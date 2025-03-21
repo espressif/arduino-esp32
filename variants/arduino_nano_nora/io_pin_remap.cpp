@@ -6,14 +6,6 @@
 #error This build system is not supported. Please rebuild without BOARD_HAS_PIN_REMAP.
 #endif
 
-#if !defined(BOARD_HAS_PIN_REMAP)
-// This board uses pin mapping but the build system has disabled it
-#warning The build system forces the Arduino API to use GPIO numbers on a board that has custom pin mapping.
-#elif defined(BOARD_USES_HW_GPIO_NUMBERS)
-// The user has chosen to disable pin mapping.
-#warning The Arduino API will use GPIO numbers for this build.
-#endif
-
 #include "Arduino.h"
 
 // NOTE: This must match with the remapped pin sequence in pins_arduino.h
