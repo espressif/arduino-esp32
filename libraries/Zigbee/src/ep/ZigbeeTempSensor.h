@@ -15,34 +15,34 @@ public:
   ~ZigbeeTempSensor() {}
 
   // Set the temperature value in 0,01°C
-  void setTemperature(float value);
+  bool setTemperature(float value);
 
   // Set the min and max value for the temperature sensor in 0,01°C
-  void setMinMaxValue(float min, float max);
+  bool setMinMaxValue(float min, float max);
 
   // Set the tolerance value for the temperature sensor in 0,01°C
-  void setTolerance(float tolerance);
+  bool setTolerance(float tolerance);
 
   // Set the reporting interval for temperature measurement in seconds and delta (temp change in 0,01 °C)
-  void setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
   // Report the temperature value
-  void reportTemperature();
+  bool reportTemperature();
 
   // Add humidity cluster to the temperature sensor device
   void addHumiditySensor(float min, float max, float tolerance);
 
   // Set the humidity value in 0,01%
-  void setHumidity(float value);
+  bool setHumidity(float value);
 
   // Set the reporting interval for humidity measurement in seconds and delta (humidity change in 0,01%)
-  void setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  bool setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
   // Report the humidity value
-  void reportHumidity();
+  bool reportHumidity();
 
   // Report the temperature and humidity values if humidity sensor is added
-  void report();
+  bool report();
 
 private:
   bool _humidity_sensor;

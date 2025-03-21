@@ -45,9 +45,9 @@ public:
   ~ZigbeeAnalog() {}
 
   // Add analog clusters
-  void addAnalogValue();
-  void addAnalogInput();
-  void addAnalogOutput();
+  bool addAnalogValue();
+  bool addAnalogInput();
+  bool addAnalogOutput();
 
   // Use to set a cb function to be called on analog output change
   void onAnalogOutputChange(void (*callback)(float analog)) {
@@ -55,14 +55,14 @@ public:
   }
 
   // Set the analog value / input
-  void setAnalogValue(float analog);
-  void setAnalogInput(float analog);
+  bool setAnalogValue(float analog);
+  bool setAnalogInput(float analog);
 
   // Report Analog Input
-  void reportAnalogInput();
+  bool reportAnalogInput();
 
   // Set reporting for Analog Input
-  void setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  bool setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;

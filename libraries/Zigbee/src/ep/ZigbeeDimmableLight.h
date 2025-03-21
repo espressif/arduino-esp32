@@ -76,9 +76,9 @@ public:
     lightChanged();
   }
 
-  void setLightState(bool state);
-  void setLightLevel(uint8_t level);
-  void setLight(bool state, uint8_t level);
+  bool setLightState(bool state);
+  bool setLightLevel(uint8_t level);
+  bool setLight(bool state, uint8_t level);
 
   bool getLightState() {
     return _current_state;
@@ -89,7 +89,6 @@ public:
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
-
   void lightChanged();
   // callback function to be called on light change (State, Level)
   void (*_on_light_change)(bool, uint8_t);

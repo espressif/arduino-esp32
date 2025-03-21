@@ -42,19 +42,19 @@ public:
   ~ZigbeeFlowSensor() {}
 
   // Set the flow value in 0,1 m3/h
-  void setFlow(float value);
+  bool setFlow(float value);
 
   // Set the min and max value for the flow sensor in 0,1 m3/h
-  void setMinMaxValue(float min, float max);
+  bool setMinMaxValue(float min, float max);
 
   // Set the tolerance value for the flow sensor in 0,01 m3/h
-  void setTolerance(float tolerance);
+  bool setTolerance(float tolerance);
 
   // Set the reporting interval for flow measurement in seconds and delta (temp change in 0,1 m3/h)
-  void setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
   // Report the flow value
-  void report();
+  bool report();
 };
 
 #endif  // CONFIG_ZB_ENABLED

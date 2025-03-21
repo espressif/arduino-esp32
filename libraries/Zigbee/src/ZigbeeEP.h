@@ -70,7 +70,7 @@ public:
   }
 
   // Set Manufacturer name and model
-  void setManufacturerAndModel(const char *name, const char *model);
+  bool setManufacturerAndModel(const char *name, const char *model);
 
   // Methods to read manufacturer and model name from selected endpoint and short address
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
@@ -78,13 +78,13 @@ public:
 
   // Set Power source and battery percentage for battery powered devices
   void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
-  void setBatteryPercentage(uint8_t percentage);
-  void reportBatteryPercentage();
+  bool setBatteryPercentage(uint8_t percentage);
+  bool reportBatteryPercentage();
 
   // Set time
   void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
-  void setTime(tm time);
-  void setTimezone(int32_t gmt_offset);
+  bool setTime(tm time);
+  bool setTimezone(int32_t gmt_offset);
 
   // Get time from Coordinator or specific endpoint (blocking until response)
   struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});

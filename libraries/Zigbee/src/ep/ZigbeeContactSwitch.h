@@ -48,13 +48,13 @@ public:
   void setIASClientEndpoint(uint8_t ep_number);
 
   // Set the contact switch value to closed
-  void setClosed();
+  bool setClosed();
 
   // Set the contact switch value to open
-  void setOpen();
+  bool setOpen();
 
   // Report the contact switch value, done automatically after setting the position
-  void report();
+  bool report();
 
 private:
   void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) override;

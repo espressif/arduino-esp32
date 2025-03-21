@@ -48,7 +48,7 @@ public:
   void setIASClientEndpoint(uint8_t ep_number);
 
   // Set the vibration sensor value (true = sensed, false = not sensed)
-  void setVibration(bool sensed);
+  bool setVibration(bool sensed);
 
   // Report the vibration sensor value, done automatically after setting the sensed value
   void report();

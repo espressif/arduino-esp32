@@ -29,29 +29,39 @@ void ZigbeeContactSwitch::setIASClientEndpoint(uint8_t ep_number) {
   _ias_cie_endpoint = ep_number;
 }
 
-void ZigbeeContactSwitch::setClosed() {
+bool ZigbeeContactSwitch::setClosed() {
   log_v("Setting Contact switch to closed");
   uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  esp_err_t ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false
   );
   esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   _zone_status = closed;
-  report();
+  return report();
 }
 
-void ZigbeeContactSwitch::setOpen() {
+bool ZigbeeContactSwitch::setOpen() {
   log_v("Setting Contact switch to open");
   uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false);
+  esp_err_t ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false
+  );
   esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   _zone_status = open;
-  report();
+  return report();
 }
 
-void ZigbeeContactSwitch::report() {
+bool ZigbeeContactSwitch::report() {
   /* Send IAS Zone status changed notification command */
 
   esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
@@ -66,9 +76,14 @@ void ZigbeeContactSwitch::report() {
   status_change_notif_cmd.delay = 0;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
+  esp_err_t ret = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
   esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to send IAS Zone status changed notification: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   log_v("IAS Zone status changed notification sent");
+  return true;
 }
 
 void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {

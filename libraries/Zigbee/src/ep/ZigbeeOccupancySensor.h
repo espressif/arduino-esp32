@@ -42,13 +42,13 @@ public:
   ~ZigbeeOccupancySensor() {}
 
   // Set the occupancy value. True for occupied, false for unoccupied
-  void setOccupancy(bool occupied);
+  bool setOccupancy(bool occupied);
 
   // Set the sensor type, see esp_zb_zcl_occupancy_sensing_occupancy_sensor_type_t
-  void setSensorType(uint8_t sensor_type);
+  bool setSensorType(uint8_t sensor_type);
 
   // Report the occupancy value
-  void report();
+  bool report();
 };
 
 #endif  // CONFIG_ZB_ENABLED
