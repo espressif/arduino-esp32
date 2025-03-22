@@ -24,13 +24,13 @@
  2nd September 2021
  Lucas Saavedra Vaz (lucasssvaz)
  22nd December 2023
- anonZ
+ anon
  10nd February 2025
  */
 
 #include <ESP_I2S.h>
 
-// In fact, the GPIO pins are not fixed, most other pins can be used for the I2S function.
+// The GPIO pins are not fixed, most other pins can be used for the I2S function.
 #define I2S_LRC 25
 #define I2S_BCLK 5
 #define I2S_DIN 26
@@ -43,7 +43,7 @@ i2s_data_bit_width_t bps = I2S_DATA_BIT_WIDTH_16BIT;
 i2s_mode_t mode = I2S_MODE_STD;
 i2s_slot_mode_t slot = I2S_SLOT_MODE_STEREO;
 
-const int halfWavelength = (sampleRate / frequency / 2);  // half wavelength of square wave
+const int halfWavelength = sampleRate / frequency / 2;  // half wavelength of square wave
 
 int32_t sample = amplitude;  // current sample value
 unsigned int count = 0;
@@ -70,9 +70,12 @@ void loop() {
     sample = -1 * sample;
   }
 
-  i2s.write(sample);  // Right channel
+  // Right channel, low 8 bit then hight 8 bit
+  i2s.write(sample);
   i2s.write(sample >> 8);
-  i2s.write(sample);  // Left channel
+
+  // Left channel, low 8 bit then hight 8 bit
+  i2s.write(sample);
   i2s.write(sample >> 8);
 
   // increment the counter for the next sample
