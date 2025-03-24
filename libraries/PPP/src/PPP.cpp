@@ -128,7 +128,7 @@ void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t
 // PPP Driver Events Callback
 void PPPClass::_onPppEvent(int32_t event, void *event_data) {
   arduino_event_t arduino_event;
-  arduino_event.event_id = ARDUINO_EVENT_MAX;
+  arduino_event.event_id = ARDUINO_EVENT_ANY;
 
   log_v("PPP Driver Event %ld: %s", event, _ppp_event_name(event));
 
@@ -141,7 +141,7 @@ void PPPClass::_onPppEvent(int32_t event, void *event_data) {
     }
   }
 
-  if (arduino_event.event_id < ARDUINO_EVENT_MAX) {
+  if (arduino_event.event_id != ARDUINO_EVENT_ANY) {
     Network.postEvent(&arduino_event);
   }
 }
