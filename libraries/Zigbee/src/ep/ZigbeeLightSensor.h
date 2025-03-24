@@ -9,7 +9,10 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-/**/
+/*
+the new macro works here, but should better be added to
+esp-zigbee-sdk/components/esp-zigbee-lib/include/ha/esp_zigbee_ha_standard.h
+*/
 #define ESP_ZB_DEFAULT_LIGHT_SENSOR_CONFIG()                                                            \
     {                                                                                                   \
         .basic_cfg =                                                                                    \
