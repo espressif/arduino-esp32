@@ -45,12 +45,13 @@ on:
       - "!.github/scripts/tests_*"
       - "!.github/scripts/upload_*"
       - "variants/esp32/**/*"
-      - "variants/esp32s2/**/*"
-      - "variants/esp32s3/**/*"
       - "variants/esp32c2/**/*"
       - "variants/esp32c3/**/*"
       - "variants/esp32c6/**/*"
       - "variants/esp32h2/**/*"
+      - "variants/esp32p4/**/*"
+      - "variants/esp32s2/**/*"
+      - "variants/esp32s3/**/*"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
@@ -65,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: bash ./.github/scripts/check-cmakelists.sh
 
   gen-chunks:
@@ -81,13 +82,13 @@ jobs:
       chunks: ${{ steps.set-chunks.outputs.chunks }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 2
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         with:
           files_yaml: |
             core:
@@ -98,11 +99,12 @@ jobs:
               - 'platform.txt'
               - 'programmers.txt'
               - "variants/esp32/**/*"
-              - "variants/esp32s2/**/*"
-              - "variants/esp32s3/**/*"
               - "variants/esp32c3/**/*"
               - "variants/esp32c6/**/*"
               - "variants/esp32h2/**/*"
+              - "variants/esp32p4/**/*"
+              - "variants/esp32s2/**/*"
+              - "variants/esp32s3/**/*"
             libraries:
               - 'libraries/**/examples/**'
               - 'libraries/**/src/**'
@@ -142,7 +144,7 @@ jobs:
 
       - name: Upload sketches found
         if: ${{ steps.set-chunks.outputs.build_all == 'false' && steps.set-chunks.outputs.build_libraries == 'true' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: sketches_found
           path: sketches_found.txt
@@ -161,13 +163,13 @@ jobs:
         chunk: ${{ fromJson(needs.gen-chunks.outputs.chunks) }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         with:
           python-version: "3.x"
 
       - name: Get libs cache
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
           path: |
@@ -195,7 +197,7 @@ jobs:
 
       - name: Download sketches found
         if: ${{ needs.gen-chunks.outputs.build_all == 'false' && needs.gen-chunks.outputs.build_libraries == 'true' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: sketches_found
 
@@ -205,7 +207,7 @@ jobs:
 
       #Upload cli compile json as artifact
       - name: Upload cli compile json
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pr_cli_compile_${{ matrix.chunk }}
           path: cli_compile_${{ matrix.chunk }}.json
@@ -223,8 +225,8 @@ jobs:
         os: [windows-latest, macOS-latest]
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         with:
           python-version: "3.x"
       - name: Build Sketches
@@ -260,10 +262,11 @@ jobs:
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - name: Check out arduino-esp32 as a component
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: recursive
           path: components/arduino-esp32
+
       - name: Build
         env:
           IDF_TARGET: ${{ matrix.idf_target }}
@@ -283,7 +286,7 @@ jobs:
     steps:
       # Check out repository
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           fetch-depth: "0"
@@ -292,7 +295,7 @@ jobs:
         run: git checkout remotes/origin/gh-pages
 
       - name: Download sketches reports artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           pattern: pr_cli_compile_*
           merge-multiple: true
@@ -322,8 +325,9 @@ jobs:
         env:
           PR_NUM: ${{ github.event.number }}
         run: echo $PR_NUM > pr_num.txt
+
       - name: Upload PR number
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pr_number
           path: ./pr_num.txt
