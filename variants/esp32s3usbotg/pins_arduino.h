@@ -2,7 +2,6 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-// Prevents fatal compilation failure in Arduino for ESP32 board with OTG
 #include <stdbool.h>
 
 #define USB_VID 0x303a
