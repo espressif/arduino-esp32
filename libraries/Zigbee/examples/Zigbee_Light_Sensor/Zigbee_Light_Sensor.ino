@@ -42,20 +42,21 @@
  static void light_sensor_value_update(void *arg) {
    for (;;) {
      // read the raw analog value from the sensor
-     int lsens_analog = analogRead(light_sensor_pin);
-     Serial.printf("[Light Sensor] raw analog value: %d°C\r\n", lsens_analog);
+     int lsens_analog_raw = analogRead(light_sensor_pin);
+     Serial.printf("[Light Sensor] raw analog value: %d\r\n", lsens_analog_raw);
  
-     // conversion into zigbee illuminance number value (typically between 0 in darkness and 50000 in direct sunlight)
+     // conversion into zigbee raw illuminance value (typically between 0 in darkness and 50000 in direct sunlight)
      // depends on the value range of the raw analog sensor values and will need calibration for correct lux values
-     int lsens_value = lsens_analog * 10; // mult by 10 for the sake of this example
-     Serial.printf("[Light Sensor] number value: %d°C\r\n", lsens_value);
+     int lsens_illuminance_raw = lsens_analog_raw * 10; // multiply by 10 for the sake of this example
+     Serial.printf("[Light Sensor] raw illuminance value: %d\r\n", lsens_illuminance_raw);
  
-     // zigbee uses the formular below to calculate lx (lux) values from the number values
-     int lsens_value_lx = (int) 10^(lsens_value/10000)-1;
-     Serial.printf("[Light Sensor] lux value: %d°C\r\n", lsens_value_lx);
+     // according to zigbee documentation the formular 10^(lsens_illuminance_raw/10000)-1 can be used to calculate lux value from raw illuminance value
+     // Note: Zigbee2MQTT seems to be using the formular 10^(lsens_illuminance_raw/10000) instead (without -1)
+     int lsens_illuminance_lux = round(pow(10,(lsens_illuminance_raw / 10000.0))-1);
+     Serial.printf("[Light Sensor] lux value: %d lux\r\n", lsens_illuminance_lux);
  
      // Update illuminance in light sensor EP
-     zbLightSensor.setIlluminance(lsens_value); // use the number value here!
+     zbLightSensor.setIlluminance(lsens_illuminance_raw); // use raw illuminance here!
  
      delay(1000); // reduce delay (in ms), if you want your device to react more quickly to changes in illuminance
    }
@@ -78,10 +79,10 @@
    // Optional: Set power source (choose between ZB_POWER_SOURCE_MAINS and ZB_POWER_SOURCE_BATTERY), defaults to unknown
    zbLightSensor.setPowerSource(ZB_POWER_SOURCE_MAINS);
  
-   // Set minimum and maximum illuminance number value (0 min and 50000 max equals to 0 lx - 100,000 lx)
+   // Set minimum and maximum for raw illuminance value (0 min and 50000 max equals to 0 lux - 100,000 lux)
    zbLightSensor.setMinMaxValue(0, 50000);
  
-   // Optional: Set tolerance for illuminance measurement
+   // Optional: Set tolerance for raw illuminance value
    zbLightSensor.setTolerance(1);
  
    // Add endpoint to Zigbee Core
@@ -109,8 +110,8 @@
  
    // Set reporting schedule for illuminance value measurement in seconds, must be called after Zigbee.begin()
    // min_interval and max_interval in seconds, delta
-   // if min = 1 and max = 0, delta = 1000, reporting is sent when illuminance value changes by 1000, but at most once per second
-   // if min = 0 and max = 10, delta = 1000, reporting is sent every 10 seconds or if illuminance value changes by 1000
+   // if min = 1 and max = 0, delta = 1000, reporting is sent when raw illuminance value changes by 1000, but at most once per second
+   // if min = 0 and max = 10, delta = 1000, reporting is sent every 10 seconds or if raw illuminance value changes by 1000
    // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of illuminance change
    // Note: On pairing with Zigbee Home Automation or Zigbee2MQTT the reporting schedule will most likely be overwritten with their default settings 
    zbLightSensor.setReporting(1, 0, 1000);
