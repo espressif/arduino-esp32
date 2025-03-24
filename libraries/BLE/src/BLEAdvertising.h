@@ -54,18 +54,18 @@ public:
   bool removeServiceUUID(int index);
   bool removeServiceUUID(BLEUUID serviceUUID);
   bool removeServiceUUID(const char *serviceUUID);
-  esp_err_t start();
-  esp_err_t stop();
+  bool start();
+  bool stop();
   void setAppearance(uint16_t appearance);
   void setAdvertisementType(esp_ble_adv_type_t adv_type);
   void setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map);
   void setMaxInterval(uint16_t maxinterval);
   void setMinInterval(uint16_t mininterval);
-  esp_err_t setAdvertisementData(BLEAdvertisementData &advertisementData);
+  bool setAdvertisementData(BLEAdvertisementData &advertisementData);
   void setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly);
-  esp_err_t setScanResponseData(BLEAdvertisementData &advertisementData);
+  bool setScanResponseData(BLEAdvertisementData &advertisementData);
   void setPrivateAddress(esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
-  esp_err_t setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
+  bool setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
 
   void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
   void setMinPreferred(uint16_t);
