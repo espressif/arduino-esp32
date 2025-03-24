@@ -18,6 +18,7 @@
 #include "ep/ZigbeeAnalog.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
+#include "ep/ZigbeeLightSensor.h"
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
