@@ -148,7 +148,7 @@ void APClass::_onApEvent(int32_t event_id, void *event_data) {
   }
 }
 
-APClass::APClass() {
+APClass::APClass(): _wifi_ap_event_handle(0) {
   _ap_network_if = this;
 }
 
@@ -163,7 +163,7 @@ bool APClass::onEnable() {
     return false;
   }
   if (_esp_netif == NULL) {
-    Network.onSysEvent(_onApArduinoEvent);
+    _wifi_ap_event_handle = Network.onSysEvent(_onApArduinoEvent);
     _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
     /* attach to receive events */
     initNetif(ESP_NETIF_ID_AP);
@@ -172,7 +172,8 @@ bool APClass::onEnable() {
 }
 
 bool APClass::onDisable() {
-  Network.removeEvent(_onApArduinoEvent);
+  Network.removeEvent(_wifi_ap_event_handle);
+  _wifi_ap_event_handle = 0;
   // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
   // That would be done by WiFi.enableAP(false) if STA is not enabled, or when it gets disabled
   _esp_netif = NULL;
