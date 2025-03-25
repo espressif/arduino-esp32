@@ -1,6 +1,6 @@
-# Arduino-ESP32 Zigbee Light Sensor Sleepy Device Example
+# Arduino-ESP32 Zigbee Illuminance Sensor Example
 
-This example demonstrates how to use the Zigbee library to create an end device light sensor and use it as a Home Automation (HA) extended light sensor.
+This example demonstrates how to use the Zigbee library to create an end device illuminance sensor and use it as a Home Automation (HA) extended illuminance sensor.
 
 # Supported Targets
 
@@ -9,9 +9,9 @@ Currently, this example supports the following targets.
 | Supported Targets | ESP32-C6 | ESP32-H2 |
 | ----------------- | -------- | -------- |
 
-## Light Sensor Functions
+## Illuminance Sensor Functions
 
-1. Initialize a Zigbee light sensor.
+1. Initialize a Zigbee illuminance sensor.
 2. Measure illuminance value.
 3. Report the measured value to the Zigbee network.
 
@@ -25,7 +25,7 @@ Currently, this example supports the following targets.
 
 In this example the raw analog value of a light sensor is used to calculate illuminance.
 Alter the calculation according to your use case and calibrate it to receive correct lux values.
-Set the light sensor GPIO by changing the `light_sensor_pin` variable to the pin to the pin to which your sensor is connected.
+Set the illuminance sensor GPIO by changing the `illuminance_sensor_pin` variable to the pin to the pin to which your sensor is connected.
 Set the button GPIO by changing the `button` variable. By default, it's the pin `BOOT_PIN` (BOOT button on ESP32-C6 and ESP32-H2).
 
 #### Using Arduino IDE

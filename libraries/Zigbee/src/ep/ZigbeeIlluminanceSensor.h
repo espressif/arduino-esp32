@@ -1,4 +1,4 @@
-/* Class of Zigbee Light sensor endpoint inherited from common EP class */
+/* Class of Zigbee Illuminance sensor endpoint inherited from common EP class */
 
 #pragma once
 
@@ -13,7 +13,7 @@
 the new macro works here, but should better be added to
 esp-zigbee-sdk/components/esp-zigbee-lib/include/ha/esp_zigbee_ha_standard.h
 */
-#define ESP_ZB_DEFAULT_LIGHT_SENSOR_CONFIG()                                                            \
+#define ESP_ZB_DEFAULT_LIGHT_SENSOR_CONFIG()                                                      \
     {                                                                                                   \
         .basic_cfg =                                                                                    \
             {                                                                                           \
@@ -36,24 +36,24 @@ esp-zigbee-sdk/components/esp-zigbee-lib/include/ha/esp_zigbee_ha_standard.h
             },                                                                                          \
     }
 
-class ZigbeeLightSensor : public ZigbeeEP {
+class ZigbeeIlluminanceSensor : public ZigbeeEP {
 public:
-  ZigbeeLightSensor(uint8_t endpoint);
-  ~ZigbeeLightSensor() {}
+  ZigbeeIlluminanceSensor(uint8_t endpoint);
+  ~ZigbeeIlluminanceSensor() {}
 
-  // Set the light value
+  // Set the illuminance value
   void setIlluminance(int value);
 
-  // Set the min and max value for the light sensor
+  // Set the min and max value for the illuminance sensor
   void setMinMaxValue(int min, int max);
 
-  // Set the tolerance value for the light sensor
+  // Set the tolerance value for the illuminance sensor
   void setTolerance(int tolerance);
 
-  // Set the reporting interval for light measurement in seconds and delta
+  // Set the reporting interval for illuminance measurement in seconds and delta
   void setReporting(uint16_t min_interval, uint16_t max_interval, int delta);
 
-  // Report the light value
+  // Report the illuminance value
   void reportIlluminance();
 };
 

@@ -13,10 +13,10 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee light sensor.
+ * @brief This example demonstrates Zigbee illuminance sensor.
  *
- * The example demonstrates how to use Zigbee library to create a end device light sensor.
- * The light sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
+ * The example demonstrates how to use Zigbee library to create a end device illuminance sensor.
+ * The illuminance sensor is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -32,31 +32,31 @@
  
  #include "Zigbee.h"
  
- #define ZIGBEE_LIGHT_SENSOR_ENDPOINT 9
+ #define ZIGBEE_ILLUMINANCE_SENSOR_ENDPOINT 9
  uint8_t button = BOOT_PIN;
- uint8_t light_sensor_pin = 6; // Insert the analog pin to which the sensor (e.g. photoresistor) is connected
+ uint8_t illuminance_sensor_pin = 6; // Insert the analog pin to which the sensor (e.g. photoresistor) is connected
  
- ZigbeeLightSensor zbLightSensor = ZigbeeLightSensor(ZIGBEE_LIGHT_SENSOR_ENDPOINT);
+ ZigbeeIlluminanceSensor zbIlluminanceSensor = ZigbeeIlluminanceSensor(ZIGBEE_ILLUMINANCE_SENSOR_ENDPOINT);
  
- /********************* Light sensor **************************/
- static void light_sensor_value_update(void *arg) {
+ /********************* Illuminance sensor **************************/
+ static void illuminance_sensor_value_update(void *arg) {
    for (;;) {
      // read the raw analog value from the sensor
-     int lsens_analog_raw = analogRead(light_sensor_pin);
-     Serial.printf("[Light Sensor] raw analog value: %d\r\n", lsens_analog_raw);
+     int lsens_analog_raw = analogRead(illuminance_sensor_pin);
+     Serial.printf("[Illuminance Sensor] raw analog value: %d\r\n", lsens_analog_raw);
  
      // conversion into zigbee raw illuminance value (typically between 0 in darkness and 50000 in direct sunlight)
      // depends on the value range of the raw analog sensor values and will need calibration for correct lux values
      int lsens_illuminance_raw = lsens_analog_raw * 10; // multiply by 10 for the sake of this example
-     Serial.printf("[Light Sensor] raw illuminance value: %d\r\n", lsens_illuminance_raw);
+     Serial.printf("[Illuminance Sensor] raw illuminance value: %d\r\n", lsens_illuminance_raw);
  
      // according to zigbee documentation the formular 10^(lsens_illuminance_raw/10000)-1 can be used to calculate lux value from raw illuminance value
      // Note: Zigbee2MQTT seems to be using the formular 10^(lsens_illuminance_raw/10000) instead (without -1)
      int lsens_illuminance_lux = round(pow(10,(lsens_illuminance_raw / 10000.0))-1);
-     Serial.printf("[Light Sensor] lux value: %d lux\r\n", lsens_illuminance_lux);
+     Serial.printf("[Illuminance Sensor] lux value: %d lux\r\n", lsens_illuminance_lux);
  
-     // Update illuminance in light sensor EP
-     zbLightSensor.setIlluminance(lsens_illuminance_raw); // use raw illuminance here!
+     // Update illuminance in illuminance sensor EP
+     zbIlluminanceSensor.setIlluminance(lsens_illuminance_raw); // use raw illuminance here!
  
      delay(1000); // reduce delay (in ms), if you want your device to react more quickly to changes in illuminance
    }
@@ -74,20 +74,20 @@
    pinMode(button, INPUT_PULLUP);
  
    // Optional: Set Zigbee device name and model
-   zbLightSensor.setManufacturerAndModel("Espressif", "ZigbeeLightSensor");
+   zbIlluminanceSensor.setManufacturerAndModel("Espressif", "ZigbeeIlluminanceSensor");
  
    // Optional: Set power source (choose between ZB_POWER_SOURCE_MAINS and ZB_POWER_SOURCE_BATTERY), defaults to unknown
-   zbLightSensor.setPowerSource(ZB_POWER_SOURCE_MAINS);
+   zbIlluminanceSensor.setPowerSource(ZB_POWER_SOURCE_MAINS);
  
    // Set minimum and maximum for raw illuminance value (0 min and 50000 max equals to 0 lux - 100,000 lux)
-   zbLightSensor.setMinMaxValue(0, 50000);
+   zbIlluminanceSensor.setMinMaxValue(0, 50000);
  
    // Optional: Set tolerance for raw illuminance value
-   zbLightSensor.setTolerance(1);
+   zbIlluminanceSensor.setTolerance(1);
  
    // Add endpoint to Zigbee Core
-   Serial.println("Adding Zigbee light sensor endpoint to Zigbee Core");
-   Zigbee.addEndpoint(&zbLightSensor);
+   Serial.println("Adding Zigbee illuminance sensor endpoint to Zigbee Core");
+   Zigbee.addEndpoint(&zbIlluminanceSensor);
  
    Serial.println("Starting Zigbee...");
    // When all EPs are registered, start Zigbee in End Device mode
@@ -105,8 +105,8 @@
    }
    Serial.println();
  
-   // Start light sensor reading task
-   xTaskCreate(light_sensor_value_update, "light_sensor_update", 2048, NULL, 10, NULL);
+   // Start illuminance sensor reading task
+   xTaskCreate(illuminance_sensor_value_update, "illuminance_sensor_update", 2048, NULL, 10, NULL);
  
    // Set reporting schedule for illuminance value measurement in seconds, must be called after Zigbee.begin()
    // min_interval and max_interval in seconds, delta
@@ -114,7 +114,7 @@
    // if min = 0 and max = 10, delta = 1000, reporting is sent every 10 seconds or if raw illuminance value changes by 1000
    // if min = 0, max = 10 and delta = 0, reporting is sent every 10 seconds regardless of illuminance change
    // Note: On pairing with Zigbee Home Automation or Zigbee2MQTT the reporting schedule will most likely be overwritten with their default settings 
-   zbLightSensor.setReporting(1, 0, 1000);
+   zbIlluminanceSensor.setReporting(1, 0, 1000);
  }
  
  /********************* Main loop **************************/
@@ -134,7 +134,7 @@
        }
      }
      // force report of illuminance when button is pressed
-     zbLightSensor.reportIlluminance();
+     zbIlluminanceSensor.reportIlluminance();
    }
    delay(100);
  }
