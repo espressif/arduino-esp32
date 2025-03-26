@@ -47,7 +47,7 @@
  
      // conversion into zigbee raw illuminance value (typically between 0 in darkness and 50000 in direct sunlight)
      // depends on the value range of the raw analog sensor values and will need calibration for correct lux values
-     int lsens_illuminance_raw = lsens_analog_raw * 10; // multiply by 10 for the sake of this example
+     int lsens_illuminance_raw = map(lsens_analog_raw, 0, 4095, 0, 50000); // to demonstate map the 12-bit ADC value (0-4095) to Zigbee illuminance range (0-50000)
      Serial.printf("[Illuminance Sensor] raw illuminance value: %d\r\n", lsens_illuminance_raw);
  
      // according to zigbee documentation the formular 10^(lsens_illuminance_raw/10000)-1 can be used to calculate lux value from raw illuminance value
@@ -134,7 +134,7 @@
        }
      }
      // force report of illuminance when button is pressed
-     zbIlluminanceSensor.reportIlluminance();
+     zbIlluminanceSensor.report();
    }
    delay(100);
  }
