@@ -35322,8 +35322,6 @@ XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.build.custom_partitions=partition
 XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
 XIAO_ESP32S3_Plus.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 
-
-
 XIAO_ESP32S3_Plus.menu.CPUFreq.240=240MHz (WiFi)
 XIAO_ESP32S3_Plus.menu.CPUFreq.240.build.f_cpu=240000000L
 XIAO_ESP32S3_Plus.menu.CPUFreq.160=160MHz (WiFi)
