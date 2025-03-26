@@ -4,7 +4,7 @@
 ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID;
 
-  esp_zb_light_sensor_cfg_t light_sensor_cfg = ESP_ZB_DEFAULT_ILLUMINANCE_SENSOR_CONFIG();
+  esp_zb_light_sensor_cfg_t light_sensor_cfg = ZIGBEE_DEFAULT_ILLUMINANCE_SENSOR_CONFIG();
   _cluster_list = esp_zb_light_sensor_clusters_create(&light_sensor_cfg);
 
   _ep_config = {

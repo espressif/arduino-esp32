@@ -9,7 +9,7 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-#define ESP_ZB_DEFAULT_ILLUMINANCE_SENSOR_CONFIG()                                                      \
+#define ZIGBEE_DEFAULT_ILLUMINANCE_SENSOR_CONFIG()                                                      \
     {                                                                                                   \
         .basic_cfg =                                                                                    \
             {                                                                                           \
