@@ -27,6 +27,15 @@
 #include "esp_private/startup_internal.h"
 #if defined(CONFIG_BT_ENABLED) && SOC_BT_SUPPORTED
 #include "esp_bt.h"
+#if CONFIG_IDF_TARGET_ESP32
+bool btInUse() {
+  return true;
+}
+#else
+bool btInUse() {
+  return false;
+}
+#endif
 #endif  //CONFIG_BT_ENABLED
 #include <sys/time.h>
 #include "soc/rtc.h"
@@ -241,19 +250,6 @@ bool verifyRollbackLater() __attribute__((weak));
 bool verifyRollbackLater() {
   return false;
 }
-#endif
-
-#ifdef CONFIG_BT_ENABLED
-#if CONFIG_IDF_TARGET_ESP32
-//overwritten in esp32-hal-bt.c
-bool btInUse() __attribute__((weak));
-bool btInUse() {
-  return false;
-}
-#else
-//from esp32-hal-bt.c
-extern bool btInUse();
-#endif
 #endif
 
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
