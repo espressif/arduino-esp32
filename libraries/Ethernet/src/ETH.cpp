@@ -124,7 +124,8 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL),
+    _eth_started(false), _link_speed(100), _full_duplex(true), _auto_negotiation(true)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
@@ -351,6 +352,19 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     return false;
   }
 
+  // auto negotiation needs to be disabled to change duplex mode and link speed
+  if (!_auto_negotiation) {
+    if (!_setAutoNegotiation(_auto_negotiation)) {
+      return false;
+    }
+    if (!_setFullDuplex(_full_duplex)) {
+      return false;
+    }
+    if (!_setLinkSpeed(_link_speed)) {
+      return false;
+    }
+  }
+
   if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
@@ -366,6 +380,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     log_e("esp_eth_start failed: %d", ret);
     return false;
   }
+
+  _eth_started = true;
 
   if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
     goto err;
@@ -788,6 +804,19 @@ bool ETHClass::beginSPI(
     return false;
   }
 
+  // auto negotiation needs to be disabled to change duplex mode and link speed
+  if (!_auto_negotiation) {
+    if (!_setAutoNegotiation(_auto_negotiation)) {
+      return false;
+    }
+    if (!_setFullDuplex(_full_duplex)) {
+      return false;
+    }
+    if (!_setLinkSpeed(_link_speed)) {
+      return false;
+    }
+  }
+
   if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
@@ -802,6 +831,8 @@ bool ETHClass::beginSPI(
     log_e("esp_eth_start failed: %d", ret);
     return false;
   }
+
+  _eth_started = true;
 
   // If Arduino's SPI is used, cs pin is in GPIO mode
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -896,6 +927,9 @@ void ETHClass::end(void) {
     while (getStatusBits() & ESP_NETIF_STARTED_BIT) {
       delay(10);
     }
+
+    _eth_started = false;
+
     //delete glue first
     if (_glue_handle != NULL) {
       if (esp_eth_del_netif_glue(_glue_handle) != ESP_OK) {
@@ -1009,7 +1043,7 @@ bool ETHClass::fullDuplex() const {
   return (link_duplex == ETH_DUPLEX_FULL);
 }
 
-bool ETHClass::setFullDuplex(bool on) {
+bool ETHClass::_setFullDuplex(bool on) {
   if (_eth_handle == NULL) {
     return false;
   }
@@ -1021,6 +1055,18 @@ bool ETHClass::setFullDuplex(bool on) {
   return err == ESP_OK;
 }
 
+bool ETHClass::setFullDuplex(bool on) {
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  if (_auto_negotiation) {
+    log_w("Auto Negotiation MUST be OFF for this setting to be applied");
+  }
+  _full_duplex = on;
+  return true;
+}
+
 bool ETHClass::autoNegotiation() const {
   if (_eth_handle == NULL) {
     return false;
@@ -1030,7 +1076,7 @@ bool ETHClass::autoNegotiation() const {
   return auto_nego;
 }
 
-bool ETHClass::setAutoNegotiation(bool on) {
+bool ETHClass::_setAutoNegotiation(bool on) {
   if (_eth_handle == NULL) {
     return false;
   }
@@ -1039,6 +1085,15 @@ bool ETHClass::setAutoNegotiation(bool on) {
     log_e("Failed to set auto negotiation: 0x%x: %s", err, esp_err_to_name(err));
   }
   return err == ESP_OK;
+}
+
+bool ETHClass::setAutoNegotiation(bool on) {
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  _auto_negotiation = on;
+  return true;
 }
 
 uint32_t ETHClass::phyAddr() const {
@@ -1059,7 +1114,7 @@ uint16_t ETHClass::linkSpeed() const {
   return (link_speed == ETH_SPEED_10M) ? 10 : 100;
 }
 
-bool ETHClass::setLinkSpeed(uint16_t speed) {
+bool ETHClass::_setLinkSpeed(uint16_t speed) {
   if (_eth_handle == NULL) {
     return false;
   }
@@ -1069,6 +1124,22 @@ bool ETHClass::setLinkSpeed(uint16_t speed) {
     log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
   }
   return err == ESP_OK;
+}
+
+bool ETHClass::setLinkSpeed(uint16_t speed) {
+  if (speed != 10 && speed != 100) {
+    log_e("Ethernet currently supports only 10 or 100 Mbps link speed");
+    return false;
+  }
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  if (_auto_negotiation) {
+    log_w("Auto Negotiation MUST be OFF for this setting to be applied");
+  }
+  _link_speed = speed;
+  return true;
 }
 
 // void ETHClass::getMac(uint8_t* mac)
