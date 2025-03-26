@@ -9,11 +9,7 @@
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
 
-/*
-the new macro works here, but should better be added to
-esp-zigbee-sdk/components/esp-zigbee-lib/include/ha/esp_zigbee_ha_standard.h
-*/
-#define ESP_ZB_DEFAULT_LIGHT_SENSOR_CONFIG()                                                      \
+#define ESP_ZB_DEFAULT_ILLUMINANCE_SENSOR_CONFIG()                                                      \
     {                                                                                                   \
         .basic_cfg =                                                                                    \
             {                                                                                           \
@@ -27,10 +23,6 @@ esp-zigbee-sdk/components/esp-zigbee-lib/include/ha/esp_zigbee_ha_standard.h
         .illuminance_cfg =                                                                              \
             {                                                                                           \
                 .measured_value = ESP_ZB_ZCL_ILLUMINANCE_MEASUREMENT_LIGHT_SENSOR_TYPE_DEFAULT_VALUE,   \
-                /*not sure with next two values, but there are no*/                                     \
-                /*ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_DEFAULT and*/              \
-                /*ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_DEFAULT*/                  \
-                /*thats why I chose MIN_VALUE and MAX_VALUE*/                                           \
                 .min_value = ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_MIN_VALUE,      \
                 .max_value = ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_MAX_VALUE,      \
             },                                                                                          \
@@ -42,19 +34,19 @@ public:
   ~ZigbeeIlluminanceSensor() {}
 
   // Set the illuminance value
-  void setIlluminance(int value);
+  void setIlluminance(uint16_t value);
 
   // Set the min and max value for the illuminance sensor
-  void setMinMaxValue(int min, int max);
+  void setMinMaxValue(uint16_t min, uint16_t max);
 
   // Set the tolerance value for the illuminance sensor
-  void setTolerance(int tolerance);
+  void setTolerance(uint16_t tolerance);
 
   // Set the reporting interval for illuminance measurement in seconds and delta
-  void setReporting(uint16_t min_interval, uint16_t max_interval, int delta);
+  void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
   // Report the illuminance value
-  void reportIlluminance();
+  void report();
 };
 
 #endif  // CONFIG_ZB_ENABLED
