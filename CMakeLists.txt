@@ -299,6 +299,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeRangeExtender.cpp
   libraries/Zigbee/src/ep/ZigbeeGateway.cpp
   libraries/Zigbee/src/ep/ZigbeeWindSpeedSensor.cpp
+  libraries/Zigbee/src/ep/ZigbeeIlluminanceSensor.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
