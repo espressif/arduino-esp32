@@ -7,9 +7,7 @@ ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(en
   esp_zb_light_sensor_cfg_t light_sensor_cfg = ZIGBEE_DEFAULT_ILLUMINANCE_SENSOR_CONFIG();
   _cluster_list = esp_zb_light_sensor_clusters_create(&light_sensor_cfg);
 
-  _ep_config = {
-    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
+  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
 void ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
@@ -22,7 +20,7 @@ void ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
 void ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {
   esp_zb_attribute_list_t *light_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-    esp_zb_illuminance_meas_cluster_add_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
+  esp_zb_illuminance_meas_cluster_add_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
 }
 
 void ZigbeeIlluminanceSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
@@ -51,7 +49,8 @@ void ZigbeeIlluminanceSensor::setIlluminance(uint16_t illuminanceValue) {
   log_d("Setting Illuminance to %d", illuminanceValue);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, &illuminanceValue, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID,
+    &illuminanceValue, false
   );
   esp_zb_lock_release();
 }
