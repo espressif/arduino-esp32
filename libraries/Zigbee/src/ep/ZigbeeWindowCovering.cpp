@@ -222,12 +222,13 @@ void ZigbeeWindowCovering::zbWindowCoveringMovementCmd(const esp_zb_zcl_window_c
       if (_current_lift_percentage != message->payload.percentage_lift_value) {
         _current_lift_percentage = message->payload.percentage_lift_value;
         goToLiftPercentage(_current_lift_percentage);
+        return;
       }
-      return;
     } else if (message->command == ESP_ZB_ZCL_CMD_WINDOW_COVERING_GO_TO_TILT_PERCENTAGE) {
       if (_current_tilt_percentage != message->payload.percentage_tilt_value) {
         _current_tilt_percentage = message->payload.percentage_tilt_value;
         goToTiltPercentage(_current_tilt_percentage);
+        return;
       }
     } else {
       log_w("Received message ignored. Command: %d not supported for Window Covering", message->command);
