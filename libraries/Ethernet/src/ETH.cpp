@@ -124,8 +124,8 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL),
-    _eth_started(false), _link_speed(100), _full_duplex(true), _auto_negotiation(true)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL), _eth_started(false), _link_speed(100),
+    _full_duplex(true), _auto_negotiation(true)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
