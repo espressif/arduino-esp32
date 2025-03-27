@@ -21,8 +21,8 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # This step checks out the repository's code at gh-pages branch
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: gh-pages
 
@@ -60,12 +60,12 @@ jobs:
 
       - name: Read the pr_num file
         id: pr_num_reader
-        uses: juliangruber/read-file-action@v1
+        uses: juliangruber/read-file-action@b549046febe0fe86f8cb4f93c24e284433f9ab58 # v1.1.7
         with:
           path: ./artifacts/sizes-report/pr_num.txt
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
+        uses: P-R-O-C-H-Y/report-size-deltas@2043188c68f483a7b50527c4eacf609d05bb67a5 # sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
