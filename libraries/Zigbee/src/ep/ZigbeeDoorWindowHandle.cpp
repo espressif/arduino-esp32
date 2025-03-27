@@ -83,6 +83,7 @@ bool ZigbeeDoorWindowHandle::setTilted() {
   return true;
 }
 
+//NOTE: Change to return bool as a result of esp_zb_zcl_ias_zone_status_change_notif_cmd_req()
 void ZigbeeDoorWindowHandle::report() {
   /* Send IAS Zone status changed notification command */
 
