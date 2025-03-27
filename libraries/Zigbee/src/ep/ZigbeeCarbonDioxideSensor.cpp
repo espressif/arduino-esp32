@@ -51,8 +51,9 @@ bool ZigbeeCarbonDioxideSensor::setTolerance(float tolerance) {
   );
   if(ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
@@ -77,8 +78,9 @@ bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
   esp_zb_lock_release();
   if(ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeCarbonDioxideSensor::setCarbonDioxide(float carbon_dioxide) {
@@ -95,8 +97,9 @@ bool ZigbeeCarbonDioxideSensor::setCarbonDioxide(float carbon_dioxide) {
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set carbon dioxide: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeeCarbonDioxideSensor::report() {

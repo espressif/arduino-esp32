@@ -13,10 +13,6 @@ ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(en
 bool ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
   esp_zb_attribute_list_t *light_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (!light_measure_cluster) {
-    log_e("Failed to get illuminance measurement cluster");
-    return false;
-  }
   esp_err_t ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&min);
   if (ret != ESP_OK) {
     log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
@@ -33,10 +29,6 @@ bool ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
 bool ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {
   esp_zb_attribute_list_t *light_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (!light_measure_cluster) {
-    log_e("Failed to get illuminance measurement cluster");
-    return false;
-  }
   esp_err_t ret = esp_zb_illuminance_meas_cluster_add_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
   if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));

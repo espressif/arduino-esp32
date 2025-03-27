@@ -43,8 +43,9 @@ bool ZigbeeTempSensor::setTolerance(float tolerance) {
   esp_err_t ret = esp_zb_temperature_meas_cluster_add_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
   if(ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
@@ -67,8 +68,9 @@ bool ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval
   esp_zb_lock_release();
   if(ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeTempSensor::setTemperature(float temperature) {
@@ -84,8 +86,9 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeeTempSensor::reportTemperature() {
@@ -137,8 +140,9 @@ bool ZigbeeTempSensor::setHumidity(float humidity) {
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set humidity: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeeTempSensor::reportHumidity() {
@@ -182,8 +186,9 @@ bool ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
   esp_zb_lock_release();
   if(ret != ESP_OK) {
     log_e("Failed to set humidity reporting: 0x%x: %s", ret, esp_err_to_name(ret) );
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeTempSensor::report() {

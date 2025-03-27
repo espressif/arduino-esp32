@@ -27,10 +27,6 @@ bool ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_max = (uint16_t)(max * 10);
   esp_zb_attribute_list_t *flow_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (!flow_measure_cluster) {
-    log_e("Failed to get flow measurement cluster");
-    return false;
-  }
   esp_err_t ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
   if(ret != ESP_OK) {
     log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
@@ -48,10 +44,6 @@ bool ZigbeeFlowSensor::setTolerance(float tolerance) {
   uint16_t zb_tolerance = (uint16_t)(tolerance * 10);
   esp_zb_attribute_list_t *flow_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (!flow_measure_cluster) {
-    log_e("Failed to get flow measurement cluster");
-    return false;
-  }
   esp_err_t ret = esp_zb_flow_meas_cluster_add_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
   if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));

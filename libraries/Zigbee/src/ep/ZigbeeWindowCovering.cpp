@@ -132,11 +132,10 @@ bool ZigbeeWindowCovering::setLimits(
   _installed_open_limit_tilt = installed_open_limit_tilt;
   _installed_closed_limit_tilt = installed_closed_limit_tilt;
   _physical_closed_limit_tilt = installed_closed_limit_tilt;
-  esp_err_t ret;
 
   esp_zb_attribute_list_t *window_covering_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  ret = esp_zb_cluster_update_attr(window_covering_cluster, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID, (void *)&_installed_open_limit_lift);
+  esp_err_t ret = esp_zb_cluster_update_attr(window_covering_cluster, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID, (void *)&_installed_open_limit_lift);
   if (ret != ESP_OK) {
     log_e("Failed to set installed open limit lift: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;

@@ -68,8 +68,9 @@ bool ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
   esp_zb_lock_release();
   if(ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeePressureSensor::setPressure(int16_t pressure) {
@@ -84,8 +85,9 @@ bool ZigbeePressureSensor::setPressure(int16_t pressure) {
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set pressure: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeePressureSensor::report() {

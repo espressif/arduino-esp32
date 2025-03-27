@@ -54,8 +54,9 @@ bool ZigbeeWindSpeedSensor::setTolerance(float tolerance) {
   esp_err_t ret = esp_zb_wind_speed_measurement_cluster_add_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
   if(ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
@@ -78,8 +79,9 @@ bool ZigbeeWindSpeedSensor::setReporting(uint16_t min_interval, uint16_t max_int
   esp_zb_lock_release();
   if(ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret == ESP_OK;
+  return true;
 }
 
 bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
@@ -96,8 +98,9 @@ bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set wind speed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
   }
-  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
+  return true;
 }
 
 bool ZigbeeWindSpeedSensor::reportWindSpeed() {
