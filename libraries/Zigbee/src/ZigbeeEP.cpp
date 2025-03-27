@@ -492,7 +492,11 @@ bool ZigbeeEP::addOTAClient(
     log_e("Failed to add OTA server endpoint: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  ret = esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  if (ret != ESP_OK) {
+    log_e("Failed to add OTA cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   return true;
 }
 
