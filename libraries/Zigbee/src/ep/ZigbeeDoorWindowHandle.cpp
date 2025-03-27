@@ -43,8 +43,7 @@ bool ZigbeeDoorWindowHandle::setClosed() {
     return false;
   }
   _zone_status = closed;
-  report();
-  return true;
+  return report();
 }
 
 bool ZigbeeDoorWindowHandle::setOpen() {
@@ -61,8 +60,7 @@ bool ZigbeeDoorWindowHandle::setOpen() {
     return false;
   }
   _zone_status = open;
-  report();
-  return true;
+  return report();
 }
 
 bool ZigbeeDoorWindowHandle::setTilted() {
@@ -79,8 +77,7 @@ bool ZigbeeDoorWindowHandle::setTilted() {
     return false;
   }
   _zone_status = tilted;
-  report();
-  return true;
+  return report();
 }
 
 void ZigbeeDoorWindowHandle::report() {
