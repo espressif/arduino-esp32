@@ -39,7 +39,7 @@ bool ZigbeeVibrationSensor::setVibration(bool sensed) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set vibration status: 0x%x", ret);
+    log_e("Failed to set vibration status: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = vibration;

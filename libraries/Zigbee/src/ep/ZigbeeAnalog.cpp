@@ -1,33 +1,15 @@
 #include "ZigbeeAnalog.h"
 #if CONFIG_ZB_ENABLED
 
-esp_zb_cluster_list_t *zigbee_analog_clusters_create(zigbee_analog_cfg_t *analog_sensor) {
-  esp_zb_basic_cluster_cfg_t *basic_cfg = analog_sensor ? &(analog_sensor->basic_cfg) : NULL;
-  esp_zb_identify_cluster_cfg_t *identify_cfg = analog_sensor ? &(analog_sensor->identify_cfg) : NULL;
-  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-  esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  return cluster_list;
-}
-
 ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
 
-  //Create custom analog sensor configuration
-  zigbee_analog_cfg_t analog_cfg = ZIGBEE_DEFAULT_ANALOG_CONFIG();
-  _cluster_list = zigbee_analog_clusters_create(&analog_cfg);
+  //Create basic analog sensor clusters without configuration
+  _cluster_list = esp_zb_zcl_cluster_list_create();
+  esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
-}
-
-bool ZigbeeAnalog::addAnalogValue() {
-  esp_err_t ret = esp_zb_cluster_list_add_analog_value_cluster(_cluster_list, esp_zb_analog_value_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (ret != ESP_OK) {
-    log_e("Failed to add Analog Value cluster: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  _analog_clusters |= ANALOG_VALUE;
-  return true;
 }
 
 bool ZigbeeAnalog::addAnalogInput() {
@@ -72,25 +54,6 @@ void ZigbeeAnalog::analogOutputChanged(float analog_output) {
   }
 }
 
-bool ZigbeeAnalog::setAnalogValue(float analog) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  if (!(_analog_clusters & ANALOG_VALUE)) {
-    log_e("Analog Value cluster not added");
-    return false;
-  }
-  log_d("Setting analog value to %.1f", analog);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_VALUE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_VALUE_PRESENT_VALUE_ID, &analog, false
-  );
-  esp_zb_lock_release();
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set analog value: 0x%x", ret);
-    return false;
-  }
-  return true;
-}
-
 bool ZigbeeAnalog::setAnalogInput(float analog) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (!(_analog_clusters & ANALOG_INPUT)) {
@@ -104,7 +67,7 @@ bool ZigbeeAnalog::setAnalogInput(float analog) {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set analog input: 0x%x", ret);
+    log_e("Failed to set analog input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   return true;

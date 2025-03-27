@@ -287,7 +287,7 @@ bool ZigbeeWindowCovering::setLiftPosition(uint16_t lift_position) {
   esp_zb_lock_release();
 
   if (ret_lift_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_lift_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position(0x%x) or lift percentage(0x%x)", ret_lift_position, ret_lift_percentage);
+    log_e("Failed to set lift position(0x%x: %s) or lift percentage(0x%x: %s)", ret_lift_position, esp_zb_zcl_status_to_name(ret_lift_position), ret_lift_percentage, esp_zb_zcl_status_to_name(ret_lift_percentage));
     return false;
   }
   return true;
@@ -311,7 +311,7 @@ bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
   esp_zb_lock_release();
 
   if (ret_lift_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_lift_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position(0x%x) or lift percentage(0x%x)", ret_lift_position, ret_lift_percentage);
+    log_e("Failed to set lift position(0x%x: %s) or lift percentage(0x%x: %s)", ret_lift_position, esp_zb_zcl_status_to_name(ret_lift_position), ret_lift_percentage, esp_zb_zcl_status_to_name(ret_lift_percentage));
     return false;
   }
   return true;
@@ -336,7 +336,7 @@ bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
   esp_zb_lock_release();
 
   if (ret_tilt_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_tilt_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position(0x%x) or tilt percentage(0x%x)", ret_tilt_position, ret_tilt_percentage);
+    log_e("Failed to set tilt position(0x%x: %s) or tilt percentage(0x%x: %s)", ret_tilt_position, esp_zb_zcl_status_to_name(ret_tilt_position), ret_tilt_percentage, esp_zb_zcl_status_to_name(ret_tilt_percentage));
     return false;
   }
   return true;
@@ -361,7 +361,7 @@ bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
   esp_zb_lock_release();
 
   if (ret_tilt_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_tilt_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position(0x%x) or tilt percentage(0x%x)", ret_tilt_position, ret_tilt_percentage);
+    log_e("Failed to set tilt position(0x%x: %s) or tilt percentage(0x%x: %s)", ret_tilt_position, esp_zb_zcl_status_to_name(ret_tilt_position), ret_tilt_percentage, esp_zb_zcl_status_to_name(ret_tilt_percentage));
     return false;
   }
   return true;

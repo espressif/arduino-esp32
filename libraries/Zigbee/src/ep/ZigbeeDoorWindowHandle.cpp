@@ -39,7 +39,7 @@ bool ZigbeeDoorWindowHandle::setClosed() {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set door/window handle to closed: 0x%x", ret);
+    log_e("Failed to set door/window handle to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = closed;
@@ -57,7 +57,7 @@ bool ZigbeeDoorWindowHandle::setOpen() {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set door/window handle to open: 0x%x", ret);
+    log_e("Failed to set door/window handle to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = open;
@@ -75,7 +75,7 @@ bool ZigbeeDoorWindowHandle::setTilted() {
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set door/window handle to tilted: 0x%x", ret);
+    log_e("Failed to set door/window handle to tilted: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = tilted;

@@ -81,7 +81,7 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set temperature: 0x%x", ret);
+    log_e("Failed to set temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
@@ -134,7 +134,7 @@ bool ZigbeeTempSensor::setHumidity(float humidity) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set humidity: 0x%x", ret);
+    log_e("Failed to set humidity: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }

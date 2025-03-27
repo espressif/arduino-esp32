@@ -368,16 +368,23 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     case ESP_ZB_ZDO_SIGNAL_LEAVE:  // End Device + Router
       // Device was removed from the network, factory reset the device
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
-        Zigbee.factoryReset();
+        Zigbee.factoryReset(true);
       }
       break;
     default: log_v("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
 
-void ZigbeeCore::factoryReset() {
-  log_v("Factory resetting Zigbee stack, device will reboot");
-  esp_zb_factory_reset();
+void ZigbeeCore::factoryReset(bool restart) {
+  if (restart) {
+    log_v("Factory resetting Zigbee stack, device will reboot");
+    esp_zb_factory_reset();
+  }
+  else {
+    log_v("Factory resetting Zigbee NVRAM to factory default");
+    log_w("The device will not reboot, to take effect please reboot the device manually");
+    esp_zb_zcl_reset_nvram_to_factory_default();
+  }
 }
 
 void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor) {

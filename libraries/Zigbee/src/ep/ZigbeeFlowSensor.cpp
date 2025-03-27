@@ -99,7 +99,7 @@ bool ZigbeeFlowSensor::setFlow(float flow) {
   esp_zb_lock_release();
   
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set flow value: 0x%x", ret);
+    log_e("Failed to set flow value: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   return true;

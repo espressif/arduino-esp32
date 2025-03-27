@@ -93,7 +93,7 @@ bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set wind speed: 0x%x", ret);
+    log_e("Failed to set wind speed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }

@@ -34,31 +34,24 @@ void ZigbeeEP::setVersion(uint8_t version) {
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   // Convert manufacturer to ZCL string
-  size_t length = strlen(name);
-  if (length > 32) {
-    log_e("Manufacturer name is too long");
+  size_t name_length = strlen(name);
+  size_t model_length = strlen(model);
+  if (name_length > 32 || model_length > 32) {
+    log_e("Manufacturer or model name is too long");
     return false;
   }
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char *zb_name = new char[length + 2];
+  char *zb_name = new char[name_length + 2];
+  char *zb_model = new char[model_length + 2];
   // Store the length as the first element
-  zb_name[0] = static_cast<char>(length);  // Cast size_t to char
+  zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
+  zb_model[0] = static_cast<char>(model_length);
   // Use memcpy to copy the characters to the result array
-  memcpy(zb_name + 1, name, length);
+  memcpy(zb_name + 1, name, name_length);
+  memcpy(zb_model + 1, model, model_length);
   // Null-terminate the array
-  zb_name[length + 1] = '\0';
-
-  // Convert model to ZCL string
-  length = strlen(model);
-  if (length > 32) {
-    log_e("Model name is too long");
-    delete[] zb_name;
-    return false;
-  }
-  char *zb_model = new char[length + 2];
-  zb_model[0] = static_cast<char>(length);
-  memcpy(zb_model + 1, model, length);
-  zb_model[length + 1] = '\0';
+  zb_name[name_length + 1] = '\0';
+  zb_model[model_length + 1] = '\0';
 
   // Get the basic cluster and update the manufacturer and model attributes
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
@@ -66,9 +59,11 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
   if(ret_manufacturer != ESP_OK || ret_model != ESP_OK) {
     log_e("Failed to set manufacturer (0x%x) or model (0x%x)", ret_manufacturer, ret_model);
-    return false;
   }
-  return true;
+  
+  delete[] zb_name;
+  delete[] zb_model;
+  return ret_manufacturer == ESP_OK && ret_model == ESP_OK;
 }
 
 void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
@@ -103,7 +98,7 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
   );
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set battery percentage: 0x%x", ret);
+    log_e("Failed to set battery percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   log_v("Battery percentage updated");
@@ -153,7 +148,9 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
   read_req.attr_number = ZB_ARRAY_LENTH(attributes);
   read_req.attr_field = attributes;
 
-  // clear read manufacturer
+  if (_read_manufacturer != nullptr) {
+    free(_read_manufacturer);
+  }
   _read_manufacturer = nullptr;
 
   esp_zb_lock_acquire(portMAX_DELAY);
@@ -189,7 +186,9 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   read_req.attr_number = ZB_ARRAY_LENTH(attributes);
   read_req.attr_field = attributes;
 
-  // clear read model
+  if (_read_model != nullptr) {
+    free(_read_model);
+  }
   _read_model = nullptr;
 
   esp_zb_lock_acquire(portMAX_DELAY);
@@ -287,7 +286,7 @@ bool ZigbeeEP::setTime(tm time) {
   ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set time: 0x%x", ret);
+    log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   return true;
@@ -300,7 +299,7 @@ bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
   esp_zb_lock_release();
   if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set timezone: 0x%x", ret);
+    log_e("Failed to set timezone: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   return true;
@@ -422,7 +421,7 @@ void ZigbeeEP::zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute) {
 //     uint8_t max_data_size; /*!< The maximum size of OTA data */
 // } esp_zb_zcl_ota_upgrade_client_variable_t;
 
-void ZigbeeEP::addOTAClient(
+bool ZigbeeEP::addOTAClient(
   uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer, uint16_t image_type, uint8_t max_data_size
 ) {
 
@@ -442,11 +441,23 @@ void ZigbeeEP::addOTAClient(
   uint16_t ota_upgrade_server_addr = 0xffff;
   uint8_t ota_upgrade_server_ep = 0xff;
 
-  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config);
-  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ADDR_ID, (void *)&ota_upgrade_server_addr);
-  esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ENDPOINT_ID, (void *)&ota_upgrade_server_ep);
-
+  esp_err_t ret = esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_CLIENT_DATA_ID, (void *)&variable_config);
+  if (ret != ESP_OK) {
+    log_e("Failed to add OTA client data: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ADDR_ID, (void *)&ota_upgrade_server_addr);
+  if (ret != ESP_OK) {
+    log_e("Failed to add OTA server address: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_ota_cluster_add_attr(ota_cluster, ESP_ZB_ZCL_ATTR_OTA_UPGRADE_SERVER_ENDPOINT_ID, (void *)&ota_upgrade_server_ep);
+  if (ret != ESP_OK) {
+    log_e("Failed to add OTA server endpoint: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   esp_zb_cluster_list_add_ota_cluster(_cluster_list, ota_cluster, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  return true;
 }
 
 static void findOTAServer(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
@@ -476,5 +487,77 @@ void ZigbeeEP::requestOTAUpdate() {
   }
   esp_zb_lock_release();
 }
+
+const char* ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
+  switch (status) {
+    case ESP_ZB_ZCL_STATUS_SUCCESS:
+      return "Success";
+    case ESP_ZB_ZCL_STATUS_FAIL:
+      return "Fail"; 
+    case ESP_ZB_ZCL_STATUS_NOT_AUTHORIZED:
+      return "Not authorized";
+    case ESP_ZB_ZCL_STATUS_MALFORMED_CMD:
+      return "Malformed command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST_CMD:
+      return "Unsupported cluster command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_GEN_CMD:
+      return "Unsupported general command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_CLUST_CMD:
+      return "Unsupported manufacturer cluster command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_GEN_CMD:
+      return "Unsupported manufacturer general command";
+    case ESP_ZB_ZCL_STATUS_INVALID_FIELD:
+      return "Invalid field";
+    case ESP_ZB_ZCL_STATUS_UNSUP_ATTRIB:
+      return "Unsupported attribute";
+    case ESP_ZB_ZCL_STATUS_INVALID_VALUE:
+      return "Invalid value";
+    case ESP_ZB_ZCL_STATUS_READ_ONLY:
+      return "Read only";
+    case ESP_ZB_ZCL_STATUS_INSUFF_SPACE:
+      return "Insufficient space";
+    case ESP_ZB_ZCL_STATUS_DUPE_EXISTS:
+      return "Duplicate exists";
+    case ESP_ZB_ZCL_STATUS_NOT_FOUND:
+      return "Not found";
+    case ESP_ZB_ZCL_STATUS_UNREPORTABLE_ATTRIB:
+      return "Unreportable attribute";
+    case ESP_ZB_ZCL_STATUS_INVALID_TYPE:
+      return "Invalid type";
+    case ESP_ZB_ZCL_STATUS_WRITE_ONLY:
+      return "Write only";
+    case ESP_ZB_ZCL_STATUS_INCONSISTENT:
+      return "Inconsistent";
+    case ESP_ZB_ZCL_STATUS_ACTION_DENIED:
+      return "Action denied";
+    case ESP_ZB_ZCL_STATUS_TIMEOUT:
+      return "Timeout";
+    case ESP_ZB_ZCL_STATUS_ABORT:
+      return "Abort";
+    case ESP_ZB_ZCL_STATUS_INVALID_IMAGE:
+      return "Invalid OTA upgrade image";
+    case ESP_ZB_ZCL_STATUS_WAIT_FOR_DATA:
+      return "Server does not have data block available yet";
+    case ESP_ZB_ZCL_STATUS_NO_IMAGE_AVAILABLE:
+      return "No image available";
+    case ESP_ZB_ZCL_STATUS_REQUIRE_MORE_IMAGE:
+      return "Require more image";
+    case ESP_ZB_ZCL_STATUS_NOTIFICATION_PENDING:
+      return "Notification pending";
+    case ESP_ZB_ZCL_STATUS_HW_FAIL:
+      return "Hardware failure";
+    case ESP_ZB_ZCL_STATUS_SW_FAIL:
+      return "Software failure";
+    case ESP_ZB_ZCL_STATUS_CALIB_ERR:
+      return "Calibration error";
+    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST:
+      return "Cluster is not found on the target endpoint";
+    case ESP_ZB_ZCL_STATUS_LIMIT_REACHED:
+      return "Limit reached";
+    default:
+      return "Unknown status";
+  }
+}
+
 
 #endif  // CONFIG_ZB_ENABLED
