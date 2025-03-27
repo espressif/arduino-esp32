@@ -91,21 +91,26 @@ bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   return started();
 }
 
-void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
+bool ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
   ep_objects.push_back(ep);
 
   log_d("Endpoint: %d, Device ID: 0x%04x", ep->_endpoint, ep->_device_id);
   //Register clusters and ep_list to the ZigbeeCore class's ep_list
   if (ep->_ep_config.endpoint == 0 || ep->_cluster_list == nullptr) {
     log_e("Endpoint config or Cluster list is not initialized, EP not added to ZigbeeCore's EP list");
-    return;
+    return false;
   }
-
+  esp_err_t ret = ESP_OK;
   if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
-    esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+    ret = esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   } else {
-    esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+    ret = esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   }
+  if (ret != ESP_OK) {
+    log_e("Failed to add endpoint: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
 static void esp_zb_task(void *pvParameters) {
@@ -368,16 +373,22 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
     case ESP_ZB_ZDO_SIGNAL_LEAVE:  // End Device + Router
       // Device was removed from the network, factory reset the device
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
-        Zigbee.factoryReset();
+        Zigbee.factoryReset(true);
       }
       break;
     default: log_v("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;
   }
 }
 
-void ZigbeeCore::factoryReset() {
-  log_v("Factory resetting Zigbee stack, device will reboot");
-  esp_zb_factory_reset();
+void ZigbeeCore::factoryReset(bool restart) {
+  if (restart) {
+    log_v("Factory resetting Zigbee stack, device will reboot");
+    esp_zb_factory_reset();
+  } else {
+    log_v("Factory resetting Zigbee NVRAM to factory default");
+    log_w("The device will not reboot, to take effect please reboot the device manually");
+    esp_zb_zcl_reset_nvram_to_factory_default();
+  }
 }
 
 void ZigbeeCore::scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor) {

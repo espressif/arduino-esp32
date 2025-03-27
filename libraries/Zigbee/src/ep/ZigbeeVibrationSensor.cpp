@@ -29,16 +29,22 @@ void ZigbeeVibrationSensor::setIASClientEndpoint(uint8_t ep_number) {
   _ias_cie_endpoint = ep_number;
 }
 
-void ZigbeeVibrationSensor::setVibration(bool sensed) {
+bool ZigbeeVibrationSensor::setVibration(bool sensed) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Vibration sensor to %s", sensed ? "sensed" : "not sensed");
   uint8_t vibration = (uint8_t)sensed;
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &vibration, false
   );
   esp_zb_lock_release();
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set vibration status: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
   _zone_status = vibration;
   report();
+  return true;
 }
 
 void ZigbeeVibrationSensor::report() {
@@ -49,7 +55,6 @@ void ZigbeeVibrationSensor::report() {
   status_change_notif_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint;  //default is 1
   memcpy(status_change_notif_cmd.zcl_basic_cmd.dst_addr_u.addr_long, _ias_cie_addr, sizeof(esp_zb_ieee_addr_t));
-
   status_change_notif_cmd.zone_status = _zone_status;
   status_change_notif_cmd.extend_status = 0;
   status_change_notif_cmd.zone_id = _zone_id;
