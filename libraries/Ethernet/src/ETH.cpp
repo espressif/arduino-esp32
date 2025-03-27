@@ -136,7 +136,7 @@ ETHClass::ETHClass(uint8_t eth_index)
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     ,
-    _task_stack_size(4096) {
+    _task_stack_size(4096), _eth_connected_event_handle(0) {
 }
 
 ETHClass::~ETHClass() {}
@@ -359,7 +359,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   /* attach to receive events */
   initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH + _eth_index));
 
-  Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
   ret = esp_eth_start(_eth_handle);
   if (ret != ESP_OK) {
@@ -849,7 +849,7 @@ bool ETHClass::beginSPI(
     perimanSetPinBusExtraType(_pin_rst, "ETH_RST");
   }
 
-  Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
   return true;
 
@@ -885,7 +885,8 @@ static bool empty_ethDetachBus(void *bus_pointer) {
 
 void ETHClass::end(void) {
 
-  Network.removeEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  Network.removeEvent(_eth_connected_event_handle);
+  _eth_connected_event_handle = 0;
 
   if (_eth_handle != NULL) {
     if (esp_eth_stop(_eth_handle) != ESP_OK) {
