@@ -229,6 +229,10 @@ private:
   esp_eth_netif_glue_handle_t _glue_handle;
   esp_eth_mac_t *_mac;
   esp_eth_phy_t *_phy;
+  bool _eth_started;
+  uint16_t _link_speed;
+  bool _full_duplex;
+  bool _auto_negotiation;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
   char _cs_str[10];
@@ -247,6 +251,7 @@ private:
   int8_t _pin_rmii_clock;
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
   size_t _task_stack_size;
+  network_event_handle_t _eth_connected_event_handle;
 
   static bool ethDetachBus(void *bus_pointer);
   bool beginSPI(
@@ -256,6 +261,9 @@ private:
 #endif
     int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz
   );
+  bool _setFullDuplex(bool on);
+  bool _setLinkSpeed(uint16_t speed);
+  bool _setAutoNegotiation(bool on);
 
   friend class EthernetClass;  // to access beginSPI
 };

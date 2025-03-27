@@ -35264,6 +35264,8 @@ XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.flash_freq=80m
 
 XIAO_ESP32S3_Plus.menu.FlashSize.8M=8MB (64Mb)
 XIAO_ESP32S3_Plus.menu.FlashSize.8M.build.flash_size=8MB
+XIAO_ESP32S3_Plus.menu.FlashSize.16M=16MB (128Mb)
+XIAO_ESP32S3_Plus.menu.FlashSize.16M.build.flash_size=16MB
 
 XIAO_ESP32S3_Plus.menu.LoopCore.1=Core 1
 XIAO_ESP32S3_Plus.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -35302,6 +35304,12 @@ XIAO_ESP32S3_Plus.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash.build.partitions=ffat
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB=Default with spiffs (3MB APP/1.5MB SPIFFS)
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
