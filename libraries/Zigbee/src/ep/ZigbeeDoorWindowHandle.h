@@ -58,7 +58,7 @@ public:
   bool setTilted();
 
   // Report the door/window handle value, done automatically after setting the position
-  void report();
+  bool report();
 
 private:
   void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) override;

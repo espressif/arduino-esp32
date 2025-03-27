@@ -43,8 +43,7 @@ bool ZigbeeDoorWindowHandle::setClosed() {
     return false;
   }
   _zone_status = closed;
-  report();
-  return true;
+  return report();
 }
 
 bool ZigbeeDoorWindowHandle::setOpen() {
@@ -61,8 +60,7 @@ bool ZigbeeDoorWindowHandle::setOpen() {
     return false;
   }
   _zone_status = open;
-  report();
-  return true;
+  return report();
 }
 
 bool ZigbeeDoorWindowHandle::setTilted() {
@@ -79,12 +77,10 @@ bool ZigbeeDoorWindowHandle::setTilted() {
     return false;
   }
   _zone_status = tilted;
-  report();
-  return true;
+  return report();
 }
 
-//NOTE: Change to return bool as a result of esp_zb_zcl_ias_zone_status_change_notif_cmd_req()
-void ZigbeeDoorWindowHandle::report() {
+bool ZigbeeDoorWindowHandle::report() {
   /* Send IAS Zone status changed notification command */
 
   esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
@@ -98,10 +94,12 @@ void ZigbeeDoorWindowHandle::report() {
   status_change_notif_cmd.zone_id = _zone_id;
   status_change_notif_cmd.delay = 0;
 
+  //NOTE: Check result of esp_zb_zcl_ias_zone_status_change_notif_cmd_req() and return true if success, false if failure
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
   esp_zb_lock_release();
   log_v("IAS Zone status changed notification sent");
+  return true;
 }
 
 void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
