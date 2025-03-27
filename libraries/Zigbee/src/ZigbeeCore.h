@@ -129,7 +129,7 @@ public:
     return _role;
   }
 
-  void addEndpoint(ZigbeeEP *ep);
+  bool addEndpoint(ZigbeeEP *ep);
   //void removeEndpoint(ZigbeeEP *ep);
 
   void setRadioConfig(esp_zb_radio_config_t config);

@@ -91,21 +91,26 @@ bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
   return started();
 }
 
-void ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
+bool ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
   ep_objects.push_back(ep);
 
   log_d("Endpoint: %d, Device ID: 0x%04x", ep->_endpoint, ep->_device_id);
   //Register clusters and ep_list to the ZigbeeCore class's ep_list
   if (ep->_ep_config.endpoint == 0 || ep->_cluster_list == nullptr) {
     log_e("Endpoint config or Cluster list is not initialized, EP not added to ZigbeeCore's EP list");
-    return;
+    return false;
   }
-
+  esp_err_t ret = ESP_OK;
   if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
-    esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+    ret  = esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   } else {
-    esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+    ret = esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   }
+  if(ret != ESP_OK) {
+    log_e("Failed to add endpoint: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
 static void esp_zb_task(void *pvParameters) {

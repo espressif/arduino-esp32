@@ -26,15 +26,17 @@ bool ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
   uint8_t sensor_type_bitmap = 1 << sensor_type;
   esp_zb_attribute_list_t *occupancy_sens_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret_type = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
-  if(ret_type != ESP_OK) {
-    log_e("Failed to set sensor type: 0x%x: %s", ret_type, esp_err_to_name(ret_type));
+  esp_err_t ret = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
+  if(ret != ESP_OK) {
+    log_e("Failed to set sensor type: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  esp_err_t ret_bitmap = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
-  if(ret_bitmap != ESP_OK) {
-    log_e("Failed to set sensor type bitmap: 0x%x: %s", ret_bitmap, esp_err_to_name(ret_bitmap));
+  ret = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
+  if(ret != ESP_OK) {
+    log_e("Failed to set sensor type bitmap: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret_type == ESP_OK && ret_bitmap == ESP_OK;
+  return true;
 }
 
 bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {

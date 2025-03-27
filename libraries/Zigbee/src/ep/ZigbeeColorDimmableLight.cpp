@@ -118,6 +118,7 @@ void ZigbeeColorDimmableLight::lightChanged() {
 }
 
 bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   //Update all attributes
   _current_state = state;
   _current_level = level;
@@ -131,34 +132,55 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
   //set on/off state
-  esp_zb_zcl_status_t ret_state = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
   );
-  //set level
-  esp_zb_zcl_status_t ret_level = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
-  );
-  //set xy color
-  esp_zb_zcl_status_t ret_xy = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, &xy_color.x, false
-  );
-  esp_zb_zcl_status_t ret_y = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID, &xy_color.y, false
-  );
-  //set hsv color
-  uint8_t hue = (uint8_t)hsv_color.h;
-  esp_zb_zcl_status_t ret_hue = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, &hue, false
-  );
-  esp_zb_zcl_status_t ret_saturation = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &hsv_color.s, false
-  );
-  esp_zb_lock_release();
-
-  if (ret_state != ESP_ZB_ZCL_STATUS_SUCCESS || ret_level != ESP_ZB_ZCL_STATUS_SUCCESS || ret_xy != ESP_ZB_ZCL_STATUS_SUCCESS || ret_y != ESP_ZB_ZCL_STATUS_SUCCESS || ret_hue != ESP_ZB_ZCL_STATUS_SUCCESS || ret_saturation != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set light state(0x%x: %s), level(0x%x: %s), xy(0x%x: %s), y(0x%x: %s), hue(0x%x: %s), saturation(0x%x: %s)", ret_state, esp_zb_zcl_status_to_name(ret_state), ret_level, esp_zb_zcl_status_to_name(ret_level), ret_xy, esp_zb_zcl_status_to_name(ret_xy), ret_y, esp_zb_zcl_status_to_name(ret_y), ret_hue, esp_zb_zcl_status_to_name(ret_hue), ret_saturation, esp_zb_zcl_status_to_name(ret_saturation));
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  //set level
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  //set x color
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID, &xy_color.x, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light xy color: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  //set y color
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID, &xy_color.y, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light y color: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  //set hue
+  uint8_t hue = (uint8_t)hsv_color.h;
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, &hue, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light hue: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  //set saturation
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &hsv_color.s, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light saturation: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  esp_zb_lock_release();
   return true;
 }
 

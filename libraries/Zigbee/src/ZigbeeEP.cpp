@@ -55,20 +55,26 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
 
   // Get the basic cluster and update the manufacturer and model attributes
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret_manufacturer = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
-  esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
-  if(ret_manufacturer != ESP_OK || ret_model != ESP_OK) {
-    log_e("Failed to set manufacturer (0x%x) or model (0x%x)", ret_manufacturer, ret_model);
+  esp_err_t ret_name = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
+  if (ret_name != ESP_OK) {
+    log_e("Failed to set manufacturer: 0x%x: %s", ret_name, esp_err_to_name(ret_name));
   }
-  
+  esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
+  if(ret_model != ESP_OK) {
+    log_e("Failed to set model: 0x%x: %s", ret_model, esp_err_to_name(ret_model));
+  }
   delete[] zb_name;
   delete[] zb_model;
-  return ret_manufacturer == ESP_OK && ret_model == ESP_OK;
+  return ret_name == ESP_OK && ret_model == ESP_OK;
 }
 
-void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
+bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_update_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, (void *)&power_source);
+  esp_err_t ret = esp_zb_cluster_update_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, (void *)&power_source);
+  if (ret != ESP_OK) {
+    log_e("Failed to set power source: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
 
   if (power_source == ZB_POWER_SOURCE_BATTERY) {
     // Add power config cluster and battery percentage attribute
@@ -77,10 +83,19 @@ void ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
     }
     battery_percentage = battery_percentage * 2;
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
-    esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&battery_percentage);
-    esp_zb_cluster_list_add_power_config_cluster(_cluster_list, power_config_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    ret = esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&battery_percentage);
+    if (ret != ESP_OK) {
+      log_e("Failed to add battery percentage attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
+    ret = esp_zb_cluster_list_add_power_config_cluster(_cluster_list, power_config_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    if (ret != ESP_OK) {
+      log_e("Failed to add power config cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
   }
   _power_source = power_source;
+  return true;
 }
 
 bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
@@ -258,7 +273,7 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
   }
 }
 
-void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
+bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   time_t utc_time = 0;
   // Check if time is set
   if (time.tm_year > 0) {
@@ -268,14 +283,35 @@ void ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
   // Create time cluster server attributes
   esp_zb_attribute_list_t *time_cluster_server = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
-  esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, (void *)&gmt_offset);
-  esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
-  esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, (void *)&_time_status);
+  esp_err_t ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, (void *)&gmt_offset);
+  if (ret != ESP_OK) {
+    log_e("Failed to add time zone attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  if (ret != ESP_OK) {
+    log_e("Failed to add time attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, (void *)&_time_status);
+  if (ret != ESP_OK) {
+    log_e("Failed to add time status attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   // Create time cluster client attributes
   esp_zb_attribute_list_t *time_cluster_client = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_TIME);
   // Add time clusters to cluster list
-  esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_server, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_client, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  ret = esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_server, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (ret != ESP_OK) {
+    log_e("Failed to add time cluster (server role): 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_cluster_list_add_time_cluster(_cluster_list, time_cluster_client, ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  if (ret != ESP_OK) {
+    log_e("Failed to add time cluster (client role): 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
 bool ZigbeeEP::setTime(tm time) {

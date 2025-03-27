@@ -31,15 +31,17 @@ bool ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
     log_e("Failed to get flow measurement cluster");
     return false;
   }
-  esp_err_t ret_min = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
-  if(ret_min != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret_min, esp_err_to_name(ret_min));
+  esp_err_t ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
+  if(ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  esp_err_t ret_max = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
-  if(ret_max != ESP_OK) {
-    log_e("Failed to set max value: 0x%x: %s", ret_max, esp_err_to_name(ret_max));
+  ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
+  if(ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret_min == ESP_OK && ret_max == ESP_OK;
+  return true;
 }
 
 bool ZigbeeFlowSensor::setTolerance(float tolerance) {

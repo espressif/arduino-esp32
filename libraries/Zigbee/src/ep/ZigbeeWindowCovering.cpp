@@ -270,54 +270,63 @@ void ZigbeeWindowCovering::stop() {
 
 // Methods to control window covering from user application
 bool ZigbeeWindowCovering::setLiftPosition(uint16_t lift_position) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   // Update both lift attributes
   _current_lift_position = lift_position;
   _current_lift_percentage = ((lift_position - _installed_open_limit_lift) * 100) / (_installed_closed_limit_lift - _installed_open_limit_lift);
   log_v("Updating window covering lift position to %d (%d%)", _current_lift_position, _current_lift_percentage);
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_status_t ret_lift_position = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID,
     &_current_lift_position, false
   );
-  esp_zb_zcl_status_t ret_lift_percentage = esp_zb_zcl_set_attribute_val(
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID,
     &_current_lift_percentage, false
   );
-  esp_zb_lock_release();
-
-  if (ret_lift_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_lift_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position(0x%x: %s) or lift percentage(0x%x: %s)", ret_lift_position, esp_zb_zcl_status_to_name(ret_lift_position), ret_lift_percentage, esp_zb_zcl_status_to_name(ret_lift_percentage));
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set lift percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  esp_zb_lock_release();
   return true;
 }
 
 bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   // Update both lift attributes
   _current_lift_percentage = lift_percentage;
   _current_lift_position = _installed_open_limit_lift + ((_installed_closed_limit_lift - _installed_open_limit_lift) * lift_percentage) / 100;
   log_v("Updating window covering lift percentage to %d%% (%d)", _current_lift_percentage, _current_lift_position);
   
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_status_t ret_lift_position = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID,
     &_current_lift_position, false
   );
-  esp_zb_zcl_status_t ret_lift_percentage = esp_zb_zcl_set_attribute_val(
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID,
     &_current_lift_percentage, false
   );
-  esp_zb_lock_release();
-
-  if (ret_lift_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_lift_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position(0x%x: %s) or lift percentage(0x%x: %s)", ret_lift_position, esp_zb_zcl_status_to_name(ret_lift_position), ret_lift_percentage, esp_zb_zcl_status_to_name(ret_lift_percentage));
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set lift percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  esp_zb_lock_release();
   return true;
 }
 
 bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   // Update both tilt attributes
   _current_tilt_position = tilt_position;
   _current_tilt_percentage = ((tilt_position - _installed_open_limit_tilt) * 100) / (_installed_closed_limit_tilt - _installed_open_limit_tilt);
@@ -325,24 +334,28 @@ bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
   log_v("Updating window covering tilt position to %d (%d%)", _current_tilt_position, _current_tilt_percentage);
   
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_status_t ret_tilt_position = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID,
     &_current_tilt_position, false
   );
-  esp_zb_zcl_status_t ret_tilt_percentage = esp_zb_zcl_set_attribute_val(
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID,
     &_current_tilt_percentage, false
   );
-  esp_zb_lock_release();
-
-  if (ret_tilt_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_tilt_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position(0x%x: %s) or tilt percentage(0x%x: %s)", ret_tilt_position, esp_zb_zcl_status_to_name(ret_tilt_position), ret_tilt_percentage, esp_zb_zcl_status_to_name(ret_tilt_percentage));
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set tilt percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  esp_zb_lock_release();
   return true;
 }
 
 bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   // Update both tilt attributes
   _current_tilt_percentage = tilt_percentage;
   _current_tilt_position = _installed_open_limit_tilt + ((_installed_closed_limit_tilt - _installed_open_limit_tilt) * tilt_percentage) / 100;
@@ -350,20 +363,23 @@ bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
   log_v("Updating window covering tilt percentage to %d%% (%d)", _current_tilt_percentage, _current_tilt_position);
   
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_status_t ret_tilt_position = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID,
     &_current_tilt_position, false
   );
-  esp_zb_zcl_status_t ret_tilt_percentage = esp_zb_zcl_set_attribute_val(
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID,
     &_current_tilt_percentage, false
   );
-  esp_zb_lock_release();
-
-  if (ret_tilt_position != ESP_ZB_ZCL_STATUS_SUCCESS || ret_tilt_percentage != ESP_ZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position(0x%x: %s) or tilt percentage(0x%x: %s)", ret_tilt_position, esp_zb_zcl_status_to_name(ret_tilt_position), ret_tilt_percentage, esp_zb_zcl_status_to_name(ret_tilt_percentage));
+  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set tilt percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  esp_zb_lock_release();
   return true;
 }
 

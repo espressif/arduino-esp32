@@ -25,15 +25,17 @@ ZigbeePressureSensor::ZigbeePressureSensor(uint8_t endpoint) : ZigbeeEP(endpoint
 bool ZigbeePressureSensor::setMinMaxValue(int16_t min, int16_t max) {
   esp_zb_attribute_list_t *pressure_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret_min = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MIN_VALUE_ID, (void *)&min);
-  if(ret_min != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret_min, esp_err_to_name(ret_min));
+  esp_err_t ret = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MIN_VALUE_ID, (void *)&min);
+  if(ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  esp_err_t ret_max = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MAX_VALUE_ID, (void *)&max);
-  if(ret_max != ESP_OK) {
-    log_e("Failed to set max value: 0x%x: %s", ret_max, esp_err_to_name(ret_max));
+  ret = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MAX_VALUE_ID, (void *)&max);
+  if(ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret_min == ESP_OK && ret_max == ESP_OK;
+  return true;
 }
 
 bool ZigbeePressureSensor::setTolerance(uint16_t tolerance) {

@@ -17,15 +17,17 @@ bool ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
     log_e("Failed to get illuminance measurement cluster");
     return false;
   }
-  esp_err_t ret_min = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&min);
-  if (ret_min != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret_min, esp_err_to_name(ret_min));
+  esp_err_t ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  esp_err_t ret_max = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&max);
-  if (ret_max != ESP_OK) {
-    log_e("Failed to set max value: 0x%x: %s", ret_max, esp_err_to_name(ret_max));
+  ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
   }
-  return ret_min == ESP_OK && ret_max == ESP_OK;
+  return true;
 }
 
 bool ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {

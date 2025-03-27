@@ -77,12 +77,12 @@ public:
   char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
 
   // Set Power source and battery percentage for battery powered devices
-  void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
+  bool setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
   bool setBatteryPercentage(uint8_t percentage);
   bool reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
   bool setTime(tm time);
   bool setTimezone(int32_t gmt_offset);
 
