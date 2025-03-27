@@ -148,7 +148,7 @@ void APClass::_onApEvent(int32_t event_id, void *event_data) {
   }
 }
 
-APClass::APClass(): _wifi_ap_event_handle(0) {
+APClass::APClass() : _wifi_ap_event_handle(0) {
   _ap_network_if = this;
 }
 
