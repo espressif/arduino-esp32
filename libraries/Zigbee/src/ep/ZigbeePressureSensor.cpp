@@ -26,12 +26,12 @@ bool ZigbeePressureSensor::setMinMaxValue(int16_t min, int16_t max) {
   esp_zb_attribute_list_t *pressure_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MIN_VALUE_ID, (void *)&min);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   ret = esp_zb_cluster_update_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MAX_VALUE_ID, (void *)&max);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -42,7 +42,7 @@ bool ZigbeePressureSensor::setTolerance(uint16_t tolerance) {
   esp_zb_attribute_list_t *pressure_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_pressure_meas_cluster_add_attr(pressure_measure_cluster, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
   }
   return ret == ESP_OK;
@@ -66,7 +66,7 @@ bool ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -83,7 +83,7 @@ bool ZigbeePressureSensor::setPressure(int16_t pressure) {
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &pressure, false
   );
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set pressure: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -103,7 +103,7 @@ bool ZigbeePressureSensor::report() {
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to send pressure report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }

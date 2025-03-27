@@ -60,7 +60,7 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     log_e("Failed to set manufacturer: 0x%x: %s", ret_name, esp_err_to_name(ret_name));
   }
   esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
-  if(ret_model != ESP_OK) {
+  if (ret_model != ESP_OK) {
     log_e("Failed to set model: 0x%x: %s", ret_model, esp_err_to_name(ret_model));
   }
   delete[] zb_name;
@@ -112,7 +112,7 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
     false
   );
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set battery percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -133,7 +133,7 @@ bool ZigbeeEP::reportBatteryPercentage() {
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to report battery percentage: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -321,7 +321,7 @@ bool ZigbeeEP::setTime(tm time) {
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -332,9 +332,10 @@ bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_d("Setting timezone to %d", gmt_offset);
   esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
+  ret =
+    esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set timezone: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -528,76 +529,42 @@ void ZigbeeEP::requestOTAUpdate() {
   esp_zb_lock_release();
 }
 
-const char* ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
+const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
   switch (status) {
-    case ESP_ZB_ZCL_STATUS_SUCCESS:
-      return "Success";
-    case ESP_ZB_ZCL_STATUS_FAIL:
-      return "Fail"; 
-    case ESP_ZB_ZCL_STATUS_NOT_AUTHORIZED:
-      return "Not authorized";
-    case ESP_ZB_ZCL_STATUS_MALFORMED_CMD:
-      return "Malformed command";
-    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST_CMD:
-      return "Unsupported cluster command";
-    case ESP_ZB_ZCL_STATUS_UNSUP_GEN_CMD:
-      return "Unsupported general command";
-    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_CLUST_CMD:
-      return "Unsupported manufacturer cluster command";
-    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_GEN_CMD:
-      return "Unsupported manufacturer general command";
-    case ESP_ZB_ZCL_STATUS_INVALID_FIELD:
-      return "Invalid field";
-    case ESP_ZB_ZCL_STATUS_UNSUP_ATTRIB:
-      return "Unsupported attribute";
-    case ESP_ZB_ZCL_STATUS_INVALID_VALUE:
-      return "Invalid value";
-    case ESP_ZB_ZCL_STATUS_READ_ONLY:
-      return "Read only";
-    case ESP_ZB_ZCL_STATUS_INSUFF_SPACE:
-      return "Insufficient space";
-    case ESP_ZB_ZCL_STATUS_DUPE_EXISTS:
-      return "Duplicate exists";
-    case ESP_ZB_ZCL_STATUS_NOT_FOUND:
-      return "Not found";
-    case ESP_ZB_ZCL_STATUS_UNREPORTABLE_ATTRIB:
-      return "Unreportable attribute";
-    case ESP_ZB_ZCL_STATUS_INVALID_TYPE:
-      return "Invalid type";
-    case ESP_ZB_ZCL_STATUS_WRITE_ONLY:
-      return "Write only";
-    case ESP_ZB_ZCL_STATUS_INCONSISTENT:
-      return "Inconsistent";
-    case ESP_ZB_ZCL_STATUS_ACTION_DENIED:
-      return "Action denied";
-    case ESP_ZB_ZCL_STATUS_TIMEOUT:
-      return "Timeout";
-    case ESP_ZB_ZCL_STATUS_ABORT:
-      return "Abort";
-    case ESP_ZB_ZCL_STATUS_INVALID_IMAGE:
-      return "Invalid OTA upgrade image";
-    case ESP_ZB_ZCL_STATUS_WAIT_FOR_DATA:
-      return "Server does not have data block available yet";
-    case ESP_ZB_ZCL_STATUS_NO_IMAGE_AVAILABLE:
-      return "No image available";
-    case ESP_ZB_ZCL_STATUS_REQUIRE_MORE_IMAGE:
-      return "Require more image";
-    case ESP_ZB_ZCL_STATUS_NOTIFICATION_PENDING:
-      return "Notification pending";
-    case ESP_ZB_ZCL_STATUS_HW_FAIL:
-      return "Hardware failure";
-    case ESP_ZB_ZCL_STATUS_SW_FAIL:
-      return "Software failure";
-    case ESP_ZB_ZCL_STATUS_CALIB_ERR:
-      return "Calibration error";
-    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST:
-      return "Cluster is not found on the target endpoint";
-    case ESP_ZB_ZCL_STATUS_LIMIT_REACHED:
-      return "Limit reached";
-    default:
-      return "Unknown status";
+    case ESP_ZB_ZCL_STATUS_SUCCESS:               return "Success";
+    case ESP_ZB_ZCL_STATUS_FAIL:                  return "Fail";
+    case ESP_ZB_ZCL_STATUS_NOT_AUTHORIZED:        return "Not authorized";
+    case ESP_ZB_ZCL_STATUS_MALFORMED_CMD:         return "Malformed command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST_CMD:       return "Unsupported cluster command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_GEN_CMD:         return "Unsupported general command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_CLUST_CMD: return "Unsupported manufacturer cluster command";
+    case ESP_ZB_ZCL_STATUS_UNSUP_MANUF_GEN_CMD:   return "Unsupported manufacturer general command";
+    case ESP_ZB_ZCL_STATUS_INVALID_FIELD:         return "Invalid field";
+    case ESP_ZB_ZCL_STATUS_UNSUP_ATTRIB:          return "Unsupported attribute";
+    case ESP_ZB_ZCL_STATUS_INVALID_VALUE:         return "Invalid value";
+    case ESP_ZB_ZCL_STATUS_READ_ONLY:             return "Read only";
+    case ESP_ZB_ZCL_STATUS_INSUFF_SPACE:          return "Insufficient space";
+    case ESP_ZB_ZCL_STATUS_DUPE_EXISTS:           return "Duplicate exists";
+    case ESP_ZB_ZCL_STATUS_NOT_FOUND:             return "Not found";
+    case ESP_ZB_ZCL_STATUS_UNREPORTABLE_ATTRIB:   return "Unreportable attribute";
+    case ESP_ZB_ZCL_STATUS_INVALID_TYPE:          return "Invalid type";
+    case ESP_ZB_ZCL_STATUS_WRITE_ONLY:            return "Write only";
+    case ESP_ZB_ZCL_STATUS_INCONSISTENT:          return "Inconsistent";
+    case ESP_ZB_ZCL_STATUS_ACTION_DENIED:         return "Action denied";
+    case ESP_ZB_ZCL_STATUS_TIMEOUT:               return "Timeout";
+    case ESP_ZB_ZCL_STATUS_ABORT:                 return "Abort";
+    case ESP_ZB_ZCL_STATUS_INVALID_IMAGE:         return "Invalid OTA upgrade image";
+    case ESP_ZB_ZCL_STATUS_WAIT_FOR_DATA:         return "Server does not have data block available yet";
+    case ESP_ZB_ZCL_STATUS_NO_IMAGE_AVAILABLE:    return "No image available";
+    case ESP_ZB_ZCL_STATUS_REQUIRE_MORE_IMAGE:    return "Require more image";
+    case ESP_ZB_ZCL_STATUS_NOTIFICATION_PENDING:  return "Notification pending";
+    case ESP_ZB_ZCL_STATUS_HW_FAIL:               return "Hardware failure";
+    case ESP_ZB_ZCL_STATUS_SW_FAIL:               return "Software failure";
+    case ESP_ZB_ZCL_STATUS_CALIB_ERR:             return "Calibration error";
+    case ESP_ZB_ZCL_STATUS_UNSUP_CLUST:           return "Cluster is not found on the target endpoint";
+    case ESP_ZB_ZCL_STATUS_LIMIT_REACHED:         return "Limit reached";
+    default:                                      return "Unknown status";
   }
 }
-
 
 #endif  // CONFIG_ZB_ENABLED

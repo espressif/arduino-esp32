@@ -30,12 +30,12 @@ bool ZigbeeCarbonDioxideSensor::setMinMaxValue(float min, float max) {
   esp_zb_attribute_list_t *carbon_dioxide_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_cluster_update_attr(carbon_dioxide_measure_cluster, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   ret = esp_zb_cluster_update_attr(carbon_dioxide_measure_cluster, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -49,7 +49,7 @@ bool ZigbeeCarbonDioxideSensor::setTolerance(float tolerance) {
   esp_err_t ret = esp_zb_carbon_dioxide_measurement_cluster_add_attr(
     carbon_dioxide_measure_cluster, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance
   );
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -76,7 +76,7 @@ bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -95,7 +95,7 @@ bool ZigbeeCarbonDioxideSensor::setCarbonDioxide(float carbon_dioxide) {
     &zb_carbon_dioxide, false
   );
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set carbon dioxide: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -115,7 +115,7 @@ bool ZigbeeCarbonDioxideSensor::report() {
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to send carbon dioxide report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }

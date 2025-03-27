@@ -102,11 +102,11 @@ bool ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
   }
   esp_err_t ret = ESP_OK;
   if (ep->_device_id == ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID) {
-    ret  = esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
+    ret = esp_zb_ep_list_add_gateway_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   } else {
     ret = esp_zb_ep_list_add_ep(_zb_ep_list, ep->_cluster_list, ep->_ep_config);
   }
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to add endpoint: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -384,8 +384,7 @@ void ZigbeeCore::factoryReset(bool restart) {
   if (restart) {
     log_v("Factory resetting Zigbee stack, device will reboot");
     esp_zb_factory_reset();
-  }
-  else {
+  } else {
     log_v("Factory resetting Zigbee NVRAM to factory default");
     log_w("The device will not reboot, to take effect please reboot the device manually");
     esp_zb_zcl_reset_nvram_to_factory_default();

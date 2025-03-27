@@ -23,12 +23,12 @@ bool ZigbeeTempSensor::setMinMaxValue(float min, float max) {
   esp_zb_attribute_list_t *temp_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   ret = esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -41,7 +41,7 @@ bool ZigbeeTempSensor::setTolerance(float tolerance) {
   esp_zb_attribute_list_t *temp_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_temperature_meas_cluster_add_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -66,7 +66,7 @@ bool ZigbeeTempSensor::setReporting(uint16_t min_interval, uint16_t max_interval
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -84,7 +84,7 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &zb_temperature, false
   );
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -104,7 +104,7 @@ bool ZigbeeTempSensor::reportTemperature() {
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to send temperature report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -138,7 +138,7 @@ bool ZigbeeTempSensor::setHumidity(float humidity) {
     false
   );
   esp_zb_lock_release();
-  if(ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set humidity: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -158,7 +158,7 @@ bool ZigbeeTempSensor::reportHumidity() {
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
+  if (ret != ESP_OK) {
     log_e("Failed to send humidity report: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
@@ -184,8 +184,8 @@ bool ZigbeeTempSensor::setHumidityReporting(uint16_t min_interval, uint16_t max_
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
-  if(ret != ESP_OK) {
-    log_e("Failed to set humidity reporting: 0x%x: %s", ret, esp_err_to_name(ret) );
+  if (ret != ESP_OK) {
+    log_e("Failed to set humidity reporting: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;

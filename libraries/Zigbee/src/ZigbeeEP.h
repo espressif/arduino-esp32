@@ -146,8 +146,8 @@ private:
 
 protected:
   // Convert ZCL status to name
-  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status); 
-  
+  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
+
   uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;

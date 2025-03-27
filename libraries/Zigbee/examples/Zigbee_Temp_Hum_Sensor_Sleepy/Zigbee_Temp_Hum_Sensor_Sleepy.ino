@@ -136,7 +136,7 @@ void loop() {
         // Optional set reset in factoryReset to false, to not restart device after erasing nvram, but set it to endless sleep manually instead
         Zigbee.factoryReset(false);
         Serial.println("Going to endless sleep, press RESET button or power off/on the device to wake up");
-        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER); 
+        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
         esp_deep_sleep_start();
       }
     }
