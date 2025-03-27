@@ -29,6 +29,7 @@ ZigbeeGateway	KEYWORD1
 ZigbeeRangeExtender	KEYWORD1
 ZigbeeVibrationSensor	KEYWORD1
 ZigbeeWindowCovering	KEYWORD1
+ZigbeeIlluminanceSensor	KEYWORD1
 
 # Other
 zigbee_role_t	KEYWORD1
@@ -122,6 +123,9 @@ addHumiditySensor	KEYWORD2
 setHumidity	KEYWORD2
 setHumidityReporting	KEYWORD2
 reportHumidity	KEYWORD2
+
+# ZigbeeIlluminanceSensor
+setIlluminance	KEYWORD2
 
 # ZigbeeFlowSensor
 setFlow	KEYWORD2

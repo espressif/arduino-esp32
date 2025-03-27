@@ -31,7 +31,8 @@ void printRunningTasks(Print &printer) {
 #endif
   configRUN_TIME_COUNTER_TYPE ulTotalRunTime = 0;
   TaskStatus_t *pxTaskStatusArray = NULL;
-  volatile UBaseType_t uxArraySize = 0, x = 0;
+  volatile UBaseType_t uxArraySize = 0;
+  uint32_t x = 0;
   const char *taskStates[] = {"Running", "Ready", "Blocked", "Suspended", "Deleted", "Invalid"};
 
   // Take a snapshot of the number of tasks in case it changes while this function is executing.
