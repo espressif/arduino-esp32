@@ -40874,8 +40874,8 @@ Geekble_Nano_ESP32S3.upload.tool.default=esptool_py
 Geekble_Nano_ESP32S3.upload.tool.network=esp_ota
 
 Geekble_Nano_ESP32S3.upload.maximum_size=1310720
-
 Geekble_Nano_ESP32S3.upload.maximum_data_size=327680
+Geekble_Nano_ESP32S3.upload.speed=921600
 Geekble_Nano_ESP32S3.upload.flags=
 Geekble_Nano_ESP32S3.upload.extra_flags=
 Geekble_Nano_ESP32S3.upload.use_1200bps_touch=false
@@ -40901,61 +40901,18 @@ Geekble_Nano_ESP32S3.build.flash_size=4MB
 Geekble_Nano_ESP32S3.build.flash_freq=80m
 Geekble_Nano_ESP32S3.build.flash_mode=dio
 Geekble_Nano_ESP32S3.build.boot=qio
-Geekble_Nano_ESP32S3.build.boot_freq=80m
 Geekble_Nano_ESP32S3.build.partitions=default
 Geekble_Nano_ESP32S3.build.defines=
-Geekble_Nano_ESP32S3.build.loop_core=
-Geekble_Nano_ESP32S3.build.event_core=
-Geekble_Nano_ESP32S3.build.psram_type=qspi
-Geekble_Nano_ESP32S3.build.memory_type={build.boot}_{build.psram_type}
+Geekble_Nano_ESP32S3.build.memory_type=qio_qspi
+Geekble_Nano_ESP32S3.build.loop_core=-DARDUINO_RUNNING_CORE=1
+Geekble_Nano_ESP32S3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled=Disabled
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.defines=
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled=Enabled
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.psram_type=qspi
-
-Geekble_Nano_ESP32S3.menu.FlashMode.qio=QIO 80MHz
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.flash_mode=dio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.boot=qio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.boot_freq=80m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.flash_freq=80m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120=QIO 120MHz
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.flash_mode=dio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.boot=qio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.boot_freq=120m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.flash_freq=80m
-
-Geekble_Nano_ESP32S3.menu.LoopCore.1=Core 1
-Geekble_Nano_ESP32S3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-Geekble_Nano_ESP32S3.menu.LoopCore.0=Core 0
-Geekble_Nano_ESP32S3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
-
-Geekble_Nano_ESP32S3.menu.EventsCore.1=Core 1
-Geekble_Nano_ESP32S3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-Geekble_Nano_ESP32S3.menu.EventsCore.0=Core 0
-Geekble_Nano_ESP32S3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
-
-Geekble_Nano_ESP32S3.menu.USBMode.hwcdc=Hardware CDC and JTAG
-Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
 Geekble_Nano_ESP32S3.menu.USBMode.default=USB-OTG (TinyUSB)
 Geekble_Nano_ESP32S3.menu.USBMode.default.build.usb_mode=0
-
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.default.build.cdc_on_boot=0
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.cdc=Enabled
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.default.build.msc_on_boot=0
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.default.build.dfu_on_boot=0
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+Geekble_Nano_ESP32S3.menu.USBMode.default.build.cdc_on_boot=1
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.cdc_on_boot=1
 
 Geekble_Nano_ESP32S3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 Geekble_Nano_ESP32S3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
@@ -40989,45 +40946,15 @@ Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs.build.custom_partitions=ota_nofs_4MB
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.build.custom_partitions=max_app_4MB
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.upload.maximum_size=4063232
-
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom=Custom
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.build.partitions=
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.upload.maximum_size=16777216
-
-Geekble_Nano_ESP32S3.menu.CPUFreq.240=240MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.240.build.f_cpu=240000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.160=160MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.160.build.f_cpu=160000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.80=80MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.80.build.f_cpu=80000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.40=40MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.40.build.f_cpu=40000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.20=20MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.20.build.f_cpu=20000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.10=10MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.10.build.f_cpu=10000000L
-
-Geekble_Nano_ESP32S3.menu.UploadSpeed.921600=921600
-Geekble_Nano_ESP32S3.menu.UploadSpeed.921600.upload.speed=921600
-Geekble_Nano_ESP32S3.menu.UploadSpeed.115200=115200
-Geekble_Nano_ESP32S3.menu.UploadSpeed.115200.upload.speed=115200
-Geekble_Nano_ESP32S3.menu.UploadSpeed.256000.windows=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.256000.upload.speed=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400.windows.upload.speed=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400=230400
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400.upload.speed=230400
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.linux=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.macosx=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.upload.speed=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.512000.windows=512000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.512000.upload.speed=512000
 
 Geekble_Nano_ESP32S3.menu.DebugLevel.none=None
 Geekble_Nano_ESP32S3.menu.DebugLevel.none.build.code_debug=0
@@ -41046,7 +40973,6 @@ Geekble_Nano_ESP32S3.menu.EraseFlash.none=Disabled
 Geekble_Nano_ESP32S3.menu.EraseFlash.none.upload.erase_cmd=
 Geekble_Nano_ESP32S3.menu.EraseFlash.all=Enabled
 Geekble_Nano_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
