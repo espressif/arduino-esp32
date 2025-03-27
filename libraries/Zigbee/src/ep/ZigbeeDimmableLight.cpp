@@ -67,7 +67,7 @@ bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   // set level
   ret = esp_zb_zcl_set_attribute_val(
@@ -75,10 +75,11 @@ bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
+unlock_and_return:
   esp_zb_lock_release();
-  return true;
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
 bool ZigbeeDimmableLight::setLightState(bool state) {

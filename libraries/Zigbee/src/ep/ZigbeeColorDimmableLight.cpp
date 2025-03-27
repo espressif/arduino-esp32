@@ -127,6 +127,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
 
   espXyColor_t xy_color = espRgbColorToXYColor(_current_color);
   espHsvColor_t hsv_color = espRgbColorToHsvColor(_current_color);
+  uint8_t hue = (uint8_t)hsv_color.h;
 
   log_v("Updating light state: %d, level: %d, color: %d, %d, %d", state, level, red, green, blue);
   /* Update light clusters */
@@ -137,7 +138,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   //set level
   ret = esp_zb_zcl_set_attribute_val(
@@ -145,7 +146,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   //set x color
   ret = esp_zb_zcl_set_attribute_val(
@@ -153,7 +154,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light xy color: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   //set y color
   ret = esp_zb_zcl_set_attribute_val(
@@ -161,16 +162,15 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light y color: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   //set hue
-  uint8_t hue = (uint8_t)hsv_color.h;
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, &hue, false
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light hue: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
   //set saturation
   ret = esp_zb_zcl_set_attribute_val(
@@ -178,10 +178,11 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light saturation: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    goto unlock_and_return;
   }
+unlock_and_return:
   esp_zb_lock_release();
-  return true;
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
 bool ZigbeeColorDimmableLight::setLightState(bool state) {
