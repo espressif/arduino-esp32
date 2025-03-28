@@ -670,6 +670,11 @@ uart_t *uartBegin(
   } else
 #endif
   {
+#if CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
+    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
+    uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
+    log_v("Setting UART%d to use DEFAULT clock", uart_nr);
+#else
     // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
     // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
 #if SOC_UART_SUPPORT_XTAL_CLK
@@ -684,9 +689,10 @@ uart_t *uartBegin(
       log_v("Setting UART%d to use APB clock", uart_nr);
     }
 #else
-    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6
+    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
     uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
     log_v("Setting UART%d to use DEFAULT clock", uart_nr);
+#endif
 #endif
   }
 
