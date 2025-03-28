@@ -40,9 +40,9 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     log_e("Manufacturer or model name is too long");
     return false;
   }
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char *zb_name = new char[name_length + 2];
-  char *zb_model = new char[model_length + 2];
+  // Allocate an array of size length + 2 (1 for the length, 1 for null terminator)
+  char zb_name[name_length + 2];
+  char zb_model[model_length + 2];
   // Store the length as the first element
   zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
   zb_model[0] = static_cast<char>(model_length);
@@ -63,8 +63,6 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   if (ret_model != ESP_OK) {
     log_e("Failed to set model: 0x%x: %s", ret_model, esp_err_to_name(ret_model));
   }
-  delete[] zb_name;
-  delete[] zb_model;
   return ret_name == ESP_OK && ret_model == ESP_OK;
 }
 
@@ -245,7 +243,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   /* Basic cluster attributes */
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char *string = (char *)malloc(zbstr->len + 1);
+    char string[zbstr->len + 1];
     memcpy(string, zbstr->data, zbstr->len);
     string[zbstr->len] = '\0';
     log_i("Peer Manufacturer is \"%s\"", string);
@@ -254,7 +252,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   }
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char *string = (char *)malloc(zbstr->len + 1);
+    char string[zbstr->len + 1];
     memcpy(string, zbstr->data, zbstr->len);
     string[zbstr->len] = '\0';
     log_i("Peer Model is \"%s\"", string);
