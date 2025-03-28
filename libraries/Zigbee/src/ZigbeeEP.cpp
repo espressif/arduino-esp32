@@ -33,16 +33,18 @@ void ZigbeeEP::setVersion(uint8_t version) {
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
+  constexpr size_t ZB_MAX_NAME_LENGTH = 32;
+
   // Convert manufacturer to ZCL string
   size_t name_length = strlen(name);
   size_t model_length = strlen(model);
-  if (name_length > 32 || model_length > 32) {
+  if (name_length > ZB_MAX_NAME_LENGTH || model_length > ZB_MAX_NAME_LENGTH) {
     log_e("Manufacturer or model name is too long");
     return false;
   }
   // Allocate an array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_name[name_length + 2];
-  char zb_model[model_length + 2];
+  char zb_name[ZB_MAX_NAME_LENGTH + 2];
+  char zb_model[ZB_MAX_NAME_LENGTH + 2];
   // Store the length as the first element
   zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
   zb_model[0] = static_cast<char>(model_length);
