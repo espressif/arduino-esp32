@@ -6329,12 +6329,12 @@ tlora_pager.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 tlora_pager.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 tlora_pager.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-tlora_pager.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-tlora_pager.menu.PartitionScheme.fatflash.build.partitions=ffat
-tlora_pager.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+tlora_pager.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+tlora_pager.menu.PartitionScheme.fatflash.build.partitions=ffat
+tlora_pager.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 tlora_pager.menu.PartitionScheme.rainmaker=RainMaker
 tlora_pager.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 tlora_pager.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
