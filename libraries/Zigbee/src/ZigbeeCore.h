@@ -129,7 +129,7 @@ public:
     return _role;
   }
 
-  void addEndpoint(ZigbeeEP *ep);
+  bool addEndpoint(ZigbeeEP *ep);
   //void removeEndpoint(ZigbeeEP *ep);
 
   void setRadioConfig(esp_zb_radio_config_t config);
@@ -164,7 +164,7 @@ public:
   zigbee_scan_result_t *getScanResult();
   void scanDelete();
 
-  void factoryReset();
+  void factoryReset(bool restart = true);
 
   // Friend function declaration to allow access to private members
   friend void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct);
