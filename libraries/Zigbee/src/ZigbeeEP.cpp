@@ -40,8 +40,8 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   size_t name_length = strlen(name);
   size_t model_length = strlen(model);
   if (name_length > ZB_MAX_NAME_LENGTH || model_length > ZB_MAX_NAME_LENGTH) {
-      log_e("Manufacturer or model name is too long");
-      return false;
+    log_e("Manufacturer or model name is too long");
+    return false;
   }
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
   std::vector<char> zb_name(name_length + 2);  // +2 for length byte and null terminator
