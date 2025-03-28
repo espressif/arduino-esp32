@@ -246,22 +246,22 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   /* Basic cluster attributes */
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    std::vector<char> string(zbstr->len + 1);
-    memcpy(string.data(), zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
-    log_i("Peer Manufacturer is \"%s\"", string);
+    std::vector<char> m_manufacturer(zbstr->len + 1);
+    memcpy(m_manufacturer.data(), zbstr->data, zbstr->len);
+    m_manufacturer[zbstr->len] = '\0';
+    log_i("Peer Manufacturer is \"%s\"", m_manufacturer);
     free(_read_manufacturer);  // Free any previously allocated memory
-    _read_manufacturer = strdup(string.data());  // Duplicate the string for persistent storage
+    _read_manufacturer = strdup(m_manufacturer.data());  // Duplicate the information for persistent storage
     xSemaphoreGive(lock);
   }
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    std::vector<char> string(zbstr->len + 1);
-    memcpy(string.data(), zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
-    log_i("Peer Model is \"%s\"", string);
+    std::vector<char> m_model(zbstr->len + 1);
+    memcpy(m_model.data(), zbstr->data, zbstr->len);
+    m_model[zbstr->len] = '\0';
+    log_i("Peer Model is \"%s\"", m_model);
     free(_read_model);  // Free any previously allocated memory
-    _read_model = strdup(string.data());  // Duplicate the string for persistent storage
+    _read_model = strdup(m_model.data());  // Duplicate the information for persistent storage
     xSemaphoreGive(lock);
   }
 }
