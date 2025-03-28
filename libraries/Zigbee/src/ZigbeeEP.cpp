@@ -44,7 +44,7 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     return false;
   }
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  std::vector<char> zb_name(name_length + 2);  // +2 for length byte and null terminator
+  std::vector<char> zb_name(name_length + 2);
   std::vector<char> zb_model(model_length + 2);
   // Store the length as the first element
   zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
