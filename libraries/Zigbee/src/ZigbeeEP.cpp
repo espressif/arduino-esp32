@@ -249,7 +249,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
     std::vector<char> zb_manufacturer(zbstr->len + 1);
     memcpy(zb_manufacturer.data(), zbstr->data, zbstr->len);
     zb_manufacturer[zbstr->len] = '\0';
-    log_i("Peer Manufacturer is \"%s\"", zb_manufacturer);
+    log_i("Peer Manufacturer is \"%s\"", zb_manufacturer.data());
     free(_read_manufacturer);  // Free any previously allocated memory
     _read_manufacturer = strdup(zb_manufacturer.data());  // Duplicate the information for persistent storage
     xSemaphoreGive(lock);
@@ -259,7 +259,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
     std::vector<char> zb_model(zbstr->len + 1);
     memcpy(zb_model.data(), zbstr->data, zbstr->len);
     zb_model[zbstr->len] = '\0';
-    log_i("Peer Model is \"%s\"", zb_model);
+    log_i("Peer Model is \"%s\"", zb_model.data());
     free(_read_model);  // Free any previously allocated memory
     _read_model = strdup(zb_model.data());  // Duplicate the information for persistent storage
     xSemaphoreGive(lock);
