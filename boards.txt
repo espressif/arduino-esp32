@@ -6168,12 +6168,12 @@ twatch_ultra.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 twatch_ultra.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 twatch_ultra.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-twatch_ultra.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-twatch_ultra.menu.PartitionScheme.fatflash.build.partitions=ffat
-twatch_ultra.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twatch_ultra.menu.PartitionScheme.fatflash.build.partitions=ffat
+twatch_ultra.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatch_ultra.menu.PartitionScheme.rainmaker=RainMaker
 twatch_ultra.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 twatch_ultra.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
