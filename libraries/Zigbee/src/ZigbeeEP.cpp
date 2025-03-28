@@ -55,6 +55,10 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
 
   // Get the basic cluster and update the manufacturer and model attributes
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (basic_cluster == nullptr) {
+    log_e("Failed to get basic cluster");
+    return false;
+  }
   esp_err_t ret_name = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
   if (ret_name != ESP_OK) {
     log_e("Failed to set manufacturer: 0x%x: %s", ret_name, esp_err_to_name(ret_name));
