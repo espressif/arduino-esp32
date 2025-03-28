@@ -66,4 +66,11 @@ static const uint8_t SCK = 3;
 #define GPS_TX (TX)
 #define GPS_RX (RX)
 
+// Peripheral definition exists
+#define USING_PCM_AMPLIFIER
+#define USING_PDM_MICROPHONE
+#define USING_PMU_MANAGE
+#define USING_INPUT_DEV_TOUCHPAD
+#define USING_IR_REMOTE
+
 #endif /* Pins_Arduino_h */
