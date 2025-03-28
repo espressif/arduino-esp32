@@ -70,21 +70,21 @@ public:
   }
 
   // Set Manufacturer name and model
-  void setManufacturerAndModel(const char *name, const char *model);
+  bool setManufacturerAndModel(const char *name, const char *model);
 
   // Methods to read manufacturer and model name from selected endpoint and short address
   char *readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
   char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
 
   // Set Power source and battery percentage for battery powered devices
-  void setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
-  void setBatteryPercentage(uint8_t percentage);
-  void reportBatteryPercentage();
+  bool setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
+  bool setBatteryPercentage(uint8_t percentage);
+  bool reportBatteryPercentage();
 
   // Set time
-  void addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
-  void setTime(tm time);
-  void setTimezone(int32_t gmt_offset);
+  bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  bool setTime(tm time);
+  bool setTimezone(int32_t gmt_offset);
 
   // Get time from Coordinator or specific endpoint (blocking until response)
   struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {0});
@@ -104,8 +104,9 @@ public:
    * @param manufacturer The manufacturer code (default: 0x1001).
    * @param image_type The image type code (default: 0x1011).
    * @param max_data_size The maximum data size for OTA transfer (default and recommended: 223).
+   * @return true if the OTA client was added successfully, false otherwise.
    */
-  void addOTAClient(
+  bool addOTAClient(
     uint32_t file_version, uint32_t downloaded_file_ver, uint16_t hw_version, uint16_t manufacturer = 0x1001, uint16_t image_type = 0x1011,
     uint8_t max_data_size = 223
   );
@@ -114,10 +115,10 @@ public:
   */
   void requestOTAUpdate();
 
-  // findEndpoind may be implemented by EPs to find and bind devices
+  // findEndpoint may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
-  //list of all handlers function calls, to be override by EPs implementation
+  // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
@@ -144,6 +145,9 @@ private:
   int32_t _read_timezone;
 
 protected:
+  // Convert ZCL status to name
+  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
+
   uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;

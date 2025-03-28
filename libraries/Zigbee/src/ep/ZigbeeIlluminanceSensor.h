@@ -33,19 +33,19 @@ public:
   ~ZigbeeIlluminanceSensor() {}
 
   // Set the illuminance value
-  void setIlluminance(uint16_t value);
+  bool setIlluminance(uint16_t value);
 
   // Set the min and max value for the illuminance sensor
-  void setMinMaxValue(uint16_t min, uint16_t max);
+  bool setMinMaxValue(uint16_t min, uint16_t max);
 
   // Set the tolerance value for the illuminance sensor
-  void setTolerance(uint16_t tolerance);
+  bool setTolerance(uint16_t tolerance);
 
   // Set the reporting interval for illuminance measurement in seconds and delta
-  void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
   // Report the illuminance value
-  void report();
+  bool report();
 };
 
 #endif  // CONFIG_ZB_ENABLED

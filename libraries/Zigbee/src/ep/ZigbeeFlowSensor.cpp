@@ -22,24 +22,37 @@ ZigbeeFlowSensor::ZigbeeFlowSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
-void ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
+bool ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_min = (uint16_t)(min * 10);
   uint16_t zb_max = (uint16_t)(max * 10);
   esp_zb_attribute_list_t *flow_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
-  esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
+  esp_err_t ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_VALUE_ID, (void *)&zb_min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeFlowSensor::setTolerance(float tolerance) {
-  // Convert tolerance to ZCL uint16_t
+bool ZigbeeFlowSensor::setTolerance(float tolerance) {
   uint16_t zb_tolerance = (uint16_t)(tolerance * 10);
   esp_zb_attribute_list_t *flow_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_flow_meas_cluster_add_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
+  esp_err_t ret = esp_zb_flow_meas_cluster_add_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
+  if (ret != ESP_OK) {
+    log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
+bool ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
   esp_zb_zcl_reporting_info_t reporting_info;
   memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
   reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
@@ -54,24 +67,39 @@ void ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval
   reporting_info.u.send_info.delta.u16 = (uint16_t)(delta * 10);  // Convert delta to ZCL uint16_t
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_update_reporting_info(&reporting_info);
+  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
   esp_zb_lock_release();
+
+  if (ret != ESP_OK) {
+    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeFlowSensor::setFlow(float flow) {
+bool ZigbeeFlowSensor::setFlow(float flow) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   uint16_t zb_flow = (uint16_t)(flow * 10);
   log_v("Updating flow sensor value...");
   /* Update temperature sensor measured value */
   log_d("Setting flow to %d", zb_flow);
+
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_VALUE_ID, &zb_flow, false
   );
   esp_zb_lock_release();
+
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set flow value: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
-void ZigbeeFlowSensor::report() {
+bool ZigbeeFlowSensor::report() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
@@ -82,9 +110,15 @@ void ZigbeeFlowSensor::report() {
   report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
   esp_zb_lock_release();
+
+  if (ret != ESP_OK) {
+    log_e("Failed to send flow report: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   log_v("Flow report sent");
+  return true;
 }
 
 #endif  // CONFIG_ZB_ENABLED
