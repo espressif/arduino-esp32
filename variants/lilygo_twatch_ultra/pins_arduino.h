@@ -12,27 +12,25 @@
 #define USB_MANUFACTURER "LILYGO"
 #define USB_PRODUCT      "T-Watch-Ultra"
 
-#define DISP_WIDTH  (240)
-#define DISP_HEIGHT (296)
+#define DISP_WIDTH  502
+#define DISP_HEIGHT 410
 
-#define DISP_D0  (39)
-#define DISP_D1  (40)
-#define DISP_D2  (45)
-#define DISP_D3  (42)
-#define DISP_SCK (41)
-#define DISP_RST (6)
-#define DISP_CS  (38)
-#define DISP_TE  (37)
+// QSPI interface display
+#define DISP_D0  (38)
+#define DISP_D1  (39)
+#define DISP_D2  (42)
+#define DISP_D3  (45)
+#define DISP_SCK (40)
+#define DISP_CS  (41)
+#define DISP_TE  (6)
 
-// touch screen
-#define TP_INT (12)
-#define TP_RST (46)
 // Interrupt IO port
+#define TP_INT (12)
 #define RTC_INT    (1)
 #define PMU_INT    (7)
 #define NFC_INT    (5)
 #define SENSOR_INT (8)
-#define NFC_RST    (4)
+#define NFC_CS     (4)
 
 // PDM microphone
 #define MIC_SCK (17)
@@ -61,6 +59,7 @@ static const uint8_t SCK = 35;
 
 #define GPS_TX (TX)
 #define GPS_RX (RX)
+#define GPS_PPS (13)
 
 #define TP_SDA (SDA)
 #define TP_SCL (SCL)
@@ -73,5 +72,21 @@ static const uint8_t SCK = 35;
 #define LORA_RST  (47)
 #define LORA_BUSY (48)
 #define LORA_IRQ  (14)
+
+// External expansion chip IO definition
+#define EXPANDS_DRV_EN      (6)
+#define EXPANDS_DISP_EN     (7)
+#define EXPANDS_TOUCH_RST   (10)
+#define EXPANDS_DISP_RST    (11)
+
+// Peripheral definition exists
+#define USING_XL9555_EXPANDS
+#define USING_PCM_AMPLIFIER
+#define USING_PDM_MICROPHONE
+#define USING_PMU_MANAGE
+#define USING_INPUT_DEV_TOUCHPAD
+#define USING_ST25R3916
+#define USING_BHI260_SENSOR
+#define HAS_SD_CARD_SOCKET
 
 #endif /* Pins_Arduino_h */
