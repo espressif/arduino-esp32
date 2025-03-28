@@ -21,7 +21,6 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _on_identify = nullptr;
   _read_model = nullptr;          // Explicitly initialize here
   _read_manufacturer = nullptr;   // Explicitly initialize here
-
   _time_status = 0;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
