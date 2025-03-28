@@ -261,7 +261,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
       return;
     } 
     memcpy(zb_manufacturer, zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
+    zb_manufacturer[zbstr->len] = '\0';
     log_i("Peer Manufacturer is \"%s\"", zb_manufacturer);
     _read_manufacturer = zb_manufacturer;
     xSemaphoreGive(lock);
@@ -275,7 +275,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
       return;
     } 
     memcpy(zb_model, zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
+    zb_model[zbstr->len] = '\0';
     log_i("Peer Model is \"%s\"", zb_model);
     _read_model = zb_model;
     xSemaphoreGive(lock);
