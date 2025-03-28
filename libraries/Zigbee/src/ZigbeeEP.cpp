@@ -19,6 +19,9 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _read_model = nullptr;          // Explicitly initialize here
+  _read_manufacturer = nullptr;   // Explicitly initialize here
+
   _time_status = 0;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
@@ -33,43 +36,51 @@ void ZigbeeEP::setVersion(uint8_t version) {
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
-  constexpr size_t ZB_MAX_NAME_LENGTH = 32;
+    constexpr size_t ZB_MAX_NAME_LENGTH = 32;
 
-  // Convert manufacturer to ZCL string
-  size_t name_length = strlen(name);
-  size_t model_length = strlen(model);
-  if (name_length > ZB_MAX_NAME_LENGTH || model_length > ZB_MAX_NAME_LENGTH) {
-    log_e("Manufacturer or model name is too long");
-    return false;
-  }
-  // Allocate an array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_name[ZB_MAX_NAME_LENGTH + 2];
-  char zb_model[ZB_MAX_NAME_LENGTH + 2];
-  // Store the length as the first element
-  zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
-  zb_model[0] = static_cast<char>(model_length);
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_name + 1, name, name_length);
-  memcpy(zb_model + 1, model, model_length);
-  // Null-terminate the array
-  zb_name[name_length + 1] = '\0';
-  zb_model[model_length + 1] = '\0';
+    // Validate input lengths
+    size_t name_length = strlen(name);
+    size_t model_length = strlen(model);
+    if (name_length > ZB_MAX_NAME_LENGTH || model_length > ZB_MAX_NAME_LENGTH) {
+        log_e("Manufacturer or model name is too long");
+        return false;
+    }
 
-  // Get the basic cluster and update the manufacturer and model attributes
-  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (basic_cluster == nullptr) {
-    log_e("Failed to get basic cluster");
-    return false;
-  }
-  esp_err_t ret_name = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, (void *)zb_name);
-  if (ret_name != ESP_OK) {
-    log_e("Failed to set manufacturer: 0x%x: %s", ret_name, esp_err_to_name(ret_name));
-  }
-  esp_err_t ret_model = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, (void *)zb_model);
-  if (ret_model != ESP_OK) {
-    log_e("Failed to set model: 0x%x: %s", ret_model, esp_err_to_name(ret_model));
-  }
-  return ret_name == ESP_OK && ret_model == ESP_OK;
+    // Use std::vector<char> for dynamic memory management - free() is for free when out of scope
+    std::vector<char> zb_name(name_length + 2);  // +2 for length byte and null terminator
+    std::vector<char> zb_model(model_length + 2);
+
+    // Convert manufacturer to ZCL string
+    zb_name[0] = static_cast<char>(name_length);  // Store the length as the first element
+    memcpy(zb_name.data() + 1, name, name_length);
+    zb_name[name_length + 1] = '\0';  // Null-terminate the array
+
+    // Convert model to ZCL string
+    zb_model[0] = static_cast<char>(model_length);
+    memcpy(zb_model.data() + 1, model, model_length);
+    zb_model[model_length + 1] = '\0';
+
+    // Get the basic cluster and update the manufacturer and model attributes
+    esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(
+        _cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    if (!basic_cluster) {
+        log_e("Failed to get basic cluster");
+        return false;
+    }
+
+    esp_err_t ret_name = esp_zb_basic_cluster_add_attr(
+        basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID, zb_name.data());
+    if (ret_name != ESP_OK) {
+        log_e("Failed to set manufacturer: 0x%x: %s", ret_name, esp_err_to_name(ret_name));
+    }
+
+    esp_err_t ret_model = esp_zb_basic_cluster_add_attr(
+        basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID, zb_model.data());
+    if (ret_model != ESP_OK) {
+        log_e("Failed to set model: 0x%x: %s", ret_model, esp_err_to_name(ret_model));
+    }
+
+    return ret_name == ESP_OK && ret_model == ESP_OK;
 }
 
 bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
@@ -146,79 +157,77 @@ bool ZigbeeEP::reportBatteryPercentage() {
 }
 
 char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
-  /* Read peer Manufacture Name & Model Identifier */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+    /* Read peer Manufacturer Name */
+    esp_zb_zcl_read_attr_cmd_t read_req;
 
-  if (short_addr != 0) {
-    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-    read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
-  } else {
-    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
-    memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-  }
+    if (short_addr != 0) {
+        read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+        read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+    } else {
+        read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+        memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+    }
 
-  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
-  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
-  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
 
-  uint16_t attributes[] = {
-    ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID,
-  };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
-  read_req.attr_field = attributes;
+    uint16_t attributes[] = {
+        ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID,
+    };
+    read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+    read_req.attr_field = attributes;
 
-  if (_read_manufacturer != nullptr) {
+    // Free previously allocated memory for _read_manufacturer
     free(_read_manufacturer);
-  }
-  _read_manufacturer = nullptr;
+    _read_manufacturer = nullptr;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
-  esp_zb_lock_release();
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
 
-  //Wait for response or timeout
-  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
-    log_e("Error while reading manufacturer");
-  }
-  return _read_manufacturer;
+    // Wait for response or timeout
+    if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+        log_e("Error while reading manufacturer");
+    }
+    return _read_manufacturer;
 }
 
 char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
-  /* Read peer Manufacture Name & Model Identifier */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+    /* Read peer Model Identifier */
+    esp_zb_zcl_read_attr_cmd_t read_req;
 
-  if (short_addr != 0) {
-    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
-    read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
-  } else {
-    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
-    memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
-  }
+    if (short_addr != 0) {
+        read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+        read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+    } else {
+        read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+        memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+    }
 
-  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
-  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
-  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BASIC;
 
-  uint16_t attributes[] = {
-    ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID,
-  };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
-  read_req.attr_field = attributes;
+    uint16_t attributes[] = {
+        ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID,
+    };
+    read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+    read_req.attr_field = attributes;
 
-  if (_read_model != nullptr) {
+    // Free previously allocated memory for _read_model
     free(_read_model);
-  }
-  _read_model = nullptr;
+    _read_model = nullptr;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
-  esp_zb_lock_release();
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
 
-  //Wait for response or timeout
-  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
-    log_e("Error while reading model");
-  }
-  return _read_model;
+    // Wait for response or timeout
+    if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+        log_e("Error while reading model");
+    }
+    return _read_model;
 }
 
 void ZigbeeEP::printBoundDevices() {
@@ -246,25 +255,44 @@ void ZigbeeEP::printBoundDevices(Print &print) {
 }
 
 void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
-  /* Basic cluster attributes */
-  if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
-    zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char string[zbstr->len + 1];
-    memcpy(string, zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
-    log_i("Peer Manufacturer is \"%s\"", string);
-    _read_manufacturer = string;
-    xSemaphoreGive(lock);
-  }
-  if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
-    zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char string[zbstr->len + 1];
-    memcpy(string, zbstr->data, zbstr->len);
-    string[zbstr->len] = '\0';
-    log_i("Peer Model is \"%s\"", string);
-    _read_model = string;
-    xSemaphoreGive(lock);
-  }
+    /* Basic cluster attributes */
+    if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID &&
+        attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING &&
+        attribute->data.value) {
+        zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
+
+        // Use std::vector<char> for automatic memory management
+        std::vector<char> string(zbstr->len + 1);  // Allocate space for the string and null terminator
+        memcpy(string.data(), zbstr->data, zbstr->len);
+        string[zbstr->len] = '\0';  // Null-terminate the string
+
+        log_i("Peer Manufacturer is \"%s\"", string.data());
+
+        // Update _read_manufacturer with a dynamically allocated copy
+        free(_read_manufacturer);  // Free any previously allocated memory
+        _read_manufacturer = strdup(string.data());  // Duplicate the string for persistent storage
+
+        xSemaphoreGive(lock);
+    }
+
+    if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID &&
+        attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING &&
+        attribute->data.value) {
+        zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
+
+        // Use std::vector<char> for automatic memory management
+        std::vector<char> string(zbstr->len + 1);  // Allocate space for the string and null terminator
+        memcpy(string.data(), zbstr->data, zbstr->len);
+        string[zbstr->len] = '\0';  // Null-terminate the string
+
+        log_i("Peer Model is \"%s\"", string.data());
+
+        // Update _read_model with a dynamically allocated copy
+        free(_read_model);  // Free any previously allocated memory
+        _read_model = strdup(string.data());  // Duplicate the string for persistent storage
+
+        xSemaphoreGive(lock);
+    }
 }
 
 void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
