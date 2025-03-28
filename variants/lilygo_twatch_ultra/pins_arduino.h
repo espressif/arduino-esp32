@@ -25,7 +25,7 @@
 #define DISP_TE  (6)
 
 // Interrupt IO port
-#define TP_INT (12)
+#define TP_INT     (12)
 #define RTC_INT    (1)
 #define PMU_INT    (7)
 #define NFC_INT    (5)
@@ -57,8 +57,8 @@ static const uint8_t MOSI = 34;
 static const uint8_t MISO = 33;
 static const uint8_t SCK = 35;
 
-#define GPS_TX (TX)
-#define GPS_RX (RX)
+#define GPS_TX  (TX)
+#define GPS_RX  (RX)
 #define GPS_PPS (13)
 
 #define TP_SDA (SDA)
@@ -74,10 +74,10 @@ static const uint8_t SCK = 35;
 #define LORA_IRQ  (14)
 
 // External expansion chip IO definition
-#define EXPANDS_DRV_EN      (6)
-#define EXPANDS_DISP_EN     (7)
-#define EXPANDS_TOUCH_RST   (10)
-#define EXPANDS_DISP_RST    (11)
+#define EXPANDS_DRV_EN    (6)
+#define EXPANDS_DISP_EN   (7)
+#define EXPANDS_TOUCH_RST (10)
+#define EXPANDS_DISP_RST  (11)
 
 // Peripheral definition exists
 #define USING_XL9555_EXPANDS
