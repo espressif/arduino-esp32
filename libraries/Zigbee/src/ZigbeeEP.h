@@ -42,7 +42,10 @@ typedef enum {
 class ZigbeeEP {
 public:
   ZigbeeEP(uint8_t endpoint = 10);
-  ~ZigbeeEP() {}
+  ~ZigbeeEP() {
+    free(_read_manufacturer);
+    free(_read_model);
+  }
 
   // Set ep config and cluster list
   void setEpConfig(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
