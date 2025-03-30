@@ -41,11 +41,12 @@ typedef enum {
 /* Zigbee End Device Class */
 class ZigbeeEP {
 public:
+  // constants and limits
+  static constexpr size_t ZB_MAX_NAME_LENGTH = 32;
+
+  // constructors and destructor
   ZigbeeEP(uint8_t endpoint = 10);
-  ~ZigbeeEP() {
-    free(_read_manufacturer);
-    free(_read_model);
-  }
+  ~ZigbeeEP() {}
 
   // Set ep config and cluster list
   void setEpConfig(esp_zb_endpoint_config_t ep_config, esp_zb_cluster_list_t *cluster_list) {
@@ -141,8 +142,8 @@ public:
   }
 
 private:
-  char *_read_manufacturer;
-  char *_read_model;
+  char _read_manufacturer[ZB_MAX_NAME_LENGTH + 1];  // + 1 for the extra '\0'
+  char _read_model[ZB_MAX_NAME_LENGTH + 1];  // + 1 for the extra '\0'
   void (*_on_identify)(uint16_t time);
   time_t _read_time;
   int32_t _read_timezone;
