@@ -35,6 +35,11 @@ void ZigbeeEP::setVersion(uint8_t version) {
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
+  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
+  // This memory space can't be deleted or overwritten, therefore using static
+  static char zb_name[ZB_MAX_NAME_LENGTH + 2];
+  static char zb_model[ZB_MAX_NAME_LENGTH + 2];
+
   // Convert manufacturer to ZCL string
   size_t name_length = strlen(name);
   size_t model_length = strlen(model);
@@ -48,9 +53,6 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
     log_e("Failed to get basic cluster");
     return false;
   }  
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_name[ZB_MAX_NAME_LENGTH + 2];
-  char zb_model[ZB_MAX_NAME_LENGTH + 2];
   // Store the length as the first element
   zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
   zb_model[0] = static_cast<char>(model_length);
@@ -245,14 +247,14 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
     memcpy(_read_manufacturer, zbstr->data, zbstr->len);
     _read_manufacturer[zbstr->len] = '\0';
-    log_i("Peer Manufacturer is \"%s\"", zb_manufacturer);
+    log_i("Peer Manufacturer is \"%s\"", _read_manufacturer);
     xSemaphoreGive(lock);
   }
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
     memcpy(_read_model, zbstr->data, zbstr->len);
     _read_model[zbstr->len] = '\0';
-    log_i("Peer Model is \"%s\"", zb_model);
+    log_i("Peer Model is \"%s\"", _read_model);
     xSemaphoreGive(lock);
   }
 }
