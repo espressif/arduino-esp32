@@ -206,7 +206,8 @@ bool rmtSetCarrier(int pin, bool carrier_en, bool carrier_level, uint32_t freque
     log_w("GPIO %d - RMT Carrier must be a float percentage from 0 to 1. Setting to 50%.", pin);
     duty_percent = 0.5;
   }
-  rmt_carrier_config_t carrier_cfg = {0};
+  rmt_carrier_config_t carrier_cfg;
+  memset((void *) &carrier_cfg, 0, sizeof(rmt_carrier_config_t));
   carrier_cfg.duty_cycle = duty_percent;                     // duty cycle
   carrier_cfg.frequency_hz = carrier_en ? frequency_Hz : 0;  // carrier frequency in Hz
   carrier_cfg.flags.polarity_active_low = carrier_level;     // carrier modulation polarity level
@@ -313,7 +314,8 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     return false;
   }
 
-  rmt_transmit_config_t transmit_cfg = {0};  // loop mode disabled
+  rmt_transmit_config_t transmit_cfg;  // loop mode disabled
+  memset((void *) &transmit_cfg, 0, sizeof(rmt_transmit_config_t));
   bool retCode = true;
 
   RMT_MUTEX_LOCK(bus);
@@ -380,6 +382,7 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
 
   // request reading RMT Channel Data
   rmt_receive_config_t receive_config;
+  memset((void *) &receive_config, 0, sizeof(rmt_receive_config_t));
   receive_config.signal_range_min_ns = bus->signal_range_min_ns;
   receive_config.signal_range_max_ns = bus->signal_range_max_ns;
 
@@ -530,6 +533,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   if (channel_direction == RMT_TX_MODE) {
     // TX Channel
     rmt_tx_channel_config_t tx_cfg;
+    memset((void *) &tx_cfg, 0, sizeof(rmt_tx_channel_config_t));
     tx_cfg.gpio_num = pin;
     // CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F80M for C6 -- CLK_XTAL for H2
     tx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
@@ -559,6 +563,7 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   } else {
     // RX Channel
     rmt_rx_channel_config_t rx_cfg;
+    memset((void *) &rx_cfg, 0, sizeof(rmt_rx_channel_config_t));
     rx_cfg.gpio_num = pin;
     // CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F80M for C6 -- CLK_XTAL for H2
     rx_cfg.clk_src = RMT_CLK_SRC_DEFAULT;
@@ -585,7 +590,8 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
   }
 
   // allocate memory for the RMT Copy encoder
-  rmt_copy_encoder_config_t copy_encoder_config = {};
+  rmt_copy_encoder_config_t copy_encoder_config;
+  memset((void *) &copy_encoder_config, 0, sizeof(rmt_copy_encoder_config_t));
   if (rmt_new_copy_encoder(&copy_encoder_config, &bus->rmt_copy_encoder_h) != ESP_OK) {
     log_e("GPIO %d - RMT Encoder Memory Allocation error.", pin);
     goto Err;
