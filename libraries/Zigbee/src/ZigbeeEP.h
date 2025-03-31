@@ -142,8 +142,8 @@ public:
   }
 
 private:
-  char _read_manufacturer[ZB_MAX_NAME_LENGTH + 1];  // + 1 for the extra '\0'
-  char _read_model[ZB_MAX_NAME_LENGTH + 1];  // + 1 for the extra '\0'
+  char *_read_manufacturer;
+  char *_read_model;
   void (*_on_identify)(uint16_t time);
   time_t _read_time;
   int32_t _read_timezone;
