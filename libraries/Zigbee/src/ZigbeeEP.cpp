@@ -36,9 +36,8 @@ void ZigbeeEP::setVersion(uint8_t version) {
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  // This memory space can't be deleted or overwritten, therefore using static
-  static char zb_name[ZB_MAX_NAME_LENGTH + 2];
-  static char zb_model[ZB_MAX_NAME_LENGTH + 2];
+  char zb_name[ZB_MAX_NAME_LENGTH + 2];
+  char zb_model[ZB_MAX_NAME_LENGTH + 2];
 
   // Convert manufacturer to ZCL string
   size_t name_length = strlen(name);
