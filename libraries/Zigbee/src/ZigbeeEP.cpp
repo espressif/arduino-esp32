@@ -251,6 +251,11 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
     char *_read_manufacturer = (char *) malloc(zbstr->len + 1);
+    if (_read_manufacturer == nullptr) {
+      log_e("Failed to allocate memory for manufacturer data");
+      xSemaphoreGive(lock);
+      return;
+    }
     memcpy(_read_manufacturer, zbstr->data, zbstr->len);
     _read_manufacturer[zbstr->len] = '\0';
     log_i("Peer Manufacturer is \"%s\"", _read_manufacturer);
@@ -259,6 +264,11 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
     char *_read_model = (char *) malloc(zbstr->len + 1);
+    if (_read_model == nullptr) {
+      log_e("Failed to allocate memory for model data");
+      xSemaphoreGive(lock);
+      return;
+    }
     memcpy(_read_model, zbstr->data, zbstr->len);
     _read_model[zbstr->len] = '\0';
     log_i("Peer Model is \"%s\"", _read_model);
