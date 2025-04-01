@@ -23,7 +23,7 @@ public:
     lightChanged();
   }
   // Use to control light state
-  void setLight(bool state);
+  bool setLight(bool state);
   // Use to get light state
   bool getLightState() {
     return _current_state;

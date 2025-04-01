@@ -40,17 +40,17 @@ public:
   ~ZigbeeWindSpeedSensor() {}
 
   // Set the WindSpeed value in 0,01 m/s
-  void setWindSpeed(float value);
+  bool setWindSpeed(float value);
 
   // Set the min and max value for the WindSpeed sensor
-  void setMinMaxValue(float min, float max);
+  bool setMinMaxValue(float min, float max);
 
   // Set the tolerance value for the WindSpeed sensor
-  void setTolerance(float tolerance);
+  bool setTolerance(float tolerance);
 
   // Set the reporting interval for WindSpeed measurement in seconds and delta
-  void setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
-  void reportWindSpeed();
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  bool reportWindSpeed();
 };
 
 #endif  //CONFIG_ZB_ENABLED

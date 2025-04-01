@@ -183,7 +183,7 @@ void BLEAdvertising::setScanFilter(bool scanRequestWhitelistOnly, bool connectWh
  * @brief Set the advertisement data that is to be published in a regular advertisement.
  * @param [in] advertisementData The data to be advertised.
  */
-void BLEAdvertising::setAdvertisementData(BLEAdvertisementData &advertisementData) {
+bool BLEAdvertising::setAdvertisementData(BLEAdvertisementData &advertisementData) {
   log_v(">> setAdvertisementData");
   esp_err_t errRc = ::esp_ble_gap_config_adv_data_raw((uint8_t *)advertisementData.getPayload().c_str(), advertisementData.getPayload().length());
   if (errRc != ESP_OK) {
@@ -191,13 +191,14 @@ void BLEAdvertising::setAdvertisementData(BLEAdvertisementData &advertisementDat
   }
   m_customAdvData = true;  // Set the flag that indicates we are using custom advertising data.
   log_v("<< setAdvertisementData");
+  return ESP_OK == errRc;
 }  // setAdvertisementData
 
 /**
  * @brief Set the advertisement data that is to be published in a scan response.
  * @param [in] advertisementData The data to be advertised.
  */
-void BLEAdvertising::setScanResponseData(BLEAdvertisementData &advertisementData) {
+bool BLEAdvertising::setScanResponseData(BLEAdvertisementData &advertisementData) {
   log_v(">> setScanResponseData");
   esp_err_t errRc = ::esp_ble_gap_config_scan_rsp_data_raw((uint8_t *)advertisementData.getPayload().c_str(), advertisementData.getPayload().length());
   if (errRc != ESP_OK) {
@@ -205,6 +206,7 @@ void BLEAdvertising::setScanResponseData(BLEAdvertisementData &advertisementData
   }
   m_customScanResponseData = true;  // Set the flag that indicates we are using custom scan response data.
   log_v("<< setScanResponseData");
+  return ESP_OK == errRc;
 }  // setScanResponseData
 
 /**
@@ -212,7 +214,7 @@ void BLEAdvertising::setScanResponseData(BLEAdvertisementData &advertisementData
  * Start advertising.
  * @return N/A.
  */
-void BLEAdvertising::start() {
+bool BLEAdvertising::start() {
   log_v(">> start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
 
   // We have a vector of service UUIDs that we wish to advertise.  In order to use the
@@ -225,7 +227,7 @@ void BLEAdvertising::start() {
     m_advData.p_service_uuid = (uint8_t *)malloc(m_advData.service_uuid_len);
     if (!m_advData.p_service_uuid) {
       log_e(">> start failed: out of memory");
-      return;
+      return false;
     }
 
     uint8_t *p = m_advData.p_service_uuid;
@@ -250,7 +252,7 @@ void BLEAdvertising::start() {
     errRc = ::esp_ble_gap_config_adv_data(&m_advData);
     if (errRc != ESP_OK) {
       log_e("<< esp_ble_gap_config_adv_data: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-      return;
+      return false;
     }
   }
 
@@ -266,7 +268,7 @@ void BLEAdvertising::start() {
     errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
     if (errRc != ESP_OK) {
       log_e("<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-      return;
+      return false;
     }
   }
 
@@ -279,9 +281,10 @@ void BLEAdvertising::start() {
   errRc = ::esp_ble_gap_start_advertising(&m_advParams);
   if (errRc != ESP_OK) {
     log_e("<< esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
+  } else {
+    log_v("<< start");
   }
-  log_v("<< start");
+  return ESP_OK == errRc;
 }  // start
 
 /**
@@ -289,14 +292,15 @@ void BLEAdvertising::start() {
  * Stop advertising.
  * @return N/A.
  */
-void BLEAdvertising::stop() {
+bool BLEAdvertising::stop() {
   log_v(">> stop");
   esp_err_t errRc = ::esp_ble_gap_stop_advertising();
   if (errRc != ESP_OK) {
     log_e("esp_ble_gap_stop_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
+  } else {
+    log_v("<< stop");
   }
-  log_v("<< stop");
+  return ESP_OK == errRc;
 }  // stop
 
 /**
@@ -305,17 +309,17 @@ void BLEAdvertising::stop() {
  * @param [in] Bluetooth address type.
  * Set BLE address.
  */
-
-void BLEAdvertising::setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type) {
+bool BLEAdvertising::setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type) {
   log_v(">> setPrivateAddress");
 
   m_advParams.own_addr_type = type;
   esp_err_t errRc = esp_ble_gap_set_rand_addr((uint8_t *)addr);
   if (errRc != ESP_OK) {
     log_e("esp_ble_gap_set_rand_addr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
+  } else {
+    log_v("<< setPrivateAddress");
   }
-  log_v("<< setPrivateAddress");
+  return ESP_OK == errRc;
 }  // setPrivateAddress
 
 /**

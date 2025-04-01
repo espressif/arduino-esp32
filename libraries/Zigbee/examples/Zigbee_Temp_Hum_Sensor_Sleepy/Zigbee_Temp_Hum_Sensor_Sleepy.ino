@@ -133,7 +133,11 @@ void loop() {
         // If key pressed for more than 10secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
         delay(1000);
-        Zigbee.factoryReset();
+        // Optional set reset in factoryReset to false, to not restart device after erasing nvram, but set it to endless sleep manually instead
+        Zigbee.factoryReset(false);
+        Serial.println("Going to endless sleep, press RESET button or power off/on the device to wake up");
+        esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+        esp_deep_sleep_start();
       }
     }
   }
