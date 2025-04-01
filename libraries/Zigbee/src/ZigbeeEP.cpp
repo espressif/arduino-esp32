@@ -68,7 +68,7 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   return ret_name == ESP_OK && ret_model == ESP_OK;
 }
 
-bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage) {
+bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_percentage, uint8_t battery_voltage) {
   esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_cluster_update_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_POWER_SOURCE_ID, (void *)&power_source);
   if (ret != ESP_OK) {
@@ -84,6 +84,11 @@ bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
     battery_percentage = battery_percentage * 2;
     esp_zb_attribute_list_t *power_config_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG);
     ret = esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, (void *)&battery_percentage);
+    if (ret != ESP_OK) {
+      log_e("Failed to add battery percentage attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
+    ret = esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, (void *)&battery_voltage);
     if (ret != ESP_OK) {
       log_e("Failed to add battery percentage attribute: 0x%x: %s", ret, esp_err_to_name(ret));
       return false;
@@ -117,6 +122,19 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
     return false;
   }
   log_v("Battery percentage updated");
+  return true;
+}
+
+bool ZigbeeEP::setBatteryVoltage(uint8_t voltage) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  esp_zb_lock_acquire(portMAX_DELAY);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
+  esp_zb_lock_release();
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set battery voltage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  log_v("Battery voltage updated");
   return true;
 }
 
