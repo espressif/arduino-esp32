@@ -145,7 +145,7 @@
                     },
 {"name": "ESP_SR/examples/Basic",
                     "sizes": [{
-                            "flash_bytes": 675174,
+                            "flash_bytes": 675234,
                             "flash_percentage": 21,
                             "ram_bytes": 31212,
                             "ram_percentage": 9
@@ -169,7 +169,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 573402,
+                            "flash_bytes": 573462,
                             "flash_percentage": 43,
                             "ram_bytes": 25988,
                             "ram_percentage": 7
@@ -177,7 +177,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 571750,
+                            "flash_bytes": 571810,
                             "flash_percentage": 43,
                             "ram_bytes": 25988,
                             "ram_percentage": 7
@@ -185,7 +185,7 @@
                     },
 {"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 963498,
+                            "flash_bytes": 963558,
                             "flash_percentage": 73,
                             "ram_bytes": 44972,
                             "ram_percentage": 13
@@ -238,7 +238,7 @@
                 "sketches": [
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 535157,
+                            "flash_bytes": 535201,
                             "flash_percentage": 40,
                             "ram_bytes": 21016,
                             "ram_percentage": 6
@@ -246,7 +246,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 533693,
+                            "flash_bytes": 533757,
                             "flash_percentage": 40,
                             "ram_bytes": 21016,
                             "ram_percentage": 6
@@ -254,7 +254,7 @@
                     },
 {"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 928321,
+                            "flash_bytes": 928385,
                             "flash_percentage": 70,
                             "ram_bytes": 40124,
                             "ram_percentage": 12
@@ -326,7 +326,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
-                            "flash_bytes": 905713,
+                            "flash_bytes": 905781,
                             "flash_percentage": 69,
                             "ram_bytes": 41484,
                             "ram_percentage": 12
@@ -334,7 +334,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
-                            "flash_bytes": 904997,
+                            "flash_bytes": 905057,
                             "flash_percentage": 69,
                             "ram_bytes": 41484,
                             "ram_percentage": 12
@@ -342,7 +342,7 @@
                     },
 {"name": "HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 995577,
+                            "flash_bytes": 995641,
                             "flash_percentage": 31,
                             "ram_bytes": 42028,
                             "ram_percentage": 12
@@ -379,7 +379,7 @@
                     },
 {"name": "ESP_I2S/examples/ES8388_loopback",
                     "sizes": [{
-                            "flash_bytes": 362996,
+                            "flash_bytes": 363004,
                             "flash_percentage": 27,
                             "ram_bytes": 13536,
                             "ram_percentage": 4
@@ -443,7 +443,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 578650,
+                            "flash_bytes": 578658,
                             "flash_percentage": 44,
                             "ram_bytes": 17780,
                             "ram_percentage": 5
@@ -451,7 +451,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 576966,
+                            "flash_bytes": 576974,
                             "flash_percentage": 44,
                             "ram_bytes": 17780,
                             "ram_percentage": 5
@@ -459,7 +459,7 @@
                     },
 {"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 1034116,
+                            "flash_bytes": 1034124,
                             "flash_percentage": 78,
                             "ram_bytes": 36272,
                             "ram_percentage": 11
@@ -520,7 +520,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 536861,
+                            "flash_bytes": 536869,
                             "flash_percentage": 40,
                             "ram_bytes": 18976,
                             "ram_percentage": 5
@@ -528,7 +528,7 @@
                     },
 {"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 535195,
+                            "flash_bytes": 535203,
                             "flash_percentage": 40,
                             "ram_bytes": 18976,
                             "ram_percentage": 5
@@ -536,7 +536,7 @@
                     },
 {"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 1041129,
+                            "flash_bytes": 1041137,
                             "flash_percentage": 79,
                             "ram_bytes": 42356,
                             "ram_percentage": 12
@@ -597,7 +597,7 @@
                 "sketches": [
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
-                            "flash_bytes": 303985,
+                            "flash_bytes": 303993,
                             "flash_percentage": 23,
                             "ram_bytes": 14628,
                             "ram_percentage": 4
@@ -605,7 +605,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
-                            "flash_bytes": 305231,
+                            "flash_bytes": 305251,
                             "flash_percentage": 23,
                             "ram_bytes": 16052,
                             "ram_percentage": 4
@@ -613,7 +613,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
-                            "flash_bytes": 304583,
+                            "flash_bytes": 304591,
                             "flash_percentage": 23,
                             "ram_bytes": 14500,
                             "ram_percentage": 4
@@ -621,7 +621,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMTWrite_RGB_LED",
                     "sizes": [{
-                            "flash_bytes": 303153,
+                            "flash_bytes": 303159,
                             "flash_percentage": 23,
                             "ram_bytes": 17084,
                             "ram_percentage": 5
@@ -629,7 +629,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
                     "sizes": [{
-                            "flash_bytes": 304107,
+                            "flash_bytes": 304113,
                             "flash_percentage": 23,
                             "ram_bytes": 13996,
                             "ram_percentage": 4
@@ -637,7 +637,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
                     "sizes": [{
-                            "flash_bytes": 303689,
+                            "flash_bytes": 303695,
                             "flash_percentage": 23,
                             "ram_bytes": 14068,
                             "ram_percentage": 4
@@ -645,7 +645,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_LED_Blink",
                     "sizes": [{
-                            "flash_bytes": 305959,
+                            "flash_bytes": 305965,
                             "flash_percentage": 23,
                             "ram_bytes": 14124,
                             "ram_percentage": 4
@@ -770,7 +770,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 907294,
+                            "flash_bytes": 907310,
                             "flash_percentage": 69,
                             "ram_bytes": 45356,
                             "ram_percentage": 13
