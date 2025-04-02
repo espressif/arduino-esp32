@@ -619,11 +619,7 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
 bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
-  if (clkSrc == UART_CLK_SRC_DEFAULT) {
-    return uartSetClockSource(_uart, (uart_sclk_t) UART_SCLK_DEFAULT);
-  } else {
-    return uartSetClockSource(_uart, (uart_sclk_t) clkSrc);
-  }
+    return uartSetClockSource(_uart, (int8_t) clkSrc); // allows negative values for UART_CLK_SRC_DEFAULT
 }
 
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
