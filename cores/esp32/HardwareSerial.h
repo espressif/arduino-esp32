@@ -97,7 +97,7 @@ typedef enum {
 } hardwareSerial_error_t;
 
   typedef enum {
-    UART_CLK_SRC_DEFAULT = -1,
+    UART_CLK_SRC_DEFAULT = UART_SCLK_DEFAULT,
 #if SOC_UART_SUPPORT_APB_CLK
     UART_CLK_SRC_APB = SOC_MOD_CLK_APB,
 #endif
