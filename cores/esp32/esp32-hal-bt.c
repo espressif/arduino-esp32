@@ -15,7 +15,7 @@
 #include "esp32-hal-bt.h"
 
 #if SOC_BT_SUPPORTED
-#ifdef CONFIG_BT_ENABLED
+#ifdef CONFIG_BT_BLUEDROID_ENABLED
 
 #if CONFIG_IDF_TARGET_ESP32
 bool btInUse() {
