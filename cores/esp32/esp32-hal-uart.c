@@ -997,7 +997,7 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   }
   bool retCode = true;
   soc_module_clk_t newClkSrc = UART_SCLK_DEFAULT;
-  uint8_t previousClkSrc = uart->_uart_clock_source;
+  int8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
 #if !(CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE)
