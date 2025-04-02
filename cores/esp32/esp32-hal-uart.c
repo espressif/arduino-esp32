@@ -996,7 +996,7 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   soc_module_clk_t newClkSrc = UART_SCLK_DEFAULT;
   uint8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
-  if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
+  if (uart->num >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
     if (uart->_uart_clock_source > 0) {
       newClkSrc = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart->num, newClkSrc);
@@ -1149,7 +1149,7 @@ bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc) {
     return false;
   }
 #if SOC_UART_LP_NUM >= 1
-  if (uart->num >  >= SOC_UART_HP_NUM) {
+  if (uart->num >= SOC_UART_HP_NUM) {
     switch (clkSrc) {
       case UART_SCLK_XTAL:
         uart->_uart_clock_source = SOC_MOD_CLK_XTAL_D2;
@@ -1161,11 +1161,10 @@ bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc) {
         uart->_uart_clock_source = -1;
     }
   } else
-#else
+#endif
   {
     uart->_uart_clock_source = clkSrc;
   }
-#endif
   return true;
 }
 
