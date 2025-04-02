@@ -8,9 +8,7 @@ esp_zb_cluster_list_t *zigbee_pm2_5_sensor_clusters_create(zigbee_pm2_5_sensor_c
   esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
   esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_pm2_5_measurement_cluster(
-    cluster_list, esp_zb_pm2_5_measurement_cluster_create(pm2_5_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE
-  );
+  esp_zb_cluster_list_add_pm2_5_measurement_cluster(cluster_list, esp_zb_pm2_5_measurement_cluster_create(pm2_5_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   return cluster_list;
 }
 
@@ -43,9 +41,7 @@ bool ZigbeePM25Sensor::setMinMaxValue(float min, float max) {
 bool ZigbeePM25Sensor::setTolerance(float tolerance) {
   esp_zb_attribute_list_t *pm2_5_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_pm2_5_measurement_cluster_add_attr(
-    pm2_5_measure_cluster, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance
-  );
+  esp_err_t ret = esp_zb_pm2_5_measurement_cluster_add_attr(pm2_5_measure_cluster, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
   if (ret != ESP_OK) {
     log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -88,8 +84,7 @@ bool ZigbeePM25Sensor::setPM25(float pm25) {
   log_d("Setting PM2.5 to %0.1f", pm25);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID,
-    &pm25, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID, &pm25, false
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
