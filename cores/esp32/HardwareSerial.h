@@ -96,6 +96,30 @@ typedef enum {
   UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
+  typedef enum {
+#if SOC_UART_SUPPORT_APB_CLK
+    UART_CLK_SRC_APB = SOC_MOD_CLK_APB,
+#endif
+#if SOC_UART_SUPPORT_PLL_F40M_CLK
+    UART_CLK_SRC_PLL = SOC_MOD_CLK_PLL_F40M,
+#endif
+#if SOC_UART_SUPPORT_PLL_F80M_CLK
+    UART_CLK_SRC_PLL = SOC_MOD_CLK_PLL_F80M,
+#endif
+#if CONFIG_IDF_TARGET_ESP32H2
+    UART_CLK_SRC_PLL = SOC_MOD_CLK_PLL_F48M,
+#endif
+#if SOC_UART_SUPPORT_XTAL_CLK
+    UART_CLK_SRC_XTAL = SOC_MOD_CLK_XTAL,
+#endif
+#if SOC_UART_SUPPORT_RTC_CLK
+    UART_CLK_SRC_RTC_FAST = SOC_MOD_CLK_RC_FAST,
+#endif
+#if SOC_UART_SUPPORT_REF_TICK
+    UART_CLK_SRC_REF_TICK = SOC_MOD_CLK_REF_TICK,
+#endif
+} SerialClkSrc;
+
 #ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
 #ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
 #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
@@ -344,9 +368,18 @@ public:
   //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
   //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
   bool setMode(SerialMode mode);
+  // Used to set the UART clock source mode. It must be set before calling begin(), otherwise it won't have any effect.
+  // Not all clock source are available to every SoC. The compatible option are listed here:
+  // UART_CLK_SRC_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
+  // UART_CLK_SRC_PLL          :: ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2 and ESP32-P4
+  // UART_CLK_SRC_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+  // UART_CLK_SRC_RTC_FAST     :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+  // UART_CLK_SRC_REF_TICK     :: ESP32 and ESP32-S2
+  // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
+  // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
+  bool setClockSource(SerialClkSrc clkSrc);
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
-
 protected:
   uint8_t _uart_nr;
   uart_t *_uart;
