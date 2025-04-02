@@ -666,10 +666,13 @@ uart_t *uartBegin(
   uart_config.baud_rate = baudrate;
 #if SOC_UART_LP_NUM >= 1
   if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
+#if !(CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE)
     if (uart->_uart_clock_source > 0) {
       uart_config.lp_source_clk = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart_nr, uart->_uart_clock_source);
-    } else {
+    } else 
+#endif
+    {
       uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
       log_v("Setting UART%d to Default LP clock source", uart_nr);
     }
@@ -997,10 +1000,13 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   uint8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
+#if !(CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE)
     if (uart->_uart_clock_source > 0) {
       newClkSrc = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart->num, newClkSrc);
-    } else {
+    } else
+#endif
+    {
       newClkSrc = LP_UART_SCLK_DEFAULT;  // use default LP clock
       log_v("Setting UART%d to Default LP clock source", uart->num);
     }
