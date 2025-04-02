@@ -97,6 +97,18 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
 bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
+// Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
+// Not all clock source are available to every SoC. The compatible option are listed here:
+// UART_SCLK_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
+// UART_SCLK_PLL_F80M     :: ESP32-C5, ESP32-C6, ESP32-C61 and ESP32-P4
+// UART_SCLK_PLL_F40M     :: ESP32-C2
+// UART_SCLK_PLL_F48M     :: ESP32-H2
+// UART_SCLK_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_SCLK_RTC          :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_SCLK_REF_TICK     :: ESP32 and ESP32-S2
+// Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only LP_UART_SCLK_LP_FAST (RTC_FAST) or LP_UART_SCLK_XTAL_D2 (XTAL/2) as Clock Source
+bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc);
+
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
 
