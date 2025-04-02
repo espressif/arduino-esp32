@@ -58,6 +58,7 @@ struct uart_struct_t {
   uint16_t _rx_buffer_size, _tx_buffer_size;  // UART RX and TX buffer sizes
   bool _inverted;                             // UART inverted signal
   uint8_t _rxfifo_full_thrhd;                 // UART RX FIFO full threshold
+  int8_t _uart_clock_source;                  // UART Clock Source used when it is started using uartBegin()
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -66,21 +67,21 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #if SOC_UART_NUM > 1
-  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 2
-  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 3
-  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 4
-  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 5
-  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 };
 
@@ -95,21 +96,21 @@ static uart_t _uart_bus_array[] = {
   xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #if SOC_UART_NUM > 1
-  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 2
-  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 3
-  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 4
-  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 #if SOC_UART_NUM > 5
-  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0},
+  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
 #endif
 };
 
@@ -665,8 +666,12 @@ uart_t *uartBegin(
   uart_config.baud_rate = baudrate;
 #if SOC_UART_LP_NUM >= 1
   if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
-    uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
-    log_v("Setting UART%d to use LP clock", uart_nr);
+    if (uart->_uart_clock_source > 0) {
+      uart_config.lp_source_clk = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
+    } else {
+      uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
+    }
+    log_v("Setting UART%d to use LP clock (%d) ", uart_nr, uart_config.lp_source_clk);
   } else
 #endif
   {
@@ -675,25 +680,29 @@ uart_t *uartBegin(
     uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
     log_v("Setting UART%d to use DEFAULT clock", uart_nr);
 #else
+    if (uart->_uart_clock_source > 0) {
+      uart_config.source_clk = (soc_module_clk_t) uart->_uart_clock_source;  // use user defined HP UART clock
+    } else {    
     // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
     // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
 #if SOC_UART_SUPPORT_XTAL_CLK
-    uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
-    log_v("Setting UART%d to use XTAL clock", uart_nr);
+      uart_config.source_clk = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
+      log_v("Setting UART%d to use XTAL clock", uart_nr);
 #elif SOC_UART_SUPPORT_REF_TICK
-    if (baudrate <= REF_TICK_BAUDRATE_LIMIT) {
-      uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
-      log_v("Setting UART%d to use REF_TICK clock", uart_nr);
-    } else {
-      uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
-      log_v("Setting UART%d to use APB clock", uart_nr);
-    }
+      if (baudrate <= REF_TICK_BAUDRATE_LIMIT) {
+        uart_config.source_clk = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
+        log_v("Setting UART%d to use REF_TICK clock", uart_nr);
+      } else {
+        uart_config.source_clk = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
+        log_v("Setting UART%d to use APB clock", uart_nr);
+      }
 #else
-    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
-    uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
-    log_v("Setting UART%d to use DEFAULT clock", uart_nr);
+      // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
+      uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
+      log_v("Setting UART%d to use DEFAULT clock", uart_nr);
 #endif
 #endif
+    }
   }
 
   UART_MUTEX_LOCK();
@@ -1088,6 +1097,37 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
   UART_MUTEX_UNLOCK();
   return retCode;
+}
+
+// this function will set the uart clock source 
+// it must be called before uartBegin(), otherwise it won't change any thing.
+bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc) {
+  if (uart == NULL) {
+    return false;
+  }
+  if (uart_is_driver_installed(uart->num)) {
+    log_e("No Clock Source change was done. This function must be called before beginning UART%d.", uart->num);
+    return false;
+  }
+#if SOC_UART_LP_NUM >= 1
+  if (uart->num >  >= SOC_UART_HP_NUM) {
+    switch (clkSrc) {
+      case UART_SCLK_XTAL:
+        uart->_uart_clock_source = SOC_MOD_CLK_XTAL_D2;
+        break;
+      case UART_SCLK_RTC:
+        uart->_uart_clock_source = SOC_MOD_CLK_RTC_FAST;
+        break;
+      default:
+        uart->_uart_clock_source = -1;
+    }
+  } else
+#else
+  {
+    uart->_uart_clock_source = clkSrc;
+  }
+#endif
+  return true;
 }
 
 void uartSetDebug(uart_t *uart) {
