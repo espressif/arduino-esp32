@@ -668,20 +668,22 @@ uart_t *uartBegin(
   if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
     if (uart->_uart_clock_source > 0) {
       uart_config.lp_source_clk = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
+      log_v("Setting UART%d to user defined LP clock source (%d) ", uart_nr, uart->_uart_clock_source);
     } else {
       uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
+      log_v("Setting UART%d to Default LP clock source", uart_nr);
     }
-    log_v("Setting UART%d to use LP clock (%d) ", uart_nr, uart_config.lp_source_clk);
   } else
-#endif
+#endif // SOC_UART_LP_NUM >= 1
   {
 #if CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
     // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
     uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
     log_v("Setting UART%d to use DEFAULT clock", uart_nr);
 #else
-    if (uart->_uart_clock_source > 0) {
+    if (uart->_uart_clock_source >= 0) {
       uart_config.source_clk = (soc_module_clk_t) uart->_uart_clock_source;  // use user defined HP UART clock
+      log_v("Setting UART%d to user defined HP clock source (%d) ", uart_nr, uart->_uart_clock_source);
     } else {    
     // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
     // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
@@ -700,9 +702,9 @@ uart_t *uartBegin(
       // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
       uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
       log_v("Setting UART%d to use DEFAULT clock", uart_nr);
-#endif
-#endif
+#endif // SOC_UART_SUPPORT_XTAL_CLK
     }
+#endif // CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
   }
 
   UART_MUTEX_LOCK();
@@ -731,6 +733,7 @@ uart_t *uartBegin(
     uart->_tx_buffer_size = tx_buffer_size;
     uart->has_peek = false;
     uart->peek_byte = 0;
+    uart->_uart_clock_source = uart_config.source_clk;
   }
   UART_MUTEX_UNLOCK();
 
@@ -990,22 +993,58 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
     return false;
   }
   bool retCode = true;
-  UART_MUTEX_LOCK();
-#if SOC_UART_SUPPORT_XTAL_CLK  // ESP32-S3, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-H2 and ESP32-P4
-  soc_module_clk_t newClkSrc = UART_SCLK_XTAL;
+  soc_module_clk_t newClkSrc = UART_SCLK_DEFAULT;
+  uint8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
-  if (uart->num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-    newClkSrc = LP_UART_SCLK_DEFAULT;  // use default LP clock
+  if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
+    if (uart->_uart_clock_source > 0) {
+      newClkSrc = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
+      log_v("Setting UART%d to user defined LP clock source (%d) ", uart->num, newClkSrc);
+    } else {
+      newClkSrc = LP_UART_SCLK_DEFAULT;  // use default LP clock
+      log_v("Setting UART%d to Default LP clock source", uart->num);
+    }
+  } else 
+#endif // SOC_UART_LP_NUM >= 1
+  {
+#if CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
+    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
+    // newClkSrc already set in the variable declaration
+    log_v("Setting UART%d to use DEFAULT clock", uart->num);
+#else
+    if (uart->_uart_clock_source >= 0) {
+      newClkSrc = (soc_module_clk_t) uart->_uart_clock_source;  // use user defined HP UART clock
+      log_v("Setting UART%d to use HP clock source (%d) ", uart->num, newClkSrc);
+    } else {    
+    // there is an issue when returning from light sleep with the C6 and H2: the uart baud rate is not restored
+    // therefore, uart clock source will set to XTAL for all SoC that support it. This fix solves the C6|H2 issue.
+#if SOC_UART_SUPPORT_XTAL_CLK
+      newClkSrc = UART_SCLK_XTAL;  // valid for C2, S3, C3, C6, H2 and P4
+      log_v("Setting UART%d to use XTAL clock", uart->num);
+#elif SOC_UART_SUPPORT_REF_TICK
+      if (baudrate <= REF_TICK_BAUDRATE_LIMIT) {
+        newClkSrc = UART_SCLK_REF_TICK;  // valid for ESP32, S2 - MAX supported baud rate is 250 Kbps
+        log_v("Setting UART%d to use REF_TICK clock", uart->num);
+      } else {
+        newClkSrc = UART_SCLK_APB;  // baudrate may change with the APB Frequency!
+        log_v("Setting UART%d to use APB clock", uart->num);
+      }
+#else
+      // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
+      // using newClkSrc = UART_SCLK_DEFAULT as defined in the variable declaration
+      log_v("Setting UART%d to use DEFAULT clock", uart->num);
+#endif // SOC_UART_SUPPORT_XTAL_CLK
+    }
+#endif // CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
   }
-#endif
-  // ESP32-P4 demands an atomic operation for setting the clock source
-  HP_UART_SRC_CLK_ATOMIC() {
-    uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
+  UART_MUTEX_LOCK();
+  // if necessary, set the correct UART Clock Source before changing the baudrate
+  if (previousClkSrc != newClkSrc) {
+    HP_UART_SRC_CLK_ATOMIC() {
+      uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
+    }
+    uart->_uart_clock_source = newClkSrc;
   }
-#else  // ESP32, ESP32-S2
-  soc_module_clk_t newClkSrc = baud_rate <= REF_TICK_BAUDRATE_LIMIT ? SOC_MOD_CLK_REF_TICK : SOC_MOD_CLK_APB;
-  uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
-#endif
   if (uart_set_baudrate(uart->num, baud_rate) == ESP_OK) {
     log_v("Setting UART%d baud rate to %ld.", uart->num, baud_rate);
     uart->_baudrate = baud_rate;
