@@ -1045,7 +1045,7 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   }
   UART_MUTEX_LOCK();
   // if necessary, set the correct UART Clock Source before changing the baudrate
-  if (previousClkSrc != newClkSrc) {
+  if (previousClkSrc < 0 || previousClkSrc != newClkSrc) {
     HP_UART_SRC_CLK_ATOMIC() {
       uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
     }
