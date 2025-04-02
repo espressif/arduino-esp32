@@ -610,6 +610,7 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Sets the UART Clock Source based on the compatible SoC options
 // This method must be called before starting UART using begin(), otherwise it won't have any effect.
 // Clock Source Options are:
+// UART_CLK_SRC_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
 // UART_CLK_SRC_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
 // UART_CLK_SRC_PLL          :: ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2 and ESP32-P4
 // UART_CLK_SRC_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
@@ -618,7 +619,11 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
 bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
-  return uartSetClockSource(_uart, (uart_sclk_t) clkSrc);
+  if (clkSrc == UART_CLK_SRC_DEFAULT) {
+    return uartSetClockSource(_uart, (uart_sclk_t) UART_SCLK_DEFAULT);
+  } else {
+    return uartSetClockSource(_uart, (uart_sclk_t) clkSrc);
+  }
 }
 
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
