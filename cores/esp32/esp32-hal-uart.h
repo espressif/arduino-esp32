@@ -99,6 +99,7 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
 // Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
 // Not all clock source are available to every SoC. The compatible option are listed here:
+// UART_SCLK_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
 // UART_SCLK_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
 // UART_SCLK_PLL_F80M     :: ESP32-C5, ESP32-C6, ESP32-C61 and ESP32-P4
 // UART_SCLK_PLL_F40M     :: ESP32-C2
