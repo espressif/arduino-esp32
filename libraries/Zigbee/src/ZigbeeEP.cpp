@@ -20,7 +20,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _cluster_list = nullptr;
   _on_identify = nullptr;
   _read_model = NULL;
-  _read_manufacturer = NULL;  
+  _read_manufacturer = NULL;
   _time_status = 0;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
@@ -51,7 +51,7 @@ bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
   if (basic_cluster == nullptr) {
     log_e("Failed to get basic cluster");
     return false;
-  }  
+  }
   // Store the length as the first element
   zb_name[0] = static_cast<char>(name_length);  // Cast size_t to char
   zb_model[0] = static_cast<char>(model_length);
@@ -172,7 +172,7 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
     free(_read_manufacturer);
   }
   _read_manufacturer = NULL;
-  
+
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
   esp_zb_lock_release();
@@ -206,7 +206,7 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   read_req.attr_number = ZB_ARRAY_LENTH(attributes);
   read_req.attr_field = attributes;
 
- if (_read_model != NULL) {
+  if (_read_model != NULL) {
     free(_read_model);
   }
   _read_model = NULL;
@@ -250,7 +250,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   /* Basic cluster attributes */
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char *_read_manufacturer = (char *) malloc(zbstr->len + 1);
+    char *_read_manufacturer = (char *)malloc(zbstr->len + 1);
     if (_read_manufacturer == NULL) {
       log_e("Failed to allocate memory for manufacturer data");
       xSemaphoreGive(lock);
@@ -263,7 +263,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   }
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char *_read_model = (char *) malloc(zbstr->len + 1);
+    char *_read_model = (char *)malloc(zbstr->len + 1);
     if (_read_model == NULL) {
       log_e("Failed to allocate memory for model data");
       xSemaphoreGive(lock);
