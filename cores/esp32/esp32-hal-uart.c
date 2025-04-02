@@ -736,7 +736,14 @@ uart_t *uartBegin(
     uart->_tx_buffer_size = tx_buffer_size;
     uart->has_peek = false;
     uart->peek_byte = 0;
-    uart->_uart_clock_source = uart_config.source_clk;
+#if SOC_UART_LP_NUM >= 1
+    if (uart_nr >= SOC_UART_HP_NUM) {
+      uart->_uart_clock_source = uart_config.lp_source_clk;
+    } else
+#endif
+    {
+      uart->_uart_clock_source = uart_config.source_clk;
+    }
   }
   UART_MUTEX_UNLOCK();
 
