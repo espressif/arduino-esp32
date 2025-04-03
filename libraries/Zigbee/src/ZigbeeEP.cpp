@@ -250,7 +250,7 @@ void ZigbeeEP::zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute) {
   /* Basic cluster attributes */
   if (attribute->id == ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_CHAR_STRING && attribute->data.value) {
     zbstring_t *zbstr = (zbstring_t *)attribute->data.value;
-    char *_read_manufacturer = (char *)malloc(zbstr->len + 1);
+    _read_manufacturer = (char *)malloc(zbstr->len + 1);
     if (_read_manufacturer == NULL) {
       log_e("Failed to allocate memory for manufacturer data");
       xSemaphoreGive(lock);
