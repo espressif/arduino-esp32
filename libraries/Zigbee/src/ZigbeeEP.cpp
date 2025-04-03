@@ -90,7 +90,7 @@ bool ZigbeeEP::setPowerSource(zb_power_source_t power_source, uint8_t battery_pe
     }
     ret = esp_zb_power_config_cluster_add_attr(power_config_cluster, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, (void *)&battery_voltage);
     if (ret != ESP_OK) {
-      log_e("Failed to add battery percentage attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+      log_e("Failed to add battery voltage attribute: 0x%x: %s", ret, esp_err_to_name(ret));
       return false;
     }
     ret = esp_zb_cluster_list_add_power_config_cluster(_cluster_list, power_config_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
