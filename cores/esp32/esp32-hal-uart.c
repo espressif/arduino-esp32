@@ -1153,14 +1153,12 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
 
 // this function will set the uart clock source 
 // it must be called before uartBegin(), otherwise it won't change any thing.
-bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc) {
-  if (uart == NULL) {
+bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
+  if (uartNum >= SOC_UART_NUM) {
+    log_e("UART%d is invalid. This device has %d UARTs, from 0 to %d.", uartNum, SOC_UART_NUM, SOC_UART_NUM - 1);
     return false;
   }
-  if (uart_is_driver_installed(uart->num)) {
-    log_e("No Clock Source change was done. This function must be called before beginning UART%d.", uart->num);
-    return false;
-  }
+  uart_t *uart = &_uart_bus_array[uartNum];
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) {
     switch (clkSrc) {
@@ -1179,6 +1177,7 @@ bool uartSetClockSource(uart_t *uart, uart_sclk_t clkSrc) {
   {
     uart->_uart_clock_source = clkSrc;
   }
+  //log_i("UART%d set clock source to %d", uart->num, uart->_uart_clock_source);
   return true;
 }
 
