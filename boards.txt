@@ -6070,10 +6070,12 @@ twatchs3.menu.EraseFlash.none.upload.erase_cmd=
 twatchs3.menu.EraseFlash.all=Enabled
 twatchs3.menu.EraseFlash.all.upload.erase_cmd=-e
 
-twatchs3.menu.Revision.Radio_SX1280=Radio-SX1280
-twatchs3.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 twatchs3.menu.Revision.Radio_SX1262=Radio-SX1262
 twatchs3.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+twatchs3.menu.Revision.Radio_SX1280=Radio-SX1280
+twatchs3.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
+twatchs3.menu.Revision.Radio_CC1101=Radio-CC1101
+twatchs3.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
 
 ##############################################################
 
@@ -6166,12 +6168,12 @@ twatch_ultra.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 twatch_ultra.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 twatch_ultra.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-twatch_ultra.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-twatch_ultra.menu.PartitionScheme.fatflash.build.partitions=ffat
-twatch_ultra.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 twatch_ultra.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twatch_ultra.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twatch_ultra.menu.PartitionScheme.fatflash.build.partitions=ffat
+twatch_ultra.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatch_ultra.menu.PartitionScheme.rainmaker=RainMaker
 twatch_ultra.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 twatch_ultra.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -6233,7 +6235,170 @@ twatch_ultra.menu.Revision.Radio_SX1280=Radio-SX1280
 twatch_ultra.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 twatch_ultra.menu.Revision.Radio_SX1262=Radio-SX1262
 twatch_ultra.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+twatch_ultra.menu.Revision.Radio_CC1101=Radio-CC1101
+twatch_ultra.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
 
+
+##############################################################
+
+tlora_pager.name=LilyGo-T-LoRa-Pager
+
+tlora_pager.bootloader.tool=esptool_py
+tlora_pager.bootloader.tool.default=esptool_py
+
+tlora_pager.upload.tool=esptool_py
+tlora_pager.upload.tool.default=esptool_py
+tlora_pager.upload.tool.network=esp_ota
+
+tlora_pager.upload.maximum_size=1310720
+tlora_pager.upload.maximum_data_size=327680
+tlora_pager.upload.flags=
+tlora_pager.upload.extra_flags=
+tlora_pager.upload.use_1200bps_touch=false
+tlora_pager.upload.wait_for_upload_port=false
+
+tlora_pager.serial.disableDTR=false
+tlora_pager.serial.disableRTS=false
+
+tlora_pager.build.tarch=xtensa
+tlora_pager.build.bootloader_addr=0x0
+tlora_pager.build.target=esp32s3
+tlora_pager.build.mcu=esp32s3
+tlora_pager.build.core=esp32
+tlora_pager.build.variant=lilygo_tlora_pager
+tlora_pager.build.board=T_LORA_PAGER
+
+tlora_pager.build.usb_mode=1
+tlora_pager.build.cdc_on_boot=1
+tlora_pager.build.msc_on_boot=0
+tlora_pager.build.dfu_on_boot=0
+tlora_pager.build.f_cpu=240000000L
+tlora_pager.build.flash_size=16MB
+tlora_pager.build.flash_freq=80m
+tlora_pager.build.flash_mode=dio
+tlora_pager.build.boot=qio
+tlora_pager.build.boot_freq=80m
+tlora_pager.build.partitions=app3M_fat9M_16MB
+tlora_pager.build.defines=-DBOARD_HAS_PSRAM -DARDUINO_T_LORA_PAGER
+tlora_pager.build.loop_core=
+tlora_pager.build.event_core=
+tlora_pager.build.psram_type=qspi
+tlora_pager.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+tlora_pager.menu.JTAGAdapter.default=Disabled
+tlora_pager.menu.JTAGAdapter.default.build.copy_jtag_files=0
+tlora_pager.menu.JTAGAdapter.builtin=Integrated USB JTAG
+tlora_pager.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+tlora_pager.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+
+tlora_pager.menu.LoopCore.1=Core 1
+tlora_pager.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+tlora_pager.menu.LoopCore.0=Core 0
+tlora_pager.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+tlora_pager.menu.EventsCore.1=Core 1
+tlora_pager.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+tlora_pager.menu.EventsCore.0=Core 0
+tlora_pager.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+tlora_pager.menu.USBMode.hwcdc=Hardware CDC and JTAG
+tlora_pager.menu.USBMode.hwcdc.build.usb_mode=1
+tlora_pager.menu.USBMode.default=USB-OTG (TinyUSB)
+tlora_pager.menu.USBMode.default.build.usb_mode=0
+
+tlora_pager.menu.CDCOnBoot.default=Enabled
+tlora_pager.menu.CDCOnBoot.default.build.cdc_on_boot=1
+tlora_pager.menu.CDCOnBoot.cdc=Disabled
+tlora_pager.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+tlora_pager.menu.MSCOnBoot.default=Disabled
+tlora_pager.menu.MSCOnBoot.default.build.msc_on_boot=0
+tlora_pager.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+tlora_pager.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+tlora_pager.menu.DFUOnBoot.default=Disabled
+tlora_pager.menu.DFUOnBoot.default.build.dfu_on_boot=0
+tlora_pager.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+tlora_pager.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+tlora_pager.menu.UploadMode.default=UART0 / Hardware CDC
+tlora_pager.menu.UploadMode.default.upload.use_1200bps_touch=false
+tlora_pager.menu.UploadMode.default.upload.wait_for_upload_port=false
+tlora_pager.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+tlora_pager.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+tlora_pager.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+tlora_pager.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+tlora_pager.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+tlora_pager.menu.PartitionScheme.fatflash.build.partitions=ffat
+tlora_pager.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+tlora_pager.menu.PartitionScheme.rainmaker=RainMaker
+tlora_pager.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+tlora_pager.menu.PartitionScheme.rainmaker.upload.maximum_size=3145728
+tlora_pager.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+tlora_pager.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+tlora_pager.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+tlora_pager.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+tlora_pager.menu.PartitionScheme.custom=Custom
+tlora_pager.menu.PartitionScheme.custom.build.partitions=
+tlora_pager.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+tlora_pager.menu.CPUFreq.240=240MHz (WiFi)
+tlora_pager.menu.CPUFreq.240.build.f_cpu=240000000L
+tlora_pager.menu.CPUFreq.160=160MHz (WiFi)
+tlora_pager.menu.CPUFreq.160.build.f_cpu=160000000L
+tlora_pager.menu.CPUFreq.80=80MHz (WiFi)
+tlora_pager.menu.CPUFreq.80.build.f_cpu=80000000L
+tlora_pager.menu.CPUFreq.40=40MHz
+tlora_pager.menu.CPUFreq.40.build.f_cpu=40000000L
+tlora_pager.menu.CPUFreq.20=20MHz
+tlora_pager.menu.CPUFreq.20.build.f_cpu=20000000L
+tlora_pager.menu.CPUFreq.10=10MHz
+tlora_pager.menu.CPUFreq.10.build.f_cpu=10000000L
+
+tlora_pager.menu.UploadSpeed.921600=921600
+tlora_pager.menu.UploadSpeed.921600.upload.speed=921600
+tlora_pager.menu.UploadSpeed.115200=115200
+tlora_pager.menu.UploadSpeed.115200.upload.speed=115200
+tlora_pager.menu.UploadSpeed.256000.windows=256000
+tlora_pager.menu.UploadSpeed.256000.upload.speed=256000
+tlora_pager.menu.UploadSpeed.230400.windows.upload.speed=256000
+tlora_pager.menu.UploadSpeed.230400=230400
+tlora_pager.menu.UploadSpeed.230400.upload.speed=230400
+tlora_pager.menu.UploadSpeed.460800.linux=460800
+tlora_pager.menu.UploadSpeed.460800.macosx=460800
+tlora_pager.menu.UploadSpeed.460800.upload.speed=460800
+tlora_pager.menu.UploadSpeed.512000.windows=512000
+tlora_pager.menu.UploadSpeed.512000.upload.speed=512000
+
+tlora_pager.menu.DebugLevel.none=None
+tlora_pager.menu.DebugLevel.none.build.code_debug=0
+tlora_pager.menu.DebugLevel.error=Error
+tlora_pager.menu.DebugLevel.error.build.code_debug=1
+tlora_pager.menu.DebugLevel.warn=Warn
+tlora_pager.menu.DebugLevel.warn.build.code_debug=2
+tlora_pager.menu.DebugLevel.info=Info
+tlora_pager.menu.DebugLevel.info.build.code_debug=3
+tlora_pager.menu.DebugLevel.debug=Debug
+tlora_pager.menu.DebugLevel.debug.build.code_debug=4
+tlora_pager.menu.DebugLevel.verbose=Verbose
+tlora_pager.menu.DebugLevel.verbose.build.code_debug=5
+
+tlora_pager.menu.EraseFlash.none=Disabled
+tlora_pager.menu.EraseFlash.none.upload.erase_cmd=
+tlora_pager.menu.EraseFlash.all=Enabled
+tlora_pager.menu.EraseFlash.all.upload.erase_cmd=-e
+
+
+tlora_pager.menu.Revision.Radio_SX1280=Radio-SX1280
+tlora_pager.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
+tlora_pager.menu.Revision.Radio_SX1262=Radio-SX1262
+tlora_pager.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+tlora_pager.menu.Revision.Radio_CC1101=Radio-CC1101
+tlora_pager.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
 
 ##############################################################
 
@@ -35264,6 +35429,8 @@ XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.flash_freq=80m
 
 XIAO_ESP32S3_Plus.menu.FlashSize.8M=8MB (64Mb)
 XIAO_ESP32S3_Plus.menu.FlashSize.8M.build.flash_size=8MB
+XIAO_ESP32S3_Plus.menu.FlashSize.16M=16MB (128Mb)
+XIAO_ESP32S3_Plus.menu.FlashSize.16M.build.flash_size=16MB
 
 XIAO_ESP32S3_Plus.menu.LoopCore.1=Core 1
 XIAO_ESP32S3_Plus.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -35302,6 +35469,12 @@ XIAO_ESP32S3_Plus.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 XIAO_ESP32S3_Plus.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash.build.partitions=ffat
+XIAO_ESP32S3_Plus.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+XIAO_ESP32S3_Plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB=Default with spiffs (3MB APP/1.5MB SPIFFS)
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 XIAO_ESP32S3_Plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
@@ -40866,8 +41039,8 @@ Geekble_Nano_ESP32S3.upload.tool.default=esptool_py
 Geekble_Nano_ESP32S3.upload.tool.network=esp_ota
 
 Geekble_Nano_ESP32S3.upload.maximum_size=1310720
-
 Geekble_Nano_ESP32S3.upload.maximum_data_size=327680
+Geekble_Nano_ESP32S3.upload.speed=921600
 Geekble_Nano_ESP32S3.upload.flags=
 Geekble_Nano_ESP32S3.upload.extra_flags=
 Geekble_Nano_ESP32S3.upload.use_1200bps_touch=false
@@ -40893,61 +41066,18 @@ Geekble_Nano_ESP32S3.build.flash_size=4MB
 Geekble_Nano_ESP32S3.build.flash_freq=80m
 Geekble_Nano_ESP32S3.build.flash_mode=dio
 Geekble_Nano_ESP32S3.build.boot=qio
-Geekble_Nano_ESP32S3.build.boot_freq=80m
 Geekble_Nano_ESP32S3.build.partitions=default
 Geekble_Nano_ESP32S3.build.defines=
-Geekble_Nano_ESP32S3.build.loop_core=
-Geekble_Nano_ESP32S3.build.event_core=
-Geekble_Nano_ESP32S3.build.psram_type=qspi
-Geekble_Nano_ESP32S3.build.memory_type={build.boot}_{build.psram_type}
+Geekble_Nano_ESP32S3.build.memory_type=qio_qspi
+Geekble_Nano_ESP32S3.build.loop_core=-DARDUINO_RUNNING_CORE=1
+Geekble_Nano_ESP32S3.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled=Disabled
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.defines=
-Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled=Enabled
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.psram_type=qspi
-
-Geekble_Nano_ESP32S3.menu.FlashMode.qio=QIO 80MHz
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.flash_mode=dio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.boot=qio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.boot_freq=80m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio.build.flash_freq=80m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120=QIO 120MHz
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.flash_mode=dio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.boot=qio
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.boot_freq=120m
-Geekble_Nano_ESP32S3.menu.FlashMode.qio120.build.flash_freq=80m
-
-Geekble_Nano_ESP32S3.menu.LoopCore.1=Core 1
-Geekble_Nano_ESP32S3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-Geekble_Nano_ESP32S3.menu.LoopCore.0=Core 0
-Geekble_Nano_ESP32S3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
-
-Geekble_Nano_ESP32S3.menu.EventsCore.1=Core 1
-Geekble_Nano_ESP32S3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-Geekble_Nano_ESP32S3.menu.EventsCore.0=Core 0
-Geekble_Nano_ESP32S3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
-
-Geekble_Nano_ESP32S3.menu.USBMode.hwcdc=Hardware CDC and JTAG
-Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
 Geekble_Nano_ESP32S3.menu.USBMode.default=USB-OTG (TinyUSB)
 Geekble_Nano_ESP32S3.menu.USBMode.default.build.usb_mode=0
-
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.default.build.cdc_on_boot=0
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.cdc=Enabled
-Geekble_Nano_ESP32S3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.default.build.msc_on_boot=0
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-Geekble_Nano_ESP32S3.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.default=Disabled
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.default.build.dfu_on_boot=0
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-Geekble_Nano_ESP32S3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+Geekble_Nano_ESP32S3.menu.USBMode.default.build.cdc_on_boot=1
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.usb_mode=1
+Geekble_Nano_ESP32S3.menu.USBMode.hwcdc.build.cdc_on_boot=1
 
 Geekble_Nano_ESP32S3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 Geekble_Nano_ESP32S3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
@@ -40981,45 +41111,15 @@ Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
 Geekble_Nano_ESP32S3.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs.build.custom_partitions=ota_nofs_4MB
 Geekble_Nano_ESP32S3.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.build.custom_partitions=max_app_4MB
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.upload.maximum_size=4063232
-
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom=Custom
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.build.partitions=
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.upload.maximum_size=16777216
-
-Geekble_Nano_ESP32S3.menu.CPUFreq.240=240MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.240.build.f_cpu=240000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.160=160MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.160.build.f_cpu=160000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.80=80MHz (WiFi)
-Geekble_Nano_ESP32S3.menu.CPUFreq.80.build.f_cpu=80000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.40=40MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.40.build.f_cpu=40000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.20=20MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.20.build.f_cpu=20000000L
-Geekble_Nano_ESP32S3.menu.CPUFreq.10=10MHz
-Geekble_Nano_ESP32S3.menu.CPUFreq.10.build.f_cpu=10000000L
-
-Geekble_Nano_ESP32S3.menu.UploadSpeed.921600=921600
-Geekble_Nano_ESP32S3.menu.UploadSpeed.921600.upload.speed=921600
-Geekble_Nano_ESP32S3.menu.UploadSpeed.115200=115200
-Geekble_Nano_ESP32S3.menu.UploadSpeed.115200.upload.speed=115200
-Geekble_Nano_ESP32S3.menu.UploadSpeed.256000.windows=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.256000.upload.speed=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400.windows.upload.speed=256000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400=230400
-Geekble_Nano_ESP32S3.menu.UploadSpeed.230400.upload.speed=230400
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.linux=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.macosx=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.460800.upload.speed=460800
-Geekble_Nano_ESP32S3.menu.UploadSpeed.512000.windows=512000
-Geekble_Nano_ESP32S3.menu.UploadSpeed.512000.upload.speed=512000
 
 Geekble_Nano_ESP32S3.menu.DebugLevel.none=None
 Geekble_Nano_ESP32S3.menu.DebugLevel.none.build.code_debug=0
@@ -41038,7 +41138,6 @@ Geekble_Nano_ESP32S3.menu.EraseFlash.none=Disabled
 Geekble_Nano_ESP32S3.menu.EraseFlash.none.upload.erase_cmd=
 Geekble_Nano_ESP32S3.menu.EraseFlash.all=Enabled
 Geekble_Nano_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
-
 
 ##############################################################
 
