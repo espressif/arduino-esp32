@@ -666,24 +666,16 @@ uart_t *uartBegin(
   uart_config.baud_rate = baudrate;
 #if SOC_UART_LP_NUM >= 1
   if (uart_nr >= SOC_UART_HP_NUM) {                    // it is a LP UART NUM
-#if !(CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE)
     if (uart->_uart_clock_source > 0) {
       uart_config.lp_source_clk = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart_nr, uart->_uart_clock_source);
-    } else 
-#endif
-    {
+    } else {
       uart_config.lp_source_clk = LP_UART_SCLK_DEFAULT;  // use default LP clock
       log_v("Setting UART%d to Default LP clock source", uart_nr);
     }
   } else
 #endif // SOC_UART_LP_NUM >= 1
   {
-#if CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
-    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
-    uart_config.source_clk = UART_SCLK_DEFAULT;  // baudrate may change with the APB Frequency!
-    log_v("Setting UART%d to use DEFAULT clock", uart_nr);
-#else
     if (uart->_uart_clock_source >= 0) {
       uart_config.source_clk = (soc_module_clk_t) uart->_uart_clock_source;  // use user defined HP UART clock
       log_v("Setting UART%d to user defined HP clock source (%d) ", uart_nr, uart->_uart_clock_source);
@@ -707,7 +699,6 @@ uart_t *uartBegin(
       log_v("Setting UART%d to use DEFAULT clock", uart_nr);
 #endif // SOC_UART_SUPPORT_XTAL_CLK
     }
-#endif // CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
   }
 
   UART_MUTEX_LOCK();
@@ -1007,24 +998,16 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   int8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) { // it is a LP UART NUM
-#if !(CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE)
     if (uart->_uart_clock_source > 0) {
       newClkSrc = (soc_periph_lp_uart_clk_src_t) uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart->num, newClkSrc);
-    } else
-#endif
-    {
+    } else {
       newClkSrc = LP_UART_SCLK_DEFAULT;  // use default LP clock
       log_v("Setting UART%d to Default LP clock source", uart->num);
     }
   } else 
 #endif // SOC_UART_LP_NUM >= 1
   {
-#if CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
-    // Default CLK Source: CLK_APB for ESP32|S2|S3|C3 -- CLK_PLL_F40M for C2 -- CLK_PLL_F48M for H2 -- CLK_PLL_F80M for C6|P4
-    // newClkSrc already set in the variable declaration
-    log_v("Setting UART%d to use DEFAULT clock", uart->num);
-#else
     if (uart->_uart_clock_source >= 0) {
       newClkSrc = (soc_module_clk_t) uart->_uart_clock_source;  // use user defined HP UART clock
       log_v("Setting UART%d to use HP clock source (%d) ", uart->num, newClkSrc);
@@ -1048,7 +1031,6 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
       log_v("Setting UART%d to use DEFAULT clock", uart->num);
 #endif // SOC_UART_SUPPORT_XTAL_CLK
     }
-#endif // CONFIG_ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
   }
   UART_MUTEX_LOCK();
   // if necessary, set the correct UART Clock Source before changing the baudrate
