@@ -118,18 +118,6 @@ config ARDUINO_SERIAL_EVENT_TASK_PRIORITY
     help
         Select at what priority you want the Serial Event task to run.
 
-config ARDUINO_SERIAL_FORCE_IDF_DEFAULT_CLOCK_SOURCE
-    bool "Force IDF default UART clock source"
-    default "n"
-    help
-        Overrides Arduino's automatic UART clock selection with the default clock from IDF (clk_tree_defs.h).
-        By default, Arduino optimizes the UART clock automatically: XTAL clock for C2, S3, C3, C6, H2, P4 and 
-        REF_TICK (<250k baud) or APB (>250k baud) for ESP32, S2.
-        It also overrrides HardwareSerial::setClockSource(), by always forcing the default uart clock source as defined in IDF. 
-        Enable this option only if you need to force IDF's default clock instead of Arduino's optimized settings.
-        It is generally recommended to leave this disabled unless specifically required.
-        Note: This configuration is also applicable to the low-power (LP) UART controller, whenever this is available.
-
 choice ARDUINO_UDP_RUNNING_CORE
     bool "Core on which Arduino's UDP is running"
     default ARDUINO_UDP_RUN_CORE0
