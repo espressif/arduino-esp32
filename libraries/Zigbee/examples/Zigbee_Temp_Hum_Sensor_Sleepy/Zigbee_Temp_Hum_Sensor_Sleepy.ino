@@ -85,7 +85,7 @@ void setup() {
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
-  // Set power source to battery, battery percentage and battery voltage (now 100% and 3.5Vfor demonstration)
+  // Set power source to battery, battery percentage and battery voltage (now 100% and 3.5V for demonstration)
   // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) or zbTempSensor.setBatteryVoltage(voltage) anytime after Zigbee.begin()
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100, 35);
 
