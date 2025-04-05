@@ -478,14 +478,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "BLE/examples/Server_multiconnect",
-                    "sizes": [{
-                            "flash_bytes": 1076209,
-                            "flash_percentage": 34,
-                            "ram_bytes": 39232,
-                            "ram_percentage": 11
-                            }]
-                    },
 {"name": "BLE/examples/UART",
                     "sizes": [{
                             "flash_bytes": 1076755,
@@ -596,6 +588,22 @@
                             "flash_percentage": 19,
                             "ram_bytes": 13120,
                             "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 260265,
+                            "flash_percentage": 19,
+                            "ram_bytes": 13120,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/ArduinoStackSize",
+                    "sizes": [{
+                            "flash_bytes": 239577,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12784,
+                            "ram_percentage": 3
                             }]
                     }
 ]

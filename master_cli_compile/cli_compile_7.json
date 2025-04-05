@@ -209,7 +209,7 @@
                     },
 {"name": "Matter/examples/WiFiProvWithinMatter",
                     "sizes": [{
-                            "flash_bytes": 2329322,
+                            "flash_bytes": 2329306,
                             "flash_percentage": 74,
                             "ram_bytes": 122532,
                             "ram_percentage": 37
@@ -246,7 +246,7 @@
                     },
 {"name": "Matter/examples/MatterOnIdentify",
                     "sizes": [{
-                            "flash_bytes": 1656281,
+                            "flash_bytes": 1656289,
                             "flash_percentage": 52,
                             "ram_bytes": 94884,
                             "ram_percentage": 28
@@ -470,62 +470,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "Matter/examples/MatterEnhancedColorLight",
-                    "sizes": [{
-                            "flash_bytes": 1717923,
-                            "flash_percentage": 54,
-                            "ram_bytes": 97260,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterFan",
-                    "sizes": [{
-                            "flash_bytes": 1687683,
-                            "flash_percentage": 53,
-                            "ram_bytes": 97580,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterHumiditySensor",
-                    "sizes": [{
-                            "flash_bytes": 1655895,
-                            "flash_percentage": 52,
-                            "ram_bytes": 96236,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterMinimum",
-                    "sizes": [{
-                            "flash_bytes": 1678187,
-                            "flash_percentage": 53,
-                            "ram_bytes": 97180,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterOccupancySensor",
-                    "sizes": [{
-                            "flash_bytes": 1657641,
-                            "flash_percentage": 52,
-                            "ram_bytes": 96236,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterOnIdentify",
-                    "sizes": [{
-                            "flash_bytes": 1679737,
-                            "flash_percentage": 53,
-                            "ram_bytes": 97180,
-                            "ram_percentage": 29
-                            }]
-                    },
-{"name": "Matter/examples/MatterOnOffLight",
-                    "sizes": [{
-                            "flash_bytes": 1680555,
-                            "flash_percentage": 53,
-                            "ram_bytes": 97188,
-                            "ram_percentage": 29
-                            }]
-                    },
 {"name": "Matter/examples/MatterOnOffPlugin",
                     "sizes": [{
                             "flash_bytes": 1680459,
@@ -588,6 +532,70 @@
                             "flash_percentage": 70,
                             "ram_bytes": 41068,
                             "ram_percentage": 12
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientInsecure",
+                    "sizes": [{
+                            "flash_bytes": 1035371,
+                            "flash_percentage": 78,
+                            "ram_bytes": 42892,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientPSK",
+                    "sizes": [{
+                            "flash_bytes": 1035405,
+                            "flash_percentage": 78,
+                            "ram_bytes": 42916,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientSecure",
+                    "sizes": [{
+                            "flash_bytes": 1037253,
+                            "flash_percentage": 32,
+                            "ram_bytes": 42900,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
+                    "sizes": [{
+                            "flash_bytes": 1100003,
+                            "flash_percentage": 34,
+                            "ram_bytes": 44340,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                    "sizes": [{
+                            "flash_bytes": 1036391,
+                            "flash_percentage": 79,
+                            "ram_bytes": 42892,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
+                    "sizes": [{
+                            "flash_bytes": 1068775,
+                            "flash_percentage": 81,
+                            "ram_bytes": 42916,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
+                    "sizes": [{
+                            "flash_bytes": 1049459,
+                            "flash_percentage": 80,
+                            "ram_bytes": 42924,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "OpenThread/examples/COAP/coap_lamp",
+                    "sizes": [{
+                            "flash_bytes": 1088485,
+                            "flash_percentage": 83,
+                            "ram_bytes": 47900,
+                            "ram_percentage": 14
                             }]
                     }
 ]

@@ -470,46 +470,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
-                    "sizes": [{
-                            "flash_bytes": 935111,
-                            "flash_percentage": 71,
-                            "ram_bytes": 41244,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
-                    "sizes": [{
-                            "flash_bytes": 935317,
-                            "flash_percentage": 71,
-                            "ram_bytes": 41212,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Network",
-                    "sizes": [{
-                            "flash_bytes": 938745,
-                            "flash_percentage": 71,
-                            "ram_bytes": 41308,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Serial",
-                    "sizes": [{
-                            "flash_bytes": 938007,
-                            "flash_percentage": 71,
-                            "ram_bytes": 41300,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "ESPmDNS/examples/mDNS-SD_Extended",
-                    "sizes": [{
-                            "flash_bytes": 957673,
-                            "flash_percentage": 73,
-                            "ram_bytes": 43356,
-                            "ram_percentage": 13
-                            }]
-                    },
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
                             "flash_bytes": 980491,
@@ -588,6 +548,54 @@
                             "flash_percentage": 35,
                             "ram_bytes": 44372,
                             "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPClient/examples/ReuseConnection",
+                    "sizes": [{
+                            "flash_bytes": 1065885,
+                            "flash_percentage": 81,
+                            "ram_bytes": 43188,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPClient/examples/StreamHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 1065323,
+                            "flash_percentage": 81,
+                            "ram_bytes": 42980,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPUpdate/examples/httpUpdate",
+                    "sizes": [{
+                            "flash_bytes": 1008965,
+                            "flash_percentage": 76,
+                            "ram_bytes": 43772,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
+                    "sizes": [{
+                            "flash_bytes": 1008347,
+                            "flash_percentage": 76,
+                            "ram_bytes": 43772,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPUpdate/examples/httpUpdateSecure",
+                    "sizes": [{
+                            "flash_bytes": 1107237,
+                            "flash_percentage": 35,
+                            "ram_bytes": 44316,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "HTTPUpdateServer/examples/WebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 1049003,
+                            "flash_percentage": 80,
+                            "ram_bytes": 46196,
+                            "ram_percentage": 14
                             }]
                     }
 ]

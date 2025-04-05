@@ -486,22 +486,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 260265,
-                            "flash_percentage": 19,
-                            "ram_bytes": 13120,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/ArduinoStackSize",
-                    "sizes": [{
-                            "flash_bytes": 239577,
-                            "flash_percentage": 18,
-                            "ram_bytes": 12784,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
                             "flash_bytes": 292741,
@@ -604,6 +588,30 @@
                             "flash_percentage": 18,
                             "ram_bytes": 12952,
                             "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
+                    "sizes": [{
+                            "flash_bytes": 243109,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12932,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTCallback",
+                    "sizes": [{
+                            "flash_bytes": 260735,
+                            "flash_percentage": 19,
+                            "ram_bytes": 14656,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/RMT/RMTLoopback",
+                    "sizes": [{
+                            "flash_bytes": 261985,
+                            "flash_percentage": 19,
+                            "ram_bytes": 16080,
+                            "ram_percentage": 4
                             }]
                     }
 ]

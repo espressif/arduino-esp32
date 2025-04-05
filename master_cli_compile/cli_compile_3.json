@@ -470,30 +470,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
-                    "sizes": [{
-                            "flash_bytes": 243109,
-                            "flash_percentage": 18,
-                            "ram_bytes": 12932,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMTCallback",
-                    "sizes": [{
-                            "flash_bytes": 260735,
-                            "flash_percentage": 19,
-                            "ram_bytes": 14656,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMTLoopback",
-                    "sizes": [{
-                            "flash_bytes": 261985,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16080,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
                             "flash_bytes": 261325,
@@ -587,6 +563,38 @@
                             "flash_bytes": 240981,
                             "flash_percentage": 18,
                             "ram_bytes": 12784,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/RxTimeout_Demo",
+                    "sizes": [{
+                            "flash_bytes": 240821,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12792,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
+                    "sizes": [{
+                            "flash_bytes": 240607,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12816,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
+                    "sizes": [{
+                            "flash_bytes": 241305,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12784,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/onReceiveExample",
+                    "sizes": [{
+                            "flash_bytes": 240987,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12808,
                             "ram_percentage": 3
                             }]
                     }

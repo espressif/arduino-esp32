@@ -470,82 +470,10 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "OpenThread/examples/onReceive",
-                    "sizes": [{
-                            "flash_bytes": 1065823,
-                            "flash_percentage": 81,
-                            "ram_bytes": 46560,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "PPP/examples/PPP_Basic",
-                    "sizes": [{
-                            "flash_bytes": 510405,
-                            "flash_percentage": 38,
-                            "ram_bytes": 18700,
-                            "ram_percentage": 5
-                            }]
-                    },
-{"name": "PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 1020143,
-                            "flash_percentage": 77,
-                            "ram_bytes": 42132,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "Preferences/examples/Prefs2Struct",
-                    "sizes": [{
-                            "flash_bytes": 249131,
-                            "flash_percentage": 19,
-                            "ram_bytes": 12808,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "Preferences/examples/StartCounter",
-                    "sizes": [{
-                            "flash_bytes": 248891,
-                            "flash_percentage": 18,
-                            "ram_bytes": 12808,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerCustom",
-                    "sizes": [{
-                            "flash_bytes": 2145737,
-                            "flash_percentage": 53,
-                            "ram_bytes": 68288,
-                            "ram_percentage": 20
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerCustomAirCooler",
-                    "sizes": [{
-                            "flash_bytes": 2132437,
-                            "flash_percentage": 52,
-                            "ram_bytes": 68432,
-                            "ram_percentage": 20
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSonoffDualR3",
-                    "sizes": [{
-                            "flash_bytes": 2148239,
-                            "flash_percentage": 53,
-                            "ram_bytes": 68688,
-                            "ram_percentage": 20
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSwitch",
-                    "sizes": [{
-                            "flash_bytes": 2158919,
-                            "flash_percentage": 53,
-                            "ram_bytes": 68376,
-                            "ram_percentage": 20
-                            }]
-                    },
 {"name": "SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 319917,
-                            "flash_percentage": 7,
+                            "flash_bytes": 319885,
+                            "flash_percentage": 24,
                             "ram_bytes": 14788,
                             "ram_percentage": 4
                             }]
@@ -588,6 +516,86 @@
                             "flash_percentage": 79,
                             "ram_bytes": 39256,
                             "ram_percentage": 11
+                            }]
+                    },
+{"name": "TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 264333,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15104,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 249577,
+                            "flash_percentage": 19,
+                            "ram_bytes": 14100,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/TickerBasic",
+                    "sizes": [{
+                            "flash_bytes": 249359,
+                            "flash_percentage": 19,
+                            "ram_bytes": 14044,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/TickerParameter",
+                    "sizes": [{
+                            "flash_bytes": 249229,
+                            "flash_percentage": 19,
+                            "ram_bytes": 14092,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Update/examples/AWS_S3_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 971463,
+                            "flash_percentage": 74,
+                            "ram_bytes": 43484,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "Update/examples/HTTPS_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 1090533,
+                            "flash_percentage": 83,
+                            "ram_bytes": 43172,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "Update/examples/HTTP_Client_AES_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 1010211,
+                            "flash_percentage": 77,
+                            "ram_bytes": 43572,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "Update/examples/HTTP_Server_AES_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 1051047,
+                            "flash_percentage": 80,
+                            "ram_bytes": 46244,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "Update/examples/OTAWebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 1034067,
+                            "flash_percentage": 78,
+                            "ram_bytes": 46124,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "Update/examples/SD_Update",
+                    "sizes": [{
+                            "flash_bytes": 325513,
+                            "flash_percentage": 24,
+                            "ram_bytes": 14636,
+                            "ram_percentage": 4
                             }]
                     }
 ]
