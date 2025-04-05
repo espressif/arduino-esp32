@@ -41,6 +41,10 @@ typedef enum {
 /* Zigbee End Device Class */
 class ZigbeeEP {
 public:
+  // constants and limits
+  static constexpr size_t ZB_MAX_NAME_LENGTH = 32;
+
+  // constructors and destructor
   ZigbeeEP(uint8_t endpoint = 10);
   ~ZigbeeEP() {}
 
