@@ -24,11 +24,7 @@
 extern "C" {
 #endif
 
-// include basic types for being used by pins_arduino.h
-#include <stdbool.h>
-#include <stdint.h>
 #include "pins_arduino.h"
-
 #include "esp32-hal.h"
 #include "soc/soc_caps.h"
 #include "driver/gpio.h"
