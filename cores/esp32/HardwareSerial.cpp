@@ -623,7 +623,7 @@ bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
     log_e("No Clock Source change was done. This function must be called before beginning UART%d.", _uart_nr);
     return false;
   }
-  return uartSetClockSource(_uart_nr, (uart_sclk_t) clkSrc);
+  return uartSetClockSource(_uart_nr, (uart_sclk_t)clkSrc);
 }
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 // LP UART has FIFO of 16 bytes

@@ -96,26 +96,26 @@ typedef enum {
   UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
-  typedef enum {
-    UART_CLK_SRC_DEFAULT = UART_SCLK_DEFAULT,
+typedef enum {
+  UART_CLK_SRC_DEFAULT = UART_SCLK_DEFAULT,
 #if SOC_UART_SUPPORT_APB_CLK
-    UART_CLK_SRC_APB = UART_SCLK_APB,
+  UART_CLK_SRC_APB = UART_SCLK_APB,
 #endif
 #if SOC_UART_SUPPORT_PLL_F40M_CLK
-    UART_CLK_SRC_PLL = UART_SCLK_PLL_F40M,
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F40M,
 #elif SOC_UART_SUPPORT_PLL_F80M_CLK
-    UART_CLK_SRC_PLL = UART_SCLK_PLL_F80M,
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F80M,
 #elif CONFIG_IDF_TARGET_ESP32H2
-    UART_CLK_SRC_PLL = UART_SCLK_PLL_F48M,
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F48M,
 #endif
 #if SOC_UART_SUPPORT_XTAL_CLK
-    UART_CLK_SRC_XTAL = UART_SCLK_XTAL,
+  UART_CLK_SRC_XTAL = UART_SCLK_XTAL,
 #endif
 #if SOC_UART_SUPPORT_RTC_CLK
-    UART_CLK_SRC_RTC = UART_SCLK_RTC,
+  UART_CLK_SRC_RTC = UART_SCLK_RTC,
 #endif
 #if SOC_UART_SUPPORT_REF_TICK
-    UART_CLK_SRC_REF_TICK = UART_SCLK_REF_TICK,
+  UART_CLK_SRC_REF_TICK = UART_SCLK_REF_TICK,
 #endif
 } SerialClkSrc;
 
@@ -380,6 +380,7 @@ public:
   bool setClockSource(SerialClkSrc clkSrc);
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
+
 protected:
   uint8_t _uart_nr;
   uart_t *_uart;
