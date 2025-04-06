@@ -1,7 +1,6 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
-#include <stdint.h>
 
 #define USB_VID          0xAFD0
 #define USB_PID          0x0003
