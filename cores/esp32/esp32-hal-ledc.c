@@ -571,6 +571,21 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 #endif
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
 
+    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
+
+    if (target_duty > max_duty) {
+      log_w("Final duty %d was adjusted to the maximum duty %d", target_duty, max_duty);
+      target_duty = max_duty;
+    }
+    if (start_duty > max_duty) {
+      log_w("Starting duty %d was adjusted to the maximum duty %d", start_duty, max_duty);
+      start_duty = max_duty;
+    }
+    if (start_duty >= target_duty) {
+      log_e("Starting duty must be lower than the final duty");
+      return false;
+    }
+
     // Initialize fade service.
     if (!fade_initialized) {
       ledc_fade_func_install(0);
@@ -582,17 +597,6 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 
     ledc_cbs_t callbacks = {.fade_cb = ledcFnWrapper};
     ledc_cb_register(group, channel, &callbacks, (void *)bus);
-
-    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
-
-    if (target_duty > max_duty) {
-      log_w("Target duty %d was adjusted to the maximum duty %d", target_duty, max_duty);
-      target_duty = max_duty;
-    }
-    if (start_duty > max_duty) {
-      log_w("Starting duty %d was adjusted to the maximum duty %d", start_duty, max_duty);
-      start_duty = max_duty;
-    }
 
 #if SOC_LEDC_SUPPORT_FADE_STOP
     ledc_fade_stop(group, channel);
@@ -848,7 +852,7 @@ void analogWrite(uint8_t pin, int value) {
       log_w("Duty is out of range. Valid duty range for pin d is 0 to %d", pin, max_duty);
       return;
     }
-    if ((value == max_duty) && (max_duty != 1)) {
+    if (value == max_duty) {
       value = max_duty + 1;
     }    
     ledcWrite(pin, value);
