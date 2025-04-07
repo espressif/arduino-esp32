@@ -339,6 +339,12 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
   if (bus != NULL) {
 
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
+    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
+
+    if (duty > max_duty) {
+      log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+      duty = max_duty;
+    }
 
     if (ledc_set_duty(group, channel, duty) != ESP_OK) {
       log_e("ledc_set_duty failed");
@@ -369,6 +375,12 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
   ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &resolution);
+  uint32_t max_duty = (1 << resolution); // Max LEDC duty
+
+  if (duty > max_duty) {
+    log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+    duty = max_duty;
+  }
 
   if (ledc_set_duty(group, channel, duty) != ESP_OK) {
     log_e("ledc_set_duty failed");
