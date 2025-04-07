@@ -643,7 +643,7 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     }
 #endif
 
-    if (ledc_set_fade_time_and_start(group, channel, target_duty, _fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
+    if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
       log_e("ledc_set_fade_time_and_start failed");
 #ifndef SOC_LEDC_SUPPORT_FADE_STOP
 #if !CONFIG_DISABLE_HAL_LOCKS
