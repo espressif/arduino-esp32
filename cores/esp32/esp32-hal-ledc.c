@@ -189,7 +189,6 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
       log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
       duty = max_duty;
     }
- 
     ledc_set_duty(group, channel, duty);
     ledc_update_duty(group, channel);
 
