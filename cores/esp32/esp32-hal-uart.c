@@ -1112,7 +1112,7 @@ int log_printfv(const char *format, va_list arg) {
       return 0;
     }
   }
-/*
+  /*
 // This causes dead locks with logging in specific cases and also with C++ constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
@@ -1122,7 +1122,7 @@ int log_printfv(const char *format, va_list arg) {
 */
   vsnprintf(temp, len + 1, format, arg);
   ets_printf("%s", temp);
-/*
+  /*
 // This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
