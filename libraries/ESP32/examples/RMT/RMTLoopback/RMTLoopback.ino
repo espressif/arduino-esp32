@@ -57,10 +57,10 @@ void setup() {
 
   // create multiple pulses with different width to be sent
   for (int i = 0; i < 255; i++) {
-    data[i].level0 = 1; // HIGH
-    data[i].duration0 = 1 + 13 - (i % 13); // number of Tick on High
-    data[i].level1 = 0; // LOW
-    data[i].duration1 = 1 + (i % 13); // number of Ticks on Low
+    data[i].level0 = 1;                     // HIGH
+    data[i].duration0 = 1 + 13 - (i % 13);  // number of Tick on High
+    data[i].level1 = 0;                     // LOW
+    data[i].duration1 = 1 + (i % 13);       // number of Ticks on Low
     my_data[i].val = 0;
   }
   data[255].val = 0;
@@ -69,9 +69,7 @@ void setup() {
   Serial.println("Preloaded Data that will sent (time in 0.1us):");
   // Printout the received data plus the original values
   for (int i = 0; i < RMT_NUM_EXCHANGED_DATA; i++) {
-    Serial.printf("%08lx=[%c 0x%02x|%c 0x%02x] ", data[i].val,
-                  data[i].level0 ? 'H' : 'L', data[i].duration0,
-                  data[i].level1 ? 'H' : 'L', data[i].duration1);
+    Serial.printf("%08lx=[%c 0x%02x|%c 0x%02x] ", data[i].val, data[i].level0 ? 'H' : 'L', data[i].duration0, data[i].level1 ? 'H' : 'L', data[i].duration1);
 
     if (!((i + 1) % 4)) {
       Serial.println();
