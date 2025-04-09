@@ -455,6 +455,7 @@ void USBCDC::setDebugOutput(bool en) {
   } else {
     ets_install_putc2(NULL);
   }
+  ets_install_putc1(NULL);  // closes UART log output
 }
 
 USBCDC::operator bool() const {
