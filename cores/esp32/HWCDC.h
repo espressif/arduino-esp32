@@ -48,6 +48,17 @@ private:
   static bool deinit(void *busptr);
   static bool isCDC_Connected();
 
+protected:
+  int _peek(TickType_t timeout);
+  int _read(TickType_t timeout);
+
+  virtual int timedRead() override {
+    return _read(pdMS_TO_TICKS(_timeout));
+  }
+  virtual int timedPeek() override {
+    return _peek(pdMS_TO_TICKS(_timeout));
+  }
+
 public:
   HWCDC();
   ~HWCDC();
@@ -63,8 +74,12 @@ public:
 
   int available(void);
   int availableForWrite(void);
-  int peek(void);
-  int read(void);
+  int peek(void){
+    return _peek(0);
+  }
+  int read(void){
+    return _read(0);
+  }
   size_t read(uint8_t *buffer, size_t size);
   size_t write(uint8_t);
   size_t write(const uint8_t *buffer, size_t size);
