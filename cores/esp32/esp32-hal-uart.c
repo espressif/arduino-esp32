@@ -952,6 +952,34 @@ uint8_t uartPeek(uart_t *uart) {
   return c;
 }
 
+bool uartTimedPeek(uart_t *uart, uint8_t * out, uint32_t timeout_ms) {
+  if (uart == NULL || out == NULL) {
+    return false;
+  }
+
+  bool valid = false;
+
+  UART_MUTEX_LOCK();
+
+  if (uart->has_peek) {
+    *out = uart->peek_byte;
+    valid = true;
+  } else {
+    uint8_t c = 0;
+    int len = uart_read_bytes(uart->num, &c, 1, pdMS_TO_TICKS(timeout_ms));
+    if (len > 0) {
+      uart->has_peek = true;
+      uart->peek_byte = c;
+      *out = c;
+      valid = true;
+    }
+  }
+
+  UART_MUTEX_UNLOCK();
+
+  return valid;
+}
+
 void uartWrite(uart_t *uart, uint8_t c) {
   if (uart == NULL) {
     return;
