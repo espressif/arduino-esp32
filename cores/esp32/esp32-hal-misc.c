@@ -243,7 +243,7 @@ bool verifyRollbackLater() {
 }
 #endif
 
-#ifdef CONFIG_BT_ENABLED
+#ifdef CONFIG_BT_BLUEDROID_ENABLED
 #if CONFIG_IDF_TARGET_ESP32
 //overwritten in esp32-hal-bt.c
 bool btInUse() __attribute__((weak));
