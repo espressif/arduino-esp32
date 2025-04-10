@@ -49,8 +49,8 @@ class Stream : public Print {
 protected:
   unsigned long _timeout;                                          // number of milliseconds to wait for the next char before aborting timed read
   unsigned long _startMillis;                                      // used for timeout measurement
-  int timedRead();                                                 // private method to read stream with timeout
-  int timedPeek();                                                 // private method to peek stream with timeout
+  virtual int timedRead();                                         // private method to read stream with timeout
+  virtual int timedPeek();                                         // private method to peek stream with timeout
   int peekNextDigit(LookaheadMode lookahead, bool detectDecimal);  // returns the next numeric digit in the stream or -1 if timeout
 
 public:

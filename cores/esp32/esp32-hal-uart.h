@@ -51,6 +51,7 @@ uint32_t uartAvailableForWrite(uart_t *uart);
 size_t uartReadBytes(uart_t *uart, uint8_t *buffer, size_t size, uint32_t timeout_ms);
 uint8_t uartRead(uart_t *uart);
 uint8_t uartPeek(uart_t *uart);
+bool uartTimedPeek(uart_t *uart, uint8_t * out, uint32_t timeout_ms);
 
 void uartWrite(uart_t *uart, uint8_t c);
 void uartWriteBuf(uart_t *uart, const uint8_t *data, size_t len);
