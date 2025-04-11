@@ -273,9 +273,9 @@ jobs:
         shell: bash
         run: |
           . ${IDF_PATH}/export.sh
-          idf.py create-project test
-          echo CONFIG_FREERTOS_HZ=1000 > test/sdkconfig.defaults
-          idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
+          idf.py -C ./components/arduino-esp32/idf_component_examples/hello_world -DEXTRA_COMPONENT_DIRS=$PWD/components build
+          idf.py -C ./components/arduino-esp32/idf_component_examples/hw_cdc_hello_world -DEXTRA_COMPONENT_DIRS=$PWD/components build
+          idf.py -C ./components/arduino-esp32/idf_component_examples/esp_matter_light -DEXTRA_COMPONENT_DIRS=$PWD/components build
 
   # Save artifacts to gh-pages
   save-master-artifacts:
