@@ -8,6 +8,7 @@ set(PROJECT_VER_NUMBER 1)
 # This should be done before using the IDF_TARGET variable.
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
+idf_build_set_property(MINIMAL_BUILD ON)
 project(arduino_managed_component_light)
 
 # WARNING: This is just an example for using key for decrypting the encrypted OTA image
