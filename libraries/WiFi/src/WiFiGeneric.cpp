@@ -604,7 +604,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
 #endif
     uint32_t current_protocol = 0;
     if (m & WIFI_MODE_STA) {
-      err = esp_wifi_get_protocol(WIFI_IF_STA, (uint8_t*)&current_protocol);
+      err = esp_wifi_get_protocol(WIFI_IF_STA, (uint8_t *)&current_protocol);
       if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
         log_v("Disabling long range on STA");
         err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_DEFAULT);
@@ -614,7 +614,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
       }
     }
     if (m & WIFI_MODE_AP) {
-      err = esp_wifi_get_protocol(WIFI_IF_AP, (uint8_t*)&current_protocol);
+      err = esp_wifi_get_protocol(WIFI_IF_AP, (uint8_t *)&current_protocol);
       if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
         log_v("Disabling long range on AP");
         err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_DEFAULT);
