@@ -77,6 +77,9 @@ public:
   // Specifies the number of movement detection events that must occur in the period unoccupied to occupied delay, before the sensor changes to its occupied state.
   bool setUnoccupiedToOccupiedThreshold(ZigbeeOccupancySensorType sensor_type, uint8_t threshold);
 
+  void onOccupancyConfigChange(void (*callback)(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold)) {
+    _on_occupancy_config_change = callback;
+  }
   // Report the occupancy value
   bool report();
 
@@ -84,7 +87,7 @@ private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_occupancy_config_change)(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold);
-  void occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold); 
+  void occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type); 
 
   // PIR sensor configuration
   uint16_t _pir_occ_to_unocc_delay;
