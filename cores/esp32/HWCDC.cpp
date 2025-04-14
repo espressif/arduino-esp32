@@ -603,6 +603,7 @@ void HWCDC::setDebugOutput(bool en) {
   } else {
     ets_install_putc2(NULL);
   }
+  ets_install_putc1(NULL);  // closes UART log output
 }
 
 #if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
