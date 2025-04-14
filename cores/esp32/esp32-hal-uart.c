@@ -1186,7 +1186,7 @@ int log_printfv(const char *format, va_list arg) {
       return 0;
     }
   }
-/*
+  /*
 // This causes dead locks with logging in specific cases and also with C++ constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
     if(s_uart_debug_nr != -1 && _uart_bus_array[s_uart_debug_nr].lock){
@@ -1194,16 +1194,8 @@ int log_printfv(const char *format, va_list arg) {
     }
 #endif
 */
-#if (ARDUINO_USB_CDC_ON_BOOT == 1 && ARDUINO_USB_MODE == 0) || CONFIG_IDF_TARGET_ESP32C3 \
-  || ((CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32P4) && ARDUINO_USB_CDC_ON_BOOT == 1)
   vsnprintf(temp, len + 1, format, arg);
   ets_printf("%s", temp);
-#else
-  int wlen = vsnprintf(temp, len + 1, format, arg);
-  for (int i = 0; i < wlen; i++) {
-    ets_write_char_uart(temp[i]);
-  }
-#endif
   /*
 // This causes dead locks with logging and also with constructors that may send logs
 #if !CONFIG_DISABLE_HAL_LOCKS
