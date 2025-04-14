@@ -30,6 +30,24 @@
   }
 // clang-format on
 
+enum ZigbeeOccupancySensorType{
+  ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR = 0,
+  ZIGBEE_OCCUPANCY_SENSOR_TYPE_ULTRASONIC = 1,
+  ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC = 2,
+  ZIGBEE_OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT = 3
+};
+
+enum ZigbeeOccupancySensorTypeBitmap{
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PIR = 0x01,
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_ULTRASONIC = 0x02,
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PIR_AND_ULTRASONIC = 0x03,
+  // ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PHYSICAL_CONTACT = 0x04, // No info in cluster specification R8
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PHYSICAL_CONTACT_AND_PIR = 0x05,
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PHYSICAL_CONTACT_AND_ULTRASONIC = 0x06,
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PHYSICAL_CONTACT_AND_PIR_AND_ULTRASONIC = 0x07,
+  ZIGBEE_OCCUPANCY_SENSOR_BITMAP_DEFAULT = 0xff
+};
+
 typedef struct zigbee_occupancy_sensor_cfg_s {
   esp_zb_basic_cluster_cfg_t basic_cfg;
   esp_zb_identify_cluster_cfg_t identify_cfg;
@@ -44,11 +62,29 @@ public:
   // Set the occupancy value. True for occupied, false for unoccupied
   bool setOccupancy(bool occupied);
 
-  // Set the sensor type, see esp_zb_zcl_occupancy_sensing_occupancy_sensor_type_t
-  bool setSensorType(uint8_t sensor_type);
+  // Set the sensor type, see ZigbeeOccupancySensorType
+  bool setSensorType(ZigbeeOccupancySensorType sensor_type, ZigbeeOccupancySensorTypeBitmap sensor_type_bitmap = ZIGBEE_OCCUPANCY_SENSOR_BITMAP_DEFAULT);
+
+  // Set the occupied to unoccupied delay
+  // Specifies the time delay, in seconds, before the sensor changes to its unoccupied state after the last detection of movement in the sensed area.
+  bool setOccupiedToUnoccupiedDelay(ZigbeeOccupancySensorType sensor_type, uint16_t delay);
+
+  // Set the unoccupied to occupied delay
+  // Specifies the time delay, in seconds, before the sensor changes to its occupied state after the detection of movement in the sensed area.
+  bool setUnoccupiedToOccupiedDelay(ZigbeeOccupancySensorType sensor_type, uint16_t delay);
+
+  // Set the unoccupied to occupied threshold
+  // Specifies the number of movement detection events that must occur in the period unoccupied to occupied delay, before the sensor changes to its occupied state.
+  bool setUnoccupiedToOccupiedThreshold(ZigbeeOccupancySensorType sensor_type, uint8_t threshold);
 
   // Report the occupancy value
   bool report();
+
+private:
+  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+
+  void (*_on_occupancy_config_change)(bool);
+  void occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type);
 };
 
 #endif  // CONFIG_ZB_ENABLED
