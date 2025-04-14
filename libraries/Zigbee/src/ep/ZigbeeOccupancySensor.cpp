@@ -226,35 +226,35 @@ void ZigbeeOccupancySensor::zbAttributeSet(const esp_zb_zcl_set_attr_value_messa
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING) {
     //PIR
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PIR_OCC_TO_UNOCC_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t pir_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
+      _pir_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PIR_UNOCC_TO_OCC_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t pir_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
+      _pir_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PIR_UNOCC_TO_OCC_THRESHOLD_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-      uint8_t pir_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
+      _pir_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR);
     } 
     //Ultrasonic
     else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_ULTRASONIC_OCCUPIED_TO_UNOCCUPIED_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t ultrasonic_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
+      _ultrasonic_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_ULTRASONIC);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_ULTRASONIC_UNOCCUPIED_TO_OCCUPIED_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t ultrasonic_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
+      _ultrasonic_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_ULTRASONIC);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_ULTRASONIC_UNOCCUPIED_TO_OCCUPIED_THRESHOLD_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-      uint8_t ultrasonic_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
+      _ultrasonic_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_ULTRASONIC);
     } 
     //Physical Contact  
     else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PHYSICAL_CONTACT_OCCUPIED_TO_UNOCCUPIED_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t physical_contact_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
+      _physical_contact_occ_to_unocc_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PHYSICAL_CONTACT_UNOCCUPIED_TO_OCCUPIED_DELAY_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
-      uint16_t physical_contact_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
+      _physical_contact_unocc_to_occ_delay = *(uint16_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT);
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_PHYSICAL_CONTACT_UNOCCUPIED_TO_OCCUPIED_THRESHOLD_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-      uint8_t physical_contact_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
+      _physical_contact_unocc_to_occ_threshold = *(uint8_t *)message->attribute.data.value;
       occupancyConfigChanged(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT);
     } else {
       log_w("Received message ignored. Attribute ID: %d not supported for Occupancy Sensor endpoint", message->attribute.id);
@@ -266,7 +266,20 @@ void ZigbeeOccupancySensor::zbAttributeSet(const esp_zb_zcl_set_attr_value_messa
 
 void ZigbeeOccupancySensor::occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type) {
   if (_on_occupancy_config_change) {
-    _on_occupancy_config_change(sensor_type); //sensor type, delay, delay, threshold
+    switch (sensor_type) {
+      case ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR:
+        _on_occupancy_config_change(sensor_type, _pir_occ_to_unocc_delay, _pir_unocc_to_occ_delay, _pir_unocc_to_occ_threshold);
+        break;
+      case ZIGBEE_OCCUPANCY_SENSOR_TYPE_ULTRASONIC:
+        _on_occupancy_config_change(sensor_type, _ultrasonic_occ_to_unocc_delay, _ultrasonic_unocc_to_occ_delay, _ultrasonic_unocc_to_occ_threshold);
+        break;
+      case ZIGBEE_OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT:
+        _on_occupancy_config_change(sensor_type, _physical_contact_occ_to_unocc_delay, _physical_contact_unocc_to_occ_delay, _physical_contact_unocc_to_occ_threshold);
+        break;
+      default:
+        log_e("Invalid sensor type for occupancy config change: 0x%x", sensor_type);
+        break;
+    }
   } else {
     log_w("No callback function set for occupancy config change");
   }

@@ -83,8 +83,23 @@ public:
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
-  void (*_on_occupancy_config_change)(bool);
-  void occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type);
+  void (*_on_occupancy_config_change)(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold);
+  void occupancyConfigChanged(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold); 
+
+  // PIR sensor configuration
+  uint16_t _pir_occ_to_unocc_delay;
+  uint16_t _pir_unocc_to_occ_delay;
+  uint8_t _pir_unocc_to_occ_threshold;
+
+  // Ultrasonic sensor configuration
+  uint16_t _ultrasonic_occ_to_unocc_delay;
+  uint16_t _ultrasonic_unocc_to_occ_delay;
+  uint8_t _ultrasonic_unocc_to_occ_threshold;
+
+  // Physical contact sensor configuration
+  uint16_t _physical_contact_occ_to_unocc_delay;
+  uint16_t _physical_contact_unocc_to_occ_delay;
+  uint8_t _physical_contact_unocc_to_occ_threshold;
 };
 
 #endif  // CONFIG_ZB_ENABLED
