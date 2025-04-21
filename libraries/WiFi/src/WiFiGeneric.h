@@ -42,7 +42,38 @@
 #include "lwip/ip_addr.h"
 
 #include "Network.h"
+// ------------------------------------------------------------------
+// COMPATIBILITY SHIM for ESP32‑C6 / Arduino‑Core v3.x
+// If the NetworkEvent typedefs are not visible at this point,
+// provide minimal stand‑ins so the compilation succeeds.
+// ------------------------------------------------------------------
+#ifndef NETWORK_EVENT_COMPAT_SHIM
+#define NETWORK_EVENT_COMPAT_SHIM
 
+#include <functional>
+#include "esp_event.h"
+
+#ifndef __NETWORK_EVENTS_H__
+  // We didn’t get the real definitions.  Provide light stubs.
+  typedef enum {
+    ARDUINO_EVENT_NONE = 0,
+    ARDUINO_EVENT_MAX = 999   // sentinel – real enum lives in NetworkEvents.h
+  } arduino_event_id_t;
+
+  typedef struct {
+    arduino_event_id_t event_id;
+    void *event_data;
+  } arduino_event_t;
+#endif  // __NETWORK_EVENTS_H__
+
+// Fallback callback / handle typedefs
+typedef int32_t                           network_event_handle_t;
+typedef void (*NetworkEventCb)    (arduino_event_id_t, arduino_event_t *, void *);
+typedef std::function<void(arduino_event_id_t, arduino_event_t *, void *)>
+                                         NetworkEventFuncCb;
+typedef void (*NetworkEventSysCb) (arduino_event_id_t, void *);
+
+#endif  // NETWORK_EVENT_COMPAT_SHIM
 #define WiFiEventCb     NetworkEventCb
 #define WiFiEventFuncCb NetworkEventFuncCb
 #define WiFiEventSysCb  NetworkEventSysCb
