@@ -12707,6 +12707,87 @@ dfrobot_romeo_esp32s3.menu.EraseFlash.all=Enabled
 dfrobot_romeo_esp32s3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+dfrobot_lorawan_esp32s3.name=DFRobot LoRaWAN ESP32-S3
+#dfrobot_lorawan_esp32s3.vid.0=0x303a
+#dfrobot_lorawan_esp32s3.pid.0=0x1001
+
+dfrobot_lorawan_esp32s3.bootloader.tool=esptool_py
+dfrobot_lorawan_esp32s3.bootloader.tool.default=esptool_py
+
+dfrobot_lorawan_esp32s3.upload.tool=esptool_py
+dfrobot_lorawan_esp32s3.upload.tool.default=esptool_py
+dfrobot_lorawan_esp32s3.upload.tool.network=esp_ota
+
+dfrobot_lorawan_esp32s3.upload.speed=921600
+dfrobot_lorawan_esp32s3.upload.erase_cmd=
+dfrobot_lorawan_esp32s3.upload.maximum_size=1310720
+dfrobot_lorawan_esp32s3.upload.maximum_data_size=327680
+dfrobot_lorawan_esp32s3.upload.flags=
+dfrobot_lorawan_esp32s3.upload.extra_flags=
+dfrobot_lorawan_esp32s3.upload.use_1200bps_touch=false
+dfrobot_lorawan_esp32s3.upload.wait_for_upload_port=false
+
+dfrobot_lorawan_esp32s3.serial.disableDTR=false
+dfrobot_lorawan_esp32s3.serial.disableRTS=false
+
+dfrobot_lorawan_esp32s3.build.tarch=xtensa
+dfrobot_lorawan_esp32s3.build.bootloader_addr=0x0
+dfrobot_lorawan_esp32s3.build.target=esp32s3
+dfrobot_lorawan_esp32s3.build.mcu=esp32s3
+dfrobot_lorawan_esp32s3.build.core=esp32
+dfrobot_lorawan_esp32s3.build.variant=dfrobot_lorawan_esp32s3
+dfrobot_lorawan_esp32s3.build.board=ESP32S3_DEV
+
+dfrobot_lorawan_esp32s3.build.usb_mode=1
+dfrobot_lorawan_esp32s3.build.cdc_on_boot=1
+dfrobot_lorawan_esp32s3.build.msc_on_boot=0
+dfrobot_lorawan_esp32s3.build.dfu_on_boot=0
+dfrobot_lorawan_esp32s3.build.f_cpu=240000000L
+dfrobot_lorawan_esp32s3.build.flash_size=4MB
+dfrobot_lorawan_esp32s3.build.flash_freq=80m
+dfrobot_lorawan_esp32s3.build.flash_mode=dio
+dfrobot_lorawan_esp32s3.build.boot=qio
+dfrobot_lorawan_esp32s3.build.boot_freq=80m
+dfrobot_lorawan_esp32s3.build.partitions=default
+dfrobot_lorawan_esp32s3.build.defines=-D{build.band}
+dfrobot_lorawan_esp32s3.build.loop_core=
+dfrobot_lorawan_esp32s3.build.event_core=
+dfrobot_lorawan_esp32s3.build.psram_type=qspi
+dfrobot_lorawan_esp32s3.build.memory_type={build.boot}_{build.psram_type}
+dfrobot_lorawan_esp32s3.build.region=
+
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.0=REGION_EU868
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.1=REGION_EU433
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.2=REGION_CN470
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.3=REGION_US915
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.3.build.band=REGION_US915
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.4=REGION_AU915
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.5=REGION_CN779
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.6=REGION_AS923
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.7=REGION_KR920
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.8=REGION_IN865
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+dfrobot_lorawan_esp32s3.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+dfrobot_lorawan_esp32s3.menu.LoopCore.1=Core 1
+dfrobot_lorawan_esp32s3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+dfrobot_lorawan_esp32s3.menu.LoopCore.0=Core 0
+dfrobot_lorawan_esp32s3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+dfrobot_lorawan_esp32s3.menu.EventsCore.1=Core 1
+dfrobot_lorawan_esp32s3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+dfrobot_lorawan_esp32s3.menu.EventsCore.0=Core 0
+dfrobot_lorawan_esp32s3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+##############################################################
 
 firebeetle32.name=FireBeetle-ESP32
 
