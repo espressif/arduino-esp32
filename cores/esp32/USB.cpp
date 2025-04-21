@@ -100,6 +100,7 @@ static bool tinyusb_device_suspended = false;
 void tud_mount_cb(void) {
   tinyusb_device_mounted = true;
   arduino_usb_event_data_t p;
+  p.suspend.remote_wakeup_en = 0;
   arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STARTED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
@@ -107,6 +108,7 @@ void tud_mount_cb(void) {
 void tud_umount_cb(void) {
   tinyusb_device_mounted = false;
   arduino_usb_event_data_t p;
+  p.suspend.remote_wakeup_en = 0;
   arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_STOPPED_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 
@@ -123,6 +125,7 @@ void tud_suspend_cb(bool remote_wakeup_en) {
 void tud_resume_cb(void) {
   tinyusb_device_suspended = false;
   arduino_usb_event_data_t p;
+  p.suspend.remote_wakeup_en = 0;
   arduino_usb_event_post(ARDUINO_USB_EVENTS, ARDUINO_USB_RESUME_EVENT, &p, sizeof(arduino_usb_event_data_t), portMAX_DELAY);
 }
 

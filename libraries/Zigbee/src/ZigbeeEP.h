@@ -81,9 +81,10 @@ public:
   char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
 
   // Set Power source and battery percentage for battery powered devices
-  bool setPowerSource(zb_power_source_t power_source, uint8_t percentage = 255);
-  bool setBatteryPercentage(uint8_t percentage);
-  bool reportBatteryPercentage();
+  bool setPowerSource(zb_power_source_t power_source, uint8_t percentage = 0xff, uint8_t voltage = 0xff);  // voltage in 100mV
+  bool setBatteryPercentage(uint8_t percentage);                                                           // 0-100 %
+  bool setBatteryVoltage(uint8_t voltage);                                                                 // voltage in 100mV (example value 35 for 3.5V)
+  bool reportBatteryPercentage();                                                                          // battery voltage is not reportable attribute
 
   // Set time
   bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
