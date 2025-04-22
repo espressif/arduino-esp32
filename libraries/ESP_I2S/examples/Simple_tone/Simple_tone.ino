@@ -70,11 +70,11 @@ void loop() {
     sample = -1 * sample;
   }
 
-  // Right channel, low 8 bit then hight 8 bit
+  // Left channel, low 8 bit then hight 8 bit
   i2s.write(sample);
   i2s.write(sample >> 8);
 
-  // Left channel, low 8 bit then hight 8 bit
+  // Right channel, low 8 bit then hight 8 bit
   i2s.write(sample);
   i2s.write(sample >> 8);
 
