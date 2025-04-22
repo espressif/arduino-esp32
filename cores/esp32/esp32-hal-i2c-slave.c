@@ -335,11 +335,16 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   }
 #endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  i2c_ll_enable_arbitration(i2c->dev, true);
+  i2c_ll_enable_fifo_mode(i2c->dev, true);
+#else
   i2c_ll_slave_init(i2c->dev);
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
   i2c_ll_enable_fifo_mode(i2c->dev, true);
 #else
   i2c_ll_slave_set_fifo_mode(i2c->dev, true);
+#endif
 #endif
   i2c_ll_set_slave_addr(i2c->dev, slaveID, false);
   i2c_ll_set_tout(i2c->dev, I2C_LL_MAX_TIMEOUT);
