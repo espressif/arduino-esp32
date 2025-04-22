@@ -128,7 +128,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   } else {
     ledc_timer_config_t ledc_timer;
     memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
-    ledc_timer.speed_mode = group
+    ledc_timer.speed_mode = group;
     ledc_timer.timer_num = timer;
     ledc_timer.duty_resolution = resolution;
     ledc_timer.freq_hz = freq;
@@ -272,7 +272,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
 
     ledc_timer_config_t ledc_timer;
     memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
-    ledc_timer.speed_mode = group
+    ledc_timer.speed_mode = group;
     ledc_timer.timer_num = timer;
     ledc_timer.duty_resolution = 10;
     ledc_timer.freq_hz = freq;
@@ -329,7 +329,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution) {
 
     ledc_timer_config_t ledc_timer;
     memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
-    ledc_timer.speed_mode = group
+    ledc_timer.speed_mode = group;
     ledc_timer.timer_num = timer;
     ledc_timer.duty_resolution = resolution;
     ledc_timer.freq_hz = freq;
