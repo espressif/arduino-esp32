@@ -35,6 +35,8 @@ PACKAGE_JSON_MERGE="$GITHUB_WORKSPACE/.github/scripts/merge_packages.py"
 PACKAGE_JSON_TEMPLATE="$GITHUB_WORKSPACE/package/package_esp32_index.template.json"
 PACKAGE_JSON_DEV="package_esp32_dev_index.json"
 PACKAGE_JSON_REL="package_esp32_index.json"
+PACKAGE_JSON_DEV_CN="package_esp32_dev_index_cn.json"
+PACKAGE_JSON_REL_CN="package_esp32_index_cn.json"
 
 echo "Event: $GITHUB_EVENT_NAME, Repo: $GITHUB_REPOSITORY, Path: $GITHUB_WORKSPACE, Ref: $GITHUB_REF"
 echo "Action: $action, Branch: $RELEASE_BRANCH, ID: $RELEASE_ID"
@@ -339,9 +341,13 @@ jq_arg=".packages[0].platforms[0].version = \"$RELEASE_TAG\" | \
 # Generate package JSONs
 echo "Generating $PACKAGE_JSON_DEV ..."
 cat "$PACKAGE_JSON_TEMPLATE" | jq "$jq_arg" > "$OUTPUT_DIR/$PACKAGE_JSON_DEV"
+# On MacOS the sed command won't skip the first match. Use gsed instead.
+sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/github_assets/espressif/|g' "$OUTPUT_DIR/$PACKAGE_JSON_DEV" > "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN"
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Generating $PACKAGE_JSON_REL ..."
     cat "$PACKAGE_JSON_TEMPLATE" | jq "$jq_arg" > "$OUTPUT_DIR/$PACKAGE_JSON_REL"
+    # On MacOS the sed command won't behave as expected. Use gsed instead.
+    sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/github_assets/espressif/|g' "$OUTPUT_DIR/$PACKAGE_JSON_REL" > "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
 fi
 
 # Figure out the last release or pre-release
@@ -373,12 +379,14 @@ echo
 if [ -n "$prev_any_release" ] && [ "$prev_any_release" != "null" ]; then
     echo "Merging with JSON from $prev_any_release ..."
     merge_package_json "$prev_any_release/$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV"
+    merge_package_json "$prev_any_release/$PACKAGE_JSON_DEV_CN" "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN"
 fi
 
 if [ "$RELEASE_PRE" == "false" ]; then
     if [ -n "$prev_release" ] && [ "$prev_release" != "null" ]; then
         echo "Merging with JSON from $prev_release ..."
         merge_package_json "$prev_release/$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL"
+        merge_package_json "$prev_release/$PACKAGE_JSON_REL_CN" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
     fi
 fi
 
@@ -387,6 +395,8 @@ fi
 echo "Installing arduino-cli ..."
 export PATH="/home/runner/bin:$PATH"
 source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+
+# For the Chinese mirror, we can't test the package JSONs as the Chinese mirror might not be updated yet.
 
 echo "Testing $PACKAGE_JSON_DEV install ..."
 
@@ -445,11 +455,15 @@ fi
 echo "Uploading $PACKAGE_JSON_DEV ..."
 echo "Download URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV")"
 echo "Pages URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV")"
+echo "Download CN URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN")"
+echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN")"
 echo
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Uploading $PACKAGE_JSON_REL ..."
     echo "Download URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL")"
     echo "Pages URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL")"
+    echo "Download CN URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
+    echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
     echo
 fi
 
