@@ -22,8 +22,8 @@
    then copy the data from the FIFO to the Arduino internal buffer, making it available to the Arduino API.
 
    There is an important detail about how HardwareSerial works using ESP32 and ESP32-S2:
-   If the baud rate is lower than 250,000, it will select REF_TICK as clock source in order to avoid that 
-   the baud rate may change when the CPU Frequency is changed. Default UART clock source is APB, which changes 
+   If the baud rate is lower than 250,000, it will select REF_TICK as clock source in order to avoid that
+   the baud rate may change when the CPU Frequency is changed. Default UART clock source is APB, which changes
    when CPU clock source is also changed. But when it selects REF_TICK as UART clock source, RX Timeout is limited to 1.
    Therefore, in order to change the ESP32/ESP32-S2 RX Timeout it is necessary to fix the UART Clock Source to APB.
 
