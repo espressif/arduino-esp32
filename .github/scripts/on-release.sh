@@ -346,7 +346,7 @@ sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/githu
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Generating $PACKAGE_JSON_REL ..."
     cat "$PACKAGE_JSON_TEMPLATE" | jq "$jq_arg" > "$OUTPUT_DIR/$PACKAGE_JSON_REL"
-    # On MacOS the sed command won't behave as expected. Use gsed instead.
+    # On MacOS the sed command won't skip the first match. Use gsed instead.
     sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/github_assets/espressif/|g' "$OUTPUT_DIR/$PACKAGE_JSON_REL" > "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
 fi
 
