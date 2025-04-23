@@ -46,7 +46,7 @@ static const uint8_t MOSI       = 11;
 static const uint8_t MISO       = 13;
 static const uint8_t SCK        = 12;
 
-// 屏幕
+
 #define TFT_DC 14
 #define TFT_CS 17
 #define TFT_RST 15
