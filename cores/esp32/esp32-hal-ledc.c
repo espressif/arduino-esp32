@@ -133,7 +133,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_timer.duty_resolution = resolution;
     ledc_timer.freq_hz = freq;
     ledc_timer.clk_cfg = clock_source;
-    
+
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledc setup failed!");
       return false;
@@ -149,7 +149,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_channel.intr_type = LEDC_INTR_DISABLE;
     ledc_channel.gpio_num = pin;
     ledc_channel.duty = duty;
-    ledc_channel.hpoint = 0; 
+    ledc_channel.hpoint = 0;
 
     ledc_channel_config(&ledc_channel);
   }
