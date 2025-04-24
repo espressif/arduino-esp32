@@ -267,9 +267,9 @@ void RMT_Loop_Write_Blink() {
     Serial.println("===> rmtWriteLooping Blink 0.25s Error!");
   }
   delay(5000);
-  
+
   Serial.println("Blinking OFF for 2 seconds");
-  rmt_data_t blink_STOP_rmt_data[] = { {0, 0, 0, 0} };
+  rmt_data_t blink_STOP_rmt_data[] = {{0, 0, 0, 0}};
   if (!rmtWrite(BLINK_GPIO, blink_STOP_rmt_data, RMT_SYMBOLS_OF(blink_STOP_rmt_data), RMT_WAIT_FOR_EVER)) {
     Serial.println("===> rmtWrite Blink STOP Error!");
   }
