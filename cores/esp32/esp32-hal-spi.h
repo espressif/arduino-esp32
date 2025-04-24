@@ -97,6 +97,8 @@ void spiSSSet(spi_t *spi);
 void spiSSClear(spi_t *spi);
 
 void spiWaitReady(spi_t *spi);
+//invert hardware SS
+void spiSSInvertout(spi_t *spi, bool invert);
 
 uint32_t spiGetClockDiv(spi_t *spi);
 uint8_t spiGetDataMode(spi_t *spi);
