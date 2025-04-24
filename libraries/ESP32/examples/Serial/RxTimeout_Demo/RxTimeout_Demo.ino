@@ -21,6 +21,15 @@
    If UART receives less than 120 bytes, it will wait RX Timeout to understand that the bus is IDLE and
    then copy the data from the FIFO to the Arduino internal buffer, making it available to the Arduino API.
 
+   There is an important detail about how HardwareSerial works using ESP32 and ESP32-S2:
+   If the baud rate is lower than 250,000, it will select REF_TICK as clock source in order to avoid that
+   the baud rate may change when the CPU Frequency is changed. Default UART clock source is APB, which changes
+   when CPU clock source is also changed. But when it selects REF_TICK as UART clock source, RX Timeout is limited to 1.
+   Therefore, in order to change the ESP32/ESP32-S2 RX Timeout it is necessary to fix the UART Clock Source to APB.
+
+   In the case of the other SoC, such as ESP32-S3, C3, C6, H2 and P4, there is no such RX Timeout limitation.
+   Those will set the UART Source Clock as XTAL, which allows the baud rate to be high and it is steady, not
+   changing with the CPU Frequency.
 */
 
 #include <Arduino.h>
@@ -45,6 +54,12 @@ void setup() {
 
   // UART1 will have its RX<->TX cross connected
   // GPIO4 <--> GPIO5 using external wire
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
+  // UART_CLK_SRC_APB will allow higher values of RX Timeout
+  // default for ESP32 and ESP32-S2 is REF_TICK which limits the RX Timeout to 1
+  // setClockSource() must be called before begin()
+  Serial1.setClockSource(UART_CLK_SRC_APB);
+#endif
   Serial1.begin(BAUD, SERIAL_8N1, RXPIN, TXPIN);  // Rx = 4, Tx = 5 will work for ESP32, S2, S3 and C3
 #if USE_INTERNAL_PIN_LOOPBACK
   uart_internal_loopback(TEST_UART, RXPIN);
