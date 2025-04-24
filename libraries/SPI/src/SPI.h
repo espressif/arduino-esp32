@@ -65,7 +65,7 @@ public:
   void end();
   
   void setHwCs(bool use);
-  void setSSInvert(bool invert);
+  void setSSInvert(bool invert);  //use before setHwCS for change to be used by setHwCs
   void setBitOrder(uint8_t bitOrder);
   void setDataMode(uint8_t dataMode);
   void setFrequency(uint32_t freq);
