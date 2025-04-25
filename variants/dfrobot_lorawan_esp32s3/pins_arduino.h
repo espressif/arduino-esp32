@@ -3,19 +3,7 @@
 
 #include <stdint.h>
 
-// DFROBOT  DFR1195
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS 40
-#define NUM_ANALOG_INPUTS 16
-
-#define analogInputToDigitalPin(p) (((p) < 20) ? (esp32_adc2gpio[(p)]) : -1)
-#define digitalPinToInterrupt(p) (((p) < 40) ? (p) : -1)
-#define digitalPinHasPWM(p) (p < 34)
-
-#define LED_GREEN -1
-#define LED_BLUE 2
-
-#define LED_BUILTIN LED_GREEN
+#define LED_BUILTIN 21
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
