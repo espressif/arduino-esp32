@@ -22,6 +22,7 @@
 #define DISP_D3  (45)
 #define DISP_SCK (40)
 #define DISP_CS  (41)
+#define DISP_RST (37)
 #define DISP_TE  (6)
 
 // Interrupt IO port
@@ -47,9 +48,9 @@
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-//BHI260,PCF85063,AXP2101,DRV2605L,PN532 share I2C Bus
-static const uint8_t SDA = 2;
-static const uint8_t SCL = 3;
+// BHI260,PCF85063,AXP2101,DRV2605L share I2C Bus
+static const uint8_t SDA = 3;
+static const uint8_t SCL = 2;
 
 // Default sd cs pin
 static const uint8_t SS = SD_CS;
@@ -76,8 +77,7 @@ static const uint8_t SCK = 35;
 // External expansion chip IO definition
 #define EXPANDS_DRV_EN    (6)
 #define EXPANDS_DISP_EN   (7)
-#define EXPANDS_TOUCH_RST (10)
-#define EXPANDS_DISP_RST  (11)
+#define EXPANDS_SD_DET  (10)
 
 // Peripheral definition exists
 #define USING_XL9555_EXPANDS
