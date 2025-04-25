@@ -74,7 +74,7 @@ struct spi_struct_t {
   int8_t miso;
   int8_t mosi;
   int8_t ss;
-  bool invert_out;
+  bool ss_invert;
 };
 
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -368,7 +368,7 @@ bool spiAttachSS(spi_t *spi, uint8_t ss_num, int8_t ss) {
     return false;
   }
   pinMode(ss, OUTPUT);
-  pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, ss_num), spi->invert_out, false);
+  pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, ss_num), spi->ss_invert, false);
   spiEnableSSPins(spi, (1 << ss_num));
   spi->ss = ss;
   if (!perimanSetPinBus(ss, ESP32_BUS_TYPE_SPI_MASTER_SS, (void *)(spi->num + 1), spi->num, -1)) {
@@ -440,7 +440,7 @@ void spiSSDisable(spi_t *spi) {
 
 void spiSSInvertout(spi_t *spi, bool invert) {
   if (spi) {
-    spi->invert_out = invert;
+    spi->ss_invert = invert;
   }
 }
 
