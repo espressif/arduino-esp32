@@ -62,7 +62,7 @@ The project will download all necessary components, including the Arduino Core.
 Execute this sequence:
  `<remove build folder> using linux rm command or Windows rmdir command`
  `idf.py set-target <SoC_Target>`
- `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
+ `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig_file1;sdkconfig_file2;sdkconfig_fileX" -p <PORT> flash monitor`
 
 Example for ESP32-S3/Linux | macOS:  
 ```
