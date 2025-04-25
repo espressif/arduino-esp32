@@ -146,7 +146,7 @@ void SPIClass::setHwCs(bool use) {
 
 void SPIClass::setSSInvert(bool invert) {
   if (_spi) {
-    spiSSInvertout(_spi, invert);
+    spiSSInvert(_spi, invert);
   }
 }
 
