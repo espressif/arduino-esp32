@@ -75,19 +75,18 @@ static const uint8_t SCK = 35;
 #define DISP_BL   (42)
 
 // External expansion chip IO definition
-#define EXPANDS_DRV_EN   (0)
-#define EXPANDS_AMP_EN   (1)
-#define EXPANDS_KB_RST   (2)
-#define EXPANDS_LORA_EN  (3)
-#define EXPANDS_GPS_EN   (4)
-#define EXPANDS_NFC_EN   (5)
-#define EXPANDS_GPS_RST  (7)
-#define EXPANDS_KB_EN    (8)
-#define EXPANDS_GPIO_EN  (9)
-#define EXPANDS_SD_DET  (10)
-#define EXPANDS_SD_PULLEN  (11)
-#define EXPANDS_SD_EN   (12)
-
+#define EXPANDS_DRV_EN    (0)
+#define EXPANDS_AMP_EN    (1)
+#define EXPANDS_KB_RST    (2)
+#define EXPANDS_LORA_EN   (3)
+#define EXPANDS_GPS_EN    (4)
+#define EXPANDS_NFC_EN    (5)
+#define EXPANDS_GPS_RST   (7)
+#define EXPANDS_KB_EN     (8)
+#define EXPANDS_GPIO_EN   (9)
+#define EXPANDS_SD_DET    (10)
+#define EXPANDS_SD_PULLEN (11)
+#define EXPANDS_SD_EN     (12)
 
 // Peripheral definition exists
 #define USING_AUDIO_CODEC
