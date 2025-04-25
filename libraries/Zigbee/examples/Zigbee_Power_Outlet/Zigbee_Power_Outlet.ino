@@ -23,7 +23,7 @@
  *
  * Please check the README.md for instructions and more detailed description.
  *
- * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
+ * Created by Ludovic Boué (https://github.com/lboue)
  */
 
 #ifndef ZIGBEE_MODE_ED
