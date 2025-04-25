@@ -59,15 +59,22 @@ Use ESP-IDF 5.1.4 from https://github.com/espressif/esp-idf/tree/release/v5.1
 This example has been tested with Arduino Core 3.0.4
 
 The project will download all necessary components, including the Arduino Core.  
-Run `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
+Execute this sequence:
+ `<remove build folder> using linux rm command or Windows rmdir command`
+ `idf.py set-target <SoC_Target>`
+ `idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.<SOC>.idf" -p <PORT> flash monitor`
 
 Example for ESP32-S3/Linux | macOS:  
 ```
-idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32s3" -p /dev/ttyACM0 flash monitor
+rm -rf build
+idf.py set-target esp32s3
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults" -p /dev/ttyACM0 flash monitor
 ```
 Example for ESP32-C3/Windows:  
 ```
-idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.esp32c3" -p com3 flash monitor
+rmdir /s/q build
+idf.py set-target esp32c3
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults" -p com3 flash monitor
 ```
 
 It may be necessary to delete some folders and files  before running `idf.py`  
@@ -95,11 +102,15 @@ In order to build the application that will use Thread Networking instead of Wi-
 
 Example for ESP32-C6/Linux | macOS:  
 ```
-idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor
+rm -rf build
+idf.py set-target esp32c6
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.c6_thread" -p /dev/ttyACM0 flash monitor
 ```
 Example for ESP32-C6/Windows:  
 ```
-idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults.c6_thread" -p com3 flash monitor
+rmdir /s/q build
+idf.py set-targt esp32c6
+idf.py -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.c6_thread" -p com3 flash monitor
 ```
 
 It may be necessary to delete some folders and files before running `idf.py`  
