@@ -438,7 +438,7 @@ void spiSSDisable(spi_t *spi) {
   SPI_MUTEX_UNLOCK();
 }
 
-void spiSSInvertout(spi_t *spi, bool invert) {
+void spiSSInvert(spi_t *spi, bool invert) {
   if (spi) {
     spi->ss_invert = invert;
   }
