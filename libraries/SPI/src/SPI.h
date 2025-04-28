@@ -63,7 +63,7 @@ public:
   ~SPIClass();
   void begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1);
   void end();
-  
+
   void setHwCs(bool use);
   void setSSInvert(bool invert);  //use before setHwCS for change to be used by setHwCs
   void setBitOrder(uint8_t bitOrder);

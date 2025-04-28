@@ -357,8 +357,6 @@ bool spiDetachMOSI(spi_t *spi) {
   return true;
 }
 
-
-
 bool spiAttachSS(spi_t *spi, uint8_t ss_num, int8_t ss) {
   if (!spi || ss < 0 || ss_num > 2) {
     return false;
