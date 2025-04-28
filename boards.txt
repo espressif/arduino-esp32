@@ -43430,6 +43430,13 @@ codecell.menu.EraseFlash.none=Disabled
 codecell.menu.EraseFlash.none.upload.erase_cmd=
 codecell.menu.EraseFlash.all=Enabled
 codecell.menu.EraseFlash.all.upload.erase_cmd=-e
+
+codecell.menu.ZigbeeMode.default=Disabled
+codecell.menu.ZigbeeMode.default.build.zigbee_mode=
+codecell.menu.ZigbeeMode.default.build.zigbee_libs=
+codecell.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+codecell.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+codecell.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 ##############################################################
 
 jczn_2432s028r.name=ESP32-2432S028R CYD
