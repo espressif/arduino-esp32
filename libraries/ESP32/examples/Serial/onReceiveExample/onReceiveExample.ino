@@ -53,13 +53,6 @@
    https://minimalmodbus.readthedocs.io/en/stable/serialcommunication.html
 */
 
-// this will make UART0 work in any case (using or not USB)
-#if ARDUINO_USB_CDC_ON_BOOT
-#define UART0 Serial0
-#else
-#define UART0 Serial
-#endif
-
 // global variable to keep the results from onReceive()
 String uart_buffer = "";
 // The Modbus RTU standard prescribes a silent period corresponding to 3.5 characters between each
@@ -71,42 +64,42 @@ const uint32_t baudrate = 19200;
 // This is a callback function executed from a high priority monitor task
 // All data will be buffered into RX Buffer, which may have its size set to whatever necessary
 void UART0_RX_CB() {
-  while (UART0.available()) {
-    uart_buffer += (char)UART0.read();
+  while (Serial0.available()) {
+    uart_buffer += (char)Serial0.read();
   }
 }
 
 // setup() and loop() are functions executed by a low priority task
 // Therefore, there are 2 tasks running when using onReceive()
 void setup() {
+  // Using Serial0 will work in any case (using or not USB CDC on Boot)
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   // UART_CLK_SRC_APB will allow higher values of RX Timeout
   // default for ESP32 and ESP32-S2 is REF_TICK which limits the RX Timeout to 1
   // setClockSource() must be called before begin()
-  UART0.setClockSource(UART_CLK_SRC_APB);
+  Serial0.setClockSource(UART_CLK_SRC_APB);
 #endif
-  // the amount of data received or waiting to be processed shall not exceed this limit (1024 bytes)
-  UART0.setRxBufferSize(1024); // default is 256 bytes
-  UART0.begin(baudrate); // default pins and default mode 8N1 (8 bits data, no parity bit, 1 stopbit)
+  // the amount of data received or waiting to be proessed shall not exceed this limit of 1024 bytes
+  Serial0.setRxBufferSize(1024); // default is 256 bytes
+  Serial0.begin(baudrate); // default pins and default mode 8N1 (8 bits data, no parity bit, 1 stopbit)
   // set RX Timeout based on UART symbols ~ 3.5 symbols of 11 bits (MODBUS standard) ~= 2 ms at 19200
-  UART0.setRxTimeout(modbusRxTimeoutLimit);  // 4 symbols at 19200 8N1 is about 2.08 ms (40 bits)
+  Serial0.setRxTimeout(modbusRxTimeoutLimit);  // 4 symbols at 19200 8N1 is about 2.08 ms (40 bits)
   // sets the callback function that will be executed only after RX Timeout
-  UART0.onReceive(UART0_RX_CB, true);
-
-  UART0.println("Send data to UART0 in order to activate the RX callback");
+  Serial0.onReceive(UART0_RX_CB, true);
+  Serial0.println("Send data using Serial Monitor in order to activate the RX callback");
 }
 
 uint32_t counter = 0;
 void loop() {
   // String <uart_buffer> is filled by the UART Callback whenever data is received and RX Timeout occurs
   if (uart_buffer.length() > 0) {
-    // process the received data from UART0 - example, just print it beside a counter
-    UART0.print("[");
-    UART0.print(counter++);
-    UART0.print("] [");
-    UART0.print(uart_buffer.length());
-    UART0.print(" bytes] ");
-    UART0.println(uart_buffer);
+    // process the received data from Serial - example, just print it beside a counter
+    Serial0.print("[");
+    Serial0.print(counter++);
+    Serial0.print("] [");
+    Serial0.print(uart_buffer.length());
+    Serial0.print(" bytes] ");
+    Serial0.println(uart_buffer);
     uart_buffer = "";  // reset uart_buffer for the next UART reading
   }
   delay(1);
