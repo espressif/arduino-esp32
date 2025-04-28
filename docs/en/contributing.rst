@@ -15,6 +15,9 @@ Before Contributing
 
 Before sending us a Pull Request, please consider this:
 
+* All contributions must be written in English to ensure effective communication and support.
+  Pull Requests written in other languages will be closed, with a request to rewrite them in English.
+
 * Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License?
   If not, cannot accept it.
 
