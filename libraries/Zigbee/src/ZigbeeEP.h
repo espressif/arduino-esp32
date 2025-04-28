@@ -66,12 +66,16 @@ public:
     return _bound_devices;
   }
 
-  static bool bound() {
+  bool bound() {
     return _is_bound;
   }
-  static void allowMultipleBinding(bool bind) {
+  void allowMultipleBinding(bool bind) {
     _allow_multiple_binding = bind;
   }
+  void setManualBinding(bool bind) {
+    _use_manual_binding = bind;
+  }
+
 
   // Set Manufacturer name and model
   bool setManufacturerAndModel(const char *name, const char *model);
@@ -98,6 +102,10 @@ public:
   bool epAllowMultipleBinding() {
     return _allow_multiple_binding;
   }
+  bool epUseManualBinding() {
+    return _use_manual_binding;
+  }
+
 
   // OTA methods
   /**
@@ -138,6 +146,14 @@ public:
     _is_bound = true;
   }
 
+  virtual void removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  virtual void removeBoundDevice(zb_device_params_t *device);
+
+  virtual void clearBoundDevices() {
+    _bound_devices.clear();
+    _is_bound = false;
+  }
+
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
   }
@@ -157,8 +173,9 @@ protected:
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;
   esp_zb_cluster_list_t *_cluster_list;
-  static bool _is_bound;
-  static bool _allow_multiple_binding;
+  bool _is_bound;
+  bool _allow_multiple_binding;
+  bool _use_manual_binding;
   std::list<zb_device_params_t *> _bound_devices;
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
