@@ -56,7 +56,7 @@
 // global variable to keep the results from onReceive()
 String uart_buffer = "";
 // The Modbus RTU standard prescribes a silent period corresponding to 3.5 characters between each
-// message, to be able fo figure out where one message ends and the next one starts.
+// message, to be able to figure out where one message ends and the next one starts.
 const uint32_t modbusRxTimeoutLimit = 4;
 const uint32_t baudrate = 19200;
 
