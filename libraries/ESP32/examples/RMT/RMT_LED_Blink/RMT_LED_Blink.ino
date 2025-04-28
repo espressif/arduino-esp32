@@ -1,4 +1,4 @@
-// Copyright 2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrate how to use RMT to just blink a regular LED (GPIO)
- * It uses all the different RMT Writing APIs to blink the LED by hardware, not being
- * necessary the regular Blink code in Arduino.
- *
- * The output is the Blinking LED in the GPIO and a serial output describing what is
- * going on, along the execution.
- *
- * The circuit is just a LED and a resistor of 270 ohms connected to the GPIO
- * GPIO ---> resistor 270 ohms ---> + LED - ---> GND
- */
+   @brief This example demonstrate how to use RMT to just blink a regular LED (GPIO)
+   It uses all the different RMT Writing APIs to blink the LED by hardware, not being
+   necessary the regular Blink code in Arduino.
+
+   The output is the Blinking LED in the GPIO and a serial output describing what is
+   going on, along the execution.
+
+   The circuit is just a LED and a resistor of 270 ohms connected to the GPIO
+   GPIO ---> resistor 270 ohms ---> + LED - ---> GND
+*/
 
 #define BLINK_GPIO 2
 
@@ -232,7 +232,7 @@ void RMT_Mixed_Write_Blink() {
   Serial.println("===> rmtWrite() (Blocking Mode) to Blink the LED.");
   Serial.println("Blinking at 500ms on + 500ms off :: 4 blinks");
   for (uint8_t i = 0; i < 4; i++) {
-    if (!rmtWrite(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 2, RMT_WAIT_FOR_EVER)) {
+    if (!rmtWrite(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 1, RMT_WAIT_FOR_EVER)) {
       Serial.println("===> rmtWrite Blink 0.5s Error!");
     }
   }
@@ -240,7 +240,7 @@ void RMT_Mixed_Write_Blink() {
   Serial.println("===> rmtWriteAsync() (Non-Blocking Mode) to Blink the LED.");
   Serial.println("Blinking at 250ms on + 250ms off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
-    if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 2)) {
+    if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 1)) {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
     // wait (blocks) until all the data is sent out
@@ -267,9 +267,11 @@ void RMT_Loop_Write_Blink() {
     Serial.println("===> rmtWriteLooping Blink 0.25s Error!");
   }
   delay(5000);
+
   Serial.println("Blinking OFF for 2 seconds");
-  if (!rmtWriteLooping(BLINK_GPIO, NULL, 0)) {
-    Serial.println("===> rmtWriteLooping Blink OFF Error!");
+  rmt_data_t blink_STOP_rmt_data[] = {{0, 0, 0, 0}};
+  if (!rmtWrite(BLINK_GPIO, blink_STOP_rmt_data, RMT_SYMBOLS_OF(blink_STOP_rmt_data), RMT_WAIT_FOR_EVER)) {
+    Serial.println("===> rmtWrite Blink STOP Error!");
   }
   delay(2000);
 }
@@ -278,19 +280,19 @@ void RMT_Single_Write_Blocking_Blink() {
   Serial.println("Using RMT Writing and its Completion to blink an LED.");
   Serial.println("Blinking at 1s on + 1s off :: 2 blinks");
   for (uint8_t i = 0; i < 2; i++) {
-    if (!rmtWrite(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data) - 2, RMT_WAIT_FOR_EVER)) {
+    if (!rmtWrite(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data) - 1, RMT_WAIT_FOR_EVER)) {
       Serial.println("===> rmtWrite Blink 1s Error!");
     }
   }
   Serial.println("Blinking at 500ms on + 500ms off :: 4 blinks");
   for (uint8_t i = 0; i < 4; i++) {
-    if (!rmtWrite(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 2, RMT_WAIT_FOR_EVER)) {
+    if (!rmtWrite(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 1, RMT_WAIT_FOR_EVER)) {
       Serial.println("===> rmtWrite Blink 0.5s Error!");
     }
   }
   Serial.println("Blinking at 250ms on + 250ms off :: 8 blinks");
   for (uint8_t i = 0; i < 8; i++) {
-    if (!rmtWrite(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 2, RMT_WAIT_FOR_EVER)) {
+    if (!rmtWrite(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 1, RMT_WAIT_FOR_EVER)) {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
   }
@@ -302,7 +304,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
   Serial.println("Using RMT Async Writing and its Completion to blink an LED.");
   Serial.println("Blinking at 1s on + 1s off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
-    if (!rmtWriteAsync(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data) - 2)) {
+    if (!rmtWriteAsync(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data) - 1)) {
       Serial.println("===> rmtWrite Blink 1s Error!");
     }
     // wait (blocks) until all the data is sent out
@@ -310,7 +312,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
   }
   Serial.println("Blinking at 500ms on + 500ms off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
-    if (!rmtWriteAsync(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 2)) {
+    if (!rmtWriteAsync(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data) - 1)) {
       Serial.println("===> rmtWrite Blink 0.5s Error!");
     }
     // wait (blocks) until all the data is sent out
@@ -318,7 +320,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
   }
   Serial.println("Blinking at 250ms on + 250ms off :: 5 blinks");
   for (uint8_t i = 0; i < 5; i++) {
-    if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 2)) {
+    if (!rmtWriteAsync(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data) - 1)) {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
     // wait (blocks) until all the data is  sent out
@@ -345,7 +347,6 @@ void setup() {
 
   RMT_Mixed_Write_Blink();
   Serial.println("End of Mixed Calls testing");
-  delay(1000);
 
   Serial.println("\n===============================");
   Serial.println("Starting a Blinking sequence...");
