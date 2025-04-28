@@ -80,8 +80,8 @@ void setup() {
   Serial0.setClockSource(UART_CLK_SRC_APB);
 #endif
   // the amount of data received or waiting to be proessed shall not exceed this limit of 1024 bytes
-  Serial0.setRxBufferSize(1024); // default is 256 bytes
-  Serial0.begin(baudrate); // default pins and default mode 8N1 (8 bits data, no parity bit, 1 stopbit)
+  Serial0.setRxBufferSize(1024);  // default is 256 bytes
+  Serial0.begin(baudrate);        // default pins and default mode 8N1 (8 bits data, no parity bit, 1 stopbit)
   // set RX Timeout based on UART symbols ~ 3.5 symbols of 11 bits (MODBUS standard) ~= 2 ms at 19200
   Serial0.setRxTimeout(modbusRxTimeoutLimit);  // 4 symbols at 19200 8N1 is about 2.08 ms (40 bits)
   // sets the callback function that will be executed only after RX Timeout
