@@ -85,7 +85,7 @@ void setup() {
   // setClockSource() must be called before begin()
   UART0.setClockSource(UART_CLK_SRC_APB);
 #endif
-  // the amount of data received or waiting to be proessed shall not exceed this limit of 1024 bytes
+  // the amount of data received or waiting to be processed shall not exceed this limit (1024 bytes)
   UART0.setRxBufferSize(1024); // default is 256 bytes
   UART0.begin(baudrate); // default pins and default mode 8N1 (8 bits data, no parity bit, 1 stopbit)
   // set RX Timeout based on UART symbols ~ 3.5 symbols of 11 bits (MODBUS standard) ~= 2 ms at 19200
