@@ -6007,12 +6007,12 @@ twatchs3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 twatchs3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 twatchs3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
-twatchs3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-twatchs3.menu.PartitionScheme.fatflash.build.partitions=ffat
-twatchs3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatchs3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
 twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
 twatchs3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twatchs3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twatchs3.menu.PartitionScheme.fatflash.build.partitions=ffat
+twatchs3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 twatchs3.menu.PartitionScheme.rainmaker=RainMaker
 twatchs3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 twatchs3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -6076,6 +6076,10 @@ twatchs3.menu.Revision.Radio_SX1280=Radio-SX1280
 twatchs3.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 twatchs3.menu.Revision.Radio_CC1101=Radio-CC1101
 twatchs3.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
+twatchs3.menu.Revision.Radio_LR1121=Radio-LR1121
+twatchs3.menu.Revision.Radio_LR1121.build.board=LILYGO_LORA_LR1121
+twatchs3.menu.Revision.Radio_SI4432=Radio-SI4432
+twatchs3.menu.Revision.Radio_SI4432.build.board=LILYGO_LORA_SI4432
 
 ##############################################################
 
@@ -6231,13 +6235,16 @@ twatch_ultra.menu.EraseFlash.none.upload.erase_cmd=
 twatch_ultra.menu.EraseFlash.all=Enabled
 twatch_ultra.menu.EraseFlash.all.upload.erase_cmd=-e
 
-twatch_ultra.menu.Revision.Radio_SX1280=Radio-SX1280
-twatch_ultra.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 twatch_ultra.menu.Revision.Radio_SX1262=Radio-SX1262
 twatch_ultra.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+twatch_ultra.menu.Revision.Radio_SX1280=Radio-SX1280
+twatch_ultra.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 twatch_ultra.menu.Revision.Radio_CC1101=Radio-CC1101
 twatch_ultra.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
-
+twatch_ultra.menu.Revision.Radio_LR1121=Radio-LR1121
+twatch_ultra.menu.Revision.Radio_LR1121.build.board=LILYGO_LORA_LR1121
+twatch_ultra.menu.Revision.Radio_SI4432=Radio-SI4432
+twatch_ultra.menu.Revision.Radio_SI4432.build.board=LILYGO_LORA_SI4432
 
 ##############################################################
 
@@ -6393,12 +6400,16 @@ tlora_pager.menu.EraseFlash.all=Enabled
 tlora_pager.menu.EraseFlash.all.upload.erase_cmd=-e
 
 
-tlora_pager.menu.Revision.Radio_SX1280=Radio-SX1280
-tlora_pager.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 tlora_pager.menu.Revision.Radio_SX1262=Radio-SX1262
 tlora_pager.menu.Revision.Radio_SX1262.build.board=LILYGO_LORA_SX1262
+tlora_pager.menu.Revision.Radio_SX1280=Radio-SX1280
+tlora_pager.menu.Revision.Radio_SX1280.build.board=LILYGO_LORA_SX1280
 tlora_pager.menu.Revision.Radio_CC1101=Radio-CC1101
 tlora_pager.menu.Revision.Radio_CC1101.build.board=LILYGO_LORA_CC1101
+tlora_pager.menu.Revision.Radio_LR1121=Radio-LR1121
+tlora_pager.menu.Revision.Radio_LR1121.build.board=LILYGO_LORA_LR1121
+tlora_pager.menu.Revision.Radio_SI4432=Radio-SI4432
+tlora_pager.menu.Revision.Radio_SI4432.build.board=LILYGO_LORA_SI4432
 
 ##############################################################
 
