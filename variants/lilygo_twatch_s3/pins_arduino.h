@@ -44,7 +44,7 @@
 static const uint8_t TX = 42;
 static const uint8_t RX = 41;
 
-//BHI260,PCF85063,AXP2101,DRV2605L,PN532 share I2C Bus
+// BMA423,PCF8563,AXP2101,DRV2605L share I2C Bus
 static const uint8_t SDA = 10;
 static const uint8_t SCL = 11;
 
