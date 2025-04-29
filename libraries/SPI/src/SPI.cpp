@@ -144,6 +144,12 @@ void SPIClass::setHwCs(bool use) {
   _use_hw_ss = use;
 }
 
+void SPIClass::setSSInvert(bool invert) {
+  if (_spi) {
+    spiSSInvert(_spi, invert);
+  }
+}
+
 void SPIClass::setFrequency(uint32_t freq) {
   SPI_PARAM_LOCK();
   //check if last freq changed
