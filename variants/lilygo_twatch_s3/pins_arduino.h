@@ -44,7 +44,7 @@
 static const uint8_t TX = 42;
 static const uint8_t RX = 41;
 
-//BHI260,PCF85063,AXP2101,DRV2605L,PN532 share I2C Bus
+// BMA423,PCF8563,AXP2101,DRV2605L share I2C Bus
 static const uint8_t SDA = 10;
 static const uint8_t SCL = 11;
 
@@ -65,5 +65,12 @@ static const uint8_t SCK = 3;
 
 #define GPS_TX (TX)
 #define GPS_RX (RX)
+
+// Peripheral definition exists
+#define USING_PCM_AMPLIFIER
+#define USING_PDM_MICROPHONE
+#define USING_PMU_MANAGE
+#define USING_INPUT_DEV_TOUCHPAD
+#define USING_IR_REMOTE
 
 #endif /* Pins_Arduino_h */

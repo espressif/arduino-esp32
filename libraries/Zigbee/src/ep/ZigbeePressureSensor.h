@@ -4,7 +4,7 @@
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -42,19 +42,19 @@ public:
   ~ZigbeePressureSensor() {}
 
   // Set the pressure value in 1 hPa
-  void setPressure(int16_t value);
+  bool setPressure(int16_t value);
 
   // Set the min and max value for the pressure sensor in 1 hPa
-  void setMinMaxValue(int16_t min, int16_t max);
+  bool setMinMaxValue(int16_t min, int16_t max);
 
   // Set the tolerance value for the pressure sensor in 1 hPa
-  void setTolerance(uint16_t tolerance);
+  bool setTolerance(uint16_t tolerance);
 
   // Set the reporting interval for pressure measurement in seconds and delta (pressure change in 1 hPa)
-  void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
   // Report the pressure value
-  void report();
+  bool report();
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

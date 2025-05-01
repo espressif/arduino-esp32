@@ -5,7 +5,7 @@
   only in Keyboard.cpp and the keyboard layout files. Layout files map
   ASCII character codes to keyboard scan codes (technically, to USB HID
   Usage codes), possibly altered by the SHIFT or ALT_GR modifiers.
-  Non-ACSII characters (anything outside the 7-bit range NUL..DEL) are
+  Non-ASCII characters (anything outside the 7-bit range NUL..DEL) are
   not supported.
 
   == Creating your own layout ==

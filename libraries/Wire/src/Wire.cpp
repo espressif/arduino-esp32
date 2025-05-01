@@ -462,10 +462,11 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
     nonStop = true;
   }
   switch (err) {
-    case ESP_OK:          return 0;
-    case ESP_FAIL:        return 2;
-    case ESP_ERR_TIMEOUT: return 5;
-    default:              break;
+    case ESP_OK:            return 0;
+    case ESP_FAIL:          return 2;
+    case ESP_ERR_NOT_FOUND: return 2;
+    case ESP_ERR_TIMEOUT:   return 5;
+    default:                break;
   }
   return 4;
 }
@@ -646,8 +647,16 @@ void TwoWire::onRequestService(uint8_t num, void *arg) {
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if SOC_I2C_NUM > 1
+TwoWire Wire1 = TwoWire(1);
+#elif SOC_I2C_NUM > 2
+TwoWire Wire2 = TwoWire(2);
+#endif /* SOC_I2C_NUM */
+#else
 #if SOC_HP_I2C_NUM > 1
 TwoWire Wire1 = TwoWire(1);
 #endif /* SOC_HP_I2C_NUM */
+#endif
 
 #endif /* SOC_I2C_SUPPORTED */

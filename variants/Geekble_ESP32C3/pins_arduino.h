@@ -27,6 +27,6 @@ static const uint8_t A1 = 1;
 static const uint8_t A2 = 2;
 static const uint8_t A3 = 3;
 static const uint8_t A4 = 4;
-static const uint8_t A5 = 5;
+//static const uint8_t A5 = 5;  // ADC1 no longer supported
 
 #endif /* Pins_Arduino_h */

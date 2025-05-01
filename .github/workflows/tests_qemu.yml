@@ -21,7 +21,7 @@ jobs:
       - name: Check if already passed
         id: get-cache-results
         if: github.event.pull_request.number != null
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           key: tests-${{ env.id }}-results-qemu
           path: |
@@ -43,7 +43,7 @@ jobs:
 
       - name: Checkout user repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
@@ -60,7 +60,7 @@ jobs:
           cd .github
           curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         with:
           cache-dependency-path: tests/requirements.txt
@@ -74,14 +74,14 @@ jobs:
           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
 
       - name: Install APT dependencies
-        uses: awalsh128/cache-apt-pkgs-action@v1.4.2
+        uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40 # v1.4.3
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         with:
           packages: libpixman-1-0 libnuma1 libglib2.0-0 libslirp0 libsdl2-2.0-0
           version: 1.0
 
       - name: Get QEMU version
-        uses: pozetroninc/github-action-get-latest-release@v0.7.0
+        uses: pozetroninc/github-action-get-latest-release@2a61c339ea7ef0a336d1daa35ef0cb1418e7676c # v0.8.0
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         id: get-qemu-version
         with:
@@ -92,7 +92,7 @@ jobs:
 
       - name: Cache QEMU
         id: cache-qemu
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         with:
           path: |
@@ -113,18 +113,18 @@ jobs:
 
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
-            ~/.arduino/tests
+            ~/.arduino/tests/${{ inputs.chip }}
 
       - name: Run Tests
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         run: QEMU_PATH="${{ env.QEMU_INSTALL_PATH }}" bash .github/scripts/tests_run.sh -c -type ${{inputs.type}} -t ${{inputs.chip}} -i 0 -m 1 -Q
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} QEMU results as cache
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         if: steps.check-tests.outputs.enabled == 'true' && github.event.pull_request.number != null
         with:
           key: tests-${{ env.id }}-results-qemu
@@ -133,7 +133,7 @@ jobs:
             tests/**/result_*.json
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} QEMU results as artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: tests-results-qemu-${{ inputs.chip }}-${{ inputs.type }}

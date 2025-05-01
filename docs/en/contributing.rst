@@ -15,6 +15,9 @@ Before Contributing
 
 Before sending us a Pull Request, please consider this:
 
+* All contributions must be written in English to ensure effective communication and support.
+  Pull Requests written in other languages will be closed, with a request to rewrite them in English.
+
 * Is the contribution entirely your own work, or is it already licensed under an LGPL 2.1 compatible Open Source License?
   If not, cannot accept it.
 
@@ -318,7 +321,7 @@ ESP32-C3 target, you would run:
 
     ./.github/scripts/tests_build.sh -s uart -t esp32c3
 
-You should see the output of the build process and the test binary should be generated in the ``~/.arduino/tests/<test_name>/build.tmp`` folder.
+You should see the output of the build process and the test binary should be generated in the ``~/.arduino/tests/<target_chip>/<test_name>/build.tmp`` folder.
 
 Now that the test is built, you can run it in the target board. Connect the target board to your computer and run:
 
@@ -339,7 +342,7 @@ The test will run on the target board and you should see the output of the test 
     lucassvaz@Lucas--MacBook-Pro esp32 % ./.github/scripts/tests_run.sh -s uart -t esp32c3
     Sketch uart test type: validation
     Running test: uart -- Config: Default
-    pytest tests --build-dir /Users/lucassvaz/.arduino/tests/uart/build.tmp -k test_uart --junit-xml=/Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests/validation/uart/esp32c3/uart.xml --embedded-services esp,arduino
+    pytest tests --build-dir /Users/lucassvaz/.arduino/tests/esp32c3/uart/build.tmp -k test_uart --junit-xml=/Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests/validation/uart/esp32c3/uart.xml --embedded-services esp,arduino
     =============================================================================================== test session starts ================================================================================================
     platform darwin -- Python 3.12.3, pytest-8.2.2, pluggy-1.5.0
     rootdir: /Users/lucassvaz/Espressif/Arduino/hardware/espressif/esp32/tests

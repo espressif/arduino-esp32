@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "author": "lucasssvaz",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "attrs": { "psramType": "octal" }
+    }
+  ],
+  "connections": [
+    [
+      "esp:TX",
+      "$serialMonitor:RX",
+      ""
+    ],
+    [
+      "esp:RX",
+      "$serialMonitor:TX",
+      ""
+    ]
+  ]
+}

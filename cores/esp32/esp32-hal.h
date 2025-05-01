@@ -121,11 +121,11 @@ void feedLoopWDT();
 
 //enable/disable WDT for the IDLE task on Core 0 (SYSTEM)
 void enableCore0WDT();
-void disableCore0WDT();
+bool disableCore0WDT();
 #ifndef CONFIG_FREERTOS_UNICORE
 //enable/disable WDT for the IDLE task on Core 1 (Arduino)
 void enableCore1WDT();
-void disableCore1WDT();
+bool disableCore1WDT();
 #endif
 
 //if xCoreID < 0 or CPU is unicore, it will use xTaskCreate, else xTaskCreatePinnedToCore

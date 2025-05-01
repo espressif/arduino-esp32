@@ -44,7 +44,7 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.3,<5.4"
+  idf: ">=5.3,<5.5"
   # mdns 1.2.1 is necessary to build H2 with no WiFi
   espressif/mdns:
     version: "^1.2.3"
@@ -52,12 +52,12 @@ dependencies:
   espressif/esp_modem:
     version: "^1.1.0"
   espressif/esp-zboss-lib:
-    version: "==1.6.0"
+    version: "==1.6.3"
     require: public
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp-zigbee-lib:
-    version: "==1.6.0"
+    version: "==1.6.3"
     require: public
     rules:
       - if: "target not in [esp32c2, esp32p4]"
@@ -69,7 +69,7 @@ dependencies:
   espressif/network_provisioning:
     version: "1.0.2"
   espressif/esp_rainmaker:
-    version: "1.5.0"
+    version: "1.5.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/rmaker_common:
@@ -77,16 +77,16 @@ dependencies:
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp_insights:
-    version: "1.0.1"
+    version: "1.2.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   # New version breaks esp_insights 1.0.1
   espressif/esp_diag_data_store:
-    version: "1.0.1"
+    version: "1.0.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/esp_diagnostics:
-    version: "1.0.2"
+    version: "1.2.1"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/cbor:

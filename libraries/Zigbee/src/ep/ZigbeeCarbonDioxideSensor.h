@@ -4,7 +4,7 @@
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -42,20 +42,20 @@ public:
   ~ZigbeeCarbonDioxideSensor() {}
 
   // Set the carbon dioxide value in ppm
-  void setCarbonDioxide(float carbon_dioxide);
+  bool setCarbonDioxide(float carbon_dioxide);
 
   // Set the min and max value for the carbon dioxide sensor in ppm
-  void setMinMaxValue(float min, float max);
+  bool setMinMaxValue(float min, float max);
 
   // Set the tolerance value for the carbon dioxide sensor in ppm
-  void setTolerance(float tolerance);
+  bool setTolerance(float tolerance);
 
   // Set the reporting interval for carbon dioxide measurement in seconds and delta (carbon dioxide change in ppm)
   // NOTE: Delta reporting is currently not supported by the carbon dioxide sensor
-  void setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
+  bool setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta);
 
   // Report the carbon dioxide value
-  void report();
+  bool report();
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

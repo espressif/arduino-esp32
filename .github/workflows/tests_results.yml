@@ -24,12 +24,12 @@ jobs:
       pull-requests: write
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: gh-pages
 
       - name: Download and Extract Artifacts
-        uses: dawidd6/action-download-artifact@v6
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
         with:
           run_id: ${{ github.event.workflow_run.id }}
           path: ./artifacts
@@ -41,6 +41,7 @@ jobs:
           original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
           original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)
           original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)
+          original_run_id=$(cat ./artifacts/parent-artifacts/run_id.txt)
 
           # Sanitize the values to avoid security issues
 
@@ -59,20 +60,30 @@ jobs:
           # Conclusion: Allow alphabetical characters and underscores
           original_conclusion=$(echo "$original_conclusion" | tr -cd '[:alpha:]_')
 
+          # Run ID: Allow numeric characters
+          original_run_id=$(echo "$original_run_id" | tr -cd '[:digit:]')
+
           echo "original_event=$original_event" >> $GITHUB_ENV
           echo "original_action=$original_action" >> $GITHUB_ENV
           echo "original_sha=$original_sha" >> $GITHUB_ENV
           echo "original_ref=$original_ref" >> $GITHUB_ENV
           echo "original_conclusion=$original_conclusion" >> $GITHUB_ENV
+          echo "original_run_id=$original_run_id" >> $GITHUB_ENV
 
           echo "original_event = $original_event"
           echo "original_action = $original_action"
           echo "original_sha = $original_sha"
           echo "original_ref = $original_ref"
           echo "original_conclusion = $original_conclusion"
+          echo "original_run_id = $original_run_id"
+
+      - name: Print links to other runs
+        run: |
+          echo "Build, Hardware and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ env.original_run_id }}"
+          echo "Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
 
       - name: Publish Unit Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2.18.0
         with:
           commit: ${{ env.original_sha }}
           event_file: ./artifacts/parent-artifacts/event_file/event.json
@@ -80,6 +91,17 @@ jobs:
           files: ./artifacts/**/*.xml
           action_fail: true
           compare_to_earlier_commit: false
+          json_file: ./unity_results.json
+          json_suite_details: true
+
+      - name: Upload JSON
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: unity_results
+          overwrite: true
+          path: |
+            ./unity_results.json
 
       - name: Fail if tests failed
         if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
@@ -87,7 +109,7 @@ jobs:
 
       - name: Clean up caches
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const ref = process.env.original_ref;
@@ -117,7 +139,7 @@ jobs:
             });
 
       - name: Report conclusion
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         if: always()
         with:
           script: |
@@ -138,15 +160,22 @@ jobs:
             })).data;
             core.info(`${name} is ${state}`);
 
-      - name: Create output folder
+      - name: Generate report
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        env:
+          REPORT_FILE: ./runtime-tests-results/RUNTIME_TESTS_REPORT.md
+          WOKWI_RUN_ID: ${{ github.event.workflow_run.id }}
+          BUILD_RUN_ID: ${{ env.original_run_id }}
+          IS_FAILING: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' || job.status == 'failure' }}
         run: |
-          rm -rf artifacts
-          mkdir -p runtime-tests-results
+          rm -rf artifacts $REPORT_FILE
+          mv -f ./unity_results.json ./runtime-tests-results/unity_results.json
+          touch $REPORT_FILE
+          python3 ./runtime-tests-results/table_generator.py ./runtime-tests-results/unity_results.json >> $REPORT_FILE
 
       - name: Generate badge
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
-        uses: jaywcjlove/generated-badges@v1.0.13
+        uses: jaywcjlove/generated-badges@0e078ae4d4bab3777ea4f137de496ab44688f5ad # v1.0.13
         with:
           label: Runtime Tests
           status: ${{ job.status == 'success' && 'passing' || 'failing' }}
@@ -161,6 +190,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [[ `git status --porcelain` ]]; then
             git add --all
-            git commit -m "Updated runtime tests badge"
+            git commit -m "Updated runtime tests report"
             git push origin HEAD:gh-pages
           fi

@@ -23,6 +23,7 @@
 
 #ifndef _ETH_H_
 #define _ETH_H_
+#include "esp_idf_version.h"
 
 //
 // Example configurations for pins_arduino.h to allow starting with ETH.begin();
@@ -127,6 +128,10 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 
 typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+  ETH_PHY_GENERIC,
+#define ETH_PHY_JL1101 ETH_PHY_GENERIC
+#endif
   ETH_PHY_LAN8720,
   ETH_PHY_TLK110,
   ETH_PHY_RTL8201,
@@ -187,8 +192,14 @@ public:
 
   // ETH Handle APIs
   bool fullDuplex() const;
-  uint8_t linkSpeed() const;
+  bool setFullDuplex(bool on);
+
+  uint16_t linkSpeed() const;
+  bool setLinkSpeed(uint16_t speed);  //10 or 100
+
   bool autoNegotiation() const;
+  bool setAutoNegotiation(bool on);
+
   uint32_t phyAddr() const;
 
   esp_eth_handle_t handle() const;
@@ -218,6 +229,10 @@ private:
   esp_eth_netif_glue_handle_t _glue_handle;
   esp_eth_mac_t *_mac;
   esp_eth_phy_t *_phy;
+  bool _eth_started;
+  uint16_t _link_speed;
+  bool _full_duplex;
+  bool _auto_negotiation;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
   char _cs_str[10];
@@ -236,6 +251,7 @@ private:
   int8_t _pin_rmii_clock;
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
   size_t _task_stack_size;
+  network_event_handle_t _eth_connected_event_handle;
 
   static bool ethDetachBus(void *bus_pointer);
   bool beginSPI(
@@ -245,6 +261,9 @@ private:
 #endif
     int sck, int miso, int mosi, spi_host_device_t spi_host, uint8_t spi_freq_mhz
   );
+  bool _setFullDuplex(bool on);
+  bool _setLinkSpeed(uint16_t speed);
+  bool _setAutoNegotiation(bool on);
 
   friend class EthernetClass;  // to access beginSPI
 };

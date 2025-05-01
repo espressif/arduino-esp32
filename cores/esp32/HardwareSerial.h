@@ -96,16 +96,51 @@ typedef enum {
   UART_PARITY_ERROR
 } hardwareSerial_error_t;
 
+typedef enum {
+  UART_CLK_SRC_DEFAULT = UART_SCLK_DEFAULT,
+#if SOC_UART_SUPPORT_APB_CLK
+  UART_CLK_SRC_APB = UART_SCLK_APB,
+#endif
+#if SOC_UART_SUPPORT_PLL_F40M_CLK
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F40M,
+#elif SOC_UART_SUPPORT_PLL_F80M_CLK
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F80M,
+#elif CONFIG_IDF_TARGET_ESP32H2
+  UART_CLK_SRC_PLL = UART_SCLK_PLL_F48M,
+#endif
+#if SOC_UART_SUPPORT_XTAL_CLK
+  UART_CLK_SRC_XTAL = UART_SCLK_XTAL,
+#endif
+#if SOC_UART_SUPPORT_RTC_CLK
+  UART_CLK_SRC_RTC = UART_SCLK_RTC,
+#endif
+#if SOC_UART_SUPPORT_REF_TICK
+  UART_CLK_SRC_REF_TICK = UART_SCLK_REF_TICK,
+#endif
+} SerialClkSrc;
+
 #ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
 #define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE CONFIG_ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+#endif
 #endif
 
 #ifndef ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_PRIORITY
 #define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES - 1)
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_PRIORITY CONFIG_ARDUINO_SERIAL_EVENT_TASK_PRIORITY
+#endif
 #endif
 
 #ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+#ifndef CONFIG_ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
 #define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#else
+#define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE CONFIG_ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
+#endif
 #endif
 
 // UART0 pins are defined by default by the bootloader.
@@ -212,6 +247,16 @@ typedef enum {
 #endif
 #endif /* SOC_UART_HP_NUM > 2 */
 
+#if SOC_UART_LP_NUM >= 1
+#ifndef LP_RX0
+#define LP_RX0 (gpio_num_t) LP_U0RXD_GPIO_NUM
+#endif
+
+#ifndef LP_TX0
+#define LP_TX0 (gpio_num_t) LP_U0TXD_GPIO_NUM
+#endif
+#endif /* SOC_UART_LP_NUM >= 1 */
+
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 
@@ -259,7 +304,7 @@ public:
   // rxfifo_full_thrhd if the UART Flow Control Threshold in the UART FIFO (max 127)
   void begin(
     unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL,
-    uint8_t rxfifo_full_thrhd = 112
+    uint8_t rxfifo_full_thrhd = 120
   );
   void end(void);
   void updateBaudRate(unsigned long baud);
@@ -322,6 +367,17 @@ public:
   //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
   //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
   bool setMode(SerialMode mode);
+  // Used to set the UART clock source mode. It must be set before calling begin(), otherwise it won't have any effect.
+  // Not all clock source are available to every SoC. The compatible option are listed here:
+  // UART_CLK_SRC_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
+  // UART_CLK_SRC_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
+  // UART_CLK_SRC_PLL          :: ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2 and ESP32-P4
+  // UART_CLK_SRC_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+  // UART_CLK_SRC_RTC          :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+  // UART_CLK_SRC_REF_TICK     :: ESP32 and ESP32-S2
+  // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
+  // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
+  bool setClockSource(SerialClkSrc clkSrc);
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
 
@@ -365,17 +421,20 @@ extern void serialEventRun(void) __attribute__((weak));
 #endif  // ARDUINO_USB_CDC_ON_BOOT
 // There is always Seria0 for UART0
 extern HardwareSerial Serial0;
-#if SOC_UART_HP_NUM > 1
+#if SOC_UART_NUM > 1
 extern HardwareSerial Serial1;
 #endif
-#if SOC_UART_HP_NUM > 2
+#if SOC_UART_NUM > 2
 extern HardwareSerial Serial2;
 #endif
-#if SOC_UART_HP_NUM > 3
+#if SOC_UART_NUM > 3
 extern HardwareSerial Serial3;
 #endif
-#if SOC_UART_HP_NUM > 4
+#if SOC_UART_NUM > 4
 extern HardwareSerial Serial4;
+#endif
+#if SOC_UART_NUM > 5
+extern HardwareSerial Serial5;
 #endif
 #endif  //!defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 

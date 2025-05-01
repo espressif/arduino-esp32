@@ -173,7 +173,7 @@ extern void ARDUINO_ISR_ATTR __digitalWrite(uint8_t pin, uint8_t val) {
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
     gpio_set_level((gpio_num_t)pin, val);
   } else {
-    log_e("IO %i is not set as GPIO.", pin);
+    log_e("IO %i is not set as GPIO. Execute digitalMode(%i, OUTPUT) first.", pin, pin);
   }
 }
 
@@ -182,14 +182,12 @@ extern int ARDUINO_ISR_ATTR __digitalRead(uint8_t pin) {
   if (pin == RGB_BUILTIN) {
     return RGB_BUILTIN_storage;
   }
-#endif
-
-  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) != NULL) {
-    return gpio_get_level((gpio_num_t)pin);
-  } else {
-    log_e("IO %i is not set as GPIO.", pin);
-    return 0;
+#endif  // RGB_BUILTIN
+  // This work when the pin is set as GPIO and in INPUT mode. For all other pin functions, it may return inconsistent response
+  if (perimanGetPinBus(pin, ESP32_BUS_TYPE_GPIO) == NULL) {
+    log_w("IO %i is not set as GPIO. digitalRead() may return an inconsistent value.", pin);
   }
+  return gpio_get_level((gpio_num_t)pin);
 }
 
 static void ARDUINO_ISR_ATTR __onPinInterrupt(void *arg) {

@@ -4,7 +4,7 @@
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
 #include "ha/esp_zigbee_ha_standard.h"
@@ -23,7 +23,7 @@ public:
     lightChanged();
   }
   // Use to control light state
-  void setLight(bool state);
+  bool setLight(bool state);
   // Use to get light state
   bool getLightState() {
     return _current_state;
@@ -38,4 +38,4 @@ private:
   bool _current_state;
 };
 
-#endif  //SOC_IEEE802154_SUPPORTED && CONFIG_ZB_ENABLED
+#endif  // CONFIG_ZB_ENABLED

@@ -49,6 +49,10 @@ void fanDCMotorDrive(bool fanState, uint8_t speedPercent) {
   // drive the Fan DC motor
   if (fanState == false) {
     // turn off the Fan
+#ifndef RGB_BUILTIN
+    // after analogWrite(), it is necessary to set the GPIO to digital mode first
+    pinMode(dcMotorPin, OUTPUT);
+#endif
     digitalWrite(dcMotorPin, LOW);
   } else {
     // set the Fan speed
@@ -180,7 +184,7 @@ void loop() {
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
   if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning the Generic Switch Matter Accessory. It shall be commissioned again.");
+    Serial.println("Decommissioning Fan Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
     button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
   }
