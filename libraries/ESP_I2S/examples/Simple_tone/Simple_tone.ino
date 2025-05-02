@@ -30,7 +30,7 @@
 
 #include <ESP_I2S.h>
 
-// The GPIO pins are not fixed, most other pins can be used for the I2S function.
+// The GPIO pins are not fixed, most other pins could be used for the I2S function.
 #define I2S_LRC 25
 #define I2S_BCLK 5
 #define I2S_DIN 26
@@ -70,11 +70,11 @@ void loop() {
     sample = -1 * sample;
   }
 
-  // Left channel, low 8 bit then hight 8 bit
+  // Left channel, low 8 bit then high 8 bit
   i2s.write(sample);
   i2s.write(sample >> 8);
 
-  // Right channel, low 8 bit then hight 8 bit
+  // Right channel, low 8 bit then high 8 bit
   i2s.write(sample);
   i2s.write(sample >> 8);
 
