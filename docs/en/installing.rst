@@ -10,6 +10,11 @@ Before Installing
 We recommend you install the support using your favorite IDE, but other options are available depending on your operating system.
 To install Arduino-ESP32 support, you can use one of the following options.
 
+.. note::
+   Users in China might have troubles with connection and download speeds using GitHub. Please use our Jihulab mirror as the repository source:
+
+   ``https://jihulab.com/esp-mirror/espressif/arduino-esp32.git``
+
 Installing using Arduino IDE
 ----------------------------
 
@@ -31,6 +36,16 @@ This is the way to install Arduino-ESP32 directly from the Arduino IDE.
 
    https://espressif.github.io/arduino-esp32/package_esp32_dev_index.json
 
+
+Users in China might have troubles with connection and download speeds using the links above. Please use our Jihulab mirror:
+
+- Stable release link::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_index_cn.json
+
+- Development release link::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_dev_index_cn.json
 
 .. note::
    Starting with the Arduino IDE version 1.6.4, Arduino allows installation of third-party platform

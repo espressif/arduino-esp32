@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "esp32c2": false,
+    "esp32s2": false
+  },
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y",
+    "CONFIG_MBEDTLS_HKDF_C=y"
+  ]
+}
