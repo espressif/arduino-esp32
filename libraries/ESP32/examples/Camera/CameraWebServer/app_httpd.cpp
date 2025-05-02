@@ -478,6 +478,7 @@ static esp_err_t status_handler(httpd_req_t *req) {
   p += sprintf(p, "\"raw_gma\":%u,", s->status.raw_gma);
   p += sprintf(p, "\"lenc\":%u,", s->status.lenc);
   p += sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
+  p += sprintf(p, "\"vflip\":%u,", s->status.vflip);
   p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
   p += sprintf(p, "\"colorbar\":%u", s->status.colorbar);
 #if CONFIG_LED_ILLUMINATOR_ENABLED
