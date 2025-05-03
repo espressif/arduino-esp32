@@ -455,7 +455,7 @@ void analogWrite(uint8_t pin, int value) {
     // Therefore, it will adjust Arduino MAX Duty to be the LEDC MAx Duty
     uint32_t max_duty = (1 << bus->channel_resolution) - 1;
     if (value < 0 || value > max_duty) {
-      log_w("Duty is out of range. Valid duty range for pin d is 0 to %d", pin, max_duty);
+      log_e("Duty is out of range. Valid duty range for pin d is 0 to %d", pin, max_duty);
       return;
     }
     if (value == max_duty) {
