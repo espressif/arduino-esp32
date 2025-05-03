@@ -31,6 +31,7 @@ on:
       - "!libraries/**.properties"
       - "!libraries/**.py"
       - "package/**"
+      - "idf_component_examples/**"
       - "tools/**.py"
       - "platform.txt"
       - "programmers.txt"
@@ -45,7 +46,6 @@ on:
       - "!.github/scripts/tests_*"
       - "!.github/scripts/upload_*"
       - "variants/esp32/**/*"
-      - "variants/esp32c2/**/*"
       - "variants/esp32c3/**/*"
       - "variants/esp32c6/**/*"
       - "variants/esp32h2/**/*"
@@ -124,7 +124,7 @@ jobs:
               - 'idf_component.yml'
               - 'Kconfig.projbuild'
               - 'CMakeLists.txt'
-              - "variants/esp32c2/**/*"
+              - "idf_component_examples/**"
 
       - name: Set chunks
         id: set-chunks
@@ -267,15 +267,23 @@ jobs:
           submodules: recursive
           path: components/arduino-esp32
 
+      - name: Setup jq
+        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
+
       - name: Build
         env:
           IDF_TARGET: ${{ matrix.idf_target }}
         shell: bash
         run: |
-          . ${IDF_PATH}/export.sh
-          idf.py create-project test
-          echo CONFIG_FREERTOS_HZ=1000 > test/sdkconfig.defaults
-          idf.py -C test -DEXTRA_COMPONENT_DIRS=$PWD/components build
+          chmod a+x ./components/arduino-esp32/.github/scripts/*
+          ./components/arduino-esp32/.github/scripts/on-push-idf.sh
+
+      - name: Upload generated sdkconfig files for debugging
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: sdkconfig-${{ matrix.idf_target }}
+          path: ./components/arduino-esp32/idf_component_examples/**/sdkconfig
 
   # Save artifacts to gh-pages
   save-master-artifacts:

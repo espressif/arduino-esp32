@@ -126,7 +126,14 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
       return false;
     }
   } else {
-    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = clock_source};
+    ledc_timer_config_t ledc_timer;
+    memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
+    ledc_timer.speed_mode = group;
+    ledc_timer.timer_num = timer;
+    ledc_timer.duty_resolution = resolution;
+    ledc_timer.freq_hz = freq;
+    ledc_timer.clk_cfg = clock_source;
+
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledc setup failed!");
       return false;
@@ -134,9 +141,16 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
 
     uint32_t duty = ledc_get_duty(group, (channel % 8));
 
-    ledc_channel_config_t ledc_channel = {
-      .speed_mode = group, .channel = (channel % 8), .timer_sel = timer, .intr_type = LEDC_INTR_DISABLE, .gpio_num = pin, .duty = duty, .hpoint = 0
-    };
+    ledc_channel_config_t ledc_channel;
+    memset((void *)&ledc_channel, 0, sizeof(ledc_channel_config_t));
+    ledc_channel.speed_mode = group;
+    ledc_channel.channel = (channel % 8);
+    ledc_channel.timer_sel = timer;
+    ledc_channel.intr_type = LEDC_INTR_DISABLE;
+    ledc_channel.gpio_num = pin;
+    ledc_channel.duty = duty;
+    ledc_channel.hpoint = 0;
+
     ledc_channel_config(&ledc_channel);
   }
 
@@ -253,7 +267,13 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
 
     uint8_t group = (bus->channel / 8), timer = ((bus->channel / 2) % 4);
 
-    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = 10, .freq_hz = freq, .clk_cfg = clock_source};
+    ledc_timer_config_t ledc_timer;
+    memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
+    ledc_timer.speed_mode = group;
+    ledc_timer.timer_num = timer;
+    ledc_timer.duty_resolution = 10;
+    ledc_timer.freq_hz = freq;
+    ledc_timer.clk_cfg = clock_source;
 
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledcWriteTone configuration failed!");
@@ -305,7 +325,13 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution) {
     }
     uint8_t group = (bus->channel / 8), timer = ((bus->channel / 2) % 4);
 
-    ledc_timer_config_t ledc_timer = {.speed_mode = group, .timer_num = timer, .duty_resolution = resolution, .freq_hz = freq, .clk_cfg = clock_source};
+    ledc_timer_config_t ledc_timer;
+    memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
+    ledc_timer.speed_mode = group;
+    ledc_timer.timer_num = timer;
+    ledc_timer.duty_resolution = resolution;
+    ledc_timer.freq_hz = freq;
+    ledc_timer.clk_cfg = clock_source;
 
     if (ledc_timer_config(&ledc_timer) != ESP_OK) {
       log_e("ledcChangeFrequency failed!");
