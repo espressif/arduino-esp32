@@ -1,4 +1,4 @@
-/* Class of Zigbee Analog sensor endpoint inherited from common EP class */
+/* Class of Zigbee Binary sensor endpoint inherited from common EP class */
 
 #pragma once
 

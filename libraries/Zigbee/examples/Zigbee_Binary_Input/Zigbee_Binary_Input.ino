@@ -13,9 +13,9 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee analog input / output device.
+ * @brief This example demonstrates Zigbee binary input device.
  *
- * The example demonstrates how to use Zigbee library to create a end device analog device.
+ * The example demonstrates how to use Zigbee library to create an end device binary sensor device.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -23,7 +23,6 @@
  * Please check the README.md for instructions and more detailed description.
  *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
- * Modified by Pat Clay
  */
 
 #ifndef ZIGBEE_MODE_ED
@@ -32,7 +31,7 @@
 
 #include "Zigbee.h"
 
-/* Zigbee analog device configuration */
+/* Zigbee binary sensor device configuration */
 #define BINARY_DEVICE_ENDPOINT_NUMBER 1
 
 uint8_t binaryPin = A0;
@@ -42,10 +41,6 @@ ZigbeeBinary zbBinaryFan = ZigbeeBinary(BINARY_DEVICE_ENDPOINT_NUMBER);
 ZigbeeBinary zbBinaryZone = ZigbeeBinary(BINARY_DEVICE_ENDPOINT_NUMBER + 1);
 
 bool binaryStatus = false;
-
-void onAnalogOutputChange(float analog_output) {
-  Serial.printf("Received analog output change: %.1f\r\n", analog_output);
-}
 
 void setup() {
   Serial.begin(115200);
@@ -89,10 +84,6 @@ void setup() {
     delay(100);
   }
   Serial.println("Connected");
-
-  // // Optional: Add reporting for analog input
-  // zbBinaryFan.setBinaryInputReporting(0, 30, 10);  // report every 30 seconds if value changes by 10
-  // zbBinaryZone.setBinaryInputReporting(0, 30, 10);  // report every 30 seconds if value changes by 10
 }
 
 void loop() {

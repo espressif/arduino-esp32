@@ -58,7 +58,7 @@ bool ZigbeeBinary::setBinaryInputApplication(uint32_t application_type) {
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_err_t ret = esp_zb_cluster_update_attr(binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
   if (ret != ESP_OK) {
-    log_e("Failed to set AI application type: 0x%x: %s", ret, esp_err_to_name(ret));
+    log_e("Failed to set Binary Input application type: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
