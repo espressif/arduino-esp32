@@ -64,16 +64,16 @@ bool ZigbeeBinary::setBinaryInputApplication(uint32_t application_type) {
   return true;
 }
 
-bool ZigbeeBinary::setBinaryInput(bool binary) {
+bool ZigbeeBinary::setBinaryInput(bool input) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (!(_binary_clusters & BINARY_INPUT)) {
     log_e("Binary Input cluster not added");
     return false;
   }
-  log_d("Setting binary input to %d", binary);
+  log_d("Setting binary input to %d", input);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &binary, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -101,32 +101,6 @@ bool ZigbeeBinary::reportBinaryInput() {
     return false;
   }
   log_v("Binary Input report sent");
-  return true;
-}
-
-bool ZigbeeBinary::setBinaryInputReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
-  esp_zb_zcl_reporting_info_t reporting_info;
-  memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
-  reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
-  reporting_info.ep = _endpoint;
-  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT;
-  reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID;
-  reporting_info.u.send_info.min_interval = min_interval;
-  reporting_info.u.send_info.max_interval = max_interval;
-  reporting_info.u.send_info.def_min_interval = min_interval;
-  reporting_info.u.send_info.def_max_interval = max_interval;
-  reporting_info.u.send_info.delta.s32 = delta; // TODO: Check if this is correct
-  reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
-
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set Binary Input reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
   return true;
 }
 

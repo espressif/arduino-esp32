@@ -68,13 +68,10 @@ public:
   // }
 
   // Set the binary input value
-  bool setBinaryInput(bool binary);
+  bool setBinaryInput(bool input);
 
   // Report Binary Input value
   bool reportBinaryInput();
-
-  // Set reporting for Binary Input
-  bool setBinaryInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
   // void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
