@@ -17481,11 +17481,11 @@ sparklemotionstick.menu.EraseFlash.all=Enabled
 sparklemotionstick.menu.EraseFlash.all.upload.erase_cmd=-e
 
 sparklemotionstick.menu.ZigbeeMode.default=Disabled
-+sparklemotionstick.menu.ZigbeeMode.default.build.zigbee_mode=
-+sparklemotionstick.menu.ZigbeeMode.default.build.zigbee_libs=
-+sparklemotionstick.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
-+sparklemotionstick.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-+sparklemotionstick.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+sparklemotionstick.menu.ZigbeeMode.default.build.zigbee_mode=
+sparklemotionstick.menu.ZigbeeMode.default.build.zigbee_libs=
+sparklemotionstick.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+sparklemotionstick.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+sparklemotionstick.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
 
