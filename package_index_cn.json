@@ -12,7 +12,7 @@
         {
           "name": "esp32",
           "architecture": "esp32",
-          "version": "3.2.0",
+          "version": "3.2.0-cn",
           "category": "ESP32",
           "url": "https://dl.espressif.cn/github_assets/espressif/arduino-esp32/releases/download/3.2.0/esp32-3.2.0.zip",
           "archiveFileName": "esp32-3.2.0.zip",
@@ -51,37 +51,37 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v5.4-2f7dcd86-v1"
+              "version": "idf-release_v5.4-2f7dcd86-v1-cn"
             },
             {
               "packager": "esp32",
               "name": "esp-x32",
-              "version": "2411"
+              "version": "2411-cn"
             },
             {
               "packager": "esp32",
               "name": "xtensa-esp-elf-gdb",
-              "version": "14.2_20240403"
+              "version": "14.2_20240403-cn"
             },
             {
               "packager": "esp32",
               "name": "esp-rv32",
-              "version": "2411"
+              "version": "2411-cn"
             },
             {
               "packager": "esp32",
               "name": "riscv32-esp-elf-gdb",
-              "version": "14.2_20240403"
+              "version": "14.2_20240403-cn"
             },
             {
               "packager": "esp32",
               "name": "openocd-esp32",
-              "version": "v0.12.0-esp32-20241016"
+              "version": "v0.12.0-esp32-20241016-cn"
             },
             {
               "packager": "esp32",
               "name": "esptool_py",
-              "version": "4.9.dev3"
+              "version": "4.9.dev3-cn"
             },
             {
               "packager": "esp32",
@@ -2798,7 +2798,7 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v5.4-2f7dcd86-v1",
+          "version": "idf-release_v5.4-2f7dcd86-v1-cn",
           "systems": [
             {
               "host": "i686-mingw32",
@@ -3418,7 +3418,7 @@
         },
         {
           "name": "esp-x32",
-          "version": "2411",
+          "version": "2411-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -3604,7 +3604,7 @@
         },
         {
           "name": "xtensa-esp-elf-gdb",
-          "version": "14.2_20240403",
+          "version": "14.2_20240403-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -3790,7 +3790,7 @@
         },
         {
           "name": "esp-rv32",
-          "version": "2411",
+          "version": "2411-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -3976,7 +3976,7 @@
         },
         {
           "name": "riscv32-esp-elf-gdb",
-          "version": "14.2_20240403",
+          "version": "14.2_20240403-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -4162,7 +4162,7 @@
         },
         {
           "name": "openocd-esp32",
-          "version": "v0.12.0-esp32-20241016",
+          "version": "v0.12.0-esp32-20241016-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
@@ -4547,7 +4547,7 @@
         },
         {
           "name": "esptool_py",
-          "version": "4.9.dev3",
+          "version": "4.9.dev3-cn",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
