@@ -39,6 +39,9 @@ uint8_t analogPin = A0;
 uint8_t button = BOOT_PIN;
 
 ZigbeeAnalog zbAnalogDevice = ZigbeeAnalog(ANALOG_DEVICE_ENDPOINT_NUMBER);
+ZigbeeAnalog zbAnalogTemp = ZigbeeAnalog(ANALOG_DEVICE_ENDPOINT_NUMBER + 1);
+ZigbeeAnalog zbAnalogFan = ZigbeeAnalog(ANALOG_DEVICE_ENDPOINT_NUMBER + 2);
+ZigbeeAnalog zbAnalogPercent = ZigbeeAnalog(ANALOG_DEVICE_ENDPOINT_NUMBER + 3);
 
 void onAnalogOutputChange(float analog_output) {
   Serial.printf("Received analog output change: %.1f\r\n", analog_output);
@@ -57,15 +60,43 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbAnalogDevice.setManufacturerAndModel("Espressif", "ZigbeeAnalogDevice");
 
-  // Add analog clusters to Zigbee Analog according your needs
+  // Set up analog input
   zbAnalogDevice.addAnalogInput();
+  zbAnalogDevice.setAnalogInputApplication(ESP_ZB_ZCL_AI_POWER_IN_WATTS_CONSUMPTION);
+  zbAnalogDevice.setAnalogInputDescription("Power Consumption (Watts)");
+  zbAnalogDevice.setAnalogInputResolution(0.01);
+
+  // Set up analog output
   zbAnalogDevice.addAnalogOutput();
+  zbAnalogDevice.setAnalogOutputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogDevice.setAnalogOutputDescription("Fan Speed (RPM)");
 
   // If analog output cluster is added, set callback function for analog output change
   zbAnalogDevice.onAnalogOutputChange(onAnalogOutputChange);
 
+  // Set up analog input
+  zbAnalogTemp.addAnalogInput();
+  zbAnalogTemp.setAnalogInputApplication(ESP_ZB_ZCL_AI_TEMPERATURE_OTHER);
+  zbAnalogTemp.setAnalogInputDescription("Temperature");
+  zbAnalogTemp.setAnalogInputResolution(0.1);
+  
+  // Set up analog input
+  zbAnalogFan.addAnalogInput();
+  zbAnalogFan.setAnalogInputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogFan.setAnalogInputDescription("RPM");
+  zbAnalogFan.setAnalogInputResolution(1);
+  
+  // Set up analog input
+  zbAnalogPercent.addAnalogInput();
+  zbAnalogPercent.setAnalogInputApplication(ESP_ZB_ZCL_AI_PERCENTAGE_OTHER);
+  zbAnalogPercent.setAnalogInputDescription("Percentage");
+  zbAnalogPercent.setAnalogInputResolution(0.01);
+
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbAnalogDevice);
+  Zigbee.addEndpoint(&zbAnalogTemp);
+  Zigbee.addEndpoint(&zbAnalogFan);
+  Zigbee.addEndpoint(&zbAnalogPercent);
 
   Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
@@ -95,9 +126,15 @@ void loop() {
     float analog = (float)analogRead(analogPin);
     Serial.printf("Updating analog input to %.1f\r\n", analog);
     zbAnalogDevice.setAnalogInput(analog);
+    zbAnalogTemp.setAnalogInput(analog/100);
+    zbAnalogFan.setAnalogInput(analog);
+    zbAnalogPercent.setAnalogInput(analog/10);
 
     // Analog input supports reporting
     zbAnalogDevice.reportAnalogInput();
+    zbAnalogTemp.reportAnalogInput();
+    zbAnalogFan.reportAnalogInput();
+    zbAnalogPercent.reportAnalogInput();
   }
 
   // Checking button for factory reset and reporting
