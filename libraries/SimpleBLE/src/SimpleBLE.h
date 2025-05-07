@@ -16,8 +16,9 @@
 #define _SIMPLE_BLE_H_
 
 #include "sdkconfig.h"
+#include "soc/soc_caps.h"
 
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+#if SOC_BT_SUPPORTED && defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <cstdint>
 #include <cstdio>

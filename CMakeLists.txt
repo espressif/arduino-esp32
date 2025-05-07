@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.3.0")
-set(max_supported_idf_version "5.4.99")
+set(max_supported_idf_version "5.5.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -362,7 +362,7 @@ set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hi
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
   #if(CONFIG_OPENTHREAD_ENABLED) # Does not work!
-  if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2") # Sadly only this works
+  if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5") # Sadly only this works
     list(APPEND requires openthread)
   endif()
 endif()
