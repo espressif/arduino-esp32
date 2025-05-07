@@ -527,14 +527,15 @@ int HardwareSerial::peek(void) {
   return -1;
 }
 
-int HardwareSerial::read(void) {
+int HardwareSerial::_read(uint32_t timeout) {
   uint8_t c = 0;
-  if (uartReadBytes(_uart, &c, 1, 0) == 1) {
+  if (uartReadBytes(_uart, &c, 1, timeout) == 1) {
     return c;
   } else {
     return -1;
   }
 }
+
 
 // read characters into buffer
 // terminates if size characters have been read, or no further are pending
@@ -661,4 +662,14 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
   // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
   _txBufferSize = new_size;
   return new_size;
+}
+
+int HardwareSerial::timedPeek(void) {
+
+  uint8_t out;
+  if(uartTimedPeek(_uart, &out, _timeout)){
+    return out;
+  }
+
+  return -1;
 }

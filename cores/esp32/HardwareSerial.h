@@ -311,7 +311,9 @@ public:
   int available(void);
   int availableForWrite(void);
   int peek(void);
-  int read(void);
+  int read(void){
+    return _read(0);
+  }
   size_t read(uint8_t *buffer, size_t size);
   inline size_t read(char *buffer, size_t size) {
     return read((uint8_t *)buffer, size);
@@ -399,6 +401,14 @@ protected:
   void _createEventTask(void *args);
   void _destroyEventTask(void);
   static void _uartEventTask(void *args);
+
+  int _read(uint32_t timeout);
+
+  virtual int timedRead() override {
+    return _read(_timeout);
+  }
+
+  virtual int timedPeek() override;
 };
 
 extern void serialEventRun(void) __attribute__((weak));
