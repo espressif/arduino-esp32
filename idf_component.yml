@@ -105,7 +105,7 @@ dependencies:
     rules:
       - if: "target in [esp32s3]"
   espressif/esp_hosted:
-    version: "^0.0.25"
+    version: "^2.0.0"
     rules:
       - if: "target == esp32p4"
   espressif/esp_wifi_remote:

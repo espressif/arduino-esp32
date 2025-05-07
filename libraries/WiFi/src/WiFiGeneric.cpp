@@ -252,13 +252,23 @@ static bool wifiHostedInit() {
   if (!hosted_initialized) {
     hosted_initialized = true;
     struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
+#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+    conf.pin_clk.pin = BOARD_SDIO_ESP_HOSTED_CLK;
+    conf.pin_cmd.pin = BOARD_SDIO_ESP_HOSTED_CMD;
+    conf.pin_d0.pin = BOARD_SDIO_ESP_HOSTED_D0;
+    conf.pin_d1.pin = BOARD_SDIO_ESP_HOSTED_D1;
+    conf.pin_d2.pin = BOARD_SDIO_ESP_HOSTED_D2;
+    conf.pin_d3.pin = BOARD_SDIO_ESP_HOSTED_D3;
+    conf.pin_reset.pin = BOARD_SDIO_ESP_HOSTED_RESET;
+#else
     conf.pin_clk.pin = CONFIG_ESP_SDIO_PIN_CLK;
     conf.pin_cmd.pin = CONFIG_ESP_SDIO_PIN_CMD;
     conf.pin_d0.pin = CONFIG_ESP_SDIO_PIN_D0;
     conf.pin_d1.pin = CONFIG_ESP_SDIO_PIN_D1;
     conf.pin_d2.pin = CONFIG_ESP_SDIO_PIN_D2;
     conf.pin_d3.pin = CONFIG_ESP_SDIO_PIN_D3;
-    //conf.pin_rst.pin = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE;
+    conf.pin_reset.pin = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE;
+#endif
     // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
     if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
       log_e("esp_hosted_init failed!");
