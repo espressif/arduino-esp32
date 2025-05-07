@@ -37,10 +37,12 @@ public:
 private:
   // save instance of the class in order to use it in static functions
   static ZigbeeSwitch *_instance;
-
+  zb_device_params_t *_device;
   void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-  static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+  void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
 };
 
 #endif  // CONFIG_ZB_ENABLED
