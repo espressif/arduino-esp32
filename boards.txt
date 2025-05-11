@@ -3672,7 +3672,7 @@ um_edges3_d.build.target=esp32s3
 um_edges3_d.build.mcu=esp32s3
 um_edges3_d.build.core=esp32
 um_edges3_d.build.variant=um_edges3_d
-um_edges3_d.build.board=EDGES3[D]
+um_edges3_d.build.board=EDGES3D
 
 um_edges3_d.build.usb_mode=1
 um_edges3_d.build.cdc_on_boot=1
@@ -4913,7 +4913,7 @@ um_squixl.build.target=esp32s3
 um_squixl.build.mcu=esp32s3
 um_squixl.build.core=esp32
 um_squixl.build.variant=um_squixl
-um_squixl.build.board=SQUiXL
+um_squixl.build.board=SQUIXL
 
 um_squixl.build.usb_mode=1
 um_squixl.build.cdc_on_boot=1
