@@ -13,4 +13,11 @@
 static const uint8_t SDA = 1;
 static const uint8_t SCL = 2;
 
+static const uint8_t SS = 42;
+static const uint8_t MOSI = 46;
+static const uint8_t MISO = 41;
+static const uint8_t SDO = 46;
+static const uint8_t SDI = 41;
+static const uint8_t SCK = 45;
+
 #endif /* Pins_Arduino_h */
