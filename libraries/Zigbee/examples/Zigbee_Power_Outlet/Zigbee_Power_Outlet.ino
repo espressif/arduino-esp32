@@ -26,20 +26,18 @@
  * Created by Ludovic Boué (https://github.com/lboue)
  */
 
-#ifndef ZIGBEE_MODE_ED
-#error "Zigbee end device mode is not selected in Tools->Zigbee mode"
+#ifndef ZIGBEE_MODE_ZCZR
+#error "Zigbee router mode is not selected in Tools->Zigbee mode"
 #endif
 
 #include "Zigbee.h"
 
 /* Zigbee power outlet configuration */
-#define ZIGBEE_OUTLET_ENDPOINT 10
+#define ZIGBEE_OUTLET_ENDPOINT 1
 uint8_t led = RGB_BUILTIN;
 uint8_t button = BOOT_PIN;
 
 ZigbeePowerOutlet zbOutlet = ZigbeePowerOutlet(ZIGBEE_OUTLET_ENDPOINT);
-
-
 
 /********************* RGB LED functions **************************/
 void setLED(bool value) {
@@ -68,7 +66,7 @@ void setup() {
   Zigbee.addEndpoint(&zbOutlet);
 
   // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
-  if (!Zigbee.begin()) {
+  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
