@@ -16,7 +16,7 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local requirements_or
 
     if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.json" ]; then
-        echo "ERROR: sdkconfig or ci.json not found" 1>&2
+        echo "WARNING: sdkconfig or ci.json not found. Assuming requirements are met." 1>&2
         # Return 1 on error to force the sketch to be built and fail. This way the
         # CI will fail and the user will know that the sketch has a problem.
     else
