@@ -43,7 +43,7 @@ i2s_data_bit_width_t bps = I2S_DATA_BIT_WIDTH_16BIT;
 i2s_mode_t mode = I2S_MODE_STD;
 i2s_slot_mode_t slot = I2S_SLOT_MODE_STEREO;
 
-const int halfWavelength = sampleRate / frequency / 2;  // half wavelength of square wave
+const unsigned int halfWavelength = sampleRate / frequency / 2;  // half wavelength of square wave
 
 int32_t sample = amplitude;  // current sample value
 unsigned int count = 0;
@@ -70,11 +70,11 @@ void loop() {
     sample = -1 * sample;
   }
 
-  // Left channel, low 8 bit then high 8 bit
+  // Left channel, the low 8 bits then high 8 bits
   i2s.write(sample);
   i2s.write(sample >> 8);
 
-  // Right channel, low 8 bit then high 8 bit
+  // Right channel, the low 8 bits then high 8 bits
   i2s.write(sample);
   i2s.write(sample >> 8);
 
