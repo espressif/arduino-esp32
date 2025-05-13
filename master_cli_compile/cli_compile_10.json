@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "USB/examples/MIDI/ReceiveMidi",
                     "sizes": [{
-                            "flash_bytes": 363653,
+                            "flash_bytes": 363915,
                             "flash_percentage": 27,
-                            "ram_bytes": 49264,
+                            "ram_bytes": 49276,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/Mouse/ButtonMouseControl",
                     "sizes": [{
-                            "flash_bytes": 350657,
+                            "flash_bytes": 350885,
                             "flash_percentage": 26,
-                            "ram_bytes": 49292,
+                            "ram_bytes": 49304,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/SystemControl",
                     "sizes": [{
-                            "flash_bytes": 350171,
+                            "flash_bytes": 350399,
                             "flash_percentage": 26,
-                            "ram_bytes": 49284,
+                            "ram_bytes": 49296,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/USBMSC",
                     "sizes": [{
-                            "flash_bytes": 370489,
+                            "flash_bytes": 370775,
                             "flash_percentage": 28,
-                            "ram_bytes": 57424,
+                            "ram_bytes": 57428,
                             "ram_percentage": 17
                             }]
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 364781,
+                            "flash_bytes": 365043,
                             "flash_percentage": 27,
-                            "ram_bytes": 49144,
+                            "ram_bytes": 49148,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "USB/examples/USBVendor",
                     "sizes": [{
-                            "flash_bytes": 370839,
+                            "flash_bytes": 371123,
                             "flash_percentage": 28,
-                            "ram_bytes": 49296,
+                            "ram_bytes": 49308,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 685325,
+                            "flash_bytes": 686337,
                             "flash_percentage": 52,
-                            "ram_bytes": 28804,
+                            "ram_bytes": 28856,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 875611,
+                            "flash_bytes": 877143,
                             "flash_percentage": 66,
-                            "ram_bytes": 29628,
+                            "ram_bytes": 29680,
                             "ram_percentage": 9
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 729535,
+                            "flash_bytes": 730547,
                             "flash_percentage": 55,
-                            "ram_bytes": 28880,
+                            "ram_bytes": 28932,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 767959,
+                            "flash_bytes": 768971,
                             "flash_percentage": 58,
-                            "ram_bytes": 31552,
+                            "ram_bytes": 31604,
                             "ram_percentage": 9
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 751237,
+                            "flash_bytes": 752183,
                             "flash_percentage": 57,
-                            "ram_bytes": 31456,
+                            "ram_bytes": 31444,
                             "ram_percentage": 9
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 400985,
+                            "flash_bytes": 401835,
                             "flash_percentage": 30,
-                            "ram_bytes": 22400,
+                            "ram_bytes": 22404,
                             "ram_percentage": 6
                             }]
                     }
@@ -105,129 +105,129 @@
                 "sketches": [
 {"name": "USB/examples/HIDVendor",
                     "sizes": [{
-                            "flash_bytes": 377398,
+                            "flash_bytes": 378450,
                             "flash_percentage": 28,
-                            "ram_bytes": 40516,
+                            "ram_bytes": 40524,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "USB/examples/Keyboard/KeyboardLogout",
                     "sizes": [{
-                            "flash_bytes": 363354,
-                            "flash_percentage": 27,
-                            "ram_bytes": 40452,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardMessage",
-                    "sizes": [{
-                            "flash_bytes": 363510,
-                            "flash_percentage": 27,
-                            "ram_bytes": 40452,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardReprogram",
-                    "sizes": [{
-                            "flash_bytes": 363706,
-                            "flash_percentage": 27,
-                            "ram_bytes": 40444,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/Keyboard/KeyboardSerial",
-                    "sizes": [{
-                            "flash_bytes": 375486,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40452,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/KeyboardAndMouseControl",
-                    "sizes": [{
-                            "flash_bytes": 376234,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40484,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/MIDI/MidiController",
-                    "sizes": [{
-                            "flash_bytes": 383846,
-                            "flash_percentage": 29,
-                            "ram_bytes": 40708,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/MIDI/MidiInterface",
-                    "sizes": [{
-                            "flash_bytes": 374306,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40412,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/MIDI/MidiMusicBox",
-                    "sizes": [{
-                            "flash_bytes": 374426,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40428,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/MIDI/ReceiveMidi",
-                    "sizes": [{
-                            "flash_bytes": 375302,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40412,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "USB/examples/Mouse/ButtonMouseControl",
-                    "sizes": [{
-                            "flash_bytes": 362574,
+                            "flash_bytes": 364338,
                             "flash_percentage": 27,
                             "ram_bytes": 40460,
                             "ram_percentage": 12
                             }]
                     },
+{"name": "USB/examples/Keyboard/KeyboardMessage",
+                    "sizes": [{
+                            "flash_bytes": 364494,
+                            "flash_percentage": 27,
+                            "ram_bytes": 40460,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardReprogram",
+                    "sizes": [{
+                            "flash_bytes": 364690,
+                            "flash_percentage": 27,
+                            "ram_bytes": 40452,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/Keyboard/KeyboardSerial",
+                    "sizes": [{
+                            "flash_bytes": 376538,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40460,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/KeyboardAndMouseControl",
+                    "sizes": [{
+                            "flash_bytes": 377302,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40492,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/MIDI/MidiController",
+                    "sizes": [{
+                            "flash_bytes": 384922,
+                            "flash_percentage": 29,
+                            "ram_bytes": 40716,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/MIDI/MidiInterface",
+                    "sizes": [{
+                            "flash_bytes": 375358,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40420,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/MIDI/MidiMusicBox",
+                    "sizes": [{
+                            "flash_bytes": 375478,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40436,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/MIDI/ReceiveMidi",
+                    "sizes": [{
+                            "flash_bytes": 376354,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40420,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "USB/examples/Mouse/ButtonMouseControl",
+                    "sizes": [{
+                            "flash_bytes": 363558,
+                            "flash_percentage": 27,
+                            "ram_bytes": 40468,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "USB/examples/SystemControl",
                     "sizes": [{
-                            "flash_bytes": 362194,
+                            "flash_bytes": 363178,
                             "flash_percentage": 27,
-                            "ram_bytes": 40420,
+                            "ram_bytes": 40428,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "USB/examples/USBMSC",
                     "sizes": [{
-                            "flash_bytes": 378582,
+                            "flash_bytes": 379650,
                             "flash_percentage": 28,
-                            "ram_bytes": 48580,
+                            "ram_bytes": 48588,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 373062,
+                            "flash_bytes": 374114,
                             "flash_percentage": 28,
-                            "ram_bytes": 40308,
+                            "ram_bytes": 40316,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "USB/examples/USBVendor",
                     "sizes": [{
-                            "flash_bytes": 377506,
+                            "flash_bytes": 378558,
                             "flash_percentage": 28,
-                            "ram_bytes": 40452,
+                            "ram_bytes": 40460,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 897114,
+                            "flash_bytes": 899962,
                             "flash_percentage": 68,
-                            "ram_bytes": 46068,
+                            "ram_bytes": 46116,
                             "ram_percentage": 14
                             }]
                     }
@@ -238,23 +238,23 @@
                 "sketches": [
 {"name": "USB/examples/Keyboard/KeyboardMessage",
                     "sizes": [{
-                            "flash_bytes": 304073,
+                            "flash_bytes": 304821,
                             "flash_percentage": 23,
-                            "ram_bytes": 35164,
+                            "ram_bytes": 35180,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/Keyboard/KeyboardReprogram",
                     "sizes": [{
-                            "flash_bytes": 304261,
+                            "flash_bytes": 305009,
                             "flash_percentage": 23,
-                            "ram_bytes": 35156,
+                            "ram_bytes": 35172,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/Keyboard/KeyboardSerial",
                     "sizes": [{
-                            "flash_bytes": 311897,
+                            "flash_bytes": 312549,
                             "flash_percentage": 23,
                             "ram_bytes": 34796,
                             "ram_percentage": 10
@@ -262,23 +262,23 @@
                     },
 {"name": "USB/examples/KeyboardAndMouseControl",
                     "sizes": [{
-                            "flash_bytes": 317025,
+                            "flash_bytes": 317837,
                             "flash_percentage": 24,
-                            "ram_bytes": 35188,
+                            "ram_bytes": 35204,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/MIDI/MidiController",
                     "sizes": [{
-                            "flash_bytes": 324785,
+                            "flash_bytes": 325625,
                             "flash_percentage": 24,
-                            "ram_bytes": 35268,
+                            "ram_bytes": 35284,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/MIDI/MidiInterface",
                     "sizes": [{
-                            "flash_bytes": 310733,
+                            "flash_bytes": 311385,
                             "flash_percentage": 23,
                             "ram_bytes": 34756,
                             "ram_percentage": 10
@@ -286,15 +286,15 @@
                     },
 {"name": "USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
-                            "flash_bytes": 315237,
+                            "flash_bytes": 316049,
                             "flash_percentage": 24,
-                            "ram_bytes": 35132,
+                            "ram_bytes": 35148,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/MIDI/ReceiveMidi",
                     "sizes": [{
-                            "flash_bytes": 311741,
+                            "flash_bytes": 312393,
                             "flash_percentage": 23,
                             "ram_bytes": 34756,
                             "ram_percentage": 10
@@ -302,7 +302,7 @@
                     },
 {"name": "USB/examples/Mouse/ButtonMouseControl",
                     "sizes": [{
-                            "flash_bytes": 303137,
+                            "flash_bytes": 303869,
                             "flash_percentage": 23,
                             "ram_bytes": 35172,
                             "ram_percentage": 10
@@ -310,15 +310,15 @@
                     },
 {"name": "USB/examples/SystemControl",
                     "sizes": [{
-                            "flash_bytes": 302749,
+                            "flash_bytes": 303497,
                             "flash_percentage": 23,
-                            "ram_bytes": 35132,
+                            "ram_bytes": 35148,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "USB/examples/USBMSC",
                     "sizes": [{
-                            "flash_bytes": 315113,
+                            "flash_bytes": 315765,
                             "flash_percentage": 24,
                             "ram_bytes": 42924,
                             "ram_percentage": 13
@@ -326,7 +326,7 @@
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 309585,
+                            "flash_bytes": 310237,
                             "flash_percentage": 23,
                             "ram_bytes": 34636,
                             "ram_percentage": 10
@@ -334,7 +334,7 @@
                     },
 {"name": "USB/examples/USBVendor",
                     "sizes": [{
-                            "flash_bytes": 318433,
+                            "flash_bytes": 319221,
                             "flash_percentage": 24,
                             "ram_bytes": 35156,
                             "ram_percentage": 10
@@ -342,9 +342,9 @@
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 861813,
+                            "flash_bytes": 862345,
                             "flash_percentage": 65,
-                            "ram_bytes": 41220,
+                            "ram_bytes": 40724,
                             "ram_percentage": 12
                             }]
                     }
@@ -355,113 +355,113 @@
                 "sketches": [
 {"name": "SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
-                            "flash_bytes": 953430,
-                            "flash_percentage": 72,
-                            "ram_bytes": 38512,
+                            "flash_bytes": 928594,
+                            "flash_percentage": 70,
+                            "ram_bytes": 37552,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 305702,
+                            "flash_bytes": 307238,
                             "flash_percentage": 23,
-                            "ram_bytes": 13916,
+                            "ram_bytes": 13912,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
-                            "flash_bytes": 292814,
+                            "flash_bytes": 294760,
                             "flash_percentage": 22,
-                            "ram_bytes": 12912,
+                            "ram_bytes": 12916,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Ticker/examples/TickerBasic",
                     "sizes": [{
-                            "flash_bytes": 292588,
+                            "flash_bytes": 294532,
                             "flash_percentage": 22,
-                            "ram_bytes": 12880,
+                            "ram_bytes": 12876,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Ticker/examples/TickerParameter",
                     "sizes": [{
-                            "flash_bytes": 292466,
+                            "flash_bytes": 294402,
                             "flash_percentage": 22,
-                            "ram_bytes": 12904,
+                            "ram_bytes": 12908,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 963850,
+                            "flash_bytes": 966976,
                             "flash_percentage": 73,
-                            "ram_bytes": 37408,
+                            "ram_bytes": 37456,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1056188,
+                            "flash_bytes": 1059386,
                             "flash_percentage": 80,
-                            "ram_bytes": 37096,
+                            "ram_bytes": 37144,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1008078,
-                            "flash_percentage": 76,
-                            "ram_bytes": 37472,
+                            "flash_bytes": 1011188,
+                            "flash_percentage": 77,
+                            "ram_bytes": 37512,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1043762,
+                            "flash_bytes": 1047102,
                             "flash_percentage": 79,
-                            "ram_bytes": 40152,
+                            "ram_bytes": 40200,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1026772,
+                            "flash_bytes": 1030100,
                             "flash_percentage": 78,
-                            "ram_bytes": 40048,
+                            "ram_bytes": 40088,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 378420,
-                            "flash_percentage": 28,
-                            "ram_bytes": 13464,
+                            "flash_bytes": 380438,
+                            "flash_percentage": 29,
+                            "ram_bytes": 13452,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 1017994,
+                            "flash_bytes": 1021334,
                             "flash_percentage": 77,
-                            "ram_bytes": 39808,
+                            "ram_bytes": 39848,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1052146,
+                            "flash_bytes": 1055060,
                             "flash_percentage": 80,
-                            "ram_bytes": 39032,
+                            "ram_bytes": 39080,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 1019018,
+                            "flash_bytes": 1022358,
                             "flash_percentage": 77,
-                            "ram_bytes": 39816,
+                            "ram_bytes": 39856,
                             "ram_percentage": 12
                             }]
                     }
@@ -472,129 +472,129 @@
                 "sketches": [
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 1025645,
+                            "flash_bytes": 1029771,
                             "flash_percentage": 78,
-                            "ram_bytes": 45884,
+                            "ram_bytes": 45908,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1062935,
+                            "flash_bytes": 1066719,
                             "flash_percentage": 81,
-                            "ram_bytes": 45308,
+                            "ram_bytes": 45340,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 1026647,
+                            "flash_bytes": 1030773,
                             "flash_percentage": 78,
-                            "ram_bytes": 45892,
+                            "ram_bytes": 45916,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 1024421,
+                            "flash_bytes": 1028547,
                             "flash_percentage": 78,
-                            "ram_bytes": 45884,
+                            "ram_bytes": 45908,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 1044567,
-                            "flash_percentage": 79,
-                            "ram_bytes": 48212,
+                            "flash_bytes": 1048619,
+                            "flash_percentage": 80,
+                            "ram_bytes": 48236,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 1045259,
-                            "flash_percentage": 79,
-                            "ram_bytes": 48348,
+                            "flash_bytes": 1049303,
+                            "flash_percentage": 80,
+                            "ram_bytes": 48372,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1044573,
-                            "flash_percentage": 79,
-                            "ram_bytes": 48236,
+                            "flash_bytes": 1048617,
+                            "flash_percentage": 80,
+                            "ram_bytes": 48260,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 1044625,
-                            "flash_percentage": 79,
-                            "ram_bytes": 48196,
+                            "flash_bytes": 1048669,
+                            "flash_percentage": 80,
+                            "ram_bytes": 48220,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1053885,
+                            "flash_bytes": 1057933,
                             "flash_percentage": 80,
-                            "ram_bytes": 48212,
+                            "ram_bytes": 48236,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 1054427,
+                            "flash_bytes": 1058475,
                             "flash_percentage": 80,
-                            "ram_bytes": 48228,
+                            "ram_bytes": 48252,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/Middleware",
                     "sizes": [{
-                            "flash_bytes": 996773,
+                            "flash_bytes": 1000423,
                             "flash_percentage": 76,
-                            "ram_bytes": 42796,
+                            "ram_bytes": 42836,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "WebServer/examples/MultiHomedServers",
                     "sizes": [{
-                            "flash_bytes": 1027417,
+                            "flash_bytes": 1031543,
                             "flash_percentage": 78,
-                            "ram_bytes": 45548,
+                            "ram_bytes": 45572,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "WebServer/examples/PathArgServer",
                     "sizes": [{
-                            "flash_bytes": 1294189,
+                            "flash_bytes": 1298029,
                             "flash_percentage": 41,
-                            "ram_bytes": 50308,
+                            "ram_bytes": 50332,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "WebServer/examples/SDWebServer",
                     "sizes": [{
-                            "flash_bytes": 1082553,
+                            "flash_bytes": 1086699,
                             "flash_percentage": 82,
-                            "ram_bytes": 46164,
+                            "ram_bytes": 46204,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/SimpleAuthentification",
                     "sizes": [{
-                            "flash_bytes": 975411,
+                            "flash_bytes": 979069,
                             "flash_percentage": 74,
-                            "ram_bytes": 42620,
+                            "ram_bytes": 42660,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "WebServer/examples/UploadHugeFile",
                     "sizes": [{
-                            "flash_bytes": 1328803,
+                            "flash_bytes": 1333147,
                             "flash_percentage": 42,
-                            "ram_bytes": 49020,
+                            "ram_bytes": 49052,
                             "ram_percentage": 14
                             }]
                     }
@@ -605,65 +605,65 @@
                 "sketches": [
 {"name": "OpenThread/examples/onReceive",
                     "sizes": [{
-                            "flash_bytes": 1086973,
-                            "flash_percentage": 82,
-                            "ram_bytes": 45588,
+                            "flash_bytes": 1096933,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45720,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 548325,
-                            "flash_percentage": 41,
-                            "ram_bytes": 18704,
+                            "flash_bytes": 553873,
+                            "flash_percentage": 42,
+                            "ram_bytes": 18700,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 292407,
+                            "flash_bytes": 293473,
                             "flash_percentage": 22,
-                            "ram_bytes": 12796,
+                            "ram_bytes": 12784,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 292141,
+                            "flash_bytes": 293215,
                             "flash_percentage": 22,
-                            "ram_bytes": 12796,
+                            "ram_bytes": 12792,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 374067,
+                            "flash_bytes": 375523,
                             "flash_percentage": 28,
-                            "ram_bytes": 14784,
+                            "ram_bytes": 14772,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
-                            "flash_bytes": 296951,
+                            "flash_bytes": 298313,
                             "flash_percentage": 22,
-                            "ram_bytes": 14080,
+                            "ram_bytes": 14084,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 325923,
+                            "flash_bytes": 326989,
                             "flash_percentage": 24,
-                            "ram_bytes": 13308,
+                            "ram_bytes": 13304,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
-                            "flash_bytes": 1087139,
+                            "flash_bytes": 1075247,
                             "flash_percentage": 82,
-                            "ram_bytes": 38208,
+                            "ram_bytes": 37320,
                             "ram_percentage": 11
                             }]
                     }
@@ -674,121 +674,121 @@
                 "sketches": [
 {"name": "SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
-                            "flash_bytes": 1083978,
-                            "flash_percentage": 82,
-                            "ram_bytes": 39768,
+                            "flash_bytes": 1067482,
+                            "flash_percentage": 81,
+                            "ram_bytes": 39764,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 326542,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22912,
+                            "flash_bytes": 327778,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22928,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
-                            "flash_bytes": 295722,
+                            "flash_bytes": 296902,
                             "flash_percentage": 22,
-                            "ram_bytes": 20656,
+                            "ram_bytes": 20664,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Ticker/examples/TickerBasic",
                     "sizes": [{
-                            "flash_bytes": 295510,
+                            "flash_bytes": 296706,
                             "flash_percentage": 22,
-                            "ram_bytes": 20600,
+                            "ram_bytes": 20624,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Ticker/examples/TickerParameter",
                     "sizes": [{
-                            "flash_bytes": 295450,
+                            "flash_bytes": 296646,
                             "flash_percentage": 22,
-                            "ram_bytes": 20640,
+                            "ram_bytes": 20664,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 922006,
+                            "flash_bytes": 922754,
                             "flash_percentage": 70,
-                            "ram_bytes": 46620,
+                            "ram_bytes": 46132,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1020798,
+                            "flash_bytes": 1022034,
                             "flash_percentage": 77,
-                            "ram_bytes": 47212,
+                            "ram_bytes": 46716,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 965466,
+                            "flash_bytes": 966194,
                             "flash_percentage": 73,
-                            "ram_bytes": 48036,
+                            "ram_bytes": 47548,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 994402,
+                            "flash_bytes": 995342,
                             "flash_percentage": 75,
-                            "ram_bytes": 49364,
-                            "ram_percentage": 15
+                            "ram_bytes": 48860,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 980878,
+                            "flash_bytes": 981838,
                             "flash_percentage": 74,
-                            "ram_bytes": 49352,
-                            "ram_percentage": 15
+                            "ram_bytes": 48880,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 372802,
+                            "flash_bytes": 374134,
                             "flash_percentage": 28,
-                            "ram_bytes": 21348,
+                            "ram_bytes": 21388,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
-                            "flash_bytes": 974794,
+                            "flash_bytes": 975762,
                             "flash_percentage": 74,
-                            "ram_bytes": 49120,
+                            "ram_bytes": 48632,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1018502,
+                            "flash_bytes": 1019390,
                             "flash_percentage": 77,
-                            "ram_bytes": 49180,
-                            "ram_percentage": 15
+                            "ram_bytes": 48692,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/Filters",
                     "sizes": [{
-                            "flash_bytes": 975070,
+                            "flash_bytes": 975998,
                             "flash_percentage": 74,
-                            "ram_bytes": 49028,
+                            "ram_bytes": 48524,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
-                            "flash_bytes": 973254,
+                            "flash_bytes": 974202,
                             "flash_percentage": 74,
-                            "ram_bytes": 49012,
+                            "ram_bytes": 48524,
                             "ram_percentage": 14
                             }]
                     }
