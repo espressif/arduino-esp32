@@ -14,6 +14,23 @@ Installing
 
 Here are the common issues during the installation.
 
+Slow or unstable downloads
+**************************
+
+Users in China might have troubles with connection and download speeds using GitHub. Please use our Jihulab mirror as the repository source:
+
+`https://jihulab.com/esp-mirror/espressif/arduino-esp32.git <https://jihulab.com/esp-mirror/espressif/arduino-esp32.git>`_
+
+JSON files for the boards manager are available here:
+
+- Stable release::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_index_cn.json
+
+- Development release::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_dev_index_cn.json
+
 Building
 --------
 
