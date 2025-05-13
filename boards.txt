@@ -49849,3 +49849,157 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
+
+# Satellite 1 CORE (rev 5.1) 
+
+sat1core_rev5_1.name=Satellite 1 CORE (rev 5.1) 
+
+sat1core_rev5_1.bootloader.tool=esptool_py
+sat1core_rev5_1.bootloader.tool.default=esptool_py
+
+sat1core_rev5_1.upload.tool=esptool_py
+sat1core_rev5_1.upload.tool.default=esptool_py
+sat1core_rev5_1.upload.tool.network=esp_ota
+
+sat1core_rev5_1.upload.maximum_size=1310720
+sat1core_rev5_1.upload.maximum_data_size=327680
+sat1core_rev5_1.upload.flags=
+sat1core_rev5_1.upload.extra_flags=
+sat1core_rev5_1.upload.use_1200bps_touch=false
+sat1core_rev5_1.upload.wait_for_upload_port=false
+
+sat1core_rev5_1.serial.disableDTR=false
+sat1core_rev5_1.serial.disableRTS=false
+
+sat1core_rev5_1.build.tarch=xtensa
+sat1core_rev5_1.build.bootloader_addr=0x0
+sat1core_rev5_1.build.target=esp32s3
+sat1core_rev5_1.build.mcu=esp32s3
+sat1core_rev5_1.build.core=esp32
+sat1core_rev5_1.build.variant=satellite1_core_rev5_1
+sat1core_rev5_1.build.board=SATELLITE1_CORE_REV5_1
+
+sat1core_rev5_1.build.usb_mode=1
+sat1core_rev5_1.build.cdc_on_boot=1
+sat1core_rev5_1.build.msc_on_boot=0
+sat1core_rev5_1.build.dfu_on_boot=0
+sat1core_rev5_1.build.f_cpu=240000000L
+sat1core_rev5_1.build.flash_size=16MB (128Mb)
+sat1core_rev5_1.build.flash_freq=80m
+sat1core_rev5_1.build.flash_mode=dio
+sat1core_rev5_1.build.boot=qio
+sat1core_rev5_1.build.boot_freq=80m
+sat1core_rev5_1.build.partitions=default
+sat1core_rev5_1.build.defines=-DBOARD_HAS_PSRAM
+sat1core_rev5_1.build.loop_core=
+sat1core_rev5_1.build.event_core=
+sat1core_rev5_1.build.psram_type=opi
+sat1core_rev5_1.build.memory_type={build.boot}_{build.psram_type}
+
+sat1core_rev5_1.menu.PSRAM.opi=Enabled
+sat1core_rev5_1.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+sat1core_rev5_1.menu.PSRAM.opi.build.psram_type=opi
+
+sat1core_rev5_1.menu.FlashMode.qio=QIO 80MHz
+sat1core_rev5_1.menu.FlashMode.qio.build.flash_mode=dio
+sat1core_rev5_1.menu.FlashMode.qio.build.boot=qio
+sat1core_rev5_1.menu.FlashMode.qio.build.boot_freq=80m
+sat1core_rev5_1.menu.FlashMode.qio.build.flash_freq=80m
+
+sat1core_rev5_1.menu.FlashSize.16M=16MB (128Mb)
+sat1core_rev5_1.menu.FlashSize.16M.build.flash_size=16MB
+
+sat1core_rev5_1.menu.LoopCore.1=Core 1
+sat1core_rev5_1.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+sat1core_rev5_1.menu.LoopCore.0=Core 0
+sat1core_rev5_1.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+sat1core_rev5_1.menu.EventsCore.1=Core 1
+sat1core_rev5_1.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+sat1core_rev5_1.menu.EventsCore.0=Core 0
+sat1core_rev5_1.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+sat1core_rev5_1.menu.USBMode.default=Hardware CDC and JTAG
+sat1core_rev5_1.menu.USBMode.default.build.usb_mode=1
+sat1core_rev5_1.menu.USBMode.hwcdc=USB-OTG (TinyUSB)
+sat1core_rev5_1.menu.USBMode.hwcdc.build.usb_mode=0
+
+sat1core_rev5_1.menu.CDCOnBoot.cdc=Enabled
+sat1core_rev5_1.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+sat1core_rev5_1.menu.CDCOnBoot.default=Disabled
+sat1core_rev5_1.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+sat1core_rev5_1.menu.MSCOnBoot.default=Disabled
+sat1core_rev5_1.menu.MSCOnBoot.default.build.msc_on_boot=0
+sat1core_rev5_1.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+sat1core_rev5_1.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+sat1core_rev5_1.menu.DFUOnBoot.default=Disabled
+sat1core_rev5_1.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sat1core_rev5_1.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+sat1core_rev5_1.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sat1core_rev5_1.menu.UploadMode.default=UART0 / Hardware CDC
+sat1core_rev5_1.menu.UploadMode.default.upload.use_1200bps_touch=false
+sat1core_rev5_1.menu.UploadMode.default.upload.wait_for_upload_port=false
+sat1core_rev5_1.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+sat1core_rev5_1.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sat1core_rev5_1.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme1=Small App w/ OTA + Huge FS (2MB APP/2MB OTA/12MB SPIFFS)
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme1.build.custom_partitions=gen4esp32_2MBapp_2MBota_12MBspiffs
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme1.upload.maximum_size=2097152
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme2=Medium App w/ OTA + Large FS (4MB APP/4MB OTA/7MB SPIFFS)
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme2.build.custom_partitions=gen4esp32_4MBapp_4MBota_7MBspiffs
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme2.upload.maximum_size=4718592
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme3=Large App w/ OTA (8MB APP/8MB OTA)
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme3.build.custom_partitions=gen4esp32_8MBapp_8MBota
+sat1core_rev5_1.menu.PartitionScheme.gen4esp32scheme3.upload.maximum_size=8323072
+
+sat1core_rev5_1.menu.CPUFreq.240=240MHz (WiFi)
+sat1core_rev5_1.menu.CPUFreq.240.build.f_cpu=240000000L
+sat1core_rev5_1.menu.CPUFreq.160=160MHz (WiFi)
+sat1core_rev5_1.menu.CPUFreq.160.build.f_cpu=160000000L
+sat1core_rev5_1.menu.CPUFreq.80=80MHz (WiFi)
+sat1core_rev5_1.menu.CPUFreq.80.build.f_cpu=80000000L
+sat1core_rev5_1.menu.CPUFreq.40=40MHz
+sat1core_rev5_1.menu.CPUFreq.40.build.f_cpu=40000000L
+sat1core_rev5_1.menu.CPUFreq.20=20MHz
+sat1core_rev5_1.menu.CPUFreq.20.build.f_cpu=20000000L
+sat1core_rev5_1.menu.CPUFreq.10=10MHz
+sat1core_rev5_1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sat1core_rev5_1.menu.UploadSpeed.921600=921600
+sat1core_rev5_1.menu.UploadSpeed.921600.upload.speed=921600
+sat1core_rev5_1.menu.UploadSpeed.115200=115200
+sat1core_rev5_1.menu.UploadSpeed.115200.upload.speed=115200
+sat1core_rev5_1.menu.UploadSpeed.256000.windows=256000
+sat1core_rev5_1.menu.UploadSpeed.256000.upload.speed=256000
+sat1core_rev5_1.menu.UploadSpeed.230400.windows.upload.speed=256000
+sat1core_rev5_1.menu.UploadSpeed.230400=230400
+sat1core_rev5_1.menu.UploadSpeed.230400.upload.speed=230400
+sat1core_rev5_1.menu.UploadSpeed.460800.linux=460800
+sat1core_rev5_1.menu.UploadSpeed.460800.macosx=460800
+sat1core_rev5_1.menu.UploadSpeed.460800.upload.speed=460800
+sat1core_rev5_1.menu.UploadSpeed.512000.windows=512000
+sat1core_rev5_1.menu.UploadSpeed.512000.upload.speed=512000
+
+sat1core_rev5_1.menu.DebugLevel.none=None
+sat1core_rev5_1.menu.DebugLevel.none.build.code_debug=0
+sat1core_rev5_1.menu.DebugLevel.error=Error
+sat1core_rev5_1.menu.DebugLevel.error.build.code_debug=1
+sat1core_rev5_1.menu.DebugLevel.warn=Warn
+sat1core_rev5_1.menu.DebugLevel.warn.build.code_debug=2
+sat1core_rev5_1.menu.DebugLevel.info=Info
+sat1core_rev5_1.menu.DebugLevel.info.build.code_debug=3
+sat1core_rev5_1.menu.DebugLevel.debug=Debug
+sat1core_rev5_1.menu.DebugLevel.debug.build.code_debug=4
+sat1core_rev5_1.menu.DebugLevel.verbose=Verbose
+sat1core_rev5_1.menu.DebugLevel.verbose.build.code_debug=5
+
+sat1core_rev5_1.menu.EraseFlash.none=Disabled
+sat1core_rev5_1.menu.EraseFlash.none.upload.erase_cmd=
+sat1core_rev5_1.menu.EraseFlash.all=Enabled
+sat1core_rev5_1.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
