@@ -558,23 +558,23 @@ int HWCDC::available(void) {
   return uxQueueMessagesWaiting(rx_queue);
 }
 
-int HWCDC::peek(void) {
+int HWCDC::_peek(TickType_t timeout) {
   if (rx_queue == NULL) {
     return -1;
   }
   uint8_t c;
-  if (xQueuePeek(rx_queue, &c, 0)) {
+  if (xQueuePeek(rx_queue, &c, timeout)) {
     return c;
   }
   return -1;
 }
 
-int HWCDC::read(void) {
+int HWCDC::_read(TickType_t timeout) {
   if (rx_queue == NULL) {
     return -1;
   }
   uint8_t c = 0;
-  if (xQueueReceive(rx_queue, &c, 0)) {
+  if (xQueueReceive(rx_queue, &c, timeout)) {
     return c;
   }
   return -1;
