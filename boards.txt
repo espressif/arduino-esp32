@@ -3643,6 +3643,155 @@ um_bling.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+um_edges3_d.name=UM EdgeS3[D]
+um_edges3_d.vid.0=0x303a
+um_edges3_d.pid.0=0x82DC
+um_edges3_d.upload_port.0.vid=0x303a
+um_edges3_d.upload_port.0.pid=0x82DC
+
+um_edges3_d.bootloader.tool=esptool_py
+um_edges3_d.bootloader.tool.default=esptool_py
+
+um_edges3_d.upload.tool=esptool_py
+um_edges3_d.upload.tool.default=esptool_py
+um_edges3_d.upload.tool.network=esp_ota
+
+um_edges3_d.upload.maximum_size=1310720
+um_edges3_d.upload.maximum_data_size=327680
+um_edges3_d.upload.flags=
+um_edges3_d.upload.extra_flags=
+um_edges3_d.upload.use_1200bps_touch=false
+um_edges3_d.upload.wait_for_upload_port=false
+
+um_edges3_d.serial.disableDTR=false
+um_edges3_d.serial.disableRTS=false
+
+um_edges3_d.build.tarch=xtensa
+um_edges3_d.build.bootloader_addr=0x0
+um_edges3_d.build.target=esp32s3
+um_edges3_d.build.mcu=esp32s3
+um_edges3_d.build.core=esp32
+um_edges3_d.build.variant=um_edges3_d
+um_edges3_d.build.board=EDGES3D
+
+um_edges3_d.build.usb_mode=1
+um_edges3_d.build.cdc_on_boot=1
+um_edges3_d.build.msc_on_boot=0
+um_edges3_d.build.dfu_on_boot=0
+um_edges3_d.build.f_cpu=240000000L
+um_edges3_d.build.flash_size=8MB
+um_edges3_d.build.flash_freq=80m
+um_edges3_d.build.flash_mode=dio
+um_edges3_d.build.boot=qio
+um_edges3_d.build.partitions=default
+um_edges3_d.build.defines=
+um_edges3_d.build.loop_core=
+um_edges3_d.build.event_core=
+um_edges3_d.build.flash_type=qio
+um_edges3_d.build.psram_type=qspi
+um_edges3_d.build.memory_type=qio_qspi
+
+um_edges3_d.menu.LoopCore.1=Core 1
+um_edges3_d.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+um_edges3_d.menu.LoopCore.0=Core 0
+um_edges3_d.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+um_edges3_d.menu.EventsCore.1=Core 1
+um_edges3_d.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+um_edges3_d.menu.EventsCore.0=Core 0
+um_edges3_d.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+um_edges3_d.menu.USBMode.hwcdc=Hardware CDC and JTAG
+um_edges3_d.menu.USBMode.hwcdc.build.usb_mode=1
+um_edges3_d.menu.USBMode.default=USB-OTG (TinyUSB)
+um_edges3_d.menu.USBMode.default.build.usb_mode=0
+
+um_edges3_d.menu.CDCOnBoot.cdc=Enabled
+um_edges3_d.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+um_edges3_d.menu.CDCOnBoot.default=Disabled
+um_edges3_d.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+um_edges3_d.menu.MSCOnBoot.default=Disabled
+um_edges3_d.menu.MSCOnBoot.default.build.msc_on_boot=0
+um_edges3_d.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+um_edges3_d.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+um_edges3_d.menu.DFUOnBoot.default=Disabled
+um_edges3_d.menu.DFUOnBoot.default.build.dfu_on_boot=0
+um_edges3_d.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+um_edges3_d.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+um_edges3_d.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+um_edges3_d.menu.UploadMode.default=UART0 / Hardware CDC
+um_edges3_d.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_edges3_d.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+um_edges3_d.menu.UploadMode.default.upload.use_1200bps_touch=false
+um_edges3_d.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+um_edges3_d.menu.PSRAM.enabled=Enabled
+um_edges3_d.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+um_edges3_d.menu.PSRAM.disabled=Disabled
+um_edges3_d.menu.PSRAM.disabled.build.defines=
+
+um_edges3_d.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
+um_edges3_d.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+um_edges3_d.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+
+um_edges3_d.menu.CPUFreq.240=240MHz (WiFi)
+um_edges3_d.menu.CPUFreq.240.build.f_cpu=240000000L
+um_edges3_d.menu.CPUFreq.160=160MHz (WiFi)
+um_edges3_d.menu.CPUFreq.160.build.f_cpu=160000000L
+um_edges3_d.menu.CPUFreq.80=80MHz (WiFi)
+um_edges3_d.menu.CPUFreq.80.build.f_cpu=80000000L
+um_edges3_d.menu.CPUFreq.40=40MHz
+um_edges3_d.menu.CPUFreq.40.build.f_cpu=40000000L
+um_edges3_d.menu.CPUFreq.20=20MHz
+um_edges3_d.menu.CPUFreq.20.build.f_cpu=20000000L
+um_edges3_d.menu.CPUFreq.10=10MHz
+um_edges3_d.menu.CPUFreq.10.build.f_cpu=10000000L
+
+um_edges3_d.menu.FlashMode.qio=QIO
+um_edges3_d.menu.FlashMode.qio.build.flash_mode=dio
+um_edges3_d.menu.FlashMode.qio.build.boot=qio
+um_edges3_d.menu.FlashMode.dio=DIO
+um_edges3_d.menu.FlashMode.dio.build.flash_mode=dio
+um_edges3_d.menu.FlashMode.dio.build.boot=dio
+
+um_edges3_d.menu.UploadSpeed.921600=921600
+um_edges3_d.menu.UploadSpeed.921600.upload.speed=921600
+um_edges3_d.menu.UploadSpeed.115200=115200
+um_edges3_d.menu.UploadSpeed.115200.upload.speed=115200
+um_edges3_d.menu.UploadSpeed.256000.windows=256000
+um_edges3_d.menu.UploadSpeed.256000.upload.speed=256000
+um_edges3_d.menu.UploadSpeed.230400.windows.upload.speed=256000
+um_edges3_d.menu.UploadSpeed.230400=230400
+um_edges3_d.menu.UploadSpeed.230400.upload.speed=230400
+um_edges3_d.menu.UploadSpeed.460800.linux=460800
+um_edges3_d.menu.UploadSpeed.460800.macosx=460800
+um_edges3_d.menu.UploadSpeed.460800.upload.speed=460800
+um_edges3_d.menu.UploadSpeed.512000.windows=512000
+um_edges3_d.menu.UploadSpeed.512000.upload.speed=512000
+
+um_edges3_d.menu.DebugLevel.none=None
+um_edges3_d.menu.DebugLevel.none.build.code_debug=0
+um_edges3_d.menu.DebugLevel.error=Error
+um_edges3_d.menu.DebugLevel.error.build.code_debug=1
+um_edges3_d.menu.DebugLevel.warn=Warn
+um_edges3_d.menu.DebugLevel.warn.build.code_debug=2
+um_edges3_d.menu.DebugLevel.info=Info
+um_edges3_d.menu.DebugLevel.info.build.code_debug=3
+um_edges3_d.menu.DebugLevel.debug=Debug
+um_edges3_d.menu.DebugLevel.debug.build.code_debug=4
+um_edges3_d.menu.DebugLevel.verbose=Verbose
+um_edges3_d.menu.DebugLevel.verbose.build.code_debug=5
+
+um_edges3_d.menu.EraseFlash.none=Disabled
+um_edges3_d.menu.EraseFlash.none.upload.erase_cmd=
+um_edges3_d.menu.EraseFlash.all=Enabled
+um_edges3_d.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 um_feathers2.name=UM FeatherS2
 um_feathers2.vid.0=0x239A
 um_feathers2.pid.0=0x80AB
@@ -4732,6 +4881,163 @@ um_pros3.menu.EraseFlash.none=Disabled
 um_pros3.menu.EraseFlash.none.upload.erase_cmd=
 um_pros3.menu.EraseFlash.all=Enabled
 um_pros3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+um_squixl.name=UM SQUIXL
+um_squixl.vid.0=0x303a
+um_squixl.pid.0=0x82DF
+um_squixl.upload_port.0.vid=0x303a
+um_squixl.upload_port.0.pid=0x82DF
+
+um_squixl.bootloader.tool=esptool_py
+um_squixl.bootloader.tool.default=esptool_py
+
+um_squixl.upload.tool=esptool_py
+um_squixl.upload.tool.default=esptool_py
+um_squixl.upload.tool.network=esp_ota
+
+um_squixl.upload.maximum_size=1310720
+um_squixl.upload.maximum_data_size=327680
+um_squixl.upload.flags=
+um_squixl.upload.extra_flags=
+um_squixl.upload.use_1200bps_touch=false
+um_squixl.upload.wait_for_upload_port=false
+
+um_squixl.serial.disableDTR=false
+um_squixl.serial.disableRTS=false
+
+um_squixl.build.tarch=xtensa
+um_squixl.build.bootloader_addr=0x0
+um_squixl.build.target=esp32s3
+um_squixl.build.mcu=esp32s3
+um_squixl.build.core=esp32
+um_squixl.build.variant=um_squixl
+um_squixl.build.board=SQUIXL
+
+um_squixl.build.usb_mode=1
+um_squixl.build.cdc_on_boot=1
+um_squixl.build.msc_on_boot=0
+um_squixl.build.dfu_on_boot=0
+um_squixl.build.f_cpu=240000000L
+um_squixl.build.flash_size=16MB
+um_squixl.build.flash_freq=80m
+um_squixl.build.flash_mode=dio
+um_squixl.build.boot=qio
+um_squixl.build.partitions=default
+um_squixl.build.defines=
+um_squixl.build.loop_core=
+um_squixl.build.event_core=
+um_squixl.build.flash_type=qio
+um_squixl.build.psram_type=opi
+um_squixl.build.memory_type=qio_opi
+
+um_squixl.menu.LoopCore.1=Core 1
+um_squixl.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+um_squixl.menu.LoopCore.0=Core 0
+um_squixl.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+um_squixl.menu.EventsCore.1=Core 1
+um_squixl.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+um_squixl.menu.EventsCore.0=Core 0
+um_squixl.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+um_squixl.menu.USBMode.hwcdc=Hardware CDC and JTAG
+um_squixl.menu.USBMode.hwcdc.build.usb_mode=1
+um_squixl.menu.USBMode.default=USB-OTG (TinyUSB)
+um_squixl.menu.USBMode.default.build.usb_mode=0
+
+um_squixl.menu.CDCOnBoot.cdc=Enabled
+um_squixl.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+um_squixl.menu.CDCOnBoot.default=Disabled
+um_squixl.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+um_squixl.menu.MSCOnBoot.default=Disabled
+um_squixl.menu.MSCOnBoot.default.build.msc_on_boot=0
+um_squixl.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+um_squixl.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+um_squixl.menu.DFUOnBoot.default=Disabled
+um_squixl.menu.DFUOnBoot.default.build.dfu_on_boot=0
+um_squixl.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+um_squixl.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+um_squixl.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+um_squixl.menu.UploadMode.default=UART0 / Hardware CDC
+um_squixl.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+um_squixl.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+um_squixl.menu.UploadMode.default.upload.use_1200bps_touch=false
+um_squixl.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+um_squixl.menu.PSRAM.opi=OPI PSRAM
+um_squixl.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+um_squixl.menu.PSRAM.opi.build.psram_type=opi
+
+um_squixl.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+um_squixl.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+um_squixl.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+um_squixl.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+um_squixl.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+um_squixl.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+um_squixl.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+um_squixl.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+um_squixl.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+um_squixl.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+um_squixl.menu.PartitionScheme.fatflash.build.partitions=ffat
+um_squixl.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+um_squixl.menu.CPUFreq.240=240MHz (WiFi)
+um_squixl.menu.CPUFreq.240.build.f_cpu=240000000L
+um_squixl.menu.CPUFreq.160=160MHz (WiFi)
+um_squixl.menu.CPUFreq.160.build.f_cpu=160000000L
+um_squixl.menu.CPUFreq.80=80MHz (WiFi)
+um_squixl.menu.CPUFreq.80.build.f_cpu=80000000L
+um_squixl.menu.CPUFreq.40=40MHz
+um_squixl.menu.CPUFreq.40.build.f_cpu=40000000L
+um_squixl.menu.CPUFreq.20=20MHz
+um_squixl.menu.CPUFreq.20.build.f_cpu=20000000L
+um_squixl.menu.CPUFreq.10=10MHz
+um_squixl.menu.CPUFreq.10.build.f_cpu=10000000L
+
+um_squixl.menu.FlashMode.qio=QIO
+um_squixl.menu.FlashMode.qio.build.flash_mode=dio
+um_squixl.menu.FlashMode.qio.build.boot=qio
+um_squixl.menu.FlashMode.dio=DIO
+um_squixl.menu.FlashMode.dio.build.flash_mode=dio
+um_squixl.menu.FlashMode.dio.build.boot=dio
+
+um_squixl.menu.UploadSpeed.921600=921600
+um_squixl.menu.UploadSpeed.921600.upload.speed=921600
+um_squixl.menu.UploadSpeed.115200=115200
+um_squixl.menu.UploadSpeed.115200.upload.speed=115200
+um_squixl.menu.UploadSpeed.256000.windows=256000
+um_squixl.menu.UploadSpeed.256000.upload.speed=256000
+um_squixl.menu.UploadSpeed.230400.windows.upload.speed=256000
+um_squixl.menu.UploadSpeed.230400=230400
+um_squixl.menu.UploadSpeed.230400.upload.speed=230400
+um_squixl.menu.UploadSpeed.460800.linux=460800
+um_squixl.menu.UploadSpeed.460800.macosx=460800
+um_squixl.menu.UploadSpeed.460800.upload.speed=460800
+um_squixl.menu.UploadSpeed.512000.windows=512000
+um_squixl.menu.UploadSpeed.512000.upload.speed=512000
+
+um_squixl.menu.DebugLevel.none=None
+um_squixl.menu.DebugLevel.none.build.code_debug=0
+um_squixl.menu.DebugLevel.error=Error
+um_squixl.menu.DebugLevel.error.build.code_debug=1
+um_squixl.menu.DebugLevel.warn=Warn
+um_squixl.menu.DebugLevel.warn.build.code_debug=2
+um_squixl.menu.DebugLevel.info=Info
+um_squixl.menu.DebugLevel.info.build.code_debug=3
+um_squixl.menu.DebugLevel.debug=Debug
+um_squixl.menu.DebugLevel.debug.build.code_debug=4
+um_squixl.menu.DebugLevel.verbose=Verbose
+um_squixl.menu.DebugLevel.verbose.build.code_debug=5
+
+um_squixl.menu.EraseFlash.none=Disabled
+um_squixl.menu.EraseFlash.none.upload.erase_cmd=
+um_squixl.menu.EraseFlash.all=Enabled
+um_squixl.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
