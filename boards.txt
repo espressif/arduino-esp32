@@ -12784,12 +12784,6 @@ dfrobot_lorawan_esp32s3.menu.FlashMode.dio.build.boot=dio
 dfrobot_lorawan_esp32s3.menu.FlashMode.dio.build.boot_freq=80m
 dfrobot_lorawan_esp32s3.menu.FlashMode.dio.build.flash_freq=80m
 dfrobot_lorawan_esp32s3.menu.FlashMode.dio.build.flash_type=qio
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi=OPI 80MHz
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi.build.flash_mode=dout
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi.build.boot=opi
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi.build.boot_freq=80m
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi.build.flash_freq=80m
-dfrobot_lorawan_esp32s3.menu.FlashMode.opi.build.flash_type=opi
 
 dfrobot_lorawan_esp32s3.menu.FlashSize.4M=4MB (32Mb)
 dfrobot_lorawan_esp32s3.menu.FlashSize.4M.build.flash_size=4MB
