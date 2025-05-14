@@ -288,19 +288,6 @@ tools.esptool_py.upload.params.quiet=
 tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash {upload.erase_cmd} -z --flash_mode keep --flash_freq keep --flash_size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
 
-## Custom tool for kodeOS: esptool_py_nomerge
-## -------------------------------------------------------------
-tools.esptool_py_nomerge.path={runtime.tools.esptool_py.path}
-tools.esptool_py_nomerge.cmd=esptool
-tools.esptool_py_nomerge.cmd.windows=esptool.exe
-
-tools.esptool_py_nomerge.upload.protocol=serial
-tools.esptool_py_nomerge.upload.params.verbose=
-tools.esptool_py_nomerge.upload.params.quiet=
-
-tools.esptool_py_nomerge.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash {upload.erase_cmd} --flash_mode keep --flash_freq keep --flash_size keep {build.flash_offset} "{build.path}/{build.project_name}.bin"
-tools.esptool_py_nomerge.upload.pattern="{path}/{cmd}" {tools.esptool_py_nomerge.upload.pattern_args}
-
 ## Program Application
 ## -------------------
 tools.esptool_py.program.params.verbose=
