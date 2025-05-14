@@ -9,4 +9,5 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 list(APPEND compile_definitions "ARDUINO_USB_CDC_ON_BOOT=1")
 list(APPEND compile_definitions "ARDUINO_USB_MODE=1")
 
+idf_build_set_property(MINIMAL_BUILD ON)
 project(hw_cdc_hello_world)
