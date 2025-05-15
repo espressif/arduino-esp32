@@ -228,6 +228,12 @@ bool shouldPrintChipDebugReport(void);
     return true;                          \
   }
 
+uint64_t getArduinoSetupWaitTick(void);
+#define SET_SETUP_WAIT_TICH(tick)      \
+  uint64_t getArduinoSetupWaitTick() { \
+    return tick;                       \
+  }
+
 // allows user to bypass esp_spiram_test()
 bool esp_psram_extram_test(void);
 #define BYPASS_SPIRAM_TEST(bypass)    \
