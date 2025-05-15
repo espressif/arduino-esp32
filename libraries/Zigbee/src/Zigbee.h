@@ -18,6 +18,7 @@
 #include "ep/ZigbeeThermostat.h"
 //// Sensors
 #include "ep/ZigbeeAnalog.h"
+#include "ep/ZigbeeBinary.h"
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
