@@ -229,7 +229,7 @@ bool shouldPrintChipDebugReport(void);
   }
 
 uint64_t getArduinoSetupWaitTick(void);
-#define SET_SETUP_WAIT_TICH(tick)      \
+#define SET_SETUP_WAIT_TICK(tick)      \
   uint64_t getArduinoSetupWaitTick() { \
     return tick;                       \
   }
