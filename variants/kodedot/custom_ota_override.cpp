@@ -1,10 +1,14 @@
 // custom_ota_override.cpp
-// Esta función sobrescribe la definición débil en el core de Arduino-ESP32.
+// This function overrides the weak definition of `verifyRollbackLater()` in the kode dot board.
+
 extern "C" {
+    // Declare the weak function symbol to override it
     bool verifyRollbackLater() __attribute__((weak));
 }
 
+// Custom implementation of verifyRollbackLater()
+// Returning `true` prevents the OTA image from being automatically marked as valid.
+// This ensures that the system will roll back to the previous image unless it is explicitly validated later.
 bool verifyRollbackLater() {
-    // Retorna true para evitar que se marque la imagen OTA como válida automáticamente.
     return true;
 }
