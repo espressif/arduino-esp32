@@ -28,7 +28,7 @@ static const uint8_t SCK = 12;
 
 #define TFT_DC  14
 #define TFT_CS  17
-#define TFT_RST  15
+#define TFT_RST 15
 #define TFT_BL  16  // Backlight pin
 
 #endif /* Pins_Arduino_h */
