@@ -2794,68 +2794,6 @@ esp32wroverkit.menu.EraseFlash.none.upload.erase_cmd=
 esp32wroverkit.menu.EraseFlash.all=Enabled
 esp32wroverkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
-###########################################################
-
-kodedot.name=kode dot
-
-kodedot.bootloader.tool=esptool_py
-kodedot.bootloader.tool.default=esptool_py
-
-kodedot.upload.tool=esptool_py_nomerge
-kodedot.upload.tool.default=esptool_py_nomerge
-kodedot.upload.tool.network=esp_ota
-
-kodedot.upload.maximum_size=8388608
-kodedot.upload.maximum_data_size=327680
-kodedot.upload.flags=
-kodedot.upload.extra_flags=
-kodedot.upload.use_1200bps_touch=false
-kodedot.upload.wait_for_upload_port=false
-kodedot.upload.speed=921600
-
-kodedot.upload.erase_cmd=
-
-kodedot.serial.disableDTR=false
-kodedot.serial.disableRTS=false
-
-kodedot.build.tarch=xtensa
-kodedot.build.bootloader_addr=0x0
-kodedot.build.target=esp32s3
-kodedot.build.mcu=esp32s3
-kodedot.build.core=esp32
-kodedot.build.variant=kodedot
-kodedot.build.board=ESP32S3_DEV
-
-kodedot.build.usb_mode=1   
-kodedot.build.cdc_on_boot=1   
-kodedot.build.msc_on_boot=0
-kodedot.build.dfu_on_boot=0
-
-kodedot.build.f_cpu=240000000L
-
-kodedot.build.flash_offset=0x400000
-kodedot.build.flash_size=16MB
-kodedot.build.flash_freq=80m
-kodedot.build.flash_mode=dio
-
-# Menú de particiones Custom kodeOS
-kodedot.menu.PartitionScheme.kodeos=Custom kodeOS
-kodedot.menu.PartitionScheme.kodeos.build.partitions=kodedot_partitions
-
-# Particiones por defecto
-kodedot.build.partitions=kodedot_partitions
-
-kodedot.build.psram_type=qspi
-kodedot.build.defines=
-
-kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
-kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-
-kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
-kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
-
-kodedot.recipe.output.save_file={build.project_name}.ino.bin
-
 ##############################################################
 
 aventen_s3_sync.name=Aventen S3 Sync
@@ -50215,5 +50153,65 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+kodedot.name=kode dot
+
+kodedot.bootloader.tool=esptool_py
+kodedot.bootloader.tool.default=esptool_py
+
+kodedot.upload.tool=esptool_py_nomerge
+kodedot.upload.tool.default=esptool_py_nomerge
+kodedot.upload.tool.network=esp_ota
+
+kodedot.upload.maximum_size=8388608
+kodedot.upload.maximum_data_size=327680
+kodedot.upload.flags=
+kodedot.upload.extra_flags=
+kodedot.upload.use_1200bps_touch=false
+kodedot.upload.wait_for_upload_port=false
+kodedot.upload.speed=921600
+
+kodedot.upload.erase_cmd=
+
+kodedot.serial.disableDTR=false
+kodedot.serial.disableRTS=false
+
+kodedot.build.tarch=xtensa
+kodedot.build.bootloader_addr=0x0
+kodedot.build.target=esp32s3
+kodedot.build.mcu=esp32s3
+kodedot.build.core=esp32
+kodedot.build.variant=kodedot
+kodedot.build.board=ESP32S3_DEV
+
+kodedot.build.usb_mode=1   
+kodedot.build.cdc_on_boot=1   
+kodedot.build.msc_on_boot=0
+kodedot.build.dfu_on_boot=0
+
+kodedot.build.f_cpu=240000000L
+
+kodedot.build.flash_offset=0x400000
+kodedot.build.flash_size=16MB
+kodedot.build.flash_freq=80m
+kodedot.build.flash_mode=dio
+
+kodedot.menu.PartitionScheme.kodeos=Custom kodeOS
+kodedot.menu.PartitionScheme.kodeos.build.partitions=kodedot_partitions
+
+kodedot.build.partitions=kodedot_partitions
+
+kodedot.build.psram_type=qspi
+kodedot.build.defines=
+
+kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
+kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
+
+kodedot.recipe.output.save_file={build.project_name}.ino.bin
 
 ##############################################################
