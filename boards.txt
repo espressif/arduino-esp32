@@ -50198,9 +50198,6 @@ kodedot.build.flash_size=16MB
 kodedot.build.flash_freq=80m
 kodedot.build.flash_mode=dio
 
-kodedot.menu.PartitionScheme.kodeos=Custom kodeOS
-kodedot.menu.PartitionScheme.kodeos.build.partitions=kodedot_partitions
-
 kodedot.build.partitions=kodedot_partitions
 
 kodedot.build.psram_type=qspi
