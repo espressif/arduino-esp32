@@ -21,6 +21,7 @@
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
+#include "ep/ZigbeeElectricalMeasurement.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeIlluminanceSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
