@@ -380,8 +380,8 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
           log_i("Leave without rejoin, factory reset the device");
           Zigbee.factoryReset(true);
         }
-        else { // Leave with rejoin -> Rejoin the network, only rebooot the device
-          log_i("Leave with rejoin, only rebooot the device");
+        else { // Leave with rejoin -> Rejoin the network, only reboot the device
+          log_i("Leave with rejoin, only reboot the device");
           ESP.restart();
         }
       }
