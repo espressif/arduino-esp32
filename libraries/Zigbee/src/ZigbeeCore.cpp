@@ -372,7 +372,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:  // End Device + Router
-      // Recieved signal to leave the network
+      // Received signal to leave the network
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
         leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
         log_v("Signal to leave the network, leave type: %d", leave_params->leave_type);
