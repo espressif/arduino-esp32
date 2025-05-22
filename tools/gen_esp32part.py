@@ -285,7 +285,7 @@ class PartitionTable(list):
 
         # check on duplicate name
         names = [p.name for p in self]
-        duplicates = set(n for n in names if names.count(n) > 1)
+        duplicates = {n for n in names if names.count(n) > 1}
 
         # print sorted duplicate partitions by name
         if len(duplicates) != 0:
