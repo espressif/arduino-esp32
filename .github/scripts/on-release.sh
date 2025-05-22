@@ -342,12 +342,14 @@ jq_arg=".packages[0].platforms[0].version = \"$RELEASE_TAG\" | \
 echo "Generating $PACKAGE_JSON_DEV ..."
 cat "$PACKAGE_JSON_TEMPLATE" | jq "$jq_arg" > "$OUTPUT_DIR/$PACKAGE_JSON_DEV"
 # On MacOS the sed command won't skip the first match. Use gsed instead.
-sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/github_assets/espressif/|g' "$OUTPUT_DIR/$PACKAGE_JSON_DEV" > "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN"
+sed '0,/github\.com\//!s|github\.com/|dl.espressif.cn/github_assets/|g' "$OUTPUT_DIR/$PACKAGE_JSON_DEV" > "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN"
+python "$SCRIPTS_DIR/release_append_cn.py" "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN"
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Generating $PACKAGE_JSON_REL ..."
     cat "$PACKAGE_JSON_TEMPLATE" | jq "$jq_arg" > "$OUTPUT_DIR/$PACKAGE_JSON_REL"
     # On MacOS the sed command won't skip the first match. Use gsed instead.
-    sed '0,/github\.com\/espressif\//!s|github\.com/espressif/|dl.espressif.cn/github_assets/espressif/|g' "$OUTPUT_DIR/$PACKAGE_JSON_REL" > "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
+    sed '0,/github\.com\//!s|github\.com/|dl.espressif.cn/github_assets/|g' "$OUTPUT_DIR/$PACKAGE_JSON_REL" > "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
+    python "$SCRIPTS_DIR/release_append_cn.py" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN"
 fi
 
 # Figure out the last release or pre-release
@@ -456,14 +458,14 @@ echo "Uploading $PACKAGE_JSON_DEV ..."
 echo "Download URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV")"
 echo "Pages URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV")"
 echo "Download CN URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN")"
-echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_DEV" "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN")"
+echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_DEV_CN" "$OUTPUT_DIR/$PACKAGE_JSON_DEV_CN")"
 echo
 if [ "$RELEASE_PRE" == "false" ]; then
     echo "Uploading $PACKAGE_JSON_REL ..."
     echo "Download URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL")"
     echo "Pages URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL")"
     echo "Download CN URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
-    echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
+    echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL_CN" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
     echo
 fi
 
