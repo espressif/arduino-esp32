@@ -192,6 +192,7 @@ static void audio_feed_task(void *arg) {
 
     /* Feed samples of an audio stream to the AFE_SR */
     g_sr_data->afe_handle->feed(g_sr_data->afe_data, audio_buffer);
+    vTaskDelay(2);
   }
   vTaskDelete(NULL);
 }
