@@ -1,0 +1,7 @@
+{
+  "fqbn_append": "PartitionScheme=zigbee,ZigbeeMode=ed",
+  "requires": [
+    "CONFIG_SOC_IEEE802154_SUPPORTED=y",
+    "CONFIG_ZB_ENABLED=y"
+  ]
+}
