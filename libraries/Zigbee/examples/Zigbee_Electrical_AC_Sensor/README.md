@@ -12,20 +12,20 @@ Currently, this example supports the following targets.
 ## AC Electrical Measurement Functions
 
  * After this board first starts up, it would be configured locally to report AC electrical measurements:
-   - AC voltage in volts (0-300.00V)
-   - AC current in amps (0-10.000A)
-   - AC power in watts (0-3200.0W)
-   - AC frequency in hertz (0-65.000Hz)
+   - AC voltage in volts (0-300.00 V)
+   - AC current in amps (0-10.000 A)
+   - AC power in watts (0-3200.0 W)
+   - AC frequency in hertz (0-65.000 Hz)
  * Holding the button (BOOT) for more than 3 seconds will trigger a factory reset of the device.
  * The device reports measurements every 2 seconds with simulated values.
 
 ## Measurement Precision
 
 The example demonstrates how to set up proper measurement precision using multiplier and divisor values:
- * Voltage: 1/100 = 0.01V (1 unit = 10mV)
- * Current: 1/1000 = 0.001A (1 unit = 1mA)
- * Power: 1/10 = 0.1W (1 unit = 100mW)
- * Frequency: 1/1000 = 0.001Hz (1 unit = 1mHz)
+ * Voltage: 1/100 = 0.01 V (1 unit = 10 mV)
+ * Current: 1/1000 = 0.001 A (1 unit = 1 mA)
+ * Power: 1/10 = 0.1 W (1 unit = 100 mW)
+ * Frequency: 1/1000 = 0.001 Hz (1 unit = 1 mHz)
 
 These settings ensure accurate reporting of measurements with proper decimal precision in the Zigbee network.
 

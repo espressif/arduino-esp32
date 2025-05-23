@@ -12,18 +12,18 @@ Currently, this example supports the following targets.
 ## DC Electrical Measurement Functions
 
  * After this board first starts up, it would be configured locally to report DC electrical measurements:
-   - DC voltage in millivolts (0-5000mV)
-   - DC current in milliamps (0-1000mA)
-   - DC power in milliwatts (0-5000mW)
+   - DC voltage in millivolts (0-5000 mV)
+   - DC current in milliamps (0-1000 mA)
+   - DC power in milliwatts (0-5000 mW)
  * Holding the button (BOOT) for more than 3 seconds will trigger a factory reset of the device.
  * The device reports measurements every 30 seconds if the value changes by more than the configured delta.
 
 ## Measurement Precision
 
 The example demonstrates how to set up proper measurement precision using multiplier and divisor values:
- * Voltage: 1/1000 = 0.001V (1 unit = 1mV)
- * Current: 1/1000 = 0.001A (1 unit = 1mA)
- * Power: 1/1000 = 0.001W (1 unit = 1mW)
+ * Voltage: 1/1000 = 0.001 V (1 unit = 1 mV)
+ * Current: 1/1000 = 0.001 A (1 unit = 1 mA)
+ * Power: 1/1000 = 0.001 W (1 unit = 1 mW)
 
 These settings ensure accurate reporting of measurements with proper decimal precision in the Zigbee network.
 
