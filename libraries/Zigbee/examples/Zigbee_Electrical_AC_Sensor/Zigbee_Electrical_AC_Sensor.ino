@@ -101,7 +101,7 @@ void setup() {
   }
   Serial.println("Connected");
 
-  // Optional: Add reporting for AC measurements (this is overriden by HomeAssistant ZHA if used as a Zigbee coordinator)
+  // Optional: Add reporting for AC measurements (this is overridden by HomeAssistant ZHA if used as a Zigbee coordinator)
   zbElectricalMeasurement.setACReporting(
     ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 10
   );  // report every 30 seconds if value changes by 10 (0.1V)

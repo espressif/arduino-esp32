@@ -92,7 +92,7 @@ void setup() {
   }
   Serial.println("Connected");
 
-  // Optional: Add reporting for DC measurements (this is overriden by HomeAssistant ZHA if connected to its network)
+  // Optional: Add reporting for DC measurements (this is overridden by HomeAssistant ZHA if connected to its network)
   zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1V)
   zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1A)
   zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 0, 30, 10);    // report every 30 seconds if value changes by 10 (0.1W)
