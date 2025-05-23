@@ -376,11 +376,10 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
         leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
         log_v("Signal to leave the network, leave type: %d", leave_params->leave_type);
-        if (leave_params->leave_type == ESP_ZB_NWK_LEAVE_TYPE_RESET) { // Leave without rejoin -> Factory reset
+        if (leave_params->leave_type == ESP_ZB_NWK_LEAVE_TYPE_RESET) {  // Leave without rejoin -> Factory reset
           log_i("Leave without rejoin, factory reset the device");
           Zigbee.factoryReset(true);
-        }
-        else { // Leave with rejoin -> Rejoin the network, only reboot the device
+        } else {  // Leave with rejoin -> Rejoin the network, only reboot the device
           log_i("Leave with rejoin, only reboot the device");
           ESP.restart();
         }
