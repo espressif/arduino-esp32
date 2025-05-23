@@ -14,13 +14,13 @@
 
 /**
  * @brief This example demonstrates a Zigbee DC electrical measurement sensor.
- * 
+ *
  * The example shows how to use the Zigbee library to create an end device that measures
  * DC voltage, current and power using the Electrical Measurement cluster.
- * 
+ *
  * The device reports:
  * - DC voltage in millivolts (0-5000mV)
- * - DC current in milliamps (0-1000mA) 
+ * - DC current in milliamps (0-1000mA)
  * - DC power in milliwatts (0-5000mW)
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
@@ -64,14 +64,14 @@ void setup() {
   zbElectricalMeasurement.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_POWER);
 
   // // Optional: set Min/max values for the measurements
-  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 5000); // 0-5.000V
-  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 0, 1000); // 0-1.000A
-  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 0, 5000); // 0-5.000W
+  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 5000);  // 0-5.000V
+  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 0, 1000);  // 0-1.000A
+  zbElectricalMeasurement.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 0, 5000);    // 0-5.000W
 
   // // Optional: set Multiplier/Divisor for the measurements
-  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 1, 1000); // 1/1000 = 0.001V (1 unit of measurement = 0.001V = 1mV)
-  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 1, 1000); // 1/1000 = 0.001A (1 unit of measurement = 0.001A = 1mA)
-  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 1, 1000); // 1/1000 = 0.001W (1 unit of measurement = 0.001W = 1mW)
+  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 1, 1000);  // 1/1000 = 0.001V (1 unit of measurement = 0.001V = 1mV)
+  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 1, 1000);  // 1/1000 = 0.001A (1 unit of measurement = 0.001A = 1mA)
+  zbElectricalMeasurement.setDCMultiplierDivisor(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 1, 1000);    // 1/1000 = 0.001W (1 unit of measurement = 0.001W = 1mW)
 
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbElectricalMeasurement);
@@ -95,7 +95,7 @@ void setup() {
   // Optional: Add reporting for DC measurements (this is overriden by HomeAssistant ZHA if connected to its network)
   zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1V)
   zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1A)
-  zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1W)
+  zbElectricalMeasurement.setDCReporting(ZIGBEE_DC_MEASUREMENT_TYPE_POWER, 0, 30, 10);    // report every 30 seconds if value changes by 10 (0.1W)
 }
 
 void loop() {
@@ -104,8 +104,8 @@ void loop() {
   // Read ADC value and update the analog value every 2s
   if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
     int16_t voltage_mv = (int16_t)(analogReadMilliVolts(analogPin));
-    int16_t current_ma = randomizer; //0-255mA
-    int16_t power_mw = voltage_mv * current_ma / 1000; //calculate power in mW
+    int16_t current_ma = randomizer;                    //0-255mA
+    int16_t power_mw = voltage_mv * current_ma / 1000;  //calculate power in mW
     Serial.printf("Updating DC voltage to %d mV, current to %d mA, power to %d mW\r\n", voltage_mv, current_ma, power_mw);
     zbElectricalMeasurement.setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, voltage_mv);
     zbElectricalMeasurement.setDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT, current_ma);
@@ -115,7 +115,7 @@ void loop() {
     zbElectricalMeasurement.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT);
     zbElectricalMeasurement.reportDC(ZIGBEE_DC_MEASUREMENT_TYPE_POWER);
 
-    randomizer+=10;
+    randomizer += 10;
   }
 
   // Checking button for factory reset and reporting

@@ -89,8 +89,9 @@ public:
   bool setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, uint16_t multiplier, uint16_t divisor);
   // Set the AC power factor for the given phase type (-100 to 100 %)
   bool setACPowerFactor(ZIGBEE_AC_PHASE_TYPE phase_type, int8_t power_factor);
-  // Set the AC reporting interval for the given measurement type and phase type in seconds and delta (measurement change - uint16_t for voltage, current and frequency, int32_t for power) 
-  bool setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, uint16_t min_interval, uint16_t max_interval, int32_t delta);
+  // Set the AC reporting interval for the given measurement type and phase type in seconds and delta (measurement change - uint16_t for voltage, current and frequency, int32_t for power)
+  bool
+    setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type, uint16_t min_interval, uint16_t max_interval, int32_t delta);
   // Report the AC measurement value for the given measurement type and phase type
   bool reportAC(ZIGBEE_AC_MEASUREMENT_TYPE measurement_type, ZIGBEE_AC_PHASE_TYPE phase_type);
 

@@ -63,22 +63,24 @@ void setup() {
   zbElectricalMeasurement.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A);
   zbElectricalMeasurement.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A);
   zbElectricalMeasurement.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR, ZIGBEE_AC_PHASE_TYPE_A);
-  zbElectricalMeasurement.addACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC); // frequency is not phase specific (shared)
+  zbElectricalMeasurement.addACMeasurement(
+    ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC
+  );  // frequency is not phase specific (shared)
 
   // Optional: set Multiplier/Divisor for the measurements
-  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, 1, 100); // 1/100 = 0.01V (1 unit of measurement = 0.01V = 10mV)
-  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, 1, 1000); // 1/1000 = 0.001A (1 unit of measurement = 0.001A = 1mA)
-  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, 1, 10); // 1/10 = 0.1W (1 unit of measurement = 0.1W = 100mW)
-  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, 1, 1000); // 1/1000 = 0.001Hz (1 unit of measurement = 0.001Hz = 1mHz)
+  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, 1, 100);     // 1/100 = 0.01V (1 unit of measurement = 0.01V = 10mV)
+  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, 1, 1000);    // 1/1000 = 0.001A (1 unit of measurement = 0.001A = 1mA)
+  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, 1, 10);        // 1/10 = 0.1W (1 unit of measurement = 0.1W = 100mW)
+  zbElectricalMeasurement.setACMultiplierDivisor(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, 1, 1000);  // 1/1000 = 0.001Hz (1 unit of measurement = 0.001Hz = 1mHz)
 
   // Optional: set Min/max values for the measurements
-  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, 0, 30000); // 0-300.00V
-  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A, 0, 10000); // 0-10.000A
-  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, 0, 32000); // 0-3200.0W
-  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, 0, 65000); // 0-65.000Hz
+  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, 0, 30000);               // 0-300.00V
+  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A, 0, 10000);               // 0-10.000A
+  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, 0, 32000);                 // 0-3200.0W
+  zbElectricalMeasurement.setACMinMaxValue(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, 0, 65000);  // 0-65.000Hz
 
   // Optional: set power factor for the measurements
-  zbElectricalMeasurement.setACPowerFactor(ZIGBEE_AC_PHASE_TYPE_A, 98); // 100 = 1.00, 0 = 0.00, -100 = -1.00
+  zbElectricalMeasurement.setACPowerFactor(ZIGBEE_AC_PHASE_TYPE_A, 98);  // 100 = 1.00, 0 = 0.00, -100 = -1.00
 
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbElectricalMeasurement);
@@ -100,10 +102,18 @@ void setup() {
   Serial.println("Connected");
 
   // Optional: Add reporting for AC measurements (this is overriden by HomeAssistant ZHA if used as a Zigbee coordinator)
-  zbElectricalMeasurement.setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 10);  // report every 30 seconds if value changes by 10 (0.1V)
-  zbElectricalMeasurement.setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 100);  // report every 30 seconds if value changes by 10 (0.1A)
-  zbElectricalMeasurement.setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 10);  // report every 30 seconds if value changes by 10 (1W)
-  zbElectricalMeasurement.setACReporting(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, 0, 30, 100);  // report every 30 seconds if value changes by 100 (0.1Hz)
+  zbElectricalMeasurement.setACReporting(
+    ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 10
+  );  // report every 30 seconds if value changes by 10 (0.1V)
+  zbElectricalMeasurement.setACReporting(
+    ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 100
+  );  // report every 30 seconds if value changes by 10 (0.1A)
+  zbElectricalMeasurement.setACReporting(
+    ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, 0, 30, 10
+  );  // report every 30 seconds if value changes by 10 (1W)
+  zbElectricalMeasurement.setACReporting(
+    ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, 0, 30, 100
+  );  // report every 30 seconds if value changes by 100 (0.1Hz)
 }
 
 void loop() {
@@ -111,11 +121,11 @@ void loop() {
 
   static uint8_t randomizer = 0;
   // Read ADC value as current to demonstrate the measurements and update the electrical measurement values every 2s
-  if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
-    uint16_t voltage = 23000 + randomizer; // 230.00 V
-    uint16_t current = analogReadMilliVolts(analogPin); // demonstrates 0-3.3A
-    int16_t power = ((voltage/100) * (current/1000) * 10); //calculate power in W
-    uint16_t frequency = 50135; // 50.000 Hz
+  if (!(timeCounter++ % 20)) {                                  // delaying for 100ms x 20 = 2s
+    uint16_t voltage = 23000 + randomizer;                      // 230.00 V
+    uint16_t current = analogReadMilliVolts(analogPin);         // demonstrates 0-3.3A
+    int16_t power = ((voltage / 100) * (current / 1000) * 10);  //calculate power in W
+    uint16_t frequency = 50135;                                 // 50.000 Hz
     Serial.printf("Updating AC voltage to %d (0.01V), current to %d (mA), power to %d (0.1W), frequency to %d (mHz)\r\n", voltage, current, power, frequency);
 
     // Update the measurements
@@ -124,13 +134,13 @@ void loop() {
     zbElectricalMeasurement.setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, power);
     zbElectricalMeasurement.setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC, frequency);
 
-    // Report the measurements 
+    // Report the measurements
     zbElectricalMeasurement.reportAC(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A);
     zbElectricalMeasurement.reportAC(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A);
     zbElectricalMeasurement.reportAC(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A);
     zbElectricalMeasurement.reportAC(ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY, ZIGBEE_AC_PHASE_TYPE_NON_SPECIFIC);
 
-    randomizer+=10;
+    randomizer += 10;
   }
 
   // Checking button for factory reset and reporting
