@@ -14,36 +14,31 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
 bool ZigbeeAnalog::addAnalogInput() {
   esp_zb_attribute_list_t *esp_zb_analog_input_cluster = esp_zb_analog_input_cluster_create(NULL);
-  
+
   // Create default description for Analog Input
-  char default_description[] = "\x0C""Analog Input";
+  char default_description[] = "\x0C"
+                               "Analog Input";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AI_GROUP_ID << 24);
   float resolution = 0.1;  // Default resolution of 0.1
-  
-  esp_err_t ret = esp_zb_analog_input_cluster_add_attr(
-    esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description
-  );
+
+  esp_err_t ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_analog_input_cluster_add_attr(
-    esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type
-  );
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != ESP_OK) {
     log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_analog_input_cluster_add_attr(
-    esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, (void *)&resolution
-  );
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, (void *)&resolution);
   if (ret != ESP_OK) {
     log_e("Failed to add resolution attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  
+
   ret = esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
     log_e("Failed to add Analog Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
@@ -75,31 +70,27 @@ bool ZigbeeAnalog::setAnalogInputApplication(uint32_t application_type) {
 
 bool ZigbeeAnalog::addAnalogOutput() {
   esp_zb_attribute_list_t *esp_zb_analog_output_cluster = esp_zb_analog_output_cluster_create(NULL);
-  
+
   // Create default description for Analog Output
-  char default_description[] = "\x0D""Analog Output";
+  char default_description[] = "\x0D"
+                               "Analog Output";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AO_GROUP_ID << 24);
   float resolution = 1;  // Default resolution of 1
 
-  esp_err_t ret = esp_zb_analog_output_cluster_add_attr(
-    esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description
-  );
+  esp_err_t ret =
+    esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_analog_output_cluster_add_attr(
-    esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type
-  );
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != ESP_OK) {
     log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_analog_output_cluster_add_attr(
-    esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution
-  );
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
   if (ret != ESP_OK) {
     log_e("Failed to add resolution attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -230,7 +221,7 @@ bool ZigbeeAnalog::setAnalogInputDescription(const char *description) {
 
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
   char zb_description[ZB_MAX_NAME_LENGTH + 2];
-  
+
   // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
@@ -270,7 +261,7 @@ bool ZigbeeAnalog::setAnalogOutputDescription(const char *description) {
 
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
   char zb_description[ZB_MAX_NAME_LENGTH + 2];
-  
+
   // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
@@ -343,6 +334,5 @@ bool ZigbeeAnalog::setAnalogOutputResolution(float resolution) {
   }
   return true;
 }
-
 
 #endif  // CONFIG_ZB_ENABLED

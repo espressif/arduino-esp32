@@ -14,27 +14,24 @@ ZigbeeBinary::ZigbeeBinary(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
 bool ZigbeeBinary::addBinaryInput() {
   esp_zb_attribute_list_t *esp_zb_binary_input_cluster = esp_zb_binary_input_cluster_create(NULL);
-  
+
   // Create default description for Binary Input
-  char default_description[] = "\x0C""Binary Input";
+  char default_description[] = "\x0C"
+                               "Binary Input";
   uint32_t application_type = 0x00000000 | (0x03 << 24);  // Group ID 0x03
-  
-  esp_err_t ret = esp_zb_binary_input_cluster_add_attr(
-    esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, (void *)default_description
-  );
+
+  esp_err_t ret = esp_zb_binary_input_cluster_add_attr(esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_binary_input_cluster_add_attr(
-    esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type
-  );
+  ret = esp_zb_binary_input_cluster_add_attr(esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != ESP_OK) {
     log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  
+
   ret = esp_zb_cluster_list_add_binary_input_cluster(_cluster_list, esp_zb_binary_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
     log_e("Failed to add Binary Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
@@ -112,7 +109,7 @@ bool ZigbeeBinary::setBinaryInputDescription(const char *description) {
 
   // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
   char zb_description[ZB_MAX_NAME_LENGTH + 2];
-  
+
   // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {

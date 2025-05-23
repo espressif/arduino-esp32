@@ -32,15 +32,15 @@ public:
   bool addAnalogOutput();
 
   // Set the application type and description for the analog input
-  bool setAnalogInputApplication(uint32_t application_type); // Check esp_zigbee_zcl_analog_input.h for application type values
+  bool setAnalogInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_analog_input.h for application type values
   bool setAnalogInputDescription(const char *description);
   bool setAnalogInputResolution(float resolution);
 
   // Set the application type and description for the analog output
-  bool setAnalogOutputApplication(uint32_t application_type); // Check esp_zigbee_zcl_analog_output.h for application type values
+  bool setAnalogOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_analog_output.h for application type values
   bool setAnalogOutputDescription(const char *description);
   bool setAnalogOutputResolution(float resolution);
-  
+
   // Use to set a cb function to be called on analog output change
   void onAnalogOutputChange(void (*callback)(float analog)) {
     _on_analog_output_change = callback;

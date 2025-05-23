@@ -79,13 +79,13 @@ void setup() {
   zbAnalogTemp.setAnalogInputApplication(ESP_ZB_ZCL_AI_TEMPERATURE_OTHER);
   zbAnalogTemp.setAnalogInputDescription("Temperature");
   zbAnalogTemp.setAnalogInputResolution(0.1);
-  
+
   // Set up analog input
   zbAnalogFan.addAnalogInput();
   zbAnalogFan.setAnalogInputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
   zbAnalogFan.setAnalogInputDescription("RPM");
   zbAnalogFan.setAnalogInputResolution(1);
-  
+
   // Set up analog input
   zbAnalogPercent.addAnalogInput();
   zbAnalogPercent.setAnalogInputApplication(ESP_ZB_ZCL_AI_PERCENTAGE_OTHER);
@@ -126,9 +126,9 @@ void loop() {
     float analog = (float)analogRead(analogPin);
     Serial.printf("Updating analog input to %.1f\r\n", analog);
     zbAnalogDevice.setAnalogInput(analog);
-    zbAnalogTemp.setAnalogInput(analog/100);
+    zbAnalogTemp.setAnalogInput(analog / 100);
     zbAnalogFan.setAnalogInput(analog);
-    zbAnalogPercent.setAnalogInput(analog/10);
+    zbAnalogPercent.setAnalogInput(analog / 10);
 
     // Analog input supports reporting
     zbAnalogDevice.reportAnalogInput();

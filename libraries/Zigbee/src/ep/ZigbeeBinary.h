@@ -55,13 +55,13 @@ public:
   // bool addBinaryOutput();
 
   // Set the application type and description for the binary input
-  bool setBinaryInputApplication(uint32_t application_type); // Check esp_zigbee_zcl_binary_input.h for application type values
+  bool setBinaryInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_input.h for application type values
   bool setBinaryInputDescription(const char *description);
 
   // Set the application type and description for the binary output
   // bool setBinaryOutputApplication(uint32_t application_type); // Check esp_zigbee_zcl_binary_output.h for application type values
   // bool setBinaryOutputDescription(const char *description);
-  
+
   // Use to set a cb function to be called on binary output change
   // void onBinaryOutputChange(void (*callback)(bool binary_output)) {
   //   _on_binary_output_change = callback;
