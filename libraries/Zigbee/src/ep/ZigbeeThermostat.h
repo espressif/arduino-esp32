@@ -48,6 +48,7 @@ public:
 private:
   // save instance of the class in order to use it in static functions
   static ZigbeeThermostat *_instance;
+  zb_device_params_t *_device;
 
   void (*_on_temp_recieve)(float);
   void (*_on_config_recieve)(float, float, float);
@@ -56,8 +57,10 @@ private:
   float _tolerance;
 
   void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-  static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+  void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+  static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
   void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
 };

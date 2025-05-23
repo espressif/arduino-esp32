@@ -10,7 +10,8 @@ ZigbeeThermostat *ZigbeeThermostat::_instance = nullptr;
 
 ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;
-  _instance = this;  // Set the static pointer to this instance
+  _instance = this;   // Set the static pointer to this instance
+  _device = nullptr;  // Initialize sensor pointer to null
 
   //use custom config to avoid narrowing error -> must be fixed in zigbee-sdk
   esp_zb_thermostat_cfg_t thermostat_cfg = ZB_DEFAULT_THERMOSTAT_CONFIG();
@@ -29,21 +30,39 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
 }
 
 void ZigbeeThermostat::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
-    if (user_ctx) {
-      zb_device_params_t *sensor = (zb_device_params_t *)user_ctx;
-      log_i("The temperature sensor originating from address(0x%x) on endpoint(%d)", sensor->short_addr, sensor->endpoint);
-      _instance->_bound_devices.push_back(sensor);
-    } else {
-      log_v("Local binding success");
+    log_i("Bound successfully!");
+    if (instance->_device) {
+      zb_device_params_t *sensor = (zb_device_params_t *)instance->_device;
+      log_i("The sensor originating from address(0x%x) on endpoint(%d)", sensor->short_addr, sensor->endpoint);
+      log_d("Sensor bound to thermostat on EP %d", instance->_endpoint);
+      instance->_bound_devices.push_back(sensor);
     }
-    _is_bound = true;
+    instance->_is_bound = true;
   } else {
-    log_e("Binding failed!");
+    instance->_device = nullptr;
+  }
+}
+
+void ZigbeeThermostat::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
+  if (instance) {
+    log_d("bindCbWrapper on EP %d", instance->_endpoint);
+    instance->bindCb(zdo_status, user_ctx);
+  }
+}
+
+void ZigbeeThermostat::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
+  if (instance) {
+    log_d("findCbWrapper on EP %d", instance->_endpoint);
+    instance->findCb(zdo_status, addr, endpoint, user_ctx);
   }
 }
 
 void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Found temperature sensor");
     esp_zb_zdo_bind_req_param_t bind_req;
@@ -56,37 +75,34 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
 
     /* 1. Send binding request to the sensor */
     bind_req.req_dst_addr = addr;
-    log_d("Request temperature sensor to bind us");
-
-    /* populate the src information of the binding */
     memcpy(bind_req.src_address, sensor->ieee_addr, sizeof(esp_zb_ieee_addr_t));
     bind_req.src_endp = endpoint;
     bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-    log_d("Bind temperature sensor");
-
-    /* populate the dst information of the binding */
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     esp_zb_get_long_address(bind_req.dst_address_u.addr_long);
-    bind_req.dst_endp = *((uint8_t *)user_ctx);  //_endpoint;
+    bind_req.dst_endp = instance->_endpoint;
 
     log_i("Request temperature sensor to bind us");
-    esp_zb_zdo_device_bind_req(&bind_req, bindCb, NULL);
+    esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, NULL);
 
     /* 2. Send binding request to self */
     bind_req.req_dst_addr = esp_zb_get_short_address();
 
     /* populate the src information of the binding */
     esp_zb_get_long_address(bind_req.src_address);
-    bind_req.src_endp = *((uint8_t *)user_ctx);  //_endpoint;
+    bind_req.src_endp = instance->_endpoint;
     bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-
-    /* populate the dst information of the binding */
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     memcpy(bind_req.dst_address_u.addr_long, sensor->ieee_addr, sizeof(esp_zb_ieee_addr_t));
     bind_req.dst_endp = endpoint;
+    log_i("Try to bind Temperature Measurement");
+    //save sensor params in the class
+    instance->_device = sensor;
 
-    log_i("Bind temperature sensor");
-    esp_zb_zdo_device_bind_req(&bind_req, bindCb, (void *)sensor);
+    log_d("Find callback on EP %d", instance->_endpoint);
+    esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, this);
+  } else {
+    log_d("No temperature sensor endpoint found");
   }
 }
 
@@ -96,7 +112,7 @@ void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
   param->num_in_clusters = 1;
   param->num_out_clusters = 0;
   param->cluster_list = cluster_list;
-  esp_zb_zdo_match_cluster(param, findCb, &_endpoint);
+  esp_zb_zdo_match_cluster(param, ZigbeeThermostat::findCbWrapper, this);
 }
 
 void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {

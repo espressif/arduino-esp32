@@ -7,11 +7,6 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
-bool ZigbeeEP::_is_bound = false;
-bool ZigbeeEP::_allow_multiple_binding = false;
-
-//TODO: is_bound and allow_multiple_binding to make not static
-
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
@@ -22,6 +17,9 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
+  _is_bound = false;
+  _use_manual_binding = false;
+  _allow_multiple_binding = false;
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -560,6 +558,54 @@ void ZigbeeEP::requestOTAUpdate() {
     esp_zb_zdo_match_cluster(&req, findOTAServer, &_endpoint);
   }
   esp_zb_lock_release();
+}
+
+void ZigbeeEP::removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+  log_d(
+    "Attempting to remove device with endpoint %d and IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+  );
+
+  for (std::list<zb_device_params_t *>::iterator it = _bound_devices.begin(); it != _bound_devices.end(); ++it) {
+    if ((*it)->endpoint == endpoint && memcmp((*it)->ieee_addr, ieee_addr, sizeof(esp_zb_ieee_addr_t)) == 0) {
+      log_d("Found matching device, removing it");
+      _bound_devices.erase(it);
+      if (_bound_devices.empty()) {
+        _is_bound = false;
+      }
+      return;
+    }
+  }
+  log_w("No matching device found for removal");
+}
+
+void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
+  if (!device) {
+    log_e("Invalid device parameters provided");
+    return;
+  }
+
+  log_d(
+    "Attempting to remove device with endpoint %d, short address 0x%04x, IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint,
+    device->short_addr, device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2],
+    device->ieee_addr[1], device->ieee_addr[0]
+  );
+
+  for (std::list<zb_device_params_t *>::iterator it = _bound_devices.begin(); it != _bound_devices.end(); ++it) {
+    bool endpoint_matches = ((*it)->endpoint == device->endpoint);
+    bool short_addr_matches = (device->short_addr != 0xFFFF && (*it)->short_addr == device->short_addr);
+    bool ieee_addr_matches = (memcmp((*it)->ieee_addr, device->ieee_addr, sizeof(esp_zb_ieee_addr_t)) == 0);
+
+    if (endpoint_matches && (short_addr_matches || ieee_addr_matches)) {
+      log_d("Found matching device by %s, removing it", short_addr_matches ? "short address" : "IEEE address");
+      _bound_devices.erase(it);
+      if (_bound_devices.empty()) {
+        _is_bound = false;
+      }
+      return;
+    }
+  }
+  log_w("No matching device found for removal");
 }
 
 const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {

@@ -8,6 +8,7 @@
 
 #include "esp_zigbee_core.h"
 #include "zdo/esp_zigbee_zdo_common.h"
+#include "aps/esp_zigbee_aps.h"
 #include <esp32-hal-log.h>
 #include <list>
 #include "ZigbeeEP.h"
@@ -100,6 +101,7 @@ private:
   uint8_t _open_network;
   zigbee_scan_result_t *_scan_result;
   SemaphoreHandle_t lock;
+  bool _debug;
 
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
@@ -156,6 +158,7 @@ public:
   }
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
+  void closeNetwork();
 
   //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
   void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
@@ -166,8 +169,29 @@ public:
 
   void factoryReset(bool restart = true);
 
+  void setDebugMode(bool debug) {
+    _debug = debug;
+  }
+  bool getDebugMode() {
+    return _debug;
+  }
+
   // Friend function declaration to allow access to private members
   friend void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct);
+  friend bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
+
+  // Helper functions for formatting addresses
+  static inline const char *formatIEEEAddress(const esp_zb_ieee_addr_t addr) {
+    static char buf[24];
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[7], addr[6], addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+    return buf;
+  }
+
+  static inline const char *formatShortAddress(uint16_t addr) {
+    static char buf[7];
+    snprintf(buf, sizeof(buf), "0x%04X", addr);
+    return buf;
+  }
 };
 
 extern ZigbeeCore Zigbee;
