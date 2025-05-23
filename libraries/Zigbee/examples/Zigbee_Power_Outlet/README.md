@@ -30,7 +30,7 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 ## Troubleshooting
 
-If the device flashed with the example `Zigbee_Power_Outlet` is not connecting to the coordinator, erase the flash of the device before flashing the example to the board. It is recommended to do this if you re-flash the coordinator or do some big changes in the appication code.
+If the device flashed with the example `Zigbee_Power_Outlet` is not connecting to the coordinator, erase the flash of the device before flashing the example to the board. It is recommended to do this if you re-flash the coordinator or do some big changes in the application code.
 You can do the following:
 
 * In the Arduino IDE go to the Tools menu and set `Erase All Flash Before Sketch Upload` to `Enabled`.
