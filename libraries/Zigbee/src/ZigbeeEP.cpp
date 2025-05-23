@@ -561,9 +561,11 @@ void ZigbeeEP::requestOTAUpdate() {
 }
 
 void ZigbeeEP::removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
-  log_d("Attempting to remove device with endpoint %d and IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-    endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]);
-  
+  log_d(
+    "Attempting to remove device with endpoint %d and IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+  );
+
   for (std::list<zb_device_params_t *>::iterator it = _bound_devices.begin(); it != _bound_devices.end(); ++it) {
     if ((*it)->endpoint == endpoint && memcmp((*it)->ieee_addr, ieee_addr, sizeof(esp_zb_ieee_addr_t)) == 0) {
       log_d("Found matching device, removing it");
@@ -583,16 +585,17 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
     return;
   }
 
-  log_d("Attempting to remove device with endpoint %d, short address 0x%04x, IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
-    device->endpoint, device->short_addr,
-    device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4],
-    device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
+  log_d(
+    "Attempting to remove device with endpoint %d, short address 0x%04x, IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint,
+    device->short_addr, device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2],
+    device->ieee_addr[1], device->ieee_addr[0]
+  );
 
   for (std::list<zb_device_params_t *>::iterator it = _bound_devices.begin(); it != _bound_devices.end(); ++it) {
     bool endpoint_matches = ((*it)->endpoint == device->endpoint);
     bool short_addr_matches = (device->short_addr != 0xFFFF && (*it)->short_addr == device->short_addr);
     bool ieee_addr_matches = (memcmp((*it)->ieee_addr, device->ieee_addr, sizeof(esp_zb_ieee_addr_t)) == 0);
-    
+
     if (endpoint_matches && (short_addr_matches || ieee_addr_matches)) {
       log_d("Found matching device by %s, removing it", short_addr_matches ? "short address" : "IEEE address");
       _bound_devices.erase(it);

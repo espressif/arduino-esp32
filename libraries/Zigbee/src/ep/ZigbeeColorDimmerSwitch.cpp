@@ -6,7 +6,7 @@ ZigbeeColorDimmerSwitch *ZigbeeColorDimmerSwitch::_instance = nullptr;
 
 ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID;
-  _instance = this;  // Set the static pointer to this instance
+  _instance = this;   // Set the static pointer to this instance
   _device = nullptr;  // Initialize light pointer to null
 
   esp_zb_color_dimmable_switch_cfg_t switch_cfg = ESP_ZB_DEFAULT_COLOR_DIMMABLE_SWITCH_CONFIG();
@@ -18,7 +18,7 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(en
 }
 
 void ZigbeeColorDimmerSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeColorDimmerSwitch* instance = static_cast<ZigbeeColorDimmerSwitch*>(user_ctx);
+  ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Bound successfully!");
     if (instance->_device) {
@@ -34,7 +34,7 @@ void ZigbeeColorDimmerSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_
 }
 
 void ZigbeeColorDimmerSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeColorDimmerSwitch* instance = static_cast<ZigbeeColorDimmerSwitch*>(user_ctx);
+  ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
   if (instance) {
     log_d("bindCbWrapper on EP %d", instance->_endpoint);
     instance->bindCb(zdo_status, user_ctx);
@@ -42,7 +42,7 @@ void ZigbeeColorDimmerSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void
 }
 
 void ZigbeeColorDimmerSwitch::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeColorDimmerSwitch* instance = static_cast<ZigbeeColorDimmerSwitch*>(user_ctx);
+  ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
   if (instance) {
     log_d("findCbWrapper on EP %d", instance->_endpoint);
     instance->findCb(zdo_status, addr, endpoint, user_ctx);
@@ -50,7 +50,7 @@ void ZigbeeColorDimmerSwitch::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint
 }
 
 void ZigbeeColorDimmerSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeColorDimmerSwitch* instance = static_cast<ZigbeeColorDimmerSwitch*>(user_ctx);
+  ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_d("Found light endpoint");
     esp_zb_zdo_bind_req_param_t bind_req;

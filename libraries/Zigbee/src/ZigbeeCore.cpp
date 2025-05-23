@@ -282,7 +282,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
           } else {
             // Save the channel mask to NVRAM in case of reboot which may be on a different channel after a change in the network
             Zigbee.setNVRAMChannelMask(1 << esp_zb_get_current_channel());
-            Zigbee._connected = true; // Coordinator is always connected
+            Zigbee._connected = true;  // Coordinator is always connected
           }
           Zigbee.searchBindings();
         }
@@ -374,7 +374,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                 log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                break; // Only one endpoint per device
+                break;  // Only one endpoint per device
               }
             }
           }
@@ -408,7 +408,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
               if (!found) {
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                break; // Only one endpoint per device
+                break;  // Only one endpoint per device
               }
             }
           }
@@ -437,25 +437,27 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
 }
 
 // APS DATA INDICATION HANDLER to catch bind/unbind requests
-bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind)
-{
+bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind) {
   if (Zigbee.getDebugMode()) {
     log_d("APSDE INDICATION - Received APSDE-DATA indication, status: %d", ind.status);
-    log_d("APSDE INDICATION - dst_endpoint: %d, src_endpoint: %d, dst_addr_mode: %d, src_addr_mode: %d, cluster_id: 0x%04x, asdu_length: %d", ind.dst_endpoint, ind.src_endpoint, ind.dst_addr_mode, ind.src_addr_mode, ind.cluster_id, ind.asdu_length);
-    log_d("APSDE INDICATION - dst_short_addr: 0x%04x, src_short_addr: 0x%04x, profile_id: 0x%04x, security_status: %d, lqi: %d, rx_time: %d", ind.dst_short_addr, ind.src_short_addr, ind.profile_id, ind.security_status, ind.lqi, ind.rx_time);
+    log_d(
+      "APSDE INDICATION - dst_endpoint: %d, src_endpoint: %d, dst_addr_mode: %d, src_addr_mode: %d, cluster_id: 0x%04x, asdu_length: %d", ind.dst_endpoint,
+      ind.src_endpoint, ind.dst_addr_mode, ind.src_addr_mode, ind.cluster_id, ind.asdu_length
+    );
+    log_d(
+      "APSDE INDICATION - dst_short_addr: 0x%04x, src_short_addr: 0x%04x, profile_id: 0x%04x, security_status: %d, lqi: %d, rx_time: %d", ind.dst_short_addr,
+      ind.src_short_addr, ind.profile_id, ind.security_status, ind.lqi, ind.rx_time
+    );
   }
-  if (ind.status == 0x00)
-    {
-      // Catch bind/unbind requests to update the bound devices list
-      if(ind.cluster_id == 0x21 || ind.cluster_id == 0x22){
-        Zigbee.searchBindings();
-      }
+  if (ind.status == 0x00) {
+    // Catch bind/unbind requests to update the bound devices list
+    if (ind.cluster_id == 0x21 || ind.cluster_id == 0x22) {
+      Zigbee.searchBindings();
     }
-    else
-    {
-      log_e("APSDE INDICATION - Invalid status of APSDE-DATA indication, error code: %d", ind.status);
-    }
-    return false; //False to let the stack process the message as usual
+  } else {
+    log_e("APSDE INDICATION - Invalid status of APSDE-DATA indication, error code: %d", ind.status);
+  }
+  return false;  //False to let the stack process the message as usual
 }
 
 void ZigbeeCore::factoryReset(bool restart) {
@@ -527,7 +529,7 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
   esp_zb_zdo_mgmt_bind_param_t *req = (esp_zb_zdo_mgmt_bind_param_t *)user_ctx;
   esp_zb_zdp_status_t zdo_status = (esp_zb_zdp_status_t)table_info->status;
   log_d("Binding table callback for address 0x%04x with status %d", req->dst_addr, zdo_status);
-  
+
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     // Print binding table log simple
     log_d("Binding table info: total %d, index %d, count %d", table_info->total, table_info->index, table_info->count);
@@ -549,10 +551,14 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
       uint16_t short_addr;
       esp_zb_ieee_addr_t ieee_addr;
       bool is_ieee;
-      
-      bool operator<(const DeviceIdentifier& other) const {
-        if (endpoint != other.endpoint) return endpoint < other.endpoint;
-        if (is_ieee != other.is_ieee) return is_ieee < other.is_ieee;
+
+      bool operator<(const DeviceIdentifier &other) const {
+        if (endpoint != other.endpoint) {
+          return endpoint < other.endpoint;
+        }
+        if (is_ieee != other.is_ieee) {
+          return is_ieee < other.is_ieee;
+        }
         if (is_ieee) {
           return memcmp(ieee_addr, other.ieee_addr, sizeof(esp_zb_ieee_addr_t)) < 0;
         }
@@ -571,30 +577,31 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
     // Add current records to our collection
     esp_zb_zdo_binding_table_record_t *record = table_info->record;
     for (int i = 0; i < table_info->count; i++) {
-      log_d("Processing record %d: src_endp %d, dst_endp %d, cluster_id 0x%04x, dst_addr_mode %d", 
-        i, record->src_endp, record->dst_endp, record->cluster_id, record->dst_addr_mode);
+      log_d(
+        "Processing record %d: src_endp %d, dst_endp %d, cluster_id 0x%04x, dst_addr_mode %d", i, record->src_endp, record->dst_endp, record->cluster_id,
+        record->dst_addr_mode
+      );
       all_records.push_back(*record);
       record = record->next;
     }
 
     // If this is not the last chunk, request the next one
     if (table_info->index + table_info->count < table_info->total) {
-      log_d("Requesting next chunk of binding table (current index: %d, count: %d, total: %d)", 
-        table_info->index, table_info->count, table_info->total);
+      log_d("Requesting next chunk of binding table (current index: %d, count: %d, total: %d)", table_info->index, table_info->count, table_info->total);
       req->start_index = table_info->index + table_info->count;
       esp_zb_zdo_binding_table_req(req, bindingTableCb, req);
     } else {
       // This is the last chunk, process all records
       log_d("Processing final chunk of binding table, total records: %d", all_records.size());
-      for (const auto& record : all_records) {
+      for (const auto &record : all_records) {
 
         DeviceIdentifier dev_id;
         dev_id.endpoint = record.src_endp;
         dev_id.is_ieee = (record.dst_addr_mode == ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT);
-        
+
         if (dev_id.is_ieee) {
           memcpy(dev_id.ieee_addr, record.dst_address.addr_long, sizeof(esp_zb_ieee_addr_t));
-          dev_id.short_addr = 0xFFFF; // Invalid short address
+          dev_id.short_addr = 0xFFFF;  // Invalid short address
         } else {
           dev_id.short_addr = record.dst_address.addr_short;
           memset(dev_id.ieee_addr, 0, sizeof(esp_zb_ieee_addr_t));
@@ -609,15 +616,15 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
         log_d("Processing endpoint %d", (*it)->getEndpoint());
         std::list<zb_device_params_t *> bound_devices = (*it)->getBoundDevices();
         std::list<zb_device_params_t *> devices_to_remove;
-        
+
         // First, identify devices that need to be removed
         for (std::list<zb_device_params_t *>::iterator dev_it = bound_devices.begin(); dev_it != bound_devices.end(); ++dev_it) {
           DeviceIdentifier dev_id;
           dev_id.endpoint = (*it)->getEndpoint();
-          
+
           // Create both short and IEEE address identifiers for the device
           bool found = false;
-          
+
           // Check if device exists with short address
           if ((*dev_it)->short_addr != 0xFFFF) {
             dev_id.is_ieee = false;
@@ -627,7 +634,7 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
               found = true;
             }
           }
-          
+
           // Check if device exists with IEEE address
           if (!found) {
             dev_id.is_ieee = true;
@@ -637,12 +644,12 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
               found = true;
             }
           }
-          
+
           if (!found) {
             devices_to_remove.push_back(*dev_it);
           }
         }
-        
+
         // Remove devices that are no longer in the binding table
         for (std::list<zb_device_params_t *>::iterator dev_it = devices_to_remove.begin(); dev_it != devices_to_remove.end(); ++dev_it) {
           (*it)->removeBoundDevice(*dev_it);
@@ -650,7 +657,7 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
         }
 
         // Now add new devices from the binding table
-        for (const auto& record : all_records) {
+        for (const auto &record : all_records) {
           if (record.src_endp == (*it)->getEndpoint()) {
             log_d("Processing binding record for EP %d", record.src_endp);
             zb_device_params_t *device = (zb_device_params_t *)calloc(1, sizeof(zb_device_params_t));
@@ -659,7 +666,7 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
               continue;
             }
             device->endpoint = record.dst_endp;
-            
+
             bool is_ieee = (record.dst_addr_mode == ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT);
             if (is_ieee) {
               memcpy(device->ieee_addr, record.dst_address.addr_long, sizeof(esp_zb_ieee_addr_t));
@@ -684,20 +691,16 @@ void ZigbeeCore::bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_inf
                 }
               }
             }
-            
+
             if (!device_exists) {
               (*it)->addBoundDevice(device);
               log_d(
-                "Device bound to EP %d -> device endpoint: %d, %s: %s", 
-                record.src_endp, device->endpoint,
-                is_ieee ? "ieee addr" : "short addr",
-                is_ieee ? 
-                  formatIEEEAddress(device->ieee_addr) : 
-                  formatShortAddress(device->short_addr)
+                "Device bound to EP %d -> device endpoint: %d, %s: %s", record.src_endp, device->endpoint, is_ieee ? "ieee addr" : "short addr",
+                is_ieee ? formatIEEEAddress(device->ieee_addr) : formatShortAddress(device->short_addr)
               );
             } else {
               log_d("Device already exists, freeing allocated memory");
-              free(device); // Free the device if it already exists
+              free(device);  // Free the device if it already exists
             }
           }
         }

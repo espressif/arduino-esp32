@@ -76,7 +76,6 @@ public:
     _use_manual_binding = bind;
   }
 
-
   // Set Manufacturer name and model
   bool setManufacturerAndModel(const char *name, const char *model);
 
@@ -105,7 +104,6 @@ public:
   bool epUseManualBinding() {
     return _use_manual_binding;
   }
-
 
   // OTA methods
   /**

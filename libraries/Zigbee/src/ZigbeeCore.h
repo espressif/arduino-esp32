@@ -181,14 +181,13 @@ public:
   friend bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
 
   // Helper functions for formatting addresses
-  static inline const char* formatIEEEAddress(const esp_zb_ieee_addr_t addr) {
+  static inline const char *formatIEEEAddress(const esp_zb_ieee_addr_t addr) {
     static char buf[24];
-    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X",
-      addr[7], addr[6], addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[7], addr[6], addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
     return buf;
   }
 
-  static inline const char* formatShortAddress(uint16_t addr) {
+  static inline const char *formatShortAddress(uint16_t addr) {
     static char buf[7];
     snprintf(buf, sizeof(buf), "0x%04X", addr);
     return buf;

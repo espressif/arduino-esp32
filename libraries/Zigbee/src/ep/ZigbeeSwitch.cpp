@@ -16,7 +16,7 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
 }
 
 void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeSwitch* instance = static_cast<ZigbeeSwitch*>(user_ctx);
+  ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Bound successfully!");
     if (instance->_device) {
@@ -32,7 +32,7 @@ void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
 }
 
 void ZigbeeSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeSwitch* instance = static_cast<ZigbeeSwitch*>(user_ctx);
+  ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (instance) {
     log_d("bindCbWrapper on EP %d", instance->_endpoint);
     instance->bindCb(zdo_status, user_ctx);
@@ -41,7 +41,7 @@ void ZigbeeSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx)
 
 // Static wrapper for findCb
 void ZigbeeSwitch::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeSwitch* instance = static_cast<ZigbeeSwitch*>(user_ctx);
+  ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (instance) {
     log_d("findCbWrapper on EP %d", instance->_endpoint);
     instance->findCb(zdo_status, addr, endpoint, user_ctx);
@@ -49,7 +49,7 @@ void ZigbeeSwitch::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, 
 }
 
 void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeSwitch* instance = static_cast<ZigbeeSwitch*>(user_ctx);
+  ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_d("Found light endpoint");
     esp_zb_zdo_bind_req_param_t bind_req;

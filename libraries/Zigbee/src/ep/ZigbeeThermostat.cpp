@@ -10,7 +10,7 @@ ZigbeeThermostat *ZigbeeThermostat::_instance = nullptr;
 
 ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;
-  _instance = this;  // Set the static pointer to this instance
+  _instance = this;   // Set the static pointer to this instance
   _device = nullptr;  // Initialize sensor pointer to null
 
   //use custom config to avoid narrowing error -> must be fixed in zigbee-sdk
@@ -30,7 +30,7 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
 }
 
 void ZigbeeThermostat::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeThermostat* instance = static_cast<ZigbeeThermostat*>(user_ctx);
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Bound successfully!");
     if (instance->_device) {
@@ -46,7 +46,7 @@ void ZigbeeThermostat::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
 }
 
 void ZigbeeThermostat::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
-  ZigbeeThermostat* instance = static_cast<ZigbeeThermostat*>(user_ctx);
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (instance) {
     log_d("bindCbWrapper on EP %d", instance->_endpoint);
     instance->bindCb(zdo_status, user_ctx);
@@ -54,7 +54,7 @@ void ZigbeeThermostat::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_
 }
 
 void ZigbeeThermostat::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeThermostat* instance = static_cast<ZigbeeThermostat*>(user_ctx);
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (instance) {
     log_d("findCbWrapper on EP %d", instance->_endpoint);
     instance->findCb(zdo_status, addr, endpoint, user_ctx);
@@ -62,7 +62,7 @@ void ZigbeeThermostat::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t ad
 }
 
 void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
-  ZigbeeThermostat* instance = static_cast<ZigbeeThermostat*>(user_ctx);
+  ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Found temperature sensor");
     esp_zb_zdo_bind_req_param_t bind_req;
