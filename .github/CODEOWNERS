@@ -7,7 +7,7 @@
 
 # The default owners are the active developers of the ESP32 Arduino Core.
 # Refrain from using @espressif/arduino-esp32 to avoid spamming non-developers with review requests.
-* @lucasssvaz @me-no-dev @P-R-O-C-H-Y @SuGlider
+* @espressif/arduino-devs
 
 # CI
 /.github/ @lucasssvaz @me-no-dev @P-R-O-C-H-Y
@@ -22,8 +22,8 @@
 /.* @lucasssvaz # Files in root directory that start with a dot.
 
 # Git Files
-/.gitignore @lucasssvaz @me-no-dev @P-R-O-C-H-Y @SuGlider
-/.gitmodules @lucasssvaz @me-no-dev @P-R-O-C-H-Y @SuGlider
+/.gitignore @espressif/arduino-devs
+/.gitmodules @espressif/arduino-devs
 
 # Documentation
 /docs/ @pedrominatel
@@ -67,4 +67,4 @@
 
 # The CODEOWNERS file should be owned by the developers of the ESP32 Arduino Core.
 # Leave this entry as the last one to avoid being overridden.
-/.github/CODEOWNERS @lucasssvaz @me-no-dev @P-R-O-C-H-Y @SuGlider
+/.github/CODEOWNERS @espressif/arduino-devs @espressif/admins
