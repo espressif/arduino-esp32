@@ -301,6 +301,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeWindSpeedSensor.cpp
   libraries/Zigbee/src/ep/ZigbeeIlluminanceSensor.cpp
   libraries/Zigbee/src/ep/ZigbeePM25Sensor.cpp
+  libraries/Zigbee/src/ep/ZigbeeBinary.cpp
   libraries/Zigbee/src/ep/ZigbeePowerOutlet.cpp
   )
 

@@ -13,7 +13,33 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
 }
 
 bool ZigbeeAnalog::addAnalogInput() {
-  esp_err_t ret = esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_attribute_list_t *esp_zb_analog_input_cluster = esp_zb_analog_input_cluster_create(NULL);
+
+  // Create default description for Analog Input
+  char default_description[] = "\x0C"
+                               "Analog Input";
+  uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AI_GROUP_ID << 24);
+  float resolution = 0.1;  // Default resolution of 0.1
+
+  esp_err_t ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description);
+  if (ret != ESP_OK) {
+    log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  if (ret != ESP_OK) {
+    log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, (void *)&resolution);
+  if (ret != ESP_OK) {
+    log_e("Failed to add resolution attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
     log_e("Failed to add Analog Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -22,13 +48,80 @@ bool ZigbeeAnalog::addAnalogInput() {
   return true;
 }
 
+// Check esp_zigbee_zcl_analog_input.h for application type values
+bool ZigbeeAnalog::setAnalogInputApplication(uint32_t application_type) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
+    log_e("Analog Input cluster not added");
+    return false;
+  }
+
+  // Add the Analog Input group ID (0x00) to the application type
+  uint32_t application_type_value = (ESP_ZB_ZCL_AI_GROUP_ID << 24) | application_type;
+
+  esp_zb_attribute_list_t *analog_input_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
+  if (ret != ESP_OK) {
+    log_e("Failed to set AI application type: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
 bool ZigbeeAnalog::addAnalogOutput() {
-  esp_err_t ret = esp_zb_cluster_list_add_analog_output_cluster(_cluster_list, esp_zb_analog_output_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_zb_attribute_list_t *esp_zb_analog_output_cluster = esp_zb_analog_output_cluster_create(NULL);
+
+  // Create default description for Analog Output
+  char default_description[] = "\x0D"
+                               "Analog Output";
+  uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AO_GROUP_ID << 24);
+  float resolution = 1;  // Default resolution of 1
+
+  esp_err_t ret =
+    esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description);
+  if (ret != ESP_OK) {
+    log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  if (ret != ESP_OK) {
+    log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
+  if (ret != ESP_OK) {
+    log_e("Failed to add resolution attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_cluster_list_add_analog_output_cluster(_cluster_list, esp_zb_analog_output_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
     log_e("Failed to add Analog Output cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   _analog_clusters |= ANALOG_OUTPUT;
+  return true;
+}
+
+// Check esp_zigbee_zcl_analog_output.h for application type values
+bool ZigbeeAnalog::setAnalogOutputApplication(uint32_t application_type) {
+  if (!(_analog_clusters & ANALOG_OUTPUT)) {
+    log_e("Analog Output cluster not added");
+    return false;
+  }
+
+  // Add the Analog Output group ID (0x00) to the application type
+  uint32_t application_type_value = (ESP_ZB_ZCL_AO_GROUP_ID << 24) | application_type;
+
+  esp_zb_attribute_list_t *analog_output_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
+  if (ret != ESP_OK) {
+    log_e("Failed to set AO application type: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
   return true;
 }
 
@@ -115,6 +208,128 @@ bool ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   esp_zb_lock_release();
   if (ret != ESP_OK) {
     log_e("Failed to set Analog Input reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogInputDescription(const char *description) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
+    log_e("Analog Input cluster not added");
+    return false;
+  }
+
+  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
+  char zb_description[ZB_MAX_NAME_LENGTH + 2];
+
+  // Convert description to ZCL string
+  size_t description_length = strlen(description);
+  if (description_length > ZB_MAX_NAME_LENGTH) {
+    log_e("Description is too long");
+    return false;
+  }
+
+  // Get and check the analog input cluster
+  esp_zb_attribute_list_t *analog_input_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_input_cluster == nullptr) {
+    log_e("Failed to get analog input cluster");
+    return false;
+  }
+
+  // Store the length as the first element
+  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
+  // Use memcpy to copy the characters to the result array
+  memcpy(zb_description + 1, description, description_length);
+  // Null-terminate the array
+  zb_description[description_length + 1] = '\0';
+
+  // Update the description attribute
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)zb_description);
+  if (ret != ESP_OK) {
+    log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogOutputDescription(const char *description) {
+  if (!(_analog_clusters & ANALOG_OUTPUT)) {
+    log_e("Analog Output cluster not added");
+    return false;
+  }
+
+  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
+  char zb_description[ZB_MAX_NAME_LENGTH + 2];
+
+  // Convert description to ZCL string
+  size_t description_length = strlen(description);
+  if (description_length > ZB_MAX_NAME_LENGTH) {
+    log_e("Description is too long");
+    return false;
+  }
+
+  // Get and check the analog output cluster
+  esp_zb_attribute_list_t *analog_output_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_output_cluster == nullptr) {
+    log_e("Failed to get analog output cluster");
+    return false;
+  }
+
+  // Store the length as the first element
+  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
+  // Use memcpy to copy the characters to the result array
+  memcpy(zb_description + 1, description, description_length);
+  // Null-terminate the array
+  zb_description[description_length + 1] = '\0';
+
+  // Update the description attribute
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
+  if (ret != ESP_OK) {
+    log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogInputResolution(float resolution) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
+    log_e("Analog Input cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *analog_input_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_input_cluster == nullptr) {
+    log_e("Failed to get analog input cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, (void *)&resolution);
+  if (ret != ESP_OK) {
+    log_e("Failed to set resolution: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogOutputResolution(float resolution) {
+  if (!(_analog_clusters & ANALOG_OUTPUT)) {
+    log_e("Analog Output cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *analog_output_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_output_cluster == nullptr) {
+    log_e("Failed to get analog output cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
+  if (ret != ESP_OK) {
+    log_e("Failed to set resolution: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
