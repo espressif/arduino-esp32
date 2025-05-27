@@ -43777,8 +43777,8 @@ alfredo-nou3.upload.maximum_size=3342336
 alfredo-nou3.upload.maximum_data_size=327680
 alfredo-nou3.upload.flags=
 alfredo-nou3.upload.extra_flags=
-alfredo-nou3.upload.use_1200bps_touch=false
-alfredo-nou3.upload.wait_for_upload_port=false
+alfredo-nou3.upload.use_1200bps_touch=true
+alfredo-nou3.upload.wait_for_upload_port=true
 
 alfredo-nou3.serial.disableDTR=false
 alfredo-nou3.serial.disableRTS=false
@@ -43791,7 +43791,7 @@ alfredo-nou3.build.core=esp32
 alfredo-nou3.build.variant=alfredo-nou3
 alfredo-nou3.build.board=ALFREDO_NOU3
 
-alfredo-nou3.build.usb_mode=1
+alfredo-nou3.build.usb_mode=0
 alfredo-nou3.build.cdc_on_boot=1
 alfredo-nou3.build.msc_on_boot=0
 alfredo-nou3.build.dfu_on_boot=0
@@ -43818,10 +43818,10 @@ alfredo-nou3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 alfredo-nou3.menu.EventsCore.0=Core 0
 alfredo-nou3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-alfredo-nou3.menu.USBMode.default=Hardware CDC and JTAG
-alfredo-nou3.menu.USBMode.default.build.usb_mode=1
-alfredo-nou3.menu.USBMode.usbotg=USB-OTG (TinyUSB)
-alfredo-nou3.menu.USBMode.usbotg.build.usb_mode=0
+alfredo-nou3.menu.USBMode.default=USB-OTG (TinyUSB)
+alfredo-nou3.menu.USBMode.default.build.usb_mode=0
+alfredo-nou3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+alfredo-nou3.menu.USBMode.hwcdc.build.usb_mode=1
 
 alfredo-nou3.menu.CDCOnBoot.cdc=Enabled
 alfredo-nou3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -43838,12 +43838,12 @@ alfredo-nou3.menu.DFUOnBoot.default.build.dfu_on_boot=0
 alfredo-nou3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 alfredo-nou3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-alfredo-nou3.menu.UploadMode.default=UART0 / Hardware CDC
-alfredo-nou3.menu.UploadMode.default.upload.use_1200bps_touch=false
-alfredo-nou3.menu.UploadMode.default.upload.wait_for_upload_port=false
 alfredo-nou3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 alfredo-nou3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 alfredo-nou3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+alfredo-nou3.menu.UploadMode.default=UART0 / Hardware CDC
+alfredo-nou3.menu.UploadMode.default.upload.use_1200bps_touch=false
+alfredo-nou3.menu.UploadMode.default.upload.wait_for_upload_port=false
 
 alfredo-nou3.menu.PartitionScheme.default_8MB=Default (3MB APP/1.5MB SPIFFS)
 alfredo-nou3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
