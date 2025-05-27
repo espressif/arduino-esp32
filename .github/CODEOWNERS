@@ -55,7 +55,7 @@
 /libraries/Network/ @me-no-dev
 /libraries/OpenThread/ @SuGlider
 /libraries/PPP/ @me-no-dev
-/libraries/USB/ @SuGlider
+/libraries/USB/ @SuGlider @me-no-dev
 /libraries/WiFi/ @me-no-dev
 /libraries/WiFiProv/ @me-no-dev
 /libraries/Wire/ @me-no-dev
@@ -67,4 +67,4 @@
 
 # The CODEOWNERS file should be owned by the developers of the ESP32 Arduino Core.
 # Leave this entry as the last one to avoid being overridden.
-/.github/CODEOWNERS @espressif/arduino-devs @espressif/admins
+/.github/CODEOWNERS @espressif/arduino-devs
