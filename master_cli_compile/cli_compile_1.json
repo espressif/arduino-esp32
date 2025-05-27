@@ -278,7 +278,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 976377,
+                            "flash_bytes": 976369,
                             "flash_percentage": 5,
                             "ram_bytes": 57652,
                             "ram_percentage": 17
@@ -611,14 +611,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "BLE/examples/Notify",
-                    "sizes": [{
-                            "flash_bytes": 1114061,
-                            "flash_percentage": 35,
-                            "ram_bytes": 37304,
-                            "ram_percentage": 11
-                            }]
-                    },
 {"name": "BLE/examples/Scan",
                     "sizes": [{
                             "flash_bytes": 1101315,
@@ -672,6 +664,22 @@
                             "flash_bytes": 295877,
                             "flash_percentage": 9,
                             "ram_bytes": 12864,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "EEPROM/examples/eeprom_extra",
+                    "sizes": [{
+                            "flash_bytes": 298937,
+                            "flash_percentage": 9,
+                            "ram_bytes": 12816,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "EEPROM/examples/eeprom_write",
+                    "sizes": [{
+                            "flash_bytes": 294443,
+                            "flash_percentage": 9,
+                            "ram_bytes": 12824,
                             "ram_percentage": 3
                             }]
                     }

@@ -603,68 +603,76 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "TFLiteMicro/examples/hello_world",
+{"name": "Zigbee/examples/Zigbee_Color_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 308971,
-                            "flash_percentage": 23,
-                            "ram_bytes": 15096,
-                            "ram_percentage": 4
+                            "flash_bytes": 626215,
+                            "flash_percentage": 47,
+                            "ram_bytes": 29280,
+                            "ram_percentage": 8
                             }]
                     },
-{"name": "Ticker/examples/Blinker",
+{"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
                     "sizes": [{
-                            "flash_bytes": 295117,
-                            "flash_percentage": 22,
-                            "ram_bytes": 14076,
-                            "ram_percentage": 4
+                            "flash_bytes": 717049,
+                            "flash_percentage": 54,
+                            "ram_bytes": 31576,
+                            "ram_percentage": 9
                             }]
                     },
-{"name": "Ticker/examples/TickerBasic",
+{"name": "Zigbee/examples/Zigbee_Contact_Switch",
                     "sizes": [{
-                            "flash_bytes": 294909,
-                            "flash_percentage": 22,
-                            "ram_bytes": 14052,
-                            "ram_percentage": 4
+                            "flash_bytes": 579415,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28096,
+                            "ram_percentage": 8
                             }]
                     },
-{"name": "Ticker/examples/TickerParameter",
+{"name": "Zigbee/examples/Zigbee_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 294781,
-                            "flash_percentage": 22,
-                            "ram_bytes": 14076,
-                            "ram_percentage": 4
+                            "flash_bytes": 605393,
+                            "flash_percentage": 46,
+                            "ram_bytes": 29264,
+                            "ram_percentage": 8
                             }]
                     },
-{"name": "Update/examples/SD_Update",
+{"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                     "sizes": [{
-                            "flash_bytes": 381263,
-                            "flash_percentage": 29,
-                            "ram_bytes": 14636,
-                            "ram_percentage": 4
+                            "flash_bytes": 708899,
+                            "flash_percentage": 54,
+                            "ram_bytes": 31808,
+                            "ram_percentage": 9
                             }]
                     },
-{"name": "Wire/examples/WireMaster",
+{"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                     "sizes": [{
-                            "flash_bytes": 312487,
-                            "flash_percentage": 23,
-                            "ram_bytes": 14140,
-                            "ram_percentage": 4
+                            "flash_bytes": 708749,
+                            "flash_percentage": 54,
+                            "ram_bytes": 31808,
+                            "ram_percentage": 9
                             }]
                     },
-{"name": "Wire/examples/WireScan",
+{"name": "Zigbee/examples/Zigbee_Electrical_DC_Sensor",
                     "sizes": [{
-                            "flash_bytes": 312239,
-                            "flash_percentage": 23,
-                            "ram_bytes": 14132,
-                            "ram_percentage": 4
+                            "flash_bytes": 591355,
+                            "flash_percentage": 45,
+                            "ram_bytes": 28352,
+                            "ram_percentage": 8
                             }]
                     },
-{"name": "Wire/examples/WireSlave",
+{"name": "Zigbee/examples/Zigbee_Illuminance_Sensor",
                     "sizes": [{
-                            "flash_bytes": 312481,
-                            "flash_percentage": 23,
-                            "ram_bytes": 14140,
-                            "ram_percentage": 4
+                            "flash_bytes": 600035,
+                            "flash_percentage": 45,
+                            "ram_bytes": 28328,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_OTA_Client",
+                    "sizes": [{
+                            "flash_bytes": 619593,
+                            "flash_percentage": 47,
+                            "ram_bytes": 29328,
+                            "ram_percentage": 8
                             }]
                     }
 ]

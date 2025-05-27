@@ -603,30 +603,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "ESP32/examples/AnalogRead",
-                    "sizes": [{
-                            "flash_bytes": 298047,
-                            "flash_percentage": 22,
-                            "ram_bytes": 13056,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 303681,
-                            "flash_percentage": 23,
-                            "ram_bytes": 13056,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/ArduinoStackSize",
-                    "sizes": [{
-                            "flash_bytes": 283911,
-                            "flash_percentage": 21,
-                            "ram_bytes": 12768,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/CI/CIBoardsTest",
                     "sizes": [{
                             "flash_bytes": 336885,
@@ -665,6 +641,38 @@
                             "flash_percentage": 21,
                             "ram_bytes": 12768,
                             "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/FreeRTOS/Semaphore",
+                    "sizes": [{
+                            "flash_bytes": 284123,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12768,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/BlinkRGB",
+                    "sizes": [{
+                            "flash_bytes": 290529,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13996,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 292259,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13460,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 290705,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13468,
+                            "ram_percentage": 4
                             }]
                     }
 ]

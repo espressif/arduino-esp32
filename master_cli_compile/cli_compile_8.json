@@ -603,68 +603,76 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "ESP32/examples/Utilities/MD5Builder",
+{"name": "OpenThread/examples/COAP/coap_lamp",
                     "sizes": [{
-                            "flash_bytes": 286449,
-                            "flash_percentage": 21,
-                            "ram_bytes": 12768,
-                            "ram_percentage": 3
+                            "flash_bytes": 1122617,
+                            "flash_percentage": 85,
+                            "ram_bytes": 47096,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "ESP32/examples/Utilities/SHA1Builder",
+{"name": "OpenThread/examples/COAP/coap_switch",
                     "sizes": [{
-                            "flash_bytes": 292737,
-                            "flash_percentage": 22,
-                            "ram_bytes": 12768,
-                            "ram_percentage": 3
+                            "flash_bytes": 1122655,
+                            "flash_percentage": 85,
+                            "ram_bytes": 47060,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "ESP_I2S/examples/ES8388_loopback",
+{"name": "OpenThread/examples/SimpleCLI",
                     "sizes": [{
-                            "flash_bytes": 367469,
-                            "flash_percentage": 28,
-                            "ram_bytes": 15388,
-                            "ram_percentage": 4
+                            "flash_bytes": 1099609,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45736,
+                            "ram_percentage": 13
                             }]
                     },
-{"name": "ESP_I2S/examples/Simple_tone",
+{"name": "OpenThread/examples/SimpleNode",
                     "sizes": [{
-                            "flash_bytes": 311909,
-                            "flash_percentage": 23,
-                            "ram_bytes": 12904,
-                            "ram_percentage": 3
+                            "flash_bytes": 1101569,
+                            "flash_percentage": 84,
+                            "ram_bytes": 45736,
+                            "ram_percentage": 13
                             }]
                     },
-{"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
+{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
                     "sizes": [{
-                            "flash_bytes": 575927,
-                            "flash_percentage": 43,
-                            "ram_bytes": 18960,
-                            "ram_percentage": 5
+                            "flash_bytes": 1102905,
+                            "flash_percentage": 84,
+                            "ram_bytes": 45744,
+                            "ram_percentage": 13
                             }]
                     },
-{"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
+{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 574261,
-                            "flash_percentage": 43,
-                            "ram_bytes": 18960,
-                            "ram_percentage": 5
+                            "flash_bytes": 1100283,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45744,
+                            "ram_percentage": 13
                             }]
                     },
-{"name": "FFat/examples/FFat_Test",
+{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 349359,
-                            "flash_percentage": 26,
-                            "ram_bytes": 13548,
-                            "ram_percentage": 4
+                            "flash_bytes": 1100347,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45744,
+                            "ram_percentage": 13
                             }]
                     },
-{"name": "LittleFS/examples/LITTLEFS_test",
+{"name": "OpenThread/examples/ThreadScan",
                     "sizes": [{
-                            "flash_bytes": 334727,
-                            "flash_percentage": 25,
-                            "ram_bytes": 13424,
-                            "ram_percentage": 4
+                            "flash_bytes": 1099959,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45736,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "OpenThread/examples/onReceive",
+                    "sizes": [{
+                            "flash_bytes": 1099501,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45736,
+                            "ram_percentage": 13
                             }]
                     }
 ]

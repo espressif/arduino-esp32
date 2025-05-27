@@ -619,22 +619,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "EEPROM/examples/eeprom_extra",
-                    "sizes": [{
-                            "flash_bytes": 298913,
-                            "flash_percentage": 22,
-                            "ram_bytes": 12816,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "EEPROM/examples/eeprom_write",
-                    "sizes": [{
-                            "flash_bytes": 294419,
-                            "flash_percentage": 22,
-                            "ram_bytes": 12824,
-                            "ram_percentage": 3
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
                             "flash_bytes": 297147,
@@ -680,6 +664,30 @@
                             "flash_bytes": 292529,
                             "flash_percentage": 22,
                             "ram_bytes": 12956,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogRead",
+                    "sizes": [{
+                            "flash_bytes": 298047,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13056,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 303681,
+                            "flash_percentage": 23,
+                            "ram_bytes": 13056,
+                            "ram_percentage": 3
+                            }]
+                    },
+{"name": "ESP32/examples/ArduinoStackSize",
+                    "sizes": [{
+                            "flash_bytes": 283911,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12768,
                             "ram_percentage": 3
                             }]
                     }

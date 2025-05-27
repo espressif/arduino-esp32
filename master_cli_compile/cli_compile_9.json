@@ -603,68 +603,76 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "OpenThread/examples/COAP/coap_lamp",
+{"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
-                            "flash_bytes": 1122617,
-                            "flash_percentage": 85,
-                            "ram_bytes": 47096,
-                            "ram_percentage": 14
+                            "flash_bytes": 553937,
+                            "flash_percentage": 42,
+                            "ram_bytes": 18700,
+                            "ram_percentage": 5
                             }]
                     },
-{"name": "OpenThread/examples/COAP/coap_switch",
+{"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 1122655,
-                            "flash_percentage": 85,
-                            "ram_bytes": 47060,
-                            "ram_percentage": 14
+                            "flash_bytes": 293471,
+                            "flash_percentage": 22,
+                            "ram_bytes": 12784,
+                            "ram_percentage": 3
                             }]
                     },
-{"name": "OpenThread/examples/SimpleCLI",
+{"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 1099609,
-                            "flash_percentage": 83,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "flash_bytes": 293213,
+                            "flash_percentage": 22,
+                            "ram_bytes": 12792,
+                            "ram_percentage": 3
                             }]
                     },
-{"name": "OpenThread/examples/SimpleNode",
+{"name": "SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 1101569,
-                            "flash_percentage": 84,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "flash_bytes": 375509,
+                            "flash_percentage": 28,
+                            "ram_bytes": 14780,
+                            "ram_percentage": 4
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
-                            "flash_bytes": 1102905,
-                            "flash_percentage": 84,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
+                            "flash_bytes": 298311,
+                            "flash_percentage": 22,
+                            "ram_bytes": 14084,
+                            "ram_percentage": 4
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
+{"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 1100283,
-                            "flash_percentage": 83,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
+                            "flash_bytes": 326987,
+                            "flash_percentage": 24,
+                            "ram_bytes": 13304,
+                            "ram_percentage": 4
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
+{"name": "SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
-                            "flash_bytes": 1100347,
-                            "flash_percentage": 83,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
+                            "flash_bytes": 1075245,
+                            "flash_percentage": 82,
+                            "ram_bytes": 37320,
+                            "ram_percentage": 11
                             }]
                     },
-{"name": "OpenThread/examples/ThreadScan",
+{"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 1099959,
-                            "flash_percentage": 83,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "flash_bytes": 308971,
+                            "flash_percentage": 23,
+                            "ram_bytes": 15096,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 295117,
+                            "flash_percentage": 22,
+                            "ram_bytes": 14076,
+                            "ram_percentage": 4
                             }]
                     }
 ]
