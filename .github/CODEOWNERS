@@ -49,12 +49,21 @@
 /package/ @me-no-dev
 
 # Libraries
+/libraries/ArduinoOTA/ @me-no-dev
+/libraries/AsyncUDP/ @me-no-dev
+/libraries/BLE/ @lucasssvaz @SuGlider
+/libraries/ESP_I2S/ @me-no-dev
 /libraries/ESP_NOW/ @P-R-O-C-H-Y @lucasssvaz
+/libraries/ESP_SR/ @me-no-dev
+/libraries/ESPmDNS/ @me-no-dev
 /libraries/Ethernet/ @me-no-dev
 /libraries/Matter/ @SuGlider
+/libraries/NetBIOS/ @me-no-dev
 /libraries/Network/ @me-no-dev
 /libraries/OpenThread/ @SuGlider
 /libraries/PPP/ @me-no-dev
+/libraries/SPI/ @me-no-dev
+/libraries/Update/ @me-no-dev
 /libraries/USB/ @SuGlider @me-no-dev
 /libraries/WiFi/ @me-no-dev
 /libraries/WiFiProv/ @me-no-dev
