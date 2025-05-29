@@ -205,7 +205,7 @@ void loop() {
         if (SimulatedThermostat.getMode() == MatterThermostat::THERMOSTAT_MODE_COOL) {
           isCooling = true;
           isHeating = false;  // keep the heating system off as it is in cooling mode
-          // when the cooling system is in COOLING mode, it will be turned off as soon as the local temperature is bellow the setpoint
+          // when the cooling system is in COOLING mode, it will be turned off as soon as the local temperature is below the setpoint
           if (localTemperature < SimulatedThermostat.getCoolingSetpoint()) {
             // turn off the cooling system
             isCooling = false;
