@@ -15,9 +15,8 @@
 #include "esp32-hal-bt.h"
 
 #if SOC_BT_SUPPORTED
-#ifdef CONFIG_BT_BLUEDROID_ENABLED
+#if defined(CONFIG_BT_BLUEDROID_ENABLED) && __has_include("esp_bt.h")
 
-#if __has_include("esp_bt.h")
 #include "esp_bt.h"
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -117,7 +116,6 @@ bool btStop() {
   return false;
 }
 
-#endif // __has_include("esp_bt.h")
 #else  // CONFIG_BT_ENABLED
 bool btStarted() {
   return false;
@@ -134,4 +132,3 @@ bool btStop() {
 #endif /* CONFIG_BT_ENABLED */
 
 #endif /* SOC_BT_SUPPORTED */
-
