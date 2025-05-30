@@ -305,6 +305,48 @@ bool APClass::enableNAPT(bool enable) {
   return true;
 }
 
+bool APClass::enableDhcpCaptivePortal() {
+#if CONFIG_ESP_ENABLE_DHCP_CAPTIVEPORTAL
+  esp_err_t err = ESP_OK;
+  static char captiveportal_uri[32] = {0,};
+
+  if (!started()) {
+    log_e("AP must be first started to enable DHCP Captive Portal");
+    return false;
+  }
+
+  // Create Captive Portal URL: http://192.168.0.4
+  strcpy(captiveportal_uri, "http://");
+  strcat(captiveportal_uri, String(localIP()).c_str());
+
+  // Stop DHCPS
+  err = esp_netif_dhcps_stop(_esp_netif);
+  if (err && err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STOPPED) {
+    log_e("DHCPS Stop Failed! 0x%04x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  // Enable DHCP Captive Portal
+  err = esp_netif_dhcps_option(_esp_netif, ESP_NETIF_OP_SET, ESP_NETIF_CAPTIVEPORTAL_URI, captiveportal_uri, strlen(captiveportal_uri));
+  if (err) {
+    log_e("Could not set enable DHCP Captive Portal! 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  // Start DHCPS
+  err = esp_netif_dhcps_start(_esp_netif);
+  if (err) {
+    log_e("DHCPS Start Failed! 0x%04x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  return true;
+#else
+  log_e("CONFIG_ESP_ENABLE_DHCP_CAPTIVEPORTAL is not enabled!");
+  return false;
+#endif
+}
+
 String APClass::SSID(void) const {
   if (!started()) {
     return String();
