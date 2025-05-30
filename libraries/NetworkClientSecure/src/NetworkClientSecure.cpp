@@ -315,9 +315,10 @@ int NetworkClientSecure::available() {
 }
 
 uint8_t NetworkClientSecure::connected() {
-  uint8_t dummy = 0;
-  read(&dummy, 0);
-
+  if (_connected) {
+    uint8_t dummy = 0;
+    read(&dummy, 0);
+  }
   return _connected;
 }
 
