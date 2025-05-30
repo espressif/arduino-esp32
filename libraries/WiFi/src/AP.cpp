@@ -306,7 +306,6 @@ bool APClass::enableNAPT(bool enable) {
 }
 
 bool APClass::enableDhcpCaptivePortal() {
-#if CONFIG_ESP_ENABLE_DHCP_CAPTIVEPORTAL
   esp_err_t err = ESP_OK;
   static char captiveportal_uri[32] = {0,};
 
@@ -341,10 +340,6 @@ bool APClass::enableDhcpCaptivePortal() {
   }
 
   return true;
-#else
-  log_e("CONFIG_ESP_ENABLE_DHCP_CAPTIVEPORTAL is not enabled!");
-  return false;
-#endif
 }
 
 String APClass::SSID(void) const {
