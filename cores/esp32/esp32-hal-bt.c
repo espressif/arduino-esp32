@@ -17,8 +17,6 @@
 #if SOC_BT_SUPPORTED
 #if defined(CONFIG_BT_BLUEDROID_ENABLED) && __has_include("esp_bt.h")
 
-#include "esp_bt.h"
-
 #if CONFIG_IDF_TARGET_ESP32
 bool btInUse() {
   return true;
@@ -29,6 +27,8 @@ __attribute__((weak)) bool btInUse() {
   return true;
 }
 #endif
+
+#include "esp_bt.h"
 
 #ifdef CONFIG_BTDM_CONTROLLER_MODE_BTDM
 #define BT_MODE ESP_BT_MODE_BTDM
@@ -56,7 +56,7 @@ bool btStartMode(bt_mode mode) {
     case BT_MODE_BTDM:       esp_bt_mode = ESP_BT_MODE_BTDM; break;
     default:                 esp_bt_mode = BT_MODE; break;
   }
-  // esp_bt_controller_enable(MODE) This mode must be equal as the mode in "cfg" of esp_bt_controller_init().
+  // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
   cfg.mode = esp_bt_mode;
   if (cfg.mode == ESP_BT_MODE_CLASSIC_BT) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
