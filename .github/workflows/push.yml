@@ -47,6 +47,7 @@ on:
       - "!.github/scripts/upload_*"
       - "variants/esp32/**/*"
       - "variants/esp32c3/**/*"
+      - "variants/esp32c5/**/*"
       - "variants/esp32c6/**/*"
       - "variants/esp32h2/**/*"
       - "variants/esp32p4/**/*"
@@ -247,7 +248,7 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v5.4"]
+        idf_ver: ["release-v5.5"]
         idf_target:
           [
             "esp32",
