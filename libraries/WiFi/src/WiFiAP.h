@@ -53,6 +53,7 @@ public:
 
   bool bandwidth(wifi_bandwidth_t bandwidth);
   bool enableNAPT(bool enable = true);
+  bool enableDhcpCaptivePortal();
 
   String SSID(void) const;
   uint8_t stationCount();
