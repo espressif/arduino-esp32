@@ -9,6 +9,23 @@
 #define DNS_OFFSET_DOMAIN_NAME DNS_HEADER_SIZE  // Offset in bytes to reach the domain name labels in the DNS message
 #define DNS_DEFAULT_PORT       53
 
+#define DNS_SOA_MNAME_LABEL "ns"
+#define DNS_SOA_RNAME_LABEL "esp32"
+// The POSTFIX_LABEL will be concatinated to the RName and MName Label  label
+// do not use a multilabel name here. "local" is a good choice as it is reserved for
+// local use by IANA
+// The postfix label is defined as an array of characters that follows the
+// definition of RFC1035 3.1
+// for instance, a postfix of  example.com would be defined as:
+// #define DNS_SOA_POSTFIX_LABEL {'\7', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '\3', 'c', 'o', 'm', '\0'}
+#define DNS_SOA_POSTFIX_LABEL {'\5', 'l', 'o', 'c', 'a', 'l', '\0'}
+// From the following values only the MINIMAL_TTL has relevance
+// in the context of client-server protocol interactions.
+#define DNS_SOA_SERIAL  2025052900  // Arbitrary
+#define DNS_SOA_REFRESH 100000      // Arbitrary
+#define DNS_SOA_RETRY   10000       // Arbitrary
+#define DNS_SOA_EXPIRE  1000000     // Arbitrary
+#define DNS_MINIMAL_TTL 5           // Time to live for negative answers RFC2308
 enum class DNSReplyCode : uint16_t {
   NoError = 0,
   FormError = 1,
@@ -82,7 +99,7 @@ public:
      * @param domainName - domain name to serve
      */
   DNSServer(const String &domainName);
-  ~DNSServer(){};  // default d-tor
+  ~DNSServer() {};  // default d-tor
 
   // Copy semantics not implemented (won't run on same UDP port anyway)
   DNSServer(const DNSServer &) = delete;
@@ -179,5 +196,7 @@ private:
   inline bool requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader);
   void replyWithIP(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion);
   inline void replyWithCustomCode(AsyncUDPPacket &req, DNSHeader &dnsHeader);
+  inline void replyWithNoAnsw(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion);
+
   void _handleUDP(AsyncUDPPacket &pkt);
 };
