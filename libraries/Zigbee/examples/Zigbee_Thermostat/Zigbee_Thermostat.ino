@@ -34,7 +34,8 @@
 #include "Zigbee.h"
 
 /* Zigbee thermostat configuration */
-#define THERMOSTAT_ENDPOINT_NUMBER 5
+#define THERMOSTAT_ENDPOINT_NUMBER 1
+#define USE_RECIEVE_TEMP_WITH_SOURCE 1
 uint8_t button = BOOT_PIN;
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
@@ -48,10 +49,21 @@ float sensor_tolerance;
 struct tm timeinfo = {};  // Time structure for Time cluster
 
 /****************** Temperature sensor handling *******************/
+#if USE_RECIEVE_TEMP_WITH_SOURCE == 0
 void recieveSensorTemp(float temperature) {
   Serial.printf("Temperature sensor value: %.2f°C\n", temperature);
   sensor_temp = temperature;
 }
+#else
+void recieveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
+  if (src_address.addr_type == ESP_ZB_ZCL_ADDR_TYPE_SHORT) {
+    Serial.printf("Temperature sensor value: %.2f°C from endpoint %d, address 0x%04x\n", temperature, src_endpoint, src_address.u.short_addr);
+  } else {
+    Serial.printf("Temperature sensor value: %.2f°C from endpoint %d, address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", temperature, src_endpoint, src_address.u.ieee_addr[7], src_address.u.ieee_addr[6], src_address.u.ieee_addr[5], src_address.u.ieee_addr[4], src_address.u.ieee_addr[3], src_address.u.ieee_addr[2], src_address.u.ieee_addr[1], src_address.u.ieee_addr[0]);
+  }
+  sensor_temp = temperature;
+}
+#endif
 
 void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
   Serial.printf("Temperature sensor settings: min %.2f°C, max %.2f°C, tolerance %.2f°C\n", min_temp, max_temp, tolerance);
@@ -66,8 +78,14 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
-  // Set callback functions for temperature and configuration receive
-  zbThermostat.onTempRecieve(recieveSensorTemp);
+  // Set callback function for recieving temperature from sensor - Use only one option
+  #if USE_RECIEVE_TEMP_WITH_SOURCE == 0
+    zbThermostat.onTempRecieve(recieveSensorTemp); // If you bound only one sensor or you don't need to know the source of the temperature
+  #else
+    zbThermostat.onTempRecieveWithSource(recieveSensorTempWithSource);
+  #endif
+
+  // Set callback function for recieving sensor configuration
   zbThermostat.onConfigRecieve(recieveSensorConfig);
 
   //Optional: set Zigbee device name and model
@@ -107,7 +125,22 @@ void setup() {
 
   Serial.println();
 
-  // Get temperature sensor configuration
+  // Get temperature sensor configuration for each bound sensor
+  std::list<zb_device_params_t *> boundLights = zbThermostat.getBoundDevices();
+  for (const auto &device : boundLights) {
+    Serial.println("--------------------------------");
+    if(device->short_addr == 0x0000 || device->short_addr == 0xFFFF) { //End devices never have 0x0000 short address or 0xFFFF group address
+      Serial.printf("Device on endpoint %d, IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->endpoint, device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4],
+      device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]);
+      zbThermostat.getSensorSettings(device->endpoint, device->ieee_addr);
+    } else {
+      Serial.printf("Device on endpoint %d, short address: 0x%x\r\n", device->endpoint, device->short_addr);
+      zbThermostat.getSensorSettings(device->endpoint, device->short_addr);
+    }
+  }
+
+  Serial.println("--------------------------------");
+  Serial.println("Getting sensor settings for all bound sensors");
   zbThermostat.getSensorSettings();
 }
 
@@ -130,5 +163,7 @@ void loop() {
     last_print = millis();
     int temp_percent = (int)((sensor_temp - sensor_min_temp) / (sensor_max_temp - sensor_min_temp) * 100);
     Serial.printf("Loop temperature info: %.2f°C (%d %%)\n", sensor_temp, temp_percent);
+    Serial.println("Bound devices:");
+    zbThermostat.printBoundDevices(Serial);
   }
 }

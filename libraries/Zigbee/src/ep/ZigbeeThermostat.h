@@ -37,13 +37,27 @@ public:
   void onTempRecieve(void (*callback)(float)) {
     _on_temp_recieve = callback;
   }
+  void onTempRecieveWithSource(void (*callback)(float, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_temp_recieve_with_source = callback;
+  }
   void onConfigRecieve(void (*callback)(float, float, float)) {
     _on_config_recieve = callback;
   }
 
   void getTemperature();
+  void getTemperature(uint16_t group_addr);
+  void getTemperature(uint8_t endpoint, uint16_t short_addr);
+  void getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
   void getSensorSettings();
+  void getSensorSettings(uint16_t group_addr);
+  void getSensorSettings(uint8_t endpoint, uint16_t short_addr);
+  void getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
   void setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
   // save instance of the class in order to use it in static functions
@@ -51,6 +65,7 @@ private:
   zb_device_params_t *_device;
 
   void (*_on_temp_recieve)(float);
+  void (*_on_temp_recieve_with_source)(float, uint8_t, esp_zb_zcl_addr_t);
   void (*_on_config_recieve)(float, float, float);
   float _min_temp;
   float _max_temp;
@@ -62,7 +77,7 @@ private:
   static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
   static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
-  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
+  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) override;
 };
 
 #endif  // CONFIG_ZB_ENABLED
