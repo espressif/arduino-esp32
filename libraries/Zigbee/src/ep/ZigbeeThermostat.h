@@ -34,14 +34,14 @@ public:
   ZigbeeThermostat(uint8_t endpoint);
   ~ZigbeeThermostat() {}
 
-  void onTempRecieve(void (*callback)(float)) {
-    _on_temp_recieve = callback;
+  void onTempReceive(void (*callback)(float)) {
+    _on_temp_receive = callback;
   }
-  void onTempRecieveWithSource(void (*callback)(float, uint8_t, esp_zb_zcl_addr_t)) {
-    _on_temp_recieve_with_source = callback;
+  void onTempReceiveWithSource(void (*callback)(float, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_temp_receive_with_source = callback;
   }
-  void onConfigRecieve(void (*callback)(float, float, float)) {
-    _on_config_recieve = callback;
+  void onConfigReceive(void (*callback)(float, float, float)) {
+    _on_config_receive = callback;
   }
 
   void getTemperature();
@@ -64,9 +64,9 @@ private:
   static ZigbeeThermostat *_instance;
   zb_device_params_t *_device;
 
-  void (*_on_temp_recieve)(float);
-  void (*_on_temp_recieve_with_source)(float, uint8_t, esp_zb_zcl_addr_t);
-  void (*_on_config_recieve)(float, float, float);
+  void (*_on_temp_receive)(float);
+  void (*_on_temp_receive_with_source)(float, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_config_receive)(float, float, float);
   float _min_temp;
   float _max_temp;
   float _tolerance;

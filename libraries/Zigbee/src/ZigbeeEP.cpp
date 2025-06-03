@@ -183,7 +183,7 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_BASIC_MANUFACTURER_NAME_ID,
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   if (_read_manufacturer != NULL) {
@@ -221,7 +221,7 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_BASIC_MODEL_IDENTIFIER_ID,
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   if (_read_model != NULL) {
@@ -386,7 +386,7 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
   }
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TIME_TIME_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TIME;
@@ -438,7 +438,7 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   }
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TIME;

@@ -12,7 +12,7 @@
 #define ZB_CMD_TIMEOUT             10000     // 10 seconds
 #define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
 
-#define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
   {                                                                \

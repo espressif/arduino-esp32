@@ -120,11 +120,11 @@ void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_att
   if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT) {
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
       int16_t value = attribute->data.value ? *(int16_t *)attribute->data.value : 0;
-      if (_on_temp_recieve) {
-        _on_temp_recieve(zb_s16_to_temperature(value));
+      if (_on_temp_receive) {
+        _on_temp_receive(zb_s16_to_temperature(value));
       }
-      if (_on_temp_recieve_with_source) {
-        _on_temp_recieve_with_source(zb_s16_to_temperature(value), src_endpoint, src_address);
+      if (_on_temp_receive_with_source) {
+        _on_temp_receive_with_source(zb_s16_to_temperature(value), src_endpoint, src_address);
       }
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S16) {
@@ -161,7 +161,7 @@ void ZigbeeThermostat::getTemperature() {
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read temperature' command");
@@ -179,7 +179,7 @@ void ZigbeeThermostat::getTemperature(uint16_t group_addr) {
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read temperature' command to group address 0x%x", group_addr);
@@ -198,7 +198,7 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, uint16_t short_addr) {
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read temperature' command to endpoint %d, address 0x%x", endpoint, short_addr);
@@ -217,7 +217,7 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
   memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
 
   uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID};
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i(
@@ -239,7 +239,7 @@ void ZigbeeThermostat::getSensorSettings() {
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read sensor settings' command");
@@ -253,7 +253,7 @@ void ZigbeeThermostat::getSensorSettings() {
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_recieve(_min_temp, _max_temp, _tolerance);
+    _on_config_receive(_min_temp, _max_temp, _tolerance);
   }
 }
 
@@ -268,7 +268,7 @@ void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read sensor settings' command to group address 0x%x", group_addr);
@@ -282,7 +282,7 @@ void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_recieve(_min_temp, _max_temp, _tolerance);
+    _on_config_receive(_min_temp, _max_temp, _tolerance);
   }
 }
 
@@ -298,7 +298,7 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) 
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i("Sending 'read sensor settings' command to endpoint %d, address 0x%x", endpoint, short_addr);
@@ -312,7 +312,7 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) 
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_recieve(_min_temp, _max_temp, _tolerance);
+    _on_config_receive(_min_temp, _max_temp, _tolerance);
   }
 }
 
@@ -328,7 +328,7 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ie
   uint16_t attributes[] = {
     ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID
   };
-  read_req.attr_number = ZB_ARRAY_LENTH(attributes);
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
   read_req.attr_field = attributes;
 
   log_i(
@@ -345,7 +345,7 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ie
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_recieve(_min_temp, _max_temp, _tolerance);
+    _on_config_receive(_min_temp, _max_temp, _tolerance);
   }
 }
 
@@ -367,7 +367,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
       .reportable_change = (void*)&report_change,
     },
   };
-  report_cmd.record_number = ZB_ARRAY_LENTH(records);
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
   log_i("Sending 'configure reporting' command");
@@ -395,7 +395,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
       .reportable_change = (void*)&report_change,
     },
   };
-  report_cmd.record_number = ZB_ARRAY_LENTH(records);
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
   log_i("Sending 'configure reporting' command to group address 0x%x", group_addr);
@@ -424,7 +424,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
       .reportable_change = (void*)&report_change,
     },
   };
-  report_cmd.record_number = ZB_ARRAY_LENTH(records);
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
   log_i("Sending 'configure reporting' command to endpoint %d, address 0x%x", endpoint, short_addr);
@@ -453,7 +453,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_add
       .reportable_change = (void*)&report_change,
     },
   };
-  report_cmd.record_number = ZB_ARRAY_LENTH(records);
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
   log_i(

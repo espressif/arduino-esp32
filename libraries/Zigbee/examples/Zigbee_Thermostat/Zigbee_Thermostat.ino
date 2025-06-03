@@ -35,7 +35,7 @@
 
 /* Zigbee thermostat configuration */
 #define THERMOSTAT_ENDPOINT_NUMBER 1
-#define USE_RECIEVE_TEMP_WITH_SOURCE 1
+#define USE_RECEIVE_TEMP_WITH_SOURCE 1
 uint8_t button = BOOT_PIN;
 
 ZigbeeThermostat zbThermostat = ZigbeeThermostat(THERMOSTAT_ENDPOINT_NUMBER);
@@ -49,13 +49,13 @@ float sensor_tolerance;
 struct tm timeinfo = {};  // Time structure for Time cluster
 
 /****************** Temperature sensor handling *******************/
-#if USE_RECIEVE_TEMP_WITH_SOURCE == 0
-void recieveSensorTemp(float temperature) {
+#if USE_RECEIVE_TEMP_WITH_SOURCE == 0
+void receiveSensorTemp(float temperature) {
   Serial.printf("Temperature sensor value: %.2f°C\n", temperature);
   sensor_temp = temperature;
 }
 #else
-void recieveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
+void receiveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
   if (src_address.addr_type == ESP_ZB_ZCL_ADDR_TYPE_SHORT) {
     Serial.printf("Temperature sensor value: %.2f°C from endpoint %d, address 0x%04x\n", temperature, src_endpoint, src_address.u.short_addr);
   } else {
@@ -65,7 +65,7 @@ void recieveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb
 }
 #endif
 
-void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
+void receiveSensorConfig(float min_temp, float max_temp, float tolerance) {
   Serial.printf("Temperature sensor config: min %.2f°C, max %.2f°C, tolerance %.2f°C\n", min_temp, max_temp, tolerance);
   sensor_min_temp = min_temp;
   sensor_max_temp = max_temp;
@@ -78,15 +78,15 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
-  // Set callback function for recieving temperature from sensor - Use only one option
-  #if USE_RECIEVE_TEMP_WITH_SOURCE == 0
-    zbThermostat.onTempRecieve(recieveSensorTemp); // If you bound only one sensor or you don't need to know the source of the temperature
+  // Set callback function for receiving temperature from sensor - Use only one option
+  #if USE_RECEIVE_TEMP_WITH_SOURCE == 0
+    zbThermostat.onTempReceive(receiveSensorTemp); // If you bound only one sensor or you don't need to know the source of the temperature
   #else
-    zbThermostat.onTempRecieveWithSource(recieveSensorTempWithSource);
+    zbThermostat.onTempReceiveWithSource(receiveSensorTempWithSource);
   #endif
 
-  // Set callback function for recieving sensor configuration
-  zbThermostat.onConfigRecieve(recieveSensorConfig);
+  // Set callback function for receiving sensor configuration
+  zbThermostat.onConfigReceive(receiveSensorConfig);
 
   //Optional: set Zigbee device name and model
   zbThermostat.setManufacturerAndModel("Espressif", "ZigbeeThermostat");
