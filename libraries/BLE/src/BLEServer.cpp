@@ -537,7 +537,7 @@ void BLEServerCallbacks::onDisconnect(BLEServer *pServer, esp_ble_gatts_cb_param
 }  // onDisconnect
 
 void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
-  uint16_t mtu = param->mtu.mtu;
+  [[maybe_unused]] uint16_t mtu = param->mtu.mtu;
   log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");

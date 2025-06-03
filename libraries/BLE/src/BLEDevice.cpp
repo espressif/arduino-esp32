@@ -236,7 +236,7 @@ String BLEDevice::getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID ch
  */
 void BLEDevice::init(String deviceName) {
   if (!initialized) {
-    esp_err_t errRc = ESP_OK;
+    [[maybe_unused]] esp_err_t errRc = ESP_OK;
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
     if (!btStart()) {
       errRc = ESP_FAIL;
