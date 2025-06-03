@@ -66,7 +66,7 @@ void recieveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb
 #endif
 
 void recieveSensorConfig(float min_temp, float max_temp, float tolerance) {
-  Serial.printf("Temperature sensor settings: min %.2f°C, max %.2f°C, tolerance %.2f°C\n", min_temp, max_temp, tolerance);
+  Serial.printf("Temperature sensor config: min %.2f°C, max %.2f°C, tolerance %.2f°C\n", min_temp, max_temp, tolerance);
   sensor_min_temp = min_temp;
   sensor_max_temp = max_temp;
   sensor_tolerance = tolerance;
@@ -125,9 +125,9 @@ void setup() {
 
   Serial.println();
 
-  // Get temperature sensor configuration for each bound sensor
-  std::list<zb_device_params_t *> boundLights = zbThermostat.getBoundDevices();
-  for (const auto &device : boundLights) {
+  // Get temperature sensor configuration for all bound sensors by endpoint number and address
+  std::list<zb_device_params_t *> boundSensors = zbThermostat.getBoundDevices();
+  for (const auto &device : boundSensors) {
     Serial.println("--------------------------------");
     if(device->short_addr == 0x0000 || device->short_addr == 0xFFFF) { //End devices never have 0x0000 short address or 0xFFFF group address
       Serial.printf("Device on endpoint %d, IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->endpoint, device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4],
@@ -138,21 +138,15 @@ void setup() {
       zbThermostat.getSensorSettings(device->endpoint, device->short_addr);
     }
   }
-
-  Serial.println("--------------------------------");
-  Serial.println("Getting sensor settings for all bound sensors");
-  zbThermostat.getSensorSettings();
 }
 
 void loop() {
   // Handle button switch in loop()
   if (digitalRead(button) == LOW) {  // Push button pressed
-
     // Key debounce handling
     while (digitalRead(button) == LOW) {
       delay(50);
     }
-
     // Set reporting interval for temperature sensor
     zbThermostat.setTemperatureReporting(0, 10, 2);
   }
@@ -163,7 +157,6 @@ void loop() {
     last_print = millis();
     int temp_percent = (int)((sensor_temp - sensor_min_temp) / (sensor_max_temp - sensor_min_temp) * 100);
     Serial.printf("Loop temperature info: %.2f°C (%d %%)\n", sensor_temp, temp_percent);
-    Serial.println("Bound devices:");
     zbThermostat.printBoundDevices(Serial);
   }
 }

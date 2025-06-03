@@ -65,7 +65,7 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
   ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Found temperature sensor");
-    esp_zb_zdo_bind_req_param_t bind_req;
+    esp_zb_zdo_bind_req_param_t bind_req = {0};
     /* Store the information of the remote device */
     zb_device_params_t *sensor = (zb_device_params_t *)malloc(sizeof(zb_device_params_t));
     sensor->endpoint = endpoint;
@@ -154,8 +154,8 @@ void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_att
 }
 
 void ZigbeeThermostat::getTemperature() {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to all bound sensors */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -171,8 +171,8 @@ void ZigbeeThermostat::getTemperature() {
 }
 
 void ZigbeeThermostat::getTemperature(uint16_t group_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to the group */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -189,8 +189,8 @@ void ZigbeeThermostat::getTemperature(uint16_t group_addr) {
 }
 
 void ZigbeeThermostat::getTemperature(uint8_t endpoint, uint16_t short_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -208,8 +208,8 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, uint16_t short_addr) {
 }
 
 void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -230,8 +230,8 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
 }
 
 void ZigbeeThermostat::getSensorSettings() {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to all bound sensors */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -258,8 +258,8 @@ void ZigbeeThermostat::getSensorSettings() {
 }
 
 void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to the group */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -287,8 +287,8 @@ void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
 }
 
 void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -317,8 +317,8 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) 
 }
 
 void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
-  /* Send "read attributes" command to the bound sensor */
-  esp_zb_zcl_read_attr_cmd_t read_req;
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req = {0};
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -350,8 +350,8 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ie
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
-  /* Send "configure report attribute" command to the bound sensor */
-  esp_zb_zcl_config_report_cmd_t report_cmd;
+  /* Send "configure report attribute" command to all bound sensors */
+  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -364,7 +364,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = &report_change,
+      .reportable_change = (void*)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENTH(records);
@@ -377,8 +377,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
-  /* Send "configure report attribute" command to the bound sensor */
-  esp_zb_zcl_config_report_cmd_t report_cmd;
+  /* Send "configure report attribute" command to the group */
+  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -392,7 +392,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = &report_change,
+      .reportable_change = (void*)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENTH(records);
@@ -405,8 +405,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
-  /* Send "configure report attribute" command to the bound sensor */
-  esp_zb_zcl_config_report_cmd_t report_cmd;
+  /* Send "configure report attribute" command to specific endpoint */
+  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -421,7 +421,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = &report_change,
+      .reportable_change = (void*)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENTH(records);
@@ -434,8 +434,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
-  /* Send "configure report attribute" command to the bound sensor */
-  esp_zb_zcl_config_report_cmd_t report_cmd;
+  /* Send "configure report attribute" command to specific endpoint */
+  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -450,7 +450,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_add
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = &report_change,
+      .reportable_change = (void*)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENTH(records);
