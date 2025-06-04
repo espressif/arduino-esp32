@@ -163,7 +163,6 @@ public:
    *                           Common public declarations                    *
    ***************************************************************************/
 
-  BLEDescriptorCallbacks();
   virtual ~BLEDescriptorCallbacks();
   virtual void onRead(BLEDescriptor *pDescriptor);
   virtual void onWrite(BLEDescriptor *pDescriptor);
