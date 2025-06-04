@@ -51,7 +51,9 @@ public:
   bool setAnalogOutput(float analog);
 
   // Get the Analog Output value
-  float getAnalogOutput() { return _output_state; }
+  float getAnalogOutput() {
+    return _output_state;
+  }
 
   // Report Analog Input/Output
   bool reportAnalogInput();
