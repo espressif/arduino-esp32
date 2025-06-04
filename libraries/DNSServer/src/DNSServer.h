@@ -18,7 +18,8 @@
 // definition of RFC1035 3.1
 // for instance, a postfix of  example.com would be defined as:
 // #define DNS_SOA_POSTFIX_LABEL {'\7', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '\3', 'c', 'o', 'm', '\0'}
-#define DNS_SOA_POSTFIX_LABEL {'\5', 'l', 'o', 'c', 'a', 'l', '\0'}
+#define DNS_SOA_POSTFIX_LABEL \
+  { '\5', 'l', 'o', 'c', 'a', 'l', '\0' }
 // From the following values only the MINIMAL_TTL has relevance
 // in the context of client-server protocol interactions.
 #define DNS_SOA_SERIAL  2025052900  // Arbitrary
@@ -99,7 +100,7 @@ public:
      * @param domainName - domain name to serve
      */
   DNSServer(const String &domainName);
-  ~DNSServer() {};  // default d-tor
+  ~DNSServer(){};  // default d-tor
 
   // Copy semantics not implemented (won't run on same UDP port anyway)
   DNSServer(const DNSServer &) = delete;

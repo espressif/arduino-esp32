@@ -15,7 +15,7 @@
 DNSServer::DNSServer() : _port(DNS_DEFAULT_PORT), _ttl(htonl(DNS_DEFAULT_TTL)), _errorReplyCode(DNSReplyCode::NonExistentDomain) {}
 
 DNSServer::DNSServer(const String &domainName)
-  : _port(DNS_DEFAULT_PORT), _ttl(htonl(DNS_DEFAULT_TTL)), _errorReplyCode(DNSReplyCode::NonExistentDomain), _domainName(domainName) {};
+  : _port(DNS_DEFAULT_PORT), _ttl(htonl(DNS_DEFAULT_TTL)), _errorReplyCode(DNSReplyCode::NonExistentDomain), _domainName(domainName){};
 
 bool DNSServer::start() {
   if (_resolvedIP.operator uint32_t() == 0) {  // no address is set, try to obtain AP interface's IP
