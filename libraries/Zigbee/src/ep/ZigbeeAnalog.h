@@ -46,11 +46,18 @@ public:
     _on_analog_output_change = callback;
   }
 
-  // Set the analog input value
+  // Set the Analog Input/Output value
   bool setAnalogInput(float analog);
+  bool setAnalogOutput(float analog);
 
-  // Report Analog Input value
+  // Get the Analog Output value
+  float getAnalogOutput() {
+    return _output_state;
+  }
+
+  // Report Analog Input/Output
   bool reportAnalogInput();
+  bool reportAnalogOutput();
 
   // Set reporting for Analog Input
   bool setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
@@ -59,9 +66,10 @@ private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_analog_output_change)(float);
-  void analogOutputChanged(float analog_output);
+  void analogOutputChanged();
 
   uint8_t _analog_clusters;
+  float _output_state;
 };
 
 #endif  // CONFIG_ZB_ENABLED
