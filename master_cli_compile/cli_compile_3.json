@@ -236,30 +236,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/Serial/BaudRateDetect_Demo",
-                    "sizes": [{
-                            "flash_bytes": 268585,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15172,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/OnReceiveError_BREAK_Demo",
-                    "sizes": [{
-                            "flash_bytes": 271437,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15212,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/OnReceive_Demo",
-                    "sizes": [{
-                            "flash_bytes": 270165,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15180,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/Serial/RS485_Echo_Demo",
                     "sizes": [{
                             "flash_bytes": 269249,
@@ -334,7 +310,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 847373,
+                            "flash_bytes": 847401,
                             "flash_percentage": 64,
                             "ram_bytes": 40128,
                             "ram_percentage": 12
@@ -345,6 +321,38 @@
                             "flash_bytes": 278865,
                             "flash_percentage": 21,
                             "ram_bytes": 15588,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Timer/WatchdogTimer",
+                    "sizes": [{
+                            "flash_bytes": 278661,
+                            "flash_percentage": 21,
+                            "ram_bytes": 15572,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Touch/TouchInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 275485,
+                            "flash_percentage": 21,
+                            "ram_bytes": 15820,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Touch/TouchRead",
+                    "sizes": [{
+                            "flash_bytes": 276477,
+                            "flash_percentage": 21,
+                            "ram_bytes": 15812,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Utilities/HEXBuilder",
+                    "sizes": [{
+                            "flash_bytes": 270333,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15172,
                             "ram_percentage": 4
                             }]
                     }

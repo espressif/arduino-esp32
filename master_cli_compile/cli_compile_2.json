@@ -113,7 +113,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 997838,
+                            "flash_bytes": 997866,
                             "flash_percentage": 5,
                             "ram_bytes": 62512,
                             "ram_percentage": 19
@@ -121,7 +121,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1000562,
+                            "flash_bytes": 1000590,
                             "flash_percentage": 5,
                             "ram_bytes": 62640,
                             "ram_percentage": 19
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1002754,
+                            "flash_bytes": 1002782,
                             "flash_percentage": 5,
                             "ram_bytes": 62956,
                             "ram_percentage": 19
@@ -252,22 +252,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/GPIO/FunctionalInterrupt",
-                    "sizes": [{
-                            "flash_bytes": 276473,
-                            "flash_percentage": 21,
-                            "ram_bytes": 16140,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
-                    "sizes": [{
-                            "flash_bytes": 275113,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16132,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
                             "flash_bytes": 275745,
@@ -361,6 +345,30 @@
                             "flash_bytes": 268709,
                             "flash_percentage": 20,
                             "ram_bytes": 15172,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/BaudRateDetect_Demo",
+                    "sizes": [{
+                            "flash_bytes": 268585,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15172,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/OnReceiveError_BREAK_Demo",
+                    "sizes": [{
+                            "flash_bytes": 271437,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15212,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/Serial/OnReceive_Demo",
+                    "sizes": [{
+                            "flash_bytes": 270165,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15180,
                             "ram_percentage": 4
                             }]
                     }
@@ -754,7 +762,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1040234,
+                            "flash_bytes": 1040262,
                             "flash_percentage": 6,
                             "ram_bytes": 63400,
                             "ram_percentage": 19
@@ -762,7 +770,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1052502,
+                            "flash_bytes": 1052530,
                             "flash_percentage": 6,
                             "ram_bytes": 63484,
                             "ram_percentage": 19

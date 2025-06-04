@@ -153,7 +153,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 879206,
+                            "flash_bytes": 879234,
                             "flash_percentage": 67,
                             "ram_bytes": 45652,
                             "ram_percentage": 13
@@ -236,38 +236,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/Timer/WatchdogTimer",
-                    "sizes": [{
-                            "flash_bytes": 278661,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15572,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Touch/TouchInterrupt",
-                    "sizes": [{
-                            "flash_bytes": 275485,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15820,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Touch/TouchRead",
-                    "sizes": [{
-                            "flash_bytes": 276477,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15812,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/HEXBuilder",
-                    "sizes": [{
-                            "flash_bytes": 270333,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15172,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/Utilities/MD5Builder",
                     "sizes": [{
                             "flash_bytes": 270661,
@@ -302,7 +270,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
-                            "flash_bytes": 833161,
+                            "flash_bytes": 833189,
                             "flash_percentage": 63,
                             "ram_bytes": 38912,
                             "ram_percentage": 11
@@ -310,7 +278,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
                     "sizes": [{
-                            "flash_bytes": 833353,
+                            "flash_bytes": 833381,
                             "flash_percentage": 63,
                             "ram_bytes": 38888,
                             "ram_percentage": 11
@@ -318,7 +286,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
-                            "flash_bytes": 836869,
+                            "flash_bytes": 836897,
                             "flash_percentage": 63,
                             "ram_bytes": 38984,
                             "ram_percentage": 11
@@ -326,7 +294,7 @@
                     },
 {"name": "ESP_NOW/examples/ESP_NOW_Serial",
                     "sizes": [{
-                            "flash_bytes": 833993,
+                            "flash_bytes": 834021,
                             "flash_percentage": 63,
                             "ram_bytes": 38976,
                             "ram_percentage": 11
@@ -334,7 +302,7 @@
                     },
 {"name": "ESPmDNS/examples/mDNS-SD_Extended",
                     "sizes": [{
-                            "flash_bytes": 850709,
+                            "flash_bytes": 850737,
                             "flash_percentage": 64,
                             "ram_bytes": 41024,
                             "ram_percentage": 12
@@ -342,9 +310,49 @@
                     },
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
-                            "flash_bytes": 868893,
+                            "flash_bytes": 868921,
                             "flash_percentage": 66,
                             "ram_bytes": 42328,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "Ethernet/examples/ETH_W5500_Arduino_SPI",
+                    "sizes": [{
+                            "flash_bytes": 536633,
+                            "flash_percentage": 40,
+                            "ram_bytes": 20840,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Ethernet/examples/ETH_W5500_IDF_SPI",
+                    "sizes": [{
+                            "flash_bytes": 535189,
+                            "flash_percentage": 40,
+                            "ram_bytes": 20840,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
+                    "sizes": [{
+                            "flash_bytes": 928949,
+                            "flash_percentage": 70,
+                            "ram_bytes": 39452,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "FFat/examples/FFat_Test",
+                    "sizes": [{
+                            "flash_bytes": 324709,
+                            "flash_percentage": 24,
+                            "ram_bytes": 15956,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "FFat/examples/FFat_time",
+                    "sizes": [{
+                            "flash_bytes": 885281,
+                            "flash_percentage": 67,
+                            "ram_bytes": 40264,
                             "ram_percentage": 12
                             }]
                     }
@@ -794,7 +802,7 @@
                     },
 {"name": "ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 922142,
+                            "flash_bytes": 922170,
                             "flash_percentage": 70,
                             "ram_bytes": 47300,
                             "ram_percentage": 14

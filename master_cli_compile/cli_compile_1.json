@@ -129,9 +129,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 903858,
+                            "flash_bytes": 904202,
                             "flash_percentage": 68,
-                            "ram_bytes": 45924,
+                            "ram_bytes": 45956,
                             "ram_percentage": 14
                             }]
                     },
@@ -236,14 +236,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "ESP32/examples/AnalogRead",
-                    "sizes": [{
-                            "flash_bytes": 280089,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15348,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "ESP32/examples/AnalogReadContinuous",
                     "sizes": [{
                             "flash_bytes": 288365,
@@ -270,7 +262,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 972481,
+                            "flash_bytes": 972509,
                             "flash_percentage": 5,
                             "ram_bytes": 57440,
                             "ram_percentage": 17
@@ -278,7 +270,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 976221,
+                            "flash_bytes": 976249,
                             "flash_percentage": 5,
                             "ram_bytes": 57476,
                             "ram_percentage": 17
@@ -355,6 +347,22 @@
                             "ram_bytes": 15760,
                             "ram_percentage": 4
                             }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 276473,
+                            "flash_percentage": 21,
+                            "ram_bytes": 16140,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 275113,
+                            "flash_percentage": 20,
+                            "ram_bytes": 16132,
+                            "ram_percentage": 4
+                            }]
                     }
 ]
 },
@@ -403,9 +411,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 973768,
+                            "flash_bytes": 974144,
                             "flash_percentage": 74,
-                            "ram_bytes": 36680,
+                            "ram_bytes": 36712,
                             "ram_percentage": 11
                             }]
                     },
@@ -504,9 +512,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 982195,
+                            "flash_bytes": 982595,
                             "flash_percentage": 74,
-                            "ram_bytes": 42756,
+                            "ram_bytes": 42788,
                             "ram_percentage": 13
                             }]
                     },
@@ -754,9 +762,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 948458,
+                            "flash_bytes": 948838,
                             "flash_percentage": 72,
-                            "ram_bytes": 46400,
+                            "ram_bytes": 46432,
                             "ram_percentage": 14
                             }]
                     },

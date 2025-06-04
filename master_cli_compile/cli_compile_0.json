@@ -36,9 +36,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 709303,
+                            "flash_bytes": 709679,
                             "flash_percentage": 54,
-                            "ram_bytes": 28852,
+                            "ram_bytes": 28884,
                             "ram_percentage": 8
                             }]
                     },
@@ -105,7 +105,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 933230,
+                            "flash_bytes": 933258,
                             "flash_percentage": 71,
                             "ram_bytes": 50412,
                             "ram_percentage": 15
@@ -113,7 +113,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 856950,
+                            "flash_bytes": 856978,
                             "flash_percentage": 65,
                             "ram_bytes": 44260,
                             "ram_percentage": 13
@@ -121,7 +121,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 857230,
+                            "flash_bytes": 857258,
                             "flash_percentage": 65,
                             "ram_bytes": 44260,
                             "ram_percentage": 13
@@ -129,7 +129,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPServer",
                     "sizes": [{
-                            "flash_bytes": 856918,
+                            "flash_bytes": 856946,
                             "flash_percentage": 65,
                             "ram_bytes": 44260,
                             "ram_percentage": 13
@@ -238,7 +238,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 895505,
+                            "flash_bytes": 895533,
                             "flash_percentage": 68,
                             "ram_bytes": 44820,
                             "ram_percentage": 13
@@ -246,7 +246,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 825909,
+                            "flash_bytes": 825937,
                             "flash_percentage": 63,
                             "ram_bytes": 38736,
                             "ram_percentage": 11
@@ -254,7 +254,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 826197,
+                            "flash_bytes": 826225,
                             "flash_percentage": 63,
                             "ram_bytes": 38736,
                             "ram_percentage": 11
@@ -262,7 +262,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPServer",
                     "sizes": [{
-                            "flash_bytes": 825877,
+                            "flash_bytes": 825905,
                             "flash_percentage": 63,
                             "ram_bytes": 38736,
                             "ram_percentage": 11
@@ -270,9 +270,9 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 873141,
+                            "flash_bytes": 873493,
                             "flash_percentage": 66,
-                            "ram_bytes": 40400,
+                            "ram_bytes": 40432,
                             "ram_percentage": 12
                             }]
                     },
@@ -345,6 +345,14 @@
                             "flash_bytes": 275793,
                             "flash_percentage": 21,
                             "ram_bytes": 15352,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "ESP32/examples/AnalogRead",
+                    "sizes": [{
+                            "flash_bytes": 280089,
+                            "flash_percentage": 21,
+                            "ram_bytes": 15348,
                             "ram_percentage": 4
                             }]
                     }
@@ -682,7 +690,7 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 956894,
+                            "flash_bytes": 956922,
                             "flash_percentage": 73,
                             "ram_bytes": 50568,
                             "ram_percentage": 15
@@ -690,7 +698,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 900482,
+                            "flash_bytes": 900510,
                             "flash_percentage": 68,
                             "ram_bytes": 44728,
                             "ram_percentage": 13
@@ -698,7 +706,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 900774,
+                            "flash_bytes": 900802,
                             "flash_percentage": 68,
                             "ram_bytes": 44728,
                             "ram_percentage": 13
@@ -706,7 +714,7 @@
                     },
 {"name": "AsyncUDP/examples/AsyncUDPServer",
                     "sizes": [{
-                            "flash_bytes": 900430,
+                            "flash_bytes": 900458,
                             "flash_percentage": 68,
                             "ram_bytes": 44728,
                             "ram_percentage": 13
