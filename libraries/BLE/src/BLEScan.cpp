@@ -207,6 +207,7 @@ void BLEScan::clearResults() {
 #if defined(CONFIG_BLUEDROID_ENABLED)
 
 #if defined(SOC_BLE_50_SUPPORTED)
+
 void BLEScan::setExtendedScanCallback(BLEExtAdvertisingCallbacks *cb) {
   m_pExtendedScanCb = cb;
 }
@@ -239,6 +240,48 @@ esp_err_t BLEScan::stopExtScan() {
 
 void BLEScan::setPeriodicScanCallback(BLEPeriodicScanCallbacks *cb) {
   m_pPeriodicScanCb = cb;
+}
+
+/**
+* @brief           This function is used to set the extended scan parameters to be used on the advertising channels.
+*
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+esp_err_t BLEScan::setExtScanParams() {
+  esp_ble_ext_scan_params_t ext_scan_params = {
+    .own_addr_type = BLE_ADDR_TYPE_PUBLIC,
+    .filter_policy = BLE_SCAN_FILTER_ALLOW_ALL,
+    .scan_duplicate = BLE_SCAN_DUPLICATE_DISABLE,
+    .cfg_mask = ESP_BLE_GAP_EXT_SCAN_CFG_UNCODE_MASK | ESP_BLE_GAP_EXT_SCAN_CFG_CODE_MASK,
+    .uncoded_cfg = {BLE_SCAN_TYPE_ACTIVE, 40, 40},
+    .coded_cfg = {BLE_SCAN_TYPE_ACTIVE, 40, 40},
+  };
+
+  esp_err_t rc = esp_ble_gap_set_ext_scan_params(&ext_scan_params);
+  if (rc) {
+    log_e("set extend scan params error, error code = %x", rc);
+  }
+  return rc;
+}
+
+/**
+* @brief           This function is used to set the extended scan parameters to be used on the advertising channels.
+*
+* @param[in]       params : scan parameters
+*
+* @return            - ESP_OK : success
+*                    - other  : failed
+*
+*/
+esp_err_t BLEScan::setExtScanParams(esp_ble_ext_scan_params_t *ext_scan_params) {
+  esp_err_t rc = esp_ble_gap_set_ext_scan_params(ext_scan_params);
+  if (rc) {
+    log_e("set extend scan params error, error code = %x", rc);
+  }
+  return rc;
 }
 
 #endif  // SOC_BLE_50_SUPPORTED
