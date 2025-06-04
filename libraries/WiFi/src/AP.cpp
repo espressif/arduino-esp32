@@ -307,7 +307,9 @@ bool APClass::enableNAPT(bool enable) {
 
 bool APClass::enableDhcpCaptivePortal() {
   esp_err_t err = ESP_OK;
-  static char captiveportal_uri[32] = {0,};
+  static char captiveportal_uri[32] = {
+    0,
+  };
 
   if (!started()) {
     log_e("AP must be first started to enable DHCP Captive Portal");
