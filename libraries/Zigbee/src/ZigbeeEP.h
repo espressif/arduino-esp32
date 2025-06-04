@@ -12,7 +12,7 @@
 #define ZB_CMD_TIMEOUT             10000     // 10 seconds
 #define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
 
-#define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
   {                                                                \
@@ -131,7 +131,7 @@ public:
 
   // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
-  virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
+  virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
   virtual void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) {};

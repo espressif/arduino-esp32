@@ -70,6 +70,8 @@ dependencies:
   # RainMaker Start (Fixed versions, because Matter supports only Insights 1.0.1)
   espressif/network_provisioning:
     version: "1.0.2"
+    rules:
+      - if: "target != esp32c2"
   espressif/esp_rainmaker:
     version: "1.5.2"
     rules:

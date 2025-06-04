@@ -356,6 +356,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
         log_e("Content-Length was 0 or wasn't set by Server?!\n");
       }
       break;
+    case HTTP_CODE_NO_CONTENT:
     case HTTP_CODE_NOT_MODIFIED:
       ///< Not Modified (No updates)
       ret = HTTP_UPDATE_NO_UPDATES;
