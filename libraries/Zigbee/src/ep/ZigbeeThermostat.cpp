@@ -221,8 +221,8 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
   read_req.attr_field = attributes;
 
   log_i(
-    "Sending 'read temperature' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
-    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'read temperature' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
@@ -332,8 +332,8 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ie
   read_req.attr_field = attributes;
 
   log_i(
-    "Sending 'read sensor settings' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
-    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'read sensor settings' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
@@ -364,7 +364,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = (void*)&report_change,
+      .reportable_change = (void *)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
@@ -392,7 +392,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = (void*)&report_change,
+      .reportable_change = (void *)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
@@ -421,7 +421,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = (void*)&report_change,
+      .reportable_change = (void *)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
@@ -450,15 +450,15 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_add
       .attrType = ESP_ZB_ZCL_ATTR_TYPE_S16,
       .min_interval = min_interval,
       .max_interval = max_interval,
-      .reportable_change = (void*)&report_change,
+      .reportable_change = (void *)&report_change,
     },
   };
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
   log_i(
-    "Sending 'configure reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
-    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'configure reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
