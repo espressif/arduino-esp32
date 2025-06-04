@@ -35,10 +35,10 @@
 /* Zigbee power outlet configuration */
 #define ZIGBEE_OUTLET_ENDPOINT 1
 
-#ifdef LED_BUILTIN // Use built-in LED if defined for the board
+#ifdef LED_BUILTIN  // Use built-in LED if defined for the board
 uint8_t led = LED_BUILTIN;
 #else
-uint8_t led = 2; // Use custom LED pin
+uint8_t led = 2;  // Use custom LED pin
 #endif
 
 uint8_t button = BOOT_PIN;
