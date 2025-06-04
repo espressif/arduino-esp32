@@ -129,8 +129,8 @@ bool ZigbeeAnalog::setAnalogOutputApplication(uint32_t application_type) {
 void ZigbeeAnalog::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_SINGLE) {
-      float analog_output = *(float *)message->attribute.data.value;
-      analogOutputChanged(analog_output);
+      _output_state = *(float *)message->attribute.data.value;
+      analogOutputChanged();
     } else {
       log_w("Received message ignored. Attribute ID: %d not supported for Analog Output", message->attribute.id);
     }
@@ -139,9 +139,9 @@ void ZigbeeAnalog::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mes
   }
 }
 
-void ZigbeeAnalog::analogOutputChanged(float analog_output) {
+void ZigbeeAnalog::analogOutputChanged() {
   if (_on_analog_output_change) {
-    _on_analog_output_change(analog_output);
+    _on_analog_output_change(_output_state);
   } else {
     log_w("No callback function set for analog output change");
   }
@@ -166,6 +166,26 @@ bool ZigbeeAnalog::setAnalogInput(float analog) {
   return true;
 }
 
+bool ZigbeeAnalog::setAnalogOutput(float analog) {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  _output_state = analog;
+  analogOutputChanged();
+
+  log_v("Updating analog output to %.2f", analog);
+  /* Update analog output */
+  esp_zb_lock_acquire(portMAX_DELAY);
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  );
+  esp_zb_lock_release();
+
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set analog output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
 bool ZigbeeAnalog::reportAnalogInput() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
@@ -184,6 +204,27 @@ bool ZigbeeAnalog::reportAnalogInput() {
     return false;
   }
   log_v("Analog Input report sent");
+  return true;
+}
+
+bool ZigbeeAnalog::reportAnalogOutput() {
+  /* Send report attributes command */
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID;
+  report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
+  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT;
+  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to send Analog Output report: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  log_v("Analog Output report sent");
   return true;
 }
 
