@@ -41589,11 +41589,6 @@ Geekble_ESP32C3.build.boot=qio
 Geekble_ESP32C3.build.partitions=default
 Geekble_ESP32C3.build.defines=
 
-Geekble_ESP32C3.menu.CDCOnBoot.default=Enabled
-Geekble_ESP32C3.menu.CDCOnBoot.default.build.cdc_on_boot=1
-Geekble_ESP32C3.menu.CDCOnBoot.cdc=Disabled
-Geekble_ESP32C3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
-
 Geekble_ESP32C3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 Geekble_ESP32C3.menu.PartitionScheme.default.build.partitions=default
 Geekble_ESP32C3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -41613,39 +41608,6 @@ Geekble_ESP32C3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 Geekble_ESP32C3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 Geekble_ESP32C3.menu.PartitionScheme.huge_app.build.partitions=huge_app
 Geekble_ESP32C3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-
-Geekble_ESP32C3.menu.CPUFreq.160=160MHz (WiFi) (Default)
-Geekble_ESP32C3.menu.CPUFreq.160.build.f_cpu=160000000L
-Geekble_ESP32C3.menu.CPUFreq.80=80MHz (WiFi)
-Geekble_ESP32C3.menu.CPUFreq.80.build.f_cpu=80000000L
-Geekble_ESP32C3.menu.CPUFreq.40=40MHz
-Geekble_ESP32C3.menu.CPUFreq.40.build.f_cpu=40000000L
-Geekble_ESP32C3.menu.CPUFreq.20=20MHz
-Geekble_ESP32C3.menu.CPUFreq.20.build.f_cpu=20000000L
-Geekble_ESP32C3.menu.CPUFreq.10=10MHz
-Geekble_ESP32C3.menu.CPUFreq.10.build.f_cpu=10000000L
-
-Geekble_ESP32C3.menu.FlashMode.qio=QIO (Default)
-Geekble_ESP32C3.menu.FlashMode.qio.build.flash_mode=dio
-Geekble_ESP32C3.menu.FlashMode.qio.build.boot=qio
-Geekble_ESP32C3.menu.FlashMode.dio=DIO
-Geekble_ESP32C3.menu.FlashMode.dio.build.flash_mode=dio
-Geekble_ESP32C3.menu.FlashMode.dio.build.boot=dio
-Geekble_ESP32C3.menu.FlashMode.qout=QOUT
-Geekble_ESP32C3.menu.FlashMode.qout.build.flash_mode=dout
-Geekble_ESP32C3.menu.FlashMode.qout.build.boot=qout
-Geekble_ESP32C3.menu.FlashMode.dout=DOUT
-Geekble_ESP32C3.menu.FlashMode.dout.build.flash_mode=dout
-
-Geekble_ESP32C3.menu.FlashFreq.80=80MHz (Default)
-Geekble_ESP32C3.menu.FlashFreq.80.build.flash_freq=80m
-Geekble_ESP32C3.menu.FlashFreq.40=40MHz
-Geekble_ESP32C3.menu.FlashFreq.40.build.flash_freq=40m
-
-Geekble_ESP32C3.menu.FlashSize.4M=4MB (Default)
-Geekble_ESP32C3.menu.FlashSize.4M.build.flash_size=4MB
-Geekble_ESP32C3.menu.FlashSize.2M=2MB
-Geekble_ESP32C3.menu.FlashSize.2M.build.flash_size=2MB
 
 Geekble_ESP32C3.menu.UploadSpeed.921600=921600 (Default)
 Geekble_ESP32C3.menu.UploadSpeed.921600.upload.speed=921600
