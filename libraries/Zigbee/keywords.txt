@@ -151,6 +151,12 @@ getAnalogOutput	KEYWORD2
 reportAnalogInput	KEYWORD2
 reportAnalogOutput	KEYWORD2
 setAnalogInputReporting	KEYWORD2
+setAnalogInputApplication	KEYWORD2
+setAnalogInputDescription	KEYWORD2
+setAnalogInputResolution	KEYWORD2
+setAnalogOutputApplication	KEYWORD2
+setAnalogOutputDescription	KEYWORD2
+setAnalogOutputResolution	KEYWORD2
 
 # ZigbeeCarbonDioxideSensor
 setCarbonDioxide	KEYWORD2
