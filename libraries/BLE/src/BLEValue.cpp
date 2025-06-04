@@ -3,14 +3,28 @@
  *
  *  Created on: Jul 17, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/*****************************************************************************
+ *                             Common includes                               *
+ *****************************************************************************/
+
 #include "BLEValue.h"
 #include "esp32-hal-log.h"
+
+/*****************************************************************************
+ *                             Common functions                              *
+ *****************************************************************************/
 
 BLEValue::BLEValue() {
   m_accumulation = "";
@@ -120,5 +134,5 @@ void BLEValue::setValue(uint8_t *pData, size_t length) {
   m_value = String((char *)pData, length);
 }  // setValue
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
