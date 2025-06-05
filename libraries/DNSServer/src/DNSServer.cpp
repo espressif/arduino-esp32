@@ -126,7 +126,7 @@ void DNSServer::_handleUDP(AsyncUDPPacket &pkt) {
 
 bool DNSServer::requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader) {
   dnsHeader.ARCount = 0;  // We assume that if ARCount !=0 there is a EDNS OPT packet, just ignore
-  return ntohs(dnsHeader.QDCount) == 1 && dnsHeader.ANCount == 0 && dnsHeader.NSCount == 0;  // && dnsHeader.ARCount == 0;
+  return ntohs(dnsHeader.QDCount) == 1 && dnsHeader.ANCount == 0 && dnsHeader.NSCount == 0;  
 }
 
 String DNSServer::getDomainNameWithoutWwwPrefix(const unsigned char *start, size_t len) {
@@ -196,7 +196,6 @@ void DNSServer::replyWithCustomCode(AsyncUDPPacket &req, DNSHeader &dnsHeader) {
 void DNSServer::replyWithNoAnsw(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion) {
 
   dnsHeader.QR = DNS_QR_RESPONSE;
-  // dnsHeader.QDCount = 1;
   dnsHeader.ANCount = 0;
   dnsHeader.NSCount = htons(1);
 
