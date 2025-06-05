@@ -37,6 +37,9 @@
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_gattc_api.h>
+#ifndef BLE_ERR_REM_USER_CONN_TERM
+#define BLE_ERR_REM_USER_CONN_TERM 0x13
+#endif
 #endif
 
 /***************************************************************************
@@ -87,7 +90,7 @@ public:
   bool connectTimeout(BLEAdvertisedDevice *device, uint32_t timeoutMS = portMAX_DELAY);
   bool connect(BLEAddress address, uint8_t type = 0, uint32_t timeoutMS = portMAX_DELAY);
   bool secureConnection();
-  void disconnect();
+  int disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
   BLEAddress getPeerAddress();
   int getRssi();
   std::map<std::string, BLERemoteService *> *getServices();

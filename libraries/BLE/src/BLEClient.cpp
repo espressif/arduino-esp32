@@ -488,16 +488,17 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
 
 /**
  * @brief Disconnect from the peer.
- * @return N/A.
+ * @return error code from bluedroid, 0 = success.
  */
-void BLEClient::disconnect() {
+int BLEClient::disconnect(uint8_t reason) {
   log_v(">> disconnect()");
   esp_err_t errRc = ::esp_ble_gattc_close(getGattcIf(), getConnId());
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_close: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
+    return errRc;
   }
   log_v("<< disconnect()");
+  return ESP_OK;
 }  // disconnect
 
 /**
@@ -1240,6 +1241,52 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
   return 0;
 }  // handleGAPEvent
+
+/**
+ * @brief Disconnect from the peer.
+ * @return Error code from NimBLE stack, 0 = success.
+ */
+int BLEClient::disconnect(uint8_t reason) {
+  log_d(">> disconnect()");
+  int rc = 0;
+  if(isConnected()) {
+    // If the timer was already started, ignore this call.
+    if(ble_npl_callout_is_active(&m_dcTimer)) {
+      log_i("Already disconnecting, timer started");
+      return BLE_HS_EALREADY;
+    }
+
+    ble_gap_conn_desc desc;
+    if(ble_gap_conn_find(m_conn_id, &desc) != 0){
+      log_i("Connection ID not found");
+      return BLE_HS_EALREADY;
+    }
+
+    // We use a timer to detect a controller error in the event that it does
+    // not inform the stack when disconnection is complete.
+    // This is a common error in certain esp-idf versions.
+    // The disconnect timeout time is the supervison timeout time + 1 second.
+    // In the case that the event happenss shortly after the supervision timeout
+    // we don't want to prematurely reset the host.
+    ble_npl_time_t ticks;
+    ble_npl_time_ms_to_ticks((desc.supervision_timeout + 100) * 10, &ticks);
+    ble_npl_callout_reset(&m_dcTimer, ticks);
+
+    rc = ble_gap_terminate(m_conn_id, reason);
+    if (rc != 0) {
+      if(rc != BLE_HS_EALREADY) {
+        ble_npl_callout_stop(&m_dcTimer);
+      }
+      log_e("ble_gap_terminate failed: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    } else {
+      log_d("Not connected to any peers");
+    }
+  }
+
+  log_d("<< disconnect()");
+  m_lastErr = rc;
+  return rc;
+} // disconnect
 
 bool BLEClientCallbacks::onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params) {
   log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: default");
