@@ -185,15 +185,15 @@ def update_json_from_release(tmp_json_path, version, release_info):
                 print(f"Skipping unknown archive type: {asset_fname}")
                 continue
 
-        asset_url = asset.get("browser_download_url")
-        asset_checksum = asset.get("digest")
-        asset_size = asset.get("size")
-        if asset_checksum is None:
-            asset_checksum = ""
-            print(f"Asset {asset_fname} has no checksum. Please set the checksum in the JSON file.")
+            asset_url = asset.get("browser_download_url")
+            asset_checksum = asset.get("digest")
+            asset_size = asset.get("size")
+            if asset_checksum is None:
+                asset_checksum = ""
+                print(f"Asset {asset_fname} has no checksum. Please set the checksum in the JSON file.")
 
-        for host in hosts:
-            update_json_for_host(tmp_json_path, version, host, asset_url, asset_fname, asset_checksum, asset_size)
+            for host in hosts:
+                update_json_for_host(tmp_json_path, version, host, asset_url, asset_fname, asset_checksum, asset_size)
 
 def get_release_info(version):
     url = f"https://api.github.com/repos/espressif/esptool/releases/tags/v{version}"
