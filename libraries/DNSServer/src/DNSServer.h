@@ -11,7 +11,7 @@
 
 #define DNS_SOA_MNAME_LABEL "ns"
 #define DNS_SOA_RNAME_LABEL "esp32"
-// The POSTFIX_LABEL will be concatinated to the RName and MName Label  label
+// The POSTFIX_LABEL will be concatenated to the RName and MName Label  label
 // do not use a multilabel name here. "local" is a good choice as it is reserved for
 // local use by IANA
 // The postfix label is defined as an array of characters that follows the
@@ -22,10 +22,12 @@
   { '\5', 'l', 'o', 'c', 'a', 'l', '\0' }
 // From the following values only the MINIMAL_TTL has relevance
 // in the context of client-server protocol interactions.
-#define DNS_SOA_SERIAL  2025052900  // Arbitrary
-#define DNS_SOA_REFRESH 100000      // Arbitrary
-#define DNS_SOA_RETRY   10000       // Arbitrary
-#define DNS_SOA_EXPIRE  1000000     // Arbitrary
+// The other vallues are arbitrary chosen as they are only relevant for
+// in a zone-transfer scenario.
+#define DNS_SOA_SERIAL  2025052900  // Arbitrary serial (format: YYYYMMDDnn)
+#define DNS_SOA_REFRESH 100000      // Arbitrary (seconds)
+#define DNS_SOA_RETRY   10000       // Arbitrary (seconds)
+#define DNS_SOA_EXPIRE  1000000     // Arbitrary (seconds)
 #define DNS_MINIMAL_TTL 5           // Time to live for negative answers RFC2308
 enum class DNSReplyCode : uint16_t {
   NoError = 0,
