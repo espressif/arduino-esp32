@@ -527,13 +527,13 @@ bool BLEService::start() {
     // Nimble requires an array of services to be sent to the api
     // Since we are adding 1 at a time we create an array of 2 and set the type
     // of the second service to 0 to indicate the end of the array.
-    ble_gatt_svc_def *svc = new ble_gatt_svc_def[2];
+    ble_gatt_svc_def *svc = new ble_gatt_svc_def[2]{};
     ble_gatt_chr_def *pChr_a = nullptr;
     ble_gatt_dsc_def *pDsc_a = nullptr;
 
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
-    svc[0].uuid = &m_uuid.getNative()->u;
-    svc[0].includes = NULL;
+    svc[0].uuid = (const ble_uuid_t *) &(m_uuid.getNative()->u);
+    svc[0].includes = nullptr;
 
     int removedCount = 0;
     BLECharacteristic *pCharacteristic;
@@ -558,12 +558,12 @@ bool BLEService::start() {
     log_d("Adding %d characteristics for service %s", numChrs, toString().c_str());
 
     if (!numChrs) {
-      svc[0].characteristics = NULL;
+      svc[0].characteristics = nullptr;
     } else {
       // Nimble requires the last characteristic to have it's uuid = 0 to indicate the end
       // of the characteristics for the service. We create 1 extra and set it to null
       // for this purpose.
-      pChr_a = new ble_gatt_chr_def[numChrs + 1];
+      pChr_a = new ble_gatt_chr_def[numChrs + 1]{};
       uint8_t i = 0;
       pCharacteristic = m_characteristicMap.getFirst();
       while (pCharacteristic != nullptr) {
@@ -585,17 +585,18 @@ bool BLEService::start() {
           }
 
           size_t numDscs = pCharacteristic->m_descriptorMap.getRegisteredDescriptorCount() - removedCount;
+          log_d("Adding %d descriptors for characteristic %s", numDscs, pCharacteristic->getUUID().toString().c_str());
 
           if (!numDscs) {
-            pChr_a[i].descriptors = NULL;
+            pChr_a[i].descriptors = nullptr;
           } else {
             // Must have last descriptor uuid = 0 so we have to create 1 extra
-            pDsc_a = new ble_gatt_dsc_def[numDscs + 1];
+            pDsc_a = new ble_gatt_dsc_def[numDscs + 1]{};
             uint8_t d = 0;
             pDescriptor = pCharacteristic->m_descriptorMap.getFirst();
             while (pDescriptor != nullptr) {
               if (pDescriptor->m_removed <= 0) {
-                pDsc_a[d].uuid = &pDescriptor->m_bleUUID.getNative()->u;
+                pDsc_a[d].uuid = (const ble_uuid_t *) &(pDescriptor->m_bleUUID.getNative()->u);
                 pDsc_a[d].att_flags = pDescriptor->m_permissions;
                 pDsc_a[d].min_key_size = 0;
                 pDsc_a[d].access_cb = BLEDescriptor::handleGATTServerEvent;
@@ -605,11 +606,11 @@ bool BLEService::start() {
               pDescriptor = pCharacteristic->m_descriptorMap.getNext();
             }
 
-            pDsc_a[numDscs].uuid = NULL;
+            pDsc_a[numDscs].uuid = nullptr;
             pChr_a[i].descriptors = pDsc_a;
           }
 
-          pChr_a[i].uuid = &pCharacteristic->m_bleUUID.getNative()->u;
+          pChr_a[i].uuid = (const ble_uuid_t *) &(pCharacteristic->m_bleUUID.getNative()->u);
           pChr_a[i].access_cb = BLECharacteristic::handleGATTServerEvent;
           pChr_a[i].arg = pCharacteristic;
           pChr_a[i].flags = pCharacteristic->m_properties;
@@ -621,7 +622,7 @@ bool BLEService::start() {
         pCharacteristic = m_characteristicMap.getNext();
       }
 
-      pChr_a[numChrs].uuid = NULL;
+      pChr_a[numChrs].uuid = nullptr;
       svc[0].characteristics = pChr_a;
     }
 
