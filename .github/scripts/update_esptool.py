@@ -185,7 +185,7 @@ def update_json_from_release(tmp_json_path, version, release_info):
                 print(f"Skipping unknown archive type: {asset_fname}")
                 continue
 
-        asset_url = asset.get("url")
+        asset_url = asset.get("browser_download_url")
         asset_checksum = asset.get("digest")
         asset_size = asset.get("size")
         if asset_checksum is None:
