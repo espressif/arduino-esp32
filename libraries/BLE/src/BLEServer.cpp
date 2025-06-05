@@ -610,8 +610,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
           return 0;
         }
 
-        server->m_pServerCallbacks->onConnect(server);
-        server->m_pServerCallbacks->onConnect(server, &desc);
+        if (server->m_pServerCallbacks != nullptr) {
+          server->m_pServerCallbacks->onConnect(server);
+          server->m_pServerCallbacks->onConnect(server, &desc);
+        }
       }
 
       return 0;
@@ -638,8 +640,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         server->resetGATT();
       }
 
-      server->m_pServerCallbacks->onDisconnect(server);
-      server->m_pServerCallbacks->onDisconnect(server, &event->disconnect.conn);
+      if (server->m_pServerCallbacks != nullptr) {
+        server->m_pServerCallbacks->onDisconnect(server);
+        server->m_pServerCallbacks->onDisconnect(server, &event->disconnect.conn);
+      }
 
       return 0;
     }  // BLE_GAP_EVENT_DISCONNECT
@@ -678,7 +682,9 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         return 0;
       }
 
-      server->m_pServerCallbacks->onMtuChanged(server, &desc, event->mtu.value);
+      if (server->m_pServerCallbacks != nullptr) {
+        server->m_pServerCallbacks->onMtuChanged(server, &desc, event->mtu.value);
+      }
       return 0;
     }  // BLE_GAP_EVENT_MTU
 
@@ -768,7 +774,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
-      } else {
+      } else if (server->m_pServerCallbacks != nullptr) {
         server->m_pServerCallbacks->onAuthenticationComplete(&desc);
       }
 
@@ -786,7 +792,9 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         // if the (static)passkey is the default, check the callback for custom value
         // both values default to the same.
         if (pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+          if (server->m_pServerCallbacks != nullptr) {
+            pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
+          }
         }
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
         log_d("BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
@@ -797,7 +805,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         // Compatibility only - Do not use, should be removed the in future
         if (BLEDevice::m_securityCallbacks != nullptr) {
           pkey.numcmp_accept = BLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-        } else {
+        } else if (server->m_pServerCallbacks != nullptr) {
           pkey.numcmp_accept = server->m_pServerCallbacks->onConfirmPIN(event->passkey.params.numcmp);
         }
 
@@ -820,7 +828,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         // Compatibility only - Do not use, should be removed the in future
         if (BLEDevice::m_securityCallbacks != nullptr) {
           pkey.passkey = BLEDevice::m_securityCallbacks->onPassKeyRequest();
-        } else {
+        } else if (server->m_pServerCallbacks != nullptr) {
           pkey.passkey = server->m_pServerCallbacks->onPassKeyRequest();
         }
 
