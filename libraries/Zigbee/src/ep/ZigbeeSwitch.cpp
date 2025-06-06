@@ -52,7 +52,7 @@ void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
   ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_d("Found light endpoint");
-    esp_zb_zdo_bind_req_param_t bind_req;
+    esp_zb_zdo_bind_req_param_t bind_req = {0};
     zb_device_params_t *light = (zb_device_params_t *)malloc(sizeof(zb_device_params_t));
     light->endpoint = endpoint;
     light->short_addr = addr;
@@ -94,7 +94,7 @@ void ZigbeeSwitch::findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {
 // Methods to control the light
 void ZigbeeSwitch::lightToggle() {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
@@ -109,7 +109,7 @@ void ZigbeeSwitch::lightToggle() {
 
 void ZigbeeSwitch::lightToggle(uint16_t group_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
@@ -125,7 +125,7 @@ void ZigbeeSwitch::lightToggle(uint16_t group_addr) {
 
 void ZigbeeSwitch::lightToggle(uint8_t endpoint, uint16_t short_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
@@ -142,7 +142,7 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, uint16_t short_addr) {
 
 void ZigbeeSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
@@ -162,7 +162,7 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
 
 void ZigbeeSwitch::lightOn() {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
@@ -177,7 +177,7 @@ void ZigbeeSwitch::lightOn() {
 
 void ZigbeeSwitch::lightOn(uint16_t group_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
@@ -193,7 +193,7 @@ void ZigbeeSwitch::lightOn(uint16_t group_addr) {
 
 void ZigbeeSwitch::lightOn(uint8_t endpoint, uint16_t short_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
@@ -210,7 +210,7 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, uint16_t short_addr) {
 
 void ZigbeeSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
@@ -230,7 +230,7 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
 
 void ZigbeeSwitch::lightOff() {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
@@ -245,7 +245,7 @@ void ZigbeeSwitch::lightOff() {
 
 void ZigbeeSwitch::lightOff(uint16_t group_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
@@ -261,7 +261,7 @@ void ZigbeeSwitch::lightOff(uint16_t group_addr) {
 
 void ZigbeeSwitch::lightOff(uint8_t endpoint, uint16_t short_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
@@ -278,7 +278,7 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, uint16_t short_addr) {
 
 void ZigbeeSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
@@ -298,7 +298,7 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
 
 void ZigbeeSwitch::lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_off_with_effect_cmd_t cmd_req;
+    esp_zb_zcl_on_off_off_with_effect_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.effect_id = effect_id;
@@ -314,7 +314,7 @@ void ZigbeeSwitch::lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant)
 
 void ZigbeeSwitch::lightOnWithSceneRecall() {
   if (_is_bound) {
-    esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_t cmd_req;
+    esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     log_v("Sending 'light on with scene recall' command");
@@ -327,7 +327,7 @@ void ZigbeeSwitch::lightOnWithSceneRecall() {
 }
 void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off) {
   if (_is_bound) {
-    esp_zb_zcl_on_off_on_with_timed_off_cmd_t cmd_req;
+    esp_zb_zcl_on_off_on_with_timed_off_cmd_t cmd_req = {0};
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_control = on_off_control;  //TODO: Test how it works, then maybe change API

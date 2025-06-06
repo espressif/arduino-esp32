@@ -41778,6 +41778,13 @@ Geekble_Nano_ESP32S3.menu.PartitionScheme.custom=Custom
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.build.partitions=
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
+Geekble_Nano_ESP32S3.menu.PSRAM.disabled=Disabled
+Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.defines=
+Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.psram_type=qspi
+Geekble_Nano_ESP32S3.menu.PSRAM.enabled=Enabled
+Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+Geekble_Nano_ESP32S3.menu.PSRAM.enabled.build.psram_type=qspi
+
 Geekble_Nano_ESP32S3.menu.DebugLevel.none=None
 Geekble_Nano_ESP32S3.menu.DebugLevel.none.build.code_debug=0
 Geekble_Nano_ESP32S3.menu.DebugLevel.error=Error
