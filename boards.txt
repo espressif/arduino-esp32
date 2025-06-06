@@ -31513,7 +31513,7 @@ wifiduino32c3.build.target=esp
 wifiduino32c3.build.mcu=esp32c3
 wifiduino32c3.build.core=esp32
 wifiduino32c3.build.variant=wifiduinov2
-wifiduino32c3.build.board=WiFiduinoV2
+wifiduino32c3.build.board=WIFIDUINOV2
 wifiduino32c3.build.bootloader_addr=0x0
 
 wifiduino32c3.build.cdc_on_boot=0
@@ -31665,7 +31665,7 @@ wifiduino32s3.build.target=esp32s3
 wifiduino32s3.build.mcu=esp32s3
 wifiduino32s3.build.core=esp32
 wifiduino32s3.build.variant=wifiduino32s3
-wifiduino32s3.build.board=WiFiduino32S3
+wifiduino32s3.build.board=WIFIDUINO32S3
 
 wifiduino32s3.build.usb_mode=1
 wifiduino32s3.build.cdc_on_boot=0
