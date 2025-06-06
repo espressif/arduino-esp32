@@ -31520,16 +31520,19 @@ wifiduino32c3.build.cdc_on_boot=0
 wifiduino32c3.build.f_cpu=160000000L
 wifiduino32c3.build.flash_size=4MB
 wifiduino32c3.build.flash_freq=80m
-wifiduino32c3.build.flash_mode=qio
+wifiduino32c3.build.flash_mode=dio
 wifiduino32c3.build.boot=qio
-wifiduino32c3.build.partitions=default
+wifiduino32c3.build.partitions=no_ota
 wifiduino32c3.build.defines=
 
-wifiduino32c3.menu.CDCOnBoot.default=Disabled
-wifiduino32c3.menu.CDCOnBoot.default.build.cdc_on_boot=0
-wifiduino32c3.menu.CDCOnBoot.cdc=Enabled
-wifiduino32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+wifiduino32c3.menu.CDCOnBoot.default=Enabled
+wifiduino32c3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+wifiduino32c3.menu.CDCOnBoot.cdc=Disabled
+wifiduino32c3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
+wifiduino32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+wifiduino32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+wifiduino32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 wifiduino32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 wifiduino32c3.menu.PartitionScheme.default.build.partitions=default
 wifiduino32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -31539,9 +31542,6 @@ wifiduino32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 wifiduino32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 wifiduino32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 wifiduino32c3.menu.PartitionScheme.minimal.build.partitions=minimal
-wifiduino32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-wifiduino32c3.menu.PartitionScheme.no_ota.build.partitions=no_ota
-wifiduino32c3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
 wifiduino32c3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
 wifiduino32c3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
 wifiduino32c3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
@@ -31584,12 +31584,12 @@ wifiduino32c3.menu.CPUFreq.20.build.f_cpu=20000000L
 wifiduino32c3.menu.CPUFreq.10=10MHz
 wifiduino32c3.menu.CPUFreq.10.build.f_cpu=10000000L
 
-wifiduino32c3.menu.FlashMode.qio=QIO
-wifiduino32c3.menu.FlashMode.qio.build.flash_mode=dio
-wifiduino32c3.menu.FlashMode.qio.build.boot=qio
 wifiduino32c3.menu.FlashMode.dio=DIO
 wifiduino32c3.menu.FlashMode.dio.build.flash_mode=dio
 wifiduino32c3.menu.FlashMode.dio.build.boot=dio
+wifiduino32c3.menu.FlashMode.qio=QIO
+wifiduino32c3.menu.FlashMode.qio.build.flash_mode=dio
+wifiduino32c3.menu.FlashMode.qio.build.boot=qio
 
 wifiduino32c3.menu.FlashFreq.80=80MHz
 wifiduino32c3.menu.FlashFreq.80.build.flash_freq=80m
@@ -31633,10 +31633,10 @@ wifiduino32c3.menu.DebugLevel.debug.build.code_debug=4
 wifiduino32c3.menu.DebugLevel.verbose=Verbose
 wifiduino32c3.menu.DebugLevel.verbose.build.code_debug=5
 
-wifiduino32c3.menu.EraseFlash.none=Disabled
-wifiduino32c3.menu.EraseFlash.none.upload.erase_cmd=
 wifiduino32c3.menu.EraseFlash.all=Enabled
 wifiduino32c3.menu.EraseFlash.all.upload.erase_cmd=-e
+wifiduino32c3.menu.EraseFlash.none=Disabled
+wifiduino32c3.menu.EraseFlash.none.upload.erase_cmd=
 
 ##############################################################
 
@@ -31672,27 +31672,27 @@ wifiduino32s3.build.cdc_on_boot=0
 wifiduino32s3.build.msc_on_boot=0
 wifiduino32s3.build.dfu_on_boot=0
 wifiduino32s3.build.f_cpu=240000000L
-wifiduino32s3.build.flash_size=4MB
+wifiduino32s3.build.flash_size=16MB
 wifiduino32s3.build.flash_freq=80m
 wifiduino32s3.build.flash_mode=dio
 wifiduino32s3.build.boot=qio
 wifiduino32s3.build.boot_freq=80m
-wifiduino32s3.build.partitions=default
+wifiduino32s3.build.partitions=app3M_fat9M_16MB
 wifiduino32s3.build.defines=
 wifiduino32s3.build.loop_core=
 wifiduino32s3.build.event_core=
-wifiduino32s3.build.psram_type=qspi
+wifiduino32s3.build.psram_type=opi
 wifiduino32s3.build.memory_type={build.boot}_{build.psram_type}
 
+wifiduino32s3.menu.PSRAM.opi=OPI PSRAM
+wifiduino32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+wifiduino32s3.menu.PSRAM.opi.build.psram_type=opi
 wifiduino32s3.menu.PSRAM.disabled=Disabled
 wifiduino32s3.menu.PSRAM.disabled.build.defines=
 wifiduino32s3.menu.PSRAM.disabled.build.psram_type=qspi
 wifiduino32s3.menu.PSRAM.enabled=QSPI PSRAM
 wifiduino32s3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 wifiduino32s3.menu.PSRAM.enabled.build.psram_type=qspi
-wifiduino32s3.menu.PSRAM.opi=OPI PSRAM
-wifiduino32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-wifiduino32s3.menu.PSRAM.opi.build.psram_type=opi
 
 wifiduino32s3.menu.FlashMode.qio=QIO 80MHz
 wifiduino32s3.menu.FlashMode.qio.build.flash_mode=dio
@@ -31715,12 +31715,12 @@ wifiduino32s3.menu.FlashMode.opi.build.boot=opi
 wifiduino32s3.menu.FlashMode.opi.build.boot_freq=80m
 wifiduino32s3.menu.FlashMode.opi.build.flash_freq=80m
 
+wifiduino32s3.menu.FlashSize.16M=16MB (128Mb)
+wifiduino32s3.menu.FlashSize.16M.build.flash_size=16MB
 wifiduino32s3.menu.FlashSize.4M=4MB (32Mb)
 wifiduino32s3.menu.FlashSize.4M.build.flash_size=4MB
 wifiduino32s3.menu.FlashSize.8M=8MB (64Mb)
 wifiduino32s3.menu.FlashSize.8M.build.flash_size=8MB
-wifiduino32s3.menu.FlashSize.16M=16MB (128Mb)
-wifiduino32s3.menu.FlashSize.16M.build.flash_size=16MB
 #wifiduino32s3.menu.FlashSize.32M=32MB (256Mb)
 #wifiduino32s3.menu.FlashSize.32M.build.flash_size=32MB
 
@@ -31761,6 +31761,9 @@ wifiduino32s3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 wifiduino32s3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 wifiduino32s3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
+wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 wifiduino32s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 wifiduino32s3.menu.PartitionScheme.default.build.partitions=default
 wifiduino32s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -31791,9 +31794,6 @@ wifiduino32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 wifiduino32s3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 wifiduino32s3.menu.PartitionScheme.fatflash.build.partitions=ffat
 wifiduino32s3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-wifiduino32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 wifiduino32s3.menu.PartitionScheme.rainmaker=RainMaker 4MB
 wifiduino32s3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 wifiduino32s3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
