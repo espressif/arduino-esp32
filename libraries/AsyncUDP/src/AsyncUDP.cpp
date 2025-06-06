@@ -682,6 +682,8 @@ igmp_fail:
 }
 
 bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl, tcpip_adapter_if_t tcpip_if) {
+  ip_addr_t bind_addr;
+
   if (!ip_addr_ismulticast(addr)) {
     return false;
   }
@@ -690,7 +692,18 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     return false;
   }
 
-  if (!listen(NULL, port)) {
+#if CONFIG_LWIP_IPV6
+  if (IP_IS_V6(addr)) {
+    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V6);
+    ip6_addr_set_any(&bind_addr.u_addr.ip6);
+  } else {
+#endif
+    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V4);
+    ip4_addr_set_any(&bind_addr.u_addr.ip4);
+#if CONFIG_LWIP_IPV6
+  }
+#endif
+  if (!listen(&bind_addr, port)) {
     return false;
   }
 
