@@ -236,8 +236,9 @@ String BLEDevice::getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID ch
  */
 void BLEDevice::init(String deviceName) {
   if (!initialized) {
-    [[maybe_unused]] esp_err_t errRc = ESP_OK;
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_NIMBLE_ENABLED)
+    esp_err_t errRc = ESP_OK;
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(ARDUINO_ARCH_ESP32)
     if (!btStart()) {
       errRc = ESP_FAIL;
       return;
@@ -261,7 +262,6 @@ void BLEDevice::init(String deviceName) {
     esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
 #endif
 
-#ifdef CONFIG_BLUEDROID_ENABLED
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     errRc = esp_bt_controller_init(&bt_cfg);
     if (errRc != ESP_OK) {
@@ -282,6 +282,7 @@ void BLEDevice::init(String deviceName) {
       return;
     }
 #endif
+#endif  // !ARDUINO_ARCH_ESP32
 
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
     if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
@@ -335,8 +336,8 @@ void BLEDevice::init(String deviceName) {
       log_e("esp_ble_gap_set_security_param: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
       return;
     };
-#endif
 #endif  // CONFIG_BLE_SMP_ENABLE
+#endif  // CONFIG_BLUEDROID_ENABLED
 
 #if defined(CONFIG_NIMBLE_ENABLED)
     errRc = nimble_port_init();
@@ -373,7 +374,6 @@ void BLEDevice::init(String deviceName) {
     while (!m_synced) {
       ble_npl_time_delay(1);
     }
-#endif
 #endif  // CONFIG_NIMBLE_ENABLED
     initialized = true;  // Set the initialization flag to ensure we are only initialized once.
   }
