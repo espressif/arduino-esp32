@@ -638,6 +638,7 @@ int BLEScan::handleGAPEvent(ble_gap_event *event, void *arg) {
         }
         advertisedDevice = new BLEAdvertisedDevice();
         advertisedDevice->setAddress(advertisedAddress);
+        advertisedDevice->setAddressType(event->disc.addr.type);
         advertisedDevice->setAdvType(event->disc.event_type);
         pScan->m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice));
         log_i("New advertiser: %s", advertisedAddress.toString().c_str());
@@ -649,7 +650,14 @@ int BLEScan::handleGAPEvent(ble_gap_event *event, void *arg) {
       }
 
       advertisedDevice->setRSSI(event->disc.rssi);
-      advertisedDevice->setPayload((uint8_t *)event->disc.data, event->disc.length_data, event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP);
+
+      if (pScan->m_shouldParse) {
+        advertisedDevice->parseAdvertisement((uint8_t *)event->disc.data, event->disc.length_data);
+      } else {
+        advertisedDevice->setPayload((uint8_t *)event->disc.data, event->disc.length_data, event->disc.event_type == BLE_HCI_ADV_RPT_EVTYPE_SCAN_RSP);
+      }
+
+      advertisedDevice->setScan(pScan);
 
       if (pScan->m_pAdvertisedDeviceCallbacks) {
         // If not active scanning or scan response is not available
