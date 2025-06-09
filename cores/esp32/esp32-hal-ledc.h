@@ -51,6 +51,8 @@ typedef struct {
   uint8_t pin;                 // Pin assigned to channel
   uint8_t channel;             // Channel number
   uint8_t channel_resolution;  // Resolution of channel
+  uint8_t timer_num;          // Timer number used by this channel
+  uint32_t freq_hz;           // Frequency configured for this channel
   voidFuncPtr fn;
   void *arg;
 #ifndef SOC_LEDC_SUPPORT_FADE_STOP
