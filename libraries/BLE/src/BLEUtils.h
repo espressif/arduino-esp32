@@ -62,7 +62,7 @@ public:
 
   static char *buildHexData(uint8_t *target, uint8_t *source, uint8_t length);
   static String buildPrintData(uint8_t *source, size_t length);
-  static const char *advTypeToString(uint8_t advType);
+  static const char *advDataTypeToString(uint8_t advType);
   static String characteristicPropertiesToString(uint8_t prop);
 
   /***************************************************************************

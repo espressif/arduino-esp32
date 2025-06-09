@@ -678,6 +678,71 @@ char *BLEUtils::buildHexData(uint8_t *target, uint8_t *source, uint8_t length) {
   return startOfData;
 }  // buildHexData
 
+/**
+ * @brief Given an advertising data type, return a string representation of the type.
+ *
+ * For details see ...
+ * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
+ *
+ * @return A string representation of the type.
+ */
+const char *BLEUtils::advDataTypeToString(uint8_t advType) {
+  switch (advType) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+    case ESP_BLE_AD_TYPE_FLAG:  // 0x01
+      return "ESP_BLE_AD_TYPE_FLAG";
+    case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
+      return "ESP_BLE_AD_TYPE_16SRV_PART";
+    case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
+      return "ESP_BLE_AD_TYPE_16SRV_CMPL";
+    case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
+      return "ESP_BLE_AD_TYPE_32SRV_PART";
+    case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
+      return "ESP_BLE_AD_TYPE_32SRV_CMPL";
+    case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
+      return "ESP_BLE_AD_TYPE_128SRV_PART";
+    case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
+      return "ESP_BLE_AD_TYPE_128SRV_CMPL";
+    case ESP_BLE_AD_TYPE_NAME_SHORT:  // 0x08
+      return "ESP_BLE_AD_TYPE_NAME_SHORT";
+    case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
+      return "ESP_BLE_AD_TYPE_NAME_CMPL";
+    case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0a
+      return "ESP_BLE_AD_TYPE_TX_PWR";
+    case ESP_BLE_AD_TYPE_DEV_CLASS:  // 0x0b
+      return "ESP_BLE_AD_TYPE_DEV_CLASS";
+    case ESP_BLE_AD_TYPE_SM_TK:  // 0x10
+      return "ESP_BLE_AD_TYPE_SM_TK";
+    case ESP_BLE_AD_TYPE_SM_OOB_FLAG:  // 0x11
+      return "ESP_BLE_AD_TYPE_SM_OOB_FLAG";
+    case ESP_BLE_AD_TYPE_INT_RANGE:  // 0x12
+      return "ESP_BLE_AD_TYPE_INT_RANGE";
+    case ESP_BLE_AD_TYPE_SOL_SRV_UUID:  // 0x14
+      return "ESP_BLE_AD_TYPE_SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_128SOL_SRV_UUID:  // 0x15
+      return "ESP_BLE_AD_TYPE_128SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
+      return "ESP_BLE_AD_TYPE_SERVICE_DATA";
+    case ESP_BLE_AD_TYPE_PUBLIC_TARGET:  // 0x17
+      return "ESP_BLE_AD_TYPE_PUBLIC_TARGET";
+    case ESP_BLE_AD_TYPE_RANDOM_TARGET:  // 0x18
+      return "ESP_BLE_AD_TYPE_RANDOM_TARGET";
+    case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
+      return "ESP_BLE_AD_TYPE_APPEARANCE";
+    case ESP_BLE_AD_TYPE_ADV_INT:  // 0x1a
+      return "ESP_BLE_AD_TYPE_ADV_INT";
+    case ESP_BLE_AD_TYPE_32SOL_SRV_UUID:  // 0x1f
+      return "ESP_BLE_AD_TYPE_32SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
+      return "ESP_BLE_AD_TYPE_32SERVICE_DATA";
+    case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
+      return "ESP_BLE_AD_TYPE_128SERVICE_DATA";
+    case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xff
+      return "ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE";
+#endif
+    default: log_v(" adv data type: 0x%x", advType); return "";
+  }  // End switch
+}  // advDataTypeToString
 
 /*****************************************************************************
  *                            Bluedroid functions                            *
@@ -776,71 +841,6 @@ String BLEUtils::adFlagsToString(uint8_t adFlags) {
   }
   return res;
 }  // adFlagsToString
-
-/**
- * @brief Given an advertising type, return a string representation of the type.
- *
- * For details see ...
- * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
- *
- * @return A string representation of the type.
- */
-const char *BLEUtils::advTypeToString(uint8_t advType) {
-  switch (advType) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-    case ESP_BLE_AD_TYPE_FLAG:  // 0x01
-      return "ESP_BLE_AD_TYPE_FLAG";
-    case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
-      return "ESP_BLE_AD_TYPE_16SRV_PART";
-    case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
-      return "ESP_BLE_AD_TYPE_16SRV_CMPL";
-    case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
-      return "ESP_BLE_AD_TYPE_32SRV_PART";
-    case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
-      return "ESP_BLE_AD_TYPE_32SRV_CMPL";
-    case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
-      return "ESP_BLE_AD_TYPE_128SRV_PART";
-    case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
-      return "ESP_BLE_AD_TYPE_128SRV_CMPL";
-    case ESP_BLE_AD_TYPE_NAME_SHORT:  // 0x08
-      return "ESP_BLE_AD_TYPE_NAME_SHORT";
-    case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
-      return "ESP_BLE_AD_TYPE_NAME_CMPL";
-    case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0a
-      return "ESP_BLE_AD_TYPE_TX_PWR";
-    case ESP_BLE_AD_TYPE_DEV_CLASS:  // 0x0b
-      return "ESP_BLE_AD_TYPE_DEV_CLASS";
-    case ESP_BLE_AD_TYPE_SM_TK:  // 0x10
-      return "ESP_BLE_AD_TYPE_SM_TK";
-    case ESP_BLE_AD_TYPE_SM_OOB_FLAG:  // 0x11
-      return "ESP_BLE_AD_TYPE_SM_OOB_FLAG";
-    case ESP_BLE_AD_TYPE_INT_RANGE:  // 0x12
-      return "ESP_BLE_AD_TYPE_INT_RANGE";
-    case ESP_BLE_AD_TYPE_SOL_SRV_UUID:  // 0x14
-      return "ESP_BLE_AD_TYPE_SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_128SOL_SRV_UUID:  // 0x15
-      return "ESP_BLE_AD_TYPE_128SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
-      return "ESP_BLE_AD_TYPE_SERVICE_DATA";
-    case ESP_BLE_AD_TYPE_PUBLIC_TARGET:  // 0x17
-      return "ESP_BLE_AD_TYPE_PUBLIC_TARGET";
-    case ESP_BLE_AD_TYPE_RANDOM_TARGET:  // 0x18
-      return "ESP_BLE_AD_TYPE_RANDOM_TARGET";
-    case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
-      return "ESP_BLE_AD_TYPE_APPEARANCE";
-    case ESP_BLE_AD_TYPE_ADV_INT:  // 0x1a
-      return "ESP_BLE_AD_TYPE_ADV_INT";
-    case ESP_BLE_AD_TYPE_32SOL_SRV_UUID: return "ESP_BLE_AD_TYPE_32SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
-      return "ESP_BLE_AD_TYPE_32SERVICE_DATA";
-    case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
-      return "ESP_BLE_AD_TYPE_128SERVICE_DATA";
-    case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xff
-      return "ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE";
-#endif
-    default: log_v(" adv data type: 0x%x", advType); return "";
-  }  // End switch
-}  // advTypeToString
 
 esp_gatt_id_t BLEUtils::buildGattId(esp_bt_uuid_t uuid, uint8_t inst_id) {
   esp_gatt_id_t retGattId;
@@ -2075,31 +2075,6 @@ const char *BLEUtils::returnCodeToString(int rc) {
   return "";
 #endif  // #if defined(CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT)
 }
-
-/**
- * @brief Convert the advertising type flag to a string.
- * @param advType The type to convert.
- * @return A string representation of the advertising flags.
- */
-const char *BLEUtils::advTypeToString(uint8_t advType) {
-#if defined(CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT)
-  switch (advType) {
-    case BLE_HCI_ADV_TYPE_ADV_IND:  //0
-      return "Undirected - Connectable / Scannable";
-    case BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_HD:  //1
-      return "Directed High Duty - Connectable";
-    case BLE_HCI_ADV_TYPE_ADV_SCAN_IND:  //2
-      return "Non-Connectable - Scan Response Available";
-    case BLE_HCI_ADV_TYPE_ADV_NONCONN_IND:  //3
-      return "Non-Connectable - No Scan Response";
-    case BLE_HCI_ADV_TYPE_ADV_DIRECT_IND_LD:  //4
-      return "Directed Low Duty - Connectable";
-    default: return "Unknown flag";
-  }
-#else   // #if defined(CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT)
-  return "";
-#endif  // #if defined(CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT)
-}  // adFlagsToString
 
 /**
  * @brief Utility function to log the gap event info.
