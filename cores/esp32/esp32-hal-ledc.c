@@ -210,7 +210,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   }
 
   uint8_t group = (channel / 8);
-  uint8_t timer;
+  uint8_t timer = 0; 
   bool channel_used = ledc_handle.used_channels & (1UL << channel);
   
   if (channel_used) {
