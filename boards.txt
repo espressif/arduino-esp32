@@ -31516,12 +31516,12 @@ wifiduino32c3.build.variant=wifiduinov2
 wifiduino32c3.build.board=WIFIDUINOV2
 wifiduino32c3.build.bootloader_addr=0x0
 
-wifiduino32c3.build.cdc_on_boot=0
+wifiduino32c3.build.cdc_on_boot=1
 wifiduino32c3.build.f_cpu=160000000L
 wifiduino32c3.build.flash_size=4MB
 wifiduino32c3.build.flash_freq=80m
 wifiduino32c3.build.flash_mode=dio
-wifiduino32c3.build.boot=qio
+wifiduino32c3.build.boot=dio
 wifiduino32c3.build.partitions=no_ota
 wifiduino32c3.build.defines=
 
@@ -31633,10 +31633,10 @@ wifiduino32c3.menu.DebugLevel.debug.build.code_debug=4
 wifiduino32c3.menu.DebugLevel.verbose=Verbose
 wifiduino32c3.menu.DebugLevel.verbose.build.code_debug=5
 
-wifiduino32c3.menu.EraseFlash.all=Enabled
-wifiduino32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 wifiduino32c3.menu.EraseFlash.none=Disabled
 wifiduino32c3.menu.EraseFlash.none.upload.erase_cmd=
+wifiduino32c3.menu.EraseFlash.all=Enabled
+wifiduino32c3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
