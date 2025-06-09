@@ -72,6 +72,9 @@ void setup() {
   zbAnalogDevice.setAnalogOutputDescription("Fan Speed (RPM)");
   zbAnalogDevice.setAnalogOutputResolution(1);
 
+  // Set the min and max values for the analog output which is used by HA to limit the range of the analog output
+  zbAnalogDevice.setAnalogOutputMinMax(-10000, 10000); //-10000 to 10000 RPM
+
   // If analog output cluster is added, set callback function for analog output change
   zbAnalogDevice.onAnalogOutputChange(onAnalogOutputChange);
 
