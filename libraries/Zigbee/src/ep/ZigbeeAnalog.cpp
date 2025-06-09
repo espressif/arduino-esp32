@@ -1,5 +1,6 @@
 #include "ZigbeeAnalog.h"
 #if CONFIG_ZB_ENABLED
+#include <cfloat>
 
 ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
@@ -20,8 +21,8 @@ bool ZigbeeAnalog::addAnalogInput() {
                                "Analog Input";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AI_GROUP_ID << 24);
   float resolution = 0.1;  // Default resolution of 0.1
-  float min = -3.402823e+38;  // Default min value for float
-  float max = 3.402823e+38;  // Default max value for float
+  float min = -FLT_MAX;  // Default min value for float
+  float max = FLT_MAX;  // Default max value for float
 
   esp_err_t ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
@@ -91,8 +92,8 @@ bool ZigbeeAnalog::addAnalogOutput() {
                                "Analog Output";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AO_GROUP_ID << 24);
   float resolution = 1;  // Default resolution of 1
-  float min = -3.402823e+38;  // Default min value for float
-  float max = 3.402823e+38;  // Default max value for float
+  float min = -FLT_MAX;  // Default min value for float
+  float max = FLT_MAX;  // Default max value for float
 
   esp_err_t ret =
     esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description);
