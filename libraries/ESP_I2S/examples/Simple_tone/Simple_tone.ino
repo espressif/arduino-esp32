@@ -31,9 +31,9 @@
 #include <ESP_I2S.h>
 
 // The GPIO pins are not fixed, most other pins could be used for the I2S function.
-#define I2S_LRC 25
+#define I2S_LRC  25
 #define I2S_BCLK 5
-#define I2S_DIN 26
+#define I2S_DIN  26
 
 const int frequency = 440;    // frequency of square wave in Hz
 const int amplitude = 500;    // amplitude of square wave
@@ -59,8 +59,7 @@ void setup() {
   // start I2S at the sample rate with 16-bits per sample
   if (!i2s.begin(mode, sampleRate, bps, slot)) {
     Serial.println("Failed to initialize I2S!");
-    while (1)
-      ;  // do nothing
+    while (1);  // do nothing
   }
 }
 
