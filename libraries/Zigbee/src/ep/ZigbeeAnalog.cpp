@@ -1,5 +1,6 @@
 #include "ZigbeeAnalog.h"
 #if CONFIG_ZB_ENABLED
+#include <cfloat>
 
 ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
@@ -20,6 +21,8 @@ bool ZigbeeAnalog::addAnalogInput() {
                                "Analog Input";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AI_GROUP_ID << 24);
   float resolution = 0.1;  // Default resolution of 0.1
+  float min = -FLT_MAX;    // Default min value for float
+  float max = FLT_MAX;     // Default max value for float
 
   esp_err_t ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
@@ -39,11 +42,24 @@ bool ZigbeeAnalog::addAnalogInput() {
     return false;
   }
 
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_input_cluster_add_attr(esp_zb_analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
   ret = esp_zb_cluster_list_add_analog_input_cluster(_cluster_list, esp_zb_analog_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
     log_e("Failed to add Analog Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
+
   _analog_clusters |= ANALOG_INPUT;
   return true;
 }
@@ -76,6 +92,8 @@ bool ZigbeeAnalog::addAnalogOutput() {
                                "Analog Output";
   uint32_t application_type = 0x00000000 | (ESP_ZB_ZCL_AO_GROUP_ID << 24);
   float resolution = 1;  // Default resolution of 1
+  float min = -FLT_MAX;  // Default min value for float
+  float max = FLT_MAX;   // Default max value for float
 
   esp_err_t ret =
     esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)default_description);
@@ -93,6 +111,18 @@ bool ZigbeeAnalog::addAnalogOutput() {
   ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
   if (ret != ESP_OK) {
     log_e("Failed to add resolution attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
@@ -371,6 +401,60 @@ bool ZigbeeAnalog::setAnalogOutputResolution(float resolution) {
   esp_err_t ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
   if (ret != ESP_OK) {
     log_e("Failed to set resolution: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogOutputMinMax(float min, float max) {
+  if (!(_analog_clusters & ANALOG_OUTPUT)) {
+    log_e("Analog Output cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *analog_output_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_output_cluster == nullptr) {
+    log_e("Failed to get analog output cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_cluster_update_attr(analog_output_cluster, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeAnalog::setAnalogInputMinMax(float min, float max) {
+  if (!(_analog_clusters & ANALOG_INPUT)) {
+    log_e("Analog Input cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *analog_input_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (analog_input_cluster == nullptr) {
+    log_e("Failed to get analog input cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
+  if (ret != ESP_OK) {
+    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  ret = esp_zb_cluster_update_attr(analog_input_cluster, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
+  if (ret != ESP_OK) {
+    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;

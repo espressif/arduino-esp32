@@ -41,6 +41,10 @@ public:
   bool setAnalogOutputDescription(const char *description);
   bool setAnalogOutputResolution(float resolution);
 
+  // Set the min and max values for the analog Input/Output
+  bool setAnalogOutputMinMax(float min, float max);
+  bool setAnalogInputMinMax(float min, float max);
+
   // Use to set a cb function to be called on analog output change
   void onAnalogOutputChange(void (*callback)(float analog)) {
     _on_analog_output_change = callback;
