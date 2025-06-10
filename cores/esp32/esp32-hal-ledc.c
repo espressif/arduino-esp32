@@ -84,7 +84,7 @@ static bool find_free_timer(uint8_t speed_mode, uint8_t *timer_num) {
       }
     }
   }
-  
+
   // Find first unused timer
   for (uint8_t i = 0; i < SOC_LEDC_TIMER_NUM; i++) {
     if (!(used_timers & (1 << i))) {
@@ -100,7 +100,7 @@ static bool find_free_timer(uint8_t speed_mode, uint8_t *timer_num) {
 // Helper function to remove a channel from a timer and clear timer if no channels are using it
 static void remove_channel_from_timer(uint8_t speed_mode, uint8_t timer_num, uint8_t channel) {
   log_d("Removing channel %u from timer %u in speed_mode %u", channel, timer_num, speed_mode);
-  
+
   // Check if any other channels are using this timer
   bool timer_in_use = false;
   for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
@@ -110,8 +110,7 @@ static void remove_channel_from_timer(uint8_t speed_mode, uint8_t timer_num, uin
     peripheral_bus_type_t type = perimanGetPinBusType(i);
     if (type == ESP32_BUS_TYPE_LEDC) {
       ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
-      if (bus != NULL && (bus->channel / 8) == speed_mode && 
-          bus->timer_num == timer_num && bus->channel != channel) {
+      if (bus != NULL && (bus->channel / 8) == speed_mode && bus->timer_num == timer_num && bus->channel != channel) {
         log_d("Timer %u is still in use by channel %u", timer_num, bus->channel);
         timer_in_use = true;
         break;
@@ -208,9 +207,9 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   }
 
   uint8_t group = (channel / 8);
-  uint8_t timer = 0; 
+  uint8_t timer = 0;
   bool channel_used = ledc_handle.used_channels & (1UL << channel);
-  
+
   if (channel_used) {
     log_i("Channel %u is already set up, given frequency and resolution will be ignored", channel);
     if (ledc_set_pin(pin, group, channel % 8) != ESP_OK) {
@@ -224,7 +223,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
         log_e("No free timers available for speed mode %u", group);
         return false;
       }
-      
+
       // Configure the timer if we're using a new one
       ledc_timer_config_t ledc_timer;
       memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
