@@ -56,12 +56,10 @@ static bool find_matching_timer(uint8_t speed_mode, uint32_t freq, uint8_t resol
     peripheral_bus_type_t type = perimanGetPinBusType(i);
     if (type == ESP32_BUS_TYPE_LEDC) {
       ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
-      if (bus != NULL && (bus->channel / 8) == speed_mode) {
-        if (bus->freq_hz == freq && bus->channel_resolution == resolution) {
-          log_d("Found matching timer %u for freq=%u, resolution=%u", bus->timer_num, freq, resolution);
-          *timer_num = bus->timer_num;
-          return true;
-        }
+      if (bus != NULL && (bus->channel / 8) == speed_mode && bus->freq_hz == freq && bus->channel_resolution == resolution) {
+        log_d("Found matching timer %u for freq=%u, resolution=%u", bus->timer_num, freq, resolution);
+        *timer_num = bus->timer_num;
+        return true;
       }
     }
   }
