@@ -25,7 +25,7 @@
 #include "esp_ota_ops.h"
 #endif  //CONFIG_APP_ROLLBACK_ENABLE
 #include "esp_private/startup_internal.h"
-#if defined(CONFIG_BT_BLUEDROID_ENABLED) && SOC_BT_SUPPORTED
+#if defined(CONFIG_BT_BLUEDROID_ENABLED) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
 #include "esp_bt.h"
 #endif  //CONFIG_BT_BLUEDROID_ENABLED
 #include <sys/time.h>
