@@ -4,12 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0x303a
-#define USB_PID 0x1001
+#define USB_VID          0x303a
+#define USB_PID          0x1001
 #define USB_MANUFACTURER "openjumper"
 #define USB_PRODUCT      "Wifiduino32-S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
-
 
 // Some boards have too low voltage on this pin (board design bug)
 // Use different pin with 3V and connect with 48
