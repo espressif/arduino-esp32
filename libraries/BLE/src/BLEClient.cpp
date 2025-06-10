@@ -895,6 +895,11 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
  */
 int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg)
 {
+  if (error == nullptr || service == nullptr) {
+    log_e("serviceDiscoveredCB: error or service is nullptr");
+    return 0;
+  }
+
   log_d("Service Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? service->start_handle : -1);
 
   ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
@@ -936,7 +941,7 @@ std::map<std::string, BLERemoteService *> *BLEClient::getServices() {
  */
   log_v(">> getServices");
   // TODO implement retrieving services from cache
-  m_semaphoreSearchCmplEvt.take("getServices");
+  //m_semaphoreSearchCmplEvt.take("getServices");
   clearServices();  // Clear any services that may exist.
 
   int errRc = 0;
@@ -947,12 +952,12 @@ std::map<std::string, BLERemoteService *> *BLEClient::getServices() {
   if (errRc != 0) {
     log_e("ble_gattc_disc_all_svcs: rc=%d %s", errRc, BLEUtils::returnCodeToString(errRc));
     m_lastErr = errRc;
-    m_semaphoreSearchCmplEvt.give();
+    //m_semaphoreSearchCmplEvt.give();
     return &m_servicesMap;
   }
   // If successful, remember that we now have services.
   m_haveServices = m_servicesMap.size() > 0;
-  m_semaphoreSearchCmplEvt.give();
+  //m_semaphoreSearchCmplEvt.give();
   log_v("<< getServices");
   return &m_servicesMap;
 }  // getServices
@@ -1249,6 +1254,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 int BLEClient::disconnect(uint8_t reason) {
   log_d(">> disconnect()");
   int rc = 0;
+
   if(isConnected()) {
     // If the timer was already started, ignore this call.
     if(ble_npl_callout_is_active(&m_dcTimer)) {
@@ -1278,9 +1284,9 @@ int BLEClient::disconnect(uint8_t reason) {
         ble_npl_callout_stop(&m_dcTimer);
       }
       log_e("ble_gap_terminate failed: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
-    } else {
-      log_d("Not connected to any peers");
     }
+  } else {
+    log_d("Not connected to any peers");
   }
 
   log_d("<< disconnect()");
