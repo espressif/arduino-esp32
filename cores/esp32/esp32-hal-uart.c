@@ -827,22 +827,56 @@ void uartSetRxInvert(uart_t *uart, bool invert) {
   if (uart == NULL) {
     return;
   }
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
   // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
   // IDF or LL set/reset the whole inv_mask!
   // if (invert)
   //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
   // else
   //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
-  log_e("uartSetRxInvert is not supported in ESP32C6, ESP32H2 and ESP32P4");
-#else
   // this implementation is better over IDF API because it only affects RXD
-  // this is supported in ESP32, ESP32-S2 and ESP32-C3
   uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
+  if (invert) {
+    hw->conf0_sync.rxd_inv = 1;
+  } else {
+    hw->conf0_sync.rxd_inv = 0;
+  }
+#else
+  // this is supported in ESP32, ESP32-S2 and ESP32-C3
   if (invert) {
     hw->conf0.rxd_inv = 1;
   } else {
     hw->conf0.rxd_inv = 0;
+  }
+#endif
+}
+
+void uartSetTxInvert(uart_t *uart, bool invert) {
+  if (uart == NULL) {
+    return;
+  }
+  // POTENTIAL ISSUE :: original code only set/reset txd_inv bit
+  // IDF or LL set/reset the whole inv_mask!
+  // if (invert)
+  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_TXD_INV));
+  // else
+  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
+  // this implementation is better over IDF API because it only affects TXD
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
+  if (invert) {
+    hw->conf0_sync.txd_inv = 1;
+  } else {
+    hw->conf0_sync.txd_inv = 0;
+  }
+#else
+  // this is supported in ESP32, ESP32-S2 and ESP32-C3
+  if (invert) {
+    hw->conf0.txd_inv = 1;
+  } else {
+    hw->conf0.txd_inv = 0;
   }
 #endif
 }
