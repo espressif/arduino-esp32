@@ -45,6 +45,93 @@ typedef struct {
 
 ledc_periph_t ledc_handle = {0};
 
+// Helper function to find a timer with matching frequency and resolution
+static bool find_matching_timer(uint8_t speed_mode, uint32_t freq, uint8_t resolution, uint8_t *timer_num) {
+  log_d("Searching for timer with freq=%u, resolution=%u", freq, resolution);
+  // Check all channels to find one with matching frequency and resolution
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;
+    }
+    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    if (type == ESP32_BUS_TYPE_LEDC) {
+      ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
+      if (bus != NULL && (bus->channel / 8) == speed_mode && bus->freq_hz == freq && bus->channel_resolution == resolution) {
+        log_d("Found matching timer %u for freq=%u, resolution=%u", bus->timer_num, freq, resolution);
+        *timer_num = bus->timer_num;
+        return true;
+      }
+    }
+  }
+  log_d("No matching timer found for freq=%u, resolution=%u", freq, resolution);
+  return false;
+}
+
+// Helper function to find an unused timer
+static bool find_free_timer(uint8_t speed_mode, uint8_t *timer_num) {
+  // Check which timers are in use
+  uint8_t used_timers = 0;
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;
+    }
+    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    if (type == ESP32_BUS_TYPE_LEDC) {
+      ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
+      if (bus != NULL && (bus->channel / 8) == speed_mode) {
+        log_d("Timer %u is in use by channel %u", bus->timer_num, bus->channel);
+        used_timers |= (1 << bus->timer_num);
+      }
+    }
+  }
+
+  // Find first unused timer
+  for (uint8_t i = 0; i < SOC_LEDC_TIMER_NUM; i++) {
+    if (!(used_timers & (1 << i))) {
+      log_d("Found free timer %u", i);
+      *timer_num = i;
+      return true;
+    }
+  }
+  log_e("No free timers available");
+  return false;
+}
+
+// Helper function to remove a channel from a timer and clear timer if no channels are using it
+static void remove_channel_from_timer(uint8_t speed_mode, uint8_t timer_num, uint8_t channel) {
+  log_d("Removing channel %u from timer %u in speed_mode %u", channel, timer_num, speed_mode);
+
+  // Check if any other channels are using this timer
+  bool timer_in_use = false;
+  for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
+    if (!perimanPinIsValid(i)) {
+      continue;
+    }
+    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    if (type == ESP32_BUS_TYPE_LEDC) {
+      ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
+      if (bus != NULL && (bus->channel / 8) == speed_mode && bus->timer_num == timer_num && bus->channel != channel) {
+        log_d("Timer %u is still in use by channel %u", timer_num, bus->channel);
+        timer_in_use = true;
+        break;
+      }
+    }
+  }
+
+  if (!timer_in_use) {
+    log_d("No other channels using timer %u, deconfiguring timer", timer_num);
+    // Stop the timer
+    ledc_timer_pause(speed_mode, timer_num);
+    // Deconfigure the timer
+    ledc_timer_config_t ledc_timer;
+    memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
+    ledc_timer.speed_mode = speed_mode;
+    ledc_timer.timer_num = timer_num;
+    ledc_timer.deconfigure = true;
+    ledc_timer_config(&ledc_timer);
+  }
+}
+
 static bool fade_initialized = false;
 
 static ledc_clk_cfg_t clock_source = LEDC_DEFAULT_CLK;
@@ -81,6 +168,8 @@ static bool ledcDetachBus(void *bus) {
   }
   pinMatrixOutDetach(handle->pin, false, false);
   if (!channel_found) {
+    uint8_t group = (handle->channel / 8);
+    remove_channel_from_timer(group, handle->timer_num, handle->channel % 8);
     ledc_handle.used_channels &= ~(1UL << handle->channel);
   }
   free(handle);
@@ -117,8 +206,10 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     return false;
   }
 
-  uint8_t group = (channel / 8), timer = ((channel / 2) % 4);
+  uint8_t group = (channel / 8);
+  uint8_t timer = 0;
   bool channel_used = ledc_handle.used_channels & (1UL << channel);
+
   if (channel_used) {
     log_i("Channel %u is already set up, given frequency and resolution will be ignored", channel);
     if (ledc_set_pin(pin, group, channel % 8) != ESP_OK) {
@@ -126,17 +217,26 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
       return false;
     }
   } else {
-    ledc_timer_config_t ledc_timer;
-    memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
-    ledc_timer.speed_mode = group;
-    ledc_timer.timer_num = timer;
-    ledc_timer.duty_resolution = resolution;
-    ledc_timer.freq_hz = freq;
-    ledc_timer.clk_cfg = clock_source;
+    // Find a timer with matching frequency and resolution, or a free timer
+    if (!find_matching_timer(group, freq, resolution, &timer)) {
+      if (!find_free_timer(group, &timer)) {
+        log_e("No free timers available for speed mode %u", group);
+        return false;
+      }
 
-    if (ledc_timer_config(&ledc_timer) != ESP_OK) {
-      log_e("ledc setup failed!");
-      return false;
+      // Configure the timer if we're using a new one
+      ledc_timer_config_t ledc_timer;
+      memset((void *)&ledc_timer, 0, sizeof(ledc_timer_config_t));
+      ledc_timer.speed_mode = group;
+      ledc_timer.timer_num = timer;
+      ledc_timer.duty_resolution = resolution;
+      ledc_timer.freq_hz = freq;
+      ledc_timer.clk_cfg = clock_source;
+
+      if (ledc_timer_config(&ledc_timer) != ESP_OK) {
+        log_e("ledc setup failed!");
+        return false;
+      }
     }
 
     uint32_t duty = ledc_get_duty(group, (channel % 8));
@@ -157,6 +257,8 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   ledc_channel_handle_t *handle = (ledc_channel_handle_t *)malloc(sizeof(ledc_channel_handle_t));
   handle->pin = pin;
   handle->channel = channel;
+  handle->timer_num = timer;
+  handle->freq_hz = freq;
 #ifndef SOC_LEDC_SUPPORT_FADE_STOP
   handle->lock = NULL;
 #endif
