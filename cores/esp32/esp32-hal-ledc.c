@@ -22,6 +22,9 @@
 #include "soc/gpio_sig_map.h"
 #include "esp_rom_gpio.h"
 #include "hal/ledc_ll.h"
+#if SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
+#include <math.h>
+#endif
 
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM << 1)
@@ -274,7 +277,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_handle.used_channels |= 1UL << channel;
   }
 
-  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle, group, channel)) {
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_LEDC, (void *)handle, channel, timer)) {
     ledcDetachBus((void *)handle);
     return false;
   }
@@ -599,6 +602,159 @@ bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg) {
   return ledcFadeConfig(pin, start_duty, target_duty, max_fade_time_ms, userFunc, arg);
 }
+
+#ifdef SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
+// Default gamma factor for gamma correction (common value for LEDs)
+static float ledcGammaFactor = 2.8;
+// Gamma correction LUT support
+static const float *ledcGammaLUT = NULL;
+static uint16_t ledcGammaLUTSize = 0;
+// Global variable to store current resolution for gamma callback
+static uint8_t ledcGammaResolution = 13;
+
+bool ledcSetGammaTable(const float* gamma_table, uint16_t size) {
+  if (gamma_table == NULL || size == 0) {
+    log_e("Invalid gamma table or size");
+    return false;
+  }
+  ledcGammaLUT = gamma_table;
+  ledcGammaLUTSize = size;
+  log_i("Custom gamma LUT set with %u entries", size);
+  return true;
+}
+
+void ledcClearGammaTable(void) {
+  ledcGammaLUT = NULL;
+  ledcGammaLUTSize = 0;
+  log_i("Gamma LUT cleared, using mathematical calculation");
+}
+
+void ledcSetGammaFactor(float factor) {
+  ledcGammaFactor = factor;
+}
+
+// Gamma correction calculator function
+static uint32_t ledcGammaCorrection(uint32_t duty) {
+  if (duty == 0) return 0;
+  
+  uint32_t max_duty = (1U << ledcGammaResolution) - 1;
+  if (duty >= (1U << ledcGammaResolution)) return max_duty;
+  
+  // Use LUT if provided, otherwise use mathematical calculation
+  if (ledcGammaLUT != NULL && ledcGammaLUTSize > 0) {
+    // LUT-based gamma correction
+    uint32_t lut_index = (duty * (ledcGammaLUTSize - 1)) / max_duty;
+    if (lut_index >= ledcGammaLUTSize) lut_index = ledcGammaLUTSize - 1;
+    
+    float corrected_normalized = ledcGammaLUT[lut_index];
+    return (uint32_t)(corrected_normalized * max_duty);
+  } else {
+    // Mathematical gamma correction
+    double normalized = (double)duty / (1U << ledcGammaResolution);
+    double corrected = pow(normalized, ledcGammaFactor);
+    return (uint32_t)(corrected * (1U << ledcGammaResolution));
+  }
+}
+
+static bool ledcFadeGammaConfig(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg) {
+  ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+  if (bus != NULL) {
+
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if (bus->lock == NULL) {
+      bus->lock = xSemaphoreCreateBinary();
+      if (bus->lock == NULL) {
+        log_e("xSemaphoreCreateBinary failed");
+        return false;
+      }
+      xSemaphoreGive(bus->lock);
+    }
+    //acquire lock
+    if (xSemaphoreTake(bus->lock, 0) != pdTRUE) {
+      log_e("LEDC Fade is still running on pin %u! SoC does not support stopping fade.", pin);
+      return false;
+    }
+#endif
+#endif
+    uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
+
+    // Initialize fade service.
+    if (!fade_initialized) {
+      ledc_fade_func_install(0);
+      fade_initialized = true;
+    }
+
+    bus->fn = (voidFuncPtr)userFunc;
+    bus->arg = arg;
+
+    ledc_cbs_t callbacks = {.fade_cb = ledcFnWrapper};
+    ledc_cb_register(group, channel, &callbacks, (void *)bus);
+
+    // Prepare gamma curve fade parameters
+    ledc_fade_param_config_t fade_params[SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX];
+    uint32_t actual_fade_ranges = 0;
+    
+    // Use a moderate number of linear segments for smooth gamma curve
+    const uint32_t linear_fade_segments = 12;
+    
+    // Set the global resolution for gamma correction
+    ledcGammaResolution = bus->channel_resolution;
+
+    // Fill multi-fade parameter list using ESP-IDF API
+    esp_err_t err = ledc_fill_multi_fade_param_list(
+      group, channel,
+      start_duty, target_duty,
+      linear_fade_segments, max_fade_time_ms,
+      ledcGammaCorrection,
+      SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX,
+      fade_params, &actual_fade_ranges
+    );
+
+    if (err != ESP_OK) {
+      log_e("ledc_fill_multi_fade_param_list failed: %s", esp_err_to_name(err));
+      return false;
+    }
+
+    // Apply the gamma-corrected start duty
+    uint32_t gamma_start_duty = ledcGammaCorrection(start_duty);
+
+    // Set multi-fade parameters
+    err = ledc_set_multi_fade(group, channel, gamma_start_duty, fade_params, actual_fade_ranges);
+    if (err != ESP_OK) {
+      log_e("ledc_set_multi_fade failed: %s", esp_err_to_name(err));
+      return false;
+    }
+
+    // Start the gamma curve fade
+    err = ledc_fade_start(group, channel, LEDC_FADE_NO_WAIT);
+    if (err != ESP_OK) {
+      log_e("ledc_fade_start failed: %s", esp_err_to_name(err));
+      return false;
+    }
+
+    log_d("Gamma curve fade started on pin %u: %u -> %u over %dms", pin, start_duty, target_duty, max_fade_time_ms);
+    
+  } else {
+    log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
+    return false;
+  }
+  return true;
+}
+
+bool ledcFadeGamma(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms) {
+  return ledcFadeGammaConfig(pin, start_duty, target_duty, max_fade_time_ms, NULL, NULL);
+}
+
+bool ledcFadeGammaWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, voidFuncPtr userFunc) {
+  return ledcFadeGammaConfig(pin, start_duty, target_duty, max_fade_time_ms, (voidFuncPtrArg)userFunc, NULL);
+}
+
+bool ledcFadeGammaWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg) {
+  return ledcFadeGammaConfig(pin, start_duty, target_duty, max_fade_time_ms, userFunc, arg);
+}
+
+#endif /* SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED */
 
 static uint8_t analog_resolution = 8;
 static int analog_frequency = 1000;
