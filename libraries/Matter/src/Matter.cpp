@@ -28,8 +28,8 @@ constexpr auto k_timeout_seconds = 300;
 
 static bool _matter_has_started = false;
 static node::config_t node_config;
-static node_t *deviceNode = NULL;
-ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = NULL;
+static node_t *deviceNode = nullptr;
+ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = nullptr;
 
 // This callback is called for every attribute update. The callback implementation shall
 // handle the desired attributes and return an appropriate error code. If the attribute
@@ -43,7 +43,7 @@ static esp_err_t app_attribute_update_cb(
   switch (type) {
     case PRE_UPDATE:  // Callback before updating the value in the database
       log_v("Attribute update callback: PRE_UPDATE");
-      if (ep != NULL) {
+      if (ep != nullptr) {
         err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
       }
       break;
@@ -79,7 +79,7 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
     identifyIsActive = false;
     log_v("Identification callback: STOP");
   }
-  if (ep != NULL) {
+  if (ep != nullptr) {
     err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
   }
 
@@ -124,7 +124,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
     default:                                                       break;
   }
   // Check if the user-defined callback is set
-  if (ArduinoMatter::_matterEventCB != NULL) {
+  if (ArduinoMatter::_matterEventCB != nullptr) {
     ArduinoMatter::_matterEventCB(static_cast<ArduinoMatter::matterEvent_t>(event->Type), event);
   }
 }
