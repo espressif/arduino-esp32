@@ -30,9 +30,9 @@
 // LED FLASH setup
 #if CONFIG_LED_ILLUMINATOR_ENABLED
 
-#define LED_LEDC_GPIO            22  //configure LED pin
 #define CONFIG_LED_MAX_INTENSITY 255
 
+int led_pin = 22;  // Store the actual LED pin used
 int led_duty = 0;
 bool isStreaming = false;
 
@@ -97,7 +97,7 @@ void enable_led(bool en) {  // Turn LED On or Off
   if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY)) {
     duty = CONFIG_LED_MAX_INTENSITY;
   }
-  ledcWrite(LED_LEDC_GPIO, duty);
+  ledcWrite(led_pin, duty);
   //ledc_set_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL, duty);
   //ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL);
   log_i("Set LED intensity to %d", duty);
@@ -845,6 +845,7 @@ void startCameraServer() {
 
 void setupLedFlash(int pin) {
 #if CONFIG_LED_ILLUMINATOR_ENABLED
+  led_pin = pin;  // Store the actual LED pin used
   ledcAttach(pin, 5000, 8);
 #else
   log_i("LED flash is disabled -> CONFIG_LED_ILLUMINATOR_ENABLED = 0");
