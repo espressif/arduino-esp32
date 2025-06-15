@@ -98,6 +98,7 @@ BLEClient::BLEClient() {
   m_connectTimeout = 30000;
   m_pTaskData = nullptr;
   m_lastErr = 0;
+  m_terminateFailCount = 0;
 
   m_pConnParams.scan_itvl = 16;                                             // Scan interval in 0.625ms units (NimBLE Default)
   m_pConnParams.scan_window = 16;                                           // Scan window in 0.625ms units (NimBLE Default)
@@ -107,9 +108,6 @@ BLEClient::BLEClient() {
   m_pConnParams.supervision_timeout = BLE_GAP_INITIAL_SUPERVISION_TIMEOUT;  // timeout = 400*10ms = 4000ms
   m_pConnParams.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;               // Minimum length of connection event in 0.625ms units
   m_pConnParams.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;               // Maximum length of connection event in 0.625ms units
-
-  memset(&m_dcTimer, 0, sizeof(m_dcTimer));
-  ble_npl_callout_init(&m_dcTimer, nimble_port_get_dflt_eventq(), BLEClient::dcTimerCb, this);
 #endif
 }  // BLEClient
 
@@ -124,10 +122,6 @@ BLEClient::~BLEClient() {
   }
   m_servicesMap.clear();
   m_servicesMapByInstID.clear();
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  ble_npl_callout_deinit(&m_dcTimer);
-#endif
 }  // ~BLEClient
 
 /**
@@ -186,34 +180,27 @@ bool BLEClient::secureConnection() {
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, nullptr};
-
   int retryCount = 1;
+  BLETaskData taskData(const_cast<BLEClient*>(this), BLE_HS_ENOTCONN);
+  m_pTaskData = &taskData;
 
   do {
-    m_pTaskData = &taskData;
-
-    int rc = BLESecurity::startSecurity(m_conn_id);
-    if (rc != 0) {
-      m_lastErr = rc;
-      m_pTaskData = nullptr;
-      return false;
+    if (BLESecurity::startSecurity(m_conn_id)) {
+      BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
     }
 
-#ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-  } while (taskData.rc == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
+  } while (taskData.m_flags == (BLE_HS_ERR_HCI_BASE + BLE_ERR_PINKEY_MISSING) && retryCount--);
 
-  if (taskData.rc != 0) {
-    m_lastErr = taskData.rc;
-    return false;
+  m_pTaskData = nullptr;
+
+  if (taskData.m_flags == 0) {
+    log_d("<< secureConnection: success");
+    return true;
   }
 
-  return true;
+  m_lastErr = taskData.m_flags;
+  log_e("secureConnection: failed rc=%d", taskData.m_flags);
+  return false;
 #endif
 }  // secureConnection
 
@@ -376,7 +363,7 @@ bool BLEClient::setMTU(uint16_t mtu) {
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-    err = ble_gattc_exchange_mtu(m_conn_id, nullptr, nullptr);
+    //err = ble_gattc_exchange_mtu(m_conn_id, nullptr, nullptr);
 #endif
 
     if (err != ESP_OK) {
@@ -799,9 +786,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   m_appId = BLEDevice::m_appId++;
   m_peerAddress = address;
 
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, nullptr};
-  m_pTaskData = &taskData;
   int rc = 0;
 
   /* Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
@@ -837,45 +821,34 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
 
   } while (rc == BLE_HS_EBUSY);
 
-  m_lastErr = rc;
-
   if (rc != 0) {
-    m_pTaskData = nullptr;
+    m_lastErr = rc;
     return false;
   }
 
-#ifdef ulTaskNotifyValueClear
-  // Clear the task notification value to ensure we block
-  ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
+  BLETaskData taskData(this);
+  m_pTaskData = &taskData;
 
   // Wait for the connect timeout time +1 second for the connection to complete
-  if (ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(m_connectTimeout + 1000)) == pdFALSE) {
-    m_pTaskData = nullptr;
-    // If a connection was made but no response from MTU exchange; disconnect
+  if (!BLEUtils::taskWait(taskData, m_connectTimeout + 1000)) {
+    // If a connection was made but no response from MTU exchange proceed anyway
     if (isConnected()) {
-      log_e("Connect timeout - no response");
-      disconnect();
+      taskData.m_flags = 0;
     } else {
-      // workaround; if the controller doesn't cancel the connection
-      // at the timeout, cancel it here.
-      log_e("Connect timeout - canceling");
+      // workaround; if the controller doesn't cancel the connection at the timeout, cancel it here.
+      log_e("Connect timeout - cancelling");
       ble_gap_conn_cancel();
+      taskData.m_flags = BLE_HS_ETIMEOUT;
     }
+  }
 
-    return false;
+  m_pTaskData = nullptr;
+  rc = taskData.m_flags;
 
-  } else if (taskData.rc != 0) {
-    m_lastErr = taskData.rc;
-    log_e("Connection failed; status=%d %s", taskData.rc, BLEUtils::returnCodeToString(taskData.rc));
-    // If the failure was not a result of a disconnection
-    // make sure we disconnect now to avoid dangling connections
-    if (isConnected()) {
-      disconnect();
-    }
+  if (rc != 0) {
+    log_e("Connection failed; status=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    m_lastErr = rc;
     return false;
-  } else {
-    log_i("Connection established");
   }
 
   m_isConnected = true;
@@ -895,15 +868,16 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
  */
 int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg)
 {
-  if (error == nullptr || service == nullptr) {
-    log_e("serviceDiscoveredCB: error or service is nullptr");
-    return 0;
-  }
-
   log_d("Service Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? service->start_handle : -1);
 
-  ble_task_data_t *pTaskData = (ble_task_data_t*)arg;
-  BLEClient *client = (BLEClient*)pTaskData->pATT;
+  BLETaskData *pTaskData = (BLETaskData*)arg;
+  BLEClient *client = (BLEClient*)pTaskData->m_pInstance;
+
+  if (error->status == BLE_HS_ENOTCONN) {
+    log_e("<< Service Discovered; Disconnected");
+    BLEUtils::taskRelease(*pTaskData, error->status);
+    return error->status;
+  }
 
   // Make sure the service discovery is for this device
   if(client->getConnId() != conn_handle){
@@ -918,53 +892,50 @@ int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_e
     return 0;
   }
 
-  if(error->status == BLE_HS_EDONE) {
-    pTaskData->rc = 0;
-  } else {
-    log_e("serviceDiscoveredCB() rc=%d %s", error->status, BLEUtils::returnCodeToString(error->status));
-    pTaskData->rc = error->status;
-  }
-
-  xTaskNotifyGive(pTaskData->task);
-
+  BLEUtils::taskRelease(*pTaskData, error->status);
   log_d("<< Service Discovered");
   return error->status;
 }
 
 std::map<std::string, BLERemoteService *> *BLEClient::getServices() {
-  /*
- * Design
- * ------
- * We invoke esp_ble_gattc_search_service.  This will request a list of the service exposed by the
- * peer BLE partner to be returned as events.  Each event will be an an instance of ESP_GATTC_SEARCH_RES_EVT
- * and will culminate with an ESP_GATTC_SEARCH_CMPL_EVT when all have been received.
- */
   log_v(">> getServices");
-  // TODO implement retrieving services from cache
-  //m_semaphoreSearchCmplEvt.take("getServices");
+
   clearServices();  // Clear any services that may exist.
 
+  if (!isConnected()) {
+    log_e("Disconnected, could not retrieve services -aborting");
+    return &m_servicesMap;
+  }
+
   int errRc = 0;
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, nullptr};
+  BLETaskData taskData(this);
 
   errRc = ble_gattc_disc_all_svcs(m_conn_id, BLEClient::serviceDiscoveredCB, &taskData);
+
   if (errRc != 0) {
     log_e("ble_gattc_disc_all_svcs: rc=%d %s", errRc, BLEUtils::returnCodeToString(errRc));
     m_lastErr = errRc;
-    //m_semaphoreSearchCmplEvt.give();
     return &m_servicesMap;
   }
-  // If successful, remember that we now have services.
-  m_haveServices = m_servicesMap.size() > 0;
-  //m_semaphoreSearchCmplEvt.give();
-  log_v("<< getServices");
+
+  BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+  errRc = taskData.m_flags;
+  if (errRc == 0 || errRc == BLE_HS_EDONE) {
+    // If successful, remember that we now have services.
+    m_haveServices = m_servicesMap.size() > 0;
+    log_v("<< getServices");
+    return &m_servicesMap;
+  }
+
+  m_lastErr = errRc;
+  log_e("Could not retrieve services, rc=%d %s", errRc, BLEUtils::returnCodeToString(errRc));
   return &m_servicesMap;
 }  // getServices
 
 int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
   BLEClient *client = (BLEClient *)arg;
-  int rc;
+  int rc = 0;
+  BLETaskData *pTaskData = client->m_pTaskData;
 
   log_d("BLEClient", "Got Client event %s", BLEUtils::gapEventToString(event->type));
 
@@ -979,7 +950,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         case BLE_HS_ETIMEOUT_HCI:
         case BLE_HS_ENOTSYNCED:
         case BLE_HS_EOS:
-          log_d("BLEClient", "Disconnect - host reset, rc=%d", rc);
+          log_e("BLEClient", "Disconnect - host reset, rc=%d", rc);
           BLEDevice::onReset(rc);
           break;
         default:
@@ -990,14 +961,12 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           break;
       }
 
-      // Stop the disconnect timer since we are now disconnected.
-      ble_npl_callout_stop(&client->m_dcTimer);
-
       // Remove the device from ignore list so we will scan it again
       // BLEDevice::removeIgnored(client->m_peerAddress);
 
       // No longer connected, clear the connection ID.
       client->m_conn_id = BLE_HS_CONN_HANDLE_NONE;
+      client->m_terminateFailCount = 0;
 
       // If we received a connected event but did not get established (no PDU)
       // then a disconnect event will be sent but we should not send it to the
@@ -1028,11 +997,11 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
       rc = event->connect.status;
       if (rc == 0) {
-        log_i("BLEClient", "Connected event");
+        log_i("BLEClient: Connected event. Handle: %d", event->connect.conn_handle);
 
         client->m_conn_id = event->connect.conn_handle;
 
-        rc = ble_gattc_exchange_mtu(client->m_conn_id, NULL, NULL);
+        rc = ble_gattc_exchange_mtu(client->m_conn_id, nullptr, nullptr);
         if (rc != 0) {
           log_e("BLEClient", "MTU exchange error; rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
           break;
@@ -1048,6 +1017,20 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
       return 0;
     }  // BLE_GAP_EVENT_CONNECT
+
+    case BLE_GAP_EVENT_TERM_FAILURE: {
+      if (client->m_conn_id != event->term_failure.conn_handle) {
+        return 0;
+      }
+
+      log_e("Connection termination failure; rc=%d - retrying", event->term_failure.status);
+      if (++client->m_terminateFailCount > 2) {
+        ble_hs_sched_reset(BLE_HS_ECONTROLLER);
+      } else {
+        ble_gap_terminate(event->term_failure.conn_handle, BLE_ERR_REM_USER_CONN_TERM);
+      }
+      return 0;
+    } // BLE_GAP_EVENT_TERM_FAILURE
 
     case BLE_GAP_EVENT_NOTIFY_RX:
     {
@@ -1236,12 +1219,8 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
     }
   }  // Switch
 
-  if (client->m_pTaskData != nullptr) {
-    client->m_pTaskData->rc = rc;
-    if (client->m_pTaskData->task) {
-      xTaskNotifyGive(client->m_pTaskData->task);
-    }
-    client->m_pTaskData = nullptr;
+  if (pTaskData != nullptr) {
+    BLEUtils::taskRelease(*pTaskData, rc);
   }
 
   return 0;
@@ -1256,33 +1235,9 @@ int BLEClient::disconnect(uint8_t reason) {
   int rc = 0;
 
   if(isConnected()) {
-    // If the timer was already started, ignore this call.
-    if(ble_npl_callout_is_active(&m_dcTimer)) {
-      log_i("Already disconnecting, timer started");
-      return BLE_HS_EALREADY;
-    }
-
-    ble_gap_conn_desc desc;
-    if(ble_gap_conn_find(m_conn_id, &desc) != 0){
-      log_i("Connection ID not found");
-      return BLE_HS_EALREADY;
-    }
-
-    // We use a timer to detect a controller error in the event that it does
-    // not inform the stack when disconnection is complete.
-    // This is a common error in certain esp-idf versions.
-    // The disconnect timeout time is the supervison timeout time + 1 second.
-    // In the case that the event happenss shortly after the supervision timeout
-    // we don't want to prematurely reset the host.
-    ble_npl_time_t ticks;
-    ble_npl_time_ms_to_ticks((desc.supervision_timeout + 100) * 10, &ticks);
-    ble_npl_callout_reset(&m_dcTimer, ticks);
-
     rc = ble_gap_terminate(m_conn_id, reason);
-    if (rc != 0) {
-      if(rc != BLE_HS_EALREADY) {
-        ble_npl_callout_stop(&m_dcTimer);
-      }
+    if (rc != 0 && rc != BLE_HS_ENOTCONN && rc != BLE_HS_EALREADY) {
+      m_lastErr = rc;
       log_e("ble_gap_terminate failed: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
     }
   } else {
@@ -1290,7 +1245,6 @@ int BLEClient::disconnect(uint8_t reason) {
   }
 
   log_d("<< disconnect()");
-  m_lastErr = rc;
   return rc;
 } // disconnect
 

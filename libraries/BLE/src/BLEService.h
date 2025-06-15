@@ -24,7 +24,7 @@
 #include "BLECharacteristic.h"
 #include "BLEServer.h"
 #include "BLEUUID.h"
-#include "BLETypes.h"
+#include "BLEUtils.h"
 #include "RTOS.h"
 
 /*****************************************************************************

@@ -355,6 +355,7 @@ BLERemoteService::BLERemoteService(BLEClient *pClient, const struct ble_gatt_svc
   }
   m_startHandle = service->start_handle;
   m_endHandle = service->end_handle;
+  m_haveCharacteristics = false;
   log_v("<< BLERemoteService(): %s", m_uuid.toString().c_str());
 }
 
@@ -362,53 +363,27 @@ BLERemoteService::BLERemoteService(BLEClient *pClient, const struct ble_gatt_svc
  * @brief Retrieve all the characteristics for this service.
  * This function will not return until we have all the characteristics.
  */
-void BLERemoteService::retrieveCharacteristics(BLEUUID *uuid_filter) {
+void BLERemoteService::retrieveCharacteristics() {
   log_v(">> retrieveCharacteristics() for service: %s", getUUID().toString().c_str());
 
   int rc = 0;
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, nullptr};
+  BLETaskData taskData(const_cast<BLERemoteService*>(this));
 
-  if (uuid_filter == nullptr) {
-    rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(), m_startHandle, m_endHandle, BLERemoteService::characteristicDiscCB, &taskData);
-  } else {
-    rc = ble_gattc_disc_chrs_by_uuid(
-      m_pClient->getConnId(), m_startHandle, m_endHandle, &uuid_filter->getNative()->u, BLERemoteService::characteristicDiscCB, &taskData
-    );
-  }
+  rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(), m_startHandle, m_endHandle, BLERemoteService::characteristicDiscCB, &taskData);
 
   if (rc != 0) {
     log_e("ble_gattc_disc_all_chrs: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
     return;
   }
 
-#ifdef ulTaskNotifyValueClear
-  // Clear the task notification value to ensure we block
-  ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-  if (taskData.rc == 0) {
-    if (uuid_filter == nullptr) {
-      if (m_characteristicMap.size() > 1) {
-        for (auto it = m_characteristicMap.begin(); it != m_characteristicMap.end(); ++it) {
-          auto nx = std::next(it, 1);
-          if (nx == m_characteristicMap.end()) {
-            break;
-          }
-          it->second->m_endHandle = nx->second->m_defHandle - 1;
-        }
-      }
-
-      if (m_characteristicMap.size() > 0) {
-        std::prev(m_characteristicMap.end())->second->m_endHandle = getEndHandle();
-      }
-    }
-
-    log_v("<< retrieveCharacteristics()");
-  } else {
-    log_e("Could not retrieve characteristics");
+  BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+  rc = taskData.m_flags;
+  if (rc == 0 || rc == BLE_HS_EDONE) {
+    log_d("<< retrieveCharacteristics()");
+    return;
   }
+
+  log_e("<< retrieveCharacteristics() rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
 }  // retrieveCharacteristics
 
 /**
@@ -418,8 +393,14 @@ void BLERemoteService::retrieveCharacteristics(BLEUUID *uuid_filter) {
 int BLERemoteService::characteristicDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg) {
   log_d("Characteristic Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? chr->val_handle : -1);
 
-  ble_task_data_t *pTaskData = (ble_task_data_t *)arg;
-  BLERemoteService *service = (BLERemoteService *)pTaskData->pATT;
+  BLETaskData *pTaskData = (BLETaskData *)arg;
+  BLERemoteService *service = (BLERemoteService *)pTaskData->m_pInstance;
+
+  if (error->status == BLE_HS_ENOTCONN) {
+    log_e("<< Characteristic Discovery; Not connected");
+    BLEUtils::taskRelease(*pTaskData, error->status);
+    return error->status;
+  }
 
   // Make sure the discovery is for this device
   if (service->getClient()->getConnId() != conn_handle) {
@@ -436,15 +417,8 @@ int BLERemoteService::characteristicDiscCB(uint16_t conn_handle, const struct bl
     return 0;
   }
 
-  if (error->status == BLE_HS_EDONE) {
-    pTaskData->rc = 0;
-  } else {
-    log_e("characteristicDiscCB() rc=%d %s", error->status, BLEUtils::returnCodeToString(error->status));
-    pTaskData->rc = error->status;
-  }
-
-  xTaskNotifyGive(pTaskData->task);
-
+  BLEUtils::taskRelease(*pTaskData, error->status);
+  service->m_haveCharacteristics = true;
   log_d("<< Characteristic Discovered");
   return error->status;
 }

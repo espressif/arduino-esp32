@@ -68,6 +68,7 @@ typedef uint16_t esp_gatt_if_t;
 class BLERemoteService;
 class BLEClientCallbacks;
 class BLEAdvertisedDevice;
+struct BLETaskData;
 
 /**
  * @brief A model of a %BLE client.
@@ -164,9 +165,9 @@ private:
 #if defined(CONFIG_NIMBLE_ENABLED)
   int m_lastErr;
   int32_t m_connectTimeout;
+  uint8_t m_terminateFailCount;
   ble_gap_conn_params m_pConnParams;
-  ble_task_data_t *m_pTaskData;
-  ble_npl_callout m_dcTimer;
+  mutable BLETaskData *m_pTaskData;
 #endif
 
   /***************************************************************************

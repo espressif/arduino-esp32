@@ -33,7 +33,7 @@
 #include "RTOS.h"
 #include "BLEAddress.h"
 #include "BLEUtils.h"
-#include "BLETypes.h"
+#include "BLEUtils.h"
 
 /*****************************************************************************
  *                            Bluedroid includes                             *

@@ -704,8 +704,7 @@ int BLEScan::handleGAPEvent(ble_gap_event *event, void *arg) {
       }
 
       if (pScan->m_pTaskData != nullptr) {
-        pScan->m_pTaskData->rc = event->disc_complete.reason;
-        xTaskNotifyGive(pScan->m_pTaskData->task);
+        BLEUtils::taskRelease(*pScan->m_pTaskData, event->disc_complete.reason);
       }
 
       return 0;
@@ -785,16 +784,16 @@ BLEScanResults *BLEScan::start(uint32_t duration, bool is_continue) {
     log_w("Blocking scan called with duration = forever");
   }
 
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {nullptr, cur_task, 0, nullptr};
+  if (m_pTaskData != nullptr) {
+    log_e("Scan already in progress");
+    return &m_scanResults;
+  }
+
+  BLETaskData taskData(this);
   m_pTaskData = &taskData;
 
   if (start(duration, nullptr, is_continue)) {
-#ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
   }
 
   m_pTaskData = nullptr;
@@ -823,7 +822,7 @@ bool BLEScan::stop() {
   }
 
   if (m_pTaskData != nullptr) {
-    xTaskNotifyGive(m_pTaskData->task);
+    BLEUtils::taskRelease(*m_pTaskData);
   }
 
   log_d("<< stop()");

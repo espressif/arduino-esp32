@@ -34,6 +34,7 @@
 #include "BLEAdvertising.h"
 #include <esp_err.h>
 #include "BLEUtils.h"
+#include "BLEDevice.h"
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
 

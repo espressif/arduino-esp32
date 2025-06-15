@@ -23,9 +23,8 @@
 
 #include <string>
 #include "BLEAddress.h"
-#include "BLEClient.h"
-#include "BLETypes.h"
 #include "WString.h"
+#include <freertos/task.h>
 
 /*****************************************************************************
  *                            Bluedroid includes                             *
@@ -42,7 +41,44 @@
  *****************************************************************************/
 
 #if defined(CONFIG_NIMBLE_ENABLED)
+#include <stdlib.h>
+#include <climits>
 #include <host/ble_gap.h>
+#endif
+
+/*****************************************************************************
+ *                             Common types                                  *
+ *****************************************************************************/
+
+typedef struct {
+  void *peer_device;  // peer device BLEClient or BLEServer
+  bool connected;     // connection status
+  uint16_t mtu;       // negotiated MTU per peer device
+} conn_status_t;
+
+/*****************************************************************************
+ *                             NimBLE types                                  *
+ *****************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+
+/**
+ * @brief A structure to hold data for a task that is waiting for a response.
+ * @details This structure is used in conjunction with BLEUtils::taskWait() and BLEUtils::taskRelease().
+ * All items are optional, the m_pHandle will be set in taskWait().
+ */
+struct BLETaskData {
+  BLETaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr);
+  ~BLETaskData();
+  void* m_pInstance{nullptr};
+  mutable int m_flags{0};
+  void* m_pBuf{nullptr};
+
+private:
+  mutable void* m_pHandle{nullptr}; // semaphore or task handle
+  friend class BLEUtils;
+};
+
 #endif
 
 /*****************************************************************************
@@ -106,6 +142,8 @@ public:
   static const char *gapEventToString(uint8_t eventType);
   static const char *returnCodeToString(int rc);
   static int checkConnParams(ble_gap_conn_params *params);
+  static bool taskWait(const BLETaskData& taskData, uint32_t timeout);
+  static void taskRelease(const BLETaskData& taskData, int rc = 0);
 #endif
 };
 

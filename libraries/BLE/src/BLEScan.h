@@ -24,7 +24,7 @@
 #include <string>
 #include "BLEAdvertisedDevice.h"
 #include "BLEClient.h"
-#include "BLETypes.h"
+#include "BLEUtils.h"
 #include "RTOS.h"
 
 /***************************************************************************
@@ -53,6 +53,7 @@ class BLEExtAdvertisingCallbacks;
 class BLEClient;
 class BLEScan;
 class BLEPeriodicScanCallbacks;
+struct BLETaskData;
 
 /***************************************************************************
  *                       Bluedroid type definitions                        *
@@ -179,7 +180,7 @@ private:
   uint32_t m_duration;
   ble_gap_disc_params m_scan_params;
   bool m_ignoreResults;
-  ble_task_data_t *m_pTaskData;
+  BLETaskData *m_pTaskData;
   uint8_t m_maxResults;
 #endif
 

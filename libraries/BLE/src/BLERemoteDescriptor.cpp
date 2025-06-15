@@ -279,7 +279,7 @@ String BLERemoteDescriptor::readValue() {
   log_d(">> Descriptor readValue: %s", toString().c_str());
 
   BLEClient *pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
-  String value;
+  String value{};
 
   if (!pClient->isConnected()) {
     log_e("Disconnected");
@@ -288,22 +288,16 @@ String BLERemoteDescriptor::readValue() {
 
   int rc = 0;
   int retryCount = 1;
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, &value};
+  BLETaskData taskData(const_cast<BLERemoteDescriptor*>(this), 0, &value);
 
   do {
     rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0, BLERemoteDescriptor::onReadCB, &taskData);
     if (rc != 0) {
-      log_e("Error: Failed to read descriptor; rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
-      return value;
+      goto exit;
     }
 
-#ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    rc = taskData.rc;
+    BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
 
     switch (rc) {
       case 0:
@@ -311,7 +305,11 @@ String BLERemoteDescriptor::readValue() {
       // Descriptor is not long-readable, return with what we have.
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
         log_i("Attribute not long");
-        rc = 0;
+        rc = ble_gattc_read(pClient->getConnId(), m_handle, BLERemoteDescriptor::onReadCB, &taskData);
+        if (rc != 0) {
+          goto exit;
+        }
+        retryCount++;
         break;
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
@@ -320,11 +318,22 @@ String BLERemoteDescriptor::readValue() {
           break;
         }
       /* Else falls through. */
-      default: return value;
+      default:
+        goto exit;
     }
   } while (rc != 0 && retryCount--);
 
-  log_d("<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
+  m_semaphoreReadDescrEvt.take("readValue");
+  m_value = value;
+  m_semaphoreReadDescrEvt.give();
+
+exit:
+  if (rc != 0) {
+    log_e("<< readValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
+  } else {
+    log_d("<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
+  }
+
   return value;
 }  // readValue
 
@@ -333,9 +342,15 @@ String BLERemoteDescriptor::readValue() {
  * @return success == 0 or error code.
  */
 int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg) {
-  ble_task_data_t *pTaskData = (ble_task_data_t *)arg;
-  BLERemoteDescriptor *desc = (BLERemoteDescriptor *)pTaskData->pATT;
+  BLETaskData *pTaskData = static_cast<BLETaskData *>(arg);
+  BLERemoteDescriptor *desc = static_cast<BLERemoteDescriptor *>(pTaskData->m_pInstance);
   uint16_t conn_id = desc->getRemoteCharacteristic()->getRemoteService()->getClient()->getConnId();
+
+  if (error->status == BLE_HS_ENOTCONN) {
+    log_e("<< Descriptor Read; Not connected");
+    BLEUtils::taskRelease(*pTaskData, error->status);
+    return error->status;
+  }
 
   if (conn_id != conn_handle) {
     return 0;
@@ -343,7 +358,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
 
   log_d("Read complete; status=%d conn_handle=%d", error->status, conn_handle);
 
-  String *strBuf = (String *)pTaskData->buf;
+  String *strBuf = static_cast<String *>(pTaskData->m_pBuf);
   int rc = error->status;
 
   if (rc == 0) {
@@ -359,9 +374,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
     }
   }
 
-  pTaskData->rc = rc;
-  xTaskNotifyGive(pTaskData->task);
-
+  BLEUtils::taskRelease(*pTaskData, rc);
   return rc;
 }
 
@@ -370,18 +383,23 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
  * @return success == 0 or error code.
  */
 int BLERemoteDescriptor::onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg) {
-  ble_task_data_t *pTaskData = (ble_task_data_t *)arg;
-  BLERemoteDescriptor *descriptor = (BLERemoteDescriptor *)pTaskData->pATT;
+  BLETaskData *pTaskData = static_cast<BLETaskData *>(arg);
+  BLERemoteDescriptor *descriptor = static_cast<BLERemoteDescriptor *>(pTaskData->m_pInstance);
+  int rc = error->status;
+
+  if (rc == BLE_HS_ENOTCONN) {
+    log_e("<< Descriptor Write; Not connected");
+    BLEUtils::taskRelease(*pTaskData, rc);
+    return rc;
+  }
 
   if (descriptor->getRemoteCharacteristic()->getRemoteService()->getClient()->getConnId() != conn_handle) {
     return 0;
   }
 
-  log_i("Write complete; status=%d conn_handle=%d", error->status, conn_handle);
+  log_i("Write complete; status=%d conn_handle=%d", rc, conn_handle);
 
-  pTaskData->rc = error->status;
-  xTaskNotifyGive(pTaskData->task);
-
+  BLEUtils::taskRelease(*pTaskData, rc);
   return 0;
 }
 
@@ -406,16 +424,14 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
   int rc = 0;
   int retryCount = 1;
   uint16_t mtu = ble_att_mtu(pClient->getConnId()) - 3;
+  BLETaskData taskData(const_cast<BLERemoteDescriptor*>(this));
 
   // Check if the data length is longer than we can write in 1 connection event.
   // If so we must do a long write which requires a response.
   if (length <= mtu && !response) {
     rc = ble_gattc_write_no_rsp_flat(pClient->getConnId(), m_handle, data, length);
-    return (rc == 0);
+    goto exit;
   }
-
-  TaskHandle_t cur_task = xTaskGetCurrentTaskHandle();
-  ble_task_data_t taskData = {this, cur_task, 0, nullptr};
 
   do {
     if (length > mtu) {
@@ -427,16 +443,11 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
     }
 
     if (rc != 0) {
-      log_e("Error: Failed to write descriptor; rc=%d", rc);
-      return false;
+      goto exit;
     }
 
-#ifdef ulTaskNotifyValueClear
-    // Clear the task notification value to ensure we block
-    ulTaskNotifyValueClear(cur_task, ULONG_MAX);
-#endif
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    rc = taskData.rc;
+    BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
+    rc = taskData.m_flags;
 
     switch (rc) {
       case 0:
@@ -454,11 +465,18 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
           break;
         }
       /* Else falls through. */
-      default: return false;
+      default:
+        goto exit;
     }
   } while (rc != 0 && retryCount--);
 
-  log_d("<< Descriptor writeValue, rc: %d", rc);
+exit:
+  if (rc != 0) {
+    log_e("<< writeValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
+  } else {
+    log_d("<< writeValue success. length: %d rc=%d", length, rc);
+  }
+
   return (rc == 0);
 }  // writeValue
 

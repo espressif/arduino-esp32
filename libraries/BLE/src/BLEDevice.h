@@ -31,7 +31,7 @@
 #include "BLEAdvertising.h"
 #include "BLESecurity.h"
 #include "BLEAddress.h"
-#include "BLETypes.h"
+#include "BLEUtils.h"
 
 /***************************************************************************
  *                           Bluedroid includes                            *

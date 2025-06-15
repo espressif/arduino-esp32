@@ -21,6 +21,7 @@
 
 #include "BLESecurity.h"
 #include "BLEUtils.h"
+#include "esp32-hal-log.h"
 
 /***************************************************************************
  *                         NimBLE includes                                 *

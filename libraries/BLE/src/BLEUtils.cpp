@@ -51,11 +51,6 @@
  *****************************************************************************/
 
 #if defined(CONFIG_NIMBLE_ENABLED)
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-#define CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT
-#define CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT
-#define CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT
-#endif
 #include <host/ble_gap.h>
 #include <host/ble_att.h>
 #include <host/ble_hs.h>
@@ -63,6 +58,18 @@
 #include <host/ble_l2cap.h>
 #include <nimble/hci_common.h>
 #include <nimble/ble.h>
+
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#define CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT
+#define CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT
+#define CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT
+#endif
+
+#ifndef CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT
+#define CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT 31
+#endif
+
+constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT);
 #endif
 
 /*****************************************************************************
@@ -1880,6 +1887,19 @@ const char *BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 
 /**
+ * @brief Construct a BLETaskData instance.
+ * @param [in] pInstance An instance of the class that will be waiting.
+ * @param [in] flags General purpose flags for the caller.
+ * @param [in] buf A buffer for data.
+ */
+BLETaskData::BLETaskData(void* pInstance, int flags, void* buf) : m_pInstance{pInstance}, m_flags{flags}, m_pBuf{buf}, m_pHandle{xTaskGetCurrentTaskHandle()} {}
+
+/**
+ * @brief Destructor.
+ */
+BLETaskData::~BLETaskData() {}
+
+/**
  * @brief A function for checking validity of connection parameters.
  * @param [in] params A pointer to the structure containing the parameters to check.
  * @return valid == 0 or error code.
@@ -2195,6 +2215,41 @@ String BLEUtils::characteristicPropertiesToString(uint8_t prop) {
   res += ((prop & BLE_GATT_CHR_PROP_EXTENDED) ? "1" : "0");
   return res;
 }  // characteristicPropertiesToString
+
+/**
+ * @brief Blocks the calling task until released or timeout.
+ * @param [in] taskData A pointer to the task data structure.
+ * @param [in] timeout The time to wait in milliseconds.
+ * @return True if the task completed, false if the timeout was reached.
+ */
+bool BLEUtils::taskWait(const BLETaskData& taskData, uint32_t timeout) {
+  ble_npl_time_t ticks;
+  if (timeout == BLE_NPL_TIME_FOREVER) {
+    ticks = BLE_NPL_TIME_FOREVER;
+  } else {
+    ble_npl_time_ms_to_ticks(timeout, &ticks);
+  }
+
+  uint32_t notificationValue;
+  xTaskNotifyWait(0, TASK_BLOCK_BIT, &notificationValue, 0);
+  if (notificationValue & TASK_BLOCK_BIT) {
+    return true;
+  }
+
+  return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
+} // taskWait
+
+/**
+ * @brief Release a task.
+ * @param [in] taskData A pointer to the task data structure.
+ * @param [in] flags A return value to set in the task data structure.
+ */
+void BLEUtils::taskRelease(const BLETaskData& taskData, int flags) {
+  taskData.m_flags = flags;
+  if (taskData.m_pHandle != nullptr) {
+    xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
+  }
+} // taskRelease
 
 #endif  // CONFIG_NIMBLE_ENABLED
 
