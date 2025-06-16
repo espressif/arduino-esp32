@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,13 @@
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin();                 // AutoStart using Thread default settings
-  otPrintNetworkInformation(Serial);  // Print Current Thread Network Information
+  OThread.begin();                            // AutoStart using Thread default settings
+  OThreadCLI.begin();
+  OThread.otPrintNetworkInformation(Serial);  // Print Current Thread Network Information
 }
 
 void loop() {
   Serial.print("Thread Node State: ");
-  Serial.println(otGetStringDeviceRole());
+  Serial.println(OThread.otGetStringDeviceRole());
   delay(5000);
 }
