@@ -248,7 +248,7 @@ bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_
  * @note The LUT array must remain valid for as long as gamma fading is used.
  *       Larger tables provide smoother transitions but use more memory.
  */
-bool ledcSetGammaTable(const float* gamma_table, uint16_t size);
+bool ledcSetGammaTable(const float *gamma_table, uint16_t size);
 
 /**
  * @brief Clear the current gamma correction lookup table.
@@ -309,7 +309,7 @@ bool ledcFadeGammaWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t targe
  * @note This function is only available on ESP32 variants that support gamma curve fading.
  */
 bool ledcFadeGammaWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg);
-#endif // SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
+#endif  // SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
 
 #ifdef __cplusplus
 }

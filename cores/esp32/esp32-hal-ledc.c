@@ -315,7 +315,11 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
   }
 #endif
 
-  log_e("No free timers available for freq=%u, resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to share its timer.", freq, resolution);
+  log_e(
+    "No free timers available for freq=%u, resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to "
+    "share its timer.",
+    freq, resolution
+  );
   return false;
 }
 
@@ -332,11 +336,11 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
       duty = max_duty + 1;
     }
 
-    if(ledc_set_duty(group, channel, duty) != ESP_OK) {
+    if (ledc_set_duty(group, channel, duty) != ESP_OK) {
       log_e("ledc_set_duty failed");
       return false;
     }
-    if(ledc_update_duty(group, channel) != ESP_OK) {
+    if (ledc_update_duty(group, channel) != ESP_OK) {
       log_e("ledc_update_duty failed");
       return false;
     }
@@ -354,7 +358,7 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   }
   uint8_t group = (channel / SOC_LEDC_CHANNEL_NUM);
   ledc_timer_t timer;
-  
+
   // Get the actual timer being used by this channel
   ledc_ll_get_channel_timer(LEDC_LL_GET_HW(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
 
@@ -368,11 +372,11 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
     duty = max_duty + 1;
   }
 
-  if(ledc_set_duty(group, channel, duty) != ESP_OK) {
+  if (ledc_set_duty(group, channel, duty) != ESP_OK) {
     log_e("ledc_set_duty failed");
     return false;
   }
-  if(ledc_update_duty(group, channel) != ESP_OK) {
+  if (ledc_update_duty(group, channel) != ESP_OK) {
     log_e("ledc_update_duty failed");
     return false;
   }
@@ -497,7 +501,9 @@ bool ledcOutputInvert(uint8_t pin, bool out_invert) {
     esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT_PAD_OUT0_IDX + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0);
 #else
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
-    esp_rom_gpio_connect_out_signal(pin, ((bus->channel / SOC_LEDC_CHANNEL_NUM == 0) ? LEDC_HS_SIG_OUT0_IDX : LEDC_LS_SIG_OUT0_IDX) + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0);
+    esp_rom_gpio_connect_out_signal(
+      pin, ((bus->channel / SOC_LEDC_CHANNEL_NUM == 0) ? LEDC_HS_SIG_OUT0_IDX : LEDC_LS_SIG_OUT0_IDX) + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0
+    );
 #else
     esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT0_IDX + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0);
 #endif
@@ -612,7 +618,7 @@ static uint16_t ledcGammaLUTSize = 0;
 // Global variable to store current resolution for gamma callback
 static uint8_t ledcGammaResolution = 13;
 
-bool ledcSetGammaTable(const float* gamma_table, uint16_t size) {
+bool ledcSetGammaTable(const float *gamma_table, uint16_t size) {
   if (gamma_table == NULL || size == 0) {
     log_e("Invalid gamma table or size");
     return false;
@@ -635,17 +641,23 @@ void ledcSetGammaFactor(float factor) {
 
 // Gamma correction calculator function
 static uint32_t ledcGammaCorrection(uint32_t duty) {
-  if (duty == 0) return 0;
-  
+  if (duty == 0) {
+    return 0;
+  }
+
   uint32_t max_duty = (1U << ledcGammaResolution) - 1;
-  if (duty >= (1U << ledcGammaResolution)) return max_duty;
-  
+  if (duty >= (1U << ledcGammaResolution)) {
+    return max_duty;
+  }
+
   // Use LUT if provided, otherwise use mathematical calculation
   if (ledcGammaLUT != NULL && ledcGammaLUTSize > 0) {
     // LUT-based gamma correction
     uint32_t lut_index = (duty * (ledcGammaLUTSize - 1)) / max_duty;
-    if (lut_index >= ledcGammaLUTSize) lut_index = ledcGammaLUTSize - 1;
-    
+    if (lut_index >= ledcGammaLUTSize) {
+      lut_index = ledcGammaLUTSize - 1;
+    }
+
     float corrected_normalized = ledcGammaLUT[lut_index];
     return (uint32_t)(corrected_normalized * max_duty);
   } else {
@@ -694,21 +706,17 @@ static bool ledcFadeGammaConfig(uint8_t pin, uint32_t start_duty, uint32_t targe
     // Prepare gamma curve fade parameters
     ledc_fade_param_config_t fade_params[SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX];
     uint32_t actual_fade_ranges = 0;
-    
+
     // Use a moderate number of linear segments for smooth gamma curve
     const uint32_t linear_fade_segments = 12;
-    
+
     // Set the global resolution for gamma correction
     ledcGammaResolution = bus->channel_resolution;
 
     // Fill multi-fade parameter list using ESP-IDF API
     esp_err_t err = ledc_fill_multi_fade_param_list(
-      group, channel,
-      start_duty, target_duty,
-      linear_fade_segments, max_fade_time_ms,
-      ledcGammaCorrection,
-      SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX,
-      fade_params, &actual_fade_ranges
+      group, channel, start_duty, target_duty, linear_fade_segments, max_fade_time_ms, ledcGammaCorrection, SOC_LEDC_GAMMA_CURVE_FADE_RANGE_MAX, fade_params,
+      &actual_fade_ranges
     );
 
     if (err != ESP_OK) {
@@ -734,7 +742,7 @@ static bool ledcFadeGammaConfig(uint8_t pin, uint32_t start_duty, uint32_t targe
     }
 
     log_d("Gamma curve fade started on pin %u: %u -> %u over %dms", pin, start_duty, target_duty, max_fade_time_ms);
-    
+
   } else {
     log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
     return false;
