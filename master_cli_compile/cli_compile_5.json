@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "ESP32/examples/Utilities/MD5Builder",
+                    "sizes": [{
+                            "flash_bytes": 323771,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21500,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Utilities/SHA1Builder",
                     "sizes": [{
                             "flash_bytes": 330063,
@@ -88,14 +96,6 @@
                             "flash_percentage": 29,
                             "ram_bytes": 22304,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "FFat/examples/FFat_time",
-                    "sizes": [{
-                            "flash_bytes": 720365,
-                            "flash_percentage": 54,
-                            "ram_bytes": 28776,
-                            "ram_percentage": 8
                             }]
                     }
 ]
@@ -342,7 +342,7 @@
                     },
 {"name": "LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 884805,
+                            "flash_bytes": 884797,
                             "flash_percentage": 67,
                             "ram_bytes": 40280,
                             "ram_percentage": 12
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "ESPmDNS/examples/mDNS-SD_Extended",
+                    "sizes": [{
+                            "flash_bytes": 961363,
+                            "flash_percentage": 73,
+                            "ram_bytes": 43388,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
                             "flash_bytes": 984181,
@@ -597,20 +605,20 @@
                             "ram_bytes": 44356,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "HTTPUpdateServer/examples/WebUpdater",
-                    "sizes": [{
-                            "flash_bytes": 1053319,
-                            "flash_percentage": 80,
-                            "ram_bytes": 46228,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
+                    "sizes": [{
+                            "flash_bytes": 305653,
+                            "flash_percentage": 23,
+                            "ram_bytes": 14008,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/RMT/RMT_EndOfTransmissionState",
                     "sizes": [{
                             "flash_bytes": 305235,
@@ -672,14 +680,6 @@
                             "flash_bytes": 284795,
                             "flash_percentage": 21,
                             "ram_bytes": 12768,
-                            "ram_percentage": 3
-                            }]
-                    },
-{"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
-                    "sizes": [{
-                            "flash_bytes": 285381,
-                            "flash_percentage": 21,
-                            "ram_bytes": 12776,
                             "ram_percentage": 3
                             }]
                     }

@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "USB/examples/ConsumerControl",
+                    "sizes": [{
+                            "flash_bytes": 350623,
+                            "flash_percentage": 26,
+                            "ram_bytes": 49304,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "USB/examples/CustomHIDDevice",
                     "sizes": [{
                             "flash_bytes": 367731,
@@ -87,14 +95,6 @@
                             "flash_bytes": 362649,
                             "flash_percentage": 27,
                             "ram_bytes": 49284,
-                            "ram_percentage": 15
-                            }]
-                    },
-{"name": "USB/examples/MIDI/MidiMusicBox",
-                    "sizes": [{
-                            "flash_bytes": 366525,
-                            "flash_percentage": 27,
-                            "ram_bytes": 49300,
                             "ram_percentage": 15
                             }]
                     }
@@ -411,7 +411,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1972738,
+                            "flash_bytes": 1972756,
                             "flash_percentage": 48,
                             "ram_bytes": 61792,
                             "ram_percentage": 18
@@ -478,10 +478,34 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "RainMaker/examples/RMakerCustomAirCooler",
+                    "sizes": [{
+                            "flash_bytes": 2117795,
+                            "flash_percentage": 52,
+                            "ram_bytes": 67600,
+                            "ram_percentage": 20
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerSonoffDualR3",
+                    "sizes": [{
+                            "flash_bytes": 2132689,
+                            "flash_percentage": 52,
+                            "ram_bytes": 67832,
+                            "ram_percentage": 20
+                            }]
+                    },
+{"name": "RainMaker/examples/RMakerSwitch",
+                    "sizes": [{
+                            "flash_bytes": 2143595,
+                            "flash_percentage": 53,
+                            "ram_bytes": 67520,
+                            "ram_percentage": 20
+                            }]
+                    },
 {"name": "SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 322453,
-                            "flash_percentage": 24,
+                            "flash_bytes": 322485,
+                            "flash_percentage": 7,
                             "ram_bytes": 14784,
                             "ram_percentage": 4
                             }]
@@ -581,36 +605,36 @@
                             "ram_bytes": 43612,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "Update/examples/HTTP_Server_AES_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 1055363,
-                            "flash_percentage": 80,
-                            "ram_bytes": 46276,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "Update/examples/OTAWebUpdater",
-                    "sizes": [{
-                            "flash_bytes": 1038363,
-                            "flash_percentage": 79,
-                            "ram_bytes": 46148,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 328085,
-                            "flash_percentage": 25,
-                            "ram_bytes": 14640,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "OpenThread/examples/CLI/onReceive",
+                    "sizes": [{
+                            "flash_bytes": 1100139,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45880,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
+                    "sizes": [{
+                            "flash_bytes": 988321,
+                            "flash_percentage": 75,
+                            "ram_bytes": 45528,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+                    "sizes": [{
+                            "flash_bytes": 987953,
+                            "flash_percentage": 75,
+                            "ram_bytes": 45528,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "PPP/examples/PPP_Basic",
                     "sizes": [{
                             "flash_bytes": 554079,
@@ -656,30 +680,6 @@
                             "flash_bytes": 327043,
                             "flash_percentage": 24,
                             "ram_bytes": 13304,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "SimpleBLE/examples/SimpleBleDevice",
-                    "sizes": [{
-                            "flash_bytes": 1077505,
-                            "flash_percentage": 82,
-                            "ram_bytes": 37392,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "TFLiteMicro/examples/hello_world",
-                    "sizes": [{
-                            "flash_bytes": 309027,
-                            "flash_percentage": 23,
-                            "ram_bytes": 15096,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "Ticker/examples/Blinker",
-                    "sizes": [{
-                            "flash_bytes": 295259,
-                            "flash_percentage": 22,
-                            "ram_bytes": 14076,
                             "ram_percentage": 4
                             }]
                     }

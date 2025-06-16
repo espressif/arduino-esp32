@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "ESP32/examples/Serial/Serial_All_CPU_Freqs",
+                    "sizes": [{
+                            "flash_bytes": 322257,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21524,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/Serial_STD_Func_OnReceive",
                     "sizes": [{
                             "flash_bytes": 323025,
@@ -85,14 +93,6 @@
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
                             "flash_bytes": 323507,
-                            "flash_percentage": 24,
-                            "ram_bytes": 21500,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/Utilities/MD5Builder",
-                    "sizes": [{
-                            "flash_bytes": 323771,
                             "flash_percentage": 24,
                             "ram_bytes": 21500,
                             "ram_percentage": 6
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "ESP32/examples/Serial/onReceiveExample",
+                    "sizes": [{
+                            "flash_bytes": 242953,
+                            "flash_percentage": 18,
+                            "ram_bytes": 12804,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/TWAI/TWAIreceive",
                     "sizes": [{
                             "flash_bytes": 246719,
@@ -597,20 +605,20 @@
                             "ram_bytes": 41324,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "ESPmDNS/examples/mDNS-SD_Extended",
-                    "sizes": [{
-                            "flash_bytes": 961363,
-                            "flash_percentage": 73,
-                            "ram_bytes": 43388,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 290847,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13468,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
                             "flash_bytes": 291491,
@@ -673,14 +681,6 @@
                             "flash_percentage": 23,
                             "ram_bytes": 17088,
                             "ram_percentage": 5
-                            }]
-                    },
-{"name": "ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 305653,
-                            "flash_percentage": 23,
-                            "ram_bytes": 14008,
-                            "ram_percentage": 4
                             }]
                     }
 ]

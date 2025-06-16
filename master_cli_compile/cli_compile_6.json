@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "FFat/examples/FFat_time",
+                    "sizes": [{
+                            "flash_bytes": 720365,
+                            "flash_percentage": 54,
+                            "ram_bytes": 28776,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "HTTPClient/examples/Authorization",
                     "sizes": [{
                             "flash_bytes": 890363,
@@ -87,14 +95,6 @@
                             "flash_bytes": 719531,
                             "flash_percentage": 54,
                             "ram_bytes": 28740,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "NetBIOS/examples/ESP_NBNST",
-                    "sizes": [{
-                            "flash_bytes": 652519,
-                            "flash_percentage": 49,
-                            "ram_bytes": 27264,
                             "ram_percentage": 8
                             }]
                     }
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "HTTPUpdateServer/examples/WebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 1053319,
+                            "flash_percentage": 80,
+                            "ram_bytes": 46228,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "Insights/examples/DiagnosticsSmokeTest",
                     "sizes": [{
                             "flash_bytes": 1109633,
@@ -597,20 +605,20 @@
                             "ram_bytes": 97012,
                             "ram_percentage": 29
                             }]
-                    },
-{"name": "Matter/examples/MatterOnOffLight",
-                    "sizes": [{
-                            "flash_bytes": 1661157,
-                            "flash_percentage": 52,
-                            "ram_bytes": 97020,
-                            "ram_percentage": 29
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/Serial/RxFIFOFull_Demo",
+                    "sizes": [{
+                            "flash_bytes": 285381,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12776,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
                             "flash_bytes": 285217,
@@ -672,14 +680,6 @@
                             "flash_bytes": 295133,
                             "flash_percentage": 22,
                             "ram_bytes": 13140,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "ESP32/examples/Timer/WatchdogTimer",
-                    "sizes": [{
-                            "flash_bytes": 294933,
-                            "flash_percentage": 22,
-                            "ram_bytes": 13132,
                             "ram_percentage": 4
                             }]
                     }

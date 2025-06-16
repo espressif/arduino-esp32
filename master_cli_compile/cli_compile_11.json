@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "Update/examples/SD_Update",
+                    "sizes": [{
+                            "flash_bytes": 401983,
+                            "flash_percentage": 30,
+                            "ram_bytes": 22404,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "WebServer/examples/AdvancedWebServer",
                     "sizes": [{
                             "flash_bytes": 737777,
@@ -88,14 +96,6 @@
                             "flash_percentage": 56,
                             "ram_bytes": 30760,
                             "ram_percentage": 9
-                            }]
-                    },
-{"name": "WebServer/examples/PathArgServer",
-                    "sizes": [{
-                            "flash_bytes": 1029745,
-                            "flash_percentage": 32,
-                            "ram_bytes": 36472,
-                            "ram_percentage": 11
                             }]
                     }
 ]
@@ -478,6 +478,30 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WebServer/examples/SDWebServer",
+                    "sizes": [{
+                            "flash_bytes": 1086893,
+                            "flash_percentage": 82,
+                            "ram_bytes": 46204,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "WebServer/examples/SimpleAuthentification",
+                    "sizes": [{
+                            "flash_bytes": 979189,
+                            "flash_percentage": 74,
+                            "ram_bytes": 42660,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "WebServer/examples/UploadHugeFile",
+                    "sizes": [{
+                            "flash_bytes": 1333349,
+                            "flash_percentage": 42,
+                            "ram_bytes": 49060,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "WebServer/examples/WebServer",
                     "sizes": [{
                             "flash_bytes": 1078721,
@@ -581,36 +605,36 @@
                             "ram_bytes": 41036,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "WiFi/examples/WiFiClientStaticIP",
-                    "sizes": [{
-                            "flash_bytes": 945799,
-                            "flash_percentage": 72,
-                            "ram_bytes": 42444,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiExtender",
-                    "sizes": [{
-                            "flash_bytes": 929263,
-                            "flash_percentage": 70,
-                            "ram_bytes": 41148,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "WiFi/examples/WiFiIPv6",
-                    "sizes": [{
-                            "flash_bytes": 943579,
-                            "flash_percentage": 71,
-                            "ram_bytes": 42716,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Analog_Input_Output",
+                    "sizes": [{
+                            "flash_bytes": 706727,
+                            "flash_percentage": 53,
+                            "ram_bytes": 32024,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Binary_Input",
+                    "sizes": [{
+                            "flash_bytes": 582359,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28312,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_CarbonDioxide_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 583425,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28080,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Color_Dimmable_Light",
                     "sizes": [{
                             "flash_bytes": 626513,
@@ -657,30 +681,6 @@
                             "flash_percentage": 54,
                             "ram_bytes": 31808,
                             "ram_percentage": 9
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Electrical_DC_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 591653,
-                            "flash_percentage": 45,
-                            "ram_bytes": 28352,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Illuminance_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 600335,
-                            "flash_percentage": 45,
-                            "ram_bytes": 28328,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_OTA_Client",
-                    "sizes": [{
-                            "flash_bytes": 619891,
-                            "flash_percentage": 47,
-                            "ram_bytes": 29328,
-                            "ram_percentage": 8
                             }]
                     }
 ]

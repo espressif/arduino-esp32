@@ -68,15 +68,23 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 335545,
+                            "flash_bytes": 335551,
                             "flash_percentage": 25,
                             "ram_bytes": 21680,
                             "ram_percentage": 6
                             }]
                     },
+{"name": "ESP32/examples/AnalogOut/LEDCGammaFade",
+                    "sizes": [{
+                            "flash_bytes": 343889,
+                            "flash_percentage": 26,
+                            "ram_bytes": 21696,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
                     "sizes": [{
-                            "flash_bytes": 313363,
+                            "flash_bytes": 313383,
                             "flash_percentage": 23,
                             "ram_bytes": 21676,
                             "ram_percentage": 6
@@ -84,17 +92,9 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
-                            "flash_bytes": 313423,
+                            "flash_bytes": 313433,
                             "flash_percentage": 23,
                             "ram_bytes": 21676,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 308187,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21520,
                             "ram_percentage": 6
                             }]
                     }
@@ -302,7 +302,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 279681,
+                            "flash_bytes": 279673,
                             "flash_percentage": 21,
                             "ram_bytes": 15344,
                             "ram_percentage": 4
@@ -310,7 +310,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
                     "sizes": [{
-                            "flash_bytes": 262409,
+                            "flash_bytes": 262429,
                             "flash_percentage": 20,
                             "ram_bytes": 15328,
                             "ram_percentage": 4
@@ -318,7 +318,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
-                            "flash_bytes": 262493,
+                            "flash_bytes": 262501,
                             "flash_percentage": 20,
                             "ram_bytes": 15328,
                             "ram_percentage": 4
@@ -334,7 +334,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcFrequency",
                     "sizes": [{
-                            "flash_bytes": 264425,
+                            "flash_bytes": 264417,
                             "flash_percentage": 20,
                             "ram_bytes": 15320,
                             "ram_percentage": 4
@@ -342,7 +342,7 @@
                     },
 {"name": "ESP32/examples/AnalogOut/ledcWrite_RGB",
                     "sizes": [{
-                            "flash_bytes": 276293,
+                            "flash_bytes": 276301,
                             "flash_percentage": 21,
                             "ram_bytes": 15352,
                             "ram_percentage": 4

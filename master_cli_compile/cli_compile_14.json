@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "WiFi/examples/WiFiUDPClient",
+                    "sizes": [{
+                            "flash_bytes": 666763,
+                            "flash_percentage": 50,
+                            "ram_bytes": 28876,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
                             "flash_bytes": 352805,
@@ -198,6 +206,30 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_PM25_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 568881,
+                            "flash_percentage": 43,
+                            "ram_bytes": 29092,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Power_Outlet",
+                    "sizes": [{
+                            "flash_bytes": 706147,
+                            "flash_percentage": 53,
+                            "ram_bytes": 33696,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 571169,
+                            "flash_percentage": 43,
+                            "ram_bytes": 29172,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Range_Extender",
                     "sizes": [{
                             "flash_bytes": 697835,

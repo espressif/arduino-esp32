@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "SD/examples/SD_time",
+                    "sizes": [{
+                            "flash_bytes": 722451,
+                            "flash_percentage": 55,
+                            "ram_bytes": 28740,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "SD_MMC/examples/SD2USBMSC",
                     "sizes": [{
                             "flash_bytes": 455291,
@@ -87,14 +95,6 @@
                             "flash_bytes": 415289,
                             "flash_percentage": 31,
                             "ram_bytes": 49740,
-                            "ram_percentage": 15
-                            }]
-                    },
-{"name": "USB/examples/ConsumerControl",
-                    "sizes": [{
-                            "flash_bytes": 350623,
-                            "flash_percentage": 26,
-                            "ram_bytes": 49304,
                             "ram_percentage": 15
                             }]
                     }
@@ -193,7 +193,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1786190,
+                            "flash_bytes": 1786206,
                             "flash_percentage": 44,
                             "ram_bytes": 70456,
                             "ram_percentage": 21
@@ -246,7 +246,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1267405,
+                            "flash_bytes": 1267413,
                             "flash_percentage": 31,
                             "ram_bytes": 43164,
                             "ram_percentage": 13
@@ -478,67 +478,91 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "OpenThread/examples/COAP/coap_switch",
+{"name": "OpenThread/examples/CLI/COAP/coap_lamp",
                     "sizes": [{
-                            "flash_bytes": 1102299,
+                            "flash_bytes": 1102653,
                             "flash_percentage": 84,
-                            "ram_bytes": 48028,
+                            "ram_bytes": 48232,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleCLI",
+{"name": "OpenThread/examples/CLI/COAP/coap_switch",
                     "sizes": [{
-                            "flash_bytes": 1079409,
-                            "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "flash_bytes": 1102687,
+                            "flash_percentage": 84,
+                            "ram_bytes": 48204,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleNode",
+{"name": "OpenThread/examples/CLI/SimpleCLI",
                     "sizes": [{
-                            "flash_bytes": 1081369,
+                            "flash_bytes": 1079841,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46860,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "OpenThread/examples/CLI/SimpleNode",
                     "sizes": [{
-                            "flash_bytes": 1082709,
+                            "flash_bytes": 1079939,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46884,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
                     "sizes": [{
-                            "flash_bytes": 1080023,
+                            "flash_bytes": 1083027,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46884,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 1080087,
+                            "flash_bytes": 1080373,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46892,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/ThreadScan",
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 1079757,
+                            "flash_bytes": 1080437,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46892,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/onReceive",
+{"name": "OpenThread/examples/CLI/ThreadScan",
                     "sizes": [{
-                            "flash_bytes": 1079299,
+                            "flash_bytes": 1080123,
                             "flash_percentage": 82,
-                            "ram_bytes": 46708,
+                            "ram_bytes": 46860,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/CLI/onReceive",
+                    "sizes": [{
+                            "flash_bytes": 1079733,
+                            "flash_percentage": 82,
+                            "ram_bytes": 46860,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
+                    "sizes": [{
+                            "flash_bytes": 967905,
+                            "flash_percentage": 73,
+                            "ram_bytes": 46508,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+                    "sizes": [{
+                            "flash_bytes": 967529,
+                            "flash_percentage": 73,
+                            "ram_bytes": 46508,
                             "ram_percentage": 14
                             }]
                     },
@@ -581,106 +605,82 @@
                             "ram_bytes": 67432,
                             "ram_percentage": 20
                             }]
-                    },
-{"name": "RainMaker/examples/RMakerCustomAirCooler",
-                    "sizes": [{
-                            "flash_bytes": 2117773,
-                            "flash_percentage": 52,
-                            "ram_bytes": 67600,
-                            "ram_percentage": 20
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSonoffDualR3",
-                    "sizes": [{
-                            "flash_bytes": 2132689,
-                            "flash_percentage": 52,
-                            "ram_bytes": 67832,
-                            "ram_percentage": 20
-                            }]
-                    },
-{"name": "RainMaker/examples/RMakerSwitch",
-                    "sizes": [{
-                            "flash_bytes": 2143595,
-                            "flash_percentage": 53,
-                            "ram_bytes": 67520,
-                            "ram_percentage": 20
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "OpenThread/examples/COAP/coap_lamp",
+{"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
-                            "flash_bytes": 1122729,
+                            "flash_bytes": 335003,
+                            "flash_percentage": 25,
+                            "ram_bytes": 13424,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "OpenThread/examples/CLI/COAP/coap_lamp",
+                    "sizes": [{
+                            "flash_bytes": 1123115,
                             "flash_percentage": 85,
-                            "ram_bytes": 47096,
+                            "ram_bytes": 47256,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/COAP/coap_switch",
+{"name": "OpenThread/examples/CLI/COAP/coap_switch",
                     "sizes": [{
-                            "flash_bytes": 1122767,
+                            "flash_bytes": 1123161,
                             "flash_percentage": 85,
-                            "ram_bytes": 47060,
+                            "ram_bytes": 47220,
                             "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleCLI",
+{"name": "OpenThread/examples/CLI/SimpleCLI",
                     "sizes": [{
-                            "flash_bytes": 1099813,
+                            "flash_bytes": 1100247,
                             "flash_percentage": 83,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "ram_bytes": 45880,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleNode",
+{"name": "OpenThread/examples/CLI/SimpleNode",
                     "sizes": [{
-                            "flash_bytes": 1101773,
+                            "flash_bytes": 1100333,
+                            "flash_percentage": 83,
+                            "ram_bytes": 45904,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+                    "sizes": [{
+                            "flash_bytes": 1103441,
                             "flash_percentage": 84,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "ram_bytes": 45912,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/ExtendedRouterNode",
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 1103119,
-                            "flash_percentage": 84,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "OpenThread/examples/SimpleThreadNetwork/LeaderNode",
-                    "sizes": [{
-                            "flash_bytes": 1100497,
+                            "flash_bytes": 1100855,
                             "flash_percentage": 83,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
+                            "ram_bytes": 45904,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/SimpleThreadNetwork/RouterNode",
+{"name": "OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 1100561,
+                            "flash_bytes": 1100919,
                             "flash_percentage": 83,
-                            "ram_bytes": 45744,
-                            "ram_percentage": 13
+                            "ram_bytes": 45904,
+                            "ram_percentage": 14
                             }]
                     },
-{"name": "OpenThread/examples/ThreadScan",
+{"name": "OpenThread/examples/CLI/ThreadScan",
                     "sizes": [{
-                            "flash_bytes": 1100163,
+                            "flash_bytes": 1100527,
                             "flash_percentage": 83,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "OpenThread/examples/onReceive",
-                    "sizes": [{
-                            "flash_bytes": 1099705,
-                            "flash_percentage": 83,
-                            "ram_bytes": 45736,
-                            "ram_percentage": 13
+                            "ram_bytes": 45880,
+                            "ram_percentage": 14
                             }]
                     }
 ]
@@ -746,7 +746,7 @@
                     },
 {"name": "Matter/examples/MatterTemperatureLight",
                     "sizes": [{
-                            "flash_bytes": 1755718,
+                            "flash_bytes": 1755798,
                             "flash_percentage": 55,
                             "ram_bytes": 100088,
                             "ram_percentage": 30
