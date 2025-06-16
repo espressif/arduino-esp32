@@ -39,8 +39,7 @@ uint8_t fade_ended = 0;  // status of LED gamma fade
 bool fade_in = true;
 
 #ifdef USE_GAMMA_LUT
-// Custom Gamma LUT demonstration with only 10 steps (the default built-in Gamma lut is 101 steps)
-// Brightness 0 - 100% gamma correction look up table (gamma = 2.6)
+// Custom Gamma LUT demonstration with 101 steps (Brightness 0 - 100% gamma correction look up table (gamma = 2.6))
 // Y = B ^ 2.6 - Pre-computed LUT to save runtime computation
 static const float ledcGammaLUT[101] = {
   0.000000, 0.000006, 0.000038, 0.000110, 0.000232, 0.000414, 0.000666, 0.000994, 0.001406, 0.001910,
@@ -74,7 +73,7 @@ void setup() {
 #if USE_GAMMA_LUT // Use default gamma LUT for better performance
   ledcSetGammaTable(ledcGammaLUT, 101);
 #else  // Use mathematical gamma correction (default, more flexible)
-  ledcSetGammaFactor(LEDC_GAMMA_FACTOR); // default gamma factor is 2.8
+  ledcSetGammaFactor(LEDC_GAMMA_FACTOR); // This is optional to set custom gamma factor (default is 2.8)
 #endif
   
   // Setup and start gamma curve fade on led (duty from 0 to 4095)
