@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,8 @@ bool otStatus = true;
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(false);  // No AutoStart - fresh start
+  OThread.begin(false);  // No AutoStart - fresh start
+  OThreadCLI.begin();
   Serial.println("Setting up OpenThread Node as Router/Child");
   Serial.println("Make sure the Leader Node is already running");
 
@@ -39,7 +40,7 @@ void setup() {
   }
   // wait for the node to enter in the router state
   uint32_t timeout = millis() + 90000;  // waits 90 seconds to
-  while (otGetDeviceRole() != OT_ROLE_CHILD && otGetDeviceRole() != OT_ROLE_ROUTER) {
+  while (OThread.otGetDeviceRole() != OT_ROLE_CHILD && OThread.otGetDeviceRole() != OT_ROLE_ROUTER) {
     Serial.print(".");
     if (millis() > timeout) {
       Serial.println("\r\n\t===> Timeout! Failed.");
@@ -70,7 +71,7 @@ void loop() {
   if (otStatus) {
     Serial.println("Thread NetworkInformation: ");
     Serial.println("---------------------------");
-    otPrintNetworkInformation(Serial);
+    OThread.otPrintNetworkInformation(Serial);
     Serial.println("---------------------------");
   } else {
     Serial.println("Some OpenThread operation has failed...");
