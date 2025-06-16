@@ -35,7 +35,7 @@
 
 void setup() {
   Serial.begin(115200);
-  OThread.begin();                            // AutoStart using Thread default settings
+  OThread.begin();  // AutoStart using Thread default settings
   OThreadCLI.begin();
   OThread.otPrintNetworkInformation(Serial);  // Print Current Thread Network Information
 }

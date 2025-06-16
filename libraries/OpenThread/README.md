@@ -32,7 +32,7 @@ class OpenThread {
 
     OpenThread();
     ~OpenThread();
-  
+
     // Returns true if the OpenThread stack is running.
     operator bool() const;
 

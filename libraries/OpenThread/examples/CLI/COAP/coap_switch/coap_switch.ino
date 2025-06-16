@@ -176,7 +176,7 @@ void setup() {
   Serial.begin(115200);
   // LED starts RED, indicating not connected to Thread network.
   rgbLedWrite(RGB_BUILTIN, 64, 0, 0);
-  OThread.begin(false);        // No AutoStart is necessary
+  OThread.begin(false);  // No AutoStart is necessary
   OThreadCLI.begin();
   OThreadCLI.setTimeout(250);  // waits 250ms for the OpenThread CLI response
   setupNode();

@@ -36,69 +36,69 @@ typedef enum {
 extern const char *otRoleString[];
 
 class DataSet {
-  public:
-    DataSet();
-    void clear();
-    void initNew();
-    const otOperationalDataset &getDataset() const;
+public:
+  DataSet();
+  void clear();
+  void initNew();
+  const otOperationalDataset &getDataset() const;
 
-    // Setters
-    void setNetworkName(const char *name);
-    void setExtendedPanId(const uint8_t *extPanId);
-    void setNetworkKey(const uint8_t *key);
-    void setChannel(uint8_t channel);
-    void setPanId(uint16_t panId);
+  // Setters
+  void setNetworkName(const char *name);
+  void setExtendedPanId(const uint8_t *extPanId);
+  void setNetworkKey(const uint8_t *key);
+  void setChannel(uint8_t channel);
+  void setPanId(uint16_t panId);
 
-    // Getters
-    const char *getNetworkName() const;
-    const uint8_t *getExtendedPanId() const;
-    const uint8_t *getNetworkKey() const;
-    uint8_t getChannel() const;
-    uint16_t getPanId() const;
+  // Getters
+  const char *getNetworkName() const;
+  const uint8_t *getExtendedPanId() const;
+  const uint8_t *getNetworkKey() const;
+  uint8_t getChannel() const;
+  uint16_t getPanId() const;
 
-    // Apply the dataset to the OpenThread instance
-    void apply(otInstance *instance);
+  // Apply the dataset to the OpenThread instance
+  void apply(otInstance *instance);
 
-  private:
-    otOperationalDataset mDataset;
+private:
+  otOperationalDataset mDataset;
 };
 
 class OpenThread {
-  public:
-    static bool otStarted;
-    static ot_device_role_t otGetDeviceRole();
-    static const char *otGetStringDeviceRole();
-    static void otPrintNetworkInformation(Stream &output);
+public:
+  static bool otStarted;
+  static ot_device_role_t otGetDeviceRole();
+  static const char *otGetStringDeviceRole();
+  static void otPrintNetworkInformation(Stream &output);
 
-    OpenThread();
-    ~OpenThread();
-    // returns true if OpenThread Stack is running
-    operator bool() const;
+  OpenThread();
+  ~OpenThread();
+  // returns true if OpenThread Stack is running
+  operator bool() const;
 
-    // Initialize OpenThread
-    static void begin(bool OThreadAutoStart = true);
+  // Initialize OpenThread
+  static void begin(bool OThreadAutoStart = true);
 
-    // Initialize OpenThread
-    static void end();
+  // Initialize OpenThread
+  static void end();
 
-    // Start the Thread network
-    void start();
+  // Start the Thread network
+  void start();
 
-    // Stop the Thread network
-    void stop();
+  // Stop the Thread network
+  void stop();
 
-    // Start Thread Network Interface
-    void networkInterfaceUp();
+  // Start Thread Network Interface
+  void networkInterfaceUp();
 
-    // Stop Thread Network Interface
-    void networkInterfaceDown();
+  // Stop Thread Network Interface
+  void networkInterfaceDown();
 
-    // Set the dataset
-    void commitDataSet(const DataSet &dataset);
+  // Set the dataset
+  void commitDataSet(const DataSet &dataset);
 
-  private:
-    static otInstance *mInstance;
-    DataSet mCurrentDataSet;
+private:
+  static otInstance *mInstance;
+  DataSet mCurrentDataSet;
 };
 
 extern OpenThread OThread;

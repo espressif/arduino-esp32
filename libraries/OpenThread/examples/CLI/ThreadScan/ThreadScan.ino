@@ -27,7 +27,7 @@
 
 void setup() {
   Serial.begin(115200);
-  OThread.begin(true);      // For scanning, AutoStart must be active, any setup
+  OThread.begin(true);  // For scanning, AutoStart must be active, any setup
   OThreadCLI.begin();
   OThreadCLI.setTimeout(100);  // Set a timeout for the CLI response
   Serial.println();

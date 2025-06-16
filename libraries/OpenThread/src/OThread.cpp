@@ -48,7 +48,6 @@ extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
 }
 #endif
 
-
 static void ot_task_worker(void *aContext) {
   esp_vfs_eventfd_config_t eventfd_config = {
     .max_fds = 3,
