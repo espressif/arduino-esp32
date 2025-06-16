@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
 
 /*
    OpenThread.begin(false) will not automatically start a node in a Thread Network
-   A Leader node is the first device, that has a complete dataset, to start Thread
-   A complete dataset is easily achieved by using the OpenThread CLI command "dataset init new"
+   A Router/Child node is the device that will join an existing Thread Network
 
-   In order to allow other node to join the network,
-   all of them shall use the same network master key
+   In order to allow this node to join the network,
+   it shall use the same network master key as used by the Leader Node
    The network master key is a 16-byte key that is used to secure the network
 
    Using the same channel will make the process faster
@@ -35,12 +34,14 @@ otInstance *aInstance = NULL;
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(false);  // No AutoStart - fresh start
+  OThread.begin(false);  // No AutoStart - fresh start
+  OThreadCLI.begin();
   Serial.println();
-  Serial.println("Setting up OpenThread Node as Leader");
+  Serial.println("Setting up OpenThread Node as Router/Child");
+  Serial.println("Make sure the Leader Node is already running");
   aInstance = esp_openthread_get_instance();
 
-  OThreadCLI.println("dataset init new");
+  OThreadCLI.println("dataset clear");
   OThreadCLI.println(CLI_NETWORK_KEY);
   OThreadCLI.println(CLI_NETWORK_CHANEL);
   OThreadCLI.println("dataset commit active");
@@ -51,11 +52,11 @@ void setup() {
 void loop() {
   Serial.println("=============================================");
   Serial.print("Thread Node State: ");
-  Serial.println(otGetStringDeviceRole());
+  Serial.println(OThread.otGetStringDeviceRole());
 
   // Native OpenThread API calls:
   // wait until the node become Child or Router
-  if (otGetDeviceRole() == OT_ROLE_LEADER) {
+  if (OThread.otGetDeviceRole() == OT_ROLE_CHILD || OThread.otGetDeviceRole() == OT_ROLE_ROUTER) {
     // Network Name
     const char *networkName = otThreadGetNetworkName(aInstance);
     Serial.printf("Network Name: %s\r\n", networkName);
