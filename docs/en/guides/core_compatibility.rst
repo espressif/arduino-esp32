@@ -9,7 +9,7 @@ Welcome to the compatibility guide for library developers aiming to support mult
 Code Adaptations
 ----------------
 
-To ensure compatibility with both versions of the ESP32 Arduino core, developers should utilize conditional compilation directives in their code. Below is an example of how to conditionally include code based on the ESP32 Arduino core version::
+To ensure compatibility with both versions of the ESP32 Arduino core, developers should utilize conditional compilation directives in their code. Below is an example of how to conditionally include code based on the ESP32 Arduino core version:
 
 .. code-block:: cpp
 
@@ -26,7 +26,7 @@ To ensure compatibility with both versions of the ESP32 Arduino core, developers
 Version Print
 -------------
 
-To easily print the ESP32 Arduino core version at runtime, developers can use the `ESP_ARDUINO_VERSION_STR` macro. Below is an example of how to print the ESP32 Arduino core version::
+To easily print the ESP32 Arduino core version at runtime, developers can use the `ESP_ARDUINO_VERSION_STR` macro. Below is an example of how to print the ESP32 Arduino core version:
 
 .. code-block:: cpp
 
