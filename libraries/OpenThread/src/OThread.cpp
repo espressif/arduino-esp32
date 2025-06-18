@@ -335,6 +335,8 @@ void OpenThread::otPrintNetworkInformation(Stream &output) {
 
   output.printf("Role: %s", otGetStringDeviceRole());
   output.println();
+  output.printf("RLOC16: 0x%04x", otThreadGetRloc16(mInstance)); // RLOC16
+  output.println();
   output.printf("Network Name: %s", otThreadGetNetworkName(mInstance));
   output.println();
   output.printf("Channel: %d", otLinkGetChannel(mInstance));
