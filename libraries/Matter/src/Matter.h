@@ -127,7 +127,7 @@
     // Commissioning Session Stopped: Signals that Commissioning session has stopped
     MATTER_COMMISSIONING_SESSION_STOPPED = (uint16_t) chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped,
 
-    // Commissioning Window Opened: Signals that Commissioning window is now opend
+    // Commissioning Window Opened: Signals that Commissioning window is now opened
     MATTER_COMMISSIONING_WINDOW_OPEN = (uint16_t) chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened,
 
     // Commissioning Window Closed: Signals that Commissioning window is now closed
