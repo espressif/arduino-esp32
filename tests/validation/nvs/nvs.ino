@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Preferences.h>
-#include <unity.h>
 
 
 struct TestData {
@@ -31,7 +30,9 @@ void validate_types() {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}
+  while (!Serial) {
+    ;
+  }
 
   preferences.begin("my-app", false);
 
@@ -125,6 +126,7 @@ void setup() {
 
   // Close the Preferences, wait and restart
   preferences.end();
+  Serial.flush();
   delay(1000);
   ESP.restart();
 }
