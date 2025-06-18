@@ -137,7 +137,7 @@
     // fabric to still be around before we delete it
     MATTER_FABRIC_WILL_BE_REMOVED = (uint16_t) chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved,
 
-    // Fabric Has Been Removed: Signals that a fabric is effectivelly deleted
+    // Fabric Has Been Removed: Signals that a fabric is effectively deleted
     MATTER_FABRIC_REMOVED = (uint16_t) chip::DeviceLayer::DeviceEventType::kFabricRemoved,
 
     // Fabric Has Been Committed: Signals that a fabric in Fabric Table is persisted to storage, by CommitPendingFabricData
