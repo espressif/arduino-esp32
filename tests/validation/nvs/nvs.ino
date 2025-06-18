@@ -28,6 +28,17 @@ void validate_types() {
   assert(preferences.getType("struct") == PT_BLOB);
 }
 
+// Function to increment string values
+void incrementStringValues(String &val_string, char *val_string_buf, size_t buf_size) {
+  // Extract the number from string and increment it
+  val_string = "str" + String(val_string.substring(3).toInt() + 1);
+
+  // Extract the number from strLen and increment it
+  String strLen_str = String(val_string_buf);
+  int strLen_num = strLen_str.substring(6).toInt();
+  snprintf(val_string_buf, buf_size, "strLen%d", strLen_num + 1);
+}
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
@@ -90,11 +101,8 @@ void setup() {
   val_double += 1.1;
   val_bool = !val_bool; // Toggle boolean value
 
-  // Extract the number from strLen and increment it
-  val_string = "str" + String(val_string.substring(3).toInt() + 1);
-  String strLen_str = String(val_string_buf);
-  int strLen_num = strLen_str.substring(6).toInt();
-  snprintf(val_string_buf, sizeof(val_string_buf), "strLen%d", strLen_num + 1);
+  // Increment string values using function
+  incrementStringValues(val_string, val_string_buf, sizeof(val_string_buf));
 
   test_data.id += 1;
   test_data.value += 10;
