@@ -34,10 +34,6 @@
 #include <MatterEndpoints/MatterOnOffPlugin.h>
 #include <MatterEndpoints/MatterThermostat.h>
 
-using namespace esp_matter;
-
-class ArduinoMatter {
-public:
   // Matter Event types used when there is a user callback for Matter Events
   enum matterEvent_t {
     // Starting from 0x8000, these events are public and can be used by applications.
@@ -155,6 +151,10 @@ public:
     MATTER_ESP32_PUBLIC_SPECIFIC_EVENT = (uint16_t) chip::DeviceLayer::DeviceEventType::kRange_PublicPlatformSpecific, // ESPSystemEvent
   };
 
+using namespace esp_matter;
+
+class ArduinoMatter {
+public:
   // Matter Event Callback type
   using matterEventCB = std::function<void(matterEvent_t, const chip::DeviceLayer::ChipDeviceEvent*)>;
   // Matter Event Callback

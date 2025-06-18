@@ -125,7 +125,7 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   }
   // Check if the user-defined callback is set
   if (ArduinoMatter::_matterEventCB != nullptr) {
-    ArduinoMatter::_matterEventCB(static_cast<ArduinoMatter::matterEvent_t>(event->Type), event);
+    ArduinoMatter::_matterEventCB(static_cast<matterEvent_t>(event->Type), event);
   }
 }
 
