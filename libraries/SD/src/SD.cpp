@@ -27,7 +27,9 @@ bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char *m
     return true;
   }
 
-  spi.begin();
+  if (!spi.begin()) {
+    return false;
+  }
 
   _pdrv = sdcard_init(ssPin, &spi, frequency);
   if (_pdrv == 0xFF) {
