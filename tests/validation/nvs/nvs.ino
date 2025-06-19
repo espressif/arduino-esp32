@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
-
 struct TestData {
   uint8_t id;
   uint16_t value;
@@ -78,16 +77,15 @@ void setup() {
   }
 
   Serial.printf("Values from Preferences: ");
-  Serial.printf("char: %c | uchar: %u | short: %d | ushort: %u | int: %ld | uint: %lu | ",
-                val_char, val_uchar, val_short, val_ushort, val_int, val_uint);
-  Serial.printf("long: %lld | ulong: %lu | long64: %lld | ulong64: %llu | ",
-                val_long, val_ulong, val_long64, val_ulong64);
-  Serial.printf("float: %.2f | double: %.2f | bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n",
-                val_float, val_double, val_bool ? "true" : "false", val_string.c_str(), val_string_buf, test_data.id, test_data.value);
-
+  Serial.printf("char: %c | uchar: %u | short: %d | ushort: %u | int: %ld | uint: %lu | ", val_char, val_uchar, val_short, val_ushort, val_int, val_uint);
+  Serial.printf("long: %lld | ulong: %lu | long64: %lld | ulong64: %llu | ", val_long, val_ulong, val_long64, val_ulong64);
+  Serial.printf(
+    "float: %.2f | double: %.2f | bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n", val_float, val_double, val_bool ? "true" : "false",
+    val_string.c_str(), val_string_buf, test_data.id, test_data.value
+  );
 
   // Increment the values
-  val_char += 1; // Increment char A -> B
+  val_char += 1;  // Increment char A -> B
   val_uchar += 1;
   val_short += 1;
   val_ushort += 1;
@@ -99,7 +97,7 @@ void setup() {
   val_ulong64 += 1;
   val_float += 1.1f;
   val_double += 1.1;
-  val_bool = !val_bool; // Toggle boolean value
+  val_bool = !val_bool;  // Toggle boolean value
 
   // Increment string values using function
   incrementStringValues(val_string, val_string_buf, sizeof(val_string_buf));
