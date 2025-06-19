@@ -1,0 +1,97 @@
+name: 'Backlog Management Bot'
+on:
+  schedule: 
+    - cron: '0 2 * * *'  # Run daily at 2 AM UTC
+  workflow_dispatch:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+permissions: 
+  issues: write
+  pull-requests: write
+
+jobs: 
+  stale: 
+    name: 'Stale Issue Management'
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/stale@v9
+        with: 
+          repo-token: ${{ github.token }}
+          stale-issue-message: ''
+          close-issue-message: |
+            [TEST MODE] This issue has been automatically closed due to inactivity. If this issue is still relevant, please reopen it or create a new issue with updated information.
+          days-before-issue-stale: 0
+          days-before-issue-close: 0
+          exempt-issue-labels: 'to-be-discussed'
+          exempt-issue-assignees: true
+          exempt-all-issue-assignees: true
+          operations-per-run: 100
+  assignee-reminder: 
+    name: 'Assignee Reminder Bot'
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Send Reminders for Assigned Issues
+        uses: actions/github-script@v7
+        with: 
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Get all open issues that are assigned
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            const now = new Date();
+            const reminderThreshold = 0; // days
+            
+            for (const issue of issues) {
+              if (!issue.assignees || issue.assignees.length === 0) continue;
+              if (issue.pull_request) continue;
+              // if (!issue.title.includes('[TEST]')) continue;
+              
+              const labels = issue.labels.map(label => label.name);
+              const exemptLabels = ['stale', 'to-be-discussed'];
+              if (labels.some(label => exemptLabels.includes(label))) continue;
+              
+              // Check last activity
+              const lastUpdate = new Date(issue.updated_at);
+              const daysSinceUpdate = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
+              
+              if (daysSinceUpdate >= reminderThreshold) {
+                // Check if we've already sent a reminder recently
+                const { data: comments } = await github.rest.issues.listComments({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  per_page: 10
+                });
+                
+                const recentBotComment = comments.find(comment => 
+                  comment.user.login === 'github-actions[bot]' && 
+                  comment.body.includes('⏰ Friendly Reminder') &&
+                  (now - new Date(comment.created_at)) < (7 * 24 * 60 * 60 * 1000) // 7 days
+                );
+                
+                if (!recentBotComment) {
+                  const assigneeNames = issue.assignees.map(assignee => `@${assignee.login}`).join(', ');
+                  // console.log(`[TEST] Would send reminder to: ${assigneeNames} for issue #${issue.number} (${issue.title})`);
+                  
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    body: 
+                      `## ⏰ Friendly Reminder
+
+                      Hello ${assigneeNames}! 
+                      This issue has been assigned to you and hasn't had any activity for ${daysSinceUpdate} days. Please provide a status update or progress comment
+
+                      ---
+                      *This is an automated reminder from the Backlog Management Bot.*`
+                  });
+                }
+              }
+            }
