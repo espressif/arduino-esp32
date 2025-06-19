@@ -39,7 +39,8 @@ void otReceivedLine() {
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin();  // AutoStart
+  OThread.begin();  // AutoStart
+  OThreadCLI.begin();
   OThreadCLI.onReceive(otReceivedLine);
 }
 
