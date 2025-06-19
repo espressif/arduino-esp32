@@ -25536,165 +25536,6 @@ odroid_esp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-rakwireless_rak3112.name=RAKwireless RAK3112
-
-rakwireless_rak3112.upload.tool=esptool_py
-rakwireless_rak3112.upload.tool.default=esptool_py
-rakwireless_rak3112.upload.tool.network=esp_ota
-rakwireless_rak3112.upload.maximum_size=1310720
-rakwireless_rak3112.upload.maximum_data_size=327680
-rakwireless_rak3112.upload.wait_for_upload_port=false
-rakwireless_rak3112.upload.speed=460800
-rakwireless_rak3112.upload.flags=
-rakwireless_rak3112.upload.extra_flags=
-
-rakwireless_rak3112.bootloader.tool=esptool_py
-rakwireless_rak3112.bootloader.tool.default=esptool_py
-
-rakwireless_rak3112.serial.disableDTR=true
-rakwireless_rak3112.serial.disableRTS=true
-
-rakwireless_rak3112.build.tarch=xtensa
-rakwireless_rak3112.build.bootloader_addr=0x0
-rakwireless_rak3112.build.mcu=esp32s3
-rakwireless_rak3112.build.core=esp32
-rakwireless_rak3112.build.target=esp32s3
-rakwireless_rak3112.build.variant=rakwireless_rak3112
-rakwireless_rak3112.build.board=RAKWIRELESS_RAK3112
-
-rakwireless_rak3112.build.usb_mode=1
-rakwireless_rak3112.build.cdc_on_boot=1
-rakwireless_rak3112.build.msc_on_boot=0
-rakwireless_rak3112.build.dfu_on_boot=0
-
-rakwireless_rak3112.build.f_cpu=240000000L
-rakwireless_rak3112.build.flash_size=16MB
-rakwireless_rak3112.build.flash_freq=80m
-rakwireless_rak3112.build.flash_mode=dio
-rakwireless_rak3112.build.boot=dio
-rakwireless_rak3112.build.partitions=default
-rakwireless_rak3112.build.defines=
-
-rakwireless_rak3112.menu.PSRAM.enabled=Enabled
-rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-rakwireless_rak3112.menu.PSRAM.enabled.build.psram_type=opi
-rakwireless_rak3112.menu.PSRAM.disabled=Disabled
-rakwireless_rak3112.menu.PSRAM.disabled.build.defines=
-
-rakwireless_rak3112.menu.LoopCore.1=Core 1
-rakwireless_rak3112.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-rakwireless_rak3112.menu.LoopCore.0=Core 0
-rakwireless_rak3112.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
-
-rakwireless_rak3112.menu.EventsCore.1=Core 1
-rakwireless_rak3112.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-rakwireless_rak3112.menu.EventsCore.0=Core 0
-rakwireless_rak3112.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
-
-rakwireless_rak3112.menu.USBMode.hwcdc=Hardware CDC and JTAG
-rakwireless_rak3112.menu.USBMode.hwcdc.build.usb_mode=1
-rakwireless_rak3112.menu.USBMode.default=USB-OTG (TinyUSB)
-rakwireless_rak3112.menu.USBMode.default.build.usb_mode=0
-
-rakwireless_rak3112.menu.CDCOnBoot.default=Enabled
-rakwireless_rak3112.menu.CDCOnBoot.default.build.cdc_on_boot=1
-rakwireless_rak3112.menu.CDCOnBoot.cdc=Disabled
-rakwireless_rak3112.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
-
-rakwireless_rak3112.menu.MSCOnBoot.default=Disabled
-rakwireless_rak3112.menu.MSCOnBoot.default.build.msc_on_boot=0
-rakwireless_rak3112.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-rakwireless_rak3112.menu.MSCOnBoot.msc.build.msc_on_boot=1
-
-rakwireless_rak3112.menu.DFUOnBoot.default=Disabled
-rakwireless_rak3112.menu.DFUOnBoot.default.build.dfu_on_boot=0
-rakwireless_rak3112.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-rakwireless_rak3112.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
-
-rakwireless_rak3112.menu.UploadMode.default=UART0 / Hardware CDC
-rakwireless_rak3112.menu.UploadMode.default.upload.use_1200bps_touch=false
-rakwireless_rak3112.menu.UploadMode.default.upload.wait_for_upload_port=false
-rakwireless_rak3112.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-rakwireless_rak3112.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-rakwireless_rak3112.menu.UploadMode.cdc.upload.wait_for_upload_port=true
-
-rakwireless_rak3112.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
-rakwireless_rak3112.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
-rakwireless_rak3112.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
-rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
-rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-16MB
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota=TinyUF2 16MB No OTA(4MB APP/11.6MB FATFS)
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-16MB-noota
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
-rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
-rakwireless_rak3112.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
-rakwireless_rak3112.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
-rakwireless_rak3112.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
-rakwireless_rak3112.menu.PartitionScheme.custom=Custom
-rakwireless_rak3112.menu.PartitionScheme.custom.build.partitions=
-rakwireless_rak3112.menu.PartitionScheme.custom.upload.maximum_size=16777216
-
-rakwireless_rak3112.menu.CPUFreq.240=240MHz (WiFi/BT)
-rakwireless_rak3112.menu.CPUFreq.240.build.f_cpu=240000000L
-rakwireless_rak3112.menu.CPUFreq.160=160MHz (WiFi/BT)
-rakwireless_rak3112.menu.CPUFreq.160.build.f_cpu=160000000L
-rakwireless_rak3112.menu.CPUFreq.80=80MHz (WiFi/BT)
-rakwireless_rak3112.menu.CPUFreq.80.build.f_cpu=80000000L
-
-rakwireless_rak3112.menu.FlashMode.qio=QIO
-rakwireless_rak3112.menu.FlashMode.qio.build.flash_mode=dio
-rakwireless_rak3112.menu.FlashMode.qio.build.boot=qio
-rakwireless_rak3112.menu.FlashMode.dio=DIO
-rakwireless_rak3112.menu.FlashMode.dio.build.flash_mode=dio
-rakwireless_rak3112.menu.FlashMode.dio.build.boot=dio
-
-rakwireless_rak3112.menu.FlashFreq.80=80MHz
-rakwireless_rak3112.menu.FlashFreq.80.build.flash_freq=80m
-rakwireless_rak3112.menu.FlashFreq.40=40MHz
-rakwireless_rak3112.menu.FlashFreq.40.build.flash_freq=40m
-
-rakwireless_rak3112.menu.UploadSpeed.921600=921600
-rakwireless_rak3112.menu.UploadSpeed.921600.upload.speed=921600
-rakwireless_rak3112.menu.UploadSpeed.115200=115200
-rakwireless_rak3112.menu.UploadSpeed.115200.upload.speed=115200
-rakwireless_rak3112.menu.UploadSpeed.256000.windows=256000
-rakwireless_rak3112.menu.UploadSpeed.256000.upload.speed=256000
-rakwireless_rak3112.menu.UploadSpeed.230400.windows.upload.speed=256000
-rakwireless_rak3112.menu.UploadSpeed.230400=230400
-rakwireless_rak3112.menu.UploadSpeed.230400.upload.speed=230400
-rakwireless_rak3112.menu.UploadSpeed.460800.linux=460800
-rakwireless_rak3112.menu.UploadSpeed.460800.macosx=460800
-rakwireless_rak3112.menu.UploadSpeed.460800.upload.speed=460800
-rakwireless_rak3112.menu.UploadSpeed.512000.windows=512000
-rakwireless_rak3112.menu.UploadSpeed.512000.upload.speed=512000
-
-rakwireless_rak3112.menu.DebugLevel.none=None
-rakwireless_rak3112.menu.DebugLevel.none.build.code_debug=0
-rakwireless_rak3112.menu.DebugLevel.error=Error
-rakwireless_rak3112.menu.DebugLevel.error.build.code_debug=1
-rakwireless_rak3112.menu.DebugLevel.warn=Warn
-rakwireless_rak3112.menu.DebugLevel.warn.build.code_debug=2
-rakwireless_rak3112.menu.DebugLevel.info=Info
-rakwireless_rak3112.menu.DebugLevel.info.build.code_debug=3
-rakwireless_rak3112.menu.DebugLevel.debug=Debug
-rakwireless_rak3112.menu.DebugLevel.debug.build.code_debug=4
-rakwireless_rak3112.menu.DebugLevel.verbose=Verbose
-rakwireless_rak3112.menu.DebugLevel.verbose.build.code_debug=5
-
-rakwireless_rak3112.menu.EraseFlash.none=Disabled
-rakwireless_rak3112.menu.EraseFlash.none.upload.erase_cmd=
-rakwireless_rak3112.menu.EraseFlash.all=Enabled
-rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
-
-##############################################################
-
 heltec_wifi_kit_32.name=Heltec WiFi Kit 32
 
 heltec_wifi_kit_32.bootloader.tool=esptool_py
@@ -50706,5 +50547,164 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+rakwireless_rak3112.name=RAKwireless RAK3112
+
+rakwireless_rak3112.upload.tool=esptool_py
+rakwireless_rak3112.upload.tool.default=esptool_py
+rakwireless_rak3112.upload.tool.network=esp_ota
+rakwireless_rak3112.upload.maximum_size=1310720
+rakwireless_rak3112.upload.maximum_data_size=327680
+rakwireless_rak3112.upload.wait_for_upload_port=false
+rakwireless_rak3112.upload.speed=460800
+rakwireless_rak3112.upload.flags=
+rakwireless_rak3112.upload.extra_flags=
+
+rakwireless_rak3112.bootloader.tool=esptool_py
+rakwireless_rak3112.bootloader.tool.default=esptool_py
+
+rakwireless_rak3112.serial.disableDTR=true
+rakwireless_rak3112.serial.disableRTS=true
+
+rakwireless_rak3112.build.tarch=xtensa
+rakwireless_rak3112.build.bootloader_addr=0x0
+rakwireless_rak3112.build.mcu=esp32s3
+rakwireless_rak3112.build.core=esp32
+rakwireless_rak3112.build.target=esp32s3
+rakwireless_rak3112.build.variant=rakwireless_rak3112
+rakwireless_rak3112.build.board=RAKWIRELESS_RAK3112
+
+rakwireless_rak3112.build.usb_mode=1
+rakwireless_rak3112.build.cdc_on_boot=1
+rakwireless_rak3112.build.msc_on_boot=0
+rakwireless_rak3112.build.dfu_on_boot=0
+
+rakwireless_rak3112.build.f_cpu=240000000L
+rakwireless_rak3112.build.flash_size=16MB
+rakwireless_rak3112.build.flash_freq=80m
+rakwireless_rak3112.build.flash_mode=dio
+rakwireless_rak3112.build.boot=dio
+rakwireless_rak3112.build.partitions=default
+rakwireless_rak3112.build.defines=
+
+rakwireless_rak3112.menu.PSRAM.enabled=Enabled
+rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+rakwireless_rak3112.menu.PSRAM.enabled.build.psram_type=opi
+rakwireless_rak3112.menu.PSRAM.disabled=Disabled
+rakwireless_rak3112.menu.PSRAM.disabled.build.defines=
+
+rakwireless_rak3112.menu.LoopCore.1=Core 1
+rakwireless_rak3112.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+rakwireless_rak3112.menu.LoopCore.0=Core 0
+rakwireless_rak3112.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.EventsCore.1=Core 1
+rakwireless_rak3112.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+rakwireless_rak3112.menu.EventsCore.0=Core 0
+rakwireless_rak3112.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.USBMode.hwcdc=Hardware CDC and JTAG
+rakwireless_rak3112.menu.USBMode.hwcdc.build.usb_mode=1
+rakwireless_rak3112.menu.USBMode.default=USB-OTG (TinyUSB)
+rakwireless_rak3112.menu.USBMode.default.build.usb_mode=0
+
+rakwireless_rak3112.menu.CDCOnBoot.default=Enabled
+rakwireless_rak3112.menu.CDCOnBoot.default.build.cdc_on_boot=1
+rakwireless_rak3112.menu.CDCOnBoot.cdc=Disabled
+rakwireless_rak3112.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+rakwireless_rak3112.menu.MSCOnBoot.default=Disabled
+rakwireless_rak3112.menu.MSCOnBoot.default.build.msc_on_boot=0
+rakwireless_rak3112.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+rakwireless_rak3112.menu.DFUOnBoot.default=Disabled
+rakwireless_rak3112.menu.DFUOnBoot.default.build.dfu_on_boot=0
+rakwireless_rak3112.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+rakwireless_rak3112.menu.UploadMode.default=UART0 / Hardware CDC
+rakwireless_rak3112.menu.UploadMode.default.upload.use_1200bps_touch=false
+rakwireless_rak3112.menu.UploadMode.default.upload.wait_for_upload_port=false
+rakwireless_rak3112.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+rakwireless_rak3112.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+rakwireless_rak3112.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+rakwireless_rak3112.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-16MB
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota=TinyUF2 16MB No OTA(4MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-16MB-noota
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+rakwireless_rak3112.menu.PartitionScheme.custom=Custom
+rakwireless_rak3112.menu.PartitionScheme.custom.build.partitions=
+rakwireless_rak3112.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+rakwireless_rak3112.menu.CPUFreq.240=240MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.240.build.f_cpu=240000000L
+rakwireless_rak3112.menu.CPUFreq.160=160MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.160.build.f_cpu=160000000L
+rakwireless_rak3112.menu.CPUFreq.80=80MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.80.build.f_cpu=80000000L
+
+rakwireless_rak3112.menu.FlashMode.qio=QIO
+rakwireless_rak3112.menu.FlashMode.qio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.qio.build.boot=qio
+rakwireless_rak3112.menu.FlashMode.dio=DIO
+rakwireless_rak3112.menu.FlashMode.dio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.dio.build.boot=dio
+
+rakwireless_rak3112.menu.FlashFreq.80=80MHz
+rakwireless_rak3112.menu.FlashFreq.80.build.flash_freq=80m
+rakwireless_rak3112.menu.FlashFreq.40=40MHz
+rakwireless_rak3112.menu.FlashFreq.40.build.flash_freq=40m
+
+rakwireless_rak3112.menu.UploadSpeed.921600=921600
+rakwireless_rak3112.menu.UploadSpeed.921600.upload.speed=921600
+rakwireless_rak3112.menu.UploadSpeed.115200=115200
+rakwireless_rak3112.menu.UploadSpeed.115200.upload.speed=115200
+rakwireless_rak3112.menu.UploadSpeed.256000.windows=256000
+rakwireless_rak3112.menu.UploadSpeed.256000.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400.windows.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400=230400
+rakwireless_rak3112.menu.UploadSpeed.230400.upload.speed=230400
+rakwireless_rak3112.menu.UploadSpeed.460800.linux=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.macosx=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.upload.speed=460800
+rakwireless_rak3112.menu.UploadSpeed.512000.windows=512000
+rakwireless_rak3112.menu.UploadSpeed.512000.upload.speed=512000
+
+rakwireless_rak3112.menu.DebugLevel.none=None
+rakwireless_rak3112.menu.DebugLevel.none.build.code_debug=0
+rakwireless_rak3112.menu.DebugLevel.error=Error
+rakwireless_rak3112.menu.DebugLevel.error.build.code_debug=1
+rakwireless_rak3112.menu.DebugLevel.warn=Warn
+rakwireless_rak3112.menu.DebugLevel.warn.build.code_debug=2
+rakwireless_rak3112.menu.DebugLevel.info=Info
+rakwireless_rak3112.menu.DebugLevel.info.build.code_debug=3
+rakwireless_rak3112.menu.DebugLevel.debug=Debug
+rakwireless_rak3112.menu.DebugLevel.debug.build.code_debug=4
+rakwireless_rak3112.menu.DebugLevel.verbose=Verbose
+rakwireless_rak3112.menu.DebugLevel.verbose.build.code_debug=5
+
+rakwireless_rak3112.menu.EraseFlash.none=Disabled
+rakwireless_rak3112.menu.EraseFlash.none.upload.erase_cmd=
+rakwireless_rak3112.menu.EraseFlash.all=Enabled
+rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
