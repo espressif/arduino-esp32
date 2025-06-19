@@ -11,7 +11,10 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-static const uint8_t LED_BUILTIN = 37;
+#define LED_GREEN  46
+#define LED_BLUE   45
+
+static const uint8_t LED_BUILTIN = LED_GREEN;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
