@@ -123,7 +123,7 @@ public:
   }
 
   bool send_message(const uint8_t *data, size_t len) {
-    if (data == NULL || len == 0) {
+    if (data == nullptr || len == 0) {
       log_e("Data to be sent is NULL or has a length of 0");
       return false;
     }
@@ -169,9 +169,12 @@ public:
 
 /* Peers */
 
-std::vector<ESP_NOW_Network_Peer *> peers;                             // Create a vector to store the peer pointers
-ESP_NOW_Network_Peer broadcast_peer(ESP_NOW.BROADCAST_ADDR, 0, NULL);  // Register the broadcast peer (no encryption support for the broadcast address)
-ESP_NOW_Network_Peer *master_peer = nullptr;                           // Pointer to peer that is the master
+// Create a vector to store the peer pointers
+std::vector<ESP_NOW_Network_Peer *> peers;
+// Register the broadcast peer (no encryption support for the broadcast address)
+ESP_NOW_Network_Peer broadcast_peer(ESP_NOW.BROADCAST_ADDR, 0, nullptr);
+// Pointer to the peer that is the master
+ESP_NOW_Network_Peer *master_peer = nullptr;
 
 /* Helper functions */
 
@@ -279,7 +282,7 @@ void setup() {
   }
 
   // Register the callback to be called when a new peer is found
-  ESP_NOW.onNewPeer(register_new_peer, NULL);
+  ESP_NOW.onNewPeer(register_new_peer, nullptr);
 
   Serial.println("Setup complete. Broadcasting own priority to find the master...");
   memset(&new_msg, 0, sizeof(new_msg));
