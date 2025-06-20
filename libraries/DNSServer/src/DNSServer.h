@@ -22,7 +22,7 @@
   { '\5', 'l', 'o', 'c', 'a', 'l', '\0' }
 // From the following values only the MINIMAL_TTL has relevance
 // in the context of client-server protocol interactions.
-// The other vallues are arbitrary chosen as they are only relevant for
+// The other values are arbitrary chosen as they are only relevant for
 // in a zone-transfer scenario.
 #define DNS_SOA_SERIAL  2025052900  // Arbitrary serial (format: YYYYMMDDnn)
 #define DNS_SOA_REFRESH 100000      // Arbitrary (seconds)
