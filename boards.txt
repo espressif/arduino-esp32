@@ -36262,12 +36262,12 @@ XIAO_ESP32S3_Plus.build.cdc_on_boot=1
 XIAO_ESP32S3_Plus.build.msc_on_boot=0
 XIAO_ESP32S3_Plus.build.dfu_on_boot=0
 XIAO_ESP32S3_Plus.build.f_cpu=240000000L
-XIAO_ESP32S3_Plus.build.flash_size=8MB
+XIAO_ESP32S3_Plus.build.flash_size=16MB
 XIAO_ESP32S3_Plus.build.flash_freq=80m
 XIAO_ESP32S3_Plus.build.flash_mode=dio
 XIAO_ESP32S3_Plus.build.boot=qio
 XIAO_ESP32S3_Plus.build.boot_freq=80m
-XIAO_ESP32S3_Plus.build.partitions=default_8MB
+XIAO_ESP32S3_Plus.build.partitions=ffat
 XIAO_ESP32S3_Plus.build.defines=
 XIAO_ESP32S3_Plus.build.loop_core=
 XIAO_ESP32S3_Plus.build.event_core=
@@ -36304,8 +36304,6 @@ XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.boot=dio
 XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.boot_freq=80m
 XIAO_ESP32S3_Plus.menu.FlashMode.dio.build.flash_freq=80m
 
-XIAO_ESP32S3_Plus.menu.FlashSize.8M=8MB (64Mb)
-XIAO_ESP32S3_Plus.menu.FlashSize.8M.build.flash_size=8MB
 XIAO_ESP32S3_Plus.menu.FlashSize.16M=16MB (128Mb)
 XIAO_ESP32S3_Plus.menu.FlashSize.16M.build.flash_size=16MB
 
