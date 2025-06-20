@@ -103,6 +103,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "Update/examples/AWS_S3_OTA_Update",
+                    "sizes": [{
+                            "flash_bytes": 900166,
+                            "flash_percentage": 68,
+                            "ram_bytes": 46116,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
                             "flash_bytes": 980434,
@@ -222,20 +230,20 @@
                             "ram_bytes": 50812,
                             "ram_percentage": 15
                             }]
-                    },
-{"name": "WebServer/examples/Middleware",
-                    "sizes": [{
-                            "flash_bytes": 918538,
-                            "flash_percentage": 70,
-                            "ram_bytes": 46012,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "WebServer/examples/HttpAuthCallback",
+                    "sizes": [{
+                            "flash_bytes": 932493,
+                            "flash_percentage": 71,
+                            "ram_bytes": 45348,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
                             "flash_bytes": 931925,
@@ -347,20 +355,20 @@
                             "ram_bytes": 38696,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "WiFi/examples/SimpleWiFiServer",
-                    "sizes": [{
-                            "flash_bytes": 855681,
-                            "flash_percentage": 65,
-                            "ram_bytes": 40292,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "WebServer/examples/Filters",
+                    "sizes": [{
+                            "flash_bytes": 1022524,
+                            "flash_percentage": 78,
+                            "ram_bytes": 39856,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "WebServer/examples/HelloServer",
                     "sizes": [{
                             "flash_bytes": 1020282,
@@ -464,20 +472,20 @@
                             "ram_bytes": 42984,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "WebServer/examples/WebServer",
-                    "sizes": [{
-                            "flash_bytes": 1080708,
-                            "flash_percentage": 82,
-                            "ram_bytes": 37048,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "WebServer/examples/PathArgServer",
+                    "sizes": [{
+                            "flash_bytes": 1298149,
+                            "flash_percentage": 41,
+                            "ram_bytes": 50332,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "WebServer/examples/SDWebServer",
                     "sizes": [{
                             "flash_bytes": 1086905,
@@ -597,14 +605,6 @@
                             "ram_bytes": 42972,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "WiFi/examples/WiFiClientEvents",
-                    "sizes": [{
-                            "flash_bytes": 930143,
-                            "flash_percentage": 70,
-                            "ram_bytes": 41036,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
@@ -688,6 +688,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "WebServer/examples/HelloServer",
+                    "sizes": [{
+                            "flash_bytes": 975070,
+                            "flash_percentage": 74,
+                            "ram_bytes": 48648,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
                             "flash_bytes": 992850,
@@ -798,14 +806,6 @@
                             "flash_percentage": 74,
                             "ram_bytes": 48856,
                             "ram_percentage": 14
-                            }]
-                    },
-{"name": "WiFi/examples/FTM/FTM_Initiator",
-                    "sizes": [{
-                            "flash_bytes": 896194,
-                            "flash_percentage": 68,
-                            "ram_bytes": 44704,
-                            "ram_percentage": 13
                             }]
                     }
 ]

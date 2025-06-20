@@ -103,6 +103,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "SD/examples/SD_time",
+                    "sizes": [{
+                            "flash_bytes": 944758,
+                            "flash_percentage": 72,
+                            "ram_bytes": 46140,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "SD_MMC/examples/SD2USBMSC",
                     "sizes": [{
                             "flash_bytes": 449058,
@@ -222,20 +230,20 @@
                             "ram_bytes": 40452,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "USB/examples/Gamepad",
-                    "sizes": [{
-                            "flash_bytes": 376874,
-                            "flash_percentage": 28,
-                            "ram_bytes": 40460,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "USB/examples/ConsumerControl",
+                    "sizes": [{
+                            "flash_bytes": 303389,
+                            "flash_percentage": 23,
+                            "ram_bytes": 34972,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "USB/examples/CustomHIDDevice",
                     "sizes": [{
                             "flash_bytes": 316605,
@@ -347,20 +355,20 @@
                             "ram_bytes": 34996,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "USB/examples/SystemControl",
-                    "sizes": [{
-                            "flash_bytes": 303397,
-                            "flash_percentage": 23,
-                            "ram_bytes": 34972,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
+                    "sizes": [{
+                            "flash_bytes": 1074482,
+                            "flash_percentage": 81,
+                            "ram_bytes": 36880,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
                             "flash_bytes": 1045994,
@@ -464,20 +472,20 @@
                             "ram_bytes": 12160,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_time",
-                    "sizes": [{
-                            "flash_bytes": 983636,
-                            "flash_percentage": 75,
-                            "ram_bytes": 36400,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "RainMaker/examples/RMakerCustom",
+                    "sizes": [{
+                            "flash_bytes": 2130209,
+                            "flash_percentage": 52,
+                            "ram_bytes": 67432,
+                            "ram_percentage": 20
+                            }]
+                    },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
                             "flash_bytes": 2117795,
@@ -597,14 +605,6 @@
                             "ram_bytes": 43228,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "Update/examples/HTTP_Client_AES_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 1014459,
-                            "flash_percentage": 77,
-                            "ram_bytes": 43612,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
@@ -688,6 +688,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientSecure",
+                    "sizes": [{
+                            "flash_bytes": 1001246,
+                            "flash_percentage": 31,
+                            "ram_bytes": 46576,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
                             "flash_bytes": 1059058,
@@ -798,14 +806,6 @@
                             "flash_percentage": 26,
                             "ram_bytes": 21252,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_time",
-                    "sizes": [{
-                            "flash_bytes": 954730,
-                            "flash_percentage": 72,
-                            "ram_bytes": 46432,
-                            "ram_percentage": 14
                             }]
                     }
 ]
