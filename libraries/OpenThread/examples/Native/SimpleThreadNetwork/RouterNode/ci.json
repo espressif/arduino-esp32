@@ -1,0 +1,6 @@
+{
+  "requires": [
+    "CONFIG_OPENTHREAD_ENABLED=y",
+    "CONFIG_SOC_IEEE802154_SUPPORTED=y"
+  ]
+}

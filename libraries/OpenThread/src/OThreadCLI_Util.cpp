@@ -19,26 +19,6 @@
 #include "OThreadCLI_Util.h"
 #include <StreamString.h>
 
-static const char *otRoleString[] = {
-  "Disabled",  ///< The Thread stack is disabled.
-  "Detached",  ///< Not currently participating in a Thread network/partition.
-  "Child",     ///< The Thread Child role.
-  "Router",    ///< The Thread Router role.
-  "Leader",    ///< The Thread Leader role.
-};
-
-ot_device_role_t otGetDeviceRole() {
-  if (!OThreadCLI) {
-    return OT_ROLE_DISABLED;
-  }
-  otInstance *instance = esp_openthread_get_instance();
-  return (ot_device_role_t)otThreadGetDeviceRole(instance);
-}
-
-const char *otGetStringDeviceRole() {
-  return otRoleString[otGetDeviceRole()];
-}
-
 bool otGetRespCmd(const char *cmd, char *resp, uint32_t respTimeout) {
   if (!OThreadCLI) {
     return false;
@@ -174,7 +154,7 @@ bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout) {
   return true;
 }
 
-void otPrintNetworkInformation(Stream &output) {
+void otCLIPrintNetworkInformation(Stream &output) {
   if (!OThreadCLI) {
     return;
   }

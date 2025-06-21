@@ -30,6 +30,7 @@ ZigbeeRangeExtender	KEYWORD1
 ZigbeeVibrationSensor	KEYWORD1
 ZigbeeWindowCovering	KEYWORD1
 ZigbeeIlluminanceSensor	KEYWORD1
+ZigbeePowerOutlet	KEYWORD1
 
 # Other
 zigbee_role_t	KEYWORD1
@@ -106,6 +107,7 @@ setLightColor	KEYWORD2
 # ZigbeeThermostat
 onTempRecieve	KEYWORD2
 onConfigRecieve	KEYWORD2
+onTempReceiveWithSource	KEYWORD2
 getTemperature	KEYWORD2
 getSensorSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
@@ -141,14 +143,21 @@ setSensorType	KEYWORD2
 setCarbonDioxide	KEYWORD2
 
 # ZigbeeAnalog
-addAnalogValue	KEYWORD2
 addAnalogInput	KEYWORD2
 addAnalogOutput	KEYWORD2
 onAnalogOutputChange	KEYWORD2
-setAnalogValue	KEYWORD2
 setAnalogInput	KEYWORD2
+setAnalogOutput	KEYWORD2
+getAnalogOutput	KEYWORD2
 reportAnalogInput	KEYWORD2
+reportAnalogOutput	KEYWORD2
 setAnalogInputReporting	KEYWORD2
+setAnalogInputApplication	KEYWORD2
+setAnalogInputDescription	KEYWORD2
+setAnalogInputResolution	KEYWORD2
+setAnalogOutputApplication	KEYWORD2
+setAnalogOutputDescription	KEYWORD2
+setAnalogOutputResolution	KEYWORD2
 
 # ZigbeeCarbonDioxideSensor
 setCarbonDioxide	KEYWORD2
@@ -190,4 +199,4 @@ ZIGBEE_DEFAULT_COORDINATOR_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_RADIO_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_HOST_CONFIG	LITERAL1
-ZB_ARRAY_LENTH	LITERAL1
+ZB_ARRAY_LENGHT	LITERAL1
