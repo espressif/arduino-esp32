@@ -28,7 +28,8 @@ constexpr auto k_timeout_seconds = 300;
 
 static bool _matter_has_started = false;
 static node::config_t node_config;
-static node_t *deviceNode = NULL;
+static node_t *deviceNode = nullptr;
+ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = nullptr;
 
 // This callback is called for every attribute update. The callback implementation shall
 // handle the desired attributes and return an appropriate error code. If the attribute
@@ -42,7 +43,7 @@ static esp_err_t app_attribute_update_cb(
   switch (type) {
     case PRE_UPDATE:  // Callback before updating the value in the database
       log_v("Attribute update callback: PRE_UPDATE");
-      if (ep != NULL) {
+      if (ep != nullptr) {
         err = ep->attributeChangeCB(endpoint_id, cluster_id, attribute_id, val) ? ESP_OK : ESP_FAIL;
       }
       break;
@@ -78,7 +79,7 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
     identifyIsActive = false;
     log_v("Identification callback: STOP");
   }
-  if (ep != NULL) {
+  if (ep != nullptr) {
     err = ep->endpointIdentifyCB(endpoint_id, identifyIsActive) ? ESP_OK : ESP_FAIL;
   }
 
@@ -89,21 +90,21 @@ static esp_err_t app_identification_cb(identification::callback_type_t type, uin
 static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
   switch (event->Type) {
     case chip::DeviceLayer::DeviceEventType::kInterfaceIpAddressChanged:
-      log_i(
+      log_d(
         "Interface %s Address changed", event->InterfaceIpAddressChanged.Type == chip::DeviceLayer::InterfaceIpChangeType::kIpV4_Assigned ? "IPv4" : "IPV6"
       );
       break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:       log_i("Commissioning complete"); break;
-    case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:        log_i("Commissioning failed, fail safe timer expired"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted: log_i("Commissioning session started"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped: log_i("Commissioning session stopped"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened:   log_i("Commissioning window opened"); break;
-    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowClosed:   log_i("Commissioning window closed"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningComplete:       log_d("Commissioning complete"); break;
+    case chip::DeviceLayer::DeviceEventType::kFailSafeTimerExpired:        log_d("Commissioning failed, fail safe timer expired"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStarted: log_d("Commissioning session started"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningSessionStopped: log_d("Commissioning session stopped"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowOpened:   log_d("Commissioning window opened"); break;
+    case chip::DeviceLayer::DeviceEventType::kCommissioningWindowClosed:   log_d("Commissioning window closed"); break;
     case chip::DeviceLayer::DeviceEventType::kFabricRemoved:
     {
-      log_i("Fabric removed successfully");
+      log_d("Fabric removed successfully");
       if (chip::Server::GetInstance().GetFabricTable().FabricCount() == 0) {
-        log_i("No fabric left, opening commissioning window");
+        log_d("No fabric left, opening commissioning window");
         chip::CommissioningWindowManager &commissionMgr = chip::Server::GetInstance().GetCommissioningWindowManager();
         constexpr auto kTimeoutSeconds = chip::System::Clock::Seconds16(k_timeout_seconds);
         if (!commissionMgr.IsCommissioningWindowOpen()) {
@@ -116,11 +117,15 @@ static void app_event_cb(const ChipDeviceEvent *event, intptr_t arg) {
       }
       break;
     }
-    case chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved: log_i("Fabric will be removed"); break;
-    case chip::DeviceLayer::DeviceEventType::kFabricUpdated:       log_i("Fabric is updated"); break;
-    case chip::DeviceLayer::DeviceEventType::kFabricCommitted:     log_i("Fabric is committed"); break;
-    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized:    log_i("BLE deinitialized and memory reclaimed"); break;
+    case chip::DeviceLayer::DeviceEventType::kFabricWillBeRemoved: log_d("Fabric will be removed"); break;
+    case chip::DeviceLayer::DeviceEventType::kFabricUpdated:       log_d("Fabric is updated"); break;
+    case chip::DeviceLayer::DeviceEventType::kFabricCommitted:     log_d("Fabric is committed"); break;
+    case chip::DeviceLayer::DeviceEventType::kBLEDeinitialized:    log_d("BLE deinitialized and memory reclaimed"); break;
     default:                                                       break;
+  }
+  // Check if the user-defined callback is set
+  if (ArduinoMatter::_matterEventCB != nullptr) {
+    ArduinoMatter::_matterEventCB(static_cast<matterEvent_t>(event->Type), event);
   }
 }
 
