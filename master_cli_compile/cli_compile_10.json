@@ -12,7 +12,7 @@
                     },
 {"name": "USB/examples/MIDI/ReceiveMidi",
                     "sizes": [{
-                            "flash_bytes": 364047,
+                            "flash_bytes": 364043,
                             "flash_percentage": 27,
                             "ram_bytes": 49284,
                             "ram_percentage": 15
@@ -36,7 +36,7 @@
                     },
 {"name": "USB/examples/USBMSC",
                     "sizes": [{
-                            "flash_bytes": 370911,
+                            "flash_bytes": 370907,
                             "flash_percentage": 28,
                             "ram_bytes": 57436,
                             "ram_percentage": 17
@@ -44,10 +44,10 @@
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 365175,
+                            "flash_bytes": 365163,
                             "flash_percentage": 27,
-                            "ram_bytes": 49156,
-                            "ram_percentage": 15
+                            "ram_bytes": 49148,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "USB/examples/USBVendor",
@@ -254,9 +254,9 @@
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 310037,
+                            "flash_bytes": 310053,
                             "flash_percentage": 23,
-                            "ram_bytes": 34460,
+                            "ram_bytes": 34476,
                             "ram_percentage": 10
                             }]
                     },
@@ -326,9 +326,9 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 942685,
+                            "flash_bytes": 942573,
                             "flash_percentage": 71,
-                            "ram_bytes": 42832,
+                            "ram_bytes": 42824,
                             "ram_percentage": 13
                             }]
                     },
@@ -363,9 +363,9 @@
                 "sketches": [
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 983636,
+                            "flash_bytes": 983652,
                             "flash_percentage": 75,
-                            "ram_bytes": 36400,
+                            "ram_bytes": 36408,
                             "ram_percentage": 11
                             }]
                     },
@@ -379,9 +379,9 @@
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 307272,
+                            "flash_bytes": 307274,
                             "flash_percentage": 23,
-                            "ram_bytes": 13912,
+                            "ram_bytes": 13908,
                             "ram_percentage": 4
                             }]
                     },
@@ -467,9 +467,9 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1055226,
+                            "flash_bytes": 1055202,
                             "flash_percentage": 80,
-                            "ram_bytes": 39080,
+                            "ram_bytes": 39072,
                             "ram_percentage": 11
                             }]
                     }
@@ -520,7 +520,7 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1066925,
+                            "flash_bytes": 1066921,
                             "flash_percentage": 81,
                             "ram_bytes": 45340,
                             "ram_percentage": 13
@@ -592,9 +592,9 @@
                     },
 {"name": "WebServer/examples/Middleware",
                     "sizes": [{
-                            "flash_bytes": 1000543,
+                            "flash_bytes": 1000557,
                             "flash_percentage": 76,
-                            "ram_bytes": 42836,
+                            "ram_bytes": 42844,
                             "ram_percentage": 13
                             }]
                     },
@@ -621,9 +621,9 @@
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 309027,
+                            "flash_bytes": 309029,
                             "flash_percentage": 23,
-                            "ram_bytes": 15096,
+                            "ram_bytes": 15092,
                             "ram_percentage": 4
                             }]
                     },
@@ -690,7 +690,7 @@
                 "sketches": [
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 954730,
+                            "flash_bytes": 954698,
                             "flash_percentage": 72,
                             "ram_bytes": 46432,
                             "ram_percentage": 14
@@ -706,7 +706,7 @@
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 328506,
+                            "flash_bytes": 328514,
                             "flash_percentage": 25,
                             "ram_bytes": 23052,
                             "ram_percentage": 7
@@ -794,7 +794,7 @@
                     },
 {"name": "WebServer/examples/FSBrowser",
                     "sizes": [{
-                            "flash_bytes": 1020190,
+                            "flash_bytes": 1020118,
                             "flash_percentage": 77,
                             "ram_bytes": 48800,
                             "ram_percentage": 14

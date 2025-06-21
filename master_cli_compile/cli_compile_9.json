@@ -20,7 +20,7 @@
                     },
 {"name": "USB/examples/FirmwareMSC",
                     "sizes": [{
-                            "flash_bytes": 393355,
+                            "flash_bytes": 393351,
                             "flash_percentage": 30,
                             "ram_bytes": 49300,
                             "ram_percentage": 15
@@ -68,7 +68,7 @@
                     },
 {"name": "USB/examples/Keyboard/KeyboardSerial",
                     "sizes": [{
-                            "flash_bytes": 364771,
+                            "flash_bytes": 364767,
                             "flash_percentage": 27,
                             "ram_bytes": 49324,
                             "ram_percentage": 15
@@ -92,7 +92,7 @@
                     },
 {"name": "USB/examples/MIDI/MidiInterface",
                     "sizes": [{
-                            "flash_bytes": 362649,
+                            "flash_bytes": 362647,
                             "flash_percentage": 27,
                             "ram_bytes": 49284,
                             "ram_percentage": 15
@@ -121,7 +121,7 @@
                     },
 {"name": "SD_MMC/examples/SDMMC_Test",
                     "sizes": [{
-                            "flash_bytes": 387690,
+                            "flash_bytes": 387682,
                             "flash_percentage": 29,
                             "ram_bytes": 21352,
                             "ram_percentage": 6
@@ -145,15 +145,15 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 340162,
+                            "flash_bytes": 340154,
                             "flash_percentage": 25,
-                            "ram_bytes": 20872,
+                            "ram_bytes": 20856,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 910894,
+                            "flash_bytes": 910870,
                             "flash_percentage": 69,
                             "ram_bytes": 45676,
                             "ram_percentage": 13
@@ -169,7 +169,7 @@
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 326082,
+                            "flash_bytes": 326074,
                             "flash_percentage": 24,
                             "ram_bytes": 22648,
                             "ram_percentage": 6
@@ -363,9 +363,9 @@
                 "sketches": [
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1074482,
+                            "flash_bytes": 1074474,
                             "flash_percentage": 81,
-                            "ram_bytes": 36880,
+                            "ram_bytes": 36872,
                             "ram_percentage": 11
                             }]
                     },
@@ -395,17 +395,17 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 292932,
+                            "flash_bytes": 292934,
                             "flash_percentage": 22,
-                            "ram_bytes": 11640,
+                            "ram_bytes": 11636,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 292666,
+                            "flash_bytes": 292668,
                             "flash_percentage": 22,
-                            "ram_bytes": 11640,
+                            "ram_bytes": 11636,
                             "ram_percentage": 3
                             }]
                     },
@@ -467,9 +467,9 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 326304,
+                            "flash_bytes": 326300,
                             "flash_percentage": 24,
-                            "ram_bytes": 12160,
+                            "ram_bytes": 12156,
                             "ram_percentage": 3
                             }]
                     }
@@ -536,17 +536,17 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 284675,
+                            "flash_bytes": 284669,
                             "flash_percentage": 21,
-                            "ram_bytes": 13324,
+                            "ram_bytes": 13320,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 981795,
+                            "flash_bytes": 981801,
                             "flash_percentage": 74,
-                            "ram_bytes": 42476,
+                            "ram_bytes": 42484,
                             "ram_percentage": 12
                             }]
                     },
@@ -560,9 +560,9 @@
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 266229,
+                            "flash_bytes": 266227,
                             "flash_percentage": 20,
-                            "ram_bytes": 15108,
+                            "ram_bytes": 15104,
                             "ram_percentage": 4
                             }]
                     },
@@ -613,25 +613,25 @@
                 "sketches": [
 {"name": "OpenThread/examples/CLI/onReceive",
                     "sizes": [{
-                            "flash_bytes": 1100139,
+                            "flash_bytes": 1100137,
                             "flash_percentage": 83,
-                            "ram_bytes": 45880,
-                            "ram_percentage": 14
+                            "ram_bytes": 45868,
+                            "ram_percentage": 13
                             }]
                     },
 {"name": "OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                     "sizes": [{
-                            "flash_bytes": 988397,
+                            "flash_bytes": 988401,
                             "flash_percentage": 75,
-                            "ram_bytes": 45528,
+                            "ram_bytes": 45520,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
                     "sizes": [{
-                            "flash_bytes": 988029,
+                            "flash_bytes": 988033,
                             "flash_percentage": 75,
-                            "ram_bytes": 45528,
+                            "ram_bytes": 45520,
                             "ram_percentage": 13
                             }]
                     },
@@ -645,17 +645,17 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 293527,
+                            "flash_bytes": 293537,
                             "flash_percentage": 22,
-                            "ram_bytes": 12784,
+                            "ram_bytes": 12780,
                             "ram_percentage": 3
                             }]
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 293269,
+                            "flash_bytes": 293279,
                             "flash_percentage": 22,
-                            "ram_bytes": 12792,
+                            "ram_bytes": 12788,
                             "ram_percentage": 3
                             }]
                     },
@@ -677,9 +677,9 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 327043,
+                            "flash_bytes": 327039,
                             "flash_percentage": 24,
-                            "ram_bytes": 13304,
+                            "ram_bytes": 13300,
                             "ram_percentage": 4
                             }]
                     }
@@ -690,9 +690,9 @@
                 "sketches": [
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 1001246,
+                            "flash_bytes": 1001206,
                             "flash_percentage": 31,
-                            "ram_bytes": 46576,
+                            "ram_bytes": 46560,
                             "ram_percentage": 14
                             }]
                     },
@@ -706,15 +706,15 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 1000134,
+                            "flash_bytes": 1000102,
                             "flash_percentage": 76,
-                            "ram_bytes": 46576,
+                            "ram_bytes": 46560,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1040354,
+                            "flash_bytes": 1040314,
                             "flash_percentage": 79,
                             "ram_bytes": 47936,
                             "ram_percentage": 14
@@ -746,7 +746,7 @@
                     },
 {"name": "Preferences/examples/Prefs2Struct",
                     "sizes": [{
-                            "flash_bytes": 313902,
+                            "flash_bytes": 313910,
                             "flash_percentage": 23,
                             "ram_bytes": 20732,
                             "ram_percentage": 6
@@ -754,7 +754,7 @@
                     },
 {"name": "Preferences/examples/StartCounter",
                     "sizes": [{
-                            "flash_bytes": 314754,
+                            "flash_bytes": 314746,
                             "flash_percentage": 24,
                             "ram_bytes": 20740,
                             "ram_percentage": 6
@@ -802,7 +802,7 @@
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 343622,
+                            "flash_bytes": 343630,
                             "flash_percentage": 26,
                             "ram_bytes": 21252,
                             "ram_percentage": 6
