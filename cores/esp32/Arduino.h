@@ -233,7 +233,7 @@ bool shouldPrintChipDebugReport(void);
 uint64_t getArduinoSetupWaitTime_ms(void);
 #define SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms)      \
   uint64_t getArduinoSetupWaitTime_ms() { \
-    return time_ms;                       \
+    return (time_ms);                     \
   }
 
 // allows user to bypass esp_spiram_test()
