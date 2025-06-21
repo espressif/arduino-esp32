@@ -44,7 +44,8 @@ __attribute__((weak)) bool shouldPrintChipDebugReport(void) {
   return false;
 }
 
-__attribute__((weak)) uint64_t getArduinoSetupWaitTick(void) {
+// this function can be changed by the skectch using the macro SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms)
+__attribute__((weak)) uint64_t getArduinoSetupWaitTime_ms(void) {
   return 0;
 }
 
