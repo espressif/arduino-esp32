@@ -1399,10 +1399,10 @@ void uart_internal_loopback(uint8_t uartNum, int8_t rxPin) {
     return;
   }
   // forces rxPin to use GPIO Matrix and setup the pin to receive UART TX Signal - IDF 5.4.1 Change with uart_release_pin()
-  gpio_func_sel((gpio_num_t) rxPin, PIN_FUNC_GPIO);
-  gpio_pullup_en((gpio_num_t) rxPin);
-  gpio_input_enable((gpio_num_t) rxPin);
-  esp_rom_gpio_connect_in_signal(rxPin, uart_periph_signal[uartNum].pins[SOC_UART_RX_PIN_IDX].signal, false);  
+  gpio_func_sel((gpio_num_t)rxPin, PIN_FUNC_GPIO);
+  gpio_pullup_en((gpio_num_t)rxPin);
+  gpio_input_enable((gpio_num_t)rxPin);
+  esp_rom_gpio_connect_in_signal(rxPin, uart_periph_signal[uartNum].pins[SOC_UART_RX_PIN_IDX].signal, false);
   esp_rom_gpio_connect_out_signal(rxPin, uart_periph_signal[uartNum].pins[SOC_UART_TX_PIN_IDX].signal, false, false);
 }
 
