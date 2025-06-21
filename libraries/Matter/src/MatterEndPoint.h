@@ -41,22 +41,22 @@ public:
   esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id) {
     if (endpoint_id == 0) {
       log_e("Endpoint ID is not set");
-      return NULL;
+      return nullptr;
     }
     endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
-    if (endpoint == NULL) {
+    if (endpoint == nullptr) {
       log_e("Endpoint [%d] not found", endpoint_id);
-      return NULL;
+      return nullptr;
     }
     cluster_t *cluster = cluster::get(endpoint, cluster_id);
-    if (cluster == NULL) {
+    if (cluster == nullptr) {
       log_e("Cluster [%d] not found", cluster_id);
-      return NULL;
+      return nullptr;
     }
     esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
-    if (attribute == NULL) {
+    if (attribute == nullptr) {
       log_e("Attribute [%d] not found", attribute_id);
-      return NULL;
+      return nullptr;
     }
     return attribute;
   }
@@ -64,7 +64,7 @@ public:
   // get the value of an attribute from its cluster id and attribute it
   bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
-    if (attribute == NULL) {
+    if (attribute == nullptr) {
       return false;
     }
     if (attribute::get_val(attribute, attrVal) == ESP_OK) {
@@ -78,7 +78,7 @@ public:
   // set the value of an attribute from its cluster id and attribute it
   bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
     esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
-    if (attribute == NULL) {
+    if (attribute == nullptr) {
       return false;
     }
     if (attribute::set_val(attribute, attrVal) == ESP_OK) {
@@ -117,6 +117,6 @@ public:
 
 protected:
   uint16_t endpoint_id = 0;
-  EndPointIdentifyCB _onEndPointIdentifyCB = NULL;
+  EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

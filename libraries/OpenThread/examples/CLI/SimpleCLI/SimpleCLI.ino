@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@
 
 void setup() {
   Serial.begin(115200);
-  OThreadCLI.begin(false);  // No AutoStart - fresh start
+  OThread.begin(false);  // No AutoStart - fresh start
+  OThreadCLI.begin();
   Serial.println("OpenThread CLI started - type 'help' for a list of commands.");
   OThreadCLI.startConsole(Serial);
 }

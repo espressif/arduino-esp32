@@ -111,16 +111,22 @@ void DNSServer::_handleUDP(AsyncUDPPacket &pkt) {
   // will reply with IP only to "*" or if domain matches without www. subdomain
   if (dnsHeader.OPCode == DNS_OPCODE_QUERY && requestIncludesOnlyOneQuestion(dnsHeader)
       && (_domainName.isEmpty() || getDomainNameWithoutWwwPrefix(static_cast<const unsigned char *>(dnsQuestion.QName), dnsQuestion.QNameLength) == _domainName)) {
-    replyWithIP(pkt, dnsHeader, dnsQuestion);
+
+    // Qtype = A (1) or ANY (255): send an A record otherwise an empty response
+    if (ntohs(dnsQuestion.QType) == 1 || ntohs(dnsQuestion.QType) == 255) {
+      replyWithIP(pkt, dnsHeader, dnsQuestion);
+    } else {
+      replyWithNoAnsw(pkt, dnsHeader, dnsQuestion);
+    }
     return;
   }
-
   // otherwise reply with custom code
   replyWithCustomCode(pkt, dnsHeader);
 }
 
 bool DNSServer::requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader) {
-  return ntohs(dnsHeader.QDCount) == 1 && dnsHeader.ANCount == 0 && dnsHeader.NSCount == 0 && dnsHeader.ARCount == 0;
+  dnsHeader.ARCount = 0;  // We assume that if ARCount !=0 there is a EDNS OPT packet, just ignore
+  return ntohs(dnsHeader.QDCount) == 1 && dnsHeader.ANCount == 0 && dnsHeader.NSCount == 0;
 }
 
 String DNSServer::getDomainNameWithoutWwwPrefix(const unsigned char *start, size_t len) {
@@ -139,7 +145,6 @@ String DNSServer::getDomainNameWithoutWwwPrefix(const unsigned char *start, size
 
 void DNSServer::replyWithIP(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion) {
   AsyncUDPMessage rpl;
-
   // Change the type of message to a response and set the number of answers equal to
   // the number of questions in the header
   dnsHeader.QR = DNS_QR_RESPONSE;
@@ -185,5 +190,78 @@ void DNSServer::replyWithCustomCode(AsyncUDPPacket &req, DNSHeader &dnsHeader) {
 
   AsyncUDPMessage rpl(sizeof(DNSHeader));
   rpl.write(reinterpret_cast<const uint8_t *>(&dnsHeader), sizeof(DNSHeader));
+  _udp.sendTo(rpl, req.remoteIP(), req.remotePort());
+}
+
+void DNSServer::replyWithNoAnsw(AsyncUDPPacket &req, DNSHeader &dnsHeader, DNSQuestion &dnsQuestion) {
+
+  dnsHeader.QR = DNS_QR_RESPONSE;
+  dnsHeader.ANCount = 0;
+  dnsHeader.NSCount = htons(1);
+
+  AsyncUDPMessage rpl;
+  rpl.write(reinterpret_cast<const uint8_t *>(&dnsHeader), sizeof(DNSHeader));
+
+  // Write the question
+  rpl.write(dnsQuestion.QName, dnsQuestion.QNameLength);
+  rpl.write((uint8_t *)&dnsQuestion.QType, 2);
+  rpl.write((uint8_t *)&dnsQuestion.QClass, 2);
+
+  // An empty answer contains an authority section with a SOA,
+  // We take the name of the query as the root of the zone for which the SOA is generated
+  // and use a value of DNS_MINIMAL_TTL seconds  in order to minimize negative caching
+  // Write the authority section:
+  // The SOA RR's ownername is set equal to the query name, and we use made up names for
+  // the MNAME and  RNAME - it doesn't really matter from a protocol perspective - as for
+  // a no such QTYPE answer only the timing fields are used.
+  // a protocol perspective - it
+  // Use DNS name compression : instead of repeating the name in this RNAME occurrence,
+  // set the two MSB of the byte corresponding normally to the length to 1. The following
+  // 14 bits must be used to specify the offset of the domain name in the message
+  // (<255 here so the first byte has the 6 LSB at 0)
+  rpl.write((uint8_t)0xC0);
+  rpl.write((uint8_t)DNS_OFFSET_DOMAIN_NAME);
+
+  // DNS type A : host address, DNS class IN for INternet, returning an IPv4 address
+  uint16_t answerType = htons(DNS_TYPE_SOA), answerClass = htons(DNS_CLASS_IN);
+  uint32_t Serial = htonl(DNS_SOA_SERIAL);    // Date type serial based on the date this piece of code was written
+  uint32_t Refresh = htonl(DNS_SOA_REFRESH);  // These timers don't matter, we don't serve zone transfers
+  uint32_t Retry = htonl(DNS_SOA_RETRY);
+  uint32_t Expire = htonl(DNS_SOA_EXPIRE);
+  uint32_t MinTTL = htonl(DNS_MINIMAL_TTL);  // See RFC2308 section 5
+  char MLabel[] = DNS_SOA_MNAME_LABEL;
+  char RLabel[] = DNS_SOA_RNAME_LABEL;
+  char PostFixLabel[] = DNS_SOA_POSTFIX_LABEL;
+
+  // 4 accounts for len fields and  for both rname
+  // and lname and their postfix labels and there are 5 32 bit fields
+
+  uint16_t RdataLength = htons((uint16_t)(strlen(MLabel) + strlen(RLabel) + 2 * strlen(PostFixLabel) + 4 + 5 * sizeof(Serial)));
+
+  rpl.write((unsigned char *)&answerType, 2);
+  rpl.write((unsigned char *)&answerClass, 2);
+  rpl.write((unsigned char *)&MinTTL, 4);  // DNS Time To Live
+
+  rpl.write((unsigned char *)&RdataLength, 2);
+
+  rpl.write((uint8_t)strlen(MLabel));
+  rpl.write((unsigned char *)&MLabel, strlen(MLabel));
+
+  rpl.write((unsigned char *)&PostFixLabel, strlen(PostFixLabel));
+  rpl.write((uint8_t)0);
+  //  rpl.write((uint8_t)0xC0);
+  //  rpl.write((uint8_t)DNS_OFFSET_DOMAIN_NAME);
+
+  rpl.write((uint8_t)strlen(RLabel));
+  rpl.write((unsigned char *)&RLabel, strlen(RLabel));
+  rpl.write((unsigned char *)&PostFixLabel, strlen(PostFixLabel));
+  rpl.write((uint8_t)0);
+
+  rpl.write((unsigned char *)&Serial, 4);
+  rpl.write((unsigned char *)&Refresh, 4);
+  rpl.write((unsigned char *)&Retry, 4);
+  rpl.write((unsigned char *)&Expire, 4);
+  rpl.write((unsigned char *)&MinTTL, 4);
+
   _udp.sendTo(rpl, req.remoteIP(), req.remotePort());
 }
