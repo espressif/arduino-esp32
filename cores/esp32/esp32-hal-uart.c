@@ -1383,10 +1383,10 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 #endif
 }
 
-///////////////////////////
-// These functions are for testing purpose only and can be used in Arduino Sketches
-// Those are used in the UART examples and CI
-///////////////////////////
+/*
+ * These functions are for testing purposes only and can be used in Arduino Sketches.
+ * They are utilized in the UART examples and CI.
+ */
 
 /*
    This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
