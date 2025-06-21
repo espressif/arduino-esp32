@@ -32,6 +32,7 @@
 #include "driver/gpio.h"
 #include "hal/gpio_hal.h"
 #include "esp_rom_gpio.h"
+#include "esp_private/gpio.h"
 
 #include "driver/rtc_io.h"
 #include "driver/lp_io.h"
