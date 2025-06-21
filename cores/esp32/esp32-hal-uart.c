@@ -329,7 +329,7 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
 
 static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx_io_num, int rts_io_num, int cts_io_num) {
   // Since an IO cannot route peripheral signals via IOMUX and GPIO matrix at the same time,
-  // if tx and rx share the same IO, both signals need to be route to IOs through GPIO matrix
+  // if tx and rx share the same IO, both signals need to be routed to IOs through GPIO matrix
   bool tx_rx_same_io = (tx_io_num == rx_io_num);
 
   /* In the following statements, if the io_num is negative, no need to configure anything. */
