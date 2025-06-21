@@ -35,7 +35,7 @@
 
 #include "driver/rtc_io.h"
 #include "driver/lp_io.h"
-#include "soc/uart_periph.h"
+#include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 
 static int s_uart_debug_nr = 0;         // UART number for debug output
@@ -1391,7 +1391,7 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
     This is intended to make an internal loopback connection using IOMUX
     The function uart_internal_loopback() shall be used right after Arduino Serial.begin(...)
     This code "replaces" the physical wiring for connecting TX <--> RX in a loopback
-*/
+
 
 // gets the right TX or RX SIGNAL, based on the UART number from gpio_sig_map.h
 #ifdef CONFIG_IDF_TARGET_ESP32P4
@@ -1416,6 +1416,7 @@ unsigned long uartDetectBaudrate(uart_t *uart) {
 #define UART_RX_SIGNAL(uartNumber) (uartNumber == UART_NUM_0 ? U0RXD_IN_IDX : U1RXD_IN_IDX)
 #endif
 #endif  // ifdef CONFIG_IDF_TARGET_ESP32P4
+*/
 
 /*
    This function internally binds defined UARTs TX signal with defined RX pin of any UART (same or different).
@@ -1427,7 +1428,12 @@ void uart_internal_loopback(uint8_t uartNum, int8_t rxPin) {
     log_e("UART%d is not supported for loopback or RX pin %d is invalid.", uartNum, rxPin);
     return;
   }
-  esp_rom_gpio_connect_out_signal(rxPin, UART_TX_SIGNAL(uartNum), false, false);
+  // forces rxPin to use GPIO Matrix and setup the pin to receive UART TX Signal - IDF 5.4.1 Change with uart_release_pin()
+  gpio_func_sel((gpio_num_t) rxPin, PIN_FUNC_GPIO);
+  gpio_pullup_en((gpio_num_t) rxPin);
+  gpio_input_enable((gpio_num_t) rxPin);
+  esp_rom_gpio_connect_in_signal(rxPin, uart_periph_signal[uartNum].pins[SOC_UART_RX_PIN_IDX].signal, false);  
+  esp_rom_gpio_connect_out_signal(rxPin, uart_periph_signal[uartNum].pins[SOC_UART_TX_PIN_IDX].signal, false, false);
 }
 
 /*
