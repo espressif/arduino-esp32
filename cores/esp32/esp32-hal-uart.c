@@ -332,7 +332,7 @@ static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx
   // if tx and rx share the same IO, both signals need to be routed to IOs through GPIO matrix
   bool tx_rx_same_io = (tx_io_num == rx_io_num);
 
-  /* In the following statements, if the io_num is negative, no need to configure anything. */
+  // In the following statements, if the io_num is negative, no need to configure anything.
   if (tx_io_num >= 0) {
 #if CONFIG_ESP_SLEEP_GPIO_RESET_WORKAROUND || CONFIG_PM_SLP_DISABLE_GPIO
     // In such case, IOs are going to switch to sleep configuration (isolate) when entering sleep for power saving reason
