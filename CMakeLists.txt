@@ -165,6 +165,7 @@ set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 
 set(ARDUINO_LIBRARY_OpenThread_SRCS
+  libraries/OpenThread/src/OThread.cpp
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
