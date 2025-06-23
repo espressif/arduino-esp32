@@ -149,7 +149,6 @@ String BLEDescriptorMap::toString() {
   return res;
 }  // toString
 
-
 /**
  * @brief Get the first descriptor in the map.
  * @return The first descriptor in the map.

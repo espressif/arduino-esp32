@@ -778,7 +778,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
     return true;
   }
 
-  BLETaskData taskData(const_cast<BLERemoteCharacteristic*>(this));
+  BLETaskData taskData(const_cast<BLERemoteCharacteristic *>(this));
   desc_filter_t filter = {uuid_filter, &taskData};
   int rc = 0;
 
@@ -789,9 +789,10 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
     return false;
   }
 
-  [[maybe_unused]] size_t prevDscCount = m_descriptorMap.size();
+  [[maybe_unused]]
+  size_t prevDscCount = m_descriptorMap.size();
   BLEUtils::taskWait(taskData, BLE_NPL_TIME_FOREVER);
-  rc = ((BLETaskData*)filter.task_data)->m_flags;
+  rc = ((BLETaskData *)filter.task_data)->m_flags;
 
   if (rc != BLE_HS_EDONE) {
     log_e("<< retrieveDescriptors(): failed: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
@@ -819,7 +820,7 @@ String BLERemoteCharacteristic::readValue() {
 
   int rc = 0;
   int retryCount = 1;
-  BLETaskData taskData(const_cast<BLERemoteCharacteristic*>(this), 0, &value);
+  BLETaskData taskData(const_cast<BLERemoteCharacteristic *>(this), 0, &value);
 
   do {
     rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0, BLERemoteCharacteristic::onReadCB, &taskData);
@@ -832,9 +833,7 @@ String BLERemoteCharacteristic::readValue() {
 
     switch (rc) {
       case 0:
-      case BLE_HS_EDONE:
-        rc = 0;
-        break;
+      case BLE_HS_EDONE: rc = 0; break;
       // Characteristic is not long-readable, return with what we have.
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
         log_i("Attribute not long");
@@ -851,8 +850,7 @@ String BLERemoteCharacteristic::readValue() {
           break;
         }
       /* Else falls through. */
-      default:
-        goto exit;
+      default: goto exit;
     }
   } while (rc != 0 && retryCount--);
 
@@ -894,7 +892,7 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
   int rc = 0;
   int retryCount = 1;
   uint16_t mtu = ble_att_mtu(pClient->getConnId()) - 3;
-  BLETaskData taskData(const_cast<BLERemoteCharacteristic*>(this));
+  BLETaskData taskData(const_cast<BLERemoteCharacteristic *>(this));
 
   // Check if the data length is longer than we can write in one connection event.
   // If so we must do a long write which requires a response.
@@ -920,9 +918,7 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
 
     switch (rc) {
       case 0:
-      case BLE_HS_EDONE:
-        rc = 0;
-        break;
+      case BLE_HS_EDONE: rc = 0; break;
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
         log_e("Long write not supported by peer; Truncating length to %d", mtu);
         retryCount++;
@@ -936,8 +932,7 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
           break;
         }
         /* Else falls through. */
-      default:
-        goto exit;
+      default: goto exit;
     }
   } while (rc != 0 && retryCount--);
 

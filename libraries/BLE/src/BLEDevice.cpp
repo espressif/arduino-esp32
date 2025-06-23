@@ -374,7 +374,7 @@ void BLEDevice::init(String deviceName) {
     while (!m_synced) {
       ble_npl_time_delay(1);
     }
-#endif  // CONFIG_NIMBLE_ENABLED
+#endif                   // CONFIG_NIMBLE_ENABLED
     initialized = true;  // Set the initialization flag to ensure we are only initialized once.
   }
   vTaskDelay(200 / portTICK_PERIOD_MS);  // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
@@ -436,28 +436,18 @@ void BLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powe
  */
 
 int BLEDevice::getPower(esp_ble_power_type_t powerType) {
-  switch(esp_ble_tx_power_get(powerType)) {
-    case ESP_PWR_LVL_N12:
-      return -12;
-    case ESP_PWR_LVL_N9:
-      return -9;
-    case ESP_PWR_LVL_N6:
-      return -6;
-    case ESP_PWR_LVL_N3:
-      return -6;
-    case ESP_PWR_LVL_N0:
-      return 0;
-    case ESP_PWR_LVL_P3:
-      return 3;
-    case ESP_PWR_LVL_P6:
-      return 6;
-    case ESP_PWR_LVL_P9:
-      return 9;
-    default:
-      return -128;
+  switch (esp_ble_tx_power_get(powerType)) {
+    case ESP_PWR_LVL_N12: return -12;
+    case ESP_PWR_LVL_N9:  return -9;
+    case ESP_PWR_LVL_N6:  return -6;
+    case ESP_PWR_LVL_N3:  return -6;
+    case ESP_PWR_LVL_N0:  return 0;
+    case ESP_PWR_LVL_P3:  return 3;
+    case ESP_PWR_LVL_P6:  return 6;
+    case ESP_PWR_LVL_P9:  return 9;
+    default:              return -128;
   }
-} // getPower
-
+}  // getPower
 
 /**
  * @brief Set the value of a characteristic of a service on a remote device.

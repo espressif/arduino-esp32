@@ -40,26 +40,26 @@ class BLE2902 : public BLEDescriptor {
 
 // Class declaration for NimBLE (deprecated)
 #if defined(CONFIG_NIMBLE_ENABLED)
-class [[deprecated("NimBLE does not support manually adding 2902 descriptors as they \
+  class [[deprecated("NimBLE does not support manually adding 2902 descriptors as they \
 are automatically added when the characteristic has notifications or indications enabled. \
 Get/Set the notifications/indications properties of the characteristic instead. \
 This class will be removed in a future version.")]] BLE2902 : public BLEDescriptor {
 #endif
 
-public:
-  /***************************************************************************
+  public:
+    /***************************************************************************
    *                         Common public functions                         *
    ***************************************************************************/
 
-  BLE2902();
-  bool getNotifications();
-  bool getIndications();
-  void setNotifications(bool flag);
-  void setIndications(bool flag);
+    BLE2902();
+    bool getNotifications();
+    bool getIndications();
+    void setNotifications(bool flag);
+    void setIndications(bool flag);
 
-private:
-  friend class BLECharacteristic;
-};  // BLE2902
+  private:
+    friend class BLECharacteristic;
+  };  // BLE2902
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

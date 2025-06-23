@@ -181,7 +181,7 @@ bool BLEClient::secureConnection() {
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   int retryCount = 1;
-  BLETaskData taskData(const_cast<BLEClient*>(this), BLE_HS_ENOTCONN);
+  BLETaskData taskData(const_cast<BLEClient *>(this), BLE_HS_ENOTCONN);
   m_pTaskData = &taskData;
 
   do {
@@ -452,8 +452,8 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   errRc = ::esp_ble_gattc_open(
     m_gattc_if,
     getPeerAddress().getNative(),  // address
-    (esp_ble_addr_type_t)type,                           // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
-    1                               // direct connection <-- maybe needs to be changed in case of direct indirect connection???
+    (esp_ble_addr_type_t)type,     // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
+    1                              // direct connection <-- maybe needs to be changed in case of direct indirect connection???
   );
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -866,12 +866,11 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
  * When a service is found or there is none left or there was an error
  * the API will call this and report findings.
  */
-int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg)
-{
+int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg) {
   log_d("Service Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? service->start_handle : -1);
 
-  BLETaskData *pTaskData = (BLETaskData*)arg;
-  BLEClient *client = (BLEClient*)pTaskData->m_pInstance;
+  BLETaskData *pTaskData = (BLETaskData *)arg;
+  BLEClient *client = (BLEClient *)pTaskData->m_pInstance;
 
   if (error->status == BLE_HS_ENOTCONN) {
     log_e("<< Service Discovered; Disconnected");
@@ -880,13 +879,13 @@ int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_e
   }
 
   // Make sure the service discovery is for this device
-  if(client->getConnId() != conn_handle){
+  if (client->getConnId() != conn_handle) {
     return 0;
   }
 
-  if(error->status == 0) {
+  if (error->status == 0) {
     // Found a service - add it to the vector
-    BLERemoteService* pRemoteService = new BLERemoteService(client, service);
+    BLERemoteService *pRemoteService = new BLERemoteService(client, service);
     client->m_servicesMap.insert(std::pair<std::string, BLERemoteService *>(pRemoteService->getUUID().toString().c_str(), pRemoteService));
     client->m_servicesMapByInstID.insert(std::pair<BLERemoteService *, uint16_t>(pRemoteService, service->start_handle));
     return 0;
@@ -1018,7 +1017,8 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
       return 0;
     }  // BLE_GAP_EVENT_CONNECT
 
-    case BLE_GAP_EVENT_TERM_FAILURE: {
+    case BLE_GAP_EVENT_TERM_FAILURE:
+    {
       if (client->m_conn_id != event->term_failure.conn_handle) {
         return 0;
       }
@@ -1030,7 +1030,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         ble_gap_terminate(event->term_failure.conn_handle, BLE_ERR_REM_USER_CONN_TERM);
       }
       return 0;
-    } // BLE_GAP_EVENT_TERM_FAILURE
+    }  // BLE_GAP_EVENT_TERM_FAILURE
 
     case BLE_GAP_EVENT_NOTIFY_RX:
     {
@@ -1071,7 +1071,9 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
           if (characteristic->second->m_notifyCallback != nullptr) {
             log_d("Invoking callback for notification on characteristic %s", characteristic->second->toString().c_str());
-            characteristic->second->m_notifyCallback(characteristic->second, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication);
+            characteristic->second->m_notifyCallback(
+              characteristic->second, event->notify_rx.om->om_data, event->notify_rx.om->om_len, !event->notify_rx.indication
+            );
           }
           break;
         }
@@ -1234,7 +1236,7 @@ int BLEClient::disconnect(uint8_t reason) {
   log_d(">> disconnect()");
   int rc = 0;
 
-  if(isConnected()) {
+  if (isConnected()) {
     rc = ble_gap_terminate(m_conn_id, reason);
     if (rc != 0 && rc != BLE_HS_ENOTCONN && rc != BLE_HS_EALREADY) {
       m_lastErr = rc;
@@ -1246,23 +1248,23 @@ int BLEClient::disconnect(uint8_t reason) {
 
   log_d("<< disconnect()");
   return rc;
-} // disconnect
+}  // disconnect
 
 bool BLEClientCallbacks::onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params) {
   log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: default");
   return true;
 }
 
-uint32_t BLEClientCallbacks::onPassKeyRequest(){
+uint32_t BLEClientCallbacks::onPassKeyRequest() {
   log_d("onPassKeyRequest: default: 123456");
   return 123456;
 }
 
-void BLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc* desc){
+void BLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
   log_d("onAuthenticationComplete: default");
 }
 
-bool BLEClientCallbacks::onConfirmPIN(uint32_t pin){
+bool BLEClientCallbacks::onConfirmPIN(uint32_t pin) {
   log_d("onConfirmPIN: default: true");
   return true;
 }

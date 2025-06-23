@@ -365,7 +365,7 @@ void BLERemoteService::retrieveCharacteristics() {
   log_v(">> retrieveCharacteristics() for service: %s", getUUID().toString().c_str());
 
   int rc = 0;
-  BLETaskData taskData(const_cast<BLERemoteService*>(this));
+  BLETaskData taskData(const_cast<BLERemoteService *>(this));
 
   rc = ble_gattc_disc_all_chrs(m_pClient->getConnId(), m_startHandle, m_endHandle, BLERemoteService::characteristicDiscCB, &taskData);
 

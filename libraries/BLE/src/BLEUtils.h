@@ -68,14 +68,14 @@ typedef struct {
  * All items are optional, the m_pHandle will be set in taskWait().
  */
 struct BLETaskData {
-  BLETaskData(void* pInstance = nullptr, int flags = 0, void* buf = nullptr);
+  BLETaskData(void *pInstance = nullptr, int flags = 0, void *buf = nullptr);
   ~BLETaskData();
-  void* m_pInstance{nullptr};
+  void *m_pInstance{nullptr};
   mutable int m_flags{0};
-  void* m_pBuf{nullptr};
+  void *m_pBuf{nullptr};
 
 private:
-  mutable void* m_pHandle{nullptr}; // semaphore or task handle
+  mutable void *m_pHandle{nullptr};  // semaphore or task handle
   friend class BLEUtils;
 };
 
@@ -142,8 +142,8 @@ public:
   static const char *gapEventToString(uint8_t eventType);
   static const char *returnCodeToString(int rc);
   static int checkConnParams(ble_gap_conn_params *params);
-  static bool taskWait(const BLETaskData& taskData, uint32_t timeout);
-  static void taskRelease(const BLETaskData& taskData, int rc = 0);
+  static bool taskWait(const BLETaskData &taskData, uint32_t timeout);
+  static void taskRelease(const BLETaskData &taskData, int rc = 0);
 #endif
 };
 

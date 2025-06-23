@@ -75,8 +75,8 @@ public:
   String toString() const;
   static BLEUUID fromString(String uuid);  // Create a BLEUUID from a string
 
-  bool operator ==(const BLEUUID & rhs) const;
-  bool operator !=(const BLEUUID & rhs) const;
+  bool operator==(const BLEUUID &rhs) const;
+  bool operator!=(const BLEUUID &rhs) const;
 
   /***************************************************************************
    *                      Bluedroid public declarations                      *
@@ -94,7 +94,7 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   BLEUUID(ble_uuid_any_t uuid);
-  BLEUUID(const ble_uuid128_t* uuid);
+  BLEUUID(const ble_uuid128_t *uuid);
   const ble_uuid_any_t *getNative() const;
 #endif
 

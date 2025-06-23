@@ -25,9 +25,9 @@
 
 #include "BLE2904.h"
 
-#define BLE2904_UUID 0x2904
-#define BLE2904_DEFAULT_NAMESPACE 1  // 1 = Bluetooth SIG Assigned Numbers
-#define BLE2904_DEFAULT_UNIT 0x2700  // 0x2700 = Unitless
+#define BLE2904_UUID              0x2904
+#define BLE2904_DEFAULT_NAMESPACE 1       // 1 = Bluetooth SIG Assigned Numbers
+#define BLE2904_DEFAULT_UNIT      0x2700  // 0x2700 = Unitless
 
 /***************************************************************************
  *                           Common functions                              *

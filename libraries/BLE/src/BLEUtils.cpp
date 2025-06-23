@@ -1892,7 +1892,7 @@ const char *BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
  * @param [in] flags General purpose flags for the caller.
  * @param [in] buf A buffer for data.
  */
-BLETaskData::BLETaskData(void* pInstance, int flags, void* buf) : m_pInstance{pInstance}, m_flags{flags}, m_pBuf{buf}, m_pHandle{xTaskGetCurrentTaskHandle()} {}
+BLETaskData::BLETaskData(void *pInstance, int flags, void *buf) : m_pInstance{pInstance}, m_flags{flags}, m_pBuf{buf}, m_pHandle{xTaskGetCurrentTaskHandle()} {}
 
 /**
  * @brief Destructor.
@@ -2171,7 +2171,7 @@ const char *BLEUtils::gapEventToString(uint8_t eventType) {
 
     case BLE_GAP_EVENT_EXT_DISC:  //19
       return "BLE_GAP_EVENT_EXT_DISC";
-#ifdef BLE_GAP_EVENT_PERIODIC_SYNC  // IDF 4.0 does not support these
+#ifdef BLE_GAP_EVENT_PERIODIC_SYNC     // IDF 4.0 does not support these
     case BLE_GAP_EVENT_PERIODIC_SYNC:  //20
       return "BLE_GAP_EVENT_PERIODIC_SYNC";
 
@@ -2222,7 +2222,7 @@ String BLEUtils::characteristicPropertiesToString(uint8_t prop) {
  * @param [in] timeout The time to wait in milliseconds.
  * @return True if the task completed, false if the timeout was reached.
  */
-bool BLEUtils::taskWait(const BLETaskData& taskData, uint32_t timeout) {
+bool BLEUtils::taskWait(const BLETaskData &taskData, uint32_t timeout) {
   ble_npl_time_t ticks;
   if (timeout == BLE_NPL_TIME_FOREVER) {
     ticks = BLE_NPL_TIME_FOREVER;
@@ -2237,19 +2237,19 @@ bool BLEUtils::taskWait(const BLETaskData& taskData, uint32_t timeout) {
   }
 
   return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
-} // taskWait
+}  // taskWait
 
 /**
  * @brief Release a task.
  * @param [in] taskData A pointer to the task data structure.
  * @param [in] flags A return value to set in the task data structure.
  */
-void BLEUtils::taskRelease(const BLETaskData& taskData, int flags) {
+void BLEUtils::taskRelease(const BLETaskData &taskData, int flags) {
   taskData.m_flags = flags;
   if (taskData.m_pHandle != nullptr) {
     xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
   }
-} // taskRelease
+}  // taskRelease
 
 #endif  // CONFIG_NIMBLE_ENABLED
 

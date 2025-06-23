@@ -137,10 +137,10 @@ BLEUUID::BLEUUID(uint32_t uuid) {
 
 BLEUUID::BLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth) {
   UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-  memcpy(UUID_VAL_128(m_uuid) + 12, &first,  4);
+  memcpy(UUID_VAL_128(m_uuid) + 12, &first, 4);
   memcpy(UUID_VAL_128(m_uuid) + 10, &second, 2);
-  memcpy(UUID_VAL_128(m_uuid) + 8,  &third,  2);
-  memcpy(UUID_VAL_128(m_uuid),      &fourth, 8);
+  memcpy(UUID_VAL_128(m_uuid) + 8, &third, 2);
+  memcpy(UUID_VAL_128(m_uuid), &fourth, 8);
   m_valueSet = true;
 }
 
@@ -237,10 +237,9 @@ BLEUUID BLEUUID::to16() {
   }
 
   if (UUID_LEN(m_uuid) == BLE_UUID_128_BITS) {
-    uint8_t base128[] = {0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00,
-                         0x00, 0x80, 0x00, 0x10, 0x00, 0x00};
-    if (memcmp(UUID_VAL_128(m_uuid), base128, sizeof(base128)) == 0 ) {
-      *this = BLEUUID(*(uint16_t*)(UUID_VAL_128(m_uuid) + 12));
+    uint8_t base128[] = {0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00};
+    if (memcmp(UUID_VAL_128(m_uuid), base128, sizeof(base128)) == 0) {
+      *this = BLEUUID(*(uint16_t *)(UUID_VAL_128(m_uuid) + 12));
     }
   }
 
@@ -279,11 +278,11 @@ String BLEUUID::toString() const {
   return res;
 }  // toString
 
-bool BLEUUID::operator ==(const BLEUUID & rhs) const {
+bool BLEUUID::operator==(const BLEUUID &rhs) const {
   return equals(rhs);
 }
 
-bool BLEUUID::operator !=(const BLEUUID & rhs) const {
+bool BLEUUID::operator!=(const BLEUUID &rhs) const {
   return !equals(rhs);
 }
 
@@ -318,11 +317,11 @@ BLEUUID::BLEUUID(ble_uuid_any_t uuid) {
   m_valueSet = true;
 }  // BLEUUID
 
-BLEUUID::BLEUUID(const ble_uuid128_t* uuid) {
+BLEUUID::BLEUUID(const ble_uuid128_t *uuid) {
   m_uuid.u.type = BLE_UUID_TYPE_128;
   memcpy(m_uuid.u128.value, uuid->value, 16);
   m_valueSet = true;
-} // BLEUUID
+}  // BLEUUID
 
 const ble_uuid_any_t *BLEUUID::getNative() const {
   if (m_valueSet == false) {

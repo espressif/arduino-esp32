@@ -649,7 +649,9 @@ int BLEScan::handleGAPEvent(ble_gap_event *event, void *arg) {
         advertisedDevice->setAddress(advertisedAddress);
         advertisedDevice->setAddressType(event->disc.addr.type);
         advertisedDevice->setAdvType(event_type);
-        pScan->m_scanResults.m_vectorAdvertisedDevices.insert(std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice));
+        pScan->m_scanResults.m_vectorAdvertisedDevices.insert(
+          std::pair<std::string, BLEAdvertisedDevice *>(advertisedAddress.toString().c_str(), advertisedDevice)
+        );
         log_i("New advertiser: %s", advertisedAddress.toString().c_str());
       } else if (advertisedDevice != nullptr) {
         log_i("Updated advertiser: %s", advertisedAddress.toString().c_str());
@@ -759,8 +761,7 @@ bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), b
 
   switch (rc) {
     case 0:
-    case BLE_HS_EALREADY:
-      break;
+    case BLE_HS_EALREADY: break;
 
     case BLE_HS_EBUSY: log_e("Unable to scan - connection in progress."); break;
 

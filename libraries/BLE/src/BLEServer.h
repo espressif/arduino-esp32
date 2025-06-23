@@ -262,7 +262,7 @@ public:
   virtual void onDisconnect(BLEServer *pServer, ble_gap_conn_desc *desc);
   virtual void onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *desc, uint16_t mtu);
   virtual uint32_t onPassKeyRequest();
-  virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
   virtual bool onConfirmPIN(uint32_t pin);
 #endif
 };  // BLEServerCallbacks

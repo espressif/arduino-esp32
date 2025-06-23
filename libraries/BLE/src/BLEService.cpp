@@ -532,7 +532,7 @@ bool BLEService::start() {
     ble_gatt_dsc_def *pDsc_a = nullptr;
 
     svc[0].type = BLE_GATT_SVC_TYPE_PRIMARY;
-    svc[0].uuid = (const ble_uuid_t *) &(m_uuid.getNative()->u);
+    svc[0].uuid = (const ble_uuid_t *)&(m_uuid.getNative()->u);
     svc[0].includes = nullptr;
 
     int removedCount = 0;
@@ -596,7 +596,7 @@ bool BLEService::start() {
             pDescriptor = pCharacteristic->m_descriptorMap.getFirst();
             while (pDescriptor != nullptr) {
               if (pDescriptor->m_removed <= 0) {
-                pDsc_a[d].uuid = (const ble_uuid_t *) &(pDescriptor->m_bleUUID.getNative()->u);
+                pDsc_a[d].uuid = (const ble_uuid_t *)&(pDescriptor->m_bleUUID.getNative()->u);
                 pDsc_a[d].att_flags = pDescriptor->m_permissions;
                 pDsc_a[d].min_key_size = 0;
                 pDsc_a[d].access_cb = BLEDescriptor::handleGATTServerEvent;
@@ -610,7 +610,7 @@ bool BLEService::start() {
             pChr_a[i].descriptors = pDsc_a;
           }
 
-          pChr_a[i].uuid = (const ble_uuid_t *) &(pCharacteristic->m_bleUUID.getNative()->u);
+          pChr_a[i].uuid = (const ble_uuid_t *)&(pCharacteristic->m_bleUUID.getNative()->u);
           pChr_a[i].access_cb = BLECharacteristic::handleGATTServerEvent;
           pChr_a[i].arg = pCharacteristic;
           pChr_a[i].flags = pCharacteristic->m_properties;

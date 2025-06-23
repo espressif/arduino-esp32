@@ -230,8 +230,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
     m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(), m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(), getHandle(),
     length,  // Data length
     data,    // Data
-    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP,
-    (esp_gatt_auth_req_t)m_auth
+    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
   );
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_write_char_descr: %d", errRc);
@@ -288,7 +287,7 @@ String BLERemoteDescriptor::readValue() {
 
   int rc = 0;
   int retryCount = 1;
-  BLETaskData taskData(const_cast<BLERemoteDescriptor*>(this), 0, &value);
+  BLETaskData taskData(const_cast<BLERemoteDescriptor *>(this), 0, &value);
 
   do {
     rc = ble_gattc_read_long(pClient->getConnId(), m_handle, 0, BLERemoteDescriptor::onReadCB, &taskData);
@@ -318,8 +317,7 @@ String BLERemoteDescriptor::readValue() {
           break;
         }
       /* Else falls through. */
-      default:
-        goto exit;
+      default: goto exit;
     }
   } while (rc != 0 && retryCount--);
 
@@ -424,7 +422,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
   int rc = 0;
   int retryCount = 1;
   uint16_t mtu = ble_att_mtu(pClient->getConnId()) - 3;
-  BLETaskData taskData(const_cast<BLERemoteDescriptor*>(this));
+  BLETaskData taskData(const_cast<BLERemoteDescriptor *>(this));
 
   // Check if the data length is longer than we can write in 1 connection event.
   // If so we must do a long write which requires a response.
@@ -465,8 +463,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
           break;
         }
       /* Else falls through. */
-      default:
-        goto exit;
+      default: goto exit;
     }
   } while (rc != 0 && retryCount--);
 

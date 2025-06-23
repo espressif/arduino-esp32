@@ -24,7 +24,6 @@
  *                           Common includes                               *
  ***************************************************************************/
 
-
 #include <sstream>
 #include "BLEAdvertisedDevice.h"
 #include "BLEUtils.h"
@@ -328,32 +327,32 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
 
       switch (ad_type) {
         case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_NAME_CMPL
+        {                                // Adv Data Type: ESP_BLE_AD_TYPE_NAME_CMPL
           setName(String(reinterpret_cast<char *>(payload), length));
           break;
         }  // 0x09
 
         case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0A
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_TX_PWR
+        {                             // Adv Data Type: ESP_BLE_AD_TYPE_TX_PWR
           setTXPower(*payload);
           break;
         }  // 0x0A
 
         case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_APPEARANCE
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_APPEARANCE
           setAppearance(*reinterpret_cast<uint16_t *>(payload));
           break;
         }  // 0x19
 
         case ESP_BLE_AD_TYPE_FLAG:  // 0x01
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_FLAG
+        {                           // Adv Data Type: ESP_BLE_AD_TYPE_FLAG
           setAdFlag(*payload);
           break;
         }  // 0x01
 
         case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
         case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_16SRV_PART/CMPL
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_16SRV_PART/CMPL
           for (int var = 0; var < length / 2; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint16_t *>(payload + var * 2)));
           }
@@ -362,7 +361,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
 
         case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
         case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_32SRV_PART/CMPL
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_32SRV_PART/CMPL
           for (int var = 0; var < length / 4; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint32_t *>(payload + var * 4)));
           }
@@ -370,13 +369,13 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         }  // 0x04, 0x05
 
         case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_CMPL
+        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_CMPL
           setServiceUUID(BLEUUID(payload, 16, false));
           break;
         }  // 0x07
 
         case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART
+        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART
           setServiceUUID(BLEUUID(payload, 16, false));
           break;
         }  // 0x06
@@ -389,7 +388,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         }  // 0xFF
 
         case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_SERVICE_DATA - 2 byte UUID
+        {                                   // Adv Data Type: ESP_BLE_AD_TYPE_SERVICE_DATA - 2 byte UUID
           if (length < 2) {
             log_e("Length too small for SERVICE_DATA");
             break;
@@ -403,7 +402,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         }  // 0x16
 
         case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_32SERVICE_DATA - 4 byte UUID
+        {                                     // Adv Data Type: ESP_BLE_AD_TYPE_32SERVICE_DATA - 4 byte UUID
           if (length < 4) {
             log_e("Length too small for 32SERVICE_DATA");
             break;
@@ -417,7 +416,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
         }  // 0x20
 
         case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
-        {  // Adv Data Type: ESP_BLE_AD_TYPE_128SERVICE_DATA - 16 byte UUID
+        {                                      // Adv Data Type: ESP_BLE_AD_TYPE_128SERVICE_DATA - 16 byte UUID
           if (length < 16) {
             log_e("Length too small for 128SERVICE_DATA");
             break;

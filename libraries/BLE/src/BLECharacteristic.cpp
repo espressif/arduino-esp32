@@ -37,7 +37,7 @@
  *                           Common definitions                            *
  ***************************************************************************/
 
-#define NULL_HANDLE         (0xffff)
+#define NULL_HANDLE (0xffff)
 
 /***************************************************************************
  *                           NimBLE definitions                            *
@@ -927,8 +927,7 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         return 0;
       }
 
-      default:
-        break;
+      default: break;
     }
   }
 
@@ -943,38 +942,38 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
  */
 void BLECharacteristic::setSubscribe(struct ble_gap_event *event) {
   ble_gap_conn_desc desc;
-  if(ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
+  if (ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
     return;
   }
 
   uint16_t subVal = 0;
-  if(event->subscribe.cur_notify > 0 && (m_properties & BLECharacteristic::PROPERTY_NOTIFY)) {
+  if (event->subscribe.cur_notify > 0 && (m_properties & BLECharacteristic::PROPERTY_NOTIFY)) {
     subVal |= NIMBLE_SUB_NOTIFY;
   }
-  if(event->subscribe.cur_indicate && (m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
+  if (event->subscribe.cur_indicate && (m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
     subVal |= NIMBLE_SUB_INDICATE;
   }
 
   log_i("New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
 
-  if(!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
+  if (!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
     BLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
   }
 
   auto it = m_subscribedVec.begin();
-  for(; it != m_subscribedVec.end(); ++it) {
-    if((*it).first == event->subscribe.conn_handle) {
+  for (; it != m_subscribedVec.end(); ++it) {
+    if ((*it).first == event->subscribe.conn_handle) {
       break;
     }
   }
 
-  if(subVal > 0) {
-    if(it == m_subscribedVec.end()) {
+  if (subVal > 0) {
+    if (it == m_subscribedVec.end()) {
       m_subscribedVec.push_back({event->subscribe.conn_handle, subVal});
     } else {
       (*it).second = subVal;
     }
-  } else if(it != m_subscribedVec.end()) {
+  } else if (it != m_subscribedVec.end()) {
     m_subscribedVec.erase(it);
   }
 
@@ -1062,12 +1061,12 @@ void BLECharacteristic::notify(bool is_notification) {
       log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
     }
 
-    if(is_notification && (!(myPair.second & NIMBLE_SUB_NOTIFY))) {
+    if (is_notification && (!(myPair.second & NIMBLE_SUB_NOTIFY))) {
       log_w("Sending notification to client subscribed to indications, sending indication instead");
       is_notification = false;
     }
 
-    if(!is_notification && (!(myPair.second & NIMBLE_SUB_INDICATE))) {
+    if (!is_notification && (!(myPair.second & NIMBLE_SUB_INDICATE))) {
       log_w("Sending indication to client subscribed to notification, sending notification instead");
       is_notification = true;
     }
@@ -1129,7 +1128,7 @@ void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic, ble
   onWrite(pCharacteristic);
 }  // onWrite
 
-void BLECharacteristicCallbacks::onSubscribe(BLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue) {
+void BLECharacteristicCallbacks::onSubscribe(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue) {
   log_d(">> onSubscribe: default");
   log_d("<< onSubscribe");
 }  // onSubscribe

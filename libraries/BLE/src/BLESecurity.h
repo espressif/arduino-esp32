@@ -75,18 +75,18 @@ public:
    *                       Bluedroid public declarations                     *
    ***************************************************************************/
 
-  #if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
   static char *esp_key_type_to_str(esp_ble_key_type_t key_type);
-  #endif
+#endif
 
   /***************************************************************************
    *                       NimBLE public declarations                        *
    ***************************************************************************/
 
-  #if defined(CONFIG_NIMBLE_ENABLED)
+#if defined(CONFIG_NIMBLE_ENABLED)
   static void setAuthenticationMode(bool bonding, bool mitm, bool sc);
   static bool startSecurity(uint16_t connHandle, int *rcPtr = nullptr);
-  #endif
+#endif
 
 private:
   friend class BLEServer;
@@ -106,9 +106,9 @@ private:
    *                       Bluedroid private properties                       *
    ***************************************************************************/
 
-  #if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
   static uint8_t m_keySize;
-  #endif
+#endif
 
 };  // BLESecurity
 
@@ -131,17 +131,17 @@ public:
    *                       Bluedroid public declarations                     *
    ***************************************************************************/
 
-  #if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED)
   virtual void onAuthenticationComplete(esp_ble_auth_cmpl_t) = 0;
-  #endif
+#endif
 
   /***************************************************************************
    *                       NimBLE public declarations                        *
    ***************************************************************************/
 
-  #if defined(CONFIG_NIMBLE_ENABLED)
+#if defined(CONFIG_NIMBLE_ENABLED)
   virtual void onAuthenticationComplete(ble_gap_conn_desc *) = 0;
-  #endif
+#endif
 
 };  // BLESecurityCallbacks
 

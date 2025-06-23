@@ -121,10 +121,7 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   static int handleGAPEvent(struct ble_gap_event *event, void *arg);
-  static int serviceDiscoveredCB(uint16_t conn_handle,
-                               const struct ble_gatt_error *error,
-                               const struct ble_gatt_svc *service,
-                               void *arg);
+  static int serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
 #endif
 
 private:
@@ -213,7 +210,7 @@ public:
 #if defined(CONFIG_NIMBLE_ENABLED)
   virtual bool onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params);
   virtual uint32_t onPassKeyRequest();
-  virtual void onAuthenticationComplete(ble_gap_conn_desc* desc);
+  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
   virtual bool onConfirmPIN(uint32_t pin);
 #endif
 };

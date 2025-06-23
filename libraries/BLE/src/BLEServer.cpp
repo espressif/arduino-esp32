@@ -537,7 +537,8 @@ void BLEServerCallbacks::onDisconnect(BLEServer *pServer, esp_ble_gatts_cb_param
 }  // onDisconnect
 
 void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
-  [[maybe_unused]] uint16_t mtu = param->mtu.mtu;
+  [[maybe_unused]]
+  uint16_t mtu = param->mtu.mtu;
   log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
@@ -950,16 +951,16 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *des
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
 
-uint32_t BLEServerCallbacks::onPassKeyRequest(){
+uint32_t BLEServerCallbacks::onPassKeyRequest() {
   log_d("BLEServerCallbacks", "onPassKeyRequest: default: 123456");
   return 123456;
 }
 
-void BLEServerCallbacks::onAuthenticationComplete(ble_gap_conn_desc*){
+void BLEServerCallbacks::onAuthenticationComplete(ble_gap_conn_desc *) {
   log_d("BLEServerCallbacks", "onAuthenticationComplete: default");
 }
 
-bool BLEServerCallbacks::onConfirmPIN(uint32_t pin){
+bool BLEServerCallbacks::onConfirmPIN(uint32_t pin) {
   log_d("BLEServerCallbacks", "onConfirmPIN: default: true");
   return true;
 }

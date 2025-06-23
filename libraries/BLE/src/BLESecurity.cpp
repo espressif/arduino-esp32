@@ -51,9 +51,7 @@ void BLESecurity::setAuthenticationMode(uint8_t auth_req) {
   esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &m_authReq, sizeof(uint8_t));
 #elif defined(CONFIG_NIMBLE_ENABLED)
   BLESecurity::setAuthenticationMode(
-    (auth_req & BLE_SM_PAIR_AUTHREQ_BOND) != 0,
-    (auth_req & BLE_SM_PAIR_AUTHREQ_MITM) != 0,
-    (auth_req & BLE_SM_PAIR_AUTHREQ_SC) != 0
+    (auth_req & BLE_SM_PAIR_AUTHREQ_BOND) != 0, (auth_req & BLE_SM_PAIR_AUTHREQ_MITM) != 0, (auth_req & BLE_SM_PAIR_AUTHREQ_SC) != 0
   );
 #endif
 }
