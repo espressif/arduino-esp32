@@ -3,15 +3,22 @@
  *
  *  Created on: Mar 12, 2018
  *      Author: pcbreflux
+ *
  *  Upgraded on: Feb 20, 2023
  *      By: Tomas Pilny
  *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on pcbreflux's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
 
 #ifndef _BLEEddystoneURL_H_
 #define _BLEEddystoneURL_H_
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
+
+#include "sdkconfig.h"
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
@@ -57,5 +64,6 @@ private:
   char BLEHeadder[12];
 };  // BLEEddystoneURL
 
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* _BLEEddystoneURL_H_ */
