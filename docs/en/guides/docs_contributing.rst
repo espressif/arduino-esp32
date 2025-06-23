@@ -49,11 +49,11 @@ Before starting your collaboration, you need to get the documentation source cod
 Requirements
 ************
 
-To properly work with the documentation, you need to install some packages in your system.
+To properly work with the documentation, you need to install some packages in your system. Note that depending on
+your system, you may need to use a virtual environment to install the packages.
 
 .. code-block::
 
-    pip install -U Sphinx
     pip install -r requirements.txt
 
 The requirements file is under the ``docs`` folder.
@@ -62,17 +62,14 @@ Using Visual Studio Code
 ************************
 
 If you are using the Visual Studio Code, you can install some extensions to help you while writing documentation.
+For reStructuredText, you can install the `reStructuredText Pack <https://marketplace.visualstudio.com/items?itemName=lextudio.restructuredtext-pack>`_ extension.
 
-`reStructuredText Pack <https://marketplace.visualstudio.com/items?itemName=lextudio.restructuredtext-pack>`_
-
-We also recommend you install to grammar check extension to help you to review English grammar.
-
-`Grammarly <https://marketplace.visualstudio.com/items?itemName=znck.grammarly>`_
+We also recommend you to install some grammar check extension to help you to review English grammar.
 
 Building
 ********
 
-To build the documentation and generate the HTML files, you can use the following command inside the ``docs`` folder. After a successful build, you can check the files inside the `_build/en/generic/html` folder.
+To build the documentation and generate the HTML files, you can use the following command inside the ``docs`` folder. After a successful build, you can check the files inside the ``_build/en/generic/html`` folder.
 
 .. code-block::
 
