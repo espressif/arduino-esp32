@@ -319,11 +319,19 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
   // Assign the correct function to the GPIO.
   assert(upin->iomux_func != -1);
   if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
     if (upin->input) {
       gpio_iomux_input(io_num, upin->iomux_func, upin->signal);
     } else {
       gpio_iomux_output(io_num, upin->iomux_func);
     }
+#else
+    gpio_iomux_out(io_num, upin->iomux_func, false);
+    // If the pin is input, we also have to redirect the signal, in order to bypass the GPIO matrix.
+    if (upin->input) {
+      gpio_iomux_in(io_num, upin->signal);
+    }
+#endif
   }
 #if (SOC_UART_LP_NUM >= 1) && (SOC_RTCIO_PIN_COUNT >= 1)
   else {
