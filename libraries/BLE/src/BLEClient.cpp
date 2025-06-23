@@ -836,7 +836,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
       taskData.m_flags = 0;
     } else {
       // workaround; if the controller doesn't cancel the connection at the timeout, cancel it here.
-      log_e("Connect timeout - cancelling");
+      log_e("Connect timeout - canceling");
       ble_gap_conn_cancel();
       taskData.m_flags = BLE_HS_ETIMEOUT;
     }
