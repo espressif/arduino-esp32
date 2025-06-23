@@ -20,7 +20,7 @@ public:
   ESP_NOW_Class();
   ~ESP_NOW_Class();
 
-  bool begin(const uint8_t *pmk = NULL /* 16 bytes */);
+  bool begin(const uint8_t *pmk = nullptr /* 16 bytes */);
   bool end();
 
   int getTotalPeerCount();
@@ -50,7 +50,7 @@ protected:
   bool remove();
   size_t send(const uint8_t *data, int len);
 
-  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL);
+  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr);
 
 public:
   virtual ~ESP_NOW_Peer() {}

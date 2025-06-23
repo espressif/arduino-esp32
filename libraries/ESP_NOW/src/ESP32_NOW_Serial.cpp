@@ -18,11 +18,11 @@
 
 ESP_NOW_Serial_Class::ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, bool remove_on_fail)
   : ESP_NOW_Peer(mac_addr, channel, iface, lmk) {
-  tx_ring_buf = NULL;
-  rx_queue = NULL;
-  tx_sem = NULL;
+  tx_ring_buf = nullptr;
+  rx_queue = nullptr;
+  tx_sem = nullptr;
   queued_size = 0;
-  queued_buff = NULL;
+  queued_buff = nullptr;
   resend_count = 0;
   _remove_on_fail = remove_on_fail;
 }
@@ -34,7 +34,7 @@ ESP_NOW_Serial_Class::~ESP_NOW_Serial_Class() {
 size_t ESP_NOW_Serial_Class::setTxBufferSize(size_t tx_queue_len) {
   if (tx_ring_buf) {
     vRingbufferDelete(tx_ring_buf);
-    tx_ring_buf = NULL;
+    tx_ring_buf = nullptr;
   }
   if (!tx_queue_len) {
     return 0;
@@ -49,7 +49,7 @@ size_t ESP_NOW_Serial_Class::setTxBufferSize(size_t tx_queue_len) {
 size_t ESP_NOW_Serial_Class::setRxBufferSize(size_t rx_queue_len) {
   if (rx_queue) {
     vQueueDelete(rx_queue);
-    rx_queue = NULL;
+    rx_queue = nullptr;
   }
   if (!rx_queue_len) {
     return 0;
@@ -65,7 +65,7 @@ bool ESP_NOW_Serial_Class::begin(unsigned long baud) {
   if (!ESP_NOW.begin() || !add()) {
     return false;
   }
-  if (tx_sem == NULL) {
+  if (tx_sem == nullptr) {
     tx_sem = xSemaphoreCreateBinary();
     //xSemaphoreTake(tx_sem, 0);
     xSemaphoreGive(tx_sem);
@@ -79,22 +79,22 @@ void ESP_NOW_Serial_Class::end() {
   remove();
   setRxBufferSize(0);
   setTxBufferSize(0);
-  if (tx_sem != NULL) {
+  if (tx_sem != nullptr) {
     vSemaphoreDelete(tx_sem);
-    tx_sem = NULL;
+    tx_sem = nullptr;
   }
 }
 
 //Stream
 int ESP_NOW_Serial_Class::available(void) {
-  if (rx_queue == NULL) {
+  if (rx_queue == nullptr) {
     return 0;
   }
   return uxQueueMessagesWaiting(rx_queue);
 }
 
 int ESP_NOW_Serial_Class::peek(void) {
-  if (rx_queue == NULL) {
+  if (rx_queue == nullptr) {
     return -1;
   }
   uint8_t c;
@@ -105,7 +105,7 @@ int ESP_NOW_Serial_Class::peek(void) {
 }
 
 int ESP_NOW_Serial_Class::read(void) {
-  if (rx_queue == NULL) {
+  if (rx_queue == nullptr) {
     return -1;
   }
   uint8_t c = 0;
@@ -116,7 +116,7 @@ int ESP_NOW_Serial_Class::read(void) {
 }
 
 size_t ESP_NOW_Serial_Class::read(uint8_t *buffer, size_t size) {
-  if (rx_queue == NULL) {
+  if (rx_queue == nullptr) {
     return -1;
   }
   uint8_t c = 0;
@@ -128,11 +128,11 @@ size_t ESP_NOW_Serial_Class::read(uint8_t *buffer, size_t size) {
 }
 
 void ESP_NOW_Serial_Class::flush() {
-  if (tx_ring_buf == NULL) {
+  if (tx_ring_buf == nullptr) {
     return;
   }
   UBaseType_t uxItemsWaiting = 0;
-  vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+  vRingbufferGetInfo(tx_ring_buf, nullptr, nullptr, nullptr, nullptr, &uxItemsWaiting);
   if (uxItemsWaiting) {
     // Now trigger the ISR to read data from the ring buffer.
     if (xSemaphoreTake(tx_sem, 0) == pdTRUE) {
@@ -141,13 +141,13 @@ void ESP_NOW_Serial_Class::flush() {
   }
   while (uxItemsWaiting) {
     delay(5);
-    vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &uxItemsWaiting);
+    vRingbufferGetInfo(tx_ring_buf, nullptr, nullptr, nullptr, nullptr, &uxItemsWaiting);
   }
 }
 
 //RX callback
 void ESP_NOW_Serial_Class::onReceive(const uint8_t *data, size_t len, bool broadcast) {
-  if (rx_queue == NULL) {
+  if (rx_queue == nullptr) {
     return;
   }
   for (uint32_t i = 0; i < len; i++) {
@@ -165,7 +165,7 @@ void ESP_NOW_Serial_Class::onReceive(const uint8_t *data, size_t len, bool broad
 //Print
 int ESP_NOW_Serial_Class::availableForWrite() {
   //return ESP_NOW_MAX_DATA_LEN;
-  if (tx_ring_buf == NULL) {
+  if (tx_ring_buf == nullptr) {
     return 0;
   }
   return xRingbufferGetCurFreeSize(tx_ring_buf);
@@ -178,7 +178,7 @@ size_t ESP_NOW_Serial_Class::tryToSend() {
     //_onSent will not be called anymore
     //the data is lost in this case
     vRingbufferReturnItem(tx_ring_buf, queued_buff);
-    queued_buff = NULL;
+    queued_buff = nullptr;
     xSemaphoreGive(tx_sem);
     end();
   }
@@ -188,12 +188,12 @@ size_t ESP_NOW_Serial_Class::tryToSend() {
 bool ESP_NOW_Serial_Class::checkForTxData() {
   //do we have something that failed the last time?
   resend_count = 0;
-  if (queued_buff == NULL) {
+  if (queued_buff == nullptr) {
     queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ESP_NOW_MAX_DATA_LEN);
   } else {
     log_d(MACSTR " : PREVIOUS", MAC2STR(addr()));
   }
-  if (queued_buff != NULL) {
+  if (queued_buff != nullptr) {
     return tryToSend() > 0;
   }
   //log_d(MACSTR ": EMPTY", MAC2STR(addr()));
@@ -203,7 +203,7 @@ bool ESP_NOW_Serial_Class::checkForTxData() {
 
 size_t ESP_NOW_Serial_Class::write(const uint8_t *buffer, size_t size, uint32_t timeout) {
   log_v(MACSTR ", size %u", MAC2STR(addr()), size);
-  if (tx_sem == NULL || tx_ring_buf == NULL || !added) {
+  if (tx_sem == nullptr || tx_ring_buf == nullptr || !added) {
     return 0;
   }
   size_t space = availableForWrite();
@@ -249,12 +249,12 @@ size_t ESP_NOW_Serial_Class::write(const uint8_t *buffer, size_t size, uint32_t 
 //TX Done Callback
 void ESP_NOW_Serial_Class::onSent(bool success) {
   log_v(MACSTR " : %s", MAC2STR(addr()), success ? "OK" : "FAIL");
-  if (tx_sem == NULL || tx_ring_buf == NULL || !added) {
+  if (tx_sem == nullptr || tx_ring_buf == nullptr || !added) {
     return;
   }
   if (success) {
     vRingbufferReturnItem(tx_ring_buf, queued_buff);
-    queued_buff = NULL;
+    queued_buff = nullptr;
     //send next packet?
     //log_d(MACSTR ": NEXT", MAC2STR(addr()));
     checkForTxData();
@@ -269,7 +269,7 @@ void ESP_NOW_Serial_Class::onSent(bool success) {
       //resend limit reached
       //the data is lost in this case
       vRingbufferReturnItem(tx_ring_buf, queued_buff);
-      queued_buff = NULL;
+      queued_buff = nullptr;
       log_e(MACSTR " : RE-SEND_MAX[%u]", MAC2STR(addr()), resend_count);
       //if we are not able to send the data and remove_on_fail is set, remove the peer
       if (_remove_on_fail) {
