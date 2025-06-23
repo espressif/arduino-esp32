@@ -316,7 +316,7 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
     return false;
   }
 
-    // Assign the correct function to the GPIO.
+  // Assign the correct function to the GPIO.
   assert(upin->iomux_func != -1);
   if (uart_num < SOC_UART_HP_NUM) {
     if (upin->input) {
