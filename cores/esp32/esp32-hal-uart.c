@@ -325,15 +325,15 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
     }
   }
 #if (SOC_UART_LP_NUM >= 1) && (SOC_RTCIO_PIN_COUNT >= 1)
-    else {
-      if (upin->input) {
-        rtc_gpio_set_direction(io_num, RTC_GPIO_MODE_INPUT_ONLY);
-      } else {
-        rtc_gpio_set_direction(io_num, RTC_GPIO_MODE_OUTPUT_ONLY);
-      }
-      rtc_gpio_init(io_num);
-      rtc_gpio_iomux_func_sel(io_num, upin->iomux_func);
+  else {
+    if (upin->input) {
+      rtc_gpio_set_direction(io_num, RTC_GPIO_MODE_INPUT_ONLY);
+    } else {
+      rtc_gpio_set_direction(io_num, RTC_GPIO_MODE_OUTPUT_ONLY);
     }
+    rtc_gpio_init(io_num);
+    rtc_gpio_iomux_func_sel(io_num, upin->iomux_func);
+  }
 #endif
   return true;
 }
