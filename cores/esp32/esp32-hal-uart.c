@@ -1287,11 +1287,11 @@ bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) {
     switch (clkSrc) {
-      case UART_SCLK_XTAL:    uart->_uart_clock_source = LP_UART_SCLK_XTAL_D2; break;
+      case UART_SCLK_XTAL: uart->_uart_clock_source = LP_UART_SCLK_XTAL_D2; break;
 #if CONFIG_IDF_TARGET_ESP32C5
-      case UART_SCLK_RTC:     uart->_uart_clock_source = LP_UART_SCLK_RC_FAST; break;
+      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_RC_FAST; break;
 #else
-      case UART_SCLK_RTC:     uart->_uart_clock_source = LP_UART_SCLK_LP_FAST; break;
+      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_LP_FAST; break;
 #endif
       case UART_SCLK_DEFAULT:
       default:                uart->_uart_clock_source = LP_UART_SCLK_DEFAULT;
