@@ -247,6 +247,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
   esp_zb_app_signal_type_t sig_type = (esp_zb_app_signal_type_t)*p_sg_p;
   //coordinator variables
   esp_zb_zdo_signal_device_annce_params_t *dev_annce_params = NULL;
+  esp_zb_zdo_signal_leave_params_t *leave_params = NULL;
   //router variables
   esp_zb_zdo_signal_device_update_params_t *dev_update_params = NULL;
 
@@ -427,9 +428,17 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
       }
       break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:  // End Device + Router
-      // Device was removed from the network, factory reset the device
+      // Received signal to leave the network
       if ((zigbee_role_t)Zigbee.getRole() != ZIGBEE_COORDINATOR) {
-        Zigbee.factoryReset(true);
+        leave_params = (esp_zb_zdo_signal_leave_params_t *)esp_zb_app_signal_get_params(p_sg_p);
+        log_v("Signal to leave the network, leave type: %d", leave_params->leave_type);
+        if (leave_params->leave_type == ESP_ZB_NWK_LEAVE_TYPE_RESET) {  // Leave without rejoin -> Factory reset
+          log_i("Leave without rejoin, factory reset the device");
+          Zigbee.factoryReset(true);
+        } else {  // Leave with rejoin -> Rejoin the network, only reboot the device
+          log_i("Leave with rejoin, only reboot the device");
+          ESP.restart();
+        }
       }
       break;
     default: log_v("ZDO signal: %s (0x%x), status: %s", esp_zb_zdo_signal_to_string(sig_type), sig_type, esp_err_to_name(err_status)); break;

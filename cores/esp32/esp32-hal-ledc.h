@@ -51,6 +51,8 @@ typedef struct {
   uint8_t pin;                 // Pin assigned to channel
   uint8_t channel;             // Channel number
   uint8_t channel_resolution;  // Resolution of channel
+  uint8_t timer_num;           // Timer number used by this channel
+  uint32_t freq_hz;            // Frequency configured for this channel
   voidFuncPtr fn;
   void *arg;
 #ifndef SOC_LEDC_SUPPORT_FADE_STOP
@@ -229,6 +231,85 @@ bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_dut
  * @return true if fade was successfully set and started, false otherwise.
  */
 bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg);
+
+//Gamma Curve Fade functions - only available on supported chips
+#ifdef SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
+
+/**
+ * @brief Set a custom gamma correction lookup table for gamma curve fading.
+ *        The LUT should contain normalized values (0.0 to 1.0) representing
+ *        the gamma-corrected brightness curve.
+ *
+ * @param gamma_table Pointer to array of float values (0.0 to 1.0)
+ * @param size Number of entries in the lookup table
+ *
+ * @return true if gamma table was successfully set, false otherwise.
+ *
+ * @note The LUT array must remain valid for as long as gamma fading is used.
+ *       Larger tables provide smoother transitions but use more memory.
+ */
+bool ledcSetGammaTable(const float *gamma_table, uint16_t size);
+
+/**
+ * @brief Clear the current gamma correction lookup table.
+ *        After calling this, gamma correction will use mathematical
+ *        calculation with the default gamma factor (2.8).
+ */
+void ledcClearGammaTable(void);
+
+/**
+ * @brief Set the gamma factor for gamma correction.
+ *
+ * @param factor Gamma factor to use for gamma correction.
+ */
+void ledcSetGammaFactor(float factor);
+
+/**
+ * @brief Setup and start a gamma curve fade on a given LEDC pin.
+ *        Gamma correction makes LED brightness changes appear more gradual to human eyes.
+ *
+ * @param pin GPIO pin
+ * @param start_duty initial duty cycle of the fade
+ * @param target_duty target duty cycle of the fade
+ * @param max_fade_time_ms maximum fade time in milliseconds
+ *
+ * @return true if gamma fade was successfully set and started, false otherwise.
+ *
+ * @note This function is only available on ESP32 variants that support gamma curve fading.
+ */
+bool ledcFadeGamma(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms);
+
+/**
+ * @brief Setup and start a gamma curve fade on a given LEDC pin with a callback function.
+ *
+ * @param pin GPIO pin
+ * @param start_duty initial duty cycle of the fade
+ * @param target_duty target duty cycle of the fade
+ * @param max_fade_time_ms maximum fade time in milliseconds
+ * @param userFunc callback function to be called after fade is finished
+ *
+ * @return true if gamma fade was successfully set and started, false otherwise.
+ *
+ * @note This function is only available on ESP32 variants that support gamma curve fading.
+ */
+bool ledcFadeGammaWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void));
+
+/**
+ * @brief Setup and start a gamma curve fade on a given LEDC pin with a callback function and argument.
+ *
+ * @param pin GPIO pin
+ * @param start_duty initial duty cycle of the fade
+ * @param target_duty target duty cycle of the fade
+ * @param max_fade_time_ms maximum fade time in milliseconds
+ * @param userFunc callback function to be called after fade is finished
+ * @param arg argument to be passed to the callback function
+ *
+ * @return true if gamma fade was successfully set and started, false otherwise.
+ *
+ * @note This function is only available on ESP32 variants that support gamma curve fading.
+ */
+bool ledcFadeGammaWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void *), void *arg);
+#endif  // SOC_LEDC_GAMMA_CURVE_FADE_SUPPORTED
 
 #ifdef __cplusplus
 }

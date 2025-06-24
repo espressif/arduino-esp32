@@ -52,7 +52,8 @@ public:
 /* Global Variables */
 
 // List of all the masters. It will be populated when a new master is registered
-std::vector<ESP_NOW_Peer_Class> masters;
+// Note: Using pointers instead of objects to prevent dangling pointers when the vector reallocates
+std::vector<ESP_NOW_Peer_Class *> masters;
 
 /* Callbacks */
 
@@ -62,13 +63,14 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
     Serial.printf("Unknown peer " MACSTR " sent a broadcast message\n", MAC2STR(info->src_addr));
     Serial.println("Registering the peer as a master");
 
-    ESP_NOW_Peer_Class new_master(info->src_addr, ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, NULL);
-
-    masters.push_back(new_master);
-    if (!masters.back().add_peer()) {
+    ESP_NOW_Peer_Class *new_master = new ESP_NOW_Peer_Class(info->src_addr, ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, nullptr);
+    if (!new_master->add_peer()) {
       Serial.println("Failed to register the new master");
+      delete new_master;
       return;
     }
+    masters.push_back(new_master);
+    Serial.printf("Successfully registered master " MACSTR " (total masters: %zu)\n", MAC2STR(new_master->addr()), masters.size());
   } else {
     // The slave will only receive broadcast messages
     log_v("Received a unicast message from " MACSTR, MAC2STR(info->src_addr));
@@ -103,11 +105,23 @@ void setup() {
   }
 
   // Register the new peer callback
-  ESP_NOW.onNewPeer(register_new_master, NULL);
+  ESP_NOW.onNewPeer(register_new_master, nullptr);
 
   Serial.println("Setup complete. Waiting for a master to broadcast a message...");
 }
 
 void loop() {
-  delay(1000);
+  // Print debug information every 10 seconds
+  static unsigned long last_debug = 0;
+  if (millis() - last_debug > 10000) {
+    last_debug = millis();
+    Serial.printf("Registered masters: %zu\n", masters.size());
+    for (size_t i = 0; i < masters.size(); i++) {
+      if (masters[i]) {
+        Serial.printf("  Master %zu: " MACSTR "\n", i, MAC2STR(masters[i]->addr()));
+      }
+    }
+  }
+
+  delay(100);
 }

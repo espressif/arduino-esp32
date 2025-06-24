@@ -20,9 +20,11 @@
 #include "ep/ZigbeePowerOutlet.h"
 //// Sensors
 #include "ep/ZigbeeAnalog.h"
+#include "ep/ZigbeeBinary.h"
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
+#include "ep/ZigbeeElectricalMeasurement.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeIlluminanceSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
