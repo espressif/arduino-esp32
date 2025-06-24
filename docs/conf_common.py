@@ -2,7 +2,7 @@
 
 from esp_docs.conf_docs import *  # noqa: F403,F401
 
-# Used by sphinx_substitution_extensions for substituting variables in the documentation
+# Used for substituting variables in the documentation
 rst_prolog = """
 .. |version| replace:: 3.2.0
 .. |idf_version| replace:: 5.4
@@ -33,7 +33,7 @@ html_static_path = ["../_static"]
 extensions += [  # noqa: F405
     "sphinx_copybutton",
     "sphinx_tabs.tabs",
-    "sphinx_substitution_extensions",
+    "sphinx_substitution_extensions",  # For allowing substitutions inside code blocks
     "esp_docs.esp_extensions.dummy_build_system",
 ]
 

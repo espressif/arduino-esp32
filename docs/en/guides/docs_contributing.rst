@@ -49,7 +49,7 @@ Before starting your collaboration, you need to get the documentation source cod
 Requirements
 ************
 
-To properly work with the documentation, you need to install some packages in your system. Note that depending on
+To build the documentation properly, you need to install some packages in your system. Note that depending on
 your system, you may need to use a virtual environment to install the packages.
 
 .. code-block::
