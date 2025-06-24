@@ -51,7 +51,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v5.5-4c3d086c-v1"
+              "version": "idf-release_v5.5-cbe9388f-v1"
             },
             {
               "packager": "esp32",
@@ -104,63 +104,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v5.5-4c3d086c-v1",
+          "version": "idf-release_v5.5-cbe9388f-v1",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-4c3d086c-v1.zip",
-              "checksum": "SHA-256:9b92b05b334132201ca5a56824df28adc471eb873b0fcc4c9fe0a0fbafb6401a",
-              "size": "420990950"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-cbe9388f-v1.zip",
+              "checksum": "SHA-256:b737ffb86a1b377db12dd610d06936ca8d85d877c872f532a68f6f0a3f666a3f",
+              "size": "421300036"
             }
           ]
         },
