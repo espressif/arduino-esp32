@@ -66,7 +66,7 @@ jobs:
           path: ./artifacts/sizes-report/pr_num.txt
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2  #2043188c68f483a7b50527c4eacf609d05bb67a5 # sizes_v2
+        uses: P-R-O-C-H-Y/report-size-deltas@bea91d2c99ca80c88a883b39b1c4012f00ec3d09 # sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
