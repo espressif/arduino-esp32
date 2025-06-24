@@ -305,7 +305,10 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
   }
 
   // Assign the correct function to the GPIO.
-  assert(upin->iomux_func != -1);
+  if (upin->iomux_func == -1) {
+    log_e("IO#%d has bad IOMUX internal information. Switching to GPIO Matrix UART function.", io_num);
+    return false;
+  }
   if (uart_num < SOC_UART_HP_NUM) {
     gpio_iomux_out(io_num, upin->iomux_func, false);
     // If the pin is input, we also have to redirect the signal, in order to bypass the GPIO matrix.
