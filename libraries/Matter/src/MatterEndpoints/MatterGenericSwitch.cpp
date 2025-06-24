@@ -17,12 +17,36 @@
 
 #include <Matter.h>
 #include <app/server/Server.h>
+#include <app/util/attribute-storage.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace esp_matter::cluster;
 using namespace chip::app::Clusters;
+
+namespace {
+// Please refer to https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+constexpr const uint8_t kNamespaceSwitches = 0x43;
+// Switches Namespace: 67, tag 0 (SwitchOn)
+constexpr const uint8_t kTagSwitchOn = 0;
+// Switches Namespace: 67, tag 1 (SwitchOff)
+constexpr const uint8_t kTagSwitchOff = 1;
+
+constexpr const uint8_t kNamespacePosition = 8;
+// Common Position Namespace: 8, tag: 0 (Left)
+constexpr const uint8_t kTagPositionLeft = 0;
+// Common Position Namespace: 8, tag: 1 (Right)
+constexpr const uint8_t kTagPositionRight = 1;
+
+const Descriptor::Structs::SemanticTagStruct::Type gEp1TagList[] = {
+    {.namespaceID = kNamespaceSwitches, .tag = kTagSwitchOn},
+    {.namespaceID = kNamespacePosition, .tag = kTagPositionRight}};
+const Descriptor::Structs::SemanticTagStruct::Type gEp2TagList[] = {
+    {.namespaceID = kNamespaceSwitches, .tag = kTagSwitchOff},
+    {.namespaceID = kNamespacePosition, .tag = kTagPositionLeft}};
+
+}
 
 MatterGenericSwitch::MatterGenericSwitch() {}
 
@@ -76,10 +100,15 @@ bool MatterGenericSwitch::begin() {
 
   switch_cluster::attribute::create_current_position(aCluster, 0);
   switch_cluster::attribute::create_number_of_positions(aCluster, 2);
+  
+  descriptor::attribute::create_tag_list(aCluster, NULL, 0, 0);
 
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Generic Switch created with endpoint_id %d", getEndPointId());
   started = true;
+
+  // TODO: Make it dynamic
+  SetTagList(getEndPointId(), chip::Span<const Descriptor::Structs::SemanticTagStruct::Type>(gEp1TagList));
   return true;
 }
 
