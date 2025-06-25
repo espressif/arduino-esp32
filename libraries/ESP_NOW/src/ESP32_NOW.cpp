@@ -140,7 +140,10 @@ static void _esp_now_tx_cb(const uint8_t *mac_addr, esp_now_send_status_t status
   }
 }
 
-ESP_NOW_Class::ESP_NOW_Class() {}
+ESP_NOW_Class::ESP_NOW_Class() {
+  max_data_len = 0;
+  version = 0;
+}
 
 ESP_NOW_Class::~ESP_NOW_Class() {}
 
@@ -154,6 +157,23 @@ bool ESP_NOW_Class::begin(const uint8_t *pmk) {
     log_e("WiFi not started! 0x%x)", err);
     return false;
   }
+
+  // Unfortunately we can't get the ESP-NOW version before initializing the Wi-Fi
+  uint32_t esp_now_version;
+  err = esp_now_get_version(&esp_now_version);
+  if (err != ESP_OK) {
+    log_w("esp_now_get_version failed! Assuming ESP-NOW v1.0");
+    esp_now_version = 1;
+  }
+
+  if (esp_now_version == 1) {
+    max_data_len = ESP_NOW_MAX_DATA_LEN;
+  } else {
+    max_data_len = ESP_NOW_MAX_DATA_LEN_V2;
+  }
+
+  version = esp_now_version;
+  log_i("ESP-NOW version: %lu, max_data_len: %lu", version, max_data_len);
 
   _esp_now_has_begun = true;
 
@@ -212,7 +232,7 @@ bool ESP_NOW_Class::end() {
   return true;
 }
 
-int ESP_NOW_Class::getTotalPeerCount() {
+int ESP_NOW_Class::getTotalPeerCount() const {
   if (!_esp_now_has_begun) {
     return -1;
   }
@@ -225,7 +245,7 @@ int ESP_NOW_Class::getTotalPeerCount() {
   return num.total_num;
 }
 
-int ESP_NOW_Class::getEncryptedPeerCount() {
+int ESP_NOW_Class::getEncryptedPeerCount() const {
   if (!_esp_now_has_begun) {
     return -1;
   }
@@ -238,16 +258,38 @@ int ESP_NOW_Class::getEncryptedPeerCount() {
   return num.encrypt_num;
 }
 
+int ESP_NOW_Class::getMaxDataLen() const {
+  if (max_data_len == 0) {
+    log_e("ESP-NOW not initialized. Please call begin() first to get the max data length.");
+    return -ESP_ERR_ESPNOW_NOT_INIT;
+  }
+
+  return max_data_len;
+}
+
+int ESP_NOW_Class::getVersion() const {
+  if (version == 0) {
+    log_e("ESP-NOW not initialized. Please call begin() first to get the version.");
+    return -ESP_ERR_ESPNOW_NOT_INIT;
+  }
+
+  return version;
+}
+
 int ESP_NOW_Class::availableForWrite() {
-  return ESP_NOW_MAX_DATA_LEN;
+  int available = getMaxDataLen();
+  if (available < 0) {
+    return 0;
+  }
+  return available;
 }
 
 size_t ESP_NOW_Class::write(const uint8_t *data, size_t len) {
   if (!_esp_now_has_begun) {
     return 0;
   }
-  if (len > ESP_NOW_MAX_DATA_LEN) {
-    len = ESP_NOW_MAX_DATA_LEN;
+  if (len > max_data_len) {
+    len = max_data_len;
   }
   esp_err_t result = esp_now_send(nullptr, data, len);
   if (result == ESP_OK) {
@@ -386,8 +428,15 @@ size_t ESP_NOW_Peer::send(const uint8_t *data, int len) {
     log_e("Peer not added.");
     return 0;
   }
-  if (len > ESP_NOW_MAX_DATA_LEN) {
-    len = ESP_NOW_MAX_DATA_LEN;
+
+  int max_data_len = ESP_NOW.getMaxDataLen();
+  if (max_data_len < 0) {
+    log_e("Error getting max data length.");
+    return 0;
+  }
+
+  if (len > max_data_len) {
+    len = max_data_len;
   }
   esp_err_t result = esp_now_send(mac, data, len);
   if (result == ESP_OK) {

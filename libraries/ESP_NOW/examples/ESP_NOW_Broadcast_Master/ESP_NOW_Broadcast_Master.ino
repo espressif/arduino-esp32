@@ -86,6 +86,8 @@ void setup() {
     ESP.restart();
   }
 
+  Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
+
   Serial.println("Setup complete. Broadcasting messages every 5 seconds.");
 }
 

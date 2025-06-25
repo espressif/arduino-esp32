@@ -75,7 +75,12 @@
 // The following struct is used to send data to the peer device.
 // We use the attribute "packed" to ensure that the struct is not padded (all data
 // is contiguous in the memory and without gaps).
-// The maximum size of the complete message is 250 bytes (ESP_NOW_MAX_DATA_LEN).
+// The maximum size of the payload is 250 bytes (ESP_NOW_MAX_DATA_LEN) for ESP-NOW v1.0.
+// For ESP-NOW v2.0, the maximum size of the payload is 1470 bytes (ESP_NOW_MAX_DATA_LEN_V2).
+// You can use ESP_NOW.getMaxDataLen() after calling ESP_NOW.begin() to get the maximum size
+// of the data that can be sent.
+// Read about the compatibility between ESP-NOW v1.0 and v2.0 in the ESP-IDF documentation:
+// https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_now.html#frame-format
 
 typedef struct {
   uint32_t count;
@@ -275,6 +280,8 @@ void setup() {
     Serial.println("Failed to initialize ESP-NOW");
     fail_reboot();
   }
+
+  Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
 
   if (!broadcast_peer.begin()) {
     Serial.println("Failed to initialize broadcast peer");

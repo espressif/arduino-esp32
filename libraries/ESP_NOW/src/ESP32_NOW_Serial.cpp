@@ -70,8 +70,25 @@ bool ESP_NOW_Serial_Class::begin(unsigned long baud) {
     //xSemaphoreTake(tx_sem, 0);
     xSemaphoreGive(tx_sem);
   }
-  setRxBufferSize(1024);  //default if not preset
-  setTxBufferSize(1024);  //default if not preset
+
+  size_t buf_size = 0;
+  if (ESP_NOW.getVersion() == 2) {
+    // ESP-NOW v2.0 has a larger maximum data length, so we need to increase the buffer sizes
+    // to hold around 3-4 packets
+    buf_size = setRxBufferSize(4096);
+    buf_size &= setTxBufferSize(4096);
+  } else {
+    // ESP-NOW v1.0 has a smaller maximum data length, so we can use the default buffer sizes
+    // to hold around 3-4 packets
+    buf_size = setRxBufferSize(1024);
+    buf_size &= setTxBufferSize(1024);
+  }
+
+  if (buf_size == 0) {
+    log_e("Failed to set buffer size");
+    return false;
+  }
+
   return true;
 }
 
@@ -164,7 +181,6 @@ void ESP_NOW_Serial_Class::onReceive(const uint8_t *data, size_t len, bool broad
 
 //Print
 int ESP_NOW_Serial_Class::availableForWrite() {
-  //return ESP_NOW_MAX_DATA_LEN;
   if (tx_ring_buf == nullptr) {
     return 0;
   }
@@ -189,7 +205,7 @@ bool ESP_NOW_Serial_Class::checkForTxData() {
   //do we have something that failed the last time?
   resend_count = 0;
   if (queued_buff == nullptr) {
-    queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ESP_NOW_MAX_DATA_LEN);
+    queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ESP_NOW.getMaxDataLen());
   } else {
     log_d(MACSTR " : PREVIOUS", MAC2STR(addr()));
   }

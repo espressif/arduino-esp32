@@ -104,6 +104,8 @@ void setup() {
     ESP.restart();
   }
 
+  Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
+
   // Register the new peer callback
   ESP_NOW.onNewPeer(register_new_master, nullptr);
 
