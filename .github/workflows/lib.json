@@ -9,7 +9,8 @@
     {
         "name": "ArduinoBLE",
         "exclude_targets": [
-            "esp32s2"
+            "esp32s2",
+            "esp32p4"
         ],
         "sketch_path": [
             "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
