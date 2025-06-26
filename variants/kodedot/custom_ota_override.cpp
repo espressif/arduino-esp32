@@ -2,8 +2,8 @@
 // This function overrides the weak definition of `verifyRollbackLater()` in the kode dot board.
 
 extern "C" {
-  // Declare the weak function symbol to override it
-  bool verifyRollbackLater() __attribute__((weak));
+// Declare the weak function symbol to override it
+bool verifyRollbackLater() __attribute__((weak));
 }
 
 // Custom implementation of verifyRollbackLater()

@@ -37,7 +37,7 @@ static const uint8_t SDA = 36;  // GPIO36 – PIN14
 static const uint8_t SS = 15;    // SD_CS
 static const uint8_t MOSI = 16;  // SD_MOSI
 static const uint8_t MISO = 18;  // SD_MISO
-static const uint8_t SCK  = 17;  // SD_CLK
+static const uint8_t SCK = 17;   // SD_CLK
 #define BOARD_HAS_SD_SPI
 #define SD_CS SS
 
