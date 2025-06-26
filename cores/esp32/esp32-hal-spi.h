@@ -27,19 +27,13 @@ extern "C" {
 #include <stdbool.h>
 
 #define SPI_HAS_TRANSACTION
-
-#ifdef CONFIG_IDF_TARGET_ESP32S2
-#define FSPI 1  //SPI 1 bus. ESP32S2: for external memory only (can use the same data lines but different SS)
-#define HSPI 2  //SPI 2 bus. ESP32S2: external memory or device  - it can be matrixed to any pins
-#define SPI2 2  // Another name for ESP32S2 SPI 2
-#define SPI3 3  //SPI 3 bus. ESP32S2: device only - it can be matrixed to any pins
-#elif CONFIG_IDF_TARGET_ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
 #define FSPI 1  //SPI 1 bus attached to the flash (can use the same data lines but different SS)
 #define HSPI 2  //SPI 2 bus normally mapped to pins 12 - 15, but can be matrixed to any pins
 #define VSPI 3  //SPI 3 bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
 #else
-#define FSPI 0  // ESP32C2, C3, C6, H2, S3, P4 - SPI 2 bus
-#define HSPI 1  // ESP32S3, P4 - SPI 3 bus
+#define FSPI 0  // ESP32C2, C3, C6, H2, S2, S3, P4 - SPI 2 bus
+#define HSPI 1  // ESP32S2, S3, P4 - SPI 3 bus
 #endif
 
 // This defines are not representing the real Divider of the ESP32

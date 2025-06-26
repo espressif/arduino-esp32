@@ -74,6 +74,7 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
 
   _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
   if (!_spi) {
+    log_e("SPI bus %d start failed.", _spi_num);
     return false;
   }
 
