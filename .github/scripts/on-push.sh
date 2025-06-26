@@ -90,6 +90,7 @@ if [ "$BUILD_LOG" -eq 1 ]; then
 fi
 
 #build sketches for different targets
+build "esp32c5" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
 build "esp32p4" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
 build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
 build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"

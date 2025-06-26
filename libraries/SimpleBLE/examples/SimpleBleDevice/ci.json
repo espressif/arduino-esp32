@@ -1,5 +1,6 @@
 {
   "requires": [
+    "CONFIG_SOC_BLE_SUPPORTED=y",
     "CONFIG_BT_ENABLED=y",
     "CONFIG_BLUEDROID_ENABLED=y"
   ]

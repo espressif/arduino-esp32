@@ -19,6 +19,7 @@ static boolean doScan = false;
 static BLERemoteCharacteristic *pRemoteCharacteristic;
 static BLEAdvertisedDevice *myDevice;
 
+// Callback function to handle notifications
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {
   Serial.print("Notify callback for characteristic ");
   Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
@@ -80,6 +81,7 @@ bool connectToServer() {
   }
 
   if (pRemoteCharacteristic->canNotify()) {
+    // Register/Subscribe for notifications
     pRemoteCharacteristic->registerForNotify(notifyCallback);
   }
 

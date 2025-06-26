@@ -7,8 +7,10 @@
 
    author: chegewara
 */
-#ifndef SOC_BLE_50_SUPPORTED
-#warning "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
+#ifndef CONFIG_BLUEDROID_ENABLED
+#error "NimBLE does not support extended scan yet. Try using Bluedroid."
+#elif !defined(SOC_BLE_50_SUPPORTED)
+#error "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
 #else
 
 #include <BLEDevice.h>
