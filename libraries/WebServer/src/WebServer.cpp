@@ -502,6 +502,16 @@ void WebServer::stop() {
 }
 
 void WebServer::sendHeader(const String &name, const String &value, bool first) {
+  if (name.indexOf('\r') != -1 || name.indexOf('\n') != -1) {
+    log_e("Invalid character in HTTP header name");
+    return;
+  }
+
+  if (value.indexOf('\r') != -1 || value.indexOf('\n') != -1) {
+    log_e("Invalid character in HTTP header value");
+    return;
+  }
+
   RequestArgument *header = new RequestArgument();
   header->key = name;
   header->value = value;
