@@ -23,8 +23,10 @@ public:
   bool begin(const uint8_t *pmk = nullptr /* 16 bytes */);
   bool end();
 
-  int getTotalPeerCount();
-  int getEncryptedPeerCount();
+  int getTotalPeerCount() const;
+  int getEncryptedPeerCount() const;
+  int getMaxDataLen() const;
+  int getVersion() const;
 
   int availableForWrite();
   size_t write(const uint8_t *data, size_t len);
@@ -34,6 +36,10 @@ public:
 
   void onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg), void *arg);
   bool removePeer(ESP_NOW_Peer &peer);
+
+protected:
+  size_t max_data_len;
+  uint32_t version;
 };
 
 class ESP_NOW_Peer {
