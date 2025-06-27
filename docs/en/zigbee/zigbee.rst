@@ -58,7 +58,7 @@ Zigbee Library Structure
 ZigbeeCore
 **********
 
-The ``Zigbee`` class is the main entry point for all Zigbee operations. It serves as the central coordinator that manages:
+The ``ZigbeeCore`` class is the main entry point for all Zigbee operations. It serves as the central coordinator that manages:
 
 * **Network Operations**: Starting, stopping, and managing the Zigbee network
 * **Device Role Management**: Configuring the device as Coordinator, Router, or End Device
@@ -67,7 +67,7 @@ The ``Zigbee`` class is the main entry point for all Zigbee operations. It serve
 * **OTA Updates**: Managing over-the-air firmware updates
 * **Power Management**: Configuring sleep modes for battery-powered devices
 
-The Zigbee class is implemented as a singleton, meaning there's only one instance available globally. You access it directly as ``Zigbee`` without creating an instance.
+The ``ZigbeeCore`` class is implemented as a singleton, meaning there's only one instance available globally. You access it directly as ``Zigbee`` without creating an instance.
 
 .. toctree::
     :maxdepth: 3
