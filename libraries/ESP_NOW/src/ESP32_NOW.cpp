@@ -261,7 +261,7 @@ int ESP_NOW_Class::getEncryptedPeerCount() const {
 int ESP_NOW_Class::getMaxDataLen() const {
   if (max_data_len == 0) {
     log_e("ESP-NOW not initialized. Please call begin() first to get the max data length.");
-    return -ESP_ERR_ESPNOW_NOT_INIT;
+    return -1;
   }
 
   return max_data_len;
@@ -270,7 +270,7 @@ int ESP_NOW_Class::getMaxDataLen() const {
 int ESP_NOW_Class::getVersion() const {
   if (version == 0) {
     log_e("ESP-NOW not initialized. Please call begin() first to get the version.");
-    return -ESP_ERR_ESPNOW_NOT_INIT;
+    return -1;
   }
 
   return version;
