@@ -50553,8 +50553,8 @@ kodedot.name=kode dot
 kodedot.bootloader.tool=esptool_py
 kodedot.bootloader.tool.default=esptool_py
 
-kodedot.upload.tool=esptool_py_nomerge
-kodedot.upload.tool.default=esptool_py_nomerge
+kodedot.upload.tool=esptool_py_app_only
+kodedot.upload.tool.default=esptool_py_app_only
 kodedot.upload.tool.network=esp_ota
 
 kodedot.upload.maximum_size=8388608
@@ -50590,7 +50590,7 @@ kodedot.build.flash_size=16MB
 kodedot.build.flash_freq=80m
 kodedot.build.flash_mode=dio
 
-kodedot.build.partitions=kodedot_partitions
+kodedot.build.custom_partitions=kodedot_partitions
 
 kodedot.build.psram_type=qspi
 kodedot.build.defines=
