@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "ZigbeeColorDimmableLight.h"
 #if CONFIG_ZB_ENABLED
 
@@ -127,9 +128,8 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
 
   espXyColor_t xy_color = espRgbColorToXYColor(_current_color);
   espHsvColor_t hsv_color = espRgbColorToHsvColor(_current_color);
-  uint8_t hue = (uint8_t)hsv_color.h; // Recast from uint16 to uint8
-  hue = (hue > 254) ? 254 : hue;  // Clamp to 0-254 (per the Zigbee standard)
-  uint8_t saturation = (hsv_color.s > 254) ? 254 : (uint8_t)hsv_color.s;  // Clamp to 0-254 (per the Zigbee standard)
+  uint8_t hue = std::min((uint8_t)hsv_color.h, (uint8_t)254); // Clamp to 0-254
+  uint8_t saturation = std::min((uint8_t)hsv_color.s, (uint8_t)254); // Clamp to 0-254
 
   log_v("Updating light state: %d, level: %d, color: %d, %d, %d", state, level, red, green, blue);
   /* Update light clusters */
