@@ -22,6 +22,10 @@ using namespace fs;
 
 SDFS::SDFS(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
 
+SDFS::~SDFS() {
+  end();
+}
+
 bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char *mountpoint, uint8_t max_files, bool format_if_empty) {
   if (_pdrv != 0xFF) {
     return true;
