@@ -67,6 +67,7 @@ void setup(void) {
           if (origin != expectedOrigin) {
             Serial.printf("Wrong origin received! Expected: %s, Received: %s\n", expectedOrigin.c_str(), origin.c_str());
             authenticated = false;
+            return;
           }
           
           Serial.printf("Update: %s\n", upload.filename.c_str());
