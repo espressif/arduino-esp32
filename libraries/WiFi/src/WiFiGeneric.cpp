@@ -259,21 +259,21 @@ typedef struct {
 static bool hosted_initialized = false;
 static sdio_pin_config_t sdio_pin_config = {
 #ifdef BOARD_HAS_SDIO_ESP_HOSTED
-    .pin_clk = BOARD_SDIO_ESP_HOSTED_CLK,
-    .pin_cmd = BOARD_SDIO_ESP_HOSTED_CMD,
-    .pin_d0 = BOARD_SDIO_ESP_HOSTED_D0,
-    .pin_d1 = BOARD_SDIO_ESP_HOSTED_D1,
-    .pin_d2 = BOARD_SDIO_ESP_HOSTED_D2,
-    .pin_d3 = BOARD_SDIO_ESP_HOSTED_D3,
-    .pin_reset = BOARD_SDIO_ESP_HOSTED_RESET
+  .pin_clk = BOARD_SDIO_ESP_HOSTED_CLK,
+  .pin_cmd = BOARD_SDIO_ESP_HOSTED_CMD,
+  .pin_d0 = BOARD_SDIO_ESP_HOSTED_D0,
+  .pin_d1 = BOARD_SDIO_ESP_HOSTED_D1,
+  .pin_d2 = BOARD_SDIO_ESP_HOSTED_D2,
+  .pin_d3 = BOARD_SDIO_ESP_HOSTED_D3,
+  .pin_reset = BOARD_SDIO_ESP_HOSTED_RESET
 #else
-    .pin_clk = CONFIG_ESP_SDIO_PIN_CLK,
-    .pin_cmd = CONFIG_ESP_SDIO_PIN_CMD,
-    .pin_d0 = CONFIG_ESP_SDIO_PIN_D0,
-    .pin_d1 = CONFIG_ESP_SDIO_PIN_D1,
-    .pin_d2 = CONFIG_ESP_SDIO_PIN_D2,
-    .pin_d3 = CONFIG_ESP_SDIO_PIN_D3,
-    .pin_reset = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
+  .pin_clk = CONFIG_ESP_SDIO_PIN_CLK,
+  .pin_cmd = CONFIG_ESP_SDIO_PIN_CMD,
+  .pin_d0 = CONFIG_ESP_SDIO_PIN_D0,
+  .pin_d1 = CONFIG_ESP_SDIO_PIN_D1,
+  .pin_d2 = CONFIG_ESP_SDIO_PIN_D2,
+  .pin_d3 = CONFIG_ESP_SDIO_PIN_D3,
+  .pin_reset = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
 #endif
 };
 
