@@ -3,6 +3,7 @@ Welcome to ESP32 Arduino Core's documentation
 #############################################
 
 Here you will find all the relevant information about the project.
+This documentation is valid for the Arduino Core for ESP32 version |version| based on ESP-IDF |idf_version|.
 
 .. note::
    This is a work in progress documentation and we will appreciate your help! We are looking for contributors!
