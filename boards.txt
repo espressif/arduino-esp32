@@ -50607,7 +50607,10 @@ kodedot.recipe.output.save_file={build.project_name}.ino.bin
 
 # FED4 Board
 fed4.name=FED4
-
+fed4.vid.0=0x303A
+fed4.pid.0=0x82Ed
+fed4.upload_port.0.vid=0x303A
+fed4.upload_port.0.pid=0x82E5
 fed4.bootloader.tool=esptool_py
 fed4.bootloader.tool.default=esptool_py
 
