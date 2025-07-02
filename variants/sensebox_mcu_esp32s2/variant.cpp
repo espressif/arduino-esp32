@@ -34,11 +34,11 @@ void initVariant(void) {
   pinMode(PD_ENABLE, OUTPUT);
   digitalWrite(PD_ENABLE, HIGH);
 
-  // Neuen Button-Pin definieren (z.B. GPIO 0 als Beispiel)
+  // define button pin
   const int PIN_BUTTON = 0;
   pinMode(PIN_BUTTON, INPUT_PULLUP);
 
-  // Button gedrückt halten
+  // keep button pressed
   unsigned long pressStartTime = 0;
   bool buttonPressed = false;
 
