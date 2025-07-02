@@ -52,7 +52,7 @@ uint16_t MatterEndPoint::getEndPointId() {
 }
 
 void MatterEndPoint::setEndPointId(uint16_t ep) {
- if (ep == 0) {   
+  if (ep == 0) {
     log_e("Invalid endpoint ID");
     return;
   }
