@@ -33417,12 +33417,12 @@ deneyapkartv2.menu.DFUOnBoot.default.build.dfu_on_boot=0
 deneyapkartv2.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 deneyapkartv2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-deneyapkartv2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-deneyapkartv2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-deneyapkartv2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 deneyapkartv2.menu.UploadMode.default=UART0 / Hardware CDC
 deneyapkartv2.menu.UploadMode.default.upload.use_1200bps_touch=false
 deneyapkartv2.menu.UploadMode.default.upload.wait_for_upload_port=false
+deneyapkartv2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+deneyapkartv2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+deneyapkartv2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 deneyapkartv2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 deneyapkartv2.menu.PartitionScheme.default.build.partitions=default
