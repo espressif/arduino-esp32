@@ -11,8 +11,8 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-#define LED_GREEN  46
-#define LED_BLUE   45
+#define LED_GREEN 46
+#define LED_BLUE  45
 
 static const uint8_t LED_BUILTIN = LED_GREEN;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -26,7 +26,7 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 9;
 static const uint8_t SCL = 40;
 
-#define WIRE1_PIN_DEFINED  
+#define WIRE1_PIN_DEFINED
 static const uint8_t SDA1 = 17;
 static const uint8_t SCL1 = 18;
 
@@ -35,7 +35,7 @@ static const uint8_t MOSI = 11;
 static const uint8_t MISO = 10;
 static const uint8_t SCK = 13;
 
-#define LORA_ANT_SWITCH  4  // Antenna switch power control pin
+#define LORA_ANT_SWITCH 4  // Antenna switch power control pin
 
 #define LORA_SCK  5  // SX1262 SCK
 #define LORA_MISO 3  // SX1262 MISO
