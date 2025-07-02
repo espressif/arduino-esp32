@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 724779,
+                            "flash_bytes": 725773,
                             "flash_percentage": 55,
-                            "ram_bytes": 28960,
+                            "ram_bytes": 29072,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "SD_MMC/examples/SD2USBMSC",
                     "sizes": [{
-                            "flash_bytes": 454849,
+                            "flash_bytes": 455843,
                             "flash_percentage": 34,
-                            "ram_bytes": 50108,
+                            "ram_bytes": 50220,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "SD_MMC/examples/SDMMC_Test",
                     "sizes": [{
-                            "flash_bytes": 419249,
-                            "flash_percentage": 31,
-                            "ram_bytes": 22844,
-                            "ram_percentage": 6
+                            "flash_bytes": 420243,
+                            "flash_percentage": 32,
+                            "ram_bytes": 22956,
+                            "ram_percentage": 7
                             }]
                     },
 {"name": "SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 722683,
+                            "flash_bytes": 723677,
                             "flash_percentage": 55,
-                            "ram_bytes": 28932,
+                            "ram_bytes": 29044,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
-                            "flash_bytes": 312159,
+                            "flash_bytes": 313153,
                             "flash_percentage": 23,
-                            "ram_bytes": 21720,
+                            "ram_bytes": 21832,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
-                            "flash_bytes": 364697,
+                            "flash_bytes": 365691,
                             "flash_percentage": 27,
-                            "ram_bytes": 22196,
+                            "ram_bytes": 22308,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 714705,
+                            "flash_bytes": 715699,
                             "flash_percentage": 54,
-                            "ram_bytes": 28828,
+                            "ram_bytes": 28940,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "TFLiteMicro/examples/hello_world",
                     "sizes": [{
-                            "flash_bytes": 344359,
+                            "flash_bytes": 345353,
                             "flash_percentage": 26,
-                            "ram_bytes": 23988,
+                            "ram_bytes": 24100,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "Ticker/examples/Blinker",
                     "sizes": [{
-                            "flash_bytes": 311461,
+                            "flash_bytes": 312455,
                             "flash_percentage": 23,
-                            "ram_bytes": 21760,
+                            "ram_bytes": 21872,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Ticker/examples/TickerBasic",
                     "sizes": [{
-                            "flash_bytes": 311249,
+                            "flash_bytes": 312243,
                             "flash_percentage": 23,
-                            "ram_bytes": 21736,
+                            "ram_bytes": 21848,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Ticker/examples/TickerParameter",
                     "sizes": [{
-                            "flash_bytes": 311131,
+                            "flash_bytes": 312125,
                             "flash_percentage": 23,
-                            "ram_bytes": 21760,
+                            "ram_bytes": 21872,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "USB/examples/CompositeDevice",
                     "sizes": [{
-                            "flash_bytes": 415105,
+                            "flash_bytes": 416099,
                             "flash_percentage": 31,
-                            "ram_bytes": 49884,
+                            "ram_bytes": 49996,
                             "ram_percentage": 15
                             }]
                     }
@@ -121,7 +121,7 @@
                     },
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 960730,
+                            "flash_bytes": 960714,
                             "flash_percentage": 30,
                             "ram_bytes": 44964,
                             "ram_percentage": 13
@@ -193,7 +193,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 1802774,
+                            "flash_bytes": 1802802,
                             "flash_percentage": 44,
                             "ram_bytes": 69172,
                             "ram_percentage": 21
@@ -201,7 +201,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1790910,
+                            "flash_bytes": 1790938,
                             "flash_percentage": 44,
                             "ram_bytes": 69272,
                             "ram_percentage": 21
@@ -209,7 +209,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 1806214,
+                            "flash_bytes": 1806242,
                             "flash_percentage": 44,
                             "ram_bytes": 69748,
                             "ram_percentage": 21
@@ -217,7 +217,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 1814210,
+                            "flash_bytes": 1814238,
                             "flash_percentage": 44,
                             "ram_bytes": 69252,
                             "ram_percentage": 21
@@ -246,7 +246,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
-                            "flash_bytes": 1284349,
+                            "flash_bytes": 1284377,
                             "flash_percentage": 31,
                             "ram_bytes": 42968,
                             "ram_percentage": 13
@@ -254,7 +254,7 @@
                     },
 {"name": "RainMaker/examples/RMakerCustomAirCooler",
                     "sizes": [{
-                            "flash_bytes": 1273013,
+                            "flash_bytes": 1273045,
                             "flash_percentage": 31,
                             "ram_bytes": 43112,
                             "ram_percentage": 13
@@ -262,7 +262,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSonoffDualR3",
                     "sizes": [{
-                            "flash_bytes": 1287573,
+                            "flash_bytes": 1287601,
                             "flash_percentage": 31,
                             "ram_bytes": 43536,
                             "ram_percentage": 13
@@ -270,7 +270,7 @@
                     },
 {"name": "RainMaker/examples/RMakerSwitch",
                     "sizes": [{
-                            "flash_bytes": 1295569,
+                            "flash_bytes": 1295597,
                             "flash_percentage": 32,
                             "ram_bytes": 43064,
                             "ram_percentage": 13
@@ -419,7 +419,7 @@
                     },
 {"name": "Matter/examples/WiFiProvWithinMatter",
                     "sizes": [{
-                            "flash_bytes": 2361016,
+                            "flash_bytes": 2361050,
                             "flash_percentage": 75,
                             "ram_bytes": 111384,
                             "ram_percentage": 33
@@ -698,7 +698,7 @@
                     },
 {"name": "Matter/examples/MatterMinimum",
                     "sizes": [{
-                            "flash_bytes": 1730286,
+                            "flash_bytes": 1730270,
                             "flash_percentage": 55,
                             "ram_bytes": 98672,
                             "ram_percentage": 30
@@ -778,7 +778,7 @@
                     },
 {"name": "Matter/examples/WiFiProvWithinMatter",
                     "sizes": [{
-                            "flash_bytes": 2537166,
+                            "flash_bytes": 2537198,
                             "flash_percentage": 80,
                             "ram_bytes": 113100,
                             "ram_percentage": 34

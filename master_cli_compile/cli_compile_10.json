@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
-                            "flash_bytes": 366351,
-                            "flash_percentage": 27,
-                            "ram_bytes": 49444,
+                            "flash_bytes": 367345,
+                            "flash_percentage": 28,
+                            "ram_bytes": 49556,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/MIDI/ReceiveMidi",
                     "sizes": [{
-                            "flash_bytes": 364457,
+                            "flash_bytes": 365451,
                             "flash_percentage": 27,
-                            "ram_bytes": 49428,
+                            "ram_bytes": 49540,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/Mouse/ButtonMouseControl",
                     "sizes": [{
-                            "flash_bytes": 350895,
+                            "flash_bytes": 351889,
                             "flash_percentage": 26,
-                            "ram_bytes": 49456,
+                            "ram_bytes": 49568,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/SystemControl",
                     "sizes": [{
-                            "flash_bytes": 350407,
+                            "flash_bytes": 351401,
                             "flash_percentage": 26,
-                            "ram_bytes": 49448,
+                            "ram_bytes": 49560,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/USBMSC",
                     "sizes": [{
-                            "flash_bytes": 371335,
+                            "flash_bytes": 372329,
                             "flash_percentage": 28,
-                            "ram_bytes": 57580,
+                            "ram_bytes": 57692,
                             "ram_percentage": 17
                             }]
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 365571,
+                            "flash_bytes": 366565,
                             "flash_percentage": 27,
-                            "ram_bytes": 49292,
+                            "ram_bytes": 49404,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "USB/examples/USBVendor",
                     "sizes": [{
-                            "flash_bytes": 371179,
+                            "flash_bytes": 372173,
                             "flash_percentage": 28,
-                            "ram_bytes": 49460,
+                            "ram_bytes": 49572,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 688969,
+                            "flash_bytes": 689963,
                             "flash_percentage": 52,
-                            "ram_bytes": 29008,
+                            "ram_bytes": 29120,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 879767,
+                            "flash_bytes": 880761,
                             "flash_percentage": 67,
-                            "ram_bytes": 29840,
+                            "ram_bytes": 29952,
                             "ram_percentage": 9
                             }]
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 733177,
-                            "flash_percentage": 55,
-                            "ram_bytes": 29092,
+                            "flash_bytes": 734171,
+                            "flash_percentage": 56,
+                            "ram_bytes": 29204,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 772393,
-                            "flash_percentage": 58,
-                            "ram_bytes": 31764,
+                            "flash_bytes": 773387,
+                            "flash_percentage": 59,
+                            "ram_bytes": 31876,
                             "ram_percentage": 9
                             }]
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 754943,
-                            "flash_percentage": 57,
-                            "ram_bytes": 31668,
+                            "flash_bytes": 763149,
+                            "flash_percentage": 58,
+                            "ram_bytes": 31780,
                             "ram_percentage": 9
                             }]
                     }
@@ -177,7 +177,7 @@
                     },
 {"name": "USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
-                            "flash_bytes": 375586,
+                            "flash_bytes": 375570,
                             "flash_percentage": 28,
                             "ram_bytes": 40508,
                             "ram_percentage": 12
@@ -238,7 +238,7 @@
                 "sketches": [
 {"name": "USB/examples/SystemControl",
                     "sizes": [{
-                            "flash_bytes": 303117,
+                            "flash_bytes": 303109,
                             "flash_percentage": 23,
                             "ram_bytes": 35028,
                             "ram_percentage": 10
@@ -254,7 +254,7 @@
                     },
 {"name": "USB/examples/USBSerial",
                     "sizes": [{
-                            "flash_bytes": 310009,
+                            "flash_bytes": 310001,
                             "flash_percentage": 23,
                             "ram_bytes": 34532,
                             "ram_percentage": 10
@@ -302,9 +302,9 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 927257,
-                            "flash_percentage": 70,
-                            "ram_bytes": 43088,
+                            "flash_bytes": 935181,
+                            "flash_percentage": 71,
+                            "ram_bytes": 43104,
                             "ram_percentage": 13
                             }]
                     },
@@ -443,9 +443,9 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1029780,
-                            "flash_percentage": 78,
-                            "ram_bytes": 38752,
+                            "flash_bytes": 1037004,
+                            "flash_percentage": 79,
+                            "ram_bytes": 38768,
                             "ram_percentage": 11
                             }]
                     },
@@ -496,9 +496,9 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1035937,
+                            "flash_bytes": 1043169,
                             "flash_percentage": 79,
-                            "ram_bytes": 44824,
+                            "ram_bytes": 44840,
                             "ram_percentage": 13
                             }]
                     },
@@ -754,7 +754,7 @@
                     },
 {"name": "Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 972206,
+                            "flash_bytes": 972190,
                             "flash_percentage": 74,
                             "ram_bytes": 46476,
                             "ram_percentage": 14
@@ -770,9 +770,9 @@
                     },
 {"name": "Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 988014,
+                            "flash_bytes": 995998,
                             "flash_percentage": 75,
-                            "ram_bytes": 47776,
+                            "ram_bytes": 47792,
                             "ram_percentage": 14
                             }]
                     },

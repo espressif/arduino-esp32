@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
-                            "flash_bytes": 322499,
+                            "flash_bytes": 323493,
                             "flash_percentage": 24,
-                            "ram_bytes": 21660,
+                            "ram_bytes": 21772,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
-                            "flash_bytes": 321839,
+                            "flash_bytes": 322833,
                             "flash_percentage": 24,
-                            "ram_bytes": 21660,
+                            "ram_bytes": 21772,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/BlinkRGB",
                     "sizes": [{
-                            "flash_bytes": 303951,
+                            "flash_bytes": 304945,
                             "flash_percentage": 23,
-                            "ram_bytes": 21648,
+                            "ram_bytes": 21760,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterrupt",
                     "sizes": [{
-                            "flash_bytes": 328907,
+                            "flash_bytes": 329901,
                             "flash_percentage": 25,
-                            "ram_bytes": 22348,
+                            "ram_bytes": 22460,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/FunctionalInterruptStruct",
                     "sizes": [{
-                            "flash_bytes": 327123,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22356,
+                            "flash_bytes": 328117,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22468,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
-                            "flash_bytes": 327997,
+                            "flash_bytes": 328991,
                             "flash_percentage": 25,
-                            "ram_bytes": 22356,
+                            "ram_bytes": 22468,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 303951,
+                            "flash_bytes": 304945,
                             "flash_percentage": 23,
-                            "ram_bytes": 21648,
+                            "ram_bytes": 21760,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
-                            "flash_bytes": 325513,
+                            "flash_bytes": 326507,
                             "flash_percentage": 24,
-                            "ram_bytes": 21732,
+                            "ram_bytes": 21844,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
-                            "flash_bytes": 325287,
+                            "flash_bytes": 326285,
                             "flash_percentage": 24,
-                            "ram_bytes": 21820,
+                            "ram_bytes": 21932,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTCallback",
                     "sizes": [{
-                            "flash_bytes": 349559,
+                            "flash_bytes": 350553,
                             "flash_percentage": 26,
-                            "ram_bytes": 22940,
+                            "ram_bytes": 23052,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
-                            "flash_bytes": 351235,
+                            "flash_bytes": 352229,
                             "flash_percentage": 26,
-                            "ram_bytes": 24364,
+                            "ram_bytes": 24476,
                             "ram_percentage": 7
                             }]
                     },
 {"name": "ESP32/examples/RMT/RMTReadXJT",
                     "sizes": [{
-                            "flash_bytes": 350161,
+                            "flash_bytes": 351155,
                             "flash_percentage": 26,
-                            "ram_bytes": 22812,
+                            "ram_bytes": 22924,
                             "ram_percentage": 6
                             }]
                     }
@@ -113,7 +113,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1003318,
+                            "flash_bytes": 1003346,
                             "flash_percentage": 5,
                             "ram_bytes": 61376,
                             "ram_percentage": 18
@@ -121,7 +121,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1006018,
+                            "flash_bytes": 1006042,
                             "flash_percentage": 5,
                             "ram_bytes": 61512,
                             "ram_percentage": 18
@@ -129,7 +129,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1008274,
+                            "flash_bytes": 1008302,
                             "flash_percentage": 6,
                             "ram_bytes": 61844,
                             "ram_percentage": 18
@@ -145,7 +145,7 @@
                     },
 {"name": "ESP32/examples/DeepSleep/ExternalWakeUp",
                     "sizes": [{
-                            "flash_bytes": 312242,
+                            "flash_bytes": 312226,
                             "flash_percentage": 23,
                             "ram_bytes": 20496,
                             "ram_percentage": 6
@@ -185,7 +185,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
-                            "flash_bytes": 304566,
+                            "flash_bytes": 304550,
                             "flash_percentage": 23,
                             "ram_bytes": 20392,
                             "ram_percentage": 6
@@ -326,7 +326,7 @@
                     },
 {"name": "ESP32/examples/RMT/RMT_LED_Blink",
                     "sizes": [{
-                            "flash_bytes": 287977,
+                            "flash_bytes": 287969,
                             "flash_percentage": 21,
                             "ram_bytes": 15936,
                             "ram_percentage": 4
@@ -358,7 +358,7 @@
                     },
 {"name": "ESP32/examples/Serial/OnReceiveError_BREAK_Demo",
                     "sizes": [{
-                            "flash_bytes": 271305,
+                            "flash_bytes": 271297,
                             "flash_percentage": 20,
                             "ram_bytes": 15260,
                             "ram_percentage": 4
@@ -762,7 +762,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1045998,
+                            "flash_bytes": 1046026,
                             "flash_percentage": 6,
                             "ram_bytes": 62196,
                             "ram_percentage": 18
@@ -770,7 +770,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1058278,
+                            "flash_bytes": 1058286,
                             "flash_percentage": 6,
                             "ram_bytes": 62288,
                             "ram_percentage": 19

@@ -4,97 +4,97 @@
                 "sketches": [
 {"name": "ArduinoOTA/examples/BasicOTA",
                     "sizes": [{
-                            "flash_bytes": 732659,
+                            "flash_bytes": 733653,
                             "flash_percentage": 55,
-                            "ram_bytes": 33340,
+                            "ram_bytes": 33452,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 654225,
+                            "flash_bytes": 655219,
                             "flash_percentage": 49,
-                            "ram_bytes": 27396,
+                            "ram_bytes": 27508,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 654517,
-                            "flash_percentage": 49,
-                            "ram_bytes": 27396,
+                            "flash_bytes": 655511,
+                            "flash_percentage": 50,
+                            "ram_bytes": 27508,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "AsyncUDP/examples/AsyncUDPServer",
                     "sizes": [{
-                            "flash_bytes": 654155,
+                            "flash_bytes": 655149,
                             "flash_percentage": 49,
-                            "ram_bytes": 27396,
+                            "ram_bytes": 27508,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 712641,
+                            "flash_bytes": 713635,
                             "flash_percentage": 54,
-                            "ram_bytes": 29096,
+                            "ram_bytes": 29208,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "EEPROM/examples/eeprom_class",
                     "sizes": [{
-                            "flash_bytes": 333447,
+                            "flash_bytes": 334441,
                             "flash_percentage": 25,
-                            "ram_bytes": 21752,
+                            "ram_bytes": 21864,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 336489,
+                            "flash_bytes": 337483,
                             "flash_percentage": 25,
-                            "ram_bytes": 21704,
+                            "ram_bytes": 21816,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "EEPROM/examples/eeprom_write",
                     "sizes": [{
-                            "flash_bytes": 331999,
+                            "flash_bytes": 332993,
                             "flash_percentage": 25,
-                            "ram_bytes": 21704,
+                            "ram_bytes": 21816,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCFade",
                     "sizes": [{
-                            "flash_bytes": 335827,
+                            "flash_bytes": 336821,
                             "flash_percentage": 25,
-                            "ram_bytes": 21824,
+                            "ram_bytes": 21936,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCGammaFade",
                     "sizes": [{
-                            "flash_bytes": 344157,
+                            "flash_bytes": 345151,
                             "flash_percentage": 26,
-                            "ram_bytes": 21840,
+                            "ram_bytes": 21952,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSingleChannel",
                     "sizes": [{
-                            "flash_bytes": 313605,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21820,
+                            "flash_bytes": 314599,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21932,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
-                            "flash_bytes": 313655,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21820,
+                            "flash_bytes": 314649,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21932,
                             "ram_percentage": 6
                             }]
                     }
@@ -209,7 +209,7 @@
                     },
 {"name": "BLE/examples/Scan",
                     "sizes": [{
-                            "flash_bytes": 886846,
+                            "flash_bytes": 886830,
                             "flash_percentage": 28,
                             "ram_bytes": 46164,
                             "ram_percentage": 14
@@ -350,7 +350,7 @@
                     },
 {"name": "ESP32/examples/AnalogRead",
                     "sizes": [{
-                            "flash_bytes": 279969,
+                            "flash_bytes": 279961,
                             "flash_percentage": 21,
                             "ram_bytes": 15420,
                             "ram_percentage": 4
