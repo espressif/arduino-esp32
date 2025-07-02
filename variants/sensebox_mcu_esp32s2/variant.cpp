@@ -54,15 +54,14 @@ void initVariant(void) {
       }
     } else if (buttonPressed) {
       // When the button is pressed and then released, boot into the OTA1 partition
-      const esp_partition_t* ota1_partition = esp_partition_find_first(
-        ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+      const esp_partition_t *ota1_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
 
       if (ota1_partition) {
         esp_err_t err = esp_ota_set_boot_partition(ota1_partition);
         if (err == ESP_OK) {
           esp_restart();  // restart, to boot OTA1 partition
         } else {
-            ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
+          ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
         }
       }
       // Abort after releasing the button
@@ -70,5 +69,4 @@ void initVariant(void) {
     }
   }
 }
-
 }
