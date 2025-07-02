@@ -9,14 +9,14 @@
 //#define PASSWORD "test123456"    // generate if remarked
 
 // Set the username and password for firmware upload
-const char * authUser = "........";
-const char * authPass = "........";
+const char *authUser = "........";
+const char *authPass = "........";
 
 WebServer server(80);
 Ticker tkSecond;
 uint8_t otaDone = 0;
 
-const char * csrfHeaders[2] = {"Origin", "Host"};
+const char *csrfHeaders[2] = {"Origin", "Host"};
 static bool authenticated = false;
 
 const char *alphanum = "0123456789!@#$%^&*abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";

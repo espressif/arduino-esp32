@@ -13,14 +13,14 @@ const char *ssid = "........";
 const char *password = "........";
 
 // Set the username and password for firmware upload
-const char * authUser = "........";
-const char * authPass = "........";
+const char *authUser = "........";
+const char *authPass = "........";
 
 WebServer server(80);
 const char *serverIndex =
   "<form method='POST' action='/update' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
 
-const char * csrfHeaders[2] = {"Origin", "Host"};
+const char *csrfHeaders[2] = {"Origin", "Host"};
 static bool authenticated = false;
 
 void setup(void) {
@@ -71,7 +71,7 @@ void setup(void) {
             authenticated = false;
             return;
           }
-          
+
           Serial.printf("Update: %s\n", upload.filename.c_str());
           if (!Update.begin()) {  //start with max available size
             Update.printError(Serial);
@@ -87,7 +87,7 @@ void setup(void) {
             Update.printError(Serial);
           }
           Serial.setDebugOutput(false);
-        } else if(authenticated) {
+        } else if (authenticated) {
           Serial.printf("Update Failed Unexpectedly (likely broken connection): status=%d\n", upload.status);
         }
       }

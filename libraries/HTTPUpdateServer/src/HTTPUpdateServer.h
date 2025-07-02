@@ -27,7 +27,7 @@ static const char serverIndex[] PROGMEM =
      </body>
      </html>)";
 static const char successResponse[] PROGMEM = "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...";
-static const char * csrfHeaders[2] = {"Origin", "Host"};
+static const char *csrfHeaders[2] = {"Origin", "Host"};
 
 class HTTPUpdateServer {
 public:
