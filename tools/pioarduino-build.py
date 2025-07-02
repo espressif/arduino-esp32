@@ -216,8 +216,14 @@ env.Append(
             "0x1000" if build_mcu in ["esp32", "esp32s2"] else ("0x2000" if build_mcu in ["esp32p4"] else "0x0000"),
             get_bootloader_image(variants_dir),
         ),
-        ("0x8000", join(env.subst("$BUILD_DIR"), "partitions.bin")),
-        ("0xe000", join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin")),
+        (
+            board_config.get("upload.arduino.partitions_bin", "0x8000"),
+            join(env.subst("$BUILD_DIR"), "partitions.bin"),
+        ),
+        (
+            board_config.get("upload.arduino.boot_app0", "0xe000"),
+            join(FRAMEWORK_DIR, "tools", "partitions", "boot_app0.bin"),
+        ),
     ]
     + [(offset, join(FRAMEWORK_DIR, img)) for offset, img in board_config.get("upload.arduino.flash_extra_images", [])],
 )
