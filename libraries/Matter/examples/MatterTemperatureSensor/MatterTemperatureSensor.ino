@@ -30,7 +30,7 @@
 // Matter Temperature Sensor Endpoint
 MatterTemperatureSensor SimulatedTemperatureSensor;
 
-// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
@@ -66,7 +66,7 @@ void setup() {
 
   Serial.begin(115200);
 
-// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
   // Manually connect to WiFi
   WiFi.begin(ssid, password);

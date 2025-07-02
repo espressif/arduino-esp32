@@ -64,7 +64,7 @@ public:
   // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
   bool endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled);
 
-  // User callaback for the Identify Cluster functionality
+  // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
 
 protected:
