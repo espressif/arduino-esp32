@@ -22,10 +22,9 @@
 
 #include "Print.h"
 
-class Server: public Print
-{
+class Server : public Print {
 public:
-    virtual void begin(uint16_t port=0) =0;
+  virtual void begin() = 0;
 };
 
 #endif

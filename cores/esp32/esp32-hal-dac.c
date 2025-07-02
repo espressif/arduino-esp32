@@ -1,49 +1,76 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include "esp32-hal-dac.h"
 
+#if SOC_DAC_SUPPORTED
 #include "esp32-hal.h"
-#include "soc/soc_caps.h"
-
-#ifndef SOC_DAC_SUPPORTED           
-#define NODAC
-#else
+#include "esp32-hal-periman.h"
 #include "soc/dac_channel.h"
-#include "driver/dac_common.h"
+#include "driver/dac_oneshot.h"
 
-void ARDUINO_ISR_ATTR __dacWrite(uint8_t pin, uint8_t value)
-{
-    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
-        return;//not dac pin
-    }
-
-    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
-    dac_output_enable(channel);
-    dac_output_voltage(channel, value);
-
+static bool dacDetachBus(void *bus) {
+  esp_err_t err = dac_oneshot_del_channel((dac_oneshot_handle_t)bus);
+  if (err != ESP_OK) {
+    log_e("dac_oneshot_del_channel failed with error: %d", err);
+    return false;
+  }
+  return true;
 }
 
-void ARDUINO_ISR_ATTR __dacDisable(uint8_t pin)
-{
-    if(pin < DAC_CHANNEL_1_GPIO_NUM || pin > DAC_CHANNEL_2_GPIO_NUM){
-        return;//not dac pin
-    }
+bool __dacWrite(uint8_t pin, uint8_t value) {
+  esp_err_t err = ESP_OK;
+  if (pin != DAC_CHAN0_GPIO_NUM && pin != DAC_CHAN1_GPIO_NUM) {
+    log_e("pin %u is not a DAC pin", pin);
+    return false;  //not dac pin
+  }
 
-    uint8_t channel = pin - DAC_CHANNEL_1_GPIO_NUM;
-    dac_output_disable(channel);
+  dac_oneshot_handle_t bus = (dac_oneshot_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT);
+  if (bus == NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_DAC_ONESHOT, dacDetachBus);
+    if (!perimanClearPinBus(pin)) {
+      return false;
+    }
+    dac_channel_t channel = (pin == DAC_CHAN0_GPIO_NUM) ? DAC_CHAN_0 : DAC_CHAN_1;
+    dac_oneshot_config_t config = {.chan_id = channel};
+    err = dac_oneshot_new_channel(&config, &bus);
+    if (err != ESP_OK) {
+      log_e("dac_oneshot_new_channel failed with error: %d", err);
+      return false;
+    }
+    if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT, (void *)bus, -1, channel)) {
+      dacDetachBus((void *)bus);
+      return false;
+    }
+  }
+
+  err = dac_oneshot_output_voltage(bus, value);
+  if (err != ESP_OK) {
+    log_e("dac_oneshot_output_voltage failed with error: %d", err);
+    return false;
+  }
+  return true;
 }
 
-extern void dacWrite(uint8_t pin, uint8_t value) __attribute__ ((weak, alias("__dacWrite")));
-extern void dacDisable(uint8_t pin) __attribute__ ((weak, alias("__dacDisable")));
+bool __dacDisable(uint8_t pin) {
+  if (pin != DAC_CHAN0_GPIO_NUM && pin != DAC_CHAN1_GPIO_NUM) {
+    log_e("pin %u is not a DAC pin", pin);
+    return false;  //not dac pin
+  }
+  void *bus = perimanGetPinBus(pin, ESP32_BUS_TYPE_DAC_ONESHOT);
+  if (bus != NULL) {
+    // will call dacDetachBus
+    return perimanClearPinBus(pin);
+  } else {
+    log_e("pin %u is not attached to DAC", pin);
+  }
+  return false;
+}
+
+extern bool dacWrite(uint8_t pin, uint8_t value) __attribute__((weak, alias("__dacWrite")));
+extern bool dacDisable(uint8_t pin) __attribute__((weak, alias("__dacDisable")));
 
 #endif

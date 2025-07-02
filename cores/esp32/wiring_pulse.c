@@ -17,32 +17,30 @@
 //#include <limits.h>
 #include "wiring_private.h"
 #include "pins_arduino.h"
-#include <hal/cpu_hal.h>
+#include "esp_cpu.h"
 
-#define WAIT_FOR_PIN_STATE(state) \
-    while (digitalRead(pin) != (state)) { \
-        if (cpu_hal_get_cycle_count() - start_cycle_count > timeout_cycles) { \
-            return 0; \
-        } \
-    }
+#define WAIT_FOR_PIN_STATE(state)                                         \
+  while (digitalRead(pin) != (state)) {                                   \
+    if (esp_cpu_get_cycle_count() - start_cycle_count > timeout_cycles) { \
+      return 0;                                                           \
+    }                                                                     \
+  }
 
 // max timeout is 27 seconds at 160MHz clock and 54 seconds at 80MHz clock
-unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout)
-{
-    const uint32_t max_timeout_us = clockCyclesToMicroseconds(UINT_MAX);
-    if (timeout > max_timeout_us) {
-        timeout = max_timeout_us;
-    }
-    const uint32_t timeout_cycles = microsecondsToClockCycles(timeout);
-    const uint32_t start_cycle_count = cpu_hal_get_cycle_count();
-    WAIT_FOR_PIN_STATE(!state);
-    WAIT_FOR_PIN_STATE(state);
-    const uint32_t pulse_start_cycle_count = cpu_hal_get_cycle_count();
-    WAIT_FOR_PIN_STATE(!state);
-    return clockCyclesToMicroseconds(cpu_hal_get_cycle_count() - pulse_start_cycle_count);
+unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout) {
+  const uint32_t max_timeout_us = clockCyclesToMicroseconds(UINT_MAX);
+  if (timeout > max_timeout_us) {
+    timeout = max_timeout_us;
+  }
+  const uint32_t timeout_cycles = microsecondsToClockCycles(timeout);
+  const uint32_t start_cycle_count = esp_cpu_get_cycle_count();
+  WAIT_FOR_PIN_STATE(!state);
+  WAIT_FOR_PIN_STATE(state);
+  const uint32_t pulse_start_cycle_count = esp_cpu_get_cycle_count();
+  WAIT_FOR_PIN_STATE(!state);
+  return clockCyclesToMicroseconds(esp_cpu_get_cycle_count() - pulse_start_cycle_count);
 }
 
-unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout)
-{
-    return pulseIn(pin, state, timeout);
+unsigned long pulseInLong(uint8_t pin, uint8_t state, unsigned long timeout) {
+  return pulseIn(pin, state, timeout);
 }

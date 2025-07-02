@@ -1,0 +1,110 @@
+exclude: |
+  (?x)(
+      ^\.github\/|
+      ^tests\/performance\/coremark\/.*\.[ch]$|
+      ^tests\/performance\/superpi\/.*\.(cpp|h)$|
+      LICENSE\.md$
+  )
+
+default_language_version:
+  # force all unspecified python hooks to run python3
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b" # v5.0.0
+    hooks:
+      # Generic checks
+      - id: check-case-conflict
+      - id: check-symlinks
+      - id: debug-statements
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: ^.*\.(bin|BIN)$
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      # JSON formatting
+      - id: pretty-format-json
+        stages: [manual]
+        args: [--autofix]
+        types_or: [json]
+        exclude: |
+          (?x)(
+              diagram\..*\.json$|
+              package\.json$|
+              ^package\/.*$
+          )
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: "f6446549e5e97ec9665b9b03e75b87b445857f9a" # v18.1.3
+    hooks:
+      # C/C++ formatting
+      - id: clang-format
+        types_or: [c, c++]
+        exclude: ^.*\/build_opt\.h$
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: "a4920527036bb9a3f3e6055d595849d67d0da066" # 25.1.0
+    hooks:
+      # Python formatting
+      - id: black
+        types_or: [python]
+        args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: "16f5f28a384f0781bebb37a08aa45e65b9526c50" # 7.2.0
+    hooks:
+      # Python linting
+      - id: flake8
+        types_or: [python]
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-comprehensions
+          - flake8-simplify
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "ffb6a759a979008c0e6dff86e39f4745a2d9eac4" # v3.1.0
+    hooks:
+      # YAML formatting
+      - id: prettier
+        types_or: [yaml]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: "63c8f8312b7559622c0d82815639671ae42132ac" # v2.4.1
+    hooks:
+      # Spell checking
+      - id: codespell
+        exclude: ^.*\.(svd|SVD)$
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: "a23f6b85d0fdd5bb9d564e2579e678033debbdff" # v0.10.0.1
+    hooks:
+      # Bash linting
+      - id: shellcheck
+        types: [shell]
+
+  - repo: https://github.com/openstack/bashate
+    rev: "fbd7c2534c2701351c603ff700ddf08202430a31" # 2.1.1
+    hooks:
+      # Bash formatting
+      - id: bashate
+        types: [shell]
+        args: ["-i", "E006"] # Ignore E006: Line too long
+
+  - repo: https://github.com/errata-ai/vale
+    rev: "dc4c47923788a413fb5677de6e3370d514aecb78" # v3.11.2
+    hooks:
+      # Sync vale styles and lint markdown and reStructuredText
+      - id: vale
+        name: vale-sync
+        language_version: "1.23.2"
+        pass_filenames: false
+        args: [sync]
+        types_or: [markdown, rst]
+      - id: vale
+        language_version: "1.23.2"
+        types_or: [markdown, rst]

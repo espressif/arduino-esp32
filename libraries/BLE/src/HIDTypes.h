@@ -22,17 +22,17 @@
 #include <stdint.h>
 
 /* */
-#define HID_VERSION_1_11    (0x0111)
+#define HID_VERSION_1_11 (0x0111)
 
 /* HID Class */
-#define BLE_HID_CLASS           (3)
-#define BLE_HID_SUBCLASS_NONE   (0)
-#define BLE_HID_PROTOCOL_NONE   (0)
+#define BLE_HID_CLASS         (3)
+#define BLE_HID_SUBCLASS_NONE (0)
+#define BLE_HID_PROTOCOL_NONE (0)
 
 /* Descriptors */
-#define HID_DESCRIPTOR          (33)
-#define HID_DESCRIPTOR_LENGTH   (0x09)
-#define REPORT_DESCRIPTOR       (34)
+#define HID_DESCRIPTOR        (33)
+#define HID_DESCRIPTOR_LENGTH (0x09)
+#define REPORT_DESCRIPTOR     (34)
 
 /* Class requests */
 #define GET_REPORT (0x1)
@@ -46,41 +46,41 @@
 
 /* Main items */
 #ifdef ARDUINO_ARCH_ESP32
-#define HIDINPUT(size)             (0x80 | size)
-#define HIDOUTPUT(size)            (0x90 | size)
+#define HIDINPUT(size)  (0x80 | size)
+#define HIDOUTPUT(size) (0x90 | size)
 #else
-#define INPUT(size)             (0x80 | size)
-#define OUTPUT(size)            (0x90 | size)
+#define INPUT(size)  (0x80 | size)
+#define OUTPUT(size) (0x90 | size)
 #endif
-#define FEATURE(size)           (0xb0 | size)
-#define COLLECTION(size)        (0xa0 | size)
-#define END_COLLECTION(size)    (0xc0 | size)
+#define FEATURE(size)        (0xb0 | size)
+#define COLLECTION(size)     (0xa0 | size)
+#define END_COLLECTION(size) (0xc0 | size)
 
 /* Global items */
-#define USAGE_PAGE(size)        (0x04 | size)
-#define LOGICAL_MINIMUM(size)   (0x14 | size)
-#define LOGICAL_MAXIMUM(size)   (0x24 | size)
-#define PHYSICAL_MINIMUM(size)  (0x34 | size)
-#define PHYSICAL_MAXIMUM(size)  (0x44 | size)
-#define UNIT_EXPONENT(size)     (0x54 | size)
-#define UNIT(size)              (0x64 | size)
-#define REPORT_SIZE(size)       (0x74 | size)  //bits
-#define REPORT_ID(size)         (0x84 | size)
-#define REPORT_COUNT(size)      (0x94 | size)  //bytes
-#define PUSH(size)              (0xa4 | size)
-#define POP(size)               (0xb4 | size)
+#define USAGE_PAGE(size)       (0x04 | size)
+#define LOGICAL_MINIMUM(size)  (0x14 | size)
+#define LOGICAL_MAXIMUM(size)  (0x24 | size)
+#define PHYSICAL_MINIMUM(size) (0x34 | size)
+#define PHYSICAL_MAXIMUM(size) (0x44 | size)
+#define UNIT_EXPONENT(size)    (0x54 | size)
+#define UNIT(size)             (0x64 | size)
+#define REPORT_SIZE(size)      (0x74 | size)  //bits
+#define REPORT_ID(size)        (0x84 | size)
+#define REPORT_COUNT(size)     (0x94 | size)  //bytes
+#define PUSH(size)             (0xa4 | size)
+#define POP(size)              (0xb4 | size)
 
 /* Local items */
-#define USAGE(size)                 (0x08 | size)
-#define USAGE_MINIMUM(size)         (0x18 | size)
-#define USAGE_MAXIMUM(size)         (0x28 | size)
-#define DESIGNATOR_INDEX(size)      (0x38 | size)
-#define DESIGNATOR_MINIMUM(size)    (0x48 | size)
-#define DESIGNATOR_MAXIMUM(size)    (0x58 | size)
-#define STRING_INDEX(size)          (0x78 | size)
-#define STRING_MINIMUM(size)        (0x88 | size)
-#define STRING_MAXIMUM(size)        (0x98 | size)
-#define DELIMITER(size)             (0xa8 | size)
+#define USAGE(size)              (0x08 | size)
+#define USAGE_MINIMUM(size)      (0x18 | size)
+#define USAGE_MAXIMUM(size)      (0x28 | size)
+#define DESIGNATOR_INDEX(size)   (0x38 | size)
+#define DESIGNATOR_MINIMUM(size) (0x48 | size)
+#define DESIGNATOR_MAXIMUM(size) (0x58 | size)
+#define STRING_INDEX(size)       (0x78 | size)
+#define STRING_MINIMUM(size)     (0x88 | size)
+#define STRING_MAXIMUM(size)     (0x98 | size)
+#define DELIMITER(size)          (0xa8 | size)
 
 /* HID Report */
 /* Where report IDs are used the first byte of 'data' will be the */
@@ -89,8 +89,8 @@
 #define MAX_HID_REPORT_SIZE (64)
 
 typedef struct {
-	uint32_t length;
-	uint8_t data[MAX_HID_REPORT_SIZE];
+  uint32_t length;
+  uint8_t data[MAX_HID_REPORT_SIZE];
 } HID_REPORT;
 
 #endif

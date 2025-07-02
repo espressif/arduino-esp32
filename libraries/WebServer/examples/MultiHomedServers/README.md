@@ -2,11 +2,11 @@
 
 This example tests support for multi-homed servers, i.e. a distinct web servers on distinct IP interface.
 
-It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely the WiFi station interfaces and the WiFi soft AP interface.
-For this to work, the WebServer and the WiFiServer classes must correctly handle the case where an IP address is passed to their relevant constructor.
+It only tests the case n=2 because on a basic ESP32 device, we only have two IP interfaces, namely the Wi-Fi station interfaces and the Wi-Fi soft AP interface.
+For this to work, the WebServer and the NetworkServer classes must correctly handle the case where an IP address is passed to their relevant constructor.
 It also requires WebServer to work with multiple, simultaneous instances.
 
-Testing the WebServer and the WiFiServer constructors was the primary purpose of this script.
+Testing the WebServer and the NetworkServer constructors was the primary purpose of this script.
 The part of WebServer used by this sketch does seem to work with multiple, simultaneous instances.
 However there is much functionality in WebServer that is not tested here. It may all be well, but that is not proven here.
 
@@ -55,7 +55,7 @@ Currently, this example supports the following targets.
 
 ## How to Use Example
 
-Change the SSID and password in the example to your WiFi and flash the example.
+Change the SSID and password in the example to your Wi-Fi and flash the example.
 Open a serial terminal and the example will write the exact addresses with used IP addresses you can use to test the servers.
 
 * How to install the Arduino IDE: [Install Arduino IDE](https://github.com/espressif/arduino-esp32/tree/master/docs/arduino-ide).
@@ -66,10 +66,6 @@ To get more information about the Espressif boards see [Espressif Development Ki
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
-
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
 
 ## Example Log Output
 

@@ -1,0 +1,40 @@
+name: Pushbutton counter test
+version: 1
+author: Jan Prochazka (jan.prochazka@espressif.com)
+
+steps:
+  - wait-serial: "Button test"
+
+  # Need for 1s delay for scenario to run properly
+  - delay: 5000ms
+
+  # Press once
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+  - delay: 2000ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 3000ms
+
+  # Press 2nd time
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+  - delay: 2000ms
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 0
+  - delay: 3000ms
+
+  # Press for the 3rd time
+  - set-control:
+      part-id: btn1
+      control: pressed
+      value: 1
+  - wait-serial: "Button pressed 3 times"

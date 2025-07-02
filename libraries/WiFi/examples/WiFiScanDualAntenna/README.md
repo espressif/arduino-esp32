@@ -1,6 +1,6 @@
 # WiFiScan Example
 
-This example demonstrates how to use the WiFi library to scan available WiFi networks and print the results.
+This example demonstrates how to use the Wi-Fi library to scan available Wi-Fi networks and print the results.
 
 This example shows the basic functionality of the dual antenna capability.
 
@@ -16,10 +16,6 @@ This example is compatible with the ESP32-WROOM-DA.
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
-
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
 
 ## Example/Log Output
 
@@ -41,7 +37,7 @@ scan done
 1: IoTNetwork (-62)*
 2: WiFiSSID (-62)*
 3: B3A7992 (-63)*
-4: WiFi (-63) 
+4: WiFi (-63)
 5: IoTNetwork2 (-64)*
 ...
 ```

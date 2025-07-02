@@ -17744,7 +17744,7 @@
             <field>
               <name>SDIO20_CONF</name>
               <description>[29],sdio negedge sample enablel.[30],sdio posedge sample enable.[31],sdio cmd/dat in delayed cycles control,0:no delay, 1:delay 1 cycle.
-[25]: sdio1.1 dat/cmd sending out edge control,1:negedge,0:posedge when highseed mode. 
+[25]: sdio1.1 dat/cmd sending out edge control,1:negedge,0:posedge when highseed mode.
 [26]: sdio2.0 dat/cmd sending out edge control,1:negedge when [12]=0,0:negedge when [12]=0,posedge when highspeed mode enable.
 [27]: sdio interrupt sending out delay control,1:delay one cycle, 0: no delay.
 [28]: sdio data pad pull up enable</description>
@@ -21230,7 +21230,7 @@ module as an I2C Slave.</description>
             </field>
             <field>
               <name>TX_LSB_FIRST</name>
-              <description>This bit is used to control the sending mode for data needing to be sent. 
+              <description>This bit is used to control the sending mode for data needing to be sent.
 1: send data from the least significant bit,
 0: send data from the most significant bit.</description>
               <bitOffset>6</bitOffset>
@@ -21363,7 +21363,7 @@ equal to the address of the slave, then this bit will be of high level.</descrip
             </field>
             <field>
               <name>SCL_MAIN_STATE_LAST</name>
-              <description>This field indicates the states of the I2C module state machine. 
+              <description>This field indicates the states of the I2C module state machine.
 0: Idle, 1: Address shift, 2: ACK address, 3: Rx data, 4: Tx data, 5: Send ACK, 6: Wait ACK</description>
               <bitOffset>24</bitOffset>
               <bitWidth>3</bitWidth>
@@ -22321,7 +22321,7 @@ in I2C module clock cycles, the I2C controller will ignore that pulse.</descript
           <fields>
             <field>
               <name>COMMAND0</name>
-              <description>This is the content of command 0. It consists of three parts: 
+              <description>This is the content of command 0. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22348,7 +22348,7 @@ level.</description>
           <fields>
             <field>
               <name>COMMAND1</name>
-              <description>This is the content of command 1. It consists of three parts: 
+              <description>This is the content of command 1. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22375,7 +22375,7 @@ level.</description>
           <fields>
             <field>
               <name>COMMAND2</name>
-              <description>This is the content of command 2. It consists of three parts: 
+              <description>This is the content of command 2. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22402,7 +22402,7 @@ Level.</description>
           <fields>
             <field>
               <name>COMMAND3</name>
-              <description>This is the content of command 3. It consists of three parts: 
+              <description>This is the content of command 3. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22429,7 +22429,7 @@ level.</description>
           <fields>
             <field>
               <name>COMMAND4</name>
-              <description>This is the content of command 4. It consists of three parts: 
+              <description>This is the content of command 4. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22482,7 +22482,7 @@ Information.</description>
           <fields>
             <field>
               <name>COMMAND6</name>
-              <description>This is the content of command 6. It consists of three parts: 
+              <description>This is the content of command 6. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -22508,7 +22508,7 @@ Information.</description>
           <fields>
             <field>
               <name>COMMAND7</name>
-              <description>This is the content of command 7. It consists of three parts: 
+              <description>This is the content of command 7. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -26821,7 +26821,7 @@ The least significant eight bits represent the fractional part.</description>
           <fields>
             <field>
               <name>CH_GAMMA_DUTY_INC</name>
-              <description>Ledc ch%s gamma duty inc of current ram write address.This register is used to increase or decrease the duty of output signal on channel %s. 
+              <description>Ledc ch%s gamma duty inc of current ram write address.This register is used to increase or decrease the duty of output signal on channel %s.
 
 1: Increase  0: Decrease.</description>
               <bitOffset>0</bitOffset>
@@ -30399,7 +30399,7 @@ Clock</description>
             </field>
             <field>
               <name>I2C_TX_LSB_FIRST</name>
-              <description>This bit is used to control the sending mode for data needing to be sent. 
+              <description>This bit is used to control the sending mode for data needing to be sent.
 1: send data from the least significant bit,
 0: send data from the most significant bit.</description>
               <bitOffset>6</bitOffset>
@@ -30488,7 +30488,7 @@ Clock</description>
             </field>
             <field>
               <name>I2C_SCL_MAIN_STATE_LAST</name>
-              <description>This field indicates the states of the I2C module state machine. 
+              <description>This field indicates the states of the I2C module state machine.
 0: Idle, 1: Address shift, 2: ACK address, 3: Rx data, 4: Tx data, 5: Send ACK, 6: Wait ACK</description>
               <bitOffset>24</bitOffset>
               <bitWidth>3</bitWidth>
@@ -31326,7 +31326,7 @@ in I2C module clock cycles, the I2C controller will ignore that pulse.</descript
           <fields>
             <field>
               <name>I2C_COMMAND0</name>
-              <description>This is the content of command 0. It consists of three parts: 
+              <description>This is the content of command 0. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31353,7 +31353,7 @@ level.</description>
           <fields>
             <field>
               <name>I2C_COMMAND1</name>
-              <description>This is the content of command 1. It consists of three parts: 
+              <description>This is the content of command 1. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31380,7 +31380,7 @@ level.</description>
           <fields>
             <field>
               <name>I2C_COMMAND2</name>
-              <description>This is the content of command 2. It consists of three parts: 
+              <description>This is the content of command 2. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31407,7 +31407,7 @@ Level.</description>
           <fields>
             <field>
               <name>I2C_COMMAND3</name>
-              <description>This is the content of command 3. It consists of three parts: 
+              <description>This is the content of command 3. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31434,7 +31434,7 @@ level.</description>
           <fields>
             <field>
               <name>I2C_COMMAND4</name>
-              <description>This is the content of command 4. It consists of three parts: 
+              <description>This is the content of command 4. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31487,7 +31487,7 @@ Information.</description>
           <fields>
             <field>
               <name>I2C_COMMAND6</name>
-              <description>This is the content of command 6. It consists of three parts: 
+              <description>This is the content of command 6. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -31513,7 +31513,7 @@ Information.</description>
           <fields>
             <field>
               <name>I2C_COMMAND7</name>
-              <description>This is the content of command 7. It consists of three parts: 
+              <description>This is the content of command 7. It consists of three parts:
 op_code is the command, 0: RSTART, 1: WRITE, 2: READ, 3: STOP, 4: END.
 Byte_num represents the number of bytes that need to be sent or received.
 ack_check_en, ack_exp and ack are used to control the ACK bit. See I2C cmd structure for more
@@ -41924,7 +41924,7 @@ Information.</description>
             </field>
             <field>
               <name>RX_PULSE_SUBMODE_SEL</name>
-              <description>Pulse submode selection. 
+              <description>Pulse submode selection.
 0000: positive pulse start(data bit included) &amp;&amp;  positive pulse end(data bit included)
 0001: positive pulse start(data bit included) &amp;&amp; positive pulse end (data bit excluded)
 0010: positive pulse start(data bit excluded) &amp;&amp; positive pulse end (data bit included)
@@ -41950,9 +41950,9 @@ Information.</description>
             </field>
             <field>
               <name>RX_SMP_MODE_SEL</name>
-              <description>Rx data sampling mode selection. 
+              <description>Rx data sampling mode selection.
 000: external level enable mode
-001: external pulse enable mode  
+001: external pulse enable mode
 010: internal software enable mode</description>
               <bitOffset>24</bitOffset>
               <bitWidth>2</bitWidth>
@@ -41974,9 +41974,9 @@ Information.</description>
             </field>
             <field>
               <name>RX_BUS_WID_SEL</name>
-              <description>Rx data bus width selection. 
-100: bus width is 1 bit 
-011: bus width is 2 bits 
+              <description>Rx data bus width selection.
+100: bus width is 1 bit
+011: bus width is 2 bits
 010: bus width is 4 bits
 001: bus width is 8 bits
 000: bus width is 16 bits</description>
@@ -42080,7 +42080,7 @@ Information.</description>
             </field>
             <field>
               <name>TX_BUS_WID_SEL</name>
-              <description>Tx data bus width selection. 
+              <description>Tx data bus width selection.
 100: bus width is 1 bit
 011: bus width is 2 bits
 010: bus width is 4 bits
@@ -49494,7 +49494,7 @@ Any pulses with width less than this will be ignored when the filter is enabled.
               <name>MEM_OWNER_CH2</name>
               <description>This register marks the ownership of CHANNEL%s's ram block.
 
-1'h1: Receiver is using the ram. 
+1'h1: Receiver is using the ram.
 
 1'h0: APB bus is using the ram.</description>
               <bitOffset>3</bitOffset>

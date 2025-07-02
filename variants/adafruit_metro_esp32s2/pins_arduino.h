@@ -2,28 +2,26 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
+#define USB_VID          0x239A
+#define USB_PID          0x80DF
+#define USB_MANUFACTURER "Adafruit"
+#define USB_PRODUCT      "Metro ESP32-S2"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
-#define USB_VID            0x239A
-#define USB_PID            0x80DF
-#define USB_MANUFACTURER   "Adafruit"
-#define USB_PRODUCT        "Metro ESP32-S2"
-#define USB_SERIAL         ""   // Empty string for MAC adddress
+#define LED_BUILTIN 42
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
+// Neopixel
+#define PIN_NEOPIXEL 45
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite() and digitalWrite() for blinking
+#define RGB_BUILTIN    (PIN_NEOPIXEL + SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
 
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define NEOPIXEL_NUM 1
 
-#define LED_BUILTIN     42
-
-#define PIN_NEOPIXEL    45
-#define NEOPIXEL_NUM    1
-
-#define PIN_BUTTON1     0  // BOOT0 switch
+#define PIN_BUTTON1 0  // BOOT0 switch
 
 static const uint8_t TX = 5;
 static const uint8_t RX = 6;
@@ -33,10 +31,10 @@ static const uint8_t RX = 6;
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 34;
 
-static const uint8_t SS    = 42;
-static const uint8_t MOSI  = 35;
-static const uint8_t SCK   = 36;
-static const uint8_t MISO  = 37;
+static const uint8_t SS = 42;
+static const uint8_t MOSI = 35;
+static const uint8_t SCK = 36;
+static const uint8_t MISO = 37;
 
 static const uint8_t A0 = 17;
 static const uint8_t A1 = 18;
@@ -58,7 +56,6 @@ static const uint8_t A16 = 15;
 static const uint8_t A17 = 16;
 static const uint8_t A18 = 19;
 static const uint8_t A19 = 20;
-
 
 static const uint8_t T1 = 1;
 static const uint8_t T2 = 2;

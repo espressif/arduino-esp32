@@ -1,0 +1,27 @@
+name: DangerJS Pull Request linter
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  pull-request-style-linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: DangerJS pull request linter
+        uses: espressif/shared-github-dangerjs@fb17367fd3e8ff7412603b8e946d9b19ffdb2d7f # v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          instructions-cla-link: "https://cla-assistant.io/espressif/arduino-esp32"
+          instructions-contributions-file: "docs/en/contributing.rst"
+          rule-max-commits: "false"
+          commit-messages-min-summary-length: "10"

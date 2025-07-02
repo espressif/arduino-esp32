@@ -6,19 +6,18 @@
 
 #include <WiFi.h>
 
-const char* ssid     = "your_network_name";
-const char* password = "your_network_password";
-const char* host     = "example.com";
-const char* url      = "/index.html";
+const char *ssid = "your_network_name";
+const char *password = "your_network_password";
+const char *host = "example.com";
+const char *url = "/index.html";
 
 IPAddress local_IP(192, 168, 31, 115);
 IPAddress gateway(192, 168, 31, 1);
 IPAddress subnet(255, 255, 0, 0);
-IPAddress primaryDNS(8, 8, 8, 8); //optional
-IPAddress secondaryDNS(8, 8, 4, 4); //optional
+IPAddress primaryDNS(8, 8, 8, 8);    //optional
+IPAddress secondaryDNS(8, 8, 4, 4);  //optional
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
 
   if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
@@ -49,15 +48,14 @@ void setup()
   Serial.println(WiFi.dnsIP());
 }
 
-void loop()
-{
+void loop() {
   delay(5000);
 
   Serial.print("connecting to ");
   Serial.println(host);
 
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
+  // Use NetworkClient class to create TCP connections
+  NetworkClient client;
   const int httpPort = 80;
   if (!client.connect(host, httpPort)) {
     Serial.println("connection failed");
@@ -68,9 +66,7 @@ void loop()
   Serial.println(url);
 
   // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Connection: close\r\n\r\n");
+  client.print(String("GET ") + url + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n");
   unsigned long timeout = millis();
   while (client.available() == 0) {
     if (millis() - timeout > 5000) {
@@ -89,4 +85,3 @@ void loop()
   Serial.println();
   Serial.println("closing connection");
 }
-

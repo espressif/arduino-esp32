@@ -21,7 +21,8 @@ extern "C" {
 
 #include "sdkconfig.h"
 
-#ifndef BOARD_HAS_PSRAM
+// Clear flags in Arduino IDE when PSRAM is disabled
+#if defined(ESP32_ARDUINO_LIB_BUILDER) && !defined(BOARD_HAS_PSRAM)
 #ifdef CONFIG_SPIRAM_SUPPORT
 #undef CONFIG_SPIRAM_SUPPORT
 #endif
@@ -31,6 +32,7 @@ extern "C" {
 #endif
 
 bool psramInit();
+bool psramAddToHeap();
 bool psramFound();
 
 void *ps_malloc(size_t size);

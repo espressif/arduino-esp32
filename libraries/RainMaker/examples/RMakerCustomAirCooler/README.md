@@ -1,6 +1,6 @@
 # ESP RainMaker Custom Device
 
-This example demonstrates how to build a custom device to be used with ESP RainMaker using Mode, Range and Toggle Parameters. 
+This example demonstrates how to build a custom device to be used with ESP RainMaker using Mode, Range and Toggle Parameters.
 
 ## What to expect in this example?
 

@@ -19,11 +19,11 @@ extern "C" {
 #endif
 
 /** Major version number (X.x.x) */
-#define ESP_ARDUINO_VERSION_MAJOR   2
+#define ESP_ARDUINO_VERSION_MAJOR 3
 /** Minor version number (x.X.x) */
-#define ESP_ARDUINO_VERSION_MINOR   0
+#define ESP_ARDUINO_VERSION_MINOR 2
 /** Patch version number (x.x.X) */
-#define ESP_ARDUINO_VERSION_PATCH   6
+#define ESP_ARDUINO_VERSION_PATCH 0
 
 /**
  * Macro to convert ARDUINO version number into an integer
@@ -37,9 +37,14 @@ extern "C" {
  *
  * To be used in comparisons, such as ESP_ARDUINO_VERSION >= ESP_ARDUINO_VERSION_VAL(2, 0, 0)
  */
-#define ESP_ARDUINO_VERSION  ESP_ARDUINO_VERSION_VAL(ESP_ARDUINO_VERSION_MAJOR, \
-                                             ESP_ARDUINO_VERSION_MINOR, \
-                                             ESP_ARDUINO_VERSION_PATCH)
+#define ESP_ARDUINO_VERSION ESP_ARDUINO_VERSION_VAL(ESP_ARDUINO_VERSION_MAJOR, ESP_ARDUINO_VERSION_MINOR, ESP_ARDUINO_VERSION_PATCH)
+
+/**
+ * Current ARDUINO version, as string
+ */
+#define df2xstr(s)              #s
+#define df2str(s)               df2xstr(s)
+#define ESP_ARDUINO_VERSION_STR df2str(ESP_ARDUINO_VERSION_MAJOR) "." df2str(ESP_ARDUINO_VERSION_MINOR) "." df2str(ESP_ARDUINO_VERSION_PATCH)
 
 #ifdef __cplusplus
 }

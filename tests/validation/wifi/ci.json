@@ -1,0 +1,27 @@
+{
+  "extra_tags": [
+    "wifi"
+  ],
+  "fqbn": {
+    "esp32": [
+      "espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
+      "espressif:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app,FlashMode=dio"
+    ],
+    "esp32s2": [
+      "espressif:esp32:esp32s2:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio",
+      "espressif:esp32:esp32s2:PSRAM=disabled,PartitionScheme=huge_app,FlashMode=dio"
+    ],
+    "esp32s3": [
+      "espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
+      "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio",
+      "espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio"
+    ]
+  },
+  "platforms": {
+    "hardware": false,
+    "qemu": false
+  },
+  "requires": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y"
+  ]
+}

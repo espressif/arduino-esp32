@@ -5,9 +5,9 @@
 
 ## What to expect in this example?
 - This example demonstrates the use of ESP Insights framework in minimal way
-- Device will try to connect with the configured WiFi network
+- Device will try to connect with the configured Wi-Fi network
 - ESP Insights is enabled in this example, so any error/warning logs, crashes will be reported to cloud
-- This example collects heap and wifi metrics every 10 minutes and network variables are collected when they change
+- This example collects heap and Wi-Fi metrics every 10 minutes and network variables are collected when they change
 
 ## Try out the example
 
@@ -19,8 +19,8 @@ Copy Auth Key to the example
 const char insights_auth_key[] = "<ENTER YOUR AUTH KEY>";
 ```
 
-### Enter WiFi Credentials
-Inside the example sketch, enter your WiFi credentials in `WIFI_SSID` and `WIFI_PASSPHRASE` macros.
+### Enter Wi-Fi Credentials
+Inside the example sketch, enter your Wi-Fi credentials in `WIFI_SSID` and `WIFI_PASSPHRASE` macros.
 
 ### Get the Node ID
 - Start the Serial monitor

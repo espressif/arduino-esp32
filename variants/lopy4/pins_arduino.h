@@ -2,42 +2,40 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       18
-
-#define analogInputToDigitalPin(p)  (((p)<40)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
+#include "soc/soc_caps.h"
 
 // SPI LoRa Radio
-#define LORA_SCK 5      // GPIO5  - SX1276 SCK
-#define LORA_MISO 19    // GPIO19 - SX1276 MISO
-#define LORA_MOSI 27    // GPIO27 - SX1276 MOSI
-#define LORA_CS 18      // GPIO18 - SX1276 CS
-#define LORA_IRQ 23     // GPIO23 - SX1276 IO0
-#define LORA_IO0 LORA_IRQ  // alias
-#define LORA_IO1 LORA_IRQ   // tied by diode to IO0
-#define LORA_IO2 LORA_IRQ   // tied by diode to IO0
-#define LORA_RST NOT_A_PIN
+#define LORA_SCK  5         // GPIO5  - SX1276 SCK
+#define LORA_MISO 19        // GPIO19 - SX1276 MISO
+#define LORA_MOSI 27        // GPIO27 - SX1276 MOSI
+#define LORA_CS   18        // GPIO18 - SX1276 CS
+#define LORA_IRQ  23        // GPIO23 - SX1276 IO0
+#define LORA_IO0  LORA_IRQ  // alias
+#define LORA_IO1  LORA_IRQ  // tied by diode to IO0
+#define LORA_IO2  LORA_IRQ  // tied by diode to IO0
+#define LORA_RST  NOT_A_PIN
 
-static const uint8_t LED_BUILTIN = 0; // ->2812 RGB !!!
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN
+// RGB LED
+#define PIN_RGB_LED 0  // ->2812 RGB !!!
+static const uint8_t LED_BUILTIN = PIN_RGB_LED + SOC_GPIO_PIN_COUNT;
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
-#define ANT_SELECT 21   // GPIO21 - External Antenna Switch
+#define ANT_SELECT 21  // GPIO21 - External Antenna Switch
 
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t SDA = 12;
 static const uint8_t SCL = 13;
- 
-static const uint8_t SS    = 18;
-static const uint8_t MOSI  = 22;
-static const uint8_t MISO  = 37;
-static const uint8_t SCK   = 13;
+
+static const uint8_t SS = 18;
+static const uint8_t MOSI = 22;
+static const uint8_t MISO = 37;
+static const uint8_t SCK = 13;
 
 static const uint8_t A0 = 36;
 static const uint8_t A1 = 37;

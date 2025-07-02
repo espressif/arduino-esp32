@@ -28961,7 +28961,7 @@ Note: FIFO pointers will be out of reset after 2 cycles of system clocks in addi
             </field>
             <field>
               <name>SEND_CCSD</name>
-              <description>When set, SD/MMC sends CCSD to the CE-ATA device. Software sets this bit only if the current command is expecting CCS (that is, RW_BLK), and if interrupts are enabled for the CE-ATA device. Once the CCSD pattern is sent to the device, SD/MMC automatically clears the SDHOST_SEND_CCSD bit. It also sets the Command Done (CD) bit  in the SDHOST_RINTSTS_REG register, and generates an interrupt for the host, in case the Command Done interrupt is not masked. 
+              <description>When set, SD/MMC sends CCSD to the CE-ATA device. Software sets this bit only if the current command is expecting CCS (that is, RW_BLK), and if interrupts are enabled for the CE-ATA device. Once the CCSD pattern is sent to the device, SD/MMC automatically clears the SDHOST_SEND_CCSD bit. It also sets the Command Done (CD) bit  in the SDHOST_RINTSTS_REG register, and generates an interrupt for the host, in case the Command Done interrupt is not masked.
 NOTE: Once the SDHOST_SEND_CCSD bit is set, it takes two card clock cycles to drive the CCSD on the CMD line. Due to this, within the boundary conditions the CCSD may be sent to the CE-ATA device, even if the device has signalled CCS.</description>
               <bitOffset>9</bitOffset>
               <bitWidth>1</bitWidth>
@@ -29164,13 +29164,13 @@ Bit 12 (HLE): Hardware locked write error;
 Bit 11 (FRUN): FIFO underrun/overrun error;
 Bit 10 (HTO): Data starvation-by-host timeout;
 Bit 9 (DRTO): Data read timeout;
-Bit 8 (RTO): Response timeout; 
-Bit 7 (DCRC): Data CRC error; 
-Bit 6 (RCRC): Response CRC error; 
-Bit 5 (RXDR): Receive FIFO data request; 
-Bit 4 (TXDR): Transmit FIFO data request; 
-Bit 3 (DTO): Data transfer over; 
-Bit 2 (CD): Command done; 
+Bit 8 (RTO): Response timeout;
+Bit 7 (DCRC): Data CRC error;
+Bit 6 (RCRC): Response CRC error;
+Bit 5 (RXDR): Receive FIFO data request;
+Bit 4 (TXDR): Transmit FIFO data request;
+Bit 3 (DTO): Data transfer over;
+Bit 2 (CD): Command done;
 Bit 1 (RE): Response error;
 Bit 0 (CD): Card detect.</description>
               <bitOffset>0</bitOffset>
@@ -29321,7 +29321,7 @@ Software should set this bit to indicate that CE-ATA device is being accessed fo
               <name>CCS_EXPECTED</name>
               <description>Expected Command Completion Signal (CCS) configuration.
 0: Interrupts are not enabled in CE-ATA device (nIEN = 1 in ATA control register), or command does not expect CCS from device;
-1: Interrupts are enabled in CE-ATA device (nIEN = 0), and RW_BLK command expects command completion signal from CE-ATA device. 
+1: Interrupts are enabled in CE-ATA device (nIEN = 0), and RW_BLK command expects command completion signal from CE-ATA device.
 If the command expects Command Completion Signal (CCS) from the CE-ATA device, the software should set this control bit. SD/MMC sets Data Transfer Over (DTO) bit in RINTSTS register and generates interrupt to host if Data Transfer Over interrupt is not masked.</description>
               <bitOffset>23</bitOffset>
               <bitWidth>1</bitWidth>
@@ -29417,17 +29417,17 @@ If the command expects Command Completion Signal (CCS) from the CE-ATA device, t
 Bit 15 (EBE): End-bit error/no CRC error;
 Bit 14 (ACD): Auto command done;
 Bit 13 (SBE/BCI): RX Start Bit Error;
-Bit 12 (HLE): Hardware locked write error; 
+Bit 12 (HLE): Hardware locked write error;
 Bit 11 (FRUN): FIFO underrun/overrun error;
 Bit 10 (HTO): Data starvation by host timeout (HTO);
-Bit 9 (DTRO): Data read timeout; 
-Bit 8 (RTO): Response timeout; 
-Bit 7 (DCRC): Data CRC error; 
-Bit 6 (RCRC): Response CRC error; 
-Bit 5 (RXDR): Receive FIFO data request; 
+Bit 9 (DTRO): Data read timeout;
+Bit 8 (RTO): Response timeout;
+Bit 7 (DCRC): Data CRC error;
+Bit 6 (RCRC): Response CRC error;
+Bit 5 (RXDR): Receive FIFO data request;
 Bit 4 (TXDR): Transmit FIFO data request;
-Bit 3 (DTO): Data transfer over; 
-Bit 2 (CD): Command done; 
+Bit 3 (DTO): Data transfer over;
+Bit 2 (CD): Command done;
 Bit 1 (RE): Response error;
 Bit 0 (CD): Card detect.</description>
               <bitOffset>0</bitOffset>
@@ -29455,17 +29455,17 @@ Bit 0 (CD): Card detect.</description>
 Bit 15 (EBE): End-bit error/no CRC error;
 Bit 14 (ACD): Auto command done;
 Bit 13 (SBE/BCI): RX Start Bit Error;
-Bit 12 (HLE): Hardware locked write error; 
+Bit 12 (HLE): Hardware locked write error;
 Bit 11 (FRUN): FIFO underrun/overrun error;
 Bit 10 (HTO): Data starvation by host timeout (HTO);
-Bit 9 (DTRO): Data read timeout; 
-Bit 8 (RTO): Response timeout; 
-Bit 7 (DCRC): Data CRC error; 
-Bit 6 (RCRC): Response CRC error; 
-Bit 5 (RXDR): Receive FIFO data request; 
+Bit 9 (DTRO): Data read timeout;
+Bit 8 (RTO): Response timeout;
+Bit 7 (DCRC): Data CRC error;
+Bit 6 (RCRC): Response CRC error;
+Bit 5 (RXDR): Receive FIFO data request;
 Bit 4 (TXDR): Transmit FIFO data request;
-Bit 3 (DTO): Data transfer over; 
-Bit 2 (CD): Command done; 
+Bit 3 (DTO): Data transfer over;
+Bit 2 (CD): Command done;
 Bit 1 (RE): Response error;
 Bit 0 (CD): Card detect.</description>
               <bitOffset>0</bitOffset>
@@ -29522,8 +29522,8 @@ Bit 0 (CD): Card detect.</description>
               <name>COMMAND_FSM_STATES</name>
               <description>Command FSM states.
 0: Idle;
-1: Send init sequence; 
-2: Send cmd start bit; 
+1: Send init sequence;
+2: Send cmd start bit;
 3: Send cmd tx bit;
 4: Send cmd index + arg;
 5: Send cmd crc7;
@@ -29605,13 +29605,13 @@ Bit 0 (CD): Card detect.</description>
             <field>
               <name>DMA_MULTIPLE_TRANSACTION_SIZE</name>
               <description>Burst size of multiple transaction, should be programmed same as DMA controller multiple-transaction-size SDHOST_SRC/DEST_MSIZE.
-000: 1-byte transfer; 
-001: 4-byte transfer; 
-010: 8-byte transfer; 
-011: 16-byte transfer; 
-100: 32-byte transfer; 
-101: 64-byte transfer; 
-110: 128-byte transfer; 
+000: 1-byte transfer;
+001: 4-byte transfer;
+010: 8-byte transfer;
+011: 16-byte transfer;
+100: 32-byte transfer;
+101: 64-byte transfer;
+110: 128-byte transfer;
 111: 256-byte transfer.</description>
               <bitOffset>28</bitOffset>
               <bitWidth>3</bitWidth>
@@ -29824,8 +29824,8 @@ Bit 0 (CD): Card detect.</description>
             <field>
               <name>CARD_RESET</name>
               <description>Hardware reset.
-1: Active mode; 
-0: Reset. 
+1: Active mode;
+0: Reset.
 These bits cause the cards to enter pre-idle state, which requires them to be re-initialized. SDHOST_RST_CARD_RESET[0] should be set to 1'b0 to reset card0, SDHOST_RST_CARD_RESET[1] should be set to 1'b0 to reset card1.</description>
               <bitOffset>0</bitOffset>
               <bitWidth>2</bitWidth>
@@ -29863,13 +29863,13 @@ These bits cause the cards to enter pre-idle state, which requires them to be re
             <field>
               <name>PBL</name>
               <description>Programmable Burst Length. These bits indicate the maximum number of beats to be performed in one IDMAC???Internal DMA Control???transaction. The IDMAC will always attempt to burst as specified in PBL each time it starts a burst transfer on the host bus. The permissible values are 1, 4, 8, 16, 32, 64, 128 and 256. This value is the mirror of MSIZE of FIFOTH register. In order to change this value, write the required value to FIFOTH register. This is an encode value as follows:
-000: 1-byte transfer; 
-001: 4-byte transfer; 
-010: 8-byte transfer; 
-011: 16-byte transfer; 
-100: 32-byte transfer; 
-101: 64-byte transfer; 
-110: 128-byte transfer; 
+000: 1-byte transfer;
+001: 4-byte transfer;
+010: 8-byte transfer;
+011: 16-byte transfer;
+100: 32-byte transfer;
+101: 64-byte transfer;
+110: 128-byte transfer;
 111: 256-byte transfer.
 PBL is a read-only value and is applicable only for data access, it does not apply to descriptor access.</description>
               <bitOffset>8</bitOffset>
@@ -29945,12 +29945,12 @@ PBL is a read-only value and is applicable only for data access, it does not app
             <field>
               <name>CES</name>
               <description>Card Error Summary. Indicates the status of the transaction to/from the card, also present in RINTSTS. Indicates the logical OR of the following bits:
-EBE : End Bit Error; 
-RTO : Response Timeout/Boot Ack Timeout; 
-RCRC : Response CRC; 
-SBE : Start Bit Error; 
-DRTO : Data Read Timeout/BDS timeout; 
-DCRC : Data CRC for Receive; 
+EBE : End Bit Error;
+RTO : Response Timeout/Boot Ack Timeout;
+RCRC : Response CRC;
+SBE : Start Bit Error;
+DRTO : Data Read Timeout/BDS timeout;
+DCRC : Data CRC for Receive;
 RE : Response Error.
 Writing 1 clears this bit. The abort condition of the IDMAC depends on the setting of this CES bit. If the CES bit is enabled, then the IDMAC aborts on a response error.</description>
               <bitOffset>5</bitOffset>
@@ -29984,14 +29984,14 @@ Others: Reserved.</description>
             <field>
               <name>FSM</name>
               <description>DMAC FSM present state.
-0: DMA_IDLE (idle state); 
-1: DMA_SUSPEND (suspend state); 
-2: DESC_RD (descriptor reading state); 
-3: DESC_CHK (descriptor checking state); 
+0: DMA_IDLE (idle state);
+1: DMA_SUSPEND (suspend state);
+2: DESC_RD (descriptor reading state);
+3: DESC_CHK (descriptor checking state);
 4: DMA_RD_REQ_WAIT (read-data request waiting state);
-5: DMA_WR_REQ_WAIT (write-data request waiting state); 
-6: DMA_RD (data-read state); 
-7: DMA_WR (data-write state); 
+5: DMA_WR_REQ_WAIT (write-data request waiting state);
+6: DMA_RD (data-read state);
+7: DMA_WR (data-write state);
 8: DESC_CLOSE (descriptor close state).</description>
               <bitOffset>13</bitOffset>
               <bitWidth>4</bitWidth>

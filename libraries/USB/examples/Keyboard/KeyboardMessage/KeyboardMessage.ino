@@ -19,19 +19,21 @@
 
   http://www.arduino.cc/en/Tutorial/KeyboardMessage
 */
-#if ARDUINO_USB_MODE
+#ifndef ARDUINO_USB_MODE
+#error This ESP32 SoC has no Native USB interface
+#elif ARDUINO_USB_MODE == 1
 #warning This sketch should be used when USB is in OTG mode
-void setup(){}
-void loop(){}
+void setup() {}
+void loop() {}
 #else
 
 #include "USB.h"
 #include "USBHIDKeyboard.h"
 USBHIDKeyboard Keyboard;
 
-const int buttonPin = 0;          // input pin for pushbutton
-int previousButtonState = HIGH;   // for checking the state of a pushButton
-int counter = 0;                  // button push counter
+const int buttonPin = 0;         // input pin for pushbutton
+int previousButtonState = HIGH;  // for checking the state of a pushButton
+int counter = 0;                 // button push counter
 
 void setup() {
   // make the pushButton pin an input:

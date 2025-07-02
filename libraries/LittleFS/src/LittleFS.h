@@ -14,29 +14,31 @@
 #ifndef _LITTLEFS_H_
 #define _LITTLEFS_H_
 
+#include "sdkconfig.h"
+
+#ifdef CONFIG_LITTLEFS_PAGE_SIZE
+
 #include "FS.h"
 
-namespace fs
-{
+namespace fs {
 
-class LittleFSFS : public FS
-{
+class LittleFSFS : public FS {
 public:
-    LittleFSFS();
-    ~LittleFSFS();
-    bool begin(bool formatOnFail=false, const char * basePath="/littlefs", uint8_t maxOpenFiles=10, const char * partitionLabel="spiffs");
-    bool format();
-    size_t totalBytes();
-    size_t usedBytes();
-    void end();
+  LittleFSFS();
+  ~LittleFSFS();
+  bool begin(bool formatOnFail = false, const char *basePath = "/littlefs", uint8_t maxOpenFiles = 10, const char *partitionLabel = "spiffs");
+  bool format();
+  size_t totalBytes();
+  size_t usedBytes();
+  void end();
 
 private:
-    char * partitionLabel_;
+  char *partitionLabel_;
 };
 
-}
+}  // namespace fs
 
 extern fs::LittleFSFS LittleFS;
 
-
+#endif /* CONFIG_LITTLEFS_PAGE_SIZE */
 #endif

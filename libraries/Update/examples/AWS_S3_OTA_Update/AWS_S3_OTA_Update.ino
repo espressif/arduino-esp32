@@ -22,7 +22,7 @@
 #include <WiFi.h>
 #include <Update.h>
 
-WiFiClient client;
+NetworkClient client;
 
 // Variables to validate
 // response from S3
@@ -31,33 +31,30 @@ bool isValidContentType = false;
 
 // Your SSID and PSWD that the chip needs
 // to connect to
-const char* SSID = "YOUR-SSID";
-const char* PSWD = "YOUR-SSID-PSWD";
+const char *SSID = "YOUR-SSID";
+const char *PSWD = "YOUR-SSID-PSWD";
 
 // S3 Bucket Config
-String host = "bucket-name.s3.ap-south-1.amazonaws.com"; // Host => bucket-name.s3.region.amazonaws.com
-int port = 80; // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
-String bin = "/sketch-name.ino.bin"; // bin file name with a slash in front.
+String host = "bucket-name.s3.ap-south-1.amazonaws.com";  // Host => bucket-name.s3.region.amazonaws.com
+int port = 80;                                            // Non https. For HTTPS 443. As of today, HTTPS doesn't work.
+String bin = "/sketch-name.ino.bin";                      // bin file name with a slash in front.
 
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName) {
   return header.substring(strlen(headerName.c_str()));
 }
 
-// OTA Logic 
+// OTA Logic
 void execOTA() {
   Serial.println("Connecting to: " + String(host));
   // Connect to S3
   if (client.connect(host.c_str(), port)) {
     // Connection Succeed.
-    // Fecthing the bin
+    // Fetching the bin
     Serial.println("Fetching Bin: " + String(bin));
 
     // Get the contents of the bin file
-    client.print(String("GET ") + bin + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Cache-Control: no-cache\r\n" +
-                 "Connection: close\r\n\r\n");
+    client.print(String("GET ") + bin + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Cache-Control: no-cache\r\n" + "Connection: close\r\n\r\n");
 
     // Check what is being sent
     //    Serial.print(String("GET ") + bin + " HTTP/1.1\r\n" +
@@ -88,7 +85,7 @@ void execOTA() {
         Content-Type: application/octet-stream
         Content-Length: 357280
         Server: AmazonS3
-                                   
+
         {{BIN FILE CONTENTS}}
 
     */
@@ -105,7 +102,7 @@ void execOTA() {
       // Update.writeStream();
       if (!line.length()) {
         //headers ended
-        break; // and get the OTA started
+        break;  // and get the OTA started
       }
 
       // Check if the HTTP Response is 200
@@ -160,7 +157,7 @@ void execOTA() {
       if (written == contentLength) {
         Serial.println("Written : " + String(written) + " successfully");
       } else {
-        Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?" );
+        Serial.println("Written only : " + String(written) + "/" + String(contentLength) + ". Retry?");
         // retry??
         // execOTA();
       }
@@ -181,11 +178,11 @@ void execOTA() {
       // Understand the partitions and
       // space availability
       Serial.println("Not enough space to begin OTA");
-      client.flush();
+      client.clear();
     }
   } else {
     Serial.println("There was no content in the response");
-    client.flush();
+    client.clear();
   }
 }
 
@@ -201,7 +198,7 @@ void setup() {
 
   // Wait for connection to establish
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print("."); // Keep the serial monitor lit!
+    Serial.print(".");  // Keep the serial monitor lit!
     delay(500);
   }
 
@@ -219,12 +216,12 @@ void loop() {
 
 /*
  * Serial Monitor log for this sketch
- * 
+ *
  * If the OTA succeeded, it would load the preference sketch, with a small modification. i.e.
  * Print `OTA Update succeeded!! This is an example sketch : Preferences > StartCounter`
  * And then keeps on restarting every 10 seconds, updating the preferences
- * 
- * 
+ *
+ *
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -247,7 +244,7 @@ void loop() {
       OTA done!
       Update successfully completed. Rebooting.
       ets Jun  8 2016 00:22:57
-      
+
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -257,13 +254,13 @@ void loop() {
       load:0x40078000,len:10632
       load:0x40080000,len:252
       entry 0x40080034
-      
+
       OTA Update succeeded!! This is an example sketch : Preferences > StartCounter
       Current counter value: 1
       Restarting in 10 seconds...
       E (102534) wifi: esp_wifi_stop 802 wifi is not init
       ets Jun  8 2016 00:22:57
-      
+
       rst:0x10 (RTCWDT_RTC_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
       configsip: 0, SPIWP:0x00
       clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
@@ -273,11 +270,11 @@ void loop() {
       load:0x40078000,len:10632
       load:0x40080000,len:252
       entry 0x40080034
-      
+
       OTA Update succeeded!! This is an example sketch : Preferences > StartCounter
       Current counter value: 2
       Restarting in 10 seconds...
 
       ....
- * 
+ *
  */

@@ -8,28 +8,28 @@
 #include <Arduino.h>
 #include "esp32/ulp.h"
 #include "driver/rtc_io.h"
+#include "soc/rtc_io_reg.h"
 
 // RTC Memory used for ULP internal variable and Sketch interfacing
 #define RTC_dutyMeter 0
 #define RTC_dir       4
 #define RTC_fadeDelay 12
-// *fadeCycleDelay is used to pass values to ULP and change its behaviour
+// *fadeCycleDelay is used to pass values to ULP and change its behavior
 uint32_t *fadeCycleDelay = &RTC_SLOW_MEM[RTC_fadeDelay];
 #define ULP_START_OFFSET 32
 
 // For ESP32 Arduino, it is usually at offeset 512, defined in sdkconfig
-RTC_DATA_ATTR uint32_t ULP_Started = 0; // 0 or 1
+RTC_DATA_ATTR uint32_t ULP_Started = 0;  // 0 or 1
 
 //Time-to-Sleep
-#define uS_TO_S_FACTOR 1000000ULL  /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  5           /* Time ESP32 will go to sleep (in microseconds); multiplied by above conversion to achieve seconds*/
-
+#define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
+#define TIME_TO_SLEEP  5          /* Time ESP32 will go to sleep (in microseconds); multiplied by above conversion to achieve seconds*/
 
 void ulp_setup() {
   if (ULP_Started) {
     return;
   }
-  *fadeCycleDelay = 5; // 5..200 works fine for a full Fade In + Out cycle
+  *fadeCycleDelay = 5;  // 5..200 works fine for a full Fade In + Out cycle
   ULP_Started = 1;
 
   // GPIO2 initialization (set to output and initial value is 0)
@@ -52,7 +52,7 @@ void ulp_setup() {
     DEC_DUTY,
     INC_DUTY,
   };
-  
+
   // Define ULP program
   const ulp_insn_t ulp_prog[] = {
     // Initial Value setup
@@ -61,7 +61,7 @@ void ulp_setup() {
     I_MOVI(R1, 1),                // R1 = 1
     I_ST(R1, R0, RTC_dir),        // RTC_SLOW_MEM[RTC_dir] = 1
 
-    M_LABEL(INIFINITE_LOOP),      // while(1) {
+    M_LABEL(INIFINITE_LOOP),  // while(1) {
 
     // run certain PWM Duty for about (RTC_fadeDelay x 100) microseconds
     I_MOVI(R3, 0),                //   R3 = 0
@@ -69,32 +69,32 @@ void ulp_setup() {
     M_LABEL(RUN_PWM),             //   do {  // repeat RTC_fadeDelay times:
 
     // execute about 10KHz PWM on GPIO2 using as duty cycle = RTC_SLOW_MEM[RTC_dutyMeter]
-    I_MOVI(R0, 0),                //     R0 = 0
-    I_LD(R0, R0, RTC_dutyMeter),  //     R0 = RTC_SLOW_MEM[RTC_dutyMeter]
-    M_BL(NEXT_PWM_CYCLE, 1),      //     if (R0 > 0) turn on LED
-    I_WR_REG(RTC_GPIO_OUT_W1TS_REG, MeterPWMBit, MeterPWMBit, 1), // W1TS set bit to clear GPIO - GPIO2 on
-    M_LABEL(PWM_ON),              //     while (R0 > 0) // repeat RTC_dutyMeter times:
-    M_BL(NEXT_PWM_CYCLE, 1),      //     {
+    I_MOVI(R0, 0),                                                 //     R0 = 0
+    I_LD(R0, R0, RTC_dutyMeter),                                   //     R0 = RTC_SLOW_MEM[RTC_dutyMeter]
+    M_BL(NEXT_PWM_CYCLE, 1),                                       //     if (R0 > 0) turn on LED
+    I_WR_REG(RTC_GPIO_OUT_W1TS_REG, MeterPWMBit, MeterPWMBit, 1),  // W1TS set bit to clear GPIO - GPIO2 on
+    M_LABEL(PWM_ON),                                               //     while (R0 > 0) // repeat RTC_dutyMeter times:
+    M_BL(NEXT_PWM_CYCLE, 1),                                       //     {
     //I_DELAY(8),                 //       // 8 is about 1 microsecond based on 8MHz
-    I_SUBI(R0, R0, 1),            //       R0 = R0 - 1
-    M_BX(PWM_ON),                 //     }
-    M_LABEL(NEXT_PWM_CYCLE),      //     // toggle GPIO_2
-    I_MOVI(R0, 0),                //     R0 = 0
-    I_LD(R0, R0, RTC_dutyMeter),  //     R0 = RTC_SLOW_MEM[RTC_dutyMeter]
-    I_MOVI(R1, 100),              //     R1 = 100
-    I_SUBR(R0, R1, R0),           //     R0 = 100 - dutyMeter
-    M_BL(END_PWM_CYCLE, 1),       //     if (R0 > 0) turn off LED
-    I_WR_REG(RTC_GPIO_OUT_W1TC_REG, MeterPWMBit, MeterPWMBit, 1), // W1TC set bit to clear GPIO - GPIO2 off
-    M_LABEL(PWM_OFF),             //     while (R0 > 0)  // repeat (100 - RTC_dutyMeter) times:
-    M_BL(END_PWM_CYCLE, 1),       //     {
+    I_SUBI(R0, R0, 1),                                             //       R0 = R0 - 1
+    M_BX(PWM_ON),                                                  //     }
+    M_LABEL(NEXT_PWM_CYCLE),                                       //     // toggle GPIO_2
+    I_MOVI(R0, 0),                                                 //     R0 = 0
+    I_LD(R0, R0, RTC_dutyMeter),                                   //     R0 = RTC_SLOW_MEM[RTC_dutyMeter]
+    I_MOVI(R1, 100),                                               //     R1 = 100
+    I_SUBR(R0, R1, R0),                                            //     R0 = 100 - dutyMeter
+    M_BL(END_PWM_CYCLE, 1),                                        //     if (R0 > 0) turn off LED
+    I_WR_REG(RTC_GPIO_OUT_W1TC_REG, MeterPWMBit, MeterPWMBit, 1),  // W1TC set bit to clear GPIO - GPIO2 off
+    M_LABEL(PWM_OFF),                                              //     while (R0 > 0)  // repeat (100 - RTC_dutyMeter) times:
+    M_BL(END_PWM_CYCLE, 1),                                        //     {
     //I_DELAY(8),                 //       // 8 is about 1us: ULP fetch+execution time
-    I_SUBI(R0, R0, 1),            //       R0 = R0 - 1
-    M_BX(PWM_OFF),                //     }
-    M_LABEL(END_PWM_CYCLE),       //
+    I_SUBI(R0, R0, 1),       //       R0 = R0 - 1
+    M_BX(PWM_OFF),           //     }
+    M_LABEL(END_PWM_CYCLE),  //
 
-    I_SUBI(R3, R3, 1),            //     R3 = R3 - 1  // RTC_fadeDelay
-    I_MOVR(R0, R3),               //     R0 = R3      // only R0 can be used to compare and branch
-    M_BGE(RUN_PWM, 1),            //   } while (R3 > 0)  // ESP32 repeatinf RTC_fadeDelay times
+    I_SUBI(R3, R3, 1),  //     R3 = R3 - 1  // RTC_fadeDelay
+    I_MOVR(R0, R3),     //     R0 = R3      // only R0 can be used to compare and branch
+    M_BGE(RUN_PWM, 1),  //   } while (R3 > 0)  // ESP32 repeatinf RTC_fadeDelay times
 
     // increase/decrease DutyMeter to apply Fade In/Out loop
     I_MOVI(R1, 0),                //   R1 = 0
@@ -102,21 +102,21 @@ void ulp_setup() {
     I_MOVI(R0, 0),                //   R0 = 0
     I_LD(R0, R0, RTC_dir),        //   R0 = RTC_SLOW_MEM[RTC_dir]
 
-    M_BGE(POSITIVE_DIR, 1),                  //   if(dir == 0) { // decrease duty by 2
+    M_BGE(POSITIVE_DIR, 1),  //   if(dir == 0) { // decrease duty by 2
     // Dir is 0, means decrease Duty by 2
     I_MOVR(R0, R1),               //     R0 = Duty
-    M_BGE(DEC_DUTY, 1),                  //     if (duty == 0) { // change direction and increase duty
+    M_BGE(DEC_DUTY, 1),           //     if (duty == 0) { // change direction and increase duty
     I_MOVI(R3, 0),                //       R3 = 0
     I_MOVI(R2, 1),                //       R2 = 1
     I_ST(R2, R3, RTC_dir),        //       RTC_SLOW_MEM[RTC_dir] = 1   // increasing direction
-    M_BX(INC_DUTY),                      //       goto "increase Duty"
-    M_LABEL(DEC_DUTY),                   //     } "decrease Duty":
+    M_BX(INC_DUTY),               //       goto "increase Duty"
+    M_LABEL(DEC_DUTY),            //     } "decrease Duty":
     I_SUBI(R0, R0, 2),            //     Duty -= 2
     I_MOVI(R2, 0),                //     R2 = 0
     I_ST(R0, R2, RTC_dutyMeter),  //     RTC_SLOW_MEM[RTC_dutyMeter] += 2
     M_BX(INIFINITE_LOOP),         // }
 
-    M_LABEL(POSITIVE_DIR),        //   else { // dir == 1 // increase duty by 2
+    M_LABEL(POSITIVE_DIR),  //   else { // dir == 1 // increase duty by 2
     // Dir is 1, means increase Duty by 2
     I_MOVR(R0, R1),               //     R0 = Duty
     M_BL(INC_DUTY, 100),          //     if (duty == 100) { // change direction and decrease duty
@@ -137,29 +137,25 @@ void ulp_setup() {
   ulp_run(ULP_START_OFFSET);
 }
 
-
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}  // wait for Serial to start
 
-  ulp_setup(); // it really only runs on the first ESP32 boot
-  Serial.printf("\nStarted smooth blink with delay %d\n", *fadeCycleDelay);
+  ulp_setup();  // it really only runs on the first ESP32 boot
+  Serial.printf("\nStarted smooth blink with delay %ld\n", *fadeCycleDelay);
 
   // *fadeCycleDelay resides in RTC_SLOW_MEM and persists along deep sleep waking up
   // it is used as a delay time parameter for smooth blinking, in the ULP processing code
   if (*fadeCycleDelay < 195) {
     *fadeCycleDelay += 10;
   } else {
-    *fadeCycleDelay = 5; // 5..200 works fine for a full Fade In + Out cycle
+    *fadeCycleDelay = 5;  // 5..200 works fine for a full Fade In + Out cycle
   }
   Serial.println("Entering in Deep Sleep");
-  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR /*/ 4*/); // time set with variable above
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR /*/ 4*/);  // time set with variable above
   esp_deep_sleep_start();
   // From this point on, no code is executed in DEEP SLEEP mode
 }
 
-
 void loop() {
   // It never reaches this code because it enters in Deep Sleep mode at the end of setup()
 }
-

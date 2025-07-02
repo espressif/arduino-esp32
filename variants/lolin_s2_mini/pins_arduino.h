@@ -4,30 +4,22 @@
 #include <stdint.h>
 
 // Default USB Settings
-#define USB_VID 			0x303a
-#define USB_PID 			0x80C2
-#define USB_MANUFACTURER 	"WEMOS.CC"
-#define USB_PRODUCT 		"LOLIN-S2-MINI"
-#define USB_SERIAL 			"0"
-
+#define USB_VID          0x303a
+#define USB_PID          0x80C2
+#define USB_MANUFACTURER "WEMOS.CC"
+#define USB_PRODUCT      "LOLIN-S2-MINI"
+#define USB_SERIAL       "0"
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID 		"ESP32-S2" 		//max 8 chars
-#define USB_FW_MSC_PRODUCT_ID 		"Firmware MSC"	//max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION	"1.23" 			//max 4 chars
-#define USB_FW_MSC_VOLUME_NAME 		"S2-Firmware" 	//max 11 chars
-#define USB_FW_MSC_SERIAL_NUMBER 	0x00000000
-
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
+#define USB_FW_MSC_VENDOR_ID        "ESP32-S2"      //max 8 chars
+#define USB_FW_MSC_PRODUCT_ID       "Firmware MSC"  //max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.23"          //max 4 chars
+#define USB_FW_MSC_VOLUME_NAME      "S2-Firmware"   //max 11 chars
+#define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 static const uint8_t LED_BUILTIN = 15;
-#define BUILTIN_LED  LED_BUILTIN // backward compatibility
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 39;
 static const uint8_t RX = 37;
@@ -35,10 +27,10 @@ static const uint8_t RX = 37;
 static const uint8_t SDA = 33;
 static const uint8_t SCL = 35;
 
-static const uint8_t SS    = 12;
-static const uint8_t MOSI  = 11;
-static const uint8_t MISO  = 9;
-static const uint8_t SCK   = 7;
+static const uint8_t SS = 12;
+static const uint8_t MOSI = 11;
+static const uint8_t MISO = 9;
+static const uint8_t SCK = 7;
 
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;

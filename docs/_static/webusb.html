@@ -1,0 +1,128 @@
+<!-- Based on https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/subsys/usb/webusb -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Espressif WebUSB Console Example</title>
+  </head>
+
+<body>
+  <script>
+    var serial = {};
+
+    (function() {
+      'use strict';
+
+      serial.getPorts = function() {
+        return navigator.usb.getDevices().then(devices => {
+          return devices.map(device => new serial.Port(device));
+        });
+      };
+
+      serial.requestPort = function() {
+        const filters = [
+          { 'vendorId': 0x10c4, 'productId': 0xea60 },
+          { 'vendorId': 0x303a, 'productId': 0x1001 },
+          { 'vendorId': 0x303a, 'productId': 0x0002 },
+        ];
+        return navigator.usb.requestDevice({ 'filters': filters }).then(
+          device => new serial.Port(device)
+        );
+      }
+
+      serial.Port = function(device) {
+        this.device_ = device;
+      };
+
+      serial.Port.prototype.connect = function() {
+        let readLoop = () => {
+          const {
+            endpointNumber
+          } = this.device_.configuration.interfaces[0].alternate.endpoints[0]
+          this.device_.transferIn(endpointNumber, 64).then(result => {
+            this.onReceive(result.data);
+            readLoop();
+          }, error => {
+            this.onReceiveError(error);
+          });
+        };
+
+        return this.device_.open()
+            .then(() => {
+              if (this.device_.configuration === null) {
+                return this.device_.selectConfiguration(1);
+              }
+            })
+            .then(() => this.device_.claimInterface(0))
+            .then(() => {
+              readLoop();
+            });
+      };
+
+      serial.Port.prototype.disconnect = function() {
+        return this.device_.close();
+      };
+
+      serial.Port.prototype.send = function(data) {
+        const {
+          endpointNumber
+        } = this.device_.configuration.interfaces[0].alternate.endpoints[1]
+        return this.device_.transferOut(endpointNumber, data);
+      };
+    })();
+
+    let port;
+
+    function connect() {
+      port.connect().then(() => {
+        port.onReceive = data => {
+          let textDecoder = new TextDecoder();
+          console.log("Received:", textDecoder.decode(data));
+          document.getElementById('output').value += textDecoder.decode(data);
+        }
+        port.onReceiveError = error => {
+          console.error(error);
+          document.querySelector("#connect").style = "visibility: initial";
+          port.disconnect();
+        };
+      });
+    }
+
+    function send(string) {
+      console.log("sending to serial:" + string.length);
+      if (string.length === 0)
+        return;
+      console.log("sending to serial: [" + string +"]\n");
+
+      let view = new TextEncoder('utf-8').encode(string);
+      console.log(view);
+      if (port) {
+        port.send(view);
+      }
+    };
+
+    window.onload = _ => {
+      document.querySelector("#connect").onclick = function() {
+        serial.requestPort().then(selectedPort => {
+          port = selectedPort;
+          this.style = "visibility: hidden";
+          connect();
+        });
+      }
+
+      document.querySelector("#submit").onclick = () => {
+        let source = document.querySelector("#input").value;
+        send(source);
+      }
+    }
+  </script>
+
+  <button id="connect" style="visibility: initial">Connect To ESP Device</button>
+  <br><br><label for="input">Sender: </label> <br>
+  <textarea id="input" rows="25" cols="80">Send to ESP Device</textarea>
+  <br><button id="submit">Send</button>
+  <br><br>
+  <label for="output">Receiver: </label> <br>
+  <textarea id="output" rows="25" cols="80"></textarea>
+</body>
+</html>

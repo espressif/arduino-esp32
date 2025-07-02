@@ -19,7 +19,7 @@
 #include <qrcode.h>
 
 #define PROV_QR_VERSION "v1"
-#define QRCODE_BASE_URL     "https://rainmaker.espressif.com/qrcode.html"
+#define QRCODE_BASE_URL "https://rainmaker.espressif.com/qrcode.html"
 
 void printQR(const char *name, const char *pop, const char *transport);
 #endif

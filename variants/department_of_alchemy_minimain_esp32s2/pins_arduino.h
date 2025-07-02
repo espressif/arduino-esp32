@@ -2,39 +2,37 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
+#define USB_VID          0x303a
+#define USB_PID          0x80FF
+#define USB_MANUFACTURER "Department of Alchemy"
+#define USB_PRODUCT      "MiniMain ESP32-S2"
+#define USB_SERIAL       ""  // Empty string for MAC address
 
-#define USB_VID            0x303a
-#define USB_PID            0x80FF
-#define USB_MANUFACTURER   "Department of Alchemy"
-#define USB_PRODUCT        "MiniMain ESP32-S2"
-#define USB_SERIAL         "" // Empty string for MAC adddress
+// User LED
+#define LED_BUILTIN 13
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
 
+// RGB LED
+#define PIN_RGB_LED 33
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWritee() for blinking
+#define RGB_BUILTIN    (PIN_RGB_LED + SOC_GPIO_PIN_COUNT)
+#define RGB_BRIGHTNESS 64
 
-#define EXTERNAL_NUM_INTERRUPTS 46
-#define NUM_DIGITAL_PINS        48
-#define NUM_ANALOG_INPUTS       20
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<48)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 46)
-
-#define LED_BUILTIN     13
-
-#define PIN_NEOPIXEL        33
-#define NEOPIXEL_NUM        1     // number of neopixels
-#define NEOPIXEL_POWER      21    // power pin
-#define NEOPIXEL_POWER_ON   HIGH  // power pin state when on
-#define PIN_SERVO           2     // servo pin
-#define PIN_ISOLATED_INPUT  40    // optocoupled input
+#define RGBLED_NUM         1     // number of RGB LEDs
+#define RGBLED_POWER       21    // power pin
+#define RGBLED_POWER_ON    HIGH  // power pin state when on
+#define PIN_SERVO          2     // servo pin
+#define PIN_ISOLATED_INPUT 40    // optocoupled input
 
 static const uint8_t SDA = 3;
 static const uint8_t SCL = 4;
 
-static const uint8_t SS    = 42;
-static const uint8_t MOSI  = 35;
-static const uint8_t SCK   = 36;
-static const uint8_t MISO  = 37;
+static const uint8_t SS = 42;
+static const uint8_t MOSI = 35;
+static const uint8_t SCK = 36;
+static const uint8_t MISO = 37;
 
 static const uint8_t A0 = 18;
 static const uint8_t A1 = 17;
@@ -42,7 +40,6 @@ static const uint8_t A2 = 16;
 static const uint8_t A3 = 15;
 static const uint8_t A4 = 14;
 static const uint8_t A5 = 8;
-
 
 static const uint8_t TX = 39;
 static const uint8_t RX = 38;

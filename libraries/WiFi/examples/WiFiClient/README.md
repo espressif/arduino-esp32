@@ -1,10 +1,10 @@
-# WiFiClient
+# NetworkClient
 
 This example demonstrates reading and writing data from and to a web service which can be used for logging data, creating insights and taking actions based on those data.
 
 # Supported Targets
 
-Currently, this example supports all SoC with WiFi.
+Currently, this example supports all SoC with Wi-Fi.
 
 
 | Supported Targets | ESP32 | ESP32-S2 | ESP32-C3 | ESP32-S3 |
@@ -18,7 +18,7 @@ Please note that this public channel can be accessed by anyone and it is possibl
 
 ### Configure the Project
 
-Change `SSID` and `password` to connect to your WiFi.
+Change `SSID` and `password` to connect to your Wi-Fi.
 Default values will allow you to use this example without any changes. If you want to use your own channel and you don't have one already follow these steps:
 
 * Create an account on [thingspeak.com](https://www.thingspeak.com).
@@ -61,10 +61,6 @@ To get more information about the Espressif boards see [Espressif Development Ki
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
 
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port` option on the `platformio.ini` file.
-
 ## Example Log Output
 
 The initial output which is common for all examples can be ignored:
@@ -79,7 +75,7 @@ load:0x403cc710,len:0x918
 load:0x403ce710,len:0x24e4
 entry 0x403cc710
 ```
-Follows the setup output where connection to your WiFi happens:
+Follows the setup output where connection to your Wi-Fi happens:
 ```
 ******************************************************
 Connecting to your-ssid
@@ -126,7 +122,7 @@ ETag: W/"8e9c308fe2c50309f991586be1aff28d"
 X-Frame-Options: SAMEORIGIN
 
 1e3
-{"channel":{"id":2005329,"name":"WiFiCLient example","description":"Default setup for Arduino ESP32 WiFiClient example","latitude":"0.0","longitude":"0.0","field1":"data0","created_at":"2023-01-11T15:56:08Z","updated_at":"2023-01-13T08:13:58Z","last_entry_id":2871},"feeds":[{"created_at":"2023-01-13T13:11:30Z","entry_id":2869,"field1":"359"},{"created_at":"2023-01-13T13:11:57Z","entry_id":2870,"field1":"361"},{"created_at":"2023-01-13T13:12:23Z","entry_id":2871,"field1":"363"}]}
+{"channel":{"id":2005329,"name":"WiFiCLient example","description":"Default setup for Arduino ESP32 NetworkClient example","latitude":"0.0","longitude":"0.0","field1":"data0","created_at":"2023-01-11T15:56:08Z","updated_at":"2023-01-13T08:13:58Z","last_entry_id":2871},"feeds":[{"created_at":"2023-01-13T13:11:30Z","entry_id":2869,"field1":"359"},{"created_at":"2023-01-13T13:11:57Z","entry_id":2870,"field1":"361"},{"created_at":"2023-01-13T13:12:23Z","entry_id":2871,"field1":"363"}]}
 0
 
 
@@ -139,7 +135,7 @@ After this the write+read log repeat every 10 seconds.
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***
 
-* **WiFi not connected:** Check the SSID and password and also that the signal has sufficient strength.
+* **Wi-Fi not connected:** Check the SSID and password and also that the signal has sufficient strength.
 * **400 Bad Request:** Check the writeApiKey.
 * **404 Not Found:** Check the channel ID.
 * **No data on chart / reading NULL:** Data must be sent as an integer, without commas.

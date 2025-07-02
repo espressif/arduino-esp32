@@ -1,0 +1,73 @@
+#######################################
+# Syntax Coloring Map For OpenThread
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+OThreadCLI	KEYWORD1
+OThread	KEYWORD1
+OpenThreadCLI	KEYWORD1
+OpenThread	KEYWORD1
+DataSet	KEYWORD1
+ot_cmd_return_t	KEYWORD1
+ot_device_role_t	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+startConsole	KEYWORD2
+stopConsole	KEYWORD2
+setPrompt	KEYWORD2
+setEchoBack	KEYWORD2
+setStream	KEYWORD2
+onReceive	KEYWORD2
+begin	KEYWORD2
+setTxBufferSize	KEYWORD2
+setRxBufferSize	KEYWORD2
+write	KEYWORD2
+available	KEYWORD2
+read	KEYWORD2
+peek	KEYWORD2
+flush	KEYWORD2
+otGetDeviceRole	KEYWORD2
+otGetStringDeviceRole	KEYWORD2
+otGetRespCmd	KEYWORD2
+otExecCommand	KEYWORD2
+otPrintRespCLI	KEYWORD2
+otPrintNetworkInformation	KEYWORD2
+clear	KEYWORD2
+initNew	KEYWORD2
+getDataset	KEYWORD2
+setNetworkName	KEYWORD2
+getNetworkName	KEYWORD2
+setExtendedPanId	KEYWORD2
+getExtendedPanId	KEYWORD2
+setNetworkKey	KEYWORD2
+getNetworkKey	KEYWORD2
+setChannel	KEYWORD2
+getChannel	KEYWORD2
+setPanId	KEYWORD2
+getPanId	KEYWORD2
+apply	KEYWORD2
+otStarted	KEYWORD2
+otCLIStarted	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
+networkInterfaceUp	KEYWORD2
+networkInterfaceDown	KEYWORD2
+commitDataSet	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+OT_ROLE_DISABLED	LITERAL1
+OT_ROLE_DETACHED	LITERAL1
+OT_ROLE_CHILD	LITERAL1
+OT_ROLE_ROUTER	LITERAL1
+OT_ROLE_LEADER	LITERAL1
+OT_EXT_PAN_ID_SIZE	LITERAL1
+OT_NETWORK_KEY_SIZE	LITERAL1

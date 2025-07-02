@@ -1,6 +1,6 @@
-# WiFiClientConnect Example
+# NetworkClientConnect Example
 
-This example demonstrates how to connect to the WiFi and manage the status and disconnection from STA.
+This example demonstrates how to connect to the Wi-Fi and manage the status and disconnection from STA.
 
 # Supported Targets
 
@@ -17,10 +17,6 @@ Currently, this example supports the following targets.
 
 * Before Compile/Verify, select the correct board: `Tools -> Board`.
 * Select the COM port: `Tools -> Port: xxx` where the `xxx` is the detected COM port.
-
-#### Using Platform IO
-
-* Select the COM port: `Devices` or set the `upload_port`` option on the `platformio.ini` file.
 
 ## Example/Log Output
 

@@ -20,47 +20,55 @@
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef ESP32WIFISCAN_H_
-#define ESP32WIFISCAN_H_
+#pragma once
+
+#include "soc/soc_caps.h"
+#include "sdkconfig.h"
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include "WiFiType.h"
 #include "WiFiGeneric.h"
 
-class WiFiScanClass
-{
+class WiFiScanClass {
 
 public:
+  void setScanTimeout(uint32_t ms);
+  void setScanActiveMinTime(uint32_t ms);
 
-    int16_t scanNetworks(bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0, const char * ssid=nullptr, const uint8_t * bssid=nullptr);
+  int16_t scanNetworks(
+    bool async = false, bool show_hidden = false, bool passive = false, uint32_t max_ms_per_chan = 300, uint8_t channel = 0, const char *ssid = nullptr,
+    const uint8_t *bssid = nullptr
+  );
 
-    int16_t scanComplete();
-    void scanDelete();
+  int16_t scanComplete();
+  void scanDelete();
 
-    // scan result
-    bool getNetworkInfo(uint8_t networkItem, String &ssid, uint8_t &encryptionType, int32_t &RSSI, uint8_t* &BSSID, int32_t &channel);
+  // scan result
+  bool getNetworkInfo(uint8_t networkItem, String &ssid, uint8_t &encryptionType, int32_t &RSSI, uint8_t *&BSSID, int32_t &channel);
 
-    String SSID(uint8_t networkItem);
-    wifi_auth_mode_t encryptionType(uint8_t networkItem);
-    int32_t RSSI(uint8_t networkItem);
-    uint8_t * BSSID(uint8_t networkItem);
-    String BSSIDstr(uint8_t networkItem);
-    int32_t channel(uint8_t networkItem);
-    static void * getScanInfoByIndex(int i) { return _getScanInfoByIndex(i); }; 
+  String SSID(uint8_t networkItem);
+  wifi_auth_mode_t encryptionType(uint8_t networkItem);
+  int32_t RSSI(uint8_t networkItem);
+  uint8_t *BSSID(uint8_t networkItem, uint8_t *bssid = NULL);
+  String BSSIDstr(uint8_t networkItem);
+  int32_t channel(uint8_t networkItem);
+  static void *getScanInfoByIndex(int i) {
+    return _getScanInfoByIndex(i);
+  };
 
-    static void _scanDone();
+  static void _scanDone();
+
 protected:
+  static bool _scanAsync;
 
-    static bool _scanAsync;
-    
-    static uint32_t _scanStarted;
-    static uint32_t _scanTimeout;
-    static uint16_t _scanCount;
-    
-    static void* _scanResult;
+  static uint32_t _scanStarted;
+  static uint32_t _scanTimeout;
+  static uint16_t _scanCount;
+  static uint32_t _scanActiveMinTime;
 
-    static void * _getScanInfoByIndex(int i);
+  static void *_scanResult;
 
+  static void *_getScanInfoByIndex(int i);
 };
 
-
-#endif /* ESP32WIFISCAN_H_ */
+#endif /* SOC_WIFI_SUPPORTED */

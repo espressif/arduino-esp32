@@ -13,6 +13,9 @@
 // limitations under the License.
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_USB_OTG_SUPPORTED
+
 #include "sdkconfig.h"
 #if CONFIG_TINYUSB_CDC_ENABLED
 
@@ -26,120 +29,116 @@
 ESP_EVENT_DECLARE_BASE(ARDUINO_USB_CDC_EVENTS);
 
 typedef enum {
-    ARDUINO_USB_CDC_ANY_EVENT = ESP_EVENT_ANY_ID,
-    ARDUINO_USB_CDC_CONNECTED_EVENT = 0,
-    ARDUINO_USB_CDC_DISCONNECTED_EVENT,
-    ARDUINO_USB_CDC_LINE_STATE_EVENT,
-    ARDUINO_USB_CDC_LINE_CODING_EVENT,
-    ARDUINO_USB_CDC_RX_EVENT,
-    ARDUINO_USB_CDC_TX_EVENT,
-    ARDUINO_USB_CDC_RX_OVERFLOW_EVENT,
-    ARDUINO_USB_CDC_MAX_EVENT,
+  ARDUINO_USB_CDC_ANY_EVENT = ESP_EVENT_ANY_ID,
+  ARDUINO_USB_CDC_CONNECTED_EVENT = 0,
+  ARDUINO_USB_CDC_DISCONNECTED_EVENT,
+  ARDUINO_USB_CDC_LINE_STATE_EVENT,
+  ARDUINO_USB_CDC_LINE_CODING_EVENT,
+  ARDUINO_USB_CDC_RX_EVENT,
+  ARDUINO_USB_CDC_TX_EVENT,
+  ARDUINO_USB_CDC_RX_OVERFLOW_EVENT,
+  ARDUINO_USB_CDC_MAX_EVENT,
 } arduino_usb_cdc_event_t;
 
 typedef union {
-    struct {
-            bool dtr;
-            bool rts;
-    } line_state;
-    struct {
-            uint32_t bit_rate;
-            uint8_t  stop_bits; ///< 0: 1 stop bit - 1: 1.5 stop bits - 2: 2 stop bits
-            uint8_t  parity;    ///< 0: None - 1: Odd - 2: Even - 3: Mark - 4: Space
-            uint8_t  data_bits; ///< can be 5, 6, 7, 8 or 16
-    } line_coding;
-    struct {
-            size_t len;
-    } rx;
-    struct {
-            size_t dropped_bytes;
-    } rx_overflow;
+  struct {
+    bool dtr;
+    bool rts;
+  } line_state;
+  struct {
+    uint32_t bit_rate;
+    uint8_t stop_bits;  ///< 0: 1 stop bit - 1: 1.5 stop bits - 2: 2 stop bits
+    uint8_t parity;     ///< 0: None - 1: Odd - 2: Even - 3: Mark - 4: Space
+    uint8_t data_bits;  ///< can be 5, 6, 7, 8 or 16
+  } line_coding;
+  struct {
+    size_t len;
+  } rx;
+  struct {
+    size_t dropped_bytes;
+  } rx_overflow;
 } arduino_usb_cdc_event_data_t;
 
-class USBCDC: public Stream
-{
+class USBCDC : public Stream {
 public:
-    USBCDC(uint8_t itf=0);
-    ~USBCDC();
+  USBCDC(uint8_t itf = 0);
+  ~USBCDC();
 
-    void onEvent(esp_event_handler_t callback);
-    void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);
+  void onEvent(esp_event_handler_t callback);
+  void onEvent(arduino_usb_cdc_event_t event, esp_event_handler_t callback);
 
-    size_t setRxBufferSize(size_t size);
-    void setTxTimeoutMs(uint32_t timeout);
-    void begin(unsigned long baud=0);
-    void end();
-    
-    int available(void);
-    int availableForWrite(void);
-    int peek(void);
-    int read(void);
-    size_t read(uint8_t *buffer, size_t size);
-    size_t write(uint8_t);
-    size_t write(const uint8_t *buffer, size_t size);
-    void flush(void);
-    
-    inline size_t read(char * buffer, size_t size)
-    {
-        return read((uint8_t*) buffer, size);
-    }
-    inline size_t write(const char * buffer, size_t size)
-    {
-        return write((uint8_t*) buffer, size);
-    }
-    inline size_t write(const char * s)
-    {
-        return write((uint8_t*) s, strlen(s));
-    }
-    inline size_t write(unsigned long n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(long n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(unsigned int n)
-    {
-        return write((uint8_t) n);
-    }
-    inline size_t write(int n)
-    {
-        return write((uint8_t) n);
-    }
-    uint32_t baudRate();
-    void setDebugOutput(bool);
-    operator bool() const;
+  size_t setRxBufferSize(size_t size);
+  void setTxTimeoutMs(uint32_t timeout);
+  void begin(unsigned long baud = 0);
+  void end();
 
-    void enableReboot(bool enable);
-    bool rebootEnabled(void);
+  int available(void);
+  int availableForWrite(void);
+  int peek(void);
+  int read(void);
+  size_t read(uint8_t *buffer, size_t size);
+  size_t write(uint8_t);
+  size_t write(const uint8_t *buffer, size_t size);
+  void flush(void);
 
-    //internal methods
-    void _onDFU(void);
-    void _onLineState(bool _dtr, bool _rts);
-    void _onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits);
-    void _onRX(void);
-    void _onTX(void);
-    void _onUnplugged(void);
-    
+  inline size_t read(char *buffer, size_t size) {
+    return read((uint8_t *)buffer, size);
+  }
+  inline size_t write(const char *buffer, size_t size) {
+    return write((uint8_t *)buffer, size);
+  }
+  inline size_t write(const char *s) {
+    return write((uint8_t *)s, strlen(s));
+  }
+  inline size_t write(unsigned long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(long n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(unsigned int n) {
+    return write((uint8_t)n);
+  }
+  inline size_t write(int n) {
+    return write((uint8_t)n);
+  }
+  uint32_t baudRate();
+  void setDebugOutput(bool);
+  operator bool() const;
+
+  void enableReboot(bool enable);
+  bool rebootEnabled(void);
+
+  //internal methods
+  void _onDFU(void);
+  void _onLineState(bool _dtr, bool _rts);
+  void _onLineCoding(uint32_t _bit_rate, uint8_t _stop_bits, uint8_t _parity, uint8_t _data_bits);
+  void _onRX(void);
+  void _onTX(void);
+  void _onUnplugged(void);
+
 protected:
-    uint8_t  itf;
-    uint32_t bit_rate;
-    uint8_t  stop_bits; ///< 0: 1 stop bit - 1: 1.5 stop bits - 2: 2 stop bits
-    uint8_t  parity;    ///< 0: None - 1: Odd - 2: Even - 3: Mark - 4: Space
-    uint8_t  data_bits; ///< can be 5, 6, 7, 8 or 16
-    bool     dtr;
-    bool     rts;
-    bool     connected;
-    bool     reboot_enable;
-    xQueueHandle rx_queue;
-    xSemaphoreHandle tx_lock;
-    uint32_t tx_timeout_ms;
-    
+  uint8_t itf;
+  uint32_t bit_rate;
+  uint8_t stop_bits;  ///< 0: 1 stop bit - 1: 1.5 stop bits - 2: 2 stop bits
+  uint8_t parity;     ///< 0: None - 1: Odd - 2: Even - 3: Mark - 4: Space
+  uint8_t data_bits;  ///< can be 5, 6, 7, 8 or 16
+  bool dtr;
+  bool rts;
+  bool connected;
+  bool reboot_enable;
+  QueueHandle_t rx_queue;
+  SemaphoreHandle_t tx_lock;
+  uint32_t tx_timeout_ms;
 };
 
-#if ARDUINO_USB_CDC_ON_BOOT && !ARDUINO_USB_MODE //Serial used for USB CDC
-extern USBCDC Serial;
+#if !ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Native USB CDC selected
+#ifndef USB_SERIAL_IS_DEFINED
+#define USB_SERIAL_IS_DEFINED 1
+#endif
+// USBSerial is always available to be used
+extern USBCDC USBSerial;
 #endif
 
 #endif /* CONFIG_TINYUSB_CDC_ENABLED */
+#endif /* SOC_USB_OTG_SUPPORTED */

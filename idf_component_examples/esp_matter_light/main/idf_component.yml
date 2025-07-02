@@ -1,0 +1,12 @@
+dependencies:
+  espressif/esp_matter:
+    version: ">=1.3.0"
+  # Adds Arduino Core from GitHub repository using main branch
+  espressif/arduino-esp32:
+    version: ">=3.0.5"
+    override_path: "../../../"
+    pre_release: true
+
+    # testing - using Arduino from the repository
+    # version: "master"  # branch or commit
+    # git: https://github.com/espressif/arduino-esp32.git

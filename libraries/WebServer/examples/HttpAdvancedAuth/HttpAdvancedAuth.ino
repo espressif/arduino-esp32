@@ -9,15 +9,15 @@
 #include <ArduinoOTA.h>
 #include <WebServer.h>
 
-const char* ssid = "........";
-const char* password = "........";
+const char *ssid = "........";
+const char *password = "........";
 
 WebServer server(80);
 
-const char* www_username = "admin";
-const char* www_password = "esp32";
+const char *www_username = "admin";
+const char *www_password = "esp32";
 // allows you to set the realm of authentication Default:"Login Required"
-const char* www_realm = "Custom Auth Realm";
+const char *www_realm = "Custom Auth Realm";
 // the Content of the HTML response in case of Unautherized Access Default:empty
 String authFailResponse = "Authentication Failed";
 
@@ -34,13 +34,13 @@ void setup() {
 
   server.on("/", []() {
     if (!server.authenticate(www_username, www_password))
-      //Basic Auth Method with Custom realm and Failure Response
-      //return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
-      //Digest Auth Method with realm="Login Required" and empty Failure Response
-      //return server.requestAuthentication(DIGEST_AUTH);
-      //Digest Auth Method with Custom realm and empty Failure Response
-      //return server.requestAuthentication(DIGEST_AUTH, www_realm);
-      //Digest Auth Method with Custom realm and Failure Response
+    //Basic Auth Method with Custom realm and Failure Response
+    //return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+    //Digest Auth Method with realm="Login Required" and empty Failure Response
+    //return server.requestAuthentication(DIGEST_AUTH);
+    //Digest Auth Method with Custom realm and empty Failure Response
+    //return server.requestAuthentication(DIGEST_AUTH, www_realm);
+    //Digest Auth Method with Custom realm and Failure Response
     {
       return server.requestAuthentication(DIGEST_AUTH, www_realm, authFailResponse);
     }
@@ -56,5 +56,5 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

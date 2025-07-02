@@ -1,7 +1,60 @@
 #!/bin/bash
 
-function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
-    while [ ! -z "$1" ]; do
+if [ -d "$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs" ]; then
+    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
+elif [ -d "$GITHUB_WORKSPACE/tools/esp32-arduino-libs" ]; then
+    SDKCONFIG_DIR="$GITHUB_WORKSPACE/tools/esp32-arduino-libs"
+else
+    SDKCONFIG_DIR="tools/esp32-arduino-libs"
+fi
+
+function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
+    local sketchdir=$1
+    local sdkconfig_path=$2
+    local has_requirements=1
+    local requirements
+    local requirements_or
+
+    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.json" ]; then
+        echo "WARNING: sdkconfig or ci.json not found. Assuming requirements are met." 1>&2
+        # Return 1 on error to force the sketch to be built and fail. This way the
+        # CI will fail and the user will know that the sketch has a problem.
+    else
+        # Check if the sketch requires any configuration options (AND)
+        requirements=$(jq -r '.requires[]? // empty' "$sketchdir/ci.json")
+        if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
+            for requirement in $requirements; do
+                requirement=$(echo "$requirement" | xargs)
+                found_line=$(grep -E "^$requirement" "$sdkconfig_path")
+                if [[ "$found_line" == "" ]]; then
+                    has_requirements=0
+                fi
+            done
+        fi
+
+        # Check if the sketch requires any configuration options (OR)
+        requirements_or=$(jq -r '.requires_any[]? // empty' "$sketchdir/ci.json")
+        if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
+            local found=false
+            for requirement in $requirements_or; do
+                requirement=$(echo "$requirement" | xargs)
+                found_line=$(grep -E "^$requirement" "$sdkconfig_path")
+                if [[ "$found_line" != "" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            if [[ "$found" == "false" ]]; then
+                has_requirements=0
+            fi
+        fi
+    fi
+
+    echo $has_requirements
+}
+
+function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
+    while [ -n "$1" ]; do
         case "$1" in
         -ai )
             shift
@@ -27,6 +80,18 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             shift
             sketchdir=$1
             ;;
+        -i )
+            shift
+            chunk_index=$1
+            ;;
+        -l )
+            shift
+            log_compilation=$1
+            ;;
+        -d )
+            shift
+            debug_level="DebugLevel=$1"
+            ;;
         * )
             break
             ;;
@@ -34,9 +99,10 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         shift
     done
 
-    xtra_opts=$*
+    xtra_opts=("$@")
+    len=0
 
-    if [ -z $sketchdir ]; then
+    if [ -z "$sketchdir" ]; then
         echo "ERROR: Sketch directory not provided"
         echo "$USAGE"
         exit 1
@@ -44,8 +110,8 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
 
     # No FQBN was passed, try to get it from other options
 
-    if [ -z $fqbn ]; then
-        if [ -z $target ]; then
+    if [ -z "$fqbn" ]; then
+        if [ -z "$target" ]; then
             echo "ERROR: Unspecified chip"
             echo "$USAGE"
             exit 1
@@ -56,40 +122,78 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ -z $options ] && [ -f $sketchdir/cfg.json ]; then
+        if [ -z "$options" ] && [ -f "$sketchdir"/ci.json ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
-            len=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn | length' $sketchdir/cfg.json`
-            fqbn=`jq -r --arg chip $target '.targets[] | select(.name==$chip) | .fqbn' $sketchdir/cfg.json`
-        else
+            len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+            if [ "$len" -gt 0 ]; then
+                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | sort' "$sketchdir"/ci.json)
+            fi
+        fi
+
+        if [ -n "$options" ] || [ "$len" -eq 0 ]; then
             # Since we are passing options, we will end up with only one FQBN to
             # build.
 
             len=1
 
-            # Default FQBN options if none were passed in the command line.
+            if [ -f "$sketchdir"/ci.json ]; then
+                fqbn_append=$(jq -r '.fqbn_append' "$sketchdir"/ci.json)
+                if [ "$fqbn_append" == "null" ]; then
+                    fqbn_append=""
+                fi
+            fi
 
-            esp32_opts="PSRAM=enabled,PartitionScheme=huge_app"
-            esp32s2_opts="PSRAM=enabled,PartitionScheme=huge_app"
-            esp32s3_opts="PSRAM=opi,USBMode=default,PartitionScheme=huge_app"
-            esp32c3_opts="PartitionScheme=huge_app"
+            # Default FQBN options if none were passed in the command line.
+            # Replace any double commas with a single one and strip leading and
+            # trailing commas.
+
+            esp32_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s2_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s3_opts=$(echo "PSRAM=opi,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c3_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
 
+            opt=""
+
             case "$target" in
                 "esp32")
-                    fqbn="espressif:esp32:esp32:${options:-$esp32_opts}"
+                    [ -n "${options:-$esp32_opts}" ] && opt=":${options:-$esp32_opts}"
+                    fqbn="espressif:esp32:esp32$opt"
                 ;;
                 "esp32s2")
-                    fqbn="espressif:esp32:esp32s2:${options:-$esp32s2_opts}"
+                    [ -n "${options:-$esp32s2_opts}" ] && opt=":${options:-$esp32s2_opts}"
+                    fqbn="espressif:esp32:esp32s2$opt"
                 ;;
                 "esp32c3")
-                    fqbn="espressif:esp32:esp32c3:${options:-$esp32c3_opts}"
+                    [ -n "${options:-$esp32c3_opts}" ] && opt=":${options:-$esp32c3_opts}"
+                    fqbn="espressif:esp32:esp32c3$opt"
                 ;;
                 "esp32s3")
-                    fqbn="espressif:esp32:esp32s3:${options:-$esp32s3_opts}"
+                    [ -n "${options:-$esp32s3_opts}" ] && opt=":${options:-$esp32s3_opts}"
+                    fqbn="espressif:esp32:esp32s3$opt"
+                ;;
+                "esp32c6")
+                    [ -n "${options:-$esp32c6_opts}" ] && opt=":${options:-$esp32c6_opts}"
+                    fqbn="espressif:esp32:esp32c6$opt"
+                ;;
+                "esp32h2")
+                    [ -n "${options:-$esp32h2_opts}" ] && opt=":${options:-$esp32h2_opts}"
+                    fqbn="espressif:esp32:esp32h2$opt"
+                ;;
+                "esp32p4")
+                    [ -n "${options:-$esp32p4_opts}" ] && opt=":${options:-$esp32p4_opts}"
+                    fqbn="espressif:esp32:esp32p4$opt"
+                ;;
+                *)
+                    echo "ERROR: Invalid chip: $target"
+                    exit 1
                 ;;
             esac
 
@@ -105,11 +209,11 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     fi
 
     if [ -z "$fqbn" ]; then
-        echo "No FQBN passed or unvalid chip: $target"
+        echo "No FQBN passed or invalid chip: $target"
         exit 1
     fi
 
-    # The directory that will hold all the artifcats (the build directory) is
+    # The directory that will hold all the artifacts (the build directory) is
     # provided through:
     #  1. An env variable called ARDUINO_BUILD_DIR.
     #  2. Created at the sketch level as "build" in the case of a single
@@ -117,54 +221,109 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
     #  3. Created at the sketch level as "buildX" where X is the number
     #     of configuration built in case of a multiconfiguration test.
 
-    sketchname=$(basename $sketchdir)
-    
+    sketchname=$(basename "$sketchdir")
+    local has_requirements
+
+    if [ -f "$sketchdir"/ci.json ]; then
+        # If the target is listed as false, skip the sketch. Otherwise, include it.
+        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+        if [[ "$is_target" == "false" ]]; then
+            echo "Skipping $sketchname for target $target"
+            exit 0
+        fi
+
+        has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+        if [ "$has_requirements" == "0" ]; then
+            echo "Target $target does not meet the requirements for $sketchname. Skipping."
+            exit 0
+        fi
+    fi
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
-    elif [ $len -eq 1 ]; then
+    elif [ "$len" -eq 1 ]; then
         # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$sketchname/build.tmp"
+        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
     fi
 
-    mkdir -p "$ARDUINO_CACHE_DIR"
-    for i in `seq 0 $(($len - 1))`
-    do
-        if [ $len -ne 1 ]; then
-          # build_dir="$sketchdir/build$i"
-          build_dir="$HOME/.arduino/tests/$sketchname/build$i.tmp"
-        fi
-        rm -rf $build_dir
-        mkdir -p $build_dir
+    output_file="$HOME/.arduino/cli_compile_output.txt"
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
 
-        currfqbn=`echo $fqbn | jq -r --argjson i $i '.[$i]'`
+    mkdir -p "$ARDUINO_CACHE_DIR"
+    for i in $(seq 0 $((len - 1))); do
+        if [ "$len" -ne 1 ]; then
+            # build_dir="$sketchdir/build$i"
+            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
+        fi
+        rm -rf "$build_dir"
+        mkdir -p "$build_dir"
+
+        currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')
 
         if [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
 
-            curroptions=`echo "$currfqbn" | cut -d':' -f4`
-            currfqbn=`echo "$currfqbn" | cut -d':' -f1-3`
-            $ide_path/arduino-cli compile \
+            curroptions=$(echo "$currfqbn" | cut -d':' -f4)
+            currfqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
+            "$ide_path"/arduino-cli compile \
                 --fqbn "$currfqbn" \
                 --board-options "$curroptions" \
                 --warnings "all" \
-                --build-cache-path "$ARDUINO_CACHE_DIR" \
+                --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-path "$build_dir" \
-                $xtra_opts "${sketchdir}"
+                "${xtra_opts[@]}" "${sketchdir}" \
+                2>&1 | tee "$output_file"
+
+            exit_status=${PIPESTATUS[0]}
+            if [ "$exit_status" -ne 0 ]; then
+                echo "ERROR: Compilation failed with error code $exit_status"
+                exit "$exit_status"
+            fi
+
+            if [ -n "$log_compilation" ]; then
+                #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
+                flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
+                flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $5}' | tr -d '(%)')
+                ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
+                ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
+
+                # Extract the directory path excluding the filename
+                directory_path=$(dirname "$sketch")
+                # Define the constant part
+                constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
+                # Extract the desired substring
+                lib_sketch_name="${directory_path#"$constant_part"}"
+                #append json file where key is fqbn, sketch name, sizes -> extracted values
+                echo "{\"name\": \"$lib_sketch_name\",
+                    \"sizes\": [{
+                            \"flash_bytes\": $flash_bytes,
+                            \"flash_percentage\": $flash_percentage,
+                            \"ram_bytes\": $ram_bytes,
+                            \"ram_percentage\": $ram_percentage
+                            }]
+                    }," >> "$sizes_file"
+            fi
+
         elif [ -f "$ide_path/arduino-builder" ]; then
             echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
             echo "Build path = $build_dir"
 
-            $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
-                -fqbn=\"$currfqbn\" \
+            "$ide_path"/arduino-builder -compile -logger=human -core-api-version=10810 \
+                -fqbn=\""$currfqbn"\" \
                 -warnings="all" \
                 -tools "$ide_path/tools-builder" \
                 -hardware "$user_path/hardware" \
                 -libraries "$user_path/libraries" \
                 -build-cache "$ARDUINO_CACHE_DIR" \
                 -build-path "$build_dir" \
-                $xtra_opts "${sketchdir}/${sketchname}.ino"
+                "${xtra_opts[@]}" "${sketchdir}/${sketchname}.ino"
 
+            exit_status=$?
+            if [ $exit_status -ne 0 ]; then
+                echo "ERROR: Compilation failed with error code $exit_status"
+                exit $exit_status
+            fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
             #     -warnings="all" \
@@ -179,48 +338,72 @@ function build_sketch(){ # build_sketch <ide_path> <user_path> <path-to-ino> [ex
             #     $xtra_opts "${sketchdir}/${sketchname}.ino"
         fi
     done
+
     unset fqbn
     unset xtra_opts
     unset options
 }
 
-function count_sketches(){ # count_sketches <path> [target]
+function count_sketches { # count_sketches <path> [target] [file] [ignore-requirements]
     local path=$1
     local target=$2
+    local ignore_requirements=$3
+    local file=$4
+    local sketches
 
     if [ $# -lt 1 ]; then
-      echo "ERROR: Illegal number of parameters"
-      echo "USAGE: ${0} count <path> [target]"
+        echo "ERROR: Illegal number of parameters"
+        echo "USAGE: ${0} count <path> [target]"
     fi
 
     rm -rf sketches.txt
+    touch sketches.txt
     if [ ! -d "$path" ]; then
-        touch sketches.txt
         return 0
     fi
 
-    local sketches=$(find $path -name *.ino | sort)
+    if [ -f "$file" ]; then
+        sketches=$(cat "$file")
+    else
+        sketches=$(find "$path" -name '*.ino' | sort)
+    fi
+
     local sketchnum=0
     for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        local sketchname=$(basename $sketch)
+        local sketchdir
+        local sketchdirname
+        local sketchname
+        local has_requirements
+
+        sketchdir=$(dirname "$sketch")
+        sketchdirname=$(basename "$sketchdir")
+        sketchname=$(basename "$sketch")
+
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f "$sketchdir/.skip.$target" ]]; then
-            continue
-        else
-            echo $sketch >> sketches.txt
-            sketchnum=$(($sketchnum + 1))
+        elif [[ -n $target ]] && [[ -f $sketchdir/ci.json ]]; then
+            # If the target is listed as false, skip the sketch. Otherwise, include it.
+            is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+            if [[ "$is_target" == "false" ]]; then
+                continue
+            fi
+
+            if [ "$ignore_requirements" != "1" ]; then
+                has_requirements=$(check_requirements "$sketchdir" "$SDKCONFIG_DIR/$target/sdkconfig")
+                if [ "$has_requirements" == "0" ]; then
+                    continue
+                fi
+            fi
         fi
+        echo "$sketch" >> sketches.txt
+        sketchnum=$((sketchnum + 1))
     done
     return $sketchnum
 }
 
-function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
-
-    local args=""
-    while [ ! -z "$1" ]; do
+function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
+    local args=()
+    while [ -n "$1" ]; do
         case $1 in
         -ai )
             shift
@@ -233,12 +416,12 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         -t )
             shift
             target=$1
-            args+=" -t $target"
+            args+=("-t" "$target")
             ;;
         -fqbn )
             shift
             fqbn=$1
-            args+=" -fqbn $fqbn"
+            args+=("-fqbn" "$fqbn")
             ;;
         -p )
             shift
@@ -252,6 +435,19 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
             shift
             chunk_max=$1
             ;;
+        -l )
+            shift
+            log_compilation=$1
+            ;;
+        -f )
+            shift
+            sketches_file=$1
+            ;;
+        -d )
+            shift
+            debug_level="$1"
+            args+=("-d" "$debug_level")
+            ;;
         * )
             break
             ;;
@@ -259,10 +455,10 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         shift
     done
 
-    local xtra_opts=$*
+    local xtra_opts=("$@")
 
-    if [ -z $chunk_index ] || [ -z $chunk_max ]; then
-        echo "ERROR: Invalid chunk paramters"
+    if [ -z "$chunk_index" ] || [ -z "$chunk_max" ]; then
+        echo "ERROR: Invalid chunk parameters"
         echo "$USAGE"
         exit 1
     fi
@@ -272,21 +468,29 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         return 1
     fi
 
-    if [ "$chunk_index" -gt "$chunk_max" ] &&  [ "$chunk_max" -ge 2 ]; then
+    if [ "$chunk_index" -gt "$chunk_max" ] && [ "$chunk_max" -ge 2 ]; then
         chunk_index=$chunk_max
     fi
 
     set +e
-    count_sketches "$path" "$target"
-    local sketchcount=$?
+    if [ -n "$sketches_file" ]; then
+        count_sketches "$path" "$target" "0" "$sketches_file"
+        local sketchcount=$?
+    else
+        count_sketches "$path" "$target"
+        local sketchcount=$?
+    fi
     set -e
-    local sketches=$(cat sketches.txt)
+    local sketches
+    sketches=$(cat sketches.txt)
     rm -rf sketches.txt
 
-    local chunk_size=$(( $sketchcount / $chunk_max ))
-    local all_chunks=$(( $chunk_max * $chunk_size ))
+    local chunk_size
+    local all_chunks
+    chunk_size=$(( sketchcount / chunk_max ))
+    all_chunks=$(( chunk_max * chunk_size ))
     if [ "$all_chunks" -lt "$sketchcount" ]; then
-        chunk_size=$(( $chunk_size + 1 ))
+        chunk_size=$(( chunk_size + 1 ))
     fi
 
     local start_index=0
@@ -295,19 +499,20 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
         start_index=$chunk_index
         end_index=$sketchcount
     else
-        start_index=$(( $chunk_index * $chunk_size ))
+        start_index=$(( chunk_index * chunk_size ))
         if [ "$sketchcount" -le "$start_index" ]; then
-            echo "Skipping job"
+            echo "No sketches to build for $target in this chunk"
             return 0
         fi
 
-        end_index=$(( $(( $chunk_index + 1 )) * $chunk_size ))
+        end_index=$(( $(( chunk_index + 1 )) * chunk_size ))
         if [ "$end_index" -gt "$sketchcount" ]; then
             end_index=$sketchcount
         fi
     fi
 
-    local start_num=$(( $start_index + 1 ))
+    local start_num
+    start_num=$(( start_index + 1 ))
     echo "Found $sketchcount Sketches for target '$target'";
     echo "Chunk Index : $chunk_index"
     echo "Chunk Count : $chunk_max"
@@ -315,53 +520,89 @@ function build_sketches(){ # build_sketches <ide_path> <user_path> <target> <pat
     echo "Start Sketch: $start_num"
     echo "End Sketch  : $end_index"
 
+    #if fqbn is not passed then set it to default for compilation log
+    if [ -z "$fqbn" ]; then
+        log_fqbn="espressif:esp32:$target"
+    else
+        log_fqbn=$fqbn
+    fi
+
+    sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
+    if [ -n "$log_compilation" ]; then
+        #echo board,target and start of sketches to sizes_file json
+        echo "{ \"board\": \"$log_fqbn\",
+                \"target\": \"$target\",
+                \"sketches\": [" >> "$sizes_file"
+    fi
+
     local sketchnum=0
-    args+=" -ai $ide_path -au $user_path"
+    args+=("-ai" "$ide_path" "-au" "$user_path" "-i" "$chunk_index")
+    if [ -n "$log_compilation" ]; then
+        args+=("-l" "$log_compilation")
+    fi
     for sketch in $sketches; do
-        local sketchdir=$(dirname $sketch)
-        local sketchdirname=$(basename $sketchdir)
-        sketchnum=$(($sketchnum + 1))
+        local sketchdir
+        local sketchdirname
+
+        sketchdir=$(dirname "$sketch")
+        sketchdirname=$(basename "$sketchdir")
+        sketchnum=$((sketchnum + 1))
+
         if [ "$sketchnum" -le "$start_index" ] \
         || [ "$sketchnum" -gt "$end_index" ]; then
             continue
         fi
         echo ""
-        echo "Building Sketch Index $(($sketchnum - 1)) - $sketchdirname"
-        build_sketch $args -s $sketchdir $xtra_opts
+        echo "Building Sketch Index $sketchnum - $sketchdirname"
+        build_sketch "${args[@]}" -s "$sketchdir" "${xtra_opts[@]}"
         local result=$?
         if [ $result -ne 0 ]; then
             return $result
         fi
     done
+
+    if [ -n "$log_compilation" ]; then
+        #remove last comma from json
+        if [ "$i" -eq $((len - 1)) ]; then
+            sed -i '$ s/.$//' "$sizes_file"
+        fi
+        #echo end of sketches sizes_file json
+        echo "]" >> "$sizes_file"
+        #echo end of board sizes_file json
+        echo "}," >> "$sizes_file"
+    fi
+
     return 0
 }
 
 USAGE="
 USAGE: ${0} [command] [options]
 Available commands:
-  count: Count sketches.
-  build: Build a sketch.
-  chunk_build: Build a chunk of sketches.
+    count: Count sketches.
+    build: Build a sketch.
+    chunk_build: Build a chunk of sketches.
+    check_requirements: Check if target meets sketch requirements.
 "
 
 cmd=$1
 shift
-if [ -z $cmd ]; then
+if [ -z "$cmd" ]; then
     echo "ERROR: No command supplied"
     echo "$USAGE"
     exit 2
 fi
 
 case "$cmd" in
-    "count") count_sketches $*
+    "count") count_sketches "$@"
     ;;
-    "build") build_sketch $*
+    "build") build_sketch "$@"
     ;;
-    "chunk_build") build_sketches $*
+    "chunk_build") build_sketches "$@"
+    ;;
+    "check_requirements") check_requirements "$@"
     ;;
     *)
         echo "ERROR: Unrecognized command"
         echo "$USAGE"
         exit 2
 esac
-

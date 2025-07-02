@@ -1,0 +1,42 @@
+menu "Light Matter Accessory"
+    menu "On Board Light ON/OFF Button"
+        config BUTTON_PIN
+            int
+            prompt "Button 1 GPIO"
+            default 9 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32C6
+            default 0
+            range -1 ENV_GPIO_IN_RANGE_MAX
+            help
+                The GPIO pin for button that will be used to turn on/off the Matter Light. It shall be connected to a push button. It can use the BOOT button of the development board.
+    endmenu
+
+    menu "LEDs"
+        config WS2812_PIN
+            int
+            prompt "WS2812 RGB LED GPIO"
+            default 8 if IDF_TARGET_ESP32C3 || IDF_TARGET_ESP32C6
+            default 48
+            range -1 ENV_GPIO_OUT_RANGE_MAX
+            help
+                The GPIO pin for the Matter Light that will be driven by RMT. It shall be connected to one single WS2812 RGB LED.
+    endmenu
+
+    config ENV_GPIO_RANGE_MIN
+        int
+        default 0
+
+    config ENV_GPIO_RANGE_MAX
+        int
+        default 19 if IDF_TARGET_ESP32C3
+        default 30 if IDF_TARGET_ESP32C6
+        default 48
+
+    config ENV_GPIO_IN_RANGE_MAX
+        int
+        default ENV_GPIO_RANGE_MAX
+
+    config ENV_GPIO_OUT_RANGE_MAX
+        int
+        default ENV_GPIO_RANGE_MAX
+
+endmenu

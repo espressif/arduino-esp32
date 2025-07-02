@@ -14,6 +14,9 @@
 
 #pragma once
 
+#include "soc/soc_caps.h"
+#if SOC_I2C_SUPPORT_SLAVE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,9 +25,9 @@ extern "C" {
 #include "stddef.h"
 #include "esp_err.h"
 
-typedef void (*i2c_slave_request_cb_t) (uint8_t num, void * arg);
-typedef void (*i2c_slave_receive_cb_t) (uint8_t num, uint8_t * data, size_t len, bool stop, void * arg);
-esp_err_t i2cSlaveAttachCallbacks(uint8_t num, i2c_slave_request_cb_t request_callback, i2c_slave_receive_cb_t receive_callback, void * arg);
+typedef void (*i2c_slave_request_cb_t)(uint8_t num, void *arg);
+typedef void (*i2c_slave_receive_cb_t)(uint8_t num, uint8_t *data, size_t len, bool stop, void *arg);
+esp_err_t i2cSlaveAttachCallbacks(uint8_t num, i2c_slave_request_cb_t request_callback, i2c_slave_receive_cb_t receive_callback, void *arg);
 
 esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t frequency, size_t rx_len, size_t tx_len);
 esp_err_t i2cSlaveDeinit(uint8_t num);
@@ -33,3 +36,5 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_I2C_SUPPORT_SLAVE */

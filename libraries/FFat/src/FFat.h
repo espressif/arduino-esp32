@@ -17,31 +17,27 @@
 #include "FS.h"
 #include "wear_levelling.h"
 
-#define FFAT_WIPE_QUICK 0
-#define FFAT_WIPE_FULL 1
+#define FFAT_WIPE_QUICK      0
+#define FFAT_WIPE_FULL       1
 #define FFAT_PARTITION_LABEL "ffat"
 
-namespace fs
-{
+namespace fs {
 
-class F_Fat : public FS
-{
+class F_Fat : public FS {
 public:
-    F_Fat(FSImplPtr impl);
-    bool begin(bool formatOnFail=false, const char * basePath="/ffat", uint8_t maxOpenFiles=10, const char * partitionLabel = (char*)FFAT_PARTITION_LABEL);
-    bool format(bool full_wipe = FFAT_WIPE_QUICK, char* partitionLabel = (char*)FFAT_PARTITION_LABEL);
-    size_t totalBytes();
-    size_t usedBytes();
-    size_t freeBytes();
-    void end();
-    bool exists(const char* path);
-    bool exists(const String& path);
+  F_Fat(FSImplPtr impl);
+  bool begin(bool formatOnFail = false, const char *basePath = "/ffat", uint8_t maxOpenFiles = 10, const char *partitionLabel = (char *)FFAT_PARTITION_LABEL);
+  bool format(bool full_wipe = FFAT_WIPE_QUICK, char *partitionLabel = (char *)FFAT_PARTITION_LABEL);
+  size_t totalBytes();
+  size_t usedBytes();
+  size_t freeBytes();
+  void end();
 
 private:
-    wl_handle_t _wl_handle = WL_INVALID_HANDLE;
+  wl_handle_t _wl_handle = WL_INVALID_HANDLE;
 };
 
-}
+}  // namespace fs
 
 extern fs::F_Fat FFat;
 

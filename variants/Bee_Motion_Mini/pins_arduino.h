@@ -3,22 +3,25 @@
 
 #include <stdint.h>
 
-
-#define EXTERNAL_NUM_INTERRUPTS 4
-#define NUM_DIGITAL_PINS        4
-#define NUM_ANALOG_INPUTS       2
-
-#define analogInputToDigitalPin(p)  (((p)<6)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<22)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 22)
-
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
 
 static const uint8_t BOOT_BTN = 9;
 static const uint8_t PIR = 5;
 
+static const uint8_t SDA = 8;
+static const uint8_t SCL = 9;
 
+static const uint8_t SS = 7;
+static const uint8_t MOSI = 6;
+static const uint8_t MISO = 5;
+static const uint8_t SCK = 4;
+
+static const uint8_t A0 = 0;
+static const uint8_t A1 = 1;
+static const uint8_t A2 = 2;
+static const uint8_t A3 = 3;
+static const uint8_t A4 = 4;
+static const uint8_t A5 = 5;
 
 #endif /* Pins_Arduino_h */
-

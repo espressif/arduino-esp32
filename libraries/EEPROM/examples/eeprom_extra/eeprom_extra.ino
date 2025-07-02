@@ -14,7 +14,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\nTesting EEPROM Library\n");
   if (!EEPROM.begin(1000)) {
-    Serial.println("Failed to initialise EEPROM");
+    Serial.println("Failed to initialize EEPROM");
     Serial.println("Restarting...");
     delay(1000);
     ESP.restart();
@@ -22,38 +22,38 @@ void setup() {
 
   int address = 0;
 
-  EEPROM.writeByte(address, -128);                  // -2^7
+  EEPROM.writeByte(address, -128);  // -2^7
   address += sizeof(byte);
 
-  EEPROM.writeChar(address, 'A');                   // Same as writyByte and readByte
+  EEPROM.writeChar(address, 'A');  // Same as writyByte and readByte
   address += sizeof(char);
 
-  EEPROM.writeUChar(address, 255);                  // 2^8 - 1
+  EEPROM.writeUChar(address, 255);  // 2^8 - 1
   address += sizeof(unsigned char);
 
-  EEPROM.writeShort(address, -32768);               // -2^15
+  EEPROM.writeShort(address, -32768);  // -2^15
   address += sizeof(short);
 
-  EEPROM.writeUShort(address, 65535);               // 2^16 - 1
+  EEPROM.writeUShort(address, 65535);  // 2^16 - 1
   address += sizeof(unsigned short);
 
-  EEPROM.writeInt(address, -2147483648);            // -2^31
+  EEPROM.writeInt(address, -2147483648);  // -2^31
   address += sizeof(int);
 
-  EEPROM.writeUInt(address, 4294967295);            // 2^32 - 1
+  EEPROM.writeUInt(address, 4294967295);  // 2^32 - 1
   address += sizeof(unsigned int);
 
-  EEPROM.writeLong(address, -2147483648);           // Same as writeInt and readInt
+  EEPROM.writeLong(address, -2147483648);  // Same as writeInt and readInt
   address += sizeof(long);
 
-  EEPROM.writeULong(address, 4294967295);           // Same as writeUInt and readUInt
+  EEPROM.writeULong(address, 4294967295);  // Same as writeUInt and readUInt
   address += sizeof(unsigned long);
 
-  int64_t value = -1223372036854775808LL;             // -2^63
+  int64_t value = -1223372036854775808LL;  // -2^63
   EEPROM.writeLong64(address, value);
   address += sizeof(int64_t);
 
-  uint64_t  Value = 18446744073709551615ULL;           // 2^64 - 1
+  uint64_t Value = 18446744073709551615ULL;  // 2^64 - 1
   EEPROM.writeULong64(address, Value);
   address += sizeof(uint64_t);
 
@@ -77,7 +77,7 @@ void setup() {
   // See also the general purpose writeBytes() and readBytes() for BLOB in EEPROM library
   EEPROM.commit();
   address = 0;
-  
+
   Serial.println(EEPROM.readByte(address));
   address += sizeof(byte);
 
@@ -107,14 +107,14 @@ void setup() {
 
   value = 0;
   value = EEPROM.readLong64(value);
-  Serial.printf("0x%08X", (uint32_t)(value >> 32)); // Print High 4 bytes in HEX
-  Serial.printf("%08X\n", (uint32_t)value);         // Print Low 4 bytes in HEX
+  Serial.printf("0x%08lX", (uint32_t)(value >> 32));  // Print High 4 bytes in HEX
+  Serial.printf("%08lX\n", (uint32_t)value);          // Print Low 4 bytes in HEX
   address += sizeof(int64_t);
 
-  Value = 0;                                        // Clear Value
+  Value = 0;  // Clear Value
   Value = EEPROM.readULong64(Value);
-  Serial.printf("0x%08X", (uint32_t)(Value >> 32)); // Print High 4 bytes in HEX
-  Serial.printf("%08X\n", (uint32_t)Value);         // Print Low 4 bytes in HEX
+  Serial.printf("0x%08lX", (uint32_t)(Value >> 32));  // Print High 4 bytes in HEX
+  Serial.printf("%08lX\n", (uint32_t)Value);          // Print Low 4 bytes in HEX
   address += sizeof(uint64_t);
 
   Serial.println(EEPROM.readFloat(address), 4);
@@ -135,5 +135,4 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-
 }

@@ -1,0 +1,79 @@
+# CODEOWNERS for ESP32 Arduino Core
+
+# This file is used to specify the code owners for the ESP32 Arduino Core.
+# Read more about CODEOWNERS:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Note that order matters. The last matching pattern will be used.
+
+# The default owners are the active developers of the ESP32 Arduino Core.
+# Refrain from using @espressif/arduino-esp32 to avoid spamming non-developers with review requests.
+* @espressif/arduino-devs
+
+# CI
+/.github/ @lucasssvaz @me-no-dev @P-R-O-C-H-Y
+/tests/ @lucasssvaz @P-R-O-C-H-Y
+
+# Tools
+/tools/ @me-no-dev
+/tools/pre-commit/ @lucasssvaz
+/tools/add_lib.sh @P-R-O-C-H-Y
+
+# Pre-commit
+/.* @lucasssvaz # Files in root directory that start with a dot.
+
+# Git Files
+/.gitignore @espressif/arduino-devs
+/.gitmodules @espressif/arduino-devs
+
+# Documentation
+/docs/ @pedrominatel
+/.github/ISSUE_TEMPLATE/ @pedrominatel
+/.github/PULL_REQUEST_TEMPLATE.md @pedrominatel
+/.readthedocs.yaml @pedrominatel
+/*.md @pedrominatel
+
+# Boards
+/variants/ @P-R-O-C-H-Y
+/boards.txt @P-R-O-C-H-Y
+
+# Arduino as Component
+/idf_component_examples/ @SuGlider
+/idf_component.yml @SuGlider @me-no-dev
+/CMakeLists.txt @SuGlider @me-no-dev
+/Kconfig.projbuild @SuGlider @me-no-dev
+
+# Build System
+/package.json @me-no-dev
+/platform.txt @me-no-dev
+/programmers.txt @me-no-dev
+/package/ @me-no-dev
+
+# Libraries
+/libraries/ArduinoOTA/ @me-no-dev
+/libraries/AsyncUDP/ @me-no-dev
+/libraries/BLE/ @lucasssvaz @SuGlider
+/libraries/ESP_I2S/ @me-no-dev
+/libraries/ESP_NOW/ @P-R-O-C-H-Y @lucasssvaz
+/libraries/ESP_SR/ @me-no-dev
+/libraries/ESPmDNS/ @me-no-dev
+/libraries/Ethernet/ @me-no-dev
+/libraries/Matter/ @SuGlider
+/libraries/NetBIOS/ @me-no-dev
+/libraries/Network/ @me-no-dev
+/libraries/OpenThread/ @SuGlider
+/libraries/PPP/ @me-no-dev
+/libraries/SPI/ @me-no-dev
+/libraries/Update/ @me-no-dev
+/libraries/USB/ @SuGlider @me-no-dev
+/libraries/WiFi/ @me-no-dev
+/libraries/WiFiProv/ @me-no-dev
+/libraries/Wire/ @me-no-dev
+/libraries/Zigbee/ @P-R-O-C-H-Y
+
+# CI JSON
+# Keep this after other libraries and tests to avoid being overridden.
+**/ci.json @lucasssvaz
+
+# The CODEOWNERS file should be owned by the developers of the ESP32 Arduino Core.
+# Leave this entry as the last one to avoid being overridden.
+/.github/CODEOWNERS @espressif/arduino-devs

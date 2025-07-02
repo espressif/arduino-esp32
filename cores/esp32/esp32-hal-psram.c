@@ -19,130 +19,135 @@
 #include "esp_heap_caps.h"
 
 #include "esp_system.h"
-#ifdef ESP_IDF_VERSION_MAJOR // IDF 4+
-#if CONFIG_IDF_TARGET_ESP32 // ESP32/PICO-D4
-#include "esp32/spiram.h"
+#include "esp_psram.h"
+#include "esp_private/esp_psram_extram.h"
+#if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
+#include "esp32/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
-#include "esp32s2/spiram.h"
 #include "esp32s2/rom/cache.h"
 #elif CONFIG_IDF_TARGET_ESP32S3
-#include "esp32s3/spiram.h"
 #include "esp32s3/rom/cache.h"
-#else 
+#elif CONFIG_IDF_TARGET_ESP32P4
+#include "esp32p4/rom/cache.h"
+#else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
-#else // ESP32 Before IDF 4.0
-#include "esp_spiram.h"
-#endif
+
+#define TAG "arduino-psram"
 
 static volatile bool spiramDetected = false;
 static volatile bool spiramFailed = false;
 
 //allows user to bypass SPI RAM test routine
-__attribute__((weak)) bool testSPIRAM(void) 
-{ 
-     return esp_spiram_test(); 
+__attribute__((weak)) bool testSPIRAM(void) {
+  return esp_psram_extram_test();
 }
 
-
-bool psramInit(){
-    if (spiramDetected) {
-        return true;
-    }
-#ifndef CONFIG_SPIRAM_BOOT_INIT
-    if (spiramFailed) {
-        return false;
-    }
-#if CONFIG_IDF_TARGET_ESP32
-    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
-    uint32_t pkg_ver = chip_ver & 0x7;
-    if (pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 || pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2) {
-        spiramFailed = true;
-        log_w("PSRAM not supported!");
-        return false;
-    }
-#elif CONFIG_IDF_TARGET_ESP32S2
-    extern void esp_config_data_cache_mode(void);
-    esp_config_data_cache_mode();
-    Cache_Enable_DCache(0);
-#endif
-    if (esp_spiram_init() != ESP_OK) {
-        spiramFailed = true;
-        log_w("PSRAM init failed!");
-#if CONFIG_IDF_TARGET_ESP32
-        if (pkg_ver != EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4) {
-            pinMatrixOutDetach(16, false, false);
-            pinMatrixOutDetach(17, false, false);
-        }
-#endif
-        return false;
-    }
-    esp_spiram_init_cache();
-    //testSPIRAM() allows user to bypass SPI RAM test routine
-    if (!testSPIRAM()) {
-        spiramFailed = true;
-        log_e("PSRAM test failed!");
-        return false;
-    }
-    if (esp_spiram_add_to_heapalloc() != ESP_OK) {
-        spiramFailed = true;
-        log_e("PSRAM could not be added to the heap!");
-        return false;
-    }
-#if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
-    heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
-#endif
-#endif /* CONFIG_SPIRAM_BOOT_INIT */
-    log_i("PSRAM enabled");
-    spiramDetected = true;
+bool psramInit() {
+  if (spiramDetected) {
     return true;
-}
-
-bool ARDUINO_ISR_ATTR psramFound(){
-    return spiramDetected;
-}
-
-void ARDUINO_ISR_ATTR *ps_malloc(size_t size){
-    if(!spiramDetected){
-        return NULL;
+  }
+#ifndef CONFIG_SPIRAM_BOOT_INIT
+  if (spiramFailed) {
+    return false;
+  }
+#if CONFIG_IDF_TARGET_ESP32
+  uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_PACKAGE);
+  uint32_t pkg_ver = chip_ver & 0x7;
+  if (pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 || pkg_ver == EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2) {
+    spiramFailed = true;
+    ESP_EARLY_LOGW(TAG, "PSRAM not supported!");
+    return false;
+  }
+#elif CONFIG_IDF_TARGET_ESP32S2
+  extern void esp_config_data_cache_mode(void);
+  esp_config_data_cache_mode();
+  Cache_Enable_DCache(0);
+#endif
+  if (esp_psram_init() != ESP_OK) {
+    spiramFailed = true;
+    ESP_EARLY_LOGW(TAG, "PSRAM init failed!");
+#if CONFIG_IDF_TARGET_ESP32
+    if (pkg_ver != EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4) {
+      pinMatrixOutDetach(16, false, false);
+      pinMatrixOutDetach(17, false, false);
     }
-    return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+#endif
+    return false;
+  }
+  //testSPIRAM() allows user to bypass SPI RAM test routine
+  if (!testSPIRAM()) {
+    spiramFailed = true;
+    ESP_EARLY_LOGE(TAG, "PSRAM test failed!");
+    return false;
+  }
+  //ESP_EARLY_LOGI(TAG, "PSRAM enabled");
+#endif /* CONFIG_SPIRAM_BOOT_INIT */
+  spiramDetected = true;
+  return true;
 }
 
-void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size){
-    if(!spiramDetected){
-        return NULL;
-    }
-    return heap_caps_calloc(n, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+bool psramAddToHeap() {
+  if (!spiramDetected) {
+    log_e("PSRAM not initialized!");
+    return false;
+  }
+  if (esp_psram_extram_add_to_heap_allocator() != ESP_OK) {
+    log_e("PSRAM could not be added to the heap!");
+    return false;
+  }
+#if CONFIG_SPIRAM_USE_MALLOC && !CONFIG_ARDUINO_ISR_IRAM
+  heap_caps_malloc_extmem_enable(CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL);
+#endif
+  log_i("PSRAM added to the heap.");
+  return true;
 }
 
-void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size){
-    if(!spiramDetected){
-        return NULL;
-    }
-    return heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+bool ARDUINO_ISR_ATTR psramFound() {
+  return spiramDetected;
+}
+
+void ARDUINO_ISR_ATTR *ps_malloc(size_t size) {
+  if (!spiramDetected) {
+    return NULL;
+  }
+  return heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+}
+
+void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size) {
+  if (!spiramDetected) {
+    return NULL;
+  }
+  return heap_caps_calloc(n, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+}
+
+void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size) {
+  if (!spiramDetected) {
+    return NULL;
+  }
+  return heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 }
 
 #else
 
-bool psramInit(){
-    return false;
+bool psramInit() {
+  return false;
 }
 
-bool ARDUINO_ISR_ATTR psramFound(){
-    return false;
+bool ARDUINO_ISR_ATTR psramFound() {
+  return false;
 }
 
-void ARDUINO_ISR_ATTR *ps_malloc(size_t size){
-    return NULL;
+void ARDUINO_ISR_ATTR *ps_malloc(size_t size) {
+  return NULL;
 }
 
-void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size){
-    return NULL;
+void ARDUINO_ISR_ATTR *ps_calloc(size_t n, size_t size) {
+  return NULL;
 }
 
-void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size){
-    return NULL;
+void ARDUINO_ISR_ATTR *ps_realloc(void *ptr, size_t size) {
+  return NULL;
 }
 
 #endif

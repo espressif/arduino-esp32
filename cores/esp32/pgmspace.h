@@ -1,7 +1,7 @@
-/* 
+/*
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the RaspberryPi core for Arduino environment.
- 
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -30,28 +30,32 @@ typedef long prog_int32_t;
 typedef unsigned long prog_uint32_t;
 
 #define PROGMEM
-#define PGM_P         const char *
-#define PGM_VOID_P    const void *
-#define PSTR(s)       (s)
-#define _SFR_BYTE(n)  (n)
+#define PGM_P        const char *
+#define PGM_VOID_P   const void *
+#define PSTR(s)      (s)
+#define _SFR_BYTE(n) (n)
 
-#define pgm_read_byte(addr)   (*(const unsigned char *)(addr))
-#define pgm_read_word(addr) ({ \
-  typeof(addr) _addr = (addr); \
-  *(const unsigned short *)(_addr); \
-})
-#define pgm_read_dword(addr) ({ \
-  typeof(addr) _addr = (addr); \
-  *(const unsigned long *)(_addr); \
-})
-#define pgm_read_float(addr) ({ \
-  typeof(addr) _addr = (addr); \
-  *(const float *)(_addr); \
-})
-#define pgm_read_ptr(addr) ({ \
-  typeof(addr) _addr = (addr); \
-  *(void * const *)(_addr); \
-})
+#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+#define pgm_read_word(addr)           \
+  ({                                  \
+    typeof(addr) _addr = (addr);      \
+    *(const unsigned short *)(_addr); \
+  })
+#define pgm_read_dword(addr)         \
+  ({                                 \
+    typeof(addr) _addr = (addr);     \
+    *(const unsigned long *)(_addr); \
+  })
+#define pgm_read_float(addr)     \
+  ({                             \
+    typeof(addr) _addr = (addr); \
+    *(const float *)(_addr);     \
+  })
+#define pgm_read_ptr(addr)       \
+  ({                             \
+    typeof(addr) _addr = (addr); \
+    *(void *const *)(_addr);     \
+  })
 
 #define pgm_get_far_address(x) ((uint32_t)(&(x)))
 

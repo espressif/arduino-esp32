@@ -4,15 +4,8 @@
 #include <stdint.h>
 
 static const uint8_t LED_BUILTIN = 18;
-#define BUILTIN_LED LED_BUILTIN // backward compatibility
-
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS 40
-#define NUM_ANALOG_INPUTS 16
-
-#define analogInputToDigitalPin(p) (((p) < 20) ? (analogChannelToDigitalPin(p)) : -1)
-#define digitalPinToInterrupt(p) (((p) < 40) ? (p) : -1)
-#define digitalPinHasPWM(p) (p < 34)
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 #define TX1 12
 #define RX1 13
@@ -42,11 +35,11 @@ static const uint8_t T2 = 2;
 static const uint8_t T8 = 33;
 static const uint8_t T9 = 32;
 
-#define ETH_PHY_ADDR 0
+#define ETH_PHY_ADDR  0
 #define ETH_PHY_POWER 2
-#define ETH_PHY_MDC 16
-#define ETH_PHY_MDIO 14
-#define ETH_PHY_TYPE ETH_PHY_RTL8201
-#define ETH_CLK_MODE ETH_CLOCK_GPIO17_OUT
+#define ETH_PHY_MDC   16
+#define ETH_PHY_MDIO  14
+#define ETH_PHY_TYPE  ETH_PHY_RTL8201
+#define ETH_CLK_MODE  ETH_CLOCK_GPIO17_OUT
 
 #endif /* Pins_Arduino_h */

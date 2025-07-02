@@ -1,89 +1,83 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+/*
+ * SPDX-FileCopyrightText: 2019-2023 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include "esp32-hal-sigmadelta.h"
 
-
-
+#if SOC_SDM_SUPPORTED
 #include "esp32-hal.h"
-#include "soc/soc_caps.h"
-#include "driver/sigmadelta.h"
+#include "esp32-hal-periman.h"
+#include "driver/sdm.h"
 
-static uint8_t duty_set[SOC_SIGMADELTA_CHANNEL_NUM] = {0};
-static uint32_t prescaler_set[SOC_SIGMADELTA_CHANNEL_NUM] = {0};
-
-static void _on_apb_change(void * arg, apb_change_ev_t ev_type, uint32_t old_apb, uint32_t new_apb){
-    if(old_apb == new_apb){
-        return;
-    }
-    uint32_t iarg = (uint32_t)arg;
-    uint8_t channel = iarg;
-    if(ev_type == APB_AFTER_CHANGE){
-        old_apb /= 1000000;
-        new_apb /= 1000000;
-        uint32_t old_prescale = prescaler_set[channel] + 1;
-        uint32_t new_prescale = ((new_apb * old_prescale) / old_apb) - 1;
-        sigmadelta_set_prescale(channel,new_prescale);
-        prescaler_set[channel] = new_prescale;
-    }
+static bool sigmaDeltaDetachBus(void *bus) {
+  esp_err_t err = sdm_channel_disable((sdm_channel_handle_t)bus);
+  if (err != ESP_OK) {
+    log_w("sdm_channel_disable failed with error: %d", err);
+  }
+  err = sdm_del_channel((sdm_channel_handle_t)bus);
+  if (err != ESP_OK) {
+    log_e("sdm_del_channel failed with error: %d", err);
+    return false;
+  }
+  return true;
 }
 
-uint32_t sigmaDeltaSetup(uint8_t pin, uint8_t channel, uint32_t freq) //chan 0-x according to SOC, freq 1220-312500
+bool sigmaDeltaAttach(uint8_t pin, uint32_t freq)  //freq 1220-312500
 {
-    if(channel >= SOC_SIGMADELTA_CHANNEL_NUM){
-        return 0;
-    }
-    
-    uint32_t apb_freq = getApbFrequency();
-    uint32_t prescale = (apb_freq/(freq*256)) - 1;
-    if(prescale > 0xFF) {
-        prescale = 0xFF;
-    }
-
-    sigmadelta_config_t sigmadelta_cfg = {
-        .channel = channel,
-        .sigmadelta_prescale = prescale,
-        .sigmadelta_duty = 0,
-        .sigmadelta_gpio = pin,
-    };
-    sigmadelta_config(&sigmadelta_cfg);
-
-    prescaler_set[channel] = prescale;
-    uint32_t iarg = channel;
-    addApbChangeCallback((void*)iarg, _on_apb_change);
-
-    return apb_freq/((prescale + 1) * 256);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_SIGMADELTA, sigmaDeltaDetachBus);
+  sdm_channel_handle_t bus = NULL;
+  // pin may be previously attached to other peripheral -> detach it.
+  // if attached to sigmaDelta, detach it and set the new frequency
+  if (perimanGetPinBusType(pin) != ESP32_BUS_TYPE_INIT && !perimanClearPinBus(pin)) {
+    log_e("Pin %u could not be detached.", pin);
+    return false;
+  }
+  sdm_config_t config = {.gpio_num = (int)pin, .clk_src = SDM_CLK_SRC_DEFAULT, .sample_rate_hz = freq, .flags = {.invert_out = 0, .io_loop_back = 0}};
+  esp_err_t err = sdm_new_channel(&config, &bus);
+  if (err != ESP_OK) {
+    log_e("sdm_new_channel failed with error: %d", err);
+    return false;
+  }
+  err = sdm_channel_enable(bus);
+  if (err != ESP_OK) {
+    sigmaDeltaDetachBus((void *)bus);
+    log_e("sdm_channel_enable failed with error: %d", err);
+    return false;
+  }
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA, (void *)bus, -1, -1)) {
+    sigmaDeltaDetachBus((void *)bus);
+    return false;
+  }
+  return true;
 }
 
-void sigmaDeltaWrite(uint8_t channel, uint8_t duty) //chan 0-x according to SOC duty 8 bit
+bool sigmaDeltaWrite(uint8_t pin, uint8_t duty)  //chan 0-x according to SOC duty 8 bit
 {
-    if(channel >= SOC_SIGMADELTA_CHANNEL_NUM){
-        return;
+  sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
+  if (bus != NULL) {
+    int8_t d = duty - 128;
+    esp_err_t err = sdm_channel_set_duty(bus, d);
+    if (err != ESP_OK) {
+      log_e("sdm_channel_set_duty failed with error: %d", err);
+      return false;
     }
-    duty -= 128; 
-
-    sigmadelta_set_duty(channel,duty);
-    duty_set[channel] = duty;
+    return true;
+  } else {
+    log_e("pin %u is not attached to SigmaDelta", pin);
+  }
+  return false;
 }
 
-uint8_t sigmaDeltaRead(uint8_t channel) //chan 0-x according to SOC
-{
-    if(channel >= SOC_SIGMADELTA_CHANNEL_NUM){
-        return 0;
-    }
-    return duty_set[channel]+128;
+bool sigmaDeltaDetach(uint8_t pin) {
+  void *bus = perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
+  if (bus != NULL) {
+    // will call sigmaDeltaDetachBus
+    return perimanClearPinBus(pin);
+  } else {
+    log_e("pin %u is not attached to SigmaDelta", pin);
+  }
+  return false;
 }
-
-void sigmaDeltaDetachPin(uint8_t pin)
-{
-    pinMatrixOutDetach(pin, false, false);
-}
+#endif

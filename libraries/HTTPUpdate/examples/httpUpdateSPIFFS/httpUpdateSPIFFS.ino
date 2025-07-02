@@ -32,7 +32,6 @@ void setup() {
 
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP("SSID", "PASSWORD");
-
 }
 
 void loop() {
@@ -41,7 +40,7 @@ void loop() {
 
     Serial.println("Update SPIFFS...");
 
-    WiFiClient client;
+    NetworkClient client;
 
     // The line below is optional. It can be used to blink the LED on the board during flashing
     // The LED will be on during download of one buffer of data from the network. The LED will
@@ -57,19 +56,12 @@ void loop() {
       ret = httpUpdate.update(client, "http://server/file.bin");
 
       switch (ret) {
-        case HTTP_UPDATE_FAILED:
-          Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-          break;
+        case HTTP_UPDATE_FAILED: Serial.printf("HTTP_UPDATE_FAILED Error (%d): %s", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str()); break;
 
-        case HTTP_UPDATE_NO_UPDATES:
-          Serial.println("HTTP_UPDATE_NO_UPDATES");
-          break;
+        case HTTP_UPDATE_NO_UPDATES: Serial.println("HTTP_UPDATE_NO_UPDATES"); break;
 
-        case HTTP_UPDATE_OK:
-          Serial.println("HTTP_UPDATE_OK");
-          break;
+        case HTTP_UPDATE_OK: Serial.println("HTTP_UPDATE_OK"); break;
       }
     }
   }
 }
-

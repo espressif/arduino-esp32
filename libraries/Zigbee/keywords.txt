@@ -1,0 +1,202 @@
+#######################################
+# Syntax Coloring Map For Zigbee
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+# Base Classes
+ZigbeeCore	KEYWORD1
+Zigbee	KEYWORD1
+ZigbeeEP	KEYWORD1
+
+# Endpoint Classes
+ZigbeeLight	KEYWORD1
+ZigbeeSwitch	KEYWORD1
+ZigbeeColorDimmableLight	KEYWORD1
+ZigbeeColorDimmerSwitch	KEYWORD1
+ZigbeeTempSensor	KEYWORD1
+ZigbeeThermostat	KEYWORD1
+ZigbeeFlowSensor	KEYWORD1
+ZigbeePressureSensor	KEYWORD1
+ZigbeeOccupancySensor	KEYWORD1
+ZigbeeAnalog	KEYWORD1
+ZigbeeCarbonDioxideSensor	KEYWORD1
+ZigbeeContactSwitch	KEYWORD1
+ZigbeeDoorWindowHandle	KEYWORD1
+ZigbeeGateway	KEYWORD1
+ZigbeeRangeExtender	KEYWORD1
+ZigbeeVibrationSensor	KEYWORD1
+ZigbeeWindowCovering	KEYWORD1
+ZigbeeIlluminanceSensor	KEYWORD1
+ZigbeePowerOutlet	KEYWORD1
+
+# Other
+zigbee_role_t	KEYWORD1
+zbstring_t	KEYWORD1
+zb_device_params_t	KEYWORD1
+zigbee_scan_result_t	KEYWORD1
+zb_power_source_t	KEYWORD1
+ZigbeeWindowCoveringType	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# ZigbeeCore
+begin	KEYWORD2
+started	KEYWORD2
+connected	KEYWORD2
+getRole	KEYWORD2
+addEndpoint	KEYWORD2
+setRadioConfig	KEYWORD2
+getRadioConfig	KEYWORD2
+setHostConfig	KEYWORD2
+getHostConfig	KEYWORD2
+setPrimaryChannelMask	KEYWORD2
+setScanDuration	KEYWORD2
+getScanDuration	KEYWORD2
+setRebootOpenNetwork	KEYWORD2
+openNetwork	KEYWORD2
+scanNetworks	KEYWORD2
+scanComplete	KEYWORD2
+getScanResult	KEYWORD2
+scanDelete	KEYWORD2
+factoryReset	KEYWORD2
+
+# Common ZigbeeEP
+setEpConfig	KEYWORD2
+setVersion	KEYWORD2
+getEndpoint	KEYWORD2
+printBoundDevices	KEYWORD2
+getBoundDevices	KEYWORD2
+bound	KEYWORD2
+allowMultipleBinding	KEYWORD2
+setManufacturerAndModel	KEYWORD2
+setPowerSource	KEYWORD2
+setBatteryPercentage	KEYWORD2
+reportBatteryPercentage	KEYWORD2
+readManufacturer	KEYWORD2
+readModel	KEYWORD2
+onIdentify	KEYWORD2
+
+# ZigbeeLight + ZigbeeColorDimmableLight
+onLightChange	KEYWORD2
+restoreLight	KEYWORD2
+setLight	KEYWORD2
+setLightState	KEYWORD2
+setLightLevel	KEYWORD2
+setLightColor	KEYWORD2
+getLightState	KEYWORD2
+getLightLevel	KEYWORD2
+getLightRed	KEYWORD2
+getLightGreen	KEYWORD2
+getLightBlue	KEYWORD2
+
+# ZigbeeSwitch + ZigbeeColorDimmerSwitch
+lightToggle	KEYWORD2
+lightOn	KEYWORD2
+lightOff	KEYWORD2
+lightOffWithEffect	KEYWORD2
+lightOnWithTimedOff	KEYWORD2
+lightOnWithSceneRecall	KEYWORD2
+setLightLevel	KEYWORD2
+setLightColor	KEYWORD2
+
+# ZigbeeThermostat
+onTempRecieve	KEYWORD2
+onConfigRecieve	KEYWORD2
+onTempReceiveWithSource	KEYWORD2
+getTemperature	KEYWORD2
+getSensorSettings	KEYWORD2
+setTemperatureReporting	KEYWORD2
+
+# Common Zigbee Sensor
+setMinMaxValue	KEYWORD2
+setTolerance	KEYWORD2
+setReporting	KEYWORD2
+report	KEYWORD2
+
+# ZigbeeTempSensor + humidity
+setTemperature	KEYWORD2
+reportTemperature	KEYWORD2
+addHumiditySensor	KEYWORD2
+setHumidity	KEYWORD2
+setHumidityReporting	KEYWORD2
+reportHumidity	KEYWORD2
+
+# ZigbeeIlluminanceSensor
+setIlluminance	KEYWORD2
+
+# ZigbeeFlowSensor
+setFlow	KEYWORD2
+
+# ZigbeePressureSensor
+setPressure	KEYWORD2
+
+# ZigbeeOccupancySensor
+setOccupancy	KEYWORD2
+setSensorType	KEYWORD2
+
+# ZigbeeCarbonDioxideSensor
+setCarbonDioxide	KEYWORD2
+
+# ZigbeeAnalog
+addAnalogInput	KEYWORD2
+addAnalogOutput	KEYWORD2
+onAnalogOutputChange	KEYWORD2
+setAnalogInput	KEYWORD2
+setAnalogOutput	KEYWORD2
+getAnalogOutput	KEYWORD2
+reportAnalogInput	KEYWORD2
+reportAnalogOutput	KEYWORD2
+setAnalogInputReporting	KEYWORD2
+setAnalogInputApplication	KEYWORD2
+setAnalogInputDescription	KEYWORD2
+setAnalogInputResolution	KEYWORD2
+setAnalogOutputApplication	KEYWORD2
+setAnalogOutputDescription	KEYWORD2
+setAnalogOutputResolution	KEYWORD2
+
+# ZigbeeCarbonDioxideSensor
+setCarbonDioxide	KEYWORD2
+
+# ZigbeeContactSwitch + ZigbeeDoorWindowHandle
+setIASClientEndpoint	KEYWORD2
+setClosed	KEYWORD2
+setOpen	KEYWORD2
+setTilted	KEYWORD2
+
+# ZigbeeVibrationSensor
+setVibration	KEYWORD2
+
+ZigbeeWindowCovering
+onOpen	KEYWORD2
+onClose	KEYWORD2
+onGoToLiftPercentage	KEYWORD2
+onGoToTiltPercentage	KEYWORD2
+onStop	KEYWORD2
+setLiftPosition	KEYWORD2
+setLiftPercentage	KEYWORD2
+setTiltPosition	KEYWORD2
+setTiltPercentage	KEYWORD2
+setCoveringType	KEYWORD2
+setConfigStatus	KEYWORD2
+setMode	KEYWORD2
+setLimits	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ZIGBEE_COORDINATOR	LITERAL1
+ZIGBEE_ROUTER	LITERAL1
+ZIGBEE_END_DEVICE	LITERAL1
+ZIGBEE_DEFAULT_ED_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_ROUTER_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_COORDINATOR_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_RADIO_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG	LITERAL1
+ZIGBEE_DEFAULT_HOST_CONFIG	LITERAL1
+ZB_ARRAY_LENGHT	LITERAL1

@@ -1,0 +1,143 @@
+name: QEMU tests
+
+on:
+  workflow_call:
+    inputs:
+      chip:
+        required: true
+        type: string
+      type:
+        required: true
+        type: string
+
+jobs:
+  qemu-test:
+    name: QEMU ${{ inputs.chip }} ${{ inputs.type }} tests
+    env:
+      id: ${{ github.event.pull_request.number || github.ref }}-${{ github.event.pull_request.head.sha || github.sha }}-${{ inputs.chip }}-${{ inputs.type }}
+      QEMU_INSTALL_PATH: "$HOME"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if already passed
+        id: get-cache-results
+        if: github.event.pull_request.number != null
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: tests-${{ env.id }}-results-qemu
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Evaluate if tests should be run
+        id: check-tests
+        run: |
+          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          enabled=true
+
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already ran, skipping"
+            enabled=false
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      - name: Checkout user repository
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !.github
+
+      # To avoid giving unknown scripts elevated permissions, download them from the master branch
+      - name: Get CI scripts from master
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          mkdir -p .github
+          cd .github
+          curl https://codeload.github.com/${{ github.repository }}/tar.gz/master | tar -xz --strip=2 arduino-esp32-master/.github
+
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          cache-dependency-path: tests/requirements.txt
+          cache: "pip"
+          python-version: "3.x"
+
+      - name: Install Python dependencies
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          pip install -U pip
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+
+      - name: Install APT dependencies
+        uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40 # v1.4.3
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          packages: libpixman-1-0 libnuma1 libglib2.0-0 libslirp0 libsdl2-2.0-0
+          version: 1.0
+
+      - name: Get QEMU version
+        uses: pozetroninc/github-action-get-latest-release@2a61c339ea7ef0a336d1daa35ef0cb1418e7676c # v0.8.0
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        id: get-qemu-version
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          owner: espressif
+          repo: qemu
+          excludes: prerelease, draft
+
+      - name: Cache QEMU
+        id: cache-qemu
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        with:
+          path: |
+            ~/qemu
+          key: qemu-${{ steps.get-qemu-version.outputs.release }}-${{ hashFiles('.github/workflows/tests_qemu.yml') }}
+
+      - name: Download QEMU
+        if: ${{ steps.cache-qemu.outputs.cache-hit != 'true' && steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          cd ${{ env.QEMU_INSTALL_PATH }}
+          underscore_release=$(echo ${{ steps.get-qemu-version.outputs.release }} | sed 's/\-/_/g')
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-riscv32-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-riscv32.tar.xz
+          curl -L https://github.com/espressif/qemu/releases/download/${{ steps.get-qemu-version.outputs.release }}/qemu-xtensa-softmmu-${underscore_release}-x86_64-linux-gnu.tar.xz > qemu-xtensa.tar.xz
+          tar -xf qemu-riscv32.tar.xz
+          tar -xf qemu-xtensa.tar.xz
+          rm qemu-*
+          echo "QEMU_PATH=${{ env.QEMU_INSTALL_PATH }}/qemu" >> $GITHUB_ENV
+
+      - name: Get binaries
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
+          path: |
+            ~/.arduino/tests/${{ inputs.chip }}
+
+      - name: Run Tests
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: QEMU_PATH="${{ env.QEMU_INSTALL_PATH }}" bash .github/scripts/tests_run.sh -c -type ${{inputs.type}} -t ${{inputs.chip}} -i 0 -m 1 -Q
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} QEMU results as cache
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        if: steps.check-tests.outputs.enabled == 'true' && github.event.pull_request.number != null
+        with:
+          key: tests-${{ env.id }}-results-qemu
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Upload ${{ inputs.chip }} ${{ inputs.type }} QEMU results as artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: tests-results-qemu-${{ inputs.chip }}-${{ inputs.type }}
+          overwrite: true
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json

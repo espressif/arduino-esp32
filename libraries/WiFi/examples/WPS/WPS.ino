@@ -14,58 +14,63 @@ Author:
 Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#error "WPS is only supported in SoCs with native Wi-Fi support"
+#endif
+
 #include "WiFi.h"
 #include "esp_wps.h"
 /*
 Change the definition of the WPS mode
 from WPS_TYPE_PBC to WPS_TYPE_PIN in
 the case that you are using pin type
-WPS
+WPS (pin is 00000000)
 */
-#define ESP_WPS_MODE      WPS_TYPE_PBC
-#define ESP_MANUFACTURER  "ESPRESSIF"
-#define ESP_MODEL_NUMBER  "ESP32"
-#define ESP_MODEL_NAME    "ESPRESSIF IOT"
-#define ESP_DEVICE_NAME   "ESP STATION"
+#define ESP_WPS_MODE WPS_TYPE_PBC
 
-static esp_wps_config_t config;
-
-void wpsInitConfig(){
+void wpsStart() {
+  esp_wps_config_t config;
+  memset(&config, 0, sizeof(esp_wps_config_t));
+  //Same as config = WPS_CONFIG_INIT_DEFAULT(ESP_WPS_MODE);
   config.wps_type = ESP_WPS_MODE;
-  strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
-  strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
-  strcpy(config.factory_info.model_name, ESP_MODEL_NAME);
-  strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
+  strcpy(config.factory_info.manufacturer, "ESPRESSIF");
+  strcpy(config.factory_info.model_number, CONFIG_IDF_TARGET);
+  strcpy(config.factory_info.model_name, "ESPRESSIF IOT");
+  strcpy(config.factory_info.device_name, "ESP DEVICE");
+  strcpy(config.pin, "00000000");
+  esp_err_t err = esp_wifi_wps_enable(&config);
+  if (err != ESP_OK) {
+    Serial.printf("WPS Enable Failed: 0x%x: %s\n", err, esp_err_to_name(err));
+    return;
+  }
+
+  err = esp_wifi_wps_start(0);
+  if (err != ESP_OK) {
+    Serial.printf("WPS Start Failed: 0x%x: %s\n", err, esp_err_to_name(err));
+  }
 }
 
-void wpsStart(){
-    if(esp_wifi_wps_enable(&config)){
-    	Serial.println("WPS Enable Failed");
-    } else if(esp_wifi_wps_start(0)){
-    	Serial.println("WPS Start Failed");
-    }
+void wpsStop() {
+  esp_err_t err = esp_wifi_wps_disable();
+  if (err != ESP_OK) {
+    Serial.printf("WPS Disable Failed: 0x%x: %s\n", err, esp_err_to_name(err));
+  }
 }
 
-void wpsStop(){
-    if(esp_wifi_wps_disable()){
-    	Serial.println("WPS Disable Failed");
-    }
-}
-
-String wpspin2string(uint8_t a[]){
+String wpspin2string(uint8_t a[]) {
   char wps_pin[9];
-  for(int i=0;i<8;i++){
+  for (int i = 0; i < 8; i++) {
     wps_pin[i] = a[i];
   }
   wps_pin[8] = '\0';
   return (String)wps_pin;
 }
 
-void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
-  switch(event){
-    case ARDUINO_EVENT_WIFI_STA_START:
-      Serial.println("Station Mode Started");
-      break;
+// WARNING: WiFiEvent is called from a separate FreeRTOS task (thread)!
+void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_STA_START: Serial.println("Station Mode Started"); break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
       Serial.println("Connected to :" + String(WiFi.SSID()));
       Serial.print("Got IP: ");
@@ -76,7 +81,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       WiFi.reconnect();
       break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
-      Serial.println("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
+      Serial.println("WPS Successful, stopping WPS and connecting to: " + String(WiFi.SSID()));
       wpsStop();
       delay(10);
       WiFi.begin();
@@ -91,25 +96,21 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       wpsStop();
       wpsStart();
       break;
-    case ARDUINO_EVENT_WPS_ER_PIN:
-      Serial.println("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code));
-      break;
-    default:
-      break;
+    case ARDUINO_EVENT_WPS_ER_PIN: Serial.println("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code)); break;
+    default:                       break;
   }
 }
 
-void setup(){
+void setup() {
   Serial.begin(115200);
   delay(10);
   Serial.println();
-  WiFi.onEvent(WiFiEvent);
+  WiFi.onEvent(WiFiEvent);  // Will call WiFiEvent() from another thread.
   WiFi.mode(WIFI_MODE_STA);
   Serial.println("Starting WPS");
-  wpsInitConfig();
   wpsStart();
 }
 
-void loop(){
+void loop() {
   //nothing to do here
 }

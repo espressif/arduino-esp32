@@ -7,20 +7,40 @@
 #######################################
 
 ArduinoOTA	KEYWORD1
+ArduinoOTAClass	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
 begin	KEYWORD2
-setup	KEYWORD2
+end	KEYWORD2
 handle	KEYWORD2
 onStart	KEYWORD2
 onEnd	KEYWORD2
 onError	KEYWORD2
 onProgress	KEYWORD2
+setPort	KEYWORD2
+setHostname	KEYWORD2
+getHostname	KEYWORD2
+setPassword	KEYWORD2
+setPasswordHash	KEYWORD2
+setPartitionLabel	KEYWORD2
+getPartitionLabel	KEYWORD2
+setRebootOnSuccess	KEYWORD2
+setMdnsEnabled	KEYWORD2
+getCommand	KEYWORD2
+setTimeout	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
+OTA_IDLE  LITERAL1
+OTA_WAITAUTH  LITERAL1
+OTA_RUNUPDATE  LITERAL1
+OTA_AUTH_ERROR  LITERAL1
+OTA_BEGIN_ERROR  LITERAL1
+OTA_CONNECT_ERROR  LITERAL1
+OTA_RECEIVE_ERROR  LITERAL1
+OTA_END_ERROR  LITERAL1

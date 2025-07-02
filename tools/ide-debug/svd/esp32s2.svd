@@ -116,7 +116,7 @@
 0x2(AES_EN_256): AES-EN-256 #
 0x4(AES_DE_128): AES-DE-128 #
 0x5(AES_DE_192): AES-DE-192 #
-0x6(AES_DE_256): AES-DE-256 
+0x6(AES_DE_256): AES-DE-256
 &amp;</description>
               <bitOffset>0</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1572,12 +1572,12 @@ alternate-channel scan mode.</description>
           <fields>
             <field>
               <name>INTR_MODE_CH0</name>
-              <description>Configure channel 0 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 0 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>0</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1585,12 +1585,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH1</name>
-              <description>Configure channel 1 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 1 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>3</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1598,12 +1598,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH2</name>
-              <description>Configure channel 2 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 2 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>6</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1611,12 +1611,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH3</name>
-              <description>Configure channel 3 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 3 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>9</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1624,12 +1624,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH4</name>
-              <description>Configure channel 4 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 4 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>12</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1637,12 +1637,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH5</name>
-              <description>Configure channel 5 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 5 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>15</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1650,12 +1650,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH6</name>
-              <description>Configure channel 6 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 6 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>18</bitOffset>
               <bitWidth>3</bitWidth>
@@ -1663,12 +1663,12 @@ alternate-channel scan mode.</description>
             </field>
             <field>
               <name>INTR_MODE_CH7</name>
-              <description>Configure channel 7 interrupt generate mode. 
-0/1: do not generate interrupt. 
+              <description>Configure channel 7 interrupt generate mode.
+0/1: do not generate interrupt.
 2: low level trigger.
-3: high level trigger. 
-4: falling edge trigger. 
-5: raising edge trigger. 
+3: high level trigger.
+4: falling edge trigger.
+5: raising edge trigger.
 6/7: falling and raising edge trigger.</description>
               <bitOffset>21</bitOffset>
               <bitWidth>3</bitWidth>
@@ -19132,7 +19132,7 @@ Any pulses with width less than this will be ignored when the filter is enabled.
               <name>MEM_OWNER</name>
               <description>This register marks the ownership of CHANNEL%s's ram block.
 
-1'h1: Receiver is using the ram. 
+1'h1: Receiver is using the ram.
 
 1'h0: Transmitter is using the ram.</description>
               <bitOffset>5</bitOffset>
@@ -20883,7 +20883,7 @@ Any pulses with width less than this will be ignored when the filter is enabled.
           <fields>
             <field>
               <name>SEL</name>
-              <description>GPIO[0-17] can be used to wake up the chip when the chip is in the sleep mode. This register prompts the pad source to wake up the chip when the latter is indeep/light sleep mode. 
+              <description>GPIO[0-17] can be used to wake up the chip when the chip is in the sleep mode. This register prompts the pad source to wake up the chip when the latter is indeep/light sleep mode.
 0: select GPIO0; 1: select GPIO2, etc</description>
               <bitOffset>27</bitOffset>
               <bitWidth>5</bitWidth>
@@ -35290,8 +35290,8 @@ This register is used in autobaud detection.</description>
             </field>
             <field>
               <name>TICK_REF_ALWAYS_ON</name>
-              <description>This register is used to select the clock. 
-1: APB_CLK. 
+              <description>This register is used to select the clock.
+1: APB_CLK.
 0: REF_TICK.</description>
               <bitOffset>27</bitOffset>
               <bitWidth>1</bitWidth>
@@ -35578,7 +35578,7 @@ This register is used in autobaud detection.</description>
             </field>
             <field>
               <name>RS485RXBY_TX_EN</name>
-              <description>1: enable RS485 transmitter to send data when RS485 receiver line is busy. 
+              <description>1: enable RS485 transmitter to send data when RS485 receiver line is busy.
 0: RS485 transmitter should not send data when its receiver is busy.</description>
               <bitOffset>4</bitOffset>
               <bitWidth>1</bitWidth>
@@ -35609,7 +35609,7 @@ This register is used in autobaud detection.</description>
           <fields>
             <field>
               <name>PRE_IDLE_NUM</name>
-              <description>This register is used to configure the idle duration time before the first AT_CMD is received by the receiver. 
+              <description>This register is used to configure the idle duration time before the first AT_CMD is received by the receiver.
 It will not take the next data received as AT_CMD character when the duration is less than this register's value.</description>
               <bitOffset>0</bitOffset>
               <bitWidth>16</bitWidth>
@@ -35947,7 +35947,7 @@ The UART_RXFIFO_TOUT_INT interrupt will be triggered when the receiver takes mor
             </field>
             <field>
               <name>OUT_EOF_MODE</name>
-              <description>This register is used to specify the generation mode of UHCI_OUT_EOF_INT interrupt. 
+              <description>This register is used to specify the generation mode of UHCI_OUT_EOF_INT interrupt.
 1: When DMA has popped all data from FIFO.
 0: When AHB has pushed all data to FIFO.</description>
               <bitOffset>8</bitOffset>
@@ -36023,8 +36023,8 @@ The UART_RXFIFO_TOUT_INT interrupt will be triggered when the receiver takes mor
             </field>
             <field>
               <name>LEN_EOF_EN</name>
-              <description>If this bit is set to 1, UHCI decoder stops receiving payload data when the number of received data bytes has reached the specified value. 
-The value is payload length indicated by UCHI packet header when UHCI_HEAD_EN is 1 or the value is a configuration value when UHCI_HEAD_EN is 0. 
+              <description>If this bit is set to 1, UHCI decoder stops receiving payload data when the number of received data bytes has reached the specified value.
+The value is payload length indicated by UCHI packet header when UHCI_HEAD_EN is 1 or the value is a configuration value when UHCI_HEAD_EN is 0.
 If this bit is set to 0, UHCI decoder stops receiving payload data  upon receiving 0xC0.</description>
               <bitOffset>20</bitOffset>
               <bitWidth>1</bitWidth>
@@ -36630,7 +36630,7 @@ If this bit is set to 0, UHCI decoder stops receiving payload data  upon receivi
             <field>
               <name>RX_ERR_CAUSE</name>
               <description>This register indicates the error type when DMA has received a packet with error.
-3'b001: Checksum error in the HCI packet; 
+3'b001: Checksum error in the HCI packet;
 3'b010: Sequence number error in the HCI packet;
 3'b011: CRC bit error in the HCI packet;
 3'b100: 0xC0 is found but the received HCI packet is not end;

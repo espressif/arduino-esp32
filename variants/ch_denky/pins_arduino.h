@@ -3,24 +3,16 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
 static const uint8_t SDA = 21;
 static const uint8_t SCL = 22;
 
-static const uint8_t SS    = 5;
-static const uint8_t MOSI  = 23;
-static const uint8_t MISO  = 19;
-static const uint8_t SCK   = 18;
+static const uint8_t SS = 5;
+static const uint8_t MOSI = 23;
+static const uint8_t MISO = 19;
+static const uint8_t SCK = 18;
 
 static const uint8_t A0 = 36;
 static const uint8_t A3 = 39;
@@ -55,25 +47,24 @@ static const uint8_t DAC2 = 26;
 
 // Specific CH2i (Charles Hallard) Boards
 // 1st Revision Denky with ESP WROOM32 + LoRa RN2483 module
-#if defined (ARDUINO_DENKY_WROOM32)
-#define PUSH_BUTTON     0
-#define TIC_ENABLE_PIN  4
-#define TIC_RX_PIN      33
-#define LORA_TX_PIN     26
-#define LORA_RX_PIN     27
-#define LORA_RESET      14
-#define RGB_LED_PIN     25
+#if defined(ARDUINO_DENKY_WROOM32)
+#define PUSH_BUTTON    0
+#define TIC_ENABLE_PIN 4
+#define TIC_RX_PIN     33
+#define LORA_TX_PIN    26
+#define LORA_RX_PIN    27
+#define LORA_RESET     14
+#define RGB_LED_PIN    25
 
 // 2nd Utra Small version with ESP Pico-D4-V3-02
-#elif defined (ARDUINO_DENKY_PICOV3)
+#elif defined(ARDUINO_DENKY_PICOV3)
 // RGB Led Pins
 #define LED_RED_PIN 27
 #define LED_GRN_PIN 26
 #define LED_BLU_PIN 25
 
 // Teleinfo RXD pin is connected to ESP32-PICO-V3-02 GPIO8
-#define TIC_RX_PIN  8   
+#define TIC_RX_PIN  8
 #endif
-
 
 #endif /* Pins_Arduino_h */

@@ -1,8 +1,8 @@
-<!-- 
+<!--
   FSWebServer - Example Index Page
   Copyright (c) 2015 Hristo Gochkov. All rights reserved.
   This file is part of the WebServer library for Arduino environment.
- 
+
   This library is free software; you can redistribute it and/or
   modify it under the terms of the GNU Lesser General Public
   License as published by the Free Software Foundation; either
@@ -25,7 +25,7 @@
     var heap,temp,digi;
     var reloadPeriod = 1000;
     var running = false;
-    
+
     function loadValues(){
       if(!running) return;
       var xh = new XMLHttpRequest();
@@ -43,14 +43,14 @@
       xh.open("GET", "/all", true);
       xh.send(null);
     };
-    
+
     function run(){
       if(!running){
         running = true;
         loadValues();
       }
     }
-    
+
     function onBodyLoad(){
       var refreshInput = document.getElementById("refresh-rate");
       refreshInput.value = reloadPeriod;
@@ -67,7 +67,7 @@
       startButton.onclick = function(e){
         run();
       }
-      
+
       // Example with 10K thermistor
       //function calcThermistor(v) {
       //  var t = Math.log(((10230000 / v) - 10000));
@@ -75,7 +75,7 @@
       //  return (t>120)?0:Math.round(t*10)/10;
       //}
       //temp = createGraph(document.getElementById("analog"), "Temperature", 100, 128, 10, 40, false, "cyan", calcThermistor);
-      
+
       temp = createGraph(document.getElementById("analog"), "Analog Input", 100, 128, 0, 1023, false, "cyan");
       heap = createGraph(document.getElementById("heap"), "Current Heap", 100, 125, 0, 30000, true, "orange");
       digi = createDigiGraph(document.getElementById("digital"), "GPIO", 100, 146, [0, 4, 5, 16], "gold");

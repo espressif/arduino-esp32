@@ -2,22 +2,22 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
-
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS 40
-#define NUM_ANALOG_INPUTS 16
-
-#define analogInputToDigitalPin(p) (((p) < 20) ? (analogChannelToDigitalPin(p)) : -1)
-#define digitalPinToInterrupt(p) (((p) < 40) ? (p) : -1)
-#define digitalPinHasPWM(p) (p < 34)
+#include "soc/soc_caps.h"
 
 static const uint8_t BUZZER = 25;
 
 static const uint8_t BUTTON_A = 35;
 static const uint8_t BUTTON_B = 27;
 
+// RGB LED Matrix 5 x 5
 static const uint8_t RGB_LED = 4;
 
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+#define LED_BUILTIN (RGB_LED + SOC_GPIO_PIN_COUNT)  // Just a single LED in the Matrix
+#define BUILTIN_LED LED_BUILTIN                     // backward compatibility
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 static const uint8_t LIGHT_SENSOR1 = 36;
 static const uint8_t LIGHT_SENSOR2 = 39;
 

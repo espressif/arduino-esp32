@@ -1,13 +1,8 @@
-pyserial>=3.0
-esptool>=3.1
-pytest-cov
-cryptography<3.4; platform_machine == "armv7l"
-
-pytest>=6.2.0
-pexpect>=4.4
-
-pytest-embedded>=0.5.1
-pytest-embedded-serial>=0.5.1
-pytest-embedded-serial-esp>=0.5.1
-pytest-embedded-arduino>=0.5.1
-
+cryptography==44.0.1
+--only-binary cryptography
+pytest-cov==5.0.0
+pytest-embedded-serial-esp==1.12.0
+pytest-embedded-arduino==1.12.0
+pytest-embedded-wokwi==1.12.0
+pytest-embedded-qemu==1.12.0
+esptool==4.8.1

@@ -4,7 +4,7 @@
 #OSTYPE: 'msys', ARCH: 'x86_64' => win32
 #OSTYPE: 'darwin18', ARCH: 'i386' => macos
 
-OSBITS=`arch`
+OSBITS=$(uname -m)
 if [[ "$OSTYPE" == "linux"* ]]; then
     export OS_IS_LINUX="1"
     ARCHIVE_FORMAT="tar.xz"
@@ -77,4 +77,3 @@ if [ ! -d "$ARDUINO_IDE_PATH" ]; then
     echo "Arduino IDE Installed in '$ARDUINO_IDE_PATH'"
     echo ""
 fi
-

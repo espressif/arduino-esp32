@@ -20,8 +20,8 @@
 
   Have a FAT Formatted SD Card connected to the SPI port of the ESP8266
   The web root is the SD Card root folder
-  File extensions with more than 3 charecters are not supported by the SD Library
-  File Names longer than 8 charecters will be truncated by the SD library, so keep filenames shorter
+  File extensions with more than 3 characters are not supported by the SD Library
+  File Names longer than 8 characters will be truncated by the SD library, so keep filenames shorter
   index.htm is the default index (works on subfolders as well)
 
   upload the contents of SdRoot to the root of the SDcard and access the editor by going to http://esp8266sd.local/edit
@@ -30,7 +30,7 @@
 
 */
 #include <WiFi.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <SPI.h>
@@ -38,15 +38,14 @@
 
 #define DBG_OUTPUT_PORT Serial
 
-const char* ssid = "**********";
-const char* password = "**********";
-const char* host = "esp32sd";
+const char *ssid = "**********";
+const char *password = "**********";
+const char *host = "esp32sd";
 
 WebServer server(80);
 
 static bool hasSD = false;
 File uploadFile;
-
 
 void returnOK() {
   server.send(200, "text/plain", "");
@@ -113,23 +112,26 @@ void handleFileUpload() {
   if (server.uri() != "/edit") {
     return;
   }
-  HTTPUpload& upload = server.upload();
+  HTTPUpload &upload = server.upload();
   if (upload.status == UPLOAD_FILE_START) {
     if (SD.exists((char *)upload.filename.c_str())) {
       SD.remove((char *)upload.filename.c_str());
     }
     uploadFile = SD.open(upload.filename.c_str(), FILE_WRITE);
-    DBG_OUTPUT_PORT.print("Upload: START, filename: "); DBG_OUTPUT_PORT.println(upload.filename);
+    DBG_OUTPUT_PORT.print("Upload: START, filename: ");
+    DBG_OUTPUT_PORT.println(upload.filename);
   } else if (upload.status == UPLOAD_FILE_WRITE) {
     if (uploadFile) {
       uploadFile.write(upload.buf, upload.currentSize);
     }
-    DBG_OUTPUT_PORT.print("Upload: WRITE, Bytes: "); DBG_OUTPUT_PORT.println(upload.currentSize);
+    DBG_OUTPUT_PORT.print("Upload: WRITE, Bytes: ");
+    DBG_OUTPUT_PORT.println(upload.currentSize);
   } else if (upload.status == UPLOAD_FILE_END) {
     if (uploadFile) {
       uploadFile.close();
     }
-    DBG_OUTPUT_PORT.print("Upload: END, Size: "); DBG_OUTPUT_PORT.println(upload.totalSize);
+    DBG_OUTPUT_PORT.print("Upload: END, Size: ");
+    DBG_OUTPUT_PORT.println(upload.totalSize);
   }
 }
 
@@ -214,7 +216,6 @@ void printDirectory() {
   dir.rewindDirectory();
   server.setContentLength(CONTENT_LENGTH_UNKNOWN);
   server.send(200, "text/json", "");
-  WiFiClient client = server.client();
 
   server.sendContent("[");
   for (int cnt = 0; true; ++cnt) {
@@ -271,7 +272,7 @@ void setup(void) {
 
   // Wait for connection
   uint8_t i = 0;
-  while (WiFi.status() != WL_CONNECTED && i++ < 20) {//wait 10 seconds
+  while (WiFi.status() != WL_CONNECTED && i++ < 20) {  //wait 10 seconds
     delay(500);
   }
   if (i == 21) {
@@ -292,13 +293,16 @@ void setup(void) {
     DBG_OUTPUT_PORT.println(".local");
   }
 
-
   server.on("/list", HTTP_GET, printDirectory);
   server.on("/edit", HTTP_DELETE, handleDelete);
   server.on("/edit", HTTP_PUT, handleCreate);
-  server.on("/edit", HTTP_POST, []() {
-    returnOK();
-  }, handleFileUpload);
+  server.on(
+    "/edit", HTTP_POST,
+    []() {
+      returnOK();
+    },
+    handleFileUpload
+  );
   server.onNotFound(handleNotFound);
 
   server.begin();
@@ -312,5 +316,5 @@ void setup(void) {
 
 void loop(void) {
   server.handleClient();
-  delay(2);//allow the cpu to switch to other tasks
+  delay(2);  //allow the cpu to switch to other tasks
 }

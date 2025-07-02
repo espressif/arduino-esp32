@@ -1,7 +1,7 @@
 /*
 
 This is an example how to use Touch Intrrerupts
-The sketh will tell when it is touched and then relesased as like a push-button
+The sketch will tell when it is touched and then released as like a push-button
 
 This method based on touchInterruptSetThresholdDirection() is only available for ESP32
 */
@@ -13,7 +13,7 @@ bool touchActive = false;
 bool lastTouchActive = false;
 bool testingLower = true;
 
-void gotTouchEvent(){
+void gotTouchEvent() {
   if (lastTouchActive != testingLower) {
     touchActive = !touchActive;
     testingLower = !testingLower;
@@ -24,7 +24,7 @@ void gotTouchEvent(){
 
 void setup() {
   Serial.begin(115200);
-  delay(1000); // give me time to bring up serial monitor
+  delay(1000);  // give me time to bring up serial monitor
   Serial.println("ESP32 Touch Interrupt Test");
   touchAttachInterrupt(T2, gotTouchEvent, threshold);
 
@@ -32,8 +32,8 @@ void setup() {
   touchInterruptSetThresholdDirection(testingLower);
 }
 
-void loop(){
-  if(lastTouchActive != touchActive){
+void loop() {
+  if (lastTouchActive != touchActive) {
     lastTouchActive = touchActive;
     if (touchActive) {
       Serial.println("  ---- Touch was Pressed");

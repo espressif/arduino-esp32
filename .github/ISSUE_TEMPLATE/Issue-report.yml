@@ -5,7 +5,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        * Before reporting a new issue please check and search in [List of existing issues](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue) 
+        * Please note that we can only process issues reported in English to ensure effective communication and support. Issues written in other languages will be closed, with a request to rewrite them in English.
+        * Before reporting a new issue please check and search in [List of existing issues](https://github.com/espressif/arduino-esp32/issues?q=is%3Aissue)
         * Please check [Online Documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/index.html)
         * Take a look on [Troubleshooting guide](https://docs.espressif.com/projects/arduino-esp32/en/latest/troubleshooting.html)
         * If still experiencing the issue, please provide as many details as possible below about your hardware, computer setup and code.
@@ -24,7 +25,7 @@ body:
       description: What development board or other hardware is the chip attached to?
       placeholder: ex. DevKitC, plain module on breadboard, etc. If your hardware is custom or unusual, please attach a photo.
     validations:
-       required: true
+      required: true
   - type: textarea
     id: other-hw
     attributes:
@@ -39,13 +40,35 @@ body:
       label: Version
       description: What version of Arduino ESP32 are you running? If possible, consider updating to the latest version.
       options:
-        - latest master (checkout manually)
+        - latest stable Release (if not listed below)
         - latest development Release Candidate (RC-X)
+        - latest master (checkout manually)
+        - v3.2.0
+        - v3.1.3
+        - v3.1.2
+        - v3.1.1
+        - v3.1.0
+        - v3.0.7
+        - v3.0.6
+        - v3.0.5
+        - v3.0.4
+        - v3.0.3
+        - v3.0.2
+        - v3.0.1
+        - v3.0.0
+        - v2.0.17
+        - v2.0.16
+        - v2.0.15
+        - v2.0.14
+        - v2.0.13
+        - v2.0.12
+        - v2.0.11
+        - v2.0.10
         - v2.0.9
         - v2.0.8
         - v2.0.7
         - v2.0.6
-        - v2.0.5 
+        - v2.0.5
         - v2.0.4
         - v2.0.3
         - v2.0.2
@@ -60,9 +83,9 @@ body:
     attributes:
      label: IDE Name
      description: What IDE are you using?
-     placeholder: eg. Arduino IDE, PlatformIO, Sloeber...
+     placeholder: eg. Arduino IDE, VSCode, Sloeber...
     validations:
-     required: true
+      required: true
   - type: input
     id: os
     attributes:
@@ -80,13 +103,13 @@ body:
     validations:
       required: true
   - type: dropdown
-    id: PSRAM 
+    id: PSRAM
     attributes:
       label: PSRAM enabled
       description: Is PSRAM enabled?
       options:
-        - 'yes'
-        - 'no' 
+        - "yes"
+        - "no"
     validations:
       required: true
   - type: input
@@ -101,8 +124,8 @@ body:
     id: Description
     attributes:
       label: Description
-      description: Please describe your problem here and expected behaviour
-      placeholder: ex. Can't connect/weird behaviour/wrong function/missing parameter..
+      description: Please describe your problem here and expected behavior
+      placeholder: ex. Can't connect/weird behavior/wrong function/missing parameter..
     validations:
       required: true
   - type: textarea
@@ -113,7 +136,7 @@ body:
       placeholder: ex. Related part of the code to replicate the issue
       render: cpp
     validations:
-     required: true
+      required: true
   - type: textarea
     id: Debug
     attributes:
@@ -122,11 +145,11 @@ body:
       placeholder: Enable Core debug level - Debug on tools menu of Arduino IDE, then put the serial output here.
       render: plain
     validations:
-      required: true      
+      required: true
   - type: textarea
     id: other-remarks
     attributes:
-      label: Other Steps to Reproduce 
+      label: Other Steps to Reproduce
       description: Is there any other information you can think of which will help us reproduce this problem? Any additional info can be added as well.
       placeholder: ex. I also tried on other OS, HW...it works correctly on that setup.
   - type: checkboxes

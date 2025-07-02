@@ -1,0 +1,65 @@
+<html>
+
+<head>
+  <title>Files</title>
+  <link Content-Type="text/css" href="/style.css" rel="stylesheet" />
+</head>
+
+<body>
+  <h1>Files on Server</h1>
+
+  <p>These files are available on the server to be opened or delete:</p>
+  <div id="list">
+  </div>
+
+  <script>
+    // load and display all files after page loading has finished
+    window.addEventListener("load", function () {
+      fetch('/api/list')
+        .then(function (result) { return result.json(); })
+        .then(function (e) {
+          var listObj = document.querySelector('#list');
+          e.forEach(function (f) {
+            var entry = document.createElement("div");
+            var nameObj = document.createElement("a");
+            nameObj.href = '/' + f.name;
+            nameObj.innerText = '/' + f.name;
+            entry.appendChild(nameObj)
+
+            entry.appendChild(document.createTextNode(' (' + f.size + ') '));
+
+            var timeObj = document.createElement("span");
+            timeObj.innerText = (new Date(f.time*1000)).toLocaleString();
+            entry.appendChild(timeObj)
+            entry.appendChild(document.createTextNode(" "));
+
+            var delObj = document.createElement("span");
+            delObj.className = 'deleteFile';
+            delObj.innerText = ' [delete]';
+            entry.appendChild(delObj)
+
+            listObj.appendChild(entry)
+          });
+
+        })
+        .catch(function (err) {
+          window.alert(err);
+        });
+    });
+
+    window.addEventListener("click", function (evt) {
+      var t = evt.target;
+      if (t.className === 'deleteFile') {
+        var fname = t.parentElement.innerText;
+        fname = fname.split(' ')[0];
+        if (window.confirm("Delete " + fname + " ?")) {
+          fetch(fname, { method: 'DELETE' });
+          document.location.reload(false);
+        }
+      };
+    });
+
+  </script>
+</body>
+
+</html>

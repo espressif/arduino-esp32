@@ -1,0 +1,17 @@
+{
+  "fqbn": {
+    "esp32": [
+      "espressif:esp32:esp32:PSRAM=disabled,PartitionScheme=huge_app"
+    ],
+    "esp32s2": [
+      "espressif:esp32:esp32s2:PSRAM=disabled,PartitionScheme=huge_app"
+    ],
+    "esp32s3": [
+      "espressif:esp32:esp32s3:PSRAM=disabled,USBMode=default,PartitionScheme=huge_app"
+    ]
+  },
+  "platform": {
+    "qemu": false,
+    "wokwi": false
+  }
+}

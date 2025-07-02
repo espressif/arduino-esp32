@@ -5,7 +5,7 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     echo "Installing ESP32 Arduino Core ..."
     script_init_path="$PWD"
     mkdir -p "$ARDUINO_USR_PATH/hardware/espressif"
-    cd "$ARDUINO_USR_PATH/hardware/espressif"
+    cd "$ARDUINO_USR_PATH/hardware/espressif" || exit
 
     echo "Installing Python Serial ..."
     pip install pyserial > /dev/null
@@ -15,21 +15,25 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
         pip install requests > /dev/null
     fi
 
-    if [ ! -z "$GITHUB_REPOSITORY" ];  then
+    if [ -n "$GITHUB_REPOSITORY" ];  then
         echo "Linking Core..."
-        ln -s $GITHUB_WORKSPACE esp32
+        ln -s "$GITHUB_WORKSPACE" esp32
     else
         echo "Cloning Core Repository..."
         git clone https://github.com/espressif/arduino-esp32.git esp32 > /dev/null 2>&1
     fi
 
     #echo "Updating Submodules ..."
-    cd esp32
+    cd esp32 || exit
     #git submodule update --init --recursive > /dev/null 2>&1
 
     echo "Installing Platform Tools ..."
-    cd tools && python get.py
-    cd $script_init_path
+    if [ "$OS_IS_WINDOWS" == "1" ]; then
+        cd tools && ./get.exe
+    else
+        cd tools && python get.py
+    fi
+    cd "$script_init_path" || exit
 
     echo "ESP32 Arduino has been installed in '$ARDUINO_ESP32_PATH'"
     echo ""

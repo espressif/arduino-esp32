@@ -24,22 +24,22 @@ void loop() {
   Wire.write(0xFF);              // data to write (if writing)
   Wire.endTransmission();
 
-  Wire.requestFrom(0x68, 1);     // number of bytes to read
+  Wire.requestFrom(0x68, 1);  // number of bytes to read
 
   while (Wire.available()) {
     Serial.println(Wire.read());
   }
 
   // SPI read/write
-  digitalWrite(SS, LOW);         // select slave device
-  SPI.transfer(0x01);            // data to write
-  digitalWrite(SS, HIGH);        // deselect slave device
+  digitalWrite(SS, LOW);   // select slave device
+  SPI.transfer(0x01);      // data to write
+  digitalWrite(SS, HIGH);  // deselect slave device
 
-  digitalWrite(SS, LOW);         // select slave device
-  byte data = SPI.transfer(0x00);// data to read
-  digitalWrite(SS, HIGH);        // deselect slave device
+  digitalWrite(SS, LOW);           // select slave device
+  byte data = SPI.transfer(0x00);  // data to read
+  digitalWrite(SS, HIGH);          // deselect slave device
 
   Serial.println(data);
 
-  delay(1000);                   // wait for 1 second before repeating loop
+  delay(1000);  // wait for 1 second before repeating loop
 }

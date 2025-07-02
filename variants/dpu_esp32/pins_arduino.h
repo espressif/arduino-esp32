@@ -3,14 +3,6 @@
 
 #include <stdint.h>
 
-#define EXTERNAL_NUM_INTERRUPTS 16
-#define NUM_DIGITAL_PINS        40
-#define NUM_ANALOG_INPUTS       16
-
-#define analogInputToDigitalPin(p)  (((p)<20)?(analogChannelToDigitalPin(p)):-1)
-#define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
-#define digitalPinHasPWM(p)         (p < 34)
-
 static const uint8_t TX = 1;
 static const uint8_t RX = 3;
 
@@ -48,17 +40,17 @@ static const uint8_t DAC2 = 26;
 static const uint8_t SDA = 4;
 static const uint8_t SCL = 5;
 
-static const uint8_t MOSI  = 13;
-static const uint8_t MISO  = 12;
-static const uint8_t SCK   = 14;
-static const uint8_t SS    = 15;
+static const uint8_t MOSI = 13;
+static const uint8_t MISO = 12;
+static const uint8_t SCK = 14;
+static const uint8_t SS = 15;
 
-static const uint8_t TP_RST  = 21;
-static const uint8_t TP_INT  = 19;
-static const uint8_t TFT_BL  = 18;
-static const uint8_t TFT_CS  = 15;
-static const uint8_t TFT_DC  = 27;
+static const uint8_t TP_RST = 21;
+static const uint8_t TP_INT = 19;
+static const uint8_t TFT_BL = 18;
+static const uint8_t TFT_CS = 15;
+static const uint8_t TFT_DC = 27;
 static const uint8_t TFT_RST = 32;
-static const uint8_t SD_CS   = 23;
-static const uint8_t SD_CD   = 22;
+static const uint8_t SD_CS = 23;
+static const uint8_t SD_CD = 22;
 #endif /* Pins_Arduino_h */

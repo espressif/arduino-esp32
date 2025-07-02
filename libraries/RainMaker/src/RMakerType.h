@@ -20,7 +20,7 @@
 #include <esp_err.h>
 #include <esp32-hal.h>
 
-typedef esp_rmaker_node_t* node_t;
+typedef esp_rmaker_node_t *node_t;
 typedef esp_rmaker_node_info_t node_info_t;
 typedef esp_rmaker_param_val_t param_val_t;
 typedef esp_rmaker_write_ctx_t write_ctx_t;
@@ -33,5 +33,5 @@ param_val_t value(int);
 param_val_t value(bool);
 param_val_t value(char *);
 param_val_t value(float);
-param_val_t value(const char*);
+param_val_t value(const char *);
 #endif

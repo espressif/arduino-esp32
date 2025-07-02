@@ -1,0 +1,9 @@
+{
+  "requires": [
+    "CONFIG_LWIP_PPP_SUPPORT=y"
+  ],
+  "requires_any": [
+    "CONFIG_SOC_WIFI_SUPPORTED=y",
+    "CONFIG_ESP_WIFI_REMOTE_ENABLED=y"
+  ]
+}

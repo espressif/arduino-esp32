@@ -15,18 +15,31 @@
 #ifndef _ESP32_ESP32_HAL_BT_H_
 #define _ESP32_ESP32_HAL_BT_H_
 
+#include "soc/soc_caps.h"
+#if SOC_BT_SUPPORTED
+
 #include "esp32-hal.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef enum {
+  BT_MODE_DEFAULT,
+  BT_MODE_BLE,
+  BT_MODE_CLASSIC_BT,
+  BT_MODE_BTDM
+} bt_mode;
+
 bool btStarted();
 bool btStart();
+bool btStartMode(bt_mode mode);
 bool btStop();
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* SOC_BT_SUPPORTED */
 
 #endif /* _ESP32_ESP32_HAL_BT_H_ */
