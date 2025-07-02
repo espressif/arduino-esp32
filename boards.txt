@@ -50608,7 +50608,7 @@ kodedot.recipe.output.save_file={build.project_name}.ino.bin
 # FED4 Board
 fed4.name=FED4
 fed4.vid.0=0x303A
-fed4.pid.0=0x82Ed
+fed4.pid.0=0x82E5
 fed4.upload_port.0.vid=0x303A
 fed4.upload_port.0.pid=0x82E5
 fed4.bootloader.tool=esptool_py
@@ -50646,7 +50646,7 @@ fed4.build.flash_freq=80m
 fed4.build.flash_mode=dio
 fed4.build.boot=qio
 fed4.build.boot_freq=80m
-fed4.build.partitions=default
+fed4.build.partitions=default_16MB
 fed4.build.defines=
 fed4.build.loop_core=
 fed4.build.event_core=
@@ -50665,16 +50665,6 @@ fed4.menu.JTAGAdapter.external.build.copy_jtag_files=1
 fed4.menu.JTAGAdapter.bridge=ESP USB Bridge
 fed4.menu.JTAGAdapter.bridge.build.openocdscript=fed4-bridge.cfg
 fed4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
-
-fed4.menu.PSRAM.disabled=Disabled
-fed4.menu.PSRAM.disabled.build.defines=
-fed4.menu.PSRAM.disabled.build.psram_type=qspi
-fed4.menu.PSRAM.enabled=QSPI PSRAM
-fed4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-fed4.menu.PSRAM.enabled.build.psram_type=qspi
-fed4.menu.PSRAM.opi=OPI PSRAM
-fed4.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-fed4.menu.PSRAM.opi.build.psram_type=opi
 
 fed4.menu.FlashMode.qio=QIO 80MHz
 fed4.menu.FlashMode.qio.build.flash_mode=dio
