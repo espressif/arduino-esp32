@@ -28,11 +28,11 @@ uint8_t mac[6];
 WebServer server(80);
 bool displayEnabled;
 
-const int BUTTON_PIN = 0;                       // GPIO für den Button
-volatile unsigned long lastPressTime = 0;       // Zeitpunkt des letzten Drucks
-volatile bool doublePressDetected = false;      // Flag für Doppeldruck
-const unsigned long doublePressInterval = 500;  // Max. Zeit (in ms) zwischen zwei Drücken für Doppeldruck
-volatile int pressCount = 0;                    // Zählt die Button-Drucke
+const int BUTTON_PIN = 0;                       // GPIO for the button
+volatile unsigned long lastPressTime = 0;       // Time of last button press
+volatile bool doublePressDetected = false;      // Flag for double press
+const unsigned long doublePressInterval = 500;  // Max. time (in ms) between two presses for double press
+volatile int pressCount = 0;                    // Counts the button presses
 
 const unsigned char epd_bitmap_wifi[] PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -64,31 +64,32 @@ const unsigned char epd_bitmap_checkmark[] PROGMEM = {
 };
 
 void IRAM_ATTR handleButtonPress() {
-  unsigned long currentTime = millis();  // Hole aktuelle Zeit
+  unsigned long currentTime = millis();  // Get current time
 
-  // Vermeidung von Prellen: Wenn der aktuelle Druck zu nahe am letzten liegt, ignoriere ihn
+  // Debounce: If the current press is too close to the last one, ignore it
   if (currentTime - lastPressTime > 50) {
-    pressCount++;                 // Zähle den Button-Druck
-    lastPressTime = currentTime;  // Aktualisiere die Zeit des letzten Drückens
+    pressCount++;                 // Count the button press
 
-    // Überprüfe, ob dies der zweite Druck innerhalb des Double-Press-Intervalls ist
+    // Check if this is the second press within the double-press interval
     if (pressCount == 2 && (currentTime - lastPressTime <= doublePressInterval)) {
-      doublePressDetected = true;  // Doppeldruck erkannt
-      pressCount = 0;              // Zähler zurücksetzen
+      doublePressDetected = true;  // Double press detected
+      pressCount = 0;              // Reset counter
     }
+
+    lastPressTime = currentTime;  // Update the time of the last press
   }
 }
 
-// Funktion zum Wechseln der Boot-Partition auf OTA1
+// Function to switch the boot partition to OTA1
 void setBootPartitionToOTA0() {
   const esp_partition_t *ota0_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
 
   if (ota0_partition) {
-    // Setze OTA1 als neue Boot-Partition
+    // Set OTA1 as new boot partition
     esp_ota_set_boot_partition(ota0_partition);
     Serial.println("Boot partition changed to OTA0. Restarting...");
 
-    // Neustart, um von der neuen Partition zu booten
+    // Restart to boot from the new partition
     esp_restart();
   } else {
     Serial.println("OTA1 partition not found!");
@@ -111,12 +112,12 @@ void displayStatusBar(int progress) {
   display.setCursor(22, 22);
   display.println("hochgeladen!");
 
-  display.fillRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, BLACK);  // Clear status bar area
-  display.drawRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, WHITE);  // Draw border
-  int filledWidth = (progress * SCREEN_WIDTH - 4) / 100;                // Calculate progress width
-  display.fillRect(1, SCREEN_HEIGHT - 23, filledWidth - 4, 6, WHITE);   // Fill progress bar
+  display.fillRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH-4, 8, BLACK); // Clear status bar area
+  display.drawRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH-4, 8, WHITE); // Draw border
+  int filledWidth = (progress * SCREEN_WIDTH-4) / 100; // Calculate progress width
+  display.fillRect(1, SCREEN_HEIGHT - 23, filledWidth-4, 6, WHITE); // Fill progress bar
 
-  display.setCursor((SCREEN_WIDTH / 2) - 12, SCREEN_HEIGHT - 10);
+  display.setCursor((SCREEN_WIDTH/2)-12, SCREEN_HEIGHT - 10);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
   display.print(progress);
@@ -134,9 +135,9 @@ void displayWelcomeScreen() {
   display.setCursor(40, 13);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Verbinde dich");
+  display.println("Verbinde dich"); // "Connect"
   display.setCursor(60, 27);
-  display.println("mit:");
+  display.println("mit:"); // "with"
 
   // Display SSID
   display.setCursor(40, 43);
@@ -156,9 +157,9 @@ void displaySuccessScreen() {
   display.setCursor(48, 22);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Erfolgreich");
+  display.println("Erfolgreich"); // "Successfully"
   display.setCursor(48, 36);
-  display.println("hochgeladen!");
+  display.println("hochgeladen!"); // "uploaded!"
 
   display.display();
 }
@@ -175,15 +176,15 @@ void setupWiFi() {
   snprintf(macLastFour, sizeof(macLastFour), "%02X%02X", mac[4], mac[5]);
   ssid = "senseBox:" + String(macLastFour);
 
-  // Definiere die IP-Adresse, Gateway und Subnetzmaske
-  IPAddress local_IP(192, 168, 1, 1);  // Die neue IP-Adresse
-  IPAddress gateway(192, 168, 1, 1);   // Gateway-Adresse (kann gleich der IP des APs sein)
-  IPAddress subnet(255, 255, 255, 0);  // Subnetzmaske
+  // Define the IP address, gateway, and subnet mask
+  IPAddress local_IP(192, 168, 1, 1);  // The new IP address
+  IPAddress gateway(192, 168, 1, 1);   // Gateway address (can be the same as the AP's IP)
+  IPAddress subnet(255, 255, 255, 0);  // Subnet mask
 
-  // Setze die IP-Adresse, Gateway und Subnetzmaske des Access Points
+  // Set the IP address, gateway, and subnet mask of the access point
   WiFi.softAPConfig(local_IP, gateway, subnet);
 
-  // Starte den Access Point
+  // Start the access point
   WiFi.softAP(ssid.c_str());
 }
 
@@ -242,10 +243,10 @@ void setup() {
   rgb_led_1.setPixelColor(0, rgb_led_1.Color(51, 51, 255));
   rgb_led_1.show();
 
-  // Button-Pin als Input konfigurieren
+  // Configure button pin as input
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  // Interrupt für den Button
+  // Interrupt for the button
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), handleButtonPress, FALLING);
 
 #ifdef DISPLAY_ENABLED
@@ -266,7 +267,7 @@ void loop() {
 #endif
 
   if (doublePressDetected) {
-    Serial.println("Doppeldruck erkannt!");
+    Serial.println("Doppeldruck erkannt!"); // "Double press detected!"
     setBootPartitionToOTA0();
 #ifdef DISPLAY_ENABLED
     display.setCursor(0, 0);
@@ -276,7 +277,7 @@ void loop() {
     display.display();
     delay(50);
 #endif
-    // Neustart, um von der neuen Partition zu booten
+    // Restart to boot from the new partition
     esp_restart();
   }
 }
