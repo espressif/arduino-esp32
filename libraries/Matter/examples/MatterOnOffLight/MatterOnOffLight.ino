@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,18 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the decive can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 #include <Preferences.h>
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
@@ -68,6 +74,8 @@ void setup() {
 
   Serial.begin(115200);
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -82,6 +90,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(500);
+#endif
 
   // Initialize Matter EndPoint
   matterPref.begin("MatterPrefs", false);
@@ -93,7 +102,7 @@ void setup() {
   Matter.begin();
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
     OnOffLight.updateAccessory();  // configure the Light based on initial state
   }
@@ -118,7 +127,7 @@ void loop() {
     }
     Serial.printf("Initial state: %s\r\n", OnOffLight.getOnOff() ? "ON" : "OFF");
     OnOffLight.updateAccessory();  // configure the Light based on initial state
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
 
   // A button is also used to control the light

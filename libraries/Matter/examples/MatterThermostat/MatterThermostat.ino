@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,15 +21,21 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the decive can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 
 // List of Matter Endpoints for this Node
 // Matter Thermostat Endpoint
 MatterThermostat SimulatedThermostat;
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
@@ -62,6 +68,8 @@ void setup() {
 
   Serial.begin(115200);
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
@@ -70,6 +78,7 @@ void setup() {
     Serial.print(".");
   }
   Serial.println();
+#endif
 
   // Simulated Thermostat in COOLING and HEATING mode with Auto Mode to keep the temperature between setpoints
   // Auto Mode can only be used when the control sequence of operation is Cooling & Heating
@@ -94,7 +103,7 @@ void setup() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
 
     // after commissioning, set initial thermostat parameters
     // start the thermostat in AUTO mode

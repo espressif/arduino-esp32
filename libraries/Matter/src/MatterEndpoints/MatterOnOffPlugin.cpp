@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,6 +78,11 @@ bool MatterOnOffPlugin::begin(bool initialState) {
   onOffState = initialState;
   setEndPointId(endpoint::get_id(endpoint));
   log_i("On-Off Plugin created with endpoint_id %d", getEndPointId());
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  createSecondaryNetworkInterface();
+#endif
+
   started = true;
   return true;
 }

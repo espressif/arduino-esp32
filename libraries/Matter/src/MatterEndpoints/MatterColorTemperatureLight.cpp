@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -128,6 +128,10 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
   cluster_t *color_control_cluster = cluster::get(endpoint, ColorControl::Id);
   esp_matter::attribute_t *color_temp_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::ColorTemperatureMireds::Id);
   attribute::set_deferred_persistence(color_temp_attribute);
+
+#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  createSecondaryNetworkInterface();
+#endif
 
   started = true;
   return true;

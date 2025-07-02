@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,27 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the decive can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 
 // List of Matter Endpoints for this Node
 // On/Off Light Endpoint
 MatterOnOffLight OnOffLight;
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 void setup() {
   Serial.begin(115200);
 
+// CONFIG_ENABLE_CHIPOBLE is enbaled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -41,6 +49,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(500);
+#endif
 
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();
@@ -64,7 +73,7 @@ void loop() {
       Serial.println("Matter Fabric not commissioned yet. Waiting for commissioning.");
     }
   }
-  Serial.println("Matter Node is commissioned and connected to Wi-Fi.");
+  Serial.println("Matter Node is commissioned and connected to the network.");
   Serial.println("====> Decommissioning in 30 seconds. <====");
   delay(30000);
   Matter.decommission();
