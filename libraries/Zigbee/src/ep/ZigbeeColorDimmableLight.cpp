@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "ZigbeeColorDimmableLight.h"
 #if CONFIG_ZB_ENABLED
 
@@ -127,7 +128,8 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
 
   espXyColor_t xy_color = espRgbColorToXYColor(_current_color);
   espHsvColor_t hsv_color = espRgbColorToHsvColor(_current_color);
-  uint8_t hue = (uint8_t)hsv_color.h;
+  uint8_t hue = std::min((uint8_t)hsv_color.h, (uint8_t)254);         // Clamp to 0-254
+  uint8_t saturation = std::min((uint8_t)hsv_color.s, (uint8_t)254);  // Clamp to 0-254
 
   log_v("Updating light state: %d, level: %d, color: %d, %d, %d", state, level, red, green, blue);
   /* Update light clusters */
@@ -174,7 +176,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   }
   //set saturation
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &hsv_color.s, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &saturation, false
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light saturation: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
