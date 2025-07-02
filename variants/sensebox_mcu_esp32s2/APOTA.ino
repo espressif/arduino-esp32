@@ -68,7 +68,7 @@ void IRAM_ATTR handleButtonPress() {
 
   // Debounce: If the current press is too close to the last one, ignore it
   if (currentTime - lastPressTime > 50) {
-    pressCount++;                 // Count the button press
+    pressCount++;  // Count the button press
 
     // Check if this is the second press within the double-press interval
     if (pressCount == 2 && (currentTime - lastPressTime <= doublePressInterval)) {
@@ -112,12 +112,12 @@ void displayStatusBar(int progress) {
   display.setCursor(22, 22);
   display.println("hochgeladen!");
 
-  display.fillRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH-4, 8, BLACK); // Clear status bar area
-  display.drawRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH-4, 8, WHITE); // Draw border
-  int filledWidth = (progress * SCREEN_WIDTH-4) / 100; // Calculate progress width
-  display.fillRect(1, SCREEN_HEIGHT - 23, filledWidth-4, 6, WHITE); // Fill progress bar
+  display.fillRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, BLACK);  // Clear status bar area
+  display.drawRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, WHITE);  // Draw border
+  int filledWidth = (progress * SCREEN_WIDTH - 4) / 100;                // Calculate progress width
+  display.fillRect(1, SCREEN_HEIGHT - 23, filledWidth - 4, 6, WHITE);   // Fill progress bar
 
-  display.setCursor((SCREEN_WIDTH/2)-12, SCREEN_HEIGHT - 10);
+  display.setCursor((SCREEN_WIDTH / 2) - 12, SCREEN_HEIGHT - 10);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
   display.print(progress);
@@ -135,9 +135,9 @@ void displayWelcomeScreen() {
   display.setCursor(40, 13);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Verbinde dich"); // "Connect"
+  display.println("Verbinde dich");  // "Connect"
   display.setCursor(60, 27);
-  display.println("mit:"); // "with"
+  display.println("mit:");  // "with"
 
   // Display SSID
   display.setCursor(40, 43);
@@ -157,9 +157,9 @@ void displaySuccessScreen() {
   display.setCursor(48, 22);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Erfolgreich"); // "Successfully"
+  display.println("Erfolgreich");  // "Successfully"
   display.setCursor(48, 36);
-  display.println("hochgeladen!"); // "uploaded!"
+  display.println("hochgeladen!");  // "uploaded!"
 
   display.display();
 }
@@ -267,7 +267,7 @@ void loop() {
 #endif
 
   if (doublePressDetected) {
-    Serial.println("Doppeldruck erkannt!"); // "Double press detected!"
+    Serial.println("Doppeldruck erkannt!");  // "Double press detected!"
     setBootPartitionToOTA0();
 #ifdef DISPLAY_ENABLED
     display.setCursor(0, 0);
