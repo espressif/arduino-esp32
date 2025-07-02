@@ -201,7 +201,6 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
   createSecondaryNetworkInterface();
 #endif
 
-
   started = true;
   return true;
 }
