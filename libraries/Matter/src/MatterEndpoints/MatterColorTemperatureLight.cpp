@@ -129,10 +129,6 @@ bool MatterColorTemperatureLight::begin(bool initialState, uint8_t brightness, u
   esp_matter::attribute_t *color_temp_attribute = attribute::get(color_control_cluster, ColorControl::Attributes::ColorTemperatureMireds::Id);
   attribute::set_deferred_persistence(color_temp_attribute);
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  createSecondaryNetworkInterface();
-#endif
-
   started = true;
   return true;
 }

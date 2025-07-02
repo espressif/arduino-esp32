@@ -217,10 +217,6 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
   esp_matter::attribute_t *current_level_attribute = attribute::get(level_control_cluster, LevelControl::Attributes::CurrentLevel::Id);
   attribute::set_deferred_persistence(current_level_attribute);
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  createSecondaryNetworkInterface();
-#endif
-
   started = true;
   return true;
 }

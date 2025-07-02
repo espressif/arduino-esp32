@@ -79,10 +79,6 @@ bool MatterOnOffPlugin::begin(bool initialState) {
   setEndPointId(endpoint::get_id(endpoint));
   log_i("On-Off Plugin created with endpoint_id %d", getEndPointId());
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  createSecondaryNetworkInterface();
-#endif
-
   started = true;
   return true;
 }
