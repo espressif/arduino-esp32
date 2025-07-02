@@ -7,8 +7,10 @@
 
 #define SSID_FORMAT "ESP32-%06lX"  // 12 chars total
 //#define PASSWORD "test123456"    // generate if remarked
-const char * authUser = "admin";
-const char * authPass = "admin";
+
+// Set the username and password for firmware upload
+const char * authUser = "........";
+const char * authPass = "........";
 
 WebServer server(80);
 Ticker tkSecond;

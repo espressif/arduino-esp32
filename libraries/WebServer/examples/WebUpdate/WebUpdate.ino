@@ -11,8 +11,10 @@
 const char *host = "esp32-webupdate";
 const char *ssid = "........";
 const char *password = "........";
-const char * authUser = "admin";
-const char * authPass = "admin";
+
+// Set the username and password for firmware upload
+const char * authUser = "........";
+const char * authPass = "........";
 
 WebServer server(80);
 const char *serverIndex =
