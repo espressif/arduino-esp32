@@ -33353,9 +33353,6 @@ deneyapkartv2.menu.PSRAM.opi.build.psram_type=opi
 deneyapkartv2.menu.PSRAM.disabled=Disabled
 deneyapkartv2.menu.PSRAM.disabled.build.defines=
 deneyapkartv2.menu.PSRAM.disabled.build.psram_type=qspi
-deneyapkartv2.menu.PSRAM.enabled=QSPI PSRAM
-deneyapkartv2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-deneyapkartv2.menu.PSRAM.enabled.build.psram_type=qspi
 
 deneyapkartv2.menu.FlashMode.qio=QIO 80MHz
 deneyapkartv2.menu.FlashMode.qio.build.flash_mode=dio
@@ -33380,12 +33377,6 @@ deneyapkartv2.menu.FlashMode.opi.build.flash_freq=80m
 
 deneyapkartv2.menu.FlashSize.4M=4MB (32Mb)
 deneyapkartv2.menu.FlashSize.4M.build.flash_size=4MB
-deneyapkartv2.menu.FlashSize.8M=8MB (64Mb)
-deneyapkartv2.menu.FlashSize.8M.build.flash_size=8MB
-deneyapkartv2.menu.FlashSize.16M=16MB (128Mb)
-deneyapkartv2.menu.FlashSize.16M.build.flash_size=16MB
-deneyapkartv2.menu.FlashSize.32M=32MB (256Mb)
-deneyapkartv2.menu.FlashSize.32M.build.flash_size=32MB
 
 deneyapkartv2.menu.LoopCore.1=Core 1
 deneyapkartv2.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
