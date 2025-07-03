@@ -44,10 +44,18 @@ __attribute__((weak)) bool shouldPrintChipDebugReport(void) {
   return false;
 }
 
+// this function can be changed by the sketch using the macro SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms)
+__attribute__((weak)) uint64_t getArduinoSetupWaitTime_ms(void) {
+  return 0;
+}
+
 void loopTask(void *pvParameters) {
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
   // sets UART0 (default console) RX/TX pins as already configured in boot or as defined in variants/pins_arduino.h
   Serial0.setPins(gpioNumberToDigitalPin(SOC_RX0), gpioNumberToDigitalPin(SOC_TX0));
+  // time in ms that the sketch may wait before starting its execution - default is zero
+  // usually done for opening the Serial Monitor and seeing all debug messages
+  delay(getArduinoSetupWaitTime_ms());
 #endif
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   printBeforeSetupInfo();
