@@ -41204,7 +41204,7 @@ sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB F
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-4MB-tinyuf2
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin" 0x170000 "{runtime.platform.path}/variants/{build.variant}/APOTA.bin"
 sensebox_mcu_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 sensebox_mcu_esp32s2.menu.PartitionScheme.default.build.partitions=default
 sensebox_mcu_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -50756,5 +50756,405 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+rakwireless_rak3112.name=RAKwireless RAK3112
+
+rakwireless_rak3112.upload.tool=esptool_py
+rakwireless_rak3112.upload.tool.default=esptool_py
+rakwireless_rak3112.upload.tool.network=esp_ota
+rakwireless_rak3112.upload.maximum_size=1310720
+rakwireless_rak3112.upload.maximum_data_size=327680
+rakwireless_rak3112.upload.wait_for_upload_port=false
+rakwireless_rak3112.upload.speed=460800
+rakwireless_rak3112.upload.flags=
+rakwireless_rak3112.upload.extra_flags=
+
+rakwireless_rak3112.bootloader.tool=esptool_py
+rakwireless_rak3112.bootloader.tool.default=esptool_py
+
+rakwireless_rak3112.serial.disableDTR=true
+rakwireless_rak3112.serial.disableRTS=true
+
+rakwireless_rak3112.build.tarch=xtensa
+rakwireless_rak3112.build.bootloader_addr=0x0
+rakwireless_rak3112.build.mcu=esp32s3
+rakwireless_rak3112.build.core=esp32
+rakwireless_rak3112.build.target=esp32s3
+rakwireless_rak3112.build.variant=rakwireless_rak3112
+rakwireless_rak3112.build.board=RAKWIRELESS_RAK3112
+
+rakwireless_rak3112.build.usb_mode=1
+rakwireless_rak3112.build.cdc_on_boot=1
+rakwireless_rak3112.build.msc_on_boot=0
+rakwireless_rak3112.build.dfu_on_boot=0
+
+rakwireless_rak3112.build.f_cpu=240000000L
+rakwireless_rak3112.build.flash_size=16MB
+rakwireless_rak3112.build.flash_freq=80m
+rakwireless_rak3112.build.flash_mode=dio
+rakwireless_rak3112.build.boot=dio
+rakwireless_rak3112.build.partitions=default
+rakwireless_rak3112.build.defines=
+
+rakwireless_rak3112.menu.PSRAM.enabled=Enabled
+rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+rakwireless_rak3112.menu.PSRAM.enabled.build.psram_type=opi
+rakwireless_rak3112.menu.PSRAM.disabled=Disabled
+rakwireless_rak3112.menu.PSRAM.disabled.build.defines=
+
+rakwireless_rak3112.menu.LoopCore.1=Core 1
+rakwireless_rak3112.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+rakwireless_rak3112.menu.LoopCore.0=Core 0
+rakwireless_rak3112.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.EventsCore.1=Core 1
+rakwireless_rak3112.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+rakwireless_rak3112.menu.EventsCore.0=Core 0
+rakwireless_rak3112.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.USBMode.hwcdc=Hardware CDC and JTAG
+rakwireless_rak3112.menu.USBMode.hwcdc.build.usb_mode=1
+rakwireless_rak3112.menu.USBMode.default=USB-OTG (TinyUSB)
+rakwireless_rak3112.menu.USBMode.default.build.usb_mode=0
+
+rakwireless_rak3112.menu.CDCOnBoot.default=Enabled
+rakwireless_rak3112.menu.CDCOnBoot.default.build.cdc_on_boot=1
+rakwireless_rak3112.menu.CDCOnBoot.cdc=Disabled
+rakwireless_rak3112.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+rakwireless_rak3112.menu.MSCOnBoot.default=Disabled
+rakwireless_rak3112.menu.MSCOnBoot.default.build.msc_on_boot=0
+rakwireless_rak3112.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+rakwireless_rak3112.menu.DFUOnBoot.default=Disabled
+rakwireless_rak3112.menu.DFUOnBoot.default.build.dfu_on_boot=0
+rakwireless_rak3112.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+rakwireless_rak3112.menu.UploadMode.default=UART0 / Hardware CDC
+rakwireless_rak3112.menu.UploadMode.default.upload.use_1200bps_touch=false
+rakwireless_rak3112.menu.UploadMode.default.upload.wait_for_upload_port=false
+rakwireless_rak3112.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+rakwireless_rak3112.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+rakwireless_rak3112.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+rakwireless_rak3112.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-16MB
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota=TinyUF2 16MB No OTA(4MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-16MB-noota
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+rakwireless_rak3112.menu.PartitionScheme.custom=Custom
+rakwireless_rak3112.menu.PartitionScheme.custom.build.partitions=
+rakwireless_rak3112.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+rakwireless_rak3112.menu.CPUFreq.240=240MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.240.build.f_cpu=240000000L
+rakwireless_rak3112.menu.CPUFreq.160=160MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.160.build.f_cpu=160000000L
+rakwireless_rak3112.menu.CPUFreq.80=80MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.80.build.f_cpu=80000000L
+
+rakwireless_rak3112.menu.FlashMode.qio=QIO
+rakwireless_rak3112.menu.FlashMode.qio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.qio.build.boot=qio
+rakwireless_rak3112.menu.FlashMode.dio=DIO
+rakwireless_rak3112.menu.FlashMode.dio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.dio.build.boot=dio
+
+rakwireless_rak3112.menu.FlashFreq.80=80MHz
+rakwireless_rak3112.menu.FlashFreq.80.build.flash_freq=80m
+rakwireless_rak3112.menu.FlashFreq.40=40MHz
+rakwireless_rak3112.menu.FlashFreq.40.build.flash_freq=40m
+
+rakwireless_rak3112.menu.UploadSpeed.921600=921600
+rakwireless_rak3112.menu.UploadSpeed.921600.upload.speed=921600
+rakwireless_rak3112.menu.UploadSpeed.115200=115200
+rakwireless_rak3112.menu.UploadSpeed.115200.upload.speed=115200
+rakwireless_rak3112.menu.UploadSpeed.256000.windows=256000
+rakwireless_rak3112.menu.UploadSpeed.256000.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400.windows.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400=230400
+rakwireless_rak3112.menu.UploadSpeed.230400.upload.speed=230400
+rakwireless_rak3112.menu.UploadSpeed.460800.linux=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.macosx=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.upload.speed=460800
+rakwireless_rak3112.menu.UploadSpeed.512000.windows=512000
+rakwireless_rak3112.menu.UploadSpeed.512000.upload.speed=512000
+
+rakwireless_rak3112.menu.DebugLevel.none=None
+rakwireless_rak3112.menu.DebugLevel.none.build.code_debug=0
+rakwireless_rak3112.menu.DebugLevel.error=Error
+rakwireless_rak3112.menu.DebugLevel.error.build.code_debug=1
+rakwireless_rak3112.menu.DebugLevel.warn=Warn
+rakwireless_rak3112.menu.DebugLevel.warn.build.code_debug=2
+rakwireless_rak3112.menu.DebugLevel.info=Info
+rakwireless_rak3112.menu.DebugLevel.info.build.code_debug=3
+rakwireless_rak3112.menu.DebugLevel.debug=Debug
+rakwireless_rak3112.menu.DebugLevel.debug.build.code_debug=4
+rakwireless_rak3112.menu.DebugLevel.verbose=Verbose
+rakwireless_rak3112.menu.DebugLevel.verbose.build.code_debug=5
+
+rakwireless_rak3112.menu.EraseFlash.none=Disabled
+rakwireless_rak3112.menu.EraseFlash.none.upload.erase_cmd=
+rakwireless_rak3112.menu.EraseFlash.all=Enabled
+rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+kodedot.name=kode dot
+
+kodedot.bootloader.tool=esptool_py
+kodedot.bootloader.tool.default=esptool_py
+
+kodedot.upload.tool=esptool_py_app_only
+kodedot.upload.tool.default=esptool_py_app_only
+kodedot.upload.tool.network=esp_ota
+
+kodedot.upload.maximum_size=8388608
+kodedot.upload.maximum_data_size=327680
+kodedot.upload.flags=
+kodedot.upload.extra_flags=
+kodedot.upload.use_1200bps_touch=false
+kodedot.upload.wait_for_upload_port=false
+kodedot.upload.speed=921600
+
+kodedot.upload.erase_cmd=
+
+kodedot.serial.disableDTR=false
+kodedot.serial.disableRTS=false
+
+kodedot.build.tarch=xtensa
+kodedot.build.bootloader_addr=0x0
+kodedot.build.target=esp32s3
+kodedot.build.mcu=esp32s3
+kodedot.build.core=esp32
+kodedot.build.variant=kodedot
+kodedot.build.board=KODE_DOT
+
+kodedot.build.usb_mode=1
+kodedot.build.cdc_on_boot=1
+kodedot.build.msc_on_boot=0
+kodedot.build.dfu_on_boot=0
+
+kodedot.build.f_cpu=240000000L
+
+kodedot.build.flash_offset=0x400000
+kodedot.build.flash_size=16MB
+kodedot.build.flash_freq=80m
+kodedot.build.flash_mode=dio
+
+kodedot.build.custom_partitions=kodedot_partitions
+
+kodedot.build.psram_type=qspi
+kodedot.build.defines=
+
+kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
+kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
+
+kodedot.recipe.output.save_file={build.project_name}.ino.bin
+
+##############################################################
+
+# FED4 Board
+fed4.name=FED4
+fed4.vid.0=0x303A
+fed4.pid.0=0x82E5
+fed4.upload_port.0.vid=0x303A
+fed4.upload_port.0.pid=0x82E5
+fed4.bootloader.tool=esptool_py
+fed4.bootloader.tool.default=esptool_py
+
+fed4.upload.tool=esptool_py
+fed4.upload.tool.default=esptool_py
+fed4.upload.tool.network=esp_ota
+
+fed4.upload.maximum_size=1310720
+fed4.upload.maximum_data_size=327680
+fed4.upload.flags=
+fed4.upload.extra_flags=
+fed4.upload.use_1200bps_touch=false
+fed4.upload.wait_for_upload_port=false
+
+fed4.serial.disableDTR=false
+fed4.serial.disableRTS=false
+
+fed4.build.tarch=xtensa
+fed4.build.bootloader_addr=0x0
+fed4.build.target=esp32s3
+fed4.build.mcu=esp32s3
+fed4.build.core=esp32
+fed4.build.variant=fed4
+fed4.build.board=FED4
+
+fed4.build.usb_mode=1
+fed4.build.cdc_on_boot=0
+fed4.build.msc_on_boot=0
+fed4.build.dfu_on_boot=0
+fed4.build.f_cpu=240000000L
+fed4.build.flash_size=16MB
+fed4.build.flash_freq=80m
+fed4.build.flash_mode=dio
+fed4.build.boot=qio
+fed4.build.boot_freq=80m
+fed4.build.partitions=default_16MB
+fed4.build.defines=
+fed4.build.loop_core=
+fed4.build.event_core=
+fed4.build.psram_type=qspi
+fed4.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+fed4.menu.JTAGAdapter.default=Disabled
+fed4.menu.JTAGAdapter.default.build.copy_jtag_files=0
+fed4.menu.JTAGAdapter.builtin=Integrated USB JTAG
+fed4.menu.JTAGAdapter.builtin.build.openocdscript=fed4-builtin.cfg
+fed4.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+fed4.menu.JTAGAdapter.external=FTDI Adapter
+fed4.menu.JTAGAdapter.external.build.openocdscript=fed4-ftdi.cfg
+fed4.menu.JTAGAdapter.external.build.copy_jtag_files=1
+fed4.menu.JTAGAdapter.bridge=ESP USB Bridge
+fed4.menu.JTAGAdapter.bridge.build.openocdscript=fed4-bridge.cfg
+fed4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+fed4.menu.FlashMode.qio=QIO 80MHz
+fed4.menu.FlashMode.qio.build.flash_mode=dio
+fed4.menu.FlashMode.qio.build.boot=qio
+fed4.menu.FlashMode.qio.build.boot_freq=80m
+fed4.menu.FlashMode.qio.build.flash_freq=80m
+fed4.menu.FlashMode.qio120=QIO 120MHz
+fed4.menu.FlashMode.qio120.build.flash_mode=dio
+fed4.menu.FlashMode.qio120.build.boot=qio
+fed4.menu.FlashMode.qio120.build.boot_freq=120m
+fed4.menu.FlashMode.qio120.build.flash_freq=80m
+fed4.menu.FlashMode.dio=DIO 80MHz
+fed4.menu.FlashMode.dio.build.flash_mode=dio
+fed4.menu.FlashMode.dio.build.boot=dio
+fed4.menu.FlashMode.dio.build.boot_freq=80m
+fed4.menu.FlashMode.dio.build.flash_freq=80m
+
+fed4.menu.FlashSize.16M=16MB (128Mb)
+fed4.menu.FlashSize.16M.build.flash_size=16MB
+
+fed4.menu.LoopCore.1=Core 1
+fed4.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+fed4.menu.LoopCore.0=Core 0
+fed4.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+fed4.menu.EventsCore.1=Core 1
+fed4.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+fed4.menu.EventsCore.0=Core 0
+fed4.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+fed4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+fed4.menu.USBMode.hwcdc.build.usb_mode=1
+fed4.menu.USBMode.default=USB-OTG (TinyUSB)
+fed4.menu.USBMode.default.build.usb_mode=0
+
+fed4.menu.CDCOnBoot.default=Disabled
+fed4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+fed4.menu.CDCOnBoot.cdc=Enabled
+fed4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+fed4.menu.MSCOnBoot.default=Disabled
+fed4.menu.MSCOnBoot.default.build.msc_on_boot=0
+fed4.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+fed4.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+fed4.menu.DFUOnBoot.default=Disabled
+fed4.menu.DFUOnBoot.default.build.dfu_on_boot=0
+fed4.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+fed4.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+fed4.menu.UploadMode.default=UART0 / Hardware CDC
+fed4.menu.UploadMode.default.upload.use_1200bps_touch=false
+fed4.menu.UploadMode.default.upload.wait_for_upload_port=false
+fed4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+fed4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+fed4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+fed4.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+fed4.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+fed4.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+fed4.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+fed4.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+fed4.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+fed4.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+fed4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+fed4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+fed4.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+fed4.menu.PartitionScheme.fatflash.build.partitions=ffat
+fed4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+fed4.menu.CPUFreq.240=240MHz (WiFi)
+fed4.menu.CPUFreq.240.build.f_cpu=240000000L
+fed4.menu.CPUFreq.160=160MHz (WiFi)
+fed4.menu.CPUFreq.160.build.f_cpu=160000000L
+fed4.menu.CPUFreq.80=80MHz (WiFi)
+fed4.menu.CPUFreq.80.build.f_cpu=80000000L
+fed4.menu.CPUFreq.40=40MHz
+fed4.menu.CPUFreq.40.build.f_cpu=40000000L
+fed4.menu.CPUFreq.20=20MHz
+fed4.menu.CPUFreq.20.build.f_cpu=20000000L
+fed4.menu.CPUFreq.10=10MHz
+fed4.menu.CPUFreq.10.build.f_cpu=10000000L
+
+fed4.menu.UploadSpeed.921600=921600
+fed4.menu.UploadSpeed.921600.upload.speed=921600
+fed4.menu.UploadSpeed.115200=115200
+fed4.menu.UploadSpeed.115200.upload.speed=115200
+fed4.menu.UploadSpeed.256000.windows=256000
+fed4.menu.UploadSpeed.256000.upload.speed=256000
+fed4.menu.UploadSpeed.230400.windows.upload.speed=256000
+fed4.menu.UploadSpeed.230400=230400
+fed4.menu.UploadSpeed.230400.upload.speed=230400
+fed4.menu.UploadSpeed.460800.linux=460800
+fed4.menu.UploadSpeed.460800.macosx=460800
+fed4.menu.UploadSpeed.460800.upload.speed=460800
+fed4.menu.UploadSpeed.512000.windows=512000
+fed4.menu.UploadSpeed.512000.upload.speed=512000
+
+fed4.menu.DebugLevel.none=None
+fed4.menu.DebugLevel.none.build.code_debug=0
+fed4.menu.DebugLevel.error=Error
+fed4.menu.DebugLevel.error.build.code_debug=1
+fed4.menu.DebugLevel.warn=Warn
+fed4.menu.DebugLevel.warn.build.code_debug=2
+fed4.menu.DebugLevel.info=Info
+fed4.menu.DebugLevel.info.build.code_debug=3
+fed4.menu.DebugLevel.debug=Debug
+fed4.menu.DebugLevel.debug.build.code_debug=4
+fed4.menu.DebugLevel.verbose=Verbose
+fed4.menu.DebugLevel.verbose.build.code_debug=5
+
+fed4.menu.EraseFlash.none=Disabled
+fed4.menu.EraseFlash.none.upload.erase_cmd=
+fed4.menu.EraseFlash.all=Enabled
+fed4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+fed4.menu.ZigbeeMode.default=Disabled
+fed4.menu.ZigbeeMode.default.build.zigbee_mode=
+fed4.menu.ZigbeeMode.default.build.zigbee_libs=
+fed4.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+fed4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+fed4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################

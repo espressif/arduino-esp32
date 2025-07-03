@@ -82,6 +82,11 @@ class WiFiGenericClass {
 public:
   WiFiGenericClass();
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+  // Set SDIO pins for connection to external ESP MCU
+  static bool setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
+#endif
+
   wifi_event_id_t onEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   wifi_event_id_t onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   wifi_event_id_t onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
