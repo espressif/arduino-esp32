@@ -11,8 +11,8 @@
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + 46;
-#define BUILTIN_LED    LED_BUILTIN                           // backward compatibility
-#define LED_BUILTIN    LED_BUILTIN                           // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED    LED_BUILTIN // backward compatibility
+#define LED_BUILTIN    LED_BUILTIN // allow testing #ifdef LED_BUILTIN
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGBLED         LED_BUILTIN
 #define RGB_BRIGHTNESS 64
@@ -68,16 +68,16 @@ static const uint8_t T11 = 12;
 static const uint8_t T12 = 13;
 static const uint8_t T13 = 14;
 
-static const uint8_t D0  = 1;
-static const uint8_t D1  = 2;
-static const uint8_t D2  = 43;
-static const uint8_t D3  = 44;
-static const uint8_t D4  = 42;
-static const uint8_t D5  = 41;
-static const uint8_t D6  = 40;
-static const uint8_t D7  = 39;
-static const uint8_t D8  = 38;
-static const uint8_t D9  = 48;
+static const uint8_t D0 = 1;
+static const uint8_t D1 = 2;
+static const uint8_t D2 = 43;
+static const uint8_t D3 = 44;
+static const uint8_t D4 = 42;
+static const uint8_t D5 = 41;
+static const uint8_t D6 = 40;
+static const uint8_t D7 = 39;
+static const uint8_t D8 = 38;
+static const uint8_t D9 = 48;
 static const uint8_t D10 = 47;
 static const uint8_t D11 = 21;
 static const uint8_t D12 = 11;
@@ -111,8 +111,8 @@ static const uint8_t CAMD8 = 17;
 static const uint8_t CAMD9 = 15;
 static const uint8_t CAMPC = 39;
 static const uint8_t CAMXC = 16;
-static const uint8_t CAMH  = 7;
-static const uint8_t CAMV  = 6;
+static const uint8_t CAMH = 7;
+static const uint8_t CAMV = 6;
 
 static const uint8_t SDCM = 12;
 static const uint8_t SDCK = 13;
