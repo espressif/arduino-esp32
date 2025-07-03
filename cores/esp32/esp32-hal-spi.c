@@ -661,6 +661,8 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
   }
 #elif CONFIG_IDF_TARGET_ESP32P4
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"  
   if (spi_num == FSPI) {
     PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI2_MODULE, ref_count) {
       if (ref_count == 0) {
@@ -668,7 +670,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
           spi_ll_enable_bus_clock(SPI2_HOST, true);
           spi_ll_reset_register(SPI2_HOST);
           spi_ll_enable_clock(SPI2_HOST, true);
-
+ 
         }
       }
     }
@@ -683,6 +685,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
       }
     }
   }
+#pragma GCC diagnostic pop
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
