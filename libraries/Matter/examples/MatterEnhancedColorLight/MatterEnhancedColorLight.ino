@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,16 +14,22 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 #include <Preferences.h>
 
 // List of Matter Endpoints for this Node
 // Color Light Endpoint
 MatterEnhancedColorLight EnhancedColorLight;
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 // It will use HSV color to control all Matter Attribute Changes
 HsvColor_t currentHSVColor = {0, 0, 0};
@@ -85,6 +91,8 @@ void setup() {
 
   Serial.begin(115200);
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -99,6 +107,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(500);
+#endif
 
   // Initialize Matter EndPoint
   matterPref.begin("MatterPrefs", false);
@@ -143,7 +152,7 @@ void setup() {
   Matter.begin();
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
     Serial.printf(
       "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
       EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
@@ -176,7 +185,7 @@ void loop() {
     );
     // configure the Light based on initial on-off state and its color
     EnhancedColorLight.updateAccessory();
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
 
   // A button is also used to control the light
