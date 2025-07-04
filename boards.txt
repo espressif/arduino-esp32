@@ -50805,10 +50805,12 @@ rakwireless_rak3112.build.dfu_on_boot=0
 rakwireless_rak3112.build.f_cpu=240000000L
 rakwireless_rak3112.build.flash_size=16MB
 rakwireless_rak3112.build.flash_freq=80m
-rakwireless_rak3112.build.flash_mode=dio
-rakwireless_rak3112.build.boot=dio
+rakwireless_rak3112.build.flash_mode=qio
+rakwireless_rak3112.build.boot=qio
 rakwireless_rak3112.build.partitions=default
 rakwireless_rak3112.build.defines=
+rakwireless_rak3112.build.psram_type=opi
+rakwireless_rak3112.build.memory_type={build.boot}_{build.psram_type}
 
 rakwireless_rak3112.menu.PSRAM.enabled=Enabled
 rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
