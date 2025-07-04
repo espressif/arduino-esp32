@@ -50809,8 +50809,10 @@ rakwireless_rak3112.build.flash_mode=dio
 rakwireless_rak3112.build.boot=dio
 rakwireless_rak3112.build.partitions=default
 rakwireless_rak3112.build.defines=
+rakwireless_rak3112.build.psram_type=opi
+rakwireless_rak3112.build.memory_type={build.boot}_{build.psram_type}
 
-rakwireless_rak3112.menu.PSRAM.enabled=Enabled
+rakwireless_rak3112.menu.PSRAM.enabled=OPI PSRAM
 rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 rakwireless_rak3112.menu.PSRAM.enabled.build.psram_type=opi
 rakwireless_rak3112.menu.PSRAM.disabled=Disabled
