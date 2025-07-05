@@ -95,7 +95,7 @@ def generate_bootloader_image(bootloader_elf):
         env.VerboseAction(
             " ".join(
                 [
-                    '"$PYTHONEXE" "$OBJCOPY"',
+                    "$OBJCOPY",
                     "--chip",
                     build_mcu,
                     "elf2image",
