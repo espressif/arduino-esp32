@@ -14,16 +14,11 @@
 
 // Matter Manager
 #include <Matter.h>
-
-#if !CONFIG_ENABLE_CHIPOBLE
-// if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
 
-// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
-#endif
 
 //number of On-Off Lights:
 const uint8_t MAX_LIGHT_NUMBER = 6;
@@ -48,8 +43,6 @@ const char *lightName[MAX_LIGHT_NUMBER] = {
 void setup() {
   Serial.begin(115200);  // callback will just print a message in the console
 
-  // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
-#if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -64,7 +57,6 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(500);
-#endif
 
   // setup all the OnOff Light endpoint and their lambda callback functions
   for (uint8_t i = 0; i < MAX_LIGHT_NUMBER; i++) {
