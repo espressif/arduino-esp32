@@ -36,7 +36,7 @@ cat platform.txt | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > __platfor
 echo "Updating package.json..."
 cat package.json | sed "s/.*\"version\":.*/  \"version\": \"$ESP_ARDUINO_VERSION\",/g" > __package.json && mv __package.json package.json
 
-echo "Updating conf_common.py..."
+echo "Updating docs/conf_common.py..."
 cat docs/conf_common.py | \
 sed "s/.. |version| replace:: .*/.. |version| replace:: $ESP_ARDUINO_VERSION/g" | \
 sed "s/.. |idf_version| replace:: .*/.. |idf_version| replace:: $ESP_IDF_VERSION/g" > docs/__conf_common.py && mv docs/__conf_common.py docs/conf_common.py
