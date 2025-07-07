@@ -13,9 +13,9 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee binary input device.
+ * @brief This example demonstrates Zigbee binary input/output device.
  *
- * The example demonstrates how to use Zigbee library to create an end device binary sensor device.
+ * The example demonstrates how to use Zigbee library to create an end device binary sensor/switch device.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
@@ -34,13 +34,28 @@
 /* Zigbee binary sensor device configuration */
 #define BINARY_DEVICE_ENDPOINT_NUMBER 1
 
-uint8_t binaryPin = A0;
 uint8_t button = BOOT_PIN;
 
 ZigbeeBinary zbBinaryFan = ZigbeeBinary(BINARY_DEVICE_ENDPOINT_NUMBER);
 ZigbeeBinary zbBinaryZone = ZigbeeBinary(BINARY_DEVICE_ENDPOINT_NUMBER + 1);
+ZigbeeBinary zbBinaryHumidifier = ZigbeeBinary(BINARY_DEVICE_ENDPOINT_NUMBER + 2);
 
-bool binaryStatus = false;
+bool zoneStatus = false;
+
+void fanSwitch(bool state) {
+  Serial.println("Fan switch changed to: " + String(state));
+  if (state) {
+    zbBinaryFan.setBinaryInput(state);
+    zbBinaryFan.reportBinaryInput();
+  } else {
+    zbBinaryFan.setBinaryInput(state);
+    zbBinaryFan.reportBinaryInput();
+  }
+}
+
+void humidifierSwitch(bool state) {
+  Serial.println("Humidifier switch changed to: " + String(state));
+}
 
 void setup() {
   Serial.begin(115200);
@@ -55,19 +70,33 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbBinaryFan.setManufacturerAndModel("Espressif", "ZigbeeBinarySensor");
 
-  // Set up binary fan status input (HVAC)
+  // Set up binary fan status input + switch output (HVAC)
   zbBinaryFan.addBinaryInput();
   zbBinaryFan.setBinaryInputApplication(BINARY_INPUT_APPLICATION_TYPE_HVAC_FAN_STATUS);
   zbBinaryFan.setBinaryInputDescription("Fan Status");
+
+  zbBinaryFan.addBinaryOutput();
+  zbBinaryFan.setBinaryOutputApplication(BINARY_OUTPUT_APPLICATION_TYPE_HVAC_FAN);
+  zbBinaryFan.setBinaryOutputDescription("Fan Switch");
+
+  zbBinaryFan.onBinaryOutputChange(fanSwitch);
 
   // Set up binary zone armed input (Security)
   zbBinaryZone.addBinaryInput();
   zbBinaryZone.setBinaryInputApplication(BINARY_INPUT_APPLICATION_TYPE_SECURITY_ZONE_ARMED);
   zbBinaryZone.setBinaryInputDescription("Zone Armed");
 
+  // Set up binary humidifier output (HVAC)
+  zbBinaryHumidifier.addBinaryOutput();
+  zbBinaryHumidifier.setBinaryOutputApplication(BINARY_OUTPUT_APPLICATION_TYPE_HVAC_HUMIDIFIER);
+  zbBinaryHumidifier.setBinaryOutputDescription("Humidifier Switch");
+
+  zbBinaryHumidifier.onBinaryOutputChange(humidifierSwitch);
+
   // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbBinaryFan);
   Zigbee.addEndpoint(&zbBinaryZone);
+  Zigbee.addEndpoint(&zbBinaryHumidifier);
 
   Serial.println("Starting Zigbee...");
   // When all EPs are registered, start Zigbee in End Device mode
@@ -101,12 +130,19 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
-    // Toggle binary input
-    binaryStatus = !binaryStatus;
-    zbBinaryFan.setBinaryInput(binaryStatus);
-    zbBinaryZone.setBinaryInput(binaryStatus);
-    zbBinaryFan.reportBinaryInput();
+
+    // Toggle fan
+    zbBinaryFan.setBinaryOutput(!zbBinaryFan.getBinaryOutput());
+    zbBinaryFan.reportBinaryOutput();
+
+    // Toggle zone
+    zoneStatus = !zoneStatus;
+    zbBinaryZone.setBinaryInput(zoneStatus);
     zbBinaryZone.reportBinaryInput();
+
+    // Toggle humidifier
+    zbBinaryHumidifier.setBinaryOutput(!zbBinaryHumidifier.getBinaryOutput());
+    zbBinaryHumidifier.reportBinaryOutput();
   }
   delay(100);
 }
