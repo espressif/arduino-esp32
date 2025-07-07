@@ -48,15 +48,15 @@ static const uint8_t SCK = 13;
 #define LORA_IRQ  LORA_DIO1
 
 // For WisBlock modules, see: https://docs.rakwireless.com/Product-Categories/WisBlock/
-#define WB_IO1 21
-#define WB_IO2 14
-#define WB_IO3 41
-#define WB_IO4 42
-#define WB_IO5 38
-#define WB_IO6 39
-#define WB_A0 1
-#define WB_A1 2
-#define WB_CS 12
+#define WB_IO1  21
+#define WB_IO2  14
+#define WB_IO3  41
+#define WB_IO4  42
+#define WB_IO5  38
+#define WB_IO6  39
+#define WB_A0   1
+#define WB_A1   2
+#define WB_CS   12
 #define WB_LED1 46
 #define WB_LED2 45
 
