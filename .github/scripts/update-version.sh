@@ -1,4 +1,5 @@
 #!/bin/bash
+# Disable shellcheck warning about using 'cat' to read a file.
 # shellcheck disable=SC2002
 
 # For reference: add tools for all boards by replacing one line in each board
@@ -23,13 +24,22 @@ ESP_ARDUINO_VERSION_MINOR="$2"
 ESP_ARDUINO_VERSION_PATCH="$3"
 ESP_ARDUINO_VERSION="$ESP_ARDUINO_VERSION_MAJOR.$ESP_ARDUINO_VERSION_MINOR.$ESP_ARDUINO_VERSION_PATCH"
 
+# Get ESP-IDF version from push.yml (this way we can ensure that the version is correct even if the local libs are not up to date)
+ESP_IDF_VERSION=$(grep "idf_ver:" .github/workflows/push.yml | sed 's/.*release-v\([^"]*\).*/\1/')
+
 echo "New Arduino Version: $ESP_ARDUINO_VERSION"
+echo "ESP-IDF Version: $ESP_IDF_VERSION"
 
 echo "Updating platform.txt..."
 cat platform.txt | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > __platform.txt && mv __platform.txt platform.txt
 
 echo "Updating package.json..."
 cat package.json | sed "s/.*\"version\":.*/  \"version\": \"$ESP_ARDUINO_VERSION\",/g" > __package.json && mv __package.json package.json
+
+echo "Updating conf_common.py..."
+cat docs/conf_common.py | \
+sed "s/.. |version| replace:: .*/.. |version| replace:: $ESP_ARDUINO_VERSION/g" | \
+sed "s/.. |idf_version| replace:: .*/.. |idf_version| replace:: $ESP_IDF_VERSION/g" > docs/__conf_common.py && mv docs/__conf_common.py docs/conf_common.py
 
 echo "Updating cores/esp32/esp_arduino_version.h..."
 cat cores/esp32/esp_arduino_version.h | \
