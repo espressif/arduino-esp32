@@ -36,7 +36,7 @@
 #define ZIGBEE_FAN_CONTROL_ENDPOINT 1
 
 #ifdef RGB_BUILTIN
-uint8_t led = RGB_BUILTIN; // To demonstrate the current fan control mode
+uint8_t led = RGB_BUILTIN;  // To demonstrate the current fan control mode
 #else
 uint8_t led = 2;
 #endif
@@ -49,28 +49,26 @@ ZigbeeFanControl zbFanControl = ZigbeeFanControl(ZIGBEE_FAN_CONTROL_ENDPOINT);
 void setFan(ZigbeeFanMode mode) {
   switch (mode) {
     case FAN_MODE_OFF:
-      rgbLedWrite(led, 0, 0, 0); // Off
+      rgbLedWrite(led, 0, 0, 0);  // Off
       Serial.println("Fan mode: OFF");
       break;
     case FAN_MODE_LOW:
-      rgbLedWrite(led, 0, 0, 255); // Blue
+      rgbLedWrite(led, 0, 0, 255);  // Blue
       Serial.println("Fan mode: LOW");
       break;
     case FAN_MODE_MEDIUM:
-      rgbLedWrite(led, 255, 255, 0); // Yellow
+      rgbLedWrite(led, 255, 255, 0);  // Yellow
       Serial.println("Fan mode: MEDIUM");
       break;
     case FAN_MODE_HIGH:
-      rgbLedWrite(led, 255, 0, 0); // Red
+      rgbLedWrite(led, 255, 0, 0);  // Red
       Serial.println("Fan mode: HIGH");
       break;
     case FAN_MODE_ON:
-      rgbLedWrite(led, 255, 255, 255); // White
+      rgbLedWrite(led, 255, 255, 255);  // White
       Serial.println("Fan mode: ON");
       break;
-    default:
-      log_e("Unhandled fan mode: %d", mode);
-      break;
+    default: log_e("Unhandled fan mode: %d", mode); break;
   }
 }
 

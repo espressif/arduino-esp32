@@ -2,7 +2,7 @@
 #if CONFIG_ZB_ENABLED
 
 ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID; //There is no FAN_CONTROL_DEVICE_ID in the Zigbee spec
+  _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;  //There is no FAN_CONTROL_DEVICE_ID in the Zigbee spec
 
   //Create basic analog sensor clusters without configuration
   _cluster_list = esp_zb_zcl_cluster_list_create();
@@ -10,7 +10,9 @@ ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   esp_zb_cluster_list_add_fan_control_cluster(_cluster_list, esp_zb_fan_control_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {
+    .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0
+  };
 }
 
 bool ZigbeeFanControl::setFanModeSequence(ZigbeeFanModeSequence sequence) {
