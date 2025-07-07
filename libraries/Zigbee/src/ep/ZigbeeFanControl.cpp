@@ -2,7 +2,7 @@
 #if CONFIG_ZB_ENABLED
 
 ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
+  _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID; //There is no FAN_CONTROL_DEVICE_ID in the Zigbee spec
 
   //Create basic analog sensor clusters without configuration
   _cluster_list = esp_zb_zcl_cluster_list_create();
@@ -26,7 +26,7 @@ bool ZigbeeFanControl::setFanModeSequence(ZigbeeFanModeSequence sequence) {
   // Set initial fan mode to OFF
   ret = esp_zb_cluster_update_attr(fan_control_cluster, ESP_ZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_ID, (void *)&_current_fan_mode);
   if (ret != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+    log_e("Failed to set fan mode: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
@@ -40,10 +40,10 @@ void ZigbeeFanControl::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t 
       _current_fan_mode = *(ZigbeeFanMode *)message->attribute.data.value;
       fanModeChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %d not supported for Fan Control", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %d not supported for Fan Control", message->info.cluster);
   }
 }
 
@@ -51,7 +51,7 @@ void ZigbeeFanControl::fanModeChanged() {
   if (_on_fan_mode_change) {
     _on_fan_mode_change(_current_fan_mode);
   } else {
-    log_w("No callback function set for light change");
+    log_w("No callback function set for fan mode change");
   }
 }
 
