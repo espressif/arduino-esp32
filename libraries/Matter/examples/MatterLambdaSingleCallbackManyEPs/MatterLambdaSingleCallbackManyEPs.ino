@@ -12,6 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/*
+  This example create 6 on-off light endpoint that share the same onChangeOnOff() callback code.
+  It uses Lambda Function with an extra Lambda Capture information that links the Endpoint to its individual information.
+  After the Matter example is commissioned, the expected Serial output shall be similar to this:
+
+Matter App Control: 'Room 1' (OnOffLight[0], Endpoint 1, GPIO 2) changed to: OFF
+Matter App Control: 'Room 1' (OnOffLight[0], Endpoint 1, GPIO 2) changed to: ON
+Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: ON
+Matter App Control: 'Room 2' (OnOffLight[1], Endpoint 2, GPIO 4) changed to: ON
+Matter App Control: 'Room 4' (OnOffLight[3], Endpoint 4, GPIO 8) changed to: ON
+Matter App Control: 'Room 6' (OnOffLight[5], Endpoint 6, GPIO 12) changed to: ON
+Matter App Control: 'Room 3' (OnOffLight[2], Endpoint 3, GPIO 6) changed to: ON
+Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: OFF
+*/
+
 // Matter Manager
 #include <Matter.h>
 #include <WiFi.h>
