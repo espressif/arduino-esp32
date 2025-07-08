@@ -582,8 +582,8 @@ bool AsyncUDP::listen(const ip_addr_t *addr, uint16_t port) {
   }
   close();
   if (addr) {
-    IP_SET_TYPE(_pcb->local_ip, IP_GET_TYPE(addr));
-    IP_SET_TYPE(_pcb->remote_ip, IP_GET_TYPE(addr));
+    IP_SET_TYPE_VAL(_pcb->local_ip, IP_GET_TYPE(addr));
+    IP_SET_TYPE_VAL(_pcb->remote_ip, IP_GET_TYPE(addr));
   }
   if (_udp_bind(_pcb, addr, port) != ERR_OK) {
     return false;
