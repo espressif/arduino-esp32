@@ -619,6 +619,14 @@
                             "ram_percentage": 8
                             }]
                     },
+{"name": "Zigbee/examples/Zigbee_Fan_Control",
+                    "sizes": [{
+                            "flash_bytes": 713051,
+                            "flash_percentage": 54,
+                            "ram_bytes": 32492,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Illuminance_Sensor",
                     "sizes": [{
                             "flash_bytes": 600217,
@@ -673,14 +681,6 @@
                             "flash_percentage": 44,
                             "ram_bytes": 28116,
                             "ram_percentage": 8
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Power_Outlet",
-                    "sizes": [{
-                            "flash_bytes": 720267,
-                            "flash_percentage": 54,
-                            "ram_bytes": 32732,
-                            "ram_percentage": 9
                             }]
                     }
 ]
