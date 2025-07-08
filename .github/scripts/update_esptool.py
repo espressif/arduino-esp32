@@ -186,7 +186,7 @@ def update_json_from_release(tmp_json_path, version, release_info):
                 continue
 
             asset_url = asset.get("browser_download_url")
-            asset_checksum = asset.get("digest")
+            asset_checksum = asset.get("digest").replace("sha256:", "SHA-256:")
             asset_size = asset.get("size")
             if asset_checksum is None:
                 asset_checksum = ""
