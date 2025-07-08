@@ -56,6 +56,13 @@ static bool i2cDetachBus(void *bus_i2c_num) {
   return true;
 }
 
+void *i2cBusHandle(uint8_t i2c_num) {
+  if (i2c_num >= SOC_I2C_NUM) {
+    return NULL;
+  }
+  return bus[i2c_num].bus_handle;
+}
+
 bool i2cIsInit(uint8_t i2c_num) {
   if (i2c_num >= SOC_I2C_NUM) {
     return false;

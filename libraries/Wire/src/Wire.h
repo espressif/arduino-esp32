@@ -105,6 +105,8 @@ public:
 
   bool end() override;
 
+  uint8_t getBusNum();
+
   bool setClock(uint32_t freq) override;
 
   void beginTransmission(uint8_t address) override;
