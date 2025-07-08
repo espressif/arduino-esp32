@@ -24,4 +24,5 @@ jobs:
           instructions-cla-link: "https://cla-assistant.io/espressif/arduino-esp32"
           instructions-contributions-file: "docs/en/contributing.rst"
           rule-max-commits: "false"
+          rule-target-branch: "false"
           commit-messages-min-summary-length: "10"
