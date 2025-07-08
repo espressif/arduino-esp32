@@ -41,7 +41,7 @@ esp_err_t i2cWriteReadNonStop(
 bool i2cIsInit(uint8_t i2c_num);
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
-void * i2cBusHandle(uint8_t i2c_num);
+void *i2cBusHandle(uint8_t i2c_num);
 #endif
 
 #ifdef __cplusplus
