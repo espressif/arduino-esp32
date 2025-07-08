@@ -26,6 +26,10 @@ ESP_ARDUINO_VERSION="$ESP_ARDUINO_VERSION_MAJOR.$ESP_ARDUINO_VERSION_MINOR.$ESP_
 
 # Get ESP-IDF version from push.yml (this way we can ensure that the version is correct even if the local libs are not up to date)
 ESP_IDF_VERSION=$(grep "idf_ver:" .github/workflows/push.yml | sed 's/.*release-v\([^"]*\).*/\1/')
+if [ -z "$ESP_IDF_VERSION" ]; then
+    echo "Error: ESP-IDF version not found in push.yml" >&2
+    exit 1
+fi
 
 echo "New Arduino Version: $ESP_ARDUINO_VERSION"
 echo "ESP-IDF Version: $ESP_IDF_VERSION"
