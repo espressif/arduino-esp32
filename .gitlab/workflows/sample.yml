@@ -1,0 +1,6 @@
+hello-world:
+  stage: test
+  script:
+    - echo "Hello, World from GitLab CI!"
+  rules:
+    - when: always
