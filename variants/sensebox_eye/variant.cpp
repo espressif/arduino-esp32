@@ -26,8 +26,24 @@
 #include "pins_arduino.h"
 #include "driver/rmt_tx.h"
 #include "esp_log.h"
+#include "esp_partition.h"
+#include "esp_system.h"
+#include "esp_ota_ops.h"
 
 extern "C" {
+
+void blinkLED(uint8_t color[3], rmt_channel_handle_t led_chan, rmt_encoder_handle_t ws2812_encoder, rmt_transmit_config_t tx_config) {
+  ESP_ERROR_CHECK(rmt_transmit(led_chan, ws2812_encoder, color, sizeof(color), &tx_config));
+  rmt_tx_wait_all_done(led_chan, portMAX_DELAY);
+
+  // Wait a moment
+  delay(50);
+
+  // Turn LED off
+  uint8_t pixel_off[3] = { 0x00, 0x00, 0x00 };
+  ESP_ERROR_CHECK(rmt_transmit(led_chan, ws2812_encoder, pixel_off, sizeof(pixel_off), &tx_config));
+  rmt_tx_wait_all_done(led_chan, portMAX_DELAY);
+}
 
 void initVariant(void) {
   rmt_channel_handle_t led_chan = NULL;
@@ -52,20 +68,49 @@ void initVariant(void) {
 
   ESP_ERROR_CHECK(rmt_enable(led_chan));
 
-  // WS2812 GRB data (green pixel)
-  uint8_t pixel[3] = { 0x10, 0x00, 0x00 }; // green
   rmt_transmit_config_t tx_config = {
     .loop_count = 0
   };
-  ESP_ERROR_CHECK(rmt_transmit(led_chan, ws2812_encoder, pixel, sizeof(pixel), &tx_config));
-  rmt_tx_wait_all_done(led_chan, portMAX_DELAY);
 
-  // Wait a moment
-  delay(50);
+  uint8_t pixel[3] = { 0x10, 0x00, 0x00 }; // green
+  blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
 
-  // Turn LED off
-  uint8_t pixel_off[3] = { 0x00, 0x00, 0x00 };
-  ESP_ERROR_CHECK(rmt_transmit(led_chan, ws2812_encoder, pixel_off, sizeof(pixel_off), &tx_config));
-  rmt_tx_wait_all_done(led_chan, portMAX_DELAY);
+  // define button pin
+  pinMode(0, INPUT_PULLUP);
+
+  // keep button pressed
+  unsigned long pressStartTime = 0;
+  bool buttonPressed = false;
+
+  // Wait 3.5 seconds for the button to be pressed
+  unsigned long startTime = millis();
+
+  // Check if button is pressed
+  while (millis() - startTime < 3500) {
+    if (digitalRead(0) == LOW) {
+      if (!buttonPressed) {
+        // The button was pressed
+        buttonPressed = true;
+      }
+    } else if (buttonPressed) {
+      // When the button is pressed and then released, boot into the OTA1 partition
+      const esp_partition_t *ota1_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+
+      if (ota1_partition) {
+        esp_err_t err = esp_ota_set_boot_partition(ota1_partition);
+        if (err == ESP_OK) {
+          uint8_t pixel[3] = { 0x00, 0x00, 0x10 }; // blue
+          blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
+          esp_restart();  // restart, to boot OTA1 partition
+        } else {
+          uint8_t pixel[3] = { 0x00, 0x10, 0x00 }; // red
+          blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
+          ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
+        }
+      }
+      // Abort after releasing the button
+      break;
+    }
+  }
 }
 }
