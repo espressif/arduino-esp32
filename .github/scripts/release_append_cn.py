@@ -17,8 +17,9 @@ import json
 
 def append_cn_to_versions(obj):
     if isinstance(obj, dict):
-        # dfu-util comes from arduino.cc and not from the Chinese mirrors, so we skip it
-        if obj.get("name") == "dfu-util":
+        # Skip tools that are not from the esp32 package
+        packager = obj.get("packager")
+        if packager is not None and packager != "esp32":
             return
 
         for key, value in obj.items():

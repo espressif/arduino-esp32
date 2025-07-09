@@ -582,8 +582,8 @@ bool AsyncUDP::listen(const ip_addr_t *addr, uint16_t port) {
   }
   close();
   if (addr) {
-    IP_SET_TYPE_VAL(_pcb->local_ip, addr->type);
-    IP_SET_TYPE_VAL(_pcb->remote_ip, addr->type);
+    IP_SET_TYPE_VAL(_pcb->local_ip, IP_GET_TYPE(addr));
+    IP_SET_TYPE_VAL(_pcb->remote_ip, IP_GET_TYPE(addr));
   }
   if (_udp_bind(_pcb, addr, port) != ERR_OK) {
     return false;
@@ -692,17 +692,8 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     return false;
   }
 
-#if CONFIG_LWIP_IPV6
-  if (IP_IS_V6(addr)) {
-    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V6);
-    ip6_addr_set_any(&bind_addr.u_addr.ip6);
-  } else {
-#endif
-    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V4);
-    ip4_addr_set_any(&bind_addr.u_addr.ip4);
-#if CONFIG_LWIP_IPV6
-  }
-#endif
+  IP_SET_TYPE(&bind_addr, IP_GET_TYPE(addr));
+  ip_addr_set_any(IP_IS_V6(addr), &bind_addr);
   if (!listen(&bind_addr, port)) {
     return false;
   }

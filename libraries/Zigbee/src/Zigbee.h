@@ -16,6 +16,7 @@
 #include "ep/ZigbeeLight.h"
 //// Controllers
 #include "ep/ZigbeeThermostat.h"
+#include "ep/ZigbeeFanControl.h"
 ////Outlets
 #include "ep/ZigbeePowerOutlet.h"
 //// Sensors
