@@ -74,8 +74,8 @@ private:
 #if SOC_I2C_SUPPORT_SLAVE
   bool is_slave;
   // functional pointers for user callbacks
-  using user_onRequest_t = void (*)(void);
-  using user_onReceive_t = void (*)(int);
+  using user_onRequest_t = std::function<void()>;
+  using user_onReceive_t = std::function<void(int)>;
   user_onRequest_t user_onRequest;
   user_onReceive_t user_onReceive;
   static void onRequestService(uint8_t, void *);
