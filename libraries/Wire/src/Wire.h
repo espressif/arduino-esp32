@@ -112,8 +112,8 @@ public:
   size_t requestFrom(uint8_t address, size_t len, bool stopBit) override;
   size_t requestFrom(uint8_t address, size_t len) override;
 
-  void onReceive(std::function<void(int)>) override;
-  void onRequest(std::function<void()>) override;
+  void onReceive(const std::function<void(int)>&) override;
+  void onRequest(const std::function<void()>&) override;
 
   //call setPins() first, so that begin() can be called without arguments from libraries
   bool setPins(int sda, int scl);
