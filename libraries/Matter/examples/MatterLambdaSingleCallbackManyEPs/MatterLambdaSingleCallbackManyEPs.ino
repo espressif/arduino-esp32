@@ -117,7 +117,7 @@ void loop() {
       }
     }
   } else {
-    if (!Matter.isDeviceConnected()) {
+    if (Matter.isDeviceConnected()) {
       Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
     } else {
       Serial.println("Matter Node is commissioned. Waiting for the network connection.");
