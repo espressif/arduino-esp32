@@ -82,7 +82,7 @@ void setup() {
   
   // setup all the OnOff Light endpoint and their lambda callback functions
   for (uint8_t i = 0; i < MAX_LIGHT_NUMBER; i++) {
-    pinMode( lightPins[i], OUTPUT);  // set the GPIO function
+    pinMode(lightPins[i], OUTPUT);  // set the GPIO function
     OnOffLight[i].begin(false);  // off
 
     // inline lambda function using capture array index -> it will just print a message in the console
