@@ -39,7 +39,7 @@ extern "C" {
 #include "Arduino.h"
 
 TwoWire::TwoWire(uint8_t bus_num)
-  : num(bus_num & 1), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
+  : num(bus_num), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
     ,
     rxBuffer(NULL), rxIndex(0), rxLength(0), txBuffer(NULL), txLength(0), txAddress(0), _timeOutMillis(50), nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -60,6 +60,10 @@ TwoWire::~TwoWire() {
     vSemaphoreDelete(lock);
   }
 #endif
+}
+
+uint8_t TwoWire::getBusNum() {
+  return num;
 }
 
 bool TwoWire::initPins(int sdaPin, int sclPin) {
