@@ -596,14 +596,14 @@ void TwoWire::flush() {
   //i2cFlush(num); // cleanup
 }
 
-void TwoWire::onReceive(std::function<void(int) function) {
+void TwoWire::onReceive(std::function<void(int)> function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onReceive = function;
 #endif
 }
 
 // sets function called on slave read
-void TwoWire::onRequest(std::function<void() function) {
+void TwoWire::onRequest(std::function<void()> function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onRequest = function;
 #endif

@@ -75,7 +75,7 @@ private:
   bool is_slave;
   // functional pointers for user callbacks
   std::function<void()> user_onRequest;
-  std::function<void(int) user_onReceive;
+  std::function<void(int)> user_onReceive;
   static void onRequestService(uint8_t, void *);
   static void onReceiveService(uint8_t, uint8_t *, size_t, bool, void *);
 #endif /* SOC_I2C_SUPPORT_SLAVE */
@@ -113,7 +113,7 @@ public:
   size_t requestFrom(uint8_t address, size_t len, bool stopBit) override;
   size_t requestFrom(uint8_t address, size_t len) override;
 
-  void onReceive(std::function<void(int)) override;
+  void onReceive(std::function<void(int)>) override;
   void onRequest(std::function<void()>) override;
 
   //call setPins() first, so that begin() can be called without arguments from libraries
