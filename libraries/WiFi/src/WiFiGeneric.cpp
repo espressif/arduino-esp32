@@ -49,7 +49,6 @@ extern "C" {
 #include "lwip/netif.h"
 #include "dhcpserver/dhcpserver.h"
 #include "dhcpserver/dhcpserver_options.h"
-
 }  //extern "C"
 
 #include "esp32-hal.h"
@@ -241,10 +240,10 @@ extern "C" void phy_bbpll_en_usb(bool en);
 
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
 extern "C" {
-//#include "esp_hosted.h"
-#include "esp_hosted_transport_config.h"
-extern esp_err_t esp_hosted_init();
-extern esp_err_t esp_hosted_deinit();
+#include "esp_hosted.h"
+// #include "esp_hosted_transport_config.h"
+// extern esp_err_t esp_hosted_init();
+// extern esp_err_t esp_hosted_deinit();
 };
 typedef struct {
   uint8_t pin_clk;
@@ -296,6 +295,15 @@ bool WiFiGenericClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int
   return true;
 }
 
+bool WiFiGenericClass::updateSlave(const char * url) {
+  esp_err_t err = esp_hosted_slave_ota(url);
+  if (err != ESP_OK) {
+    log_e("esp_hosted_slave_ota failed! 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
 static bool wifiHostedInit() {
   if (!hosted_initialized) {
     hosted_initialized = true;
@@ -314,6 +322,11 @@ static bool wifiHostedInit() {
       return false;
     }
     log_v("ESP-HOSTED initialized!");
+    // // This throws heap exception when the slave has older firmware
+    // esp_hosted_coprocessor_fwver_t fwver = {0,0,0};
+    // if (esp_hosted_get_coprocessor_fwversion(&fwver) == ESP_OK) {
+    //   log_d("ESP-HOSTED Slave FW Version: %lu.%li.%lu", fwver.major1, fwver.minor1, fwver.patch1);
+    // }
   }
   // Attach pins to PeriMan here
   // Slave chip model is CONFIG_IDF_SLAVE_TARGET
