@@ -3,15 +3,37 @@
  *
  *  Created on: Jan 03, 2018
  *      Author: chegewara
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
 
 #include "BLEHIDDevice.h"
 #include "BLE2904.h"
+#include "BLEDescriptor.h"
+
+/***************************************************************************
+ *                     NimBLE includes and definitions                     *
+ ***************************************************************************/
+
+#ifdef CONFIG_NIMBLE_ENABLED
+#include <host/ble_att.h>
+#endif
+
+/***************************************************************************
+ *                           Common functions                              *
+ ***************************************************************************/
 
 BLEHIDDevice::BLEHIDDevice(BLEServer *server) {
   /*
@@ -45,10 +67,12 @@ BLEHIDDevice::BLEHIDDevice(BLEServer *server) {
   m_batteryLevelCharacteristic =
     m_batteryService->createCharacteristic((uint16_t)0x2a19, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
   m_batteryLevelCharacteristic->addDescriptor(batteryLevelDescriptor);
+#if CONFIG_BLUEDROID_ENABLED
   BLE2902 *batLevelIndicator = new BLE2902();
   // Battery Level Notification is ON by default, making it work always on BLE Pairing and Bonding
   batLevelIndicator->setNotifications(true);
   m_batteryLevelCharacteristic->addDescriptor(batLevelIndicator);
+#endif
 
   /*
 	 * This value is setup here because its default value in most usage cases, its very rare to use boot mode
@@ -117,15 +141,18 @@ BLECharacteristic *BLEHIDDevice::inputReport(uint8_t reportID) {
   BLECharacteristic *inputReportCharacteristic =
     m_hidService->createCharacteristic((uint16_t)0x2a4d, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
   BLEDescriptor *inputReportDescriptor = new BLEDescriptor(BLEUUID((uint16_t)0x2908));
-  BLE2902 *p2902 = new BLE2902();
   inputReportCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
   inputReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-  p2902->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
 
   uint8_t desc1_val[] = {reportID, 0x01};
   inputReportDescriptor->setValue((uint8_t *)desc1_val, 2);
-  inputReportCharacteristic->addDescriptor(p2902);
   inputReportCharacteristic->addDescriptor(inputReportDescriptor);
+
+#if CONFIG_BLUEDROID_ENABLED
+  BLE2902 *p2902 = new BLE2902();
+  p2902->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+  inputReportCharacteristic->addDescriptor(p2902);
+#endif
 
   return inputReportCharacteristic;
 }
@@ -175,7 +202,9 @@ BLECharacteristic *BLEHIDDevice::featureReport(uint8_t reportID) {
  */
 BLECharacteristic *BLEHIDDevice::bootInput() {
   BLECharacteristic *bootInputCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a22, BLECharacteristic::PROPERTY_NOTIFY);
+#if CONFIG_BLUEDROID_ENABLED
   bootInputCharacteristic->addDescriptor(new BLE2902());
+#endif
 
   return bootInputCharacteristic;
 }
@@ -252,5 +281,5 @@ BLEService *BLEHIDDevice::batteryService() {
   return m_batteryService;
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

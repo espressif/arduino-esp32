@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,10 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 
 // List of Matter Endpoints for this Node
 // There will be 3 On/Off Light Endpoints in the same Node
@@ -22,9 +25,12 @@ MatterOnOffLight Light1;
 MatterDimmableLight Light2;
 MatterColorLight Light3;
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 // set your board USER BUTTON pin here -  USED to decommission the Matter Node
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
@@ -56,6 +62,8 @@ void setup() {
 
   Serial.begin(115200);
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // We start by connecting to a WiFi network
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -71,6 +79,7 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
   delay(500);
+#endif
 
   // Initialize all 3 Matter EndPoints
   Light1.begin();
@@ -103,7 +112,7 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.println("Matter Node is commissioned and connected to Wi-Fi. Ready for use.");
+    Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
 
   //displays the Light state every 5 seconds

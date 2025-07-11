@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,10 @@
 
 #include <Matter.h>
 #include <app/server/Server.h>
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+#include "esp_openthread_types.h"
+#include "platform/ESP32/OpenthreadLauncher.h"
+#endif
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -150,6 +154,18 @@ void ArduinoMatter::begin() {
     log_e("No Matter endpoint has been created. Please create an endpoint first.");
     return;
   }
+
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+  // Set OpenThread platform config
+  esp_openthread_platform_config_t config;
+  memset(&config, 0, sizeof(esp_openthread_platform_config_t));
+  config.radio_config.radio_mode = RADIO_MODE_NATIVE;
+  config.host_config.host_connection_mode = HOST_CONNECTION_MODE_NONE;
+  config.port_config.storage_partition_name = "nvs";
+  config.port_config.netif_queue_size = 10;
+  config.port_config.task_queue_size = 10;
+  set_openthread_platform_config(&config);
+#endif
 
   /* Matter start */
   esp_err_t err = esp_matter::start(app_event_cb);
