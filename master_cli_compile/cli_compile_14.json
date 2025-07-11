@@ -39,6 +39,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WiFiProv/examples/WiFiProv",
+                    "sizes": [{
+                            "flash_bytes": 1470414,
+                            "flash_percentage": 46,
+                            "ram_bytes": 64844,
+                            "ram_percentage": 19
+                            }]
+                    },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
                             "flash_bytes": 329918,
@@ -140,6 +148,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Gateway",
+                    "sizes": [{
+                            "flash_bytes": 1191725,
+                            "flash_percentage": 34,
+                            "ram_bytes": 56132,
+                            "ram_percentage": 17
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_On_Off_Switch",
                     "sizes": [{
                             "flash_bytes": 620013,
@@ -169,6 +185,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Wire/examples/WireScan",
+                    "sizes": [{
+                            "flash_bytes": 310672,
+                            "flash_percentage": 23,
+                            "ram_bytes": 12320,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
                             "flash_bytes": 310922,
@@ -254,6 +278,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_On_Off_Light",
+                    "sizes": [{
+                            "flash_bytes": 590415,
+                            "flash_percentage": 45,
+                            "ram_bytes": 30300,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_On_Off_MultiSwitch",
                     "sizes": [{
                             "flash_bytes": 694567,
@@ -376,6 +408,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 660434,
+                            "flash_percentage": 50,
+                            "ram_bytes": 36916,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                     "sizes": [{
                             "flash_bytes": 660330,

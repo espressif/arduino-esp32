@@ -135,6 +135,14 @@
                             "ram_percentage": 29
                             }]
                     },
+{"name": "Matter/examples/MatterLambdaSingleCallbackManyEPs",
+                    "sizes": [{
+                            "flash_bytes": 1665270,
+                            "flash_percentage": 52,
+                            "ram_bytes": 98484,
+                            "ram_percentage": 30
+                            }]
+                    },
 {"name": "Matter/examples/MatterMinimum",
                     "sizes": [{
                             "flash_bytes": 1686798,
@@ -222,20 +230,20 @@
                             "ram_bytes": 120252,
                             "ram_percentage": 36
                             }]
-                    },
-{"name": "NetBIOS/examples/ESP_NBNST",
-                    "sizes": [{
-                            "flash_bytes": 862314,
-                            "flash_percentage": 65,
-                            "ram_bytes": 43148,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "Matter/examples/MatterSmartButon",
+                    "sizes": [{
+                            "flash_bytes": 1632321,
+                            "flash_percentage": 51,
+                            "ram_bytes": 93708,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "Matter/examples/MatterTemperatureLight",
                     "sizes": [{
                             "flash_bytes": 1676685,
@@ -347,14 +355,6 @@
                             "ram_bytes": 39136,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "Preferences/examples/Prefs2Struct",
-                    "sizes": [{
-                            "flash_bytes": 276049,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15244,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -449,6 +449,14 @@
                             "ram_percentage": 27
                             }]
                     },
+{"name": "Matter/examples/MatterLambdaSingleCallbackManyEPs",
+                    "sizes": [{
+                            "flash_bytes": 1630400,
+                            "flash_percentage": 51,
+                            "ram_bytes": 88984,
+                            "ram_percentage": 27
+                            }]
+                    },
 {"name": "Matter/examples/MatterMinimum",
                     "sizes": [{
                             "flash_bytes": 1648088,
@@ -464,20 +472,20 @@
                             "ram_bytes": 88656,
                             "ram_percentage": 27
                             }]
-                    },
-{"name": "Matter/examples/MatterOnIdentify",
-                    "sizes": [{
-                            "flash_bytes": 1649774,
-                            "flash_percentage": 52,
-                            "ram_bytes": 89608,
-                            "ram_percentage": 27
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Matter/examples/MatterOccupancySensor",
+                    "sizes": [{
+                            "flash_bytes": 1630539,
+                            "flash_percentage": 51,
+                            "ram_bytes": 94760,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "Matter/examples/MatterOnIdentify",
                     "sizes": [{
                             "flash_bytes": 1657631,
@@ -595,14 +603,6 @@
                             "flash_bytes": 1039661,
                             "flash_percentage": 79,
                             "ram_bytes": 41608,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
-                    "sizes": [{
-                            "flash_bytes": 1072037,
-                            "flash_percentage": 81,
-                            "ram_bytes": 41624,
                             "ram_percentage": 12
                             }]
                     }

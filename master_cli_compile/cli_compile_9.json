@@ -103,6 +103,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "SD/examples/SD_Test",
+                    "sizes": [{
+                            "flash_bytes": 391574,
+                            "flash_percentage": 29,
+                            "ram_bytes": 21860,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "SD/examples/SD_time",
                     "sizes": [{
                             "flash_bytes": 949706,
@@ -222,20 +230,20 @@
                             "ram_bytes": 40516,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "USB/examples/FirmwareMSC",
-                    "sizes": [{
-                            "flash_bytes": 401570,
-                            "flash_percentage": 30,
-                            "ram_bytes": 40516,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "USB/examples/CompositeDevice",
+                    "sizes": [{
+                            "flash_bytes": 357357,
+                            "flash_percentage": 27,
+                            "ram_bytes": 35468,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "USB/examples/ConsumerControl",
                     "sizes": [{
                             "flash_bytes": 303109,
@@ -347,20 +355,20 @@
                             "ram_bytes": 34636,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "USB/examples/Mouse/ButtonMouseControl",
-                    "sizes": [{
-                            "flash_bytes": 303481,
-                            "flash_percentage": 23,
-                            "ram_bytes": 35052,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                    "sizes": [{
+                            "flash_bytes": 1033156,
+                            "flash_percentage": 78,
+                            "ram_bytes": 35504,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
                             "flash_bytes": 1074246,
@@ -464,20 +472,20 @@
                             "ram_bytes": 12936,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_Test",
-                    "sizes": [{
-                            "flash_bytes": 326296,
-                            "flash_percentage": 24,
-                            "ram_bytes": 12192,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Preferences/examples/StartCounter",
+                    "sizes": [{
+                            "flash_bytes": 251183,
+                            "flash_percentage": 19,
+                            "ram_bytes": 12876,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "RainMaker/examples/RMakerCustom",
                     "sizes": [{
                             "flash_bytes": 2127477,
@@ -597,14 +605,6 @@
                             "ram_bytes": 42192,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "Update/examples/HTTPS_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 1092479,
-                            "flash_percentage": 83,
-                            "ram_bytes": 41904,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
@@ -688,6 +688,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "NetworkClientSecure/examples/WiFiClientPSK",
+                    "sizes": [{
+                            "flash_bytes": 1004710,
+                            "flash_percentage": 76,
+                            "ram_bytes": 45388,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
                             "flash_bytes": 1006526,
@@ -797,14 +805,6 @@
                             "flash_bytes": 300802,
                             "flash_percentage": 22,
                             "ram_bytes": 20876,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "SPIFFS/examples/SPIFFS_Test",
-                    "sizes": [{
-                            "flash_bytes": 343462,
-                            "flash_percentage": 26,
-                            "ram_bytes": 21316,
                             "ram_percentage": 6
                             }]
                     }
