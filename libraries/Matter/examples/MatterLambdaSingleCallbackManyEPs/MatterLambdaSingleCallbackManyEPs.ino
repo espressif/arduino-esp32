@@ -42,16 +42,11 @@ const uint8_t MAX_LIGHT_NUMBER = 6;
 MatterOnOffLight OnOffLight[MAX_LIGHT_NUMBER];
 
 // all pins, one for each on-off light
-uint8_t lightPins[MAX_LIGHT_NUMBER] = { 2, 4, 6, 8, 10, 12 }; // must replace it by the real pin for the target SoC and application
+uint8_t lightPins[MAX_LIGHT_NUMBER] = {2, 4, 6, 8, 10, 12};  // must replace it by the real pin for the target SoC and application
 
 // friendly OnOffLights names used for printing a message in the callback
 const char *lightName[MAX_LIGHT_NUMBER] = {
-  "Room 1",
-  "Room 2",
-  "Room 3",
-  "Room 4",
-  "Room 5",
-  "Room 6",
+  "Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6",
 };
 
 // simple setup() function
@@ -75,15 +70,16 @@ void setup() {
 
   // setup all the OnOff Light endpoint and their lambda callback functions
   for (uint8_t i = 0; i < MAX_LIGHT_NUMBER; i++) {
-    pinMode( lightPins[i], OUTPUT);  // set the GPIO function
-    OnOffLight[i].begin(false);  // off
+    pinMode(lightPins[i], OUTPUT);  // set the GPIO function
+    OnOffLight[i].begin(false);     // off
 
     // inline lambda function using capture array index -> it will just print a message in the console
     OnOffLight[i].onChangeOnOff([i](bool state) -> bool {
       // Display message with the specific light name and details
-      Serial.printf("Matter App Control: '%s' (OnOffLight[%d], Endpoint %d, GPIO %d) changed to: %s\r\n",
-      lightName[i], i, OnOffLight[i].getEndPointId(),
-      lightPins[i], state ? "ON" : "OFF");
+      Serial.printf(
+        "Matter App Control: '%s' (OnOffLight[%d], Endpoint %d, GPIO %d) changed to: %s\r\n", lightName[i], i, OnOffLight[i].getEndPointId(), lightPins[i],
+        state ? "ON" : "OFF"
+      );
 
       return true;
     });
@@ -110,7 +106,7 @@ void loop() {
       }
     }
     Serial.println("Matter Node is commissioned and connected to the WiFi network. Ready for use.");
-  } 
-  
-  delay(500);  
+  }
+
+  delay(500);
 }
