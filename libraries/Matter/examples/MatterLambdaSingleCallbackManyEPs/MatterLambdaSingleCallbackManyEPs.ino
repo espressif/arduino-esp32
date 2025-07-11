@@ -122,6 +122,8 @@ void loop() {
     } else {
       Serial.println("Matter Node is commissioned. Waiting for the network connection.");
     }
+    // wait 3 seconds for the network connection
+    delay(3000);
   }
 
   delay(100);  
