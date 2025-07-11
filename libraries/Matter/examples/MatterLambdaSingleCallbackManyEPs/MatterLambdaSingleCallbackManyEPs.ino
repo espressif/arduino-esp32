@@ -109,15 +109,8 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-  } else {
-    if (Matter.isDeviceConnected()) {
-      Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    } else {
-      Serial.println("Matter Node is commissioned. Waiting for the network connection.");
-    }
-    // wait 3 seconds for the network connection
-    delay(3000);
-  }
-
-  delay(100);  
+    Serial.println("Matter Node is commissioned and connected to the WiFi network. Ready for use.");
+  } 
+  
+  delay(500);  
 }
