@@ -16,9 +16,9 @@ void setup() {
     Wire.print(" Packets.");
     Serial.println("onRequest");
   });
-  
+
   Wire.onReceive([](int len) {
-  Serial.printf("onReceive[%d]: ", len);
+    Serial.printf("onReceive[%d]: ", len);
     while (Wire.available()) {
       Serial.write(Wire.read());
     }

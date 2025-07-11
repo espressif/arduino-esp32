@@ -401,11 +401,11 @@ The callback function must have the signature ``void(int numBytes)`` where ``num
         int deviceAddress;
     public:
         I2CDevice(int addr) : deviceAddress(addr) {}
-        
+
         void handleReceive(int numBytes) {
             Serial.printf("Device 0x%02X received %d bytes\n", deviceAddress, numBytes);
         }
-        
+
         void setup() {
             Wire.onReceive([this](int bytes) {
                 this->handleReceive(bytes);
@@ -413,8 +413,8 @@ The callback function must have the signature ``void(int numBytes)`` where ``num
         }
     };
 
-.. note:: 
-    The ``onReceive`` callback is triggered when the I2C master sends data to this slave device. 
+.. note::
+    The ``onReceive`` callback is triggered when the I2C master sends data to this slave device.
     Use ``Wire.available()`` and ``Wire.read()`` inside the callback to retrieve the received data.
 
 onRequest
@@ -471,13 +471,13 @@ The callback function must have the signature ``void()`` with no parameters. Thi
         void updateTemperature() {
             temperature = 25.5; // Read from actual sensor
         }
-        
+
         void sendTemperature() {
             // Convert float to bytes and send
             uint8_t* tempBytes = (uint8_t*)&temperature;
             Wire.write(tempBytes, sizeof(float));
         }
-        
+
         void setup() {
             Wire.onRequest([this]() {
                 this->sendTemperature();
@@ -485,10 +485,10 @@ The callback function must have the signature ``void()`` with no parameters. Thi
         }
     };
 
-.. note:: 
-    The ``onRequest`` callback is triggered when the I2C master requests data from this slave device. 
+.. note::
+    The ``onRequest`` callback is triggered when the I2C master requests data from this slave device.
     Use ``Wire.write()`` inside the callback to send response data back to the master.
-  
+
 slaveWrite
 ^^^^^^^^^^
 
