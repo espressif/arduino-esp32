@@ -74,7 +74,7 @@ volatile bool ledStateChanged = false;    // Flag to indicate LED needs updating
 
 // Variables to demonstrate lambda captures
 volatile uint32_t totalInterrupts = 0;
-unsigned long lastInterruptTime = 0;
+volatile unsigned long lastInterruptTime = 0;
 
 // Debouncing variables (volatile for ISR safety)
 volatile unsigned long lastButton1InterruptTime = 0;
