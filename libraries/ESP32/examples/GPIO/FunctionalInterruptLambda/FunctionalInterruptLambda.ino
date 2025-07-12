@@ -219,7 +219,7 @@ void setup() {
 
     // Update captured variables via pointers
     (*totalInterruptsPtr)++;
-    (*lastInterruptTimePtr) = millis();
+    (*lastInterruptTimePtr) = currentTime;
 
     // Toggle LED state and set flag for main loop to handle
     (*ledStatePtr) = !(*ledStatePtr);
