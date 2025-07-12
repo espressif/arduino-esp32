@@ -12,8 +12,6 @@ This example demonstrates how to use lambda functions with FunctionalInterrupt f
 3. **Object method calls integrated within lambda functions**
 4. **Edge type detection** using digitalRead() within ISR
 5. **Hardware debouncing** with configurable timeout and anti-hysteresis
-6. **Best practices** for interrupt-safe lambda functions
-7. **Cross-platform terminal compatibility** (Windows, Linux, macOS)
 
 ## Hardware Setup
 
