@@ -36,8 +36,10 @@ EndPointSpeedCB	KEYWORD1
 EndPointOnOffCB	KEYWORD1
 EndPointBrightnessCB	KEYWORD1
 EndPointRGBColorCB	KEYWORD1
+EndPointIdentifyCB	KEYWORD1
 matterEvent_t	KEYWORD1
 matterEventCB	KEYWORD1
+attrOperation_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -111,6 +113,10 @@ onChangeLocalTemperature	KEYWORD2
 onChangeCoolingSetpoint	KEYWORD2
 onChangeHeatingSetpoint	KEYWORD2
 onEvent	KEYWORD2
+setEndPointId	KEYWORD2
+getEndPointId	KEYWORD2
+onIdentify	KEYWORD2
+endpointIdentifyCB	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
