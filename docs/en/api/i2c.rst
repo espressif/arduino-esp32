@@ -347,20 +347,147 @@ This function will return ``true`` if the peripheral was initialized correctly.
 onReceive
 ^^^^^^^^^
 
-The ``onReceive`` function is used to define the callback for the data received from the master.
+The ``onReceive`` function is used to define the callback for data received from the master device.
 
 .. code-block:: arduino
 
-    void onReceive( void (*)(int) );
+    void onReceive(const std::function<void(int)>& callback);
+
+**Function Signature:**
+
+The callback function must have the signature ``void(int numBytes)`` where ``numBytes`` indicates how many bytes were received from the master.
+
+**Usage Examples:**
+
+.. code-block:: arduino
+
+    // Method 1: Regular function
+    void handleReceive(int numBytes) {
+        Serial.printf("Received %d bytes: ", numBytes);
+        while (Wire.available()) {
+            char c = Wire.read();
+            Serial.print(c);
+        }
+        Serial.println();
+    }
+    Wire.onReceive(handleReceive);
+
+    // Method 2: Lambda function
+    Wire.onReceive([](int numBytes) {
+        Serial.printf("Master sent %d bytes\n", numBytes);
+        while (Wire.available()) {
+            uint8_t data = Wire.read();
+            // Process received data
+            Serial.printf("Data: 0x%02X\n", data);
+        }
+    });
+
+    // Method 3: Lambda with capture (for accessing variables)
+    int deviceId = 42;
+    Wire.onReceive([deviceId](int numBytes) {
+        Serial.printf("Device %d received %d bytes\n", deviceId, numBytes);
+        // Process data...
+    });
+
+    // Method 4: Using std::function variable
+    std::function<void(int)> receiveHandler = [](int bytes) {
+        Serial.printf("Handling %d received bytes\n", bytes);
+    };
+    Wire.onReceive(receiveHandler);
+
+    // Method 5: Class member function (using lambda wrapper)
+    class I2CDevice {
+    private:
+        int deviceAddress;
+    public:
+        I2CDevice(int addr) : deviceAddress(addr) {}
+
+        void handleReceive(int numBytes) {
+            Serial.printf("Device 0x%02X received %d bytes\n", deviceAddress, numBytes);
+        }
+
+        void setup() {
+            Wire.onReceive([this](int bytes) {
+                this->handleReceive(bytes);
+            });
+        }
+    };
+
+.. note::
+    The ``onReceive`` callback is triggered when the I2C master sends data to this slave device.
+    Use ``Wire.available()`` and ``Wire.read()`` inside the callback to retrieve the received data.
 
 onRequest
 ^^^^^^^^^
 
-The ``onRequest`` function is used to define the callback for the data to be send to the master.
+The ``onRequest`` function is used to define the callback for responding to master read requests.
 
 .. code-block:: arduino
 
-    void onRequest( void (*)(void) );
+    void onRequest(const std::function<void()>& callback);
+
+**Function Signature:**
+
+The callback function must have the signature ``void()`` with no parameters. This callback is triggered when the master requests data from this slave device.
+
+**Usage Examples:**
+
+.. code-block:: arduino
+
+    // Method 1: Regular function
+    void handleRequest() {
+        static int counter = 0;
+        Wire.printf("Response #%d", counter++);
+    }
+    Wire.onRequest(handleRequest);
+
+    // Method 2: Lambda function
+    Wire.onRequest([]() {
+        // Send sensor data to master
+        int sensorValue = analogRead(A0);
+        Wire.write(sensorValue >> 8);    // High byte
+        Wire.write(sensorValue & 0xFF);  // Low byte
+    });
+
+    // Method 3: Lambda with capture (for accessing variables)
+    int deviceStatus = 1;
+    String deviceName = "Sensor1";
+    Wire.onRequest([&deviceStatus, &deviceName]() {
+        Wire.write(deviceStatus);
+        Wire.write(deviceName.c_str(), deviceName.length());
+    });
+
+    // Method 4: Using std::function variable
+    std::function<void()> requestHandler = []() {
+        Wire.write("Hello Master!");
+    };
+    Wire.onRequest(requestHandler);
+
+    // Method 5: Class member function (using lambda wrapper)
+    class TemperatureSensor {
+    private:
+        float temperature;
+    public:
+        void updateTemperature() {
+            temperature = 25.5; // Read from actual sensor
+        }
+
+        void sendTemperature() {
+            // Convert float to bytes and send
+            uint8_t* tempBytes = (uint8_t*)&temperature;
+            Wire.write(tempBytes, sizeof(float));
+        }
+
+        void setup() {
+            Wire.onRequest([this]() {
+                this->sendTemperature();
+            });
+        }
+    };
+
+.. note::
+    The ``onRequest`` callback is triggered when the I2C master requests data from this slave device.
+    Use ``Wire.write()`` inside the callback to send response data back to the master.
 
 slaveWrite
 ^^^^^^^^^^
