@@ -22,15 +22,15 @@ This example demonstrates how to use lambda functions with FunctionalInterrupt f
 - Optionally connect a second button to BOOT pin for advanced examples
 
 ```
-ESP32 Board          Button 1        Button 2 (Optional)    LED
-───────────          ────────        ──────────────────     ───
+ESP32 Board          Buttons + LED
+───────────          ────────────────
 GPIO 4 ──────────── [BUTTON] ──── GND
-GPIO 0 (BOOT) ────── [BUTTON] ──── GND
-GPIO 2 ──────────── [LED] ──────── GND
-                       │
-                     [330Ω]
-                       │
-                      3V3
+GPIO 0 (BOOT) ───── [BUTTON] ──── GND
+GPIO 2 ───── [R1] ─── [LED] ───── GND  * R1 = resistor 220 ohms
+                        │
+                      [330Ω]
+                        │
+                       3V3
 ```
 
 ## Important ESP32 Interrupt Behavior
