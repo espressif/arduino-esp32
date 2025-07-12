@@ -294,25 +294,33 @@
                     },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
-                            "flash_bytes": 292613,
+                            "flash_bytes": 293081,
                             "flash_percentage": 22,
-                            "ram_bytes": 16612,
+                            "ram_bytes": 16660,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "Wire/examples/WireScan",
                     "sizes": [{
-                            "flash_bytes": 292381,
+                            "flash_bytes": 292849,
                             "flash_percentage": 22,
-                            "ram_bytes": 16604,
+                            "ram_bytes": 16652,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
-                            "flash_bytes": 292573,
+                            "flash_bytes": 293429,
                             "flash_percentage": 22,
-                            "ram_bytes": 16612,
+                            "ram_bytes": 16660,
+                            "ram_percentage": 5
+                            }]
+                    },
+{"name": "Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 293305,
+                            "flash_percentage": 22,
+                            "ram_bytes": 16660,
                             "ram_percentage": 5
                             }]
                     },
@@ -345,14 +353,6 @@
                             "flash_bytes": 624277,
                             "flash_percentage": 47,
                             "ram_bytes": 31780,
-                            "ram_percentage": 9
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Fan_Control",
-                    "sizes": [{
-                            "flash_bytes": 625385,
-                            "flash_percentage": 47,
-                            "ram_bytes": 31904,
                             "ram_percentage": 9
                             }]
                     }
@@ -467,9 +467,9 @@
                     },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
-                            "flash_bytes": 310924,
+                            "flash_bytes": 311376,
                             "flash_percentage": 23,
-                            "ram_bytes": 12320,
+                            "ram_bytes": 12352,
                             "ram_percentage": 3
                             }]
                     }
@@ -480,17 +480,25 @@
                 "sketches": [
 {"name": "Wire/examples/WireScan",
                     "sizes": [{
-                            "flash_bytes": 270581,
+                            "flash_bytes": 271029,
                             "flash_percentage": 20,
-                            "ram_bytes": 14132,
+                            "ram_bytes": 14180,
                             "ram_percentage": 4
                             }]
                     },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
-                            "flash_bytes": 270831,
+                            "flash_bytes": 271605,
                             "flash_percentage": 20,
-                            "ram_bytes": 14140,
+                            "ram_bytes": 14188,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 271503,
+                            "flash_percentage": 20,
+                            "ram_bytes": 14188,
                             "ram_percentage": 4
                             }]
                     },
@@ -597,20 +605,20 @@
                             "ram_bytes": 30388,
                             "ram_percentage": 9
                             }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Occupancy_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 564141,
-                            "flash_percentage": 43,
-                            "ram_bytes": 29144,
-                            "ram_percentage": 8
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_PM25_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 583213,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28116,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Power_Outlet",
                     "sizes": [{
                             "flash_bytes": 720267,
@@ -672,14 +680,6 @@
                             "flash_bytes": 579421,
                             "flash_percentage": 44,
                             "ram_bytes": 28132,
-                            "ram_percentage": 8
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Wind_Speed_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 583163,
-                            "flash_percentage": 44,
-                            "ram_bytes": 28108,
                             "ram_percentage": 8
                             }]
                     }
@@ -770,25 +770,33 @@
                     },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
-                            "flash_bytes": 331366,
+                            "flash_bytes": 331826,
                             "flash_percentage": 25,
-                            "ram_bytes": 22124,
+                            "ram_bytes": 22172,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Wire/examples/WireScan",
                     "sizes": [{
-                            "flash_bytes": 331122,
+                            "flash_bytes": 331582,
                             "flash_percentage": 25,
-                            "ram_bytes": 22116,
+                            "ram_bytes": 22164,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "Wire/examples/WireSlave",
                     "sizes": [{
-                            "flash_bytes": 331630,
+                            "flash_bytes": 332474,
                             "flash_percentage": 25,
-                            "ram_bytes": 22124,
+                            "ram_bytes": 22172,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 332338,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22172,
                             "ram_percentage": 6
                             }]
                     },
@@ -797,14 +805,6 @@
                             "flash_bytes": 659546,
                             "flash_percentage": 50,
                             "ram_bytes": 37180,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
-                    "sizes": [{
-                            "flash_bytes": 665902,
-                            "flash_percentage": 50,
-                            "ram_bytes": 36876,
                             "ram_percentage": 11
                             }]
                     }

@@ -600,9 +600,9 @@
                     },
 {"name": "Wire/examples/WireMaster",
                     "sizes": [{
-                            "flash_bytes": 270839,
+                            "flash_bytes": 271287,
                             "flash_percentage": 20,
-                            "ram_bytes": 14140,
+                            "ram_bytes": 14188,
                             "ram_percentage": 4
                             }]
                     }
@@ -611,6 +611,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
+                    "sizes": [{
+                            "flash_bytes": 708865,
+                            "flash_percentage": 54,
+                            "ram_bytes": 31844,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Electrical_DC_Sensor",
                     "sizes": [{
                             "flash_bytes": 591535,
@@ -673,14 +681,6 @@
                             "flash_percentage": 53,
                             "ram_bytes": 32148,
                             "ram_percentage": 9
-                            }]
-                    },
-{"name": "Zigbee/examples/Zigbee_PM25_Sensor",
-                    "sizes": [{
-                            "flash_bytes": 583213,
-                            "flash_percentage": 44,
-                            "ram_bytes": 28116,
-                            "ram_percentage": 8
                             }]
                     }
 ]
