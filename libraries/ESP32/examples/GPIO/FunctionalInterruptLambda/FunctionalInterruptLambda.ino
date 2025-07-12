@@ -184,8 +184,8 @@ void setup() {
   Serial.println("Setting up Example 2: Lambda with pointer captures");
 
   // Create pointers to avoid capturing static/global variables directly
-  uint32_t* totalInterruptsPtr = &totalInterrupts;
-  unsigned long* lastInterruptTimePtr = &lastInterruptTime;
+  volatile uint32_t* totalInterruptsPtr = &totalInterrupts;
+  volatile unsigned long* lastInterruptTimePtr = &lastInterruptTime;
   volatile bool* ledStatePtr = &ledState;
   volatile bool* ledStateChangedPtr = &ledStateChanged;
   volatile unsigned long* lastButton2TimePtr = &lastButton2InterruptTime;
