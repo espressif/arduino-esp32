@@ -393,8 +393,8 @@ const uint8_t *OpenThread::getNetworkKey() const {
     return nullptr;
   }
   static otNetworkKey networkKey;  // Static storage to persist after function return
-  otError error = otThreadGetNetworkKey(mInstance, &networkKey);
-  return (error == OT_ERROR_NONE) ? networkKey.m8 : nullptr;
+  otThreadGetNetworkKey(mInstance, &networkKey);
+  return networkKey.m8;
 }
 
 // Get the Node Channel
@@ -492,8 +492,9 @@ IPAddress OpenThread::getLeaderRloc() const {
     log_w("Error: OpenThread instance not initialized");
     return IPAddress(IPv6);  // Return empty IPv6 address
   }
-  const otIp6Address *otAddr = otThreadGetLeaderRloc(mInstance);
-  if (!otAddr) {
+  otIp6Address otAddr;
+  otError error = otThreadGetLeaderRloc(mInstance, &otAddr);
+  if (error != OT_ERROR_NONE) {
     log_w("Failed to get Leader RLOC");
     return IPAddress(IPv6);
   }
