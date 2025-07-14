@@ -67,7 +67,10 @@ void loop() {
     
     IPAddress nodeRloc = threadChildNode.getRloc();
     Serial.printf("Node RLOC: %s\r\n", nodeRloc.toString().c_str());
-    
+         
+    IPAddress leaderRloc = threadChildNode.getLeaderRloc();
+    Serial.printf("Leader RLOC: %s\r\n", leaderRloc.toString().c_str());
+
     Serial.println();
     
  } else {
