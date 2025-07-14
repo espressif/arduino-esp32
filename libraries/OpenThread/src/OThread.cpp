@@ -498,7 +498,7 @@ IPAddress OpenThread::getLeaderRloc() const {
     log_w("Failed to get Leader RLOC");
     return IPAddress(IPv6);
   }
-  return IPAddress(IPv6, otAddr->mFields.m8);
+  return IPAddress(IPv6, otAddr.mFields.m8);
 }
 
 // Get the Node RLOC
