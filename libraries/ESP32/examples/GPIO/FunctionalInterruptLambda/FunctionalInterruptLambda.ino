@@ -67,6 +67,42 @@ const unsigned long DEBOUNCE_DELAY_MS = 50;  // 50ms debounce delay
 // State-based debouncing to prevent hysteresis issues
 volatile bool lastButtonState = HIGH;  // Track last stable state (HIGH = released)
 
+// Global lambda function (declared at file scope) - ISR in IRAM
+IRAM_ATTR std::function<void()> changeModeLambda = []() {
+  // Simple debouncing: check if enough time has passed since last interrupt
+  unsigned long currentTime = millis();
+  if (currentTime - lastButtonInterruptTime < DEBOUNCE_DELAY_MS) {
+    return; // Ignore this interrupt due to bouncing
+  }
+
+  // Read current pin state to determine edge type
+  bool currentState = digitalRead(BUTTON_PIN);
+
+  // State-based debouncing: only process if state actually changed
+  if (currentState == lastButtonState) {
+    return; // No real state change, ignore (hysteresis/noise)
+  }
+
+  // Update timing and state
+  lastButtonInterruptTime = currentTime;
+  lastButtonState = currentState;
+
+  if (currentState == LOW) {
+    // FALLING edge detected (button pressed) - set flag for main loop
+    // volatile variables require use of temporary value transfer
+    uint32_t temp = buttonPressCount + 1;
+    buttonPressCount = temp;
+    buttonPressed = true;
+    ledStateChanged = true;  // Signal main loop to toggle LED
+  } else {
+    // RISING edge detected (button released) - set flag for main loop
+    // volatile variables require use of temporary value transfer
+    uint32_t temp = buttonReleaseCount + 1;
+    buttonReleaseCount = temp;
+    buttonReleased = true;
+  }
+};
+
 void setup() {
   Serial.begin(115200);
   delay(1000); // Allow serial monitor to connect
@@ -83,38 +119,7 @@ void setup() {
   // This toggles the LED on button press (FALLING edge)
   Serial.println("Setting up CHANGE mode lambda for LED toggle");
 
-  // Simplified lambda with minimal captures
-  std::function<void()> changeModeLambda = []() {
-    // Simple debouncing: check if enough time has passed since last interrupt
-    unsigned long currentTime = millis();
-    if (currentTime - lastButtonInterruptTime < DEBOUNCE_DELAY_MS) {
-      return; // Ignore this interrupt due to bouncing
-    }
-
-    // Read current pin state to determine edge type
-    bool currentState = digitalRead(BUTTON_PIN);
-
-    // State-based debouncing: only process if state actually changed
-    if (currentState == lastButtonState) {
-      return; // No real state change, ignore (hysteresis/noise)
-    }
-
-    // Update timing and state
-    lastButtonInterruptTime = currentTime;
-    lastButtonState = currentState;
-
-    if (currentState == LOW) {
-      // FALLING edge detected (button pressed) - set flag for main loop
-      buttonPressCount++;
-      buttonPressed = true;
-      ledStateChanged = true;  // Signal main loop to toggle LED
-    } else {
-      // RISING edge detected (button released) - set flag for main loop
-      buttonReleaseCount++;
-      buttonReleased = true;
-    }
-  };
-  
+  // Use the global lambda function
   attachInterrupt(BUTTON_PIN, changeModeLambda, CHANGE);
 
   Serial.println();

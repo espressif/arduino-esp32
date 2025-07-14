@@ -8,6 +8,7 @@ This example demonstrates how to use lambda functions with FunctionalInterrupt f
 2. **LED toggle on button press** (FALLING edge)
 3. **Edge type detection** using digitalRead() within ISR
 4. **Hardware debouncing** with configurable timeout
+5. **IRAM_ATTR lambda declaration** for optimal ISR performance in RAM
 
 ## Hardware Setup
 
@@ -46,9 +47,10 @@ This example demonstrates a simple CHANGE mode lambda interrupt that:
 
 ## Lambda Function Pattern
 
-### CHANGE Mode Lambda (No Captures)
+### CHANGE Mode Lambda with IRAM Declaration
 ```cpp
-std::function<void()> changeModeLambda = []() {
+// Global lambda declared with IRAM_ATTR for optimal ISR performance
+IRAM_ATTR std::function<void()> changeModeLambda = []() {
     // Debouncing check
     unsigned long currentTime = millis();
     if (currentTime - lastButtonInterruptTime < DEBOUNCE_DELAY_MS) {
