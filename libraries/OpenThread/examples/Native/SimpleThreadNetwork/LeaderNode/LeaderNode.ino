@@ -39,11 +39,11 @@ void loop() {
     Serial.println("OpenThread Network Information:");
     
     // Basic network information
-    Serial.printf("Role: %s\n", threadLeaderNode.otGetStringDeviceRole());
-    Serial.printf("RLOC16: 0x%04x\n", threadLeaderNode.getRloc16());
-    Serial.printf("Network Name: %s\n", threadLeaderNode.getNetworkName().c_str());
-    Serial.printf("Channel: %d\n", threadLeaderNode.getChannel());
-    Serial.printf("PAN ID: 0x%04x\n", threadLeaderNode.getPanId());
+    Serial.printf("Role: %s\r\n", threadLeaderNode.otGetStringDeviceRole());
+    Serial.printf("RLOC16: 0x%04x\r\n", threadLeaderNode.getRloc16());
+    Serial.printf("Network Name: %s\r\n", threadLeaderNode.getNetworkName().c_str());
+    Serial.printf("Channel: %d\r\n", threadLeaderNode.getChannel());
+    Serial.printf("PAN ID: 0x%04x\r\n", threadLeaderNode.getPanId());
     
     // Extended PAN ID
     const uint8_t *extPanId = threadLeaderNode.getExtendedPanId();
@@ -67,51 +67,42 @@ void loop() {
     
     // Mesh Local EID
     IPAddress meshLocalEid = threadLeaderNode.getMeshLocalEid();
-    Serial.printf("Mesh Local EID: %s\n", meshLocalEid.toString().c_str());
+    Serial.printf("Mesh Local EID: %s\r\n", meshLocalEid.toString().c_str());
     
     // Leader RLOC
     IPAddress leaderRloc = threadLeaderNode.getLeaderRloc();
-    Serial.printf("Leader RLOC: %s\n", leaderRloc.toString().c_str());
+    Serial.printf("Leader RLOC: %s\r\n", leaderRloc.toString().c_str());
     
     // Node RLOC
     IPAddress nodeRloc = threadLeaderNode.getRloc();
-    Serial.printf("Node RLOC: %s\n", nodeRloc.toString().c_str());
+    Serial.printf("Node RLOC: %s\r\n", nodeRloc.toString().c_str());
     
     // Demonstrate address listing with two different methods:
     // Method 1: Unicast addresses using counting API (individual access)
-    Serial.println("\n--- Unicast Addresses (Using Count + Index API) ---");
+    Serial.println("\r\n--- Unicast Addresses (Using Count + Index API) ---");
     size_t unicastCount = threadLeaderNode.getUnicastAddressCount();
     for (size_t i = 0; i < unicastCount; i++) {
       IPAddress addr = threadLeaderNode.getUnicastAddress(i);
-      Serial.printf("  [%zu]: %s\n", i, addr.toString().c_str());
+      Serial.printf("  [%zu]: %s\r\n", i, addr.toString().c_str());
     }
     
     // Method 2: Multicast addresses using std::vector (bulk access)
-    Serial.println("\n--- Multicast Addresses (Using std::vector API) ---");
+    Serial.println("\r\n--- Multicast Addresses (Using std::vector API) ---");
     std::vector<IPAddress> allMulticast = threadLeaderNode.getAllMulticastAddresses();
     for (size_t i = 0; i < allMulticast.size(); i++) {
-      Serial.printf("  [%zu]: %s\n", i, allMulticast[i].toString().c_str());
+      Serial.printf("  [%zu]: %s\r\n", i, allMulticast[i].toString().c_str());
     }
-    
-    // Cache management information
-    Serial.println("\n--- Address Access Methods ---");
-    Serial.println("Two ways to access addresses:");
-    Serial.println("1. Count + Index: getUnicastAddressCount() + getUnicastAddress(index)");
-    Serial.println("2. Vector: getAllUnicastAddresses() or getAllMulticastAddresses()");
-    Serial.println("Cache is automatically populated when empty");
-    
-    Serial.println("==============================================\n");
-    
+        
     // Check for role change and clear cache if needed (only when active)
     if (currentRole != lastKnownRole) {
-      Serial.printf("Role changed from %s to %s - clearing address cache\n", 
+      Serial.printf("Role changed from %s to %s - clearing address cache\r\n", 
                     (lastKnownRole < 5) ? otRoleString[lastKnownRole] : "Unknown",
                     threadLeaderNode.otGetStringDeviceRole());
       threadLeaderNode.clearAllAddressCache();
       lastKnownRole = currentRole;
     }
   } else {
-    Serial.printf("Thread Node Status: %s - Waiting for network connection...\n", 
+    Serial.printf("Thread Node Status: %s - Waiting for thread network start...\r\n", 
                   threadLeaderNode.otGetStringDeviceRole());
     
     // Update role tracking even when detached/disabled, but don't clear cache

@@ -33,13 +33,13 @@ void loop() {
     // Get and display the current active dataset
     const DataSet &activeDataset = threadChildNode.getCurrentDataSet();
     
-    Serial.printf("Role: %s\n", threadChildNode.otGetStringDeviceRole());
-    Serial.printf("RLOC16: 0x%04x\n", threadChildNode.getRloc16());
+    Serial.printf("Role: %s\r\n", threadChildNode.otGetStringDeviceRole());
+    Serial.printf("RLOC16: 0x%04x\r\n", threadChildNode.getRloc16());
     
     // Dataset information
-    Serial.printf("Network Name: %s\n", activeDataset.getNetworkName());
-    Serial.printf("Channel: %d\n", activeDataset.getChannel());
-    Serial.printf("PAN ID: 0x%04x\n", activeDataset.getPanId());
+    Serial.printf("Network Name: %s\r\n", activeDataset.getNetworkName());
+    Serial.printf("Channel: %d\r\n", activeDataset.getChannel());
+    Serial.printf("PAN ID: 0x%04x\r\n", activeDataset.getPanId());
     
     // Extended PAN ID from dataset
     const uint8_t *extPanId = activeDataset.getExtendedPanId();
@@ -63,16 +63,16 @@ void loop() {
     
     // Additional runtime information
     IPAddress meshLocalEid = threadChildNode.getMeshLocalEid();
-    Serial.printf("Mesh Local EID: %s\n", meshLocalEid.toString().c_str());
+    Serial.printf("Mesh Local EID: %s\r\n", meshLocalEid.toString().c_str());
     
     IPAddress nodeRloc = threadChildNode.getRloc();
-    Serial.printf("Node RLOC: %s\n", nodeRloc.toString().c_str());
+    Serial.printf("Node RLOC: %s\r\n", nodeRloc.toString().c_str());
     
     Serial.println();
     
  } else {
     Serial.println("==============================================");
-    Serial.printf("Thread Node Status: %s - Waiting for network connection...\n", 
+    Serial.printf("Thread Node Status: %s - Waiting for thread network start...\r\n", 
                   threadChildNode.otGetStringDeviceRole());
     
     Serial.println();

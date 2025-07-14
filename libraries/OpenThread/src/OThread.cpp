@@ -240,6 +240,7 @@ void OpenThread::begin(bool OThreadAutoStart) {
       log_i("AUTO start OpenThread done");
     }
   }
+  delay(500); // Give some time for the OpenThread tasks to initialize
   otStarted = true;
 }
 
