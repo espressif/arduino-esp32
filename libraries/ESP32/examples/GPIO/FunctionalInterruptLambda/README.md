@@ -17,14 +17,14 @@ This example demonstrates how to use lambda functions with FunctionalInterrupt f
   Some boards have an RGB LED that needs no special hardware setup to work as a simple white on/off LED.
 
 ```
-ESP32 Board          Button              LED
------------          ------              ---
+ESP32 Board          Button/LED
+-----------          ---------
 BOOT_PIN ------------ [BUTTON] ---- GND
-LED_PIN ----------- [LED] ------- GND
-                       ¦
-                     [330O] (*) Only needed when using an external LED attached to the GPIO.
-                       ¦
-                      3V3
+LED_PIN --------------- [LED] ----- GND
+                          ¦
+                        [330O] (*) Only needed when using an external LED attached to the GPIO.
+                          ¦
+                         3V3
 ```
 
 ## Important ESP32 Interrupt Behavior
