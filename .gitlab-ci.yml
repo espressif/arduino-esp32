@@ -21,5 +21,5 @@ workflow:
 # Place the default settings in `.gitlab/workflows/common.yml` instead
 
 include:
-  - '.gitlab/workflows/common.yml'
-  - '.gitlab/workflows/sample.yml'
+  - ".gitlab/workflows/common.yml"
+  - ".gitlab/workflows/sample.yml"
