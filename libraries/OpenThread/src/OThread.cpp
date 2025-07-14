@@ -2,6 +2,8 @@
 #if SOC_IEEE802154_SUPPORTED
 #if CONFIG_OPENTHREAD_ENABLED
 
+#include "IPAddress.h"
+#include <vector>
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -262,6 +264,7 @@ void OpenThread::start() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
+  clearAllAddressCache(); // Clear cache when starting network
   otThreadSetEnabled(mInstance, true);
   log_d("Thread network started");
 }
@@ -271,6 +274,7 @@ void OpenThread::stop() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
+  clearAllAddressCache(); // Clear cache when stopping network
   otThreadSetEnabled(mInstance, false);
   log_d("Thread network stopped");
 }
@@ -285,6 +289,7 @@ void OpenThread::networkInterfaceUp() {
   if (error != OT_ERROR_NONE) {
     log_e("Error: Failed to enable Thread interface (error code: %d)\n", error);
   }
+  clearAllAddressCache(); // Clear cache when interface comes up
   log_d("OpenThread Network Interface is up");
 }
 
@@ -312,6 +317,7 @@ void OpenThread::commitDataSet(const DataSet &dataset) {
     log_e("Error: Failed to commit dataset (error code: %d)\n", error);
     return;
   }
+  clearAllAddressCache(); // Clear cache when dataset changes
   log_d("Dataset committed successfully");
 }
 
@@ -358,6 +364,290 @@ void OpenThread::otPrintNetworkInformation(Stream &output) {
     output.printf("%02x", networkKey.m8[i]);
   }
   output.println();
+}
+
+// Get the Node Network Name
+String OpenThread::getNetworkName() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return String();  // Return empty String, not nullptr
+  }
+  const char* networkName = otThreadGetNetworkName(mInstance);
+  return networkName ? String(networkName) : String();
+}
+
+// Get the Node Extended PAN ID
+const uint8_t *OpenThread::getExtendedPanId() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  const otExtendedPanId *extPanId = otThreadGetExtendedPanId(mInstance);
+  return extPanId ? extPanId->m8 : nullptr;
+}
+
+// Get the Node Network Key
+const uint8_t *OpenThread::getNetworkKey() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  static otNetworkKey networkKey;  // Static storage to persist after function return
+  otError error = otThreadGetNetworkKey(mInstance, &networkKey);
+  return (error == OT_ERROR_NONE) ? networkKey.m8 : nullptr;
+}
+
+// Get the Node Channel
+uint8_t OpenThread::getChannel() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  return otLinkGetChannel(mInstance);
+}
+
+// Get the Node PAN ID
+uint16_t OpenThread::getPanId() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  return otLinkGetPanId(mInstance);
+}
+
+// Get the OpenThread instance
+otInstance *OpenThread::getInstance() {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  return mInstance;
+}
+
+// Get the current dataset
+const DataSet &OpenThread::getCurrentDataSet() const {
+  static DataSet currentDataset;
+  
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    currentDataset.clear();
+    return currentDataset;
+  }
+  
+  otOperationalDataset dataset;
+  otError error = otDatasetGetActive(mInstance, &dataset);
+  
+  if (error == OT_ERROR_NONE) {
+    currentDataset.clear();
+    
+    if (dataset.mComponents.mIsNetworkNamePresent) {
+      currentDataset.setNetworkName(dataset.mNetworkName.m8);
+    }
+    if (dataset.mComponents.mIsExtendedPanIdPresent) {
+      currentDataset.setExtendedPanId(dataset.mExtendedPanId.m8);
+    }
+    if (dataset.mComponents.mIsNetworkKeyPresent) {
+      currentDataset.setNetworkKey(dataset.mNetworkKey.m8);
+    }
+    if (dataset.mComponents.mIsChannelPresent) {
+      currentDataset.setChannel(dataset.mChannel);
+    }
+    if (dataset.mComponents.mIsPanIdPresent) {
+      currentDataset.setPanId(dataset.mPanId);
+    }
+  } else {
+    log_w("Failed to get active dataset (error: %d)", error);
+    currentDataset.clear();
+  }
+  
+  return currentDataset;
+}
+
+// Get the Mesh Local Prefix
+const otMeshLocalPrefix *OpenThread::getMeshLocalPrefix() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  return otThreadGetMeshLocalPrefix(mInstance);
+}
+
+// Get the Mesh-Local EID
+IPAddress OpenThread::getMeshLocalEid() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return IPAddress(IPv6);  // Return empty IPv6 address
+  }
+  const otIp6Address *otAddr = otThreadGetMeshLocalEid(mInstance);
+  if (!otAddr) {
+    log_w("Failed to get Mesh Local EID");
+    return IPAddress(IPv6);
+  }
+  return IPAddress(IPv6, otAddr->mFields.m8);
+}
+
+// Get the Thread Leader RLOC
+IPAddress OpenThread::getLeaderRloc() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return IPAddress(IPv6);  // Return empty IPv6 address
+  }
+  const otIp6Address *otAddr = otThreadGetLeaderRloc(mInstance);
+  if (!otAddr) {
+    log_w("Failed to get Leader RLOC");
+    return IPAddress(IPv6);
+  }
+  return IPAddress(IPv6, otAddr->mFields.m8);
+}
+
+// Get the Node RLOC
+IPAddress OpenThread::getRloc() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return IPAddress(IPv6);  // Return empty IPv6 address
+  }
+  const otIp6Address *otAddr = otThreadGetRloc(mInstance);
+  if (!otAddr) {
+    log_w("Failed to get Node RLOC");
+    return IPAddress(IPv6);
+  }
+  return IPAddress(IPv6, otAddr->mFields.m8);
+}
+
+// Get the RLOC16 ID
+uint16_t OpenThread::getRloc16() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  return otThreadGetRloc16(mInstance);
+}
+
+// Populate unicast address cache from OpenThread
+void OpenThread::populateUnicastAddressCache() const {
+  if (!mInstance) {
+    return;
+  }
+  
+  // Clear existing cache
+  mCachedUnicastAddresses.clear();
+  
+  // Populate unicast addresses cache
+  const otNetifAddress *addr = otIp6GetUnicastAddresses(mInstance);
+  while (addr != nullptr) {
+    mCachedUnicastAddresses.push_back(IPAddress(IPv6, addr->mAddress.mFields.m8));
+    addr = addr->mNext;
+  }
+  
+  log_d("Populated unicast address cache with %d addresses", mCachedUnicastAddresses.size());
+}
+
+// Populate multicast address cache from OpenThread
+void OpenThread::populateMulticastAddressCache() const {
+  if (!mInstance) {
+    return;
+  }
+  
+  // Clear existing cache
+  mCachedMulticastAddresses.clear();
+  
+  // Populate multicast addresses cache
+  const otNetifMulticastAddress *mAddr = otIp6GetMulticastAddresses(mInstance);
+  while (mAddr != nullptr) {
+    mCachedMulticastAddresses.push_back(IPAddress(IPv6, mAddr->mAddress.mFields.m8));
+    mAddr = mAddr->mNext;
+  }
+  
+  log_d("Populated multicast address cache with %d addresses", mCachedMulticastAddresses.size());
+}
+
+// Clear unicast address cache
+void OpenThread::clearUnicastAddressCache() const {
+  mCachedUnicastAddresses.clear();
+  log_d("Cleared unicast address cache");
+}
+
+// Clear multicast address cache
+void OpenThread::clearMulticastAddressCache() const {
+  mCachedMulticastAddresses.clear();
+  log_d("Cleared multicast address cache");
+}
+
+// Clear all address caches
+void OpenThread::clearAllAddressCache() const {
+  mCachedUnicastAddresses.clear();
+  mCachedMulticastAddresses.clear();
+  log_d("Cleared all address caches");
+}
+
+// Get count of unicast addresses
+size_t OpenThread::getUnicastAddressCount() const {
+  // Populate cache if empty
+  if (mCachedUnicastAddresses.empty()) {
+    populateUnicastAddressCache();
+  }
+  
+  return mCachedUnicastAddresses.size();
+}
+
+// Get unicast address by index
+IPAddress OpenThread::getUnicastAddress(size_t index) const {
+  // Populate cache if empty
+  if (mCachedUnicastAddresses.empty()) {
+    populateUnicastAddressCache();
+  }
+  
+  if (index >= mCachedUnicastAddresses.size()) {
+    log_w("Unicast address index %zu out of range (max: %zu)", index, mCachedUnicastAddresses.size());
+    return IPAddress(IPv6);
+  }
+  
+  return mCachedUnicastAddresses[index];
+}
+
+// Get all unicast addresses
+std::vector<IPAddress> OpenThread::getAllUnicastAddresses() const {
+  // Populate cache if empty
+  if (mCachedUnicastAddresses.empty()) {
+    populateUnicastAddressCache();
+  }
+  
+  return mCachedUnicastAddresses; // Return copy of cached vector
+}
+
+// Get count of multicast addresses
+size_t OpenThread::getMulticastAddressCount() const {
+  // Populate cache if empty
+  if (mCachedMulticastAddresses.empty()) {
+    populateMulticastAddressCache();
+  }
+  
+  return mCachedMulticastAddresses.size();
+}
+
+// Get multicast address by index
+IPAddress OpenThread::getMulticastAddress(size_t index) const {
+  // Populate cache if empty
+  if (mCachedMulticastAddresses.empty()) {
+    populateMulticastAddressCache();
+  }
+  
+  if (index >= mCachedMulticastAddresses.size()) {
+    log_w("Multicast address index %zu out of range (max: %zu)", index, mCachedMulticastAddresses.size());
+    return IPAddress(IPv6);
+  }
+  
+  return mCachedMulticastAddresses[index];
+}
+
+// Get all multicast addresses
+std::vector<IPAddress> OpenThread::getAllMulticastAddresses() const {
+  // Populate cache if empty
+  if (mCachedMulticastAddresses.empty()) {
+    populateMulticastAddressCache();
+  }
+  
+  return mCachedMulticastAddresses; // Return copy of cached vector
 }
 
 OpenThread OThread;

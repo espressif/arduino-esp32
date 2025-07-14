@@ -22,8 +22,61 @@ void setup() {
 }
 
 void loop() {
-  // Print network information every 5 seconds
-  Serial.println("==============================================");
-  threadChildNode.otPrintNetworkInformation(Serial);
+  // Get current device role
+  ot_device_role_t currentRole = threadChildNode.otGetDeviceRole();
+  
+  // Only print detailed network information when node is active
+  if (currentRole != OT_ROLE_DETACHED && currentRole != OT_ROLE_DISABLED) {
+    Serial.println("==============================================");
+    Serial.println("OpenThread Network Information (Active Dataset):");
+    
+    // Get and display the current active dataset
+    const DataSet &activeDataset = threadChildNode.getCurrentDataSet();
+    
+    Serial.printf("Role: %s\n", threadChildNode.otGetStringDeviceRole());
+    Serial.printf("RLOC16: 0x%04x\n", threadChildNode.getRloc16());
+    
+    // Dataset information
+    Serial.printf("Network Name: %s\n", activeDataset.getNetworkName());
+    Serial.printf("Channel: %d\n", activeDataset.getChannel());
+    Serial.printf("PAN ID: 0x%04x\n", activeDataset.getPanId());
+    
+    // Extended PAN ID from dataset
+    const uint8_t *extPanId = activeDataset.getExtendedPanId();
+    if (extPanId) {
+      Serial.print("Extended PAN ID: ");
+      for (int i = 0; i < OT_EXT_PAN_ID_SIZE; i++) {
+        Serial.printf("%02x", extPanId[i]);
+      }
+      Serial.println();
+    }
+    
+    // Network Key from dataset
+    const uint8_t *networkKey = activeDataset.getNetworkKey();
+    if (networkKey) {
+      Serial.print("Network Key: ");
+      for (int i = 0; i < OT_NETWORK_KEY_SIZE; i++) {
+        Serial.printf("%02x", networkKey[i]);
+      }
+      Serial.println();
+    }
+    
+    // Additional runtime information
+    IPAddress meshLocalEid = threadChildNode.getMeshLocalEid();
+    Serial.printf("Mesh Local EID: %s\n", meshLocalEid.toString().c_str());
+    
+    IPAddress nodeRloc = threadChildNode.getRloc();
+    Serial.printf("Node RLOC: %s\n", nodeRloc.toString().c_str());
+    
+    Serial.println();
+    
+ } else {
+    Serial.println("==============================================");
+    Serial.printf("Thread Node Status: %s - Waiting for network connection...\n", 
+                  threadChildNode.otGetStringDeviceRole());
+    
+    Serial.println();
+  }
+  
   delay(5000);
 }
