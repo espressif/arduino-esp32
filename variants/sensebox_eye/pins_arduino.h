@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define USB_VID          0x303A
-#define USB_PID          0x81B8
+#define USB_PID          0x82D1
 #define USB_MANUFACTURER "senseBox"
 #define USB_PRODUCT      "Eye ESP32S3"
 #define USB_SERIAL       ""  // Empty string for MAC address
