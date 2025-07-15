@@ -134,16 +134,29 @@ const otOperationalDataset &DataSet::getDataset() const {
 }
 
 void DataSet::setNetworkName(const char *name) {
-  strncpy(mDataset.mNetworkName.m8, name, sizeof(mDataset.mNetworkName.m8));
+  if (!name) {
+    log_w("Network name is null");
+    return;
+  }
+  // char m8[OT_NETWORK_KEY_SIZE + 1] bytes space by definition
+  strncpy(mDataset.mNetworkName.m8, name, OT_NETWORK_KEY_SIZE);
   mDataset.mComponents.mIsNetworkNamePresent = true;
 }
 
 void DataSet::setExtendedPanId(const uint8_t *extPanId) {
+  if (!extPanId) {
+    log_w("Extended PAN ID is null");
+    return;
+  }
   memcpy(mDataset.mExtendedPanId.m8, extPanId, OT_EXT_PAN_ID_SIZE);
   mDataset.mComponents.mIsExtendedPanIdPresent = true;
 }
 
 void DataSet::setNetworkKey(const uint8_t *key) {
+  if (!key) {
+    log_w("Network key is null");
+    return;
+  }
   memcpy(mDataset.mNetworkKey.m8, key, OT_NETWORK_KEY_SIZE);
   mDataset.mComponents.mIsNetworkKeyPresent = true;
 }
@@ -183,10 +196,18 @@ void DataSet::apply(otInstance *instance) {
 }
 
 // OpenThread Implementation
-bool OpenThread::otStarted = false;
+bool OpenThread::otStarted;
+otInstance *OpenThread::mInstance;
+DataSet OpenThread::mCurrentDataset;
+otNetworkKey OpenThread::mNetworkKey;
 
-otInstance *OpenThread::mInstance = nullptr;
-OpenThread::OpenThread() {}
+OpenThread::OpenThread() {
+  // static initialization (node data and stack starting information)
+  otStarted = false;
+  mCurrentDataset.clear();  // Initialize the current dataset
+  memset(&mNetworkKey, 0, sizeof(mNetworkKey)); // Initialize the network key
+  mInstance = nullptr;
+}
 
 OpenThread::~OpenThread() {
   end();
@@ -216,13 +237,7 @@ void OpenThread::begin(bool OThreadAutoStart) {
     return;
   }
   log_d("OpenThread task created successfully");
-  // get the OpenThread instance that will be used for all operations
-  mInstance = esp_openthread_get_instance();
-  if (!mInstance) {
-    log_e("Error: Failed to initialize OpenThread instance");
-    end();
-    return;
-  }
+  
   // starts Thread with default dataset from NVS or from IDF default settings
   if (OThreadAutoStart) {
     otOperationalDatasetTlvs dataset;
@@ -240,24 +255,46 @@ void OpenThread::begin(bool OThreadAutoStart) {
       log_i("AUTO start OpenThread done");
     }
   }
-  delay(500); // Give some time for the OpenThread tasks to initialize
+  
+  // get the OpenThread instance that will be used for all operations
+  mInstance = esp_openthread_get_instance();
+  if (!mInstance) {
+    log_e("Error: Failed to initialize OpenThread instance");
+    end();
+    return;
+  }
+
   otStarted = true;
 }
 
 void OpenThread::end() {
+  if (!otStarted) {
+    log_w("OpenThread already stopped");
+    return;
+  }
+  
   if (s_ot_task != NULL) {
     vTaskDelete(s_ot_task);
     s_ot_task = NULL;
-    // Clean up
-    esp_openthread_deinit();
-    esp_openthread_netif_glue_deinit();
-#if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
-    ot_lwip_netif = NULL;
-#endif
-    esp_netif_destroy(openthread_netif);
-    esp_vfs_eventfd_unregister();
   }
+  
+  // Clean up in reverse order of initialization
+  if (openthread_netif != NULL) {
+    esp_netif_destroy(openthread_netif);
+    openthread_netif = NULL;
+  }
+  
+  esp_openthread_netif_glue_deinit();
+  esp_openthread_deinit();
+  esp_vfs_eventfd_unregister();
+  
+#if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
+  ot_lwip_netif = NULL;
+#endif
+  
+  mInstance = nullptr;
   otStarted = false;
+  log_d("OpenThread ended successfully");
 }
 
 void OpenThread::start() {
@@ -393,9 +430,8 @@ const uint8_t *OpenThread::getNetworkKey() const {
     log_w("Error: OpenThread instance not initialized");
     return nullptr;
   }
-  static otNetworkKey networkKey;  // Static storage to persist after function return
-  otThreadGetNetworkKey(mInstance, &networkKey);
-  return networkKey.m8;
+  otThreadGetNetworkKey(mInstance, &mNetworkKey);
+  return mNetworkKey.m8;
 }
 
 // Get the Node Channel
@@ -427,41 +463,40 @@ otInstance *OpenThread::getInstance() {
 
 // Get the current dataset
 const DataSet &OpenThread::getCurrentDataSet() const {
-  static DataSet currentDataset;
   
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
-    currentDataset.clear();
-    return currentDataset;
+    mCurrentDataset.clear();
+    return mCurrentDataset;
   }
   
   otOperationalDataset dataset;
   otError error = otDatasetGetActive(mInstance, &dataset);
   
   if (error == OT_ERROR_NONE) {
-    currentDataset.clear();
+    mCurrentDataset.clear();
     
     if (dataset.mComponents.mIsNetworkNamePresent) {
-      currentDataset.setNetworkName(dataset.mNetworkName.m8);
+      mCurrentDataset.setNetworkName(dataset.mNetworkName.m8);
     }
     if (dataset.mComponents.mIsExtendedPanIdPresent) {
-      currentDataset.setExtendedPanId(dataset.mExtendedPanId.m8);
+      mCurrentDataset.setExtendedPanId(dataset.mExtendedPanId.m8);
     }
     if (dataset.mComponents.mIsNetworkKeyPresent) {
-      currentDataset.setNetworkKey(dataset.mNetworkKey.m8);
+      mCurrentDataset.setNetworkKey(dataset.mNetworkKey.m8);
     }
     if (dataset.mComponents.mIsChannelPresent) {
-      currentDataset.setChannel(dataset.mChannel);
+      mCurrentDataset.setChannel(dataset.mChannel);
     }
     if (dataset.mComponents.mIsPanIdPresent) {
-      currentDataset.setPanId(dataset.mPanId);
+      mCurrentDataset.setPanId(dataset.mPanId);
     }
   } else {
     log_w("Failed to get active dataset (error: %d)", error);
-    currentDataset.clear();
+    mCurrentDataset.clear();
   }
   
-  return currentDataset;
+  return mCurrentDataset;
 }
 
 // Get the Mesh Local Prefix
@@ -541,7 +576,7 @@ void OpenThread::populateUnicastAddressCache() const {
     addr = addr->mNext;
   }
   
-  log_d("Populated unicast address cache with %d addresses", mCachedUnicastAddresses.size());
+  log_d("Populated unicast address cache with %zu addresses", mCachedUnicastAddresses.size());
 }
 
 // Populate multicast address cache from OpenThread
@@ -560,7 +595,7 @@ void OpenThread::populateMulticastAddressCache() const {
     mAddr = mAddr->mNext;
   }
   
-  log_d("Populated multicast address cache with %d addresses", mCachedMulticastAddresses.size());
+  log_d("Populated multicast address cache with %zu addresses", mCachedMulticastAddresses.size());
 }
 
 // Clear unicast address cache

@@ -150,7 +150,8 @@ public:
 
 private:
   static otInstance *mInstance;
-  DataSet mCurrentDataSet;
+  static DataSet mCurrentDataset;  // Current dataset being used by the OpenThread instance.
+  static otNetworkKey mNetworkKey; // Static storage to persist after function return
   
   // Address caching for performance (user-controlled)
   mutable std::vector<IPAddress> mCachedUnicastAddresses;
