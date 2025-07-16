@@ -204,8 +204,8 @@ otNetworkKey OpenThread::mNetworkKey;
 OpenThread::OpenThread() {
   // static initialization (node data and stack starting information)
   otStarted = false;
-  mCurrentDataset.clear();  // Initialize the current dataset
-  memset(&mNetworkKey, 0, sizeof(mNetworkKey)); // Initialize the network key
+  mCurrentDataset.clear();                       // Initialize the current dataset
+  memset(&mNetworkKey, 0, sizeof(mNetworkKey));  // Initialize the network key
   mInstance = nullptr;
 }
 
@@ -237,7 +237,7 @@ void OpenThread::begin(bool OThreadAutoStart) {
     return;
   }
   log_d("OpenThread task created successfully");
-  
+
   // starts Thread with default dataset from NVS or from IDF default settings
   if (OThreadAutoStart) {
     otOperationalDatasetTlvs dataset;
@@ -255,7 +255,7 @@ void OpenThread::begin(bool OThreadAutoStart) {
       log_i("AUTO start OpenThread done");
     }
   }
-  
+
   // get the OpenThread instance that will be used for all operations
   mInstance = esp_openthread_get_instance();
   if (!mInstance) {
@@ -272,26 +272,26 @@ void OpenThread::end() {
     log_w("OpenThread already stopped");
     return;
   }
-  
+
   if (s_ot_task != NULL) {
     vTaskDelete(s_ot_task);
     s_ot_task = NULL;
   }
-  
+
   // Clean up in reverse order of initialization
   if (openthread_netif != NULL) {
     esp_netif_destroy(openthread_netif);
     openthread_netif = NULL;
   }
-  
+
   esp_openthread_netif_glue_deinit();
   esp_openthread_deinit();
   esp_vfs_eventfd_unregister();
-  
+
 #if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
   ot_lwip_netif = NULL;
 #endif
-  
+
   mInstance = nullptr;
   otStarted = false;
   log_d("OpenThread ended successfully");
@@ -302,7 +302,7 @@ void OpenThread::start() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
-  clearAllAddressCache(); // Clear cache when starting network
+  clearAllAddressCache();  // Clear cache when starting network
   otThreadSetEnabled(mInstance, true);
   log_d("Thread network started");
 }
@@ -312,7 +312,7 @@ void OpenThread::stop() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
-  clearAllAddressCache(); // Clear cache when stopping network
+  clearAllAddressCache();  // Clear cache when stopping network
   otThreadSetEnabled(mInstance, false);
   log_d("Thread network stopped");
 }
@@ -327,7 +327,7 @@ void OpenThread::networkInterfaceUp() {
   if (error != OT_ERROR_NONE) {
     log_e("Error: Failed to enable Thread interface (error code: %d)\n", error);
   }
-  clearAllAddressCache(); // Clear cache when interface comes up
+  clearAllAddressCache();  // Clear cache when interface comes up
   log_d("OpenThread Network Interface is up");
 }
 
@@ -355,7 +355,7 @@ void OpenThread::commitDataSet(const DataSet &dataset) {
     log_e("Error: Failed to commit dataset (error code: %d)\n", error);
     return;
   }
-  clearAllAddressCache(); // Clear cache when dataset changes
+  clearAllAddressCache();  // Clear cache when dataset changes
   log_d("Dataset committed successfully");
 }
 
@@ -410,7 +410,7 @@ String OpenThread::getNetworkName() const {
     log_w("Error: OpenThread instance not initialized");
     return String();  // Return empty String, not nullptr
   }
-  const char* networkName = otThreadGetNetworkName(mInstance);
+  const char *networkName = otThreadGetNetworkName(mInstance);
   return networkName ? String(networkName) : String();
 }
 
@@ -463,19 +463,19 @@ otInstance *OpenThread::getInstance() {
 
 // Get the current dataset
 const DataSet &OpenThread::getCurrentDataSet() const {
-  
+
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     mCurrentDataset.clear();
     return mCurrentDataset;
   }
-  
+
   otOperationalDataset dataset;
   otError error = otDatasetGetActive(mInstance, &dataset);
-  
+
   if (error == OT_ERROR_NONE) {
     mCurrentDataset.clear();
-    
+
     if (dataset.mComponents.mIsNetworkNamePresent) {
       mCurrentDataset.setNetworkName(dataset.mNetworkName.m8);
     }
@@ -495,7 +495,7 @@ const DataSet &OpenThread::getCurrentDataSet() const {
     log_w("Failed to get active dataset (error: %d)", error);
     mCurrentDataset.clear();
   }
-  
+
   return mCurrentDataset;
 }
 
@@ -565,17 +565,17 @@ void OpenThread::populateUnicastAddressCache() const {
   if (!mInstance) {
     return;
   }
-  
+
   // Clear existing cache
   mCachedUnicastAddresses.clear();
-  
+
   // Populate unicast addresses cache
   const otNetifAddress *addr = otIp6GetUnicastAddresses(mInstance);
   while (addr != nullptr) {
     mCachedUnicastAddresses.push_back(IPAddress(IPv6, addr->mAddress.mFields.m8));
     addr = addr->mNext;
   }
-  
+
   log_d("Populated unicast address cache with %zu addresses", mCachedUnicastAddresses.size());
 }
 
@@ -584,17 +584,17 @@ void OpenThread::populateMulticastAddressCache() const {
   if (!mInstance) {
     return;
   }
-  
+
   // Clear existing cache
   mCachedMulticastAddresses.clear();
-  
+
   // Populate multicast addresses cache
   const otNetifMulticastAddress *mAddr = otIp6GetMulticastAddresses(mInstance);
   while (mAddr != nullptr) {
     mCachedMulticastAddresses.push_back(IPAddress(IPv6, mAddr->mAddress.mFields.m8));
     mAddr = mAddr->mNext;
   }
-  
+
   log_d("Populated multicast address cache with %zu addresses", mCachedMulticastAddresses.size());
 }
 
@@ -623,7 +623,7 @@ size_t OpenThread::getUnicastAddressCount() const {
   if (mCachedUnicastAddresses.empty()) {
     populateUnicastAddressCache();
   }
-  
+
   return mCachedUnicastAddresses.size();
 }
 
@@ -633,12 +633,12 @@ IPAddress OpenThread::getUnicastAddress(size_t index) const {
   if (mCachedUnicastAddresses.empty()) {
     populateUnicastAddressCache();
   }
-  
+
   if (index >= mCachedUnicastAddresses.size()) {
     log_w("Unicast address index %zu out of range (max: %zu)", index, mCachedUnicastAddresses.size());
     return IPAddress(IPv6);
   }
-  
+
   return mCachedUnicastAddresses[index];
 }
 
@@ -648,8 +648,8 @@ std::vector<IPAddress> OpenThread::getAllUnicastAddresses() const {
   if (mCachedUnicastAddresses.empty()) {
     populateUnicastAddressCache();
   }
-  
-  return mCachedUnicastAddresses; // Return copy of cached vector
+
+  return mCachedUnicastAddresses;  // Return copy of cached vector
 }
 
 // Get count of multicast addresses
@@ -658,7 +658,7 @@ size_t OpenThread::getMulticastAddressCount() const {
   if (mCachedMulticastAddresses.empty()) {
     populateMulticastAddressCache();
   }
-  
+
   return mCachedMulticastAddresses.size();
 }
 
@@ -668,12 +668,12 @@ IPAddress OpenThread::getMulticastAddress(size_t index) const {
   if (mCachedMulticastAddresses.empty()) {
     populateMulticastAddressCache();
   }
-  
+
   if (index >= mCachedMulticastAddresses.size()) {
     log_w("Multicast address index %zu out of range (max: %zu)", index, mCachedMulticastAddresses.size());
     return IPAddress(IPv6);
   }
-  
+
   return mCachedMulticastAddresses[index];
 }
 
@@ -683,8 +683,8 @@ std::vector<IPAddress> OpenThread::getAllMulticastAddresses() const {
   if (mCachedMulticastAddresses.empty()) {
     populateMulticastAddressCache();
   }
-  
-  return mCachedMulticastAddresses; // Return copy of cached vector
+
+  return mCachedMulticastAddresses;  // Return copy of cached vector
 }
 
 OpenThread OThread;

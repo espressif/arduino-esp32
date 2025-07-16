@@ -129,7 +129,7 @@ public:
   IPAddress getLeaderRloc() const;
 
   // Get the Node RLOC
-  IPAddress getRloc() const;  
+  IPAddress getRloc() const;
 
   // Get the RLOC16 ID
   uint16_t getRloc16() const;
@@ -138,7 +138,7 @@ public:
   size_t getUnicastAddressCount() const;
   IPAddress getUnicastAddress(size_t index) const;
   std::vector<IPAddress> getAllUnicastAddresses() const;
-  
+
   size_t getMulticastAddressCount() const;
   IPAddress getMulticastAddress(size_t index) const;
   std::vector<IPAddress> getAllMulticastAddresses() const;
@@ -150,13 +150,13 @@ public:
 
 private:
   static otInstance *mInstance;
-  static DataSet mCurrentDataset;  // Current dataset being used by the OpenThread instance.
-  static otNetworkKey mNetworkKey; // Static storage to persist after function return
-  
+  static DataSet mCurrentDataset;   // Current dataset being used by the OpenThread instance.
+  static otNetworkKey mNetworkKey;  // Static storage to persist after function return
+
   // Address caching for performance (user-controlled)
   mutable std::vector<IPAddress> mCachedUnicastAddresses;
   mutable std::vector<IPAddress> mCachedMulticastAddresses;
-  
+
   // Internal cache management
   void populateUnicastAddressCache() const;
   void populateMulticastAddressCache() const;
