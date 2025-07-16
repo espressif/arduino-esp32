@@ -95,7 +95,7 @@ if (digitalRead(pin) == LOW) {
 
 ### Debouncing Strategy
 This example implements dual-layer debouncing:
-1. **Time-based**: Ignores interrupts within 50ms of previous one
+1. **Time-based**: Ignores interrupts within 50 ms of previous one
 2. **State-based**: Only processes actual state changes
 
 ### Main Loop Processing
