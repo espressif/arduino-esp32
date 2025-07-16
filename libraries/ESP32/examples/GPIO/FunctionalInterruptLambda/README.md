@@ -56,17 +56,17 @@ IRAM_ATTR std::function<void()> changeModeLambda = []() {
     if (currentTime - lastButtonInterruptTime < DEBOUNCE_DELAY_MS) {
         return; // Ignore bouncing
     }
-    
+
     // Determine edge type
     bool currentState = digitalRead(BUTTON_PIN);
     if (currentState == lastButtonState) {
         return; // No real state change
     }
-    
+
     // Update state and handle edges
     lastButtonInterruptTime = currentTime;
     lastButtonState = currentState;
-    
+
     if (currentState == LOW) {
         // Button pressed (FALLING edge)
         buttonPressCount++;
@@ -107,7 +107,7 @@ void loop() {
     ledState = !ledState;
     digitalWrite(LED_PIN, ledState);
   }
-  
+
   // Report button events
   if (buttonPressed) {
     // Handle press event

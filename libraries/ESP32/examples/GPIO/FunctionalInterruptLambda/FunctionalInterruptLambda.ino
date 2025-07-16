@@ -17,7 +17,7 @@
 
    ESP32 Lambda FunctionalInterrupt Example
    ========================================
-   
+
    This example demonstrates how to use lambda functions with FunctionalInterrupt
    for GPIO pin interrupt callbacks on ESP32. It shows CHANGE mode detection
    with LED toggle functionality and proper debouncing.
@@ -31,7 +31,7 @@
    2. LED toggle on button press (FALLING edge)
    3. Edge type detection using digitalRead() within ISR
    4. Hardware debouncing with configurable timeout
-  
+
    IMPORTANT NOTE ABOUT ESP32 INTERRUPT BEHAVIOR:
    - Only ONE interrupt handler can be attached per GPIO pin at a time
    - Calling attachInterrupt() on a pin that already has an interrupt will override the previous one
@@ -44,12 +44,12 @@
 #include <FunctionalInterrupt.h>
 
 // Pin definitions
-#define BUTTON_PIN       BOOT_PIN // BOOT BUTTON - change as needed
+#define BUTTON_PIN BOOT_PIN  // BOOT BUTTON - change as needed
 #ifdef LED_BUILTIN
-#define LED_PIN         LED_BUILTIN
+#define LED_PIN LED_BUILTIN
 #else
 #warning Using LED_PIN = GPIO 2 as default - change as needed
-#define LED_PIN         2        // change as needed
+#define LED_PIN 2  // change as needed
 #endif
 
 // Global variables for interrupt handling (volatile for ISR safety)
@@ -58,7 +58,7 @@ volatile uint32_t buttonReleaseCount = 0;
 volatile bool buttonPressed = false;
 volatile bool buttonReleased = false;
 volatile bool ledState = false;
-volatile bool ledStateChanged = false;    // Flag to indicate LED needs updating
+volatile bool ledStateChanged = false;  // Flag to indicate LED needs updating
 
 // Debouncing variables (volatile for ISR safety)
 volatile unsigned long lastButtonInterruptTime = 0;
@@ -72,7 +72,7 @@ IRAM_ATTR std::function<void()> changeModeLambda = []() {
   // Simple debouncing: check if enough time has passed since last interrupt
   unsigned long currentTime = millis();
   if (currentTime - lastButtonInterruptTime < DEBOUNCE_DELAY_MS) {
-    return; // Ignore this interrupt due to bouncing
+    return;  // Ignore this interrupt due to bouncing
   }
 
   // Read current pin state to determine edge type
@@ -80,7 +80,7 @@ IRAM_ATTR std::function<void()> changeModeLambda = []() {
 
   // State-based debouncing: only process if state actually changed
   if (currentState == lastButtonState) {
-    return; // No real state change, ignore (hysteresis/noise)
+    return;  // No real state change, ignore (hysteresis/noise)
   }
 
   // Update timing and state
@@ -105,7 +105,7 @@ IRAM_ATTR std::function<void()> changeModeLambda = []() {
 
 void setup() {
   Serial.begin(115200);
-  delay(1000); // Allow serial monitor to connect
+  delay(1000);  // Allow serial monitor to connect
 
   Serial.println("ESP32 Lambda FunctionalInterrupt Example");
   Serial.println("========================================");
@@ -144,15 +144,13 @@ void loop() {
   // Check for button presses
   if (buttonPressed) {
     buttonPressed = false;
-    Serial.printf("==> Button PRESSED! Count: %lu, LED: %s (FALLING edge)\r\n",
-                  buttonPressCount, ledState ? "ON" : "OFF");
+    Serial.printf("==> Button PRESSED! Count: %lu, LED: %s (FALLING edge)\r\n", buttonPressCount, ledState ? "ON" : "OFF");
   }
 
   // Check for button releases
   if (buttonReleased) {
     buttonReleased = false;
-    Serial.printf("==> Button RELEASED! Count: %lu (RISING edge)\r\n",
-                  buttonReleaseCount);
+    Serial.printf("==> Button RELEASED! Count: %lu (RISING edge)\r\n", buttonReleaseCount);
   }
 
   delay(10);
