@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "LittleFS/examples/LITTLEFS_time",
+                    "sizes": [{
+                            "flash_bytes": 722693,
+                            "flash_percentage": 55,
+                            "ram_bytes": 29076,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
                             "flash_bytes": 655617,
@@ -89,20 +97,20 @@
                             "ram_bytes": 21792,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "SD/examples/SD_Test",
-                    "sizes": [{
-                            "flash_bytes": 393671,
-                            "flash_percentage": 30,
-                            "ram_bytes": 22540,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "Matter/examples/MatterDimmableLight",
+                    "sizes": [{
+                            "flash_bytes": 1694858,
+                            "flash_percentage": 53,
+                            "ram_bytes": 98532,
+                            "ram_percentage": 30
+                            }]
+                    },
 {"name": "Matter/examples/MatterEnhancedColorLight",
                     "sizes": [{
                             "flash_bytes": 1716530,
@@ -222,20 +230,20 @@
                             "ram_bytes": 98284,
                             "ram_percentage": 29
                             }]
-                    },
-{"name": "Matter/examples/WiFiProvWithinMatter",
-                    "sizes": [{
-                            "flash_bytes": 2301730,
-                            "flash_percentage": 73,
-                            "ram_bytes": 120252,
-                            "ram_percentage": 36
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "Matter/examples/MatterPressureSensor",
+                    "sizes": [{
+                            "flash_bytes": 1628785,
+                            "flash_percentage": 51,
+                            "ram_bytes": 93684,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "Matter/examples/MatterSmartButon",
                     "sizes": [{
                             "flash_bytes": 1632321,
@@ -347,20 +355,20 @@
                             "ram_bytes": 20528,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 919605,
-                            "flash_percentage": 70,
-                            "ram_bytes": 39136,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Insights/examples/MinimalDiagnostics",
+                    "sizes": [{
+                            "flash_bytes": 1073520,
+                            "flash_percentage": 81,
+                            "ram_bytes": 37008,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
                             "flash_bytes": 334226,
@@ -464,20 +472,20 @@
                             "ram_bytes": 89608,
                             "ram_percentage": 27
                             }]
-                    },
-{"name": "Matter/examples/MatterOccupancySensor",
-                    "sizes": [{
-                            "flash_bytes": 1622396,
-                            "flash_percentage": 51,
-                            "ram_bytes": 88656,
-                            "ram_percentage": 27
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Matter/examples/MatterMinimum",
+                    "sizes": [{
+                            "flash_bytes": 1655943,
+                            "flash_percentage": 52,
+                            "ram_bytes": 95696,
+                            "ram_percentage": 29
+                            }]
+                    },
 {"name": "Matter/examples/MatterOccupancySensor",
                     "sizes": [{
                             "flash_bytes": 1630539,
@@ -597,20 +605,20 @@
                             "ram_bytes": 43112,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
-                    "sizes": [{
-                            "flash_bytes": 1039661,
-                            "flash_percentage": 79,
-                            "ram_bytes": 41608,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "ESP32/examples/Timer/RepeatTimer",
+                    "sizes": [{
+                            "flash_bytes": 294969,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13176,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
                             "flash_bytes": 294761,
@@ -674,20 +682,20 @@
                             "ram_bytes": 18996,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "FFat/examples/FFat_Test",
-                    "sizes": [{
-                            "flash_bytes": 349409,
-                            "flash_percentage": 26,
-                            "ram_bytes": 13588,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "HTTPUpdate/examples/httpUpdate",
+                    "sizes": [{
+                            "flash_bytes": 973558,
+                            "flash_percentage": 74,
+                            "ram_bytes": 46684,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "HTTPUpdate/examples/httpUpdateSPIFFS",
                     "sizes": [{
                             "flash_bytes": 972826,
@@ -797,14 +805,6 @@
                             "flash_bytes": 1728890,
                             "flash_percentage": 54,
                             "ram_bytes": 98664,
-                            "ram_percentage": 30
-                            }]
-                    },
-{"name": "Matter/examples/MatterFan",
-                    "sizes": [{
-                            "flash_bytes": 1748486,
-                            "flash_percentage": 55,
-                            "ram_bytes": 99044,
                             "ram_percentage": 30
                             }]
                     }

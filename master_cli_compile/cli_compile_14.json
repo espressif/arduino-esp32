@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "WiFi/examples/WiFiTelnetToSerial",
+                    "sizes": [{
+                            "flash_bytes": 683971,
+                            "flash_percentage": 52,
+                            "ram_bytes": 28864,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "WiFi/examples/WiFiUDPClient",
                     "sizes": [{
                             "flash_bytes": 669853,
@@ -47,6 +55,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "WiFi/examples/WiFiUDPClient",
+                    "sizes": [{
+                            "flash_bytes": 867138,
+                            "flash_percentage": 66,
+                            "ram_bytes": 44764,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "WiFiProv/examples/WiFiProv",
                     "sizes": [{
                             "flash_bytes": 1470414,
@@ -164,6 +180,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
+                    "sizes": [{
+                            "flash_bytes": 624277,
+                            "flash_percentage": 47,
+                            "ram_bytes": 31780,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Fan_Control",
                     "sizes": [{
                             "flash_bytes": 625385,
@@ -209,6 +233,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "Wire/examples/WireMaster",
+                    "sizes": [{
+                            "flash_bytes": 311376,
+                            "flash_percentage": 23,
+                            "ram_bytes": 12352,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "Wire/examples/WireScan",
                     "sizes": [{
                             "flash_bytes": 311126,
@@ -310,6 +342,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_OTA_Client",
+                    "sizes": [{
+                            "flash_bytes": 605169,
+                            "flash_percentage": 46,
+                            "ram_bytes": 30388,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Occupancy_Sensor",
                     "sizes": [{
                             "flash_bytes": 564141,
@@ -435,6 +475,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Vibration_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 579421,
+                            "flash_percentage": 44,
+                            "ram_bytes": 28132,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Wind_Speed_Sensor",
                     "sizes": [{
                             "flash_bytes": 583163,
@@ -456,6 +504,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "Zigbee/examples/Zigbee_Analog_Input_Output",
+                    "sizes": [{
+                            "flash_bytes": 659546,
+                            "flash_percentage": 50,
+                            "ram_bytes": 37180,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "Zigbee/examples/Zigbee_Color_Dimmer_Switch",
                     "sizes": [{
                             "flash_bytes": 665902,
