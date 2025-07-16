@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /*
-  This example create 6 on-off light endpoint that share the same onChangeOnOff() callback code.
+  This example creates 6 on-off light endpoints that share the same onChangeOnOff() callback code.
   It uses Lambda Function with an extra Lambda Capture information that links the Endpoint to its individual information.
   After the Matter example is commissioned, the expected Serial output shall be similar to this:
 

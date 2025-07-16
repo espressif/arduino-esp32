@@ -45,6 +45,11 @@ cat docs/conf_common.py | \
 sed "s/.. |version| replace:: .*/.. |version| replace:: $ESP_ARDUINO_VERSION/g" | \
 sed "s/.. |idf_version| replace:: .*/.. |idf_version| replace:: $ESP_IDF_VERSION/g" > docs/__conf_common.py && mv docs/__conf_common.py docs/conf_common.py
 
+echo "Updating .gitlab/workflows/common.yml..."
+cat .gitlab/workflows/common.yml | \
+sed "s/ESP_IDF_VERSION:.*/ESP_IDF_VERSION: \"$ESP_IDF_VERSION\"/g" | \
+sed "s/ESP_ARDUINO_VERSION:.*/ESP_ARDUINO_VERSION: \"$ESP_ARDUINO_VERSION\"/g" > .gitlab/workflows/__common.yml && mv .gitlab/workflows/__common.yml .gitlab/workflows/common.yml
+
 echo "Updating cores/esp32/esp_arduino_version.h..."
 cat cores/esp32/esp_arduino_version.h | \
 sed "s/#define ESP_ARDUINO_VERSION_MAJOR.*/#define ESP_ARDUINO_VERSION_MAJOR $ESP_ARDUINO_VERSION_MAJOR/g" | \
