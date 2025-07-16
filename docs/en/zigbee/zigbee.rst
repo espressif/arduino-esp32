@@ -43,8 +43,8 @@ Zigbee Network Topology
 **Device Roles**
 
 * **Coordinator**: Forms and manages the network, stores network information
-* **Router**: Extends network range, routes messages, mains powered devices (typicaly lights, switches, etc.)
-* **End Device**: Battery-powered devices that can sleep for extended periods (typicaly sensors)
+* **Router**: Extends network range, routes messages, mains powered devices (typically lights, switches, etc.)
+* **End Device**: Battery-powered devices that can sleep for extended periods (typically sensors)
 
 Zigbee Library Structure
 ------------------------
@@ -150,7 +150,7 @@ Debug Mode
 **********
 
 For better debugging, you can enable debug mode to get detailed information about network operations. Call debug mode before starting Zigbee.
-Also selectiong zigbee mode with *debug* suffix is recommended.
+Also selecting zigbee mode with *debug* suffix is recommended.
 
 .. code-block:: arduino
 
