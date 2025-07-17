@@ -72,45 +72,29 @@ void initVariant(void) {
     .loop_count = 0
   };
 
-  uint8_t pixel[3] = { 0x10, 0x00, 0x00 }; // green
-  blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
-
   // define button pin
-  pinMode(0, INPUT_PULLUP);
-
-  // keep button pressed
-  unsigned long pressStartTime = 0;
-  bool buttonPressed = false;
-
-  // Wait 3.5 seconds for the button to be pressed
-  unsigned long startTime = millis();
+  pinMode(47, INPUT_PULLUP);
 
   // Check if button is pressed
-  while (millis() - startTime < 3500) {
-    if (digitalRead(0) == LOW) {
-      if (!buttonPressed) {
-        // The button was pressed
-        buttonPressed = true;
-      }
-    } else if (buttonPressed) {
-      // When the button is pressed and then released, boot into the OTA1 partition
-      const esp_partition_t *ota1_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+  if (digitalRead(47) == LOW) {
+    // When the button is pressed and then released, boot into the OTA1 partition
+    const esp_partition_t *ota1_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
 
-      if (ota1_partition) {
-        esp_err_t err = esp_ota_set_boot_partition(ota1_partition);
-        if (err == ESP_OK) {
-          uint8_t pixel[3] = { 0x00, 0x00, 0x10 }; // blue
-          blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
-          esp_restart();  // restart, to boot OTA1 partition
-        } else {
-          uint8_t pixel[3] = { 0x00, 0x10, 0x00 }; // red
-          blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
-          ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
-        }
+    if (ota1_partition) {
+      esp_err_t err = esp_ota_set_boot_partition(ota1_partition);
+      if (err == ESP_OK) {
+        uint8_t pixel[3] = { 0x00, 0x00, 0x10 }; // blue
+        blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
+        esp_restart();  // restart, to boot OTA1 partition
+      } else {
+        uint8_t pixel[3] = { 0x00, 0x10, 0x00 }; // red
+        blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
+        ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
       }
-      // Abort after releasing the button
-      break;
     }
+  } else {
+    uint8_t pixel[3] = { 0x10, 0x00, 0x00 }; // green
+    blinkLED(pixel, led_chan, ws2812_encoder, tx_config);
   }
 }
 }
