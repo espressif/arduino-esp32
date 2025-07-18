@@ -9,6 +9,10 @@
 #include "esp32-hal.h"
 #include "esp_wifi.h"
 
+#ifndef ESP_NOW_MAX_DATA_LEN_V2
+#define ESP_NOW_MAX_DATA_LEN_V2 1470
+#endif
+
 static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg) = nullptr;
 static void *new_arg = nullptr;  // * tx_arg = nullptr, * rx_arg = nullptr,
 static bool _esp_now_has_begun = false;
