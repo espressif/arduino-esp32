@@ -781,6 +781,7 @@ wifi_ps_type_t WiFiGenericClass::getSleep() {
   return _sleepEnabled;
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
 /**
  * control wifi band mode
  * @param band_mode enum possible band modes
@@ -823,7 +824,6 @@ bool WiFiGenericClass::setBandMode(wifi_band_mode_t band_mode) {
 #endif
 }
 
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
 /**
  * get the current enabled wifi band mode
  * @return enum band mode
@@ -844,6 +844,7 @@ wifi_band_mode_t WiFiGenericClass::getBandMode() {
   return WIFI_BAND_MODE_2G_ONLY;
 #endif
 }
+#endif
 
 /**
  * get the current active wifi band
@@ -865,7 +866,6 @@ wifi_band_t WiFiGenericClass::getBand() {
   return WIFI_BAND_2G;
 #endif
 }
-#endif
 
 /**
  * control wifi tx power
