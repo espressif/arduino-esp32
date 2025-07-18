@@ -368,9 +368,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 
   i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
   i2c_ll_clear_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) \
-  || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \
-  || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0))
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
   i2c_ll_enable_fifo_mode(i2c->dev, true);
 #else
   i2c_ll_slave_set_fifo_mode(i2c->dev, true);
