@@ -248,7 +248,7 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v5.5"]
+        idf_ver: ["release-v5.3","release-v5.4","release-v5.5"]
         idf_target:
           [
             "esp32",
