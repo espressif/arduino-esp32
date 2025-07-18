@@ -389,7 +389,12 @@ static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx
 #endif
     if (tx_rx_same_io || !_uartTrySetIomuxPin(uart_num, rx_io_num, SOC_UART_RX_PIN_IDX)) {
       if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
         gpio_input_enable(rx_io_num);
+#else
+        gpio_func_sel(rx_io_num, PIN_FUNC_GPIO);
+        gpio_ll_input_enable(&GPIO, rx_io_num);
+#endif
         esp_rom_gpio_connect_in_signal(rx_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), 0);
       }
 #if SOC_LP_GPIO_MATRIX_SUPPORTED
@@ -422,8 +427,14 @@ static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx
 
   if (cts_io_num >= 0 && !_uartTrySetIomuxPin(uart_num, cts_io_num, SOC_UART_CTS_PIN_IDX)) {
     if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
       gpio_pullup_en(cts_io_num);
       gpio_input_enable(cts_io_num);
+#else
+      gpio_func_sel(cts_io_num, PIN_FUNC_GPIO);
+      gpio_set_pull_mode(cts_io_num, GPIO_PULLUP_ONLY);
+      gpio_set_direction(cts_io_num, GPIO_MODE_INPUT);
+#endif
       esp_rom_gpio_connect_in_signal(cts_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), 0);
     }
 #if SOC_LP_GPIO_MATRIX_SUPPORTED

@@ -58,7 +58,9 @@ void loop() {
   Serial.println("-------------------------------------");
   Serial.println("Default wifi band mode scan:");
   Serial.println("-------------------------------------");
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
   WiFi.setBandMode(WIFI_BAND_MODE_AUTO);
+#endif
   ScanWiFi();
 #if CONFIG_SOC_WIFI_SUPPORT_5G
   // Wait a bit before scanning again.
