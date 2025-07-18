@@ -28,6 +28,7 @@
 #include "ep/ZigbeeElectricalMeasurement.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeIlluminanceSensor.h"
+#include "ep/ZigbeeMultistate.h"
 #include "ep/ZigbeeOccupancySensor.h"
 #include "ep/ZigbeePM25Sensor.h"
 #include "ep/ZigbeePressureSensor.h"
