@@ -305,6 +305,7 @@ bool APClass::enableNAPT(bool enable) {
   return true;
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
 bool APClass::enableDhcpCaptivePortal() {
   esp_err_t err = ESP_OK;
   static char captiveportal_uri[32] = {
@@ -343,6 +344,7 @@ bool APClass::enableDhcpCaptivePortal() {
 
   return true;
 }
+#endif
 
 String APClass::SSID(void) const {
   if (!started()) {

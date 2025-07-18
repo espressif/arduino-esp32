@@ -9,6 +9,10 @@
 #include "esp32-hal.h"
 #include "esp_wifi.h"
 
+#ifndef ESP_NOW_MAX_DATA_LEN_V2
+#define ESP_NOW_MAX_DATA_LEN_V2 1470
+#endif
+
 static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg) = nullptr;
 static void *new_arg = nullptr;  // * tx_arg = nullptr, * rx_arg = nullptr,
 static bool _esp_now_has_begun = false;
@@ -129,7 +133,12 @@ static void _esp_now_rx_cb(const esp_now_recv_info_t *info, const uint8_t *data,
   }
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+static void _esp_now_tx_cb(const esp_now_send_info_t *tx_info, esp_now_send_status_t status) {
+  const uint8_t *mac_addr = tx_info->des_addr;
+#else
 static void _esp_now_tx_cb(const uint8_t *mac_addr, esp_now_send_status_t status) {
+#endif
   log_v(MACSTR " : %s", MAC2STR(mac_addr), (status == ESP_NOW_SEND_SUCCESS) ? "SUCCESS" : "FAILED");
   //find the peer and call it's callback
   for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {

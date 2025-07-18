@@ -115,6 +115,8 @@ onChangeHeatingSetpoint	KEYWORD2
 onEvent	KEYWORD2
 setEndPointId	KEYWORD2
 getEndPointId	KEYWORD2
+getSecondaryNetworkEndPointId	KEYWORD2
+createSecondaryNetworkInterface	KEYWORD2
 onIdentify	KEYWORD2
 endpointIdentifyCB	KEYWORD2
 

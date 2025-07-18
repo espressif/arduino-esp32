@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,15 +22,21 @@
 
 // Matter Manager
 #include <Matter.h>
+#if !CONFIG_ENABLE_CHIPOBLE
+// if the device can be commissioned using BLE, WiFi is not used - save flash space
 #include <WiFi.h>
+#endif
 
 // List of Matter Endpoints for this Node
 // Single On/Off Light Endpoint - at least one per node
 MatterOnOffLight OnOffLight;
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
 // WiFi is manually set and started
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID
 const char *password = "your-password";  // Change this to your WiFi password
+#endif
 
 // Light GPIO that can be controlled by Matter APP
 #ifdef LED_BUILTIN
@@ -62,6 +68,8 @@ void setup() {
   // Initialize the LED GPIO
   pinMode(ledPin, OUTPUT);
 
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
   // Manually connect to WiFi
   WiFi.begin(ssid, password);
   // Wait for connection
@@ -73,6 +81,7 @@ void setup() {
     delay(500);
   }
   Serial.println();
+#endif
 
   // Initialize at least one Matter EndPoint
   OnOffLight.begin();

@@ -53,7 +53,9 @@ public:
 
   bool bandwidth(wifi_bandwidth_t bandwidth);
   bool enableNAPT(bool enable = true);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
   bool enableDhcpCaptivePortal();
+#endif
 
   String SSID(void) const;
   uint8_t stationCount();

@@ -9,8 +9,8 @@ stages:
   - result
 
 variables:
-  ESP_IDF_VERSION: "5.4"
-  ESP_ARDUINO_VERSION: "3.2.1"
+  ESP_IDF_VERSION: "5.5"
+  ESP_ARDUINO_VERSION: "3.3.0"
 
 #############
 # `default` #

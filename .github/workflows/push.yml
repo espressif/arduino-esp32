@@ -47,6 +47,7 @@ on:
       - "!.github/scripts/upload_*"
       - "variants/esp32/**/*"
       - "variants/esp32c3/**/*"
+      - "variants/esp32c5/**/*"
       - "variants/esp32c6/**/*"
       - "variants/esp32h2/**/*"
       - "variants/esp32p4/**/*"
@@ -247,7 +248,7 @@ jobs:
         # See https://hub.docker.com/r/espressif/idf/tags and
         # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
         # for details.
-        idf_ver: ["release-v5.4"]
+        idf_ver: ["release-v5.3","release-v5.4","release-v5.5"]
         idf_target:
           [
             "esp32",
@@ -282,7 +283,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: sdkconfig-${{ matrix.idf_target }}
+          name: sdkconfig-${{ matrix.idf_ver }}-${{ matrix.idf_target }}
           path: ./components/arduino-esp32/idf_component_examples/**/sdkconfig
 
   # Save artifacts to gh-pages

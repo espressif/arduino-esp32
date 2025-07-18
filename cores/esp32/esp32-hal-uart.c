@@ -208,6 +208,14 @@ static bool lpuartCheckPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rt
 }
 #endif  // SOC_UART_LP_NUM >= 1
 
+#ifndef GPIO_FUNC_IN_LOW
+#define GPIO_FUNC_IN_LOW GPIO_MATRIX_CONST_ZERO_INPUT
+#endif
+
+#ifndef GPIO_FUNC_IN_HIGH
+#define GPIO_FUNC_IN_HIGH GPIO_MATRIX_CONST_ONE_INPUT
+#endif
+
 // Negative Pin Number will keep it unmodified, thus this function can detach individual pins
 // This function will also unset the pins in the Peripheral Manager and set the pin to -1 after detaching
 static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
@@ -223,7 +231,8 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 
   // detaches HP and LP pins and sets Peripheral Manager and UART information
   if (rxPin >= 0 && uart->_rxPin == rxPin && perimanGetPinBusType(rxPin) == ESP32_BUS_TYPE_UART_RX) {
-    gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
+    esp_rom_gpio_pad_select_gpio(rxPin);
     // avoids causing BREAK in the UART line
     if (uart->_inverted) {
       esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
@@ -237,7 +246,8 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
   }
   if (txPin >= 0 && uart->_txPin == txPin && perimanGetPinBusType(txPin) == ESP32_BUS_TYPE_UART_TX) {
-    gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
+    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
+    esp_rom_gpio_pad_select_gpio(txPin);
     esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
     uart->_txPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(txPin)) {
@@ -246,7 +256,8 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
   }
   if (ctsPin >= 0 && uart->_ctsPin == ctsPin && perimanGetPinBusType(ctsPin) == ESP32_BUS_TYPE_UART_CTS) {
-    gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
+    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
+    esp_rom_gpio_pad_select_gpio(ctsPin);
     esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
     uart->_ctsPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(ctsPin)) {
@@ -255,7 +266,8 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     }
   }
   if (rtsPin >= 0 && uart->_rtsPin == rtsPin && perimanGetPinBusType(rtsPin) == ESP32_BUS_TYPE_UART_RTS) {
-    gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
+    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
+    esp_rom_gpio_pad_select_gpio(rtsPin);
     esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
     uart->_rtsPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(rtsPin)) {
@@ -310,11 +322,19 @@ static bool _uartTrySetIomuxPin(uart_port_t uart_num, int io_num, uint32_t idx) 
     return false;
   }
   if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    if (upin->input) {
+      gpio_iomux_input(io_num, upin->iomux_func, upin->signal);
+    } else {
+      gpio_iomux_output(io_num, upin->iomux_func);
+    }
+#else
     gpio_iomux_out(io_num, upin->iomux_func, false);
     // If the pin is input, we also have to redirect the signal, in order to bypass the GPIO matrix.
     if (upin->input) {
       gpio_iomux_in(io_num, upin->signal);
     }
+#endif
   }
 #if (SOC_UART_LP_NUM >= 1) && (SOC_RTCIO_PIN_COUNT >= 1)
   else {
@@ -369,7 +389,12 @@ static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx
 #endif
     if (tx_rx_same_io || !_uartTrySetIomuxPin(uart_num, rx_io_num, SOC_UART_RX_PIN_IDX)) {
       if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
         gpio_input_enable(rx_io_num);
+#else
+        gpio_func_sel(rx_io_num, PIN_FUNC_GPIO);
+        gpio_ll_input_enable(&GPIO, rx_io_num);
+#endif
         esp_rom_gpio_connect_in_signal(rx_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), 0);
       }
 #if SOC_LP_GPIO_MATRIX_SUPPORTED
@@ -402,8 +427,14 @@ static esp_err_t _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx
 
   if (cts_io_num >= 0 && !_uartTrySetIomuxPin(uart_num, cts_io_num, SOC_UART_CTS_PIN_IDX)) {
     if (uart_num < SOC_UART_HP_NUM) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
       gpio_pullup_en(cts_io_num);
       gpio_input_enable(cts_io_num);
+#else
+      gpio_func_sel(cts_io_num, PIN_FUNC_GPIO);
+      gpio_set_pull_mode(cts_io_num, GPIO_PULLUP_ONLY);
+      gpio_set_direction(cts_io_num, GPIO_MODE_INPUT);
+#endif
       esp_rom_gpio_connect_in_signal(cts_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), 0);
     }
 #if SOC_LP_GPIO_MATRIX_SUPPORTED
@@ -950,7 +981,7 @@ void uartSetRxInvert(uart_t *uart, bool invert) {
   if (uart == NULL) {
     return;
   }
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
   // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
   // IDF or LL set/reset the whole inv_mask!
   // if (invert)
@@ -1267,8 +1298,12 @@ bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) {
     switch (clkSrc) {
-      case UART_SCLK_XTAL:    uart->_uart_clock_source = LP_UART_SCLK_XTAL_D2; break;
-      case UART_SCLK_RTC:     uart->_uart_clock_source = LP_UART_SCLK_LP_FAST; break;
+      case UART_SCLK_XTAL: uart->_uart_clock_source = LP_UART_SCLK_XTAL_D2; break;
+#if CONFIG_IDF_TARGET_ESP32C5
+      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_RC_FAST; break;
+#else
+      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_LP_FAST; break;
+#endif
       case UART_SCLK_DEFAULT:
       default:                uart->_uart_clock_source = LP_UART_SCLK_DEFAULT;
     }
