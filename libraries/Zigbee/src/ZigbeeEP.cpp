@@ -608,6 +608,15 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
   log_w("No matching device found for removal");
 }
 
+void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message) {
+  log_v("Default response received for endpoint %d", _endpoint);
+  log_v("Status code: %s", esp_zb_zcl_status_to_name(message->status_code));
+  log_v("Response to command: %d", message->resp_to_cmd);
+  if (_on_default_response) {
+    _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
+  }
+}
+
 const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
   switch (status) {
     case ESP_ZB_ZCL_STATUS_SUCCESS:               return "Success";

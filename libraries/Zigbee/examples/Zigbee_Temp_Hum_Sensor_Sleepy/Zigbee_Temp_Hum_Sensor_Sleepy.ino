@@ -42,6 +42,9 @@ uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
+uint8_t dataToSend = 2; // Temperature and humidity values are reported in same endpoint, so 2 values are reported
+bool resend = false; 
+
 /************************ Temp sensor *****************************/
 void meausureAndSleep() {
   // Measure temperature sensor value
@@ -55,17 +58,34 @@ void meausureAndSleep() {
   zbTempSensor.setHumidity(humidity);
 
   // Report temperature and humidity values
-  zbTempSensor.report();
+  zbTempSensor.report(); // reports temperature and humidity values (if humidity sensor is not added, only temperature is reported)
   Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
 
-  // Add small delay to allow the data to be sent before going to sleep
-  delay(100);
+  // Wait until data was succesfully sent
+  while(dataToSend != 0){
+    if(resend){
+        Serial.println("Resending data on failure!");
+        resend = false;
+        dataToSend = 2;
+        zbTempSensor.report(); // report again
+    }
+  }
 
-  // Put device to deep sleep
+  // Put device to deep sleep after data was sent successfully
   Serial.println("Going to sleep now");
   esp_deep_sleep_start();
 }
 
+void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
+  Serial.printf("Response status recieved %s", zbTempSensor.esp_zb_zcl_status_to_name(status));
+  if(command == ZB_CMD_REPORT_ATTRIBUTE){
+    switch (status){
+      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
+      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+    }
+  }
+}
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
@@ -92,6 +112,9 @@ void setup() {
   // Add humidity cluster to the temperature sensor device with min, max and tolerance values
   zbTempSensor.addHumiditySensor(0, 100, 1);
 
+  // Set callback for default response to handle status of reported data
+  zbTempSensor.onDefaultResponse(onResponse);
+
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
@@ -116,9 +139,6 @@ void setup() {
   }
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
-
-  // Delay approx 1s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
-  delay(1000);
 }
 
 void loop() {
