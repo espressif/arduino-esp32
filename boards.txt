@@ -41310,6 +41310,196 @@ sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
 sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+# senseBox Eye
+
+sensebox_eye.name=senseBox Eye
+senseBox_eye.vid.0=0x303A
+senseBox_eye.pid.0=0x82D1
+senseBox_eye.vid.1=0x303A
+senseBox_eye.pid.1=0x82D2
+senseBox_eye.vid.2=0x303A
+senseBox_eye.pid.2=0x82D3
+
+sensebox_eye.bootloader.tool=esptool_py
+sensebox_eye.bootloader.tool.default=esptool_py
+
+sensebox_eye.upload.tool=esptool_py
+sensebox_eye.upload.tool.default=esptool_py
+sensebox_eye.upload.tool.network=esp_ota
+
+sensebox_eye.upload.maximum_size=1310720
+sensebox_eye.upload.maximum_data_size=327680
+sensebox_eye.upload.flags=
+sensebox_eye.upload.extra_flags=
+sensebox_eye.upload.use_1200bps_touch=true
+sensebox_eye.upload.wait_for_upload_port=true
+
+sensebox_eye.serial.disableDTR=true
+sensebox_eye.serial.disableRTS=true
+
+sensebox_eye.build.tarch=xtensa
+sensebox_eye.build.bootloader_addr=0x0
+sensebox_eye.build.target=esp32s3
+sensebox_eye.build.mcu=esp32s3
+sensebox_eye.build.core=esp32
+sensebox_eye.build.variant=sensebox_eye
+sensebox_eye.build.board=sensebox_eye
+
+sensebox_eye.build.usb_mode=0
+sensebox_eye.build.cdc_on_boot=1
+sensebox_eye.build.msc_on_boot=1
+sensebox_eye.build.dfu_on_boot=0
+sensebox_eye.build.f_cpu=240000000L
+sensebox_eye.build.flash_size=16MB (128Mb)
+sensebox_eye.build.flash_freq=80m
+sensebox_eye.build.flash_mode=dio
+sensebox_eye.build.boot=qio
+sensebox_eye.build.boot_freq=80m
+sensebox_eye.build.partitions=default_16MB
+sensebox_eye.build.defines=
+sensebox_eye.build.loop_core=
+sensebox_eye.build.event_core=
+sensebox_eye.build.psram_type=qspi
+sensebox_eye.build.memory_type={build.boot}_{build.psram_type}
+
+sensebox_eye.menu.JTAGAdapter.default=Disabled
+sensebox_eye.menu.JTAGAdapter.default.build.copy_jtag_files=0
+sensebox_eye.menu.JTAGAdapter.builtin=Integrated USB JTAG
+sensebox_eye.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+sensebox_eye.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+sensebox_eye.menu.JTAGAdapter.external=FTDI Adapter
+sensebox_eye.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+sensebox_eye.menu.JTAGAdapter.external.build.copy_jtag_files=1
+sensebox_eye.menu.JTAGAdapter.bridge=ESP USB Bridge
+sensebox_eye.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+sensebox_eye.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+sensebox_eye.menu.PSRAM.disabled=Disabled
+sensebox_eye.menu.PSRAM.disabled.build.defines=
+sensebox_eye.menu.PSRAM.disabled.build.psram_type=qspi
+sensebox_eye.menu.PSRAM.opi=OPI PSRAM
+sensebox_eye.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+sensebox_eye.menu.PSRAM.opi.build.psram_type=opi
+
+sensebox_eye.menu.FlashMode.qio=QIO 80MHz
+sensebox_eye.menu.FlashMode.qio.build.flash_mode=dio
+sensebox_eye.menu.FlashMode.qio.build.boot=qio
+sensebox_eye.menu.FlashMode.qio.build.boot_freq=80m
+sensebox_eye.menu.FlashMode.qio.build.flash_freq=80m
+sensebox_eye.menu.FlashMode.dio=DIO 80MHz
+sensebox_eye.menu.FlashMode.dio.build.flash_mode=dio
+sensebox_eye.menu.FlashMode.dio.build.boot=dio
+sensebox_eye.menu.FlashMode.dio.build.boot_freq=80m
+sensebox_eye.menu.FlashMode.dio.build.flash_freq=80m
+
+sensebox_eye.menu.FlashSize.16M=16MB (128Mb)
+sensebox_eye.menu.FlashSize.16M.build.flash_size=16MB
+
+sensebox_eye.menu.LoopCore.1=Core 1
+sensebox_eye.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+sensebox_eye.menu.LoopCore.0=Core 0
+sensebox_eye.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+sensebox_eye.menu.EventsCore.1=Core 1
+sensebox_eye.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+sensebox_eye.menu.EventsCore.0=Core 0
+sensebox_eye.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+sensebox_eye.menu.USBMode.hwcdc=Hardware CDC and JTAG
+sensebox_eye.menu.USBMode.hwcdc.build.usb_mode=1
+sensebox_eye.menu.USBMode.default=USB-OTG (TinyUSB)
+sensebox_eye.menu.USBMode.default.build.usb_mode=0
+
+sensebox_eye.menu.CDCOnBoot.default=Enabled
+sensebox_eye.menu.CDCOnBoot.default.build.cdc_on_boot=1
+sensebox_eye.menu.CDCOnBoot.cdc=Disabled
+sensebox_eye.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+sensebox_eye.menu.MSCOnBoot.default=Disabled
+sensebox_eye.menu.MSCOnBoot.default.build.msc_on_boot=0
+sensebox_eye.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+sensebox_eye.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+sensebox_eye.menu.DFUOnBoot.default=Disabled
+sensebox_eye.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sensebox_eye.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+sensebox_eye.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sensebox_eye.menu.UploadMode.default=UART0 / Hardware CDC
+sensebox_eye.menu.UploadMode.default.upload.use_1200bps_touch=false
+sensebox_eye.menu.UploadMode.default.upload.wait_for_upload_port=false
+sensebox_eye.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+sensebox_eye.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sensebox_eye.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+sensebox_eye.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+sensebox_eye.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+sensebox_eye.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+sensebox_eye.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+sensebox_eye.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+sensebox_eye.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+sensebox_eye.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+sensebox_eye.menu.PartitionScheme.fatflash.build.partitions=ffat
+sensebox_eye.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+sensebox_eye.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/12MB FFAT)
+sensebox_eye.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+sensebox_eye.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions_tinyuf2
+sensebox_eye.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+sensebox_eye.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4=Huge App (16MB APP)
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4.build.custom_partitions=gen4esp32_16MBapp
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4.upload.maximum_size=16646144
+
+sensebox_eye.menu.CPUFreq.240=240MHz (WiFi)
+sensebox_eye.menu.CPUFreq.240.build.f_cpu=240000000L
+sensebox_eye.menu.CPUFreq.160=160MHz (WiFi)
+sensebox_eye.menu.CPUFreq.160.build.f_cpu=160000000L
+sensebox_eye.menu.CPUFreq.80=80MHz (WiFi)
+sensebox_eye.menu.CPUFreq.80.build.f_cpu=80000000L
+sensebox_eye.menu.CPUFreq.40=40MHz
+sensebox_eye.menu.CPUFreq.40.build.f_cpu=40000000L
+sensebox_eye.menu.CPUFreq.20=20MHz
+sensebox_eye.menu.CPUFreq.20.build.f_cpu=20000000L
+sensebox_eye.menu.CPUFreq.10=10MHz
+sensebox_eye.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sensebox_eye.menu.UploadSpeed.921600=921600
+sensebox_eye.menu.UploadSpeed.921600.upload.speed=921600
+sensebox_eye.menu.UploadSpeed.115200=115200
+sensebox_eye.menu.UploadSpeed.115200.upload.speed=115200
+sensebox_eye.menu.UploadSpeed.256000.windows=256000
+sensebox_eye.menu.UploadSpeed.256000.upload.speed=256000
+sensebox_eye.menu.UploadSpeed.230400.windows.upload.speed=256000
+sensebox_eye.menu.UploadSpeed.230400=230400
+sensebox_eye.menu.UploadSpeed.230400.upload.speed=230400
+sensebox_eye.menu.UploadSpeed.460800.linux=460800
+sensebox_eye.menu.UploadSpeed.460800.macosx=460800
+sensebox_eye.menu.UploadSpeed.460800.upload.speed=460800
+sensebox_eye.menu.UploadSpeed.512000.windows=512000
+sensebox_eye.menu.UploadSpeed.512000.upload.speed=512000
+
+sensebox_eye.menu.DebugLevel.none=None
+sensebox_eye.menu.DebugLevel.none.build.code_debug=0
+sensebox_eye.menu.DebugLevel.error=Error
+sensebox_eye.menu.DebugLevel.error.build.code_debug=1
+sensebox_eye.menu.DebugLevel.warn=Warn
+sensebox_eye.menu.DebugLevel.warn.build.code_debug=2
+sensebox_eye.menu.DebugLevel.info=Info
+sensebox_eye.menu.DebugLevel.info.build.code_debug=3
+sensebox_eye.menu.DebugLevel.debug=Debug
+sensebox_eye.menu.DebugLevel.debug.build.code_debug=4
+sensebox_eye.menu.DebugLevel.verbose=Verbose
+sensebox_eye.menu.DebugLevel.verbose.build.code_debug=5
+
+sensebox_eye.menu.EraseFlash.none=Disabled
+sensebox_eye.menu.EraseFlash.none.upload.erase_cmd=
+sensebox_eye.menu.EraseFlash.all=Enabled
+sensebox_eye.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
 
 nano_nora.name=Arduino Nano ESP32
 nano_nora.vid.0=0x2341
