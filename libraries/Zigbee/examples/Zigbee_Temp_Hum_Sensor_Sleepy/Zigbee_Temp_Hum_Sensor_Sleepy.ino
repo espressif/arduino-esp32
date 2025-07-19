@@ -37,6 +37,7 @@
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
+#define REPORT_TIMEOUT 30000      /* Timeout for reporting data in ms */
 
 uint8_t button = BOOT_PIN;
 
@@ -57,9 +58,13 @@ void meausureAndSleep() {
   zbTempSensor.setTemperature(temperature);
   zbTempSensor.setHumidity(humidity);
 
+  
   // Report temperature and humidity values
   zbTempSensor.report(); // reports temperature and humidity values (if humidity sensor is not added, only temperature is reported)
   Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
+
+  unsigned long startTime = millis();
+  const unsigned long timeout = REPORT_TIMEOUT;
 
   // Wait until data was succesfully sent
   while(dataToSend != 0){
@@ -69,15 +74,19 @@ void meausureAndSleep() {
         dataToSend = 2;
         zbTempSensor.report(); // report again
     }
+    if (millis() - startTime >= timeout) {
+      Serial.println("Report timeout!");
+      break;
+    }
   }
 
-  // Put device to deep sleep after data was sent successfully
+  // Put device to deep sleep after data was sent successfully or timeout
   Serial.println("Going to sleep now");
   esp_deep_sleep_start();
 }
 
 void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
-  Serial.printf("Response status recieved %s", zbTempSensor.esp_zb_zcl_status_to_name(status));
+  Serial.printf("Response status received %s\r\n", zbTempSensor.esp_zb_zcl_status_to_name(status));
   if(command == ZB_CMD_REPORT_ATTRIBUTE){
     switch (status){
       case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
