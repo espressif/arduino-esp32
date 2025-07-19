@@ -237,7 +237,9 @@ void ZigbeeCore::closeNetwork() {
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
-  ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
+  if(esp_zb_bdb_start_top_level_commissioning(mode_mask) != ESP_OK){
+    log_e("Failed to start Zigbee commissioning");
+  }
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
