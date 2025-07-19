@@ -32,6 +32,8 @@
 
 #include "Zigbee.h"
 
+#define USE_GLOBAL_ON_RESPONSE_CALLBACK 1 // Set to 0 to use local callback specified directly for the endpoint.
+
 /* Zigbee temperature + humidity sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
@@ -45,6 +47,31 @@ ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
 uint8_t dataToSend = 2; // Temperature and humidity values are reported in same endpoint, so 2 values are reported
 bool resend = false; 
+
+/************************ Callbacks *****************************/
+#if USE_GLOBAL_ON_RESPONSE_CALLBACK
+void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster){
+  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster); 
+  if((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)){
+    switch (status){
+      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
+      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+    }
+  }
+}
+#else
+void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
+  Serial.printf("Response command: %d, status: %s\r\n", command, esp_zb_zcl_status_to_name(status));
+  if(command == ZB_CMD_REPORT_ATTRIBUTE){
+    switch (status){
+      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
+      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+    }
+  }
+}
+#endif
 
 /************************ Temp sensor *****************************/
 void meausureAndSleep() {
@@ -85,16 +112,6 @@ void meausureAndSleep() {
   esp_deep_sleep_start();
 }
 
-void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
-  Serial.printf("Response status received %s\r\n", zbTempSensor.esp_zb_zcl_status_to_name(status));
-  if(command == ZB_CMD_REPORT_ATTRIBUTE){
-    switch (status){
-      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
-      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
-      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
-    }
-  }
-}
 /********************* Arduino functions **************************/
 void setup() {
   Serial.begin(115200);
@@ -121,8 +138,15 @@ void setup() {
   // Add humidity cluster to the temperature sensor device with min, max and tolerance values
   zbTempSensor.addHumiditySensor(0, 100, 1);
 
-  // Set callback for default response to handle status of reported data
+  // Set callback for default response to handle status of reported data, there are 2 options.
+
+#if USE_GLOBAL_ON_RESPONSE_CALLBACK
+  // Global callback for all endpoints with more params to determine the endpoint and cluster in the callback function.
+  Zigbee.onGlobalDefaultResponse(onGlobalResponse);
+#else
+  // Callback specified for endpoint
   zbTempSensor.onDefaultResponse(onResponse);
+#endif
 
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);

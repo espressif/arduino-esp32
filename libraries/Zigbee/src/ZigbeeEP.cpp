@@ -617,7 +617,8 @@ void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *me
   }
 }
 
-const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
+// Global function implementation
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
   switch (status) {
     case ESP_ZB_ZCL_STATUS_SUCCESS:               return "Success";
     case ESP_ZB_ZCL_STATUS_FAIL:                  return "Fail";

@@ -12,32 +12,6 @@
 #define ZB_CMD_TIMEOUT             10000     // 10 seconds
 #define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
 
-typedef enum {
-  ZB_CMD_READ_ATTRIBUTE                = 0x00U, /*!< Read attributes command */
-  ZB_CMD_READ_ATTRIBUTE_RESPONSE       = 0x01U, /*!< Read attributes response command */
-  ZB_CMD_WRITE_ATTRIBUTE               = 0x02U, /*!< Write attributes foundation command */
-  ZB_CMD_WRITE_ATTRIBUTE_UNDIVIDED     = 0x03U, /*!< Write attributes undivided command */
-  ZB_CMD_WRITE_ATTRIBUTE_RESPONSE      = 0x04U, /*!< Write attributes response command */
-  ZB_CMD_WRITE_ATTRIBUTE_NO_RESPONSE   = 0x05U, /*!< Write attributes no response command */
-  ZB_CMD_CONFIGURE_REPORTING           = 0x06U, /*!< Configure reporting command */
-  ZB_CMD_CONFIGURE_REPORTING_RESPONSE  = 0x07U, /*!< Configure reporting response command */
-  ZB_CMD_READ_REPORTING_CONFIG         = 0x08U, /*!< Read reporting config command */
-  ZB_CMD_READ_REPORTING_CONFIG_RESPONSE= 0x09U, /*!< Read reporting config response command */
-  ZB_CMD_REPORT_ATTRIBUTE              = 0x0aU, /*!< Report attribute command */
-  ZB_CMD_DEFAULT_RESPONSE              = 0x0bU, /*!< Default response command */
-  ZB_CMD_DISCOVER_ATTRIBUTES           = 0x0cU, /*!< Discover attributes command */
-  ZB_CMD_DISCOVER_ATTRIBUTES_RESPONSE  = 0x0dU, /*!< Discover attributes response command */
-  ZB_CMD_READ_ATTRIBUTE_STRUCTURED     = 0x0eU, /*!< Read attributes structured */
-  ZB_CMD_WRITE_ATTRIBUTE_STRUCTURED    = 0x0fU, /*!< Write attributes structured */
-  ZB_CMD_WRITE_ATTRIBUTE_STRUCTURED_RESPONSE = 0x10U, /*!< Write attributes structured response */
-  ZB_CMD_DISCOVER_COMMANDS_RECEIVED    = 0x11U, /*!< Discover Commands Received command */
-  ZB_CMD_DISCOVER_COMMANDS_RECEIVED_RESPONSE = 0x12U, /*!< Discover Commands Received response command */
-  ZB_CMD_DISCOVER_COMMANDS_GENERATED   = 0x13U, /*!< Discover Commands Generated command */
-  ZB_CMD_DISCOVER_COMMANDS_GENERATED_RESPONSE = 0x14U, /*!< Discover Commands Generated response command */
-  ZB_CMD_DISCOVER_ATTRIBUTES_EXTENDED  = 0x15U, /*!< Discover attributes extended command */
-  ZB_CMD_DISCOVER_ATTRIBUTES_EXTENDED_RESPONSE = 0x16U, /*!< Discover attributes extended response command */
-} zb_cmd_type_t;
-
 #define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
@@ -63,6 +37,9 @@ typedef enum {
   ZB_POWER_SOURCE_MAINS = 0x01,
   ZB_POWER_SOURCE_BATTERY = 0x03,
 } zb_power_source_t;
+
+// Global function for converting ZCL status to name
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
 
 /* Zigbee End Device Class */
 class ZigbeeEP {
@@ -188,7 +165,6 @@ public:
   }
 
   // Convert ZCL status to name
-  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
   
 private:
   char *_read_manufacturer;
@@ -212,6 +188,7 @@ protected:
   zb_power_source_t _power_source;
   uint8_t _time_status;
 
+  // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
 };
 

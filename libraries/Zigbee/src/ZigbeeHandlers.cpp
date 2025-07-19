@@ -399,6 +399,9 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
     message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
   );
 
+  // Call global callback if set
+  Zigbee.callDefaultResponseCallback((zb_cmd_type_t)message->resp_to_cmd, message->status_code, message->info.dst_endpoint, message->info.cluster);
+
   // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->getEndpoint()) {
