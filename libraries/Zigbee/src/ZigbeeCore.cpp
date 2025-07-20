@@ -794,13 +794,8 @@ const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceI
 }
 
 void ZigbeeCore::callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
-  log_v("Global callback called: cmd=%d, status=%s, ep=%d, cluster=0x%04x", resp_to_cmd, esp_zb_zcl_status_to_name(status), endpoint, cluster);
   if (_global_default_response_cb) {
-    log_v("Global callback is set, calling it");
     _global_default_response_cb(resp_to_cmd, status, endpoint, cluster);
-    log_v("Global callback completed");
-  } else {
-    log_v("Global callback is NOT set");
   }
 }
 
