@@ -41343,7 +41343,7 @@ sensebox_eye.build.target=esp32s3
 sensebox_eye.build.mcu=esp32s3
 sensebox_eye.build.core=esp32
 sensebox_eye.build.variant=sensebox_eye
-sensebox_eye.build.board=sensebox_eye
+sensebox_eye.build.board=SENSEBOX_EYE
 
 sensebox_eye.build.usb_mode=0
 sensebox_eye.build.cdc_on_boot=1
