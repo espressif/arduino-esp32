@@ -74,7 +74,7 @@ void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
 #endif
 
 /************************ Temp sensor *****************************/
-void meausureAndSleep() {
+static void meausureAndSleep(void *arg) {
   // Measure temperature sensor value
   float temperature = temperatureRead();
 
@@ -93,6 +93,7 @@ void meausureAndSleep() {
   unsigned long startTime = millis();
   const unsigned long timeout = REPORT_TIMEOUT;
 
+  Serial.printf("Waiting for data report to be confirmed \r\n");
   // Wait until data was succesfully sent
   while(dataToSend != 0){
     if(resend){
@@ -105,6 +106,8 @@ void meausureAndSleep() {
       Serial.println("Report timeout!");
       break;
     }
+    Serial.printf(".");
+    delay(50); // 50ms delay to avoid busy-waiting
   }
 
   // Put device to deep sleep after data was sent successfully or timeout
@@ -172,6 +175,9 @@ void setup() {
   }
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
+
+   // Start Temperature sensor reading task
+   xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
 }
 
 void loop() {
@@ -194,7 +200,5 @@ void loop() {
       }
     }
   }
-
-  // Call the function to measure temperature and put the device to sleep
-  meausureAndSleep();
+  delay(100);
 }
