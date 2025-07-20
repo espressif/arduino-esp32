@@ -41313,12 +41313,12 @@ sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 # senseBox Eye
 
 sensebox_eye.name=senseBox Eye
-senseBox_eye.vid.0=0x303A
-senseBox_eye.pid.0=0x82D1
-senseBox_eye.vid.1=0x303A
-senseBox_eye.pid.1=0x82D2
-senseBox_eye.vid.2=0x303A
-senseBox_eye.pid.2=0x82D3
+sensebox_eye.vid.0=0x303A
+sensebox_eye.pid.0=0x82D1
+sensebox_eye.vid.1=0x303A
+sensebox_eye.pid.1=0x82D2
+sensebox_eye.vid.2=0x303A
+sensebox_eye.pid.2=0x82D3
 
 sensebox_eye.bootloader.tool=esptool_py
 sensebox_eye.bootloader.tool.default=esptool_py
