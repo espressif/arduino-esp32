@@ -613,6 +613,15 @@ int NetworkInterface::route_prio() const {
   return esp_netif_get_route_prio(_esp_netif);
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+int NetworkInterface::route_prio(int prio) {
+  if (_esp_netif == NULL) {
+    return -1;
+  }
+  return esp_netif_set_route_prio(_esp_netif, prio);
+}
+#endif
+
 bool NetworkInterface::setDefault() {
   if (_esp_netif == NULL) {
     return false;

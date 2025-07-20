@@ -58,6 +58,9 @@ public:
   String impl_name() const;
   int impl_index() const;
   int route_prio() const;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  int route_prio(int prio);
+#endif
   bool setDefault();
   bool isDefault() const;
 
