@@ -606,7 +606,13 @@ int NetworkInterface::impl_index() const {
   return esp_netif_get_netif_impl_index(_esp_netif);
 }
 
-int NetworkInterface::route_prio() const {
+/**
+ * Every netif has a parameter named route_prio, you can refer to file esp_netif_defaults.h.
+ * A higher value of route_prio indicates a higher priority.
+ * The active interface with highest priority will be used for default route (gateway).
+ * Defaults are: STA=100, BR=70, ETH=50, PPP=20, AP/NAN=10
+ */
+int NetworkInterface::getRoutePrio() const {
   if (_esp_netif == NULL) {
     return -1;
   }
@@ -614,7 +620,7 @@ int NetworkInterface::route_prio() const {
 }
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-int NetworkInterface::route_prio(int prio) {
+int NetworkInterface::setRoutePrio(int prio) {
   if (_esp_netif == NULL) {
     return -1;
   }
@@ -622,6 +628,11 @@ int NetworkInterface::route_prio(int prio) {
 }
 #endif
 
+/**
+ * This API overrides the automatic configuration of the default interface based on the route_prio
+ * If the selected netif is set default using this API, no other interface could be set-default disregarding
+ * its route_prio number (unless the selected netif gets destroyed)
+ */
 bool NetworkInterface::setDefault() {
   if (_esp_netif == NULL) {
     return false;
