@@ -839,7 +839,11 @@ size_t NetworkInterface::printTo(Print &out) const {
   if (flags & ESP_NETIF_FLAG_MLDV6_REPORT) {
     bytes += out.print(",V6_REP");
   }
-  bytes += out.println(")");
+  bytes += out.print(")");
+
+  bytes += out.print(" PRIO: ");
+  bytes += out.print(getRoutePrio());
+  bytes += out.println("");
 
   bytes += out.print("      ");
   bytes += out.print("ether ");
