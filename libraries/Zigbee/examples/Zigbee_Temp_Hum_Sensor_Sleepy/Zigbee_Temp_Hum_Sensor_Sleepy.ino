@@ -39,7 +39,7 @@
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
-#define REPORT_TIMEOUT 1000      /* Timeout for response from coordinator in ms */
+#define REPORT_TIMEOUT 1000       /* Timeout for response from coordinator in ms */
 
 uint8_t button = BOOT_PIN;
 
@@ -106,7 +106,7 @@ static void meausureAndSleep(void *arg) {
     if (millis() - startTime >= timeout) {
       Serial.println("\nReport timeout! Report Again");
       dataToSend = 2;
-      zbTempSensor.report(); // report again
+      zbTempSensor.report();  // report again
       startTime = millis();
       tries++;
     }
