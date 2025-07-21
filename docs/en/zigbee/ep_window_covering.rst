@@ -49,13 +49,13 @@ Position Control
 setLiftPosition
 ^^^^^^^^^^^^^^^
 
-Sets the window covering lift position in cm.
+Sets the window covering lift position.
 
 .. code-block:: arduino
 
     bool setLiftPosition(uint16_t lift_position);
 
-* ``lift_position`` - Lift position in cm
+* ``lift_position`` - Lift position
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
