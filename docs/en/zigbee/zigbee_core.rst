@@ -173,7 +173,7 @@ Sets the timeout for network operations.
 
     void setTimeout(uint32_t timeout);
 
-* ``timeout`` - Timeout in milliseconds (default: 30000ms)
+* ``timeout`` - Timeout in milliseconds (default: 30000 ms)
 
 Network Discovery
 *****************

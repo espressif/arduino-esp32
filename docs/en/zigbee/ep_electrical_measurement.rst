@@ -18,9 +18,8 @@ The ``ZigbeeElectricalMeasurement`` class provides an endpoint for electrical me
 * Zigbee HA standard compliance
 
 **Use Cases:**
-* Smart power meters
+* Smart power monitoring
 * Energy monitoring systems
-* Industrial power monitoring
 * Solar panel monitoring
 * Battery monitoring systems
 * Electrical load monitoring

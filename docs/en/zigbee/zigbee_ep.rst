@@ -152,7 +152,7 @@ Sets the power source type for the endpoint.
 
 * ``source`` - Power source type (``ZB_POWER_SOURCE_MAINS``, ``ZB_POWER_SOURCE_BATTERY``, etc.)
 * ``percentage`` - Battery percentage (0-100, default: 0xff)
-* ``voltage`` - Battery voltage in 100mV units (default: 0xff)
+* ``voltage`` - Battery voltage in 100 mV units (default: 0xff)
 
 This function will return ``true`` if set successfully, ``false`` otherwise.
 
@@ -178,7 +178,7 @@ Sets the battery voltage.
 
     bool setBatteryVoltage(uint8_t voltage);
 
-* ``voltage`` - Battery voltage in 100mV units (e.g., 35 for 3.5V)
+* ``voltage`` - Battery voltage in 100 mV units (e.g., 35 for 3.5 V)
 
 This function will return ``true`` if set successfully, ``false`` otherwise.
 

@@ -135,7 +135,7 @@ Common Issues
 **Network connectivity problems**
   * Check that devices are within range
   * Verify that routers are properly configured
-  * Check for interference from other 2.4GHz devices
+  * Check for interference from other 2.4 GHz devices
 
 Factory Reset
 *************
