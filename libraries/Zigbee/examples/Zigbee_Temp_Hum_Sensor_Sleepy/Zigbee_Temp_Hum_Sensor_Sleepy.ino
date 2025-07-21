@@ -32,7 +32,7 @@
 
 #include "Zigbee.h"
 
-#define USE_GLOBAL_ON_RESPONSE_CALLBACK 1 // Set to 0 to use local callback specified directly for the endpoint.
+#define USE_GLOBAL_ON_RESPONSE_CALLBACK 1  // Set to 0 to use local callback specified directly for the endpoint.
 
 /* Zigbee temperature + humidity sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
@@ -45,29 +45,29 @@ uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
-uint8_t dataToSend = 2; // Temperature and humidity values are reported in same endpoint, so 2 values are reported
-bool resend = false; 
+uint8_t dataToSend = 2;  // Temperature and humidity values are reported in same endpoint, so 2 values are reported
+bool resend = false;
 
 /************************ Callbacks *****************************/
 #if USE_GLOBAL_ON_RESPONSE_CALLBACK
-void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster){
-  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster); 
-  if((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)){
-    switch (status){
+void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
+  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
+  if ((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)) {
+    switch (status) {
       case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
-      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
-      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
     }
   }
 }
 #else
-void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status){
+void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status) {
   Serial.printf("Response command: %d, status: %s\r\n", command, esp_zb_zcl_status_to_name(status));
-  if(command == ZB_CMD_REPORT_ATTRIBUTE){
-    switch (status){
+  if (command == ZB_CMD_REPORT_ATTRIBUTE) {
+    switch (status) {
       case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
-      case ESP_ZB_ZCL_STATUS_FAIL: resend = true; break;
-      default: break;// add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
     }
   }
 }
@@ -85,9 +85,8 @@ static void meausureAndSleep(void *arg) {
   zbTempSensor.setTemperature(temperature);
   zbTempSensor.setHumidity(humidity);
 
-  
   // Report temperature and humidity values
-  zbTempSensor.report(); // reports temperature and humidity values (if humidity sensor is not added, only temperature is reported)
+  zbTempSensor.report();  // reports temperature and humidity values (if humidity sensor is not added, only temperature is reported)
   Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
 
   unsigned long startTime = millis();
@@ -95,19 +94,19 @@ static void meausureAndSleep(void *arg) {
 
   Serial.printf("Waiting for data report to be confirmed \r\n");
   // Wait until data was succesfully sent
-  while(dataToSend != 0){
-    if(resend){
-        Serial.println("Resending data on failure!");
-        resend = false;
-        dataToSend = 2;
-        zbTempSensor.report(); // report again
+  while (dataToSend != 0) {
+    if (resend) {
+      Serial.println("Resending data on failure!");
+      resend = false;
+      dataToSend = 2;
+      zbTempSensor.report();  // report again
     }
     if (millis() - startTime >= timeout) {
       Serial.println("Report timeout!");
       break;
     }
     Serial.printf(".");
-    delay(50); // 50ms delay to avoid busy-waiting
+    delay(50);  // 50ms delay to avoid busy-waiting
   }
 
   // Put device to deep sleep after data was sent successfully or timeout
@@ -176,8 +175,8 @@ void setup() {
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
 
-   // Start Temperature sensor reading task
-   xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
+  // Start Temperature sensor reading task
+  xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
 }
 
 void loop() {

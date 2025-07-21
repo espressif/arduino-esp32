@@ -141,7 +141,7 @@ public:
   virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
-  virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message); //already implemented
+  virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
@@ -165,7 +165,7 @@ public:
   }
 
   // Convert ZCL status to name
-  
+
 private:
   char *_read_manufacturer;
   char *_read_model;
@@ -175,7 +175,6 @@ private:
   int32_t _read_timezone;
 
 protected:
-
   uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;
