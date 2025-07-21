@@ -31,4 +31,4 @@ Range Extender Implementation
 *****************************
 
 .. literalinclude:: ../../../libraries/Zigbee/examples/Zigbee_Range_Extender/Zigbee_Range_Extender.ino
-    :language: arduino 
+    :language: arduino

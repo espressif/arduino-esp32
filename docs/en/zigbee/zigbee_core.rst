@@ -44,10 +44,10 @@ This function will return ``true`` if initialization successful, ``false`` other
 
     Depending on the Zigbee role, proper Zigbee mode and partition scheme must be set in the Arduino IDE.
 
-    * **ZIGBEE_COORDINATOR** and **ZIGBEE_ROUTER**: 
+    * **ZIGBEE_COORDINATOR** and **ZIGBEE_ROUTER**:
         * Zigbee mode to ``Zigbee ZCZR (coordinator/router)``.
         * Partition scheme to ``Zigbee ZCZR xMB with spiffs`` (where ``x`` is the number of MB of selected flash size).
-    * **ZIGBEE_END_DEVICE**: 
+    * **ZIGBEE_END_DEVICE**:
         * Zigbee mode to ``Zigbee ED (end device)``.
         * Partition scheme to ``Zigbee xMB with spiffs`` (where ``x`` is the number of MB of selected flash size).
 
