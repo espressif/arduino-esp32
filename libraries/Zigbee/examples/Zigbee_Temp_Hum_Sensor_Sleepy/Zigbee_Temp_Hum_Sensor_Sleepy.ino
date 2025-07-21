@@ -39,7 +39,7 @@
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
-#define REPORT_TIMEOUT 30000      /* Timeout for reporting data in ms */
+#define REPORT_TIMEOUT 1000      /* Timeout for response from coordinator in ms */
 
 uint8_t button = BOOT_PIN;
 
@@ -93,8 +93,10 @@ static void meausureAndSleep(void *arg) {
   const unsigned long timeout = REPORT_TIMEOUT;
 
   Serial.printf("Waiting for data report to be confirmed \r\n");
-  // Wait until data was succesfully sent
-  while (dataToSend != 0) {
+  // Wait until data was successfully sent
+  int tries = 0;
+  const int maxTries = 3;
+  while (dataToSend != 0 && tries < maxTries) {
     if (resend) {
       Serial.println("Resending data on failure!");
       resend = false;
@@ -102,8 +104,11 @@ static void meausureAndSleep(void *arg) {
       zbTempSensor.report();  // report again
     }
     if (millis() - startTime >= timeout) {
-      Serial.println("Report timeout!");
-      break;
+      Serial.println("\nReport timeout! Report Again");
+      dataToSend = 2;
+      zbTempSensor.report(); // report again
+      startTime = millis();
+      tries++;
     }
     Serial.printf(".");
     delay(50);  // 50ms delay to avoid busy-waiting
