@@ -60,6 +60,7 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
+#include "hal/spi_ll.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -79,16 +80,15 @@ struct spi_struct_t {
 
 #if CONFIG_IDF_TARGET_ESP32S2
 // ESP32S2
-#define SPI_COUNT (3)
+#define SPI_COUNT (2)
 
-#define SPI_CLK_IDX(p)  ((p == 0) ? SPICLK_OUT_MUX_IDX : ((p == 1) ? FSPICLK_OUT_MUX_IDX : ((p == 2) ? SPI3_CLK_OUT_MUX_IDX : 0)))
-#define SPI_MISO_IDX(p) ((p == 0) ? SPIQ_OUT_IDX : ((p == 1) ? FSPIQ_OUT_IDX : ((p == 2) ? SPI3_Q_OUT_IDX : 0)))
-#define SPI_MOSI_IDX(p) ((p == 0) ? SPID_IN_IDX : ((p == 1) ? FSPID_IN_IDX : ((p == 2) ? SPI3_D_IN_IDX : 0)))
+#define SPI_CLK_IDX(p)  ((p == 0) ? FSPICLK_OUT_MUX_IDX : ((p == 1) ? SPI3_CLK_OUT_MUX_IDX : 0))
+#define SPI_MISO_IDX(p) ((p == 0) ? FSPIQ_OUT_IDX : ((p == 1) ? SPI3_Q_OUT_IDX : 0))
+#define SPI_MOSI_IDX(p) ((p == 0) ? FSPID_IN_IDX : ((p == 1) ? SPI3_D_IN_IDX : 0))
 
-#define SPI_SPI_SS_IDX(n)  ((n == 0) ? SPICS0_OUT_IDX : ((n == 1) ? SPICS1_OUT_IDX : 0))
-#define SPI_HSPI_SS_IDX(n) ((n == 0) ? SPI3_CS0_OUT_IDX : ((n == 1) ? SPI3_CS1_OUT_IDX : ((n == 2) ? SPI3_CS2_OUT_IDX : SPI3_CS0_OUT_IDX)))
-#define SPI_FSPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : ((n == 2) ? FSPICS2_OUT_IDX : FSPICS0_OUT_IDX)))
-#define SPI_SS_IDX(p, n)   ((p == 0) ? SPI_SPI_SS_IDX(n) : ((p == 1) ? SPI_SPI_SS_IDX(n) : ((p == 2) ? SPI_HSPI_SS_IDX(n) : 0)))
+#define SPI_HSPI_SS_IDX(n) ((n == 0) ? SPI3_CS0_OUT_IDX : ((n == 1) ? SPI3_CS1_OUT_IDX : ((n == 2) ? SPI3_CS2_OUT_IDX : 0)))
+#define SPI_FSPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : ((n == 2) ? FSPICS2_OUT_IDX : 0)))
+#define SPI_SS_IDX(p, n)   ((p == 0) ? SPI_FSPI_SS_IDX(n) : ((p == 1) ? SPI_HSPI_SS_IDX(n) : 0))
 
 #elif CONFIG_IDF_TARGET_ESP32S3
 // ESP32S3
@@ -98,8 +98,8 @@ struct spi_struct_t {
 #define SPI_MISO_IDX(p) ((p == 0) ? FSPIQ_OUT_IDX : ((p == 1) ? SPI3_Q_OUT_IDX : 0))
 #define SPI_MOSI_IDX(p) ((p == 0) ? FSPID_IN_IDX : ((p == 1) ? SPI3_D_IN_IDX : 0))
 
-#define SPI_HSPI_SS_IDX(n) ((n == 0) ? SPI3_CS0_OUT_IDX : ((n == 1) ? SPI3_CS1_OUT_IDX : 0))
-#define SPI_FSPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : 0))
+#define SPI_HSPI_SS_IDX(n) ((n == 0) ? SPI3_CS0_OUT_IDX : ((n == 1) ? SPI3_CS1_OUT_IDX : ((n == 2) ? SPI3_CS2_OUT_IDX : 0)))
+#define SPI_FSPI_SS_IDX(n) ((n == 0) ? FSPICS0_OUT_IDX : ((n == 1) ? FSPICS1_OUT_IDX : ((n == 2) ? FSPICS2_OUT_IDX : 0)))
 #define SPI_SS_IDX(p, n)   ((p == 0) ? SPI_FSPI_SS_IDX(n) : ((p == 1) ? SPI_HSPI_SS_IDX(n) : 0))
 
 #elif CONFIG_IDF_TARGET_ESP32P4
@@ -151,11 +151,7 @@ struct spi_struct_t {
 #define SPI_MUTEX_UNLOCK()
 // clang-format off
 static spi_t _spi_bus_array[] = {
-#if CONFIG_IDF_TARGET_ESP32S2
-  {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 0, -1, -1, -1, -1, false},
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 1, -1, -1, -1, -1, false},
-  {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 2, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32S2 ||CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 1, -1, -1, -1, -1, false}
 #elif CONFIG_IDF_TARGET_ESP32C2
@@ -179,11 +175,7 @@ static spi_t _spi_bus_array[] = {
 #define SPI_MUTEX_UNLOCK() xSemaphoreGive(spi->lock)
 
 static spi_t _spi_bus_array[] = {
-#if CONFIG_IDF_TARGET_ESP32S2
-  {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 0, -1, -1, -1, -1, false},
-  {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 1, -1, -1, -1, -1, false},
-  {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 2, -1, -1, -1, -1, false}
-#elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}, {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 1, -1, -1, -1, -1, false}
 #elif CONFIG_IDF_TARGET_ESP32C2
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false}
@@ -621,6 +613,7 @@ void spiStopBus(spi_t *spi) {
 
 spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder) {
   if (spi_num >= SPI_COUNT) {
+    log_e("SPI bus index %d is out of range", spi_num);
     return NULL;
   }
 
@@ -647,9 +640,6 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   } else if (spi_num == HSPI) {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI3_CLK_EN);
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI3_RST);
-  } else {
-    DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI01_CLK_EN);
-    DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
   }
 #elif CONFIG_IDF_TARGET_ESP32S3
   if (spi_num == FSPI) {
@@ -670,6 +660,31 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI01_CLK_EN);
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
   }
+#elif CONFIG_IDF_TARGET_ESP32P4
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI2_MODULE, ref_count) {
+      if (ref_count == 0) {
+        PERIPH_RCC_ATOMIC() {
+          spi_ll_enable_bus_clock(SPI2_HOST, true);
+          spi_ll_reset_register(SPI2_HOST);
+          spi_ll_enable_clock(SPI2_HOST, true);
+        }
+      }
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI3_MODULE, ref_count) {
+      if (ref_count == 0) {
+        PERIPH_RCC_ATOMIC() {
+          spi_ll_enable_bus_clock(SPI3_HOST, true);
+          spi_ll_reset_register(SPI3_HOST);
+          spi_ll_enable_clock(SPI3_HOST, true);
+        }
+      }
+    }
+  }
+#pragma GCC diagnostic pop
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);

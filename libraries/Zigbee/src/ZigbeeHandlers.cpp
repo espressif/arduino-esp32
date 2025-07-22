@@ -108,7 +108,9 @@ static esp_err_t zb_attribute_reporting_handler(const esp_zb_zcl_report_attr_mes
   // List through all Zigbee EPs and call the callback function, with the message
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->dst_endpoint == (*it)->getEndpoint()) {
-      (*it)->zbAttributeRead(message->cluster, &message->attribute);  //method zbAttributeRead must be implemented in specific EP class
+      (*it)->zbAttributeRead(
+        message->cluster, &message->attribute, message->src_endpoint, message->src_address
+      );  //method zbAttributeRead must be implemented in specific EP class
     }
   }
   return ESP_OK;
@@ -142,7 +144,9 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const esp_zb_zcl_cmd_read_attr_re
           } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_TIME) {
             (*it)->zbReadTimeCluster(&variable->attribute);  //method zbReadTimeCluster implemented in the common EP class
           } else {
-            (*it)->zbAttributeRead(message->info.cluster, &variable->attribute);  //method zbAttributeRead must be implemented in specific EP class
+            (*it)->zbAttributeRead(
+              message->info.cluster, &variable->attribute, message->info.src_endpoint, message->info.src_address
+            );  //method zbAttributeRead must be implemented in specific EP class
           }
         }
         variable = variable->next;
@@ -394,6 +398,16 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
     "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
     message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
   );
+
+  // Call global callback if set
+  Zigbee.callDefaultResponseCallback((zb_cmd_type_t)message->resp_to_cmd, message->status_code, message->info.dst_endpoint, message->info.cluster);
+
+  // List through all Zigbee EPs and call the callback function, with the message
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbDefaultResponse(message);  //method zbDefaultResponse is implemented in the common EP class
+    }
+  }
   return ESP_OK;
 }
 

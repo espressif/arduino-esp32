@@ -12,24 +12,31 @@ Zigbee	KEYWORD1
 ZigbeeEP	KEYWORD1
 
 # Endpoint Classes
-ZigbeeLight	KEYWORD1
-ZigbeeSwitch	KEYWORD1
+ZigbeeAnalog	KEYWORD1
+ZigbeeBinary	KEYWORD1
+ZigbeeCarbonDioxideSensor	KEYWORD1
 ZigbeeColorDimmableLight	KEYWORD1
 ZigbeeColorDimmerSwitch	KEYWORD1
+ZigbeeContactSwitch	KEYWORD1
+ZigbeeDimableLight	KEYWORD1
+ZigbeeDoorWindowHandle	KEYWORD1
+ZigbeeElectricalMeasurement	KEYWORD1
+ZigbeeFanControl	KEYWORD1
+ZigbeeFlowSensor	KEYWORD1
+ZigbeeGateway	KEYWORD1
+ZigbeeIlluminanceSensor	KEYWORD1
+ZigbeeLight	KEYWORD1
+ZigbeeOccupancySensor	KEYWORD1
+ZigbeePM25Sensor	KEYWORD1
+ZigbeePowerOutlet	KEYWORD1
+ZigbeePressureSensor	KEYWORD1
+ZigbeeRangeExtender	KEYWORD1
+ZigbeeSwitch	KEYWORD1
 ZigbeeTempSensor	KEYWORD1
 ZigbeeThermostat	KEYWORD1
-ZigbeeFlowSensor	KEYWORD1
-ZigbeePressureSensor	KEYWORD1
-ZigbeeOccupancySensor	KEYWORD1
-ZigbeeAnalog	KEYWORD1
-ZigbeeCarbonDioxideSensor	KEYWORD1
-ZigbeeContactSwitch	KEYWORD1
-ZigbeeDoorWindowHandle	KEYWORD1
-ZigbeeGateway	KEYWORD1
-ZigbeeRangeExtender	KEYWORD1
 ZigbeeVibrationSensor	KEYWORD1
 ZigbeeWindowCovering	KEYWORD1
-ZigbeeIlluminanceSensor	KEYWORD1
+ZigbeeWindSpeedSensor	KEYWORD1
 
 # Other
 zigbee_role_t	KEYWORD1
@@ -38,6 +45,9 @@ zb_device_params_t	KEYWORD1
 zigbee_scan_result_t	KEYWORD1
 zb_power_source_t	KEYWORD1
 ZigbeeWindowCoveringType	KEYWORD1
+ZigbeeFanMode	KEYWORD1
+ZigbeeFanModeSequence	KEYWORD1
+zb_cmd_type_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -72,6 +82,7 @@ printBoundDevices	KEYWORD2
 getBoundDevices	KEYWORD2
 bound	KEYWORD2
 allowMultipleBinding	KEYWORD2
+setManualBinding	KEYWORD2
 setManufacturerAndModel	KEYWORD2
 setPowerSource	KEYWORD2
 setBatteryPercentage	KEYWORD2
@@ -79,6 +90,14 @@ reportBatteryPercentage	KEYWORD2
 readManufacturer	KEYWORD2
 readModel	KEYWORD2
 onIdentify	KEYWORD2
+addTimeCluster	KEYWORD2
+setTime	KEYWORD2
+setTimezone	KEYWORD2
+getTime	KEYWORD2
+getTimezone	KEYWORD2
+addOTAClient	KEYWORD2
+clearBoundDevices	KEYWORD2
+onDefaultResponse	KEYWORD2
 
 # ZigbeeLight + ZigbeeColorDimmableLight
 onLightChange	KEYWORD2
@@ -106,6 +125,7 @@ setLightColor	KEYWORD2
 # ZigbeeThermostat
 onTempRecieve	KEYWORD2
 onConfigRecieve	KEYWORD2
+onTempReceiveWithSource	KEYWORD2
 getTemperature	KEYWORD2
 getSensorSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
@@ -141,14 +161,21 @@ setSensorType	KEYWORD2
 setCarbonDioxide	KEYWORD2
 
 # ZigbeeAnalog
-addAnalogValue	KEYWORD2
 addAnalogInput	KEYWORD2
 addAnalogOutput	KEYWORD2
 onAnalogOutputChange	KEYWORD2
-setAnalogValue	KEYWORD2
 setAnalogInput	KEYWORD2
+setAnalogOutput	KEYWORD2
+getAnalogOutput	KEYWORD2
 reportAnalogInput	KEYWORD2
+reportAnalogOutput	KEYWORD2
 setAnalogInputReporting	KEYWORD2
+setAnalogInputApplication	KEYWORD2
+setAnalogInputDescription	KEYWORD2
+setAnalogInputResolution	KEYWORD2
+setAnalogOutputApplication	KEYWORD2
+setAnalogOutputDescription	KEYWORD2
+setAnalogOutputResolution	KEYWORD2
 
 # ZigbeeCarbonDioxideSensor
 setCarbonDioxide	KEYWORD2
@@ -162,7 +189,7 @@ setTilted	KEYWORD2
 # ZigbeeVibrationSensor
 setVibration	KEYWORD2
 
-ZigbeeWindowCovering
+# ZigbeeWindowCovering
 onOpen	KEYWORD2
 onClose	KEYWORD2
 onGoToLiftPercentage	KEYWORD2
@@ -177,6 +204,26 @@ setConfigStatus	KEYWORD2
 setMode	KEYWORD2
 setLimits	KEYWORD2
 
+# ZigbeeBinary
+addBinaryInput	KEYWORD2
+addBinaryOutput	KEYWORD2
+onBinaryOutputChange	KEYWORD2
+setBinaryInput	KEYWORD2
+setBinaryOutput	KEYWORD2
+getBinaryOutput	KEYWORD2
+reportBinaryInput	KEYWORD2
+reportBinaryOutput	KEYWORD2
+setBinaryInputApplication	KEYWORD2
+setBinaryInputDescription	KEYWORD2
+setBinaryOutputApplication	KEYWORD2
+setBinaryOutputDescription	KEYWORD2
+
+# ZigbeeFanControl
+setFanModeSequence	KEYWORD2
+getFanMode	KEYWORD2
+getFanModeSequence	KEYWORD2
+onFanModeChange	KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################
@@ -190,4 +237,4 @@ ZIGBEE_DEFAULT_COORDINATOR_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_RADIO_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG	LITERAL1
 ZIGBEE_DEFAULT_HOST_CONFIG	LITERAL1
-ZB_ARRAY_LENTH	LITERAL1
+ZB_ARRAY_LENGHT	LITERAL1

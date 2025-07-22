@@ -432,6 +432,11 @@ void PPPClass::end(void) {
     _pin_cts = -1;
     perimanClearPinBus(pin);
   }
+  if (_pin_rst != -1) {
+    pin = _pin_rst;
+    _pin_rst = -1;
+    perimanClearPinBus(pin);
+  }
 
   _mode = ESP_MODEM_MODE_COMMAND;
 }

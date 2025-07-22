@@ -44,16 +44,17 @@ jobs:
           gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
           do
             IFS=$'\t' read name url <<< "$artifact"
-            gh api $url > "$name.zip"
-            unzip -j "$name.zip" -d "temp_$name"
-            if [[ "$name" == "pr_number" ]]; then
-              mv "temp_$name"/* sizes-report
-            elif [[ "$name" == "pr_cli"* ]]; then
-              mv "temp_$name"/* sizes-report/pr
-            else
-              mv "temp_$name"/* sizes-report
+            # Only process pr_number and pr_cli_compile artifacts
+            if [[ "$name" == "pr_number" || "$name" =~ ^pr_cli_compile_[0-9]+$ ]]; then
+              gh api $url > "$name.zip"
+              unzip -o -j "$name.zip" -d "temp_$name"
+              if [[ "$name" == "pr_number" ]]; then
+                mv "temp_$name"/* sizes-report
+              elif [[ "$name" =~ ^pr_cli_compile_[0-9]+$ ]]; then
+                mv "temp_$name"/* sizes-report/pr
+              fi
+              rm -r "temp_$name"
             fi
-            rm -r "temp_$name"
           done
           echo "Contents of parent directory:"
           ls -R ..
@@ -65,7 +66,7 @@ jobs:
           path: ./artifacts/sizes-report/pr_num.txt
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@2043188c68f483a7b50527c4eacf609d05bb67a5 # sizes_v2
+        uses: P-R-O-C-H-Y/report-size-deltas@bea91d2c99ca80c88a883b39b1c4012f00ec3d09 # sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}

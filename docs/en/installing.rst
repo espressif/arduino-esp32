@@ -70,6 +70,8 @@ To start the installation process using the Boards Manager, follow these steps:
    :figclass: align-center
 
 -  Open Boards Manager from Tools > Board menu and install *esp32* platform (and do not forget to select your ESP32 board from Tools > Board menu after installation).
+   Users in China must select the package version with the "-cn" suffix and perform updates manually.
+   Automatic updates are not supported in this region, as they target the default package without the "-cn" suffix, resulting in download failures.
 
 .. figure:: ../_static/install_guide_boards_manager_esp32.png
    :align: center

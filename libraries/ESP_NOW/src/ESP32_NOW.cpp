@@ -9,12 +9,12 @@
 #include "esp32-hal.h"
 #include "esp_wifi.h"
 
-static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg) = NULL;
-static void *new_arg = NULL;  // * tx_arg = NULL, * rx_arg = NULL,
+static void (*new_cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg) = nullptr;
+static void *new_arg = nullptr;  // * tx_arg = nullptr, * rx_arg = nullptr,
 static bool _esp_now_has_begun = false;
 static ESP_NOW_Peer *_esp_now_peers[ESP_NOW_MAX_TOTAL_PEER_NUM];
 
-static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, ESP_NOW_Peer *_peer = NULL) {
+static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, ESP_NOW_Peer *_peer = nullptr) {
   log_v(MACSTR, MAC2STR(mac_addr));
   if (esp_now_is_peer_exist(mac_addr)) {
     log_e("Peer Already Exists");
@@ -26,16 +26,16 @@ static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wif
   memcpy(peer.peer_addr, mac_addr, ESP_NOW_ETH_ALEN);
   peer.channel = channel;
   peer.ifidx = iface;
-  peer.encrypt = lmk != NULL;
+  peer.encrypt = lmk != nullptr;
   if (lmk) {
     memcpy(peer.lmk, lmk, ESP_NOW_KEY_LEN);
   }
 
   esp_err_t result = esp_now_add_peer(&peer);
   if (result == ESP_OK) {
-    if (_peer != NULL) {
+    if (_peer != nullptr) {
       for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
-        if (_esp_now_peers[i] == NULL) {
+        if (_esp_now_peers[i] == nullptr) {
           _esp_now_peers[i] = _peer;
           return ESP_OK;
         }
@@ -67,8 +67,8 @@ static esp_err_t _esp_now_del_peer(const uint8_t *mac_addr) {
   }
 
   for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
-    if (_esp_now_peers[i] != NULL && memcmp(mac_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
-      _esp_now_peers[i] = NULL;
+    if (_esp_now_peers[i] != nullptr && memcmp(mac_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
+      _esp_now_peers[i] = nullptr;
       break;
     }
   }
@@ -87,7 +87,7 @@ static esp_err_t _esp_now_modify_peer(const uint8_t *mac_addr, uint8_t channel, 
   memcpy(peer.peer_addr, mac_addr, ESP_NOW_ETH_ALEN);
   peer.channel = channel;
   peer.ifidx = iface;
-  peer.encrypt = lmk != NULL;
+  peer.encrypt = lmk != nullptr;
   if (lmk) {
     memcpy(peer.lmk, lmk, ESP_NOW_KEY_LEN);
   }
@@ -111,17 +111,17 @@ static void _esp_now_rx_cb(const esp_now_recv_info_t *info, const uint8_t *data,
   bool broadcast = memcmp(info->des_addr, ESP_NOW.BROADCAST_ADDR, ESP_NOW_ETH_ALEN) == 0;
   log_v("%s from " MACSTR ", data length : %u", broadcast ? "Broadcast" : "Unicast", MAC2STR(info->src_addr), len);
   log_buf_v(data, len);
-  if (!esp_now_is_peer_exist(info->src_addr) && new_cb != NULL) {
+  if (!esp_now_is_peer_exist(info->src_addr) && new_cb != nullptr) {
     log_v("Calling new_cb, peer not found.");
     new_cb(info, data, len, new_arg);
     return;
   }
   //find the peer and call it's callback
   for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
-    if (_esp_now_peers[i] != NULL) {
+    if (_esp_now_peers[i] != nullptr) {
       log_v("Checking peer " MACSTR, MAC2STR(_esp_now_peers[i]->addr()));
     }
-    if (_esp_now_peers[i] != NULL && memcmp(info->src_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
+    if (_esp_now_peers[i] != nullptr && memcmp(info->src_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
       log_v("Calling onReceive");
       _esp_now_peers[i]->onReceive(data, len, broadcast);
       return;
@@ -133,14 +133,17 @@ static void _esp_now_tx_cb(const uint8_t *mac_addr, esp_now_send_status_t status
   log_v(MACSTR " : %s", MAC2STR(mac_addr), (status == ESP_NOW_SEND_SUCCESS) ? "SUCCESS" : "FAILED");
   //find the peer and call it's callback
   for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
-    if (_esp_now_peers[i] != NULL && memcmp(mac_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
+    if (_esp_now_peers[i] != nullptr && memcmp(mac_addr, _esp_now_peers[i]->addr(), ESP_NOW_ETH_ALEN) == 0) {
       _esp_now_peers[i]->onSent(status == ESP_NOW_SEND_SUCCESS);
       return;
     }
   }
 }
 
-ESP_NOW_Class::ESP_NOW_Class() {}
+ESP_NOW_Class::ESP_NOW_Class() {
+  max_data_len = 0;
+  version = 0;
+}
 
 ESP_NOW_Class::~ESP_NOW_Class() {}
 
@@ -154,6 +157,23 @@ bool ESP_NOW_Class::begin(const uint8_t *pmk) {
     log_e("WiFi not started! 0x%x)", err);
     return false;
   }
+
+  // Unfortunately we can't get the ESP-NOW version before initializing the Wi-Fi
+  uint32_t esp_now_version;
+  err = esp_now_get_version(&esp_now_version);
+  if (err != ESP_OK) {
+    log_w("esp_now_get_version failed! Assuming ESP-NOW v1.0");
+    esp_now_version = 1;
+  }
+
+  if (esp_now_version == 1) {
+    max_data_len = ESP_NOW_MAX_DATA_LEN;
+  } else {
+    max_data_len = ESP_NOW_MAX_DATA_LEN_V2;
+  }
+
+  version = esp_now_version;
+  log_i("ESP-NOW version: %lu, max_data_len: %lu", version, max_data_len);
 
   _esp_now_has_begun = true;
 
@@ -197,7 +217,7 @@ bool ESP_NOW_Class::end() {
   }
   //remove all peers
   for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
-    if (_esp_now_peers[i] != NULL) {
+    if (_esp_now_peers[i] != nullptr) {
       removePeer(*_esp_now_peers[i]);
     }
   }
@@ -212,7 +232,7 @@ bool ESP_NOW_Class::end() {
   return true;
 }
 
-int ESP_NOW_Class::getTotalPeerCount() {
+int ESP_NOW_Class::getTotalPeerCount() const {
   if (!_esp_now_has_begun) {
     return -1;
   }
@@ -225,7 +245,7 @@ int ESP_NOW_Class::getTotalPeerCount() {
   return num.total_num;
 }
 
-int ESP_NOW_Class::getEncryptedPeerCount() {
+int ESP_NOW_Class::getEncryptedPeerCount() const {
   if (!_esp_now_has_begun) {
     return -1;
   }
@@ -238,18 +258,40 @@ int ESP_NOW_Class::getEncryptedPeerCount() {
   return num.encrypt_num;
 }
 
+int ESP_NOW_Class::getMaxDataLen() const {
+  if (max_data_len == 0) {
+    log_e("ESP-NOW not initialized. Please call begin() first to get the max data length.");
+    return -1;
+  }
+
+  return max_data_len;
+}
+
+int ESP_NOW_Class::getVersion() const {
+  if (version == 0) {
+    log_e("ESP-NOW not initialized. Please call begin() first to get the version.");
+    return -1;
+  }
+
+  return version;
+}
+
 int ESP_NOW_Class::availableForWrite() {
-  return ESP_NOW_MAX_DATA_LEN;
+  int available = getMaxDataLen();
+  if (available < 0) {
+    return 0;
+  }
+  return available;
 }
 
 size_t ESP_NOW_Class::write(const uint8_t *data, size_t len) {
   if (!_esp_now_has_begun) {
     return 0;
   }
-  if (len > ESP_NOW_MAX_DATA_LEN) {
-    len = ESP_NOW_MAX_DATA_LEN;
+  if (len > max_data_len) {
+    len = max_data_len;
   }
-  esp_err_t result = esp_now_send(NULL, data, len);
+  esp_err_t result = esp_now_send(nullptr, data, len);
   if (result == ESP_OK) {
     return len;
   } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
@@ -292,7 +334,7 @@ ESP_NOW_Peer::ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel, wifi_interf
   }
   chan = channel;
   ifc = iface;
-  encrypt = lmk != NULL;
+  encrypt = lmk != nullptr;
   if (encrypt) {
     memcpy(key, lmk, 16);
   }
@@ -305,7 +347,7 @@ bool ESP_NOW_Peer::add() {
   if (added) {
     return true;
   }
-  if (_esp_now_add_peer(mac, chan, ifc, encrypt ? key : NULL, this) != ESP_OK) {
+  if (_esp_now_add_peer(mac, chan, ifc, encrypt ? key : nullptr, this) != ESP_OK) {
     return false;
   }
   log_v("Peer added - " MACSTR, MAC2STR(mac));
@@ -350,7 +392,7 @@ bool ESP_NOW_Peer::setChannel(uint8_t channel) {
   if (!_esp_now_has_begun || !added) {
     return true;
   }
-  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : NULL) == ESP_OK;
+  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : nullptr) == ESP_OK;
 }
 
 wifi_interface_t ESP_NOW_Peer::getInterface() const {
@@ -362,7 +404,7 @@ bool ESP_NOW_Peer::setInterface(wifi_interface_t iface) {
   if (!_esp_now_has_begun || !added) {
     return true;
   }
-  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : NULL) == ESP_OK;
+  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : nullptr) == ESP_OK;
 }
 
 bool ESP_NOW_Peer::isEncrypted() const {
@@ -370,14 +412,14 @@ bool ESP_NOW_Peer::isEncrypted() const {
 }
 
 bool ESP_NOW_Peer::setKey(const uint8_t *lmk) {
-  encrypt = lmk != NULL;
+  encrypt = lmk != nullptr;
   if (encrypt) {
     memcpy(key, lmk, 16);
   }
   if (!_esp_now_has_begun || !added) {
     return true;
   }
-  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : NULL) == ESP_OK;
+  return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : nullptr) == ESP_OK;
 }
 
 size_t ESP_NOW_Peer::send(const uint8_t *data, int len) {
@@ -386,8 +428,15 @@ size_t ESP_NOW_Peer::send(const uint8_t *data, int len) {
     log_e("Peer not added.");
     return 0;
   }
-  if (len > ESP_NOW_MAX_DATA_LEN) {
-    len = ESP_NOW_MAX_DATA_LEN;
+
+  int max_data_len = ESP_NOW.getMaxDataLen();
+  if (max_data_len < 0) {
+    log_e("Error getting max data length.");
+    return 0;
+  }
+
+  if (len > max_data_len) {
+    len = max_data_len;
   }
   esp_err_t result = esp_now_send(mac, data, len);
   if (result == ESP_OK) {

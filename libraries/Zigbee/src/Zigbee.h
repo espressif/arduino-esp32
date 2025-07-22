@@ -2,6 +2,9 @@
 
 #pragma once
 
+// Common types and functions
+#include "ZigbeeTypes.h"
+
 // Core
 #include "ZigbeeCore.h"
 #include "ZigbeeEP.h"
@@ -16,11 +19,16 @@
 #include "ep/ZigbeeLight.h"
 //// Controllers
 #include "ep/ZigbeeThermostat.h"
+#include "ep/ZigbeeFanControl.h"
+////Outlets
+#include "ep/ZigbeePowerOutlet.h"
 //// Sensors
 #include "ep/ZigbeeAnalog.h"
+#include "ep/ZigbeeBinary.h"
 #include "ep/ZigbeeCarbonDioxideSensor.h"
 #include "ep/ZigbeeContactSwitch.h"
 #include "ep/ZigbeeDoorWindowHandle.h"
+#include "ep/ZigbeeElectricalMeasurement.h"
 #include "ep/ZigbeeFlowSensor.h"
 #include "ep/ZigbeeIlluminanceSensor.h"
 #include "ep/ZigbeeOccupancySensor.h"
