@@ -345,6 +345,19 @@ Performs a factory reset, clearing all network settings.
 
 * ``restart`` - ``true`` to restart after reset (default: ``true``)
 
+onGlobalDefaultResponse
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Sets a global callback for default response messages.
+
+.. code-block:: arduino
+
+    void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster));
+
+* ``callback`` - Function pointer to the callback function
+
+This callback will be called for all endpoints when a default response is received.
+
 Utility Functions
 *****************
 
