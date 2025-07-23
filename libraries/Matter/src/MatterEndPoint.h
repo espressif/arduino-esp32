@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 #include <sdkconfig.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
-#include <Matter.h>
+#include <Arduino.h>
+#include <esp_matter.h>
 #include <functional>
 
 using namespace esp_matter;
@@ -29,93 +30,47 @@ public:
     ATTR_UPDATE = true
   };
 
-  uint16_t getEndPointId() {
-    return endpoint_id;
-  }
-
-  void setEndPointId(uint16_t ep) {
-    endpoint_id = ep;
-  }
-
-  // helper functions for attribute manipulation
-  esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id) {
-    if (endpoint_id == 0) {
-      log_e("Endpoint ID is not set");
-      return nullptr;
-    }
-    endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
-    if (endpoint == nullptr) {
-      log_e("Endpoint [%d] not found", endpoint_id);
-      return nullptr;
-    }
-    cluster_t *cluster = cluster::get(endpoint, cluster_id);
-    if (cluster == nullptr) {
-      log_e("Cluster [%d] not found", cluster_id);
-      return nullptr;
-    }
-    esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
-    if (attribute == nullptr) {
-      log_e("Attribute [%d] not found", attribute_id);
-      return nullptr;
-    }
-    return attribute;
-  }
-
-  // get the value of an attribute from its cluster id and attribute it
-  bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
-    esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
-    if (attribute == nullptr) {
-      return false;
-    }
-    if (attribute::get_val(attribute, attrVal) == ESP_OK) {
-      log_v("GET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-      return true;
-    }
-    log_e("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-    return false;
-  }
-
-  // set the value of an attribute from its cluster id and attribute it
-  bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
-    esp_matter::attribute_t *attribute = getAttribute(cluster_id, attribute_id);
-    if (attribute == nullptr) {
-      return false;
-    }
-    if (attribute::set_val(attribute, attrVal) == ESP_OK) {
-      log_v("SET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-      return true;
-    }
-    log_e("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-    return false;
-  }
-
-  // update the value of an attribute from its cluster id and attribute it
-  bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
-    if (attribute::update(endpoint_id, cluster_id, attribute_id, attrVal) == ESP_OK) {
-      log_v("Update Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-      return true;
-    }
-    log_e("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
-    return false;
-  }
+  using EndPointIdentifyCB = std::function<bool(bool)>;
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   virtual bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) = 0;
 
+  // This function is called to create a secondary network interface endpoint.
+  // It can be used for devices that support multiple network interfaces,
+  // such as Ethernet, Thread and Wi-Fi.
+  bool createSecondaryNetworkInterface();
+
+  // This function is called to get the secondary network interface endpoint ID.
+  uint16_t getSecondaryNetworkEndPointId();
+
+  // This function is called to get the current Matter Accessory endpoint ID.
+  uint16_t getEndPointId();
+
+  // This function is called to set the current Matter Accessory endpoint ID.
+  void setEndPointId(uint16_t ep);
+
+  // helper functions for attribute manipulation
+  esp_matter::attribute_t *getAttribute(uint32_t cluster_id, uint32_t attribute_id);
+
+  // get the value of an attribute from its cluster id and
+  bool getAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
+
+  // set the value of an attribute from its cluster id and
+  bool setAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
+
+  // update the value of an attribute from its cluster id
+  bool updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal);
+
   // This callback is invoked when clients interact with the Identify Cluster of an specific endpoint.
-  bool endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled) {
-    if (_onEndPointIdentifyCB) {
-      return _onEndPointIdentifyCB(identifyIsEnabled);
-    }
-    return true;
-  }
-  // User callaback for the Identify Cluster functionality
-  using EndPointIdentifyCB = std::function<bool(bool)>;
-  void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
-    _onEndPointIdentifyCB = onEndPointIdentifyCB;
-  }
+  bool endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEnabled);
+
+  // User callback for the Identify Cluster functionality
+  void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
 
 protected:
+  // used for secondary network interface endpoints
+  static uint16_t secondary_network_endpoint_id;
+  // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
 };
