@@ -3,15 +3,29 @@
  *
  *  Created on: Jun 22, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/*****************************************************************************
+ *                             Common includes                               *
+ *****************************************************************************/
+
 #include <stdio.h>
 #include <iomanip>
 #include "BLEService.h"
+
+/*****************************************************************************
+ *                             Common functions                              *
+ *****************************************************************************/
 
 /**
  * @brief Return the service by UUID.
@@ -82,13 +96,6 @@ String BLEServiceMap::toString() {
   return res;
 }  // toString
 
-void BLEServiceMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  // Invoke the handler for every Service we have.
-  for (auto &myPair : m_uuidMap) {
-    myPair.first->handleGATTServerEvent(event, gatts_if, param);
-  }
-}
-
 /**
  * @brief Get the first service in the map.
  * @return The first service in the map.
@@ -130,8 +137,21 @@ void BLEServiceMap::removeService(BLEService *service) {
  * @return amount of registered services
  */
 int BLEServiceMap::getRegisteredServiceCount() {
-  return m_handleMap.size();
+  return m_uuidMap.size();
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+/*****************************************************************************
+ *                            Bluedroid functions                            *
+ *****************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+void BLEServiceMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
+  // Invoke the handler for every Service we have.
+  for (auto &myPair : m_uuidMap) {
+    myPair.first->handleGATTServerEvent(event, gatts_if, param);
+  }
+}
+#endif
+
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

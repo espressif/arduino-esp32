@@ -1,5 +1,5 @@
 /*
- *  This sketch demonstrates how to scan WiFi networks.
+ *  This sketch demonstrates how to scan WiFi networks. For chips that support 5GHz band, separate scans are done for all bands.
  *  The API is based on the Arduino WiFi Shield library, but has significant changes as newer WiFi functions are supported.
  *  E.g. the return value of `encryptionType()` different because more modern encryption is supported.
  */
@@ -7,18 +7,13 @@
 
 void setup() {
   Serial.begin(115200);
-
-  // Set WiFi to station mode and disconnect from an AP if it was previously connected.
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  delay(100);
-
+  // Enable Station Interface
+  WiFi.STA.begin();
   Serial.println("Setup done");
 }
 
-void loop() {
+void ScanWiFi() {
   Serial.println("Scan start");
-
   // WiFi.scanNetworks will return the number of networks found.
   int n = WiFi.scanNetworks();
   Serial.println("Scan done");
@@ -54,11 +49,35 @@ void loop() {
       delay(10);
     }
   }
-  Serial.println("");
 
   // Delete the scan result to free memory for code below.
   WiFi.scanDelete();
-
+  Serial.println("-------------------------------------");
+}
+void loop() {
+  Serial.println("-------------------------------------");
+  Serial.println("Default wifi band mode scan:");
+  Serial.println("-------------------------------------");
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+  WiFi.setBandMode(WIFI_BAND_MODE_AUTO);
+#endif
+  ScanWiFi();
+#if CONFIG_SOC_WIFI_SUPPORT_5G
   // Wait a bit before scanning again.
-  delay(5000);
+  delay(1000);
+  Serial.println("-------------------------------------");
+  Serial.println("2.4 Ghz wifi band mode scan:");
+  Serial.println("-------------------------------------");
+  WiFi.setBandMode(WIFI_BAND_MODE_2G_ONLY);
+  ScanWiFi();
+  // Wait a bit before scanning again.
+  delay(1000);
+  Serial.println("-------------------------------------");
+  Serial.println("5 Ghz wifi band mode scan:");
+  Serial.println("-------------------------------------");
+  WiFi.setBandMode(WIFI_BAND_MODE_5G_ONLY);
+  ScanWiFi();
+#endif
+  // Wait a bit before scanning again.
+  delay(10000);
 }

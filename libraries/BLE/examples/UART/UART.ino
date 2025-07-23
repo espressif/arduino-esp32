@@ -40,10 +40,12 @@ uint8_t txValue = 0;
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
     deviceConnected = true;
+    Serial.println("Device connected");
   };
 
   void onDisconnect(BLEServer *pServer) {
     deviceConnected = false;
+    Serial.println("Device disconnected");
   }
 };
 
@@ -80,6 +82,7 @@ void setup() {
   // Create a BLE Characteristic
   pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
 
+  // Descriptor 2902 is not required when using NimBLE as it is automatically added based on the characteristic properties
   pTxCharacteristic->addDescriptor(new BLE2902());
 
   BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
@@ -97,22 +100,24 @@ void setup() {
 void loop() {
 
   if (deviceConnected) {
+    Serial.print("Notifying Value: ");
+    Serial.println(txValue);
     pTxCharacteristic->setValue(&txValue, 1);
     pTxCharacteristic->notify();
     txValue++;
-    delay(10);  // bluetooth stack will go into congestion, if too many packets are sent
+    delay(1000);  // Notifying every 1 second
   }
 
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
     delay(500);                   // give the bluetooth stack the chance to get things ready
     pServer->startAdvertising();  // restart advertising
-    Serial.println("start advertising");
-    oldDeviceConnected = deviceConnected;
+    Serial.println("Started advertising again...");
+    oldDeviceConnected = false;
   }
   // connecting
   if (deviceConnected && !oldDeviceConnected) {
     // do stuff here on connecting
-    oldDeviceConnected = deviceConnected;
+    oldDeviceConnected = true;
   }
 }
