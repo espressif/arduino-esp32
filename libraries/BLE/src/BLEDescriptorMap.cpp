@@ -3,20 +3,49 @@
  *
  *  Created on: Jun 22, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
+
 #include <sstream>
 #include <iomanip>
 #include "BLECharacteristic.h"
 #include "BLEDescriptor.h"
-#include <esp_gatts_api.h>  // ESP32 BLE
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
 #endif
+
+/***************************************************************************
+ *                           Bluedroid includes                            *
+ ***************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include <esp_gatts_api.h>  // ESP32 BLE
+#endif
+
+/***************************************************************************
+ *                           NimBLE includes                               *
+ ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+#include "host/ble_gatt.h"
+#endif
+
+/***************************************************************************
+ *                           Common functions                             *
+ ***************************************************************************/
 
 /**
  * @brief Return the descriptor by UUID.
@@ -82,6 +111,24 @@ void BLEDescriptorMap::setByHandle(uint16_t handle, BLEDescriptor *pDescriptor) 
 }  // setByHandle
 
 /**
+ * @brief Get the number of registered descriptors.
+ * @return The number of registered descriptors.
+ */
+int BLEDescriptorMap::getRegisteredDescriptorCount() {
+  return m_uuidMap.size();
+}
+
+/**
+ * @brief Remove a descriptor from the map.
+ * @param [in] pDescriptor The descriptor to remove.
+ * @return N/A.
+ */
+void BLEDescriptorMap::removeDescriptor(BLEDescriptor *pDescriptor) {
+  m_uuidMap.erase(pDescriptor);
+  m_handleMap.erase(pDescriptor->getHandle());
+}
+
+/**
  * @brief Return a string representation of the descriptor map.
  * @return A string representation of the descriptor map.
  */
@@ -101,19 +148,6 @@ String BLEDescriptorMap::toString() {
   }
   return res;
 }  // toString
-
-/**
- * @brief Pass the GATT server event onwards to each of the descriptors found in the mapping
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- */
-void BLEDescriptorMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  // Invoke the handler for every descriptor we have.
-  for (auto &myPair : m_uuidMap) {
-    myPair.first->handleGATTServerEvent(event, gatts_if, param);
-  }
-}  // handleGATTServerEvent
 
 /**
  * @brief Get the first descriptor in the map.
@@ -142,5 +176,41 @@ BLEDescriptor *BLEDescriptorMap::getNext() {
   return pRet;
 }  // getNext
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+/***************************************************************************
+ *                           Bluedroid functions                           *
+ ***************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+
+/**
+ * @brief Pass the GATT server event onwards to each of the descriptors found in the mapping
+ * @param [in] event
+ * @param [in] gatts_if
+ * @param [in] param
+ */
+void BLEDescriptorMap::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
+  // Invoke the handler for every descriptor we have.
+  for (auto &myPair : m_uuidMap) {
+    myPair.first->handleGATTServerEvent(event, gatts_if, param);
+  }
+}  // handleGATTServerEvent
+
+#endif
+
+/***************************************************************************
+ *                           NimBLE functions                             *
+ ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+
+void BLEDescriptorMap::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, ble_gatt_access_ctxt *ctxt, void *arg) {
+  // Invoke the handler for every descriptor we have.
+  for (auto &myPair : m_uuidMap) {
+    myPair.first->handleGATTServerEvent(conn_handle, attr_handle, ctxt, arg);
+  }
+}
+
+#endif
+
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

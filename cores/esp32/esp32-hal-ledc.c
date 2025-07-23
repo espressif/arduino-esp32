@@ -88,6 +88,9 @@ static bool find_free_timer(uint8_t speed_mode, uint8_t *timer_num) {
     }
   }
 
+#ifndef SOC_LEDC_TIMER_NUM
+#define SOC_LEDC_TIMER_NUM 4
+#endif
   // Find first unused timer
   for (uint8_t i = 0; i < SOC_LEDC_TIMER_NUM; i++) {
     if (!(used_timers & (1 << i))) {

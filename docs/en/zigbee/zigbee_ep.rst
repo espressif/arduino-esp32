@@ -345,6 +345,19 @@ Sets a callback function for identify events.
 * ``callback`` - Function to call when identify event occurs
 * ``time`` - Identify time in seconds
 
+onDefaultResponse
+^^^^^^^^^^^^^^^^^
+
+Sets a callback for default response messages for this endpoint.
+
+.. code-block:: arduino
+
+    void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status));
+
+* ``callback`` - Function pointer to the callback function
+
+This callback will be called when a default response is received for this specific endpoint.
+
 Supported Endpoints
 -------------------
 
