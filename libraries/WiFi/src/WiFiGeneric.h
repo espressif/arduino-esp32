@@ -116,6 +116,12 @@ public:
   bool setTxPower(wifi_power_t power);
   wifi_power_t getTxPower();
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+  bool setBandMode(wifi_band_mode_t band_mode);
+  wifi_band_mode_t getBandMode();
+#endif
+  wifi_band_t getBand();
+
   bool initiateFTM(uint8_t frm_count = 16, uint16_t burst_period = 2, uint8_t channel = 1, const uint8_t *mac = NULL);
 
   static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);

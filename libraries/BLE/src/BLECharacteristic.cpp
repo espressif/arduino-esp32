@@ -3,12 +3,22 @@
  *
  *  Created on: Jun 22, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
+
 #include <sstream>
 #include <string.h>
 #include <iomanip>
@@ -23,9 +33,30 @@
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
 
+/***************************************************************************
+ *                           Common definitions                            *
+ ***************************************************************************/
+
 #define NULL_HANDLE (0xffff)
 
+/***************************************************************************
+ *                           NimBLE definitions                            *
+ ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+#define NIMBLE_SUB_NOTIFY   0x0001
+#define NIMBLE_SUB_INDICATE 0x0002
+#endif
+
+/***************************************************************************
+ *                           Common global variables                       *
+ ***************************************************************************/
+
 static BLECharacteristicCallbacks defaultCallback;  //null-object-pattern
+
+/***************************************************************************
+ *                              Common functions                           *
+ ***************************************************************************/
 
 /**
  * @brief Construct a characteristic
@@ -42,15 +73,23 @@ BLECharacteristic::BLECharacteristic(const char *uuid, uint32_t properties) : BL
 BLECharacteristic::BLECharacteristic(BLEUUID uuid, uint32_t properties) {
   m_bleUUID = uuid;
   m_handle = NULL_HANDLE;
-  m_properties = (esp_gatt_char_prop_t)0;
   m_pCallbacks = &defaultCallback;
 
-  setBroadcastProperty((properties & PROPERTY_BROADCAST) != 0);
-  setReadProperty((properties & PROPERTY_READ) != 0);
-  setWriteProperty((properties & PROPERTY_WRITE) != 0);
-  setNotifyProperty((properties & PROPERTY_NOTIFY) != 0);
-  setIndicateProperty((properties & PROPERTY_INDICATE) != 0);
-  setWriteNoResponseProperty((properties & PROPERTY_WRITE_NR) != 0);
+#ifdef CONFIG_BLUEDROID_ENABLED
+  m_properties = 0;
+  setBroadcastProperty((properties & BLECharacteristic::PROPERTY_BROADCAST) != 0);
+  setReadProperty((properties & BLECharacteristic::PROPERTY_READ) != 0);
+  setWriteProperty((properties & BLECharacteristic::PROPERTY_WRITE) != 0);
+  setNotifyProperty((properties & BLECharacteristic::PROPERTY_NOTIFY) != 0);
+  setIndicateProperty((properties & BLECharacteristic::PROPERTY_INDICATE) != 0);
+  setWriteNoResponseProperty((properties & BLECharacteristic::PROPERTY_WRITE_NR) != 0);
+#endif
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  m_readMux = portMUX_INITIALIZER_UNLOCKED;
+  m_removed = 0;
+  m_properties = properties;
+#endif
 }  // BLECharacteristic
 
 /**
@@ -66,50 +105,19 @@ BLECharacteristic::~BLECharacteristic() {
  * @return N/A.
  */
 void BLECharacteristic::addDescriptor(BLEDescriptor *pDescriptor) {
+#ifdef CONFIG_NIMBLE_ENABLED
+  if (pDescriptor->getUUID() == BLEUUID(uint16_t(0x2902))) {
+    log_i("NimBLE automatically creates the 0x2902 descriptor if a characteristic has a notification or indication property assigned to it.\n"
+          "You should check the characteristic properties for notification or indication rather than adding the descriptor manually.\n"
+          "This will be removed in a future version of the library.");
+    pDescriptor->executeCreate(this);
+    return;
+  }
+#endif
   log_v(">> addDescriptor(): Adding %s to %s", pDescriptor->toString().c_str(), toString().c_str());
   m_descriptorMap.setByUUID(pDescriptor->getUUID(), pDescriptor);
   log_v("<< addDescriptor()");
 }  // addDescriptor
-
-/**
- * @brief Register a new characteristic with the ESP runtime.
- * @param [in] pService The service with which to associate this characteristic.
- */
-void BLECharacteristic::executeCreate(BLEService *pService) {
-  log_v(">> executeCreate()");
-
-  if (m_handle != NULL_HANDLE) {
-    log_e("Characteristic already has a handle.");
-    return;
-  }
-
-  m_pService = pService;  // Save the service to which this characteristic belongs.
-
-  log_d("Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s", getUUID().toString().c_str(), m_pService->toString().c_str());
-
-  esp_attr_control_t control;
-  control.auto_rsp = ESP_GATT_RSP_BY_APP;
-
-  m_semaphoreCreateEvt.take("executeCreate");
-  esp_err_t errRc = ::esp_ble_gatts_add_char(
-    m_pService->getHandle(), getUUID().getNative(), static_cast<esp_gatt_perm_t>(m_permissions), getProperties(), nullptr,
-    &control
-  );  // Whether to auto respond or not.
-
-  if (errRc != ESP_OK) {
-    log_e("<< esp_ble_gatts_add_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
-  }
-  m_semaphoreCreateEvt.wait("executeCreate");
-
-  BLEDescriptor *pDescriptor = m_descriptorMap.getFirst();
-  while (pDescriptor != nullptr) {
-    pDescriptor->executeCreate(this);
-    pDescriptor = m_descriptorMap.getNext();
-  }  // End while
-
-  log_v("<< executeCreate");
-}  // executeCreate
 
 /**
  * @brief Return the BLE Descriptor for the given UUID if associated with this characteristic.
@@ -137,8 +145,10 @@ uint16_t BLECharacteristic::getHandle() {
   return m_handle;
 }  // getHandle
 
-void BLECharacteristic::setAccessPermissions(esp_gatt_perm_t perm) {
+void BLECharacteristic::setAccessPermissions(uint8_t perm) {
+#ifdef CONFIG_BLUEDROID_ENABLED
   m_permissions = perm;
+#endif
 }
 
 esp_gatt_char_prop_t BLECharacteristic::getProperties() {
@@ -183,6 +193,308 @@ uint8_t *BLECharacteristic::getData() {
 size_t BLECharacteristic::getLength() {
   return m_value.getLength();
 }  // getLength
+
+/**
+ * @brief Register a new characteristic with the ESP runtime.
+ * @param [in] pService The service with which to associate this characteristic.
+ */
+void BLECharacteristic::executeCreate(BLEService *pService) {
+  log_v(">> executeCreate()");
+
+  if (m_handle != NULL_HANDLE) {
+    log_e("Characteristic already has a handle.");
+    return;
+  }
+
+  m_pService = pService;  // Save the service to which this characteristic belongs.
+
+#ifdef CONFIG_BLUEDROID_ENABLED
+  log_d("Registering characteristic (esp_ble_gatts_add_char): uuid: %s, service: %s", getUUID().toString().c_str(), m_pService->toString().c_str());
+
+  esp_attr_control_t control;
+  control.auto_rsp = ESP_GATT_RSP_BY_APP;
+
+  m_semaphoreCreateEvt.take("executeCreate");
+  esp_err_t errRc = ::esp_ble_gatts_add_char(
+    m_pService->getHandle(), getUUID().getNative(), static_cast<esp_gatt_perm_t>(m_permissions), getProperties(), nullptr,
+    &control
+  );  // Whether to auto respond or not.
+
+  if (errRc != ESP_OK) {
+    log_e("<< esp_ble_gatts_add_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+    return;
+  }
+  m_semaphoreCreateEvt.wait("executeCreate");
+
+#endif
+
+  BLEDescriptor *pDescriptor = m_descriptorMap.getFirst();
+  while (pDescriptor != nullptr) {
+    pDescriptor->executeCreate(this);
+    pDescriptor = m_descriptorMap.getNext();
+  }  // End while
+
+  log_v("<< executeCreate");
+}  // executeCreate
+
+/**
+ * @brief Send an indication.
+ * An indication is a transmission of up to the first 20 bytes of the characteristic value.  An indication
+ * will block waiting a positive confirmation from the client.
+ * @return N/A
+ */
+void BLECharacteristic::indicate() {
+
+  log_v(">> indicate: length: %d", m_value.getValue().length());
+  notify(false);
+  log_v("<< indicate");
+}  // indicate
+
+/**
+ * @brief Set the permission to broadcast.
+ * A characteristics has properties associated with it which define what it is capable of doing.
+ * One of these is the broadcast flag.
+ * @param [in] value The flag value of the property.
+ * @return N/A
+ */
+void BLECharacteristic::setBroadcastProperty(bool value) {
+  //log_d("setBroadcastProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_BROADCAST);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_BROADCAST);
+  }
+}  // setBroadcastProperty
+
+/**
+ * @brief Set the callback handlers for this characteristic.
+ * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
+ */
+void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks *pCallbacks) {
+  log_v(">> setCallbacks: 0x%x", (uint32_t)pCallbacks);
+  if (pCallbacks != nullptr) {
+    m_pCallbacks = pCallbacks;
+  } else {
+    m_pCallbacks = &defaultCallback;
+  }
+  log_v("<< setCallbacks");
+}  // setCallbacks
+
+/**
+ * @brief Set the BLE handle associated with this characteristic.
+ * A user program will request that a characteristic be created against a service.  When the characteristic has been
+ * registered, the service will be given a "handle" that it knows the characteristic as.  This handle is unique to the
+ * server/service but it is told to the service, not the characteristic associated with the service.  This internally
+ * exposed function can be invoked by the service against this model of the characteristic to allow the characteristic
+ * to learn its own handle.  Once the characteristic knows its own handle, it will be able to see incoming GATT events
+ * that will be propagated down to it which contain a handle value and now know that the event is destined for it.
+ * @param [in] handle The handle associated with this characteristic.
+ */
+void BLECharacteristic::setHandle(uint16_t handle) {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  log_v(">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString().c_str());
+  m_handle = handle;
+  log_v("<< setHandle");
+#endif
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  log_w("NimBLE does not support manually setting the handle of a characteristic. Ignoring request.");
+#endif
+}  // setHandle
+
+/**
+ * @brief Set the Indicate property value.
+ * @param [in] value Set to true if we are to allow indicate messages.
+ */
+void BLECharacteristic::setIndicateProperty(bool value) {
+  //log_d("setIndicateProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_INDICATE);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_INDICATE);
+  }
+}  // setIndicateProperty
+
+/**
+ * @brief Set the Notify property value.
+ * @param [in] value Set to true if we are to allow notification messages.
+ */
+void BLECharacteristic::setNotifyProperty(bool value) {
+  //log_d("setNotifyProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_NOTIFY);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_NOTIFY);
+  }
+}  // setNotifyProperty
+
+/**
+ * @brief Set the Read property value.
+ * @param [in] value Set to true if we are to allow reads.
+ */
+void BLECharacteristic::setReadProperty(bool value) {
+  //log_d("setReadProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_READ);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_READ);
+  }
+}  // setReadProperty
+
+/**
+ * @brief Set the value of the characteristic.
+ * @param [in] data The data to set for the characteristic.
+ * @param [in] length The length of the data in bytes.
+ */
+void BLECharacteristic::setValue(uint8_t *data, size_t length) {
+// The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
+// "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+  char *pHex = BLEUtils::buildHexData(nullptr, data, length);
+  log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+  free(pHex);
+#endif
+  if (length > ESP_GATT_MAX_ATTR_LEN) {
+    log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
+    return;
+  }
+  m_semaphoreSetValue.take();
+  m_value.setValue(data, length);
+  m_semaphoreSetValue.give();
+  log_v("<< setValue");
+}  // setValue
+
+/**
+ * @brief Set the value of the characteristic from string data.
+ * We set the value of the characteristic from the bytes contained in the
+ * string.
+ * @param [in] Set the value of the characteristic.
+ * @return N/A.
+ */
+void BLECharacteristic::setValue(String value) {
+  setValue((uint8_t *)(value.c_str()), value.length());
+}  // setValue
+
+void BLECharacteristic::setValue(uint16_t &data16) {
+  uint8_t temp[2];
+  temp[0] = data16;
+  temp[1] = data16 >> 8;
+  setValue(temp, 2);
+}  // setValue
+
+void BLECharacteristic::setValue(uint32_t &data32) {
+  uint8_t temp[4];
+  temp[0] = data32;
+  temp[1] = data32 >> 8;
+  temp[2] = data32 >> 16;
+  temp[3] = data32 >> 24;
+  setValue(temp, 4);
+}  // setValue
+
+void BLECharacteristic::setValue(int &data32) {
+  uint8_t temp[4];
+  temp[0] = data32;
+  temp[1] = data32 >> 8;
+  temp[2] = data32 >> 16;
+  temp[3] = data32 >> 24;
+  setValue(temp, 4);
+}  // setValue
+
+void BLECharacteristic::setValue(float &data32) {
+  float temp = data32;
+  setValue((uint8_t *)&temp, 4);
+}  // setValue
+
+void BLECharacteristic::setValue(double &data64) {
+  double temp = data64;
+  setValue((uint8_t *)&temp, 8);
+}  // setValue
+
+/**
+ * @brief Set the Write No Response property value.
+ * @param [in] value Set to true if we are to allow writes with no response.
+ */
+void BLECharacteristic::setWriteNoResponseProperty(bool value) {
+  //log_d("setWriteNoResponseProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE_NR);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_WRITE_NR);
+  }
+}  // setWriteNoResponseProperty
+
+/**
+ * @brief Set the Write property value.
+ * @param [in] value Set to true if we are to allow writes.
+ */
+void BLECharacteristic::setWriteProperty(bool value) {
+  //log_d("setWriteProperty(%d)", value);
+  if (value) {
+    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE);
+  } else {
+    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_WRITE);
+  }
+}  // setWriteProperty
+
+/**
+ * @brief Return a string representation of the characteristic.
+ * @return A string representation of the characteristic.
+ */
+String BLECharacteristic::toString() {
+  String res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
+  char hex[5];
+  snprintf(hex, sizeof(hex), "%04x", m_handle);
+  res += hex;
+  res += " ";
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_READ) {
+    res += "Read ";
+  }
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE) {
+    res += "Write ";
+  }
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE_NR) {
+    res += "WriteNoResponse ";
+  }
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_BROADCAST) {
+    res += "Broadcast ";
+  }
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_NOTIFY) {
+    res += "Notify ";
+  }
+  if (m_properties & ESP_GATT_CHAR_PROP_BIT_INDICATE) {
+    res += "Indicate ";
+  }
+  return res;
+}  // toString
+
+BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
+
+// Common callbacks
+void BLECharacteristicCallbacks::onRead(BLECharacteristic *pCharacteristic) {
+  log_d(">> onRead: default");
+  log_d("<< onRead");
+}  // onRead
+
+void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
+  log_d(">> onWrite: default");
+  log_d("<< onWrite");
+}  // onWrite
+
+void BLECharacteristicCallbacks::onNotify(BLECharacteristic *pCharacteristic) {
+  log_d(">> onNotify: default");
+  log_d("<< onNotify");
+}  // onNotify
+
+void BLECharacteristicCallbacks::onStatus(BLECharacteristic *pCharacteristic, Status s, uint32_t code) {
+  log_d(">> onStatus: default");
+  log_d("<< onStatus");
+}  // onStatus
+
+/***************************************************************************
+ *                             Bluedroid functions                         *
+ ***************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 /**
  * Handle a GATT server event.
@@ -453,19 +765,6 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 }  // handleGATTServerEvent
 
 /**
- * @brief Send an indication.
- * An indication is a transmission of up to the first 20 bytes of the characteristic value.  An indication
- * will block waiting a positive confirmation from the client.
- * @return N/A
- */
-void BLECharacteristic::indicate() {
-
-  log_v(">> indicate: length: %d", m_value.getValue().length());
-  notify(false);
-  log_v("<< indicate");
-}  // indicate
-
-/**
  * @brief Send a notify.
  * A notification is a transmission of up to the first 20 bytes of the characteristic value.  An notification
  * will not block; it is a fire and forget.
@@ -554,246 +853,287 @@ void BLECharacteristic::notify(bool is_notification) {
   log_v("<< notify");
 }  // Notify
 
-/**
- * @brief Set the permission to broadcast.
- * A characteristics has properties associated with it which define what it is capable of doing.
- * One of these is the broadcast flag.
- * @param [in] value The flag value of the property.
- * @return N/A
- */
-void BLECharacteristic::setBroadcastProperty(bool value) {
-  //log_d("setBroadcastProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_BROADCAST);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_BROADCAST);
-  }
-}  // setBroadcastProperty
-
-/**
- * @brief Set the callback handlers for this characteristic.
- * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
- */
-void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks *pCallbacks) {
-  log_v(">> setCallbacks: 0x%x", (uint32_t)pCallbacks);
-  if (pCallbacks != nullptr) {
-    m_pCallbacks = pCallbacks;
-  } else {
-    m_pCallbacks = &defaultCallback;
-  }
-  log_v("<< setCallbacks");
-}  // setCallbacks
-
-/**
- * @brief Set the BLE handle associated with this characteristic.
- * A user program will request that a characteristic be created against a service.  When the characteristic has been
- * registered, the service will be given a "handle" that it knows the characteristic as.  This handle is unique to the
- * server/service but it is told to the service, not the characteristic associated with the service.  This internally
- * exposed function can be invoked by the service against this model of the characteristic to allow the characteristic
- * to learn its own handle.  Once the characteristic knows its own handle, it will be able to see incoming GATT events
- * that will be propagated down to it which contain a handle value and now know that the event is destined for it.
- * @param [in] handle The handle associated with this characteristic.
- */
-void BLECharacteristic::setHandle(uint16_t handle) {
-  log_v(">> setHandle: handle=0x%.2x, characteristic uuid=%s", handle, getUUID().toString().c_str());
-  m_handle = handle;
-  log_v("<< setHandle");
-}  // setHandle
-
-/**
- * @brief Set the Indicate property value.
- * @param [in] value Set to true if we are to allow indicate messages.
- */
-void BLECharacteristic::setIndicateProperty(bool value) {
-  //log_d("setIndicateProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_INDICATE);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_INDICATE);
-  }
-}  // setIndicateProperty
-
-/**
- * @brief Set the Notify property value.
- * @param [in] value Set to true if we are to allow notification messages.
- */
-void BLECharacteristic::setNotifyProperty(bool value) {
-  //log_d("setNotifyProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_NOTIFY);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_NOTIFY);
-  }
-}  // setNotifyProperty
-
-/**
- * @brief Set the Read property value.
- * @param [in] value Set to true if we are to allow reads.
- */
-void BLECharacteristic::setReadProperty(bool value) {
-  //log_d("setReadProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_READ);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_READ);
-  }
-}  // setReadProperty
-
-/**
- * @brief Set the value of the characteristic.
- * @param [in] data The data to set for the characteristic.
- * @param [in] length The length of the data in bytes.
- */
-void BLECharacteristic::setValue(uint8_t *data, size_t length) {
-// The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
-// "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-  char *pHex = BLEUtils::buildHexData(nullptr, data, length);
-  log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
-  free(pHex);
-#endif
-  if (length > ESP_GATT_MAX_ATTR_LEN) {
-    log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
-    return;
-  }
-  m_semaphoreSetValue.take();
-  m_value.setValue(data, length);
-  m_semaphoreSetValue.give();
-  log_v("<< setValue");
-}  // setValue
-
-/**
- * @brief Set the value of the characteristic from string data.
- * We set the value of the characteristic from the bytes contained in the
- * string.
- * @param [in] Set the value of the characteristic.
- * @return N/A.
- */
-void BLECharacteristic::setValue(String value) {
-  setValue((uint8_t *)(value.c_str()), value.length());
-}  // setValue
-
-void BLECharacteristic::setValue(uint16_t &data16) {
-  uint8_t temp[2];
-  temp[0] = data16;
-  temp[1] = data16 >> 8;
-  setValue(temp, 2);
-}  // setValue
-
-void BLECharacteristic::setValue(uint32_t &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
-}  // setValue
-
-void BLECharacteristic::setValue(int &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
-}  // setValue
-
-void BLECharacteristic::setValue(float &data32) {
-  float temp = data32;
-  setValue((uint8_t *)&temp, 4);
-}  // setValue
-
-void BLECharacteristic::setValue(double &data64) {
-  double temp = data64;
-  setValue((uint8_t *)&temp, 8);
-}  // setValue
-
-/**
- * @brief Set the Write No Response property value.
- * @param [in] value Set to true if we are to allow writes with no response.
- */
-void BLECharacteristic::setWriteNoResponseProperty(bool value) {
-  //log_d("setWriteNoResponseProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE_NR);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_WRITE_NR);
-  }
-}  // setWriteNoResponseProperty
-
-/**
- * @brief Set the Write property value.
- * @param [in] value Set to true if we are to allow writes.
- */
-void BLECharacteristic::setWriteProperty(bool value) {
-  //log_d("setWriteProperty(%d)", value);
-  if (value) {
-    m_properties = (esp_gatt_char_prop_t)(m_properties | ESP_GATT_CHAR_PROP_BIT_WRITE);
-  } else {
-    m_properties = (esp_gatt_char_prop_t)(m_properties & ~ESP_GATT_CHAR_PROP_BIT_WRITE);
-  }
-}  // setWriteProperty
-
-/**
- * @brief Return a string representation of the characteristic.
- * @return A string representation of the characteristic.
- */
-String BLECharacteristic::toString() {
-  String res = "UUID: " + m_bleUUID.toString() + ", handle : 0x";
-  char hex[5];
-  snprintf(hex, sizeof(hex), "%04x", m_handle);
-  res += hex;
-  res += " ";
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_READ) {
-    res += "Read ";
-  }
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE) {
-    res += "Write ";
-  }
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_WRITE_NR) {
-    res += "WriteNoResponse ";
-  }
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_BROADCAST) {
-    res += "Broadcast ";
-  }
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_NOTIFY) {
-    res += "Notify ";
-  }
-  if (m_properties & ESP_GATT_CHAR_PROP_BIT_INDICATE) {
-    res += "Indicate ";
-  }
-  return res;
-}  // toString
-
-BLECharacteristicCallbacks::~BLECharacteristicCallbacks() {}
-
 void BLECharacteristicCallbacks::onRead(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param) {
   onRead(pCharacteristic);
-}  // onRead
-
-void BLECharacteristicCallbacks::onRead(BLECharacteristic *pCharacteristic) {
-  log_d(">> onRead: default");
-  log_d("<< onRead");
 }  // onRead
 
 void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param) {
   onWrite(pCharacteristic);
 }  // onWrite
 
-void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic) {
-  log_d(">> onWrite: default");
-  log_d("<< onWrite");
+#endif /* CONFIG_BLUEDROID_ENABLED */
+
+/***************************************************************************
+ *                             NimBLE functions                           *
+ ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+
+int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
+  const ble_uuid_t *uuid;
+  int rc;
+  struct ble_gap_conn_desc desc;
+  BLECharacteristic *pCharacteristic = (BLECharacteristic *)arg;
+
+  log_d("Characteristic %s %s event", pCharacteristic->getUUID().toString().c_str(), ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR ? "Read" : "Write");
+
+  uuid = ctxt->chr->uuid;
+  if (ble_uuid_cmp(uuid, &pCharacteristic->getUUID().getNative()->u) == 0) {
+    switch (ctxt->op) {
+      case BLE_GATT_ACCESS_OP_READ_CHR:
+      {
+        // If the packet header is only 8 bytes this is a follow up of a long read
+        // so we don't want to call the onRead() callback again.
+        if (ctxt->om->om_pkthdr_len > 8) {
+          rc = ble_gap_conn_find(conn_handle, &desc);
+          assert(rc == 0);
+          pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
+          pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
+        }
+
+        portENTER_CRITICAL(&pCharacteristic->m_readMux);
+        rc = os_mbuf_append(ctxt->om, (uint8_t *)pCharacteristic->m_value.getValue().c_str(), pCharacteristic->m_value.getValue().length());
+        portEXIT_CRITICAL(&pCharacteristic->m_readMux);
+
+        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+      }
+
+      case BLE_GATT_ACCESS_OP_WRITE_CHR:
+      {
+        if (ctxt->om->om_len > BLE_ATT_ATTR_MAX_LEN) {
+          return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        }
+
+        uint8_t buf[BLE_ATT_ATTR_MAX_LEN];
+        size_t len = ctxt->om->om_len;
+        memcpy(buf, ctxt->om->om_data, len);
+
+        os_mbuf *next;
+        next = SLIST_NEXT(ctxt->om, om_next);
+        while (next != NULL) {
+          if ((len + next->om_len) > BLE_ATT_ATTR_MAX_LEN) {
+            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+          }
+          memcpy(&buf[len], next->om_data, next->om_len);
+          len += next->om_len;
+          next = SLIST_NEXT(next, om_next);
+        }
+        rc = ble_gap_conn_find(conn_handle, &desc);
+        assert(rc == 0);
+        pCharacteristic->setValue(buf, len);
+        pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
+        pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
+
+        return 0;
+      }
+
+      default: break;
+    }
+  }
+
+  return BLE_ATT_ERR_UNLIKELY;
+
+  //m_descriptorMap.handleGATTServerEvent(conn_handle, attr_handle, ctxt, arg);
+}
+
+/**
+ * @brief Set the subscribe status for this characteristic.\n
+ * This will maintain a vector of subscribed clients and their indicate/notify status.
+ */
+void BLECharacteristic::setSubscribe(struct ble_gap_event *event) {
+  ble_gap_conn_desc desc;
+  if (ble_gap_conn_find(event->subscribe.conn_handle, &desc) != 0) {
+    return;
+  }
+
+  uint16_t subVal = 0;
+  if (event->subscribe.cur_notify > 0 && (m_properties & BLECharacteristic::PROPERTY_NOTIFY)) {
+    subVal |= NIMBLE_SUB_NOTIFY;
+  }
+  if (event->subscribe.cur_indicate && (m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
+    subVal |= NIMBLE_SUB_INDICATE;
+  }
+
+  log_i("New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
+
+  if (!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
+    BLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
+  }
+
+  auto it = m_subscribedVec.begin();
+  for (; it != m_subscribedVec.end(); ++it) {
+    if ((*it).first == event->subscribe.conn_handle) {
+      break;
+    }
+  }
+
+  if (subVal > 0) {
+    if (it == m_subscribedVec.end()) {
+      m_subscribedVec.push_back({event->subscribe.conn_handle, subVal});
+    } else {
+      (*it).second = subVal;
+    }
+  } else if (it != m_subscribedVec.end()) {
+    m_subscribedVec.erase(it);
+  }
+
+  m_pCallbacks->onSubscribe(this, &desc, subVal);
+}
+
+/**
+ * @brief Send a notify.
+ * A notification is a transmission of up to the first 20 bytes of the characteristic value.  An notification
+ * will not block; it is a fire and forget.
+ * @return N/A.
+ */
+void BLECharacteristic::notify(bool is_notification) {
+  log_v(">> notify: length: %d", m_value.getValue().length());
+
+  assert(getService() != nullptr);
+  assert(getService()->getServer() != nullptr);
+
+  int rc = 0;
+  m_pCallbacks->onNotify(this);  // Invoke the notify callback.
+
+  // GeneralUtils::hexDump() doesn't output anything if the log level is not
+  // "VERBOSE". Additionally, it is very CPU intensive, even when it doesn't
+  // output anything! So it is much better to *not* call it at all if not needed.
+  // In a simple program which calls BLECharacteristic::notify() every 50 ms,
+  // the performance gain of this little optimization is 37% in release mode
+  // (-O3) and 57% in debug mode.
+  // Of course, the "#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE" guard
+  // could also be put inside the GeneralUtils::hexDump() function itself. But
+  // it's better to put it here also, as it is clearer (indicating a verbose log
+  // thing) and it allows to remove the "m_value.getValue().c_str()" call, which
+  // is, in itself, quite CPU intensive.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+  GeneralUtils::hexDump((uint8_t *)m_value.getValue().c_str(), m_value.getValue().length());
+#endif
+
+  if (getService()->getServer()->getConnectedCount() == 0) {
+    log_v("<< notify: No connected clients.");
+    m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_CLIENT, 0);
+    return;
+  }
+
+  if (m_subscribedVec.size() == 0) {
+    log_v("<< notify: No clients subscribed.");
+    m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_SUBSCRIBER, 0);
+    return;
+  }
+
+  if (is_notification) {
+    if (!(m_properties & BLECharacteristic::PROPERTY_NOTIFY)) {
+      log_v("<< notifications disabled; ignoring");
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NOTIFY_DISABLED, 0);  // Invoke the notify callback.
+      return;
+    }
+  } else {
+    if (!(m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
+      log_v("<< indications disabled; ignoring");
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_DISABLED, 0);  // Invoke the notify callback.
+      return;
+    }
+  }
+
+  bool reqSec = (m_properties & BLE_GATT_CHR_F_READ_AUTHEN) || (m_properties & BLE_GATT_CHR_F_READ_AUTHOR) || (m_properties & BLE_GATT_CHR_F_READ_ENC);
+
+  for (auto &myPair : m_subscribedVec) {
+    uint16_t _mtu = getService()->getServer()->getPeerMTU(myPair.first);
+
+    // check if connected and subscribed
+    if (_mtu == 0 || myPair.second == 0) {
+      continue;
+    }
+
+    if (reqSec) {
+      struct ble_gap_conn_desc desc;
+      rc = ble_gap_conn_find(myPair.first, &desc);
+      if (rc != 0 || !desc.sec_state.encrypted) {
+        continue;
+      }
+    }
+
+    String value = getValue();
+    size_t length = value.length();
+
+    if (length > _mtu - 3) {
+      log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+    }
+
+    if (is_notification && (!(myPair.second & NIMBLE_SUB_NOTIFY))) {
+      log_w("Sending notification to client subscribed to indications, sending indication instead");
+      is_notification = false;
+    }
+
+    if (!is_notification && (!(myPair.second & NIMBLE_SUB_INDICATE))) {
+      log_w("Sending indication to client subscribed to notification, sending notification instead");
+      is_notification = true;
+    }
+
+    if (!is_notification) {  // is indication
+      m_semaphoreConfEvt.take("indicate");
+    }
+
+    // don't create the m_buf until we are sure to send the data or else
+    // we could be allocating a buffer that doesn't get released.
+    // We also must create it in each loop iteration because it is consumed with each host call.
+    os_mbuf *om = ble_hs_mbuf_from_flat((uint8_t *)value.c_str(), length);
+
+    if (!is_notification && (m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
+      if (!BLEDevice::getServer()->setIndicateWait(myPair.first)) {
+        log_e("prior Indication in progress");
+        os_mbuf_free_chain(om);
+        return;
+      }
+
+      rc = ble_gatts_indicate_custom(myPair.first, m_handle, om);
+      if (rc != 0) {
+        BLEDevice::getServer()->clearIndicateWait(myPair.first);
+      }
+    } else {
+      rc = ble_gatts_notify_custom(myPair.first, m_handle, om);
+    }
+
+    if (rc != 0) {
+      log_e("<< ble_gatts_%s_custom: rc=%d %s", is_notification ? "notify" : "indicate", rc, GeneralUtils::errorToString(rc));
+      m_semaphoreConfEvt.give();
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_GATT, rc);  // Invoke the notify callback.
+      return;
+    }
+
+    if (!is_notification) {  // is indication
+      if (!m_semaphoreConfEvt.timedWait("indicate", indicationTimeout)) {
+        m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, 0);  // Invoke the notify callback.
+      } else {
+        auto code = m_semaphoreConfEvt.value();
+        if (code == ESP_OK) {
+          m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_INDICATE, code);  // Invoke the notify callback.
+        } else {
+          m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, code);
+        }
+      }
+    } else {
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);  // Invoke the notify callback.
+    }
+  }
+  log_v("<< notify");
+}  // Notify
+
+void BLECharacteristicCallbacks::onRead(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc) {
+  onRead(pCharacteristic);
+}  // onRead
+
+void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc) {
+  onWrite(pCharacteristic);
 }  // onWrite
 
-void BLECharacteristicCallbacks::onNotify(BLECharacteristic *pCharacteristic) {
-  log_d(">> onNotify: default");
-  log_d("<< onNotify");
-}  // onNotify
+void BLECharacteristicCallbacks::onSubscribe(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue) {
+  log_d(">> onSubscribe: default");
+  log_d("<< onSubscribe");
+}  // onSubscribe
 
-void BLECharacteristicCallbacks::onStatus(BLECharacteristic *pCharacteristic, Status s, uint32_t code) {
-  log_d(">> onStatus: default");
-  log_d("<< onStatus");
-}  // onStatus
+#endif /* CONFIG_NIMBLE_ENABLED */
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */

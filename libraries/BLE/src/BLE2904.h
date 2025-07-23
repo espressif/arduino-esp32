@@ -3,17 +3,30 @@
  *
  *  Created on: Dec 23, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
 
 #ifndef COMPONENTS_CPP_UTILS_BLE2904_H_
 #define COMPONENTS_CPP_UTILS_BLE2904_H_
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
 
 #include "BLEDescriptor.h"
+
+/***************************************************************************
+ *                            Common types                                 *
+ ***************************************************************************/
 
 struct BLE2904_Data {
   uint8_t m_format;
@@ -21,8 +34,11 @@ struct BLE2904_Data {
   uint16_t m_unit;  // See https://www.bluetooth.com/specifications/assigned-numbers/units
   uint8_t m_namespace;
   uint16_t m_description;
-
 } __attribute__((packed));
+
+/***************************************************************************
+ *                           Common functions                              *
+ ***************************************************************************/
 
 /**
  * @brief Descriptor for Characteristic Presentation Format.
@@ -34,7 +50,10 @@ struct BLE2904_Data {
  */
 class BLE2904 : public BLEDescriptor {
 public:
-  BLE2904();
+  /***************************************************************************
+   *                         Common public constants                         *
+   ***************************************************************************/
+
   static const uint8_t FORMAT_BOOLEAN = 1;
   static const uint8_t FORMAT_UINT2 = 2;
   static const uint8_t FORMAT_UINT4 = 3;
@@ -62,7 +81,13 @@ public:
   static const uint8_t FORMAT_UTF8 = 25;
   static const uint8_t FORMAT_UTF16 = 26;
   static const uint8_t FORMAT_OPAQUE = 27;
+  static const uint8_t FORMAT_MEDASN1 = 28;
 
+  /***************************************************************************
+   *                         Common public functions                         *
+   ***************************************************************************/
+
+  BLE2904();
   void setDescription(uint16_t);
   void setExponent(int8_t exponent);
   void setFormat(uint8_t format);
@@ -70,9 +95,15 @@ public:
   void setUnit(uint16_t unit);
 
 private:
+  friend class BLECharacteristic;
+
+  /***************************************************************************
+   *                         Common private properties                         *
+   ***************************************************************************/
+
   BLE2904_Data m_data;
 };  // BLE2904
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
 #endif /* SOC_BLE_SUPPORTED */
 #endif /* COMPONENTS_CPP_UTILS_BLE2904_H_ */

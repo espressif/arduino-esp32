@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include "soc/soc_caps.h"
 
 #define USB_VID          0x303a
 #define USB_PID          0x822B
@@ -9,8 +10,16 @@
 #define USB_PRODUCT      "ESP32-S3-Zero"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
-// Partial voltage measurement method
+// Onboard WS2812 RGB LED
 #define WS_RGB 21
+
+// BUILTIN_LED can be used in new Arduino API digitalWrite() like in Blink.ino
+static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + WS_RGB;
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
+// RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
+#define RGB_BUILTIN    LED_BUILTIN
+#define RGB_BRIGHTNESS 64
 
 // Mapping based on the ESP32S3 data sheet - alternate for OUTPUT
 static const uint8_t OUTPUT_IO1 = 1;

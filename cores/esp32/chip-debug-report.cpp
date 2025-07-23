@@ -67,6 +67,10 @@ static void printPkgVersion(void) {
 #elif CONFIG_IDF_TARGET_ESP32P4
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS_2_REG, EFUSE_PKG_VERSION);
   chip_report_printf("%lu", pkg_ver);
+#elif CONFIG_IDF_TARGET_ESP32C5
+  // ToDo: Update this line when EFUSE_PKG_VERSION is available again for ESP32-C5
+  uint32_t pkg_ver = 0;  //REG_GET_FIELD(EFUSE_RD_MAC_SYS2_REG, EFUSE_PKG_VERSION);
+  chip_report_printf("%lu", pkg_ver);
 #else
   chip_report_printf("Unknown");
 #endif
@@ -88,7 +92,12 @@ static void printChipInfo(void) {
     case CHIP_ESP32C6: chip_report_printf("ESP32-C6\n"); break;
     case CHIP_ESP32H2: chip_report_printf("ESP32-H2\n"); break;
     case CHIP_ESP32P4: chip_report_printf("ESP32-P4\n"); break;
-    default:           chip_report_printf("Unknown %d\n", info.model); break;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    case CHIP_ESP32C5:  chip_report_printf("ESP32-C5\n"); break;
+    case CHIP_ESP32C61: chip_report_printf("ESP32-C61\n"); break;
+    case CHIP_ESP32H21: chip_report_printf("ESP32-H21\n"); break;
+#endif
+    default: chip_report_printf("Unknown %d\n", info.model); break;
   }
   printPkgVersion();
   chip_report_printf("  Revision          : %.2f\n", (float)(info.revision) / 100.0);

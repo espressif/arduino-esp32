@@ -38,6 +38,9 @@ typedef enum {
   ZB_POWER_SOURCE_BATTERY = 0x03,
 } zb_power_source_t;
 
+// Global function for converting ZCL status to name
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
+
 /* Zigbee End Device Class */
 class ZigbeeEP {
 public:
@@ -138,6 +141,7 @@ public:
   virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
+  virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
@@ -156,17 +160,21 @@ public:
     _on_identify = callback;
   }
 
+  void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status)) {
+    _on_default_response = callback;
+  }
+
+  // Convert ZCL status to name
+
 private:
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);
+  void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status);
   time_t _read_time;
   int32_t _read_timezone;
 
 protected:
-  // Convert ZCL status to name
-  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
-
   uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;
@@ -179,6 +187,7 @@ protected:
   zb_power_source_t _power_source;
   uint8_t _time_status;
 
+  // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
 };
 

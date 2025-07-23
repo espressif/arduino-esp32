@@ -5,4 +5,9 @@
  *      Author: kolban
  */
 
+#include "soc/soc_caps.h"
+#if SOC_BLE_SUPPORTED
+
 //#include "BLEExceptions.h"
+
+#endif /* SOC_BLE_SUPPORTED */
