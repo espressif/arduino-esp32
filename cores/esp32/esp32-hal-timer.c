@@ -54,7 +54,6 @@ void IRAM_ATTR timerWrite(hw_timer_t *timer, uint64_t val) {
 
 void IRAM_ATTR timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return;
   }
   esp_err_t err = ESP_OK;
