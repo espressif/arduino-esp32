@@ -36,9 +36,8 @@ struct timer_struct_t {
   bool timer_started;
 };
 
-inline uint64_t timerRead(hw_timer_t *timer) {
+inline IRAM_ATTR uint64_t timerRead(hw_timer_t *timer) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return 0;
   }
   uint64_t value;
@@ -46,15 +45,14 @@ inline uint64_t timerRead(hw_timer_t *timer) {
   return value;
 }
 
-void timerWrite(hw_timer_t *timer, uint64_t val) {
+void IRAM_ATTR timerWrite(hw_timer_t *timer, uint64_t val) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return;
   }
   gptimer_set_raw_count(timer->timer_handle, val);
 }
 
-void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
+void IRAM_ATTR timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
   if (timer == NULL) {
     log_e("Timer handle is NULL");
     return;
@@ -67,7 +65,7 @@ void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64
   };
   err = gptimer_set_alarm_action(timer->timer_handle, &alarm_cfg);
   if (err != ESP_OK) {
-    log_e("Timer Alarm Write failed, error num=%d", err);
+    ; // Ignore
   }
 }
 
@@ -80,27 +78,24 @@ uint32_t timerGetFrequency(hw_timer_t *timer) {
   return frequency;
 }
 
-void timerStart(hw_timer_t *timer) {
+void IRAM_ATTR timerStart(hw_timer_t *timer) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return;
   }
   gptimer_start(timer->timer_handle);
   timer->timer_started = true;
 }
 
-void timerStop(hw_timer_t *timer) {
+void IRAM_ATTR timerStop(hw_timer_t *timer) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return;
   }
   gptimer_stop(timer->timer_handle);
   timer->timer_started = false;
 }
 
-void timerRestart(hw_timer_t *timer) {
+void IRAM_ATTR timerRestart(hw_timer_t *timer) {
   if (timer == NULL) {
-    log_e("Timer handle is NULL");
     return;
   }
   gptimer_set_raw_count(timer->timer_handle, 0);
