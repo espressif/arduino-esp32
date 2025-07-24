@@ -22,6 +22,12 @@
 #include "esp_clk_tree.h"
 #endif
 
+#if CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
+#define TIMER_IRAM IRAM_ATTR
+#else
+#define TIMER_IRAM
+#endif
+
 typedef void (*voidFuncPtr)(void);
 typedef void (*voidFuncPtrArg)(void *);
 
@@ -36,9 +42,11 @@ struct timer_struct_t {
   bool timer_started;
 };
 
-inline uint64_t timerRead(hw_timer_t *timer) {
+inline TIMER_IRAM uint64_t timerRead(hw_timer_t *timer) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return 0;
   }
   uint64_t value;
@@ -46,17 +54,21 @@ inline uint64_t timerRead(hw_timer_t *timer) {
   return value;
 }
 
-void timerWrite(hw_timer_t *timer, uint64_t val) {
+void TIMER_IRAM timerWrite(hw_timer_t *timer, uint64_t val) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return;
   }
   gptimer_set_raw_count(timer->timer_handle, val);
 }
 
-void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
+void TIMER_IRAM timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64_t reload_count) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return;
   }
   esp_err_t err = ESP_OK;
@@ -67,7 +79,9 @@ void timerAlarm(hw_timer_t *timer, uint64_t alarm_value, bool autoreload, uint64
   };
   err = gptimer_set_alarm_action(timer->timer_handle, &alarm_cfg);
   if (err != ESP_OK) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer Alarm Write failed, error num=%d", err);
+#endif
   }
 }
 
@@ -80,27 +94,33 @@ uint32_t timerGetFrequency(hw_timer_t *timer) {
   return frequency;
 }
 
-void timerStart(hw_timer_t *timer) {
+void TIMER_IRAM timerStart(hw_timer_t *timer) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return;
   }
   gptimer_start(timer->timer_handle);
   timer->timer_started = true;
 }
 
-void timerStop(hw_timer_t *timer) {
+void TIMER_IRAM timerStop(hw_timer_t *timer) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return;
   }
   gptimer_stop(timer->timer_handle);
   timer->timer_started = false;
 }
 
-void timerRestart(hw_timer_t *timer) {
+void TIMER_IRAM timerRestart(hw_timer_t *timer) {
   if (timer == NULL) {
+#ifndef CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM
     log_e("Timer handle is NULL");
+#endif
     return;
   }
   gptimer_set_raw_count(timer->timer_handle, 0);
