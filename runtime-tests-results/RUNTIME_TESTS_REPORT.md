@@ -1,6 +1,6 @@
 ## Runtime Tests Report
 
-:white_check_mark: **The test workflows are passing.** :white_check_mark:
+:x: **The test workflows are failing. Please check the run logs.** :x:
 
 ### Validation Tests
 
@@ -14,7 +14,7 @@ nvs|2/2 :white_check_mark:|2/2 :white_check_mark:|4/4 :white_check_mark:|4/4 :wh
 periman|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:
 psram|10/10 :white_check_mark:|-|-|-|8/8 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
 timer|3/3 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:
-touch|3/3 :white_check_mark:|-|-|-|3/3 :white_check_mark:|3/3 :white_check_mark:|3/3 :white_check_mark:
+touch|3/3 :white_check_mark:|-|-|-|2/3 :x:|3/3 :white_check_mark:|3/3 :white_check_mark:
 uart|11/11 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|11/11 :white_check_mark:|10/10 :white_check_mark:
 unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:
 #### Wokwi
@@ -32,6 +32,6 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2025/07/23 03:19:45
+Generated on: 2025/07/24 03:20:59
 
-[Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/16460163072) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/16460642418)
+[Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/16486409974) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/16486911958)
