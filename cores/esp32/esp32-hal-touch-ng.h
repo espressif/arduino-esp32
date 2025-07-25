@@ -21,6 +21,7 @@
 #define MAIN_ESP32_HAL_TOUCH_NEW_H_
 
 #include "soc/soc_caps.h"
+#include "esp_idf_version.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0) || SOC_TOUCH_SENSOR_VERSION == 3
