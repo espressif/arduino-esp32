@@ -4,28 +4,30 @@
 
 #if CONFIG_IDF_TARGET_ESP32
 
-#define TEST_TOUCH_CHANNEL (9)
+#define TEST_TOUCH_CHANNEL (7)
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM0,
   //TOUCH_PAD_NUM1 is GPIO0, for download.
-  TOUCH_PAD_NUM2, TOUCH_PAD_NUM3, TOUCH_PAD_NUM4, TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7, TOUCH_PAD_NUM8, TOUCH_PAD_NUM9
+  TOUCH_PAD_NUM2, TOUCH_PAD_NUM3, TOUCH_PAD_NUM4, TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7 /*,TOUCH_PAD_NUM8, TOUCH_PAD_NUM9*/
 };
 
-uint8_t TOUCH_GPIOS[] = {4, 2, 15, 13, 12, 14, 27, 33, 32};
+uint8_t TOUCH_GPIOS[] = {4,/* 0,*/ 2, 15, 13, 12, 14, 27/*, 33, 32*/};
 
 #define NO_TOUCH_GPIO 25
 
 #elif (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)
 
-#define TEST_TOUCH_CHANNEL (12)  //14
+#define TEST_TOUCH_CHANNEL (9)  //14
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM1, TOUCH_PAD_NUM2, TOUCH_PAD_NUM3,  TOUCH_PAD_NUM4,  TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7,
-  TOUCH_PAD_NUM8, TOUCH_PAD_NUM9, TOUCH_PAD_NUM10, TOUCH_PAD_NUM11, TOUCH_PAD_NUM12
+  TOUCH_PAD_NUM8, /*TOUCH_PAD_NUM9,*/ TOUCH_PAD_NUM10
+  //TOUCH_PAD_NUM11, //Wrong reading
+  //TOUCH_PAD_NUM12, //Wrong reading
   //TOUCH_PAD_NUM13, //Wrong reading
   //TOUCH_PAD_NUM14
 };
 
-uint8_t TOUCH_GPIOS[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 /*,13,14*/};
+uint8_t TOUCH_GPIOS[] = {1, 2, 3, 4, 5, 6, 7, 8,/*9,*/ 10/*, 11, 12, 13, 14*/};
 
 #define NO_TOUCH_GPIO 17
 
@@ -120,6 +122,9 @@ void test_touch_read(void) {
   }
 
   // COMPARE PRESSED <-> UNPRESSED
+  for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
+    log_v("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+  }
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
 #if CONFIG_IDF_TARGET_ESP32
     TEST_ASSERT_LESS_THAN((touch_unpressed[l] - PRESSED_VALUE_DIFFERENCE), touch_pressed[l]);

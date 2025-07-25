@@ -29,7 +29,7 @@ void setup() {
 
   //Set the touch pads
   Serial.println("\n ESP32 Touch Interrupt Test\n");
-  touchAttachInterrupt(T0, gotTouch1, threshold);
+  touchAttachInterrupt(T1, gotTouch1, threshold);
   touchAttachInterrupt(T2, gotTouch2, threshold);
 }
 
