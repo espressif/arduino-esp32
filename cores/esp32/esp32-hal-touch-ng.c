@@ -14,7 +14,6 @@
 #include "soc/soc_caps.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
-//#if SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4 for now
 
 #include "esp32-hal-touch-ng.h"
 #include "esp32-hal-periman.h"
@@ -228,7 +227,7 @@ static void __touchInit() {
 #elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
   touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(_duration_ms, _volt_low, _volt_high);
 #elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
-  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V3_DEFAULT_SAMPLE_CONFIG(_sample_num, _div_num, _coarse_freq_tune, _fine_freq_tune);
+  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V3_DEFAULT_SAMPLE_CONFIG(_div_num, _coarse_freq_tune, _fine_freq_tune);
 #endif
   touch_sensor_sample_config_t sample_cfg[_sample_num] = {};
   sample_cfg[0] = single_sample_cfg;
@@ -532,5 +531,4 @@ extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribut
 extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value_t) __attribute__((weak, alias("__touchAttachArgsInterrupt")));
 extern void touchDetachInterrupt(uint8_t) __attribute__((weak, alias("__touchDettachInterrupt")));
 
-//#endif /* SOC_TOUCH_SENSOR_VERSION == 3 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */
