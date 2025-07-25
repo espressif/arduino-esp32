@@ -22,13 +22,32 @@
 
 #include "soc/soc_caps.h"
 #if SOC_TOUCH_SENSOR_SUPPORTED
-#if SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include "esp32-hal.h"
+#include "driver/touch_sens.h"
+
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
+    .abs_active_thresh = {1000},  \
+    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
+    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
+    .group = TOUCH_CHAN_TRIG_GROUP_BOTH,  \
+}
+#elif SOC_TOUCH_SENSOR_VERSION == 2     // ESP32-S2 & ESP32-S3
+#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
+    .active_thresh = {2000},  \
+    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
+    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
+}
+#elif SOC_TOUCH_SENSOR_VERSION == 3     // ESP32-P4
+#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
+    .active_thresh = {1000},  \
+}
+#endif
 
 typedef uint32_t touch_value_t;
 
@@ -40,11 +59,31 @@ typedef uint32_t touch_value_t;
  **/
 void touchSetTiming(float measure, uint32_t sleep);
 
+#if SOC_TOUCH_SENSOR_VERSION == 1 || SOC_TOUCH_SENSOR_VERSION == 2 // ESP32, ESP32S2, ESP32S3
+/*
+ * @param[in] duration_ms   The measurement duration of the touch channel
+ * @param[in] volt_low      The low voltage limit of the touch channel
+ * @param[in] volt_high     The high voltage limit of the touch channel
+ */
+void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high);
+
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
 /*
  * Tune the touch pad frequency.
  * Note: Must be called before setting up touch pads
 */
 void touchSetConfig(uint32_t _div_num, uint8_t coarse_freq_tune, uint8_t fine_freq_tune);
+#endif
+
+#if SOC_TOUCH_SENSOR_VERSION == 1
+/*
+ * Specific functions to ESP32
+ * Tells the driver if it shall activate the ISR if the sensor is Lower or Higher than the Threshold
+ * Default if Lower.
+ * Note: Must be called before setting up touch pads
+ **/
+void touchInterruptSetThresholdDirection(bool mustbeLower);
+#endif
 
 /*
  * Read touch pad value.
@@ -86,6 +125,5 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold);
 }
 #endif
 
-#endif /* SOC_TOUCH_SENSOR_VERSION == 3 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */
 #endif /* MAIN_ESP32_HAL_TOUCH_H_ */

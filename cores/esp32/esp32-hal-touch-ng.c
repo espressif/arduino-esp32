@@ -14,9 +14,8 @@
 #include "soc/soc_caps.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
-#if SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4 for now
+//#if SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4 for now
 
-#include "driver/touch_sens.h"
 #include "esp32-hal-touch-ng.h"
 #include "esp32-hal-periman.h"
 
@@ -37,11 +36,24 @@ typedef struct {
 static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {
   0,
 };
-
-static uint8_t _sample_num = 1;
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+static uint8_t _sample_num = 1; // only one sample configuration supported
+static float _duration_ms = 5.0f;
+static touch_volt_lim_l_t _volt_low = TOUCH_VOLT_LIM_L_0V5;
+static touch_volt_lim_h_t _volt_high = TOUCH_VOLT_LIM_H_1V7;
+static touch_intr_trig_mode_t _intr_trig_mode = TOUCH_INTR_TRIG_ON_BELOW_THRESH;
+#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+static uint8_t _sample_num = 1; // only one sample configuration supported
+static float _duration_ms = 500.0f;
+static touch_volt_lim_l_t _volt_low = TOUCH_VOLT_LIM_L_0V5;
+static touch_volt_lim_h_t _volt_high = TOUCH_VOLT_LIM_H_2V2;
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
+static uint8_t _sample_num = 1; // TODO: can be extended to multiple samples
 static uint32_t _div_num = 1;
 static uint8_t _coarse_freq_tune = 1;
 static uint8_t _fine_freq_tune = 1;
+#endif
+
 static uint8_t used_pads = 0;
 
 static uint32_t __touchSleepTime = 256;
@@ -156,15 +168,28 @@ bool touchBenchmarkThreshold(uint8_t pad) {
 
   // Reconfigure passed pad with new threshold
   uint32_t benchmark[_sample_num] = {};
+  #if SOC_TOUCH_SUPPORT_BENCHMARK // ESP32S2, ESP32S3,ESP32P4
   if (touch_channel_read_data(touch_channel_handle[pad], TOUCH_CHAN_DATA_TYPE_BENCHMARK, benchmark) != ESP_OK) {
     log_e("Touch channel read data failed!");
     return false;
   }
+  #else
+  if (touch_channel_read_data(touch_channel_handle[pad], TOUCH_CHAN_DATA_TYPE_SMOOTH, benchmark) != ESP_OK) {
+    log_e("Touch channel read data failed!");
+    return false;
+  }
+  #endif
+
   /* Calculate the proper active thresholds regarding the initial benchmark */
-  touch_channel_config_t chan_cfg = {};
+  touch_channel_config_t chan_cfg = TOUCH_CHANNEL_DEFAULT_CONFIG();
   for (int i = 0; i < _sample_num; i++) {
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+    chan_cfg.abs_active_thresh[i] = (uint32_t)(benchmark[i] * (1 - s_thresh2bm_ratio));
+    log_v("Configured [CH %d] sample %d: benchmark = %"PRIu32", threshold = %"PRIu32"\t", pad, i, benchmark[i], chan_cfg.abs_active_thresh[i]);
+#else
     chan_cfg.active_thresh[i] = (uint32_t)(benchmark[i] * s_thresh2bm_ratio);
-    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
+    log_v("Configured [CH %d] sample %d: benchmark = %"PRIu32", threshold = %"PRIu32"\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
+#endif
   }
   /* Update the channel configuration */
   if (touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
@@ -198,21 +223,40 @@ static void __touchInit() {
     return;
   }
   // Support only one sample configuration for now
-  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V3_DEFAULT_SAMPLE_CONFIG(_div_num, _coarse_freq_tune, _fine_freq_tune);
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V1_DEFAULT_SAMPLE_CONFIG(_duration_ms, _volt_low, _volt_high);
+#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(_duration_ms, _volt_low, _volt_high);
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
+  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V3_DEFAULT_SAMPLE_CONFIG(_sample_num, _div_num, _coarse_freq_tune, _fine_freq_tune);
+#endif
   touch_sensor_sample_config_t sample_cfg[_sample_num] = {};
   sample_cfg[0] = single_sample_cfg;
 
-  /* Allocate new touch controller handle */
   touch_sensor_config_t sens_cfg = {
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+    .power_on_wait_us = __touchSleepTime,
+    .meas_interval_us = __touchMeasureTime,
+    .intr_trig_mode = _intr_trig_mode,
+    .intr_trig_group = TOUCH_INTR_TRIG_GROUP_BOTH,
+    .sample_cfg_num = _sample_num,
+    .sample_cfg = sample_cfg,
+#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+    .power_on_wait_us = __touchSleepTime,
+    .meas_interval_us = __touchMeasureTime,
+    .max_meas_time_us = 0,
+    .sample_cfg_num = _sample_num,
+    .sample_cfg = sample_cfg,
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
     .power_on_wait_us = __touchSleepTime,
     .meas_interval_us = __touchMeasureTime,
     .max_meas_time_us = 0,
     .output_mode = TOUCH_PAD_OUT_AS_CLOCK,
     .sample_cfg_num = _sample_num,
     .sample_cfg = sample_cfg,
+#endif
   };
 
-  // touch_sensor_config_t sens_cfg = TOUCH_SENSOR_DEFAULT_BASIC_CONFIG(_sample_num, sample_cfg);
   if (touch_sensor_new_controller(&sens_cfg, &touch_sensor_handle) != ESP_OK) {
     goto err;
   }
@@ -225,14 +269,10 @@ static void __touchInit() {
   }
 
   /* Register the touch sensor on_active and on_inactive callbacks */
-  touch_event_callbacks_t callbacks = {
-    .on_active = __touchOnActiveISR,
-    .on_inactive = __touchOnInactiveISR,
-    .on_measure_done = NULL,
-    .on_scan_done = NULL,
-    .on_timeout = NULL,
-    .on_proximity_meas_done = NULL,
-  };
+  touch_event_callbacks_t callbacks = {0};
+  callbacks.on_active = __touchOnActiveISR;
+  callbacks.on_inactive = __touchOnInactiveISR;
+
   if (touch_sensor_register_callbacks(touch_sensor_handle, &callbacks, NULL) != ESP_OK) {
     goto err;
   }
@@ -253,10 +293,8 @@ static void __touchChannelInit(int pad) {
   // Initial setup with default Threshold
   __touchInterruptHandlers[pad].fn = NULL;
 
-  touch_channel_config_t chan_cfg = {
-    .active_thresh = {1000}  // default threshold, will be updated after benchmark
-  };
-
+  touch_channel_config_t chan_cfg = TOUCH_CHANNEL_DEFAULT_CONFIG();
+  
   if (!touchStop() || !touchDisable()) {
     log_e("Touch sensor stop and disable failed!");
     return;
@@ -323,8 +361,21 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
     __touchInterruptHandlers[pad].arg = NULL;
   } else {
     // attach ISR User Call
-    __touchInit();
-    __touchChannelInit(pad);
+    if (perimanGetPinBus(pin, ESP32_BUS_TYPE_TOUCH) == NULL) {
+      perimanSetBusDeinit(ESP32_BUS_TYPE_TOUCH, touchDetachBus);
+      if (!perimanClearPinBus(pin)) {
+        log_e("Failed to clear pin bus");
+        return;
+      }
+      __touchInit();
+      __touchChannelInit(pad);
+
+      if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_TOUCH, (void *)(pin + 1), -1, pad)) {
+        touchDetachBus((void *)(pin + 1));
+        log_e("Failed to set bus to Peripheral manager");
+        return;
+      }
+    }
     __touchInterruptHandlers[pad].fn = userFunc;
     __touchInterruptHandlers[pad].callWithArgs = callWithArgs;
     __touchInterruptHandlers[pad].arg = Args;
@@ -338,7 +389,11 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
 
     touch_channel_config_t chan_cfg = {};
     for (int i = 0; i < _sample_num; i++) {
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+      chan_cfg.abs_active_thresh[i] = threshold;
+#else
       chan_cfg.active_thresh[i] = threshold;
+#endif
     }
 
     if (touch_sensor_reconfig_channel(touch_channel_handle[pad], &chan_cfg) != ESP_OK) {
@@ -375,7 +430,6 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
   if (pad < 0) {
     return false;
   }
-
   return __touchInterruptHandlers[pad].lastStatusIsPressed;
 }
 
@@ -405,9 +459,13 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
 
   touch_sleep_config_t deep_slp_cfg = {
     .slp_wakeup_lvl = TOUCH_DEEP_SLEEP_WAKEUP,
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+    .deep_slp_sens_cfg = NULL,  // Use the original touch sensor configuration
+#else // SOC_TOUCH_SENSOR_VERSION 2 and 3// ESP32S2, ESP32S3, ESP32P4
     .deep_slp_chan = touch_channel_handle[pad],
     .deep_slp_thresh = {threshold},
     .deep_slp_sens_cfg = NULL,  // Use the original touch sensor configuration
+#endif
   };
 
   // Register the deep sleep wake-up
@@ -434,6 +492,20 @@ void touchSetTiming(float measure, uint32_t sleep) {
   __touchMeasureTime = measure;
 }
 
+#if SOC_TOUCH_SENSOR_VERSION == 1 || SOC_TOUCH_SENSOR_VERSION == 2 // ESP32, ESP32S2, ESP32S3
+
+void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high) {
+  if (initialized) {
+    log_e("Touch sensor already initialized. Cannot set configuration.");
+    return;
+  }
+  _duration_ms = duration_ms;
+  _volt_low = volt_low;
+  _volt_high = volt_high;
+}
+
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
+
 void touchSetConfig(uint32_t div_num, uint8_t coarse_freq_tune, uint8_t fine_freq_tune) {
   if (initialized) {
     log_e("Touch sensor already initialized. Cannot set configuration.");
@@ -443,11 +515,22 @@ void touchSetConfig(uint32_t div_num, uint8_t coarse_freq_tune, uint8_t fine_fre
   _coarse_freq_tune = coarse_freq_tune;
   _fine_freq_tune = fine_freq_tune;
 }
+#endif
+
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+void touchInterruptSetThresholdDirection(bool mustbeLower) {
+  if (mustbeLower) {
+    _intr_trig_mode = TOUCH_INTR_TRIG_ON_BELOW_THRESH;
+  } else {
+    _intr_trig_mode = TOUCH_INTR_TRIG_ON_ABOVE_THRESH;
+  }
+}
+#endif
 
 extern touch_value_t touchRead(uint8_t) __attribute__((weak, alias("__touchRead")));
 extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribute__((weak, alias("__touchAttachInterrupt")));
 extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value_t) __attribute__((weak, alias("__touchAttachArgsInterrupt")));
 extern void touchDetachInterrupt(uint8_t) __attribute__((weak, alias("__touchDettachInterrupt")));
 
-#endif /* SOC_TOUCH_SENSOR_VERSION == 3 */
+//#endif /* SOC_TOUCH_SENSOR_VERSION == 3 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */

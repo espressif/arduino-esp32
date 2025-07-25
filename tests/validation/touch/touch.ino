@@ -1,10 +1,6 @@
 #include <unity.h>
 #include "soc/soc_caps.h"
-#include "driver/touch_pad.h"
-
-#if SOC_TOUCH_SENSOR_VERSION == 3
 #include "hal/touch_sensor_ll.h"
-#endif
 
 #if CONFIG_IDF_TARGET_ESP32
 
@@ -82,7 +78,7 @@ void gotTouch2() {
  */
 static void test_press_fake(touch_pad_t pad_num) {
 #if SOC_TOUCH_SENSOR_VERSION <= 2
-  touch_pad_set_cnt_mode(pad_num, TOUCH_PAD_SLOPE_1, TOUCH_PAD_TIE_OPT_DEFAULT);
+  touch_ll_set_charge_speed(pad_num,TOUCH_CHARGE_SPEED_4);
 #else
   touch_ll_set_internal_capacitor(0x7f);
 #endif
@@ -93,7 +89,7 @@ static void test_press_fake(touch_pad_t pad_num) {
  */
 static void test_release_fake(touch_pad_t pad_num) {
 #if SOC_TOUCH_SENSOR_VERSION <= 2
-  touch_pad_set_cnt_mode(pad_num, TOUCH_PAD_SLOPE_7, TOUCH_PAD_TIE_OPT_DEFAULT);
+  touch_ll_set_charge_speed(pad_num, TOUCH_CHARGE_SPEED_7); 
 #else
   touch_ll_set_internal_capacitor(0);
 #endif
@@ -192,6 +188,11 @@ void setup() {
 
   UNITY_BEGIN();
   RUN_TEST(test_touch_read);
+
+#if SOC_TOUCH_SENSOR_VERSION == 3
+  touch_ll_enable_internal_capacitor(true);
+#endif
+
   RUN_TEST(test_touch_interrtupt);
   RUN_TEST(test_touch_errors);
   UNITY_END();
