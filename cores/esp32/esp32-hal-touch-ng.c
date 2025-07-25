@@ -43,7 +43,7 @@ static touch_volt_lim_h_t _volt_high = TOUCH_VOLT_LIM_H_1V7;
 static touch_intr_trig_mode_t _intr_trig_mode = TOUCH_INTR_TRIG_ON_BELOW_THRESH;
 #elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
 static uint8_t _sample_num = 1; // only one sample configuration supported
-static float _duration_ms = 500.0f;
+static uint32_t _chg_times = 500;
 static touch_volt_lim_l_t _volt_low = TOUCH_VOLT_LIM_L_0V5;
 static touch_volt_lim_h_t _volt_high = TOUCH_VOLT_LIM_H_2V2;
 #elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
@@ -225,7 +225,7 @@ static void __touchInit() {
 #if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
   touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V1_DEFAULT_SAMPLE_CONFIG(_duration_ms, _volt_low, _volt_high);
 #elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
-  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(_duration_ms, _volt_low, _volt_high);
+  touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V2_DEFAULT_SAMPLE_CONFIG(_chg_times, _volt_low, _volt_high);
 #elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
   touch_sensor_sample_config_t single_sample_cfg = TOUCH_SENSOR_V3_DEFAULT_SAMPLE_CONFIG(_div_num, _coarse_freq_tune, _fine_freq_tune);
 #endif
