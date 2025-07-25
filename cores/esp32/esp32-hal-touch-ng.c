@@ -14,6 +14,7 @@
 #include "soc/soc_caps.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0) || SOC_TOUCH_SENSOR_VERSION == 3
 
 #include "esp32-hal-touch-ng.h"
 #include "esp32-hal-periman.h"
@@ -540,4 +541,5 @@ extern void touchAttachInterrupt(uint8_t, voidFuncPtr, touch_value_t) __attribut
 extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value_t) __attribute__((weak, alias("__touchAttachArgsInterrupt")));
 extern void touchDetachInterrupt(uint8_t) __attribute__((weak, alias("__touchDettachInterrupt")));
 
+#endif /* ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0) || SOC_TOUCH_SENSOR_VERSION == 3 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */

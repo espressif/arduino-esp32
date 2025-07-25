@@ -86,6 +86,7 @@ void yield(void);
 #include "esp32-hal-matrix.h"
 #include "esp32-hal-uart.h"
 #include "esp32-hal-gpio.h"
+#include "esp32-hal-touch.h"
 #include "esp32-hal-touch-ng.h"
 #include "esp32-hal-dac.h"
 #include "esp32-hal-adc.h"
