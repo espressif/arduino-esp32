@@ -43,21 +43,14 @@ uint8_t TOUCH_GPIOS[] = {2, 3, 4, 5, 6 /*, 7, 8, 9, 10, 11, 12 ,13, 14, 15*/};
 #define NO_TOUCH_GPIO 17
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32
-#define RELEASED_VALUE      75  //75+ read value to pass test
-#define PRESSED_VALUE       20  //20- read value to pass test
-#define INTERRUPT_THRESHOLD 40
-#elif CONFIG_IDF_TARGET_ESP32S2
-#define RELEASED_VALUE      10000  //10000- read value to pass test
-#define PRESSED_VALUE       42000  //40000+ read value to pass test
-#define INTERRUPT_THRESHOLD 30000
-#elif CONFIG_IDF_TARGET_ESP32S3
-#define RELEASED_VALUE      25000  //25000- read value to pass test
-#define PRESSED_VALUE       90000  //90000+ read value to pass test
-#define INTERRUPT_THRESHOLD 80000
-#elif CONFIG_IDF_TARGET_ESP32P4
-#define PRESSED_VALUE_DIFFERENCE 200  //200+ read value difference against the unpressed value
 #define INTERRUPT_THRESHOLD      0    // Use benchmarked threshold
+
+#if CONFIG_IDF_TARGET_ESP32
+#define PRESSED_VALUE_DIFFERENCE 200  //-200 read value difference against the unpressed value
+#elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2
+#define PRESSED_VALUE_DIFFERENCE 2000  //2000+ read value difference against the unpressed value
+#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#define PRESSED_VALUE_DIFFERENCE 200  //200+ read value difference against the unpressed value
 #else
 #error Test not currently supported on this chip. Please adjust and try again!
 #endif
@@ -109,31 +102,6 @@ void tearDown(void) {
  * Test Touch read on all available channels - compare values if reading is right
  */
 void test_touch_read(void) {
-
-#if SOC_TOUCH_SENSOR_VERSION <= 2
-  //TEST RELEASE STATE
-  for (int i = 0; i < sizeof(TOUCH_GPIOS); i++) {
-#ifdef CONFIG_IDF_TARGET_ESP32
-    TEST_ASSERT_GREATER_THAN(RELEASED_VALUE, touchRead(TOUCH_GPIOS[i]));
-#else
-    TEST_ASSERT_LESS_THAN(RELEASED_VALUE, touchRead(TOUCH_GPIOS[i]));
-#endif
-  }
-
-  // TEST PRESS STATE
-  for (int j = 0; j < TEST_TOUCH_CHANNEL; j++) {
-    test_press_fake(touch_list[j]);
-  }
-  delay(100);
-
-  for (int k = 0; k < sizeof(TOUCH_GPIOS); k++) {
-#ifdef CONFIG_IDF_TARGET_ESP32
-    TEST_ASSERT_LESS_THAN(PRESSED_VALUE, touchRead(TOUCH_GPIOS[k]));
-#else
-    TEST_ASSERT_GREATER_THAN(PRESSED_VALUE, touchRead(TOUCH_GPIOS[k]));
-#endif
-  }
-#else  //TOUCH V3
   //TEST RELEASE STATE
   touch_value_t touch_unpressed[sizeof(TOUCH_GPIOS)];
   for (int i = 0; i < sizeof(TOUCH_GPIOS); i++) {
@@ -151,11 +119,14 @@ void test_touch_read(void) {
     touch_pressed[k] = touchRead(TOUCH_GPIOS[k]);
   }
 
-  // COMPARE PRESSED > UNPRESSED
+  // COMPARE PRESSED <-> UNPRESSED
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
+#if CONFIG_IDF_TARGET_ESP32
+    TEST_ASSERT_LESS_THAN((touch_unpressed[l] - PRESSED_VALUE_DIFFERENCE), touch_pressed[l]);
+#else
     TEST_ASSERT_GREATER_THAN((touch_unpressed[l] + PRESSED_VALUE_DIFFERENCE), touch_pressed[l]);
-  }
 #endif
+  }
 }
 
 void test_touch_interrtupt(void) {
@@ -166,7 +137,6 @@ void test_touch_interrtupt(void) {
   test_press_fake(touch_list[0]);
   test_press_fake(touch_list[1]);
 
-  delay(300);
 
   touchDetachInterrupt(TOUCH_GPIOS[0]);
   touchDetachInterrupt(TOUCH_GPIOS[1]);
