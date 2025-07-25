@@ -491,8 +491,7 @@ void touchSetTiming(float measure, uint32_t sleep) {
   __touchMeasureTime = measure;
 }
 
-#if SOC_TOUCH_SENSOR_VERSION == 1 || SOC_TOUCH_SENSOR_VERSION == 2 // ESP32, ESP32S2, ESP32S3
-
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
 void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high) {
   if (initialized) {
     log_e("Touch sensor already initialized. Cannot set configuration.");
@@ -503,8 +502,18 @@ void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_l
   _volt_high = volt_high;
 }
 
-#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
+#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+void touchSetConfig(uint32_t chg_times, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high) {
+  if (initialized) {
+    log_e("Touch sensor already initialized. Cannot set configuration.");
+    return;
+  }
+  _chg_times = chg_times;
+  _volt_low = volt_low;
+  _volt_high = volt_high;
+}
 
+#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
 void touchSetConfig(uint32_t div_num, uint8_t coarse_freq_tune, uint8_t fine_freq_tune) {
   if (initialized) {
     log_e("Touch sensor already initialized. Cannot set configuration.");

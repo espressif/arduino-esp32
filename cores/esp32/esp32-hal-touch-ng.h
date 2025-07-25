@@ -59,13 +59,21 @@ typedef uint32_t touch_value_t;
  **/
 void touchSetTiming(float measure, uint32_t sleep);
 
-#if SOC_TOUCH_SENSOR_VERSION == 1 || SOC_TOUCH_SENSOR_VERSION == 2 // ESP32, ESP32S2, ESP32S3
+#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
 /*
  * @param[in] duration_ms   The measurement duration of the touch channel
  * @param[in] volt_low      The low voltage limit of the touch channel
  * @param[in] volt_high     The high voltage limit of the touch channel
  */
 void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high);
+
+#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+/*
+ * @param[in] chg_times     The charge times of the touch channel
+ * @param[in] volt_low      The low voltage limit of the touch channel
+ * @param[in] volt_high     The high voltage limit of the touch channel
+ */
+void touchSetConfig(uint32_t chg_times, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high);
 
 #elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
 /*
