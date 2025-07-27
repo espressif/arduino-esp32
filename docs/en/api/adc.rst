@@ -52,8 +52,7 @@ This function will return analog value in millivolts (calibrated).
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095)
-for all chips except ESP32-S3 where default is 13 bits (range from 0 to 8191).
+This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095).
 When different resolution is set, the values read will be shifted to match the given resolution.
 
 Range is 1 - 16 .The default value will be used, if this function is not used.
