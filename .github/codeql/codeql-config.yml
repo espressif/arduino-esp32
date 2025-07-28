@@ -1,0 +1,26 @@
+name: "CodeQL config"
+
+packs:
+  - trailofbits/cpp-queries
+  - githubsecuritylab/codeql-cpp-queries
+  - githubsecuritylab/codeql-python-queries
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+query-filters:
+  - exclude:
+      query path:
+        - /^experimental\/.*/
+  - exclude:
+      tags contain:
+        - experimental
+  - exclude:
+      problem.severity:
+        - recommendation
+  - exclude:
+      id: tob/cpp/use-of-legacy-algorithm
+
+paths-ignore:
+  - tests/**
