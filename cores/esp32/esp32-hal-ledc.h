@@ -83,10 +83,11 @@ bool ledcSetClockSource(ledc_clk_cfg_t source);
  * @param pin GPIO pin
  * @param freq frequency of PWM signal
  * @param resolution resolution for LEDC pin
- *
+ * @param inverted if true, output signal will be inverted (default: false)
+ * 
  * @return true if configuration is successful and pin was successfully attached, false otherwise.
  */
-bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
+bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, bool inverted = false);
 
 /**
  * @brief Attach a pin to the LEDC driver, with a given frequency, resolution and channel.
@@ -95,10 +96,11 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
  * @param freq frequency of PWM signal
  * @param resolution resolution for LEDC pin
  * @param channel LEDC channel to attach to
+ * @param inverted if true, output signal will be inverted (default: false)
  *
  * @return true if configuration is successful and pin was successfully attached, false otherwise.
  */
-bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel);
+bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel, bool inverted = false);
 
 /**
  * @brief Set the duty cycle of a given pin.

@@ -186,7 +186,7 @@ static bool ledcDetachBus(void *bus) {
   return true;
 }
 
-bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel) {
+bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t channel, bool inverted = false) {
   if (channel >= LEDC_CHANNELS) {
     log_e("Channel %u is not available (maximum %u)!", channel, LEDC_CHANNELS);
     return false;
@@ -256,6 +256,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_channel.gpio_num = pin;
     ledc_channel.duty = duty;
     ledc_channel.hpoint = 0;
+    ledc_channel.flags.output_invert = inverted ? 1 : 0;
 
     ledc_channel_config(&ledc_channel);
   }
@@ -289,7 +290,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   return true;
 }
 
-bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
+bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution, bool inverted = false) {
   int free_channel = ~ledc_handle.used_channels & (ledc_handle.used_channels + 1);
   if (free_channel == 0) {
     log_e("No more LEDC channels available! (maximum is %u channels)", LEDC_CHANNELS);
@@ -298,7 +299,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
   uint8_t channel = __builtin_ctz(free_channel);  // Convert the free_channel bit to channel number
 
   // Try the first available channel
-  if (ledcAttachChannel(pin, freq, resolution, channel)) {
+  if (ledcAttachChannel(pin, freq, resolution, channel, inverted)) {
     return true;
   }
 
@@ -311,7 +312,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
     int group1_free_channel = (~ledc_handle.used_channels) & group1_mask;
     if (group1_free_channel != 0) {
       uint8_t group1_channel = __builtin_ctz(group1_free_channel);
-      if (ledcAttachChannel(pin, freq, resolution, group1_channel)) {
+      if (ledcAttachChannel(pin, freq, resolution, group1_channel, inverted)) {
         return true;
       }
     }
