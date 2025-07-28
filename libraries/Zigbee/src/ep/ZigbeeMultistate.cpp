@@ -1,6 +1,25 @@
 #include "ZigbeeMultistate.h"
 #if CONFIG_ZB_ENABLED
 
+// Workaround for ESP-ZIGBEE-SDK 1.6.6 known issue
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern void esp_zb_zcl_multi_input_init_server(void);
+extern void esp_zb_zcl_multi_input_init_client(void);
+
+void esp_zb_zcl_multistate_input_init_server(void)
+{
+    esp_zb_zcl_multi_input_init_server();
+}
+void esp_zb_zcl_multistate_input_init_client(void)
+{
+    esp_zb_zcl_multi_input_init_client();
+}
+#ifdef __cplusplus
+}
+#endif
+
 ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
 
