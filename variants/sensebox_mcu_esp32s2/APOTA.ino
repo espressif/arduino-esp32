@@ -1,5 +1,5 @@
-// APOTA is a arduino fallback sketch that is written to OTA1_Partition. 
-// APOTA opens an access point which waits to receive a .binfile on /sketch. 
+// APOTA is a arduino fallback sketch that is written to OTA1_Partition.
+// APOTA opens an access point which waits to receive a .binfile on /sketch.
 // After succesful upload, the file is written to OTA0_Partition and the microcontroller reboots to the newly uploaded sketch.
 
 #define DISPLAY_ENABLED
