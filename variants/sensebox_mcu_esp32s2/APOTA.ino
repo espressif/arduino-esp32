@@ -1,3 +1,7 @@
+// APOTA is an Arduino fallback sketch that is written to OTA1_Partition.
+// APOTA opens an access point which waits to receive a .bin file on /sketch.
+// After successful upload, the file is written to OTA0_Partition, and the microcontroller reboots to the newly uploaded sketch.
+
 #define DISPLAY_ENABLED
 
 #include <WiFi.h>
