@@ -6,6 +6,7 @@ on:
 
 permissions: 
   issues: write
+  discussions: write
   contents: read
 
 jobs:

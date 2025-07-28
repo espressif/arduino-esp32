@@ -10,6 +10,7 @@
  *   exempt labels that have been inactive for 90+ days.
  * - Avoids sending duplicate Friendly Reminder comments if one was 
  *   posted within the last 7 days.
+ * - Moves issues labeled 'questions' to GitHub Discussions
  */
 
 const dedent = (strings, ...values) => {
@@ -47,10 +48,53 @@ async function fetchAllOpenIssues(github, owner, repo) {
     return issues;
 }
 
+
+async function migrateToDiscussion(github, owner, repo, issue) {
+    const discussionCategory = 'Q&A';
+
+    const { data: categories } = await github.rest.discussions.listCategories({
+        owner,
+        repo,
+    });
+
+    const category = categories.find(cat =>
+        cat.name.toLowerCase() === discussionCategory.toLowerCase()
+    );
+
+    if (!category) {
+        throw new Error(`Discussion category '${discussionCategory}' not found.`);
+    }
+
+    const { data: discussion } = await github.rest.discussions.create({
+        owner,
+        repo,
+        title: issue.title,
+        body: `Originally created by @${issue.user.login} in #${issue.number}\n\n---\n\n${issue.body}`,
+        category_id: category.id,
+    });
+
+    await github.rest.issues.createComment({
+        owner,
+        repo,
+        issue_number: issue.number,
+        body: `💬 This issue was moved to [Discussions](${discussion.html_url}) for better visibility.`,
+    });
+
+    await github.rest.issues.update({
+        owner,
+        repo,
+        issue_number: issue.number,
+        state: 'closed',
+    });
+
+    return discussion.html_url;
+}
+
+
 const shouldSendReminder = (issue, exemptLabels, closeLabels) => {
-  const hasExempt = issue.labels.some(l => exemptLabels.includes(l.name));
-  const hasClose = issue.labels.some(l => closeLabels.includes(l.name));
-  return issue.assignees.length > 0 && !hasExempt && !hasClose;
+    const hasExempt = issue.labels.some(l => exemptLabels.includes(l.name));
+    const hasClose = issue.labels.some(l => closeLabels.includes(l.name));
+    return issue.assignees.length > 0 && !hasExempt && !hasClose;
 };
 
 
@@ -61,16 +105,24 @@ module.exports = async ({ github, context }) => {
     const thresholdDays = 90;
     const exemptLabels = ['to-be-discussed'];
     const closeLabels = ['awaiting-response'];
+    const discussionLabel = 'questions';
     const sevenDays = 7 * 24 * 60 * 60 * 1000;
 
     let totalClosed = 0;
     let totalReminders = 0;
     let totalSkipped = 0;
+    let totalMigrated = 0;    
 
     for (const issue of issues) {
         const isAssigned = issue.assignees && issue.assignees.length > 0;
         const lastUpdate = new Date(issue.updated_at);
         const daysSinceUpdate = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
+
+        if (issue.labels.some(label => label.name === discussionLabel)) {
+            await migrateToDiscussion(github, owner, repo, issue);
+            totalMigrated++;
+            continue;
+        }
 
         if (daysSinceUpdate < thresholdDays) {
             totalSkipped++;
@@ -145,5 +197,6 @@ module.exports = async ({ github, context }) => {
         Total issues processed: ${issues.length}
         Total issues closed: ${totalClosed}
         Total reminders sent: ${totalReminders}
+        Total migrated to discussions: ${totalMigrated}
         Total skipped: ${totalSkipped}`);
 };
