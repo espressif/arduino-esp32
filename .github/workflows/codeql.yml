@@ -1,4 +1,4 @@
-name: CodeQL Actions Analysis
+name: CodeQL Analysis
 
 on:
   workflow_dispatch:
@@ -7,13 +7,17 @@ on:
       - master
   pull_request:
     paths:
+      - "**/*.py"
       - ".github/workflows/*.yml"
       - ".github/workflows/*.yaml"
 
 jobs:
   codeql-analysis:
-    name: CodeQL Actions Analysis
+    name: CodeQL ${{ matrix.language }} analysis
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [python, actions]
 
     steps:
       - name: Checkout repository
@@ -22,10 +26,10 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
-          languages: actions
+          languages: ${{ matrix.language }}
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Run CodeQL Analysis
         uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
-          category: "Analysis: Actions"
+          category: "/language:${{ matrix.language }}"
