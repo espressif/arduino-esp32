@@ -101,21 +101,13 @@ void setBootPartitionToOTA0() {
 }
 
 void setupDisplay() {
-  Serial.println("checking display connection...");
   Wire.begin(PIN_QWIIC_SDA,PIN_QWIIC_SCL);
   displayEnabled = Wire.requestFrom(0x3D, 1);  // Check if the display is connected
   if (displayEnabled) {
-    delay(1000);
-    Serial.println("Display found!");
     display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
     display.display();
     delay(100);
     display.clearDisplay();
-  } else {
-    while(true) {
-      Serial.println("Display not found!");
-      delay(1000);
-    }
   }
 }
 
