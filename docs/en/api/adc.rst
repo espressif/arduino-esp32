@@ -52,9 +52,11 @@ This function will return analog value in millivolts (calibrated).
 analogReadResolution
 ^^^^^^^^^^^^^^^^^^^^
 
-This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095)
-for all chips except ESP32-S2 where default is 13 bits (range from 0 to 8191).
+This function is used to set the resolution of ``analogRead`` return value. Default is 12 bits (range from 0 to 4095) for all chips.
 When different resolution is set, the values read will be shifted to match the given resolution.
+
+.. note::
+   For **ESP32-S2 chip revision v0.0**, the default ADC resolution is 13 bits (0-8191) due to the `ADC-112 errata <https://docs.espressif.com/projects/esp-chip-errata/en/latest/esp32s2/03-errata-description/esp32s2/sar-adc-bit1-no-flip.html>`_. This is fixed in later revisions (v1.0+), which use the standard 12-bit resolution.
 
 Range is 1 - 16 .The default value will be used, if this function is not used.
 
