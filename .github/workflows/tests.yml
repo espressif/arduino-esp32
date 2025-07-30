@@ -16,20 +16,17 @@ on:
   pull_request:
     types: [opened, reopened, closed, synchronize, labeled, unlabeled]
     paths:
+      - ".github/scripts/install*.sh"
       - ".github/workflows/tests*"
-      - ".github/scripts/*.sh"
-      - "!.github/scripts/check-cmakelists.sh"
-      - "!.github/scripts/find_*"
-      - "!.github/scripts/on-*.sh"
-      - "!.github/scripts/set_push_chunks.sh"
-      - "!.github/scripts/update-version.sh"
-      - "!.github/scripts/upload_py_tools.sh"
+      - ".github/scripts/sketch_utils.sh"
       - "tests/**"
       - "cores/**"
       - "libraries/*/src/**.cpp"
       - "libraries/*/src/**.h"
       - "libraries/*/src/**.c"
       - "package/**"
+      - "!*.md"
+      - "!*.properties"
   schedule:
     - cron: "0 2 * * *"
 
