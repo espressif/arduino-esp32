@@ -313,7 +313,7 @@ String BLERemoteDescriptor::readValue() {
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
       /* Else falls through. */
@@ -459,7 +459,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
       /* Else falls through. */

@@ -846,7 +846,7 @@ String BLERemoteCharacteristic::readValue() {
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
       /* Else falls through. */
@@ -928,10 +928,10 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
-        /* Else falls through. */
+      /* Else falls through. */
       default: goto exit;
     }
   } while (rc != 0 && retryCount--);

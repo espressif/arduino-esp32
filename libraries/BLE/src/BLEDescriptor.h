@@ -42,6 +42,8 @@
 #include <host/ble_att.h>
 #include "BLEConnInfo.h"
 
+// Bluedroid compatibility
+// NimBLE does not support signed reads and writes
 #define ESP_GATT_PERM_READ                BLE_ATT_F_READ
 #define ESP_GATT_PERM_WRITE               BLE_ATT_F_WRITE
 #define ESP_GATT_PERM_READ_ENCRYPTED      BLE_ATT_F_READ_ENC

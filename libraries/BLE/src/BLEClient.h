@@ -209,9 +209,6 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   virtual bool onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params);
-  virtual uint32_t onPassKeyRequest();
-  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
-  virtual bool onConfirmPIN(uint32_t pin);
 #endif
 };
 

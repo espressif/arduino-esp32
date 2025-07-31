@@ -129,6 +129,9 @@ public:
   BLEService *getServiceByUUID(const char *uuid);
   BLEService *getServiceByUUID(BLEUUID uuid);
   void start();
+#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
+  void advertiseOnDisconnect(bool enable);
+#endif
 
   // Connection management functions
   std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
@@ -174,6 +177,9 @@ private:
   uint32_t m_connectedCount;
   bool m_gattsStarted;
   std::map<uint16_t, conn_status_t> m_connectedServersMap;
+#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
+  bool m_advertiseOnDisconnect;
+#endif
   FreeRTOS::Semaphore m_semaphoreRegisterAppEvt = FreeRTOS::Semaphore("RegisterAppEvt");
   FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
   FreeRTOS::Semaphore m_semaphoreOpenEvt = FreeRTOS::Semaphore("OpenEvt");
@@ -261,9 +267,6 @@ public:
   virtual void onConnect(BLEServer *pServer, ble_gap_conn_desc *desc);
   virtual void onDisconnect(BLEServer *pServer, ble_gap_conn_desc *desc);
   virtual void onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *desc, uint16_t mtu);
-  virtual uint32_t onPassKeyRequest();
-  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
-  virtual bool onConfirmPIN(uint32_t pin);
 #endif
 };  // BLEServerCallbacks
 
