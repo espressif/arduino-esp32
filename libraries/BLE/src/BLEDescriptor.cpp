@@ -207,7 +207,7 @@ void BLEDescriptor::setValue(const String &value) {
   setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
 }  // setValue
 
-void BLEDescriptor::setAccessPermissions(uint8_t perm) {
+void BLEDescriptor::setAccessPermissions(uint16_t perm) {
   m_permissions = perm;
 }
 
