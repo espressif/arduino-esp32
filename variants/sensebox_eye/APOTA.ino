@@ -227,14 +227,18 @@ void setupOTA() {
           if (displayEnabled) {
             displayStatusBar(progress);  // Update progress on display
           }
+          rgb_led.setPixelColor(0, rgb_led.Color(255, 255, 51));
+          rgb_led.show();
         }
       } else if (upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {  //true to set the size to the current progress
           if (displayEnabled) {
             displaySuccessScreen();
+            delay(3000);
+            wipeDisplay();
           }
-          delay(3000);
-          wipeDisplay();
+          rgb_led.setPixelColor(0, rgb_led.Color(51, 51, 255));
+          rgb_led.show();
         } else {
           Update.printError(Serial);
         }
