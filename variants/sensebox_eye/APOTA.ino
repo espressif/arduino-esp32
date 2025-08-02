@@ -84,19 +84,19 @@ void IRAM_ATTR handleButtonPress() {
   }
 }
 
-// Function to switch the boot partition to OTA1
+// Function to switch the boot partition to OTA0
 void setBootPartitionToOTA0() {
   const esp_partition_t *ota0_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
 
   if (ota0_partition) {
-    // Set OTA1 as new boot partition
+    // Set OTA0 as new boot partition
     esp_ota_set_boot_partition(ota0_partition);
     Serial.println("Boot partition changed to OTA0. Restarting...");
 
     // Restart to boot from the new partition
     esp_restart();
   } else {
-    Serial.println("OTA1 partition not found!");
+    Serial.println("OTA0 partition not found!");
   }
 }
 
