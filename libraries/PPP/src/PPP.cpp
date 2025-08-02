@@ -747,6 +747,18 @@ String PPPClass::cmd(const char *at_command, int timeout) {
   return String(out);
 }
 
+String PPPClass::cmd_raw(const char *at_command, int timeout) {
+  PPP_CMD_MODE_CHECK(String());
+
+  char out[CONFIG_ESP_MODEM_C_API_STR_MAX] = {0};
+  esp_err_t err = _esp_modem_at_raw(_dce, at_command, out, "OK", "ERROR", timeout);
+  if (err != ESP_OK) {
+    log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
+    return String();
+  }
+  return String(out);
+}
+
 size_t PPPClass::printDriverInfo(Print &out) const {
   size_t bytes = 0;
   if (_dce == NULL || _mode == ESP_MODEM_MODE_DATA) {
