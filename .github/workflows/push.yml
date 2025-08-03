@@ -96,7 +96,7 @@ jobs:
               - 'libraries/Network/src/**'
             fs:
               - 'libraries/FS/src/**'
-            static_sketeches:
+            static_sketches:
               - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
               - 'libraries/BLE/examples/Server/Server.ino'
               - 'libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino'
@@ -112,7 +112,7 @@ jobs:
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
           BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
-          BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+          BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketches_any_changed == 'true' }}
           FS_CHANGED: ${{ steps.changed-files.outputs.fs_any_changed == 'true' }}
           NETWORKING_CHANGED: ${{ steps.changed-files.outputs.networking_any_changed == 'true' }}
           CORE_CHANGED: ${{ steps.changed-files.outputs.core_any_changed == 'true' }}
