@@ -57,27 +57,27 @@ static const uint8_t D13 = 17;
  */
 #define PIN_SSD1312_SDA (14)
 #define PIN_SSD1312_SCL (13)  // DC
-#define PIN_OLED_EN (12)
+#define PIN_OLED_EN     (12)
 
 /*
  * LoRa
  */
-#define PIN_SX126X_NSS (45)
-#define PIN_SX126X_DIO1 (42)
-#define PIN_SX126X_BUSY (43)
+#define PIN_SX126X_NSS   (45)
+#define PIN_SX126X_DIO1  (42)
+#define PIN_SX126X_BUSY  (43)
 #define PIN_SX126X_RESET (44)
-#define PIN_SX126X_TXEN (-1)
-#define PIN_SX126X_RXEN (46)
+#define PIN_SX126X_TXEN  (-1)
+#define PIN_SX126X_RXEN  (46)
 #define SX126X_DIO2_AS_RF_SWITCH
 #define SX126X_DIO3_TCXO_VOLTAGE 1.8
 
 /*
  * MFP Pins
  */
-#define PIN_MFP1 (38)
-#define PIN_MFP2 (37)
-#define PIN_MFP3 (36)
-#define PIN_MFP4 (35)
+#define PIN_MFP1    (38)
+#define PIN_MFP2    (37)
+#define PIN_MFP3    (36)
+#define PIN_MFP4    (35)
 #define PIN_MFP_PWR (1)
 
 #endif /* Pins_Arduino_h */
