@@ -1,5 +1,5 @@
 // ESP32 Touch Test
-// Just test touch pin - Touch0 is T0 which is on GPIO 4.
+// Just test touch pin - Touch2 is T2 which is on GPIO 2.
 
 void setup() {
   Serial.begin(115200);
@@ -8,6 +8,6 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(touchRead(T1));  // get value using T0
+  Serial.println(touchRead(T2));  // get value using T2
   delay(1000);
 }
