@@ -1,6 +1,6 @@
-# Arduino-ESP32 Zigbee Binary Input Example
+# Arduino-ESP32 Zigbee Binary Input Output Example
 
-This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) binary input device with two different applications: HVAC fan status and security zone armed status.
+This example shows how to configure the Zigbee end device and use it as a Home Automation (HA) binary input/output device with multiple applications: HVAC fan status/control, security zone armed status, and HVAC humidifier control.
 
 # Supported Targets
 
@@ -9,12 +9,17 @@ Currently, this example supports the following targets.
 | Supported Targets | ESP32-C6 | ESP32-H2 |
 | ----------------- | -------- | -------- |
 
-## Binary Input Functions
+## Binary Input/Output Functions
 
- * The example implements two binary inputs:
-   - HVAC Fan Status: Reports the current state of a fan
-   - Security Zone Armed: Reports the armed state of a security zone
- * By clicking the button (BOOT) on this board, it will toggle both binary inputs and immediately send a report of their states to the network.
+ * The example implements three binary devices:
+   - **Binary Fan Device (Endpoint 1)**: 
+     - Binary Input: HVAC Fan Status - Reports the current state of a fan
+     - Binary Output: HVAC Fan - Controls the fan switch with callback function
+   - **Binary Zone Device (Endpoint 2)**:
+     - Binary Input: Security Zone Armed - Reports the armed state of a security zone
+   - **Binary Humidifier Device (Endpoint 3)**:
+     - Binary Output: HVAC Humidifier - Controls the humidifier switch with callback function
+ * By clicking the button (BOOT) on this board, it will toggle all binary inputs/outputs and immediately send a report of their states to the network.
  * Holding the button for more than 3 seconds will trigger a factory reset of the Zigbee device.
 
 ## Hardware Required
