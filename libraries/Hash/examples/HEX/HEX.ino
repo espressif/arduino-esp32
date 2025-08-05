@@ -1,3 +1,9 @@
+/*
+  Usage example for the HEXBuilder class.
+
+  This example shows how to convert a HEX string to a binary buffer and vice versa.
+*/
+
 #include <HEXBuilder.h>
 
 void setup() {
