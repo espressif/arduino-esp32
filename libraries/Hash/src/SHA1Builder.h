@@ -32,19 +32,16 @@ private:
   void process(const uint8_t *data);
 
 public:
-  void begin() override;
-
   using HashBuilder::add;
+
+  void begin() override;
   void add(const uint8_t *data, size_t len) override;
-
-  using HashBuilder::addHexString;
-  void addHexString(const char *data) override;
-
   bool addStream(Stream &stream, const size_t maxLen) override;
   void calculate() override;
   void getBytes(uint8_t *output) override;
   void getChars(char *output) override;
   String toString() override;
+  size_t getHashSize() const override { return SHA1_HASH_SIZE; }
 };
 
 #endif
