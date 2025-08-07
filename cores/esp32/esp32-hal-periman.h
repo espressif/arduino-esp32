@@ -136,7 +136,7 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
 
 // Get the peripheral destructor callback. It allows changing/restoring the peripheral pin function detaching, if necessary
 // retrns NULL is none is set
-peripheral_bus_deinit_cb_t perimanSetBusDeinit(peripheral_bus_type_t type);
+peripheral_bus_deinit_cb_t perimanGetBusDeinit(peripheral_bus_type_t type);
 
 // Check if given pin is a valid GPIO number
 bool perimanPinIsValid(uint8_t pin);
