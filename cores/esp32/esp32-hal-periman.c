@@ -236,7 +236,7 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
   return true;
 }
 
-peripheral_bus_deinit_cb_t perimanSetBusDeinit(peripheral_bus_type_t type) {
+peripheral_bus_deinit_cb_t perimanGetBusDeinit(peripheral_bus_type_t type) {
   if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
     log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
     return NULL;
