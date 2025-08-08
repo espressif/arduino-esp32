@@ -78,6 +78,12 @@ public:
     return cmd(at_command.c_str(), timeout);
   }
 
+  // Send AT command in raw mode (doesn’t append ‘\r’ to command, returns everything) with timeout in milliseconds
+  String cmd_raw(const char *at_command, int timeout);
+  String cmd_raw(String at_command, int timeout) {
+    return cmd_raw(at_command.c_str(), timeout);
+  }
+
   // untested
   bool powerDown();
   bool reset();
