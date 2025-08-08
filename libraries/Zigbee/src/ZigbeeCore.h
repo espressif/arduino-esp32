@@ -206,6 +206,8 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ZIGBEE)
 extern ZigbeeCore Zigbee;
+#endif
 
 #endif  // CONFIG_ZB_ENABLED
