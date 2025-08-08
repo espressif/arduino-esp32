@@ -462,18 +462,34 @@ private:
  * FATFS API
  * */
 
+/**
+ * @brief Initialize the SD card and prepare it for use with the FATFS filesystem.
+ *
+ * This function performs the low-level initialization sequence for an SD card
+ * over SPI, following the SD card protocol. It sends the required commands to
+ * bring the card out of idle state, checks for card type (SDv1, SDv2, SDHC, MMC),
+ * and configures the card for block access. The function also handles error
+ * conditions and sets the card status accordingly.
+ *
+ * @param pdrv Physical drive number (index into s_cards array).
+ * @return DSTATUS Status of the disk after initialization.
+ */
 DSTATUS ff_sd_initialize(uint8_t pdrv) {
   char token;
   unsigned int resp;
   unsigned int start;
+  // Get the card structure for the given drive number
   ardu_sdcard_t *card = s_cards[pdrv];
 
+  // If the card is already initialized, return its status
   if (!(card->status & STA_NOINIT)) {
     return card->status;
   }
 
+  // Lock the SPI bus and set it to a low frequency (400kHz) for initialization
   AcquireSPI card_locked(card, 400000);
 
+  // Send at least 74 clock cycles with CS high and MOSI high (send 0xFF)
   digitalWrite(card->ssPin, HIGH);
   for (uint8_t i = 0; i < 20; i++) {
     card->spi->transfer(0XFF);
