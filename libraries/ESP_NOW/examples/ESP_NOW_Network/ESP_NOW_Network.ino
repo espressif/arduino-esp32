@@ -32,6 +32,7 @@
 #include <esp_mac.h>  // For the MAC2STR and MACSTR macros
 
 #include <vector>
+#include <new>  //std::nothrow
 
 /* Definitions */
 
@@ -235,7 +236,7 @@ void register_new_peer(const esp_now_recv_info_t *info, const uint8_t *data, int
 
   if (current_peer_count < ESPNOW_PEER_COUNT) {
     Serial.printf("New peer found: " MACSTR " with priority %d\n", MAC2STR(info->src_addr), priority);
-    ESP_NOW_Network_Peer *new_peer = new ESP_NOW_Network_Peer(info->src_addr, priority);
+    ESP_NOW_Network_Peer *new_peer = new (std::nothrow) ESP_NOW_Network_Peer(info->src_addr, priority);
     if (new_peer == nullptr || !new_peer->begin()) {
       Serial.println("Failed to create or register the new peer");
       delete new_peer;

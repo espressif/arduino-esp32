@@ -162,7 +162,9 @@ private:
   void populateMulticastAddressCache() const;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_OPENTHREAD)
 extern OpenThread OThread;
+#endif
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

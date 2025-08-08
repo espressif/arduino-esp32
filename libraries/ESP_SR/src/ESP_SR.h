@@ -33,6 +33,8 @@ public:
   esp_err_t _fill(void *out, size_t len, size_t *bytes_read, uint32_t timeout_ms);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ESP_SR)
 extern ESP_SR_Class ESP_SR;
+#endif
 
 #endif  // CONFIG_IDF_TARGET_ESP32S3
