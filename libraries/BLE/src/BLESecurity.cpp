@@ -35,7 +35,19 @@
  *                         Common properties                               *
  ***************************************************************************/
 
+uint8_t BLESecurity::m_iocap = 0;
+uint8_t BLESecurity::m_authReq = 0;
+uint8_t BLESecurity::m_initKey = 0;
+uint8_t BLESecurity::m_respKey = 0;
 uint32_t BLESecurity::m_passkey = BLE_SM_DEFAULT_PASSKEY;
+
+/***************************************************************************
+ *                         Bluedroid properties                            *
+ ***************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+uint8_t BLESecurity::m_keySize = 16;
+#endif
 
 /***************************************************************************
  *                          Common functions                               *
