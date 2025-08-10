@@ -1,11 +1,11 @@
 /*
   ────────────────────────────────────────────────────────────────────────
-  KodeDot – ESP32-S3R8  Variant
+  KodeDot – ESP32-S3R8  Variant (rev. with OPI flash/PSRAM)
   Pin definition file for the Arduino-ESP32 core
   ────────────────────────────────────────────────────────────────────────
   * External 2 × 10 connector → simple aliases  PIN1 … PIN20
   * On-board QSPI LCD 410×502 @40 MHz  (SPI3_HOST)
-  * micro-SD on SPI2_HOST
+  * micro-SD on SDMMC (1-bit)
   * Dual-I²C:  external (GPIO37/36)  +  internal-sensors (GPIO48/47)
   * USB VID/PID 0x303A:0x1001
 */
@@ -33,13 +33,12 @@ static const uint8_t SDA = 36;  // GPIO36 – PIN14
 #define INT_I2C_SCL 47  // GPIO47
 #define INT_I2C_SDA 48  // GPIO48
 
-/*──────────────── SPI2 – micro-SD ───────────────────────*/
-static const uint8_t SS = 15;    // SD_CS
-static const uint8_t MOSI = 16;  // SD_MOSI
-static const uint8_t MISO = 18;  // SD_MISO
-static const uint8_t SCK = 17;   // SD_CLK
-#define BOARD_HAS_SD_SPI
-#define SD_CS SS
+/*──────────────── SDMMC – micro-SD (1-bit) ───────────────*/
+#define BOARD_HAS_SD_SDMMC
+#define SDMMC_CMD 5   // SD_CMD
+#define SDMMC_CLK 6   // SD_CLK
+#define SDMMC_D0  7   // SD_D0
+#define SD_CS     -1  // No CS pin in SDMMC mode
 
 /*──────────────── QSPI LCD (SPI3_HOST) ─────────────────–
  * Controller: ST7789 / 4-line SPI (no D/C pin)
@@ -52,16 +51,14 @@ static const uint8_t SCK = 17;   // SD_CLK
 #define LCD_HEIGHT 502
 
 #define LCD_HOST SPI3_HOST
-#define LCD_SCK  35  // GPIO35  • QSPI_CLK
-#define LCD_MOSI 33  // GPIO33  • QSPI_IO0 (D0)
-#define LCD_IO1  34  // GPIO34  • QSPI_IO1 (D1)
-#define LCD_IO2  37  // GPIO37  • QSPI_IO2 (D2)
-#define LCD_IO3  36  // GPIO36  • QSPI_IO3 (D3)
-#define LCD_CS   10  // GPIO10
-#define LCD_RST  9   // GPIO09
+#define LCD_SCK  17  // GPIO17  • QSPI_CLK
+#define LCD_MOSI 15  // GPIO15  • QSPI_IO0 (D0)
+#define LCD_IO1  14  // GPIO14  • QSPI_IO1 (D1)
+#define LCD_IO2  16  // GPIO16  • QSPI_IO2 (D2)
+#define LCD_IO3  10  // GPIO10  • QSPI_IO3 (D3)
+#define LCD_CS   9   // GPIO09
+#define LCD_RST  8   // GPIO08
 #define LCD_DC   -1  // not used in 4-line SPI
-/* Optional: back-light enable shares the NeoPixel pin */
-#define LCD_BL 5  // GPIO05 (same as NEOPIXEL)
 
 /*──────────────── Analog / Touch pads ────────────────*/
 static const uint8_t A0 = 11;  // PIN4  – GPIO11 / TOUCH11 / ADC2_CH0
@@ -71,9 +68,9 @@ static const uint8_t A3 = 14;  // PIN10 – GPIO14 / TOUCH14 / ADC2_CH3
 static const uint8_t T0 = A0, T1 = A1, T2 = A2, T3 = A3;
 
 /*──────────────── On-board controls & indicator ─────────*/
-#define BUTTON_TOP    0  // GPIO00 – BOOT    • active-LOW
-#define BUTTON_BOTTOM 6  // GPIO06           • active-LOW
-#define NEOPIXEL_PIN  5  // GPIO05 – WS2812
+#define BUTTON_TOP    0   // GPIO00 – BOOT    • active-LOW
+#define BUTTON_BOTTOM -1  // via IO expander  • no direct GPIO
+#define NEOPIXEL_PIN  4   // GPIO04 – WS2812
 #define LED_BUILTIN   NEOPIXEL_PIN
 
 /*──────────────── JTAG (also on connector) ──────────────*/
