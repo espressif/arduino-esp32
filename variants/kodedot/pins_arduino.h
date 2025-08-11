@@ -101,4 +101,10 @@ static const uint8_t T0 = A0, T1 = A1, T2 = A2, T3 = A3;
 /* PIN1, PIN2, PIN19, PIN20 are power/ground and deliberately
    left undefined – they are **not** usable as GPIO. */
 
+/* ==== Default SPI pins for library compatibility ==== */
+#define SCK  17   // LCD_SCK  • QSPI_CLK
+#define MISO -1   // No MISO available in this design
+#define MOSI 15   // LCD_MOSI • QSPI_IO0
+#define SS    9   // LCD_CS
+
 #endif /* Pins_Arduino_h */
