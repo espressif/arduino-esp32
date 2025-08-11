@@ -56,6 +56,11 @@ concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+  pull-requests: read
+  pages: write
+
 env:
   MAX_CHUNKS: 15
 

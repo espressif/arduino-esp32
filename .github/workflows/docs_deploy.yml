@@ -13,6 +13,9 @@ on:
       - "docs/**"
       - ".github/workflows/docs_deploy.yml"
 
+permissions:
+  contents: read
+
 jobs:
   deploy-prod-docs:
     name: Deploy Documentation on Production
