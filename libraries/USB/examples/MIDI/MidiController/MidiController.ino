@@ -20,7 +20,7 @@ void loop() {}
 
 #include "USB.h"
 #include "USBMIDI.h"
-// Create the MIDI device with specific descriptor
+// Creates the MIDI device with specific descriptor
 USBMIDI MIDI("ESP MIDI Device");
 
 #define MIDI_NOTE_C4 60
