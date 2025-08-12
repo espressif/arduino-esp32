@@ -19,7 +19,7 @@ typedef struct {
 
 class USBMIDI {
 public:
-  USBMIDI(void);
+  USBMIDI(String devDescName = "TinyUSB MIDI");
   void begin(void);
   void end(void);
 
