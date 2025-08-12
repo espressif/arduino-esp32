@@ -41542,11 +41542,11 @@ sensebox_eye.upload.maximum_size=1310720
 sensebox_eye.upload.maximum_data_size=327680
 sensebox_eye.upload.flags=
 sensebox_eye.upload.extra_flags=
-sensebox_eye.upload.use_1200bps_touch=true
-sensebox_eye.upload.wait_for_upload_port=true
+sensebox_eye.upload.use_1200bps_touch=false
+sensebox_eye.upload.wait_for_upload_port=false
 
-sensebox_eye.serial.disableDTR=true
-sensebox_eye.serial.disableRTS=true
+sensebox_eye.serial.disableDTR=false
+sensebox_eye.serial.disableRTS=false
 
 sensebox_eye.build.tarch=xtensa
 sensebox_eye.build.bootloader_addr=0x0
