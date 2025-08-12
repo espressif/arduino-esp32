@@ -11,14 +11,14 @@
 
 static bool tinyusb_midi_descriptor_loaded = false;
 static bool tinyusb_midi_interface_enabled = false;
+static String deviceDescriptor("");
 
 extern "C" uint16_t tusb_midi_load_descriptor(uint8_t *dst, uint8_t *itf) {
   if (tinyusb_midi_descriptor_loaded) {
     return 0;
   }
   tinyusb_midi_descriptor_loaded = true;
-
-  uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB MIDI");
+  uint8_t str_index = tinyusb_add_string_descriptor(deviceDescriptor.c_str());
   uint8_t ep_in = tinyusb_get_free_in_endpoint();
   TU_VERIFY(ep_in != 0);
   uint8_t ep_out = tinyusb_get_free_out_endpoint();
@@ -32,9 +32,10 @@ extern "C" uint16_t tusb_midi_load_descriptor(uint8_t *dst, uint8_t *itf) {
   return TUD_MIDI_DESC_LEN;
 }
 
-USBMIDI::USBMIDI() {
+USBMIDI::USBMIDI(String devDescName = "TinyUSB MIDI") {
   if (!tinyusb_midi_interface_enabled) {
     tinyusb_midi_interface_enabled = true;
+    deviceDescriptor = devDescName;
     tinyusb_enable_interface(USB_INTERFACE_MIDI, TUD_MIDI_DESC_LEN, tusb_midi_load_descriptor);
   } else {
     log_e("USBMIDI: Multiple instances of USBMIDI not supported!");
