@@ -32,7 +32,7 @@ extern "C" uint16_t tusb_midi_load_descriptor(uint8_t *dst, uint8_t *itf) {
   return TUD_MIDI_DESC_LEN;
 }
 
-USBMIDI::USBMIDI(String devDescName = "TinyUSB MIDI") {
+USBMIDI::USBMIDI(String devDescName) {
   if (!tinyusb_midi_interface_enabled) {
     tinyusb_midi_interface_enabled = true;
     deviceDescriptor = devDescName;
