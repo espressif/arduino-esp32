@@ -12,9 +12,22 @@ with open(sys.argv[1], "r") as f:
     data = json.load(f)
     tests = sorted(data["stats"]["suite_details"], key=lambda x: x["name"])
 
+# Get commit SHA from command line argument or environment variable
+commit_sha = None
+if len(sys.argv) < 2 or len(sys.argv) > 3:
+    print("Usage: python table_generator.py <test_results.json> [commit_sha]")
+    sys.exit(1)
+elif len(sys.argv) == 3: # Commit SHA is provided as argument
+    commit_sha = sys.argv[2]
+elif "GITHUB_SHA" in os.environ: # Commit SHA is provided as environment variable
+    commit_sha = os.environ["GITHUB_SHA"]
+else: # Commit SHA is not provided
+    print("Commit SHA is not provided. Please provide it as an argument or set the GITHUB_SHA environment variable.")
+    sys.exit(1)
+
 # Generate the table
 
-print("## Runtime Tests Report")
+print("## Runtime Test Results")
 print("")
 
 try:
@@ -99,6 +112,21 @@ print(f"Generated on: {datetime.now().strftime('%Y/%m/%d %H:%M:%S')}")
 print("")
 
 try:
-    print(f"[Build, Hardware and QEMU run](https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['BUILD_RUN_ID']}) / [Wokwi run](https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['WOKWI_RUN_ID']})")
+    print(f"[Commit](https://github.com/{os.environ['GITHUB_REPOSITORY']}/commit/{commit_sha}) / [Build, Hardware and QEMU run](https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['BUILD_RUN_ID']}) / [Wokwi run](https://github.com/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['WOKWI_RUN_ID']})")
 except KeyError:
     pass
+
+# Save test results to JSON file
+results_data = {
+    "commit_sha": commit_sha,
+    "tests_failed": os.environ["IS_FAILING"] == "true",
+    "test_data": proc_test_data,
+    "generated_at": datetime.now().isoformat()
+}
+
+with open("test_results.json", "w") as f:
+    json.dump(results_data, f, indent=2)
+
+print(f"\nTest results saved to test_results.json")
+print(f"Commit SHA: {commit_sha}")
+print(f"Tests failed: {results_data['tests_failed']}")
