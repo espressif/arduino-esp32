@@ -12,6 +12,11 @@ env:
   SKETCHES_REPORTS_PATH: artifacts/sizes-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+permissions:
+  contents: read
+  pull-requests: write
+  pages: write
+
 jobs:
   sizes-test-results:
     name: Sizes Comparison Results

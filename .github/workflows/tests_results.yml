@@ -7,7 +7,8 @@ on:
       - completed
 
 # No permissions by default
-permissions: { contents: read }
+permissions:
+  contents: read
 
 jobs:
   unit-test-results:

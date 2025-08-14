@@ -12,6 +12,10 @@ env:
   SKETCHES_REPORTS_PATH: artifacts/libraries-report
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   lib-test-results:
     name: External Libraries Test Results

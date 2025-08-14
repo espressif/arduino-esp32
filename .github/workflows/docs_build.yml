@@ -13,6 +13,9 @@ on:
       - "docs/**"
       - ".github/workflows/docs_build.yml"
 
+permissions:
+  contents: read
+
 jobs:
   build-docs:
     name: Build ESP-Docs

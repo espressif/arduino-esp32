@@ -9,6 +9,10 @@ env:
   RESULT_SIZES_TEST_FILE: SIZES_TEST.md
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sizes-test-results:
     name: Sizes Comparison Results

@@ -9,6 +9,10 @@ on:
       - "tools/gen_esp32part.py"
       - "tools/gen_insights_package.py"
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   find-changed-tools:
     name: Check if tools have been changed

@@ -12,6 +12,9 @@ on:
         description: "Chip to run tests for"
         required: true
 
+permissions:
+  contents: read
+
 env:
   DEBIAN_FRONTEND: noninteractive
 
