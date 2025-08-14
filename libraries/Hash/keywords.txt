@@ -1,0 +1,51 @@
+#######################################
+# Syntax Coloring Map For Hash
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+HashBuilder	KEYWORD1
+HEXBuilder	KEYWORD1
+MD5Builder	KEYWORD1
+SHA1Builder	KEYWORD1
+SHA2Builder	KEYWORD1
+SHA224Builder	KEYWORD1
+SHA256Builder	KEYWORD1
+SHA384Builder	KEYWORD1
+SHA512Builder	KEYWORD1
+SHA3Builder	KEYWORD1
+PBKDF2_HMACBuilder	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+add	KEYWORD2
+addHexString	KEYWORD2
+addStream	KEYWORD2
+calculate	KEYWORD2
+getBytes	KEYWORD2
+getChars	KEYWORD2
+toString	KEYWORD2
+hex2bytes	KEYWORD2
+bytes2hex	KEYWORD2
+getHashSize	KEYWORD2
+setPassword	KEYWORD2
+setSalt	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SHA1_HASH_SIZE	LITERAL1
+SHA2_224_HASH_SIZE	LITERAL1
+SHA2_256_HASH_SIZE	LITERAL1
+SHA2_384_HASH_SIZE	LITERAL1
+SHA2_512_HASH_SIZE	LITERAL1
+SHA3_224_HASH_SIZE	LITERAL1
+SHA3_256_HASH_SIZE	LITERAL1
+SHA3_384_HASH_SIZE	LITERAL1
+SHA3_512_HASH_SIZE	LITERAL1

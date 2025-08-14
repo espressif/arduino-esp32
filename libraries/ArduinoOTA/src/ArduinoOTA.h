@@ -54,7 +54,7 @@ public:
   //Sets the password that will be required for OTA. Default NULL
   ArduinoOTAClass &setPassword(const char *password);
 
-  //Sets the password as above but in the form MD5(password). Default NULL
+  //Sets the password as above but in the form SHA256(password). Default NULL
   ArduinoOTAClass &setPasswordHash(const char *password);
 
   //Sets the partition label to write to when updating SPIFFS. Default NULL

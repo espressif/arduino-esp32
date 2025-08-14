@@ -17,8 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <Arduino.h>
-#include <HEXBuilder.h>
+#include "HEXBuilder.h"
 
 static uint8_t hex_char_to_byte(uint8_t c) {
   return (c >= 'a' && c <= 'f')   ? (c - ((uint8_t)'a' - 0xa))
