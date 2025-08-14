@@ -15,14 +15,14 @@ with open(sys.argv[1], "r") as f:
 # Get commit SHA from command line argument or environment variable
 commit_sha = None
 if len(sys.argv) < 2 or len(sys.argv) > 3:
-    print("Usage: python table_generator.py <test_results.json> [commit_sha]")
+    print("Usage: python table_generator.py <test_results.json> [commit_sha]", file=sys.stderr)
     sys.exit(1)
 elif len(sys.argv) == 3: # Commit SHA is provided as argument
     commit_sha = sys.argv[2]
 elif "GITHUB_SHA" in os.environ: # Commit SHA is provided as environment variable
     commit_sha = os.environ["GITHUB_SHA"]
 else: # Commit SHA is not provided
-    print("Commit SHA is not provided. Please provide it as an argument or set the GITHUB_SHA environment variable.")
+    print("Commit SHA is not provided. Please provide it as an argument or set the GITHUB_SHA environment variable.", file=sys.stderr)
     sys.exit(1)
 
 # Generate the table
@@ -41,7 +41,6 @@ except KeyError:
     pass
 
 print("### Validation Tests")
-print("")
 
 proc_test_data = {}
 target_list = []
@@ -76,6 +75,7 @@ for test in tests:
 target_list = sorted(target_list)
 
 for platform in proc_test_data:
+    print("")
     print(f"#### {platform.capitalize()}")
     print("")
     print("Test", end="")
@@ -127,6 +127,6 @@ results_data = {
 with open("test_results.json", "w") as f:
     json.dump(results_data, f, indent=2)
 
-print(f"\nTest results saved to test_results.json")
-print(f"Commit SHA: {commit_sha}")
-print(f"Tests failed: {results_data['tests_failed']}")
+print(f"\nTest results saved to test_results.json", file=sys.stderr)
+print(f"Commit SHA: {commit_sha}", file=sys.stderr)
+print(f"Tests failed: {results_data['tests_failed']}", file=sys.stderr)
