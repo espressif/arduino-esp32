@@ -105,7 +105,7 @@ public:
   size_t writeString(int address, const char *value);
   size_t writeString(int address, String value);
   size_t writeBytes(int address, const void *value, size_t len);
-  template<class T> T writeAll(int address, const T &);
+  template<class T> size_t writeAll(int address, const T &);
 
 protected:
   nvs_handle _handle;

@@ -72,6 +72,8 @@ public:
   bool isProvEnabled();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_WIFI)
 extern WiFiClass WiFi;
+#endif
 
 #endif /* SOC_WIFI_SUPPORTED */

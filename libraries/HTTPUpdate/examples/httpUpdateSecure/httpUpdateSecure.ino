@@ -32,7 +32,8 @@ void setClock() {
   struct tm timeinfo;
   gmtime_r(&now, &timeinfo);
   Serial.print(F("Current time: "));
-  Serial.print(asctime(&timeinfo));
+  char buf[26];
+  Serial.print(asctime_r(&timeinfo, buf));
 }
 
 /**
