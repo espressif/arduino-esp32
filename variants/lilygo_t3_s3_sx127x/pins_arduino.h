@@ -35,7 +35,6 @@ static const uint8_t SCK = 14;
 #define LORA_CS   7  // SX1276/SX1278 CS
 #define LORA_RST  8  // SX1276/SX1278 RST
 
-#define LORA_BUSY 33
 #define LORA_DIO0 9  //IRQ
 #define LORA_DIO1 33
 #define LORA_DIO2 34
