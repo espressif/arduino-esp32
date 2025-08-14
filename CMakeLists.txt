@@ -54,6 +54,7 @@ set(CORE_SRCS
   cores/esp32/freertos_stats.cpp
   cores/esp32/FunctionalInterrupt.cpp
   cores/esp32/HardwareSerial.cpp
+  cores/esp32/HashBuilder.cpp
   cores/esp32/HEXBuilder.cpp
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
@@ -62,7 +63,6 @@ set(CORE_SRCS
   cores/esp32/main.cpp
   cores/esp32/MD5Builder.cpp
   cores/esp32/Print.cpp
-  cores/esp32/SHA1Builder.cpp
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
@@ -93,6 +93,7 @@ set(ARDUINO_ALL_LIBRARIES
   Ethernet
   FFat
   FS
+  Hash
   HTTPClient
   HTTPUpdate
   Insights
@@ -153,6 +154,13 @@ set(ARDUINO_LIBRARY_FFat_SRCS libraries/FFat/src/FFat.cpp)
 set(ARDUINO_LIBRARY_FS_SRCS
   libraries/FS/src/FS.cpp
   libraries/FS/src/vfs_api.cpp)
+
+set(ARDUINO_LIBRARY_Hash_SRCS
+  libraries/Hash/src/SHA1Builder.cpp
+  libraries/Hash/src/SHA2Builder.cpp
+  libraries/Hash/src/SHA3Builder.cpp
+  libraries/Hash/src/PBKDF2_HMACBuilder.cpp
+  )
 
 set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
 
