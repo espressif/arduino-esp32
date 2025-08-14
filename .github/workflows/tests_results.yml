@@ -172,6 +172,7 @@ jobs:
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
           touch $REPORT_FILE
           python3 ./runtime-test-results/table_generator.py ./runtime-test-results/unity_results.json >> $REPORT_FILE
+          mv -f ./test_results.json ./runtime-test-results/test_results.json
 
       - name: Generate badge
         if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled

@@ -117,25 +117,3 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
-
-  gitlab-tests:
-    name: Internal Hardware tests
-    runs-on: ubuntu-latest
-    if: false
-    # if: github.event_name == 'schedule'
-    steps:
-      # The decision to run the tests will be made inside GitLab
-      # GitLab should only perform the actual test execution and save the results as artifacts in
-      # a format that can be downloaded and parsed by this GitHub Actions workflow.
-
-
-
-      - name: Upload Internal Hardware test results as artifacts
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: test-results-gitlab
-          overwrite: true
-          path: |
-            tests/**/*.xml
-            tests/**/result_*.json
