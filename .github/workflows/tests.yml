@@ -63,13 +63,19 @@ jobs:
         run: |
           if [ ${{ github.event_name }} != 'pull_request' ]; then
           # if [ ${{ github.event_name }} == 'schedule' ]; then
-            last_run_commit=$(jq -r '.commit_sha' ./runtime-test-results/test_results.json)
+            if [ -f ./runtime-test-results/test_results.json ]; then
+              last_run_commit=$(jq -r '.commit_sha' ./runtime-test-results/test_results.json)
+              last_run_failed=$(jq -r '.tests_failed' ./runtime-test-results/test_results.json)
+            else
+              last_run_commit="none"
+              last_run_failed="true"
+            fi
             current_commit=${{ github.sha }}
-            if [ "$last_run_commit" == "$current_commit" ]; then
+            if [ "$last_run_commit" == "$current_commit" ] && [ "$last_run_failed" == "false" ]; then
               echo "Last run commit and current commit are the same. Skipping tests..."
               echo "run_tests=false" >> $GITHUB_OUTPUT
             else
-              echo "Last run commit and current commit are different. Running tests..."
+              echo "Last run commit and current commit are different or last run failed. Running tests..."
               echo "run_tests=true" >> $GITHUB_OUTPUT
             fi
           else
