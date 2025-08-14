@@ -51573,3 +51573,260 @@ fed4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 fed4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
+
+twinaiot.name=Twin AIoT Module
+
+twinaiot.bootloader.tool=esptool_py
+twinaiot.bootloader.tool.default=esptool_py
+
+twinaiot.upload.tool=esptool_py
+twinaiot.upload.tool.default=esptool_py
+twinaiot.upload.tool.network=esp_ota
+
+twinaiot.upload.maximum_size=1310720
+twinaiot.upload.maximum_data_size=327680
+twinaiot.upload.flags=
+twinaiot.upload.extra_flags=
+twinaiot.upload.use_1200bps_touch=false
+twinaiot.upload.wait_for_upload_port=false
+
+twinaiot.serial.disableDTR=false
+twinaiot.serial.disableRTS=false
+
+twinaiot.build.tarch=xtensa
+twinaiot.build.bootloader_addr=0x0
+twinaiot.build.target=esp32s3
+twinaiot.build.mcu=esp32s3
+twinaiot.build.core=esp32
+twinaiot.build.variant=twinaiot
+twinaiot.build.board=TWIN_AIOT
+
+twinaiot.build.usb_mode=1
+twinaiot.build.cdc_on_boot=0
+twinaiot.build.msc_on_boot=0
+twinaiot.build.dfu_on_boot=0
+twinaiot.build.f_cpu=240000000L
+twinaiot.build.flash_size=4MB
+twinaiot.build.flash_freq=80m
+twinaiot.build.flash_mode=dio
+twinaiot.build.boot=qio
+twinaiot.build.boot_freq=80m
+twinaiot.build.partitions=default
+twinaiot.build.defines=
+twinaiot.build.loop_core=
+twinaiot.build.event_core=
+twinaiot.build.psram_type=qspi
+twinaiot.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+twinaiot.menu.JTAGAdapter.default=Disabled
+twinaiot.menu.JTAGAdapter.default.build.copy_jtag_files=0
+twinaiot.menu.JTAGAdapter.builtin=Integrated USB JTAG
+twinaiot.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+twinaiot.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+twinaiot.menu.JTAGAdapter.external=FTDI Adapter
+twinaiot.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+twinaiot.menu.JTAGAdapter.external.build.copy_jtag_files=1
+twinaiot.menu.JTAGAdapter.bridge=ESP USB Bridge
+twinaiot.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+twinaiot.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+twinaiot.menu.PSRAM.disabled=Disabled
+twinaiot.menu.PSRAM.disabled.build.defines=
+twinaiot.menu.PSRAM.disabled.build.psram_type=qspi
+twinaiot.menu.PSRAM.enabled=QSPI PSRAM
+twinaiot.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+twinaiot.menu.PSRAM.enabled.build.psram_type=qspi
+twinaiot.menu.PSRAM.opi=OPI PSRAM
+twinaiot.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+twinaiot.menu.PSRAM.opi.build.psram_type=opi
+
+twinaiot.menu.FlashMode.qio=QIO 80MHz
+twinaiot.menu.FlashMode.qio.build.flash_mode=dio
+twinaiot.menu.FlashMode.qio.build.boot=qio
+twinaiot.menu.FlashMode.qio.build.boot_freq=80m
+twinaiot.menu.FlashMode.qio.build.flash_freq=80m
+twinaiot.menu.FlashMode.qio120=QIO 120MHz
+twinaiot.menu.FlashMode.qio120.build.flash_mode=dio
+twinaiot.menu.FlashMode.qio120.build.boot=qio
+twinaiot.menu.FlashMode.qio120.build.boot_freq=120m
+twinaiot.menu.FlashMode.qio120.build.flash_freq=80m
+twinaiot.menu.FlashMode.dio=DIO 80MHz
+twinaiot.menu.FlashMode.dio.build.flash_mode=dio
+twinaiot.menu.FlashMode.dio.build.boot=dio
+twinaiot.menu.FlashMode.dio.build.boot_freq=80m
+twinaiot.menu.FlashMode.dio.build.flash_freq=80m
+twinaiot.menu.FlashMode.opi=OPI 80MHz
+twinaiot.menu.FlashMode.opi.build.flash_mode=dout
+twinaiot.menu.FlashMode.opi.build.boot=opi
+twinaiot.menu.FlashMode.opi.build.boot_freq=80m
+twinaiot.menu.FlashMode.opi.build.flash_freq=80m
+
+twinaiot.menu.FlashSize.4M=4MB (32Mb)
+twinaiot.menu.FlashSize.4M.build.flash_size=4MB
+twinaiot.menu.FlashSize.8M=8MB (64Mb)
+twinaiot.menu.FlashSize.8M.build.flash_size=8MB
+twinaiot.menu.FlashSize.16M=16MB (128Mb)
+twinaiot.menu.FlashSize.16M.build.flash_size=16MB
+twinaiot.menu.FlashSize.32M=32MB (256Mb)
+twinaiot.menu.FlashSize.32M.build.flash_size=32MB
+
+twinaiot.menu.LoopCore.1=Core 1
+twinaiot.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+twinaiot.menu.LoopCore.0=Core 0
+twinaiot.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+twinaiot.menu.EventsCore.1=Core 1
+twinaiot.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+twinaiot.menu.EventsCore.0=Core 0
+twinaiot.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+twinaiot.menu.USBMode.hwcdc=Hardware CDC and JTAG
+twinaiot.menu.USBMode.hwcdc.build.usb_mode=1
+twinaiot.menu.USBMode.default=USB-OTG (TinyUSB)
+twinaiot.menu.USBMode.default.build.usb_mode=0
+
+twinaiot.menu.CDCOnBoot.default=Disabled
+twinaiot.menu.CDCOnBoot.default.build.cdc_on_boot=0
+twinaiot.menu.CDCOnBoot.cdc=Enabled
+twinaiot.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+twinaiot.menu.MSCOnBoot.default=Disabled
+twinaiot.menu.MSCOnBoot.default.build.msc_on_boot=0
+twinaiot.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+twinaiot.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+twinaiot.menu.DFUOnBoot.default=Disabled
+twinaiot.menu.DFUOnBoot.default.build.dfu_on_boot=0
+twinaiot.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+twinaiot.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+twinaiot.menu.UploadMode.default=UART0 / Hardware CDC
+twinaiot.menu.UploadMode.default.upload.use_1200bps_touch=false
+twinaiot.menu.UploadMode.default.upload.wait_for_upload_port=false
+twinaiot.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+twinaiot.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+twinaiot.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+twinaiot.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+twinaiot.menu.PartitionScheme.default.build.partitions=default
+twinaiot.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+twinaiot.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+twinaiot.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+twinaiot.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+twinaiot.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+twinaiot.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+twinaiot.menu.PartitionScheme.minimal.build.partitions=minimal
+twinaiot.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+twinaiot.menu.PartitionScheme.no_fs.build.partitions=no_fs
+twinaiot.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+twinaiot.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+twinaiot.menu.PartitionScheme.no_ota.build.partitions=no_ota
+twinaiot.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+twinaiot.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+twinaiot.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+twinaiot.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+twinaiot.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+twinaiot.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+twinaiot.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+twinaiot.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+twinaiot.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+twinaiot.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+twinaiot.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+twinaiot.menu.PartitionScheme.huge_app.build.partitions=huge_app
+twinaiot.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+twinaiot.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+twinaiot.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+twinaiot.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+twinaiot.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+twinaiot.menu.PartitionScheme.fatflash.build.partitions=ffat
+twinaiot.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+twinaiot.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+twinaiot.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+twinaiot.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+twinaiot.menu.PartitionScheme.rainmaker=RainMaker 4MB
+twinaiot.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+twinaiot.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+twinaiot.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+twinaiot.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+twinaiot.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+twinaiot.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+twinaiot.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+twinaiot.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+twinaiot.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+twinaiot.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+twinaiot.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+twinaiot.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+twinaiot.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+twinaiot.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+twinaiot.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+twinaiot.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+twinaiot.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+twinaiot.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+twinaiot.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+twinaiot.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+twinaiot.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+twinaiot.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+twinaiot.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+twinaiot.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+twinaiot.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+twinaiot.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+twinaiot.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+twinaiot.menu.PartitionScheme.custom=Custom
+twinaiot.menu.PartitionScheme.custom.build.partitions=
+twinaiot.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+twinaiot.menu.CPUFreq.240=240MHz (WiFi)
+twinaiot.menu.CPUFreq.240.build.f_cpu=240000000L
+twinaiot.menu.CPUFreq.160=160MHz (WiFi)
+twinaiot.menu.CPUFreq.160.build.f_cpu=160000000L
+twinaiot.menu.CPUFreq.80=80MHz (WiFi)
+twinaiot.menu.CPUFreq.80.build.f_cpu=80000000L
+twinaiot.menu.CPUFreq.40=40MHz
+twinaiot.menu.CPUFreq.40.build.f_cpu=40000000L
+twinaiot.menu.CPUFreq.20=20MHz
+twinaiot.menu.CPUFreq.20.build.f_cpu=20000000L
+twinaiot.menu.CPUFreq.10=10MHz
+twinaiot.menu.CPUFreq.10.build.f_cpu=10000000L
+
+twinaiot.menu.UploadSpeed.921600=921600
+twinaiot.menu.UploadSpeed.921600.upload.speed=921600
+twinaiot.menu.UploadSpeed.115200=115200
+twinaiot.menu.UploadSpeed.115200.upload.speed=115200
+twinaiot.menu.UploadSpeed.256000.windows=256000
+twinaiot.menu.UploadSpeed.256000.upload.speed=256000
+twinaiot.menu.UploadSpeed.230400.windows.upload.speed=256000
+twinaiot.menu.UploadSpeed.230400=230400
+twinaiot.menu.UploadSpeed.230400.upload.speed=230400
+twinaiot.menu.UploadSpeed.460800.linux=460800
+twinaiot.menu.UploadSpeed.460800.macosx=460800
+twinaiot.menu.UploadSpeed.460800.upload.speed=460800
+twinaiot.menu.UploadSpeed.512000.windows=512000
+twinaiot.menu.UploadSpeed.512000.upload.speed=512000
+
+twinaiot.menu.DebugLevel.none=None
+twinaiot.menu.DebugLevel.none.build.code_debug=0
+twinaiot.menu.DebugLevel.error=Error
+twinaiot.menu.DebugLevel.error.build.code_debug=1
+twinaiot.menu.DebugLevel.warn=Warn
+twinaiot.menu.DebugLevel.warn.build.code_debug=2
+twinaiot.menu.DebugLevel.info=Info
+twinaiot.menu.DebugLevel.info.build.code_debug=3
+twinaiot.menu.DebugLevel.debug=Debug
+twinaiot.menu.DebugLevel.debug.build.code_debug=4
+twinaiot.menu.DebugLevel.verbose=Verbose
+twinaiot.menu.DebugLevel.verbose.build.code_debug=5
+
+twinaiot.menu.EraseFlash.none=Disabled
+twinaiot.menu.EraseFlash.none.upload.erase_cmd=
+twinaiot.menu.EraseFlash.all=Enabled
+twinaiot.menu.EraseFlash.all.upload.erase_cmd=-e
+
+twinaiot.menu.ZigbeeMode.default=Disabled
+twinaiot.menu.ZigbeeMode.default.build.zigbee_mode=
+twinaiot.menu.ZigbeeMode.default.build.zigbee_libs=
+twinaiot.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+twinaiot.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+twinaiot.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
