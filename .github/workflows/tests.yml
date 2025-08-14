@@ -28,7 +28,7 @@ on:
       - "!*.md"
       - "!*.properties"
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 0 * * *"
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
@@ -45,9 +45,43 @@ jobs:
           name: event_file
           path: ${{ github.event_path }}
 
+  check-last-run:
+    name: Check last run
+    runs-on: ubuntu-latest
+    outputs:
+      run_tests: ${{ steps.last-run.outputs.run_tests }}
+    steps:
+      - name: Checkout
+        if: github.event_name != 'pull_request'
+        # if: github.event_name == 'schedule'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: gh-pages
+
+      - name: Get last run commit and compare with current commit
+        id: last-run
+        run: |
+          if [ ${{ github.event_name }} != 'pull_request' ]; then
+          # if [ ${{ github.event_name }} == 'schedule' ]; then
+            last_run_commit=$(jq -r '.commit_sha' ./runtime-test-results/test_results.json)
+            current_commit=${{ github.sha }}
+            if [ "$last_run_commit" == "$current_commit" ]; then
+              echo "Last run commit and current commit are the same. Skipping tests..."
+              echo "run_tests=false" >> $GITHUB_OUTPUT
+            else
+              echo "Last run commit and current commit are different. Running tests..."
+              echo "run_tests=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Not a schedule event. Continuing..."
+            echo "run_tests=true" >> $GITHUB_OUTPUT
+          fi
+
   gen-matrix:
     name: Generate matrix
     runs-on: ubuntu-latest
+    if: ${{ needs.check-last-run.outputs.run_tests }}
+    needs: check-last-run
     outputs:
       build-types: ${{ steps.set-matrix.outputs.build-types }}
       hw-types: ${{ steps.set-matrix.outputs.hw-types }}

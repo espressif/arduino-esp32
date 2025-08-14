@@ -135,9 +135,19 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          pattern: tests-results-hw-*
+          pattern: test-results-hw-*
           merge-multiple: true
           path: artifacts/results/hw
+
+      - name: Download and extract parent GitLab results
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        continue-on-error: true
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: test-results-gitlab
+          merge-multiple: true
+          path: artifacts/results/gitlab
 
       - name: Download and extract parent QEMU results
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
@@ -145,7 +155,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          pattern: tests-results-qemu-*
+          pattern: test-results-qemu-*
           merge-multiple: true
           path: artifacts/results/qemu
 
@@ -221,7 +231,7 @@ jobs:
         if: needs.get-artifacts.outputs.pr_num
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          key: tests-${{ env.id }}-results-wokwi
+          key: test-${{ env.id }}-results-wokwi
           path: |
             tests/**/*.xml
             tests/**/result_*.json
@@ -274,7 +284,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
-          name: tests-bin-${{ matrix.chip }}-${{ matrix.type }}
+          name: test-bin-${{ matrix.chip }}-${{ matrix.type }}
           path: |
             ~/.arduino/tests/${{ matrix.chip }}
 
@@ -289,7 +299,7 @@ jobs:
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         if: steps.check-tests.outputs.enabled == 'true' && needs.get-artifacts.outputs.pr_num
         with:
-          key: tests-${{ env.id }}-results-wokwi
+          key: test-${{ env.id }}-results-wokwi
           path: |
             tests/**/*.xml
             tests/**/result_*.json
@@ -298,7 +308,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: tests-results-wokwi-${{ matrix.chip }}-${{ matrix.type }}
+          name: test-results-wokwi-${{ matrix.chip }}-${{ matrix.type }}
           overwrite: true
           path: |
             tests/**/*.xml
