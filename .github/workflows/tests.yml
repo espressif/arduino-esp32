@@ -28,7 +28,7 @@ on:
       - "!*.md"
       - "!*.properties"
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 0 * * *"
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}

@@ -24,7 +24,7 @@ jobs:
         if: github.event.pull_request.number != null
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          key: tests-${{ env.id }}-bin
+          key: test-${{ env.id }}-bin
           path: |
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         if: steps.check-build.outputs.enabled == 'true' && github.event.pull_request.number != null
         with:
-          key: tests-${{ env.id }}-bin
+          key: test-${{ env.id }}-bin
           path: |
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
@@ -81,7 +81,7 @@ jobs:
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
+          name: test-bin-${{ inputs.chip }}-${{ inputs.type }}
           overwrite: true
           path: |
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.bin
