@@ -285,8 +285,7 @@ bool rmtDeinit(int pin) {
   return false;
 }
 
-static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool blocking, bool loop, uint32_t timeout_ms) {
-  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool blocking, uint32_t loop, uint32_t timeout_ms) {  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
     return false;
   }
@@ -308,6 +307,10 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     "GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO",
     loopCancel ? "YES" : "NO"
   );
+  // loop == 1 means infinite loop.
+  if (loop > 1) {
+    log_v("GPIO: %d - Loop count: %lu times", pin, loop);
+  }
 
   if ((xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) == 0) {
     log_v("GPIO %d - RMT Write still pending to be completed.", pin);
@@ -336,8 +339,8 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     bus->rmt_ch_is_looping = false;
   } else {  // new writing | looping request
     // looping | Writing over a previous looping state is valid
-    if (loop) {
-      transmit_cfg.loop_count = -1;  // enable infinite loop mode
+    if (loop) { 
+      transmit_cfg.loop_count = (loop == 1) ? -1 : loop;
       // keeps RMT_FLAG_TX_DONE set - it never changes
     } else {
       // looping mode never sets this flag (IDF 5.1) in the callback
@@ -349,7 +352,8 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
       log_w("GPIO %d - RMT Transmission failed.", pin);
     } else {  // transmit OK
       if (loop) {
-        bus->rmt_ch_is_looping = true;  // for ever... until a channel canceling or new writing
+        bus->rmt_ch_is_looping = true;  // for ever... until a channel canceling or new writing. 
+                                        // NOTE: even if loop count is finite number
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout
@@ -402,15 +406,20 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
 }
 
 bool rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t timeout_ms) {
-  return _rmtWrite(pin, data, num_rmt_symbols, true /*blocks*/, false /*looping*/, timeout_ms);
+  return _rmtWrite(pin, data, num_rmt_symbols, true /*blocks*/, 0 /*looping*/, timeout_ms);
 }
 
 bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
-  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, false /*looping*/, 0 /*N/A*/);
+  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, 0 /*looping*/, 0 /*N/A*/);
 }
 
 bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
-  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, true /*looping*/, 0 /*N/A*/);
+  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, 1 /*looping*/, 0 /*N/A*/);
+}
+
+// Same as rmtWriteLooping(...) but limits number of loops to "loop_count"
+bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
+  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
 }
 
 bool rmtTransmitCompleted(int pin) {
