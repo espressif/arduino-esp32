@@ -285,7 +285,8 @@ bool rmtDeinit(int pin) {
   return false;
 }
 
-static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool blocking, uint32_t loop, uint32_t timeout_ms) {  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
+static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool blocking, uint32_t loop, uint32_t timeout_ms) {
+  rmt_bus_handle_t bus = _rmtGetBus(pin, __FUNCTION__);
   if (bus == NULL) {
     return false;
   }
