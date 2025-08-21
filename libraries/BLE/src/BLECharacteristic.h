@@ -185,7 +185,7 @@ public:
   void notify(bool is_notification = true);
   void setCallbacks(BLECharacteristicCallbacks *pCallbacks);
   void setValue(const uint8_t *data, size_t size);
-  void setValue(String value);
+  void setValue(const String &value);
   void setValue(uint16_t data16);
   void setValue(uint32_t data32);
   void setValue(int data32);

@@ -37,7 +37,7 @@ BLEValue::BLEValue() {
  * The accumulation is a growing set of data that is added to until a commit or cancel.
  * @param [in] part A message part being added.
  */
-void BLEValue::addPart(String part) {
+void BLEValue::addPart(const String &part) {
   log_v(">> addPart: length=%d", part.length());
   m_accumulation += part;
 }  // addPart
@@ -121,7 +121,7 @@ void BLEValue::setReadOffset(uint16_t readOffset) {
 /**
  * @brief Set the current value.
  */
-void BLEValue::setValue(String value) {
+void BLEValue::setValue(const String &value) {
   m_value = value;
 }  // setValue
 

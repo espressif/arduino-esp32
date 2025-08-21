@@ -203,8 +203,8 @@ void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
  * @brief Set the value of the descriptor.
  * @param [in] value The value of the descriptor in string form.
  */
-void BLEDescriptor::setValue(String value) {
-  setValue((uint8_t *)value.c_str(), value.length());
+void BLEDescriptor::setValue(const String &value) {
+  setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
 }  // setValue
 
 void BLEDescriptor::setAccessPermissions(uint8_t perm) {
