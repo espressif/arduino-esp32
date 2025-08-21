@@ -186,11 +186,11 @@ public:
   void setCallbacks(BLECharacteristicCallbacks *pCallbacks);
   void setValue(uint8_t *data, size_t size);
   void setValue(String value);
-  void setValue(uint16_t &data16);
-  void setValue(uint32_t &data32);
-  void setValue(int &data32);
-  void setValue(float &data32);
-  void setValue(double &data64);
+  void setValue(uint16_t data16);
+  void setValue(uint32_t data32);
+  void setValue(int data32);
+  void setValue(float data32);
+  void setValue(double data64);
   String toString();
   uint16_t getHandle();
   void setAccessPermissions(uint8_t perm);

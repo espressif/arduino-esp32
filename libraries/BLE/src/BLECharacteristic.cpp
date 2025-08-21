@@ -375,14 +375,14 @@ void BLECharacteristic::setValue(String value) {
   setValue((uint8_t *)(value.c_str()), value.length());
 }  // setValue
 
-void BLECharacteristic::setValue(uint16_t &data16) {
+void BLECharacteristic::setValue(uint16_t data16) {
   uint8_t temp[2];
   temp[0] = data16;
   temp[1] = data16 >> 8;
   setValue(temp, 2);
 }  // setValue
 
-void BLECharacteristic::setValue(uint32_t &data32) {
+void BLECharacteristic::setValue(uint32_t data32) {
   uint8_t temp[4];
   temp[0] = data32;
   temp[1] = data32 >> 8;
@@ -391,7 +391,7 @@ void BLECharacteristic::setValue(uint32_t &data32) {
   setValue(temp, 4);
 }  // setValue
 
-void BLECharacteristic::setValue(int &data32) {
+void BLECharacteristic::setValue(int data32) {
   uint8_t temp[4];
   temp[0] = data32;
   temp[1] = data32 >> 8;
@@ -400,12 +400,12 @@ void BLECharacteristic::setValue(int &data32) {
   setValue(temp, 4);
 }  // setValue
 
-void BLECharacteristic::setValue(float &data32) {
+void BLECharacteristic::setValue(float data32) {
   float temp = data32;
   setValue((uint8_t *)&temp, 4);
 }  // setValue
 
-void BLECharacteristic::setValue(double &data64) {
+void BLECharacteristic::setValue(double data64) {
   double temp = data64;
   setValue((uint8_t *)&temp, 8);
 }  // setValue
