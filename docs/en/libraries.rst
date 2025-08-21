@@ -91,3 +91,15 @@ The Arduino ESP32 offers some unique APIs, described in this section:
     :glob:
 
     api/*
+
+Zigbee APIs
+-----------
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    zigbee/zigbee
+    zigbee/zigbee_core
+    zigbee/zigbee_ep
+    zigbee/ep_*

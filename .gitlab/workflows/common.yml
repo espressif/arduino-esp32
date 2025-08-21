@@ -1,0 +1,26 @@
+#####################
+# Default Variables #
+#####################
+
+stages:
+  - pre_check
+  - build
+  - test
+  - result
+
+variables:
+  ESP_IDF_VERSION: "5.5"
+  ESP_ARDUINO_VERSION: "3.3.0"
+
+#############
+# `default` #
+#############
+
+default:
+  retry:
+    max: 2
+    when:
+      # In case of a runner failure we could hop to another one, or a network error could go away.
+      - runner_system_failure
+      # Job execution timeout may be caused by a network issue.
+      - job_execution_timeout

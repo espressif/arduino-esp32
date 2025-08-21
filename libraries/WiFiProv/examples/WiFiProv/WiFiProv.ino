@@ -62,7 +62,7 @@ void setup() {
   WiFi.onEvent(SysProvEvent);
 
 // BLE Provisioning using the ESP SoftAP Prov works fine for any BLE SoC, including ESP32, ESP32S3 and ESP32C3.
-#if CONFIG_BLUEDROID_ENABLED && !defined(USE_SOFT_AP)
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h") && !defined(USE_SOFT_AP)
   Serial.println("Begin Provisioning using BLE");
   // Sample uuid that user can pass during provisioning using BLE
   uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02};

@@ -1,0 +1,16 @@
+hello-world:
+  stage: test
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+  variables:
+    PIPELINE_TRIGGER_TOKEN: $CI_PIPELINE_TRIGGER_TOKEN
+  script:
+    - echo "Hello, World from GitLab CI!"
+    - echo "Hello World!" > sample_artifact.txt
+  artifacts:
+    name: "sample-artifact"
+    paths:
+      - sample_artifact.txt
+    expire_in: 1 day

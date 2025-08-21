@@ -3,14 +3,20 @@
  *
  *  Created on: Mar 12, 2018
  *      Author: pcbreflux
+ *
  *  Upgraded on: Feb 20, 2023
  *      By: Tomas Pilny
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on pcbreflux's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
 #if SOC_BLE_SUPPORTED
 
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #include <string.h>
 #include "esp32-hal-log.h"
 #include "BLEEddystoneURL.h"
@@ -158,7 +164,11 @@ void BLEEddystoneURL::setData(String data) {
 }  // setData
 
 void BLEEddystoneURL::setUUID(BLEUUID l_uuid) {
+#if defined(CONFIG_BLUEDROID_ENABLED)
   uint16_t beaconUUID = l_uuid.getNative()->uuid.uuid16;
+#elif defined(CONFIG_NIMBLE_ENABLED)
+  uint16_t beaconUUID = l_uuid.getNative()->u16.value;
+#endif
   BLEHeadder[10] = beaconUUID >> 8;
   BLEHeadder[9] = beaconUUID & 0x00FF;
 }  // setUUID

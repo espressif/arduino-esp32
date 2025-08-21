@@ -32,6 +32,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_duration = 3;  // default scan duration
   _rx_on_when_idle = true;
   _debug = false;
+  _global_default_response_cb = nullptr;  // Initialize global callback to nullptr
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -237,7 +238,9 @@ void ZigbeeCore::closeNetwork() {
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
-  ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
+  if (esp_zb_bdb_start_top_level_commissioning(mode_mask) != ESP_OK) {
+    log_e("Failed to start Zigbee commissioning");
+  }
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
@@ -789,6 +792,12 @@ const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceI
     case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID:              return "Custom Tunnel device";
     case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID:                return "Custom Attributes Device";
     default:                                             return "Unknown device type";
+  }
+}
+
+void ZigbeeCore::callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
+  if (_global_default_response_cb) {
+    _global_default_response_cb(resp_to_cmd, status, endpoint, cluster);
   }
 }
 
