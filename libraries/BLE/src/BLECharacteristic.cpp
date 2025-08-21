@@ -376,38 +376,23 @@ void BLECharacteristic::setValue(String value) {
 }  // setValue
 
 void BLECharacteristic::setValue(uint16_t data16) {
-  uint8_t temp[2];
-  temp[0] = data16;
-  temp[1] = data16 >> 8;
-  setValue(temp, 2);
+  setValue(reinterpret_cast<uint8_t *>(&data16), sizeof(data16));
 }  // setValue
 
 void BLECharacteristic::setValue(uint32_t data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+  setValue(reinterpret_cast<uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
 void BLECharacteristic::setValue(int data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+  setValue(reinterpret_cast<uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
 void BLECharacteristic::setValue(float data32) {
-  float temp = data32;
-  setValue((uint8_t *)&temp, 4);
+  setValue(reinterpret_cast<uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
 void BLECharacteristic::setValue(double data64) {
-  double temp = data64;
-  setValue((uint8_t *)&temp, 8);
+  setValue(reinterpret_cast<uint8_t *>(&data64), sizeof(data64));
 }  // setValue
 
 /**
