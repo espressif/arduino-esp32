@@ -346,7 +346,7 @@ void BLECharacteristic::setReadProperty(bool value) {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void BLECharacteristic::setValue(uint8_t *data, size_t length) {
+void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
 // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
 // "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE

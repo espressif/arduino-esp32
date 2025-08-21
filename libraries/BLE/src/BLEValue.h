@@ -35,7 +35,7 @@ public:
 
   BLEValue();
   void addPart(String part);
-  void addPart(uint8_t *pData, size_t length);
+  void addPart(const uint8_t *pData, size_t length);
   void cancel();
   void commit();
   uint8_t *getData();
@@ -44,7 +44,7 @@ public:
   String getValue();
   void setReadOffset(uint16_t readOffset);
   void setValue(String value);
-  void setValue(uint8_t *pData, size_t length);
+  void setValue(const uint8_t *pData, size_t length);
 
 private:
   /***************************************************************************

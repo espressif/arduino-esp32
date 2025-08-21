@@ -94,7 +94,7 @@ public:
 
   void setAccessPermissions(uint8_t perm);                // Set the permissions of the descriptor.
   void setCallbacks(BLEDescriptorCallbacks *pCallbacks);  // Set callbacks to be invoked for the descriptor.
-  void setValue(uint8_t *data, size_t size);              // Set the value of the descriptor as a pointer to data.
+  void setValue(const uint8_t *data, size_t size);        // Set the value of the descriptor as a pointer to data.
   void setValue(String value);                            // Set the value of the descriptor as a data buffer.
 
   String toString();  // Convert the descriptor to a string representation.

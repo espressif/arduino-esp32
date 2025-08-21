@@ -181,7 +181,7 @@ void BLEDescriptor::setHandle(uint16_t handle) {
  * @param [in] data The data to set for the descriptor.
  * @param [in] length The length of the data in bytes.
  */
-void BLEDescriptor::setValue(uint8_t *data, size_t length) {
+void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
   if (length > m_value.attr_max_len) {
     log_e("Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
     return;

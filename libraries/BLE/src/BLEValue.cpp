@@ -48,7 +48,7 @@ void BLEValue::addPart(String part) {
  * @param [in] pData A message part being added.
  * @param [in] length The number of bytes being added.
  */
-void BLEValue::addPart(uint8_t *pData, size_t length) {
+void BLEValue::addPart(const uint8_t *pData, size_t length) {
   log_v(">> addPart: length=%d", length);
   m_accumulation += String((char *)pData, length);
 }  // addPart
@@ -130,7 +130,7 @@ void BLEValue::setValue(String value) {
  * @param [in] pData The data for the current value.
  * @param [in] The length of the new current value.
  */
-void BLEValue::setValue(uint8_t *pData, size_t length) {
+void BLEValue::setValue(const uint8_t *pData, size_t length) {
   m_value = String((char *)pData, length);
 }  // setValue
 
