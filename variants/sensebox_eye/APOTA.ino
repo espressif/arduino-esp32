@@ -101,7 +101,7 @@ void setBootPartitionToOTA0() {
 }
 
 void setupDisplay() {
-  Wire.begin(PIN_QWIIC_SDA,PIN_QWIIC_SCL);
+  Wire.begin(PIN_QWIIC_SDA, PIN_QWIIC_SCL);
   displayEnabled = Wire.requestFrom(0x3D, 1);  // Check if the display is connected
   if (displayEnabled) {
     display.begin(SSD1306_SWITCHCAPVCC, 0x3D);

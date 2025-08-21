@@ -25,15 +25,15 @@ void initVariant(void) {
     if (ota1_partition) {
       esp_err_t err = esp_ota_set_boot_partition(ota1_partition);
       if (err == ESP_OK) {
-        blinkLED(0x00, 0x00, 0x10); // blue
-        esp_restart();  // restart, to boot OTA1 partition
+        blinkLED(0x00, 0x00, 0x10);  // blue
+        esp_restart();               // restart, to boot OTA1 partition
       } else {
-        blinkLED(0x10, 0x00, 0x00); // red
+        blinkLED(0x10, 0x00, 0x00);  // red
         ESP_LOGE("OTA", "Error setting OTA1 partition: %s", esp_err_to_name(err));
       }
     }
   } else {
-    blinkLED(0x00, 0x10, 0x00); // green
+    blinkLED(0x00, 0x10, 0x00);  // green
   }
 }
 }
