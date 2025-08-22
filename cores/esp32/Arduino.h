@@ -222,6 +222,9 @@ size_t getArduinoLoopTaskStackSize(void);
     return sz;                           \
   }
 
+#if CONFIG_TINYUSB_MIDI_ENABLE
+// Forward declaration of USBMIDI class for the SET_USB_MIDI_DEVICE_NAME macro
+#include "USB/USBMIDI.h"
 #define SET_USB_MIDI_DEVICE_NAME(name) \
     namespace { \
         static const char* _usb_midi_default_name = name; \
@@ -231,7 +234,17 @@ size_t getArduinoLoopTaskStackSize(void);
             } \
         } _usb_midi_name_setter; \
     }
-    
+#else
+#define SET_USB_MIDI_DEVICE_NAME(name) \
+    namespace { \
+        static struct _USBMIDINameSetter { \
+            _USBMIDINameSetter() { \
+                log_e("USB MIDI is not enabled. Enable it in menuconfig under Component Config -> TinyUSB -> CDC Enable"); \
+            } \
+        } _usb_midi_name_setter; \
+    }
+#endif
+
 bool shouldPrintChipDebugReport(void);
 #define ENABLE_CHIP_DEBUG_REPORT          \
   bool shouldPrintChipDebugReport(void) { \
