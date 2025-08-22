@@ -19,6 +19,7 @@
 
 const char *ssid = "..........";
 const char *password = "..........";
+uint32_t last_ota_time = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -40,9 +41,13 @@ void setup() {
   // No authentication by default
   // ArduinoOTA.setPassword("admin");
 
-  // Password can be set with it's md5 value as well
-  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
+  // Password can be set with plain text (will be hashed internally)
+  // The authentication uses PBKDF2-HMAC-SHA256 with 10,000 iterations
+  // ArduinoOTA.setPassword("admin");
+
+  // Or set password with pre-hashed value (SHA256 hash of "admin")
+  // SHA256(admin) = 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+  // ArduinoOTA.setPasswordHash("8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918");
 
   ArduinoOTA
     .onStart([]() {
@@ -60,7 +65,10 @@ void setup() {
       Serial.println("\nEnd");
     })
     .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      if (millis() - last_ota_time > 500) {
+        Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
+        last_ota_time = millis();
+      }
     })
     .onError([](ota_error_t error) {
       Serial.printf("Error[%u]: ", error);
