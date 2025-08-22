@@ -29,9 +29,8 @@ SET_USB_MIDI_DEVICE_NAME("ESP MIDI Device")
 
 #include "USB.h"
 #include "USBMIDI.h"
-// Creates the MIDI device with specific descriptor
-USBMIDI MIDI();
-
+// Creates the MIDI device with specific name defined with the SET_USB_MIDI_DEVICE_NAME() macro
+USBMIDI MIDI;
 
 #define MIDI_RX 39
 #define MIDI_TX 40
