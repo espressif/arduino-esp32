@@ -39,7 +39,7 @@ jobs:
         if: github.event.pull_request.number != null
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
-          key: tests-${{ env.id }}-results-hw
+          key: test-${{ env.id }}-results-hw
           path: |
             tests/**/*.xml
             tests/**/result_*.json
@@ -61,6 +61,7 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          # Workaround for missing files in checkout
           sparse-checkout: |
             *
 
@@ -84,7 +85,7 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
-          name: tests-bin-${{ inputs.chip }}-${{ inputs.type }}
+          name: test-bin-${{ inputs.chip }}-${{ inputs.type }}
           path: |
             ~/.arduino/tests/${{ inputs.chip }}
 
@@ -102,7 +103,7 @@ jobs:
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         if: steps.check-tests.outputs.enabled == 'true' && github.event.pull_request.number != null
         with:
-          key: tests-${{ env.id }}-results-hw
+          key: test-${{ env.id }}-results-hw
           path: |
             tests/**/*.xml
             tests/**/result_*.json
@@ -111,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: tests-results-hw-${{ inputs.chip }}-${{ inputs.type }}
+          name: test-results-hw-${{ inputs.chip }}-${{ inputs.type }}
           overwrite: true
           path: |
             tests/**/*.xml
