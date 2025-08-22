@@ -7,14 +7,13 @@
 #define USB_VID 0x303a
 #define USB_PID 0x1001
 
-
 #define RGB_PIN 15
 
 static const uint8_t LED_BUILTIN = 35;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
-#define RGB_BUILTIN    RGB_PIN
+#define RGB_BUILTIN RGB_PIN
 
 static const uint8_t TX = 39;
 static const uint8_t RX = 40;
@@ -33,8 +32,8 @@ static const uint8_t D10_OUT_PIN = 10;
 
 static const uint8_t TOUCH_PIN = 13;
 
-static const uint8_t TRIG_PIN = 5; // GPIO connected to HC-SR04 TRIG
-static const uint8_t ECHO_PIN = 6; // GPIO connected to HC-SR04 ECHO
+static const uint8_t TRIG_PIN = 5;  // GPIO connected to HC-SR04 TRIG
+static const uint8_t ECHO_PIN = 6;  // GPIO connected to HC-SR04 ECHO
 
 static const uint8_t latchPin = 34;
 static const uint8_t clockPin = 47;
