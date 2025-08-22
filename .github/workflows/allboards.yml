@@ -5,6 +5,9 @@ on:
   repository_dispatch:
     types: [test-boards]
 
+permissions:
+  contents: read
+
 jobs:
   find-boards:
     runs-on: ubuntu-latest
@@ -35,10 +38,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.client_payload.branch }}
-
-      - run: npm install
-      - name: Setup jq
-        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
 
       - id: set-test-chunks
         name: Set Chunks
