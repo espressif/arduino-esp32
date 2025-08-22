@@ -31,4 +31,6 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_NETWORK)
 extern NetworkManager Network;
+#endif

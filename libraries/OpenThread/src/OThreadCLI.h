@@ -68,7 +68,9 @@ public:
   void flush();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_OPENTHREADCLI)
 extern OpenThreadCLI OThreadCLI;
+#endif
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

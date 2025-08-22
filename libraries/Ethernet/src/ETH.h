@@ -268,7 +268,9 @@ private:
   friend class EthernetClass;  // to access beginSPI
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ETH)
 extern ETHClass ETH;
+#endif
 
 #endif /* _ETH_H_ */
 #endif /* CONFIG_ETH_ENABLED */

@@ -65,6 +65,8 @@ public:
   void printQR(const char *name, const char *pop, const char *transport, Print &out = Serial);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_WIFIPROV)
 extern WiFiProvClass WiFiProv;
+#endif
 
 #endif /* SOC_WIFI_SUPPORTED */

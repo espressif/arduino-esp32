@@ -38,7 +38,9 @@ private:
 
 }  // namespace fs
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_LITTLEFS)
 extern fs::LittleFSFS LittleFS;
+#endif
 
 #endif /* CONFIG_LITTLEFS_PAGE_SIZE */
 #endif

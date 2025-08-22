@@ -39,5 +39,8 @@ public:
   esp_err_t stop();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_RAINMAKER)
 extern RMakerClass RMaker;
+#endif
+
 #endif

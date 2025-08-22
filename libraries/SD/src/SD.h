@@ -43,7 +43,9 @@ public:
 
 }  // namespace fs
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SD)
 extern fs::SDFS SD;
+#endif
 
 using namespace fs;
 typedef fs::File SDFile;
