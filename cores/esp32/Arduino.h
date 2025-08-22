@@ -222,6 +222,16 @@ size_t getArduinoLoopTaskStackSize(void);
     return sz;                           \
   }
 
+#define SET_USB_MIDI_DEVICE_NAME(name) \
+    namespace { \
+        static const char* _usb_midi_default_name = name; \
+        static struct _USBMIDINameSetter { \
+            _USBMIDINameSetter() { \
+                USBMIDI::setDefaultName(_usb_midi_default_name); \
+            } \
+        } _usb_midi_name_setter; \
+    }
+    
 bool shouldPrintChipDebugReport(void);
 #define ENABLE_CHIP_DEBUG_REPORT          \
   bool shouldPrintChipDebugReport(void) { \
