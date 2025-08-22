@@ -40,7 +40,7 @@ public:
    ***************************************************************************/
 
   BLE2901();
-  void setDescription(String desc);
+  void setDescription(const String &desc);
 };  // BLE2901
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
