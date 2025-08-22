@@ -24,8 +24,12 @@ void setup() {}
 void loop() {}
 #else
 
+// define a new USB MIDI device name using a macro
+SET_USB_MIDI_DEVICE_NAME("ESP MIDI Device")
+
 #include "USB.h"
 #include "USBMIDI.h"
+// Creates the MIDI device with specific name defined with the SET_USB_MIDI_DEVICE_NAME() macro
 USBMIDI MIDI;
 
 #define MIDI_RX 39
