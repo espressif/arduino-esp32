@@ -18,10 +18,53 @@ typedef struct {
 } midiEventPacket_t;
 
 class USBMIDI {
+private:
+  static const char* deviceName;
+  static char nameBuffer[32]; // Buffer to store the device name
+  /**
+   * @brief Get the default device name
+   * @return Default name "TinyUSB MIDI" if no other name is set
+   */
+  static const char* getDefaultDeviceName() {
+    return "TinyUSB MIDI";
+  }
+
 public:
-  USBMIDI(String devDescName = "TinyUSB MIDI");
+  /**
+   * @brief Default constructor
+   * Will use the compile-time name if set via SET_USB_MIDI_DEVICE_NAME(),
+   * otherwise uses "TinyUSB MIDI"
+   */
+  USBMIDI(void);
+
+  /**
+   * @brief Constructor with custom device name
+   * @param name The device name to use. This takes precedence over any
+   * compile-time name set via SET_USB_MIDI_DEVICE_NAME()
+   */
+  USBMIDI(const char* name);
+
   void begin(void);
   void end(void);
+  
+  /**
+   * @brief Get the current device name
+   * @return The device name in order of precedence:
+   * 1. Name set via constructor (if any)
+   * 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+   * 3. Default name "TinyUSB MIDI"
+   */
+  static const char* getCurrentDeviceName(void) {
+    return deviceName ? deviceName : getDefaultDeviceName();
+  }
+
+  /**
+   * @brief Set the default name at compile time
+   * @param name The name to set as default if no runtime name is provided
+   */
+  static void setDefaultName(const char* name) {
+    if (!deviceName) deviceName = name;
+  }
 
   /* User-level API */
 
