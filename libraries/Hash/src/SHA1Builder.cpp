@@ -1,27 +1,21 @@
-/*
- *  FIPS-180-1 compliant SHA-1 implementation
- *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
- *  Modified for esp32 by Lucas Saavedra Vaz on 11 Jan 2024
- */
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Based on mbed TLS (https://tls.mbed.org)
 
 #include <Arduino.h>
-#include <SHA1Builder.h>
+#include "SHA1Builder.h"
 
 // 32-bit integer manipulation macros (big endian)
 
@@ -249,17 +243,6 @@ void SHA1Builder::add(const uint8_t *data, size_t len) {
   if (len > 0) {
     memcpy((void *)(buffer + left), data, len);
   }
-}
-
-void SHA1Builder::addHexString(const char *data) {
-  uint16_t len = strlen(data);
-  uint8_t *tmp = (uint8_t *)malloc(len / 2);
-  if (tmp == NULL) {
-    return;
-  }
-  hex2bytes(tmp, len / 2, data);
-  add(tmp, len / 2);
-  free(tmp);
 }
 
 bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
