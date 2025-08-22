@@ -59,7 +59,7 @@ struct uart_struct_t {
   uint16_t _rx_buffer_size, _tx_buffer_size;  // UART RX and TX buffer sizes
   bool _inverted;                             // UART inverted signal
   uint8_t _rxfifo_full_thrhd;                 // UART RX FIFO full threshold
-  int8_t _uart_clock_source;                  // UART Clock Source used when it is started using uartBegin()
+  int8_t _uart_clock_source;                  // UART Clock Source that should be used if user defines an specific one with setClockSource()
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -820,7 +820,7 @@ uart_t *uartBegin(
   uart_config.baud_rate = baudrate;
 #if SOC_UART_LP_NUM >= 1
   if (uart_nr >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-    if (uart->_uart_clock_source > 0) {
+    if (uart->_uart_clock_source >= 0) {
       uart_config.lp_source_clk = (soc_periph_lp_uart_clk_src_t)uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart_nr, uart->_uart_clock_source);
     } else {
@@ -881,14 +881,7 @@ uart_t *uartBegin(
     uart->_tx_buffer_size = tx_buffer_size;
     uart->has_peek = false;
     uart->peek_byte = 0;
-#if SOC_UART_LP_NUM >= 1
-    if (uart_nr >= SOC_UART_HP_NUM) {
-      uart->_uart_clock_source = uart_config.lp_source_clk;
-    } else
-#endif
-    {
-      uart->_uart_clock_source = uart_config.source_clk;
-    }
+    // uart->_uart_clock_source can only change by explicit user API request/call
   }
   UART_MUTEX_UNLOCK();
 
@@ -1149,10 +1142,9 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
   }
   bool retCode = true;
   soc_module_clk_t newClkSrc = UART_SCLK_DEFAULT;
-  int8_t previousClkSrc = uart->_uart_clock_source;
 #if SOC_UART_LP_NUM >= 1
   if (uart->num >= SOC_UART_HP_NUM) {  // it is a LP UART NUM
-    if (uart->_uart_clock_source > 0) {
+    if (uart->_uart_clock_source >= 0) {
       newClkSrc = (soc_periph_lp_uart_clk_src_t)uart->_uart_clock_source;  // use user defined LP UART clock
       log_v("Setting UART%d to user defined LP clock source (%d) ", uart->num, newClkSrc);
     } else {
@@ -1187,13 +1179,10 @@ bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate) {
     }
   }
   UART_MUTEX_LOCK();
-  // if necessary, set the correct UART Clock Source before changing the baudrate
-  if (previousClkSrc < 0 || previousClkSrc != newClkSrc) {
-    HP_UART_SRC_CLK_ATOMIC() {
-      uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
-    }
-    uart->_uart_clock_source = newClkSrc;
+  HP_UART_SRC_CLK_ATOMIC() {
+    uart_ll_set_sclk(UART_LL_GET_HW(uart->num), newClkSrc);
   }
+  // uart->_uart_clock_source can only change by explicit user API request/call
   if (uart_set_baudrate(uart->num, baud_rate) == ESP_OK) {
     log_v("Setting UART%d baud rate to %ld.", uart->num, baud_rate);
     uart->_baudrate = baud_rate;
@@ -1312,7 +1301,7 @@ bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
   {
     uart->_uart_clock_source = clkSrc;
   }
-  //log_i("UART%d set clock source to %d", uart->num, uart->_uart_clock_source);
+  log_v("UART%d set clock source to %d", uart->num, uart->_uart_clock_source);
   return true;
 }
 
