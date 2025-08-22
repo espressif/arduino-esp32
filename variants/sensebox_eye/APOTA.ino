@@ -18,7 +18,7 @@
 #include <Adafruit_SSD1306.h>
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include <Adafruit_NeoPixel.h>
-Adafruit_NeoPixel rgb_led_1 = Adafruit_NeoPixel(1, 1, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel rgb_led = Adafruit_NeoPixel(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 
 #endif
 #include "esp_partition.h"
@@ -84,25 +84,27 @@ void IRAM_ATTR handleButtonPress() {
   }
 }
 
-// Function to switch the boot partition to OTA1
+// Function to switch the boot partition to OTA0
 void setBootPartitionToOTA0() {
   const esp_partition_t *ota0_partition = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
 
   if (ota0_partition) {
-    // Set OTA1 as new boot partition
+    // Set OTA0 as new boot partition
     esp_ota_set_boot_partition(ota0_partition);
     Serial.println("Boot partition changed to OTA0. Restarting...");
 
     // Restart to boot from the new partition
     esp_restart();
   } else {
-    Serial.println("OTA1 partition not found!");
+    Serial.println("OTA0 partition not found!");
   }
 }
 
 void setupDisplay() {
-  displayEnabled = display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
+  Wire.begin(PIN_QWIIC_SDA, PIN_QWIIC_SCL);
+  displayEnabled = Wire.requestFrom(0x3D, 1);  // Check if the display is connected
   if (displayEnabled) {
+    display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
     display.display();
     delay(100);
     display.clearDisplay();
@@ -222,13 +224,21 @@ void setupOTA() {
           Update.printError(Serial);
         } else {
           int progress = (Update.progress() * 100) / Update.size();
-          displayStatusBar(progress);  // Update progress on status bar
+          if (displayEnabled) {
+            displayStatusBar(progress);  // Update progress on display
+          }
+          rgb_led.setPixelColor(0, rgb_led.Color(255, 255, 51));
+          rgb_led.show();
         }
       } else if (upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {  //true to set the size to the current progress
-          displaySuccessScreen();
-          delay(3000);
-          wipeDisplay();
+          if (displayEnabled) {
+            displaySuccessScreen();
+            delay(3000);
+            wipeDisplay();
+          }
+          rgb_led.setPixelColor(0, rgb_led.Color(51, 51, 255));
+          rgb_led.show();
         } else {
           Update.printError(Serial);
         }
@@ -242,10 +252,10 @@ void setupOTA() {
 void setup() {
   // Start Serial communication
   Serial.begin(115200);
-  rgb_led_1.begin();
-  rgb_led_1.setBrightness(30);
-  rgb_led_1.setPixelColor(0, rgb_led_1.Color(51, 51, 255));
-  rgb_led_1.show();
+  rgb_led.begin();
+  rgb_led.setBrightness(15);
+  rgb_led.setPixelColor(0, rgb_led.Color(51, 51, 255));
+  rgb_led.show();
 
   // Configure button pin as input
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -267,19 +277,23 @@ void loop() {
   server.handleClient();
 
 #ifdef DISPLAY_ENABLED
-  displayWelcomeScreen();
+  if (displayEnabled) {
+    displayWelcomeScreen();
+  }
 #endif
 
   if (doublePressDetected) {
     Serial.println("Double press detected!");
     setBootPartitionToOTA0();
 #ifdef DISPLAY_ENABLED
-    display.setCursor(0, 0);
-    display.setTextSize(1);
-    display.setTextColor(WHITE, BLACK);
-    display.println("");
-    display.display();
-    delay(50);
+    if (displayEnabled) {
+      display.setCursor(0, 0);
+      display.setTextSize(1);
+      display.setTextColor(WHITE, BLACK);
+      display.println("");
+      display.display();
+      delay(50);
+    }
 #endif
     // Restart to boot from the new partition
     esp_restart();
