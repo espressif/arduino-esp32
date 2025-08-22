@@ -28,11 +28,15 @@ on:
       - "!*.md"
       - "!*.properties"
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 0 * * *"
 
 concurrency:
   group: tests-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   push-event-file:
