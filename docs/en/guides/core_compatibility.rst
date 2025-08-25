@@ -35,7 +35,7 @@ To easily print the ESP32 Arduino core version at runtime, developers can use th
 API Differences
 ---------------
 
-Developers should be aware, that there may be API differences between major versions of the ESP32 Arduino core. For this we created a `Migration guide <https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides.html>`_. to help developers transition from between major versions of the ESP32 Arduino core.
+Developers should be aware, that there may be API differences between major versions of the ESP32 Arduino core. For this we created a `Migration guide <https://docs.espressif.com/projects/arduino-esp32/en/latest/migration_guides/migration_guides.html>`_. to help developers transition from between major versions of the ESP32 Arduino core.
 
 Library Testing
 ---------------
