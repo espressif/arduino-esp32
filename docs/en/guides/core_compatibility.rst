@@ -26,7 +26,7 @@ To ensure compatibility with both versions of the ESP32 Arduino core, developers
 Version Print
 -------------
 
-To easily print the ESP32 Arduino core version at runtime, developers can use the `ESP_ARDUINO_VERSION_STR` macro. Below is an example of how to print the ESP32 Arduino core version:
+To easily print the ESP32 Arduino core version at runtime, developers can use the ``ESP_ARDUINO_VERSION_STR`` macro. Below is an example of how to print the ESP32 Arduino core version:
 
 .. code-block:: cpp
 
