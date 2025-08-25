@@ -142,7 +142,8 @@ void test_touch_interrtupt(void) {
   test_press_fake(touch_list[0]);
   test_press_fake(touch_list[1]);
 
-
+  delay(100);
+  
   touchDetachInterrupt(TOUCH_GPIOS[0]);
   touchDetachInterrupt(TOUCH_GPIOS[1]);
 
