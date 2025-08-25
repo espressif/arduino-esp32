@@ -10,7 +10,7 @@ For some APIs, the reference to be used is the same as the Arduino Core.
 Arduino API Reference
 ---------------------
 
-`SPI Reference <https://www.arduino.cc/reference/en/language/functions/communication/spi/>`_
+`SPI Reference <https://docs.arduino.cc/language-reference/en/functions/communication/SPI/>`_
 
 `SPI Description <https://docs.arduino.cc/learn/communication/spi>`_
 
