@@ -349,7 +349,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     unset options
 }
 
-function count_sketches { # count_sketches <path> [target] [file] [ignore-requirements]
+function count_sketches { # count_sketches <path> [target] [ignore-requirements] [file]
     local path=$1
     local target=$2
     local ignore_requirements=$3
@@ -368,7 +368,7 @@ function count_sketches { # count_sketches <path> [target] [file] [ignore-requir
     fi
 
     if [ -f "$file" ]; then
-        sketches=$(cat "$file")
+        sketches=$(cat "$file" | sort)
     else
         sketches=$(find "$path" -name '*.ino' | sort)
     fi
