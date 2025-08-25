@@ -80,6 +80,17 @@ body:
         - other
     validations:
       required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: How would you define the type of the issue? Please select from the types below.
+      options:
+        - "Task"
+        - "Bug"
+        - "Question"
+    validations:
+      required: true
   - type: input
     id: IDE
     attributes:
