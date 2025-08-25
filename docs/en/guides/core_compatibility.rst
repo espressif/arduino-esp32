@@ -41,4 +41,4 @@ Library Testing
 ---------------
 
 We have added an External Library Test CI job, which tests external libraries with the latest version of the ESP32 Arduino core to help developers ensure compatibility with the latest version of the ESP32 Arduino core.
-If you want to include your library in the External Library Test CI job, please follow the instructions in the `External Libraries Test <https://docs.espressif.com/projects/arduino-esp32/en/latest/esp32/external_libraries_test.html>`_.
+If you want to include your library in the External Library Test CI job, please follow the instructions in the `External Libraries Test <https://docs.espressif.com/projects/arduino-esp32/en/latest/external_libraries_test.html>`_.
