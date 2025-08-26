@@ -204,17 +204,21 @@ static bool touchDetachBus(void *pin) {
   int8_t pad = digitalPinToTouchChannel((int)(pin - 1));
   channels_initialized[pad] = false;
   //disable touch pad and delete the channel
+  touchStop();
+  touchDisable();
   touch_sensor_del_channel(touch_channel_handle[pad]);
   used_pads--;
   if (used_pads == 0) {
-    touchStop();
-    touchDisable();
     if (touch_sensor_del_controller(touch_sensor_handle) != ESP_OK)  //deinit touch module, as no pads are used
     {
       log_e("Touch module deinit failed!");
       return false;
     }
     initialized = false;
+  }
+  else {
+    touchEnable();
+    touchStart();
   }
   return true;
 }
