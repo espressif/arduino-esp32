@@ -123,7 +123,7 @@ void test_touch_read(void) {
 
   // COMPARE PRESSED <-> UNPRESSED
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
-    log_v("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+    log_i("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
   }
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
 #if CONFIG_IDF_TARGET_ESP32
