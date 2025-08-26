@@ -102,8 +102,12 @@ void tearDown(void) {
 void test_touch_read(void) {
   //TEST RELEASE STATE
   touch_value_t touch_unpressed[sizeof(TOUCH_GPIOS)];
+  touch_value_t touch_unpressed_2[sizeof(TOUCH_GPIOS)];
+  touch_value_t touch_unpressed_3[sizeof(TOUCH_GPIOS)]; 
   for (int i = 0; i < sizeof(TOUCH_GPIOS); i++) {
     touch_unpressed[i] = touchRead(TOUCH_GPIOS[i]);
+    touch_unpressed_2[i] = touchRead(TOUCH_GPIOS[i]);
+    touch_unpressed_3[i] = touchRead(TOUCH_GPIOS[i]);
   }
 
   // TEST PRESS STATE
@@ -113,14 +117,20 @@ void test_touch_read(void) {
   delay(100);
 
   touch_value_t touch_pressed[sizeof(TOUCH_GPIOS)];
+  touch_value_t touch_pressed_2[sizeof(TOUCH_GPIOS)];
+  touch_value_t touch_pressed_3[sizeof(TOUCH_GPIOS)];
   for (int k = 0; k < sizeof(TOUCH_GPIOS); k++) {
     touch_pressed[k] = touchRead(TOUCH_GPIOS[k]);
+    touch_pressed_2[k] = touchRead(TOUCH_GPIOS[k]);
+    touch_pressed_3[k] = touchRead(TOUCH_GPIOS[k]);
   }
 
   // COMPARE PRESSED <-> UNPRESSED
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
     //log_i("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
-    Serial.printf("Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+    Serial.printf("1. Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+    Serial.printf("2. Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed_2[l], touch_pressed_2[l]);
+    Serial.printf("3. Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed_3[l], touch_pressed_3[l]);
   }
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
 #if CONFIG_IDF_TARGET_ESP32
@@ -159,13 +169,12 @@ void setup() {
     ;
   }
 
-  UNITY_BEGIN();
-  RUN_TEST(test_touch_read);
-
 #if SOC_TOUCH_SENSOR_VERSION == 3
   touch_ll_enable_internal_capacitor(true);
 #endif
 
+  UNITY_BEGIN();
+  RUN_TEST(test_touch_read);
   RUN_TEST(test_touch_interrtupt);
   RUN_TEST(test_touch_errors);
   UNITY_END();
