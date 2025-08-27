@@ -785,7 +785,7 @@ void analogWrite(uint8_t pin, int value) {
 
 void analogWriteFrequency(uint8_t pin, uint32_t freq) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-  if (bus != NULL) { // if pin is attached to LEDC change frequency, otherwise update the global frequency
+  if (bus != NULL) {  // if pin is attached to LEDC change frequency, otherwise update the global frequency
     if (ledcChangeFrequency(pin, freq, analog_resolution) == 0) {
       log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
       return;
@@ -796,7 +796,7 @@ void analogWriteFrequency(uint8_t pin, uint32_t freq) {
 
 void analogWriteResolution(uint8_t pin, uint8_t resolution) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
-  if (bus != NULL) { // if pin is attached to LEDC change resolution, otherwise update the global resolution
+  if (bus != NULL) {  // if pin is attached to LEDC change resolution, otherwise update the global resolution
     if (ledcChangeFrequency(pin, analog_frequency, resolution) == 0) {
       log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
       return;
