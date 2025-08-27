@@ -204,8 +204,14 @@ static bool touchDetachBus(void *pin) {
   int8_t pad = digitalPinToTouchChannel((int)(pin - 1));
   channels_initialized[pad] = false;
   //disable touch pad and delete the channel
-  touchStop();
-  touchDisable();
+  if (!touchStop()) {
+    log_e("touchStop() failed!");
+    return false;
+  }
+  if (!touchDisable()) {
+    log_e("touchDisable() failed!");
+    return false;
+  }
   touch_sensor_del_channel(touch_channel_handle[pad]);
   used_pads--;
   if (used_pads == 0) {

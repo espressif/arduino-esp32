@@ -44,12 +44,10 @@ uint8_t TOUCH_GPIOS[] = {2, 3, 4, 5, 6 /*, 7, 8, 9, 10, 11, 12 ,13, 14, 15*/};
 
 #define INTERRUPT_THRESHOLD      0    // Use benchmarked threshold
 
-#if CONFIG_IDF_TARGET_ESP32
-#define PRESSED_VALUE_DIFFERENCE 200  //-200 read value difference against the unpressed value
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32P4
+#define PRESSED_VALUE_DIFFERENCE 200  //-200 for ESP32 and +200 for ESP32P4 read value difference against the unpressed value
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32S2
 #define PRESSED_VALUE_DIFFERENCE 2000  //2000+ read value difference against the unpressed value
-#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-#define PRESSED_VALUE_DIFFERENCE 200  //200+ read value difference against the unpressed value
 #else
 #error Test not currently supported on this chip. Please adjust and try again!
 #endif
