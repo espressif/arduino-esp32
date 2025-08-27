@@ -245,7 +245,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     fi
 
     # Install libraries from ci.json if they exist
-    install_libs -ai "$ide_path" -s "$sketchdir" -v
+    install_libs -ai "$ide_path" -s "$sketchdir"
     install_result=$?
     if [ $install_result -ne 0 ]; then
         echo "ERROR: Library installation failed for $sketchname" >&2
@@ -588,6 +588,21 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     return 0
 }
 
+# Return 0 if the string looks like a git URL we should pass to --git-url
+is_git_like_url() {
+    local u=$1
+    [[ "$u" =~ ^https?://.+ ]] || [[ "$u" =~ ^git@[^:]+:.+ ]]
+}
+
+# If status!=0, print errors/warnings from captured output (fallback to full output)
+print_err_warnings() {
+    local status=$1; shift
+    local out=$*
+    if [ "$status" -ne 0 ]; then
+        printf '%s\n' "$out" | grep -Ei "error|warning|warn" >&2 || printf '%s\n' "$out" >&2
+    fi
+}
+
 function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     local ide_path=""
     local sketchdir=""
@@ -622,13 +637,10 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         return 1
     fi
 
-    # No ci.json => nothing to install
     if [ ! -f "$sketchdir/ci.json" ]; then
         [ "$verbose" = true ] && echo "No ci.json found in $sketchdir, skipping library installation"
         return 0
     fi
-
-    # Validate JSON early
     if ! jq -e . "$sketchdir/ci.json" >/dev/null 2>&1; then
         echo "ERROR: $sketchdir/ci.json is not valid JSON" >&2
         return 1
@@ -658,24 +670,21 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     local libs
     libs=$(jq -r '.libs[]? // empty' "$sketchdir/ci.json")
 
-    # Detect if any lib is a Git URL (needs unsafe install)
+    # Detect any git-like URL (GitHub/GitLab/Bitbucket/self-hosted/ssh)
     for lib in $libs; do
-        if [[ "$lib" == https://github.com/* ]]; then
+        if is_git_like_url "$lib"; then
             needs_unsafe=true
             break
         fi
     done
 
-    # Enable unsafe installs if needed, remember original setting
     if [ "$needs_unsafe" = true ]; then
         [ "$verbose" = true ] && echo "Checking current unsafe install setting..."
         original_unsafe_setting=$("$ide_path/arduino-cli" config get library.enable_unsafe_install 2>/dev/null || echo "false")
         if [ "$original_unsafe_setting" = "false" ]; then
             [ "$verbose" = true ] && echo "Enabling unsafe installs for Git URLs..."
-            if ! "$ide_path/arduino-cli" config set library.enable_unsafe_install true >/dev/null 2>&1; then
+            "$ide_path/arduino-cli" config set library.enable_unsafe_install true >/dev/null 2>&1 || \
                 echo "WARNING: Failed to enable unsafe installs, Git URL installs may fail" >&2
-                # continue; the install will surface a real error if it matters
-            fi
         else
             [ "$verbose" = true ] && echo "Unsafe installs already enabled"
         fi
@@ -685,15 +694,14 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     for lib in $libs; do
         [ "$verbose" = true ] && echo "Processing library: $lib"
 
-        if [[ "$lib" == https://github.com/* ]]; then
-            [ "$verbose" = true ] && echo "Installing library from GitHub URL: $lib"
+        if is_git_like_url "$lib"; then
+            [ "$verbose" = true ] && echo "Installing library from git URL: $lib"
             if [ "$verbose" = true ]; then
                 "$ide_path/arduino-cli" lib install --git-url "$lib"
                 install_status=$?
             else
                 output=$("$ide_path/arduino-cli" lib install --git-url "$lib" 2>&1)
                 install_status=$?
-                [ $install_status -ne 0 ] && echo "$output" | grep -Ei "error|warning|warn" >&2 || true
             fi
         else
             [ "$verbose" = true ] && echo "Installing library by name: $lib"
@@ -703,8 +711,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
             else
                 output=$("$ide_path/arduino-cli" lib install "$lib" 2>&1)
                 install_status=$?
-                [ $install_status -ne 0 ] && echo "$output" | grep -Ei "error|warning|warn" >&2 || true
             fi
+        fi
+
+        # Treat "already installed"/"up to date" as success (idempotent)
+        if [ $install_status -ne 0 ] && echo "$output" | grep -qiE 'already installed|up to date'; then
+            install_status=0
+        fi
+
+        if [ "$verbose" != true ]; then
+            print_err_warnings "$install_status" "$output"
         fi
 
         if [ $install_status -ne 0 ]; then
@@ -716,7 +732,6 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         fi
     done
 
-    # Restore unsafe setting if we changed it
     if [ "$needs_unsafe" = true ] && [ "$original_unsafe_setting" = "false" ]; then
         [ "$verbose" = true ] && echo "Restoring original unsafe install setting..."
         "$ide_path/arduino-cli" config set library.enable_unsafe_install false >/dev/null 2>&1 || true
