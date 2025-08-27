@@ -563,7 +563,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv) {
       if (resp & (1 << 30)) {
         card->type = CARD_SDHC;  // High capacity card (SDHC/SDXC)
       } else {
-        card->type = CARD_SD;    // Standard capacity card
+        card->type = CARD_SD;  // Standard capacity card
       }
     } else {
       log_w("READ_OCR failed: %X", resp);

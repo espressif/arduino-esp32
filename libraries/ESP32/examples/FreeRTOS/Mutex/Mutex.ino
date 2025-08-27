@@ -71,9 +71,9 @@ void Task(void *pvParameters) {  // This is a task.
 #endif
         int new_value = random(1000);
 
-        char str0[35]; // Maximum possible length of the string
+        char str0[35];  // Maximum possible length of the string
         snprintf(str0, sizeof(str0), " %d <- %d      |", shared_variable, new_value);
-        char str1[46]; // Maximum possible length of the string
+        char str1[46];  // Maximum possible length of the string
         snprintf(str1, sizeof(str1), "                 | %d <- %d", shared_variable, new_value);
         Serial.printf("%s\n", task_num ? str0 : str1);
 

@@ -317,7 +317,7 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDPPacket &packet) {
   pbuf_ref(_pb);
 }
 
-AsyncUDPPacket& AsyncUDPPacket::operator=(const AsyncUDPPacket& packet) {
+AsyncUDPPacket &AsyncUDPPacket::operator=(const AsyncUDPPacket &packet) {
   if (this != &packet) {
     if (_pb) {
       // Free existing pbuf reference

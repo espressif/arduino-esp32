@@ -60,7 +60,7 @@ bool EEPROMClass::begin(size_t size) {
   }
   if (size < key_size) {  // truncate
     log_w("truncating EEPROM from %d to %d", key_size, size);
-    uint8_t *key_data = new(std::nothrow) uint8_t[key_size];
+    uint8_t *key_data = new (std::nothrow) uint8_t[key_size];
     if (!key_data) {
       log_e("Not enough memory to truncate EEPROM!");
       return false;
@@ -71,7 +71,7 @@ bool EEPROMClass::begin(size_t size) {
     delete[] key_data;
   } else if (size > key_size) {  // expand or new
     size_t expand_size = size - key_size;
-    uint8_t *expand_key = new(std::nothrow) uint8_t[expand_size];
+    uint8_t *expand_key = new (std::nothrow) uint8_t[expand_size];
     if (!expand_key) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -84,7 +84,7 @@ bool EEPROMClass::begin(size_t size) {
     }
     delete[] expand_key;
     nvs_erase_key(_handle, "expand");
-    uint8_t *key_data = new(std::nothrow) uint8_t[size];
+    uint8_t *key_data = new (std::nothrow) uint8_t[size];
     if (!key_data) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -108,7 +108,7 @@ bool EEPROMClass::begin(size_t size) {
     delete[] _data;
   }
 
-  _data = new(std::nothrow) uint8_t[size];
+  _data = new (std::nothrow) uint8_t[size];
   if (!_data) {
     log_e("Not enough memory for %d bytes in EEPROM", size);
     return false;
@@ -213,7 +213,7 @@ uint16_t EEPROMClass::convert(bool clear, const char *EEPROMname, const char *nv
   }
 
   size_t size = mypart->size;
-  uint8_t *data = new(std::nothrow) uint8_t[size];
+  uint8_t *data = new (std::nothrow) uint8_t[size];
   if (!data) {
     log_e("Not enough memory to convert EEPROM!");
     goto exit;
