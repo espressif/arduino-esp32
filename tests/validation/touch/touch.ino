@@ -4,6 +4,7 @@
 
 #if CONFIG_IDF_TARGET_ESP32
 
+
 #define TEST_TOUCH_CHANNEL (7)
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM0,
@@ -159,13 +160,12 @@ void setup() {
     ;
   }
 
-  UNITY_BEGIN();
-  RUN_TEST(test_touch_read);
-
 #if SOC_TOUCH_SENSOR_VERSION == 3
   touch_ll_enable_internal_capacitor(true);
 #endif
 
+  UNITY_BEGIN();
+  RUN_TEST(test_touch_read);
   RUN_TEST(test_touch_interrtupt);
   RUN_TEST(test_touch_errors);
   UNITY_END();
