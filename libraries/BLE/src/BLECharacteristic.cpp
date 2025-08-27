@@ -376,7 +376,7 @@ void BLECharacteristic::setValue(const String &value) {
 }  // setValue
 
 void BLECharacteristic::setValue(uint16_t data16) {
-  setValue(reinterpret_cast<uint8_t *>(&data16), sizeof(data16));
+  setValue(reinterpret_cast<const uint8_t *>(&data16), sizeof(data16));
 }  // setValue
 
 void BLECharacteristic::setValue(uint32_t data32) {
