@@ -12,7 +12,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 304575,
+                            "flash_bytes": 304541,
                             "flash_percentage": 23,
                             "ram_bytes": 15396,
                             "ram_percentage": 4
@@ -225,7 +225,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Mutex",
                     "sizes": [{
-                            "flash_bytes": 325017,
+                            "flash_bytes": 325135,
                             "flash_percentage": 24,
                             "ram_bytes": 21824,
                             "ram_percentage": 6
@@ -246,7 +246,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 317035,
+                            "flash_bytes": 316995,
                             "flash_percentage": 24,
                             "ram_bytes": 20684,
                             "ram_percentage": 6
@@ -342,7 +342,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1023263,
+                            "flash_bytes": 1023327,
                             "flash_percentage": 6,
                             "ram_bytes": 66092,
                             "ram_percentage": 20
@@ -350,7 +350,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1026143,
+                            "flash_bytes": 1026207,
                             "flash_percentage": 6,
                             "ram_bytes": 66220,
                             "ram_percentage": 20
@@ -358,7 +358,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1028451,
+                            "flash_bytes": 1028515,
                             "flash_percentage": 6,
                             "ram_bytes": 66620,
                             "ram_percentage": 20
@@ -411,7 +411,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 997730,
+                            "flash_bytes": 997802,
                             "flash_percentage": 5,
                             "ram_bytes": 61884,
                             "ram_percentage": 18
@@ -419,7 +419,7 @@
                     },
 {"name": "ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1001574,
+                            "flash_bytes": 1001642,
                             "flash_percentage": 5,
                             "ram_bytes": 61896,
                             "ram_percentage": 18
@@ -467,7 +467,7 @@
                     },
 {"name": "ESP32/examples/FreeRTOS/Mutex",
                     "sizes": [{
-                            "flash_bytes": 270494,
+                            "flash_bytes": 270554,
                             "flash_percentage": 20,
                             "ram_bytes": 15248,
                             "ram_percentage": 4
@@ -528,7 +528,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 984912,
+                            "flash_bytes": 985008,
                             "flash_percentage": 75,
                             "ram_bytes": 35416,
                             "ram_percentage": 10
@@ -544,7 +544,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 300612,
+                            "flash_bytes": 300574,
                             "flash_percentage": 22,
                             "ram_bytes": 11888,
                             "ram_percentage": 3
@@ -552,7 +552,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_write",
                     "sizes": [{
-                            "flash_bytes": 296094,
+                            "flash_bytes": 296096,
                             "flash_percentage": 22,
                             "ram_bytes": 11888,
                             "ram_percentage": 3
@@ -637,7 +637,7 @@
                 "sketches": [
 {"name": "EEPROM/examples/eeprom_class",
                     "sizes": [{
-                            "flash_bytes": 256001,
+                            "flash_bytes": 255999,
                             "flash_percentage": 19,
                             "ram_bytes": 13108,
                             "ram_percentage": 4
@@ -645,7 +645,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 259073,
+                            "flash_bytes": 259031,
                             "flash_percentage": 19,
                             "ram_bytes": 13044,
                             "ram_percentage": 3
@@ -778,7 +778,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_class",
                     "sizes": [{
-                            "flash_bytes": 297719,
+                            "flash_bytes": 297717,
                             "flash_percentage": 9,
                             "ram_bytes": 13064,
                             "ram_percentage": 3
@@ -786,7 +786,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 300785,
+                            "flash_bytes": 300749,
                             "flash_percentage": 9,
                             "ram_bytes": 13016,
                             "ram_percentage": 3
@@ -919,7 +919,7 @@
                     },
 {"name": "DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 966159,
+                            "flash_bytes": 966239,
                             "flash_percentage": 73,
                             "ram_bytes": 45144,
                             "ram_percentage": 13
@@ -927,7 +927,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_class",
                     "sizes": [{
-                            "flash_bytes": 317463,
+                            "flash_bytes": 317483,
                             "flash_percentage": 24,
                             "ram_bytes": 20884,
                             "ram_percentage": 6
@@ -935,7 +935,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_extra",
                     "sizes": [{
-                            "flash_bytes": 319703,
+                            "flash_bytes": 319651,
                             "flash_percentage": 24,
                             "ram_bytes": 20820,
                             "ram_percentage": 6
@@ -943,7 +943,7 @@
                     },
 {"name": "EEPROM/examples/eeprom_write",
                     "sizes": [{
-                            "flash_bytes": 315943,
+                            "flash_bytes": 315963,
                             "flash_percentage": 24,
                             "ram_bytes": 20928,
                             "ram_percentage": 6
