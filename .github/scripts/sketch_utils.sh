@@ -244,6 +244,14 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         fi
     fi
 
+    # Install libraries from ci.json if they exist
+    install_libs -ai "$ide_path" -s "$sketchdir" -v
+    install_result=$?
+    if [ $install_result -ne 0 ]; then
+        echo "ERROR: Library installation failed for $sketchname" >&2
+        exit $install_result
+    fi
+
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     if [ -n "$ARDUINO_BUILD_DIR" ]; then
         build_dir="$ARDUINO_BUILD_DIR"
@@ -580,6 +588,145 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     return 0
 }
 
+function install_libs { # install_libs <ide_path> <sketchdir> [-v]
+    local ide_path=""
+    local sketchdir=""
+    local verbose=false
+
+    while [ -n "$1" ]; do
+        case "$1" in
+        -ai ) shift; ide_path=$1 ;;
+        -s  ) shift; sketchdir=$1 ;;
+        -v  ) verbose=true ;;
+        * )
+            echo "ERROR: Unknown argument: $1" >&2
+            echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+            return 1
+            ;;
+        esac
+        shift
+    done
+
+    if [ -z "$ide_path" ]; then
+        echo "ERROR: IDE path not provided" >&2
+        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+        return 1
+    fi
+    if [ -z "$sketchdir" ]; then
+        echo "ERROR: Sketch directory not provided" >&2
+        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+        return 1
+    fi
+    if [ ! -f "$ide_path/arduino-cli" ]; then
+        echo "ERROR: arduino-cli not found at $ide_path/arduino-cli" >&2
+        return 1
+    fi
+
+    # No ci.json => nothing to install
+    if [ ! -f "$sketchdir/ci.json" ]; then
+        [ "$verbose" = true ] && echo "No ci.json found in $sketchdir, skipping library installation"
+        return 0
+    fi
+
+    # Validate JSON early
+    if ! jq -e . "$sketchdir/ci.json" >/dev/null 2>&1; then
+        echo "ERROR: $sketchdir/ci.json is not valid JSON" >&2
+        return 1
+    fi
+
+    local libs_type
+    libs_type=$(jq -r '.libs | type' "$sketchdir/ci.json" 2>/dev/null)
+    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ]; then
+        [ "$verbose" = true ] && echo "No libs field found in ci.json, skipping library installation"
+        return 0
+    elif [ "$libs_type" != "array" ]; then
+        echo "ERROR: libs field in ci.json must be an array, found: $libs_type" >&2
+        return 1
+    fi
+
+    local libs_count
+    libs_count=$(jq -r '.libs | length' "$sketchdir/ci.json" 2>/dev/null)
+    if [ "$libs_count" -eq 0 ]; then
+        [ "$verbose" = true ] && echo "libs array is empty in ci.json, skipping library installation"
+        return 0
+    fi
+
+    echo "Installing $libs_count libraries from $sketchdir/ci.json"
+
+    local needs_unsafe=false
+    local original_unsafe_setting=""
+    local libs
+    libs=$(jq -r '.libs[]? // empty' "$sketchdir/ci.json")
+
+    # Detect if any lib is a Git URL (needs unsafe install)
+    for lib in $libs; do
+        if [[ "$lib" == https://github.com/* ]]; then
+            needs_unsafe=true
+            break
+        fi
+    done
+
+    # Enable unsafe installs if needed, remember original setting
+    if [ "$needs_unsafe" = true ]; then
+        [ "$verbose" = true ] && echo "Checking current unsafe install setting..."
+        original_unsafe_setting=$("$ide_path/arduino-cli" config get library.enable_unsafe_install 2>/dev/null || echo "false")
+        if [ "$original_unsafe_setting" = "false" ]; then
+            [ "$verbose" = true ] && echo "Enabling unsafe installs for Git URLs..."
+            if ! "$ide_path/arduino-cli" config set library.enable_unsafe_install true >/dev/null 2>&1; then
+                echo "WARNING: Failed to enable unsafe installs, Git URL installs may fail" >&2
+                # continue; the install will surface a real error if it matters
+            fi
+        else
+            [ "$verbose" = true ] && echo "Unsafe installs already enabled"
+        fi
+    fi
+
+    local rc=0 install_status=0 output=""
+    for lib in $libs; do
+        [ "$verbose" = true ] && echo "Processing library: $lib"
+
+        if [[ "$lib" == https://github.com/* ]]; then
+            [ "$verbose" = true ] && echo "Installing library from GitHub URL: $lib"
+            if [ "$verbose" = true ]; then
+                "$ide_path/arduino-cli" lib install --git-url "$lib"
+                install_status=$?
+            else
+                output=$("$ide_path/arduino-cli" lib install --git-url "$lib" 2>&1)
+                install_status=$?
+                [ $install_status -ne 0 ] && echo "$output" | grep -Ei "error|warning|warn" >&2 || true
+            fi
+        else
+            [ "$verbose" = true ] && echo "Installing library by name: $lib"
+            if [ "$verbose" = true ]; then
+                "$ide_path/arduino-cli" lib install "$lib"
+                install_status=$?
+            else
+                output=$("$ide_path/arduino-cli" lib install "$lib" 2>&1)
+                install_status=$?
+                [ $install_status -ne 0 ] && echo "$output" | grep -Ei "error|warning|warn" >&2 || true
+            fi
+        fi
+
+        if [ $install_status -ne 0 ]; then
+            echo "ERROR: Failed to install library: $lib" >&2
+            rc=$install_status
+            break
+        else
+            [ "$verbose" = true ] && echo "Successfully installed library: $lib"
+        fi
+    done
+
+    # Restore unsafe setting if we changed it
+    if [ "$needs_unsafe" = true ] && [ "$original_unsafe_setting" = "false" ]; then
+        [ "$verbose" = true ] && echo "Restoring original unsafe install setting..."
+        "$ide_path/arduino-cli" config set library.enable_unsafe_install false >/dev/null 2>&1 || true
+    fi
+
+    [ $rc -eq 0 ] && echo "Library installation completed"
+    return $rc
+}
+
+
 USAGE="
 USAGE: ${0} [command] [options]
 Available commands:
@@ -587,6 +734,7 @@ Available commands:
     build: Build a sketch.
     chunk_build: Build a chunk of sketches.
     check_requirements: Check if target meets sketch requirements.
+    install_libs: Install libraries from ci.json file.
 "
 
 cmd=$1
@@ -605,6 +753,8 @@ case "$cmd" in
     "chunk_build") build_sketches "$@"
     ;;
     "check_requirements") check_requirements "$@"
+    ;;
+    "install_libs") install_libs "$@"
     ;;
     *)
         echo "ERROR: Unrecognized command"
