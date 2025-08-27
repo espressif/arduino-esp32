@@ -388,7 +388,7 @@ void BLECharacteristic::setValue(int data32) {
 }  // setValue
 
 void BLECharacteristic::setValue(float data32) {
-  setValue(reinterpret_cast<uint8_t *>(&data32), sizeof(data32));
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
 void BLECharacteristic::setValue(double data64) {
