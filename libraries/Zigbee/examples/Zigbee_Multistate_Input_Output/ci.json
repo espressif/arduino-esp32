@@ -1,0 +1,6 @@
+{
+  "fqbn_append": "PartitionScheme=zigbee_zczr,ZigbeeMode=zczr",
+  "requires": [
+    "CONFIG_ZB_ENABLED=y"
+  ]
+}
