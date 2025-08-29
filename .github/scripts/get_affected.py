@@ -184,6 +184,7 @@ affected_sketches = []
 include_regex = re.compile(r'#include\s*[<"]([^">]+)[">]')
 
 # Ctags-based symbol index (optional)
+ctags_executable = None
 ctags_available = False
 ctags_header_to_qnames: dict[str, set[str]] = {}
 ctags_defs_by_qname: dict[str, set[str]] = {}
@@ -204,11 +205,20 @@ def detect_universal_ctags() -> bool:
     """
     Return True if Universal Ctags is available on PATH.
     """
-    ctags_path = shutil.which("ctags-universal")
+    exec_names = ["ctags-universal", "ctags"]
+
+    global ctags_executable
+    for exec_name in exec_names:
+        ctags_path = shutil.which(exec_name)
+        if ctags_path:
+            break
     if not ctags_path:
         return False
+
+    ctags_executable = ctags_path
+
     try:
-        out = subprocess.run([ctags_path, "--version"], capture_output=True, text=True, check=False)
+        out = subprocess.run([ctags_executable, "--version"], capture_output=True, text=True, check=False)
         return "Universal Ctags" in (out.stdout + out.stderr)
     except Exception:
         return False
@@ -241,7 +251,7 @@ def run_ctags_and_index(paths: list[str]) -> tuple[dict[str, set[str]], dict[str
     Paths in results are relative to project_root to match this script's expectations.
     """
     cmd = [
-        "ctags-universal", "-R", "-f", "-",
+        ctags_executable, "-R", "-f", "-",
         "--map-C++=+.ino",
         "--languages=C,C++",
         "--kinds-C=+p",

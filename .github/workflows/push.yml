@@ -97,7 +97,7 @@ jobs:
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
         run: |
-          which ctags-universal
+          (which ctags-universal || which ctags) || (echo "Error: Neither ctags-universal nor ctags found in PATH" && exit 1)
           python3 ./.github/scripts/get_affected.py --debug ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
 
       - name: Upload affected sketches
