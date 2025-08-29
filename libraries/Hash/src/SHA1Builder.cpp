@@ -1,27 +1,21 @@
-/*
- *  FIPS-180-1 compliant SHA-1 implementation
- *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: Apache-2.0
- *
- *  Licensed under the Apache License, Version 2.0 (the "License"); you may
- *  not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *  http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
- *  Modified for esp32 by Lucas Saavedra Vaz on 11 Jan 2024
- */
+// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Based on mbed TLS (https://tls.mbed.org)
 
 #include <Arduino.h>
-#include <SHA1Builder.h>
+#include "SHA1Builder.h"
 
 // 32-bit integer manipulation macros (big endian)
 
@@ -201,6 +195,8 @@ void SHA1Builder::process(const uint8_t *data) {
 // Public methods
 
 void SHA1Builder::begin(void) {
+  finalized = false;
+
   total[0] = 0;
   total[1] = 0;
 
@@ -218,7 +214,7 @@ void SHA1Builder::add(const uint8_t *data, size_t len) {
   size_t fill;
   uint32_t left;
 
-  if (len == 0) {
+  if (finalized || len == 0) {
     return;
   }
 
@@ -249,17 +245,6 @@ void SHA1Builder::add(const uint8_t *data, size_t len) {
   if (len > 0) {
     memcpy((void *)(buffer + left), data, len);
   }
-}
-
-void SHA1Builder::addHexString(const char *data) {
-  uint16_t len = strlen(data);
-  uint8_t *tmp = (uint8_t *)malloc(len / 2);
-  if (tmp == NULL) {
-    return;
-  }
-  hex2bytes(tmp, len / 2, data);
-  add(tmp, len / 2);
-  free(tmp);
 }
 
 bool SHA1Builder::addStream(Stream &stream, const size_t maxLen) {
@@ -306,6 +291,10 @@ void SHA1Builder::calculate(void) {
   uint32_t high, low;
   uint8_t msglen[8];
 
+  if (finalized) {
+    return;
+  }
+
   high = (total[0] >> 29) | (total[1] << 3);
   low = (total[0] << 3);
 
@@ -323,6 +312,8 @@ void SHA1Builder::calculate(void) {
   PUT_UINT32_BE(state[2], hash, 8);
   PUT_UINT32_BE(state[3], hash, 12);
   PUT_UINT32_BE(state[4], hash, 16);
+
+  finalized = true;
 }
 
 void SHA1Builder::getBytes(uint8_t *output) {
@@ -330,6 +321,11 @@ void SHA1Builder::getBytes(uint8_t *output) {
 }
 
 void SHA1Builder::getChars(char *output) {
+  if (!finalized || output == nullptr) {
+    log_e("Error: SHA1 not calculated or no output buffer provided.");
+    return;
+  }
+
   bytes2hex(output, SHA1_HASH_SIZE * 2 + 1, hash, SHA1_HASH_SIZE);
 }
 
