@@ -423,6 +423,11 @@ void SHA2Builder::getBytes(uint8_t *output) {
 
 // Get the hash as hex string
 void SHA2Builder::getChars(char *output) {
+  if (!finalized || output == nullptr) {
+      log_e("Error: SHA2 not calculated or no output buffer provided.");
+      return;
+  }
+
     bytes2hex(output, hash_size * 2 + 1, hash, hash_size);
 }
 

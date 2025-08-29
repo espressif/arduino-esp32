@@ -20,6 +20,25 @@
 
 #include "HEXBuilder.h"
 
+/* Try to prevent most compilers from optimizing out clearing of memory that
+ * becomes unaccessible after this function is called. This is mostly the case
+ * for clearing local stack variables at the end of a function. This is not
+ * exactly perfect, i.e., someone could come up with a compiler that figures out
+ * the pointer is pointing to memset and then end up optimizing the call out, so
+ * try go a bit further by storing the first octet (now zero) to make this even
+ * a bit more difficult to optimize out. Once memset_s() is available, that
+ * could be used here instead. */
+static void * (* const volatile memset_func)(void *, int, size_t) = memset;
+static uint8_t forced_memzero_val;
+
+static inline void forced_memzero(void *ptr, size_t len)
+{
+  memset_func(ptr, 0, len);
+  if (len) {
+    forced_memzero_val = ((uint8_t *) ptr)[0];
+  }
+}
+
 // Base class for hash builders
 
 class HashBuilder : public HEXBuilder {

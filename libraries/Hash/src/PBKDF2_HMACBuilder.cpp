@@ -47,6 +47,7 @@ PBKDF2_HMACBuilder::~PBKDF2_HMACBuilder() {
 
 void PBKDF2_HMACBuilder::clearData() {
   if (derivedKey != nullptr) {
+    forced_memzero(derivedKey, derivedKeyLen);
     delete[] derivedKey;
     derivedKey = nullptr;
   }
@@ -126,6 +127,7 @@ void PBKDF2_HMACBuilder::calculate() {
 
   // Allocate output buffer
   if (derivedKey != nullptr) {
+    forced_memzero(derivedKey, derivedKeyLen);
     delete[] derivedKey;
   }
   derivedKey = new uint8_t[derivedKeyLen];
@@ -148,9 +150,8 @@ void PBKDF2_HMACBuilder::getChars(char *output) {
     log_e("Error: PBKDF2-HMAC not calculated or no output buffer provided.");
     return;
   }
-  for (size_t i = 0; i < derivedKeyLen; i++) {
-    output[i] = (char)derivedKey[i];
-  }
+
+  bytes2hex(output, derivedKeyLen * 2 + 1, derivedKey, derivedKeyLen);
 }
 
 String PBKDF2_HMACBuilder::toString() {
@@ -159,19 +160,15 @@ String PBKDF2_HMACBuilder::toString() {
     return "";
   }
 
-  String result = "";
-  for (size_t i = 0; i < derivedKeyLen; i++) {
-    if (derivedKey[i] < 0x10) {
-      result += "0";
-    }
-    result += String(derivedKey[i], HEX);
-  }
-  return result;
+  char out[(derivedKeyLen * 2) + 1];
+  getChars(out);
+  return String(out);
 }
 
 // PBKDF2 specific methods
 void PBKDF2_HMACBuilder::setPassword(const uint8_t* password, size_t len) {
   if (this->password != nullptr) {
+    forced_memzero(this->password, len);
     delete[] this->password;
   }
   this->password = new uint8_t[len];
@@ -190,6 +187,7 @@ void PBKDF2_HMACBuilder::setPassword(String password) {
 
 void PBKDF2_HMACBuilder::setSalt(const uint8_t* salt, size_t len) {
   if (this->salt != nullptr) {
+    forced_memzero(this->salt, len);
     delete[] this->salt;
   }
   this->salt = new uint8_t[len];

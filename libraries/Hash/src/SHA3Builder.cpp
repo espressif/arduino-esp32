@@ -253,6 +253,11 @@ void SHA3Builder::getBytes(uint8_t *output) {
 
 // Get the hash as hex string
 void SHA3Builder::getChars(char *output) {
+  if (!finalized || output == nullptr) {
+    log_e("Error: SHA3 not calculated or no output buffer provided.");
+    return;
+  }
+
   bytes2hex(output, hash_size * 2 + 1, hash, hash_size);
 }
 

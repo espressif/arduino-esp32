@@ -195,6 +195,8 @@ void SHA1Builder::process(const uint8_t *data) {
 // Public methods
 
 void SHA1Builder::begin(void) {
+  finalized = false;
+
   total[0] = 0;
   total[1] = 0;
 
@@ -212,7 +214,7 @@ void SHA1Builder::add(const uint8_t *data, size_t len) {
   size_t fill;
   uint32_t left;
 
-  if (len == 0) {
+  if (finalized || len == 0) {
     return;
   }
 
@@ -289,6 +291,10 @@ void SHA1Builder::calculate(void) {
   uint32_t high, low;
   uint8_t msglen[8];
 
+  if (finalized) {
+    return;
+  }
+
   high = (total[0] >> 29) | (total[1] << 3);
   low = (total[0] << 3);
 
@@ -306,6 +312,8 @@ void SHA1Builder::calculate(void) {
   PUT_UINT32_BE(state[2], hash, 8);
   PUT_UINT32_BE(state[3], hash, 12);
   PUT_UINT32_BE(state[4], hash, 16);
+
+  finalized = true;
 }
 
 void SHA1Builder::getBytes(uint8_t *output) {
@@ -313,6 +321,11 @@ void SHA1Builder::getBytes(uint8_t *output) {
 }
 
 void SHA1Builder::getChars(char *output) {
+  if (!finalized || output == nullptr) {
+    log_e("Error: SHA1 not calculated or no output buffer provided.");
+    return;
+  }
+
   bytes2hex(output, SHA1_HASH_SIZE * 2 + 1, hash, SHA1_HASH_SIZE);
 }
 

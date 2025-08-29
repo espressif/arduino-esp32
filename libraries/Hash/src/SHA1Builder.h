@@ -28,12 +28,14 @@ private:
   uint32_t state[5];            /* intermediate digest state  */
   unsigned char buffer[64];     /* data block being processed */
   uint8_t hash[SHA1_HASH_SIZE]; /* SHA-1 result               */
+  bool finalized;               /* Whether hash has been finalized */
 
   void process(const uint8_t *data);
 
 public:
   using HashBuilder::add;
 
+  SHA1Builder() : finalized(false) {}
   void begin() override;
   void add(const uint8_t *data, size_t len) override;
   bool addStream(Stream &stream, const size_t maxLen) override;
