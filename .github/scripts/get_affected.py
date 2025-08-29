@@ -112,7 +112,6 @@ component_mode = False
 # A list of files that are used by the CI and build system.
 # If any of these files change, the preset sketches should be recompiled.
 build_files = [
-    "package/package_esp32_index.template.json",
     "package.json",
     "tools/get.py",
     "tools/get.exe",
@@ -547,6 +546,17 @@ def preprocess_changed_files(changed_files: list[str]) -> None:
     """
     Preprocess the changed files to detect build system changes.
     """
+    # Special case: if the Arduino libs or tools changes, rebuild all sketches on PRs
+    if is_pr and not component_mode:
+        for changed in changed_files:
+            if changed == "package/package_esp32_index.template.json":
+                print("Package index changed - all sketches affected", file=sys.stderr)
+                all_sketches = list_ino_files()
+                for sketch in all_sketches:
+                    if sketch not in affected_sketches:
+                        affected_sketches.append(sketch)
+                # No need to continue preprocessing; dependency walk will still run afterwards
+                break
     # If not a PR, skip preprocessing as we'll recompile everything anyway
     if not is_pr:
         return
