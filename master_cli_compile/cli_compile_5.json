@@ -135,6 +135,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "ESP32/examples/Touch/TouchRead",
+                    "sizes": [{
+                            "flash_bytes": 342481,
+                            "flash_percentage": 26,
+                            "ram_bytes": 22164,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
                             "flash_bytes": 326447,
@@ -222,20 +230,20 @@
                             "ram_bytes": 27116,
                             "ram_percentage": 8
                             }]
-                    },
-{"name": "Ethernet/examples/ETH_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 760175,
-                            "flash_percentage": 57,
-                            "ram_bytes": 27960,
-                            "ram_percentage": 8
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
+                    "sizes": [{
+                            "flash_bytes": 879531,
+                            "flash_percentage": 67,
+                            "ram_bytes": 43416,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
                             "flash_bytes": 882455,
@@ -355,20 +363,20 @@
                             "ram_bytes": 45400,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "HTTPClient/examples/StreamHttpClient",
-                    "sizes": [{
-                            "flash_bytes": 1005855,
-                            "flash_percentage": 76,
-                            "ram_bytes": 45192,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "FFat/examples/FFat_Test",
+                    "sizes": [{
+                            "flash_bytes": 325518,
+                            "flash_percentage": 24,
+                            "ram_bytes": 16024,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "FFat/examples/FFat_time",
                     "sizes": [{
                             "flash_bytes": 899702,
@@ -479,14 +487,6 @@
                             "flash_percentage": 23,
                             "ram_bytes": 15904,
                             "ram_percentage": 4
-                            }]
-                    },
-{"name": "LittleFS/examples/LITTLEFS_time",
-                    "sizes": [{
-                            "flash_bytes": 898962,
-                            "flash_percentage": 68,
-                            "ram_bytes": 40132,
-                            "ram_percentage": 12
                             }]
                     }
 ]
@@ -853,19 +853,27 @@
                             "ram_percentage": 6
                             }]
                     },
+{"name": "ESP32/examples/Touch/TouchButton",
+                    "sizes": [{
+                            "flash_bytes": 322743,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21092,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Touch/TouchInterrupt",
                     "sizes": [{
-                            "flash_bytes": 316063,
+                            "flash_bytes": 322639,
                             "flash_percentage": 24,
-                            "ram_bytes": 20940,
+                            "ram_bytes": 21092,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/Touch/TouchRead",
                     "sizes": [{
-                            "flash_bytes": 316815,
+                            "flash_bytes": 322503,
                             "flash_percentage": 24,
-                            "ram_bytes": 20932,
+                            "ram_bytes": 21084,
                             "ram_percentage": 6
                             }]
                     },
@@ -938,14 +946,6 @@
                             "flash_bytes": 928007,
                             "flash_percentage": 70,
                             "ram_bytes": 43796,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Serial",
-                    "sizes": [{
-                            "flash_bytes": 925075,
-                            "flash_percentage": 70,
-                            "ram_bytes": 43688,
                             "ram_percentage": 13
                             }]
                     }

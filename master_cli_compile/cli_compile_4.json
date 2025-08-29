@@ -215,19 +215,19 @@
                             "ram_percentage": 6
                             }]
                     },
-{"name": "ESP32/examples/Touch/TouchInterrupt",
+{"name": "ESP32/examples/Touch/TouchButton",
                     "sizes": [{
-                            "flash_bytes": 338245,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22140,
+                            "flash_bytes": 342713,
+                            "flash_percentage": 26,
+                            "ram_bytes": 22172,
                             "ram_percentage": 6
                             }]
                     },
-{"name": "ESP32/examples/Touch/TouchRead",
+{"name": "ESP32/examples/Touch/TouchInterrupt",
                     "sizes": [{
-                            "flash_bytes": 342479,
+                            "flash_bytes": 342639,
                             "flash_percentage": 26,
-                            "ram_bytes": 22164,
+                            "ram_bytes": 22172,
                             "ram_percentage": 6
                             }]
                     }
@@ -284,19 +284,27 @@
                             "ram_percentage": 6
                             }]
                     },
+{"name": "ESP32/examples/Touch/TouchButton",
+                    "sizes": [{
+                            "flash_bytes": 324175,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21428,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "ESP32/examples/Touch/TouchInterrupt",
                     "sizes": [{
-                            "flash_bytes": 313515,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21284,
+                            "flash_bytes": 324051,
+                            "flash_percentage": 24,
+                            "ram_bytes": 21428,
                             "ram_percentage": 6
                             }]
                     },
 {"name": "ESP32/examples/Touch/TouchRead",
                     "sizes": [{
-                            "flash_bytes": 314575,
+                            "flash_bytes": 323959,
                             "flash_percentage": 24,
-                            "ram_bytes": 21284,
+                            "ram_bytes": 21420,
                             "ram_percentage": 6
                             }]
                     },
@@ -355,20 +363,20 @@
                             "ram_bytes": 43440,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
-                    "sizes": [{
-                            "flash_bytes": 879531,
-                            "flash_percentage": 67,
-                            "ram_bytes": 43416,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "ESP32/examples/Touch/TouchRead",
+                    "sizes": [{
+                            "flash_bytes": 287134,
+                            "flash_percentage": 21,
+                            "ram_bytes": 16000,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "ESP32/examples/Utilities/HEXBuilder",
                     "sizes": [{
                             "flash_bytes": 271306,
@@ -479,14 +487,6 @@
                             "flash_percentage": 72,
                             "ram_bytes": 39104,
                             "ram_percentage": 11
-                            }]
-                    },
-{"name": "FFat/examples/FFat_Test",
-                    "sizes": [{
-                            "flash_bytes": 325518,
-                            "flash_percentage": 24,
-                            "ram_bytes": 16024,
-                            "ram_percentage": 4
                             }]
                     }
 ]

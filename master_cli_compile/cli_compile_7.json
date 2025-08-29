@@ -135,6 +135,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "LittleFS/examples/LITTLEFS_test",
+                    "sizes": [{
+                            "flash_bytes": 375035,
+                            "flash_percentage": 28,
+                            "ram_bytes": 22460,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
                             "flash_bytes": 728075,
@@ -222,20 +230,20 @@
                             "ram_bytes": 21828,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "Preferences/examples/StartCounter",
-                    "sizes": [{
-                            "flash_bytes": 333605,
-                            "flash_percentage": 25,
-                            "ram_bytes": 21828,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "Matter/examples/MatterFan",
+                    "sizes": [{
+                            "flash_bytes": 1864175,
+                            "flash_percentage": 59,
+                            "ram_bytes": 113704,
+                            "ram_percentage": 34
+                            }]
+                    },
 {"name": "Matter/examples/MatterHumiditySensor",
                     "sizes": [{
                             "flash_bytes": 1827427,
@@ -355,20 +363,20 @@
                             "ram_bytes": 45136,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "NetworkClientSecure/examples/WiFiClientSecure",
-                    "sizes": [{
-                            "flash_bytes": 970687,
-                            "flash_percentage": 30,
-                            "ram_bytes": 45104,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "Matter/examples/MatterOnOffPlugin",
+                    "sizes": [{
+                            "flash_bytes": 1667154,
+                            "flash_percentage": 52,
+                            "ram_bytes": 92384,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "Matter/examples/MatterPressureSensor",
                     "sizes": [{
                             "flash_bytes": 1643542,
@@ -479,14 +487,6 @@
                             "flash_percentage": 39,
                             "ram_bytes": 20388,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 928998,
-                            "flash_percentage": 70,
-                            "ram_bytes": 38856,
-                            "ram_percentage": 11
                             }]
                     }
 ]
@@ -829,6 +829,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "HTTPClient/examples/StreamHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 1052219,
+                            "flash_percentage": 80,
+                            "ram_bytes": 46564,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
                             "flash_bytes": 984819,
@@ -938,14 +946,6 @@
                             "flash_bytes": 1788131,
                             "flash_percentage": 56,
                             "ram_bytes": 106224,
-                            "ram_percentage": 32
-                            }]
-                    },
-{"name": "Matter/examples/MatterEvents",
-                    "sizes": [{
-                            "flash_bytes": 1746927,
-                            "flash_percentage": 55,
-                            "ram_bytes": 105948,
                             "ram_percentage": 32
                             }]
                     }
