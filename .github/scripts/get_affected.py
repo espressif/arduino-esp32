@@ -189,12 +189,16 @@ ctags_header_to_qnames: dict[str, set[str]] = {}
 ctags_defs_by_qname: dict[str, set[str]] = {}
 header_extensions = {".h", ".hpp", ".hh", ".hxx"}
 source_extensions = {".c", ".cc", ".cpp", ".cxx", ".ino"}
+skip_extensions = {".md"}
 
 def is_header_file(path: str) -> bool:
     return os.path.splitext(path)[1].lower() in header_extensions
 
 def is_source_file(path: str) -> bool:
     return os.path.splitext(path)[1].lower() in source_extensions
+
+def should_skip_file(path: str) -> bool:
+    return os.path.splitext(path)[1].lower() in skip_extensions
 
 def detect_universal_ctags() -> bool:
     """
@@ -496,11 +500,9 @@ def has_build_files_changed(changed_files: list[str]) -> bool:
     """
     Check if any of the build files have changed.
     Supports glob patterns in build_files.
-    Excludes .md files from triggering rebuilds.
     """
     for file in changed_files:
-        # Skip .md files
-        if file.endswith('.md'):
+        if should_skip_file(file):
             continue
 
         if not component_mode:
@@ -517,10 +519,8 @@ def has_build_files_changed(changed_files: list[str]) -> bool:
 def has_sketch_build_files_changed(path: str) -> bool:
     """
     Check if any of the sketch build files have changed.
-    Excludes .md files from triggering rebuilds.
     """
-    # Skip .md files
-    if path.endswith('.md'):
+    if should_skip_file(path):
         return False
 
     if not component_mode:
@@ -614,8 +614,7 @@ def find_affected_sketches(changed_files: list[str]) -> None:
         all_examples = []
 
     for file in changed_files:
-        # Skip .md files entirely from dependency analysis
-        if not file.endswith('.md'):
+        if not should_skip_file(file):
             q.put(file)
 
     while not q.empty():
