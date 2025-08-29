@@ -91,7 +91,7 @@ jobs:
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
         run: |
-          which ctags-universal
+          (which ctags-universal || which ctags) || (echo "Error: Neither ctags-universal nor ctags found in PATH" && exit 1)
           python3 ./.github/scripts/get_affected.py --debug --component ${{ steps.changed-files.outputs.all_changed_files }} > affected_examples.txt
 
       - name: Upload affected examples
