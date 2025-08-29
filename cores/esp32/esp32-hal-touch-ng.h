@@ -33,23 +33,18 @@ extern "C" {
 #include "esp32-hal.h"
 #include "driver/touch_sens.h"
 
-#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
-#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
-    .abs_active_thresh = {1000},  \
-    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
-    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
-    .group = TOUCH_CHAN_TRIG_GROUP_BOTH,  \
-}
-#elif SOC_TOUCH_SENSOR_VERSION == 2     // ESP32-S2 & ESP32-S3
-#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
-    .active_thresh = {2000},  \
-    .charge_speed = TOUCH_CHARGE_SPEED_7,  \
-    .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT,  \
-}
-#elif SOC_TOUCH_SENSOR_VERSION == 3     // ESP32-P4
-#define TOUCH_CHANNEL_DEFAULT_CONFIG()        {  \
-    .active_thresh = {1000},  \
-}
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
+#define TOUCH_CHANNEL_DEFAULT_CONFIG()                                                                                     \
+  {                                                                                                                        \
+    .abs_active_thresh = {1000}, .charge_speed = TOUCH_CHARGE_SPEED_7, .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT, \
+    .group = TOUCH_CHAN_TRIG_GROUP_BOTH,                                                                                   \
+  }
+#elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32-S2 & ESP32-S3
+#define TOUCH_CHANNEL_DEFAULT_CONFIG() \
+  { .active_thresh = {2000}, .charge_speed = TOUCH_CHARGE_SPEED_7, .init_charge_volt = TOUCH_INIT_CHARGE_VOLT_DEFAULT, }
+#elif SOC_TOUCH_SENSOR_VERSION == 3  // ESP32-P4
+#define TOUCH_CHANNEL_DEFAULT_CONFIG() \
+  { .active_thresh = {1000}, }
 #endif
 
 typedef uint32_t touch_value_t;
@@ -62,7 +57,7 @@ typedef uint32_t touch_value_t;
  **/
 void touchSetTiming(float measure, uint32_t sleep);
 
-#if SOC_TOUCH_SENSOR_VERSION == 1 // ESP32
+#if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
 /*
  * @param[in] duration_ms   The measurement duration of the touch channel
  * @param[in] volt_low      The low voltage limit of the touch channel
@@ -70,7 +65,7 @@ void touchSetTiming(float measure, uint32_t sleep);
  */
 void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high);
 
-#elif SOC_TOUCH_SENSOR_VERSION == 2 // ESP32S2, ESP32S3
+#elif SOC_TOUCH_SENSOR_VERSION == 2  // ESP32S2, ESP32S3
 /*
  * @param[in] chg_times     The charge times of the touch channel
  * @param[in] volt_low      The low voltage limit of the touch channel
@@ -78,7 +73,7 @@ void touchSetConfig(float duration_ms, touch_volt_lim_l_t volt_low, touch_volt_l
  */
 void touchSetConfig(uint32_t chg_times, touch_volt_lim_l_t volt_low, touch_volt_lim_h_t volt_high);
 
-#elif SOC_TOUCH_SENSOR_VERSION == 3 // ESP32P4
+#elif SOC_TOUCH_SENSOR_VERSION == 3  // ESP32P4
 /*
  * Tune the touch pad frequency.
  * Note: Must be called before setting up touch pads

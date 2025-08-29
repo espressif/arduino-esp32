@@ -22,7 +22,7 @@ void setup() {
 
   //Optional: Set the threshold to 5% of the benchmark value. Only effective if threshold = 0.
   touchSetDefaultThreshold(5);
-  
+
   Serial.println("ESP32 Touch Interrupt Test");
   touchAttachInterrupt(T2, gotTouch1, threshold);
   touchAttachInterrupt(T3, gotTouch2, threshold);

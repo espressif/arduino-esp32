@@ -4,7 +4,6 @@
 
 #if CONFIG_IDF_TARGET_ESP32
 
-
 #define TEST_TOUCH_CHANNEL (7)
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM0,
@@ -12,7 +11,7 @@ static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
   TOUCH_PAD_NUM2, TOUCH_PAD_NUM3, TOUCH_PAD_NUM4, TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7 /*,TOUCH_PAD_NUM8, TOUCH_PAD_NUM9*/
 };
 
-uint8_t TOUCH_GPIOS[] = {4,/* 0,*/ 2, 15, 13, 12, 14, 27/*, 33, 32*/};
+uint8_t TOUCH_GPIOS[] = {4, /* 0,*/ 2, 15, 13, 12, 14, 27 /*, 33, 32*/};
 
 #define NO_TOUCH_GPIO 25
 
@@ -20,7 +19,8 @@ uint8_t TOUCH_GPIOS[] = {4,/* 0,*/ 2, 15, 13, 12, 14, 27/*, 33, 32*/};
 
 #define TEST_TOUCH_CHANNEL (8)  //14
 static touch_pad_t touch_list[TEST_TOUCH_CHANNEL] = {
-  TOUCH_PAD_NUM1, TOUCH_PAD_NUM2, TOUCH_PAD_NUM3,  TOUCH_PAD_NUM4,  TOUCH_PAD_NUM5, TOUCH_PAD_NUM6, TOUCH_PAD_NUM7, TOUCH_PAD_NUM8 
+  TOUCH_PAD_NUM1, TOUCH_PAD_NUM2, TOUCH_PAD_NUM3, TOUCH_PAD_NUM4, TOUCH_PAD_NUM5,
+  TOUCH_PAD_NUM6, TOUCH_PAD_NUM7, TOUCH_PAD_NUM8
   /*TOUCH_PAD_NUM9, TOUCH_PAD_NUM10, TOUCH_PAD_NUM11, TOUCH_PAD_NUM12, TOUCH_PAD_NUM13, TOUCH_PAD_NUM14*/
 };
 
@@ -42,7 +42,7 @@ uint8_t TOUCH_GPIOS[] = {2, 3, 4, 5, 6 /*, 7, 8, 9, 10, 11, 12 ,13, 14, 15*/};
 #define NO_TOUCH_GPIO 17
 #endif
 
-#define INTERRUPT_THRESHOLD      0    // Use benchmarked threshold
+#define INTERRUPT_THRESHOLD 0  // Use benchmarked threshold
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32P4
 #define PRESSED_VALUE_DIFFERENCE 200  //-200 for ESP32 and +200 for ESP32P4 read value difference against the unpressed value
@@ -68,7 +68,7 @@ void gotTouch2() {
  */
 static void test_press_fake(touch_pad_t pad_num) {
 #if SOC_TOUCH_SENSOR_VERSION <= 2
-  touch_ll_set_charge_speed(pad_num,TOUCH_CHARGE_SPEED_4);
+  touch_ll_set_charge_speed(pad_num, TOUCH_CHARGE_SPEED_4);
 #else
   touch_ll_set_internal_capacitor(0x7f);
 #endif
@@ -79,7 +79,7 @@ static void test_press_fake(touch_pad_t pad_num) {
  */
 static void test_release_fake(touch_pad_t pad_num) {
 #if SOC_TOUCH_SENSOR_VERSION <= 2
-  touch_ll_set_charge_speed(pad_num, TOUCH_CHARGE_SPEED_7); 
+  touch_ll_set_charge_speed(pad_num, TOUCH_CHARGE_SPEED_7);
 #else
   touch_ll_set_internal_capacitor(0);
 #endif
@@ -139,7 +139,7 @@ void test_touch_interrtupt(void) {
   test_press_fake(touch_list[1]);
 
   delay(100);
-  
+
   touchDetachInterrupt(TOUCH_GPIOS[0]);
   touchDetachInterrupt(TOUCH_GPIOS[1]);
 
