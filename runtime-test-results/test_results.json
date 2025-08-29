@@ -1,6 +1,6 @@
 {
-  "commit_sha": "20c0ddec9e00e13fb156933246d8efa8b49cb5e6",
-  "tests_failed": true,
+  "commit_sha": "d673d267ddd4c1c6898dde2ac7d458d9d22991fc",
+  "tests_failed": false,
   "test_data": {
     "hardware": {
       "democfg": {
@@ -197,7 +197,7 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 1,
+          "failures": 0,
           "total": 3,
           "errors": 0
         },
@@ -598,5 +598,5 @@
       }
     }
   },
-  "generated_at": "2025-08-29T00:53:21.566816"
+  "generated_at": "2025-08-29T16:27:34.776085"
 }
