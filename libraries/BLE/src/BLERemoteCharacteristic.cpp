@@ -566,8 +566,11 @@ String BLERemoteCharacteristic::readValue() {
     return String();
   }
 
+  log_d("readValue: taking semaphore");
   m_semaphoreReadCharEvt.take("readValue");
 
+  log_d("readValue: calling esp_ble_gattc_read_char");
+  log_d("readValue: gattcIf: %d, connId: %d, handle: %d, auth: %d", m_pRemoteService->getClient()->getGattcIf(), m_pRemoteService->getClient()->getConnId(), getHandle(), m_auth);
   // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
   // This is an asynchronous request which means that we must block waiting for the response
   // to become available.
@@ -578,6 +581,8 @@ String BLERemoteCharacteristic::readValue() {
     (esp_gatt_auth_req_t)m_auth
   );  // Security
 
+  log_d("readValue: esp_ble_gattc_read_char returned: %d", errRc);
+
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     return "";
@@ -585,7 +590,9 @@ String BLERemoteCharacteristic::readValue() {
 
   // Block waiting for the event that indicates that the read has completed.  When it has, the String found
   // in m_value will contain our data.
+  log_d("readValue: waiting for semaphore to be released with ESP_GATTC_READ_CHAR_EVT...");
   m_semaphoreReadCharEvt.wait("readValue");
+  log_d("readValue: semaphore released");
 
   log_v("<< readValue(): length: %d", m_value.length());
   return m_value;
@@ -846,7 +853,7 @@ String BLERemoteCharacteristic::readValue() {
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
       /* Else falls through. */
@@ -928,10 +935,10 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHEN):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_AUTHOR):
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_INSUFFICIENT_ENC):
-        if (retryCount && pClient->secureConnection()) {
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
           break;
         }
-        /* Else falls through. */
+      /* Else falls through. */
       default: goto exit;
     }
   } while (rc != 0 && retryCount--);

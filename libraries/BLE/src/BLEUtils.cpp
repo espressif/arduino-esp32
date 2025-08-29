@@ -1568,7 +1568,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     // - uint32_t trans_id
     // - esp_bd_addr_t bda
     // - uint8_t exec_write_flag
-#ifdef ARDUHAL_LOG_LEVEL_VERBOSE
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     case ESP_GATTS_EXEC_WRITE_EVT:
     {
       char *pWriteFlagText;
