@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: read
+  contents: read
+  pull-requests: write
 
 jobs:
   lint:
@@ -65,6 +65,7 @@ jobs:
         uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
 
       - name: Run pre-commit hooks in changed files
+        id: pre-commit
         run: pre-commit run --color=always --show-diff-on-failure --files ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Save pre-commit cache
@@ -82,3 +83,18 @@ jobs:
         if: ${{ always() && github.event_name == 'pull_request' }}
         with:
           msg: "ci(pre-commit): Apply automatic fixes"
+
+      - name: Add label if no commits are pending
+        if: ${{ failure() && steps.pre-commit.outcome == 'failure' && steps.pre-commit.outputs.pending_commit == '0' && github.event_name == 'pull_request' }}
+        run: |
+          gh pr edit ${{ github.event.number }} --add-label 'Status: Pre-commit fixes required ⚠️'
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Remove label if everything was fixed
+        if: ${{ success() && github.event_name == 'pull_request' }}
+        run: |
+          gh pr edit ${{ github.event.number }} --remove-label 'Status: Pre-commit fixes required ⚠️'
+        env:
+          GH_TOKEN: ${{ github.token }}
+

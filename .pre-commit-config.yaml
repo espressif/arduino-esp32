@@ -108,3 +108,20 @@ repos:
       - id: vale
         language_version: "1.23.2"
         types_or: [markdown, rst]
+
+  # Always leave this last to ensure that all hooks have already run
+  - repo: local
+    hooks:
+      - id: git-diff
+        name: git diff
+        entry: |
+          bash -c '
+            if [ "$CI" = "true" ]; then
+              if git diff --exit-code; then
+                echo "pending_commit=0" >> $GITHUB_OUTPUT
+              else
+                echo "pending_commit=1" >> $GITHUB_OUTPUT
+              fi
+            fi
+          '
+        language: system
