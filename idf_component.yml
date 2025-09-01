@@ -103,9 +103,9 @@ dependencies:
       - if: "target not in [esp32c2, esp32p4]"
   # RainMaker End
   espressif/esp-sr:
-    version: "^1.4.2"
+    version: "^2.1.5"
     rules:
-      - if: "target in [esp32s3]"
+      - if: "target in [esp32s3, esp32p4]"
   espressif/esp_hosted:
     version: "^2.0.12"
     rules:
