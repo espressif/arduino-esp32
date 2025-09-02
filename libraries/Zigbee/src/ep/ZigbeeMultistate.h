@@ -88,12 +88,14 @@ public:
   // Set the application type and description for the multistate input
   bool setMultistateInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_multistate_input.h for application type values
   bool setMultistateInputDescription(const char *description);
-  bool setMultistateInputStates(const char * const states[], uint16_t states_length);
+  bool setMultistateInputStates(uint16_t number_of_states);
+  // bool setMultistateInputStates(const char * const states[], uint16_t states_length);
 
   // Set the application type and description for the multistate output
   bool setMultistateOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_multistate_output.h for application type values
   bool setMultistateOutputDescription(const char *description);
-  bool setMultistateOutputStates(const char * const states[], uint16_t states_length);
+  bool setMultistateOutputStates(uint16_t number_of_states);
+  // bool setMultistateOutputStates(const char * const states[], uint16_t states_length);
 
   // Use to set a cb function to be called on multistate output change
   void onMultistateOutputChange(void (*callback)(uint16_t state)) {
@@ -113,18 +115,18 @@ public:
   }
   
   // Get state names and length
-  const char* const* getMultistateInputStateNames() {
-    return _input_state_names;
-  }
   uint16_t getMultistateInputStateNamesLength() {
     return _input_state_names_length;
-  }
-  const char* const* getMultistateOutputStateNames() {
-    return _output_state_names;
   }
   uint16_t getMultistateOutputStateNamesLength() {
     return _output_state_names_length;
   }
+  // const char* const* getMultistateInputStateNames() {
+  //   return _input_state_names;
+  // }
+  // const char* const* getMultistateOutputStateNames() {
+  //   return _output_state_names;
+  // }
 
   // Report Multistate Input/Output
   bool reportMultistateInput();
@@ -141,10 +143,11 @@ private:
   uint16_t _input_state;
   
   // Local storage for state names
-  const char* const* _input_state_names;
   uint16_t _input_state_names_length;
-  const char* const* _output_state_names;
   uint16_t _output_state_names_length;
+  // const char* const* _input_state_names;
+  // const char* const* _output_state_names;
+
 };
 
 #endif  // CONFIG_ZB_ENABLED

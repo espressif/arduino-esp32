@@ -52,7 +52,7 @@ void onStateChange(uint16_t state) {
   // print the state
   Serial.printf("Received state change: %d\r\n", state);
   // print the state name using the stored state names
-  const char* const* state_names = zbMultistateDevice.getMultistateOutputStateNames();
+  const char* const* state_names = ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES;
   if (state_names && state < zbMultistateDevice.getMultistateOutputStateNamesLength()) {
     Serial.printf("State name: %s\r\n", state_names[state]);
   }
@@ -64,9 +64,8 @@ void onStateChangeCustom(uint16_t state) {
   // print the state
   Serial.printf("Received state change: %d\r\n", state);
   // print the state name using the stored state names
-  const char* const* state_names = zbMultistateDeviceCustom.getMultistateOutputStateNames();
-  if (state_names && state < zbMultistateDeviceCustom.getMultistateOutputStateNamesLength()) {
-    Serial.printf("State name: %s\r\n", state_names[state]);
+  if (multistate_custom_state_names && state < zbMultistateDeviceCustom.getMultistateOutputStateNamesLength()) {
+    Serial.printf("State name: %s\r\n", multistate_custom_state_names[state]);
   }
   // print state index of possible options
   Serial.printf("State index: %d / %d\r\n", state, zbMultistateDevice.getMultistateOutputStateNamesLength() - 1);
@@ -95,37 +94,51 @@ void onStateChangeCustom(uint16_t state) {
 }
 
 void setup() {
+  log_d("Starting serial");
   Serial.begin(115200);
 
   // Init button switch
+  log_d("Init button switch");
   pinMode(button, INPUT_PULLUP);
 
   // Optional: set Zigbee device name and model
+  log_d("Set Zigbee device name and model");
   zbMultistateDevice.setManufacturerAndModel("Espressif", "ZigbeeMultistateDevice");
 
   // Set up analog input
+  log_d("Add Multistate Input");
   zbMultistateDevice.addMultistateInput();
+  log_d("Set Multistate Input Application");
   zbMultistateDevice.setMultistateInputApplication(ZB_MULTISTATE_APPLICATION_TYPE_0_INDEX);
+  log_d("Set Multistate Input Description");
   zbMultistateDevice.setMultistateInputDescription("Fan (on/off/auto)");
-  zbMultistateDevice.setMultistateInputStates(ZB_MULTISTATE_APPLICATION_TYPE_0_STATE_NAMES, ZB_MULTISTATE_APPLICATION_TYPE_0_NUM_STATES);
+  zbMultistateDevice.setMultistateInputStates(ZB_MULTISTATE_APPLICATION_TYPE_0_NUM_STATES);
 
   // Set up analog output
+  log_d("Add Multistate Output");
   zbMultistateDevice.addMultistateOutput();
+  log_d("Set Multistate Output Application");
   zbMultistateDevice.setMultistateOutputApplication(ZB_MULTISTATE_APPLICATION_TYPE_7_INDEX);
+  log_d("Set Multistate Output Description");
   zbMultistateDevice.setMultistateOutputDescription("Light (high/normal/low)");
-  zbMultistateDevice.setMultistateOutputStates(ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES, ZB_MULTISTATE_APPLICATION_TYPE_7_NUM_STATES);
+  zbMultistateDevice.setMultistateOutputStates(ZB_MULTISTATE_APPLICATION_TYPE_7_NUM_STATES);
 
   // Set up custom output
+  log_d("Add Multistate Output");
   zbMultistateDeviceCustom.addMultistateOutput();
+  log_d("Set Multistate Output Application");
   zbMultistateDeviceCustom.setMultistateOutputApplication(ZB_MULTISTATE_APPLICATION_TYPE_OTHER_INDEX);
+  log_d("Set Multistate Output Description");
   zbMultistateDeviceCustom.setMultistateOutputDescription("Fan (on/off/slow/medium/fast)");
-  zbMultistateDeviceCustom.setMultistateOutputStates(multistate_custom_state_names, 5);
+  zbMultistateDeviceCustom.setMultistateOutputStates(5);
 
   // Set callback function for multistate output change 
+  log_d("Set callback function for multistate output change");
   zbMultistateDevice.onMultistateOutputChange(onStateChange);
   zbMultistateDeviceCustom.onMultistateOutputChange(onStateChangeCustom);
 
   // Add endpoints to Zigbee Core
+  log_d("Add endpoints to Zigbee Core");
   Zigbee.addEndpoint(&zbMultistateDevice);
   Zigbee.addEndpoint(&zbMultistateDeviceCustom);
 

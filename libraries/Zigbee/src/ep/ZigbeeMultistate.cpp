@@ -34,10 +34,10 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _multistate_clusters = 0;
   _input_state = 0;
   _output_state = 0;
-  _input_state_names = nullptr;
   _input_state_names_length = 0;
-  _output_state_names = nullptr;
   _output_state_names_length = 0;
+  // _input_state_names = nullptr;
+  // _output_state_names = nullptr;
   _on_multistate_output_change = nullptr;
 }
 
@@ -55,25 +55,25 @@ bool ZigbeeMultistate::addMultistateInput() {
   char default_description[] = "\x10" // Size of the description text
                                "Multistate Input"; // Description text
   uint32_t application_type = 0x00000000 | (0x0D << 24); // Application type
-  const char* state_text[] = { "Off", "On", "Auto" }; // State text array
+  // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
-  esp_err_t ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)default_description);
+  esp_err_t ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != ESP_OK) {
     log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_STATE_TEXT_ID, (void *)state_text);
-  if (ret != ESP_OK) {
-    log_e("Failed to add state text attribute: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
+  // ret = esp_zb_multistate_input_cluster_add_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_STATE_TEXT_ID, (void *)state_text);
+  // if (ret != ESP_OK) {
+  //   log_e("Failed to add state text attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+  //   return false;
+  // }
 
   ret = esp_zb_cluster_list_add_multistate_input_cluster(_cluster_list, multistate_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
@@ -102,23 +102,23 @@ bool ZigbeeMultistate::addMultistateOutput() {
   const char* state_text[] = { "Off", "On", "Auto" }; // State text array
   uint16_t num_states = 3; // Number of states
 
-  esp_err_t ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)default_description);
+  esp_err_t ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != ESP_OK) {
     log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
 
-  ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_STATE_TEXT_ID, (void *)state_text);
-  if (ret != ESP_OK) {
-    log_e("Failed to add state text attribute: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
+  // ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_STATE_TEXT_ID, (void *)state_text);
+  // if (ret != ESP_OK) {
+  //   log_e("Failed to add state text attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+  //   return false;
+  // }
 
   ret = esp_zb_cluster_list_add_multistate_output_cluster(_cluster_list, multistate_output_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   if (ret != ESP_OK) {
@@ -141,7 +141,7 @@ bool ZigbeeMultistate::setMultistateInputApplication(uint32_t application_type) 
 
   esp_zb_attribute_list_t *multistate_input_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
   if (ret != ESP_OK) {
     log_e("Failed to set Multistate Input application type: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -160,7 +160,7 @@ bool ZigbeeMultistate::setMultistateOutputApplication(uint32_t application_type)
 
   esp_zb_attribute_list_t *multistate_output_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
   if (ret != ESP_OK) {
     log_e("Failed to set Multistate Output application type: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -200,7 +200,7 @@ bool ZigbeeMultistate::setMultistateInputDescription(const char *description) {
   zb_description[description_length + 1] = '\0';
 
   // Update the description attribute
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)zb_description);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_DESCRIPTION_ID, (void *)zb_description);
   if (ret != ESP_OK) {
     log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -240,13 +240,61 @@ bool ZigbeeMultistate::setMultistateOutputDescription(const char *description) {
   zb_description[description_length + 1] = '\0';
 
   // Update the description attribute
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
   if (ret != ESP_OK) {
     log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
 }
+
+bool ZigbeeMultistate::setMultistateInputStates(uint16_t number_of_states) {
+  if (!(_multistate_clusters & MULTISTATE_INPUT)) {
+    log_e("Multistate Input cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *multistate_input_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (multistate_input_cluster == nullptr) {
+    log_e("Failed to get multistate input cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_NUMBER_OF_STATES_ID, (void *)&number_of_states);
+  if (ret != ESP_OK) {
+    log_e("Failed to set number of states: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+
+  _input_state_names_length = number_of_states;
+  return true;
+}
+
+bool ZigbeeMultistate::setMultistateOutputStates(uint16_t number_of_states) {
+  if (!(_multistate_clusters & MULTISTATE_OUTPUT)) {
+    log_e("Multistate Output cluster not added");
+    return false;
+  }
+
+  esp_zb_attribute_list_t *multistate_output_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (multistate_output_cluster == nullptr) {
+    log_e("Failed to get multistate output cluster");
+    return false;
+  }
+
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_NUMBER_OF_STATES_ID, (void *)&number_of_states);
+  if (ret != ESP_OK) {
+    log_e("Failed to set number of states: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  
+  _output_state_names_length = number_of_states;
+  return true;
+}
+
+/* TODO: revisit this after arrays are supported
 
 bool ZigbeeMultistate::setMultistateInputStates(const char * const states[], uint16_t states_length) {
   if (!(_multistate_clusters & MULTISTATE_INPUT)) {
@@ -261,12 +309,12 @@ bool ZigbeeMultistate::setMultistateInputStates(const char * const states[], uin
     return false;
   }
 
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_STATE_TEXT_ID, (void *)states);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_STATE_TEXT_ID, (void *)states);
   if (ret != ESP_OK) {
     log_e("Failed to set states text: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_NUMBER_OF_STATES_ID, (void *)&states_length);
+  ret = esp_zb_cluster_update_attr(multistate_input_cluster, ESP_ZB_ZCL_ATTR_MULTI_INPUT_NUMBER_OF_STATES_ID, (void *)&states_length);
   if (ret != ESP_OK) {
     log_e("Failed to set number of states: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -291,12 +339,12 @@ bool ZigbeeMultistate::setMultistateOutputStates(const char * const states[], ui
     return false;
   }
 
-  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_STATE_TEXT_ID, (void *)states);
+  esp_err_t ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_STATE_TEXT_ID, (void *)states);
   if (ret != ESP_OK) {
     log_e("Failed to set states text: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_NUMBER_OF_STATES_ID, (void *)&states_length);
+  ret = esp_zb_cluster_update_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_NUMBER_OF_STATES_ID, (void *)&states_length);
   if (ret != ESP_OK) {
     log_e("Failed to set number of states: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -307,11 +355,12 @@ bool ZigbeeMultistate::setMultistateOutputStates(const char * const states[], ui
   _output_state_names_length = states_length;
   return true;
 }
+*/
 
 //set attribute method -> method overridden in child class
 void ZigbeeMultistate::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+    if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       _output_state = *(uint16_t *)message->attribute.data.value;
       multistateOutputChanged();
     } else {
@@ -339,7 +388,7 @@ bool ZigbeeMultistate::setMultistateInput(uint16_t state) {
   log_d("Setting multistate input to %d", state);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_PRESENT_VALUE_ID, &state, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false
   );
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
@@ -358,7 +407,7 @@ bool ZigbeeMultistate::setMultistateOutput(uint16_t state) {
   /* Update multistate output */
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
   );
   esp_zb_lock_release();
 
@@ -373,7 +422,7 @@ bool ZigbeeMultistate::reportMultistateInput() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_MULTISTATE_INPUT_PRESENT_VALUE_ID;
+  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
@@ -394,7 +443,7 @@ bool ZigbeeMultistate::reportMultistateOutput() {
   /* Send report attributes command */
   esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_MULTISTATE_OUTPUT_PRESENT_VALUE_ID;
+  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
