@@ -13,7 +13,7 @@
 ## Description of Change
 Please describe your proposed Pull Request and it's impact.
 
-## Tests scenarios
+## Test Scenarios
 Please describe on what Hardware and Software combinations you have tested this Pull Request and how.
 
 (*eg. I have tested my Pull Request on Arduino-esp32 core v2.0.2 with ESP32 and ESP32-S2 Board with this scenario*)

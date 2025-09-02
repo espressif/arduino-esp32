@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,6 +110,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
 
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Fan created with endpoint_id %d", getEndPointId());
+
   started = true;
   return true;
 }

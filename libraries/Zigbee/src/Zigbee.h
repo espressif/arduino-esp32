@@ -2,6 +2,9 @@
 
 #pragma once
 
+// Common types and functions
+#include "ZigbeeTypes.h"
+
 // Core
 #include "ZigbeeCore.h"
 #include "ZigbeeEP.h"

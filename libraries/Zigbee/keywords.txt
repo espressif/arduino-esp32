@@ -48,6 +48,7 @@ zb_power_source_t	KEYWORD1
 ZigbeeWindowCoveringType	KEYWORD1
 ZigbeeFanMode	KEYWORD1
 ZigbeeFanModeSequence	KEYWORD1
+zb_cmd_type_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -97,6 +98,7 @@ getTime	KEYWORD2
 getTimezone	KEYWORD2
 addOTAClient	KEYWORD2
 clearBoundDevices	KEYWORD2
+onDefaultResponse	KEYWORD2
 
 # ZigbeeLight + ZigbeeColorDimmableLight
 onLightChange	KEYWORD2

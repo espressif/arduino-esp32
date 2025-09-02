@@ -4,6 +4,10 @@ on:
   release:
     types: published
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   build:
     name: Publish Release

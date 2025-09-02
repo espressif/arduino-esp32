@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -203,6 +203,8 @@ protected:
   static void _init();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)
 extern ArduinoMatter Matter;
+#endif
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

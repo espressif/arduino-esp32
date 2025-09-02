@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.3.0")
-set(max_supported_idf_version "5.4.99")
+set(max_supported_idf_version "5.5.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -184,7 +184,8 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
   libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
-  libraries/Matter/src/Matter.cpp)
+  libraries/Matter/src/Matter.cpp
+  libraries/Matter/src/MatterEndPoint.cpp)
 
 set(ARDUINO_LIBRARY_PPP_SRCS
   libraries/PPP/src/PPP.cpp
@@ -362,18 +363,18 @@ endforeach()
 set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver)
+set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
   #if(CONFIG_OPENTHREAD_ENABLED) # Does not work!
-  if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2") # Sadly only this works
+  if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5") # Sadly only this works
     list(APPEND requires openthread)
   endif()
 endif()
 
-if(IDF_TARGET STREQUAL "esp32p4")
+if(IDF_TARGET STREQUAL "esp32" OR IDF_TARGET STREQUAL "esp32s2" OR IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
   list(APPEND requires esp_driver_touch_sens)
 endif()
 

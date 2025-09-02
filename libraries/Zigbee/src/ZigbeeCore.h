@@ -11,6 +11,7 @@
 #include "aps/esp_zigbee_aps.h"
 #include <esp32-hal-log.h>
 #include <list>
+#include "ZigbeeTypes.h"
 #include "ZigbeeEP.h"
 class ZigbeeEP;
 
@@ -103,6 +104,9 @@ private:
   SemaphoreHandle_t lock;
   bool _debug;
 
+  // Global default response callback
+  void (*_global_default_response_cb)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
+
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
   const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
@@ -176,6 +180,14 @@ public:
     return _debug;
   }
 
+  // Set global default response callback
+  void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster)) {
+    _global_default_response_cb = callback;
+  }
+
+  // Call global default response callback (for internal use)
+  void callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
+
   // Friend function declaration to allow access to private members
   friend void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct);
   friend bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
@@ -194,6 +206,8 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ZIGBEE)
 extern ZigbeeCore Zigbee;
+#endif
 
 #endif  // CONFIG_ZB_ENABLED

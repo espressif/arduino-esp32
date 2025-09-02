@@ -48,10 +48,6 @@
 #ifndef I2C_BUFFER_LENGTH
 #define I2C_BUFFER_LENGTH 128  // Default size, if none is set using Wire::setBuffersize(size_t)
 #endif
-#if SOC_I2C_SUPPORT_SLAVE
-typedef void (*user_onRequest)(void);
-typedef void (*user_onReceive)(uint8_t *, int);
-#endif /* SOC_I2C_SUPPORT_SLAVE */
 
 class TwoWire : public HardwareI2C {
 protected:
@@ -77,8 +73,8 @@ protected:
 private:
 #if SOC_I2C_SUPPORT_SLAVE
   bool is_slave;
-  void (*user_onRequest)(void);
-  void (*user_onReceive)(int);
+  std::function<void()> user_onRequest;
+  std::function<void(int)> user_onReceive;
   static void onRequestService(uint8_t, void *);
   static void onReceiveService(uint8_t, uint8_t *, size_t, bool, void *);
 #endif /* SOC_I2C_SUPPORT_SLAVE */
@@ -116,8 +112,8 @@ public:
   size_t requestFrom(uint8_t address, size_t len, bool stopBit) override;
   size_t requestFrom(uint8_t address, size_t len) override;
 
-  void onReceive(void (*)(int)) override;
-  void onRequest(void (*)(void)) override;
+  void onReceive(const std::function<void(int)> &) override;
+  void onRequest(const std::function<void()> &) override;
 
   //call setPins() first, so that begin() can be called without arguments from libraries
   bool setPins(int sda, int scl);
@@ -146,6 +142,7 @@ public:
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_WIRE)
 extern TwoWire Wire;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #if SOC_I2C_NUM > 1
@@ -157,6 +154,7 @@ extern TwoWire Wire2;
 #if SOC_HP_I2C_NUM > 1
 extern TwoWire Wire1;
 #endif /* SOC_HP_I2C_NUM */
+#endif
 #endif
 
 #endif /* SOC_I2C_SUPPORTED */

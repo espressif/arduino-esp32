@@ -25,6 +25,8 @@
 #include <openthread/dataset_ftd.h>
 #include <esp_openthread.h>
 #include <Arduino.h>
+#include "IPAddress.h"
+#include <vector>
 
 typedef enum {
   OT_ROLE_DISABLED = 0,  ///< The Thread stack is disabled.
@@ -96,12 +98,73 @@ public:
   // Set the dataset
   void commitDataSet(const DataSet &dataset);
 
+  // Get the Node Network Name
+  String getNetworkName() const;
+
+  // Get the Node Extended PAN ID
+  const uint8_t *getExtendedPanId() const;
+
+  // Get the Node Network Key
+  const uint8_t *getNetworkKey() const;
+
+  // Get the Node Channel
+  uint8_t getChannel() const;
+
+  // Get the Node PAN ID
+  uint16_t getPanId() const;
+
+  // Get the OpenThread instance
+  otInstance *getInstance();
+
+  // Get the current dataset
+  const DataSet &getCurrentDataSet() const;
+
+  // Get the Mesh Local Prefix
+  const otMeshLocalPrefix *getMeshLocalPrefix() const;
+
+  // Get the Mesh-Local EID
+  IPAddress getMeshLocalEid() const;
+
+  // Get the Thread Leader RLOC
+  IPAddress getLeaderRloc() const;
+
+  // Get the Node RLOC
+  IPAddress getRloc() const;
+
+  // Get the RLOC16 ID
+  uint16_t getRloc16() const;
+
+  // Address management with caching
+  size_t getUnicastAddressCount() const;
+  IPAddress getUnicastAddress(size_t index) const;
+  std::vector<IPAddress> getAllUnicastAddresses() const;
+
+  size_t getMulticastAddressCount() const;
+  IPAddress getMulticastAddress(size_t index) const;
+  std::vector<IPAddress> getAllMulticastAddresses() const;
+
+  // Cache management
+  void clearUnicastAddressCache() const;
+  void clearMulticastAddressCache() const;
+  void clearAllAddressCache() const;
+
 private:
   static otInstance *mInstance;
-  DataSet mCurrentDataSet;
+  static DataSet mCurrentDataset;   // Current dataset being used by the OpenThread instance.
+  static otNetworkKey mNetworkKey;  // Static storage to persist after function return
+
+  // Address caching for performance (user-controlled)
+  mutable std::vector<IPAddress> mCachedUnicastAddresses;
+  mutable std::vector<IPAddress> mCachedMulticastAddresses;
+
+  // Internal cache management
+  void populateUnicastAddressCache() const;
+  void populateMulticastAddressCache() const;
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_OPENTHREAD)
 extern OpenThread OThread;
+#endif
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

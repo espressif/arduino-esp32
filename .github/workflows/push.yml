@@ -25,50 +25,46 @@ on:
   pull_request:
     paths:
       - "cores/**"
-      - "libraries/**"
-      - "!libraries/**.md"
-      - "!libraries/**.txt"
-      - "!libraries/**.properties"
-      - "!libraries/**.py"
+      - "libraries/**/*.cpp"
+      - "libraries/**/*.c"
+      - "libraries/**/*.h"
+      - "libraries/**/*.ino"
+      - "libraries/**/ci.json"
       - "package/**"
-      - "idf_component_examples/**"
-      - "tools/**.py"
+      - "tools/get.*"
       - "platform.txt"
       - "programmers.txt"
-      - "idf_component.yml"
-      - "Kconfig.projbuild"
       - "package.json"
-      - "CMakeLists.txt"
       - ".github/workflows/push.yml"
-      - ".github/scripts/**"
-      - "!.github/scripts/find_*"
-      - "!.github/scripts/on-release.sh"
-      - "!.github/scripts/tests_*"
-      - "!.github/scripts/upload_*"
-      - "variants/esp32/**/*"
-      - "variants/esp32c3/**/*"
-      - "variants/esp32c6/**/*"
-      - "variants/esp32h2/**/*"
-      - "variants/esp32p4/**/*"
-      - "variants/esp32s2/**/*"
-      - "variants/esp32s3/**/*"
+      - ".github/scripts/install-*"
+      - ".github/scripts/on-push.sh"
+      - ".github/scripts/set_push_chunks.sh"
+      - ".github/scripts/sketch_utils.sh"
+      - "variants/esp32/**"
+      - "variants/esp32c3/**"
+      - "variants/esp32c5/**"
+      - "variants/esp32c6/**"
+      - "variants/esp32h2/**"
+      - "variants/esp32p4/**"
+      - "variants/esp32s2/**"
+      - "variants/esp32s3/**"
+      - "!*.md"
+      - "!*.txt"
+      - "!*.properties"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+  pull-requests: read
+  pages: write
+
 env:
   MAX_CHUNKS: 15
 
 jobs:
-  cmake-check:
-    name: Check cmake file
-    runs-on: ubuntu-latest
-    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - run: bash ./.github/scripts/check-cmakelists.sh
-
   gen-chunks:
     name: Generate chunks
     runs-on: ubuntu-latest
@@ -77,7 +73,6 @@ jobs:
       build_all: ${{ steps.set-chunks.outputs.build_all }}
       build_libraries: ${{ steps.set-chunks.outputs.build_libraries }}
       build_static_sketches: ${{ steps.set-chunks.outputs.build_static_sketches }}
-      build_idf: ${{ steps.set-chunks.outputs.build_idf }}
       chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
       chunks: ${{ steps.set-chunks.outputs.chunks }}
     steps:
@@ -98,13 +93,7 @@ jobs:
               - 'tools/**'
               - 'platform.txt'
               - 'programmers.txt'
-              - "variants/esp32/**/*"
-              - "variants/esp32c3/**/*"
-              - "variants/esp32c6/**/*"
-              - "variants/esp32h2/**/*"
-              - "variants/esp32p4/**/*"
-              - "variants/esp32s2/**/*"
-              - "variants/esp32s3/**/*"
+              - "variants/**"
             libraries:
               - 'libraries/**/examples/**'
               - 'libraries/**/src/**'
@@ -112,7 +101,7 @@ jobs:
               - 'libraries/Network/src/**'
             fs:
               - 'libraries/FS/src/**'
-            static_sketeches:
+            static_sketches:
               - 'libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino'
               - 'libraries/BLE/examples/Server/Server.ino'
               - 'libraries/ESP32/examples/Camera/CameraWebServer/CameraWebServer.ino'
@@ -120,11 +109,6 @@ jobs:
               - 'libraries/NetworkClientSecure/src/**'
               - 'libraries/BLE/src/**'
               - 'libraries/Insights/src/**'
-            idf:
-              - 'idf_component.yml'
-              - 'Kconfig.projbuild'
-              - 'CMakeLists.txt'
-              - "idf_component_examples/**"
 
       - name: Set chunks
         id: set-chunks
@@ -132,9 +116,8 @@ jobs:
           LIB_FILES: ${{ steps.changed-files.outputs.libraries_all_changed_files }}
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
-          BUILD_IDF: ${{ steps.changed-files.outputs.idf_any_changed == 'true' }}
           BUILD_LIBRARIES: ${{ steps.changed-files.outputs.libraries_any_changed == 'true' }}
-          BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketeches_any_changed == 'true' }}
+          BUILD_STATIC_SKETCHES: ${{ steps.changed-files.outputs.static_sketches_any_changed == 'true' }}
           FS_CHANGED: ${{ steps.changed-files.outputs.fs_any_changed == 'true' }}
           NETWORKING_CHANGED: ${{ steps.changed-files.outputs.networking_any_changed == 'true' }}
           CORE_CHANGED: ${{ steps.changed-files.outputs.core_any_changed == 'true' }}
@@ -231,59 +214,6 @@ jobs:
           python-version: "3.x"
       - name: Build Sketches
         run: bash ./.github/scripts/on-push.sh
-
-  build-esp-idf-component:
-    name: Build with ESP-IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
-    needs: gen-chunks
-    if: |
-      needs.gen-chunks.outputs.build_all == 'true' ||
-      needs.gen-chunks.outputs.build_libraries == 'true' ||
-      needs.gen-chunks.outputs.build_idf == 'true'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # The version names here correspond to the versions of espressif/idf Docker image.
-        # See https://hub.docker.com/r/espressif/idf/tags and
-        # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
-        # for details.
-        idf_ver: ["release-v5.4"]
-        idf_target:
-          [
-            "esp32",
-            "esp32s2",
-            "esp32s3",
-            "esp32c2",
-            "esp32c3",
-            "esp32c6",
-            "esp32h2",
-            "esp32p4"
-          ]
-    container: espressif/idf:${{ matrix.idf_ver }}
-    steps:
-      - name: Check out arduino-esp32 as a component
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          submodules: recursive
-          path: components/arduino-esp32
-
-      - name: Setup jq
-        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
-
-      - name: Build
-        env:
-          IDF_TARGET: ${{ matrix.idf_target }}
-        shell: bash
-        run: |
-          chmod a+x ./components/arduino-esp32/.github/scripts/*
-          ./components/arduino-esp32/.github/scripts/on-push-idf.sh
-
-      - name: Upload generated sdkconfig files for debugging
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: always()
-        with:
-          name: sdkconfig-${{ matrix.idf_target }}
-          path: ./components/arduino-esp32/idf_component_examples/**/sdkconfig
 
   # Save artifacts to gh-pages
   save-master-artifacts:
