@@ -34,6 +34,7 @@ jobs:
       - name: Remove Label
         if: contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks')
         run: gh pr edit ${{ github.event.number }} --remove-label 'Re-trigger Pre-commit Hooks'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -86,6 +87,7 @@ jobs:
 
       - name: Add label if no commits are pending
         if: ${{ failure() && steps.pre-commit.outcome == 'failure' && steps.pre-commit.outputs.pending_commit == '0' && github.event_name == 'pull_request' }}
+        continue-on-error: true
         run: |
           gh pr edit ${{ github.event.number }} --add-label 'Status: Pre-commit fixes required ⚠️'
         env:
@@ -93,6 +95,7 @@ jobs:
 
       - name: Remove label if everything was fixed
         if: ${{ success() && github.event_name == 'pull_request' }}
+        continue-on-error: true
         run: |
           gh pr edit ${{ github.event.number }} --remove-label 'Status: Pre-commit fixes required ⚠️'
         env:
