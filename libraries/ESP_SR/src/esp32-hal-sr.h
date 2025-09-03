@@ -6,7 +6,7 @@
 
 #pragma once
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32S3 && (CONFIG_USE_WAKENET || CONFIG_USE_MULTINET)
+#if (CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4) && (CONFIG_USE_WAKENET || CONFIG_USE_MULTINET)
 
 #include "driver/i2s_types.h"
 #include "esp_err.h"
