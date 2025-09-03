@@ -9,6 +9,7 @@ enum type {
   css,
   txt,
   js,
+  mjs,
   json,
   png,
   gif,

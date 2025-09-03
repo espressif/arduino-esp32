@@ -10,6 +10,7 @@ const Entry mimeTable[maxType] = {
   {".css", "text/css"},
   {".txt", "text/plain"},
   {".js", "application/javascript"},
+  {".mjs", "text/javascript"},
   {".json", "application/json"},
   {".png", "image/png"},
   {".gif", "image/gif"},
