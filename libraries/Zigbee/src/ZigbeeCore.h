@@ -139,6 +139,8 @@ public:
   bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
   bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
   // bool end();
+  void stop();
+  void start();
 
   bool started() {
     return _started;

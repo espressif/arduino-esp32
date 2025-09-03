@@ -765,6 +765,24 @@ void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
   log_v("Channel mask set to 0x%08x", mask);
 }
 
+void ZigbeeCore::stop() {
+  if (started()) {
+    vTaskSuspend(xTaskGetHandle("Zigbee_main"));
+    log_v("Zigbee stack stopped");
+    _started = false;
+  }
+  return;
+}
+
+void ZigbeeCore::start() {
+  if (!started()) {
+    vTaskResume(xTaskGetHandle("Zigbee_main"));
+    log_v("Zigbee stack started");
+    _started = true;
+  }
+  return;
+}
+
 // Function to convert enum value to string
 const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
   switch (deviceId) {
