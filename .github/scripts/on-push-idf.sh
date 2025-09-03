@@ -20,7 +20,7 @@ for example in $idf_component_examples; do
         fi
     fi
 
-    idf.py -C "$example" set-target "$IDF_TARGET"
+    idf.py --preview -C "$example" set-target "$IDF_TARGET"
 
     has_requirements=$(${CHECK_REQUIREMENTS} "$example" "$example/sdkconfig")
     if [ "$has_requirements" -eq 0 ]; then
@@ -29,5 +29,5 @@ for example in $idf_component_examples; do
     fi
 
     printf "\n\033[95mBuilding %s\033[0m\n\n" "$example"
-    idf.py -C "$example" -DEXTRA_COMPONENT_DIRS="$PWD/components" build
+    idf.py --preview -C "$example" -DEXTRA_COMPONENT_DIRS="$PWD/components" build
 done
