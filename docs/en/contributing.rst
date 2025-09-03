@@ -425,6 +425,10 @@ The ``ci.json`` file is used to specify how the test suite and sketches will han
 * ``fqbn``: A dictionary that specifies the FQBNs that will be used to compile the sketch. The key is the target name and the value is a list
   of FQBNs. The `default FQBNs <https://github.com/espressif/arduino-esp32/blob/a31a5fca1739993173caba995f7785b8eed6b30e/.github/scripts/sketch_utils.sh#L86-L91>`_
   are used if this field is not specified. This overrides the default FQBNs and the ``fqbn_append`` field.
+* ``libs``: A list of libraries that are required to run the test suite. The libraries will be installed automatically if they are not already present.
+  Libraries are installed using the ``arduino-cli lib install`` command, so you can specify libraries by name + version (e.g., ``AudioZero@1.0.0``)
+  or by URL (e.g., ``https://github.com/arduino-libraries/WiFi101.git``).
+  More information can be found in the `Arduino CLI documentation <https://arduino.github.io/arduino-cli/1.3/commands/arduino-cli_lib_install/>`_.
 
 The ``wifi`` test suite is a good example of how to use the ``ci.json`` file:
 

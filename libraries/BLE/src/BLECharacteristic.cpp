@@ -346,7 +346,7 @@ void BLECharacteristic::setReadProperty(bool value) {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void BLECharacteristic::setValue(uint8_t *data, size_t length) {
+void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
 // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
 // "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
@@ -371,43 +371,28 @@ void BLECharacteristic::setValue(uint8_t *data, size_t length) {
  * @param [in] Set the value of the characteristic.
  * @return N/A.
  */
-void BLECharacteristic::setValue(String value) {
-  setValue((uint8_t *)(value.c_str()), value.length());
+void BLECharacteristic::setValue(const String &value) {
+  setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
 }  // setValue
 
-void BLECharacteristic::setValue(uint16_t &data16) {
-  uint8_t temp[2];
-  temp[0] = data16;
-  temp[1] = data16 >> 8;
-  setValue(temp, 2);
+void BLECharacteristic::setValue(uint16_t data16) {
+  setValue(reinterpret_cast<const uint8_t *>(&data16), sizeof(data16));
 }  // setValue
 
-void BLECharacteristic::setValue(uint32_t &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+void BLECharacteristic::setValue(uint32_t data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(int &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+void BLECharacteristic::setValue(int data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(float &data32) {
-  float temp = data32;
-  setValue((uint8_t *)&temp, 4);
+void BLECharacteristic::setValue(float data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(double &data64) {
-  double temp = data64;
-  setValue((uint8_t *)&temp, 8);
+void BLECharacteristic::setValue(double data64) {
+  setValue(reinterpret_cast<const uint8_t *>(&data64), sizeof(data64));
 }  // setValue
 
 /**
