@@ -29,15 +29,15 @@ static const uint8_t RTC_INT_PIN = 27;
 #if defined(ARDUINO_WATCHY_V10)
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 33;
-#define RTC_TYPE    1  //DS3231
+#define RTC_TYPE 1  //DS3231
 #elif defined(ARDUINO_WATCHY_V15)
 static const uint8_t UP_BTN_PIN = 32;
 static const uint8_t BATT_ADC_PIN = 35;
-#define RTC_TYPE    2  //PCF8563
+#define RTC_TYPE 2  //PCF8563
 #elif defined(ARDUINO_WATCHY_V20)
 static const uint8_t UP_BTN_PIN = 35;
 static const uint8_t BATT_ADC_PIN = 34;
-#define RTC_TYPE    2  //PCF8563
+#define RTC_TYPE 2  //PCF8563
 #endif
 
 #define UP_BTN_MASK   (BIT64(UP_BTN_PIN))
