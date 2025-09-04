@@ -5,14 +5,14 @@
   IO capability using a static passkey.
   The server will accept connections from devices that have the same passkey set.
   The example passkey is set to 123456.
-  The server will create a service and a secure and an unsecure characteristic
+  The server will create a service and a secure and an insecure characteristic
   to be used as example.
 
   This server is designed to be used with the Client_secure_static_passkey example.
 
   Note that ESP32 uses Bluedroid by default and the other SoCs use NimBLE.
   Bluedroid initiates security on-connect, while NimBLE initiates security on-demand.
-  This means that in NimBLE you can read the unsecure characteristic without entering
+  This means that in NimBLE you can read the insecure characteristic without entering
   the passkey. This is not possible in Bluedroid.
 
   Also, the SoC stores the authentication info in the NVS memory. After a successful
@@ -33,7 +33,7 @@
 // https://www.uuidgenerator.net/
 
 #define SERVICE_UUID                 "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define UNSECURE_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define Insecure_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define SECURE_CHARACTERISTIC_UUID   "ff1d2614-e2d6-4c87-9154-6625d39ca7f8"
 
 // This is an example passkey. You should use a different or random passkey.
@@ -51,7 +51,7 @@ void setup() {
   BLESecurity *pSecurity = new BLESecurity();
 
   // Set security parameters
-  // Deafult parameters:
+  // Default parameters:
   // - IO capability is set to NONE
   // - Initiator and responder key distribution flags are set to both encryption and identity keys.
   // - Passkey is set to BLE_SM_DEFAULT_PASSKEY (123456). It will warn if you don't change it.
@@ -71,8 +71,8 @@ void setup() {
 
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
-  uint32_t unsecure_properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
-  uint32_t secure_properties = unsecure_properties;
+  uint32_t insecure_properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
+  uint32_t secure_properties = insecure_properties;
 
   // NimBLE uses properties to secure characteristics.
   // These special permission properties are not supported by Bluedroid and will be ignored.
@@ -81,21 +81,21 @@ void setup() {
   secure_properties |= BLECharacteristic::PROPERTY_READ_ENC | BLECharacteristic::PROPERTY_WRITE_ENC;
 
   BLECharacteristic *pSecureCharacteristic = pService->createCharacteristic(SECURE_CHARACTERISTIC_UUID, secure_properties);
-  BLECharacteristic *pUnsecureCharacteristic = pService->createCharacteristic(UNSECURE_CHARACTERISTIC_UUID, unsecure_properties);
+  BLECharacteristic *pInsecureCharacteristic = pService->createCharacteristic(Insecure_CHARACTERISTIC_UUID, insecure_properties);
 
   // Bluedroid uses permissions to secure characteristics.
   // This is the same as using the properties above.
   // NimBLE does not use permissions and will ignore these calls.
   // This can be removed if only using NimBLE (any SoC except ESP32).
   pSecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-  pUnsecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
+  pInsecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
 
   // Set value for secure characteristic
   pSecureCharacteristic->setValue("Secure Hello World!");
 
-  // Set value for unsecure characteristic
+  // Set value for insecure characteristic
   // When using NimBLE you will be able to read this characteristic without entering the passkey.
-  pUnsecureCharacteristic->setValue("Unsecure Hello World!");
+  pInsecureCharacteristic->setValue("Insecure Hello World!");
 
   pService->start();
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();

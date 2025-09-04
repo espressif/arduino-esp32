@@ -9,7 +9,7 @@
 
   Note that ESP32 uses Bluedroid by default and the other SoCs use NimBLE.
   Bluedroid initiates security on-connect, while NimBLE initiates security on-demand.
-  This means that in NimBLE you can read the unsecure characteristic without entering
+  This means that in NimBLE you can read the insecure characteristic without entering
   the passkey. This is not possible in Bluedroid.
 
   Also, the SoC stores the authentication info in the NVS memory. After a successful
@@ -26,7 +26,7 @@
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 // The characteristics of the remote service we are interested in.
-static BLEUUID unsecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+static BLEUUID insecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 
 // This must match the server's passkey
@@ -35,7 +35,7 @@ static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 static boolean doConnect = false;
 static boolean connected = false;
 static boolean doScan = false;
-static BLERemoteCharacteristic *pRemoteUnsecureCharacteristic;
+static BLERemoteCharacteristic *pRemoteInsecureCharacteristic;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic;
 static BLEAdvertisedDevice *myDevice;
 
@@ -87,15 +87,15 @@ bool connectToServer() {
   }
   Serial.println(" - Found our service");
 
-  // Obtain a reference to the unsecure characteristic
-  pRemoteUnsecureCharacteristic = pRemoteService->getCharacteristic(unsecureCharUUID);
-  if (pRemoteUnsecureCharacteristic == nullptr) {
-    Serial.print("Failed to find unsecure characteristic UUID: ");
-    Serial.println(unsecureCharUUID.toString().c_str());
+  // Obtain a reference to the insecure characteristic
+  pRemoteInsecureCharacteristic = pRemoteService->getCharacteristic(insecureCharUUID);
+  if (pRemoteInsecureCharacteristic == nullptr) {
+    Serial.print("Failed to find insecure characteristic UUID: ");
+    Serial.println(insecureCharUUID.toString().c_str());
     pClient->disconnect();
     return false;
   }
-  Serial.println(" - Found unsecure characteristic");
+  Serial.println(" - Found insecure characteristic");
 
   // Obtain a reference to the secure characteristic
   pRemoteSecureCharacteristic = pRemoteService->getCharacteristic(secureCharUUID);
@@ -107,10 +107,10 @@ bool connectToServer() {
   }
   Serial.println(" - Found secure characteristic");
 
-  // Read the value of the unsecure characteristic (should work without authentication)
-  if (pRemoteUnsecureCharacteristic->canRead()) {
-    String value = pRemoteUnsecureCharacteristic->readValue();
-    Serial.print("Unsecure characteristic value: ");
+  // Read the value of the insecure characteristic (should work without authentication)
+  if (pRemoteInsecureCharacteristic->canRead()) {
+    String value = pRemoteInsecureCharacteristic->readValue();
+    Serial.print("Insecure characteristic value: ");
     Serial.println(value.c_str());
   }
 
@@ -127,9 +127,9 @@ bool connectToServer() {
   }
 
   // Register for notifications on both characteristics if they support it
-  if (pRemoteUnsecureCharacteristic->canNotify()) {
-    pRemoteUnsecureCharacteristic->registerForNotify(notifyCallback);
-    Serial.println(" - Registered for unsecure characteristic notifications");
+  if (pRemoteInsecureCharacteristic->canNotify()) {
+    pRemoteInsecureCharacteristic->registerForNotify(notifyCallback);
+    Serial.println(" - Registered for insecure characteristic notifications");
   }
 
   if (pRemoteSecureCharacteristic->canNotify()) {
@@ -173,7 +173,7 @@ void setup() {
   BLESecurity *pSecurity = new BLESecurity();
 
   // Set security parameters
-  // Deafult parameters:
+  // Default parameters:
   // - IO capability is set to NONE
   // - Initiator and responder key distribution flags are set to both encryption and identity keys.
   // - Passkey is set to BLE_SM_DEFAULT_PASSKEY (123456). It will warn if you don't change it.
@@ -213,11 +213,11 @@ void loop() {
 
   // If we are connected to a peer BLE Server, demonstrate secure communication
   if (connected) {
-    // Write to the unsecure characteristic
-    String unsecureValue = "Client time: " + String(millis() / 1000);
-    if (pRemoteUnsecureCharacteristic->canWrite()) {
-      pRemoteUnsecureCharacteristic->writeValue(unsecureValue.c_str(), unsecureValue.length());
-      Serial.println("Wrote to unsecure characteristic: " + unsecureValue);
+    // Write to the insecure characteristic
+    String insecureValue = "Client time: " + String(millis() / 1000);
+    if (pRemoteInsecureCharacteristic->canWrite()) {
+      pRemoteInsecureCharacteristic->writeValue(insecureValue.c_str(), insecureValue.length());
+      Serial.println("Wrote to insecure characteristic: " + insecureValue);
     }
 
     // Write to the secure characteristic

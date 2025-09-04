@@ -59,7 +59,7 @@ uint32_t BLESecurity::m_passkey = BLE_SM_DEFAULT_PASSKEY;
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
 uint8_t BLESecurity::m_keySize = 16;
-esp_ble_sec_act_t BLESecurity::m_securityLevel = (esp_ble_sec_act_t)0;
+esp_ble_sec_act_t BLESecurity::m_securityLevel;
 #endif
 
 /***************************************************************************
@@ -216,7 +216,7 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool sc) {
 // It should return the passkey that the peer device is showing on its output.
 // This might not be called if the client has a static passkey set.
 uint32_t BLESecurityCallbacks::onPassKeyRequest() {
-  Serial.println("BLESecurityCallbacks: *ATTENTION* Using unsecure onPassKeyRequest.");
+  Serial.println("BLESecurityCallbacks: *ATTENTION* Using insecure onPassKeyRequest.");
   Serial.println("BLESecurityCallbacks: *ATTENTION* Please implement onPassKeyRequest with a suitable passkey in your BLESecurityCallbacks class");
   Serial.printf("BLESecurityCallbacks: Default passkey: %06d\n", BLE_SM_DEFAULT_PASSKEY);
   return BLE_SM_DEFAULT_PASSKEY;
@@ -239,7 +239,7 @@ bool BLESecurityCallbacks::onSecurityRequest() {
 // This callback is called by both devices when both have the DisplayYesNo capability.
 // It should return true if both devices display the same passkey.
 bool BLESecurityCallbacks::onConfirmPIN(uint32_t pin) {
-  Serial.println("BLESecurityCallbacks: *ATTENTION* Using unsecure onConfirmPIN. It will accept any passkey.");
+  Serial.println("BLESecurityCallbacks: *ATTENTION* Using insecure onConfirmPIN. It will accept any passkey.");
   Serial.println("BLESecurityCallbacks: *ATTENTION* Please implement onConfirmPIN with a suitable confirmation logic in your BLESecurityCallbacks class");
   return true;
 }
@@ -251,7 +251,7 @@ bool BLESecurityCallbacks::onConfirmPIN(uint32_t pin) {
 // otherwise it is requesting to write.
 // It should return true if the authorization is granted, false otherwise.
 bool BLESecurityCallbacks::onAuthorizationRequest(uint16_t connHandle, uint16_t attrHandle, bool isRead) {
-  Serial.println("BLESecurityCallbacks: *ATTENTION* Using unsecure onAuthorizationRequest. It will accept any authorization request.");
+  Serial.println("BLESecurityCallbacks: *ATTENTION* Using insecure onAuthorizationRequest. It will accept any authorization request.");
   Serial.println(
     "BLESecurityCallbacks: *ATTENTION* Please implement onAuthorizationRequest with a suitable authorization logic in your BLESecurityCallbacks class"
   );
@@ -272,17 +272,28 @@ bool BLESecurity::startSecurity(esp_bd_addr_t bd_addr, int *rcPtr) {
 #ifdef CONFIG_BLE_SMP_ENABLE
   if (m_securityStarted) {
     log_w("Security already started for bd_addr=%s", BLEAddress(bd_addr).toString().c_str());
+    if (rcPtr) {
+      *rcPtr = ESP_OK;
+    }
     return true;
   }
 
-  int rc = esp_ble_set_encryption(bd_addr, m_securityLevel);
-  if (rc != ESP_OK) {
-    log_e("esp_ble_set_encryption: rc=%d %s", rc, GeneralUtils::errorToString(rc));
+  if (m_securityEnabled) {
+    int rc = esp_ble_set_encryption(bd_addr, m_securityLevel);
+    if (rc != ESP_OK) {
+      log_e("esp_ble_set_encryption: rc=%d %s", rc, GeneralUtils::errorToString(rc));
+    }
+    if (rcPtr) {
+      *rcPtr = rc;
+    }
+    m_securityStarted = (rc == ESP_OK);
+  } else {
+    log_e("Security is not enabled. Can't start security.");
+    if (rcPtr) {
+      *rcPtr = ESP_FAIL;
+    }
+    return false;
   }
-  if (rcPtr) {
-    *rcPtr = rc;
-  }
-  m_securityStarted = (rc == ESP_OK);
   return m_securityStarted;
 #else
   log_e("Bluedroid SMP is not enabled. Can't start security.");
@@ -324,17 +335,28 @@ void BLESecurityCallbacks::onAuthenticationComplete(esp_ble_auth_cmpl_t param) {
 bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
   if (m_securityStarted) {
     log_w("Security already started for connHandle=%d", connHandle);
+    if (rcPtr) {
+      *rcPtr = 0;
+    }
     return true;
   }
 
-  int rc = ble_gap_security_initiate(connHandle);
-  if (rc != 0) {
-    log_e("ble_gap_security_initiate: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+  if (m_securityEnabled) {
+    int rc = ble_gap_security_initiate(connHandle);
+    if (rc != 0) {
+      log_e("ble_gap_security_initiate: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    }
+    if (rcPtr) {
+      *rcPtr = rc;
+    }
+    m_securityStarted = (rc == 0 || rc == BLE_HS_EALREADY);
+  } else {
+    log_e("Security is not enabled. Can't start security.");
+    if (rcPtr) {
+      *rcPtr = ESP_FAIL;
+    }
+    return false;
   }
-  if (rcPtr) {
-    *rcPtr = rc;
-  }
-  m_securityStarted = (rc == 0 || rc == BLE_HS_EALREADY);
   return m_securityStarted;
 }
 
