@@ -62,7 +62,7 @@
 
 #if defined(CONFIG_NIMBLE_ENABLED)
 typedef uint16_t esp_gatt_char_prop_t;
-typedef uint8_t esp_gatt_perm_t;
+typedef uint16_t esp_gatt_perm_t;
 #endif
 
 /***************************************************************************
@@ -140,11 +140,17 @@ public:
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   static const uint32_t PROPERTY_READ = 1 << 0;
+  static const uint32_t PROPERTY_READ_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_READ_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_READ_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
   static const uint32_t PROPERTY_WRITE = 1 << 1;
+  static const uint32_t PROPERTY_WRITE_NR = 1 << 5;
+  static const uint32_t PROPERTY_WRITE_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_WRITE_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_WRITE_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
   static const uint32_t PROPERTY_NOTIFY = 1 << 2;
   static const uint32_t PROPERTY_BROADCAST = 1 << 3;
   static const uint32_t PROPERTY_INDICATE = 1 << 4;
-  static const uint32_t PROPERTY_WRITE_NR = 1 << 5;
 #endif
 
   /***************************************************************************
@@ -161,8 +167,8 @@ public:
   static const uint32_t PROPERTY_WRITE_ENC = BLE_GATT_CHR_F_WRITE_ENC;
   static const uint32_t PROPERTY_WRITE_AUTHEN = BLE_GATT_CHR_F_WRITE_AUTHEN;
   static const uint32_t PROPERTY_WRITE_AUTHOR = BLE_GATT_CHR_F_WRITE_AUTHOR;
-  static const uint32_t PROPERTY_BROADCAST = BLE_GATT_CHR_F_BROADCAST;
   static const uint32_t PROPERTY_NOTIFY = BLE_GATT_CHR_F_NOTIFY;
+  static const uint32_t PROPERTY_BROADCAST = BLE_GATT_CHR_F_BROADCAST;
   static const uint32_t PROPERTY_INDICATE = BLE_GATT_CHR_F_INDICATE;
 #endif
 
@@ -193,7 +199,7 @@ public:
   void setValue(double data64);
   String toString();
   uint16_t getHandle();
-  void setAccessPermissions(uint8_t perm);
+  void setAccessPermissions(uint16_t perm);
   esp_gatt_char_prop_t getProperties();
   void setReadProperty(bool value);
   void setWriteProperty(bool value);

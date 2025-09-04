@@ -145,7 +145,7 @@ uint16_t BLECharacteristic::getHandle() {
   return m_handle;
 }  // getHandle
 
-void BLECharacteristic::setAccessPermissions(uint8_t perm) {
+void BLECharacteristic::setAccessPermissions(uint16_t perm) {
 #ifdef CONFIG_BLUEDROID_ENABLED
   m_permissions = perm;
 #endif
@@ -567,6 +567,32 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
       // we save the new value.  Next we look at the need_rsp flag which indicates whether or not we need
       // to send a response.  If we do, then we formulate a response and send it.
       if (param->write.handle == m_handle) {
+
+        // Check for authorization requirement
+        if (m_permissions & ESP_GATT_PERM_WRITE_AUTHORIZATION) {
+          bool authorized = false;
+
+          if (BLEDevice::m_securityCallbacks != nullptr) {
+            log_i("Authorization required for write operation. Checking authorization...");
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->write.conn_id, m_handle, false);
+          } else {
+            log_w("onAuthorizationRequest not implemented. Rejecting write authorization request");
+          }
+
+          if (!authorized) {
+            log_i("Write authorization rejected");
+            if (param->write.need_rsp) {
+              esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_INSUF_AUTHORIZATION, nullptr);
+              if (errRc != ESP_OK) {
+                log_e("esp_ble_gatts_send_response (authorization failed): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+              }
+            }
+            return;  // Exit early, don't process the write
+          } else {
+            log_i("Write authorization granted");
+          }
+        }
+
         if (param->write.is_prep) {
           m_value.addPart(param->write.value, param->write.len);
           m_writeEvt = true;
@@ -621,6 +647,31 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
     case ESP_GATTS_READ_EVT:
     {
       if (param->read.handle == m_handle) {
+
+        // Check for authorization requirement
+        if (m_permissions & ESP_GATT_PERM_READ_AUTHORIZATION) {
+          bool authorized = false;
+
+          if (BLEDevice::m_securityCallbacks != nullptr) {
+            log_i("Authorization required for read operation. Checking authorization...");
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->read.conn_id, m_handle, true);
+          } else {
+            log_w("onAuthorizationRequest not implemented. Rejecting read authorization request");
+          }
+
+          if (!authorized) {
+            log_i("Read authorization rejected");
+            if (param->read.need_rsp) {
+              esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->read.conn_id, param->read.trans_id, ESP_GATT_INSUF_AUTHORIZATION, nullptr);
+              if (errRc != ESP_OK) {
+                log_e("esp_ble_gatts_send_response (authorization failed): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+              }
+            }
+            return;  // Exit early, don't process the read
+          } else {
+            log_i("Read authorization granted");
+          }
+        }
 
         // Here's an interesting thing.  The read request has the option of saying whether we need a response
         // or not.  What would it "mean" to receive a read request and NOT send a response back?  That feels like
