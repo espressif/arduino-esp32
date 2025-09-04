@@ -80,13 +80,16 @@ void onStateChangeCustom(uint16_t state) {
       Serial.println("On");
       break;
     case 2:
-      Serial.println("Slow");
+      Serial.println("UltraSlow");
       break;
     case 3:
-      Serial.println("Medium");
+      Serial.println("Slow");
       break;
     case 4:
       Serial.println("Fast");
+      break;
+    case 5:
+      Serial.println("SuperFast");
       break;
     default:
       Serial.println("Invalid state");

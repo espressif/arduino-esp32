@@ -56,6 +56,8 @@ zb_cmd_type_t	KEYWORD1
 
 # ZigbeeCore
 begin	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
 started	KEYWORD2
 connected	KEYWORD2
 getRole	KEYWORD2
@@ -241,9 +243,9 @@ setMultistateInputStates	KEYWORD2
 setMultistateOutputApplication	KEYWORD2
 setMultistateOutputDescription	KEYWORD2
 setMultistateOutputStates	KEYWORD2
-getMultistateInputStateNames	KEYWORD2
+#getMultistateInputStateNames	KEYWORD2
 getMultistateInputStateNamesLength	KEYWORD2
-getMultistateOutputStateNames	KEYWORD2
+#getMultistateOutputStateNames	KEYWORD2
 getMultistateOutputStateNamesLength	KEYWORD2
 
 #######################################
