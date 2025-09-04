@@ -16,7 +16,7 @@ typedef struct ATTR_PACKED {
   int8_t bus_channel;
 } peripheral_pin_item_t;
 
-static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX] = { 0 };
+static peripheral_bus_deinit_cb_t deinit_functions[ESP32_BUS_TYPE_MAX] = { NULL };
 static peripheral_pin_item_t pins[SOC_GPIO_PIN_COUNT];
 
 #define GPIO_NOT_VALID(p) ((p >= SOC_GPIO_PIN_COUNT) || ((SOC_GPIO_VALID_GPIO_MASK & (1ULL << p)) == 0))
