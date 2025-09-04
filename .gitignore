@@ -55,3 +55,10 @@ libraries/Insights/examples/*/*.ino.zip
 # Ignore Lib Builder Docker run scripts
 /run.sh
 /run.ps1
+
+# Ignore dependency analysis artifacts
+/dependencies.json
+/dependencies_reverse.json
+/affected_sketches.txt
+/affected_examples.txt
+/ctags_*
