@@ -67,8 +67,6 @@ jobs:
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      idf_ver: ${{ steps.set-matrix.outputs.idf_ver }}
-      idf_target: ${{ steps.set-matrix.outputs.idf_target }}
       should_build: ${{ steps.affected-examples.outputs.should_build }}
     steps:
       - name: Install universal-ctags
