@@ -92,7 +92,7 @@ void USBMIDI::channelPressure(uint8_t pressure, uint8_t channel) {
 // Pitch Bend Change [-8192,0,8191]
 void USBMIDI::pitchBend(int16_t value, uint8_t channel) {
   uint16_t pitchBendValue = constrain(value, -8192, 8191) + 8192;
-  pitchBend(pitchBendValue);
+  pitchBend(pitchBendValue, channel);
 }
 
 // Pitch Bend Change [0,8192,16383]
