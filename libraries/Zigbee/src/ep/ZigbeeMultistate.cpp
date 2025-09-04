@@ -99,8 +99,7 @@ bool ZigbeeMultistate::addMultistateOutput() {
   char default_description[] = "\x11" // Size of the description text
                                "Multistate Output"; // Description text
   uint32_t application_type = 0x00000000 | (0x0E << 24);
-  const char* state_text[] = { "Off", "On", "Auto" }; // State text array
-  uint16_t num_states = 3; // Number of states
+  // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
   esp_err_t ret = esp_zb_multistate_output_cluster_add_attr(multistate_output_cluster, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
