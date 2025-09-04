@@ -27,5 +27,8 @@ public:
   HttpsOTAStatus_t status();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_HTTPSOTAUPDATE)
 extern HttpsOTAUpdateClass HttpsOTA;
+#endif
+
 #endif

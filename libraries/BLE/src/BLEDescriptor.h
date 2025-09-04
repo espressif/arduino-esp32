@@ -42,6 +42,9 @@
 #include <host/ble_att.h>
 #include "BLEConnInfo.h"
 
+// Bluedroid compatibility
+// NimBLE does not support signed reads and writes
+
 #define ESP_GATT_PERM_READ                BLE_ATT_F_READ
 #define ESP_GATT_PERM_WRITE               BLE_ATT_F_WRITE
 #define ESP_GATT_PERM_READ_ENCRYPTED      BLE_ATT_F_READ_ENC
@@ -92,10 +95,10 @@ public:
   uint8_t *getValue();                     // Get a pointer to the value of the descriptor.
   BLECharacteristic *getCharacteristic();  // Get the characteristic that this descriptor belongs to.
 
-  void setAccessPermissions(uint8_t perm);                // Set the permissions of the descriptor.
+  void setAccessPermissions(uint16_t perm);               // Set the permissions of the descriptor.
   void setCallbacks(BLEDescriptorCallbacks *pCallbacks);  // Set callbacks to be invoked for the descriptor.
-  void setValue(uint8_t *data, size_t size);              // Set the value of the descriptor as a pointer to data.
-  void setValue(String value);                            // Set the value of the descriptor as a data buffer.
+  void setValue(const uint8_t *data, size_t size);        // Set the value of the descriptor as a pointer to data.
+  void setValue(const String &value);                     // Set the value of the descriptor as a data buffer.
 
   String toString();  // Convert the descriptor to a string representation.
 
@@ -140,7 +143,7 @@ private:
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
-  uint8_t m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
+  uint16_t m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
 #endif
 
   /***************************************************************************

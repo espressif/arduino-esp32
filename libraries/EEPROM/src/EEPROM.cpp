@@ -27,6 +27,7 @@
 #include <nvs.h>
 #include <esp_partition.h>
 #include <esp_log.h>
+#include <new>
 
 EEPROMClass::EEPROMClass(void) : _handle(0), _data(0), _size(0), _dirty(false), _name("eeprom") {}
 
@@ -59,7 +60,7 @@ bool EEPROMClass::begin(size_t size) {
   }
   if (size < key_size) {  // truncate
     log_w("truncating EEPROM from %d to %d", key_size, size);
-    uint8_t *key_data = (uint8_t *)malloc(key_size);
+    uint8_t *key_data = new (std::nothrow) uint8_t[key_size];
     if (!key_data) {
       log_e("Not enough memory to truncate EEPROM!");
       return false;
@@ -67,10 +68,10 @@ bool EEPROMClass::begin(size_t size) {
     nvs_get_blob(_handle, _name, key_data, &key_size);
     nvs_set_blob(_handle, _name, key_data, size);
     nvs_commit(_handle);
-    free(key_data);
+    delete[] key_data;
   } else if (size > key_size) {  // expand or new
     size_t expand_size = size - key_size;
-    uint8_t *expand_key = (uint8_t *)malloc(expand_size);
+    uint8_t *expand_key = new (std::nothrow) uint8_t[expand_size];
     if (!expand_key) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -78,12 +79,12 @@ bool EEPROMClass::begin(size_t size) {
     // check for adequate free space
     if (nvs_set_blob(_handle, "expand", expand_key, expand_size)) {
       log_e("Not enough space to expand EEPROM from %d to %d", key_size, size);
-      free(expand_key);
+      delete[] expand_key;
       return false;
     }
-    free(expand_key);
+    delete[] expand_key;
     nvs_erase_key(_handle, "expand");
-    uint8_t *key_data = (uint8_t *)malloc(size);
+    uint8_t *key_data = new (std::nothrow) uint8_t[size];
     if (!key_data) {
       log_e("Not enough memory to expand EEPROM!");
       return false;
@@ -99,7 +100,7 @@ bool EEPROMClass::begin(size_t size) {
     }
     nvs_commit(_handle);
     nvs_set_blob(_handle, _name, key_data, size);
-    free(key_data);
+    delete[] key_data;
     nvs_commit(_handle);
   }
 
@@ -107,7 +108,7 @@ bool EEPROMClass::begin(size_t size) {
     delete[] _data;
   }
 
-  _data = (uint8_t *)malloc(size);
+  _data = new (std::nothrow) uint8_t[size];
   if (!_data) {
     log_e("Not enough memory for %d bytes in EEPROM", size);
     return false;
@@ -212,7 +213,7 @@ uint16_t EEPROMClass::convert(bool clear, const char *EEPROMname, const char *nv
   }
 
   size_t size = mypart->size;
-  uint8_t *data = (uint8_t *)malloc(size);
+  uint8_t *data = new (std::nothrow) uint8_t[size];
   if (!data) {
     log_e("Not enough memory to convert EEPROM!");
     goto exit;
@@ -255,7 +256,7 @@ uint16_t EEPROMClass::convert(bool clear, const char *EEPROMname, const char *nv
     }
   }
 exit:
-  free(data);
+  delete[] data;
   return result;
 }
 
@@ -509,9 +510,9 @@ size_t EEPROMClass::writeBytes(int address, const void *value, size_t len) {
   return len;
 }
 
-template<class T> T EEPROMClass::writeAll(int address, const T &value) {
+template<class T> size_t EEPROMClass::writeAll(int address, const T &value) {
   if (address < 0 || address + sizeof(T) > _size) {
-    return value;
+    return 0;
   }
 
   memcpy(_data + address, (const uint8_t *)&value, sizeof(T));

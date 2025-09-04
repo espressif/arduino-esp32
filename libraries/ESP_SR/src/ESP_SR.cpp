@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32S3 && (CONFIG_USE_WAKENET || CONFIG_USE_MULTINET)
+#if (CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4) && (CONFIG_MODEL_IN_FLASH || CONFIG_MODEL_IN_SDCARD)
 #include "ESP_SR.h"
 
 static esp_err_t on_sr_fill(void *arg, void *out, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
@@ -25,9 +25,9 @@ void ESP_SR_Class::onEvent(sr_cb event_cb) {
   cb = event_cb;
 }
 
-bool ESP_SR_Class::begin(I2SClass &_i2s, const sr_cmd_t *sr_commands, size_t sr_commands_len, sr_channels_t rx_chan, sr_mode_t mode) {
+bool ESP_SR_Class::begin(I2SClass &_i2s, const sr_cmd_t *sr_commands, size_t sr_commands_len, sr_channels_t rx_chan, sr_mode_t mode, const char *input_format) {
   i2s = &_i2s;
-  esp_err_t err = sr_start(on_sr_fill, this, rx_chan, mode, sr_commands, sr_commands_len, on_sr_event, this);
+  esp_err_t err = sr_start(on_sr_fill, this, rx_chan, mode, input_format, sr_commands, sr_commands_len, on_sr_event, this);
   return (err == ESP_OK);
 }
 

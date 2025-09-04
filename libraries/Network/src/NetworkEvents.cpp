@@ -3,6 +3,9 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
+#include <new>  //std::nothrow
+
 #include "NetworkEvents.h"
 #include "NetworkManager.h"
 #include "esp_task.h"
@@ -82,7 +85,7 @@ bool NetworkEvents::postEvent(const arduino_event_t *data) {
   if (data == NULL || _arduino_event_queue == NULL) {
     return false;
   }
-  arduino_event_t *event = new arduino_event_t();
+  arduino_event_t *event = new (std::nothrow) arduino_event_t();
   if (event == NULL) {
     log_e("Arduino Event Malloc Failed!");
     return false;

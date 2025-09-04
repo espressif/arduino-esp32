@@ -203,6 +203,8 @@ protected:
   static void _init();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MATTER)
 extern ArduinoMatter Matter;
+#endif
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

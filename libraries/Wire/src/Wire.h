@@ -142,6 +142,7 @@ public:
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_WIRE)
 extern TwoWire Wire;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #if SOC_I2C_NUM > 1
@@ -153,6 +154,7 @@ extern TwoWire Wire2;
 #if SOC_HP_I2C_NUM > 1
 extern TwoWire Wire1;
 #endif /* SOC_HP_I2C_NUM */
+#endif
 #endif
 
 #endif /* SOC_I2C_SUPPORTED */

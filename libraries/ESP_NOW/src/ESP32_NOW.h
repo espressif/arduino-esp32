@@ -87,6 +87,8 @@ public:
   friend bool ESP_NOW_Class::removePeer(ESP_NOW_Peer &);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ESP_NOW)
 extern ESP_NOW_Class ESP_NOW;
+#endif
 
 #endif
