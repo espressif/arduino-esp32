@@ -77,7 +77,9 @@ private:
 
 }  // namespace fs
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SD_MMC)
 extern fs::SDMMCFS SD_MMC;
+#endif
 
 #endif /* SOC_SDMMC_HOST_SUPPORTED */
 #endif /* _SDMMC_H_ */

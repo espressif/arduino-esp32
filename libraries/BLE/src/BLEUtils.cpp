@@ -656,7 +656,7 @@ static const gattService_t g_gattServices[] = {
  * @param [in] length The length of the data to convert.
  * @return A pointer to the formatted buffer.
  */
-char *BLEUtils::buildHexData(uint8_t *target, uint8_t *source, uint8_t length) {
+char *BLEUtils::buildHexData(uint8_t *target, const uint8_t *source, uint8_t length) {
   // Guard against too much data.
   if (length > 100) {
     length = 100;
@@ -672,8 +672,7 @@ char *BLEUtils::buildHexData(uint8_t *target, uint8_t *source, uint8_t length) {
   char *startOfData = (char *)target;
 
   for (int i = 0; i < length; i++) {
-    sprintf((char *)target, "%.2x", (char)*source);
-    source++;
+    sprintf((char *)target, "%.2x", (char)source[i]);
     target += 2;
   }
 
@@ -1568,7 +1567,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     // - uint32_t trans_id
     // - esp_bd_addr_t bda
     // - uint8_t exec_write_flag
-#ifdef ARDUHAL_LOG_LEVEL_VERBOSE
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     case ESP_GATTS_EXEC_WRITE_EVT:
     {
       char *pWriteFlagText;

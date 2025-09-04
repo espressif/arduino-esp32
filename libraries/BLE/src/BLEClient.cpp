@@ -19,6 +19,7 @@
  *                           Common includes                               *
  ***************************************************************************/
 
+#include "Arduino.h"
 #include <esp_bt.h>
 #include "BLEClient.h"
 #include "BLEUtils.h"
@@ -29,6 +30,7 @@
 #include <unordered_set>
 #include "BLEDevice.h"
 #include "esp32-hal-log.h"
+#include "BLESecurity.h"
 
 /***************************************************************************
  *                           Bluedroid includes                            *
@@ -598,11 +600,11 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
       if (errRc != ESP_OK) {
         log_e("esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
       }
-#ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      if (BLEDevice::m_securityLevel) {
-        esp_ble_set_encryption(evtParam->connect.remote_bda, BLEDevice::m_securityLevel);
+      // Set encryption on connect for BlueDroid when security is enabled
+      // This ensures security is established before any secure operations
+      if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
+        BLESecurity::startSecurity(evtParam->connect.remote_bda);
       }
-#endif  // CONFIG_BLE_SMP_ENABLE
       break;
     }  // ESP_GATTC_CONNECT_EVT
 
@@ -1006,6 +1008,10 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           break;
         }
 
+        if (BLESecurity::m_securityEnabled) {
+          BLESecurity::startSecurity(client->m_conn_id);
+        }
+
         // In the case of a multiconnecting device we ignore this device when
         // scanning since we are already connected to it
         // BLEDevice::addIgnored(client->m_peerAddress);
@@ -1136,8 +1142,6 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           ble_store_util_delete_peer(&desc.peer_id_addr);
         } else if (BLEDevice::m_securityCallbacks != nullptr) {
           BLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
-        } else {
-          client->m_pClientCallbacks->onAuthenticationComplete(&desc);
         }
       }
 
@@ -1164,27 +1168,52 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
       }
 
       if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
-        pkey.action = event->passkey.params.action;
-        pkey.passkey = BLESecurity::m_passkey;  // This is the passkey to be entered on peer
-        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
-        log_d("ble_sm_inject_io result: %d", rc);
+        // Display the passkey on this device
+        log_d("BLE_SM_IOACT_DISP");
 
-      } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-        log_d("Passkey on device's display: %d", event->passkey.params.numcmp);
         pkey.action = event->passkey.params.action;
-        // Compatibility only - Do not use, should be removed the in future
-        if (BLEDevice::m_securityCallbacks != nullptr) {
-          pkey.numcmp_accept = BLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-          ////////////////////////////////////////////////////
+        pkey.passkey = BLESecurity::getPassKey();  // This is the passkey to be entered on peer
+
+        if (!BLESecurity::m_passkeySet) {
+          log_w("No passkey set");
+        }
+
+        if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
+          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          pkey.numcmp_accept = client->m_pClientCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+          log_i("Passkey: %d", pkey.passkey);
+        }
+
+        if (BLEDevice::m_securityCallbacks != nullptr) {
+          BLEDevice::m_securityCallbacks->onPassKeyNotify(pkey.passkey);
         }
 
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
         log_d("ble_sm_inject_io result: %d", rc);
 
-        //TODO: Handle out of band pairing
+      } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
+        // Check if the passkey on the peer device is correct
+        log_d("BLE_SM_IOACT_NUMCMP");
+
+        log_d("Passkey on device's display: %d", event->passkey.params.numcmp);
+        pkey.action = event->passkey.params.action;
+
+        if (BLEDevice::m_securityCallbacks != nullptr) {
+          pkey.numcmp_accept = BLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
+        } else {
+          log_e("onConfirmPIN not implemented. Rejecting connection");
+          pkey.numcmp_accept = 0;
+        }
+
+        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+        log_d("ble_sm_inject_io result: %d", rc);
+
       } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
+        // Out of band pairing
+        // TODO: Handle out of band pairing
+        log_w("BLE_SM_IOACT_OOB: Not implemented");
+
         static uint8_t tem_oob[16] = {0};
         pkey.action = event->passkey.params.action;
         for (int i = 0; i < 16; i++) {
@@ -1192,24 +1221,35 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         }
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
         log_d("ble_sm_inject_io result: %d", rc);
-        ////////
       } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
-        log_d("Enter the passkey");
-        pkey.action = event->passkey.params.action;
+        // Input passkey from peer device
+        log_d("BLE_SM_IOACT_INPUT");
 
-        // Compatibility only - Do not use, should be removed the in future
-        if (BLEDevice::m_securityCallbacks != nullptr) {
-          pkey.passkey = BLEDevice::m_securityCallbacks->onPassKeyRequest();
-          /////////////////////////////////////////////
+        pkey.action = event->passkey.params.action;
+        pkey.passkey = BLESecurity::getPassKey();
+
+        if (!BLESecurity::m_passkeySet) {
+          if (BLEDevice::m_securityCallbacks != nullptr) {
+            log_i("No passkey set, getting passkey from onPassKeyRequest");
+            pkey.passkey = BLEDevice::m_securityCallbacks->onPassKeyRequest();
+          } else {
+            log_w("*ATTENTION* onPassKeyRequest not implemented and no static passkey set.");
+          }
+        }
+
+        if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
+          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          pkey.passkey = client->m_pClientCallbacks->onPassKeyRequest();
+          log_i("Passkey: %d", pkey.passkey);
         }
 
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
         log_d("ble_sm_inject_io result: %d", rc);
 
       } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
-        log_d("No passkey action required");
+        log_d("BLE_SM_IOACT_NONE");
+        log_i("No passkey action required");
       }
 
       return 0;
@@ -1252,20 +1292,6 @@ int BLEClient::disconnect(uint8_t reason) {
 
 bool BLEClientCallbacks::onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params) {
   log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: default");
-  return true;
-}
-
-uint32_t BLEClientCallbacks::onPassKeyRequest() {
-  log_d("onPassKeyRequest: default: 123456");
-  return 123456;
-}
-
-void BLEClientCallbacks::onAuthenticationComplete(ble_gap_conn_desc *desc) {
-  log_d("onAuthenticationComplete: default");
-}
-
-bool BLEClientCallbacks::onConfirmPIN(uint32_t pin) {
-  log_d("onConfirmPIN: default: true");
   return true;
 }
 

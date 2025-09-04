@@ -22,8 +22,8 @@
  ***************************************************************************/
 
 #include <map>
-#include <string>
 #include <esp_bt.h>
+#include "WString.h"
 #include "BLEServer.h"
 #include "BLEClient.h"
 #include "BLEUtils.h"
@@ -32,6 +32,16 @@
 #include "BLESecurity.h"
 #include "BLEAddress.h"
 #include "BLEUtils.h"
+
+/***************************************************************************
+ *                           Common definitions                            *
+ ***************************************************************************/
+
+enum class BLEStack {
+  BLUEDROID,
+  NIMBLE,
+  UNKNOWN
+};
 
 /***************************************************************************
  *                           Bluedroid includes                            *
@@ -141,7 +151,6 @@ public:
    ***************************************************************************/
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  static esp_ble_sec_act_t m_securityLevel;
   static gattc_event_handler m_customGattcHandler;
   static gatts_event_handler m_customGattsHandler;
 #endif
@@ -179,13 +188,14 @@ public:
   static BLEClient *getClientByGattIf(uint16_t conn_id);
   static void setCustomGapHandler(gap_event_handler handler);
   static void deinit(bool release_memory = false);
+  static BLEStack getBLEStack();
+  static String getBLEStackString();
 
   /***************************************************************************
    *                       Bluedroid public declarations                    *
    ***************************************************************************/
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  static void setEncryptionLevel(esp_ble_sec_act_t level);
   static void setCustomGattcHandler(gattc_event_handler handler);
   static void setCustomGattsHandler(gatts_event_handler handler);
 #endif

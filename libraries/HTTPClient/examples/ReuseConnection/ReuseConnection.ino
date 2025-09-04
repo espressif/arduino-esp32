@@ -12,23 +12,21 @@
 
 #include <HTTPClient.h>
 
-#define USE_SERIAL Serial
-
 WiFiMulti wifiMulti;
 
 HTTPClient http;
 
 void setup() {
 
-  USE_SERIAL.begin(115200);
+  Serial.begin(115200);
 
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-  USE_SERIAL.println();
+  Serial.println();
+  Serial.println();
+  Serial.println();
 
   for (uint8_t t = 4; t > 0; t--) {
-    USE_SERIAL.printf("[SETUP] WAIT %d...\n", t);
-    USE_SERIAL.flush();
+    Serial.printf("[SETUP] WAIT %d...\n", t);
+    Serial.flush();
     delay(1000);
   }
 
@@ -47,14 +45,14 @@ void loop() {
 
     int httpCode = http.GET();
     if (httpCode > 0) {
-      USE_SERIAL.printf("[HTTP] GET... code: %d\n", httpCode);
+      Serial.printf("[HTTP] GET... code: %d\n", httpCode);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
-        http.writeToStream(&USE_SERIAL);
+        http.writeToStream(&Serial);
       }
     } else {
-      USE_SERIAL.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
 
     http.end();

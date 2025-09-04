@@ -181,7 +181,7 @@ void BLEDescriptor::setHandle(uint16_t handle) {
  * @param [in] data The data to set for the descriptor.
  * @param [in] length The length of the data in bytes.
  */
-void BLEDescriptor::setValue(uint8_t *data, size_t length) {
+void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
   if (length > m_value.attr_max_len) {
     log_e("Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
     return;
@@ -203,11 +203,11 @@ void BLEDescriptor::setValue(uint8_t *data, size_t length) {
  * @brief Set the value of the descriptor.
  * @param [in] value The value of the descriptor in string form.
  */
-void BLEDescriptor::setValue(String value) {
-  setValue((uint8_t *)value.c_str(), value.length());
+void BLEDescriptor::setValue(const String &value) {
+  setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
 }  // setValue
 
-void BLEDescriptor::setAccessPermissions(uint8_t perm) {
+void BLEDescriptor::setAccessPermissions(uint16_t perm) {
   m_permissions = perm;
 }
 

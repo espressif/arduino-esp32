@@ -15,6 +15,12 @@ on:
       - ".github/workflows/*.yml"
       - ".github/workflows/*.yaml"
 
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+  security-events: write
+
 jobs:
   codeql-analysis:
     name: CodeQL ${{ matrix.language }} analysis
