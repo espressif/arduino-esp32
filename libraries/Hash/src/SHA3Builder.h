@@ -35,13 +35,13 @@
 
 class SHA3Builder : public HashBuilder {
 protected:
-  uint64_t state[25];        // SHA3 state (1600 bits)
-  uint8_t buffer[200];       // Input buffer
-  size_t rate;               // Rate (block size)
-  size_t hash_size;          // Output hash size
-  size_t buffer_size;        // Current buffer size
-  bool finalized;            // Whether hash has been finalized
-  uint8_t hash[64];          // Hash result
+  uint64_t state[25];   // SHA3 state (1600 bits)
+  uint8_t buffer[200];  // Input buffer
+  size_t rate;          // Rate (block size)
+  size_t hash_size;     // Output hash size
+  size_t buffer_size;   // Current buffer size
+  bool finalized;       // Whether hash has been finalized
+  uint8_t hash[64];     // Hash result
 
   void keccak_f(uint64_t state[25]);
   void process_block(const uint8_t *data);

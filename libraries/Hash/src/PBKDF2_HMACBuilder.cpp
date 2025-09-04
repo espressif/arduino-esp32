@@ -18,7 +18,7 @@
 // Block size for HMAC (64 bytes for SHA-1, SHA-256, SHA-512)
 #define HMAC_BLOCK_SIZE 64
 
-PBKDF2_HMACBuilder::PBKDF2_HMACBuilder(HashBuilder* hash, String password, String salt, uint32_t iterations) {
+PBKDF2_HMACBuilder::PBKDF2_HMACBuilder(HashBuilder *hash, String password, String salt, uint32_t iterations) {
   this->hashBuilder = hash;
   this->hashSize = hashBuilder->getHashSize();
   this->iterations = iterations;
@@ -55,10 +55,10 @@ void PBKDF2_HMACBuilder::clearData() {
   calculated = false;
 }
 
-void PBKDF2_HMACBuilder::hmac(const uint8_t* key, size_t keyLen, const uint8_t* data, size_t dataLen, uint8_t* output) {
+void PBKDF2_HMACBuilder::hmac(const uint8_t *key, size_t keyLen, const uint8_t *data, size_t dataLen, uint8_t *output) {
   uint8_t keyPad[HMAC_BLOCK_SIZE];
   uint8_t outerPad[HMAC_BLOCK_SIZE];
-  uint8_t innerHash[64]; // Large enough for any hash
+  uint8_t innerHash[64];  // Large enough for any hash
 
   // Prepare key
   if (keyLen > HMAC_BLOCK_SIZE) {
@@ -166,7 +166,7 @@ String PBKDF2_HMACBuilder::toString() {
 }
 
 // PBKDF2 specific methods
-void PBKDF2_HMACBuilder::setPassword(const uint8_t* password, size_t len) {
+void PBKDF2_HMACBuilder::setPassword(const uint8_t *password, size_t len) {
   if (this->password != nullptr) {
     forced_memzero(this->password, len);
     delete[] this->password;
@@ -177,15 +177,15 @@ void PBKDF2_HMACBuilder::setPassword(const uint8_t* password, size_t len) {
   calculated = false;
 }
 
-void PBKDF2_HMACBuilder::setPassword(const char* password) {
-  setPassword((const uint8_t*)password, strlen(password));
+void PBKDF2_HMACBuilder::setPassword(const char *password) {
+  setPassword((const uint8_t *)password, strlen(password));
 }
 
 void PBKDF2_HMACBuilder::setPassword(String password) {
-  setPassword((const uint8_t*)password.c_str(), password.length());
+  setPassword((const uint8_t *)password.c_str(), password.length());
 }
 
-void PBKDF2_HMACBuilder::setSalt(const uint8_t* salt, size_t len) {
+void PBKDF2_HMACBuilder::setSalt(const uint8_t *salt, size_t len) {
   if (this->salt != nullptr) {
     forced_memzero(this->salt, len);
     delete[] this->salt;
@@ -196,19 +196,19 @@ void PBKDF2_HMACBuilder::setSalt(const uint8_t* salt, size_t len) {
   calculated = false;
 }
 
-void PBKDF2_HMACBuilder::setSalt(const char* salt) {
-  setSalt((const uint8_t*)salt, strlen(salt));
+void PBKDF2_HMACBuilder::setSalt(const char *salt) {
+  setSalt((const uint8_t *)salt, strlen(salt));
 }
 
 void PBKDF2_HMACBuilder::setSalt(String salt) {
-  setSalt((const uint8_t*)salt.c_str(), salt.length());
+  setSalt((const uint8_t *)salt.c_str(), salt.length());
 }
 
 void PBKDF2_HMACBuilder::setIterations(uint32_t iterations) {
   this->iterations = iterations;
 }
 
-void PBKDF2_HMACBuilder::setHashAlgorithm(HashBuilder* hash) {
+void PBKDF2_HMACBuilder::setHashAlgorithm(HashBuilder *hash) {
   // Set the hash algorithm to use for the HMAC
   // Note: We don't delete hashBuilder here as it might be owned by the caller
   // The caller is responsible for managing the hashBuilder lifetime
@@ -216,12 +216,12 @@ void PBKDF2_HMACBuilder::setHashAlgorithm(HashBuilder* hash) {
   hashSize = hashBuilder->getHashSize();
 }
 
-void PBKDF2_HMACBuilder::pbkdf2_hmac(const uint8_t* password, size_t passwordLen,
-                                const uint8_t* salt, size_t saltLen,
-                                uint32_t iterations, uint8_t* output, size_t outputLen) {
-  uint8_t u1[64]; // Large enough for any hash
+void PBKDF2_HMACBuilder::pbkdf2_hmac(
+  const uint8_t *password, size_t passwordLen, const uint8_t *salt, size_t saltLen, uint32_t iterations, uint8_t *output, size_t outputLen
+) {
+  uint8_t u1[64];  // Large enough for any hash
   uint8_t u2[64];
-  uint8_t saltWithBlock[256]; // Salt + block number
+  uint8_t saltWithBlock[256];  // Salt + block number
   uint8_t block[64];
 
   size_t blocks = (outputLen + hashSize - 1) / hashSize;

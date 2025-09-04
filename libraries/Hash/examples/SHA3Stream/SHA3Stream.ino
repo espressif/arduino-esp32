@@ -20,13 +20,13 @@
 #include <Stream.h>
 
 // Expected hash values for validation
-const char* EXPECTED_STREAM_TEST_SHA3_256 = "7094efc774885c7a785b408c5da86636cb8adc79156c0f162c6fd7e49f4c505e";
-const char* EXPECTED_MAX_SHA3_224_FULL = "ad0e69e04a7258d7cab4272a08ac69f8b43f4e45f9c49c9abb0628af";
-const char* EXPECTED_MAX_SHA3_224_10 = "9b55096e998cda6b96d3f2828c4ccda8c9964a1ad98989fb8b0fcd26";
-const char* EXPECTED_COMBINED_SHA3_256 = "4a32307fe03bf9f600c5d124419985fd4d42c1639e6a23ab044f107c3b95a189";
+const char *EXPECTED_STREAM_TEST_SHA3_256 = "7094efc774885c7a785b408c5da86636cb8adc79156c0f162c6fd7e49f4c505e";
+const char *EXPECTED_MAX_SHA3_224_FULL = "ad0e69e04a7258d7cab4272a08ac69f8b43f4e45f9c49c9abb0628af";
+const char *EXPECTED_MAX_SHA3_224_10 = "9b55096e998cda6b96d3f2828c4ccda8c9964a1ad98989fb8b0fcd26";
+const char *EXPECTED_COMBINED_SHA3_256 = "4a32307fe03bf9f600c5d124419985fd4d42c1639e6a23ab044f107c3b95a189";
 
 // Validation function
-bool validateHash(const String& calculated, const char* expected, const String& test_name) {
+bool validateHash(const String &calculated, const char *expected, const String &test_name) {
   bool passed = (calculated == expected);
   Serial.print(test_name);
   Serial.print(": ");
@@ -66,7 +66,7 @@ public:
   }
 
   virtual size_t write(uint8_t) override {
-    return 0; // Read-only stream
+    return 0;  // Read-only stream
   }
 
   size_t length() {
@@ -91,9 +91,9 @@ void setup() {
   {
     Serial.println("\n1. Hashing data from a custom stream:");
 
-    const char* test_data = "This is a test message for streaming hash calculation. "
-                           "It contains multiple sentences to demonstrate how the "
-                           "addStream method processes data in chunks.";
+    const char *test_data = "This is a test message for streaming hash calculation. "
+                            "It contains multiple sentences to demonstrate how the "
+                            "addStream method processes data in chunks.";
 
     TestStream stream(test_data);
 
@@ -112,7 +112,7 @@ void setup() {
   {
     Serial.println("\n2. Comparing different maximum lengths with streams:");
 
-    const char* test_data = "Streaming hash test with different maximum lengths";
+    const char *test_data = "Streaming hash test with different maximum lengths";
     TestStream stream(test_data);
 
     // SHA3-224 with a hardcoded maximum length
@@ -138,7 +138,7 @@ void setup() {
   {
     Serial.println("\n3. Combining add() and addStream():");
 
-    const char* stream_data = "Additional data from stream";
+    const char *stream_data = "Additional data from stream";
     TestStream stream(stream_data);
 
     SHA3_256Builder sha3_256;

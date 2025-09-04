@@ -21,32 +21,30 @@
 
 class PBKDF2_HMACBuilder : public HashBuilder {
 private:
-  HashBuilder* hashBuilder;
+  HashBuilder *hashBuilder;
   size_t hashSize;
   uint32_t iterations;
 
   // Password and salt storage
-  uint8_t* password;
+  uint8_t *password;
   size_t passwordLen;
-  uint8_t* salt;
+  uint8_t *salt;
   size_t saltLen;
 
   // Output storage
-  uint8_t* derivedKey;
+  uint8_t *derivedKey;
   size_t derivedKeyLen;
   bool calculated;
 
-  void hmac(const uint8_t* key, size_t keyLen, const uint8_t* data, size_t dataLen, uint8_t* output);
-  void pbkdf2_hmac(const uint8_t* password, size_t passwordLen,
-                   const uint8_t* salt, size_t saltLen,
-                   uint32_t iterations, uint8_t* output, size_t outputLen);
+  void hmac(const uint8_t *key, size_t keyLen, const uint8_t *data, size_t dataLen, uint8_t *output);
+  void pbkdf2_hmac(const uint8_t *password, size_t passwordLen, const uint8_t *salt, size_t saltLen, uint32_t iterations, uint8_t *output, size_t outputLen);
   void clearData();
 
 public:
   using HashBuilder::add;
 
   // Constructor takes a hash builder instance
-  PBKDF2_HMACBuilder(HashBuilder* hash, String password = "", String salt = "", uint32_t iterations = 10000);
+  PBKDF2_HMACBuilder(HashBuilder *hash, String password = "", String salt = "", uint32_t iterations = 10000);
   ~PBKDF2_HMACBuilder();
 
   // Standard HashBuilder interface
@@ -57,17 +55,19 @@ public:
   void getBytes(uint8_t *output) override;
   void getChars(char *output) override;
   String toString() override;
-  size_t getHashSize() const override { return derivedKeyLen; }
+  size_t getHashSize() const override {
+    return derivedKeyLen;
+  }
 
   // PBKDF2 specific methods
-  void setPassword(const uint8_t* password, size_t len);
-  void setPassword(const char* password);
+  void setPassword(const uint8_t *password, size_t len);
+  void setPassword(const char *password);
   void setPassword(String password);
-  void setSalt(const uint8_t* salt, size_t len);
-  void setSalt(const char* salt);
+  void setSalt(const uint8_t *salt, size_t len);
+  void setSalt(const char *salt);
   void setSalt(String salt);
   void setIterations(uint32_t iterations);
-  void setHashAlgorithm(HashBuilder* hash);
+  void setHashAlgorithm(HashBuilder *hash);
 };
 
 #endif

@@ -59,8 +59,8 @@ void setup() {
     SHA1Builder sha1;
     PBKDF2_HMACBuilder pbkdf2(&sha1);
 
-    const char* password = "password";
-    const char* salt = "salt";
+    const char *password = "password";
+    const char *salt = "salt";
 
     pbkdf2.begin();
     pbkdf2.setPassword(password);
@@ -128,11 +128,11 @@ void setup() {
   // Test 4: PBKDF2-HMAC-SHA1 with byte arrays
   Serial.println("\n4. PBKDF2-HMAC-SHA1 Test (byte arrays)");
   {
-    SHA1Builder sha1; // or any other hash algorithm based on HashBuilder
+    SHA1Builder sha1;  // or any other hash algorithm based on HashBuilder
     PBKDF2_HMACBuilder pbkdf2(&sha1);
 
-    uint8_t password[] = {0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64}; // "password" in bytes
-    uint8_t salt[] = {0x73, 0x61, 0x6c, 0x74}; // "salt" in bytes
+    uint8_t password[] = {0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64};  // "password" in bytes
+    uint8_t salt[] = {0x73, 0x61, 0x6c, 0x74};                              // "salt" in bytes
 
     pbkdf2.begin();
     pbkdf2.setPassword(password, sizeof(password));

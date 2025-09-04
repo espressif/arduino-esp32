@@ -43,7 +43,9 @@ public:
   void getBytes(uint8_t *output) override;
   void getChars(char *output) override;
   String toString() override;
-  size_t getHashSize() const override { return SHA1_HASH_SIZE; }
+  size_t getHashSize() const override {
+    return SHA1_HASH_SIZE;
+  }
 };
 
 #endif

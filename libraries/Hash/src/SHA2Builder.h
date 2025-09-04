@@ -39,16 +39,16 @@
 
 class SHA2Builder : public HashBuilder {
 protected:
-  uint32_t state_32[8];      // SHA-224/256 state (256 bits)
-  uint64_t state_64[8];      // SHA-384/512 state (512 bits)
-  uint8_t buffer[128];       // Input buffer (max block size)
-  size_t block_size;         // Block size
-  size_t hash_size;          // Output hash size
-  size_t buffer_size;        // Current buffer size
-  bool finalized;            // Whether hash has been finalized
-  bool is_sha512;            // Whether using SHA-512 family
-  uint8_t hash[64];          // Hash result
-  uint64_t total_length;     // Total length of input data
+  uint32_t state_32[8];   // SHA-224/256 state (256 bits)
+  uint64_t state_64[8];   // SHA-384/512 state (512 bits)
+  uint8_t buffer[128];    // Input buffer (max block size)
+  size_t block_size;      // Block size
+  size_t hash_size;       // Output hash size
+  size_t buffer_size;     // Current buffer size
+  bool finalized;         // Whether hash has been finalized
+  bool is_sha512;         // Whether using SHA-512 family
+  uint8_t hash[64];       // Hash result
+  uint64_t total_length;  // Total length of input data
 
   void process_block_sha256(const uint8_t *data);
   void process_block_sha512(const uint8_t *data);

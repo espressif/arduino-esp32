@@ -15,13 +15,14 @@
 #include <SHA2Builder.h>
 
 // Expected hash values for validation
-const char* EXPECTED_HELLO_WORLD_SHA256 = "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e";
-const char* EXPECTED_HELLO_WORLD_SHA512 = "2c74fd17edafd80e8447b0d46741ee243b7eb74dd2149a0ab1b9246fb30382f27e853d8585719e0e67cbda0daa8f51671064615d645ae27acb15bfb1447f459b";
-const char* EXPECTED_TEST_MESSAGE_SHA224 = "155b033d801d4dd59b783d76ac3059053c00b2c28340a5a36a427a76";
-const char* EXPECTED_TEST_MESSAGE_SHA384 = "efd336618cbc96551936e5897e6af391d2480513ff8d4fc744e34462edb3111477d2b889c4d5e80e23b5f9d1b636fbd7";
+const char *EXPECTED_HELLO_WORLD_SHA256 = "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e";
+const char *EXPECTED_HELLO_WORLD_SHA512 =
+  "2c74fd17edafd80e8447b0d46741ee243b7eb74dd2149a0ab1b9246fb30382f27e853d8585719e0e67cbda0daa8f51671064615d645ae27acb15bfb1447f459b";
+const char *EXPECTED_TEST_MESSAGE_SHA224 = "155b033d801d4dd59b783d76ac3059053c00b2c28340a5a36a427a76";
+const char *EXPECTED_TEST_MESSAGE_SHA384 = "efd336618cbc96551936e5897e6af391d2480513ff8d4fc744e34462edb3111477d2b889c4d5e80e23b5f9d1b636fbd7";
 
 // Validation function
-bool validateHash(const String& calculated, const char* expected, const String& test_name) {
+bool validateHash(const String &calculated, const char *expected, const String &test_name) {
   bool passed = (calculated == expected);
   Serial.print(test_name);
   Serial.print(": ");

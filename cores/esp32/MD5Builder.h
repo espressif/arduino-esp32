@@ -44,7 +44,9 @@ public:
   void getBytes(uint8_t *output) override;
   void getChars(char *output) override;
   String toString(void) override;
-  size_t getHashSize() const override { return ESP_ROM_MD5_DIGEST_LEN; }
+  size_t getHashSize() const override {
+    return ESP_ROM_MD5_DIGEST_LEN;
+  }
 };
 
 #endif
