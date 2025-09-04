@@ -317,6 +317,33 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDPPacket &packet) {
   pbuf_ref(_pb);
 }
 
+AsyncUDPPacket &AsyncUDPPacket::operator=(const AsyncUDPPacket &packet) {
+  if (this != &packet) {
+    if (_pb) {
+      // Free existing pbuf reference
+      pbuf_free(_pb);
+    }
+
+    // Copy all members
+    _udp = packet._udp;
+    _pb = packet._pb;
+    _if = packet._if;
+    _data = packet._data;
+    _len = packet._len;
+    _index = 0;
+
+    memcpy(&_remoteIp, &packet._remoteIp, sizeof(ip_addr_t));
+    memcpy(&_localIp, &packet._localIp, sizeof(ip_addr_t));
+    _localPort = packet._localPort;
+    _remotePort = packet._remotePort;
+    memcpy(_remoteMac, packet._remoteMac, 6);
+
+    // Increment reference count for the new pbuf
+    pbuf_ref(_pb);
+  }
+  return *this;
+}
+
 AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, uint16_t rport, struct netif *ntif) {
   _udp = udp;
   _pb = pb;

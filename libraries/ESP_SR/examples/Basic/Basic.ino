@@ -9,6 +9,17 @@
 #define LIGHT_PIN 40
 #define FAN_PIN   41
 
+/**
+ * The input format:
+ * M to represent the microphone channel
+ * R to represent the playback reference channel
+ * N to represent an unknown or unused channel
+ *
+ * For example, input_format="MMNR" indicates that the input data consists of four channels,
+ * which are the microphone channel, the microphone channel, an unused channel, and the playback channel
+ */
+#define SR_INPUT_FORMAT "MM"
+
 I2SClass i2s;
 
 // Generated using the following command:
@@ -69,7 +80,7 @@ void setup() {
   i2s.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO);
 
   ESP_SR.onEvent(onSrEvent);
-  ESP_SR.begin(i2s, sr_commands, sizeof(sr_commands) / sizeof(sr_cmd_t), SR_CHANNELS_STEREO, SR_MODE_WAKEWORD);
+  ESP_SR.begin(i2s, sr_commands, sizeof(sr_commands) / sizeof(sr_cmd_t), SR_CHANNELS_STEREO, SR_MODE_WAKEWORD, SR_INPUT_FORMAT);
 }
 
 void loop() {}

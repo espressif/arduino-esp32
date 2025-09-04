@@ -308,7 +308,7 @@ void initArduino() {
   if (err) {
     log_e("Failed to initialize NVS! Error: %u", err);
   }
-#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
   if (!btInUse()) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
   }

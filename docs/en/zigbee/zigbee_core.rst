@@ -51,6 +51,24 @@ This function will return ``true`` if initialization successful, ``false`` other
         * Zigbee mode to ``Zigbee ED (end device)``.
         * Partition scheme to ``Zigbee xMB with spiffs`` (where ``x`` is the number of MB of selected flash size).
 
+start
+^^^^^
+Starts the Zigbee stack again, if it was stopped by calling ``stop()``.
+
+.. code-block:: arduino
+
+    void start();
+
+
+stop
+^^^^
+Stops the Zigbee stack. This can be used after calling ``begin()`` to stop the Zigbee stack.
+Usage example is to save power or when you need the radio to be available for other tasks.
+
+.. code-block:: arduino
+
+    void stop();
+
 Network Status
 **************
 
