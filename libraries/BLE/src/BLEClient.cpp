@@ -1008,7 +1008,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           break;
         }
 
-        if(BLESecurity::m_securityEnabled) {
+        if (BLESecurity::m_securityEnabled) {
           BLESecurity::startSecurity(client->m_conn_id);
         }
 
@@ -1174,7 +1174,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         pkey.action = event->passkey.params.action;
         pkey.passkey = BLESecurity::getPassKey();  // This is the passkey to be entered on peer
 
-        if(!BLESecurity::m_passkeySet) {
+        if (!BLESecurity::m_passkeySet) {
           log_w("No passkey set");
         }
 

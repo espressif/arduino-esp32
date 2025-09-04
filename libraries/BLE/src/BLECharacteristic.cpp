@@ -574,9 +574,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 
           if (BLEDevice::m_securityCallbacks != nullptr) {
             log_i("Authorization required for write operation. Checking authorization...");
-            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(
-              param->write.conn_id, m_handle, false
-            );
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->write.conn_id, m_handle, false);
           } else {
             log_w("onAuthorizationRequest not implemented. Rejecting write authorization request");
           }
@@ -656,9 +654,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 
           if (BLEDevice::m_securityCallbacks != nullptr) {
             log_i("Authorization required for read operation. Checking authorization...");
-            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(
-              param->read.conn_id, m_handle, true
-            );
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->read.conn_id, m_handle, true);
           } else {
             log_w("onAuthorizationRequest not implemented. Rejecting read authorization request");
           }

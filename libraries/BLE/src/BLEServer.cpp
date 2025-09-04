@@ -638,7 +638,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
           server->m_pServerCallbacks->onConnect(server, &desc);
         }
 
-        if(BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
+        if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
           BLESecurity::startSecurity(event->connect.conn_handle);
         }
 
@@ -828,7 +828,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         pkey.action = event->passkey.params.action;
         pkey.passkey = BLESecurity::getPassKey();
 
-        if(!BLESecurity::m_passkeySet) {
+        if (!BLESecurity::m_passkeySet) {
           log_w("No passkey set");
         }
 
@@ -915,18 +915,16 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
     {
       log_d("BLE_GAP_EVENT_AUTHORIZE");
 
-      log_i("Authorization request: conn_handle=%d attr_handle=%d is_read=%d",
-            event->authorize.conn_handle,
-            event->authorize.attr_handle,
-            event->authorize.is_read);
+      log_i(
+        "Authorization request: conn_handle=%d attr_handle=%d is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
+      );
 
       bool authorized = false;
 
       if (BLEDevice::m_securityCallbacks != nullptr) {
         log_i("Asking for authorization from onAuthorizationRequest");
-        authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(
-          event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
-        );
+        authorized =
+          BLEDevice::m_securityCallbacks->onAuthorizationRequest(event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read);
       } else {
         log_w("onAuthorizationRequest not implemented. Rejecting authorization request");
       }

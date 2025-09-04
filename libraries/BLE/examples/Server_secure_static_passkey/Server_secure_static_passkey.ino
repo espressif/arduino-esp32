@@ -80,10 +80,8 @@ void setup() {
   // Check the BLECharacteristic.h file for more information.
   secure_properties |= BLECharacteristic::PROPERTY_READ_ENC | BLECharacteristic::PROPERTY_WRITE_ENC;
 
-  BLECharacteristic *pSecureCharacteristic =
-    pService->createCharacteristic(SECURE_CHARACTERISTIC_UUID, secure_properties);
-  BLECharacteristic *pUnsecureCharacteristic =
-    pService->createCharacteristic(UNSECURE_CHARACTERISTIC_UUID, unsecure_properties);
+  BLECharacteristic *pSecureCharacteristic = pService->createCharacteristic(SECURE_CHARACTERISTIC_UUID, secure_properties);
+  BLECharacteristic *pUnsecureCharacteristic = pService->createCharacteristic(UNSECURE_CHARACTERISTIC_UUID, unsecure_properties);
 
   // Bluedroid uses permissions to secure characteristics.
   // This is the same as using the properties above.

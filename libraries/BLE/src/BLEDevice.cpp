@@ -723,13 +723,10 @@ BLEStack BLEDevice::getBLEStack() {
 
 String BLEDevice::getBLEStackString() {
   switch (getBLEStack()) {
-    case BLEStack::BLUEDROID:
-      return "Bluedroid";
-    case BLEStack::NIMBLE:
-      return "NimBLE";
+    case BLEStack::BLUEDROID: return "Bluedroid";
+    case BLEStack::NIMBLE:    return "NimBLE";
     case BLEStack::UNKNOWN:
-    default:
-      return "Unknown";
+    default:                  return "Unknown";
   }
 }
 
@@ -829,7 +826,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     case ESP_GAP_BLE_OOB_REQ_EVT:  /* OOB request event */ log_i("ESP_GAP_BLE_OOB_REQ_EVT"); break;
     case ESP_GAP_BLE_LOCAL_IR_EVT: /* BLE local IR event */ log_i("ESP_GAP_BLE_LOCAL_IR_EVT"); break;
     case ESP_GAP_BLE_LOCAL_ER_EVT: /* BLE local ER event */ log_i("ESP_GAP_BLE_LOCAL_ER_EVT"); break;
-    case ESP_GAP_BLE_NC_REQ_EVT:   /*  NUMERIC CONFIRMATION  */
+    case ESP_GAP_BLE_NC_REQ_EVT: /*  NUMERIC CONFIRMATION  */
     {
       log_i("ESP_GAP_BLE_NC_REQ_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
@@ -840,8 +837,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         esp_ble_confirm_reply(param->ble_security.ble_req.bd_addr, false);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
     case ESP_GAP_BLE_PASSKEY_REQ_EVT: /* passkey request event */
     {
       log_i("ESP_GAP_BLE_PASSKEY_REQ_EVT: ");
@@ -867,8 +863,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 
       esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, passkey);
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
       /*
 			 * TODO should we add white/black list comparison?
 			 */
@@ -885,8 +880,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
       /*
 			  *
 			  */
@@ -897,7 +891,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
       uint32_t passkey = param->ble_security.key_notif.passkey;
 
-      if(!BLESecurity::m_passkeySet) {
+      if (!BLESecurity::m_passkeySet) {
         log_w("No passkey set");
       }
 
@@ -912,8 +906,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         BLEDevice::m_securityCallbacks->onPassKeyNotify(passkey);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
     case ESP_GAP_BLE_KEY_EVT:
     {
       //shows the ble key type info share with peer device to the user.
@@ -921,8 +914,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
       log_i("key type = %s", BLESecurity::esp_key_type_to_str(param->ble_security.ble_key.key_type));
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
     case ESP_GAP_BLE_AUTH_CMPL_EVT:
     {
       log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
@@ -931,8 +923,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-    }
-      break;
+    } break;
     default:
     {
       break;
@@ -963,8 +954,6 @@ void BLEDevice::setCustomGattcHandler(gattc_event_handler handler) {
 void BLEDevice::setCustomGattsHandler(gatts_event_handler handler) {
   m_customGattsHandler = handler;
 }
-
-
 
 #endif
 

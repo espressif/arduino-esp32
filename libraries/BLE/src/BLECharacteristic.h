@@ -140,14 +140,14 @@ public:
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   static const uint32_t PROPERTY_READ = 1 << 0;
-  static const uint32_t PROPERTY_READ_ENC = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_READ_AUTHEN = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_READ_AUTHOR = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_READ_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_READ_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_READ_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
   static const uint32_t PROPERTY_WRITE = 1 << 1;
   static const uint32_t PROPERTY_WRITE_NR = 1 << 5;
-  static const uint32_t PROPERTY_WRITE_ENC = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_WRITE_AUTHEN = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_WRITE_AUTHOR = 0; // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_WRITE_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_WRITE_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
+  static const uint32_t PROPERTY_WRITE_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
   static const uint32_t PROPERTY_NOTIFY = 1 << 2;
   static const uint32_t PROPERTY_BROADCAST = 1 << 3;
   static const uint32_t PROPERTY_INDICATE = 1 << 4;

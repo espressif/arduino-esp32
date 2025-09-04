@@ -149,9 +149,9 @@ uint32_t BLESecurity::setPassKey(bool staticPasskey, uint32_t passkey) {
   log_d("setPassKey: staticPasskey=%d, passkey=%d", staticPasskey, passkey);
   m_staticPasskey = staticPasskey;
 
-  if(m_staticPasskey) {
+  if (m_staticPasskey) {
     m_passkey = passkey;
-    if(m_passkey == BLE_SM_DEFAULT_PASSKEY) {
+    if (m_passkey == BLE_SM_DEFAULT_PASSKEY) {
       log_w("*WARNING* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
       log_w("*WARNING* Please use a random passkey or set a different static passkey");
     }
@@ -174,7 +174,7 @@ uint32_t BLESecurity::setPassKey(bool staticPasskey, uint32_t passkey) {
 // If using a random passkey, it will generate a new random passkey if m_regenOnConnect is true.
 // Otherwise, it will return the current passkey being used.
 uint32_t BLESecurity::getPassKey() {
-  if(m_passkeySet && !m_staticPasskey && m_regenOnConnect) {
+  if (m_passkeySet && !m_staticPasskey && m_regenOnConnect) {
     m_passkey = generateRandomPassKey();
 #if defined(CONFIG_BLUEDROID_ENABLED)
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &m_passkey, sizeof(uint32_t));
@@ -197,8 +197,8 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool sc) {
   m_securityEnabled = (m_authReq != 0);
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &m_authReq, sizeof(uint8_t));
-  if(sc) {
-    if(mitm) {
+  if (sc) {
+    if (mitm) {
       setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_MITM);
     } else {
       setEncryptionLevel(ESP_BLE_SEC_ENCRYPT_NO_MITM);
@@ -252,7 +252,9 @@ bool BLESecurityCallbacks::onConfirmPIN(uint32_t pin) {
 // It should return true if the authorization is granted, false otherwise.
 bool BLESecurityCallbacks::onAuthorizationRequest(uint16_t connHandle, uint16_t attrHandle, bool isRead) {
   Serial.println("BLESecurityCallbacks: *ATTENTION* Using unsecure onAuthorizationRequest. It will accept any authorization request.");
-  Serial.println("BLESecurityCallbacks: *ATTENTION* Please implement onAuthorizationRequest with a suitable authorization logic in your BLESecurityCallbacks class");
+  Serial.println(
+    "BLESecurityCallbacks: *ATTENTION* Please implement onAuthorizationRequest with a suitable authorization logic in your BLESecurityCallbacks class"
+  );
   return true;
 }
 
@@ -268,7 +270,7 @@ void BLESecurity::setEncryptionLevel(esp_ble_sec_act_t level) {
 
 bool BLESecurity::startSecurity(esp_bd_addr_t bd_addr, int *rcPtr) {
 #ifdef CONFIG_BLE_SMP_ENABLE
-  if(m_securityStarted) {
+  if (m_securityStarted) {
     log_w("Security already started for bd_addr=%s", BLEAddress(bd_addr).toString().c_str());
     return true;
   }
@@ -320,7 +322,7 @@ void BLESecurityCallbacks::onAuthenticationComplete(esp_ble_auth_cmpl_t param) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 // This function initiates security for a given connection handle.
 bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
-  if(m_securityStarted) {
+  if (m_securityStarted) {
     log_w("Security already started for connHandle=%d", connHandle);
     return true;
   }
