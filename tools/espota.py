@@ -54,7 +54,6 @@ AUTH = 200
 # Constants
 PROGRESS_BAR_LENGTH = 60
 
-
 # update_progress(): Displays or updates a console progress bar
 def update_progress(progress):
     if PROGRESS:
@@ -94,7 +93,8 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
         return 1
 
     content_size = os.path.getsize(filename)
-    file_md5 = hashlib.md5(open(filename, "rb").read()).hexdigest()
+    with open(filename, "rb") as f:
+        file_md5 = hashlib.md5(f.read()).hexdigest()
     logging.info("Upload size: %d", content_size)
     message = "%d %d %d %s\n" % (command, local_port, content_size, file_md5)
 
@@ -118,7 +118,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
             return 1
         sock2.settimeout(TIMEOUT)
         try:
-            data = sock2.recv(37).decode()
+            data = sock2.recv(69).decode()  # "AUTH " + 64-char SHA256 nonce
             break
         except:  # noqa: E722
             sys.stderr.write(".")
@@ -132,18 +132,32 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
     if data != "OK":
         if data.startswith("AUTH"):
             nonce = data.split()[1]
+
+            # Generate client nonce (cnonce)
             cnonce_text = "%s%u%s%s" % (filename, content_size, file_md5, remote_addr)
-            cnonce = hashlib.md5(cnonce_text.encode()).hexdigest()
-            passmd5 = hashlib.md5(password.encode()).hexdigest()
-            result_text = "%s:%s:%s" % (passmd5, nonce, cnonce)
-            result = hashlib.md5(result_text.encode()).hexdigest()
+            cnonce = hashlib.sha256(cnonce_text.encode()).hexdigest()
+
+            # PBKDF2-HMAC-SHA256 challenge/response protocol
+            # The ESP32 stores the password as SHA256 hash, so we need to hash the password first
+            # 1. Hash the password with SHA256 (to match ESP32 storage)
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+            # 2. Derive key using PBKDF2-HMAC-SHA256 with the password hash
+            salt = nonce + ":" + cnonce
+            derived_key = hashlib.pbkdf2_hmac('sha256', password_hash.encode(), salt.encode(), 10000)
+            derived_key_hex = derived_key.hex()
+
+            # 3. Create challenge response
+            challenge = derived_key_hex + ":" + nonce + ":" + cnonce
+            response = hashlib.sha256(challenge.encode()).hexdigest()
+
             sys.stderr.write("Authenticating...")
             sys.stderr.flush()
-            message = "%d %s %s\n" % (AUTH, cnonce, result)
+            message = "%d %s %s\n" % (AUTH, cnonce, response)
             sock2.sendto(message.encode(), remote_address)
             sock2.settimeout(10)
             try:
-                data = sock2.recv(32).decode()
+                data = sock2.recv(64).decode()  # SHA256 produces 64 character response
             except:  # noqa: E722
                 sys.stderr.write("FAIL\n")
                 logging.error("No Answer to our Authentication")
@@ -163,6 +177,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
     sock2.close()
 
     logging.info("Waiting for device...")
+
     try:
         sock.settimeout(10)
         connection, client_address = sock.accept()
@@ -172,6 +187,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
         logging.error("No response from device")
         sock.close()
         return 1
+
     try:
         with open(filename, "rb") as f:
             if PROGRESS:
@@ -225,7 +241,8 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
             logging.error("Error response from device")
             connection.close()
             return 1
-
+    except Exception as e:  # noqa: E722
+        logging.error("Error: %s", str(e))
     finally:
         connection.close()
 
