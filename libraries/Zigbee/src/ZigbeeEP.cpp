@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 /* Common Class for Zigbee End Point */
 
 #include "ZigbeeEP.h"

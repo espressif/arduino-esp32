@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // Zigbee library header file for includes of all Zigbee library headers.
 
 #pragma once
