@@ -65,7 +65,7 @@ void onStateChangeCustom(uint16_t state) {
   // print the state
   Serial.printf("Received state change: %d\r\n", state);
   // print the state name using the stored state names
-  if (multistate_custom_state_names && state < zbMultistateDeviceCustom.getMultistateOutputStateNamesLength()) {
+  if (state < zbMultistateDeviceCustom.getMultistateOutputStateNamesLength()) {
     Serial.printf("State name: %s\r\n", multistate_custom_state_names[state]);
   }
   // print state index of possible options
@@ -161,8 +161,6 @@ void setup() {
 }
 
 void loop() {
-  static uint32_t timeCounter = 0;
-
   // Checking button for factory reset and reporting
   if (digitalRead(button) == LOW) {  // Push button pressed
     // Key debounce handling
