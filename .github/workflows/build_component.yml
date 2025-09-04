@@ -12,7 +12,7 @@ on:
         description: "IDF Targets"
         default: "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
         type: "string"
-        required: true
+        required: false
   push:
     branches:
       - master
@@ -66,8 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
-      idf_ver: ${{ steps.set-matrix.outputs.idf_ver }}
-      idf_target: ${{ steps.set-matrix.outputs.idf_target }}
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
       should_build: ${{ steps.affected-examples.outputs.should_build }}
     steps:
       - name: Install universal-ctags
@@ -113,32 +112,78 @@ jobs:
             dependencies_reverse.json
           if-no-files-found: warn
 
-      - name: Get IDF Version and Targets
+      - name: Get Matrix Combinations
         id: set-matrix
         run: |
-          # Default values
-          idf_ver="release-v5.3,release-v5.4,release-v5.5"
-          idf_targets="esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
+          # Define version-specific target configurations
+          get_targets_for_version() {
+            case "$1" in
+              "release-v5.3")
+                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
+                ;;
+              "release-v5.4")
+                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
+                ;;
+              "release-v5.5")
+                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32h2,esp32p4"
+                ;;
+              *)
+                echo ""
+                ;;
+            esac
+          }
 
-          # Override with inputs if provided
+          # Default versions if not provided via inputs
+          DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5"
+
+          # Use inputs if provided, otherwise use defaults
           if [[ -n "${{ inputs.idf_ver }}" ]]; then
-            idf_ver="${{ inputs.idf_ver }}"
+            VERSIONS="${{ inputs.idf_ver }}"
+          else
+            VERSIONS="$DEFAULT_VERSIONS"
           fi
-          if [[ -n "${{ inputs.idf_targets }}" ]]; then
-            idf_targets="${{ inputs.idf_targets }}"
-          fi
 
-          # Convert comma-separated strings to JSON arrays using a more robust method
-          idf_ver_json=$(printf '%s\n' "$idf_ver" | tr ',' '\n' | jq -R . | jq -s . | jq -c .)
-          idf_targets_json=$(printf '%s\n' "$idf_targets" | tr ',' '\n' | jq -R . | jq -s . | jq -c .)
+          # Generate matrix combinations
+          echo '{"include": [' > matrix.json
+          first=true
+          IFS=',' read -ra VERSION_ARRAY <<< "$VERSIONS"
 
-          # Debug: Print the JSON for verification
-          echo "Debug - idf_ver_json: $idf_ver_json"
-          echo "Debug - idf_targets_json: $idf_targets_json"
+          for version in "${VERSION_ARRAY[@]}"; do
+            # Trim whitespace
+            version=$(echo "$version" | xargs)
 
-          # Set outputs - ensure no extra whitespace
-          printf "idf_ver=%s\n" "$idf_ver_json" >> $GITHUB_OUTPUT
-          printf "idf_target=%s\n" "$idf_targets_json" >> $GITHUB_OUTPUT
+            # Get targets for this version
+            if [[ -n "${{ inputs.idf_targets }}" ]]; then
+              # Use provided targets for all versions
+              targets="${{ inputs.idf_targets }}"
+            else
+              # Use version-specific targets
+              targets=$(get_targets_for_version "$version")
+            fi
+
+            if [[ -n "$targets" ]]; then
+              IFS=',' read -ra TARGET_ARRAY <<< "$targets"
+              for target in "${TARGET_ARRAY[@]}"; do
+                # Trim whitespace
+                target=$(echo "$target" | xargs)
+
+                if [ "$first" = true ]; then
+                  first=false
+                else
+                  echo ',' >> matrix.json
+                fi
+                echo "{\"idf_ver\": \"$version\", \"idf_target\": \"$target\"}" >> matrix.json
+              done
+            fi
+          done
+          echo ']}' >> matrix.json
+
+          # Debug: Print the matrix for verification
+          echo "Debug - Generated matrix:"
+          cat matrix.json | jq .
+
+          # Set output
+          printf "matrix=%s\n" "$(cat matrix.json | jq -c .)" >> $GITHUB_OUTPUT
 
   build-esp-idf-component:
     name: Build IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
@@ -147,13 +192,7 @@ jobs:
     if: ${{ needs.set-matrix.outputs.should_build == '1' }}
     strategy:
       fail-fast: false
-      matrix:
-        # The version names here correspond to the versions of espressif/idf Docker image.
-        # See https://hub.docker.com/r/espressif/idf/tags and
-        # https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-docker-image.html
-        # for details.
-        idf_ver: ${{ fromJson(needs.set-matrix.outputs.idf_ver) }}
-        idf_target: ${{ fromJson(needs.set-matrix.outputs.idf_target) }}
+      matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     container: espressif/idf:${{ matrix.idf_ver }}
     steps:
       - name: Check out arduino-esp32 as a component
