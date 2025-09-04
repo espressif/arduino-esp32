@@ -49,7 +49,8 @@ typedef void (*sr_event_cb)(void *arg, sr_event_t event, int command_id, int phr
 typedef esp_err_t (*sr_fill_cb)(void *arg, void *out, size_t len, size_t *bytes_read, uint32_t timeout_ms);
 
 esp_err_t sr_start(
-  sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const char *input_format, const sr_cmd_t *sr_commands, size_t cmd_number, sr_event_cb cb, void *cb_arg
+  sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const char *input_format, const sr_cmd_t *sr_commands, size_t cmd_number,
+  sr_event_cb cb, void *cb_arg
 );
 esp_err_t sr_stop(void);
 esp_err_t sr_pause(void);

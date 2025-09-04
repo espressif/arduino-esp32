@@ -23,7 +23,7 @@ public:
   ~ESP_SR_Class();
 
   void onEvent(sr_cb cb);
-/**
+  /**
  * The input format:
  * M to represent the microphone channel
  * R to represent the playback reference channel
@@ -32,7 +32,10 @@ public:
  * For example, input_format="MMNR" indicates that the input data consists of four channels,
  * which are the microphone channel, the microphone channel, an unused channel, and the playback channel
  */
-  bool begin(I2SClass &i2s, const sr_cmd_t *sr_commands, size_t sr_commands_len, sr_channels_t rx_chan = SR_CHANNELS_STEREO, sr_mode_t mode = SR_MODE_WAKEWORD, const char *input_format = "MN");
+  bool begin(
+    I2SClass &i2s, const sr_cmd_t *sr_commands, size_t sr_commands_len, sr_channels_t rx_chan = SR_CHANNELS_STEREO, sr_mode_t mode = SR_MODE_WAKEWORD,
+    const char *input_format = "MN"
+  );
   bool end(void);
   bool setMode(sr_mode_t mode);
   bool pause(void);
