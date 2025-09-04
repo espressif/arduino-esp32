@@ -14,8 +14,8 @@
 
 /**
  * @brief This example demonstrates Zigbee multistate input / output device.
- *
- * The example demonstrates how to use Zigbee library to create a end device multistate device.
+ * 
+ * The example demonstrates how to use Zigbee library to create a router multistate device.
  * In the example, we have two multistate devices:
  * - zbMultistateDevice: uses defined application states from Zigbee specification
  * - zbMultistateDeviceCustom: uses custom application states (user defined)
@@ -24,9 +24,10 @@
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
+ * 
+ * NOTE: HomeAssistant ZHA does not support multistate input and output clusters yet.
  *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
- * Modified by Pat Clay
  */
 
 #ifndef ZIGBEE_MODE_ZCZR
@@ -68,7 +69,7 @@ void onStateChangeCustom(uint16_t state) {
     Serial.printf("State name: %s\r\n", multistate_custom_state_names[state]);
   }
   // print state index of possible options
-  Serial.printf("State index: %d / %d\r\n", state, zbMultistateDevice.getMultistateOutputStateNamesLength() - 1);
+  Serial.printf("State index: %d / %d\r\n", state, zbMultistateDeviceCustom.getMultistateOutputStateNamesLength() - 1);
 
   Serial.print("Changing to fan mode to: ");
   switch (state) {
