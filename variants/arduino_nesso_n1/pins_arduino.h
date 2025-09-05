@@ -49,6 +49,14 @@ public:
     uint8_t address;
 };
 
+class NessoBattery {
+public:
+    NessoBattery() {};
+    void enableCharge();      // enable charging
+    float getVoltage();      // get battery voltage in Volts
+    uint16_t getChargeLevel();  // get battery charge level in percents
+};
+
 extern ExpanderPin LORA_LNA_ENABLE;
 extern ExpanderPin LORA_ANTENNA_SWITCH;
 extern ExpanderPin LORA_ENABLE;

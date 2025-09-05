@@ -85,6 +85,37 @@ int digitalRead(ExpanderPin pin) {
     return readBitRegister(pin.address, 0xF, pin.pin);
 }
 
+void NessoBattery::enableCharge() {
+    // AW32001E - address 0x49
+    // set CEB bit low (charge enable)
+    if (!wireInitialized) {
+        WireInternal.begin(SDA, SCL);
+        wireInitialized = true;
+    }
+    writeBitRegister(0x49, 0x1, 3, false);
+}
+
+float NessoBattery::getVoltage() {
+    // BQ27220 - address 0x55
+    if (!wireInitialized) {
+        WireInternal.begin(SDA, SCL);
+        wireInitialized = true;
+    }
+    uint16_t voltage = (readRegister(0x55, 0x9) << 8) | readRegister(0x55, 0x8);
+    return (float)voltage / 1000.0f;
+}
+
+uint16_t NessoBattery::getChargeLevel() {
+    // BQ27220 - address 0x55
+    if (!wireInitialized) {
+        WireInternal.begin(SDA, SCL);
+        wireInitialized = true;
+    }
+    uint16_t current_capacity = readRegister(0x55, 0x11) << 8 | readRegister(0x55, 0x10);
+    uint16_t total_capacity = readRegister(0x55, 0x13) << 8 | readRegister(0x55, 0x12);
+    return (current_capacity * 100) / total_capacity;
+}
+
 ExpanderPin LORA_LNA_ENABLE(5);
 ExpanderPin LORA_ANTENNA_SWITCH(6);
 ExpanderPin LORA_ENABLE(7);
