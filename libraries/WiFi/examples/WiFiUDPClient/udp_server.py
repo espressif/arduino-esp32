@@ -5,6 +5,7 @@ import sys
 import subprocess
 import platform
 
+
 def get_interface_ips():
     """Get all available interface IP addresses"""
     interface_ips = []
@@ -15,31 +16,31 @@ def get_interface_ips():
     try:
         if system == "darwin" or system == "linux":
             # Use 'ifconfig' on macOS/Linux
-            result = subprocess.run(['ifconfig'], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(["ifconfig"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 for line in lines:
-                    if 'inet ' in line and '127.0.0.1' not in line:
+                    if "inet " in line and "127.0.0.1" not in line:
                         # Extract IP address from ifconfig output
                         parts = line.strip().split()
                         for i, part in enumerate(parts):
-                            if part == 'inet':
+                            if part == "inet":
                                 if i + 1 < len(parts):
                                     ip = parts[i + 1]
-                                    if ip not in interface_ips and ip != '127.0.0.1':
+                                    if ip not in interface_ips and ip != "127.0.0.1":
                                         interface_ips.append(ip)
                                 break
         elif system == "windows":
             # Use 'ipconfig' on Windows
-            result = subprocess.run(['ipconfig'], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(["ipconfig"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 for line in lines:
-                    if 'IPv4 Address' in line and '127.0.0.1' not in line:
+                    if "IPv4 Address" in line and "127.0.0.1" not in line:
                         # Extract IP address from ipconfig output
-                        if ':' in line:
-                            ip = line.split(':')[1].strip()
-                            if ip not in interface_ips and ip != '127.0.0.1':
+                        if ":" in line:
+                            ip = line.split(":")[1].strip()
+                            if ip not in interface_ips and ip != "127.0.0.1":
                                 interface_ips.append(ip)
     except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
         print("Error: Failed to get interface IPs using system commands")
@@ -52,7 +53,7 @@ def get_interface_ips():
             hostname = socket.gethostname()
             ip_list = socket.gethostbyname_ex(hostname)[2]
             for ip in ip_list:
-                if ip not in interface_ips and ip != '127.0.0.1':
+                if ip not in interface_ips and ip != "127.0.0.1":
                     interface_ips.append(ip)
         except socket.gaierror:
             print("Error: Failed to get interface IPs using sockets")
@@ -63,6 +64,7 @@ def get_interface_ips():
         sys.exit(1)
 
     return interface_ips
+
 
 def select_interface(interface_ips):
     """Ask user to select which interface to bind to"""
@@ -89,6 +91,7 @@ def select_interface(interface_ips):
         except KeyboardInterrupt:
             print("\nExiting...")
             sys.exit(1)
+
 
 try:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

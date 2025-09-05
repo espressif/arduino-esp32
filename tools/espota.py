@@ -54,6 +54,7 @@ AUTH = 200
 # Constants
 PROGRESS_BAR_LENGTH = 60
 
+
 # update_progress(): Displays or updates a console progress bar
 def update_progress(progress):
     if PROGRESS:
@@ -144,7 +145,7 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
 
             # 2. Derive key using PBKDF2-HMAC-SHA256 with the password hash
             salt = nonce + ":" + cnonce
-            derived_key = hashlib.pbkdf2_hmac('sha256', password_hash.encode(), salt.encode(), 10000)
+            derived_key = hashlib.pbkdf2_hmac("sha256", password_hash.encode(), salt.encode(), 10000)
             derived_key_hex = derived_key.hex()
 
             # 3. Create challenge response

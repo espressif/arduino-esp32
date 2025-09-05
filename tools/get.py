@@ -52,7 +52,7 @@ dist_dir = current_dir + "/dist/"
 
 def is_safe_archive_path(path):
     # Check for absolute paths (both Unix and Windows style)
-    if path.startswith('/') or (len(path) > 1 and path[1] == ':' and path[2] in '\\/'):
+    if path.startswith("/") or (len(path) > 1 and path[1] == ":" and path[2] in "\\/"):
         raise ValueError(f"Absolute path not allowed: {path}")
 
     # Normalize the path to handle any path separators
@@ -68,8 +68,8 @@ def is_safe_archive_path(path):
 
     # Check for any remaining directory traversal patterns in the original path
     # This catches cases that might not be normalized properly
-    path_parts = path.replace('\\', '/').split('/')
-    if '..' in path_parts:
+    path_parts = path.replace("\\", "/").split("/")
+    if ".." in path_parts:
         raise ValueError(f"Directory traversal not allowed: {path}")
 
     return True
