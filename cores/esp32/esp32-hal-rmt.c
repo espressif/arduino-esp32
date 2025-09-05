@@ -435,7 +435,7 @@ bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_
     return false;
   }
   if (loop_count == 1) {
-    // send the RMT symbols once using non blocking write, like "looping" it a single time
+    // send the RMT symbols once using non-blocking write (single non-looping transmission)
     return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, 0 /*looping*/, 0 /*N/A*/);
   } else {
     // write the RMT symbols for loop_count times
