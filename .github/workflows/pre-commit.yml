@@ -31,13 +31,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Remove Label
-        if: contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks')
-        run: gh pr edit ${{ github.event.number }} --remove-label 'Re-trigger Pre-commit Hooks'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-
       - name: Set up Python 3
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         with:
@@ -85,19 +78,20 @@ jobs:
         with:
           msg: "ci(pre-commit): Apply automatic fixes"
 
-      - name: Add label if no commits are pending
-        if: ${{ failure() && steps.pre-commit.outcome == 'failure' && steps.pre-commit.outputs.pending_commit == '0' && github.event_name == 'pull_request' }}
-        continue-on-error: true
+      - name: Save workflow information for labeling
+        if: ${{ always() && github.event_name == 'pull_request' }}
         run: |
-          gh pr edit ${{ github.event.number }} --add-label 'Status: Pre-commit fixes required ⚠️'
-        env:
-          GH_TOKEN: ${{ github.token }}
+          mkdir -p ./pr-artifacts
+          echo "${{ github.event.number }}" > ./pr-artifacts/pr_number.txt
+          echo "${{ steps.pre-commit.outcome }}" > ./pr-artifacts/pre_commit_outcome.txt
+          echo "${{ steps.pre-commit.outputs.pending_commit }}" > ./pr-artifacts/pending_commit.txt
+          echo "${{ contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks') }}" > ./pr-artifacts/has_retrigger_label.txt
 
-      - name: Remove label if everything was fixed
-        if: ${{ success() && github.event_name == 'pull_request' }}
-        continue-on-error: true
-        run: |
-          gh pr edit ${{ github.event.number }} --remove-label 'Status: Pre-commit fixes required ⚠️'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Upload PR artifacts
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pr-artifacts
+          path: ./pr-artifacts/
+          retention-days: 1
 

@@ -52,10 +52,26 @@ enum zigbee_binary_clusters {
 #define BINARY_INPUT_APPLICATION_TYPE_SECURITY_HEAT_DETECTION             0x01000008  // Type 0x01, Index 0x0008
 #define BINARY_INPUT_APPLICATION_TYPE_SECURITY_OTHER                      0x0100FFFF  // Type 0x01, Index 0xFFFF
 
+// HVAC application types for Binary Output (more can be found in Zigbee Cluster Specification 3.14.11.19.5 Binary Outputs (BO) Types)
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_BOILER        0x00000003  // Type 0x00, Index 0x0003
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_CHILLER       0x0000000D  // Type 0x00, Index 0x000D
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_FAN           0x00000022  // Type 0x00, Index 0x0022
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_HEATING_VALVE 0x0000002C  // Type 0x00, Index 0x002C
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_HUMIDIFIER    0x00000033  // Type 0x00, Index 0x0033
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_PREHEAT       0x00000034  // Type 0x00, Index 0x0034
+#define BINARY_OUTPUT_APPLICATION_TYPE_HVAC_OTHER         0x0000FFFF  // Type 0x00, Index 0xFFFF
+
+// Security application types for Binary Output
+#define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ARM_DISARM_COMMAND 0x01000000  // Type 0x01, Index 0x0000
+#define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_OCCUPANCY_CONTROL  0x01000001  // Type 0x01, Index 0x0001
+#define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ENABLE_CONTROL     0x01000002  // Type 0x01, Index 0x0002
+#define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_ACCESS_CONTROL     0x01000003  // Type 0x01, Index 0x0003
+#define BINARY_OUTPUT_APPLICATION_TYPE_SECURITY_OTHER              0x0100FFFF  // Type 0x01, Index 0xFFFF
+
 typedef struct zigbee_binary_cfg_s {
   esp_zb_basic_cluster_cfg_t basic_cfg;
   esp_zb_identify_cluster_cfg_t identify_cfg;
-  // esp_zb_binary_output_cluster_cfg_t binary_output_cfg;
+  esp_zb_binary_output_cluster_cfg_t binary_output_cfg;
   esp_zb_binary_input_cluster_cfg_t binary_input_cfg;
 } zigbee_binary_cfg_t;
 
@@ -66,33 +82,41 @@ public:
 
   // Add binary cluster
   bool addBinaryInput();
-  // bool addBinaryOutput();
+  bool addBinaryOutput();
 
   // Set the application type and description for the binary input
   bool setBinaryInputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_input.h for application type values
   bool setBinaryInputDescription(const char *description);
 
   // Set the application type and description for the binary output
-  // bool setBinaryOutputApplication(uint32_t application_type); // Check esp_zigbee_zcl_binary_output.h for application type values
-  // bool setBinaryOutputDescription(const char *description);
+  bool setBinaryOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_output.h for application type values
+  bool setBinaryOutputDescription(const char *description);
 
   // Use to set a cb function to be called on binary output change
-  // void onBinaryOutputChange(void (*callback)(bool binary_output)) {
-  //   _on_binary_output_change = callback;
-  // }
+  void onBinaryOutputChange(void (*callback)(bool binary_output)) {
+    _on_binary_output_change = callback;
+  }
 
-  // Set the binary input value
+  // Set the binary input/output value
   bool setBinaryInput(bool input);
+  bool setBinaryOutput(bool output);
 
-  // Report Binary Input value
+  // Get the Binary Output value
+  bool getBinaryOutput() {
+    return _output_state;
+  }
+
+  // Report Binary Input/Output value
   bool reportBinaryInput();
+  bool reportBinaryOutput();
 
 private:
-  // void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
 
-  // void (*_on_binary_output_change)(bool);
-  // void binaryOutputChanged(bool binary_output);
+  void (*_on_binary_output_change)(bool);
+  void binaryOutputChanged();
 
+  bool _output_state;
   uint8_t _binary_clusters;
 };
 
