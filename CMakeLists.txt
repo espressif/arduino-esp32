@@ -315,6 +315,7 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeeBinary.cpp
   libraries/Zigbee/src/ep/ZigbeePowerOutlet.cpp
   libraries/Zigbee/src/ep/ZigbeeFanControl.cpp
+  libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
   )
 
 set(ARDUINO_LIBRARY_BLE_SRCS
