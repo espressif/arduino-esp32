@@ -70,10 +70,18 @@ void pinMode(ExpanderPin pin, uint8_t mode) {
 }
 
 void digitalWrite(ExpanderPin pin, uint8_t val) {
+    if (!wireInitialized) {
+        WireInternal.begin(SDA, SCL);
+        wireInitialized = true;
+    }
     writeBitRegister(pin.address, 0x5, pin.pin, val == HIGH);
 }
 
 int digitalRead(ExpanderPin pin) {
+    if (!wireInitialized) {
+        WireInternal.begin(SDA, SCL);
+        wireInitialized = true;
+    }
     return readBitRegister(pin.address, 0xF, pin.pin);
 }
 
