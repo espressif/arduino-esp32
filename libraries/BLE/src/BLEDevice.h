@@ -11,10 +11,10 @@
 
 #ifndef MAIN_BLEDevice_H_
 #define MAIN_BLEDevice_H_
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 /***************************************************************************
@@ -22,7 +22,15 @@
  ***************************************************************************/
 
 #include <map>
+#if defined(SOC_BLE_SUPPORTED)
 #include <esp_bt.h>
+#else
+// For ESP32-P4 and other chips without native BLE support
+// Define minimal types needed for interface compatibility
+typedef int esp_power_level_t;
+typedef int esp_ble_power_type_t;
+#define ESP_BLE_PWR_TYPE_DEFAULT 0
+#endif
 #include "WString.h"
 #include "BLEServer.h"
 #include "BLEClient.h"
@@ -32,6 +40,8 @@
 #include "BLESecurity.h"
 #include "BLEAddress.h"
 #include "BLEUtils.h"
+#include "BLEUUID.h"
+#include "BLEAdvertisedDevice.h"
 
 /***************************************************************************
  *                           Common definitions                            *
@@ -60,6 +70,9 @@ enum class BLEStack {
 #if defined(CONFIG_NIMBLE_ENABLED)
 #include <host/ble_gap.h>
 #define ESP_GATT_IF_NONE BLE_HS_CONN_HANDLE_NONE
+
+// Hosted HCI transport implementation is provided in BLEHostedHCI.cpp
+// and is automatically linked when building for ESP32-P4
 
 // NimBLE configuration compatibility macros
 #if defined(CONFIG_SCAN_DUPLICATE_BY_DEVICE_ADDR) && !defined(CONFIG_BTDM_SCAN_DUPL_TYPE_DEVICE)
@@ -190,6 +203,7 @@ public:
   static void deinit(bool release_memory = false);
   static BLEStack getBLEStack();
   static String getBLEStackString();
+  static bool isHostedBLE();
 
   /***************************************************************************
    *                       Bluedroid public declarations                    *
@@ -272,5 +286,6 @@ public:
 #endif
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+
 #endif /* MAIN_BLEDevice_H_ */

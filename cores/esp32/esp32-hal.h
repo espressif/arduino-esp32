@@ -100,6 +100,7 @@ void yield(void);
 #include "esp32-hal-psram.h"
 #include "esp32-hal-rgb-led.h"
 #include "esp32-hal-cpu.h"
+#include "esp32-hal-hosted.h"
 
 void analogWrite(uint8_t pin, int value);
 void analogWriteFrequency(uint8_t pin, uint32_t freq);
