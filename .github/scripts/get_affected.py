@@ -626,11 +626,9 @@ def find_affected_sketches(changed_files: list[str]) -> None:
     q = queue.Queue()
 
     if component_mode:
-        print(f"Affected IDF component examples:", file=sys.stderr)
         # Get all available component examples once for efficiency
         all_examples = list_idf_component_examples()
     else:
-        print(f"Affected sketches:", file=sys.stderr)
         all_examples = []
 
     for file in changed_files:
@@ -648,11 +646,9 @@ def find_affected_sketches(changed_files: list[str]) -> None:
             # Check if this file belongs to an IDF component example
             for example in all_examples:
                 if file.startswith(example + "/") and example not in affected_sketches:
-                    print(example, file=sys.stderr)
                     affected_sketches.append(example)
         else:
             if file.endswith('.ino') and file not in affected_sketches:
-                print(file, file=sys.stderr)
                 affected_sketches.append(file)
 
         # Continue with reverse dependency traversal
@@ -687,18 +683,24 @@ def find_affected_sketches(changed_files: list[str]) -> None:
                         if should_traverse:
                             q.put(dependency)
                             if dependency_example and dependency_example not in affected_sketches:
-                                print(dependency_example, file=sys.stderr)
                                 affected_sketches.append(dependency_example)
                     else:
                         q.put(dependency)
                         if dependency.endswith('.ino') and dependency not in affected_sketches:
-                            print(dependency, file=sys.stderr)
                             affected_sketches.append(dependency)
 
     if component_mode:
         print(f"Total affected IDF component examples: {len(affected_sketches)}", file=sys.stderr)
+        if affected_sketches:
+            print("Affected IDF component examples:", file=sys.stderr)
+            for example in affected_sketches:
+                print(f"  {example}", file=sys.stderr)
     else:
         print(f"Total affected sketches: {len(affected_sketches)}", file=sys.stderr)
+        if affected_sketches:
+            print("Affected sketches:", file=sys.stderr)
+            for sketch in affected_sketches:
+                print(f"  {sketch}", file=sys.stderr)
 
 def save_dependencies_as_json(output_file: str = "dependencies.json") -> None:
     """
