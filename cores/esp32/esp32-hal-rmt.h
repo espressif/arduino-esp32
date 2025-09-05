@@ -124,8 +124,8 @@ bool rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t timeou
 bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
 
 /**
-     Writing data up to the reserved memsize, looping continuously (rmtWriteLooping) or fixed 
-     number of times (rmtWriteLoopingCount())
+     Writing data up to the reserved memsize, looping continuously (rmtWriteLooping()) or fixed 
+     number of times (rmtWriteRepeated())
      
      <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
      It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of rmt_data_t
@@ -135,10 +135,11 @@ bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
      Non-Blocking mode - returns right after execution
      Returns <true> on execution success, <false> otherwise
 
-     <bool rmtTransmitCompleted(int pin)> will return always <true> while it is looping.
+     <bool rmtTransmitCompleted(int pin)> will return always <true> while it is looping mode.
+     looping mode is active for rmtWriteLooping() and for rmtWriteRepeated() when loop_count > 1.
 */
 bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols);
-bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count);
+bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count);
 
 /**
      Checks if transmission is completed and the rmtChannel ready for transmitting new data.
