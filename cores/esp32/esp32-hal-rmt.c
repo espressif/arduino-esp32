@@ -356,8 +356,9 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
       log_w("GPIO %d - RMT Transmission failed.", pin);
     } else {  // transmit OK
       if (loop) {
-        bus->rmt_ch_is_looping = true;  // for ever... until a channel canceling or new writing. 
-                                        // NOTE: even if loop count is finite number
+       // Even if loop count is finite number, it shall keep looping ... until a channel canceling or new writing. 
+        bus->rmt_ch_is_looping = true;
+                                       
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout
