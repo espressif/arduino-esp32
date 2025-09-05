@@ -421,15 +421,20 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
   return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, 1 /*looping*/, 0 /*N/A*/);
 }
 
-// Same as rmtWriteLooping(...) but limits number of loops to "loop_count"
-// loop_count shall be higher than 1 because 0 means no looping (single transmission)
-// 1 means infinite looping (it shall use rmtWriteLooping() instead)
+// Same as rmtWriteLooping(...) but it transmits the data a fixed number of times ("loop_count").
+// loop_count == 0 is invalid (no transmission); loop_count >= 1 means transmit that many times.
 bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
-  if (loop_count <= 1) {
-    log_w("rmtWriteLoopingCount: Invalid loop_count (%u). Must be greater than 1.", loop_count);
+	if (loop_count == 0) {
+	  log_w("rmtWriteLoopingCount: Invalid loop_count (%u). Must be at least 1.", loop_count);
     return false;
   }
-  return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
+	if (loop_count == 1) {
+    // send the RMT symbols once using non blocking write, like "looping" it a single time
+    return rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
+  } else {
+    // write the RMT symbols for loop_count times
+    return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
+  }
 }
 
 bool rmtTransmitCompleted(int pin) {
