@@ -44,13 +44,9 @@ bool zoneStatus = false;
 
 void fanSwitch(bool state) {
   Serial.println("Fan switch changed to: " + String(state));
-  if (state) {
-    zbBinaryFan.setBinaryInput(state);
-    zbBinaryFan.reportBinaryInput();
-  } else {
-    zbBinaryFan.setBinaryInput(state);
-    zbBinaryFan.reportBinaryInput();
-  }
+  // Switch Fan status input signalling the fan status has changed
+  zbBinaryFan.setBinaryInput(state);
+  zbBinaryFan.reportBinaryInput();
 }
 
 void humidifierSwitch(bool state) {
