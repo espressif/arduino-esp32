@@ -16,13 +16,23 @@
       "top": -22.6,
       "left": -19.2,
       "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -0.8,
+      "left": -267.4,
+      "rotate": 270,
+      "attrs": { "color": "red" }
     }
   ],
   "connections": [
     [ "esp32:RX", "$serialMonitor:TX", "", [] ],
     [ "esp32:TX", "$serialMonitor:RX", "", [] ],
     [ "btn1:1.l", "esp32:0", "blue", [ "h-19.2", "v-96", "h-163.2", "v93.77" ] ],
-    [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v173", "h-269.2", "v-98.23" ] ]
+    [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v173", "h-269.2", "v-98.23" ] ],
+    [ "esp32:GND.2", "led1:C", "black", [ "h0" ] ],
+    [ "esp32:4", "led1:A", "green", [ "h-29.14", "v-26.57" ] ]
   ],
   "dependencies": {}
 }

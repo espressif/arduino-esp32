@@ -13,16 +13,26 @@
     {
       "type": "wokwi-pushbutton",
       "id": "btn1",
-      "top": -13,
-      "left": -19.2,
+      "top": 83,
+      "left": 9.6,
       "attrs": { "color": "green" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": -39.6,
+      "left": -41.4,
+      "rotate": 90,
+      "attrs": { "color": "red" }
     }
   ],
   "connections": [
     [ "esp32:RX", "$serialMonitor:TX", "", [] ],
     [ "esp32:TX", "$serialMonitor:RX", "", [] ],
     [ "btn1:1.l", "esp32:0", "blue", [ "h-19.2", "v48", "h-38.4" ] ],
-    [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v173", "h-269.2", "v-98.23" ] ]
+    [ "btn1:2.r", "esp32:GND.1", "black", [ "h19.4", "v173", "h-269.2", "v-98.23" ] ],
+    [ "esp32:GND.2", "led1:C", "black", [ "v0" ] ],
+    [ "esp32:4", "led1:A", "green", [ "h0" ] ]
   ],
   "dependencies": {}
 }
