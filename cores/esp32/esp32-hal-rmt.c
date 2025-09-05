@@ -308,7 +308,10 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     "GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO",
     loopCancel ? "YES" : "NO"
   );
-  // loop == 1 means infinite loop.
+  // loop parameter semantics:
+  //   loop == 0: no looping (single transmission)
+  //   loop == 1: infinite looping
+  //   loop > 1: transmit the data 'loop' times
   if (loop > 1) {
     log_v("GPIO: %d - Loop count: %lu times", pin, loop);
   }
