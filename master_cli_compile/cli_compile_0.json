@@ -754,6 +754,14 @@
                             "ram_bytes": 22052,
                             "ram_percentage": 6
                             }]
+                    },
+{"name": "libraries/BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 714846,
+                            "flash_percentage": 22,
+                            "ram_bytes": 22068,
+                            "ram_percentage": 6
+                            }]
                     }
 ]
 },
@@ -837,6 +845,14 @@
                             "flash_bytes": 729280,
                             "flash_percentage": 23,
                             "ram_bytes": 20984,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/BLE/examples/UART",
+                    "sizes": [{
+                            "flash_bytes": 732966,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20992,
                             "ram_percentage": 6
                             }]
                     }
