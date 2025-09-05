@@ -109,7 +109,7 @@ void BLEDescriptor::executeCreate(BLECharacteristic *pCharacteristic) {
  * @brief Get the BLE handle for this descriptor.
  * @return The handle for this descriptor.
  */
-uint16_t BLEDescriptor::getHandle() {
+uint16_t BLEDescriptor::getHandle() const {
   return m_handle;
 }  // getHandle
 
@@ -117,14 +117,14 @@ uint16_t BLEDescriptor::getHandle() {
  * @brief Get the length of the value of this descriptor.
  * @return The length (in bytes) of the value of this descriptor.
  */
-size_t BLEDescriptor::getLength() {
+size_t BLEDescriptor::getLength() const {
   return m_value.attr_len;
 }  // getLength
 
 /**
  * @brief Get the UUID of the descriptor.
  */
-BLEUUID BLEDescriptor::getUUID() {
+BLEUUID BLEDescriptor::getUUID() const {
   return m_bleUUID;
 }  // getUUID
 
@@ -132,7 +132,7 @@ BLEUUID BLEDescriptor::getUUID() {
  * @brief Get the value of this descriptor.
  * @return A pointer to the value of this descriptor.
  */
-uint8_t *BLEDescriptor::getValue() {
+uint8_t *BLEDescriptor::getValue() const {
   return m_value.attr_value;
 }  // getValue
 
@@ -140,7 +140,7 @@ uint8_t *BLEDescriptor::getValue() {
  * @brief Get the characteristic this descriptor belongs to.
  * @return A pointer to the characteristic this descriptor belongs to.
  */
-BLECharacteristic *BLEDescriptor::getCharacteristic() {
+BLECharacteristic *BLEDescriptor::getCharacteristic() const {
   return m_pCharacteristic;
 }  // getCharacteristic
 
@@ -215,14 +215,14 @@ void BLEDescriptor::setAccessPermissions(uint16_t perm) {
  * @brief Return a string representation of the descriptor.
  * @return A string representation of the descriptor.
  */
-String BLEDescriptor::toString() {
+String BLEDescriptor::toString() const {
   char hex[5];
   snprintf(hex, sizeof(hex), "%04x", m_handle);
   String res = "UUID: " + m_bleUUID.toString() + ", handle: 0x" + hex;
   return res;
 }  // toString
 
-BLEDescriptorCallbacks::~BLEDescriptorCallbacks() {}
+BLEDescriptorCallbacks::~BLEDescriptorCallbacks() = default;
 
 /**
  * @brief Callback function to support a read request.

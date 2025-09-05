@@ -39,9 +39,9 @@ public:
   void cancel();
   void commit();
   uint8_t *getData();
-  size_t getLength();
-  uint16_t getReadOffset();
-  String getValue();
+  size_t getLength() const;
+  uint16_t getReadOffset() const;
+  String getValue() const;
   void setReadOffset(uint16_t readOffset);
   void setValue(const String &value);
   void setValue(const uint8_t *pData, size_t length);

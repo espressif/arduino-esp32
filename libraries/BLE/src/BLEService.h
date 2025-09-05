@@ -61,13 +61,13 @@ public:
   void setByUUID(BLECharacteristic *pCharacteristic, const char *uuid);
   void setByUUID(BLECharacteristic *pCharacteristic, BLEUUID uuid);
   void setByHandle(uint16_t handle, BLECharacteristic *pCharacteristic);
-  BLECharacteristic *getByUUID(const char *uuid);
-  BLECharacteristic *getByUUID(BLEUUID uuid);
-  BLECharacteristic *getByHandle(uint16_t handle);
+  BLECharacteristic *getByUUID(const char *uuid) const;
+  BLECharacteristic *getByUUID(BLEUUID uuid) const;
+  BLECharacteristic *getByHandle(uint16_t handle) const;
   BLECharacteristic *getFirst();
   BLECharacteristic *getNext();
-  String toString();
-  int getRegisteredCharacteristicCount();
+  String toString() const;
+  int getRegisteredCharacteristicCount() const;
   void removeCharacteristic(BLECharacteristic *characteristic);
 
   /***************************************************************************
