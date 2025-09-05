@@ -32,6 +32,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-cpu.c
   cores/esp32/esp32-hal-dac.c
   cores/esp32/esp32-hal-gpio.c
+  cores/esp32/esp32-hal-hosted.c
   cores/esp32/esp32-hal-i2c.c
   cores/esp32/esp32-hal-i2c-ng.c
   cores/esp32/esp32-hal-i2c-slave.c
