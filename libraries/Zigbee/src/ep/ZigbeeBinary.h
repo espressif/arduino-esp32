@@ -89,7 +89,7 @@ public:
   bool setBinaryInputDescription(const char *description);
 
   // Set the application type and description for the binary output
-  bool setBinaryOutputApplication(uint32_t application_type); // Check esp_zigbee_zcl_binary_output.h for application type values
+  bool setBinaryOutputApplication(uint32_t application_type);  // Check esp_zigbee_zcl_binary_output.h for application type values
   bool setBinaryOutputDescription(const char *description);
 
   // Use to set a cb function to be called on binary output change

@@ -63,7 +63,8 @@ bool ZigbeeBinary::addBinaryOutput() {
                                "Binary Output";
   uint32_t application_type = 0x00000000 | (0x04 << 24);  // Group ID 0x04
 
-  esp_err_t ret = esp_zb_binary_output_cluster_add_attr(esp_zb_binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, (void *)default_description);
+  esp_err_t ret =
+    esp_zb_binary_output_cluster_add_attr(esp_zb_binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, (void *)default_description);
   if (ret != ESP_OK) {
     log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;

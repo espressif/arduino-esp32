@@ -12,7 +12,7 @@ Currently, this example supports the following targets.
 ## Binary Input/Output Functions
 
  * The example implements three binary devices:
-   - **Binary Fan Device (Endpoint 1)**: 
+   - **Binary Fan Device (Endpoint 1)**:
      - Binary Input: HVAC Fan Status - Reports the current state of a fan
      - Binary Output: HVAC Fan - Controls the fan switch with callback function
    - **Binary Zone Device (Endpoint 2)**:
