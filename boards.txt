@@ -36595,9 +36595,15 @@ XIAO_ESP32S3.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 XIAO_ESP32S3.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
 XIAO_ESP32S3.menu.PartitionScheme.tinyuf2=TinyUF2 8MB (2MB APP/3.7MB FFAT)
 XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-8MB-tinyuf2
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-8MB
 XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
 XIAO_ESP32S3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2_noota=TinyUF2 8MB No OTA (4MB APP/3.7MB FFAT)
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-8MB-noota
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
+XIAO_ESP32S3.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+
 
 XIAO_ESP32S3.menu.CPUFreq.240=240MHz (WiFi)
 XIAO_ESP32S3.menu.CPUFreq.240.build.f_cpu=240000000L
