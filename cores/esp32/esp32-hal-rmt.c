@@ -423,7 +423,7 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 }
 
 // Same as rmtWriteLooping(...) but limits number of loops to "loop_count"
-// loop_count shall be higher than 1 because 0 means no looping (single trnasmission)
+// loop_count shall be higher than 1 because 0 means no looping (single transmission)
 // 1 means infinite looping (it shall use rmtWriteLooping() instead)
 bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
   if (loop_count <= 1) {
