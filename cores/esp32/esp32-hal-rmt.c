@@ -435,7 +435,7 @@ bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uin
   }
   if (loop_count == 1) {
     // send the RMT symbols once using non blocking write, like "looping" it a single time
-    return rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
+    return rmtWriteAsync(pin, data, num_rmt_symbols);
   } else {
     // write the RMT symbols for loop_count times
     return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
