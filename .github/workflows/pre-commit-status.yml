@@ -140,25 +140,15 @@ jobs:
         uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
         with:
           pr-number: ${{ steps.pr-info.outputs.pr_number }}
-          comment-tag: pre-commit-failure
           message: |
             ## ⚠️ Pre-commit Hooks Failed
 
-            Some pre-commit hooks failed and require manual fixes.
+            Some pre-commit hooks failed and require manual fixes. Please see the detailed error report below.
 
             **What to do:**
-            1. 🔧 Fix the issues locally in your code
-            2. 💾 Commit and push your changes
-            3. 🔄 The hooks will run again automatically
+            1. 📋 [**View the detailed error report**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}) to see which hooks failed
+            2. 🔧 Fix the issues locally in your code
+            3. 💾 Commit and push your changes
+            4. 🔄 The hooks will run again automatically
 
-            [🔗 View detailed error log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }})
-
-      - name: Remove pre-commit failure comment if resolved
-        if: |
-          steps.pr-info.outputs.artifacts_found == 'true' &&
-          steps.pr-info.outputs.pre_commit_outcome == 'success'
-        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
-        with:
-          pr-number: ${{ steps.pr-info.outputs.pr_number }}
-          comment-tag: pre-commit-failure
-          mode: delete
+            **Need help?** Ask in the comments below.
