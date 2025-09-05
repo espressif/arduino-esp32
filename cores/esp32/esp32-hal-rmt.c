@@ -304,17 +304,16 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   }
 
   log_v("GPIO: %d - Request: %d RMT Symbols - %s - Timeout: %d", pin, num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms);
-  log_v(
-    "GPIO: %d - Currently in Loop Mode: [%s] | Asked to Loop: %s, LoopCancel: %s", pin, bus->rmt_ch_is_looping ? "YES" : "NO", loop ? "YES" : "NO",
-    loopCancel ? "YES" : "NO"
-  );
   // loop parameter semantics:
   //   loop == 0: no looping (single transmission)
   //   loop == 1: infinite looping
   //   loop > 1: transmit the data 'loop' times
-  if (loop > 1) {
-    log_v("GPIO: %d - Loop count: %lu times", pin, loop);
-  }
+  log_v(
+    "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, 
+    bus->rmt_ch_is_looping ? "YES" : "NO", 
+    loop == 0 ? "NO" : (loop == 1 ? "FOREVER" : ({ char buf[20]; sprintf(buf, "%lu times", loop); buf; })),
+    loopCancel ? "YES" : "NO"
+  );
 
   if ((xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) == 0) {
     log_v("GPIO %d - RMT Write still pending to be completed.", pin);
