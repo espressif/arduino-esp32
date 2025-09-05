@@ -37,7 +37,7 @@ The example creates two multistate devices:
 
 You can modify the state names and configurations by changing the following variables:
 - `multistate_custom_state_names[]`: Array of custom state names
-- Application type and length macros: `ZB_MULTISTATE_APPLICATION_TYPE_X_STATE_NAMES`, 
+- Application type and length macros: `ZB_MULTISTATE_APPLICATION_TYPE_X_STATE_NAMES`,
 `ZB_MULTISTATE_APPLICATION_TYPE_X_NUM_STATES`, `ZB_MULTISTATE_APPLICATION_TYPE_X_INDEX`
 - Device descriptions and application types in the setup() function
 

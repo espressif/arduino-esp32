@@ -15,55 +15,91 @@
 // uint8_t chars for state names, with max of 16 chars ASCII
 
 // Multistate Input/Output Application Types Defines
-#define ZB_MULTISTATE_APPLICATION_TYPE_0_INDEX         0x0000
-#define ZB_MULTISTATE_APPLICATION_TYPE_0_NUM_STATES    3
-#define ZB_MULTISTATE_APPLICATION_TYPE_0_STATE_NAMES   (const char* const[]){"Off", "On", "Auto"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_0_INDEX      0x0000
+#define ZB_MULTISTATE_APPLICATION_TYPE_0_NUM_STATES 3
+#define ZB_MULTISTATE_APPLICATION_TYPE_0_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Off", "On", "Auto"                              \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_1_INDEX         0x0001
-#define ZB_MULTISTATE_APPLICATION_TYPE_1_NUM_STATES    4
-#define ZB_MULTISTATE_APPLICATION_TYPE_1_STATE_NAMES   (const char* const[]){"Off", "Low", "Medium", "High"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_1_INDEX      0x0001
+#define ZB_MULTISTATE_APPLICATION_TYPE_1_NUM_STATES 4
+#define ZB_MULTISTATE_APPLICATION_TYPE_1_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Off", "Low", "Medium", "High"                   \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_2_INDEX         0x0002
-#define ZB_MULTISTATE_APPLICATION_TYPE_2_NUM_STATES    7
-#define ZB_MULTISTATE_APPLICATION_TYPE_2_STATE_NAMES   (const char* const[]){"Auto", "Heat", "Cool", "Off", "Emergency Heat", "Fan Only", "Max Heat"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_2_INDEX      0x0002
+#define ZB_MULTISTATE_APPLICATION_TYPE_2_NUM_STATES 7
+#define ZB_MULTISTATE_APPLICATION_TYPE_2_STATE_NAMES                        \
+  (const char *const[]) {                                                   \
+    "Auto", "Heat", "Cool", "Off", "Emergency Heat", "Fan Only", "Max Heat" \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_3_INDEX         0x0003
-#define ZB_MULTISTATE_APPLICATION_TYPE_3_NUM_STATES    4
-#define ZB_MULTISTATE_APPLICATION_TYPE_3_STATE_NAMES   (const char* const[]){"Occupied", "Unoccupied", "Standby", "Bypass"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_3_INDEX      0x0003
+#define ZB_MULTISTATE_APPLICATION_TYPE_3_NUM_STATES 4
+#define ZB_MULTISTATE_APPLICATION_TYPE_3_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Occupied", "Unoccupied", "Standby", "Bypass"    \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_4_INDEX         0x0004
-#define ZB_MULTISTATE_APPLICATION_TYPE_4_NUM_STATES    3
-#define ZB_MULTISTATE_APPLICATION_TYPE_4_STATE_NAMES   (const char* const[]){"Inactive", "Active", "Hold"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_4_INDEX      0x0004
+#define ZB_MULTISTATE_APPLICATION_TYPE_4_NUM_STATES 3
+#define ZB_MULTISTATE_APPLICATION_TYPE_4_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Inactive", "Active", "Hold"                     \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_5_INDEX         0x0005
-#define ZB_MULTISTATE_APPLICATION_TYPE_5_NUM_STATES    8
-#define ZB_MULTISTATE_APPLICATION_TYPE_5_STATE_NAMES   (const char* const[]){"Auto", "Warm-up", "Water Flush", "Autocalibration", "Shutdown Open", "Shutdown Closed", "Low Limit", "Test and Balance"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_5_INDEX      0x0005
+#define ZB_MULTISTATE_APPLICATION_TYPE_5_NUM_STATES 8
+#define ZB_MULTISTATE_APPLICATION_TYPE_5_STATE_NAMES                                                                         \
+  (const char *const[]) {                                                                                                    \
+    "Auto", "Warm-up", "Water Flush", "Autocalibration", "Shutdown Open", "Shutdown Closed", "Low Limit", "Test and Balance" \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_6_INDEX         0x0006
-#define ZB_MULTISTATE_APPLICATION_TYPE_6_NUM_STATES    6
-#define ZB_MULTISTATE_APPLICATION_TYPE_6_STATE_NAMES   (const char* const[]){"Off", "Auto", "Heat Cool", "Heat Only", "Cool Only", "Fan Only"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_6_INDEX      0x0006
+#define ZB_MULTISTATE_APPLICATION_TYPE_6_NUM_STATES 6
+#define ZB_MULTISTATE_APPLICATION_TYPE_6_STATE_NAMES                 \
+  (const char *const[]) {                                            \
+    "Off", "Auto", "Heat Cool", "Heat Only", "Cool Only", "Fan Only" \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_7_INDEX         0x0007
-#define ZB_MULTISTATE_APPLICATION_TYPE_7_NUM_STATES    3
-#define ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES   (const char* const[]){"High", "Normal", "Low"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_7_INDEX      0x0007
+#define ZB_MULTISTATE_APPLICATION_TYPE_7_NUM_STATES 3
+#define ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES \
+  (const char *const[]) {                            \
+    "High", "Normal", "Low"                          \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_8_INDEX         0x0008
-#define ZB_MULTISTATE_APPLICATION_TYPE_8_NUM_STATES    4
-#define ZB_MULTISTATE_APPLICATION_TYPE_8_STATE_NAMES   (const char* const[]){"Occupied", "Unoccupied", "Startup", "Shutdown"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_8_INDEX      0x0008
+#define ZB_MULTISTATE_APPLICATION_TYPE_8_NUM_STATES 4
+#define ZB_MULTISTATE_APPLICATION_TYPE_8_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Occupied", "Unoccupied", "Startup", "Shutdown"  \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_9_INDEX         0x0009
-#define ZB_MULTISTATE_APPLICATION_TYPE_9_NUM_STATES    3
-#define ZB_MULTISTATE_APPLICATION_TYPE_9_STATE_NAMES   (const char* const[]){"Night", "Day", "Hold"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_9_INDEX      0x0009
+#define ZB_MULTISTATE_APPLICATION_TYPE_9_NUM_STATES 3
+#define ZB_MULTISTATE_APPLICATION_TYPE_9_STATE_NAMES \
+  (const char *const[]) {                            \
+    "Night", "Day", "Hold"                           \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_10_INDEX         0x000A
-#define ZB_MULTISTATE_APPLICATION_TYPE_10_NUM_STATES    5
-#define ZB_MULTISTATE_APPLICATION_TYPE_10_STATE_NAMES   (const char* const[]){"Off", "Cool", "Heat", "Auto", "Emergency Heat"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_10_INDEX      0x000A
+#define ZB_MULTISTATE_APPLICATION_TYPE_10_NUM_STATES 5
+#define ZB_MULTISTATE_APPLICATION_TYPE_10_STATE_NAMES \
+  (const char *const[]) {                             \
+    "Off", "Cool", "Heat", "Auto", "Emergency Heat"   \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_11_INDEX         0x000B
-#define ZB_MULTISTATE_APPLICATION_TYPE_11_NUM_STATES    7
-#define ZB_MULTISTATE_APPLICATION_TYPE_11_STATE_NAMES   (const char* const[]){"Shutdown Closed", "Shutdown Open", "Satisfied", "Mixing", "Cooling", "Heating", "Suppl Heat"}
+#define ZB_MULTISTATE_APPLICATION_TYPE_11_INDEX      0x000B
+#define ZB_MULTISTATE_APPLICATION_TYPE_11_NUM_STATES 7
+#define ZB_MULTISTATE_APPLICATION_TYPE_11_STATE_NAMES                                             \
+  (const char *const[]) {                                                                         \
+    "Shutdown Closed", "Shutdown Open", "Satisfied", "Mixing", "Cooling", "Heating", "Suppl Heat" \
+  }
 
-#define ZB_MULTISTATE_APPLICATION_TYPE_OTHER_INDEX      0xFFFF
+#define ZB_MULTISTATE_APPLICATION_TYPE_OTHER_INDEX 0xFFFF
 
 //enum for bits set to check what multistate cluster were added
 enum zigbee_multistate_clusters {
@@ -113,7 +149,7 @@ public:
   uint16_t getMultistateOutput() {
     return _output_state;
   }
-  
+
   // Get state names and length
   uint16_t getMultistateInputStateNamesLength() {
     return _input_state_names_length;
@@ -141,13 +177,12 @@ private:
   uint8_t _multistate_clusters;
   uint16_t _output_state;
   uint16_t _input_state;
-  
+
   // Local storage for state names
   uint16_t _input_state_names_length;
   uint16_t _output_state_names_length;
   // const char* const* _input_state_names;
   // const char* const* _output_state_names;
-
 };
 
 #endif  // CONFIG_ZB_ENABLED

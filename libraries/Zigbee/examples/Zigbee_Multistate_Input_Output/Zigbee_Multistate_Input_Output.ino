@@ -14,17 +14,17 @@
 
 /**
  * @brief This example demonstrates Zigbee multistate input / output device.
- * 
+ *
  * The example demonstrates how to use Zigbee library to create a router multistate device.
  * In the example, we have two multistate devices:
  * - zbMultistateDevice: uses defined application states from Zigbee specification
  * - zbMultistateDeviceCustom: uses custom application states (user defined)
- * 
+ *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
  * and also the correct partition scheme must be selected in Tools->Partition Scheme.
  *
  * Please check the README.md for instructions and more detailed description.
- * 
+ *
  * NOTE: HomeAssistant ZHA does not support multistate input and output clusters yet.
  *
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
@@ -47,13 +47,13 @@ ZigbeeMultistate zbMultistateDevice = ZigbeeMultistate(MULTISTATE_DEVICE_ENDPOIN
 // zbMultistateDeviceCustom will use custom application states (user defined)
 ZigbeeMultistate zbMultistateDeviceCustom = ZigbeeMultistate(MULTISTATE_DEVICE_ENDPOINT_NUMBER + 1);
 
-const char* multistate_custom_state_names[6] = {"Off", "On", "UltraSlow", "Slow", "Fast", "SuperFast"};
+const char *multistate_custom_state_names[6] = {"Off", "On", "UltraSlow", "Slow", "Fast", "SuperFast"};
 
 void onStateChange(uint16_t state) {
   // print the state
   Serial.printf("Received state change: %d\r\n", state);
   // print the state name using the stored state names
-  const char* const* state_names = ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES;
+  const char *const *state_names = ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES;
   if (state_names && state < zbMultistateDevice.getMultistateOutputStateNamesLength()) {
     Serial.printf("State name: %s\r\n", state_names[state]);
   }
@@ -73,27 +73,13 @@ void onStateChangeCustom(uint16_t state) {
 
   Serial.print("Changing to fan mode to: ");
   switch (state) {
-    case 0:
-      Serial.println("Off");
-      break;
-    case 1:
-      Serial.println("On");
-      break;
-    case 2:
-      Serial.println("UltraSlow");
-      break;
-    case 3:
-      Serial.println("Slow");
-      break;
-    case 4:
-      Serial.println("Fast");
-      break;
-    case 5:
-      Serial.println("SuperFast");
-      break;
-    default:
-      Serial.println("Invalid state");
-      break;
+    case 0:  Serial.println("Off"); break;
+    case 1:  Serial.println("On"); break;
+    case 2:  Serial.println("UltraSlow"); break;
+    case 3:  Serial.println("Slow"); break;
+    case 4:  Serial.println("Fast"); break;
+    case 5:  Serial.println("SuperFast"); break;
+    default: Serial.println("Invalid state"); break;
   }
 }
 
@@ -136,7 +122,7 @@ void setup() {
   zbMultistateDeviceCustom.setMultistateOutputDescription("Fan (on/off/slow/medium/fast)");
   zbMultistateDeviceCustom.setMultistateOutputStates(5);
 
-  // Set callback function for multistate output change 
+  // Set callback function for multistate output change
   log_d("Set callback function for multistate output change");
   zbMultistateDevice.onMultistateOutputChange(onStateChange);
   zbMultistateDeviceCustom.onMultistateOutputChange(onStateChangeCustom);
