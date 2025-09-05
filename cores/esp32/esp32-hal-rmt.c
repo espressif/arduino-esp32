@@ -310,7 +310,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   //   loop == 1: infinite looping
   //   loop > 1: transmit the data 'loop' times
   {
-    char buf[16];  // place holder for up to maximum uint32_t value (4294967295) = 10 digits + " times" + null terminator (16 bytes) 
+    char buf[16];  // placeholder for up to maximum uint32_t value (4294967295) = 10 digits + " times" + null terminator (16 bytes) 
     snprintf(buf, sizeof(buf), "%lu times", loop);
     log_v(
       "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, 
