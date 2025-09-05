@@ -355,10 +355,10 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
       retCode = false;
       log_w("GPIO %d - RMT Transmission failed.", pin);
     } else {  // transmit OK
-      if (loop) {
-       // Even if loop count is finite number, it shall keep looping ... until a channel canceling or new writing. 
-        bus->rmt_ch_is_looping = true;
-                                       
+      if (loop > 0) {
+        // rmt_ch_is_looping is used as a flag to indicate that RMT is in looping execution in order to
+        //be cancelled whenever a new _rmtWrite() is executed while it is looping
+        bus->rmt_ch_is_looping = true;                                       
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout
@@ -423,6 +423,8 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 }
 
 // Same as rmtWriteLooping(...) but limits number of loops to "loop_count"
+// loop_count shall be higher than 1 because 0 means no looping (single trnasmission)
+// 1 means infinite looping (it shall use rmtWriteLooping() instead)
 bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
   if (loop_count <= 1) {
     log_w("rmtWriteLoopingCount: Invalid loop_count (%u). Must be greater than 1.", loop_count);
