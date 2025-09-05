@@ -420,6 +420,10 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 
 // Same as rmtWriteLooping(...) but limits number of loops to "loop_count"
 bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
+  if (loop_count <= 1) {
+    log_w("rmtWriteLoopingCount: Invalid loop_count (%u). Must be greater than 1.", loop_count);
+    return false;
+  }
   return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
 }
 
