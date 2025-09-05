@@ -44,7 +44,7 @@ bool zoneStatus = false;
 
 void fanSwitch(bool state) {
   Serial.println("Fan switch changed to: " + String(state));
-  // Switch Fan status input signalling the fan status has changed
+  // Switch Fan status input signaling the fan status has changed
   zbBinaryFan.setBinaryInput(state);
   zbBinaryFan.reportBinaryInput();
 }
