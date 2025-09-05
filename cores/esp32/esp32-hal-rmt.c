@@ -310,11 +310,12 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   //   loop == 1: infinite looping
   //   loop > 1: transmit the data 'loop' times
   {
-    char buf[20];
+    char buf[12];  // place holder up to 5 + 1 + 5 + 1 bytes 
+    sprintf(buf, "%lu times", loop);
     log_v(
       "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, 
       bus->rmt_ch_is_looping ? "YES" : "NO", 
-      loop == 0 ? "NO" : (loop == 1 ? "FOREVER" : ({ sprintf(buf, "%lu times", loop); buf; })),
+      loop == 0 ? "NO" : (loop == 1 ? "FOREVER" : buf),
       loopCancel ? "YES" : "NO"
     );
   }
@@ -428,9 +429,9 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 
 // Same as rmtWriteLooping(...) but it transmits the data a fixed number of times ("loop_count").
 // loop_count == 0 is invalid (no transmission); loop_count >= 1 means transmit that many times.
-bool rmtWriteLoopingCount(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
+bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
   if (loop_count == 0) {
-    log_w("rmtWriteLoopingCount: Invalid loop_count (%u). Must be at least 1.", loop_count);
+    log_w("rmtWriteRepeated: Invalid loop_count (%u). Must be at least 1.", loop_count);
     return false;
   }
   if (loop_count == 1) {
