@@ -311,7 +311,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   //   loop > 1: transmit the data 'loop' times
   {
     char buf[12];  // place holder up to 5 + 1 + 5 + 1 bytes 
-    sprintf(buf, "%lu times", loop);
+    snprintf(buf, sizeof(buf), "%lu times", loop);
     log_v(
       "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, 
       bus->rmt_ch_is_looping ? "YES" : "NO", 
