@@ -343,7 +343,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     bus->rmt_ch_is_looping = false;
   } else {  // new writing | looping request
     // looping | Writing over a previous looping state is valid
-    if (loop) {
+    if (loop > 0) {
       transmit_cfg.loop_count = (loop == 1) ? -1 : loop;
       // keeps RMT_FLAG_TX_DONE set - it never changes
     } else {
