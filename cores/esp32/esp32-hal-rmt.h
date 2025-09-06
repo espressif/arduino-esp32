@@ -125,7 +125,7 @@ bool rmtWriteAsync(int pin, rmt_data_t *data, size_t num_rmt_symbols);
 
 /**
      Writing data up to the reserved memsize, looping continuously (rmtWriteLooping()) or fixed 
-     number of times (rmtWriteRepeated())
+     number of <loop_count> times (rmtWriteRepeated()) 
      
      <rmt_symbol> is a 32 bits structure as defined by rmt_data_t type.
      It is possible to use the macro RMT_SYMBOLS_OF(data), if data is an array of rmt_data_t
