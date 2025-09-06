@@ -19,7 +19,7 @@ function FindSignTool {
     if (Test-Path -Path $SignTool -PathType Leaf) {
         return $SignTool
     }
-    $sdkVers = "10.0.22000.0", "10.0.20348.0", "10.0.19041.0", "10.0.17763.0"
+    $sdkVers = "10.0.22000.0", "10.0.20348.0", "10.0.19041.0", "10.0.17763.0", "10.0.14393.0", "10.0.15063.0", "10.0.16299.0", "10.0.17134.0", "10.0.26100.0"
     Foreach ($ver in $sdkVers)
     {
         $SignTool = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\${ver}\x64\signtool.exe"

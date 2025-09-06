@@ -20,29 +20,44 @@
 
 #include "HEXBuilder.h"
 
+/* Try to prevent most compilers from optimizing out clearing of memory that
+ * becomes unaccessible after this function is called. This is mostly the case
+ * for clearing local stack variables at the end of a function. This is not
+ * exactly perfect, i.e., someone could come up with a compiler that figures out
+ * the pointer is pointing to memset and then end up optimizing the call out, so
+ * try go a bit further by storing the first octet (now zero) to make this even
+ * a bit more difficult to optimize out. Once memset_s() is available, that
+ * could be used here instead. */
+static void *(*const volatile memset_func)(void *, int, size_t) = memset;
+static uint8_t forced_memzero_val;
+
+static inline void forced_memzero(void *ptr, size_t len) {
+  memset_func(ptr, 0, len);
+  if (len) {
+    forced_memzero_val = ((uint8_t *)ptr)[0];
+  }
+}
+
+// Base class for hash builders
+
 class HashBuilder : public HEXBuilder {
 public:
   virtual ~HashBuilder() {}
   virtual void begin() = 0;
 
   virtual void add(const uint8_t *data, size_t len) = 0;
-  virtual void add(const char *data) {
-    add((const uint8_t *)data, strlen(data));
-  }
-  virtual void add(String data) {
-    add(data.c_str());
-  }
+  void add(const char *data);
+  void add(String data);
 
-  virtual void addHexString(const char *data) = 0;
-  virtual void addHexString(String data) {
-    addHexString(data.c_str());
-  }
+  void addHexString(const char *data);
+  void addHexString(String data);
 
   virtual bool addStream(Stream &stream, const size_t maxLen) = 0;
   virtual void calculate() = 0;
   virtual void getBytes(uint8_t *output) = 0;
   virtual void getChars(char *output) = 0;
   virtual String toString() = 0;
+  virtual size_t getHashSize() const = 0;
 };
 
 #endif

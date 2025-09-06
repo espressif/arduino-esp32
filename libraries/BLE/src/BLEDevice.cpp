@@ -35,6 +35,7 @@
 #include "BLEClient.h"
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
+#include "BLESecurity.h"
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
@@ -97,7 +98,6 @@ gap_event_handler BLEDevice::m_customGapHandler = nullptr;
  ***************************************************************************/
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
-esp_ble_sec_act_t BLEDevice::m_securityLevel = (esp_ble_sec_act_t)0;
 gattc_event_handler BLEDevice::m_customGattcHandler = nullptr;
 gatts_event_handler BLEDevice::m_customGattsHandler = nullptr;
 #endif
@@ -236,6 +236,8 @@ String BLEDevice::getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID ch
  */
 void BLEDevice::init(String deviceName) {
   if (!initialized) {
+    log_i("Initializing BLE stack: %s", getBLEStackString().c_str());
+
     esp_err_t errRc = ESP_OK;
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #if defined(ARDUINO_ARCH_ESP32)
@@ -709,6 +711,25 @@ void BLEDevice::setCustomGapHandler(gap_event_handler handler) {
 #endif
 }
 
+BLEStack BLEDevice::getBLEStack() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  return BLEStack::BLUEDROID;
+#elif defined(CONFIG_NIMBLE_ENABLED)
+  return BLEStack::NIMBLE;
+#else
+  return BLEStack::UNKNOWN;
+#endif
+}
+
+String BLEDevice::getBLEStackString() {
+  switch (getBLEStack()) {
+    case BLEStack::BLUEDROID: return "Bluedroid";
+    case BLEStack::NIMBLE:    return "NimBLE";
+    case BLEStack::UNKNOWN:
+    default:                  return "Unknown";
+  }
+}
+
 /***************************************************************************
  *                           Bluedroid functions                           *
  ***************************************************************************/
@@ -730,11 +751,9 @@ void BLEDevice::gattServerEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t
   switch (event) {
     case ESP_GATTS_CONNECT_EVT:
     {
-#ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      if (BLEDevice::m_securityLevel) {
-        esp_ble_set_encryption(param->connect.remote_bda, BLEDevice::m_securityLevel);
+      if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
+        BLESecurity::startSecurity(param->connect.remote_bda);
       }
-#endif  // CONFIG_BLE_SMP_ENABLE
       break;
     }  // ESP_GATTS_CONNECT_EVT
 
@@ -771,11 +790,11 @@ void BLEDevice::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
   switch (event) {
     case ESP_GATTC_CONNECT_EVT:
     {
-#ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      if (BLEDevice::m_securityLevel) {
-        esp_ble_set_encryption(param->connect.remote_bda, BLEDevice::m_securityLevel);
+      // Set encryption on connect for BlueDroid when security is enabled
+      // This ensures security is established before any secure operations
+      if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
+        BLESecurity::startSecurity(param->connect.remote_bda);
       }
-#endif  // CONFIG_BLE_SMP_ENABLE
       break;
     }  // ESP_GATTS_CONNECT_EVT
 
@@ -807,26 +826,49 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     case ESP_GAP_BLE_OOB_REQ_EVT:  /* OOB request event */ log_i("ESP_GAP_BLE_OOB_REQ_EVT"); break;
     case ESP_GAP_BLE_LOCAL_IR_EVT: /* BLE local IR event */ log_i("ESP_GAP_BLE_LOCAL_IR_EVT"); break;
     case ESP_GAP_BLE_LOCAL_ER_EVT: /* BLE local ER event */ log_i("ESP_GAP_BLE_LOCAL_ER_EVT"); break;
-    case ESP_GAP_BLE_NC_REQ_EVT:   /*  NUMERIC CONFIRMATION  */ log_i("ESP_GAP_BLE_NC_REQ_EVT");
+    case ESP_GAP_BLE_NC_REQ_EVT: /*  NUMERIC CONFIRMATION  */
+    {
+      log_i("ESP_GAP_BLE_NC_REQ_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
       if (BLEDevice::m_securityCallbacks != nullptr) {
         esp_ble_confirm_reply(param->ble_security.ble_req.bd_addr, BLEDevice::m_securityCallbacks->onConfirmPIN(param->ble_security.key_notif.passkey));
+      } else {
+        log_e("onConfirmPIN not implemented. Rejecting connection");
+        esp_ble_confirm_reply(param->ble_security.ble_req.bd_addr, false);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
+    } break;
     case ESP_GAP_BLE_PASSKEY_REQ_EVT: /* passkey request event */
+    {
       log_i("ESP_GAP_BLE_PASSKEY_REQ_EVT: ");
       // esp_log_buffer_hex(m_remote_bda, sizeof(m_remote_bda));
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      if (BLEDevice::m_securityCallbacks != nullptr) {
-        esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, BLEDevice::m_securityCallbacks->onPassKeyRequest());
+      uint32_t passkey = BLESecurity::getPassKey();
+
+      if (!BLESecurity::m_passkeySet) {
+        if (BLEDevice::m_securityCallbacks != nullptr) {
+          log_i("No passkey set, getting passkey from onPassKeyRequest");
+          passkey = BLEDevice::m_securityCallbacks->onPassKeyRequest();
+        } else {
+          log_w("*ATTENTION* onPassKeyRequest not implemented and no static passkey set.");
+        }
       }
+
+      if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
+        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
+      } else {
+        log_i("Passkey: %d", passkey);
+      }
+
+      esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, passkey);
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
+    } break;
       /*
 			 * TODO should we add white/black list comparison?
 			 */
     case ESP_GAP_BLE_SEC_REQ_EVT:
+    {
       /* send the positive(true) security response to the peer device to accept the security request.
 			 If not accept the security request, should sent the security response with negative(false) accept value*/
       log_i("ESP_GAP_BLE_SEC_REQ_EVT");
@@ -834,37 +876,54 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       if (BLEDevice::m_securityCallbacks != nullptr) {
         esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, BLEDevice::m_securityCallbacks->onSecurityRequest());
       } else {
+        log_w("onSecurityRequest not implemented. Accepting security request");
         esp_ble_gap_security_rsp(param->ble_security.ble_req.bd_addr, true);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
+    } break;
       /*
 			  *
 			  */
     case ESP_GAP_BLE_PASSKEY_NOTIF_EVT:  //the app will receive this evt when the IO  has Output capability and the peer device IO has Input capability.
+    {
       //display the passkey number to the user to input it in the peer device within 30 seconds
       log_i("ESP_GAP_BLE_PASSKEY_NOTIF_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      log_i("passKey = %d", param->ble_security.key_notif.passkey);
+      uint32_t passkey = param->ble_security.key_notif.passkey;
+
+      if (!BLESecurity::m_passkeySet) {
+        log_w("No passkey set");
+      }
+
+      if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
+        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
+      } else {
+        log_i("Passkey: %d", passkey);
+      }
+
       if (BLEDevice::m_securityCallbacks != nullptr) {
-        BLEDevice::m_securityCallbacks->onPassKeyNotify(param->ble_security.key_notif.passkey);
+        BLEDevice::m_securityCallbacks->onPassKeyNotify(passkey);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
+    } break;
     case ESP_GAP_BLE_KEY_EVT:
+    {
       //shows the ble key type info share with peer device to the user.
       log_d("ESP_GAP_BLE_KEY_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
       log_i("key type = %s", BLESecurity::esp_key_type_to_str(param->ble_security.ble_key.key_type));
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
-    case ESP_GAP_BLE_AUTH_CMPL_EVT: log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
+    } break;
+    case ESP_GAP_BLE_AUTH_CMPL_EVT:
+    {
+      log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
-      break;
+    } break;
     default:
     {
       break;
@@ -894,14 +953,6 @@ void BLEDevice::setCustomGattcHandler(gattc_event_handler handler) {
 
 void BLEDevice::setCustomGattsHandler(gatts_event_handler handler) {
   m_customGattsHandler = handler;
-}
-
-/*
- * @brief Set encryption level that will be negotiated with peer device durng connection
- * @param [in] level Requested encryption level
- */
-void BLEDevice::setEncryptionLevel(esp_ble_sec_act_t level) {
-  BLEDevice::m_securityLevel = level;
 }
 
 #endif

@@ -17,7 +17,8 @@ import sys
 
 
 def load_package(filename):
-    pkg = json.load(open(filename))["packages"][0]
+    with open(filename) as f:
+        pkg = json.load(f)["packages"][0]
     print("Loaded package {0} from {1}".format(pkg["name"], filename), file=sys.stderr)
     print("{0} platform(s), {1} tools".format(len(pkg["platforms"]), len(pkg["tools"])), file=sys.stderr)
     return pkg

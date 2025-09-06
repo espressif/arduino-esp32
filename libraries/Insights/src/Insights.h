@@ -101,7 +101,9 @@ public:
   bool event(const char *tag, const char *format, ...);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_INSIGHTS)
 extern ESPInsightsClass Insights;
+#endif
 
 extern "C" {
 #endif
