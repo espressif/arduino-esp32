@@ -443,6 +443,7 @@ bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_
     return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
 #else
     log_e("RMT TX GPIO %d : Loop Count is not supported. Writing failed.", pin);
+    return false;
 #endif
   }
 }
