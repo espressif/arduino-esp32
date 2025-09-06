@@ -431,7 +431,7 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 // loop_count == 0 is invalid (no transmission); loop_count >= 1 means transmit that many times.
 bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
   if (loop_count == 0) {
-    log_w("rmtWriteRepeated: Invalid loop_count (%u). Must be at least 1.", loop_count);
+    log_e("RMT TX GPIO %d - rmtWriteRepeated: Invalid loop_count (%u). Must be at least 1.", pin, loop_count);
     return false;
   }
   if (loop_count == 1) {
@@ -439,7 +439,11 @@ bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_
     return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, 0 /*looping*/, 0 /*N/A*/);
   } else {
     // write the RMT symbols for loop_count times
+#if SOC_RMT_SUPPORT_TX_LOOP_COUNT
     return _rmtWrite(pin, data, num_rmt_symbols, false /*blocks*/, loop_count /*looping*/, 0 /*N/A*/);
+#else
+    log_e("RMT TX GPIO %d - rmtWriteRepeated: Loop Count is not supported. Writing failed.", pin);
+#endif
   }
 }
 
