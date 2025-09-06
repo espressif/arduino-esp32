@@ -431,7 +431,7 @@ bool rmtWriteLooping(int pin, rmt_data_t *data, size_t num_rmt_symbols) {
 // loop_count == 0 is invalid (no transmission); loop_count >= 1 means transmit that many times.
 bool rmtWriteRepeated(int pin, rmt_data_t *data, size_t num_rmt_symbols, uint32_t loop_count) {
   if (loop_count == 0) {
-    log_e("RMT TX GPIO %d - rmtWriteRepeated: Invalid loop_count (%u). Must be at least 1.", pin, loop_count);
+    log_e("RMT TX GPIO %d : Invalid loop_count (%u). Must be at least 1.", pin, loop_count);
     return false;
   }
   if (loop_count == 1) {
