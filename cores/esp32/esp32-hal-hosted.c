@@ -46,9 +46,55 @@ static sdio_pin_config_t sdio_pin_config = {
 #endif
 };
 
-// Forward declarations
-bool hostedInit();
-bool hostedDeinit();
+static bool hostedInit() {
+  if (!hosted_initialized) {
+    log_i("Initializing ESP-Hosted");
+    log_d("SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0, sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset);
+    hosted_initialized = true;
+    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
+    conf.pin_clk.pin = sdio_pin_config.pin_clk;
+    conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
+    conf.pin_d0.pin = sdio_pin_config.pin_d0;
+    conf.pin_d1.pin = sdio_pin_config.pin_d1;
+    conf.pin_d2.pin = sdio_pin_config.pin_d2;
+    conf.pin_d3.pin = sdio_pin_config.pin_d3;
+    conf.pin_reset.pin = sdio_pin_config.pin_reset;
+    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
+    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
+      log_e("esp_hosted_init failed!");
+      hosted_initialized = false;
+      return false;
+    }
+    log_i("ESP-Hosted initialized!");
+  }
+
+  // Attach pins to PeriMan here
+  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
+  // sdio_pin_config.pin_clk
+  // sdio_pin_config.pin_cmd
+  // sdio_pin_config.pin_d0
+  // sdio_pin_config.pin_d1
+  // sdio_pin_config.pin_d2
+  // sdio_pin_config.pin_d3
+  // sdio_pin_config.pin_reset
+
+  return true;
+}
+
+static bool hostedDeinit() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  if (esp_hosted_deinit() != ESP_OK) {
+    log_e("esp_hosted_deinit failed!");
+    return false;
+  }
+
+  hosted_initialized = false;
+  return true;
+}
 
 bool hostedInitBLE() {
   log_i("Initializing ESP-Hosted for BLE");
@@ -82,41 +128,6 @@ bool hostedDeinitWiFi() {
     log_i("ESP-Hosted is still being used by BLE. Skipping deinit.");
     return true;
   }
-}
-
-bool hostedInit() {
-  if (!hosted_initialized) {
-    log_i("Initializing ESP-Hosted");
-    log_d("SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0, sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset);
-    hosted_initialized = true;
-    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
-    conf.pin_clk.pin = sdio_pin_config.pin_clk;
-    conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
-    conf.pin_d0.pin = sdio_pin_config.pin_d0;
-    conf.pin_d1.pin = sdio_pin_config.pin_d1;
-    conf.pin_d2.pin = sdio_pin_config.pin_d2;
-    conf.pin_d3.pin = sdio_pin_config.pin_d3;
-    conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
-    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
-      log_e("esp_hosted_init failed!");
-      hosted_initialized = false;
-      return false;
-    }
-    log_i("ESP-Hosted initialized!");
-  }
-
-  // Attach pins to PeriMan here
-  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
-  // sdio_pin_config.pin_clk
-  // sdio_pin_config.pin_cmd
-  // sdio_pin_config.pin_d0
-  // sdio_pin_config.pin_d1
-  // sdio_pin_config.pin_d2
-  // sdio_pin_config.pin_d3
-  // sdio_pin_config.pin_reset
-
-  return true;
 }
 
 bool hostedSetPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
@@ -159,21 +170,6 @@ bool hostedIsBLEActive() {
 
 bool hostedIsWiFiActive() {
   return hosted_wifi_active;
-}
-
-bool hostedDeinit() {
-  if (!hosted_initialized) {
-    log_e("ESP-Hosted is not initialized");
-    return false;
-  }
-
-  if (esp_hosted_deinit() != ESP_OK) {
-    log_e("esp_hosted_deinit failed!");
-    return false;
-  }
-
-  hosted_initialized = false;
-  return true;
 }
 
 bool hostedIsInitialized() {
