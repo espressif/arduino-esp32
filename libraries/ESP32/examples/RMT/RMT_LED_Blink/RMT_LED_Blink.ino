@@ -351,8 +351,7 @@ void RMT_Write_Aync_Non_Blocking_Blink() {
       Serial.println("===> rmtWrite Blink 0.25s Error!");
     }
     // wait (blocks) until all the data is  sent out
-    while (!rmtTransmitCompleted(BLINK_GPIO))
-      ;
+    while (!rmtTransmitCompleted(BLINK_GPIO));
   }
   Serial.println("Blinking OFF for 1 seconds");
   delay(1000);
