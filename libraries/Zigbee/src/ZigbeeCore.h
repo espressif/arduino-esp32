@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Zigbee core class */
 
 #pragma once
@@ -124,6 +138,8 @@ public:
   bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
   bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
   // bool end();
+  void stop();
+  void start();
 
   bool started() {
     return _started;
@@ -206,6 +222,8 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ZIGBEE)
 extern ZigbeeCore Zigbee;
+#endif
 
 #endif  // CONFIG_ZB_ENABLED

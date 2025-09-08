@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
-  pull-requests: read
+  contents: read
+  pull-requests: write
 
 jobs:
   lint:
@@ -30,12 +30,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 2
-
-      - name: Remove Label
-        if: contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks')
-        run: gh pr edit ${{ github.event.number }} --remove-label 'Re-trigger Pre-commit Hooks'
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Set up Python 3
         uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
@@ -65,6 +59,7 @@ jobs:
         uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
 
       - name: Run pre-commit hooks in changed files
+        id: pre-commit
         run: pre-commit run --color=always --show-diff-on-failure --files ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Save pre-commit cache
@@ -82,3 +77,21 @@ jobs:
         if: ${{ always() && github.event_name == 'pull_request' }}
         with:
           msg: "ci(pre-commit): Apply automatic fixes"
+
+      - name: Save workflow information for labeling
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        run: |
+          mkdir -p ./pr-artifacts
+          echo "${{ github.event.number }}" > ./pr-artifacts/pr_number.txt
+          echo "${{ steps.pre-commit.outcome }}" > ./pr-artifacts/pre_commit_outcome.txt
+          echo "${{ steps.pre-commit.outputs.pending_commit }}" > ./pr-artifacts/pending_commit.txt
+          echo "${{ contains(github.event.pull_request.labels.*.name, 'Re-trigger Pre-commit Hooks') }}" > ./pr-artifacts/has_retrigger_label.txt
+
+      - name: Upload PR artifacts
+        if: ${{ always() && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pr-artifacts
+          path: ./pr-artifacts/
+          retention-days: 1
+

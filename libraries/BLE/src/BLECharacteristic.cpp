@@ -145,7 +145,7 @@ uint16_t BLECharacteristic::getHandle() {
   return m_handle;
 }  // getHandle
 
-void BLECharacteristic::setAccessPermissions(uint8_t perm) {
+void BLECharacteristic::setAccessPermissions(uint16_t perm) {
 #ifdef CONFIG_BLUEDROID_ENABLED
   m_permissions = perm;
 #endif
@@ -346,7 +346,7 @@ void BLECharacteristic::setReadProperty(bool value) {
  * @param [in] data The data to set for the characteristic.
  * @param [in] length The length of the data in bytes.
  */
-void BLECharacteristic::setValue(uint8_t *data, size_t length) {
+void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
 // The call to BLEUtils::buildHexData() doesn't output anything if the log level is not
 // "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
@@ -371,43 +371,28 @@ void BLECharacteristic::setValue(uint8_t *data, size_t length) {
  * @param [in] Set the value of the characteristic.
  * @return N/A.
  */
-void BLECharacteristic::setValue(String value) {
-  setValue((uint8_t *)(value.c_str()), value.length());
+void BLECharacteristic::setValue(const String &value) {
+  setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
 }  // setValue
 
-void BLECharacteristic::setValue(uint16_t &data16) {
-  uint8_t temp[2];
-  temp[0] = data16;
-  temp[1] = data16 >> 8;
-  setValue(temp, 2);
+void BLECharacteristic::setValue(uint16_t data16) {
+  setValue(reinterpret_cast<const uint8_t *>(&data16), sizeof(data16));
 }  // setValue
 
-void BLECharacteristic::setValue(uint32_t &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+void BLECharacteristic::setValue(uint32_t data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(int &data32) {
-  uint8_t temp[4];
-  temp[0] = data32;
-  temp[1] = data32 >> 8;
-  temp[2] = data32 >> 16;
-  temp[3] = data32 >> 24;
-  setValue(temp, 4);
+void BLECharacteristic::setValue(int data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(float &data32) {
-  float temp = data32;
-  setValue((uint8_t *)&temp, 4);
+void BLECharacteristic::setValue(float data32) {
+  setValue(reinterpret_cast<const uint8_t *>(&data32), sizeof(data32));
 }  // setValue
 
-void BLECharacteristic::setValue(double &data64) {
-  double temp = data64;
-  setValue((uint8_t *)&temp, 8);
+void BLECharacteristic::setValue(double data64) {
+  setValue(reinterpret_cast<const uint8_t *>(&data64), sizeof(data64));
 }  // setValue
 
 /**
@@ -582,6 +567,32 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
       // we save the new value.  Next we look at the need_rsp flag which indicates whether or not we need
       // to send a response.  If we do, then we formulate a response and send it.
       if (param->write.handle == m_handle) {
+
+        // Check for authorization requirement
+        if (m_permissions & ESP_GATT_PERM_WRITE_AUTHORIZATION) {
+          bool authorized = false;
+
+          if (BLEDevice::m_securityCallbacks != nullptr) {
+            log_i("Authorization required for write operation. Checking authorization...");
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->write.conn_id, m_handle, false);
+          } else {
+            log_w("onAuthorizationRequest not implemented. Rejecting write authorization request");
+          }
+
+          if (!authorized) {
+            log_i("Write authorization rejected");
+            if (param->write.need_rsp) {
+              esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_INSUF_AUTHORIZATION, nullptr);
+              if (errRc != ESP_OK) {
+                log_e("esp_ble_gatts_send_response (authorization failed): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+              }
+            }
+            return;  // Exit early, don't process the write
+          } else {
+            log_i("Write authorization granted");
+          }
+        }
+
         if (param->write.is_prep) {
           m_value.addPart(param->write.value, param->write.len);
           m_writeEvt = true;
@@ -636,6 +647,31 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
     case ESP_GATTS_READ_EVT:
     {
       if (param->read.handle == m_handle) {
+
+        // Check for authorization requirement
+        if (m_permissions & ESP_GATT_PERM_READ_AUTHORIZATION) {
+          bool authorized = false;
+
+          if (BLEDevice::m_securityCallbacks != nullptr) {
+            log_i("Authorization required for read operation. Checking authorization...");
+            authorized = BLEDevice::m_securityCallbacks->onAuthorizationRequest(param->read.conn_id, m_handle, true);
+          } else {
+            log_w("onAuthorizationRequest not implemented. Rejecting read authorization request");
+          }
+
+          if (!authorized) {
+            log_i("Read authorization rejected");
+            if (param->read.need_rsp) {
+              esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->read.conn_id, param->read.trans_id, ESP_GATT_INSUF_AUTHORIZATION, nullptr);
+              if (errRc != ESP_OK) {
+                log_e("esp_ble_gatts_send_response (authorization failed): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+              }
+            }
+            return;  // Exit early, don't process the read
+          } else {
+            log_i("Read authorization granted");
+          }
+        }
 
         // Here's an interesting thing.  The read request has the option of saying whether we need a response
         // or not.  What would it "mean" to receive a read request and NOT send a response back?  That feels like

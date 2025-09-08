@@ -59,7 +59,8 @@ void setClock() {
   struct tm timeinfo;
   gmtime_r(&nowSecs, &timeinfo);
   Serial.print(F("Current time: "));
-  Serial.print(asctime(&timeinfo));
+  char buf[26];
+  Serial.print(asctime_r(&timeinfo, buf));
 }
 
 WiFiMulti WiFiMulti;

@@ -98,7 +98,9 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SPI)
 extern SPIClass SPI;
+#endif
 
 #endif /* SOC_GPSPI_SUPPORTED */
 #endif /* _SPI_H_INCLUDED */
