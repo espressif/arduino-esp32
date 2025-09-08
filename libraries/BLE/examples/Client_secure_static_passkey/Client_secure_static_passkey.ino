@@ -12,9 +12,9 @@
   This means that in NimBLE you can read the insecure characteristic without entering
   the passkey. This is not possible in Bluedroid.
 
-  Also, the SoC stores the authentication info in the NVS memory. After a successful
-  connection it is possible that a passkey change will be ineffective.
-  To avoid this, clear the memory of the SoC's between security tests.
+  IMPORTANT: MITM (Man-In-The-Middle protection) must be enabled for password prompts
+  to work. Without MITM, the BLE stack assumes no user interaction is needed and will use
+  "Just Works" pairing method (with encryption if secure connection is enabled).
 
   Based on examples from Neil Kolban and h2zero.
   Created by lucasssvaz.
@@ -22,6 +22,7 @@
 
 #include "BLEDevice.h"
 #include "BLESecurity.h"
+#include "nvs_flash.h"
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
@@ -116,7 +117,7 @@ bool connectToServer() {
 
   // For Bluedroid, we need to set the authentication request type for the secure characteristic
   // This is not needed for NimBLE and will be ignored.
-  pRemoteSecureCharacteristic->setAuth(ESP_GATT_AUTH_REQ_NO_MITM);
+  pRemoteSecureCharacteristic->setAuth(ESP_GATT_AUTH_REQ_MITM);
 
   // Try to read the secure characteristic (this will trigger security negotiation in NimBLE)
   if (pRemoteSecureCharacteristic->canRead()) {
@@ -167,6 +168,12 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting Secure BLE Client application...");
 
+  // Clear NVS to remove any cached pairing information
+  // This ensures fresh authentication for testing
+  Serial.println("Clearing NVS pairing data...");
+  nvs_flash_erase();
+  nvs_flash_init();
+
   BLEDevice::init("Secure BLE Client");
 
   // Set up security with the same passkey as the server
@@ -177,7 +184,7 @@ void setup() {
   // - IO capability is set to NONE
   // - Initiator and responder key distribution flags are set to both encryption and identity keys.
   // - Passkey is set to BLE_SM_DEFAULT_PASSKEY (123456). It will warn if you don't change it.
-  // - Max key size is set to 16 bytes
+  // - Key size is set to 16 bytes
 
   // Set the same static passkey as the server
   // The first argument defines if the passkey is static or random.
@@ -185,8 +192,8 @@ void setup() {
   pSecurity->setPassKey(true, CLIENT_PIN);
 
   // Set authentication mode to match server requirements
-  // Enable secure connection only for this example
-  pSecurity->setAuthenticationMode(false, false, true);
+  // Enable secure connection and MITM (for password prompts) for this example
+  pSecurity->setAuthenticationMode(false, true, true);
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device. Specify that we want active scanning and start the

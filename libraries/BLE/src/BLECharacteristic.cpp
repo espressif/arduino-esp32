@@ -923,7 +923,6 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         if (ctxt->om->om_pkthdr_len > 8) {
           rc = ble_gap_conn_find(conn_handle, &desc);
           assert(rc == 0);
-          pCharacteristic->m_pCallbacks->onRead(pCharacteristic);
           pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
         }
 
@@ -957,7 +956,6 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         rc = ble_gap_conn_find(conn_handle, &desc);
         assert(rc == 0);
         pCharacteristic->setValue(buf, len);
-        pCharacteristic->m_pCallbacks->onWrite(pCharacteristic);
         pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
 
         return 0;

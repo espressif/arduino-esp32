@@ -15,9 +15,9 @@
   This means that in NimBLE you can read the insecure characteristic without entering
   the passkey. This is not possible in Bluedroid.
 
-  Also, the SoC stores the authentication info in the NVS memory. After a successful
-  connection it is possible that a passkey change will be ineffective.
-  To avoid this, clear the memory of the SoC's between security tests.
+  IMPORTANT: MITM (Man-In-The-Middle protection) must be enabled for password prompts
+  to work. Without MITM, the BLE stack assumes no user interaction is needed and will use
+  "Just Works" pairing method (with encryption if secure connection is enabled).
 
   Based on examples from Neil Kolban and h2zero.
   Created by lucasssvaz.
@@ -27,13 +27,14 @@
 #include <BLEUtils.h>
 #include <BLEServer.h>
 #include <BLESecurity.h>
+#include <nvs_flash.h>
 #include <string>
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
 
 #define SERVICE_UUID                 "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define Insecure_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define INSECURE_CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 #define SECURE_CHARACTERISTIC_UUID   "ff1d2614-e2d6-4c87-9154-6625d39ca7f8"
 
 // This is an example passkey. You should use a different or random passkey.
@@ -42,6 +43,12 @@
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
+
+  // Clear NVS to remove any cached pairing information
+  // This ensures fresh authentication for testing
+  Serial.println("Clearing NVS pairing data...");
+  nvs_flash_erase();
+  nvs_flash_init();
 
   Serial.print("Using BLE stack: ");
   Serial.println(BLEDevice::getBLEStackString());
@@ -55,16 +62,22 @@ void setup() {
   // - IO capability is set to NONE
   // - Initiator and responder key distribution flags are set to both encryption and identity keys.
   // - Passkey is set to BLE_SM_DEFAULT_PASSKEY (123456). It will warn if you don't change it.
-  // - Max key size is set to 16 bytes
+  // - Key size is set to 16 bytes
 
   // Set static passkey
   // The first argument defines if the passkey is static or random.
   // The second argument is the passkey (ignored when using a random passkey).
   pSecurity->setPassKey(true, SERVER_PIN);
 
+  // Set IO capability to DisplayOnly
+  // We need the proper IO capability for MITM authentication even
+  // if the passkey is static and won't be shown to the user
+  // See https://www.bluetooth.com/blog/bluetooth-pairing-part-2-key-generation-methods/
+  pSecurity->setCapability(ESP_IO_CAP_OUT);
+
   // Set authentication mode
-  // Require secure connection only for this example
-  pSecurity->setAuthenticationMode(false, false, true);
+  // Require secure connection and MITM (for password prompts) for this example
+  pSecurity->setAuthenticationMode(false, true, true);
 
   BLEServer *pServer = BLEDevice::createServer();
   pServer->advertiseOnDisconnect(true);
@@ -78,16 +91,16 @@ void setup() {
   // These special permission properties are not supported by Bluedroid and will be ignored.
   // This can be removed if only using Bluedroid (ESP32).
   // Check the BLECharacteristic.h file for more information.
-  secure_properties |= BLECharacteristic::PROPERTY_READ_ENC | BLECharacteristic::PROPERTY_WRITE_ENC;
+  secure_properties |= BLECharacteristic::PROPERTY_READ_AUTHEN | BLECharacteristic::PROPERTY_WRITE_AUTHEN;
 
   BLECharacteristic *pSecureCharacteristic = pService->createCharacteristic(SECURE_CHARACTERISTIC_UUID, secure_properties);
-  BLECharacteristic *pInsecureCharacteristic = pService->createCharacteristic(Insecure_CHARACTERISTIC_UUID, insecure_properties);
+  BLECharacteristic *pInsecureCharacteristic = pService->createCharacteristic(INSECURE_CHARACTERISTIC_UUID, insecure_properties);
 
   // Bluedroid uses permissions to secure characteristics.
   // This is the same as using the properties above.
   // NimBLE does not use permissions and will ignore these calls.
   // This can be removed if only using NimBLE (any SoC except ESP32).
-  pSecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+  pSecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENC_MITM | ESP_GATT_PERM_WRITE_ENC_MITM);
   pInsecureCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
 
   // Set value for secure characteristic

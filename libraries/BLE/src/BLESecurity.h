@@ -104,6 +104,7 @@ public:
   static uint32_t getPassKey();
   static uint32_t generateRandomPassKey();
   static void regenPassKeyOnConnect(bool enable = false);
+  static void resetSecurity();
 
   /***************************************************************************
    *                       Bluedroid public declarations                     *

@@ -2170,6 +2170,9 @@ const char *BLEUtils::gapEventToString(uint8_t eventType) {
 
     case BLE_GAP_EVENT_EXT_DISC:  //19
       return "BLE_GAP_EVENT_EXT_DISC";
+
+    case BLE_GAP_EVENT_AUTHORIZE:  //32
+      return "BLE_GAP_EVENT_AUTHORIZE";
 #ifdef BLE_GAP_EVENT_PERIODIC_SYNC     // IDF 4.0 does not support these
     case BLE_GAP_EVENT_PERIODIC_SYNC:  //20
       return "BLE_GAP_EVENT_PERIODIC_SYNC";
