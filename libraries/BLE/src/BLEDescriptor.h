@@ -89,11 +89,11 @@ public:
   BLEDescriptor(BLEUUID uuid, uint16_t max_len = 100);
   virtual ~BLEDescriptor();
 
-  uint16_t getHandle() const;                   // Get the handle of the descriptor.
-  size_t getLength() const;                     // Get the length of the value of the descriptor.
-  BLEUUID getUUID() const;                      // Get the UUID of the descriptor.
-  uint8_t *getValue() const;                    // Get a pointer to the value of the descriptor.
-  BLECharacteristic *getCharacteristic() const; // Get the characteristic that this descriptor belongs to.
+  uint16_t getHandle() const;                    // Get the handle of the descriptor.
+  size_t getLength() const;                      // Get the length of the value of the descriptor.
+  BLEUUID getUUID() const;                       // Get the UUID of the descriptor.
+  uint8_t *getValue() const;                     // Get a pointer to the value of the descriptor.
+  BLECharacteristic *getCharacteristic() const;  // Get the characteristic that this descriptor belongs to.
 
   void setAccessPermissions(uint16_t perm);               // Set the permissions of the descriptor.
   void setCallbacks(BLEDescriptorCallbacks *pCallbacks);  // Set callbacks to be invoked for the descriptor.
