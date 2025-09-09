@@ -20,7 +20,7 @@ typedef struct {
 class USBMIDI {
 private:
   static char* midiUserDeviceName; // user device name
-  static void setDeviceName(const char* name); // set user device name limites to 32 characters
+  static void setDeviceName(const char* name); // set user device name limited to 32 characters
 
 public:
   /**
