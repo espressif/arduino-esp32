@@ -39961,6 +39961,8 @@ gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.flash_freq=80m
 
 gen4-ESP32-S3R8n16.menu.FlashSize.16M=16MB (128Mb)
 gen4-ESP32-S3R8n16.menu.FlashSize.16M.build.flash_size=16MB
+gen4-ESP32-S3R8n16.menu.FlashSize.32M=32MB (256Mb)
+gen4-ESP32-S3R8n16.menu.FlashSize.32M.build.flash_size=32MB
 
 gen4-ESP32-S3R8n16.menu.LoopCore.1=Core 1
 gen4-ESP32-S3R8n16.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -40011,6 +40013,15 @@ gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme3.upload.maximum_size=832
 gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4=Huge App (16MB APP)
 gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4.build.custom_partitions=gen4esp32_16MBapp
 gen4-ESP32-S3R8n16.menu.PartitionScheme.gen4esp32scheme4.upload.maximum_size=16646144
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+gen4-ESP32-S3R8n16.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
 
 gen4-ESP32-S3R8n16.menu.CPUFreq.240=240MHz (WiFi)
 gen4-ESP32-S3R8n16.menu.CPUFreq.240.build.f_cpu=240000000L
