@@ -50,7 +50,6 @@ USBMIDI::USBMIDI() {
 
 // private function for setting a not null/empty MIDI device name limited to 32 characters
 void USBMIDI::setDeviceName(const char* name) {
-  printf("setName called");
     const uint8_t maxNameLength = 32; // tinyUSB Descriptor limit
     if (name != nullptr && strlen(name) > 0) {
       if (strlen(name) > maxNameLength) {
