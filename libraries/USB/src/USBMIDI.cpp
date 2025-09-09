@@ -103,7 +103,11 @@ const char* USBMIDI::getCurrentDeviceName(void) {
   }
   // If no user name set, use the compile-time default name limited to 32 characters
   setDeviceName(getUSBMIDIDefaultDeviceName()); 
-  return strlen(midiUserDeviceName) ? midiUserDeviceName : "TinyUSB MIDI";
+  if (midiUserDeviceName && strlen(midiUserDeviceName)) {
+    return midiUserDeviceName;
+  } else {
+    return "TinyUSB MIDI";
+  }
 }
 
 // uint compatible version of constrain
