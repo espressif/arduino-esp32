@@ -68,6 +68,14 @@ void USBMIDI::setDeviceName(const char* name) {
     }
 }
 
+/**
+* @brief Get the current device name
+* @return The device name in order of precedence:
+* 1. Name set via constructor (if any)
+* 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+* 3. Default name "TinyUSB MIDI"
+* If device name is set as "", it will be ignored
+*/
 USBMIDI::USBMIDI(const char* name) {
   if (!tinyusb_midi_interface_enabled) {
     setDeviceName(name);
