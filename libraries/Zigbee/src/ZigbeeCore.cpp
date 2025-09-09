@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Zigbee Core Functions */
 
 #include "ZigbeeCore.h"
@@ -32,6 +46,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_duration = 3;  // default scan duration
   _rx_on_when_idle = true;
   _debug = false;
+  _global_default_response_cb = nullptr;  // Initialize global callback to nullptr
   if (!lock) {
     lock = xSemaphoreCreateBinary();
     if (lock == NULL) {
@@ -237,7 +252,9 @@ void ZigbeeCore::closeNetwork() {
 }
 
 static void bdb_start_top_level_commissioning_cb(uint8_t mode_mask) {
-  ESP_ERROR_CHECK(esp_zb_bdb_start_top_level_commissioning(mode_mask));
+  if (esp_zb_bdb_start_top_level_commissioning(mode_mask) != ESP_OK) {
+    log_e("Failed to start Zigbee commissioning");
+  }
 }
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
@@ -512,8 +529,14 @@ void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
     log_e("Zigbee stack is not started, cannot scan networks");
     return;
   }
+  if (_scan_status == ZB_SCAN_RUNNING) {
+    log_w("Scan already in progress, ignoring new scan request");
+    return;
+  }
   log_v("Scanning Zigbee networks");
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zdo_active_scan_request(channel_mask, scan_duration, scanCompleteCallback);
+  esp_zb_lock_release();
   _scan_status = ZB_SCAN_RUNNING;
 }
 
@@ -747,6 +770,24 @@ void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
   log_v("Channel mask set to 0x%08x", mask);
 }
 
+void ZigbeeCore::stop() {
+  if (started()) {
+    vTaskSuspend(xTaskGetHandle("Zigbee_main"));
+    log_v("Zigbee stack stopped");
+    _started = false;
+  }
+  return;
+}
+
+void ZigbeeCore::start() {
+  if (!started()) {
+    vTaskResume(xTaskGetHandle("Zigbee_main"));
+    log_v("Zigbee stack started");
+    _started = true;
+  }
+  return;
+}
+
 // Function to convert enum value to string
 const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
   switch (deviceId) {
@@ -789,6 +830,12 @@ const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceI
     case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID:              return "Custom Tunnel device";
     case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID:                return "Custom Attributes Device";
     default:                                             return "Unknown device type";
+  }
+}
+
+void ZigbeeCore::callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
+  if (_global_default_response_cb) {
+    _global_default_response_cb(resp_to_cmd, status, endpoint, cluster);
   }
 }
 

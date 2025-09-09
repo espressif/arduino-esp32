@@ -317,6 +317,33 @@ AsyncUDPPacket::AsyncUDPPacket(AsyncUDPPacket &packet) {
   pbuf_ref(_pb);
 }
 
+AsyncUDPPacket &AsyncUDPPacket::operator=(const AsyncUDPPacket &packet) {
+  if (this != &packet) {
+    if (_pb) {
+      // Free existing pbuf reference
+      pbuf_free(_pb);
+    }
+
+    // Copy all members
+    _udp = packet._udp;
+    _pb = packet._pb;
+    _if = packet._if;
+    _data = packet._data;
+    _len = packet._len;
+    _index = 0;
+
+    memcpy(&_remoteIp, &packet._remoteIp, sizeof(ip_addr_t));
+    memcpy(&_localIp, &packet._localIp, sizeof(ip_addr_t));
+    _localPort = packet._localPort;
+    _remotePort = packet._remotePort;
+    memcpy(_remoteMac, packet._remoteMac, 6);
+
+    // Increment reference count for the new pbuf
+    pbuf_ref(_pb);
+  }
+  return *this;
+}
+
 AsyncUDPPacket::AsyncUDPPacket(AsyncUDP *udp, pbuf *pb, const ip_addr_t *raddr, uint16_t rport, struct netif *ntif) {
   _udp = udp;
   _pb = pb;
@@ -582,8 +609,8 @@ bool AsyncUDP::listen(const ip_addr_t *addr, uint16_t port) {
   }
   close();
   if (addr) {
-    IP_SET_TYPE_VAL(_pcb->local_ip, addr->type);
-    IP_SET_TYPE_VAL(_pcb->remote_ip, addr->type);
+    IP_SET_TYPE_VAL(_pcb->local_ip, IP_GET_TYPE(addr));
+    IP_SET_TYPE_VAL(_pcb->remote_ip, IP_GET_TYPE(addr));
   }
   if (_udp_bind(_pcb, addr, port) != ERR_OK) {
     return false;
@@ -692,17 +719,8 @@ bool AsyncUDP::listenMulticast(const ip_addr_t *addr, uint16_t port, uint8_t ttl
     return false;
   }
 
-#if CONFIG_LWIP_IPV6
-  if (IP_IS_V6(addr)) {
-    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V6);
-    ip6_addr_set_any(&bind_addr.u_addr.ip6);
-  } else {
-#endif
-    IP_SET_TYPE(&bind_addr, IPADDR_TYPE_V4);
-    ip4_addr_set_any(&bind_addr.u_addr.ip4);
-#if CONFIG_LWIP_IPV6
-  }
-#endif
+  IP_SET_TYPE(&bind_addr, IP_GET_TYPE(addr));
+  ip_addr_set_any(IP_IS_V6(addr), &bind_addr);
   if (!listen(&bind_addr, port)) {
     return false;
   }

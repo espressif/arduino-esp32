@@ -119,10 +119,10 @@ espHsvColor_t espRgbColorToHsvColor(espRgbColor_t rgb) {
 }
 
 espRgbColor_t espXYColorToRgbColor(uint8_t Level, espXyColor_t xy) {
-  return espXYToRgbColor(Level, xy.x, xy.y);
+  return espXYToRgbColor(Level, xy.x, xy.y, true);
 }
 
-espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y) {
+espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y, bool addXYZScaling) {
   // convert xyY color space to RGB
 
   // https://www.easyrgb.com/en/math.php
@@ -156,9 +156,11 @@ espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t curren
   // X, Y and Z input refer to a D65/2° standard illuminant.
   // sR, sG and sB (standard RGB) output range = 0 ÷ 255
   // convert XYZ to RGB - CIE XYZ to sRGB
-  X = X / 100.0f;
-  Y = Y / 100.0f;
-  Z = Z / 100.0f;
+  if (addXYZScaling) {
+    X = X / 100.0f;
+    Y = Y / 100.0f;
+    Z = Z / 100.0f;
+  }
 
   r = (X * 3.2406f) - (Y * 1.5372f) - (Z * 0.4986f);
   g = -(X * 0.9689f) + (Y * 1.8758f) + (Z * 0.0415f);

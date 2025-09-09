@@ -21,7 +21,7 @@ extern "C" {
 /** Major version number (X.x.x) */
 #define ESP_ARDUINO_VERSION_MAJOR 3
 /** Minor version number (x.X.x) */
-#define ESP_ARDUINO_VERSION_MINOR 2
+#define ESP_ARDUINO_VERSION_MINOR 3
 /** Patch version number (x.x.X) */
 #define ESP_ARDUINO_VERSION_PATCH 0
 

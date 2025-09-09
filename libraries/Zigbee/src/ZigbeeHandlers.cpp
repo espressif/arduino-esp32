@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Zigbee Common Functions */
 #include "ZigbeeCore.h"
 #include "Arduino.h"
@@ -398,6 +412,16 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
     "Received default response: from address(0x%x), src_endpoint(%d) to dst_endpoint(%d), cluster(0x%x) with status 0x%x",
     message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->status_code
   );
+
+  // Call global callback if set
+  Zigbee.callDefaultResponseCallback((zb_cmd_type_t)message->resp_to_cmd, message->status_code, message->info.dst_endpoint, message->info.cluster);
+
+  // List through all Zigbee EPs and call the callback function, with the message
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbDefaultResponse(message);  //method zbDefaultResponse is implemented in the common EP class
+    }
+  }
   return ESP_OK;
 }
 

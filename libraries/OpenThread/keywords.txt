@@ -13,6 +13,7 @@ OpenThread	KEYWORD1
 DataSet	KEYWORD1
 ot_cmd_return_t	KEYWORD1
 ot_device_role_t	KEYWORD1
+OnReceiveCb_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -59,6 +60,23 @@ stop	KEYWORD2
 networkInterfaceUp	KEYWORD2
 networkInterfaceDown	KEYWORD2
 commitDataSet	KEYWORD2
+getInstance	KEYWORD2
+getCurrentDataSet	KEYWORD2
+getMeshLocalPrefix	KEYWORD2
+getMeshLocalEid	KEYWORD2
+getLeaderRloc	KEYWORD2
+getRloc	KEYWORD2
+getRloc16	KEYWORD2
+getUnicastAddressCount	KEYWORD2
+getUnicastAddress	KEYWORD2
+getAllUnicastAddresses	KEYWORD2
+getMulticastAddressCount	KEYWORD2
+getMulticastAddress	KEYWORD2
+getAllMulticastAddresses	KEYWORD2
+clearUnicastAddressCache	KEYWORD2
+clearMulticastAddressCache	KEYWORD2
+clearAllAddressCache	KEYWORD2
+end	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

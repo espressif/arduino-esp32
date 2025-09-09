@@ -34,6 +34,8 @@ private:
 
 }  // namespace fs
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SPIFFS)
 extern fs::SPIFFSFS SPIFFS;
+#endif
 
 #endif

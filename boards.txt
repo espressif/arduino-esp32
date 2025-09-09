@@ -161,6 +161,217 @@ esp32c2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+esp32c5.name=ESP32C5 Dev Module
+
+esp32c5.bootloader.tool=esptool_py
+esp32c5.bootloader.tool.default=esptool_py
+
+esp32c5.upload.tool=esptool_py
+esp32c5.upload.tool.default=esptool_py
+esp32c5.upload.tool.network=esp_ota
+
+esp32c5.upload.maximum_size=1310720
+esp32c5.upload.maximum_data_size=327680
+esp32c5.upload.flags=
+esp32c5.upload.extra_flags=
+esp32c5.upload.use_1200bps_touch=false
+esp32c5.upload.wait_for_upload_port=false
+
+esp32c5.serial.disableDTR=false
+esp32c5.serial.disableRTS=false
+
+esp32c5.build.tarch=riscv32
+esp32c5.build.target=esp
+esp32c5.build.mcu=esp32c5
+esp32c5.build.core=esp32
+esp32c5.build.variant=esp32c5
+esp32c5.build.board=ESP32C5_DEV
+esp32c5.build.bootloader_addr=0x2000
+
+esp32c5.build.cdc_on_boot=0
+esp32c5.build.f_cpu=240000000L
+esp32c5.build.flash_size=4MB
+esp32c5.build.flash_freq=80m
+esp32c5.build.flash_mode=qio
+esp32c5.build.boot=qio
+esp32c5.build.partitions=default
+esp32c5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+esp32c5.menu.JTAGAdapter.default=Disabled
+esp32c5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+esp32c5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+esp32c5.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+esp32c5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+esp32c5.menu.JTAGAdapter.external=FTDI Adapter
+esp32c5.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+esp32c5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+esp32c5.menu.JTAGAdapter.bridge=ESP USB Bridge
+esp32c5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+esp32c5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+esp32c5.menu.PSRAM.disabled=Disabled
+esp32c5.menu.PSRAM.disabled.build.defines=
+esp32c5.menu.PSRAM.enabled=Enabled
+esp32c5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+esp32c5.menu.CDCOnBoot.default=Disabled
+esp32c5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+esp32c5.menu.CDCOnBoot.cdc=Enabled
+esp32c5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+esp32c5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+esp32c5.menu.PartitionScheme.default.build.partitions=default
+esp32c5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+esp32c5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+esp32c5.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+esp32c5.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+esp32c5.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+esp32c5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+esp32c5.menu.PartitionScheme.minimal.build.partitions=minimal
+esp32c5.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+esp32c5.menu.PartitionScheme.no_fs.build.partitions=no_fs
+esp32c5.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+esp32c5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+esp32c5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+esp32c5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+esp32c5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+esp32c5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+esp32c5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+esp32c5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+esp32c5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+esp32c5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+esp32c5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+esp32c5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+esp32c5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+esp32c5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+esp32c5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+esp32c5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+esp32c5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+esp32c5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+esp32c5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+esp32c5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+esp32c5.menu.PartitionScheme.fatflash.build.partitions=ffat
+esp32c5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+esp32c5.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32c5.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32c5.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+esp32c5.menu.PartitionScheme.rainmaker=RainMaker 4MB
+esp32c5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+esp32c5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+esp32c5.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+esp32c5.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+esp32c5.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+esp32c5.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+esp32c5.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+esp32c5.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+esp32c5.menu.PartitionScheme.zigbee_2MB=Zigbee 2MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee_2MB.build.partitions=zigbee_2MB
+esp32c5.menu.PartitionScheme.zigbee_2MB.upload.maximum_size=1310720
+esp32c5.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee.build.partitions=zigbee
+esp32c5.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+esp32c5.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+esp32c5.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
+esp32c5.menu.PartitionScheme.zigbee_zczr_2MB=Zigbee ZCZR 2MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee_zczr_2MB.build.partitions=zigbee_zczr_2MB
+esp32c5.menu.PartitionScheme.zigbee_zczr_2MB.upload.maximum_size=1310720
+esp32c5.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+esp32c5.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+esp32c5.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+esp32c5.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+esp32c5.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+esp32c5.menu.PartitionScheme.custom=Custom
+esp32c5.menu.PartitionScheme.custom.build.partitions=
+esp32c5.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+esp32c5.menu.CPUFreq.240=240MHz (WiFi)
+esp32c5.menu.CPUFreq.240.build.f_cpu=240000000L
+esp32c5.menu.CPUFreq.120=120MHz (WiFi)
+esp32c5.menu.CPUFreq.120.build.f_cpu=120000000L
+esp32c5.menu.CPUFreq.80=80MHz (WiFi)
+esp32c5.menu.CPUFreq.80.build.f_cpu=80000000L
+esp32c5.menu.CPUFreq.40=40MHz
+esp32c5.menu.CPUFreq.40.build.f_cpu=40000000L
+esp32c5.menu.CPUFreq.20=20MHz
+esp32c5.menu.CPUFreq.20.build.f_cpu=20000000L
+esp32c5.menu.CPUFreq.10=10MHz
+esp32c5.menu.CPUFreq.10.build.f_cpu=10000000L
+
+esp32c5.menu.FlashMode.qio=QIO
+esp32c5.menu.FlashMode.qio.build.flash_mode=dio
+esp32c5.menu.FlashMode.qio.build.boot=qio
+esp32c5.menu.FlashMode.dio=DIO
+esp32c5.menu.FlashMode.dio.build.flash_mode=dio
+esp32c5.menu.FlashMode.dio.build.boot=dio
+
+esp32c5.menu.FlashFreq.80=80MHz
+esp32c5.menu.FlashFreq.80.build.flash_freq=80m
+esp32c5.menu.FlashFreq.40=40MHz
+esp32c5.menu.FlashFreq.40.build.flash_freq=40m
+
+esp32c5.menu.FlashSize.4M=4MB (32Mb)
+esp32c5.menu.FlashSize.4M.build.flash_size=4MB
+esp32c5.menu.FlashSize.8M=8MB (64Mb)
+esp32c5.menu.FlashSize.8M.build.flash_size=8MB
+esp32c5.menu.FlashSize.2M=2MB (16Mb)
+esp32c5.menu.FlashSize.2M.build.flash_size=2MB
+esp32c5.menu.FlashSize.16M=16MB (128Mb)
+esp32c5.menu.FlashSize.16M.build.flash_size=16MB
+
+esp32c5.menu.UploadSpeed.921600=921600
+esp32c5.menu.UploadSpeed.921600.upload.speed=921600
+esp32c5.menu.UploadSpeed.115200=115200
+esp32c5.menu.UploadSpeed.115200.upload.speed=115200
+esp32c5.menu.UploadSpeed.256000.windows=256000
+esp32c5.menu.UploadSpeed.256000.upload.speed=256000
+esp32c5.menu.UploadSpeed.230400.windows.upload.speed=256000
+esp32c5.menu.UploadSpeed.230400=230400
+esp32c5.menu.UploadSpeed.230400.upload.speed=230400
+esp32c5.menu.UploadSpeed.460800.linux=460800
+esp32c5.menu.UploadSpeed.460800.macosx=460800
+esp32c5.menu.UploadSpeed.460800.upload.speed=460800
+esp32c5.menu.UploadSpeed.512000.windows=512000
+esp32c5.menu.UploadSpeed.512000.upload.speed=512000
+
+esp32c5.menu.DebugLevel.none=None
+esp32c5.menu.DebugLevel.none.build.code_debug=0
+esp32c5.menu.DebugLevel.error=Error
+esp32c5.menu.DebugLevel.error.build.code_debug=1
+esp32c5.menu.DebugLevel.warn=Warn
+esp32c5.menu.DebugLevel.warn.build.code_debug=2
+esp32c5.menu.DebugLevel.info=Info
+esp32c5.menu.DebugLevel.info.build.code_debug=3
+esp32c5.menu.DebugLevel.debug=Debug
+esp32c5.menu.DebugLevel.debug.build.code_debug=4
+esp32c5.menu.DebugLevel.verbose=Verbose
+esp32c5.menu.DebugLevel.verbose.build.code_debug=5
+
+esp32c5.menu.EraseFlash.none=Disabled
+esp32c5.menu.EraseFlash.none.upload.erase_cmd=
+esp32c5.menu.EraseFlash.all=Enabled
+esp32c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+esp32c5.menu.ZigbeeMode.default=Disabled
+esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
+esp32c5.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32c5.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32c5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+esp32c5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+esp32c5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+esp32c5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+
 esp32p4.name=ESP32P4 Dev Module
 
 esp32p4.bootloader.tool=esptool_py
@@ -291,6 +502,10 @@ esp32p4.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
 esp32p4.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
 esp32p4.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
 esp32p4.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+esp32p4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+esp32p4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+esp32p4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
 esp32p4.menu.PartitionScheme.custom=Custom
 esp32p4.menu.PartitionScheme.custom.build.partitions=
 esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -13536,16 +13751,16 @@ adafruit_metro_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_metro_esp32s2.menu.PSRAM.disabled=Disabled
 adafruit_metro_esp32s2.menu.PSRAM.disabled.build.defines=
 
-adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_metro_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_metro_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_metro_esp32s2.menu.PartitionScheme.default.build.partitions=default
 adafruit_metro_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -13922,16 +14137,16 @@ adafruit_magtag29_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_magtag29_esp32s2.menu.PSRAM.disabled=Disabled
 adafruit_magtag29_esp32s2.menu.PSRAM.disabled.build.defines=
 
-adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_magtag29_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_magtag29_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_magtag29_esp32s2.menu.PartitionScheme.default.build.partitions=default
 adafruit_magtag29_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -14105,16 +14320,16 @@ adafruit_funhouse_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_funhouse_esp32s2.menu.PSRAM.disabled=Disabled
 adafruit_funhouse_esp32s2.menu.PSRAM.disabled.build.defines=
 
-adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_funhouse_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_funhouse_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_funhouse_esp32s2.menu.PartitionScheme.default.build.partitions=default
 adafruit_funhouse_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -14543,16 +14758,16 @@ adafruit_feather_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s2.menu.PSRAM.disabled=Disabled
 adafruit_feather_esp32s2.menu.PSRAM.disabled.build.defines=
 
-adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s2.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -14726,16 +14941,16 @@ adafruit_feather_esp32s2_tft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s2_tft.menu.PSRAM.disabled=Disabled
 adafruit_feather_esp32s2_tft.menu.PSRAM.disabled.build.defines=
 
-adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s2_tft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s2_tft.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -14909,16 +15124,16 @@ adafruit_feather_esp32s2_reversetft.menu.PSRAM.enabled.build.defines=-DBOARD_HAS
 adafruit_feather_esp32s2_reversetft.menu.PSRAM.disabled=Disabled
 adafruit_feather_esp32s2_reversetft.menu.PSRAM.disabled.build.defines=
 
-adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s2_reversetft.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -15118,16 +15333,16 @@ adafruit_feather_esp32s3.menu.PSRAM.opi=OPI PSRAM
 adafruit_feather_esp32s3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s3.menu.PSRAM.opi.build.psram_type=opi
 
-adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s3.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -15523,16 +15738,16 @@ adafruit_feather_esp32s3_tft.menu.PSRAM.opi=OPI PSRAM
 adafruit_feather_esp32s3_tft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s3_tft.menu.PSRAM.opi.build.psram_type=opi
 
-adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s3_tft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s3_tft.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -15741,16 +15956,16 @@ adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi=OPI PSRAM
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 adafruit_feather_esp32s3_reversetft.menu.PSRAM.opi.build.psram_type=opi
 
-adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32s3_reversetft.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -16364,16 +16579,16 @@ adafruit_qtpy_esp32s2.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 adafruit_qtpy_esp32s2.menu.PSRAM.disabled=Disabled
 adafruit_qtpy_esp32s2.menu.PSRAM.disabled.build.defines=
 
-adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_qtpy_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_qtpy_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_qtpy_esp32s2.menu.PartitionScheme.default.build.partitions=default
 adafruit_qtpy_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -16760,16 +16975,16 @@ adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi=OPI PSRAM
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
 adafruit_qtpy_esp32s3_n4r2.menu.PSRAM.opi.build.psram_type=opi
 
-adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
-adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
-adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
-adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.default.build.partitions=default
 adafruit_qtpy_esp32s3_n4r2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -32161,7 +32376,7 @@ ch_denky.menu.Revision.denkyd4.build.board=DENKY_PICOV3
 ch_denky.menu.Revision.denkyd4.build.flash_size=8MB
 ch_denky.menu.Revision.denky32=WROOM32
 ch_denky.menu.Revision.denky32.build.board=DENKY_WROOM32
-ch_denky.menu.Revision.denkyd4.build.flash_size=4MB
+ch_denky.menu.Revision.denky32.build.flash_size=4MB
 
 ch_denky.menu.PartitionScheme.default=Default
 ch_denky.menu.PartitionScheme.default.build.partitions=default
@@ -33284,6 +33499,229 @@ deneyapkart.menu.EraseFlash.none=Disabled
 deneyapkart.menu.EraseFlash.none.upload.erase_cmd=
 deneyapkart.menu.EraseFlash.all=Enabled
 deneyapkart.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+deneyapkartv2.name=Deneyap Kart v2
+
+deneyapkartv2.vid.0=0x303a
+deneyapkartv2.pid.0=0x82EB
+
+deneyapkartv2.bootloader.tool=esptool_py
+deneyapkartv2.bootloader.tool.default=esptool_py
+
+deneyapkartv2.upload.tool=esptool_py
+deneyapkartv2.upload.tool.default=esptool_py
+deneyapkartv2.upload.tool.network=esp_ota
+
+deneyapkartv2.upload.maximum_size=1310720
+deneyapkartv2.upload.maximum_data_size=327680
+deneyapkartv2.upload.flags=
+deneyapkartv2.upload.extra_flags=
+deneyapkartv2.upload.use_1200bps_touch=false
+deneyapkartv2.upload.wait_for_upload_port=false
+
+deneyapkartv2.serial.disableDTR=false
+deneyapkartv2.serial.disableRTS=false
+
+deneyapkartv2.build.tarch=xtensa
+deneyapkartv2.build.bootloader_addr=0x0
+deneyapkartv2.build.target=esp32s3
+deneyapkartv2.build.mcu=esp32s3
+deneyapkartv2.build.core=esp32
+deneyapkartv2.build.variant=deneyapkartv2
+deneyapkartv2.build.board=DYDKV2
+
+deneyapkartv2.build.usb_mode=1
+deneyapkartv2.build.cdc_on_boot=1
+deneyapkartv2.build.msc_on_boot=0
+deneyapkartv2.build.dfu_on_boot=0
+deneyapkartv2.build.f_cpu=240000000L
+deneyapkartv2.build.flash_size=4MB
+deneyapkartv2.build.flash_freq=80m
+deneyapkartv2.build.flash_mode=dio
+deneyapkartv2.build.boot=qio
+deneyapkartv2.build.boot_freq=80m
+deneyapkartv2.build.partitions=default
+deneyapkartv2.build.defines=-DBOARD_HAS_PSRAM
+deneyapkartv2.build.loop_core=
+deneyapkartv2.build.event_core=
+deneyapkartv2.build.psram_type=opi
+deneyapkartv2.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+deneyapkartv2.menu.JTAGAdapter.default=Disabled
+deneyapkartv2.menu.JTAGAdapter.default.build.copy_jtag_files=0
+deneyapkartv2.menu.JTAGAdapter.builtin=Integrated USB JTAG
+deneyapkartv2.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+deneyapkartv2.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+deneyapkartv2.menu.JTAGAdapter.external=FTDI Adapter
+deneyapkartv2.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+deneyapkartv2.menu.JTAGAdapter.external.build.copy_jtag_files=1
+deneyapkartv2.menu.JTAGAdapter.bridge=ESP USB Bridge
+deneyapkartv2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+deneyapkartv2.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+deneyapkartv2.menu.PSRAM.opi=OPI PSRAM
+deneyapkartv2.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+deneyapkartv2.menu.PSRAM.opi.build.psram_type=opi
+deneyapkartv2.menu.PSRAM.disabled=Disabled
+deneyapkartv2.menu.PSRAM.disabled.build.defines=
+deneyapkartv2.menu.PSRAM.disabled.build.psram_type=qspi
+
+deneyapkartv2.menu.FlashMode.qio=QIO 80MHz
+deneyapkartv2.menu.FlashMode.qio.build.flash_mode=dio
+deneyapkartv2.menu.FlashMode.qio.build.boot=qio
+deneyapkartv2.menu.FlashMode.qio.build.boot_freq=80m
+deneyapkartv2.menu.FlashMode.qio.build.flash_freq=80m
+deneyapkartv2.menu.FlashMode.qio120=QIO 120MHz
+deneyapkartv2.menu.FlashMode.qio120.build.flash_mode=dio
+deneyapkartv2.menu.FlashMode.qio120.build.boot=qio
+deneyapkartv2.menu.FlashMode.qio120.build.boot_freq=120m
+deneyapkartv2.menu.FlashMode.qio120.build.flash_freq=80m
+deneyapkartv2.menu.FlashMode.dio=DIO 80MHz
+deneyapkartv2.menu.FlashMode.dio.build.flash_mode=dio
+deneyapkartv2.menu.FlashMode.dio.build.boot=dio
+deneyapkartv2.menu.FlashMode.dio.build.boot_freq=80m
+deneyapkartv2.menu.FlashMode.dio.build.flash_freq=80m
+deneyapkartv2.menu.FlashMode.opi=OPI 80MHz
+deneyapkartv2.menu.FlashMode.opi.build.flash_mode=dout
+deneyapkartv2.menu.FlashMode.opi.build.boot=opi
+deneyapkartv2.menu.FlashMode.opi.build.boot_freq=80m
+deneyapkartv2.menu.FlashMode.opi.build.flash_freq=80m
+
+deneyapkartv2.menu.FlashSize.4M=4MB (32Mb)
+deneyapkartv2.menu.FlashSize.4M.build.flash_size=4MB
+
+deneyapkartv2.menu.LoopCore.1=Core 1
+deneyapkartv2.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+deneyapkartv2.menu.LoopCore.0=Core 0
+deneyapkartv2.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+deneyapkartv2.menu.EventsCore.1=Core 1
+deneyapkartv2.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+deneyapkartv2.menu.EventsCore.0=Core 0
+deneyapkartv2.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+deneyapkartv2.menu.USBMode.hwcdc=Hardware CDC and JTAG
+deneyapkartv2.menu.USBMode.hwcdc.build.usb_mode=1
+deneyapkartv2.menu.USBMode.default=USB-OTG (TinyUSB)
+deneyapkartv2.menu.USBMode.default.build.usb_mode=0
+
+deneyapkartv2.menu.CDCOnBoot.cdc=Enabled
+deneyapkartv2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+deneyapkartv2.menu.CDCOnBoot.default=Disabled
+deneyapkartv2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+deneyapkartv2.menu.MSCOnBoot.default=Disabled
+deneyapkartv2.menu.MSCOnBoot.default.build.msc_on_boot=0
+deneyapkartv2.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+deneyapkartv2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+deneyapkartv2.menu.DFUOnBoot.default=Disabled
+deneyapkartv2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+deneyapkartv2.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+deneyapkartv2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+deneyapkartv2.menu.UploadMode.default=UART0 / Hardware CDC
+deneyapkartv2.menu.UploadMode.default.upload.use_1200bps_touch=false
+deneyapkartv2.menu.UploadMode.default.upload.wait_for_upload_port=false
+deneyapkartv2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+deneyapkartv2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+deneyapkartv2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+deneyapkartv2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.default.build.partitions=default
+deneyapkartv2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+deneyapkartv2.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+deneyapkartv2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.minimal.build.partitions=minimal
+deneyapkartv2.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+deneyapkartv2.menu.PartitionScheme.no_fs.build.partitions=no_fs
+deneyapkartv2.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+deneyapkartv2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+deneyapkartv2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+deneyapkartv2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+deneyapkartv2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+deneyapkartv2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+deneyapkartv2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+deneyapkartv2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+deneyapkartv2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+deneyapkartv2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+deneyapkartv2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+deneyapkartv2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+deneyapkartv2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+deneyapkartv2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+deneyapkartv2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+deneyapkartv2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+deneyapkartv2.menu.PartitionScheme.rainmaker=RainMaker 4MB
+deneyapkartv2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+deneyapkartv2.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+deneyapkartv2.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+deneyapkartv2.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+deneyapkartv2.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+deneyapkartv2.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+deneyapkartv2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+deneyapkartv2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+deneyapkartv2.menu.PartitionScheme.custom=Custom
+deneyapkartv2.menu.PartitionScheme.custom.build.partitions=
+deneyapkartv2.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+deneyapkartv2.menu.CPUFreq.240=240MHz (WiFi)
+deneyapkartv2.menu.CPUFreq.240.build.f_cpu=240000000L
+deneyapkartv2.menu.CPUFreq.160=160MHz (WiFi)
+deneyapkartv2.menu.CPUFreq.160.build.f_cpu=160000000L
+deneyapkartv2.menu.CPUFreq.80=80MHz (WiFi)
+deneyapkartv2.menu.CPUFreq.80.build.f_cpu=80000000L
+deneyapkartv2.menu.CPUFreq.40=40MHz
+deneyapkartv2.menu.CPUFreq.40.build.f_cpu=40000000L
+deneyapkartv2.menu.CPUFreq.20=20MHz
+deneyapkartv2.menu.CPUFreq.20.build.f_cpu=20000000L
+deneyapkartv2.menu.CPUFreq.10=10MHz
+deneyapkartv2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+deneyapkartv2.menu.UploadSpeed.921600=921600
+deneyapkartv2.menu.UploadSpeed.921600.upload.speed=921600
+deneyapkartv2.menu.UploadSpeed.115200=115200
+deneyapkartv2.menu.UploadSpeed.115200.upload.speed=115200
+deneyapkartv2.menu.UploadSpeed.256000.windows=256000
+deneyapkartv2.menu.UploadSpeed.256000.upload.speed=256000
+deneyapkartv2.menu.UploadSpeed.230400.windows.upload.speed=256000
+deneyapkartv2.menu.UploadSpeed.230400=230400
+deneyapkartv2.menu.UploadSpeed.230400.upload.speed=230400
+deneyapkartv2.menu.UploadSpeed.460800.linux=460800
+deneyapkartv2.menu.UploadSpeed.460800.macosx=460800
+deneyapkartv2.menu.UploadSpeed.460800.upload.speed=460800
+deneyapkartv2.menu.UploadSpeed.512000.windows=512000
+deneyapkartv2.menu.UploadSpeed.512000.upload.speed=512000
+
+deneyapkartv2.menu.DebugLevel.none=None
+deneyapkartv2.menu.DebugLevel.none.build.code_debug=0
+deneyapkartv2.menu.DebugLevel.error=Error
+deneyapkartv2.menu.DebugLevel.error.build.code_debug=1
+deneyapkartv2.menu.DebugLevel.warn=Warn
+deneyapkartv2.menu.DebugLevel.warn.build.code_debug=2
+deneyapkartv2.menu.DebugLevel.info=Info
+deneyapkartv2.menu.DebugLevel.info.build.code_debug=3
+deneyapkartv2.menu.DebugLevel.debug=Debug
+deneyapkartv2.menu.DebugLevel.debug.build.code_debug=4
+deneyapkartv2.menu.DebugLevel.verbose=Verbose
+deneyapkartv2.menu.DebugLevel.verbose.build.code_debug=5
+
+deneyapkartv2.menu.EraseFlash.none=Disabled
+deneyapkartv2.menu.EraseFlash.none.upload.erase_cmd=
+deneyapkartv2.menu.EraseFlash.all=Enabled
+deneyapkartv2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+deneyapkartv2.menu.ZigbeeMode.default=Disabled
+deneyapkartv2.menu.ZigbeeMode.default.build.zigbee_mode=
+deneyapkartv2.menu.ZigbeeMode.default.build.zigbee_libs=
+deneyapkartv2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+deneyapkartv2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+deneyapkartv2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
 
@@ -35683,6 +36121,200 @@ XIAO_ESP32C3.menu.EraseFlash.none=Disabled
 XIAO_ESP32C3.menu.EraseFlash.none.upload.erase_cmd=
 XIAO_ESP32C3.menu.EraseFlash.all=Enabled
 XIAO_ESP32C3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
+XIAO_ESP32C5.name=XIAO_ESP32C5
+
+XIAO_ESP32C5.vid.0=0x2886
+XIAO_ESP32C5.pid.0=0x0067
+
+XIAO_ESP32C5.bootloader.tool=esptool_py
+XIAO_ESP32C5.bootloader.tool.default=esptool_py
+
+XIAO_ESP32C5.upload.tool=esptool_py
+XIAO_ESP32C5.upload.tool.default=esptool_py
+XIAO_ESP32C5.upload.tool.network=esp_ota
+
+XIAO_ESP32C5.upload.maximum_size=1310720
+XIAO_ESP32C5.upload.maximum_data_size=327680
+XIAO_ESP32C5.upload.flags=
+XIAO_ESP32C5.upload.extra_flags=
+XIAO_ESP32C5.upload.use_1200bps_touch=false
+XIAO_ESP32C5.upload.wait_for_upload_port=false
+
+XIAO_ESP32C5.serial.disableDTR=false
+XIAO_ESP32C5.serial.disableRTS=false
+
+XIAO_ESP32C5.build.tarch=riscv32
+XIAO_ESP32C5.build.target=esp
+XIAO_ESP32C5.build.mcu=esp32c5
+XIAO_ESP32C5.build.core=esp32
+XIAO_ESP32C5.build.variant=XIAO_ESP32C5
+XIAO_ESP32C5.build.board=XIAO_ESP32C5
+XIAO_ESP32C5.build.bootloader_addr=0x2000
+
+XIAO_ESP32C5.build.cdc_on_boot=1
+XIAO_ESP32C5.build.f_cpu=240000000L
+XIAO_ESP32C5.build.flash_size=8MB
+XIAO_ESP32C5.build.flash_freq=80m
+XIAO_ESP32C5.build.flash_mode=qio
+XIAO_ESP32C5.build.boot=qio
+XIAO_ESP32C5.build.partitions=default_8MB
+XIAO_ESP32C5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+XIAO_ESP32C5.menu.JTAGAdapter.default=Disabled
+XIAO_ESP32C5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+XIAO_ESP32C5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+XIAO_ESP32C5.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+XIAO_ESP32C5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+XIAO_ESP32C5.menu.JTAGAdapter.external=FTDI Adapter
+XIAO_ESP32C5.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+XIAO_ESP32C5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+XIAO_ESP32C5.menu.JTAGAdapter.bridge=ESP USB Bridge
+XIAO_ESP32C5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+XIAO_ESP32C5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+XIAO_ESP32C5.menu.PSRAM.disabled=Disabled
+XIAO_ESP32C5.menu.PSRAM.disabled.build.defines=
+XIAO_ESP32C5.menu.PSRAM.enabled=Enabled
+XIAO_ESP32C5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+XIAO_ESP32C5.menu.CDCOnBoot.cdc=Enabled
+XIAO_ESP32C5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+XIAO_ESP32C5.menu.CDCOnBoot.default=Disabled
+XIAO_ESP32C5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+XIAO_ESP32C5.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+XIAO_ESP32C5.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+XIAO_ESP32C5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.default.build.partitions=default
+XIAO_ESP32C5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+XIAO_ESP32C5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+XIAO_ESP32C5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.minimal.build.partitions=minimal
+XIAO_ESP32C5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+XIAO_ESP32C5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+XIAO_ESP32C5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+XIAO_ESP32C5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+XIAO_ESP32C5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+XIAO_ESP32C5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+XIAO_ESP32C5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+XIAO_ESP32C5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+XIAO_ESP32C5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+XIAO_ESP32C5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+XIAO_ESP32C5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+XIAO_ESP32C5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+XIAO_ESP32C5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+XIAO_ESP32C5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+XIAO_ESP32C5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+XIAO_ESP32C5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+XIAO_ESP32C5.menu.PartitionScheme.fatflash.build.partitions=ffat
+XIAO_ESP32C5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker=RainMaker 4MB
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+XIAO_ESP32C5.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+XIAO_ESP32C5.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+XIAO_ESP32C5.menu.PartitionScheme.zigbee.build.partitions=zigbee
+XIAO_ESP32C5.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+XIAO_ESP32C5.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+
+XIAO_ESP32C5.menu.CPUFreq.240=240MHz (WiFi)
+XIAO_ESP32C5.menu.CPUFreq.240.build.f_cpu=240000000L
+XIAO_ESP32C5.menu.CPUFreq.160=160MHz (WiFi)
+XIAO_ESP32C5.menu.CPUFreq.160.build.f_cpu=160000000L
+XIAO_ESP32C5.menu.CPUFreq.80=80MHz (WiFi)
+XIAO_ESP32C5.menu.CPUFreq.80.build.f_cpu=80000000L
+XIAO_ESP32C5.menu.CPUFreq.40=40MHz
+XIAO_ESP32C5.menu.CPUFreq.40.build.f_cpu=40000000L
+XIAO_ESP32C5.menu.CPUFreq.20=20MHz
+XIAO_ESP32C5.menu.CPUFreq.20.build.f_cpu=20000000L
+XIAO_ESP32C5.menu.CPUFreq.10=10MHz
+XIAO_ESP32C5.menu.CPUFreq.10.build.f_cpu=10000000L
+
+XIAO_ESP32C5.menu.FlashMode.qio=QIO
+XIAO_ESP32C5.menu.FlashMode.qio.build.flash_mode=dio
+XIAO_ESP32C5.menu.FlashMode.qio.build.boot=qio
+XIAO_ESP32C5.menu.FlashMode.dio=DIO
+XIAO_ESP32C5.menu.FlashMode.dio.build.flash_mode=dio
+XIAO_ESP32C5.menu.FlashMode.dio.build.boot=dio
+
+XIAO_ESP32C5.menu.FlashFreq.80=80MHz
+XIAO_ESP32C5.menu.FlashFreq.80.build.flash_freq=80m
+XIAO_ESP32C5.menu.FlashFreq.40=40MHz
+XIAO_ESP32C5.menu.FlashFreq.40.build.flash_freq=40m
+
+XIAO_ESP32C5.menu.FlashSize.8M=8MB (64Mb)
+XIAO_ESP32C5.menu.FlashSize.8M.build.flash_size=8MB
+
+XIAO_ESP32C5.menu.UploadSpeed.921600=921600
+XIAO_ESP32C5.menu.UploadSpeed.921600.upload.speed=921600
+XIAO_ESP32C5.menu.UploadSpeed.115200=115200
+XIAO_ESP32C5.menu.UploadSpeed.115200.upload.speed=115200
+XIAO_ESP32C5.menu.UploadSpeed.256000.windows=256000
+XIAO_ESP32C5.menu.UploadSpeed.256000.upload.speed=256000
+XIAO_ESP32C5.menu.UploadSpeed.230400.windows.upload.speed=256000
+XIAO_ESP32C5.menu.UploadSpeed.230400=230400
+XIAO_ESP32C5.menu.UploadSpeed.230400.upload.speed=230400
+XIAO_ESP32C5.menu.UploadSpeed.460800.linux=460800
+XIAO_ESP32C5.menu.UploadSpeed.460800.macosx=460800
+XIAO_ESP32C5.menu.UploadSpeed.460800.upload.speed=460800
+XIAO_ESP32C5.menu.UploadSpeed.512000.windows=512000
+XIAO_ESP32C5.menu.UploadSpeed.512000.upload.speed=512000
+
+XIAO_ESP32C5.menu.DebugLevel.none=None
+XIAO_ESP32C5.menu.DebugLevel.none.build.code_debug=0
+XIAO_ESP32C5.menu.DebugLevel.error=Error
+XIAO_ESP32C5.menu.DebugLevel.error.build.code_debug=1
+XIAO_ESP32C5.menu.DebugLevel.warn=Warn
+XIAO_ESP32C5.menu.DebugLevel.warn.build.code_debug=2
+XIAO_ESP32C5.menu.DebugLevel.info=Info
+XIAO_ESP32C5.menu.DebugLevel.info.build.code_debug=3
+XIAO_ESP32C5.menu.DebugLevel.debug=Debug
+XIAO_ESP32C5.menu.DebugLevel.debug.build.code_debug=4
+XIAO_ESP32C5.menu.DebugLevel.verbose=Verbose
+XIAO_ESP32C5.menu.DebugLevel.verbose.build.code_debug=5
+
+XIAO_ESP32C5.menu.EraseFlash.none=Disabled
+XIAO_ESP32C5.menu.EraseFlash.none.upload.erase_cmd=
+XIAO_ESP32C5.menu.EraseFlash.all=Enabled
+XIAO_ESP32C5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+XIAO_ESP32C5.menu.ZigbeeMode.default=Disabled
+XIAO_ESP32C5.menu.ZigbeeMode.default.build.zigbee_mode=
+XIAO_ESP32C5.menu.ZigbeeMode.default.build.zigbee_libs=
+XIAO_ESP32C5.menu.ZigbeeMode.ed=Zigbee ED (end device)
+XIAO_ESP32C5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+XIAO_ESP32C5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+XIAO_ESP32C5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+XIAO_ESP32C5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+XIAO_ESP32C5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+XIAO_ESP32C5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+XIAO_ESP32C5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+XIAO_ESP32C5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+XIAO_ESP32C5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
 
 ##############################################################
 
@@ -40993,7 +41625,7 @@ sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB F
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-4MB-tinyuf2
 sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
-sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+sensebox_mcu_esp32s2.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin" 0x170000 "{runtime.platform.path}/variants/{build.variant}/APOTA.bin"
 sensebox_mcu_esp32s2.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 sensebox_mcu_esp32s2.menu.PartitionScheme.default.build.partitions=default
 sensebox_mcu_esp32s2.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -41085,6 +41717,196 @@ sensebox_mcu_esp32s2.menu.EraseFlash.none=Disabled
 sensebox_mcu_esp32s2.menu.EraseFlash.none.upload.erase_cmd=
 sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
 sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+# senseBox Eye
+
+sensebox_eye.name=senseBox Eye
+sensebox_eye.vid.0=0x303A
+sensebox_eye.pid.0=0x82D1
+sensebox_eye.vid.1=0x303A
+sensebox_eye.pid.1=0x82D2
+sensebox_eye.vid.2=0x303A
+sensebox_eye.pid.2=0x82D3
+
+sensebox_eye.bootloader.tool=esptool_py
+sensebox_eye.bootloader.tool.default=esptool_py
+
+sensebox_eye.upload.tool=esptool_py
+sensebox_eye.upload.tool.default=esptool_py
+sensebox_eye.upload.tool.network=esp_ota
+
+sensebox_eye.upload.maximum_size=1310720
+sensebox_eye.upload.maximum_data_size=327680
+sensebox_eye.upload.flags=
+sensebox_eye.upload.extra_flags=
+sensebox_eye.upload.use_1200bps_touch=false
+sensebox_eye.upload.wait_for_upload_port=false
+
+sensebox_eye.serial.disableDTR=false
+sensebox_eye.serial.disableRTS=false
+
+sensebox_eye.build.tarch=xtensa
+sensebox_eye.build.bootloader_addr=0x0
+sensebox_eye.build.target=esp32s3
+sensebox_eye.build.mcu=esp32s3
+sensebox_eye.build.core=esp32
+sensebox_eye.build.variant=sensebox_eye
+sensebox_eye.build.board=SENSEBOX_EYE
+
+sensebox_eye.build.usb_mode=0
+sensebox_eye.build.cdc_on_boot=1
+sensebox_eye.build.msc_on_boot=1
+sensebox_eye.build.dfu_on_boot=0
+sensebox_eye.build.f_cpu=240000000L
+sensebox_eye.build.flash_size=16MB (128Mb)
+sensebox_eye.build.flash_freq=80m
+sensebox_eye.build.flash_mode=dio
+sensebox_eye.build.boot=qio
+sensebox_eye.build.boot_freq=80m
+sensebox_eye.build.partitions=tinyuf2
+sensebox_eye.build.defines=
+sensebox_eye.build.loop_core=
+sensebox_eye.build.event_core=
+sensebox_eye.build.psram_type=qspi
+sensebox_eye.build.memory_type={build.boot}_{build.psram_type}
+
+sensebox_eye.menu.JTAGAdapter.default=Disabled
+sensebox_eye.menu.JTAGAdapter.default.build.copy_jtag_files=0
+sensebox_eye.menu.JTAGAdapter.builtin=Integrated USB JTAG
+sensebox_eye.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+sensebox_eye.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+sensebox_eye.menu.JTAGAdapter.external=FTDI Adapter
+sensebox_eye.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+sensebox_eye.menu.JTAGAdapter.external.build.copy_jtag_files=1
+sensebox_eye.menu.JTAGAdapter.bridge=ESP USB Bridge
+sensebox_eye.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+sensebox_eye.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+sensebox_eye.menu.PSRAM.opi=OPI PSRAM
+sensebox_eye.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+sensebox_eye.menu.PSRAM.opi.build.psram_type=opi
+sensebox_eye.menu.PSRAM.disabled=Disabled
+sensebox_eye.menu.PSRAM.disabled.build.defines=
+sensebox_eye.menu.PSRAM.disabled.build.psram_type=qspi
+
+sensebox_eye.menu.FlashMode.qio=QIO 80MHz
+sensebox_eye.menu.FlashMode.qio.build.flash_mode=dio
+sensebox_eye.menu.FlashMode.qio.build.boot=qio
+sensebox_eye.menu.FlashMode.qio.build.boot_freq=80m
+sensebox_eye.menu.FlashMode.qio.build.flash_freq=80m
+sensebox_eye.menu.FlashMode.dio=DIO 80MHz
+sensebox_eye.menu.FlashMode.dio.build.flash_mode=dio
+sensebox_eye.menu.FlashMode.dio.build.boot=dio
+sensebox_eye.menu.FlashMode.dio.build.boot_freq=80m
+sensebox_eye.menu.FlashMode.dio.build.flash_freq=80m
+
+sensebox_eye.menu.FlashSize.16M=16MB (128Mb)
+sensebox_eye.menu.FlashSize.16M.build.flash_size=16MB
+
+sensebox_eye.menu.LoopCore.1=Core 1
+sensebox_eye.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+sensebox_eye.menu.LoopCore.0=Core 0
+sensebox_eye.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+sensebox_eye.menu.EventsCore.1=Core 1
+sensebox_eye.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+sensebox_eye.menu.EventsCore.0=Core 0
+sensebox_eye.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+sensebox_eye.menu.USBMode.default=USB-OTG (TinyUSB)
+sensebox_eye.menu.USBMode.default.build.usb_mode=0
+sensebox_eye.menu.USBMode.hwcdc=Hardware CDC and JTAG
+sensebox_eye.menu.USBMode.hwcdc.build.usb_mode=1
+
+sensebox_eye.menu.CDCOnBoot.default=Enabled
+sensebox_eye.menu.CDCOnBoot.default.build.cdc_on_boot=1
+sensebox_eye.menu.CDCOnBoot.cdc=Disabled
+sensebox_eye.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+sensebox_eye.menu.MSCOnBoot.default=Enabled (Requires USB-OTG Mode)
+sensebox_eye.menu.MSCOnBoot.default.build.msc_on_boot=1
+sensebox_eye.menu.MSCOnBoot.msc=Disabled
+sensebox_eye.menu.MSCOnBoot.msc.build.msc_on_boot=0
+
+sensebox_eye.menu.DFUOnBoot.default=Disabled
+sensebox_eye.menu.DFUOnBoot.default.build.dfu_on_boot=0
+sensebox_eye.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+sensebox_eye.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+sensebox_eye.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+sensebox_eye.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+sensebox_eye.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+sensebox_eye.menu.UploadMode.default=UART0 / Hardware CDC
+sensebox_eye.menu.UploadMode.default.upload.use_1200bps_touch=false
+sensebox_eye.menu.UploadMode.default.upload.wait_for_upload_port=false
+
+sensebox_eye.menu.PartitionScheme.tinyuf2=TinyUF2 Compatibility (2MB APP/12MB FFAT)
+sensebox_eye.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader_tinyuf2
+sensebox_eye.menu.PartitionScheme.tinyuf2.build.custom_partitions=partitions-16MB-tinyuf2
+sensebox_eye.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+sensebox_eye.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin" 0x210000 "{runtime.platform.path}/variants/{build.variant}/APOTA.bin"
+sensebox_eye.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+sensebox_eye.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+sensebox_eye.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+sensebox_eye.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+sensebox_eye.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+sensebox_eye.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+sensebox_eye.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+sensebox_eye.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+sensebox_eye.menu.PartitionScheme.fatflash.build.partitions=ffat
+sensebox_eye.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4=Huge App (16MB APP)
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4.build.custom_partitions=gen4esp32_16MBapp
+sensebox_eye.menu.PartitionScheme.gen4esp32scheme4.upload.maximum_size=16646144
+
+sensebox_eye.menu.CPUFreq.240=240MHz (WiFi)
+sensebox_eye.menu.CPUFreq.240.build.f_cpu=240000000L
+sensebox_eye.menu.CPUFreq.160=160MHz (WiFi)
+sensebox_eye.menu.CPUFreq.160.build.f_cpu=160000000L
+sensebox_eye.menu.CPUFreq.80=80MHz (WiFi)
+sensebox_eye.menu.CPUFreq.80.build.f_cpu=80000000L
+sensebox_eye.menu.CPUFreq.40=40MHz
+sensebox_eye.menu.CPUFreq.40.build.f_cpu=40000000L
+sensebox_eye.menu.CPUFreq.20=20MHz
+sensebox_eye.menu.CPUFreq.20.build.f_cpu=20000000L
+sensebox_eye.menu.CPUFreq.10=10MHz
+sensebox_eye.menu.CPUFreq.10.build.f_cpu=10000000L
+
+sensebox_eye.menu.UploadSpeed.921600=921600
+sensebox_eye.menu.UploadSpeed.921600.upload.speed=921600
+sensebox_eye.menu.UploadSpeed.115200=115200
+sensebox_eye.menu.UploadSpeed.115200.upload.speed=115200
+sensebox_eye.menu.UploadSpeed.256000.windows=256000
+sensebox_eye.menu.UploadSpeed.256000.upload.speed=256000
+sensebox_eye.menu.UploadSpeed.230400.windows.upload.speed=256000
+sensebox_eye.menu.UploadSpeed.230400=230400
+sensebox_eye.menu.UploadSpeed.230400.upload.speed=230400
+sensebox_eye.menu.UploadSpeed.460800.linux=460800
+sensebox_eye.menu.UploadSpeed.460800.macosx=460800
+sensebox_eye.menu.UploadSpeed.460800.upload.speed=460800
+sensebox_eye.menu.UploadSpeed.512000.windows=512000
+sensebox_eye.menu.UploadSpeed.512000.upload.speed=512000
+
+sensebox_eye.menu.DebugLevel.none=None
+sensebox_eye.menu.DebugLevel.none.build.code_debug=0
+sensebox_eye.menu.DebugLevel.error=Error
+sensebox_eye.menu.DebugLevel.error.build.code_debug=1
+sensebox_eye.menu.DebugLevel.warn=Warn
+sensebox_eye.menu.DebugLevel.warn.build.code_debug=2
+sensebox_eye.menu.DebugLevel.info=Info
+sensebox_eye.menu.DebugLevel.info.build.code_debug=3
+sensebox_eye.menu.DebugLevel.debug=Debug
+sensebox_eye.menu.DebugLevel.debug.build.code_debug=4
+sensebox_eye.menu.DebugLevel.verbose=Verbose
+sensebox_eye.menu.DebugLevel.verbose.build.code_debug=5
+
+sensebox_eye.menu.EraseFlash.none=Disabled
+sensebox_eye.menu.EraseFlash.none.upload.erase_cmd=
+sensebox_eye.menu.EraseFlash.all=Enabled
+sensebox_eye.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -50545,5 +51367,833 @@ cyobot_v2_esp32s3.menu.ZigbeeMode.default.build.zigbee_libs=
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 cyobot_v2_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+rakwireless_rak3112.name=RAKwireless RAK3112
+
+rakwireless_rak3112.upload.tool=esptool_py
+rakwireless_rak3112.upload.tool.default=esptool_py
+rakwireless_rak3112.upload.tool.network=esp_ota
+rakwireless_rak3112.upload.maximum_size=1310720
+rakwireless_rak3112.upload.maximum_data_size=327680
+rakwireless_rak3112.upload.wait_for_upload_port=false
+rakwireless_rak3112.upload.speed=460800
+rakwireless_rak3112.upload.flags=
+rakwireless_rak3112.upload.extra_flags=
+
+rakwireless_rak3112.bootloader.tool=esptool_py
+rakwireless_rak3112.bootloader.tool.default=esptool_py
+
+rakwireless_rak3112.serial.disableDTR=true
+rakwireless_rak3112.serial.disableRTS=true
+
+rakwireless_rak3112.build.tarch=xtensa
+rakwireless_rak3112.build.bootloader_addr=0x0
+rakwireless_rak3112.build.mcu=esp32s3
+rakwireless_rak3112.build.core=esp32
+rakwireless_rak3112.build.target=esp32s3
+rakwireless_rak3112.build.variant=rakwireless_rak3112
+rakwireless_rak3112.build.board=RAKWIRELESS_RAK3112
+
+rakwireless_rak3112.build.usb_mode=1
+rakwireless_rak3112.build.cdc_on_boot=1
+rakwireless_rak3112.build.msc_on_boot=0
+rakwireless_rak3112.build.dfu_on_boot=0
+
+rakwireless_rak3112.build.f_cpu=240000000L
+rakwireless_rak3112.build.flash_size=16MB
+rakwireless_rak3112.build.flash_freq=80m
+rakwireless_rak3112.build.flash_mode=qio
+rakwireless_rak3112.build.boot=qio
+rakwireless_rak3112.build.partitions=default
+rakwireless_rak3112.build.defines=
+rakwireless_rak3112.build.psram_type=opi
+rakwireless_rak3112.build.memory_type={build.boot}_{build.psram_type}
+
+rakwireless_rak3112.menu.PSRAM.enabled=Enabled
+rakwireless_rak3112.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+rakwireless_rak3112.menu.PSRAM.enabled.build.psram_type=opi
+rakwireless_rak3112.menu.PSRAM.disabled=Disabled
+rakwireless_rak3112.menu.PSRAM.disabled.build.defines=
+
+rakwireless_rak3112.menu.LoopCore.1=Core 1
+rakwireless_rak3112.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+rakwireless_rak3112.menu.LoopCore.0=Core 0
+rakwireless_rak3112.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.EventsCore.1=Core 1
+rakwireless_rak3112.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+rakwireless_rak3112.menu.EventsCore.0=Core 0
+rakwireless_rak3112.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+rakwireless_rak3112.menu.USBMode.hwcdc=Hardware CDC and JTAG
+rakwireless_rak3112.menu.USBMode.hwcdc.build.usb_mode=1
+rakwireless_rak3112.menu.USBMode.default=USB-OTG (TinyUSB)
+rakwireless_rak3112.menu.USBMode.default.build.usb_mode=0
+
+rakwireless_rak3112.menu.CDCOnBoot.default=Enabled
+rakwireless_rak3112.menu.CDCOnBoot.default.build.cdc_on_boot=1
+rakwireless_rak3112.menu.CDCOnBoot.cdc=Disabled
+rakwireless_rak3112.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+rakwireless_rak3112.menu.MSCOnBoot.default=Disabled
+rakwireless_rak3112.menu.MSCOnBoot.default.build.msc_on_boot=0
+rakwireless_rak3112.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+rakwireless_rak3112.menu.DFUOnBoot.default=Disabled
+rakwireless_rak3112.menu.DFUOnBoot.default.build.dfu_on_boot=0
+rakwireless_rak3112.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+rakwireless_rak3112.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+rakwireless_rak3112.menu.UploadMode.default=UART0 / Hardware CDC
+rakwireless_rak3112.menu.UploadMode.default.upload.use_1200bps_touch=false
+rakwireless_rak3112.menu.UploadMode.default.upload.wait_for_upload_port=false
+rakwireless_rak3112.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+rakwireless_rak3112.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+rakwireless_rak3112.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+rakwireless_rak3112.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+rakwireless_rak3112.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+rakwireless_rak3112.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-16MB
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota=TinyUF2 16MB No OTA(4MB APP/11.6MB FATFS)
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-16MB-noota
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
+rakwireless_rak3112.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+rakwireless_rak3112.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+rakwireless_rak3112.menu.PartitionScheme.custom=Custom
+rakwireless_rak3112.menu.PartitionScheme.custom.build.partitions=
+rakwireless_rak3112.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+rakwireless_rak3112.menu.CPUFreq.240=240MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.240.build.f_cpu=240000000L
+rakwireless_rak3112.menu.CPUFreq.160=160MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.160.build.f_cpu=160000000L
+rakwireless_rak3112.menu.CPUFreq.80=80MHz (WiFi/BT)
+rakwireless_rak3112.menu.CPUFreq.80.build.f_cpu=80000000L
+
+rakwireless_rak3112.menu.FlashMode.qio=QIO
+rakwireless_rak3112.menu.FlashMode.qio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.qio.build.boot=qio
+rakwireless_rak3112.menu.FlashMode.dio=DIO
+rakwireless_rak3112.menu.FlashMode.dio.build.flash_mode=dio
+rakwireless_rak3112.menu.FlashMode.dio.build.boot=dio
+
+rakwireless_rak3112.menu.FlashFreq.80=80MHz
+rakwireless_rak3112.menu.FlashFreq.80.build.flash_freq=80m
+rakwireless_rak3112.menu.FlashFreq.40=40MHz
+rakwireless_rak3112.menu.FlashFreq.40.build.flash_freq=40m
+
+rakwireless_rak3112.menu.UploadSpeed.921600=921600
+rakwireless_rak3112.menu.UploadSpeed.921600.upload.speed=921600
+rakwireless_rak3112.menu.UploadSpeed.115200=115200
+rakwireless_rak3112.menu.UploadSpeed.115200.upload.speed=115200
+rakwireless_rak3112.menu.UploadSpeed.256000.windows=256000
+rakwireless_rak3112.menu.UploadSpeed.256000.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400.windows.upload.speed=256000
+rakwireless_rak3112.menu.UploadSpeed.230400=230400
+rakwireless_rak3112.menu.UploadSpeed.230400.upload.speed=230400
+rakwireless_rak3112.menu.UploadSpeed.460800.linux=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.macosx=460800
+rakwireless_rak3112.menu.UploadSpeed.460800.upload.speed=460800
+rakwireless_rak3112.menu.UploadSpeed.512000.windows=512000
+rakwireless_rak3112.menu.UploadSpeed.512000.upload.speed=512000
+
+rakwireless_rak3112.menu.DebugLevel.none=None
+rakwireless_rak3112.menu.DebugLevel.none.build.code_debug=0
+rakwireless_rak3112.menu.DebugLevel.error=Error
+rakwireless_rak3112.menu.DebugLevel.error.build.code_debug=1
+rakwireless_rak3112.menu.DebugLevel.warn=Warn
+rakwireless_rak3112.menu.DebugLevel.warn.build.code_debug=2
+rakwireless_rak3112.menu.DebugLevel.info=Info
+rakwireless_rak3112.menu.DebugLevel.info.build.code_debug=3
+rakwireless_rak3112.menu.DebugLevel.debug=Debug
+rakwireless_rak3112.menu.DebugLevel.debug.build.code_debug=4
+rakwireless_rak3112.menu.DebugLevel.verbose=Verbose
+rakwireless_rak3112.menu.DebugLevel.verbose.build.code_debug=5
+
+rakwireless_rak3112.menu.EraseFlash.none=Disabled
+rakwireless_rak3112.menu.EraseFlash.none.upload.erase_cmd=
+rakwireless_rak3112.menu.EraseFlash.all=Enabled
+rakwireless_rak3112.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+kodedot.name=kode dot
+
+kodedot.bootloader.tool=esptool_py
+kodedot.bootloader.tool.default=esptool_py
+
+kodedot.upload.tool=esptool_py_app_only
+kodedot.upload.tool.default=esptool_py_app_only
+kodedot.upload.tool.network=esp_ota
+
+kodedot.upload.maximum_size=8388608
+kodedot.upload.maximum_data_size=327680
+kodedot.upload.flags=
+kodedot.upload.extra_flags=
+kodedot.upload.use_1200bps_touch=false
+kodedot.upload.wait_for_upload_port=false
+kodedot.upload.speed=921600
+
+kodedot.upload.erase_cmd=
+
+kodedot.serial.disableDTR=false
+kodedot.serial.disableRTS=false
+
+kodedot.build.tarch=xtensa
+kodedot.build.bootloader_addr=0x0
+kodedot.build.target=esp32s3
+kodedot.build.mcu=esp32s3
+kodedot.build.core=esp32
+kodedot.build.variant=kodedot
+kodedot.build.board=KODE_DOT
+
+kodedot.build.usb_mode=1
+kodedot.build.cdc_on_boot=1
+kodedot.build.msc_on_boot=0
+kodedot.build.dfu_on_boot=0
+
+kodedot.build.f_cpu=240000000L
+
+kodedot.build.flash_offset=0x400000
+kodedot.build.flash_size=16MB
+kodedot.build.flash_freq=80m
+kodedot.build.flash_mode=dio
+
+kodedot.build.custom_partitions=kodedot_partitions
+
+kodedot.build.psram_type=qspi
+kodedot.build.defines=
+
+kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
+kodedot.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
+kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
+
+kodedot.recipe.output.save_file={build.project_name}.ino.bin
+
+##############################################################
+
+# FED4 Board
+fed4.name=FED4
+fed4.vid.0=0x303A
+fed4.pid.0=0x82E5
+fed4.upload_port.0.vid=0x303A
+fed4.upload_port.0.pid=0x82E5
+fed4.bootloader.tool=esptool_py
+fed4.bootloader.tool.default=esptool_py
+
+fed4.upload.tool=esptool_py
+fed4.upload.tool.default=esptool_py
+fed4.upload.tool.network=esp_ota
+
+fed4.upload.maximum_size=1310720
+fed4.upload.maximum_data_size=327680
+fed4.upload.flags=
+fed4.upload.extra_flags=
+fed4.upload.use_1200bps_touch=false
+fed4.upload.wait_for_upload_port=false
+
+fed4.serial.disableDTR=false
+fed4.serial.disableRTS=false
+
+fed4.build.tarch=xtensa
+fed4.build.bootloader_addr=0x0
+fed4.build.target=esp32s3
+fed4.build.mcu=esp32s3
+fed4.build.core=esp32
+fed4.build.variant=fed4
+fed4.build.board=FED4
+
+fed4.build.usb_mode=1
+fed4.build.cdc_on_boot=0
+fed4.build.msc_on_boot=0
+fed4.build.dfu_on_boot=0
+fed4.build.f_cpu=240000000L
+fed4.build.flash_size=16MB
+fed4.build.flash_freq=80m
+fed4.build.flash_mode=dio
+fed4.build.boot=qio
+fed4.build.boot_freq=80m
+fed4.build.partitions=default_16MB
+fed4.build.defines=
+fed4.build.loop_core=
+fed4.build.event_core=
+fed4.build.psram_type=qspi
+fed4.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+fed4.menu.JTAGAdapter.default=Disabled
+fed4.menu.JTAGAdapter.default.build.copy_jtag_files=0
+fed4.menu.JTAGAdapter.builtin=Integrated USB JTAG
+fed4.menu.JTAGAdapter.builtin.build.openocdscript=fed4-builtin.cfg
+fed4.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+fed4.menu.JTAGAdapter.external=FTDI Adapter
+fed4.menu.JTAGAdapter.external.build.openocdscript=fed4-ftdi.cfg
+fed4.menu.JTAGAdapter.external.build.copy_jtag_files=1
+fed4.menu.JTAGAdapter.bridge=ESP USB Bridge
+fed4.menu.JTAGAdapter.bridge.build.openocdscript=fed4-bridge.cfg
+fed4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+fed4.menu.FlashMode.qio=QIO 80MHz
+fed4.menu.FlashMode.qio.build.flash_mode=dio
+fed4.menu.FlashMode.qio.build.boot=qio
+fed4.menu.FlashMode.qio.build.boot_freq=80m
+fed4.menu.FlashMode.qio.build.flash_freq=80m
+fed4.menu.FlashMode.qio120=QIO 120MHz
+fed4.menu.FlashMode.qio120.build.flash_mode=dio
+fed4.menu.FlashMode.qio120.build.boot=qio
+fed4.menu.FlashMode.qio120.build.boot_freq=120m
+fed4.menu.FlashMode.qio120.build.flash_freq=80m
+fed4.menu.FlashMode.dio=DIO 80MHz
+fed4.menu.FlashMode.dio.build.flash_mode=dio
+fed4.menu.FlashMode.dio.build.boot=dio
+fed4.menu.FlashMode.dio.build.boot_freq=80m
+fed4.menu.FlashMode.dio.build.flash_freq=80m
+
+fed4.menu.FlashSize.16M=16MB (128Mb)
+fed4.menu.FlashSize.16M.build.flash_size=16MB
+
+fed4.menu.LoopCore.1=Core 1
+fed4.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+fed4.menu.LoopCore.0=Core 0
+fed4.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+fed4.menu.EventsCore.1=Core 1
+fed4.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+fed4.menu.EventsCore.0=Core 0
+fed4.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+fed4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+fed4.menu.USBMode.hwcdc.build.usb_mode=1
+fed4.menu.USBMode.default=USB-OTG (TinyUSB)
+fed4.menu.USBMode.default.build.usb_mode=0
+
+fed4.menu.CDCOnBoot.default=Disabled
+fed4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+fed4.menu.CDCOnBoot.cdc=Enabled
+fed4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+fed4.menu.MSCOnBoot.default=Disabled
+fed4.menu.MSCOnBoot.default.build.msc_on_boot=0
+fed4.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+fed4.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+fed4.menu.DFUOnBoot.default=Disabled
+fed4.menu.DFUOnBoot.default.build.dfu_on_boot=0
+fed4.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+fed4.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+fed4.menu.UploadMode.default=UART0 / Hardware CDC
+fed4.menu.UploadMode.default.upload.use_1200bps_touch=false
+fed4.menu.UploadMode.default.upload.wait_for_upload_port=false
+fed4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+fed4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+fed4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+fed4.menu.PartitionScheme.default_16MB=Default (6.25MB APP/3.43MB SPIFFS)
+fed4.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+fed4.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+fed4.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+fed4.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+fed4.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+fed4.menu.PartitionScheme.app3M_fat9M_16MB=FFAT (3MB APP/9MB FATFS)
+fed4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+fed4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+fed4.menu.PartitionScheme.fatflash=Large FFAT (2MB APP/12.5MB FATFS)
+fed4.menu.PartitionScheme.fatflash.build.partitions=ffat
+fed4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+
+fed4.menu.CPUFreq.240=240MHz (WiFi)
+fed4.menu.CPUFreq.240.build.f_cpu=240000000L
+fed4.menu.CPUFreq.160=160MHz (WiFi)
+fed4.menu.CPUFreq.160.build.f_cpu=160000000L
+fed4.menu.CPUFreq.80=80MHz (WiFi)
+fed4.menu.CPUFreq.80.build.f_cpu=80000000L
+fed4.menu.CPUFreq.40=40MHz
+fed4.menu.CPUFreq.40.build.f_cpu=40000000L
+fed4.menu.CPUFreq.20=20MHz
+fed4.menu.CPUFreq.20.build.f_cpu=20000000L
+fed4.menu.CPUFreq.10=10MHz
+fed4.menu.CPUFreq.10.build.f_cpu=10000000L
+
+fed4.menu.UploadSpeed.921600=921600
+fed4.menu.UploadSpeed.921600.upload.speed=921600
+fed4.menu.UploadSpeed.115200=115200
+fed4.menu.UploadSpeed.115200.upload.speed=115200
+fed4.menu.UploadSpeed.256000.windows=256000
+fed4.menu.UploadSpeed.256000.upload.speed=256000
+fed4.menu.UploadSpeed.230400.windows.upload.speed=256000
+fed4.menu.UploadSpeed.230400=230400
+fed4.menu.UploadSpeed.230400.upload.speed=230400
+fed4.menu.UploadSpeed.460800.linux=460800
+fed4.menu.UploadSpeed.460800.macosx=460800
+fed4.menu.UploadSpeed.460800.upload.speed=460800
+fed4.menu.UploadSpeed.512000.windows=512000
+fed4.menu.UploadSpeed.512000.upload.speed=512000
+
+fed4.menu.DebugLevel.none=None
+fed4.menu.DebugLevel.none.build.code_debug=0
+fed4.menu.DebugLevel.error=Error
+fed4.menu.DebugLevel.error.build.code_debug=1
+fed4.menu.DebugLevel.warn=Warn
+fed4.menu.DebugLevel.warn.build.code_debug=2
+fed4.menu.DebugLevel.info=Info
+fed4.menu.DebugLevel.info.build.code_debug=3
+fed4.menu.DebugLevel.debug=Debug
+fed4.menu.DebugLevel.debug.build.code_debug=4
+fed4.menu.DebugLevel.verbose=Verbose
+fed4.menu.DebugLevel.verbose.build.code_debug=5
+
+fed4.menu.EraseFlash.none=Disabled
+fed4.menu.EraseFlash.none.upload.erase_cmd=
+fed4.menu.EraseFlash.all=Enabled
+fed4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+fed4.menu.ZigbeeMode.default=Disabled
+fed4.menu.ZigbeeMode.default.build.zigbee_mode=
+fed4.menu.ZigbeeMode.default.build.zigbee_libs=
+fed4.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+fed4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+fed4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+# FoBE Quill ESP32S3 Mesh FH4R2
+
+fobe_quill_esp32s3_mesh.name=FoBE Quill ESP32S3 Mesh
+fobe_quill_esp32s3_mesh.vid.0=0x303a
+fobe_quill_esp32s3_mesh.pid.0=0x82f4
+fobe_quill_esp32s3_mesh.vid.1=0x303a
+fobe_quill_esp32s3_mesh.vid.1=0x82f5
+fobe_quill_esp32s3_mesh.vid.2=0x303a
+fobe_quill_esp32s3_mesh.pid.2=0x82f6
+
+fobe_quill_esp32s3_mesh.bootloader.tool=esptool_py
+fobe_quill_esp32s3_mesh.bootloader.tool.default=esptool_py
+
+fobe_quill_esp32s3_mesh.upload.tool=esptool_py
+fobe_quill_esp32s3_mesh.upload.tool.default=esptool_py
+fobe_quill_esp32s3_mesh.upload.tool.network=esp_ota
+
+fobe_quill_esp32s3_mesh.upload.maximum_size=1310720
+fobe_quill_esp32s3_mesh.upload.maximum_data_size=327680
+fobe_quill_esp32s3_mesh.upload.flags=
+fobe_quill_esp32s3_mesh.upload.extra_flags=
+fobe_quill_esp32s3_mesh.upload.use_1200bps_touch=true
+fobe_quill_esp32s3_mesh.upload.wait_for_upload_port=true
+
+fobe_quill_esp32s3_mesh.serial.disableDTR=false
+fobe_quill_esp32s3_mesh.serial.disableRTS=false
+
+fobe_quill_esp32s3_mesh.build.tarch=xtensa
+fobe_quill_esp32s3_mesh.build.bootloader_addr=0x0
+fobe_quill_esp32s3_mesh.build.target=esp32s3
+fobe_quill_esp32s3_mesh.build.mcu=esp32s3
+fobe_quill_esp32s3_mesh.build.core=esp32
+fobe_quill_esp32s3_mesh.build.variant=fobe_quill_esp32s3_mesh
+fobe_quill_esp32s3_mesh.build.board=FOBE_QUILL_ESP32S3_MESH
+
+fobe_quill_esp32s3_mesh.build.usb_mode=0
+fobe_quill_esp32s3_mesh.build.cdc_on_boot=1
+fobe_quill_esp32s3_mesh.build.msc_on_boot=0
+fobe_quill_esp32s3_mesh.build.dfu_on_boot=0
+fobe_quill_esp32s3_mesh.build.f_cpu=240000000L
+fobe_quill_esp32s3_mesh.build.flash_size=4MB
+fobe_quill_esp32s3_mesh.build.flash_freq=80m
+fobe_quill_esp32s3_mesh.build.flash_mode=qio
+fobe_quill_esp32s3_mesh.build.boot=qio
+fobe_quill_esp32s3_mesh.build.boot_freq=80m
+fobe_quill_esp32s3_mesh.build.partitions=ffat
+fobe_quill_esp32s3_mesh.build.defines=
+fobe_quill_esp32s3_mesh.build.loop_core=
+fobe_quill_esp32s3_mesh.build.event_core=
+fobe_quill_esp32s3_mesh.build.psram_type=qspi
+fobe_quill_esp32s3_mesh.build.memory_type={build.boot}_{build.psram_type}
+
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.default=Disabled
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.default.build.copy_jtag_files=0
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.builtin=Integrated USB JTAG
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.external=FTDI Adapter
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.external.build.copy_jtag_files=1
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.bridge=ESP USB Bridge
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+fobe_quill_esp32s3_mesh.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+fobe_quill_esp32s3_mesh.menu.PSRAM.disabled=Disabled
+fobe_quill_esp32s3_mesh.menu.PSRAM.disabled.build.defines=
+fobe_quill_esp32s3_mesh.menu.PSRAM.disabled.build.psram_type=qspi
+fobe_quill_esp32s3_mesh.menu.PSRAM.enabled=QSPI PSRAM
+fobe_quill_esp32s3_mesh.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+fobe_quill_esp32s3_mesh.menu.PSRAM.enabled.build.psram_type=qspi
+
+fobe_quill_esp32s3_mesh.menu.FlashMode.qio=QIO 80MHz
+fobe_quill_esp32s3_mesh.menu.FlashMode.qio.build.flash_mode=dio
+fobe_quill_esp32s3_mesh.menu.FlashMode.qio.build.boot=qio
+fobe_quill_esp32s3_mesh.menu.FlashMode.qio.build.boot_freq=80m
+fobe_quill_esp32s3_mesh.menu.FlashMode.qio.build.flash_freq=80m
+fobe_quill_esp32s3_mesh.menu.FlashMode.dio=DIO 80MHz
+fobe_quill_esp32s3_mesh.menu.FlashMode.dio.build.flash_mode=dio
+fobe_quill_esp32s3_mesh.menu.FlashMode.dio.build.boot=dio
+fobe_quill_esp32s3_mesh.menu.FlashMode.dio.build.boot_freq=80m
+fobe_quill_esp32s3_mesh.menu.FlashMode.dio.build.flash_freq=80m
+
+fobe_quill_esp32s3_mesh.menu.FlashSize.4M=4MB (32Mb)
+fobe_quill_esp32s3_mesh.menu.FlashSize.4M.build.flash_size=4MB
+
+fobe_quill_esp32s3_mesh.menu.LoopCore.1=Core 1
+fobe_quill_esp32s3_mesh.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+fobe_quill_esp32s3_mesh.menu.LoopCore.0=Core 0
+fobe_quill_esp32s3_mesh.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+fobe_quill_esp32s3_mesh.menu.EventsCore.1=Core 1
+fobe_quill_esp32s3_mesh.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+fobe_quill_esp32s3_mesh.menu.EventsCore.0=Core 0
+fobe_quill_esp32s3_mesh.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+fobe_quill_esp32s3_mesh.menu.USBMode.hwcdc=Hardware CDC and JTAG
+fobe_quill_esp32s3_mesh.menu.USBMode.hwcdc.build.usb_mode=1
+fobe_quill_esp32s3_mesh.menu.USBMode.default=USB-OTG (TinyUSB)
+fobe_quill_esp32s3_mesh.menu.USBMode.default.build.usb_mode=0
+
+fobe_quill_esp32s3_mesh.menu.CDCOnBoot.default=Enabled
+fobe_quill_esp32s3_mesh.menu.CDCOnBoot.default.build.cdc_on_boot=1
+fobe_quill_esp32s3_mesh.menu.CDCOnBoot.cdc=Disabled
+fobe_quill_esp32s3_mesh.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+fobe_quill_esp32s3_mesh.menu.MSCOnBoot.default=Disabled
+fobe_quill_esp32s3_mesh.menu.MSCOnBoot.default.build.msc_on_boot=0
+fobe_quill_esp32s3_mesh.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+fobe_quill_esp32s3_mesh.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+fobe_quill_esp32s3_mesh.menu.DFUOnBoot.default=Disabled
+fobe_quill_esp32s3_mesh.menu.DFUOnBoot.default.build.dfu_on_boot=0
+fobe_quill_esp32s3_mesh.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+fobe_quill_esp32s3_mesh.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+fobe_quill_esp32s3_mesh.menu.UploadMode.default=UART0 / Hardware CDC
+fobe_quill_esp32s3_mesh.menu.UploadMode.default.upload.use_1200bps_touch=false
+fobe_quill_esp32s3_mesh.menu.UploadMode.default.upload.wait_for_upload_port=false
+fobe_quill_esp32s3_mesh.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+fobe_quill_esp32s3_mesh.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+fobe_quill_esp32s3_mesh.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2=TinyUF2 4MB (1.3MB APP/960KB FATFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-4MB
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2.upload.maximum_size=1441792
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2_noota=TinyUF2 4MB No OTA (2.7MB APP/960KB FATFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-4MB-noota
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=2883584
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x2d0000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.default.build.partitions=default
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.minimal.build.partitions=minimal
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.no_ota.build.partitions=no_ota
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.huge_app.build.partitions=huge_app
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+fobe_quill_esp32s3_mesh.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+
+fobe_quill_esp32s3_mesh.menu.CPUFreq.240=240MHz (WiFi)
+fobe_quill_esp32s3_mesh.menu.CPUFreq.240.build.f_cpu=240000000L
+fobe_quill_esp32s3_mesh.menu.CPUFreq.160=160MHz (WiFi)
+fobe_quill_esp32s3_mesh.menu.CPUFreq.160.build.f_cpu=160000000L
+fobe_quill_esp32s3_mesh.menu.CPUFreq.80=80MHz (WiFi)
+fobe_quill_esp32s3_mesh.menu.CPUFreq.80.build.f_cpu=80000000L
+fobe_quill_esp32s3_mesh.menu.CPUFreq.40=40MHz
+fobe_quill_esp32s3_mesh.menu.CPUFreq.40.build.f_cpu=40000000L
+fobe_quill_esp32s3_mesh.menu.CPUFreq.20=20MHz
+fobe_quill_esp32s3_mesh.menu.CPUFreq.20.build.f_cpu=20000000L
+fobe_quill_esp32s3_mesh.menu.CPUFreq.10=10MHz
+fobe_quill_esp32s3_mesh.menu.CPUFreq.10.build.f_cpu=10000000L
+
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.921600=921600
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.921600.upload.speed=921600
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.115200=115200
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.115200.upload.speed=115200
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.256000.windows=256000
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.256000.upload.speed=256000
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.230400.windows.upload.speed=256000
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.230400=230400
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.230400.upload.speed=230400
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.460800.linux=460800
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.460800.macosx=460800
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.460800.upload.speed=460800
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.512000.windows=512000
+fobe_quill_esp32s3_mesh.menu.UploadSpeed.512000.upload.speed=512000
+
+fobe_quill_esp32s3_mesh.menu.DebugLevel.none=None
+fobe_quill_esp32s3_mesh.menu.DebugLevel.none.build.code_debug=0
+fobe_quill_esp32s3_mesh.menu.DebugLevel.error=Error
+fobe_quill_esp32s3_mesh.menu.DebugLevel.error.build.code_debug=1
+fobe_quill_esp32s3_mesh.menu.DebugLevel.warn=Warn
+fobe_quill_esp32s3_mesh.menu.DebugLevel.warn.build.code_debug=2
+fobe_quill_esp32s3_mesh.menu.DebugLevel.info=Info
+fobe_quill_esp32s3_mesh.menu.DebugLevel.info.build.code_debug=3
+fobe_quill_esp32s3_mesh.menu.DebugLevel.debug=Debug
+fobe_quill_esp32s3_mesh.menu.DebugLevel.debug.build.code_debug=4
+fobe_quill_esp32s3_mesh.menu.DebugLevel.verbose=Verbose
+fobe_quill_esp32s3_mesh.menu.DebugLevel.verbose.build.code_debug=5
+
+fobe_quill_esp32s3_mesh.menu.EraseFlash.none=Disabled
+fobe_quill_esp32s3_mesh.menu.EraseFlash.none.upload.erase_cmd=
+fobe_quill_esp32s3_mesh.menu.EraseFlash.all=Enabled
+fobe_quill_esp32s3_mesh.menu.EraseFlash.all.upload.erase_cmd=-e
+
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.default=Disabled
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.default.build.zigbee_mode=
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.default.build.zigbee_libs=
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+fobe_quill_esp32s3_mesh.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+twinaiot.name=Twin AIoT Module
+
+twinaiot.bootloader.tool=esptool_py
+twinaiot.bootloader.tool.default=esptool_py
+
+twinaiot.upload.tool=esptool_py
+twinaiot.upload.tool.default=esptool_py
+twinaiot.upload.tool.network=esp_ota
+
+twinaiot.upload.maximum_size=1310720
+twinaiot.upload.maximum_data_size=327680
+twinaiot.upload.use_1200bps_touch=false
+twinaiot.upload.wait_for_upload_port=false
+
+twinaiot.serial.disableDTR=false
+twinaiot.serial.disableRTS=false
+
+twinaiot.build.tarch=xtensa
+twinaiot.build.bootloader_addr=0x0
+twinaiot.build.target=esp32s3
+twinaiot.build.mcu=esp32s3
+twinaiot.build.core=esp32
+twinaiot.build.variant=twinaiot
+twinaiot.build.board=TWIN_AIOT
+
+twinaiot.build.usb_mode=1
+twinaiot.build.cdc_on_boot=0
+twinaiot.build.msc_on_boot=0
+twinaiot.build.dfu_on_boot=0
+twinaiot.build.f_cpu=240000000L
+twinaiot.build.flash_size=4MB
+twinaiot.build.flash_freq=80m
+twinaiot.build.flash_mode=dio
+twinaiot.build.boot=qio
+twinaiot.build.boot_freq=80m
+twinaiot.build.partitions=default
+twinaiot.build.defines=
+twinaiot.build.loop_core=
+twinaiot.build.event_core=
+twinaiot.build.psram_type=qspi
+twinaiot.build.memory_type={build.boot}_{build.psram_type}
+
+twinaiot.menu.JTAGAdapter.default=Disabled
+twinaiot.menu.JTAGAdapter.default.build.copy_jtag_files=0
+twinaiot.menu.JTAGAdapter.builtin=Integrated USB JTAG
+twinaiot.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+twinaiot.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+twinaiot.menu.JTAGAdapter.external=FTDI Adapter
+twinaiot.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+twinaiot.menu.JTAGAdapter.external.build.copy_jtag_files=1
+twinaiot.menu.JTAGAdapter.bridge=ESP USB Bridge
+twinaiot.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+twinaiot.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+twinaiot.menu.PSRAM.disabled=Disabled
+twinaiot.menu.PSRAM.disabled.build.defines=
+twinaiot.menu.PSRAM.disabled.build.psram_type=qspi
+twinaiot.menu.PSRAM.enabled=QSPI PSRAM
+twinaiot.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+twinaiot.menu.PSRAM.enabled.build.psram_type=qspi
+
+twinaiot.menu.FlashMode.qio=QIO 80MHz
+twinaiot.menu.FlashMode.qio.build.flash_mode=dio
+twinaiot.menu.FlashMode.qio.build.boot=qio
+twinaiot.menu.FlashMode.qio.build.boot_freq=80m
+twinaiot.menu.FlashMode.qio.build.flash_freq=80m
+twinaiot.menu.FlashMode.qio120=QIO 120MHz
+twinaiot.menu.FlashMode.qio120.build.flash_mode=dio
+twinaiot.menu.FlashMode.qio120.build.boot=qio
+twinaiot.menu.FlashMode.qio120.build.boot_freq=120m
+twinaiot.menu.FlashMode.qio120.build.flash_freq=80m
+twinaiot.menu.FlashMode.dio=DIO 80MHz
+twinaiot.menu.FlashMode.dio.build.flash_mode=dio
+twinaiot.menu.FlashMode.dio.build.boot=dio
+twinaiot.menu.FlashMode.dio.build.boot_freq=80m
+twinaiot.menu.FlashMode.dio.build.flash_freq=80m
+
+
+twinaiot.menu.FlashSize.4M=4MB (32Mb)
+twinaiot.menu.FlashSize.4M.build.flash_size=4MB
+
+twinaiot.menu.CPUFreq.240=240MHz (WiFi)
+twinaiot.menu.CPUFreq.240.build.f_cpu=240000000L
+twinaiot.menu.CPUFreq.160=160MHz (WiFi)
+twinaiot.menu.CPUFreq.160.build.f_cpu=160000000L
+twinaiot.menu.CPUFreq.80=80MHz (WiFi)
+twinaiot.menu.CPUFreq.80.build.f_cpu=80000000L
+twinaiot.menu.CPUFreq.40=40MHz
+twinaiot.menu.CPUFreq.40.build.f_cpu=40000000L
+twinaiot.menu.CPUFreq.20=20MHz
+twinaiot.menu.CPUFreq.20.build.f_cpu=20000000L
+twinaiot.menu.CPUFreq.10=10MHz
+twinaiot.menu.CPUFreq.10.build.f_cpu=10000000L
+
+twinaiot.menu.UploadSpeed.921600=921600
+twinaiot.menu.UploadSpeed.921600.upload.speed=921600
+twinaiot.menu.UploadSpeed.115200=115200
+twinaiot.menu.UploadSpeed.115200.upload.speed=115200
+twinaiot.menu.UploadSpeed.256000.windows=256000
+twinaiot.menu.UploadSpeed.256000.upload.speed=256000
+twinaiot.menu.UploadSpeed.230400.windows.upload.speed=256000
+twinaiot.menu.UploadSpeed.230400=230400
+twinaiot.menu.UploadSpeed.230400.upload.speed=230400
+twinaiot.menu.UploadSpeed.460800.linux=460800
+twinaiot.menu.UploadSpeed.460800.macosx=460800
+twinaiot.menu.UploadSpeed.460800.upload.speed=460800
+twinaiot.menu.UploadSpeed.512000.windows=512000
+twinaiot.menu.UploadSpeed.512000.upload.speed=512000
+
+twinaiot.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+twinaiot.menu.PartitionScheme.default.build.partitions=default
+twinaiot.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+twinaiot.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+twinaiot.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+twinaiot.menu.PartitionScheme.minimal.build.partitions=minimal
+twinaiot.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+twinaiot.menu.PartitionScheme.no_fs.build.partitions=no_fs
+twinaiot.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+twinaiot.menu.PartitionScheme.no_ota.build.partitions=no_ota
+twinaiot.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+twinaiot.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+twinaiot.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+twinaiot.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+twinaiot.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+twinaiot.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+twinaiot.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+twinaiot.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+twinaiot.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+twinaiot.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+twinaiot.menu.PartitionScheme.huge_app.build.partitions=huge_app
+twinaiot.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+twinaiot.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+twinaiot.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+twinaiot.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+twinaiot.menu.PartitionScheme.rainmaker=RainMaker 4MB
+twinaiot.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+twinaiot.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+twinaiot.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+twinaiot.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+twinaiot.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+twinaiot.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+twinaiot.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+twinaiot.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+twinaiot.menu.PartitionScheme.custom=Custom
+twinaiot.menu.PartitionScheme.custom.build.partitions=
+twinaiot.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+twinaiot.menu.LoopCore.1=Core 1
+twinaiot.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+twinaiot.menu.LoopCore.0=Core 0
+twinaiot.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+twinaiot.menu.EventsCore.1=Core 1
+twinaiot.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+twinaiot.menu.EventsCore.0=Core 0
+twinaiot.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+twinaiot.menu.USBMode.hwcdc=Hardware CDC and JTAG
+twinaiot.menu.USBMode.hwcdc.build.usb_mode=1
+twinaiot.menu.USBMode.default=USB-OTG (TinyUSB)
+twinaiot.menu.USBMode.default.build.usb_mode=0
+
+twinaiot.menu.CDCOnBoot.default=Disabled
+twinaiot.menu.CDCOnBoot.default.build.cdc_on_boot=0
+twinaiot.menu.CDCOnBoot.cdc=Enabled
+twinaiot.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+twinaiot.menu.MSCOnBoot.default=Disabled
+twinaiot.menu.MSCOnBoot.default.build.msc_on_boot=0
+twinaiot.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+twinaiot.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+twinaiot.menu.DFUOnBoot.default=Disabled
+twinaiot.menu.DFUOnBoot.default.build.dfu_on_boot=0
+twinaiot.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+twinaiot.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+twinaiot.menu.UploadMode.default=UART0 / Hardware CDC
+twinaiot.menu.UploadMode.default.upload.use_1200bps_touch=false
+twinaiot.menu.UploadMode.default.upload.wait_for_upload_port=false
+twinaiot.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+twinaiot.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+twinaiot.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+twinaiot.menu.DebugLevel.none=None
+twinaiot.menu.DebugLevel.none.build.code_debug=0
+twinaiot.menu.DebugLevel.error=Error
+twinaiot.menu.DebugLevel.error.build.code_debug=1
+twinaiot.menu.DebugLevel.warn=Warn
+twinaiot.menu.DebugLevel.warn.build.code_debug=2
+twinaiot.menu.DebugLevel.info=Info
+twinaiot.menu.DebugLevel.info.build.code_debug=3
+twinaiot.menu.DebugLevel.debug=Debug
+twinaiot.menu.DebugLevel.debug.build.code_debug=4
+twinaiot.menu.DebugLevel.verbose=Verbose
+twinaiot.menu.DebugLevel.verbose.build.code_debug=5
+
+twinaiot.menu.EraseFlash.none=Disabled
+twinaiot.menu.EraseFlash.none.upload.erase_cmd=
+twinaiot.menu.EraseFlash.all=Enabled
+twinaiot.menu.EraseFlash.all.upload.erase_cmd=-e
+
+twinaiot.menu.ZigbeeMode.default=Disabled
+twinaiot.menu.ZigbeeMode.default.build.zigbee_mode=
+twinaiot.menu.ZigbeeMode.default.build.zigbee_libs=
+twinaiot.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+twinaiot.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+twinaiot.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
