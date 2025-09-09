@@ -27,7 +27,7 @@ public:
    * @brief Default constructor
    * Will use the compile-time name if set via SET_USB_MIDI_DEVICE_NAME(),
    * otherwise uses "TinyUSB MIDI"
-   */
+  */
   USBMIDI(void);
 
   /**
