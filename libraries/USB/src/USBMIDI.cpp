@@ -7,8 +7,11 @@
 #include "esp32-hal-tinyusb.h"
 
 // Initialize static members
-const char* USBMIDI::deviceName = nullptr;
-char USBMIDI::nameBuffer[32] = {0};
+char* USBMIDI::midiUserDeviceName = nullptr;
+// Weak definition of getUSBMIDIDefaultDeviceName to provide a default name
+__attribute__((weak)) const char* getUSBMIDIDefaultDeviceName() {
+  return ESP32_USB_MIDI_DEFAULT_NAME;
+}
 
 // Default Cable Number (for simplified APIs that do not expose this)
 #define DEFAULT_CN 0
@@ -45,11 +48,29 @@ USBMIDI::USBMIDI() {
   }
 }
 
+
+void USBMIDI::setDeviceName(const char* name) {
+    const uint8_t maxNameLength = 32; // tinyUSB Descriptor limit
+    if (name != nullptr && strlen(name) > 0) {
+      if (strlen(name) > maxNameLength) {
+        log_w("USBMIDI: Device name too long, truncating to %d characters.", maxNameLength);
+      }
+      midiUserDeviceName = new char[maxNameLength + 1]; // +1 for null-terminator
+      if (midiUserDeviceName) {
+        strncpy(midiUserDeviceName, name, maxNameLength);
+        // Ensure null-termination when overflowing
+        midiUserDeviceName[maxNameLength] = '\0';
+      } else {
+        log_e("USBMIDI: Failed to allocate memory for device name, using default name.");
+      }
+    } else {
+      log_w("USBMIDI: No device name provided, using default name [%s].", getUSBMIDIDefaultDeviceName());
+    }
+}
+
 USBMIDI::USBMIDI(const char* name) {
   if (!tinyusb_midi_interface_enabled) {
-    strncpy(nameBuffer, name, sizeof(nameBuffer) - 1);
-    nameBuffer[sizeof(nameBuffer) - 1] = '\0';
-    deviceName = nameBuffer;
+    setDeviceName(name);
     tinyusb_midi_interface_enabled = true;
     tinyusb_enable_interface(USB_INTERFACE_MIDI, TUD_MIDI_DESC_LEN, tusb_midi_load_descriptor);
   } else {
@@ -57,8 +78,32 @@ USBMIDI::USBMIDI(const char* name) {
   }
 }
 
+USBMIDI::~USBMIDI() {
+  if (midiUserDeviceName) {
+    delete[] midiUserDeviceName;
+    midiUserDeviceName = nullptr;
+  }
+} 
+
 void USBMIDI::begin() {}
 void USBMIDI::end() {}
+
+/**
+* @brief Get the current device name
+* @return The device name in order of precedence:
+* 1. Name set via constructor (if any)
+* 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+* 3. Default name "TinyUSB MIDI"
+* If device name is set as "", it will be ignored
+*/
+const char* USBMIDI::getCurrentDeviceName(void) {
+  if (midiUserDeviceName) {
+    return midiUserDeviceName;
+  }
+  // If no user name set, use the compile-time default name limited to 32 characters
+  setDeviceName(getUSBMIDIDefaultDeviceName()); 
+  return strlen(midiUserDeviceName) ? midiUserDeviceName : "TinyUSB MIDI";
+}
 
 // uint compatible version of constrain
 #define uconstrain(amt, low, high) ((amt) <= (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
