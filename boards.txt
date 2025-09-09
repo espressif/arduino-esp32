@@ -39949,15 +39949,6 @@ gen4-ESP32-S3R8n16.build.event_core=
 gen4-ESP32-S3R8n16.build.psram_type=opi
 gen4-ESP32-S3R8n16.build.memory_type={build.boot}_{build.psram_type}
 
-gen4-ESP32-S3R8n16.menu.PSRAM.opi=OPI PSRAM
-gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-gen4-ESP32-S3R8n16.menu.PSRAM.opi.build.psram_type=opi
-
-gen4-ESP32-S3R8n16.menu.FlashMode.qio=QIO 80MHz
-gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.flash_mode=dio
-gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.boot=qio
-gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.boot_freq=80m
-gen4-ESP32-S3R8n16.menu.FlashMode.qio.build.flash_freq=80m
 
 gen4-ESP32-S3R8n16.menu.FlashSize.16M=16MB (128Mb)
 gen4-ESP32-S3R8n16.menu.FlashSize.16M.build.flash_size=16MB
