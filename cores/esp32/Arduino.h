@@ -222,6 +222,22 @@ size_t getArduinoLoopTaskStackSize(void);
     return sz;                           \
   }
 
+#define ESP32_USB_MIDI_DEFAULT_NAME "TinyUSB MIDI"
+/**
+* @brief Set the current device name
+* 1. Name set via constructor (if any)
+* 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+* 3. Default name "TinyUSB MIDI"
+* If device name is set as "", it will be ignored
+*/
+#define SET_USB_MIDI_DEVICE_NAME(name)        \
+  const char *getUSBMIDIDefaultDeviceName() { \
+    if (!name || strlen(name) == 0) {         \
+      return ESP32_USB_MIDI_DEFAULT_NAME;     \
+    }                                         \
+    return name;                              \
+  }
+
 bool shouldPrintChipDebugReport(void);
 #define ENABLE_CHIP_DEBUG_REPORT          \
   bool shouldPrintChipDebugReport(void) { \
