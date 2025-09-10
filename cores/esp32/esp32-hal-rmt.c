@@ -303,7 +303,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     }
   }
 
-  #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
   log_v("GPIO: %d - Request: %d RMT Symbols - %s - Timeout: %d", pin, num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms);
   // loop parameter semantics:
   //   loop == 0: no looping (single transmission)
@@ -313,14 +313,12 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     char buf[17];  // placeholder for up to maximum uint32_t value (4294967295) = 10 digits + " times" (6 chars) + null terminator (17 bytes)
     snprintf(buf, sizeof(buf), "%lu times", loop);
     log_v(
-      "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, 
-      bus->rmt_ch_is_looping ? "YES" : "NO", 
-      loop == 0 ? "NO" : (loop == 1 ? "FOREVER" : buf),
-      loopCancel ? "YES" : "NO"
+      "GPIO: %d - Currently in Loop Mode: [%s] | Loop Request: [%s], LoopCancel: [%s]", pin, bus->rmt_ch_is_looping ? "YES" : "NO",
+      loop == 0 ? "NO" : (loop == 1 ? "FOREVER" : buf), loopCancel ? "YES" : "NO"
     );
   }
-  #endif
-  
+#endif
+
   if ((xEventGroupGetBits(bus->rmt_events) & RMT_FLAG_TX_DONE) == 0) {
     log_v("GPIO %d - RMT Write still pending to be completed.", pin);
     return false;
@@ -363,7 +361,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
       if (loop > 0) {
         // rmt_ch_is_looping is used as a flag to indicate that RMT is in looping execution in order to
         // be cancelled whenever a new _rmtWrite() is executed while it is looping
-        bus->rmt_ch_is_looping = true;                                       
+        bus->rmt_ch_is_looping = true;
       } else {
         if (blocking) {
           // wait for transmission confirmation | timeout

@@ -128,7 +128,7 @@ rmt_data_t blink_1s_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 // RMT is at 400KHz with a 2.5us tick
@@ -185,7 +185,7 @@ rmt_data_t blink_500ms_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 // RMT is at 400KHz with a 2.5us tick
@@ -218,7 +218,7 @@ rmt_data_t blink_250ms_rmt_data[] = {
     0,
   },
   // Looping mode needs a Zero ending data to mark the EOF
-  { 0, 0, 0, 0 }
+  {0, 0, 0, 0}
 };
 
 void RMT_Mixed_Write_Blink() {
@@ -269,7 +269,7 @@ void RMT_Loop_Write_Blink() {
   delay(5000);
 
   Serial.println("Blinking OFF for 2 seconds");
-  rmt_data_t blink_STOP_rmt_data[] = { { 0, 0, 0, 0 } };
+  rmt_data_t blink_STOP_rmt_data[] = {{0, 0, 0, 0}};
   if (!rmtWrite(BLINK_GPIO, blink_STOP_rmt_data, RMT_SYMBOLS_OF(blink_STOP_rmt_data), RMT_WAIT_FOR_EVER)) {
     Serial.println("===> rmtWrite Blink STOP Error!");
   }
@@ -283,19 +283,19 @@ void RMT_Repeated_Write_Blink() {
   if (!rmtWriteRepeated(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data), 2)) {
     Serial.println("===> rmtWrite Blink 1s Error!");
   }
-  delay(4000 + 1000); // it should blink 2 times and stop automatically
+  delay(4000 + 1000);  // it should blink 2 times and stop automatically
   Serial.println("Blinking at 500ms on + 500ms off :: 4 blinks");
   // repeating blink_500ms_rmt_data (500ms on + 500ms off) 4 times for 4 blinks
   if (!rmtWriteRepeated(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data), 4)) {
     Serial.println("===> rmtWrite Blink 0.5s Error!");
   }
-  delay(4000 + 1000); // it should blink 4 times and stop automatically
+  delay(4000 + 1000);  // it should blink 4 times and stop automatically
   Serial.println("Blinking at 250ms on + 250ms off :: 8 blinks");
   // repeating blink_250ms_rmt_data (250ms on + 250ms off) 8 times for 8 blinks
   if (!rmtWriteRepeated(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data), 8)) {
     Serial.println("===> rmtWrite Blink 0.25s Error!");
   }
-  delay(4000 + 1000); // it should blink 8 times and stop automatically
+  delay(4000 + 1000);  // it should blink 8 times and stop automatically
   Serial.println("Blinking is OFF for 2 seconds");
   delay(2000);
 }
