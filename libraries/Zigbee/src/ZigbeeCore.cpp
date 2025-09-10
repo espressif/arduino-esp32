@@ -46,6 +46,7 @@ ZigbeeCore::ZigbeeCore() {
   _scan_duration = 3;  // default scan duration
   _rx_on_when_idle = true;
   _debug = false;
+  _allow_multi_endpoint_binding = false;
   _global_default_response_cb = nullptr;  // Initialize global callback to nullptr
   if (!lock) {
     lock = xSemaphoreCreateBinary();
@@ -392,7 +393,9 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                 log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                break;  // Only one endpoint per device
+                if(!Zigbee.allowMultiEndpointBinding()) { // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
+                  break;
+                }
               }
             }
           }
@@ -422,11 +425,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                   break;
                 }
               }
-              log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
               if (!found) {
+                log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                break;  // Only one endpoint per device
+                if(!Zigbee.allowMultiEndpointBinding()) { // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
+                  break;
+                }
               }
             }
           }
