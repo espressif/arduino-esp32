@@ -15,10 +15,10 @@
 #ifndef _SIMPLE_BLE_H_
 #define _SIMPLE_BLE_H_
 
-#include "sdkconfig.h"
 #include "soc/soc_caps.h"
-
-#if SOC_BT_SUPPORTED && defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+#include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include <cstdint>
 #include <cstdio>
@@ -26,7 +26,10 @@
 #include <cstring>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+
+#if defined(SOC_BLE_SUPPORTED)
 #include "esp_bt.h"
+#endif
 
 #include "Arduino.h"
 
@@ -60,6 +63,7 @@ private:
 private:
 };
 
-#endif
+#endif // SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
+#endif // CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED
 
-#endif
+#endif // _SIMPLE_BLE_H_
