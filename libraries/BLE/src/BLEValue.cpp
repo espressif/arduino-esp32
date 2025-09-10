@@ -91,7 +91,7 @@ uint8_t *BLEValue::getData() {
  * @brief Get the length of the data in bytes.
  * @return The length of the data in bytes.
  */
-size_t BLEValue::getLength() {
+size_t BLEValue::getLength() const {
   return m_value.length();
 }  // getLength
 
@@ -99,14 +99,14 @@ size_t BLEValue::getLength() {
  * @brief Get the read offset.
  * @return The read offset into the read.
  */
-uint16_t BLEValue::getReadOffset() {
+uint16_t BLEValue::getReadOffset() const {
   return m_readOffset;
 }  // getReadOffset
 
 /**
  * @brief Get the current value.
  */
-String BLEValue::getValue() {
+String BLEValue::getValue() const {
   return m_value;
 }  // getValue
 
