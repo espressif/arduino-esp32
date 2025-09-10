@@ -203,7 +203,7 @@ public:
   bool allowMultiEndpointBinding() {
     return _allow_multi_endpoint_binding;
   }
-  
+
   // Set global default response callback
   void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster)) {
     _global_default_response_cb = callback;

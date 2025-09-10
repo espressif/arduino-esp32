@@ -73,9 +73,9 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
     case ESP_ZB_CORE_OTA_UPGRADE_QUERY_IMAGE_RESP_CB_ID:
       ret = zb_ota_upgrade_query_image_resp_handler((esp_zb_zcl_ota_upgrade_query_image_resp_message_t *)message);
       break;
-    case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID: ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
+    case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID:    ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
     case ESP_ZB_CORE_CMD_WRITE_ATTR_RESP_CB_ID: ret = zb_cmd_write_attr_resp_handler((esp_zb_zcl_cmd_write_attr_resp_message_t *)message); break;
-    default:                                 log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
+    default:                                    log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
   }
   return ret;
 }
@@ -189,11 +189,11 @@ static esp_err_t zb_cmd_write_attr_resp_handler(const esp_zb_zcl_cmd_write_attr_
     if (message->info.dst_endpoint == (*it)->getEndpoint()) {
       esp_zb_zcl_write_attr_resp_variable_t *variable = message->variables;
       while (variable) {
-        log_v(
-          "Write attribute response: status(%d), cluster(0x%x), attribute(0x%x)", variable->status, message->info.cluster, variable->attribute_id
-        );
+        log_v("Write attribute response: status(%d), cluster(0x%x), attribute(0x%x)", variable->status, message->info.cluster, variable->attribute_id);
         if (variable->status == ESP_ZB_ZCL_STATUS_SUCCESS) {
-          (*it)->zbWriteAttributeResponse(message->info.cluster, variable->attribute_id, variable->status, message->info.src_endpoint, message->info.src_address);
+          (*it)->zbWriteAttributeResponse(
+            message->info.cluster, variable->attribute_id, variable->status, message->info.src_endpoint, message->info.src_address
+          );
         }
         variable = variable->next;
       }
@@ -201,7 +201,6 @@ static esp_err_t zb_cmd_write_attr_resp_handler(const esp_zb_zcl_cmd_write_attr_
   }
   return ESP_OK;
 }
-
 
 static esp_err_t zb_configure_report_resp_handler(const esp_zb_zcl_cmd_config_report_resp_message_t *message) {
   if (!message) {

@@ -393,7 +393,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                 log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                if(!Zigbee.allowMultiEndpointBinding()) { // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
+                if (!Zigbee.allowMultiEndpointBinding()) {  // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
                   break;
                 }
               }
@@ -429,7 +429,7 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct) {
                 log_d("Device not bound to endpoint %d and it is free to bound!", (*it)->getEndpoint());
                 (*it)->findEndpoint(&cmd_req);
                 log_d("Endpoint %d is searching for device", (*it)->getEndpoint());
-                if(!Zigbee.allowMultiEndpointBinding()) { // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
+                if (!Zigbee.allowMultiEndpointBinding()) {  // If multi endpoint binding is not allowed, break the loop to keep backwards compatibility
                   break;
                 }
               }

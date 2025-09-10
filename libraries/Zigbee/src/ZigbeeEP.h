@@ -149,7 +149,8 @@ public:
   // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
   virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
-  virtual void zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, esp_zb_zcl_status_t status, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
+  virtual void
+    zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, esp_zb_zcl_status_t status, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
   virtual void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) {};
