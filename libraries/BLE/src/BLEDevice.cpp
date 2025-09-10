@@ -23,14 +23,9 @@
 #include <freertos/task.h>
 #include <esp_err.h>
 #include <nvs_flash.h>
+
 #if SOC_BLE_SUPPORTED
 #include <esp_bt.h>
-#else
-// For ESP32-P4 and other chips without native BLE support
-// Define minimal types needed for interface compatibility
-typedef int esp_power_level_t;
-typedef int esp_ble_power_type_t;
-#define ESP_BLE_PWR_TYPE_DEFAULT 0
 #endif
 
 #include <esp_err.h>
