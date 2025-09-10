@@ -360,7 +360,7 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
     } else {  // transmit OK
       if (loop > 0) {
         // rmt_ch_is_looping is used as a flag to indicate that RMT is in looping execution in order to
-        // be cancelled whenever a new _rmtWrite() is executed while it is looping
+        // be canceled whenever a new _rmtWrite() is executed while it is looping
         bus->rmt_ch_is_looping = true;
       } else {
         if (blocking) {
