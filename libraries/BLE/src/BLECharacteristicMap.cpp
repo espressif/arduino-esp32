@@ -35,7 +35,7 @@
  * @param [in] handle The handle to look up the characteristic.
  * @return The characteristic.
  */
-BLECharacteristic *BLECharacteristicMap::getByHandle(uint16_t handle) {
+BLECharacteristic *BLECharacteristicMap::getByHandle(uint16_t handle) const {
   return m_handleMap.at(handle);
 }  // getByHandle
 
@@ -44,7 +44,7 @@ BLECharacteristic *BLECharacteristicMap::getByHandle(uint16_t handle) {
  * @param [in] UUID The UUID to look up the characteristic.
  * @return The characteristic.
  */
-BLECharacteristic *BLECharacteristicMap::getByUUID(const char *uuid) {
+BLECharacteristic *BLECharacteristicMap::getByUUID(const char *uuid) const {
   return getByUUID(BLEUUID(uuid));
 }
 
@@ -53,7 +53,7 @@ BLECharacteristic *BLECharacteristicMap::getByUUID(const char *uuid) {
  * @param [in] UUID The UUID to look up the characteristic.
  * @return The characteristic.
  */
-BLECharacteristic *BLECharacteristicMap::getByUUID(BLEUUID uuid) {
+BLECharacteristic *BLECharacteristicMap::getByUUID(BLEUUID uuid) const {
   for (auto &myPair : m_uuidMap) {
     if (myPair.first->getUUID().equals(uuid)) {
       return myPair.first;
@@ -94,7 +94,7 @@ BLECharacteristic *BLECharacteristicMap::getNext() {
  * @brief Get the number of registered characteristics.
  * @return The number of registered characteristics.
  */
-int BLECharacteristicMap::getRegisteredCharacteristicCount() {
+int BLECharacteristicMap::getRegisteredCharacteristicCount() const {
   return m_uuidMap.size();
 }  // getRegisteredCharacteristicCount
 
@@ -132,7 +132,7 @@ void BLECharacteristicMap::setByUUID(BLECharacteristic *pCharacteristic, BLEUUID
  * @brief Return a string representation of the characteristic map.
  * @return A string representation of the characteristic map.
  */
-String BLECharacteristicMap::toString() {
+String BLECharacteristicMap::toString() const {
   String res;
   int count = 0;
   char hex[5];

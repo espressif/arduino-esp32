@@ -58,13 +58,8 @@ BLEAddress::BLEAddress() {
  * @param [in] otherAddress The other address to compare against.
  * @return True if the addresses are equal.
  */
-bool BLEAddress::equals(BLEAddress otherAddress) {
-#if defined(CONFIG_NIMBLE_ENABLED)
-  if (m_addrType != otherAddress.m_addrType) {
-    return false;
-  }
-#endif
-  return memcmp(otherAddress.getNative(), m_address, ESP_BD_ADDR_LEN) == 0;
+bool BLEAddress::equals(const BLEAddress &otherAddress) const {
+  return *this == otherAddress;
 }
 
 bool BLEAddress::operator==(const BLEAddress &otherAddress) const {
@@ -115,9 +110,9 @@ uint8_t *BLEAddress::getNative() {
  *
  * @return The string representation of the address.
  */
-String BLEAddress::toString() {
-  auto size = 18;
-  char *res = (char *)malloc(size);
+String BLEAddress::toString() const {
+  constexpr size_t size = 18;
+  char res[size];
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   snprintf(res, size, "%02x:%02x:%02x:%02x:%02x:%02x", m_address[0], m_address[1], m_address[2], m_address[3], m_address[4], m_address[5]);
@@ -128,7 +123,6 @@ String BLEAddress::toString() {
 #endif
 
   String ret(res);
-  free(res);
   return ret;
 }
 
@@ -157,7 +151,7 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  *
  * @param [in] stringAddress The hex representation of the address.
  */
-BLEAddress::BLEAddress(String stringAddress) {
+BLEAddress::BLEAddress(const String &stringAddress) {
   if (stringAddress.length() != 17) {
     return;
   }
@@ -192,7 +186,7 @@ BLEAddress::BLEAddress(ble_addr_t address) {
   m_addrType = address.type;
 }
 
-uint8_t BLEAddress::getType() {
+uint8_t BLEAddress::getType() const {
   return m_addrType;
 }
 
@@ -208,7 +202,7 @@ uint8_t BLEAddress::getType() {
  * @param [in] stringAddress The hex representation of the address.
  * @param [in] type The address type.
  */
-BLEAddress::BLEAddress(String stringAddress, uint8_t type) {
+BLEAddress::BLEAddress(const String &stringAddress, uint8_t type) {
   if (stringAddress.length() != 17) {
     return;
   }

@@ -61,7 +61,7 @@ int8_t BLEBeacon::getSignalPower() {
   return m_beaconData.signalPower;
 }
 
-void BLEBeacon::setData(String data) {
+void BLEBeacon::setData(const String &data) {
   if (data.length() != sizeof(m_beaconData)) {
     log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_beaconData));
     return;

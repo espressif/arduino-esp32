@@ -64,7 +64,7 @@ public:
    ***************************************************************************/
 
   BLEAddress();
-  bool equals(BLEAddress otherAddress);
+  bool equals(const BLEAddress &otherAddress) const;
   bool operator==(const BLEAddress &otherAddress) const;
   bool operator!=(const BLEAddress &otherAddress) const;
   bool operator<(const BLEAddress &otherAddress) const;
@@ -72,7 +72,7 @@ public:
   bool operator>(const BLEAddress &otherAddress) const;
   bool operator>=(const BLEAddress &otherAddress) const;
   uint8_t *getNative();
-  String toString();
+  String toString() const;
 
   /***************************************************************************
    *                       Bluedroid public declarations                     *
@@ -80,7 +80,7 @@ public:
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   BLEAddress(esp_bd_addr_t address);
-  BLEAddress(String stringAddress);
+  BLEAddress(const String &stringAddress);
 #endif
 
   /***************************************************************************
@@ -89,9 +89,9 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   BLEAddress(ble_addr_t address);
-  BLEAddress(String stringAddress, uint8_t type = BLE_ADDR_PUBLIC);
+  BLEAddress(const String &stringAddress, uint8_t type = BLE_ADDR_PUBLIC);
   BLEAddress(uint8_t address[ESP_BD_ADDR_LEN], uint8_t type = BLE_ADDR_PUBLIC);
-  uint8_t getType();
+  uint8_t getType() const;
 #endif
 
 private:

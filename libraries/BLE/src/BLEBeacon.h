@@ -55,7 +55,7 @@ public:
   uint16_t getManufacturerId();
   BLEUUID getProximityUUID();
   int8_t getSignalPower();
-  void setData(String data);
+  void setData(const String &data);
   void setMajor(uint16_t major);
   void setMinor(uint16_t minor);
   void setManufacturerId(uint16_t manufacturerId);

@@ -55,9 +55,6 @@ This class will be removed in a future version.")]] BLE2902 : public BLEDescript
     bool getIndications();
     void setNotifications(bool flag);
     void setIndications(bool flag);
-
-  private:
-    friend class BLECharacteristic;
   };  // BLE2902
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */

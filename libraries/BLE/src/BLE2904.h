@@ -94,8 +94,6 @@ public:
   void setUnit(uint16_t unit);
 
 private:
-  friend class BLECharacteristic;
-
   /***************************************************************************
    *                         Common private properties                         *
    ***************************************************************************/
