@@ -5,11 +5,9 @@
 // setup() will be executed only after this time
 SET_TIME_BEFORE_STARTING_SKETCH_MS(5000);
 
-
 void setup() {
   Serial.begin(115200);
   Serial.println("After 5 seconds... this message will be seen in the Serial Monitor.");
 }
 
-void loop() {
-}
+void loop() {}

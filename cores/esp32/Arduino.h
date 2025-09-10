@@ -231,9 +231,9 @@ bool shouldPrintChipDebugReport(void);
 // macro SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms) can set a time in milliseconds
 // before the sketch would start its execution. It gives the user time to open the Serial Monitor
 uint64_t getArduinoSetupWaitTime_ms(void);
-#define SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms)      \
-  uint64_t getArduinoSetupWaitTime_ms() { \
-    return (time_ms);                     \
+#define SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms) \
+  uint64_t getArduinoSetupWaitTime_ms() {           \
+    return (time_ms);                               \
   }
 
 // allows user to bypass esp_spiram_test()
