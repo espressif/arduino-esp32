@@ -231,8 +231,8 @@ size_t getArduinoLoopTaskStackSize(void);
 * If device name is set as "", it will be ignored
 */
 #define SET_USB_MIDI_DEVICE_NAME(name)        \
-  const char* getUSBMIDIDefaultDeviceName() { \
-    if (!name || strlen(name) == 0) {                  \
+  const char *getUSBMIDIDefaultDeviceName() { \
+    if (!name || strlen(name) == 0) {         \
       return ESP32_USB_MIDI_DEFAULT_NAME;     \
     }                                         \
     return name;                              \

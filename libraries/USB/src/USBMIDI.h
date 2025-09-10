@@ -19,8 +19,8 @@ typedef struct {
 
 class USBMIDI {
 private:
-  static char* midiUserDeviceName; // user device name
-  static void setDeviceName(const char* name); // set user device name limited to 32 characters
+  static char *midiUserDeviceName;              // user device name
+  static void setDeviceName(const char *name);  // set user device name limited to 32 characters
 
 public:
   /**
@@ -37,13 +37,13 @@ public:
    * 3. Default name "TinyUSB MIDI"
    * It has no effect if name is set as NULL or ""
   */
-  USBMIDI(const char* name);
-  
+  USBMIDI(const char *name);
+
   ~USBMIDI();
 
   void begin(void);
   void end(void);
-  
+
   /**
    * @brief Get the current device name
    * @return The device name in order of precedence:
@@ -51,7 +51,7 @@ public:
    * 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
    * 3. Default name "TinyUSB MIDI"
   */
-  static const char* getCurrentDeviceName(void);
+  static const char *getCurrentDeviceName(void);
 
   /* User-level API */
 
