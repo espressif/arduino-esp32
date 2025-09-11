@@ -44,6 +44,115 @@
                     }
 ]
 },
+{ "board": "espressif:esp32:esp32p4",
+                "target": "esp32p4",
+                "sketches": [
+{"name": "libraries/WiFi/examples/WiFiIPv6",
+                    "sizes": [{
+                            "flash_bytes": 843060,
+                            "flash_percentage": 64,
+                            "ram_bytes": 31020,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiMulti",
+                    "sizes": [{
+                            "flash_bytes": 823170,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29368,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiMultiAdvanced",
+                    "sizes": [{
+                            "flash_bytes": 1005400,
+                            "flash_percentage": 76,
+                            "ram_bytes": 31336,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiScan",
+                    "sizes": [{
+                            "flash_bytes": 820784,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29336,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiScanAsync",
+                    "sizes": [{
+                            "flash_bytes": 820828,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29336,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
+                    "sizes": [{
+                            "flash_bytes": 819884,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29336,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiScanTime",
+                    "sizes": [{
+                            "flash_bytes": 820562,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29336,
+                            "ram_percentage": 8
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiTelnetToSerial",
+                    "sizes": [{
+                            "flash_bytes": 851606,
+                            "flash_percentage": 64,
+                            "ram_bytes": 30716,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "libraries/WiFi/examples/WiFiUDPClient",
+                    "sizes": [{
+                            "flash_bytes": 839130,
+                            "flash_percentage": 64,
+                            "ram_bytes": 30996,
+                            "ram_percentage": 9
+                            }]
+                    },
+{"name": "libraries/Wire/examples/WireMaster",
+                    "sizes": [{
+                            "flash_bytes": 359028,
+                            "flash_percentage": 27,
+                            "ram_bytes": 24024,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "libraries/Wire/examples/WireScan",
+                    "sizes": [{
+                            "flash_bytes": 358800,
+                            "flash_percentage": 27,
+                            "ram_bytes": 24016,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "libraries/Wire/examples/WireSlave",
+                    "sizes": [{
+                            "flash_bytes": 359374,
+                            "flash_percentage": 27,
+                            "ram_bytes": 24024,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "libraries/Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 359270,
+                            "flash_percentage": 27,
+                            "ram_bytes": 24024,
+                            "ram_percentage": 7
+                            }]
+                    }
+]
+},
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
