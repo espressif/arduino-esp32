@@ -10,16 +10,17 @@
  */
 
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
-
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 /***************************************************************************
  *                       Common includes                                   *
  ***************************************************************************/
 
+#if SOC_BLE_SUPPORTED
 #include <esp_bt.h>
+#endif
 #include "GeneralUtils.h"
 #include "BLEDevice.h"
 #include "BLEServer.h"
@@ -1047,4 +1048,4 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *des
 #endif  // CONFIG_NIMBLE_ENABLED
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */

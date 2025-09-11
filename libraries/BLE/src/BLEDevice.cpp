@@ -10,9 +10,8 @@
  */
 
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
-
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 /***************************************************************************
@@ -24,7 +23,10 @@
 #include <freertos/task.h>
 #include <esp_err.h>
 #include <nvs_flash.h>
+
+#if SOC_BLE_SUPPORTED
 #include <esp_bt.h>
+#endif
 
 #include <esp_err.h>
 #include <map>
@@ -73,6 +75,10 @@
 #include "host/util/util.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+#endif
+
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#include "esp32-hal-hosted.h"
 #endif
 
 /***************************************************************************
@@ -341,6 +347,16 @@ void BLEDevice::init(String deviceName) {
 #endif  // CONFIG_BLE_SMP_ENABLE
 #endif  // CONFIG_BLUEDROID_ENABLED
 
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+    // Initialize esp-hosted transport for BLE HCI when explicitly enabled
+    if (!hostedInitBLE()) {
+      log_e("Failed to initialize ESP-Hosted for BLE");
+      return;
+    }
+
+    // Hosted HCI driver will be initialized automatically by NimBLE transport layer
+#endif
+
 #if defined(CONFIG_NIMBLE_ENABLED)
     errRc = nimble_port_init();
     if (errRc != ESP_OK) {
@@ -412,10 +428,14 @@ void BLEDevice::init(String deviceName) {
  */
 void BLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType) {
   log_v(">> setPower: %d (type: %d)", powerLevel, powerType);
+#if defined(SOC_BLE_SUPPORTED)
   esp_err_t errRc = ::esp_ble_tx_power_set(powerType, powerLevel);
   if (errRc != ESP_OK) {
     log_e("esp_ble_tx_power_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
   };
+#else
+  log_w("setPower not supported with hosted HCI - power controlled by co-processor");
+#endif
   log_v("<< setPower");
 }  // setPower
 
@@ -438,6 +458,7 @@ void BLEDevice::setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powe
  */
 
 int BLEDevice::getPower(esp_ble_power_type_t powerType) {
+#if SOC_BLE_SUPPORTED
   switch (esp_ble_tx_power_get(powerType)) {
     case ESP_PWR_LVL_N12: return -12;
     case ESP_PWR_LVL_N9:  return -9;
@@ -449,6 +470,10 @@ int BLEDevice::getPower(esp_ble_power_type_t powerType) {
     case ESP_PWR_LVL_P9:  return 9;
     default:              return -128;
   }
+#else
+  log_w("getPower not supported with hosted HCI - power controlled by co-processor");
+  return 0;  // Return default power level
+#endif
 }  // getPower
 
 /**
@@ -683,13 +708,21 @@ void BLEDevice::deinit(bool release_memory) {
   nimble_port_deinit();
 #endif
 
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+  hostedDeinitBLE();
+#endif
+
+#if CONFIG_BT_CONTROLLER_ENABLED
   esp_bt_controller_disable();
   esp_bt_controller_deinit();
+#endif
 
 #ifdef ARDUINO_ARCH_ESP32
   if (release_memory) {
     // Require tests because we released classic BT memory and this can cause crash (most likely not, esp-idf takes care of it)
+#if CONFIG_BT_CONTROLLER_ENABLED
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+#endif
   } else {
 #ifdef CONFIG_NIMBLE_ENABLED
     m_synced = false;
@@ -728,6 +761,14 @@ String BLEDevice::getBLEStackString() {
     case BLEStack::UNKNOWN:
     default:                  return "Unknown";
   }
+}
+
+bool BLEDevice::isHostedBLE() {
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+  return true;
+#else
+  return false;
+#endif
 }
 
 /***************************************************************************
@@ -1113,4 +1154,4 @@ int BLEDeviceCallbacks::onStoreStatus(struct ble_store_status_event *event, void
 #endif
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */

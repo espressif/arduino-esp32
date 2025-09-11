@@ -240,100 +240,18 @@ extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-extern "C" {
-//#include "esp_hosted.h"
-#include "esp_hosted_transport_config.h"
-extern esp_err_t esp_hosted_init();
-extern esp_err_t esp_hosted_deinit();
-};
-typedef struct {
-  uint8_t pin_clk;
-  uint8_t pin_cmd;
-  uint8_t pin_d0;
-  uint8_t pin_d1;
-  uint8_t pin_d2;
-  uint8_t pin_d3;
-  uint8_t pin_reset;
-} sdio_pin_config_t;
-
-static bool hosted_initialized = false;
-static sdio_pin_config_t sdio_pin_config = {
-#ifdef BOARD_HAS_SDIO_ESP_HOSTED
-  .pin_clk = BOARD_SDIO_ESP_HOSTED_CLK,
-  .pin_cmd = BOARD_SDIO_ESP_HOSTED_CMD,
-  .pin_d0 = BOARD_SDIO_ESP_HOSTED_D0,
-  .pin_d1 = BOARD_SDIO_ESP_HOSTED_D1,
-  .pin_d2 = BOARD_SDIO_ESP_HOSTED_D2,
-  .pin_d3 = BOARD_SDIO_ESP_HOSTED_D3,
-  .pin_reset = BOARD_SDIO_ESP_HOSTED_RESET
-#else
-  .pin_clk = CONFIG_ESP_SDIO_PIN_CLK,
-  .pin_cmd = CONFIG_ESP_SDIO_PIN_CMD,
-  .pin_d0 = CONFIG_ESP_SDIO_PIN_D0,
-  .pin_d1 = CONFIG_ESP_SDIO_PIN_D1,
-  .pin_d2 = CONFIG_ESP_SDIO_PIN_D2,
-  .pin_d3 = CONFIG_ESP_SDIO_PIN_D3,
-  .pin_reset = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
-#endif
-};
 
 bool WiFiGenericClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
-  if (clk < 0 || cmd < 0 || d0 < 0 || d1 < 0 || d2 < 0 || d3 < 0 || rst < 0) {
-    log_e("All SDIO pins must be defined");
-    return false;
-  }
-  if (hosted_initialized) {
-    log_e("SDIO pins must be set before WiFi is initialized");
-    return false;
-  }
-  sdio_pin_config.pin_clk = clk;
-  sdio_pin_config.pin_cmd = cmd;
-  sdio_pin_config.pin_d0 = d0;
-  sdio_pin_config.pin_d1 = d1;
-  sdio_pin_config.pin_d2 = d2;
-  sdio_pin_config.pin_d3 = d3;
-  sdio_pin_config.pin_reset = rst;
-  return true;
+  return hostedSetPins(clk, cmd, d0, d1, d2, d3, rst);
 }
 
-static bool wifiHostedInit() {
-  if (!hosted_initialized) {
-    hosted_initialized = true;
-    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
-    conf.pin_clk.pin = sdio_pin_config.pin_clk;
-    conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
-    conf.pin_d0.pin = sdio_pin_config.pin_d0;
-    conf.pin_d1.pin = sdio_pin_config.pin_d1;
-    conf.pin_d2.pin = sdio_pin_config.pin_d2;
-    conf.pin_d3.pin = sdio_pin_config.pin_d3;
-    conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
-    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
-      log_e("esp_hosted_init failed!");
-      hosted_initialized = false;
-      return false;
-    }
-    log_v("ESP-HOSTED initialized!");
-  }
-  // Attach pins to PeriMan here
-  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
-  // sdio_pin_config.pin_clk
-  // sdio_pin_config.pin_cmd
-  // sdio_pin_config.pin_d0
-  // sdio_pin_config.pin_d1
-  // sdio_pin_config.pin_d2
-  // sdio_pin_config.pin_d3
-  // sdio_pin_config.pin_reset
-
-  return true;
-}
 #endif
 
 bool wifiLowLevelInit(bool persistent) {
   if (!lowLevelInitDone) {
     lowLevelInitDone = true;
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-    if (!wifiHostedInit()) {
+    if (!hostedInitWiFi()) {
       lowLevelInitDone = false;
       return lowLevelInitDone;
     }
@@ -402,11 +320,7 @@ static bool wifiLowLevelDeinit() {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
       Network.postEvent(&arduino_event);
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-      if (hosted_initialized && esp_hosted_deinit() == ESP_OK) {
-        hosted_initialized = false;
-        log_v("ESP-HOSTED uninitialized!");
-        // detach SDIO pins from PeriMan
-      }
+      hostedDeinitWiFi();
 #endif
     }
   }

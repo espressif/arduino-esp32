@@ -13,10 +13,10 @@
  * See also:
  * https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.characteristic_presentation_format.xml
  */
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 /***************************************************************************
@@ -85,4 +85,4 @@ void BLE2904::setUnit(uint16_t unit) {
 }
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */

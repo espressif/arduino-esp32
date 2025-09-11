@@ -13,10 +13,10 @@
  */
 
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
-
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
 #include <string.h>
 #include "esp32-hal-log.h"
 #include "BLEEddystoneURL.h"
@@ -174,34 +174,22 @@ void BLEEddystoneURL::setUUID(BLEUUID l_uuid) {
 }  // setUUID
 
 void BLEEddystoneURL::setPower(esp_power_level_t advertisedTxPower) {
-  int tx_power;
+  int tx_power = 0;
+#if SOC_BLE_SUPPORTED
   switch (advertisedTxPower) {
-    case ESP_PWR_LVL_N12:  // 12dbm
-      tx_power = -12;
-      break;
-    case ESP_PWR_LVL_N9:  // -9dbm
-      tx_power = -9;
-      break;
-    case ESP_PWR_LVL_N6:  // -6dbm
-      tx_power = -6;
-      break;
-    case ESP_PWR_LVL_N3:  // -3dbm
-      tx_power = -3;
-      break;
-    case ESP_PWR_LVL_N0:  //  0dbm
-      tx_power = 0;
-      break;
-    case ESP_PWR_LVL_P3:  // +3dbm
-      tx_power = +3;
-      break;
-    case ESP_PWR_LVL_P6:  // +6dbm
-      tx_power = +6;
-      break;
-    case ESP_PWR_LVL_P9:  // +9dbm
-      tx_power = +9;
-      break;
-    default: tx_power = 0;
+    case ESP_PWR_LVL_N12: tx_power = -12; break;
+    case ESP_PWR_LVL_N9:  tx_power = -9; break;
+    case ESP_PWR_LVL_N6:  tx_power = -6; break;
+    case ESP_PWR_LVL_N3:  tx_power = -3; break;
+    case ESP_PWR_LVL_N0:  tx_power = 0; break;
+    case ESP_PWR_LVL_P3:  tx_power = +3; break;
+    case ESP_PWR_LVL_P6:  tx_power = +6; break;
+    case ESP_PWR_LVL_P9:  tx_power = +9; break;
+    default:              tx_power = 0; break;
   }
+#else
+  log_w("setPower not supported with hosted HCI - power controlled by co-processor");
+#endif
   m_eddystoneData.advertisedTxPower = int8_t((tx_power - -100) / 2);
 }  // setPower
 
@@ -300,4 +288,4 @@ void BLEEddystoneURL::_initHeadder() {
 }
 
 #endif
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
