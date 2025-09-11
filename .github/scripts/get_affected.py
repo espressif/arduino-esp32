@@ -222,6 +222,123 @@ def detect_universal_ctags() -> bool:
     except Exception:
         return False
 
+def normalize_function_signature(signature: str) -> str:
+    """
+    Normalize a function signature by removing parameter names, keeping only types.
+
+    This handles cases where header declarations and implementations have different parameter names.
+    Uses a simple heuristic: the last word in each parameter is typically the parameter name.
+
+    For example:
+    - "ltoa(long val, char *s, int radix)" -> "ltoa(long,char *,int)"
+    - "ltoa(long value, char *result, int base)" -> "ltoa(long,char *,int)"
+
+    Args:
+        signature: The function signature string, e.g., "(long val, char *s, int radix)"
+
+    Returns:
+        Normalized signature with parameter names removed, e.g., "(long,char *,int)"
+    """
+    if not signature:
+        return signature
+
+    # Normalize signatures: treat (void) and () as equivalent (both mean no parameters)
+    if signature == "(void)":
+        return "()"
+
+    if not (signature.startswith("(") and signature.endswith(")")):
+        return signature
+
+    # Handle const qualifier at the end (e.g., "(int i) const")
+    const_qualifier = ""
+    if signature.endswith(" const"):
+        signature = signature[:-6]  # Remove " const"
+        const_qualifier = " const"
+
+    # Extract parameter list without parentheses
+    param_list = signature[1:-1]
+    if not param_list.strip():
+        return "()" + const_qualifier
+
+    # Split by comma and process each parameter
+    params = []
+    for param in param_list.split(","):
+        param = param.strip()
+        if not param:
+            continue
+
+        # Handle default parameters (e.g., "int x = 5")
+        if "=" in param:
+            param = param.split("=")[0].strip()
+
+        # Try simple approach first: remove the last word
+        # This works for most cases: "int x" -> "int", "MyStruct s" -> "MyStruct"
+        import re
+
+        # Handle arrays first: "int arr[10]" -> "int [10]", "char *argv[]" -> "char *[]"
+        array_match = re.match(r'^(.+?)\s+(\w+)((?:\[\d*\])+)$', param)
+        if array_match:
+            type_part = array_match.group(1).strip()
+            array_brackets = array_match.group(3)
+            params.append(type_part + array_brackets)
+        else:
+            # Handle function pointers: "int (*func)(int, char)" -> "int (*)(int, char)"
+            func_ptr_match = re.match(r'^(.+?)\s*\(\s*\*\s*(\w+)\s*\)\s*\((.+?)\)\s*$', param)
+            if func_ptr_match:
+                return_type = func_ptr_match.group(1).strip()
+                inner_params = func_ptr_match.group(3).strip()
+                # Recursively normalize the inner parameters
+                if inner_params:
+                    inner_normalized = normalize_function_signature(f"({inner_params})")
+                    inner_normalized = inner_normalized[1:-1]  # Remove outer parentheses
+                else:
+                    inner_normalized = ""
+                params.append(f"{return_type} (*)({inner_normalized})")
+            else:
+                # Try simple approach: remove the last word
+                simple_match = re.match(r'^(.+)\s+(\w+)$', param)
+                if simple_match:
+                    # Simple case worked - just remove the last word
+                    type_part = simple_match.group(1).strip()
+                    params.append(type_part)
+                else:
+                    # Fallback to complex regex for edge cases with pointers
+                    # First, try to match cases with pointers/references (including multiple *)
+                    # Pattern: (everything before) (one or more * or &) (space) (parameter name)
+                    m = re.match(r'^(.+?)(\s*[*&]+\s+)(\w+)$', param)
+                    if m:
+                        # Keep everything before the pointers, plus the pointers (without the space before param name)
+                        type_part = m.group(1) + m.group(2).rstrip()
+                        params.append(type_part.strip())
+                    else:
+                        # Try to match cases without space between type and pointer: "char*ptr", "char**ptr"
+                        m = re.match(r'^(.+?)([*&]+)(\w+)$', param)
+                        if m:
+                            # Keep everything before the pointers, plus the pointers
+                            type_part = m.group(1) + m.group(2)
+                            params.append(type_part.strip())
+                        else:
+                            # Single word - assume it's a type
+                            params.append(param.strip())
+
+        # Normalize spacing around pointers to ensure consistent output
+        # This ensures "char *" and "char*" both become "char *"
+        if params:
+            last_param = params[-1]
+            # Normalize spacing around * and & symbols
+            # Replace multiple spaces with single space, ensure space before * and &
+            normalized = re.sub(r'\s+', ' ', last_param)  # Collapse multiple spaces
+            normalized = re.sub(r'\s*([*&]+)', r' \1', normalized)  # Ensure space before * and &
+            normalized = re.sub(r'([*&]+)\s*', r'\1 ', normalized)  # Ensure space after * and &
+            normalized = re.sub(r'\s+', ' ', normalized).strip()  # Clean up extra spaces
+            params[-1] = normalized
+
+    result = "(" + ",".join(params) + ")"
+    if const_qualifier:
+        result += const_qualifier
+
+    return result
+
 def build_qname_from_tag(tag: dict) -> str:
     """
     Compose a qualified name for a function/method using scope + name + signature.
@@ -231,9 +348,8 @@ def build_qname_from_tag(tag: dict) -> str:
     name = tag.get("name") or ""
     signature = tag.get("signature") or ""
 
-    # Normalize signatures: treat (void) and () as equivalent (both mean no parameters)
-    if signature == "(void)":
-        signature = "()"
+    # Normalize the signature to remove parameter names
+    signature = normalize_function_signature(signature)
 
     qparts = []
     if scope:
