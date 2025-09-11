@@ -73,7 +73,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE Authorization Example!");
 
-  // Initialize the BOOT pin for reseting the read count
+  // Initialize the BOOT pin for resetting the read count
   pinMode(BOOT_PIN, INPUT_PULLUP);
 
   // Clear NVS to remove any cached pairing information
