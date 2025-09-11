@@ -175,21 +175,21 @@ void BLEEddystoneURL::setUUID(BLEUUID l_uuid) {
 
 void BLEEddystoneURL::setPower(esp_power_level_t advertisedTxPower) {
   int tx_power = 0;
-  #if SOC_BLE_SUPPORTED
+#if SOC_BLE_SUPPORTED
   switch (advertisedTxPower) {
-    case ESP_PWR_LVL_N12:  tx_power = -12; break;
-    case ESP_PWR_LVL_N9:   tx_power = -9;  break;
-    case ESP_PWR_LVL_N6:   tx_power = -6;  break;
-    case ESP_PWR_LVL_N3:   tx_power = -3;  break;
-    case ESP_PWR_LVL_N0:   tx_power = 0;   break;
-    case ESP_PWR_LVL_P3:   tx_power = +3;  break;
-    case ESP_PWR_LVL_P6:   tx_power = +6;  break;
-    case ESP_PWR_LVL_P9:   tx_power = +9;  break;
-    default:               tx_power = 0;   break;
+    case ESP_PWR_LVL_N12: tx_power = -12; break;
+    case ESP_PWR_LVL_N9:  tx_power = -9; break;
+    case ESP_PWR_LVL_N6:  tx_power = -6; break;
+    case ESP_PWR_LVL_N3:  tx_power = -3; break;
+    case ESP_PWR_LVL_N0:  tx_power = 0; break;
+    case ESP_PWR_LVL_P3:  tx_power = +3; break;
+    case ESP_PWR_LVL_P6:  tx_power = +6; break;
+    case ESP_PWR_LVL_P9:  tx_power = +9; break;
+    default:              tx_power = 0; break;
   }
-  #else
+#else
   log_w("setPower not supported with hosted HCI - power controlled by co-processor");
-  #endif
+#endif
   m_eddystoneData.advertisedTxPower = int8_t((tx_power - -100) / 2);
 }  // setPower
 

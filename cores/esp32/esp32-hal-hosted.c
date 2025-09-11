@@ -49,7 +49,10 @@ static sdio_pin_config_t sdio_pin_config = {
 static bool hostedInit() {
   if (!hosted_initialized) {
     log_i("Initializing ESP-Hosted");
-    log_d("SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0, sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset);
+    log_d(
+      "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
+      sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset
+    );
     hosted_initialized = true;
     struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
     conf.pin_clk.pin = sdio_pin_config.pin_clk;
@@ -140,7 +143,10 @@ bool hostedSetPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8
     int8_t current_clk, current_cmd, current_d0, current_d1, current_d2, current_d3, current_rst;
     hostedGetPins(&current_clk, &current_cmd, &current_d0, &current_d1, &current_d2, &current_d3, &current_rst);
     log_e("SDIO pins must be set before ESP-Hosted is initialized");
-    log_e("Current pins used: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", current_clk, current_cmd, current_d0, current_d1, current_d2, current_d3, current_rst);
+    log_e(
+      "Current pins used: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", current_clk, current_cmd, current_d0, current_d1, current_d2, current_d3,
+      current_rst
+    );
     return false;
   }
 

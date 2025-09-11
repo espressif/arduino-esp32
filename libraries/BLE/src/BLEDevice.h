@@ -31,7 +31,7 @@
 typedef int esp_power_level_t;
 typedef int esp_ble_power_type_t;
 #define ESP_BLE_PWR_TYPE_DEFAULT 0
-#define ESP_PWR_LVL_N12 0
+#define ESP_PWR_LVL_N12          0
 #endif
 
 #include "WString.h"

@@ -472,7 +472,7 @@ int BLEDevice::getPower(esp_ble_power_type_t powerType) {
   }
 #else
   log_w("getPower not supported with hosted HCI - power controlled by co-processor");
-  return 0; // Return default power level
+  return 0;  // Return default power level
 #endif
 }  // getPower
 
