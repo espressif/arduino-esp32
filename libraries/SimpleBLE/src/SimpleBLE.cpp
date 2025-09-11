@@ -148,11 +148,8 @@ static void _nimble_on_sync(void) {
 
 static int _nimble_gap_event(struct ble_gap_event *event, void *arg) {
   switch (event->type) {
-    case BLE_GAP_EVENT_ADV_COMPLETE:
-      log_d("BLE_GAP_EVENT_ADV_COMPLETE");
-      break;
-    default:
-      break;
+    case BLE_GAP_EVENT_ADV_COMPLETE: log_d("BLE_GAP_EVENT_ADV_COMPLETE"); break;
+    default:                         break;
   }
   return 0;
 }
@@ -251,7 +248,7 @@ static bool _init_gap(const char *name) {
   nimble_port_freertos_init(_nimble_host_task);
 
   // Wait for sync
-  int sync_timeout = 1000; // 10 seconds timeout
+  int sync_timeout = 1000;  // 10 seconds timeout
   while (!_nimble_synced && sync_timeout > 0) {
     vTaskDelay(pdMS_TO_TICKS(10));
     sync_timeout--;
@@ -408,5 +405,5 @@ void SimpleBLE::end() {
   _stop_gap();
 }
 
-#endif // CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED
-#endif // SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
+#endif  // CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED
+#endif  // SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
