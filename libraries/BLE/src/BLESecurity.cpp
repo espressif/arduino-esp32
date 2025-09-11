@@ -47,7 +47,7 @@ bool BLESecurity::m_securityStarted = false;
 bool BLESecurity::m_passkeySet = false;
 bool BLESecurity::m_staticPasskey = true;
 bool BLESecurity::m_regenOnConnect = false;
-uint8_t BLESecurity::m_iocap = 0;
+uint8_t BLESecurity::m_iocap = ESP_IO_CAP_NONE;
 uint8_t BLESecurity::m_authReq = 0;
 uint8_t BLESecurity::m_initKey = 0;
 uint8_t BLESecurity::m_respKey = 0;
@@ -188,6 +188,12 @@ void BLESecurity::regenPassKeyOnConnect(bool enable) {
   m_regenOnConnect = enable;
 }
 
+// This function resets the security state on disconnect.
+void BLESecurity::resetSecurity() {
+  log_d("resetSecurity: Resetting security state");
+  m_securityStarted = false;
+}
+
 // This function sets the authentication mode with bonding, MITM, and secure connection options.
 void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool sc) {
   log_d("setAuthenticationMode: bonding=%d, mitm=%d, sc=%d", bonding, mitm, sc);
@@ -270,6 +276,7 @@ void BLESecurity::setEncryptionLevel(esp_ble_sec_act_t level) {
 
 bool BLESecurity::startSecurity(esp_bd_addr_t bd_addr, int *rcPtr) {
 #ifdef CONFIG_BLE_SMP_ENABLE
+  log_d("startSecurity: bd_addr=%s", BLEAddress(bd_addr).toString().c_str());
   if (m_securityStarted) {
     log_w("Security already started for bd_addr=%s", BLEAddress(bd_addr).toString().c_str());
     if (rcPtr) {
@@ -333,6 +340,7 @@ void BLESecurityCallbacks::onAuthenticationComplete(esp_ble_auth_cmpl_t param) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 // This function initiates security for a given connection handle.
 bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
+  log_d("startSecurity: connHandle=%d", connHandle);
   if (m_securityStarted) {
     log_w("Security already started for connHandle=%d", connHandle);
     if (rcPtr) {

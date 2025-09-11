@@ -460,6 +460,9 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
         m_connectedCount--;  // Decrement the number of connected devices count.
       }
 
+      // Reset security state on disconnect
+      BLESecurity::resetSecurity();
+
       // Start advertising again if enabled
       if (m_advertiseOnDisconnect) {
         log_i("Start advertising again after disconnect");
@@ -675,6 +678,9 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         server->m_pServerCallbacks->onDisconnect(server);
         server->m_pServerCallbacks->onDisconnect(server, &event->disconnect.conn);
       }
+
+      // Reset security state on disconnect
+      BLESecurity::resetSecurity();
 
 #if !defined(CONFIG_BT_NIMBLE_EXT_ADV)
       if (server->m_advertiseOnDisconnect) {
