@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 783472,
+                            "flash_percentage": 24,
+                            "ram_bytes": 26172,
+                            "ram_percentage": 7
+                            }]
+                    },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
                             "flash_bytes": 1047442,
@@ -129,14 +137,6 @@
                             "ram_bytes": 17948,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ChipID/GetChipID",
-                    "sizes": [{
-                            "flash_bytes": 299482,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16204,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -252,6 +252,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 619043,
+                            "flash_percentage": 19,
+                            "ram_bytes": 32724,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
                             "flash_bytes": 923435,
@@ -395,14 +403,6 @@
                             "ram_bytes": 66752,
                             "ram_percentage": 20
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ChipID/GetChipID",
-                    "sizes": [{
-                            "flash_bytes": 309027,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20724,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
@@ -542,9 +542,17 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/BLE/examples/UART",
+                    "sizes": [{
+                            "flash_bytes": 638470,
+                            "flash_percentage": 20,
+                            "ram_bytes": 22632,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Write",
                     "sizes": [{
-                            "flash_bytes": 634450,
+                            "flash_bytes": 634466,
                             "flash_percentage": 20,
                             "ram_bytes": 22624,
                             "ram_percentage": 6
@@ -552,7 +560,7 @@
                     },
 {"name": "libraries/BLE/examples/iBeacon",
                     "sizes": [{
-                            "flash_bytes": 640644,
+                            "flash_bytes": 640660,
                             "flash_percentage": 20,
                             "ram_bytes": 22632,
                             "ram_percentage": 6
@@ -653,20 +661,20 @@
                             "ram_bytes": 12124,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ArduinoStackSize",
-                    "sizes": [{
-                            "flash_bytes": 285514,
-                            "flash_percentage": 21,
-                            "ram_bytes": 11904,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/BLE/examples/iBeacon",
+                    "sizes": [{
+                            "flash_bytes": 714846,
+                            "flash_percentage": 22,
+                            "ram_bytes": 22068,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
                             "flash_bytes": 996136,
@@ -794,23 +802,23 @@
                             "ram_bytes": 15628,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ChipID/GetChipID",
-                    "sizes": [{
-                            "flash_bytes": 248680,
-                            "flash_percentage": 18,
-                            "ram_bytes": 13284,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/BLE/examples/UART",
+                    "sizes": [{
+                            "flash_bytes": 732988,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20992,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Write",
                     "sizes": [{
-                            "flash_bytes": 728968,
+                            "flash_bytes": 728984,
                             "flash_percentage": 23,
                             "ram_bytes": 20984,
                             "ram_percentage": 6
@@ -818,7 +826,7 @@
                     },
 {"name": "libraries/BLE/examples/iBeacon",
                     "sizes": [{
-                            "flash_bytes": 735162,
+                            "flash_bytes": 735178,
                             "flash_percentage": 23,
                             "ram_bytes": 20992,
                             "ram_percentage": 6
@@ -887,14 +895,6 @@
                             "ram_bytes": 13176,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 283336,
-                            "flash_percentage": 21,
-                            "ram_bytes": 13344,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -903,7 +903,7 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/iBeacon",
                     "sizes": [{
-                            "flash_bytes": 1119223,
+                            "flash_bytes": 1119251,
                             "flash_percentage": 35,
                             "ram_bytes": 39464,
                             "ram_percentage": 12

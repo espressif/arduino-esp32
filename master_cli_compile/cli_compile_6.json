@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/Insights/examples/MinimalDiagnostics",
+                    "sizes": [{
+                            "flash_bytes": 1147426,
+                            "flash_percentage": 87,
+                            "ram_bytes": 48960,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
                             "flash_bytes": 347448,
@@ -129,14 +137,6 @@
                             "ram_bytes": 113124,
                             "ram_percentage": 34
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterOnOffPlugin",
-                    "sizes": [{
-                            "flash_bytes": 2196892,
-                            "flash_percentage": 69,
-                            "ram_bytes": 113124,
-                            "ram_percentage": 34
-                            }]
                     }
 ]
 },
@@ -252,6 +252,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 989975,
+                            "flash_percentage": 75,
+                            "ram_bytes": 47588,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/Hash/examples/HEX",
                     "sizes": [{
                             "flash_bytes": 307795,
@@ -377,14 +385,6 @@
                             "flash_bytes": 1865427,
                             "flash_percentage": 59,
                             "ram_bytes": 113344,
-                            "ram_percentage": 34
-                            }]
-                    },
-{"name": "libraries/Matter/examples/MatterEnhancedColorLight",
-                    "sizes": [{
-                            "flash_bytes": 1887027,
-                            "flash_percentage": 59,
-                            "ram_bytes": 113384,
                             "ram_percentage": 34
                             }]
                     }
@@ -518,6 +518,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/StreamHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 1085910,
+                            "flash_percentage": 82,
+                            "ram_bytes": 35648,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
                             "flash_bytes": 1026862,
@@ -629,20 +637,20 @@
                             "ram_bytes": 12576,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/LittleFS/examples/LITTLEFS_time",
-                    "sizes": [{
-                            "flash_bytes": 1003956,
-                            "flash_percentage": 76,
-                            "ram_bytes": 35296,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/Hash/examples/SHA3Stream",
+                    "sizes": [{
+                            "flash_bytes": 251836,
+                            "flash_percentage": 19,
+                            "ram_bytes": 13244,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                     "sizes": [{
                             "flash_bytes": 1123774,
@@ -770,20 +778,20 @@
                             "ram_bytes": 140392,
                             "ram_percentage": 42
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterOnIdentify",
-                    "sizes": [{
-                            "flash_bytes": 2558154,
-                            "flash_percentage": 81,
-                            "ram_bytes": 141104,
-                            "ram_percentage": 43
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 318288,
+                            "flash_percentage": 24,
+                            "ram_bytes": 13304,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
                             "flash_bytes": 592270,
@@ -861,14 +869,6 @@
                             "flash_bytes": 293780,
                             "flash_percentage": 22,
                             "ram_bytes": 13184,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/LittleFS/examples/LITTLEFS_test",
-                    "sizes": [{
-                            "flash_bytes": 338414,
-                            "flash_percentage": 25,
-                            "ram_bytes": 13832,
                             "ram_percentage": 4
                             }]
                     }

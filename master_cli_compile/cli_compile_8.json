@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+                    "sizes": [{
+                            "flash_bytes": 1157274,
+                            "flash_percentage": 88,
+                            "ram_bytes": 51476,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
                     "sizes": [{
                             "flash_bytes": 1160380,
@@ -129,14 +137,6 @@
                             "ram_bytes": 17320,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "libraries/SD/examples/SD_time",
-                    "sizes": [{
-                            "flash_bytes": 1084524,
-                            "flash_percentage": 82,
-                            "ram_bytes": 47232,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
@@ -252,6 +252,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
+                    "sizes": [{
+                            "flash_bytes": 971387,
+                            "flash_percentage": 74,
+                            "ram_bytes": 45112,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
                             "flash_bytes": 973195,
@@ -378,14 +386,6 @@
                             "flash_percentage": 34,
                             "ram_bytes": 41032,
                             "ram_percentage": 12
-                            }]
-                    },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
-                    "sizes": [{
-                            "flash_bytes": 389051,
-                            "flash_percentage": 29,
-                            "ram_bytes": 21716,
-                            "ram_percentage": 6
                             }]
                     }
 ]
@@ -518,6 +518,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterOnOffPlugin",
+                    "sizes": [{
+                            "flash_bytes": 1852754,
+                            "flash_percentage": 58,
+                            "ram_bytes": 95656,
+                            "ram_percentage": 29
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterPressureSensor",
                     "sizes": [{
                             "flash_bytes": 1822718,
@@ -629,20 +637,20 @@
                             "ram_bytes": 17592,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "libraries/PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 1035066,
-                            "flash_percentage": 78,
-                            "ram_bytes": 34616,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+                    "sizes": [{
+                            "flash_bytes": 1115750,
+                            "flash_percentage": 85,
+                            "ram_bytes": 48540,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
                     "sizes": [{
                             "flash_bytes": 1090640,
@@ -770,20 +778,20 @@
                             "ram_bytes": 51088,
                             "ram_percentage": 15
                             }]
-                    },
-{"name": "libraries/RainMaker/examples/RMakerSwitch",
-                    "sizes": [{
-                            "flash_bytes": 1790376,
-                            "flash_percentage": 44,
-                            "ram_bytes": 50784,
-                            "ram_percentage": 15
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterMinimum",
+                    "sizes": [{
+                            "flash_bytes": 2157048,
+                            "flash_percentage": 68,
+                            "ram_bytes": 108624,
+                            "ram_percentage": 33
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterOccupancySensor",
                     "sizes": [{
                             "flash_bytes": 2129746,
@@ -861,14 +869,6 @@
                             "flash_bytes": 1138288,
                             "flash_percentage": 86,
                             "ram_bytes": 47500,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
-                    "sizes": [{
-                            "flash_bytes": 1140382,
-                            "flash_percentage": 87,
-                            "ram_bytes": 47476,
                             "ram_percentage": 14
                             }]
                     }

@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/WebServer/examples/HelloServer",
+                    "sizes": [{
+                            "flash_bytes": 1091598,
+                            "flash_percentage": 83,
+                            "ram_bytes": 49664,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
                             "flash_bytes": 1119550,
@@ -129,14 +137,6 @@
                             "ram_bytes": 45608,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/WiFi/examples/SimpleWiFiServer",
-                    "sizes": [{
-                            "flash_bytes": 1031244,
-                            "flash_percentage": 78,
-                            "ram_bytes": 46992,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
@@ -252,6 +252,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+                    "sizes": [{
+                            "flash_bytes": 367599,
+                            "flash_percentage": 28,
+                            "ram_bytes": 40608,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
                     "sizes": [{
                             "flash_bytes": 379563,
@@ -378,14 +386,6 @@
                             "flash_percentage": 75,
                             "ram_bytes": 47540,
                             "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 399983,
-                            "flash_percentage": 30,
-                            "ram_bytes": 21776,
-                            "ram_percentage": 6
                             }]
                     }
 ]
@@ -518,6 +518,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Ticker/examples/TickerParameter",
+                    "sizes": [{
+                            "flash_bytes": 296408,
+                            "flash_percentage": 22,
+                            "ram_bytes": 12976,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
                             "flash_bytes": 980532,
@@ -629,20 +637,20 @@
                             "ram_bytes": 40664,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1",
-                    "sizes": [{
-                            "flash_bytes": 1071440,
-                            "flash_percentage": 81,
-                            "ram_bytes": 40680,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/WebServer/examples/FSBrowser",
+                    "sizes": [{
+                            "flash_bytes": 1078034,
+                            "flash_percentage": 82,
+                            "ram_bytes": 44228,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "libraries/WebServer/examples/Filters",
                     "sizes": [{
                             "flash_bytes": 1043582,
@@ -770,20 +778,20 @@
                             "ram_bytes": 44820,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/WiFi/examples/FTM/FTM_Initiator",
-                    "sizes": [{
-                            "flash_bytes": 941450,
-                            "flash_percentage": 71,
-                            "ram_bytes": 39940,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Preferences/examples/Prefs2Struct",
+                    "sizes": [{
+                            "flash_bytes": 297292,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13192,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/Preferences/examples/StartCounter",
                     "sizes": [{
                             "flash_bytes": 297026,
@@ -863,14 +871,6 @@
                             "ram_bytes": 14592,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/Wire/examples/WireScan",
-                    "sizes": [{
-                            "flash_bytes": 316724,
-                            "flash_percentage": 24,
-                            "ram_bytes": 14584,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -887,7 +887,7 @@
                     },
 {"name": "libraries/SimpleBLE/examples/SimpleBleDevice",
                     "sizes": [{
-                            "flash_bytes": 1077783,
+                            "flash_bytes": 1077919,
                             "flash_percentage": 82,
                             "ram_bytes": 39012,
                             "ram_percentage": 11
