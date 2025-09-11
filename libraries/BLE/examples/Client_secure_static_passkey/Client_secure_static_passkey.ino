@@ -195,6 +195,12 @@ void setup() {
   // Enable secure connection and MITM (for password prompts) for this example
   pSecurity->setAuthenticationMode(false, true, true);
 
+  // Set IO capability to KeyboardOnly
+  // We need the proper IO capability for MITM authentication even
+  // if the passkey is static and won't be entered by the user
+  // See https://www.bluetooth.com/blog/bluetooth-pairing-part-2-key-generation-methods/
+  pSecurity->setCapability(ESP_IO_CAP_IN);
+
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device. Specify that we want active scanning and start the
   // scan to run for 5 seconds.
