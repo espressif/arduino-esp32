@@ -33,6 +33,6 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2025/09/11 00:52:32
+Generated on: 2025/09/12 00:53:02
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/54ed29cbc7d4292a3de52d2a5d0fe478acb8edf6) / [Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/17630031752) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/17630641838)
+[Commit](https://github.com/espressif/arduino-esp32/commit/2ca96fb20bad73a3baaae15ab942ef00f509cd6e) / [Build, Hardware and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/17660533401) / [Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/17661169813)
