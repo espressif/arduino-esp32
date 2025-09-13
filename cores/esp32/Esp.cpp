@@ -378,7 +378,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
 }
 #endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
-uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
+uint32_t EspClass::magicFlashChipSize(uint8_t octet) {
   /*
     FLASH_SIZES = {
         "1MB": 0x00,
@@ -391,7 +391,7 @@ uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
         "128MB": 0x70,
     }
 */
-  switch (byte & 0x0F) {
+  switch (octet & 0x0F) {
     case 0x0: return (1_MB);    // 8 MBit (1MB)
     case 0x1: return (2_MB);    // 16 MBit (2MB)
     case 0x2: return (4_MB);    // 32 MBit (4MB)
