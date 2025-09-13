@@ -51652,13 +51652,14 @@ kodedot.build.dfu_on_boot=0
 kodedot.build.f_cpu=240000000L
 
 kodedot.build.flash_offset=0x400000
-kodedot.build.flash_size=16MB
+kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
 kodedot.build.flash_mode=dio
+kodedot.build.psram_type=opi
 
 kodedot.build.custom_partitions=kodedot_partitions
 
-kodedot.build.psram_type=qspi
+kodedot.build.psram_type=opi
 kodedot.build.defines=
 
 kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
