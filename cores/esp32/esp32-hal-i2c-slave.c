@@ -618,7 +618,7 @@ static bool i2c_slave_check_line_state(int8_t sda, int8_t scl) {
         log_w("Recovered after %d Cycles", a);
         gpio_set_level(sda, 0);  // start
         i2c_slave_delay_us(5);
-        for (uint8_t a = 0; a < 9; a++) {
+        for (uint8_t b = 0; b < 9; b++) {
           gpio_set_level(scl, 1);
           i2c_slave_delay_us(5);
           gpio_set_level(scl, 0);
