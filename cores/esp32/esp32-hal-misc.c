@@ -206,7 +206,7 @@ unsigned long ARDUINO_ISR_ATTR micros() {
 }
 
 unsigned long ARDUINO_ISR_ATTR millis() {
-  return (unsigned long)(esp_timer_get_time() / 1000ULL);
+  return (unsigned long)(esp_timer_get_time() * 1000ULL);
 }
 
 void delay(uint32_t ms) {
