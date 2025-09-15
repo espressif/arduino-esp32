@@ -205,7 +205,7 @@ void setup() {
   Serial.println("Successfully connected to Zigbee network");
 
   // Start Zigbee OTA client query, first request is within a minute and the next requests are sent every hour automatically
-  zbLight.requestOTAUpdate();
+  zbTempSensor.requestOTAUpdate();
 
   // Start Temperature sensor reading task
   xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
