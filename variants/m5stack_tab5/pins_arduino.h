@@ -49,7 +49,6 @@ static const uint8_t T11 = 13;
 static const uint8_t T12 = 14;
 static const uint8_t T13 = 15;
 
-
 //WIFI - ESP32C6
 #define BOARD_HAS_SDIO_ESP_HOSTED
 #define BOARD_SDIO_ESP_HOSTED_CLK   12
