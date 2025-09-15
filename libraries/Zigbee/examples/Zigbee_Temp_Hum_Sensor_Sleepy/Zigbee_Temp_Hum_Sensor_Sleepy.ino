@@ -32,6 +32,12 @@
 
 #include "Zigbee.h"
 
+/* Zigbee OTA configuration */
+
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    0x01010100  // Increment this value when the running image is updated
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 0x01010101  // Increment this value when the downloaded image is updated
+#define OTA_UPGRADE_HW_VERSION              0x0101      // The hardware version, this can be used to differentiate between different hardware versions
+
 #define USE_GLOBAL_ON_RESPONSE_CALLBACK 1  // Set to 0 to use local callback specified directly for the endpoint.
 
 /* Zigbee temperature + humidity sensor configuration */
@@ -45,6 +51,7 @@ uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
+volatile bool otaInhibitSleep = false;
 uint8_t dataToSend = 2;  // Temperature and humidity values are reported in same endpoint, so 2 values are reported
 bool resend = false;
 
@@ -72,6 +79,15 @@ void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status) {
   }
 }
 #endif
+
+void otaSleepInhibitCallback(bool otaActive) {
+  otaInhibitSleep = otaActive;
+  if (otaActive) {
+    Serial.println("OTA started: inhibiting sleep");
+  } else {
+    Serial.println("OTA finished: sleep allowed");
+  }
+}
 
 /************************ Temp sensor *****************************/
 static void meausureAndSleep(void *arg) {
@@ -115,8 +131,10 @@ static void meausureAndSleep(void *arg) {
   }
 
   // Put device to deep sleep after data was sent successfully or timeout
-  Serial.println("Going to sleep now");
-  esp_deep_sleep_start();
+  if (!otaInhibitSleep) {
+    Serial.println("Going to sleep now");
+    esp_deep_sleep_start();
+  }
 }
 
 /********************* Arduino functions **************************/
@@ -131,6 +149,12 @@ void setup() {
 
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensor");
+
+  // Optional: set ota
+  zbTempSensor.addOTAClient(OTA_UPGRADE_RUNNING_FILE_VERSION, OTA_UPGRADE_DOWNLOADED_FILE_VERSION, OTA_UPGRADE_HW_VERSION);
+  
+  // Optional: Register callback for OTA state change (inhibit sleep during OTA)
+  zbTempSensor.onOTAStateChange(otaSleepInhibitCallback);
 
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
@@ -180,6 +204,9 @@ void setup() {
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
 
+  // Start Zigbee OTA client query, first request is within a minute and the next requests are sent every hour automatically
+  zbLight.requestOTAUpdate();
+
   // Start Temperature sensor reading task
   xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
 }
@@ -193,6 +220,10 @@ void loop() {
     while (digitalRead(button) == LOW) {
       delay(50);
       if ((millis() - startTime) > 10000) {
+        if (otaInhibitSleep) {
+          Serial.println("OTA in progress, cannot reset now");
+          break;
+        }
         // If key pressed for more than 10secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
         delay(1000);

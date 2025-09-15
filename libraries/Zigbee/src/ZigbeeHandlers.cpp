@@ -338,6 +338,9 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
     switch (message->upgrade_status) {
       case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_START:
         log_i("Zigbee - OTA upgrade start");
+        for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+          (*it)->zbOTAState(true);  // Notify that OTA is active
+        }
         start_time = esp_timer_get_time();
         s_ota_partition = esp_ota_get_next_update_partition(NULL);
         assert(s_ota_partition);
@@ -348,6 +351,9 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
 #endif
         if (ret != ESP_OK) {
           log_e("Zigbee - Failed to begin OTA partition, status: %s", esp_err_to_name(ret));
+          for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+            (*it)->zbOTAState(false);  // Notify that OTA is no longer active
+          }
           return ret;
         }
         break;
@@ -361,6 +367,9 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
           ret = esp_element_ota_data(total_size, message->payload, message->payload_size, &payload, &payload_size);
           if (ret != ESP_OK) {
             log_e("Zigbee - Failed to element OTA data, status: %s", esp_err_to_name(ret));
+            for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+              (*it)->zbOTAState(false);  // Notify that OTA is no longer active
+            }
             return ret;
           }
 #if CONFIG_ZB_DELTA_OTA
@@ -370,6 +379,9 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
 #endif
           if (ret != ESP_OK) {
             log_e("Zigbee - Failed to write OTA data to partition, status: %s", esp_err_to_name(ret));
+            for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+              (*it)->zbOTAState(false);  // Notify that OTA is no longer active
+            }
             return ret;
           }
         }
@@ -389,6 +401,9 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
           message->ota_header.file_version, message->ota_header.manufacturer_code, message->ota_header.image_type, message->ota_header.image_size,
           (esp_timer_get_time() - start_time) / 1000
         );
+        for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+          (*it)->zbOTAState(false);  // Notify that OTA is no longer active
+        }
 #if CONFIG_ZB_DELTA_OTA
         ret = esp_delta_ota_end(s_ota_handle);
 #else
