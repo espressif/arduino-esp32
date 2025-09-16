@@ -34,6 +34,9 @@
 #if defined __has_include && __has_include("soc/emac_ext_struct.h")
 #include "soc/emac_ext_struct.h"
 #endif /* __has_include("soc/emac_ext_struct.h" */
+#if ETH_PHY_LAN867X_SUPPORTED
+#include "esp_eth_phy_lan867x.h"
+#endif
 #include "soc/rtc.h"
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #include "esp32-hal-periman.h"
@@ -292,6 +295,9 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
     case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
     case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+#if ETH_PHY_LAN867X_SUPPORTED
+    case ETH_PHY_LAN867X: _phy = esp_eth_phy_new_lan867x(&phy_config); break;
+#endif
     default:              log_e("Unsupported PHY %d", type); break;
   }
   if (_phy == NULL) {
