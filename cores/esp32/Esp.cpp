@@ -378,7 +378,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
 }
 #endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
-uint32_t EspClass::magicFlashChipSize(uint8_t octet) {
+uint32_t EspClass::magicFlashChipSize(uint8_t flashByte) {
   /*
     FLASH_SIZES = {
         "1MB": 0x00,
@@ -391,7 +391,7 @@ uint32_t EspClass::magicFlashChipSize(uint8_t octet) {
         "128MB": 0x70,
     }
 */
-  switch (octet & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0x0: return (1_MB);    // 8 MBit (1MB)
     case 0x1: return (2_MB);    // 16 MBit (2MB)
     case 0x2: return (4_MB);    // 32 MBit (4MB)
@@ -405,7 +405,7 @@ uint32_t EspClass::magicFlashChipSize(uint8_t octet) {
   }
 }
 
-uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
+uint32_t EspClass::magicFlashChipSpeed(uint8_t flashByte) {
 #if CONFIG_IDF_TARGET_ESP32C2
   /*
     FLASH_FREQUENCY = {
@@ -415,7 +415,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "15m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (60_MHz);
     case 0x0: return (30_MHz);
     case 0x1: return (20_MHz);
@@ -432,7 +432,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "20m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0x0: return (80_MHz);
     case 0x2: return (20_MHz);
     default:  // fail?
@@ -449,7 +449,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "12m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (48_MHz);
     case 0x0: return (24_MHz);
     case 0x1: return (16_MHz);
@@ -467,7 +467,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "20m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (80_MHz);
     case 0x0: return (40_MHz);
     case 0x1: return (26_MHz);
@@ -478,8 +478,8 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
 #endif
 }
 
-FlashMode_t EspClass::magicFlashChipMode(uint8_t byte) {
-  FlashMode_t mode = (FlashMode_t)byte;
+FlashMode_t EspClass::magicFlashChipMode(uint8_t flashByte) {
+  FlashMode_t mode = (FlashMode_t)flashByte;
   if (mode > FM_SLOW_READ) {
     mode = FM_UNKNOWN;
   }
