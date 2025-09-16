@@ -125,6 +125,10 @@ dependencies:
   chmorgan/esp-libhelix-mp3:
     version: "1.0.3"
     require: public
+  espressif/lan867x:
+    version: "^2.0.0"
+    rules:
+      - if: "target in [esp32, esp32p4]"
 examples:
   - path: ./idf_component_examples/hello_world
   - path: ./idf_component_examples/hw_cdc_hello_world
