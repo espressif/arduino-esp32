@@ -9,7 +9,7 @@
 
 // Pixie has a built in RGB LED WS2812B and a regular LED
 #define PIN_RGB_LED 21
-#define PIN_LED 11
+#define PIN_LED     11
 // Regular built-in LED (pin 11) - for use with digitalWrite()
 #define LED_BUILTIN PIN_LED
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -17,7 +17,7 @@
 #define RGB_LED PIN_RGB_LED
 // Allow testing for LED_BUILTIN
 #ifdef LED_BUILTIN
-  // Defined and ready to use
+// Defined and ready to use
 #endif
 
 static const uint8_t TX = 43;
