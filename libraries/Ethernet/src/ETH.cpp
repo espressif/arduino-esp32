@@ -298,7 +298,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 #if ETH_PHY_LAN867X_SUPPORTED
     case ETH_PHY_LAN867X: _phy = esp_eth_phy_new_lan867x(&phy_config); break;
 #endif
-    default:              log_e("Unsupported PHY %d", type); break;
+    default: log_e("Unsupported PHY %d", type); break;
   }
   if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
