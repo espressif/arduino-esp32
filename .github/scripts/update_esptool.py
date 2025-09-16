@@ -33,6 +33,7 @@ import json
 import os
 import shutil
 import stat
+import subprocess
 import tarfile
 import zipfile
 import hashlib
@@ -201,10 +202,34 @@ def get_release_info(version):
     response.raise_for_status()
     return response.json()
 
+def create_branch_and_commit(version, json_path):
+    """Create a new branch and commit the changes to it."""
+    branch_name = f"update-esptool-{version}"
+    commit_message = f"change(esptool): Upgrade to version {version}"
+
+    try:
+        # Create and checkout new branch
+        subprocess.run(["git", "checkout", "-b", branch_name], check=True, capture_output=True, text=True)
+        print(f"Created and switched to new branch: {branch_name}")
+
+        # Stage the JSON file
+        subprocess.run(["git", "add", str(json_path)], check=True, capture_output=True, text=True)
+        print(f"Staged file: {json_path}")
+
+        # Commit the changes
+        subprocess.run(["git", "commit", "-m", commit_message], check=True, capture_output=True, text=True)
+        print(f"Committed changes with message: {commit_message}")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Git operation failed: {e}")
+        print(f"Command output: {e.stderr if e.stderr else e.stdout}")
+        raise
+
 def main():
     parser = argparse.ArgumentParser(description="Repack esptool and update JSON metadata.")
     parser.add_argument("version", help="Version of the esptool (e.g. 5.0.dev1)")
     parser.add_argument("-l", "--local", dest="base_folder", help="Enable local build mode and set the base folder with unpacked artifacts")
+    parser.add_argument("-c", "--commit", action="store_true", help="Automatically create a new branch and commit the JSON file changes")
     args = parser.parse_args()
 
     script_dir = Path(__file__).resolve().parent
@@ -231,6 +256,11 @@ def main():
 
     shutil.move(tmp_json_path, json_path)
     print(f"Done. JSON updated at {json_path}")
+
+    # Auto-commit if requested
+    if args.commit:
+        print("Auto-commit enabled. Creating branch and committing changes...")
+        create_branch_and_commit(args.version, json_path)
 
 if __name__ == "__main__":
     main()
