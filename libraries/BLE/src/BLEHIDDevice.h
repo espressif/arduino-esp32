@@ -3,16 +3,19 @@
  *
  *  Created on: Jan 03, 2018
  *      Author: chegewara
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
 
 #ifndef _BLEHIDDEVICE_H_
 #define _BLEHIDDEVICE_H_
 
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
-
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include "BLECharacteristic.h"
 #include "BLEService.h"
@@ -75,6 +78,7 @@ private:
   BLECharacteristic *m_batteryLevelCharacteristic;  //0x2a19
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+
 #endif /* _BLEHIDDEVICE_H_ */

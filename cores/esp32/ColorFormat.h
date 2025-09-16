@@ -19,6 +19,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,7 +50,7 @@ typedef struct HsvColor_t espHsvColor_t;
 typedef struct XyColor_t espXyColor_t;
 typedef struct CtColor_t espCtColor_t;
 
-espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y);
+espRgbColor_t espXYToRgbColor(uint8_t Level, uint16_t current_X, uint16_t current_Y, bool addXYZScaling);
 espRgbColor_t espXYColorToRgb(uint8_t Level, espXyColor_t xy);
 espXyColor_t espRgbColorToXYColor(espRgbColor_t rgb);
 espXyColor_t espRgbToXYColor(uint8_t r, uint8_t g, uint8_t b);

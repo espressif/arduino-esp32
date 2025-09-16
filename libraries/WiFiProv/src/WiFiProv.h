@@ -29,7 +29,7 @@
 //Select the scheme using which you want to provision
 typedef enum {
   NETWORK_PROV_SCHEME_SOFTAP,
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   NETWORK_PROV_SCHEME_BLE,
 #endif
   NETWORK_PROV_SCHEME_MAX
@@ -37,7 +37,7 @@ typedef enum {
 
 typedef enum {
   NETWORK_PROV_SCHEME_HANDLER_NONE,
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM,
   NETWORK_PROV_SCHEME_HANDLER_FREE_BLE,
   NETWORK_PROV_SCHEME_HANDLER_FREE_BT,
@@ -65,6 +65,8 @@ public:
   void printQR(const char *name, const char *pop, const char *transport, Print &out = Serial);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_WIFIPROV)
 extern WiFiProvClass WiFiProv;
+#endif
 
 #endif /* SOC_WIFI_SUPPORTED */

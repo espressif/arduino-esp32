@@ -5,7 +5,9 @@
    author: chegewara
 */
 
-#ifndef CONFIG_BT_BLE_50_FEATURES_SUPPORTED
+#ifndef CONFIG_BLUEDROID_ENABLED
+#error "NimBLE does not support periodic advertising yet. Try using Bluedroid."
+#elif !defined(CONFIG_BT_BLE_50_FEATURES_SUPPORTED)
 #error "This SoC does not support BLE5. Try using ESP32-C3, or ESP32-S3"
 #else
 #include <BLEDevice.h>

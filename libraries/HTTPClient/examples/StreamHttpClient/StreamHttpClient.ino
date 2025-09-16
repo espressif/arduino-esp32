@@ -12,21 +12,19 @@
 
 #include <HTTPClient.h>
 
-#define USE_SERIAL Serial
-
 WiFiMulti wifiMulti;
 
 void setup() {
 
-  USE_SERIAL.begin(115200);
+  Serial.begin(115200);
 
-  USE_SERIAL.println();
-  USE_SERIAL.println();
-  USE_SERIAL.println();
+  Serial.println();
+  Serial.println();
+  Serial.println();
 
   for (uint8_t t = 4; t > 0; t--) {
-    USE_SERIAL.printf("[SETUP] WAIT %d...\n", t);
-    USE_SERIAL.flush();
+    Serial.printf("[SETUP] WAIT %d...\n", t);
+    Serial.flush();
     delay(1000);
   }
 
@@ -39,18 +37,18 @@ void loop() {
 
     HTTPClient http;
 
-    USE_SERIAL.print("[HTTP] begin...\n");
+    Serial.print("[HTTP] begin...\n");
 
     // configure server and url
     http.begin("http://192.168.1.12/test.html");
     //http.begin("192.168.1.12", 80, "/test.html");
 
-    USE_SERIAL.print("[HTTP] GET...\n");
+    Serial.print("[HTTP] GET...\n");
     // start connection and send HTTP header
     int httpCode = http.GET();
     if (httpCode > 0) {
       // HTTP header has been send and Server response header has been handled
-      USE_SERIAL.printf("[HTTP] GET... code: %d\n", httpCode);
+      Serial.printf("[HTTP] GET... code: %d\n", httpCode);
 
       // file found at server
       if (httpCode == HTTP_CODE_OK) {
@@ -74,7 +72,7 @@ void loop() {
             int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
 
             // write it to Serial
-            USE_SERIAL.write(buff, c);
+            Serial.write(buff, c);
 
             if (len > 0) {
               len -= c;
@@ -83,11 +81,11 @@ void loop() {
           delay(1);
         }
 
-        USE_SERIAL.println();
-        USE_SERIAL.print("[HTTP] connection closed or file end.\n");
+        Serial.println();
+        Serial.print("[HTTP] connection closed or file end.\n");
       }
     } else {
-      USE_SERIAL.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
     }
 
     http.end();

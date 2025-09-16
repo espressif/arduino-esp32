@@ -222,10 +222,34 @@ size_t getArduinoLoopTaskStackSize(void);
     return sz;                           \
   }
 
+#define ESP32_USB_MIDI_DEFAULT_NAME "TinyUSB MIDI"
+/**
+* @brief Set the current device name
+* 1. Name set via constructor (if any)
+* 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+* 3. Default name "TinyUSB MIDI"
+* If device name is set as "", it will be ignored
+*/
+#define SET_USB_MIDI_DEVICE_NAME(name)        \
+  const char *getUSBMIDIDefaultDeviceName() { \
+    if (!name || strlen(name) == 0) {         \
+      return ESP32_USB_MIDI_DEFAULT_NAME;     \
+    }                                         \
+    return name;                              \
+  }
+
 bool shouldPrintChipDebugReport(void);
 #define ENABLE_CHIP_DEBUG_REPORT          \
   bool shouldPrintChipDebugReport(void) { \
     return true;                          \
+  }
+
+// macro SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms) can set a time in milliseconds
+// before the sketch would start its execution. It gives the user time to open the Serial Monitor
+uint64_t getArduinoSetupWaitTime_ms(void);
+#define SET_TIME_BEFORE_STARTING_SKETCH_MS(time_ms) \
+  uint64_t getArduinoSetupWaitTime_ms() {           \
+    return (time_ms);                               \
   }
 
 // allows user to bypass esp_spiram_test()

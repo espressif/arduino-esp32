@@ -16,8 +16,9 @@
 #define _BLUETOOTH_SERIAL_H_
 
 #include "sdkconfig.h"
+#include "soc/soc_caps.h"
 
-#if defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+#if SOC_BT_SUPPORTED && defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include "Arduino.h"
 #include "Stream.h"
@@ -34,7 +35,7 @@ typedef std::function<void()> KeyRequestCb;
 typedef std::function<void(boolean success)> AuthCompleteCb;
 typedef std::function<void(BTAdvertisedDevice *pAdvertisedDevice)> BTAdvertisedDeviceCb;
 
-class BluetoothSerial : public Stream {
+class [[deprecated("BluetoothSerial won't be supported in version 4.0.0 by default")]] BluetoothSerial : public Stream {
 public:
   BluetoothSerial(void);
   ~BluetoothSerial(void);

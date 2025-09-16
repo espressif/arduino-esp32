@@ -5,6 +5,6 @@
 doctests = True
 # W503 and W504 are mutually exclusive. PEP 8 recommends line break before.
 ignore = W503,E203
-max-complexity = 20
+max-complexity = 30
 max-line-length = 120
 select = E,W,F,C,N

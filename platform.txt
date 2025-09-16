@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=3.2.1
+version=3.3.0
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
@@ -84,6 +84,7 @@ build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32p4=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32c5=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
 build.zigbee_mode=
@@ -259,6 +260,14 @@ debug_config.esp32c6=
 # ESP32-H2 debug configuration (TBD)
 debug_script.esp32h2=esp32h2-builtin.cfg
 debug_config.esp32h2=
+
+# ESP32-P4 debug configuration (TBD)
+debug_script.esp32p4=esp32p4-builtin.cfg
+debug_config.esp32p4=
+
+# ESP32-C5 debug configuration (TBD)
+debug_script.esp32c5=esp32c5-builtin.cfg
+debug_config.esp32c5=
 
 # Debug API variable definitions
 debug.executable={build.path}/{build.project_name}.elf

@@ -43,7 +43,10 @@
 #include "soc/i2c_struct.h"
 #include "soc/periph_defs.h"
 #include "hal/i2c_ll.h"
+#include "hal/i2c_types.h"
+#ifndef CONFIG_IDF_TARGET_ESP32C5
 #include "hal/clk_gate_ll.h"
+#endif
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
 #include "esp32-hal-periman.h"
@@ -325,7 +328,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = 100000L;
   }
   frequency = (frequency * 5) / 4;
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32C5)
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1
@@ -335,10 +338,15 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   }
 #endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \
+  || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0))
   i2c_ll_set_mode(i2c->dev, I2C_BUS_MODE_SLAVE);
   i2c_ll_enable_pins_open_drain(i2c->dev, true);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
   i2c_ll_enable_fifo_mode(i2c->dev, true);
+#else
+  i2c_ll_slave_set_fifo_mode(i2c->dev, true);
+#endif
 #else
   i2c_ll_slave_init(i2c->dev);
   i2c_ll_slave_set_fifo_mode(i2c->dev, true);
@@ -363,7 +371,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 
   i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
   i2c_ll_clear_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
   i2c_ll_enable_fifo_mode(i2c->dev, true);
 #else
   i2c_ll_slave_set_fifo_mode(i2c->dev, true);
@@ -558,6 +566,9 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
     i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB); /*!< I2C source clock from APB, 80M*/
   }
 #elif SOC_I2C_SUPPORT_XTAL
+#ifndef XTAL_CLK_FREQ
+#define XTAL_CLK_FREQ APB_CLK_FREQ
+#endif
   i2c_ll_master_cal_bus_clk(XTAL_CLK_FREQ, clk_speed, &clk_cal);
   I2C_CLOCK_SRC_ATOMIC() {
     i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL); /*!< I2C source clock from XTAL, 40M */
@@ -607,7 +618,7 @@ static bool i2c_slave_check_line_state(int8_t sda, int8_t scl) {
         log_w("Recovered after %d Cycles", a);
         gpio_set_level(sda, 0);  // start
         i2c_slave_delay_us(5);
-        for (uint8_t a = 0; a < 9; a++) {
+        for (uint8_t b = 0; b < 9; b++) {
           gpio_set_level(scl, 1);
           i2c_slave_delay_us(5);
           gpio_set_level(scl, 0);

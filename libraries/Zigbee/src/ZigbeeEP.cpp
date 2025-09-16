@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Common Class for Zigbee End Point */
 
 #include "ZigbeeEP.h"
@@ -14,6 +28,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _on_ota_state_change = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -301,6 +316,12 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
     }
   } else {
     log_w("Other identify commands are not implemented yet.");
+  }
+}
+
+void ZigbeeEP::zbOTAState(bool otaActive) {
+  if (_on_ota_state_change != NULL) {
+    _on_ota_state_change(otaActive);
   }
 }
 
@@ -608,7 +629,17 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
   log_w("No matching device found for removal");
 }
 
-const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
+void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message) {
+  log_v("Default response received for endpoint %d", _endpoint);
+  log_v("Status code: %s", esp_zb_zcl_status_to_name(message->status_code));
+  log_v("Response to command: %d", message->resp_to_cmd);
+  if (_on_default_response) {
+    _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
+  }
+}
+
+// Global function implementation
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
   switch (status) {
     case ESP_ZB_ZCL_STATUS_SUCCESS:               return "Success";
     case ESP_ZB_ZCL_STATUS_FAIL:                  return "Fail";

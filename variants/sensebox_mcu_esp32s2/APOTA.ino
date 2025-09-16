@@ -1,3 +1,7 @@
+// APOTA is an Arduino fallback sketch that is written to OTA1_Partition.
+// APOTA opens an access point which waits to receive a .bin file on /sketch.
+// After successful upload, the file is written to OTA0_Partition, and the microcontroller reboots to the newly uploaded sketch.
+
 #define DISPLAY_ENABLED
 
 #include <WiFi.h>
@@ -107,10 +111,10 @@ void setupDisplay() {
 
 void displayStatusBar(int progress) {
   display.clearDisplay();
-  display.setCursor(24, 8);
-  display.println("Sketch wird");
-  display.setCursor(22, 22);
-  display.println("hochgeladen!");
+  display.setCursor(16, 8);
+  display.println("Sketch is being");
+  display.setCursor(32, 22);
+  display.println("uploaded!");
 
   display.fillRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, BLACK);  // Clear status bar area
   display.drawRect(0, SCREEN_HEIGHT - 24, SCREEN_WIDTH - 4, 8, WHITE);  // Draw border
@@ -132,12 +136,12 @@ void displayWelcomeScreen() {
   display.drawBitmap(0, 12, epd_bitmap_wifi, 44, 44, WHITE);
 
   // Display SSID text
-  display.setCursor(40, 13);
+  display.setCursor(52, 13);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Verbinde dich");  // "Connect"
+  display.println("Connect");
   display.setCursor(60, 27);
-  display.println("mit:");  // "with"
+  display.println("with:");
 
   // Display SSID
   display.setCursor(40, 43);
@@ -157,9 +161,9 @@ void displaySuccessScreen() {
   display.setCursor(48, 22);
   display.setTextSize(1);
   display.setTextColor(WHITE, BLACK);
-  display.println("Erfolgreich");  // "Successfully"
+  display.println("Successfully");
   display.setCursor(48, 36);
-  display.println("hochgeladen!");  // "uploaded!"
+  display.println("uploaded!");
 
   display.display();
 }
@@ -267,7 +271,7 @@ void loop() {
 #endif
 
   if (doublePressDetected) {
-    Serial.println("Doppeldruck erkannt!");  // "Double press detected!"
+    Serial.println("Double press detected!");
     setBootPartitionToOTA0();
 #ifdef DISPLAY_ENABLED
     display.setCursor(0, 0);

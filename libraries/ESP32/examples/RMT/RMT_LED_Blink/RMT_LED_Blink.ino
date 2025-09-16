@@ -276,6 +276,30 @@ void RMT_Loop_Write_Blink() {
   delay(2000);
 }
 
+void RMT_Repeated_Write_Blink() {
+  Serial.println("Using RMT Writing repeated N times to blink an LED.");
+  Serial.println("Blinking at 1s on + 1s off :: 2 blinks");
+  // repeating blink_1s_rmt_data (1s on + 1s off) 2 times for 2 blinks
+  if (!rmtWriteRepeated(BLINK_GPIO, blink_1s_rmt_data, RMT_SYMBOLS_OF(blink_1s_rmt_data), 2)) {
+    Serial.println("===> rmtWrite Blink 1s Error!");
+  }
+  delay(4000 + 1000);  // it should blink 2 times and stop automatically
+  Serial.println("Blinking at 500ms on + 500ms off :: 4 blinks");
+  // repeating blink_500ms_rmt_data (500ms on + 500ms off) 4 times for 4 blinks
+  if (!rmtWriteRepeated(BLINK_GPIO, blink_500ms_rmt_data, RMT_SYMBOLS_OF(blink_500ms_rmt_data), 4)) {
+    Serial.println("===> rmtWrite Blink 0.5s Error!");
+  }
+  delay(4000 + 1000);  // it should blink 4 times and stop automatically
+  Serial.println("Blinking at 250ms on + 250ms off :: 8 blinks");
+  // repeating blink_250ms_rmt_data (250ms on + 250ms off) 8 times for 8 blinks
+  if (!rmtWriteRepeated(BLINK_GPIO, blink_250ms_rmt_data, RMT_SYMBOLS_OF(blink_250ms_rmt_data), 8)) {
+    Serial.println("===> rmtWrite Blink 0.25s Error!");
+  }
+  delay(4000 + 1000);  // it should blink 8 times and stop automatically
+  Serial.println("Blinking is OFF for 2 seconds");
+  delay(2000);
+}
+
 void RMT_Single_Write_Blocking_Blink() {
   Serial.println("Using RMT Writing and its Completion to blink an LED.");
   Serial.println("Blinking at 1s on + 1s off :: 2 blinks");
@@ -356,6 +380,7 @@ void setup() {
 void loop() {
   RMT_Write_Aync_Non_Blocking_Blink();
   RMT_Loop_Write_Blink();
+  RMT_Repeated_Write_Blink();
   RMT_Single_Write_Blocking_Blink();
   Serial.println("\nStarting OVER...\n");
 }
