@@ -29578,6 +29578,96 @@ wesp32.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+mant1s.name=Silicognition ManT1S
+
+mant1s.bootloader.tool=esptool_py
+mant1s.bootloader.tool.default=esptool_py
+
+mant1s.upload.tool=esptool_py
+mant1s.upload.tool.default=esptool_py
+mant1s.upload.tool.network=esp_ota
+
+mant1s.upload.maximum_size=1310720
+mant1s.upload.maximum_data_size=2424832
+mant1s.upload.flags=
+mant1s.upload.extra_flags=
+
+mant1s.serial.disableDTR=true
+mant1s.serial.disableRTS=true
+
+mant1s.build.tarch=xtensa
+mant1s.build.bootloader_addr=0x1000
+mant1s.build.target=esp32
+mant1s.build.mcu=esp32
+mant1s.build.core=esp32
+mant1s.build.variant=mant1s
+mant1s.build.board=MANT1S
+
+mant1s.build.f_cpu=240000000L
+mant1s.build.flash_mode=dio
+mant1s.build.flash_size=8MB
+mant1s.build.boot=dio
+mant1s.build.partitions=default
+mant1s.build.defines=
+
+mant1s.menu.FlashFreq.80=80MHz
+mant1s.menu.FlashFreq.80.build.flash_freq=80m
+mant1s.menu.FlashFreq.40=40MHz
+mant1s.menu.FlashFreq.40.build.flash_freq=40m
+
+mant1s.menu.PSRAM.enabled=Enabled
+mant1s.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mant1s.menu.PSRAM.enabled.build.extra_libs=
+mant1s.menu.PSRAM.disabled=Disabled
+mant1s.menu.PSRAM.disabled.build.defines=
+mant1s.menu.PSRAM.disabled.build.extra_libs=
+
+mant1s.menu.PartitionScheme.default=8M OTA with large SPIFFS (1.25MB APP/5.3MB SPIFFS)
+mant1s.menu.PartitionScheme.default.build.partitions=large_spiffs_8MB
+mant1s.menu.PartitionScheme.default_large_app=8M large OTA app with SPIFFS (3MB APP/1.5MB SPIFFS)
+mant1s.menu.PartitionScheme.default_large_app.build.partitions=default_8MB
+mant1s.menu.PartitionScheme.default_large_app.upload.maximum_size=3342336
+mant1s.menu.PartitionScheme.default_fatfs=8M OTA with large FATFS (1.25MB APP/5.3MB FATFS)
+mant1s.menu.PartitionScheme.default_fatfs.build.partitions=large_ffat_8MB
+mant1s.menu.PartitionScheme.default_large_app_fatfs=8M large OTA app with FATFS (3MB APP/1.5MB FATFS)
+mant1s.menu.PartitionScheme.default_large_app_fatfs.build.partitions=default_ffat_8MB
+mant1s.menu.PartitionScheme.default_large_app_fatfs.upload.maximum_size=3342336
+
+mant1s.menu.UploadSpeed.921600=921600
+mant1s.menu.UploadSpeed.921600.upload.speed=921600
+mant1s.menu.UploadSpeed.115200=115200
+mant1s.menu.UploadSpeed.115200.upload.speed=115200
+mant1s.menu.UploadSpeed.256000.windows=256000
+mant1s.menu.UploadSpeed.256000.upload.speed=256000
+mant1s.menu.UploadSpeed.230400.windows.upload.speed=256000
+mant1s.menu.UploadSpeed.230400=230400
+mant1s.menu.UploadSpeed.230400.upload.speed=230400
+mant1s.menu.UploadSpeed.460800.linux=460800
+mant1s.menu.UploadSpeed.460800.macosx=460800
+mant1s.menu.UploadSpeed.460800.upload.speed=460800
+mant1s.menu.UploadSpeed.512000.windows=512000
+mant1s.menu.UploadSpeed.512000.upload.speed=512000
+
+mant1s.menu.DebugLevel.none=None
+mant1s.menu.DebugLevel.none.build.code_debug=0
+mant1s.menu.DebugLevel.error=Error
+mant1s.menu.DebugLevel.error.build.code_debug=1
+mant1s.menu.DebugLevel.warn=Warn
+mant1s.menu.DebugLevel.warn.build.code_debug=2
+mant1s.menu.DebugLevel.info=Info
+mant1s.menu.DebugLevel.info.build.code_debug=3
+mant1s.menu.DebugLevel.debug=Debug
+mant1s.menu.DebugLevel.debug.build.code_debug=4
+mant1s.menu.DebugLevel.verbose=Verbose
+mant1s.menu.DebugLevel.verbose.build.code_debug=5
+
+mant1s.menu.EraseFlash.none=Disabled
+mant1s.menu.EraseFlash.none.upload.erase_cmd=
+mant1s.menu.EraseFlash.all=Enabled
+mant1s.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 t-beam.name=T-Beam
 
 t-beam.bootloader.tool=esptool_py
