@@ -1,7 +1,6 @@
 #ifndef __HTTP_UPDATE_SERVER_H
 #define __HTTP_UPDATE_SERVER_H
 
-#include <SPIFFS.h>
 #include <StreamString.h>
 #include <Update.h>
 #include <WebServer.h>
@@ -123,7 +122,7 @@ public:
             Serial.printf("Update: %s\n", upload.filename.c_str());
           }
           if (upload.name == "filesystem") {
-            if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {  //start with max available size
+            if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {  //Instead of SPIFFS.totalBytes(). Fix https://github.com/espressif/arduino-esp32/issues/9967
               if (_serial_output) {
                 Update.printError(Serial);
               }
