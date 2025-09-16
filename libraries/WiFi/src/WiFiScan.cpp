@@ -114,7 +114,7 @@ int16_t
  */
 void WiFiScanClass::_scanDone() {
   if (!(WiFiGenericClass::getStatusBits() & WIFI_SCANNING_BIT)) {
-    return; //Ignore if not scanning, scan was started by other
+    return;  //Ignore if not scanning, scan was started by other
   }
   esp_wifi_scan_get_ap_num(&(WiFiScanClass::_scanCount));
   if (WiFiScanClass::_scanResult) {
