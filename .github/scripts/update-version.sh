@@ -34,6 +34,10 @@ fi
 echo "New Arduino Version: $ESP_ARDUINO_VERSION"
 echo "ESP-IDF Version: $ESP_IDF_VERSION"
 
+echo "Updating issue template..."
+cat .github/ISSUE_TEMPLATE/issue-report.yml | \
+sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$ESP_ARDUINO_VERSION/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/issue-report.yml
+
 echo "Updating platform.txt..."
 cat platform.txt | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > __platform.txt && mv __platform.txt platform.txt
 
