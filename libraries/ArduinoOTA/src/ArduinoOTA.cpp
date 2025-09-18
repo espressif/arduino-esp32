@@ -182,7 +182,7 @@ String ArduinoOTAClass::readStringUntil(char end) {
 void ArduinoOTAClass::_onRx() {
   if (_state == OTA_IDLE) {
     int cmd = parseInt();
-    if (cmd != U_FLASH && cmd != U_SPIFFS) {
+    if (cmd != U_FLASH && cmd != U_FLASHFS) {
       return;
     }
     _cmd = cmd;
