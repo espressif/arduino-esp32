@@ -349,7 +349,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
 
           delay(100);
 
-          int command =  type;
+          int command = type;
 
           if (type == U_FLASH) {
             log_d("runUpdate flash...\n");
