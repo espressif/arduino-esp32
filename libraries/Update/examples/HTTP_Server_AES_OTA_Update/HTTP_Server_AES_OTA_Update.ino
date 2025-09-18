@@ -18,7 +18,7 @@ defaults:- {if not set ie. "Update.setupCrypt();" }
 
 OTA_MODE options:-
   U_AES_DECRYPT_NONE       decryption disabled, loads OTA image files as sent(plain)
-  U_AES_DECRYPT_AUTO       auto loads both plain & encrypted OTA FLASH image files, and plain OTA SPIFFS image files
+  U_AES_DECRYPT_AUTO       auto loads both plain & encrypted OTA FLASH image files, and plain OTA File System image files
   U_AES_DECRYPT_ON         decrypts OTA image files
 
 https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/
@@ -36,7 +36,6 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
 
 #include <WiFi.h>
 #include <NetworkClient.h>
-#include <SPIFFS.h>
 #include <Update.h>
 #include <WebServer.h>
 #include <ESPmDNS.h>
@@ -145,7 +144,7 @@ void setupHttpUpdateServer() {
       if (upload.status == UPLOAD_FILE_START) {
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (upload.name == "filesystem") {
-          if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {  //start with max available size
+          if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASHFS)) {  //start with max available size
             Update.printError(Serial);
           }
         } else {

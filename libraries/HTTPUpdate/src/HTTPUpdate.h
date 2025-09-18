@@ -98,11 +98,17 @@ public:
     NetworkClient &client, const String &host, uint16_t port, const String &uri = "/", const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL
   );
 
+  t_httpUpdate_return updateFs(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
   t_httpUpdate_return updateSpiffs(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
+  t_httpUpdate_return updateFatfs(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
+  t_httpUpdate_return updateLittlefs(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
   t_httpUpdate_return update(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
+  t_httpUpdate_return updateFs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
   t_httpUpdate_return updateSpiffs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
+  t_httpUpdate_return updateFatfs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
+  t_httpUpdate_return updateLittlefs(HTTPClient &httpClient, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
   // Notification callbacks
   void onStart(HTTPUpdateStartCB cbOnStart) {
@@ -122,7 +128,7 @@ public:
   String getLastErrorString(void);
 
 protected:
-  t_httpUpdate_return handleUpdate(HTTPClient &http, const String &currentVersion, bool spiffs = false, HTTPUpdateRequestCB requestCB = NULL);
+  t_httpUpdate_return handleUpdate(HTTPClient &http, const String &currentVersion, uint8_t type = U_FLASH, HTTPUpdateRequestCB requestCB = NULL);
   bool runUpdate(Stream &in, uint32_t size, String md5, int command = U_FLASH);
 
   // Set the error and potentially use a CB to notify the application
