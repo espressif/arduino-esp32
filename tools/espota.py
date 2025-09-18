@@ -81,7 +81,7 @@ def update_progress(progress):
         sys.stderr.flush()
 
 
-def serve(remote_addr, local_addr, remote_port, local_port, password, filename, command=FLASH):  # noqa: C901
+def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH):  # noqa: C901
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = (local_addr, local_port)
@@ -119,7 +119,10 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
             return 1
         sock2.settimeout(TIMEOUT)
         try:
-            data = sock2.recv(69).decode()  # "AUTH " + 64-char SHA256 nonce
+            if md5_target:
+                data = sock2.recv(37).decode()  # "AUTH " + 32-char MD5 nonce
+            else:
+                data = sock2.recv(69).decode()  # "AUTH " + 64-char SHA256 nonce
             break
         except:  # noqa: E722
             sys.stderr.write(".")
@@ -133,24 +136,36 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
     if data != "OK":
         if data.startswith("AUTH"):
             nonce = data.split()[1]
-
-            # Generate client nonce (cnonce)
             cnonce_text = "%s%u%s%s" % (filename, content_size, file_md5, remote_addr)
-            cnonce = hashlib.sha256(cnonce_text.encode()).hexdigest()
 
-            # PBKDF2-HMAC-SHA256 challenge/response protocol
-            # The ESP32 stores the password as SHA256 hash, so we need to hash the password first
-            # 1. Hash the password with SHA256 (to match ESP32 storage)
-            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            if md5_target:
+                # Generate client nonce (cnonce)
+                cnonce = hashlib.md5(cnonce_text.encode()).hexdigest()
 
-            # 2. Derive key using PBKDF2-HMAC-SHA256 with the password hash
-            salt = nonce + ":" + cnonce
-            derived_key = hashlib.pbkdf2_hmac("sha256", password_hash.encode(), salt.encode(), 10000)
-            derived_key_hex = derived_key.hex()
+                # MD5 challenge/response protocol (insecure, use only for compatibility with old firmwares)
+                # 1. Hash the password with MD5 (to match ESP32 storage)
+                password_hash = hashlib.md5(password.encode()).hexdigest()
 
-            # 3. Create challenge response
-            challenge = derived_key_hex + ":" + nonce + ":" + cnonce
-            response = hashlib.sha256(challenge.encode()).hexdigest()
+                # 2. Create challenge response
+                challenge = "%s:%s:%s" % (password_hash, nonce, cnonce)
+                response = hashlib.md5(challenge.encode()).hexdigest()
+            else:
+                # Generate client nonce (cnonce)
+                cnonce = hashlib.sha256(cnonce_text.encode()).hexdigest()
+
+                # PBKDF2-HMAC-SHA256 challenge/response protocol
+                # The ESP32 stores the password as SHA256 hash, so we need to hash the password first
+                # 1. Hash the password with SHA256 (to match ESP32 storage)
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+                # 2. Derive key using PBKDF2-HMAC-SHA256 with the password hash
+                salt = nonce + ":" + cnonce
+                derived_key = hashlib.pbkdf2_hmac("sha256", password_hash.encode(), salt.encode(), 10000)
+                derived_key_hex = derived_key.hex()
+
+                # 3. Create challenge response
+                challenge = derived_key_hex + ":" + nonce + ":" + cnonce
+                response = hashlib.sha256(challenge.encode()).hexdigest()
 
             sys.stderr.write("Authenticating...")
             sys.stderr.flush()
@@ -158,7 +173,10 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, filename, 
             sock2.sendto(message.encode(), remote_address)
             sock2.settimeout(10)
             try:
-                data = sock2.recv(64).decode()  # SHA256 produces 64 character response
+                if md5_target:
+                    data = sock2.recv(32).decode()  # MD5 produces 32 character response
+                else:
+                    data = sock2.recv(64).decode()  # SHA256 produces 64 character response
             except:  # noqa: E722
                 sys.stderr.write("FAIL\n")
                 logging.error("No Answer to our Authentication")
@@ -269,6 +287,14 @@ def parse_args(unparsed_args):
 
     # authentication
     parser.add_argument("-a", "--auth", dest="auth", help="Set authentication password.", action="store", default="")
+    parser.add_argument(
+        "-m",
+        "--md5-target",
+        dest="md5_target",
+        help="Target device is using MD5 checksum. This is insecure, use only for compatibility with old firmwares.",
+        action="store_true",
+        default=False,
+    )
 
     # image
     parser.add_argument("-f", "--file", dest="image", help="Image file.", metavar="FILE", default=None)
@@ -335,7 +361,14 @@ def main(args):
         command = SPIFFS
 
     return serve(
-        options.esp_ip, options.host_ip, options.esp_port, options.host_port, options.auth, options.image, command
+        options.esp_ip,
+        options.host_ip,
+        options.esp_port,
+        options.host_port,
+        options.auth,
+        options.md5_target,
+        options.image,
+        command
     )
 
 
