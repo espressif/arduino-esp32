@@ -349,6 +349,7 @@ config ARDUINO_SELECTIVE_Hash
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
+    select ARDUINO_SELECTIVE_Hash
     select ARDUINO_SELECTIVE_ESPmDNS
     default y
 
