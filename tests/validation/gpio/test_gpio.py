@@ -1,16 +1,17 @@
 import logging
+from pytest_embedded_wokwi import Wokwi
+from pytest_embedded import Dut
 
 
-def test_gpio(dut):
+def test_gpio(dut: Dut, wokwi: Wokwi):
     LOGGER = logging.getLogger(__name__)
 
+    LOGGER.info("Waiting for Button test begin...")
     dut.expect_exact("Button test")
 
-    LOGGER.info("Expecting button press 1")
-    dut.expect_exact("Button pressed 1 times")
+    for i in range(3):
+        LOGGER.info(f"Setting button pressed for {i + 1} seconds")
+        wokwi.client.set_control("btn1", "pressed", 1)
 
-    LOGGER.info("Expecting button press 2")
-    dut.expect_exact("Button pressed 2 times")
-
-    LOGGER.info("Expecting button press 3")
-    dut.expect_exact("Button pressed 3 times")
+        dut.expect_exact(f"Button pressed {i + 1} times")
+        wokwi.client.set_control("btn1", "pressed", 0)

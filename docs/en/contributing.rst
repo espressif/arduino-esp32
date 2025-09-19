@@ -365,7 +365,7 @@ After the test is finished, you can check the output in the terminal and the gen
 Additionally, for performance tests, you can check the generated JSON file in the same folder.
 
 You can also run the tests in `Wokwi <https://docs.wokwi.com/>`_ or `Espressif's QEMU <https://github.com/espressif/esp-toolchain-docs/tree/main/qemu>`_
-by using the ``-W <timeout_in_ms>`` and ``-Q`` flags respectively. You will need to have the Wokwi and/or QEMU installed in your system
+by using the ``-W`` and ``-Q`` flags respectively. You will need to have the Wokwi and/or QEMU installed in your system
 and set the ``WOKWI_CLI_TOKEN`` and/or ``QEMU_PATH`` environment variables. The ``WOKWI_CLI_TOKEN`` is the CI token that can be obtained from the
 `Wokwi website <https://wokwi.com/dashboard/ci>`_ and the ``QEMU_PATH`` is the path to the QEMU binary.
 
@@ -373,7 +373,7 @@ For example, to run the ``uart`` test using Wokwi, you would run:
 
 .. code-block:: bash
 
-    WOKWI_CLI_TOKEN=<your_wokwi_token> ./.github/scripts/tests_run.sh -s uart -t esp32c3 -W <timeout_in_ms>
+    WOKWI_CLI_TOKEN=<your_wokwi_token> ./.github/scripts/tests_run.sh -s uart -t esp32c3 -W
 
 And to run the ``uart`` test using QEMU, you would run:
 
@@ -398,7 +398,6 @@ A test suite contains the following files:
 * ``<test_name>.ino``: The sketch that will be tested. Required.
 * ``ci.json``: The file that specifies how the test suite will be run in the CI system. Optional.
 * ``diagram.<target>.json``: The diagram file that specifies the connections between the components in Wokwi. Optional.
-* ``scenario.yaml``: The scenario file that specifies how Wokwi will interact with the components. Optional.
 * Any other files that are needed for the test suite.
 
 You can read more about the test python API in the `pytest-embedded documentation <https://docs.espressif.com/projects/pytest-embedded/en/latest/usages/expecting.html>`_.
