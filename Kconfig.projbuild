@@ -388,7 +388,7 @@ config ARDUINO_SELECTIVE_WebServer
     bool "Enable WebServer"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
-    select ARDUINO_SELECTIVE_HASH
+    select ARDUINO_SELECTIVE_Hash
     select ARDUINO_SELECTIVE_FS
 
 config ARDUINO_SELECTIVE_WiFi
