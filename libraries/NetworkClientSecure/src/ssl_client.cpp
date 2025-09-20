@@ -413,26 +413,36 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     return 0;  // Skipping zero-length write
   }
 
-  const unsigned long write_start_time = millis();
-
+  const size_t kChunk = 4096;
+  unsigned long last_progress = millis();  // Timeout since last progress
   size_t sent = 0;
+
   while (sent < len) {
-    const size_t to_send = len - sent;
-    const int ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data + sent, to_send);
+    size_t to_send = len - sent;
+    if (to_send > kChunk) {
+      to_send = kChunk;
+    }
+
+    int ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data + sent, to_send);
     if (ret > 0) {
       sent += ret;
+      last_progress = millis();  // refresh timeout window
       continue;
     }
-    if ((millis() - write_start_time) > ssl_client->socket_timeout) {
-        log_v("SSL write timed out.");
-        return -1;
+
+    if ((millis() - last_progress) > ssl_client->socket_timeout) {
+      log_v("SSL write timed out.");
+      return -1;
     }
+
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
-        log_v("Handling error %d", ret);
-        return handle_error(ret);
+      log_v("Handling error %d", ret);
+      return handle_error(ret);
     }
+
     vTaskDelay(2);
   }
+
   return (int)sent;
 }
 
