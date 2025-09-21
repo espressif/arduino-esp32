@@ -413,14 +413,14 @@ int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len
     return 0;  // Skipping zero-length write
   }
 
-  const size_t kChunk = 4096;
+  static constexpr size_t max_write_chunk_size = 4096;
   unsigned long last_progress = millis();  // Timeout since last progress
   size_t sent = 0;
 
   while (sent < len) {
     size_t to_send = len - sent;
-    if (to_send > kChunk) {
-      to_send = kChunk;
+    if (to_send > max_write_chunk_size) {
+      to_send = max_write_chunk_size;
     }
 
     int ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data + sent, to_send);
