@@ -89,22 +89,8 @@ jobs:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
-  call-hardware-tests:
-    name: Hardware
-    uses: ./.github/workflows/tests_hw.yml
-    needs: [gen-matrix, call-build-tests]
-    if: |
-      github.repository == 'espressif/arduino-esp32' &&
-      (github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'hil_test'))
-    strategy:
-      fail-fast: false
-      matrix:
-        type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
-        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
-    with:
-      type: ${{ matrix.type }}
-      chip: ${{ matrix.chip }}
+  # Hardware tests now run via workflow_run trigger in tests_hw_wokwi.yml
+  # This provides secure access to GitLab secrets while maintaining the same functionality
 
   # This job is disabled for now
   call-qemu-tests:

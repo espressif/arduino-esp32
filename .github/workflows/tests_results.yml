@@ -2,7 +2,7 @@ name: Publish and clean test results
 
 on:
   workflow_run:
-    workflows: ["Wokwi tests"]
+    workflows: ["Hardware and Wokwi tests"]
     types:
       - completed
 
@@ -80,8 +80,8 @@ jobs:
 
       - name: Print links to other runs
         run: |
-          echo "Build, Hardware and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ env.original_run_id }}"
-          echo "Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+          echo "Build and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ env.original_run_id }}"
+          echo "Hardware and Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2.18.0
