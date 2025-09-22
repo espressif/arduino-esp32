@@ -343,7 +343,7 @@ esp_err_t sr_start(
   // Load WakeWord Detection
   afe_config_t *afe_config = afe_config_init(input_format, models, AFE_TYPE_SR, AFE_MODE_LOW_COST);
   g_sr_data->afe_handle = esp_afe_handle_from_config(afe_config);
-  log_d("load wakenet '%s'", afe_config.wakenet_model_name);
+  log_d("load wakenet '%s'", afe_config->wakenet_model_name);
   g_sr_data->afe_data = g_sr_data->afe_handle->create_from_config(afe_config);
   afe_config_free(afe_config);
 
