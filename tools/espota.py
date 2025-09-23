@@ -189,7 +189,9 @@ def authenticate(remote_addr, remote_port, password, md5_target, filename, conte
         return False, str(e)
 
 
-def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH):  # noqa: C901
+def serve(
+    remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH
+):  # noqa: C901
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = (local_addr, local_port)
@@ -220,7 +222,9 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target
             # Try authentication with the specified method first
             sys.stderr.write("Authenticating...")
             sys.stderr.flush()
-            auth_success, auth_error = authenticate(remote_addr, remote_port, password, md5_target, filename, content_size, file_md5, nonce)
+            auth_success, auth_error = authenticate(
+                remote_addr, remote_port, password, md5_target, filename, content_size, file_md5, nonce
+            )
 
             if not auth_success:
                 # If authentication failed and we're not already using MD5, try with MD5
@@ -229,7 +233,9 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target
                     logging.warning("Authentication failed with SHA256, retrying with MD5: %s", auth_error)
 
                     # Restart the entire process with MD5 to get a fresh nonce
-                    success, data, error = send_invitation_and_get_auth_challenge(remote_addr, remote_port, message, True)
+                    success, data, error = send_invitation_and_get_auth_challenge(
+                        remote_addr, remote_port, message, True
+                    )
                     if not success:
                         logging.error("Failed to re-establish connection for MD5 retry: %s", error)
                         return 1
@@ -238,7 +244,9 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target
                         nonce = data.split()[1]
                         sys.stderr.write("Retrying with MD5...")
                         sys.stderr.flush()
-                        auth_success, auth_error = authenticate(remote_addr, remote_port, password, True, filename, content_size, file_md5, nonce)
+                        auth_success, auth_error = authenticate(
+                            remote_addr, remote_port, password, True, filename, content_size, file_md5, nonce
+                        )
                     else:
                         auth_success = False
                         auth_error = "Expected AUTH challenge for MD5 retry, got: " + data
@@ -331,7 +339,9 @@ def serve(remote_addr, local_addr, remote_port, local_port, password, md5_target
 
             # After all attempts, provide detailed error information
             if received_any_response:
-                logging.warning("Upload completed but device sent unexpected response(s). This may still be successful.")
+                logging.warning(
+                    "Upload completed but device sent unexpected response(s). This may still be successful."
+                )
                 logging.warning("Device might be rebooting to apply firmware - this is normal.")
                 connection.close()
                 return 0  # Consider it successful if we got any response and upload completed
@@ -448,7 +458,7 @@ def main(args):
         options.auth,
         options.md5_target,
         options.image,
-        command
+        command,
     )
 
 
