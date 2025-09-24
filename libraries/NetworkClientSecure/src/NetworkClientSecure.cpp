@@ -227,6 +227,10 @@ size_t NetworkClientSecure::write(const uint8_t *buf, size_t size) {
     return 0;
   }
 
+  if (size == 0) {
+    return 0;
+  }
+
   if (_stillinPlainStart) {
     return send_net_data(sslclient.get(), buf, size);
   }
