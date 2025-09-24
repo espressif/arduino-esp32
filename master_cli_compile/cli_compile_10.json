@@ -12,7 +12,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 1119652,
+                            "flash_bytes": 1119680,
                             "flash_percentage": 85,
                             "ram_bytes": 51960,
                             "ram_percentage": 15
@@ -20,7 +20,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 1120344,
+                            "flash_bytes": 1120372,
                             "flash_percentage": 85,
                             "ram_bytes": 52096,
                             "ram_percentage": 15
@@ -28,7 +28,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1119656,
+                            "flash_bytes": 1119684,
                             "flash_percentage": 85,
                             "ram_bytes": 51984,
                             "ram_percentage": 15
@@ -36,7 +36,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 1119710,
+                            "flash_bytes": 1119738,
                             "flash_percentage": 85,
                             "ram_bytes": 51944,
                             "ram_percentage": 15
@@ -44,7 +44,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1128860,
+                            "flash_bytes": 1128884,
                             "flash_percentage": 86,
                             "ram_bytes": 51960,
                             "ram_percentage": 15
@@ -52,7 +52,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 1129544,
+                            "flash_bytes": 1129568,
                             "flash_percentage": 86,
                             "ram_bytes": 51976,
                             "ram_percentage": 15
@@ -116,7 +116,7 @@
                     },
 {"name": "libraries/WebServer/examples/WebUpdate",
                     "sizes": [{
-                            "flash_bytes": 1103586,
+                            "flash_bytes": 1103614,
                             "flash_percentage": 84,
                             "ram_bytes": 49888,
                             "ram_percentage": 15
@@ -350,7 +350,7 @@
                     },
 {"name": "libraries/Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 917467,
+                            "flash_bytes": 917491,
                             "flash_percentage": 69,
                             "ram_bytes": 44916,
                             "ram_percentage": 13
@@ -358,7 +358,7 @@
                     },
 {"name": "libraries/Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1002075,
+                            "flash_bytes": 1002071,
                             "flash_percentage": 76,
                             "ram_bytes": 45368,
                             "ram_percentage": 13
@@ -366,7 +366,7 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 962291,
+                            "flash_bytes": 962315,
                             "flash_percentage": 73,
                             "ram_bytes": 44988,
                             "ram_percentage": 13
@@ -374,17 +374,17 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 990899,
+                            "flash_bytes": 984255,
                             "flash_percentage": 75,
-                            "ram_bytes": 47628,
+                            "ram_bytes": 47596,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 984779,
+                            "flash_bytes": 984803,
                             "flash_percentage": 75,
-                            "ram_bytes": 47540,
+                            "ram_bytes": 47532,
                             "ram_percentage": 14
                             }]
                     }
@@ -491,7 +491,7 @@
                     },
 {"name": "libraries/Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 879142,
+                            "flash_bytes": 879170,
                             "flash_percentage": 67,
                             "ram_bytes": 40264,
                             "ram_percentage": 12
@@ -499,15 +499,15 @@
                     },
 {"name": "libraries/Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 970726,
+                            "flash_bytes": 970722,
                             "flash_percentage": 74,
-                            "ram_bytes": 40716,
+                            "ram_bytes": 40708,
                             "ram_percentage": 12
                             }]
                     },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 923442,
+                            "flash_bytes": 923470,
                             "flash_percentage": 70,
                             "ram_bytes": 40336,
                             "ram_percentage": 12
@@ -528,15 +528,15 @@
                     },
 {"name": "libraries/Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 980632,
+                            "flash_bytes": 980654,
                             "flash_percentage": 74,
-                            "ram_bytes": 35984,
+                            "ram_bytes": 35968,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "libraries/Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1077796,
+                            "flash_bytes": 1077792,
                             "flash_percentage": 82,
                             "ram_bytes": 35864,
                             "ram_percentage": 10
@@ -544,7 +544,7 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1026004,
+                            "flash_bytes": 1026026,
                             "flash_percentage": 78,
                             "ram_bytes": 36048,
                             "ram_percentage": 11
@@ -552,23 +552,23 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1061342,
+                            "flash_bytes": 1051810,
                             "flash_percentage": 80,
-                            "ram_bytes": 38728,
+                            "ram_bytes": 38696,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "libraries/Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1051274,
+                            "flash_bytes": 1051302,
                             "flash_percentage": 80,
-                            "ram_bytes": 38624,
+                            "ram_bytes": 38608,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "libraries/Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 382138,
+                            "flash_bytes": 382162,
                             "flash_percentage": 29,
                             "ram_bytes": 13524,
                             "ram_percentage": 4
@@ -608,7 +608,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 1062340,
+                            "flash_bytes": 1062368,
                             "flash_percentage": 81,
                             "ram_bytes": 40688,
                             "ram_percentage": 12
@@ -616,7 +616,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 1063020,
+                            "flash_bytes": 1063048,
                             "flash_percentage": 81,
                             "ram_bytes": 40816,
                             "ram_percentage": 12
@@ -624,7 +624,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1062328,
+                            "flash_bytes": 1062356,
                             "flash_percentage": 81,
                             "ram_bytes": 40704,
                             "ram_percentage": 12
@@ -632,7 +632,7 @@
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 1062378,
+                            "flash_bytes": 1062406,
                             "flash_percentage": 81,
                             "ram_bytes": 40664,
                             "ram_percentage": 12
@@ -669,47 +669,47 @@
                     },
 {"name": "libraries/WebServer/examples/HttpAdvancedAuth",
                     "sizes": [{
-                            "flash_bytes": 1069422,
+                            "flash_bytes": 1069450,
                             "flash_percentage": 81,
-                            "ram_bytes": 46908,
+                            "ram_bytes": 46892,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallback",
                     "sizes": [{
-                            "flash_bytes": 1070100,
+                            "flash_bytes": 1070128,
                             "flash_percentage": 81,
-                            "ram_bytes": 47036,
+                            "ram_bytes": 47020,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
                     "sizes": [{
-                            "flash_bytes": 1069412,
+                            "flash_bytes": 1069440,
                             "flash_percentage": 81,
-                            "ram_bytes": 46924,
+                            "ram_bytes": 46908,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuth",
                     "sizes": [{
-                            "flash_bytes": 1069462,
+                            "flash_bytes": 1069490,
                             "flash_percentage": 81,
-                            "ram_bytes": 46884,
+                            "ram_bytes": 46868,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1",
                     "sizes": [{
-                            "flash_bytes": 1078624,
+                            "flash_bytes": 1078648,
                             "flash_percentage": 82,
-                            "ram_bytes": 46900,
+                            "ram_bytes": 46884,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
                     "sizes": [{
-                            "flash_bytes": 1079308,
+                            "flash_bytes": 1079332,
                             "flash_percentage": 82,
                             "ram_bytes": 46916,
                             "ram_percentage": 14
@@ -773,7 +773,7 @@
                     },
 {"name": "libraries/WebServer/examples/WebUpdate",
                     "sizes": [{
-                            "flash_bytes": 1053466,
+                            "flash_bytes": 1053494,
                             "flash_percentage": 80,
                             "ram_bytes": 44820,
                             "ram_percentage": 13
@@ -858,7 +858,7 @@
                     },
 {"name": "libraries/Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 384478,
+                            "flash_bytes": 384502,
                             "flash_percentage": 29,
                             "ram_bytes": 14804,
                             "ram_percentage": 4
@@ -927,15 +927,15 @@
                     },
 {"name": "libraries/Update/examples/AWS_S3_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 941847,
+                            "flash_bytes": 941887,
                             "flash_percentage": 71,
-                            "ram_bytes": 44988,
+                            "ram_bytes": 44980,
                             "ram_percentage": 13
                             }]
                     },
 {"name": "libraries/Update/examples/HTTPS_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1045011,
+                            "flash_bytes": 1045007,
                             "flash_percentage": 79,
                             "ram_bytes": 45556,
                             "ram_percentage": 13
@@ -943,7 +943,7 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 985943,
+                            "flash_bytes": 985979,
                             "flash_percentage": 75,
                             "ram_bytes": 46296,
                             "ram_percentage": 14
@@ -951,15 +951,15 @@
                     },
 {"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
                     "sizes": [{
-                            "flash_bytes": 1015859,
+                            "flash_bytes": 1009287,
                             "flash_percentage": 77,
-                            "ram_bytes": 47732,
+                            "ram_bytes": 47700,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/Update/examples/OTAWebUpdater",
                     "sizes": [{
-                            "flash_bytes": 1009867,
+                            "flash_bytes": 1009911,
                             "flash_percentage": 77,
                             "ram_bytes": 47752,
                             "ram_percentage": 14
@@ -967,9 +967,9 @@
                     },
 {"name": "libraries/Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 376307,
+                            "flash_bytes": 376347,
                             "flash_percentage": 28,
-                            "ram_bytes": 21632,
+                            "ram_bytes": 21624,
                             "ram_percentage": 6
                             }]
                     },
