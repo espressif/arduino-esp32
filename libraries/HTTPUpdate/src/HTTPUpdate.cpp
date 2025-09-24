@@ -310,7 +310,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
               _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, NULL);
             }
           }
-          
+
           if (!_partition) {
             _lastError = HTTP_UE_NO_PARTITION;
             return HTTP_UPDATE_FAILED;
