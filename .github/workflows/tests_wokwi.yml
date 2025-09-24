@@ -266,7 +266,7 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         run: |
           pip install -U pip
-          pip install -r tests/requirements.txt
+          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
 
       - name: Wokwi CI Server
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
