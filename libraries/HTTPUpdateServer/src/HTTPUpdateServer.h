@@ -122,7 +122,7 @@ public:
             Serial.printf("Update: %s\n", upload.filename.c_str());
           }
           if (upload.name == "filesystem") {
-            if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {  //Instead of SPIFFS.totalBytes(). Fix https://github.com/espressif/arduino-esp32/issues/9967
+            if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASHFS)) {  //Instead of SPIFFS.totalBytes(). Fix https://github.com/espressif/arduino-esp32/issues/9967
               if (_serial_output) {
                 Update.printError(Serial);
               }
