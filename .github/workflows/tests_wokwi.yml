@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  WOKWI_TIMEOUT: 600000 # Milliseconds
-
 jobs:
   get-artifacts:
     name: Get required artifacts
@@ -271,10 +268,6 @@ jobs:
           pip install -U pip
           pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
 
-      - name: Install Wokwi CLI
-        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        run: curl -L https://wokwi.com/ci/install.sh | sh
-
       - name: Wokwi CI Server
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: wokwi/wokwi-ci-server-action@a6fabb5a49e080158c7a1d121ea5b789536a82c3 # v1
@@ -294,7 +287,7 @@ jobs:
         env:
           WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
         run: |
-          bash .github/scripts/tests_run.sh -c -type ${{ matrix.type }} -t ${{ matrix.chip }} -i 0 -m 1 -W ${{ env.WOKWI_TIMEOUT }}
+          bash .github/scripts/tests_run.sh -c -type ${{ matrix.type }} -t ${{ matrix.chip }} -i 0 -m 1 -W
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as cache
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
