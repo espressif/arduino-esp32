@@ -206,7 +206,6 @@ static void __touchChannelInit(int pad) {
 static touch_value_t __touchRead(uint8_t pin) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return 0;
   }
 
@@ -233,7 +232,6 @@ static touch_value_t __touchRead(uint8_t pin) {
 static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, touch_value_t threshold, bool callWithArgs) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return;
   }
 
@@ -295,7 +293,6 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
 void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return;
   }
 
