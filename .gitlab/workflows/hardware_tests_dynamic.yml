@@ -1,0 +1,105 @@
+###############################
+# Dynamic Hardware Tests Parent
+###############################
+
+# This parent workflow generates a dynamic child pipeline with jobs grouped
+# by SOC + runner tags derived from tests' ci.json, then triggers it and waits.
+
+generate-hw-tests:
+  stage: generate
+  image: python:3.10.1-bullseye
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: on_success
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+    # Inputs expected from the external trigger (GitHub Actions):
+    # - TEST_TYPES: comma-separated (e.g. validation,performance). Default: validation
+    # - TEST_CHIPS: comma-separated (e.g. esp32,esp32s2,esp32s3,esp32c3)
+    # - BINARIES_RUN_ID, GITHUB_REPOSITORY
+    TEST_TYPES: ${TEST_TYPES:-validation}
+    TEST_CHIPS: ${TEST_CHIPS:-esp32,esp32s2,esp32s3,esp32c3,esp32c6,esp32h2,esp32p4,esp32c5}
+  before_script:
+    - pip install -U pip
+    - pip install PyYAML
+    - pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+    - apt-get update
+    - apt-get install -y jq unzip curl
+  script:
+    - mkdir -p ~/.arduino/tests
+    - python3 .gitlab/scripts/gen_hw_jobs.py --chips "$TEST_CHIPS" --types "$TEST_TYPES" --out child-hw-jobs.yml
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - child-hw-jobs.yml
+
+trigger-hw-tests:
+  stage: trigger
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: on_success
+  trigger:
+    include:
+      - artifact: child-hw-jobs.yml
+        job: generate-hw-tests
+    strategy: depend
+  needs: ["generate-hw-tests"]
+  variables:
+    # Forward common context to children
+    BINARIES_RUN_ID: $BINARIES_RUN_ID
+    GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+    PIPELINE_ID: $PIPELINE_ID
+
+
+collect-hw-results:
+  stage: result
+  image: python:3.10.1-bullseye
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: on_success
+  needs: ["trigger-hw-tests"]
+  before_script:
+    - apt-get update && apt-get install -y jq curl unzip
+  script:
+    - |
+      set -euo pipefail
+      echo "Collecting artifacts from child pipeline(s)"
+      api="$CI_API_V4_URL"
+      proj="$CI_PROJECT_ID"
+      parent="$CI_PIPELINE_ID"
+      bridges=$(curl --header "JOB-TOKEN: $CI_JOB_TOKEN" -s "$api/projects/$proj/pipelines/$parent/bridges")
+      echo "$bridges" | jq '.'
+      child_ids=$(echo "$bridges" | jq -r '.[] | select(.name=="trigger-hw-tests") | .downstream_pipeline.id')
+      mkdir -p aggregated
+      for cid in $child_ids; do
+        echo "Child pipeline: $cid"
+        jobs=$(curl --header "JOB-TOKEN: $CI_JOB_TOKEN" -s "$api/projects/$proj/pipelines/$cid/jobs?per_page=100")
+        echo "$jobs" | jq -r '.[] | {id: .id, name: .name, has_artifacts: (.artifacts_file!=null)}'
+        ids=$(echo "$jobs" | jq -r '.[] | select(.artifacts_file!=null) | .id')
+        for jid in $ids; do
+          echo "Downloading artifacts from job $jid"
+          curl --header "JOB-TOKEN: $CI_JOB_TOKEN" -L -s "$api/projects/$proj/jobs/$jid/artifacts" -o artifact.zip || true
+          [ -f artifact.zip ] || continue
+          unzip -o artifact.zip -d aggregated >/dev/null 2>&1 || true
+          rm -f artifact.zip
+        done
+      done
+      # Mirror original paths for junit/report collection
+      mkdir -p tests
+      # Move only relevant files
+      find aggregated -type f -name "*.xml" -exec mkdir -p tests \; -exec cp {} tests/ \;
+      find aggregated -type f -name "result_*.json" -exec cp --parents {} . \; || true
+      echo "Collected XMLs:"
+      ls -la tests || true
+  artifacts:
+    name: "hw-test-results-aggregated"
+    expire_in: 7 days
+    when: always
+    paths:
+      - "tests/**/*.xml"
+      - "tests/**/result_*.json"
+    reports:
+      junit: "tests/**/*.xml"
+
+

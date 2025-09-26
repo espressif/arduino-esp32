@@ -4,8 +4,10 @@
 
 stages:
   - pre_check
+  - generate
   - build
   - test
+  - trigger
   - result
 
 variables:

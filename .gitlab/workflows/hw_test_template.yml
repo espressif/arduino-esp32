@@ -1,0 +1,61 @@
+#############################
+# HW Test Job Template (CI) #
+#############################
+
+# Single job template to be cloned by the dynamic generator
+hw-test-template:
+  stage: test
+  image: python:3.10.1-bullseye
+
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: on_success
+
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+    TEST_TYPE: $TEST_TYPE
+    TEST_CHIP: $TEST_CHIP
+    PIPELINE_ID: $PIPELINE_ID
+    BINARIES_RUN_ID: $BINARIES_RUN_ID
+    GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+
+  tags:
+    - $TEST_CHIP
+
+  before_script:
+    - echo "Running hardware tests for chip:$TEST_CHIP type:$TEST_TYPE"
+    - echo "Pipeline ID:$PIPELINE_ID"
+
+  script:
+    # Clean workspace
+    - rm -rf ~/.arduino/tests
+
+    # Install dependencies
+    - pip install -U pip
+    - pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+    - apt update
+    - apt install -y jq
+
+    # Create directory structure for test binaries
+    - mkdir -p ~/.arduino/tests/$TEST_CHIP
+
+    # Download test binaries from GitHub
+    - bash .gitlab/scripts/get_artifacts.sh
+
+    # List binaries for debugging
+    - ls -laR ~/.arduino/tests
+
+    # Run the actual hardware tests
+    - bash .github/scripts/tests_run.sh -c -type $TEST_TYPE -t $TEST_CHIP -i 0 -m 1 -e
+
+  artifacts:
+    name: "hw-test-results-$TEST_CHIP-$TEST_TYPE"
+    expire_in: 7 days
+    when: always
+    paths:
+      - "tests/**/*.xml"
+      - "tests/**/result_*.json"
+    reports:
+      junit: "tests/**/*.xml"
+
+

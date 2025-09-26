@@ -22,4 +22,4 @@ workflow:
 
 include:
   - ".gitlab/workflows/common.yml"
-  - ".gitlab/workflows/hardware_tests.yml"
+  - ".gitlab/workflows/hardware_tests_dynamic.yml"
