@@ -29533,7 +29533,7 @@ wesp32.build.board=WESP32
 
 wesp32.build.f_cpu=240000000L
 wesp32.build.flash_mode=dio
-wesp32.build.flash_size=4MB
+wesp32.build.flash_size=16MB
 wesp32.build.boot=dio
 wesp32.build.partitions=default
 wesp32.build.defines=
@@ -29542,6 +29542,23 @@ wesp32.menu.FlashFreq.80=80MHz
 wesp32.menu.FlashFreq.80.build.flash_freq=80m
 wesp32.menu.FlashFreq.40=40MHz
 wesp32.menu.FlashFreq.40.build.flash_freq=40m
+
+wesp32.menu.FlashSize.default=16MB (128Mb) rev 7+
+wesp32.menu.FlashSize.default.build.flash_size=16MB
+wesp32.menu.FlashSize.default_4m_flash=4MB (32Mb) rev 5 and below
+wesp32.menu.FlashSize.default_4m_flash.build.flash_size=4MB
+
+wesp32.menu.PartitionScheme.default=16M OTA with large SPIFFS (4.5MB APP/6.8MB SPIFFS)
+wesp32.menu.PartitionScheme.default.build.partitions=large_spiffs_16MB
+wesp32.menu.PartitionScheme.default.upload.maximum_size=4718592
+wesp32.menu.PartitionScheme.default_large_app=16M large OTA app with SPIFFS (6.2MB APP/3.3MB SPIFFS)
+wesp32.menu.PartitionScheme.default_large_app.build.partitions=default_16MB
+wesp32.menu.PartitionScheme.default_large_app.upload.maximum_size=6553600
+wesp32.menu.PartitionScheme.default_fatfs=16M OTA with large FATFS (3MB APP/9.8MB FATFS)
+wesp32.menu.PartitionScheme.default_fatfs.build.partitions=app3M_fat9M_16MB
+wesp32.menu.PartitionScheme.default_fatfs.upload.maximum_size=3145728
+wesp32.menu.PartitionScheme.default_4m_flash=4M OTA app with SPIFFS (1.25MB APP/1.3MB FATFS)
+wesp32.menu.PartitionScheme.default_4m_flash.build.partitions=default
 
 wesp32.menu.UploadSpeed.921600=921600
 wesp32.menu.UploadSpeed.921600.upload.speed=921600
