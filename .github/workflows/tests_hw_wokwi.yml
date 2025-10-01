@@ -1,4 +1,4 @@
-name: Wokwi tests
+name: Hardware and Wokwi tests
 
 on:
   workflow_run:
@@ -9,6 +9,10 @@ on:
 # No permissions by default
 permissions:
   contents: read
+
+env:
+  #TESTS_BRANCH: "master" # Branch that will be checked out to run the tests
+  TESTS_BRANCH: "ci/hw_gitlab"
 
 jobs:
   get-artifacts:
@@ -22,7 +26,10 @@ jobs:
       ref: ${{ steps.set-ref.outputs.ref }}
       base: ${{ steps.set-ref.outputs.base }}
       targets: ${{ steps.set-ref.outputs.targets }}
-      types: ${{ steps.set-ref.outputs.types }}
+      wokwi_types: ${{ steps.set-ref.outputs.wokwi_types }}
+      hw_types: ${{ steps.set-ref.outputs.hw_types }}
+      hw_tests_enabled: ${{ steps.set-ref.outputs.hw_tests_enabled }}
+      push_time: ${{ steps.set-ref.outputs.push_time }}
     steps:
       - name: Report pending
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -60,7 +67,7 @@ jobs:
           name: matrix_info
           path: artifacts/matrix_info
 
-      - name: Try to read PR number
+      - name: Get info
         id: set-ref
         run: |
           pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json | tr -cd "[:digit:]")
@@ -83,13 +90,34 @@ jobs:
             base=${{ github.ref }}
           fi
 
-          types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
+          hw_tests_enabled="true"
+          if [[ -n "$pr_num" ]]; then
+            # This is a PR, check for hil_test label
+            has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
+            echo "Has hil_test label: $has_hil_label"
+
+            if [[ "$has_hil_label" != "true" ]]; then
+              echo "PR does not have hil_test label, hardware tests will be disabled"
+              hw_tests_enabled="false"
+            fi
+          fi
+
+          push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
+          if [ -z "$push_time" ] || [ "$push_time" == "null" ]; then
+            push_time=""
+          fi
+
+          wokwi_types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
+          hw_types=$(cat artifacts/matrix_info/hw_types.txt | tr -cd "[:alpha:],[]'")
           targets=$(cat artifacts/matrix_info/targets.txt | tr -cd "[:alnum:],[]'")
 
           echo "base = $base"
           echo "targets = $targets"
-          echo "types = $types"
+          echo "wokwi_types = $wokwi_types"
+          echo "hw_types = $hw_types"
           echo "pr_num = $pr_num"
+          echo "hw_tests_enabled = $hw_tests_enabled"
+          echo "push_time = $push_time"
 
           printf "$ref" >> artifacts/ref.txt
           printf "Ref = "
@@ -124,28 +152,11 @@ jobs:
           echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
           echo "base=$base" >> $GITHUB_OUTPUT
           echo "targets=$targets" >> $GITHUB_OUTPUT
-          echo "types=$types" >> $GITHUB_OUTPUT
+          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
+          echo "hw_types=$hw_types" >> $GITHUB_OUTPUT
           echo "ref=$ref" >> $GITHUB_OUTPUT
-
-      - name: Download and extract parent hardware results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
-        continue-on-error: true
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-          pattern: test-results-hw-*
-          merge-multiple: true
-          path: artifacts/results/hw
-
-      - name: Download and extract parent GitLab results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
-        continue-on-error: true
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-          pattern: test-results-gitlab
-          merge-multiple: true
-          path: artifacts/results/gitlab
+          echo "hw_tests_enabled=$hw_tests_enabled" >> $GITHUB_OUTPUT
+          echo "push_time=$push_time" >> $GITHUB_OUTPUT
 
       - name: Download and extract parent QEMU results
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
@@ -185,6 +196,194 @@ jobs:
             })).data;
             core.info(`${name} is ${state}`);
 
+  hardware-test:
+    name: Internal Hardware Tests
+    if: |
+      (github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'timed_out') &&
+      needs.get-artifacts.outputs.hw_tests_enabled == 'true'
+    runs-on: ubuntu-latest
+    needs: get-artifacts
+    env:
+      id: ${{ needs.get-artifacts.outputs.ref }}-${{ github.event.workflow_run.head_sha || github.sha }}
+    permissions:
+      actions: read
+      statuses: write
+    steps:
+      - name: Report pending
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Internal Hardware Tests (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: 'pending',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
+      - name: Check if already passed
+        id: get-cache-results
+        if: needs.get-artifacts.outputs.pr_num
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: test-${{ env.id }}-results-hw
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Evaluate if tests should be run
+        id: check-tests
+        run: |
+          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          enabled=true
+
+          # Check cache first
+          if [[ $cache_exists == 'true' ]]; then
+            echo "Already ran, skipping GitLab pipeline trigger"
+            enabled=false
+          else
+            echo "Cache miss, hardware tests will run"
+          fi
+
+          echo "enabled=$enabled" >> $GITHUB_OUTPUT
+
+      - name: Wait for GitLab sync
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          # A webhook to sync the repository is sent to GitLab when a commit is pushed to GitHub
+          # We wait for 10 minutes after the push to GitHub to be safe
+
+          echo "Ensuring GitLab sync has completed before triggering pipeline..."
+
+          # Use push time determined in get-artifacts job
+          push_time="${{ needs.get-artifacts.outputs.push_time }}"
+
+          if [ -n "$push_time" ]; then
+            echo "Push time: $push_time"
+
+            # Convert push time to epoch
+            push_epoch=$(date -d "$push_time" +%s 2>/dev/null || echo "")
+
+            if [ -n "$push_epoch" ]; then
+              current_epoch=$(date +%s)
+              elapsed_minutes=$(( (current_epoch - push_epoch) / 60 ))
+
+              echo "Elapsed time since push: ${elapsed_minutes} minutes"
+
+              if [ $elapsed_minutes -lt 10 ]; then
+                wait_time=$(( (10 - elapsed_minutes) * 60 ))
+                echo "Waiting ${wait_time} seconds for GitLab sync to complete..."
+                sleep $wait_time
+              else
+                echo "GitLab sync should be complete (${elapsed_minutes} minutes elapsed)"
+              fi
+            else
+              echo "Could not parse push timestamp, waiting 60 seconds as fallback..."
+              sleep 60
+            fi
+          else
+            echo "Could not determine push time, waiting 60 seconds as fallback..."
+            sleep 60
+          fi
+
+          echo "Proceeding with GitLab pipeline trigger..."
+
+      - name: Trigger GitLab Pipeline and Download Artifacts
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        uses: digital-blueprint/gitlab-pipeline-trigger-action@v1.3.0
+        id: gitlab-trigger
+        with:
+          host: ${{ secrets.GITLAB_URL }}
+          id: ${{ secrets.GITLAB_PROJECT_ID }}
+          ref: ${{ env.TESTS_BRANCH }}
+          trigger_token: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
+          access_token: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+          download_artifacts: 'true'
+          download_artifacts_on_failure: 'true'
+          download_path: './gitlab-artifacts'
+          variables: '{"TEST_TYPES":"${{ needs.get-artifacts.outputs.hw_types }}","TEST_CHIPS":"${{ needs.get-artifacts.outputs.targets }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
+
+      - name: Process Downloaded Artifacts
+        if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          echo "GitLab Pipeline Status: ${{ steps.gitlab-trigger.outputs.status }}"
+          echo "Artifacts Downloaded: ${{ steps.gitlab-trigger.outputs.artifacts_downloaded }}"
+
+          # Create tests directory structure expected by GitHub caching
+          mkdir -p tests
+
+          # Process downloaded GitLab artifacts
+          if [ "${{ steps.gitlab-trigger.outputs.artifacts_downloaded }}" = "true" ]; then
+            echo "Processing downloaded GitLab artifacts..."
+
+            # Find and copy test result files while preserving directory structure
+            # The GitLab artifacts have the structure: gitlab-artifacts/job_*/artifacts/tests/...
+            # We want to preserve the tests/... part of the structure
+
+            for job_dir in ./gitlab-artifacts/job_*; do
+              if [ -d "$job_dir/artifacts/tests" ]; then
+                # Merge results into tests/ without failing on non-empty directories
+                echo "Merging $job_dir/artifacts/tests/ into tests/"
+                cp -a "$job_dir/artifacts/tests/." tests/
+              fi
+            done
+
+            echo "Test results found:"
+            ls -laR tests/ || echo "No test results found"
+          else
+            echo "No artifacts were downloaded from GitLab"
+          fi
+
+      - name: Upload hardware results as cache
+        uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        if: steps.check-tests.outputs.enabled == 'true' && needs.get-artifacts.outputs.pr_num
+        with:
+          key: test-${{ env.id }}-results-hw
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Upload hardware results as artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: test-results-hw
+          overwrite: true
+          path: |
+            tests/**/*.xml
+            tests/**/result_*.json
+
+      - name: Report conclusion
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        if: always()
+        with:
+          script: |
+            const owner = '${{ github.repository_owner }}';
+            const repo = '${{ github.repository }}'.split('/')[1];
+            const sha = '${{ github.event.workflow_run.head_sha }}';
+            core.debug(`owner: ${owner}`);
+            core.debug(`repo: ${repo}`);
+            core.debug(`sha: ${sha}`);
+            const { context: name, state } = (await github.rest.repos.createCommitStatus({
+              context: 'Runtime Tests / Internal Hardware Tests (${{ github.event.workflow_run.event }} -> workflow_run)',
+              owner: owner,
+              repo: repo,
+              sha: sha,
+              state: '${{ job.status }}',
+              target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+            })).data;
+            core.info(`${name} is ${state}`);
+
   wokwi-test:
     name: Wokwi ${{ matrix.chip }} ${{ matrix.type }} tests
     if: |
@@ -201,7 +400,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type: ${{ fromJson(needs.get-artifacts.outputs.types) }}
+        type: ${{ fromJson(needs.get-artifacts.outputs.wokwi_types) }}
         chip: ${{ fromJson(needs.get-artifacts.outputs.targets) }}
     steps:
       - name: Report pending

@@ -2,7 +2,7 @@ name: Publish and clean test results
 
 on:
   workflow_run:
-    workflows: ["Wokwi tests"]
+    workflows: ["Hardware and Wokwi tests"]
     types:
       - completed
 
@@ -11,24 +11,17 @@ permissions:
   contents: read
 
 jobs:
-  unit-test-results:
-    name: Unit Test Results
-    if: |
-      github.event.workflow_run.conclusion == 'success' ||
-      github.event.workflow_run.conclusion == 'failure' ||
-      github.event.workflow_run.conclusion == 'timed_out'
+  get-artifacts:
+    name: Get artifacts
     runs-on: ubuntu-latest
-    permissions:
-      actions: write
-      statuses: write
-      checks: write
-      pull-requests: write
-      contents: write
+    outputs:
+      original_event: ${{ steps.get-info.outputs.original_event }}
+      original_action: ${{ steps.get-info.outputs.original_action }}
+      original_sha: ${{ steps.get-info.outputs.original_sha }}
+      original_ref: ${{ steps.get-info.outputs.original_ref }}
+      original_conclusion: ${{ steps.get-info.outputs.original_conclusion }}
+      original_run_id: ${{ steps.get-info.outputs.original_run_id }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: gh-pages
-
       - name: Download and Extract Artifacts
         uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
         with:
@@ -36,7 +29,11 @@ jobs:
           path: ./artifacts
 
       - name: Get original info
+        id: get-info
         run: |
+          echo "Artifacts:"
+          ls -laR ./artifacts
+
           original_event=$(cat ./artifacts/parent-artifacts/event.txt)
           original_action=$(cat ./artifacts/parent-artifacts/action.txt)
           original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
@@ -64,12 +61,12 @@ jobs:
           # Run ID: Allow numeric characters
           original_run_id=$(echo "$original_run_id" | tr -cd '[:digit:]')
 
-          echo "original_event=$original_event" >> $GITHUB_ENV
-          echo "original_action=$original_action" >> $GITHUB_ENV
-          echo "original_sha=$original_sha" >> $GITHUB_ENV
-          echo "original_ref=$original_ref" >> $GITHUB_ENV
-          echo "original_conclusion=$original_conclusion" >> $GITHUB_ENV
-          echo "original_run_id=$original_run_id" >> $GITHUB_ENV
+          echo "original_event=$original_event" >> $GITHUB_OUTPUT
+          echo "original_action=$original_action" >> $GITHUB_OUTPUT
+          echo "original_sha=$original_sha" >> $GITHUB_OUTPUT
+          echo "original_ref=$original_ref" >> $GITHUB_OUTPUT
+          echo "original_conclusion=$original_conclusion" >> $GITHUB_OUTPUT
+          echo "original_run_id=$original_run_id" >> $GITHUB_OUTPUT
 
           echo "original_event = $original_event"
           echo "original_action = $original_action"
@@ -80,32 +77,63 @@ jobs:
 
       - name: Print links to other runs
         run: |
-          echo "Build, Hardware and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ env.original_run_id }}"
-          echo "Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+          echo "Build and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ steps.get-info.outputs.original_run_id }}"
+          echo "Hardware and Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+
+  unit-test-results:
+    name: Unit Test Results
+    needs: get-artifacts
+    if: |
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'timed_out'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      statuses: write
+      checks: write
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: gh-pages
+
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          path: ./artifacts
 
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2.18.0
         with:
-          commit: ${{ env.original_sha }}
+          commit: ${{ needs.get-artifacts.outputs.original_sha }}
           event_file: ./artifacts/parent-artifacts/event_file/event.json
-          event_name: ${{ env.original_event }}
+          event_name: ${{ needs.get-artifacts.outputs.original_event }}
           files: ./artifacts/**/*.xml
           action_fail: true
+          action_fail_on_inconclusive: true
           compare_to_earlier_commit: false
           json_file: ./unity_results.json
           json_suite_details: true
 
       - name: Upload JSON
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: ${{ always() }}
+        if: always()
         with:
           name: unity_results
           overwrite: true
-          path: |
-            ./unity_results.json
+          path: ./unity_results.json
 
       - name: Fail if tests failed
-        if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
+        if: |
+          needs.get-artifacts.outputs.original_conclusion == 'failure' ||
+          needs.get-artifacts.outputs.original_conclusion == 'cancelled' ||
+          needs.get-artifacts.outputs.original_conclusion == 'timed_out' ||
+          github.event.workflow_run.conclusion == 'failure' ||
+          github.event.workflow_run.conclusion == 'cancelled' ||
+          github.event.workflow_run.conclusion == 'timed_out'
         run: exit 1
 
       - name: Clean up caches
@@ -113,10 +141,10 @@ jobs:
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
-            const ref = process.env.original_ref;
+            const ref = '${{ needs.get-artifacts.outputs.original_ref }}';
             const key_prefix = 'test-' + ref + '-';
 
-            if (process.env.original_event == 'pull_request' && process.env.original_action != 'closed') {
+            if ('${{ needs.get-artifacts.outputs.original_event }}' == 'pull_request' && '${{ needs.get-artifacts.outputs.original_action }}' != 'closed') {
               console.log('Skipping cache cleanup for open PR');
               return;
             }
@@ -146,12 +174,12 @@ jobs:
           script: |
             const owner = '${{ github.repository_owner }}';
             const repo = '${{ github.repository }}'.split('/')[1];
-            const sha = process.env.original_sha;
+            const sha = '${{ needs.get-artifacts.outputs.original_sha }}';
             core.debug(`owner: ${owner}`);
             core.debug(`repo: ${repo}`);
             core.debug(`sha: ${sha}`);
             const { context: name, state } = (await github.rest.repos.createCommitStatus({
-              context: `Runtime Tests / Report results (${process.env.original_event} -> workflow_run -> workflow_run)`,
+              context: `Runtime Tests / Report results (${{ needs.get-artifacts.outputs.original_event }} -> workflow_run -> workflow_run)`,
               owner: owner,
               repo: repo,
               sha: sha,
@@ -162,12 +190,24 @@ jobs:
             core.info(`${name} is ${state}`);
 
       - name: Generate report
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         env:
           REPORT_FILE: ./runtime-test-results/RUNTIME_TEST_RESULTS.md
           WOKWI_RUN_ID: ${{ github.event.workflow_run.id }}
-          BUILD_RUN_ID: ${{ env.original_run_id }}
-          IS_FAILING: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' || job.status == 'failure' }}
+          BUILD_RUN_ID: ${{ needs.get-artifacts.outputs.original_run_id }}
+          IS_FAILING: |
+            needs.get-artifacts.outputs.original_conclusion == 'failure' ||
+            needs.get-artifacts.outputs.original_conclusion == 'cancelled' ||
+            needs.get-artifacts.outputs.original_conclusion == 'timed_out' ||
+            github.event.workflow_run.conclusion == 'failure' ||
+            github.event.workflow_run.conclusion == 'cancelled' ||
+            github.event.workflow_run.conclusion == 'timed_out' ||
+            job.status == 'failure'
         run: |
           rm -rf artifacts $REPORT_FILE
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
@@ -176,7 +216,12 @@ jobs:
           mv -f ./test_results.json ./runtime-test-results/test_results.json
 
       - name: Generate badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         uses: jaywcjlove/generated-badges@0e078ae4d4bab3777ea4f137de496ab44688f5ad # v1.0.13
         with:
           label: Runtime Tests
@@ -186,7 +231,12 @@ jobs:
           style: flat
 
       - name: Push badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
