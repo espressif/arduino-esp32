@@ -141,12 +141,16 @@ jobs:
       - name: Clean up caches
         if: always()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          ORIGINAL_REF: ${{ needs.get-artifacts.outputs.original_ref }}
+          ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
+          ORIGINAL_ACTION: ${{ needs.get-artifacts.outputs.original_action }}
         with:
           script: |
-            const ref = '${{ needs.get-artifacts.outputs.original_ref }}';
+            const ref = process.env.ORIGINAL_REF;
             const key_prefix = 'test-' + ref + '-';
 
-            if ('${{ needs.get-artifacts.outputs.original_event }}' == 'pull_request' && '${{ needs.get-artifacts.outputs.original_action }}' != 'closed') {
+            if (process.env.ORIGINAL_EVENT == 'pull_request' && process.env.ORIGINAL_ACTION != 'closed') {
               console.log('Skipping cache cleanup for open PR');
               return;
             }
@@ -172,16 +176,19 @@ jobs:
       - name: Report conclusion
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         if: always()
+        env:
+          ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
+          ORIGINAL_SHA: ${{ needs.get-artifacts.outputs.original_sha }}
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
             const repo = '${{ github.repository }}'.split('/')[1];
-            const sha = '${{ needs.get-artifacts.outputs.original_sha }}';
+            const sha = process.env.ORIGINAL_SHA;
             core.debug(`owner: ${owner}`);
             core.debug(`repo: ${repo}`);
             core.debug(`sha: ${sha}`);
             const { context: name, state } = (await github.rest.repos.createCommitStatus({
-              context: `Runtime Tests / Report results (${{ needs.get-artifacts.outputs.original_event }} -> workflow_run -> workflow_run)`,
+              context: `Runtime Tests / Report results (${process.env.ORIGINAL_EVENT} -> workflow_run -> workflow_run)`,
               owner: owner,
               repo: repo,
               sha: sha,

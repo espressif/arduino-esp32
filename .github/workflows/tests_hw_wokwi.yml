@@ -302,7 +302,7 @@ jobs:
 
       - name: Trigger GitLab Pipeline and Download Artifacts
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
-        uses: digital-blueprint/gitlab-pipeline-trigger-action@v1.3.0
+        uses: digital-blueprint/gitlab-pipeline-trigger-action@20e77989b24af658ba138a0aa5291bdc657f1505 # v1.3.0
         id: gitlab-trigger
         with:
           host: ${{ secrets.GITLAB_URL }}

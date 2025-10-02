@@ -5,20 +5,21 @@ import json
 import yaml
 import os
 import sys
-from pathlib import Path
 import copy
+import traceback
+from pathlib import Path
 
-# Resolve repository root from this script location: .gitlab/scripts -> esp32 root
+# Resolve repository root from this script location
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
+TESTS_ROOT = REPO_ROOT / "tests"
 
 # Ensure we run from repo root so relative paths work consistently
 try:
     os.chdir(REPO_ROOT)
-except Exception:
-    pass
-
-TESTS_ROOT = REPO_ROOT / "tests"
+except Exception as e:
+    sys.stderr.write(f"[WARN] Failed to chdir to repo root '{REPO_ROOT}': {e}\n")
+    sys.stderr.write(traceback.format_exc() + "\n")
 
 
 class PrettyDumper(yaml.SafeDumper):
@@ -35,7 +36,9 @@ def read_json(p: Path):
     try:
         with p.open("r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        sys.stderr.write(f"[WARN] Failed to parse JSON file '{p}': {e}\n")
+        sys.stderr.write(traceback.format_exc() + "\n")
         return {}
 
 
@@ -155,7 +158,9 @@ def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
             if not ok:
                 return False
         return True
-    except Exception:
+    except Exception as e:
+        sys.stderr.write(f"[WARN] Failed to evaluate requirements against '{sdkconfig}': {e}\n")
+        sys.stderr.write(traceback.format_exc() + "\n")
         return False
 
 
@@ -166,13 +171,13 @@ def parse_list_arg(s: str) -> list[str]:
     if txt.startswith("[") and txt.endswith("]"):
         try:
             return [str(x).strip() for x in json.loads(txt)]
-        except Exception:
-            # Attempt single-quote JSON -> replace with double quotes
+        except Exception as e:
+            sys.stderr.write(f"[WARN] Failed to parse JSON list '{txt}': {e}. Retrying with quote normalization.\n")
             try:
                 fixed = txt.replace("'", '"')
                 return [str(x).strip() for x in json.loads(fixed)]
-            except Exception:
-                pass
+            except Exception as e2:
+                sys.stderr.write(f"[WARN] Failed to parse JSON list after normalization: {e2}. Falling back to CSV parsing.\n")
     # Fallback: comma-separated
     return [part.strip() for part in txt.split(",") if part.strip()]
 
