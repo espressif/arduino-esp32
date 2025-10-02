@@ -259,6 +259,8 @@ jobs:
 
       - name: Wait for GitLab sync
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        env:
+          PUSH_TIME: ${{ needs.get-artifacts.outputs.push_time }}
         run: |
           # A webhook to sync the repository is sent to GitLab when a commit is pushed to GitHub
           # We wait for 10 minutes after the push to GitHub to be safe
@@ -266,7 +268,7 @@ jobs:
           echo "Ensuring GitLab sync has completed before triggering pipeline..."
 
           # Use push time determined in get-artifacts job
-          push_time="${{ needs.get-artifacts.outputs.push_time }}"
+          push_time="$PUSH_TIME"
 
           if [ -n "$push_time" ]; then
             echo "Push time: $push_time"
