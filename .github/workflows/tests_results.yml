@@ -76,8 +76,10 @@ jobs:
           echo "original_run_id = $original_run_id"
 
       - name: Print links to other runs
+        env:
+          ORIGINAL_RUN_ID: ${{ steps.get-info.outputs.original_run_id }}
         run: |
-          echo "Build and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ steps.get-info.outputs.original_run_id }}"
+          echo "Build and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/$ORIGINAL_RUN_ID"
           echo "Hardware and Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
 
   unit-test-results:
