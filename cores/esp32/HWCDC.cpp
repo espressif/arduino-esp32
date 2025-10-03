@@ -14,7 +14,7 @@
 #include "USB.h"
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
 
-#include "Arduino.h" // defines ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
+#include "Arduino.h" // defines ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE and ARDUINO_SERIAL_EVENT_TASK_PRIORITY
 #include "esp32-hal.h"
 #include "esp32-hal-periman.h"
 #include "HWCDC.h"
@@ -61,7 +61,7 @@ static esp_err_t
   arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
   if (!arduino_hw_cdc_event_loop_handle) {
     esp_event_loop_args_t event_task_args = {
-      .queue_size = 5, .task_name = "arduino_hw_cdc_events", .task_priority = 5, .task_stack_size = ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, .task_core_id = tskNO_AFFINITY
+      .queue_size = 5, .task_name = "arduino_hw_cdc_events", .task_priority = ARDUINO_SERIAL_EVENT_TASK_PRIORITY, .task_stack_size = ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, .task_core_id = tskNO_AFFINITY
     };
     if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
       log_e("esp_event_loop_create failed");
