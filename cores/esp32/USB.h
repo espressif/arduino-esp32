@@ -21,6 +21,7 @@
 
 #include "esp_event.h"
 #include "USBCDC.h"
+#include "Arduino.h"  // necessary for ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE definition
 
 #define ARDUINO_USB_ON_BOOT (ARDUINO_USB_CDC_ON_BOOT | ARDUINO_USB_MSC_ON_BOOT | ARDUINO_USB_DFU_ON_BOOT)
 
@@ -43,7 +44,7 @@ typedef union {
 
 class ESPUSB {
 public:
-  ESPUSB(size_t event_task_stack_size = 2048, uint8_t event_task_priority = 5);
+  ESPUSB(size_t event_task_stack_size = ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE, uint8_t event_task_priority = 5);
   ~ESPUSB();
 
   void onEvent(esp_event_handler_t callback);
