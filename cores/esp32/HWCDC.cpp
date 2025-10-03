@@ -321,17 +321,18 @@ void HWCDC::begin(unsigned long baud) {
   // delay(10);  // USB Host has to enumerate it again
 
   // Peripheral Manager setting for USB D+ D- pins
-  // Peripheral Manager setting for USB D+ D- pins
+  uint8_t pin = USB_INT_PHY0_DM_GPIO_NUM;
   if (perimanGetBusDeinit(ESP32_BUS_TYPE_USB_DM) == NULL) {
     perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
   } 
-  if (!perimanSetPinBus(USB_INT_PHY0_DM_GPIO_NUM, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
     goto err;
   }
+  pin = USB_INT_PHY0_DP_GPIO_NUM;
   if (perimanGetBusDeinit(ESP32_BUS_TYPE_USB_DP) == NULL) {
     perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
   } 
-  if (!perimanSetPinBus(USB_INT_PHY0_DP_GPIO_NUM, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
+  if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
     goto err;
   }
   // Configure PHY
