@@ -4,8 +4,11 @@
 
 stages:
   - pre_check
+  - generate
   - build
   - test
+  - trigger
+  - collect
   - result
 
 variables:

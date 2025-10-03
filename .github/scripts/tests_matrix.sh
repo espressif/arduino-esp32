@@ -17,6 +17,7 @@ targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c6','esp32h2','esp32p4'"
 mkdir -p info
 
 echo "[$wokwi_types]" > info/wokwi_types.txt
+echo "[$hw_types]" > info/hw_types.txt
 echo "[$targets]" > info/targets.txt
 
 {

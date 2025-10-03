@@ -1,4 +1,18 @@
 {
+  "soc_tags": {
+    "esp32": [
+      "psram"
+    ],
+    "esp32s2": [
+      "psram"
+    ],
+    "esp32s3": [
+      "octal_psram"
+    ],
+    "esp32c5": [
+      "psram"
+    ]
+  },
   "platforms": {
     "qemu": false
   },
