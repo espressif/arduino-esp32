@@ -479,6 +479,10 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
       ret &= perimanSetPinBus(rxPin, ESP32_BUS_TYPE_UART_RX, (void *)uart, uart_num, -1);
       if (ret) {
         uart->_rxPin = rxPin;
+        // set Peripheral Manager deInit Callback for this UART pin
+        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX) == NULL) {
+          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
+        }
       }
     }
     if (!ret) {
@@ -502,6 +506,10 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
       ret &= perimanSetPinBus(txPin, ESP32_BUS_TYPE_UART_TX, (void *)uart, uart_num, -1);
       if (ret) {
         uart->_txPin = txPin;
+        // set Peripheral Manager deInit Callback for this UART pin
+        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX) == NULL) {
+          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
+        }
       }
     }
     if (!ret) {
@@ -525,6 +533,10 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
       ret &= perimanSetPinBus(ctsPin, ESP32_BUS_TYPE_UART_CTS, (void *)uart, uart_num, -1);
       if (ret) {
         uart->_ctsPin = ctsPin;
+        // set Peripheral Manager deInit Callback for this UART pin
+        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_CTS) == NULL) {
+          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, _uartDetachBus_CTS);
+        }
       }
     }
     if (!ret) {
@@ -548,6 +560,10 @@ static bool _uartAttachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
       ret &= perimanSetPinBus(rtsPin, ESP32_BUS_TYPE_UART_RTS, (void *)uart, uart_num, -1);
       if (ret) {
         uart->_rtsPin = rtsPin;
+        // set Peripheral Manager deInit Callback for this UART pin
+        if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RTS) == NULL) {
+          perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, _uartDetachBus_RTS);
+        }
       }
     }
     if (!ret) {
@@ -565,14 +581,6 @@ int8_t uart_get_RxPin(uint8_t uart_num) {
 
 int8_t uart_get_TxPin(uint8_t uart_num) {
   return _uart_bus_array[uart_num]._txPin;
-}
-
-void uart_init_PeriMan(void) {
-  // set Peripheral Manager deInit Callback for each UART pin
-  perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, _uartDetachBus_RX);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, _uartDetachBus_TX);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, _uartDetachBus_CTS);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, _uartDetachBus_RTS);
 }
 
 // Routines that take care of UART events will be in the HardwareSerial Class code

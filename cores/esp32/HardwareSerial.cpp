@@ -136,8 +136,6 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     }
   }
 #endif
-  // set deinit function in the Peripheral Manager
-  uart_init_PeriMan();
 }
 
 HardwareSerial::~HardwareSerial() {
