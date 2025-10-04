@@ -25,7 +25,6 @@ WebServer server(80);
 
 void handleChunks() {
   uint8_t countDown = 10;
-  //server.chunkResponseBegin("Transfer-Encoding: chunked");
   server.chunkResponseBegin();
   char countContent[8];
   while (countDown) {
