@@ -19,6 +19,7 @@ menu.EraseFlash=Erase All Flash Before Sketch Upload
 menu.JTAGAdapter=JTAG Adapter
 menu.ZigbeeMode=Zigbee Mode
 menu.PinNumbers=Pin Numbering
+menu.LoggingSubsystem=Logging Subsystem
 
 # Custom options
 menu.Revision=Board Revision
@@ -36923,6 +36924,11 @@ XIAO_ESP32S3.menu.EraseFlash.none=Disabled
 XIAO_ESP32S3.menu.EraseFlash.none.upload.erase_cmd=
 XIAO_ESP32S3.menu.EraseFlash.all=Enabled
 XIAO_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+XIAO_ESP32S3.menu.LoggingSubsystem.Arduino=Arduino
+XIAO_ESP32S3.menu.LoggingSubsystem.Arduino.build.log_subsystem=
+XIAO_ESP32S3.menu.LoggingSubsystem.ESP_IDF=ESP_IDF
+XIAO_ESP32S3.menu.LoggingSubsystem.ESP_IDF.build.log_subsystem=-DUSE_ESP_IDF_LOG
 
 ##############################################################
 
