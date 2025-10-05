@@ -374,16 +374,17 @@ void printAfterSetupInfo(void) {
  * @return Source clock frequency in MHz (80, 120, 160, or 240)
  */
 uint8_t getFlashSourceFrequencyMHz(void) {
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32 classic supports 40 MHz and 80 MHz
+  // Note: ESP32 uses the PLL clock (80 MHz) as source and divides it
+  return 80;  // Always 80 MHz source, divider determines 40/80 MHz
+#else
   volatile uint32_t* core_clk_reg = (volatile uint32_t*)(FLASH_SPI0_BASE + FLASH_CORE_CLK_SEL_OFFSET);
   uint32_t core_clk_sel = (*core_clk_reg) & 0x3;  // Bits 0-1
   
   uint8_t source_freq = 80;  // Default
   
-#if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic supports 40 MHz and 80 MHz
-  // Note: ESP32 uses the PLL clock (80 MHz) as source and divides it
-  source_freq = 80;  // Always 80 MHz source, divider determines 40/80 MHz
-#elif CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32S3
   switch (core_clk_sel) {
     case 0:  source_freq = 80;  break;
     case 1:  source_freq = 120; break;
@@ -405,6 +406,7 @@ uint8_t getFlashSourceFrequencyMHz(void) {
 #endif
   
   return source_freq;
+#endif
 }
 
 /**
