@@ -9,6 +9,7 @@
 #include "soc/efuse_reg.h"
 #include "soc/rtc.h"
 #include "soc/spi_reg.h"
+#include "soc/soc.h"
 #if CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/spi_flash.h"
 #endif
@@ -16,6 +17,7 @@
 
 #include "Arduino.h"
 #include "esp32-hal-periman.h"
+#include "chip-debug-report.h"
 
 #define chip_report_printf log_printf
 
@@ -138,25 +140,19 @@ static void printFlashInfo(void) {
   chip_report_printf("  Block Size        : %8lu B (%6.1f KB)\n", g_rom_flashchip.block_size, b2kb(g_rom_flashchip.block_size));
   chip_report_printf("  Sector Size       : %8lu B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
   chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
-  esp_image_header_t fhdr;
-  esp_flash_read(esp_flash_default_chip, (void *)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t));
-  if (fhdr.magic == ESP_IMAGE_HEADER_MAGIC) {
-    uint32_t f_freq = 0;
-    switch (fhdr.spi_speed) {
-#if CONFIG_IDF_TARGET_ESP32H2
-      case 0x0: f_freq = 32; break;
-      case 0x2: f_freq = 16; break;
-      case 0xf: f_freq = 64; break;
-#else
-      case 0x0: f_freq = 40; break;
-      case 0x1: f_freq = 26; break;
-      case 0x2: f_freq = 20; break;
-      case 0xf: f_freq = 80; break;
-#endif
-      default: f_freq = fhdr.spi_speed; break;
-    }
-    chip_report_printf("  Bus Speed         : %lu MHz\n", f_freq);
+  
+  // Runtime flash frequency detection from hardware registers
+  uint32_t actual_freq = getFlashFrequencyMHz();
+  uint8_t source_freq = getFlashSourceFrequencyMHz();
+  uint8_t divider = getFlashClockDivider();
+  
+  chip_report_printf("  Bus Speed         : %lu MHz\n", actual_freq);
+  chip_report_printf("  Flash Frequency   : %lu MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
+  
+  if (isFlashHighPerformanceModeEnabled()) {
+    chip_report_printf("  HPM Mode          : Enabled (> 80 MHz)\n");
   }
+  
   chip_report_printf("  Bus Mode          : ");
 #if CONFIG_ESPTOOLPY_OCT_FLASH
   chip_report_printf("OPI\n");
@@ -344,4 +340,107 @@ void printAfterSetupInfo(void) {
   printPerimanInfo();
   chip_report_printf("============ After Setup End =============\n");
   delay(20);  //allow the print to finish
+}
+
+// ============================================================================
+// Flash Frequency Runtime Detection
+// ============================================================================
+
+// Define SPI0 base addresses for different chips
+#if CONFIG_IDF_TARGET_ESP32S3
+  #define FLASH_SPI0_BASE 0x60003000
+#elif CONFIG_IDF_TARGET_ESP32S2
+  #define FLASH_SPI0_BASE 0x3f402000
+#elif CONFIG_IDF_TARGET_ESP32C3
+  #define FLASH_SPI0_BASE 0x60002000
+#elif CONFIG_IDF_TARGET_ESP32C2
+  #define FLASH_SPI0_BASE 0x60002000
+#elif CONFIG_IDF_TARGET_ESP32C6
+  #define FLASH_SPI0_BASE 0x60003000
+#elif CONFIG_IDF_TARGET_ESP32H2
+  #define FLASH_SPI0_BASE 0x60003000
+#elif CONFIG_IDF_TARGET_ESP32
+  #define FLASH_SPI0_BASE 0x3ff42000
+#else
+  #define FLASH_SPI0_BASE 0x60003000  // Default for new chips
+#endif
+
+// Register offsets
+#define FLASH_CORE_CLK_SEL_OFFSET 0x80
+#define FLASH_CLOCK_OFFSET 0x14
+
+/**
+ * @brief Read the source clock frequency from hardware registers
+ * @return Source clock frequency in MHz (80, 120, 160, or 240)
+ */
+uint8_t getFlashSourceFrequencyMHz(void) {
+  volatile uint32_t* core_clk_reg = (volatile uint32_t*)(FLASH_SPI0_BASE + FLASH_CORE_CLK_SEL_OFFSET);
+  uint32_t core_clk_sel = (*core_clk_reg) & 0x3;  // Bits 0-1
+  
+  uint8_t source_freq = 80;  // Default
+  
+#if CONFIG_IDF_TARGET_ESP32S3
+  switch (core_clk_sel) {
+    case 0:  source_freq = 80;  break;
+    case 1:  source_freq = 120; break;
+    case 2:  source_freq = 160; break;
+    case 3:  source_freq = 240; break;
+  }
+#elif CONFIG_IDF_TARGET_ESP32S2
+  switch (core_clk_sel) {
+    case 0:  source_freq = 80;  break;
+    case 1:  source_freq = 120; break;
+    case 2:  source_freq = 160; break;
+  }
+#elif CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C2 || \
+      CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
+  switch (core_clk_sel) {
+    case 0:  source_freq = 80;  break;
+    case 1:  source_freq = 120; break;
+  }
+#elif CONFIG_IDF_TARGET_ESP32
+  // ESP32 classic - simplified
+  source_freq = 80;
+#endif
+  
+  return source_freq;
+}
+
+/**
+ * @brief Read the clock divider from hardware registers
+ * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
+ */
+uint8_t getFlashClockDivider(void) {
+  volatile uint32_t* clock_reg = (volatile uint32_t*)(FLASH_SPI0_BASE + FLASH_CLOCK_OFFSET);
+  uint32_t clock_val = *clock_reg;
+  
+  // Bit 31: if set, clock is 1:1 (no divider)
+  if (clock_val & (1 << 31)) {
+    return 1;
+  }
+  
+  // Bits 16-23: clkdiv_pre
+  uint8_t clkdiv_pre = (clock_val >> 16) & 0xFF;
+  return clkdiv_pre + 1;
+}
+
+/**
+ * @brief Get the actual flash frequency in MHz
+ * @return Flash frequency in MHz
+ */
+uint32_t getFlashFrequencyMHz(void) {
+  uint8_t source = getFlashSourceFrequencyMHz();
+  uint8_t divider = getFlashClockDivider();
+  
+  if (divider == 0) divider = 1;  // Safety check
+  
+  return source / divider;
+}
+
+/**
+ * @brief Check if High Performance Mode is enabled
+ * @return true if flash runs > 80 MHz, false otherwise
+ */
+bool isFlashHighPerformanceModeEnabled(void) {
+  return getFlashFrequencyMHz() > 80;
 }
