@@ -379,7 +379,11 @@ uint8_t getFlashSourceFrequencyMHz(void) {
   
   uint8_t source_freq = 80;  // Default
   
-#if CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32 classic supports 40 MHz and 80 MHz
+  // Note: ESP32 uses the PLL clock (80 MHz) as source and divides it
+  source_freq = 80;  // Always 80 MHz source, divider determines 40/80 MHz
+#elif CONFIG_IDF_TARGET_ESP32S3
   switch (core_clk_sel) {
     case 0:  source_freq = 80;  break;
     case 1:  source_freq = 120; break;
@@ -398,9 +402,6 @@ uint8_t getFlashSourceFrequencyMHz(void) {
     case 0:  source_freq = 80;  break;
     case 1:  source_freq = 120; break;
   }
-#elif CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic - simplified
-  source_freq = 80;
 #endif
   
   return source_freq;
