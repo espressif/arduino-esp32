@@ -403,6 +403,12 @@ uint8_t getFlashSourceFrequencyMHz(void) {
     case 0:  source_freq = 80;  break;
     case 1:  source_freq = 120; break;
   }
+#else
+  switch (core_clk_sel) {
+    case 0:  source_freq = 80;  break;
+    case 1:  source_freq = 120; break;
+    default: source_freq = 80;  break;
+  }
 #endif
   
   return source_freq;
