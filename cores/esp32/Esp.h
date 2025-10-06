@@ -96,7 +96,6 @@ public:
   uint32_t getFlashFrequencyMHz();
   uint8_t getFlashSourceFrequencyMHz();
   uint8_t getFlashClockDivider();
-  bool isFlashHighPerformanceModeEnabled();
 
   uint32_t magicFlashChipSize(uint8_t flashByte);
   uint32_t magicFlashChipSpeed(uint8_t flashByte);
