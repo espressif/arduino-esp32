@@ -2,16 +2,15 @@
  * This example demonstrates how to send an HTTP response using chunks
  * It will create an HTTP Server (port 80) associated with an a MDNS service
  * Access the HTTP server using a Web Browser:
- * URL can be composed using the MDNS name "esp32_chunk_resp.local" 
+ * URL can be composed using the MDNS name "esp32_chunk_resp.local"
  * http://esp32_chunk_resp.local/
- * or the IP Address that will be printed out, such as for instance 192.168.1.10 
+ * or the IP Address that will be printed out, such as for instance 192.168.1.10
  * http://192.168.1.10/
  *
- * ESP32 Server response can also be viewed using the curl command: 
+ * ESP32 Server response can also be viewed using the curl command:
  * curl -i esp32_chunk_resp.local:80
  * curl -i --raw esp32_chunk_resp.local:80
  */
-
 
 #include <WiFi.h>
 #include <NetworkClient.h>

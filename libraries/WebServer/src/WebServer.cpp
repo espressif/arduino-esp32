@@ -551,7 +551,7 @@ void WebServer::enableETag(bool enable, ETagFunction fn) {
   _eTagFunction = fn;
 }
 
-void WebServer::chunkResponseBegin(const char* contentType) {
+void WebServer::chunkResponseBegin(const char *contentType) {
   if (_chunkedResponseActive) {
     log_e("Already in chunked response mode");
     return;
@@ -575,12 +575,11 @@ void WebServer::chunkResponseBegin(const char* contentType) {
   _chunkedClient = _currentClient;
 }
 
-void WebServer::chunkWrite(const char* data, size_t length) {
-  if (!_chunkedResponseActive)
-  {
+void WebServer::chunkWrite(const char *data, size_t length) {
+  if (!_chunkedResponseActive) {
     log_e("Chunked response has not been started");
     return;
-  } 
+  }
 
   char chunkSize[11];
   snprintf(chunkSize, sizeof(chunkSize), "%zx\r\n", length);
@@ -591,7 +590,7 @@ void WebServer::chunkWrite(const char* data, size_t length) {
     return;
   }
 
-  if (_chunkedClient.write((const uint8_t*)data, length) != length) {
+  if (_chunkedClient.write((const uint8_t *)data, length) != length) {
     log_e("Failed to write chunk data");
     _chunkedResponseActive = false;
     return;
@@ -605,8 +604,7 @@ void WebServer::chunkWrite(const char* data, size_t length) {
 }
 
 void WebServer::chunkResponseEnd() {
-  if (!_chunkedResponseActive)
-  {
+  if (!_chunkedResponseActive) {
     log_e("Chunked response has not been started");
     return;
   }

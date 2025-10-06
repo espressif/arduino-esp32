@@ -115,8 +115,8 @@ public:
   const String AuthTypeDigest = F("Digest");
   const String AuthTypeBasic = F("Basic");
 
-  void chunkResponseBegin(const char* contentType = "text/plain");
-  void chunkWrite(const char* data, size_t length);
+  void chunkResponseBegin(const char *contentType = "text/plain");
+  void chunkWrite(const char *data, size_t length);
   void chunkResponseEnd();
 
   /* Callbackhandler for authentication. The extra parameters depend on the
@@ -247,7 +247,7 @@ public:
 
 private:
   bool _chunkedResponseActive = false;
-  NetworkClient _chunkedClient; // Store by value, no dangling pointer
+  NetworkClient _chunkedClient;  // Store by value, no dangling pointer
 
 protected:
   virtual size_t _currentClientWrite(const char *b, size_t l) {
