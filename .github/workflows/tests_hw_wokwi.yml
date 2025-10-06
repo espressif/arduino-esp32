@@ -11,8 +11,7 @@ permissions:
   contents: read
 
 env:
-  #TESTS_BRANCH: "master" # Branch that will be checked out to run the tests
-  TESTS_BRANCH: "ci/hw_gitlab"
+  TESTS_BRANCH: "master" # Branch that will be checked out to run the tests
 
 jobs:
   get-artifacts:
