@@ -89,23 +89,6 @@ jobs:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
-  call-hardware-tests:
-    name: Hardware
-    uses: ./.github/workflows/tests_hw.yml
-    needs: [gen-matrix, call-build-tests]
-    if: |
-      github.repository == 'espressif/arduino-esp32' &&
-      (github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'hil_test'))
-    strategy:
-      fail-fast: false
-      matrix:
-        type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
-        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
-    with:
-      type: ${{ matrix.type }}
-      chip: ${{ matrix.chip }}
-
   # This job is disabled for now
   call-qemu-tests:
     name: QEMU
@@ -121,4 +104,4 @@ jobs:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
-  # Wokwi tests are run after this workflow as it needs access to secrets
+  # Hardware and Wokwi tests are run after this workflow as they need access to secrets
