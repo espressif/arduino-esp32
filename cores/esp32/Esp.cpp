@@ -551,19 +551,13 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
  */
 uint8_t EspClass::getFlashClockDivider(void) {
 #if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic: Use SPI0 structure (no 'mem_' prefix)
+  // ESP32 classic: Use SPI0 structure
   if (SPI0.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
   return SPI0.clock.clkcnt_n + 1;
-#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  // ESP32-P4 and ESP32-C5: Use SPIMEM0 structure with 'mem_' prefix
-  if (SPIMEM0.clock.mem_clk_equ_sysclk) {
-    return 1;  // 1:1 clock (no divider)
-  }
-  return SPIMEM0.clock.mem_clkcnt_n + 1;
 #else
-  // ESP32-S2, S3, C2, C3, C6, H2: Use SPIMEM0 structure without 'mem_' prefix
+  // All modern chips (S2, S3, C2, C3, C5, C6, H2, P4): Use SPIMEM0 structure
   if (SPIMEM0.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
