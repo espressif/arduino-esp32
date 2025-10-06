@@ -409,25 +409,41 @@ int data_to_read(sslclient_context *ssl_client) {
 }
 
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len) {
-  unsigned long write_start_time = millis();
-  int ret = -1;
+  if (len == 0) {
+    return 0;  // Skipping zero-length write
+  }
 
-  while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-    if ((millis() - write_start_time) > ssl_client->socket_timeout) {
+  static constexpr size_t max_write_chunk_size = 4096;
+  unsigned long last_progress = millis();  // Timeout since last progress
+  size_t sent = 0;
+
+  while (sent < len) {
+    size_t to_send = len - sent;
+    if (to_send > max_write_chunk_size) {
+      to_send = max_write_chunk_size;
+    }
+
+    int ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data + sent, to_send);
+    if (ret > 0) {
+      sent += ret;
+      last_progress = millis();  // refresh timeout window
+      continue;
+    }
+
+    if ((millis() - last_progress) > ssl_client->socket_timeout) {
       log_v("SSL write timed out.");
       return -1;
     }
 
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
-      log_v("Handling error %d", ret);  //for low level debug
+      log_v("Handling error %d", ret);
       return handle_error(ret);
     }
 
-    //wait for space to become available
     vTaskDelay(2);
   }
 
-  return ret;
+  return (int)sent;
 }
 
 // Some protocols, such as SMTP, XMPP, MySQL/Posgress and various others

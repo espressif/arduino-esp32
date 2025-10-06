@@ -33,20 +33,21 @@
 #include "soc/touch_sensor_periph.h"
 
 int8_t digitalPinToTouchChannel(uint8_t pin) {
-  int8_t ret = -1;
   if (pin < SOC_GPIO_PIN_COUNT) {
     for (uint8_t i = 0; i < SOC_TOUCH_SENSOR_NUM; i++) {
       if (touch_sensor_channel_io_map[i] == pin) {
-        ret = i;
-        break;
+        return i;
       }
     }
   }
-  return ret;
+
+  log_e("No touch pad on selected pin(%u)!", pin);
+  return -1;
 }
 #else
 // No Touch Sensor available
 int8_t digitalPinToTouchChannel(uint8_t pin) {
+  log_e("Touch sensor not available on this chip");
   return -1;
 }
 #endif

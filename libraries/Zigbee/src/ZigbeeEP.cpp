@@ -28,6 +28,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _on_ota_state_change = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -315,6 +316,12 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
     }
   } else {
     log_w("Other identify commands are not implemented yet.");
+  }
+}
+
+void ZigbeeEP::zbOTAState(bool otaActive) {
+  if (_on_ota_state_change != NULL) {
+    _on_ota_state_change(otaActive);
   }
 }
 

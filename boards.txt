@@ -23012,6 +23012,187 @@ m5stack_cores3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+m5stack_tab5.name=M5Tab5
+
+m5stack_tab5.bootloader.tool=esptool_py
+m5stack_tab5.bootloader.tool.default=esptool_py
+
+m5stack_tab5.upload.tool=esptool_py
+m5stack_tab5.upload.tool.default=esptool_py
+m5stack_tab5.upload.tool.network=esp_ota
+
+m5stack_tab5.upload.maximum_size=1310720
+m5stack_tab5.upload.maximum_data_size=327680
+m5stack_tab5.upload.flags=
+m5stack_tab5.upload.extra_flags=
+m5stack_tab5.upload.use_1200bps_touch=false
+m5stack_tab5.upload.wait_for_upload_port=false
+
+m5stack_tab5.serial.disableDTR=false
+m5stack_tab5.serial.disableRTS=false
+
+m5stack_tab5.build.tarch=riscv32
+m5stack_tab5.build.target=esp
+m5stack_tab5.build.mcu=esp32p4
+m5stack_tab5.build.core=esp32
+m5stack_tab5.build.variant=m5stack_tab5
+m5stack_tab5.build.board=M5STACK_TAB5
+m5stack_tab5.build.bootloader_addr=0x2000
+
+m5stack_tab5.build.usb_mode=0
+m5stack_tab5.build.cdc_on_boot=0
+m5stack_tab5.build.msc_on_boot=0
+m5stack_tab5.build.dfu_on_boot=0
+m5stack_tab5.build.f_cpu=360000000L
+m5stack_tab5.build.flash_size=16MB
+m5stack_tab5.build.flash_freq=80m
+m5stack_tab5.build.img_freq=80m
+m5stack_tab5.build.flash_mode=qio
+m5stack_tab5.build.boot=qio
+m5stack_tab5.build.partitions=default
+m5stack_tab5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+m5stack_tab5.menu.JTAGAdapter.default=Disabled
+m5stack_tab5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+m5stack_tab5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+m5stack_tab5.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+m5stack_tab5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+m5stack_tab5.menu.JTAGAdapter.external=FTDI Adapter
+m5stack_tab5.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+m5stack_tab5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+m5stack_tab5.menu.JTAGAdapter.bridge=ESP USB Bridge
+m5stack_tab5.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+m5stack_tab5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+m5stack_tab5.menu.PSRAM.enabled=Enabled
+m5stack_tab5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+m5stack_tab5.menu.PSRAM.disabled=Disabled
+m5stack_tab5.menu.PSRAM.disabled.build.defines=
+
+m5stack_tab5.menu.USBMode.hwcdc=Hardware CDC and JTAG
+m5stack_tab5.menu.USBMode.hwcdc.build.usb_mode=1
+m5stack_tab5.menu.USBMode.default=USB-OTG (TinyUSB)
+m5stack_tab5.menu.USBMode.default.build.usb_mode=0
+
+m5stack_tab5.menu.CDCOnBoot.cdc=Enabled
+m5stack_tab5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+m5stack_tab5.menu.CDCOnBoot.default=Disabled
+m5stack_tab5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+m5stack_tab5.menu.MSCOnBoot.default=Disabled
+m5stack_tab5.menu.MSCOnBoot.default.build.msc_on_boot=0
+m5stack_tab5.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+m5stack_tab5.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+m5stack_tab5.menu.DFUOnBoot.default=Disabled
+m5stack_tab5.menu.DFUOnBoot.default.build.dfu_on_boot=0
+m5stack_tab5.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+m5stack_tab5.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+m5stack_tab5.menu.UploadMode.default=UART0 / Hardware CDC
+m5stack_tab5.menu.UploadMode.default.upload.use_1200bps_touch=false
+m5stack_tab5.menu.UploadMode.default.upload.wait_for_upload_port=false
+m5stack_tab5.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+m5stack_tab5.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+m5stack_tab5.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+m5stack_tab5.menu.PartitionScheme.default=Default (2 x 6.5 MB app, 3.6 MB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.default.build.partitions=default_16MB
+m5stack_tab5.menu.PartitionScheme.default.upload.maximum_size=6553600
+m5stack_tab5.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+m5stack_tab5.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+m5stack_tab5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.minimal.build.partitions=minimal
+m5stack_tab5.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+m5stack_tab5.menu.PartitionScheme.no_fs.build.partitions=no_fs
+m5stack_tab5.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+m5stack_tab5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+m5stack_tab5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+m5stack_tab5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+m5stack_tab5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+m5stack_tab5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+m5stack_tab5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+m5stack_tab5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+m5stack_tab5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+m5stack_tab5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+m5stack_tab5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+m5stack_tab5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+m5stack_tab5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+m5stack_tab5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+m5stack_tab5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+m5stack_tab5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+m5stack_tab5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+m5stack_tab5.menu.PartitionScheme.fatflash.build.partitions=ffat
+m5stack_tab5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+m5stack_tab5.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+m5stack_tab5.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+m5stack_tab5.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+m5stack_tab5.menu.PartitionScheme.custom=Custom
+m5stack_tab5.menu.PartitionScheme.custom.build.partitions=
+m5stack_tab5.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+## From https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/kconfig.html#config-esp-default-cpu-freq-mhz
+m5stack_tab5.menu.CPUFreq.360=360MHz
+m5stack_tab5.menu.CPUFreq.360.build.f_cpu=360000000L
+m5stack_tab5.menu.CPUFreq.40=40MHz
+m5stack_tab5.menu.CPUFreq.40.build.f_cpu=40000000L
+
+m5stack_tab5.menu.FlashMode.qio=QIO
+m5stack_tab5.menu.FlashMode.qio.build.flash_mode=dio
+m5stack_tab5.menu.FlashMode.qio.build.boot=qio
+m5stack_tab5.menu.FlashMode.dio=DIO
+m5stack_tab5.menu.FlashMode.dio.build.flash_mode=dio
+m5stack_tab5.menu.FlashMode.dio.build.boot=dio
+
+m5stack_tab5.menu.FlashFreq.80=80MHz
+m5stack_tab5.menu.FlashFreq.80.build.flash_freq=80m
+m5stack_tab5.menu.FlashFreq.40=40MHz
+m5stack_tab5.menu.FlashFreq.40.build.flash_freq=40m
+
+m5stack_tab5.menu.FlashSize.16M=16MB (128Mb)
+m5stack_tab5.menu.FlashSize.16M.build.flash_size=16MB
+
+m5stack_tab5.menu.UploadSpeed.921600=921600
+m5stack_tab5.menu.UploadSpeed.921600.upload.speed=921600
+m5stack_tab5.menu.UploadSpeed.115200=115200
+m5stack_tab5.menu.UploadSpeed.115200.upload.speed=115200
+m5stack_tab5.menu.UploadSpeed.256000.windows=256000
+m5stack_tab5.menu.UploadSpeed.256000.upload.speed=256000
+m5stack_tab5.menu.UploadSpeed.230400.windows.upload.speed=256000
+m5stack_tab5.menu.UploadSpeed.230400=230400
+m5stack_tab5.menu.UploadSpeed.230400.upload.speed=230400
+m5stack_tab5.menu.UploadSpeed.460800.linux=460800
+m5stack_tab5.menu.UploadSpeed.460800.macosx=460800
+m5stack_tab5.menu.UploadSpeed.460800.upload.speed=460800
+m5stack_tab5.menu.UploadSpeed.512000.windows=512000
+m5stack_tab5.menu.UploadSpeed.512000.upload.speed=512000
+
+m5stack_tab5.menu.DebugLevel.none=None
+m5stack_tab5.menu.DebugLevel.none.build.code_debug=0
+m5stack_tab5.menu.DebugLevel.error=Error
+m5stack_tab5.menu.DebugLevel.error.build.code_debug=1
+m5stack_tab5.menu.DebugLevel.warn=Warn
+m5stack_tab5.menu.DebugLevel.warn.build.code_debug=2
+m5stack_tab5.menu.DebugLevel.info=Info
+m5stack_tab5.menu.DebugLevel.info.build.code_debug=3
+m5stack_tab5.menu.DebugLevel.debug=Debug
+m5stack_tab5.menu.DebugLevel.debug.build.code_debug=4
+m5stack_tab5.menu.DebugLevel.verbose=Verbose
+m5stack_tab5.menu.DebugLevel.verbose.build.code_debug=5
+
+m5stack_tab5.menu.EraseFlash.none=Disabled
+m5stack_tab5.menu.EraseFlash.none.upload.erase_cmd=
+m5stack_tab5.menu.EraseFlash.all=Enabled
+m5stack_tab5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+
 m5stack_timer_cam.name=M5TimerCAM
 
 m5stack_timer_cam.bootloader.tool=esptool_py
@@ -29352,7 +29533,7 @@ wesp32.build.board=WESP32
 
 wesp32.build.f_cpu=240000000L
 wesp32.build.flash_mode=dio
-wesp32.build.flash_size=4MB
+wesp32.build.flash_size=16MB
 wesp32.build.boot=dio
 wesp32.build.partitions=default
 wesp32.build.defines=
@@ -29361,6 +29542,23 @@ wesp32.menu.FlashFreq.80=80MHz
 wesp32.menu.FlashFreq.80.build.flash_freq=80m
 wesp32.menu.FlashFreq.40=40MHz
 wesp32.menu.FlashFreq.40.build.flash_freq=40m
+
+wesp32.menu.FlashSize.default=16MB (128Mb) rev 7+
+wesp32.menu.FlashSize.default.build.flash_size=16MB
+wesp32.menu.FlashSize.default_4m_flash=4MB (32Mb) rev 5 and below
+wesp32.menu.FlashSize.default_4m_flash.build.flash_size=4MB
+
+wesp32.menu.PartitionScheme.default=16M OTA with large SPIFFS (4.5MB APP/6.8MB SPIFFS)
+wesp32.menu.PartitionScheme.default.build.partitions=large_spiffs_16MB
+wesp32.menu.PartitionScheme.default.upload.maximum_size=4718592
+wesp32.menu.PartitionScheme.default_large_app=16M large OTA app with SPIFFS (6.2MB APP/3.3MB SPIFFS)
+wesp32.menu.PartitionScheme.default_large_app.build.partitions=default_16MB
+wesp32.menu.PartitionScheme.default_large_app.upload.maximum_size=6553600
+wesp32.menu.PartitionScheme.default_fatfs=16M OTA with large FATFS (3MB APP/9.8MB FATFS)
+wesp32.menu.PartitionScheme.default_fatfs.build.partitions=app3M_fat9M_16MB
+wesp32.menu.PartitionScheme.default_fatfs.upload.maximum_size=3145728
+wesp32.menu.PartitionScheme.default_4m_flash=4M OTA app with SPIFFS (1.25MB APP/1.3MB SPIFFS)
+wesp32.menu.PartitionScheme.default_4m_flash.build.partitions=default
 
 wesp32.menu.UploadSpeed.921600=921600
 wesp32.menu.UploadSpeed.921600.upload.speed=921600
@@ -29394,6 +29592,96 @@ wesp32.menu.EraseFlash.none=Disabled
 wesp32.menu.EraseFlash.none.upload.erase_cmd=
 wesp32.menu.EraseFlash.all=Enabled
 wesp32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+mant1s.name=Silicognition ManT1S
+
+mant1s.bootloader.tool=esptool_py
+mant1s.bootloader.tool.default=esptool_py
+
+mant1s.upload.tool=esptool_py
+mant1s.upload.tool.default=esptool_py
+mant1s.upload.tool.network=esp_ota
+
+mant1s.upload.maximum_size=1310720
+mant1s.upload.maximum_data_size=2424832
+mant1s.upload.flags=
+mant1s.upload.extra_flags=
+
+mant1s.serial.disableDTR=true
+mant1s.serial.disableRTS=true
+
+mant1s.build.tarch=xtensa
+mant1s.build.bootloader_addr=0x1000
+mant1s.build.target=esp32
+mant1s.build.mcu=esp32
+mant1s.build.core=esp32
+mant1s.build.variant=mant1s
+mant1s.build.board=MANT1S
+
+mant1s.build.f_cpu=240000000L
+mant1s.build.flash_mode=dio
+mant1s.build.flash_size=8MB
+mant1s.build.boot=dio
+mant1s.build.partitions=default
+mant1s.build.defines=
+
+mant1s.menu.FlashFreq.80=80MHz
+mant1s.menu.FlashFreq.80.build.flash_freq=80m
+mant1s.menu.FlashFreq.40=40MHz
+mant1s.menu.FlashFreq.40.build.flash_freq=40m
+
+mant1s.menu.PSRAM.enabled=Enabled
+mant1s.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+mant1s.menu.PSRAM.enabled.build.extra_libs=
+mant1s.menu.PSRAM.disabled=Disabled
+mant1s.menu.PSRAM.disabled.build.defines=
+mant1s.menu.PSRAM.disabled.build.extra_libs=
+
+mant1s.menu.PartitionScheme.default=8M OTA with large SPIFFS (1.25MB APP/5.3MB SPIFFS)
+mant1s.menu.PartitionScheme.default.build.partitions=large_spiffs_8MB
+mant1s.menu.PartitionScheme.default_large_app=8M large OTA app with SPIFFS (3MB APP/1.5MB SPIFFS)
+mant1s.menu.PartitionScheme.default_large_app.build.partitions=default_8MB
+mant1s.menu.PartitionScheme.default_large_app.upload.maximum_size=3342336
+mant1s.menu.PartitionScheme.default_fatfs=8M OTA with large FATFS (1.25MB APP/5.3MB FATFS)
+mant1s.menu.PartitionScheme.default_fatfs.build.partitions=large_ffat_8MB
+mant1s.menu.PartitionScheme.default_large_app_fatfs=8M large OTA app with FATFS (3MB APP/1.5MB FATFS)
+mant1s.menu.PartitionScheme.default_large_app_fatfs.build.partitions=default_ffat_8MB
+mant1s.menu.PartitionScheme.default_large_app_fatfs.upload.maximum_size=3342336
+
+mant1s.menu.UploadSpeed.921600=921600
+mant1s.menu.UploadSpeed.921600.upload.speed=921600
+mant1s.menu.UploadSpeed.115200=115200
+mant1s.menu.UploadSpeed.115200.upload.speed=115200
+mant1s.menu.UploadSpeed.256000.windows=256000
+mant1s.menu.UploadSpeed.256000.upload.speed=256000
+mant1s.menu.UploadSpeed.230400.windows.upload.speed=256000
+mant1s.menu.UploadSpeed.230400=230400
+mant1s.menu.UploadSpeed.230400.upload.speed=230400
+mant1s.menu.UploadSpeed.460800.linux=460800
+mant1s.menu.UploadSpeed.460800.macosx=460800
+mant1s.menu.UploadSpeed.460800.upload.speed=460800
+mant1s.menu.UploadSpeed.512000.windows=512000
+mant1s.menu.UploadSpeed.512000.upload.speed=512000
+
+mant1s.menu.DebugLevel.none=None
+mant1s.menu.DebugLevel.none.build.code_debug=0
+mant1s.menu.DebugLevel.error=Error
+mant1s.menu.DebugLevel.error.build.code_debug=1
+mant1s.menu.DebugLevel.warn=Warn
+mant1s.menu.DebugLevel.warn.build.code_debug=2
+mant1s.menu.DebugLevel.info=Info
+mant1s.menu.DebugLevel.info.build.code_debug=3
+mant1s.menu.DebugLevel.debug=Debug
+mant1s.menu.DebugLevel.debug.build.code_debug=4
+mant1s.menu.DebugLevel.verbose=Verbose
+mant1s.menu.DebugLevel.verbose.build.code_debug=5
+
+mant1s.menu.EraseFlash.none=Disabled
+mant1s.menu.EraseFlash.none.upload.erase_cmd=
+mant1s.menu.EraseFlash.all=Enabled
+mant1s.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
@@ -51863,7 +52151,7 @@ fobe_quill_esp32s3_mesh.name=FoBE Quill ESP32S3 Mesh
 fobe_quill_esp32s3_mesh.vid.0=0x303a
 fobe_quill_esp32s3_mesh.pid.0=0x82f4
 fobe_quill_esp32s3_mesh.vid.1=0x303a
-fobe_quill_esp32s3_mesh.vid.1=0x82f5
+fobe_quill_esp32s3_mesh.pid.1=0x82f5
 fobe_quill_esp32s3_mesh.vid.2=0x303a
 fobe_quill_esp32s3_mesh.pid.2=0x82f6
 
@@ -52083,6 +52371,8 @@ twinaiot.upload.tool.network=esp_ota
 
 twinaiot.upload.maximum_size=1310720
 twinaiot.upload.maximum_data_size=327680
+twinaiot.upload.flags=
+twinaiot.upload.extra_flags=
 twinaiot.upload.use_1200bps_touch=false
 twinaiot.upload.wait_for_upload_port=false
 
@@ -52378,11 +52668,6 @@ esp32p4_4ds_mipi.menu.CPUFreq.360.build.f_cpu=360000000L
 esp32p4_4ds_mipi.menu.CPUFreq.40=40MHz
 esp32p4_4ds_mipi.menu.CPUFreq.40.build.f_cpu=40000000L
 
-esp32p4_4ds_mipi.menu.FlashSize.16M=16MB (128Mb)
-esp32p4_4ds_mipi.menu.FlashSize.16M.build.flash_size=16MB
-esp32p4_4ds_mipi.menu.FlashSize.32M=32MB (256Mb)
-esp32p4_4ds_mipi.menu.FlashSize.32M.build.flash_size=32MB
-
 esp32p4_4ds_mipi.menu.UploadSpeed.921600=921600
 esp32p4_4ds_mipi.menu.UploadSpeed.921600.upload.speed=921600
 esp32p4_4ds_mipi.menu.UploadSpeed.115200=115200
@@ -52442,5 +52727,399 @@ esp32p4_4ds_mipi.menu.DisplayModel.esp32p4_101ct_clb=ESP32-P4-101CT-CLB
 esp32p4_4ds_mipi.menu.DisplayModel.esp32p4_101ct_clb.build.DisplayModel=ESP32P4_101CT
 
 esp32p4_4ds_mipi.build.defines=-DBOARD_HAS_PSRAM -D{build.board} -D{build.DisplayModel}
+
+##############################################################
+
+# Axiometa PIXIE M1 - Based on ESP32-S3-Mini-N4R2
+# 4MB Quad SPI Flash, 2MB Quad SPI PSRAM
+
+axiometa_pixie_m1.name=Axiometa PIXIE M1
+
+axiometa_pixie_m1.bootloader.tool=esptool_py
+axiometa_pixie_m1.bootloader.tool.default=esptool_py
+
+axiometa_pixie_m1.upload.tool=esptool_py
+axiometa_pixie_m1.upload.tool.default=esptool_py
+axiometa_pixie_m1.upload.tool.network=esp_ota
+
+axiometa_pixie_m1.upload.maximum_size=1310720
+axiometa_pixie_m1.upload.maximum_data_size=327680
+axiometa_pixie_m1.upload.flags=
+axiometa_pixie_m1.upload.extra_flags=
+axiometa_pixie_m1.upload.use_1200bps_touch=false
+axiometa_pixie_m1.upload.wait_for_upload_port=false
+
+axiometa_pixie_m1.serial.disableDTR=false
+axiometa_pixie_m1.serial.disableRTS=false
+
+axiometa_pixie_m1.build.tarch=xtensa
+axiometa_pixie_m1.build.bootloader_addr=0x0
+axiometa_pixie_m1.build.target=esp32s3
+axiometa_pixie_m1.build.mcu=esp32s3
+axiometa_pixie_m1.build.core=esp32
+axiometa_pixie_m1.build.variant=axiometa_pixie_m1
+axiometa_pixie_m1.build.board=AXIOMETA_PIXIE_M1
+
+# Hardware Configuration (ESP32-S3-Mini-N4R2)
+axiometa_pixie_m1.build.usb_mode=1
+axiometa_pixie_m1.build.cdc_on_boot=1
+axiometa_pixie_m1.build.msc_on_boot=0
+axiometa_pixie_m1.build.dfu_on_boot=0
+axiometa_pixie_m1.build.f_cpu=240000000L
+axiometa_pixie_m1.build.flash_size=4MB
+axiometa_pixie_m1.build.flash_freq=80m
+axiometa_pixie_m1.build.flash_mode=dio
+axiometa_pixie_m1.build.boot=qio
+axiometa_pixie_m1.build.boot_freq=80m
+axiometa_pixie_m1.build.partitions=default
+axiometa_pixie_m1.build.defines=-DBOARD_HAS_PSRAM
+axiometa_pixie_m1.build.loop_core=
+axiometa_pixie_m1.build.event_core=
+axiometa_pixie_m1.build.psram_type=qspi
+axiometa_pixie_m1.build.memory_type={build.boot}_{build.psram_type}
+
+## JTAG Adapter - N4R2 Compatible
+axiometa_pixie_m1.menu.JTAGAdapter.default=Disabled
+axiometa_pixie_m1.menu.JTAGAdapter.default.build.copy_jtag_files=0
+axiometa_pixie_m1.menu.JTAGAdapter.builtin=Integrated USB JTAG
+axiometa_pixie_m1.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+axiometa_pixie_m1.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+axiometa_pixie_m1.menu.JTAGAdapter.external=FTDI Adapter
+axiometa_pixie_m1.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+axiometa_pixie_m1.menu.JTAGAdapter.external.build.copy_jtag_files=1
+axiometa_pixie_m1.menu.JTAGAdapter.bridge=ESP USB Bridge
+axiometa_pixie_m1.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+axiometa_pixie_m1.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+## PSRAM - N4R2 has 2MB QSPI PSRAM
+axiometa_pixie_m1.menu.PSRAM.enabled=QSPI PSRAM (Enabled)
+axiometa_pixie_m1.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+axiometa_pixie_m1.menu.PSRAM.enabled.build.psram_type=qspi
+axiometa_pixie_m1.menu.PSRAM.disabled=Disabled
+axiometa_pixie_m1.menu.PSRAM.disabled.build.defines=
+axiometa_pixie_m1.menu.PSRAM.disabled.build.psram_type=qspi
+
+## Flash Mode - N4R2 Compatible (QSPI Flash)
+axiometa_pixie_m1.menu.FlashMode.qio=QIO 80MHz
+axiometa_pixie_m1.menu.FlashMode.qio.build.flash_mode=dio
+axiometa_pixie_m1.menu.FlashMode.qio.build.boot=qio
+axiometa_pixie_m1.menu.FlashMode.qio.build.boot_freq=80m
+axiometa_pixie_m1.menu.FlashMode.qio.build.flash_freq=80m
+axiometa_pixie_m1.menu.FlashMode.qio120=QIO 120MHz
+axiometa_pixie_m1.menu.FlashMode.qio120.build.flash_mode=dio
+axiometa_pixie_m1.menu.FlashMode.qio120.build.boot=qio
+axiometa_pixie_m1.menu.FlashMode.qio120.build.boot_freq=120m
+axiometa_pixie_m1.menu.FlashMode.qio120.build.flash_freq=80m
+axiometa_pixie_m1.menu.FlashMode.dio=DIO 80MHz
+axiometa_pixie_m1.menu.FlashMode.dio.build.flash_mode=dio
+axiometa_pixie_m1.menu.FlashMode.dio.build.boot=dio
+axiometa_pixie_m1.menu.FlashMode.dio.build.boot_freq=80m
+axiometa_pixie_m1.menu.FlashMode.dio.build.flash_freq=80m
+
+## CPU Core Assignment
+axiometa_pixie_m1.menu.LoopCore.1=Core 1
+axiometa_pixie_m1.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+axiometa_pixie_m1.menu.LoopCore.0=Core 0
+axiometa_pixie_m1.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+axiometa_pixie_m1.menu.EventsCore.1=Core 1
+axiometa_pixie_m1.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+axiometa_pixie_m1.menu.EventsCore.0=Core 0
+axiometa_pixie_m1.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+## USB Mode - Both modes work on N4R2
+axiometa_pixie_m1.menu.USBMode.hwcdc=Hardware CDC and JTAG
+axiometa_pixie_m1.menu.USBMode.hwcdc.build.usb_mode=1
+axiometa_pixie_m1.menu.USBMode.default=USB-OTG (TinyUSB)
+axiometa_pixie_m1.menu.USBMode.default.build.usb_mode=0
+
+## CDC On Boot
+axiometa_pixie_m1.menu.CDCOnBoot.cdc=Enabled
+axiometa_pixie_m1.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+axiometa_pixie_m1.menu.CDCOnBoot.default=Disabled
+axiometa_pixie_m1.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+## MSC On Boot (Only works with USB-OTG mode)
+axiometa_pixie_m1.menu.MSCOnBoot.default=Disabled
+axiometa_pixie_m1.menu.MSCOnBoot.default.build.msc_on_boot=0
+axiometa_pixie_m1.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+axiometa_pixie_m1.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+## DFU On Boot (Only works with USB-OTG mode)
+axiometa_pixie_m1.menu.DFUOnBoot.default=Disabled
+axiometa_pixie_m1.menu.DFUOnBoot.default.build.dfu_on_boot=0
+axiometa_pixie_m1.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+axiometa_pixie_m1.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+## Upload Mode
+axiometa_pixie_m1.menu.UploadMode.default=UART0 / Hardware CDC
+axiometa_pixie_m1.menu.UploadMode.default.upload.use_1200bps_touch=false
+axiometa_pixie_m1.menu.UploadMode.default.upload.wait_for_upload_port=false
+axiometa_pixie_m1.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+axiometa_pixie_m1.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+axiometa_pixie_m1.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+## Partition Schemes - 4MB Flash Compatible Only
+axiometa_pixie_m1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.default.build.partitions=default
+axiometa_pixie_m1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+axiometa_pixie_m1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+axiometa_pixie_m1.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.minimal.build.partitions=minimal
+axiometa_pixie_m1.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+axiometa_pixie_m1.menu.PartitionScheme.no_fs.build.partitions=no_fs
+axiometa_pixie_m1.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+axiometa_pixie_m1.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+axiometa_pixie_m1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+axiometa_pixie_m1.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+axiometa_pixie_m1.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+axiometa_pixie_m1.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+axiometa_pixie_m1.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+axiometa_pixie_m1.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+axiometa_pixie_m1.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+axiometa_pixie_m1.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+axiometa_pixie_m1.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+axiometa_pixie_m1.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.huge_app.build.partitions=huge_app
+axiometa_pixie_m1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+axiometa_pixie_m1.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+axiometa_pixie_m1.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+axiometa_pixie_m1.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker=RainMaker 4MB
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+axiometa_pixie_m1.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+axiometa_pixie_m1.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+axiometa_pixie_m1.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+axiometa_pixie_m1.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+axiometa_pixie_m1.menu.PartitionScheme.custom=Custom
+axiometa_pixie_m1.menu.PartitionScheme.custom.build.partitions=
+axiometa_pixie_m1.menu.PartitionScheme.custom.upload.maximum_size=4194304
+
+## CPU Frequency
+axiometa_pixie_m1.menu.CPUFreq.240=240MHz (WiFi)
+axiometa_pixie_m1.menu.CPUFreq.240.build.f_cpu=240000000L
+axiometa_pixie_m1.menu.CPUFreq.160=160MHz (WiFi)
+axiometa_pixie_m1.menu.CPUFreq.160.build.f_cpu=160000000L
+axiometa_pixie_m1.menu.CPUFreq.80=80MHz (WiFi)
+axiometa_pixie_m1.menu.CPUFreq.80.build.f_cpu=80000000L
+axiometa_pixie_m1.menu.CPUFreq.40=40MHz
+axiometa_pixie_m1.menu.CPUFreq.40.build.f_cpu=40000000L
+axiometa_pixie_m1.menu.CPUFreq.20=20MHz
+axiometa_pixie_m1.menu.CPUFreq.20.build.f_cpu=20000000L
+axiometa_pixie_m1.menu.CPUFreq.10=10MHz
+axiometa_pixie_m1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+## Upload Speed
+axiometa_pixie_m1.menu.UploadSpeed.921600=921600
+axiometa_pixie_m1.menu.UploadSpeed.921600.upload.speed=921600
+axiometa_pixie_m1.menu.UploadSpeed.115200=115200
+axiometa_pixie_m1.menu.UploadSpeed.115200.upload.speed=115200
+axiometa_pixie_m1.menu.UploadSpeed.256000.windows=256000
+axiometa_pixie_m1.menu.UploadSpeed.256000.upload.speed=256000
+axiometa_pixie_m1.menu.UploadSpeed.230400.windows.upload.speed=256000
+axiometa_pixie_m1.menu.UploadSpeed.230400=230400
+axiometa_pixie_m1.menu.UploadSpeed.230400.upload.speed=230400
+axiometa_pixie_m1.menu.UploadSpeed.460800.linux=460800
+axiometa_pixie_m1.menu.UploadSpeed.460800.macosx=460800
+axiometa_pixie_m1.menu.UploadSpeed.460800.upload.speed=460800
+axiometa_pixie_m1.menu.UploadSpeed.512000.windows=512000
+axiometa_pixie_m1.menu.UploadSpeed.512000.upload.speed=512000
+
+## Debug Level
+axiometa_pixie_m1.menu.DebugLevel.none=None
+axiometa_pixie_m1.menu.DebugLevel.none.build.code_debug=0
+axiometa_pixie_m1.menu.DebugLevel.error=Error
+axiometa_pixie_m1.menu.DebugLevel.error.build.code_debug=1
+axiometa_pixie_m1.menu.DebugLevel.warn=Warn
+axiometa_pixie_m1.menu.DebugLevel.warn.build.code_debug=2
+axiometa_pixie_m1.menu.DebugLevel.info=Info
+axiometa_pixie_m1.menu.DebugLevel.info.build.code_debug=3
+axiometa_pixie_m1.menu.DebugLevel.debug=Debug
+axiometa_pixie_m1.menu.DebugLevel.debug.build.code_debug=4
+axiometa_pixie_m1.menu.DebugLevel.verbose=Verbose
+axiometa_pixie_m1.menu.DebugLevel.verbose.build.code_debug=5
+
+## Erase Flash
+axiometa_pixie_m1.menu.EraseFlash.none=Disabled
+axiometa_pixie_m1.menu.EraseFlash.none.upload.erase_cmd=
+axiometa_pixie_m1.menu.EraseFlash.all=Enabled
+axiometa_pixie_m1.menu.EraseFlash.all.upload.erase_cmd=-e
+
+## Zigbee Mode
+axiometa_pixie_m1.menu.ZigbeeMode.default=Disabled
+axiometa_pixie_m1.menu.ZigbeeMode.default.build.zigbee_mode=
+axiometa_pixie_m1.menu.ZigbeeMode.default.build.zigbee_libs=
+axiometa_pixie_m1.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+axiometa_pixie_m1.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+axiometa_pixie_m1.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
+soldered_nula_mini_esp32c6.name=Soldered NULA Mini ESP32C6
+
+soldered_nula_mini_esp32c6.bootloader.tool=esptool_py
+soldered_nula_mini_esp32c6.bootloader.tool.default=esptool_py
+
+soldered_nula_mini_esp32c6.upload.tool=esptool_py
+soldered_nula_mini_esp32c6.upload.tool.default=esptool_py
+soldered_nula_mini_esp32c6.upload.tool.network=esp_ota
+
+soldered_nula_mini_esp32c6.upload.maximum_size=1310720
+soldered_nula_mini_esp32c6.upload.maximum_data_size=327680
+soldered_nula_mini_esp32c6.upload.flags=
+soldered_nula_mini_esp32c6.upload.extra_flags=
+soldered_nula_mini_esp32c6.upload.use_1200bps_touch=false
+soldered_nula_mini_esp32c6.upload.wait_for_upload_port=false
+
+soldered_nula_mini_esp32c6.serial.disableDTR=true
+soldered_nula_mini_esp32c6.serial.disableRTS=true
+
+soldered_nula_mini_esp32c6.build.tarch=riscv32
+soldered_nula_mini_esp32c6.build.target=esp
+soldered_nula_mini_esp32c6.build.mcu=esp32c6
+soldered_nula_mini_esp32c6.build.core=esp32
+soldered_nula_mini_esp32c6.build.variant=soldered_nula_mini_esp32c6
+soldered_nula_mini_esp32c6.build.board=SOLDERED_NULA_MINI_ESP32C6
+soldered_nula_mini_esp32c6.build.bootloader_addr=0x0
+
+soldered_nula_mini_esp32c6.build.f_cpu=160000000L
+soldered_nula_mini_esp32c6.build.flash_size=4MB
+soldered_nula_mini_esp32c6.build.flash_freq=80m
+soldered_nula_mini_esp32c6.build.flash_mode=qio
+soldered_nula_mini_esp32c6.build.boot=qio
+soldered_nula_mini_esp32c6.build.partitions=default
+soldered_nula_mini_esp32c6.build.defines=
+
+## IDE 2.0 Seems to not update the value
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.default=Disabled
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.external=FTDI Adapter
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.bridge=ESP USB Bridge
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+soldered_nula_mini_esp32c6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+soldered_nula_mini_esp32c6.menu.CDCOnBoot.default=Disabled
+soldered_nula_mini_esp32c6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+soldered_nula_mini_esp32c6.menu.CDCOnBoot.cdc=Enabled
+soldered_nula_mini_esp32c6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+soldered_nula_mini_esp32c6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.default.build.partitions=default
+soldered_nula_mini_esp32c6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+soldered_nula_mini_esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
+soldered_nula_mini_esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+soldered_nula_mini_esp32c6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+soldered_nula_mini_esp32c6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+soldered_nula_mini_esp32c6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+soldered_nula_mini_esp32c6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+soldered_nula_mini_esp32c6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+soldered_nula_mini_esp32c6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+soldered_nula_mini_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker=RainMaker 4MB
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+soldered_nula_mini_esp32c6.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+soldered_nula_mini_esp32c6.menu.PartitionScheme.custom=Custom
+soldered_nula_mini_esp32c6.menu.PartitionScheme.custom.build.partitions=
+soldered_nula_mini_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+soldered_nula_mini_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
+soldered_nula_mini_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
+soldered_nula_mini_esp32c6.menu.CPUFreq.80=80MHz (WiFi)
+soldered_nula_mini_esp32c6.menu.CPUFreq.80.build.f_cpu=80000000L
+soldered_nula_mini_esp32c6.menu.CPUFreq.40=40MHz
+soldered_nula_mini_esp32c6.menu.CPUFreq.40.build.f_cpu=40000000L
+soldered_nula_mini_esp32c6.menu.CPUFreq.20=20MHz
+soldered_nula_mini_esp32c6.menu.CPUFreq.20.build.f_cpu=20000000L
+soldered_nula_mini_esp32c6.menu.CPUFreq.10=10MHz
+soldered_nula_mini_esp32c6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+soldered_nula_mini_esp32c6.menu.FlashMode.qio=QIO
+soldered_nula_mini_esp32c6.menu.FlashMode.qio.build.flash_mode=dio
+soldered_nula_mini_esp32c6.menu.FlashMode.qio.build.boot=qio
+soldered_nula_mini_esp32c6.menu.FlashMode.dio=DIO
+soldered_nula_mini_esp32c6.menu.FlashMode.dio.build.flash_mode=dio
+soldered_nula_mini_esp32c6.menu.FlashMode.dio.build.boot=dio
+
+soldered_nula_mini_esp32c6.menu.FlashFreq.80=80MHz
+soldered_nula_mini_esp32c6.menu.FlashFreq.80.build.flash_freq=80m
+soldered_nula_mini_esp32c6.menu.FlashFreq.40=40MHz
+soldered_nula_mini_esp32c6.menu.FlashFreq.40.build.flash_freq=40m
+
+soldered_nula_mini_esp32c6.menu.FlashSize.4M=4MB (32Mb)
+soldered_nula_mini_esp32c6.menu.FlashSize.4M.build.flash_size=4MB
+
+soldered_nula_mini_esp32c6.menu.UploadSpeed.921600=921600
+soldered_nula_mini_esp32c6.menu.UploadSpeed.921600.upload.speed=921600
+soldered_nula_mini_esp32c6.menu.UploadSpeed.115200=115200
+soldered_nula_mini_esp32c6.menu.UploadSpeed.115200.upload.speed=115200
+soldered_nula_mini_esp32c6.menu.UploadSpeed.256000.windows=256000
+soldered_nula_mini_esp32c6.menu.UploadSpeed.256000.upload.speed=256000
+soldered_nula_mini_esp32c6.menu.UploadSpeed.230400.windows.upload.speed=256000
+soldered_nula_mini_esp32c6.menu.UploadSpeed.230400=230400
+soldered_nula_mini_esp32c6.menu.UploadSpeed.230400.upload.speed=230400
+soldered_nula_mini_esp32c6.menu.UploadSpeed.460800.linux=460800
+soldered_nula_mini_esp32c6.menu.UploadSpeed.460800.macosx=460800
+soldered_nula_mini_esp32c6.menu.UploadSpeed.460800.upload.speed=460800
+soldered_nula_mini_esp32c6.menu.UploadSpeed.512000.windows=512000
+soldered_nula_mini_esp32c6.menu.UploadSpeed.512000.upload.speed=512000
+
+soldered_nula_mini_esp32c6.menu.DebugLevel.none=None
+soldered_nula_mini_esp32c6.menu.DebugLevel.none.build.code_debug=0
+soldered_nula_mini_esp32c6.menu.DebugLevel.error=Error
+soldered_nula_mini_esp32c6.menu.DebugLevel.error.build.code_debug=1
+soldered_nula_mini_esp32c6.menu.DebugLevel.warn=Warn
+soldered_nula_mini_esp32c6.menu.DebugLevel.warn.build.code_debug=2
+soldered_nula_mini_esp32c6.menu.DebugLevel.info=Info
+soldered_nula_mini_esp32c6.menu.DebugLevel.info.build.code_debug=3
+soldered_nula_mini_esp32c6.menu.DebugLevel.debug=Debug
+soldered_nula_mini_esp32c6.menu.DebugLevel.debug.build.code_debug=4
+soldered_nula_mini_esp32c6.menu.DebugLevel.verbose=Verbose
+soldered_nula_mini_esp32c6.menu.DebugLevel.verbose.build.code_debug=5
+
+soldered_nula_mini_esp32c6.menu.EraseFlash.none=Disabled
+soldered_nula_mini_esp32c6.menu.EraseFlash.none.upload.erase_cmd=
+soldered_nula_mini_esp32c6.menu.EraseFlash.all=Enabled
+soldered_nula_mini_esp32c6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.default=Disabled
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.default.build.zigbee_mode=
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.default.build.zigbee_libs=
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+soldered_nula_mini_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
 
 ##############################################################

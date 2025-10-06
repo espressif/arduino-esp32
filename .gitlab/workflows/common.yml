@@ -4,13 +4,16 @@
 
 stages:
   - pre_check
+  - generate
   - build
   - test
+  - trigger
+  - collect
   - result
 
 variables:
   ESP_IDF_VERSION: "5.5"
-  ESP_ARDUINO_VERSION: "3.3.0"
+  ESP_ARDUINO_VERSION: "3.3.1"
 
 #############
 # `default` #

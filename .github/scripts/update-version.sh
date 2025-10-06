@@ -2,6 +2,10 @@
 # Disable shellcheck warning about using 'cat' to read a file.
 # shellcheck disable=SC2002
 
+# Exit on any error and make pipelines fail if any command fails
+set -e
+set -o pipefail
+
 # For reference: add tools for all boards by replacing one line in each board
 # "[board].upload.tool=esptool_py" to "[board].upload.tool=esptool_py\n[board].upload.tool.default=esptool_py\n[board].upload.tool.network=esp_ota"
 #cat boards.txt | sed "s/\([a-zA-Z0-9_\-]*\)\.upload\.tool\=esptool_py/\1\.upload\.tool\=esptool_py\\n\1\.upload\.tool\.default\=esptool_py\\n\1\.upload\.tool\.network\=esp_ota/"
@@ -24,15 +28,24 @@ ESP_ARDUINO_VERSION_MINOR="$2"
 ESP_ARDUINO_VERSION_PATCH="$3"
 ESP_ARDUINO_VERSION="$ESP_ARDUINO_VERSION_MAJOR.$ESP_ARDUINO_VERSION_MINOR.$ESP_ARDUINO_VERSION_PATCH"
 
-# Get ESP-IDF version from push.yml (this way we can ensure that the version is correct even if the local libs are not up to date)
-ESP_IDF_VERSION=$(grep "idf_ver:" .github/workflows/push.yml | sed 's/.*release-v\([^"]*\).*/\1/')
+# Get ESP-IDF version from build_component.yml (this way we can ensure that the version is correct even if the local libs are not up to date)
+ESP_IDF_VERSION=$(grep -m 1 "default:" .github/workflows/build_component.yml | sed 's/.*release-v\([^"]*\).*/\1/')
 if [ -z "$ESP_IDF_VERSION" ]; then
-    echo "Error: ESP-IDF version not found in push.yml" >&2
+    echo "Error: ESP-IDF version not found in build_component.yml" >&2
     exit 1
 fi
 
 echo "New Arduino Version: $ESP_ARDUINO_VERSION"
 echo "ESP-IDF Version: $ESP_IDF_VERSION"
+
+echo "Updating issue template..."
+cat .github/ISSUE_TEMPLATE/Issue-report.yml | \
+sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$ESP_ARDUINO_VERSION/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/Issue-report.yml
+
+echo "Updating GitLab variables..."
+cat .gitlab/workflows/common.yml | \
+sed "s/ESP_IDF_VERSION:.*/ESP_IDF_VERSION: \"$ESP_IDF_VERSION\"/g" | \
+sed "s/ESP_ARDUINO_VERSION:.*/ESP_ARDUINO_VERSION: \"$ESP_ARDUINO_VERSION\"/g" > .gitlab/workflows/__common.yml && mv .gitlab/workflows/__common.yml .gitlab/workflows/common.yml
 
 echo "Updating platform.txt..."
 cat platform.txt | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > __platform.txt && mv __platform.txt platform.txt
