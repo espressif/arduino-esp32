@@ -52150,7 +52150,7 @@ fobe_quill_esp32s3_mesh.name=FoBE Quill ESP32S3 Mesh
 fobe_quill_esp32s3_mesh.vid.0=0x303a
 fobe_quill_esp32s3_mesh.pid.0=0x82f4
 fobe_quill_esp32s3_mesh.vid.1=0x303a
-fobe_quill_esp32s3_mesh.vid.1=0x82f5
+fobe_quill_esp32s3_mesh.pid.1=0x82f5
 fobe_quill_esp32s3_mesh.vid.2=0x303a
 fobe_quill_esp32s3_mesh.pid.2=0x82f6
 
@@ -52370,6 +52370,8 @@ twinaiot.upload.tool.network=esp_ota
 
 twinaiot.upload.maximum_size=1310720
 twinaiot.upload.maximum_data_size=327680
+twinaiot.upload.flags=
+twinaiot.upload.extra_flags=
 twinaiot.upload.use_1200bps_touch=false
 twinaiot.upload.wait_for_upload_port=false
 
