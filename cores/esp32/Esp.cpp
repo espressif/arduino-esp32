@@ -364,17 +364,13 @@ uint32_t EspClass::getFlashChipSpeed(void) {
   return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
-// FIXME for P4
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
 FlashMode_t EspClass::getFlashChipMode(void) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32P4
   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-#else
-#if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C5
   uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
 #else
   uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
-#endif
 #endif
   /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
   if (spi_ctrl & BIT(24)) {  //SPI_FREAD_QIO
@@ -390,9 +386,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
   } else {
     return (FM_SLOW_READ);
   }
-  return (FM_DOUT);
 }
-#endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 uint32_t EspClass::magicFlashChipSize(uint8_t flashByte) {
   /*
@@ -557,13 +551,19 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
  */
 uint8_t EspClass::getFlashClockDivider(void) {
 #if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic: Use SPI0 structure
+  // ESP32 classic: Use SPI0 structure (no 'mem_' prefix)
   if (SPI0.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
   return SPI0.clock.clkcnt_n + 1;
+#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
+  // ESP32-P4 and ESP32-C5: Use SPIMEM0 structure with 'mem_' prefix
+  if (SPIMEM0.clock.mem_clk_equ_sysclk) {
+    return 1;  // 1:1 clock (no divider)
+  }
+  return SPIMEM0.clock.mem_clkcnt_n + 1;
 #else
-  // Modern chips (S2, S3, C2, C3, C5, C6, H2, P4): Use SPIMEM0 structure
+  // ESP32-S2, S3, C2, C3, C6, H2: Use SPIMEM0 structure without 'mem_' prefix
   if (SPIMEM0.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
