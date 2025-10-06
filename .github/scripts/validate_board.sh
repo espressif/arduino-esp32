@@ -52,6 +52,12 @@ validate_board() {
     validate_debug_level_menu "$board_name" "$boards_file"
     echo ""
 
+    # Rule 6: Check for duplicate lines
+    echo "Rule 6: Duplicate Lines Validation"
+    echo "=================================="
+    validate_no_duplicates "$board_name" "$boards_file"
+    echo ""
+
     # Add more validation rules here as needed
     echo "=========================================="
     print_success "ALL VALIDATION RULES PASSED for board '$board_name'"
@@ -111,6 +117,7 @@ validate_required_properties() {
 
     echo "  ✓ Required properties validation completed"
 }
+
 
 # Rule 3: Check for valid partition schemes for available flash sizes
 validate_partition_schemes() {
@@ -352,16 +359,29 @@ validate_vid_pid_consistency() {
     local board_name="$1"
     local boards_file="$2"
     
-    # Get all VID and PID entries for this board
+    # Get all VID and PID entries for this board (including upload_port entries)
     local vid_entries
     local pid_entries
     
     vid_entries=$(grep "^$board_name\.vid\." "$boards_file" | sort)
     pid_entries=$(grep "^$board_name\.pid\." "$boards_file" | sort)
     
+    # Also get upload_port VID and PID entries
+    local upload_port_vid_entries
+    local upload_port_pid_entries
+    
+    upload_port_vid_entries=$(grep "^$board_name\.upload_port\..*\.vid=" "$boards_file" | sort)
+    upload_port_pid_entries=$(grep "^$board_name\.upload_port\..*\.pid=" "$boards_file" | sort)
+    
     # Check for duplicate VID entries with same index but different values
+    local all_vid_entries="$vid_entries"
+    if [ -n "$upload_port_vid_entries" ]; then
+        all_vid_entries="$all_vid_entries
+$upload_port_vid_entries"
+    fi
+    
     local vid_duplicates
-    vid_duplicates=$(echo "$vid_entries" | cut -d'=' -f1 | sort | uniq -d)
+    vid_duplicates=$(echo "$all_vid_entries" | cut -d'=' -f1 | sort | uniq -d)
     
     if [ -n "$vid_duplicates" ]; then
         print_error "Found duplicate VID entries with different values for board '$board_name':"
@@ -370,8 +390,14 @@ validate_vid_pid_consistency() {
     fi
     
     # Check for duplicate PID entries with same index but different values
+    local all_pid_entries="$pid_entries"
+    if [ -n "$upload_port_pid_entries" ]; then
+        all_pid_entries="$all_pid_entries
+$upload_port_pid_entries"
+    fi
+    
     local pid_duplicates
-    pid_duplicates=$(echo "$pid_entries" | cut -d'=' -f1 | sort | uniq -d)
+    pid_duplicates=$(echo "$all_pid_entries" | cut -d'=' -f1 | sort | uniq -d)
     
     if [ -n "$pid_duplicates" ]; then
         print_error "Found duplicate PID entries with different values for board '$board_name':"
@@ -383,8 +409,26 @@ validate_vid_pid_consistency() {
     local vid_indices
     local pid_indices
     
-    vid_indices=$(echo "$vid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.vid\.//" | sort -n)
-    pid_indices=$(echo "$pid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.pid\.//" | sort -n)
+    # Get indices from regular vid/pid entries
+    local regular_vid_indices=$(echo "$vid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.vid\.//" | sort -n)
+    local regular_pid_indices=$(echo "$pid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.pid\.//" | sort -n)
+    
+    # Get indices from upload_port entries
+    local upload_vid_indices=$(echo "$upload_port_vid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.upload_port\.//" | sed "s/\.vid$//" | sort -n)
+    local upload_pid_indices=$(echo "$upload_port_pid_entries" | cut -d'=' -f1 | sed "s/^$board_name\.upload_port\.//" | sed "s/\.pid$//" | sort -n)
+    
+    # Combine indices
+    vid_indices="$regular_vid_indices"
+    if [ -n "$upload_vid_indices" ]; then
+        vid_indices="$vid_indices
+$upload_vid_indices"
+    fi
+    
+    pid_indices="$regular_pid_indices"
+    if [ -n "$upload_pid_indices" ]; then
+        pid_indices="$pid_indices
+$upload_pid_indices"
+    fi
     
     # Check if VID and PID indices match
     if [ "$vid_indices" != "$pid_indices" ]; then
@@ -392,6 +436,48 @@ validate_vid_pid_consistency() {
         echo "VID indices: $vid_indices"
         echo "PID indices: $pid_indices"
         exit 1
+    fi
+    
+    # Check that no VID/PID combination matches esp32_family (0x303a/0x1001)
+    local esp32_family_vid="0x303a"
+    local esp32_family_pid="0x1001"
+    
+    # Check regular vid/pid entries
+    if [ -n "$vid_entries" ] && [ -n "$pid_entries" ]; then
+        while IFS= read -r vid_line; do
+            if [ -n "$vid_line" ]; then
+                local vid_index=$(echo "$vid_line" | cut -d'=' -f1 | sed "s/^$board_name\.vid\.//")
+                local vid_value=$(echo "$vid_line" | cut -d'=' -f2)
+                
+                # Find corresponding PID
+                local pid_value
+                pid_value=$(grep "^$board_name\.pid\.$vid_index=" "$boards_file" | cut -d'=' -f2)
+                
+                if [ "$vid_value" = "$esp32_family_vid" ] && [ "$pid_value" = "$esp32_family_pid" ]; then
+                    print_error "Board '$board_name' VID/PID combination ($vid_value/$pid_value) matches esp32_family VID/PID (0x303a/0x1001) - this is not allowed"
+                    exit 1
+                fi
+            fi
+        done <<< "$vid_entries"
+    fi
+    
+    # Check upload_port vid/pid entries
+    if [ -n "$upload_port_vid_entries" ] && [ -n "$upload_port_pid_entries" ]; then
+        while IFS= read -r vid_line; do
+            if [ -n "$vid_line" ]; then
+                local vid_index=$(echo "$vid_line" | cut -d'=' -f1 | sed "s/^$board_name\.upload_port\.//" | sed "s/\.vid$//")
+                local vid_value=$(echo "$vid_line" | cut -d'=' -f2)
+                
+                # Find corresponding PID
+                local pid_value
+                pid_value=$(grep "^$board_name\.upload_port\.$vid_index\.pid=" "$boards_file" | cut -d'=' -f2)
+                
+                if [ "$vid_value" = "$esp32_family_vid" ] && [ "$pid_value" = "$esp32_family_pid" ]; then
+                    print_error "Board '$board_name' upload_port VID/PID combination ($vid_value/$pid_value) matches esp32_family VID/PID (0x303a/0x1001) - this is not allowed"
+                    exit 1
+                fi
+            fi
+        done <<< "$upload_port_vid_entries"
     fi
     
     echo "  ✓ VID and PID consistency check passed"
@@ -443,6 +529,46 @@ validate_debug_level_menu() {
     done
     
     echo "  ✓ DebugLevel menu validation completed"
+}
+
+# Rule 6: Check for duplicate lines
+validate_no_duplicates() {
+    local board_name="$1"
+    local boards_file="$2"
+    
+    # Get all lines for this board
+    local board_lines
+    board_lines=$(grep "^$board_name\." "$boards_file")
+    
+    # Extract just the property names (before =)
+    local property_names
+    property_names=$(echo "$board_lines" | cut -d'=' -f1)
+    
+    # Find duplicates
+    local duplicate_lines
+    duplicate_lines=$(echo "$property_names" | sort | uniq -d)
+    
+    if [ -n "$duplicate_lines" ]; then
+        print_error "Found duplicate lines for board '$board_name':"
+        echo "Duplicate line keys:"
+        echo "$duplicate_lines"
+        
+        echo "Duplicate content details:"
+        while IFS= read -r line_key; do
+            if [ -n "$line_key" ]; then
+                echo "  Key: $line_key"
+                echo "  Content with line numbers:"
+                local key_only=$(echo "$line_key" | cut -d'=' -f1)
+                grep -n "^$key_only=" "$boards_file" | while IFS=':' read -r line_num full_line; do
+                    echo "    Line $line_num: $full_line"
+                done
+                echo ""
+            fi
+        done <<< "$duplicate_lines"
+        exit 1
+    fi
+    
+    echo "  ✓ No duplicate lines found"
 }
 
 # Main execution
