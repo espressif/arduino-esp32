@@ -42347,6 +42347,19 @@ nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
 nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
 nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
 
+nano_nora.menu.DebugLevel.none=None
+nano_nora.menu.DebugLevel.none.build.code_debug=0
+nano_nora.menu.DebugLevel.error=Error
+nano_nora.menu.DebugLevel.error.build.code_debug=1
+nano_nora.menu.DebugLevel.warn=Warn
+nano_nora.menu.DebugLevel.warn.build.code_debug=2
+nano_nora.menu.DebugLevel.info=Info
+nano_nora.menu.DebugLevel.info.build.code_debug=3
+nano_nora.menu.DebugLevel.debug=Debug
+nano_nora.menu.DebugLevel.debug.build.code_debug=4
+nano_nora.menu.DebugLevel.verbose=Verbose
+nano_nora.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 makergo_c3_supermini.name=MakerGO ESP32 C3 SuperMini
@@ -51945,6 +51958,19 @@ kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
 kodedot.recipe.output.save_file={build.project_name}.ino.bin
+
+kodedot.menu.DebugLevel.none=None
+kodedot.menu.DebugLevel.none.build.code_debug=0
+kodedot.menu.DebugLevel.error=Error
+kodedot.menu.DebugLevel.error.build.code_debug=1
+kodedot.menu.DebugLevel.warn=Warn
+kodedot.menu.DebugLevel.warn.build.code_debug=2
+kodedot.menu.DebugLevel.info=Info
+kodedot.menu.DebugLevel.info.build.code_debug=3
+kodedot.menu.DebugLevel.debug=Debug
+kodedot.menu.DebugLevel.debug.build.code_debug=4
+kodedot.menu.DebugLevel.verbose=Verbose
+kodedot.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
