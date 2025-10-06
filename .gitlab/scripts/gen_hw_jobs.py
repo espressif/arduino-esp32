@@ -177,7 +177,9 @@ def parse_list_arg(s: str) -> list[str]:
                 fixed = txt.replace("'", '"')
                 return [str(x).strip() for x in json.loads(fixed)]
             except Exception as e2:
-                sys.stderr.write(f"[WARN] Failed to parse JSON list after normalization: {e2}. Falling back to CSV parsing.\n")
+                sys.stderr.write(
+                    f"[WARN] Failed to parse JSON list after normalization: {e2}. Falling back to CSV parsing.\n"
+                )
     # Fallback: comma-separated
     return [part.strip() for part in txt.split(",") if part.strip()]
 
