@@ -41,12 +41,13 @@ extern "C" {
 #include "hal/spi_flash_ll.h"
 #if CONFIG_IDF_TARGET_ESP32
 #include "soc/spi_struct.h"
-#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-#include "hal/spimem_flash_ll.h"
-#include "soc/spi_mem_c_struct.h"
-#else
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
 #include "hal/spimem_flash_ll.h"
 #include "soc/spi_mem_struct.h"
+#else
+// ESP32-P4, ESP32-C5, and future chips use spi_mem_c_struct.h
+#include "hal/spimem_flash_ll.h"
+#include "soc/spi_mem_c_struct.h"
 #endif
 
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
