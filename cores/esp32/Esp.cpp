@@ -37,11 +37,6 @@ extern "C" {
 #include "esp_mac.h"
 #include "esp_flash.h"
 
-// Include for HPM (High Performance Mode) functions
-#if CONFIG_SPI_FLASH_HPM_ON
-#include "esp_private/spi_flash_os.h"
-#endif
-
 // Include HAL layer for flash clock access
 #include "hal/spi_flash_ll.h"
 #if !CONFIG_IDF_TARGET_ESP32
@@ -533,9 +528,6 @@ uint64_t EspClass::getEfuseMac(void) {
 // Flash Frequency Runtime Detection
 // ============================================================================
 
-// Note: Using ESP-IDF HAL layer functions instead of direct register access
-// for better maintainability and chip-specific handling
-
 /**
  * @brief Read the source clock frequency using ESP-IDF HAL functions
  * @return Source clock frequency in MHz (80, 120, 160, or 240)
@@ -551,27 +543,13 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
 }
 
 /**
- * @brief Read the clock divider from hardware using HAL abstraction
+ * @brief Read the clock divider from hardware
  * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
- * 
- * @note This function still reads hardware registers but uses chip-specific
- *       base addresses from ESP-IDF HAL layer
  */
 uint8_t EspClass::getFlashClockDivider(void) {
   // Read CLOCK register using DR_REG_SPI0_BASE from soc/soc.h
   volatile uint32_t* clock_reg = (volatile uint32_t*)(DR_REG_SPI0_BASE + 0x14);
   uint32_t clock_val = *clock_reg;
-  
-  // Bit 31: if set, clock is 1:1 (no divider)
-  if (clock_val & (1 << 31)) {
-    return 1;
-  }
-  
-  // Bits 16-23: clkdiv_pre
-  // This is consistent across all ESP32 chips
-  uint8_t clkdiv_pre = (clock_val >> 16) & 0xFF;
-  return clkdiv_pre + 1;
-}
   
   // Bit 31: if set, clock is 1:1 (no divider)
   if (clock_val & (1 << 31)) {
@@ -585,7 +563,7 @@ uint8_t EspClass::getFlashClockDivider(void) {
 
 /**
  * @brief Get the actual flash frequency in MHz
- * @return Flash frequency in MHz
+ * @return Flash frequency in MHz (e.g., 80, 120, 160, 240)
  */
 uint32_t EspClass::getFlashFrequencyMHz(void) {
   uint8_t source = getFlashSourceFrequencyMHz();
@@ -594,41 +572,4 @@ uint32_t EspClass::getFlashFrequencyMHz(void) {
   if (divider == 0) divider = 1;  // Safety check
   
   return source / divider;
-}
-
-/**
- * @brief Check if High Performance Mode is enabled
- * @return true if flash runs > 80 MHz, false otherwise
- * 
- * @note This function combines hardware register reading with ESP-IDF HPM status
- *       to provide accurate HPM detection across all scenarios.
- */
-bool EspClass::isFlashHighPerformanceModeEnabled(void) {
-  uint32_t freq = getFlashFrequencyMHz();
-  
-  // Primary check: If frequency is > 80 MHz, HPM should be active
-  if (freq <= 80) {
-    return false;
-  }
-  
-#if CONFIG_SPI_FLASH_HPM_ON
-  // Secondary check: Use ESP-IDF HPM functions if available
-  // spi_flash_hpm_dummy_adjust() returns true if HPM with dummy adjustment is active
-  // Note: Some flash chips use other HPM methods (command, status register), 
-  // so we also trust the frequency reading
-  bool hpm_dummy_active = spi_flash_hpm_dummy_adjust();
-  
-  // If dummy adjust is active, definitely in HPM mode
-  if (hpm_dummy_active) {
-    return true;
-  }
-  
-  // If frequency > 80 MHz but dummy adjust not reported, 
-  // HPM might be enabled via other method (command/status register)
-  // Trust the frequency reading in this case
-  return true;
-#else
-  // If HPM support not compiled in, rely on frequency reading only
-  return true;
-#endif
 }
