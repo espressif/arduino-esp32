@@ -2,6 +2,10 @@
 # Disable shellcheck warning about using 'cat' to read a file.
 # shellcheck disable=SC2002
 
+# Exit on any error and make pipelines fail if any command fails
+set -e
+set -o pipefail
+
 # For reference: add tools for all boards by replacing one line in each board
 # "[board].upload.tool=esptool_py" to "[board].upload.tool=esptool_py\n[board].upload.tool.default=esptool_py\n[board].upload.tool.network=esp_ota"
 #cat boards.txt | sed "s/\([a-zA-Z0-9_\-]*\)\.upload\.tool\=esptool_py/\1\.upload\.tool\=esptool_py\\n\1\.upload\.tool\.default\=esptool_py\\n\1\.upload\.tool\.network\=esp_ota/"
@@ -37,6 +41,11 @@ echo "ESP-IDF Version: $ESP_IDF_VERSION"
 echo "Updating issue template..."
 cat .github/ISSUE_TEMPLATE/Issue-report.yml | \
 sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$ESP_ARDUINO_VERSION/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/Issue-report.yml
+
+echo "Updating GitLab variables..."
+cat .gitlab/workflows/common.yml | \
+sed "s/ESP_IDF_VERSION:.*/ESP_IDF_VERSION: \"$ESP_IDF_VERSION\"/g" | \
+sed "s/ESP_ARDUINO_VERSION:.*/ESP_ARDUINO_VERSION: \"$ESP_ARDUINO_VERSION\"/g" > .gitlab/workflows/__common.yml && mv .gitlab/workflows/__common.yml .gitlab/workflows/common.yml
 
 echo "Updating platform.txt..."
 cat platform.txt | sed "s/version=.*/version=$ESP_ARDUINO_VERSION/g" > __platform.txt && mv __platform.txt platform.txt

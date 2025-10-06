@@ -551,6 +551,76 @@ void WebServer::enableETag(bool enable, ETagFunction fn) {
   _eTagFunction = fn;
 }
 
+void WebServer::chunkResponseBegin(const char *contentType) {
+  if (_chunkedResponseActive) {
+    log_e("Already in chunked response mode");
+    return;
+  }
+
+  if (strchr(contentType, '\r') || strchr(contentType, '\n')) {
+    log_e("Invalid character in content type");
+    return;
+  }
+
+  _chunkedResponseActive = true;
+  _chunkedClient = _currentClient;
+
+  _contentLength = CONTENT_LENGTH_UNKNOWN;
+
+  String header;
+  _prepareHeader(header, 200, contentType, 0);
+  _currentClientWrite(header.c_str(), header.length());
+
+  _chunkedResponseActive = true;
+  _chunkedClient = _currentClient;
+}
+
+void WebServer::chunkWrite(const char *data, size_t length) {
+  if (!_chunkedResponseActive) {
+    log_e("Chunked response has not been started");
+    return;
+  }
+
+  char chunkSize[11];
+  snprintf(chunkSize, sizeof(chunkSize), "%zx\r\n", length);
+
+  if (_chunkedClient.write(chunkSize) != strlen(chunkSize)) {
+    log_e("Failed to write chunk size");
+    _chunkedResponseActive = false;
+    return;
+  }
+
+  if (_chunkedClient.write((const uint8_t *)data, length) != length) {
+    log_e("Failed to write chunk data");
+    _chunkedResponseActive = false;
+    return;
+  }
+
+  if (_chunkedClient.write("\r\n") != 2) {
+    log_e("Failed to write chunk terminator");
+    _chunkedResponseActive = false;
+    return;
+  }
+}
+
+void WebServer::chunkResponseEnd() {
+  if (!_chunkedResponseActive) {
+    log_e("Chunked response has not been started");
+    return;
+  }
+
+  if (_chunkedClient.write("0\r\n\r\n", 5) != 5) {
+    log_e("Failed to write terminating chunk");
+  }
+
+  _chunkedClient.flush();
+  _chunkedResponseActive = false;
+  _chunked = false;
+  _chunkedClient = NetworkClient();
+
+  _clearResponseHeaders();
+}
+
 void WebServer::_prepareHeader(String &response, int code, const char *content_type, size_t contentLength) {
   _responseCode = code;
 
