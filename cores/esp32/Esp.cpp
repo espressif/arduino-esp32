@@ -41,6 +41,9 @@ extern "C" {
 #include "hal/spi_flash_ll.h"
 #if CONFIG_IDF_TARGET_ESP32
 #include "soc/spi_struct.h"
+#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
+#include "hal/spimem_flash_ll.h"
+#include "soc/spi_mem_c_struct.h"
 #else
 #include "hal/spimem_flash_ll.h"
 #include "soc/spi_mem_struct.h"
