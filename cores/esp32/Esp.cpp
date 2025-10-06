@@ -41,6 +41,7 @@ extern "C" {
 #include "hal/spi_flash_ll.h"
 #if !CONFIG_IDF_TARGET_ESP32
 #include "hal/spimem_flash_ll.h"
+#include "soc/spi_mem_struct.h"
 #endif
 
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -543,11 +544,12 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
 }
 
 /**
- * @brief Read the clock divider from hardware
+ * @brief Read the clock divider from hardware using HAL structures
  * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
  */
 uint8_t EspClass::getFlashClockDivider(void) {
-  // Read CLOCK register using DR_REG_SPI0_BASE from soc/soc.h
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32 classic: Read CLOCK register directly (no SPIMEM structure available)
   volatile uint32_t* clock_reg = (volatile uint32_t*)(DR_REG_SPI0_BASE + 0x14);
   uint32_t clock_val = *clock_reg;
   
@@ -559,6 +561,13 @@ uint8_t EspClass::getFlashClockDivider(void) {
   // Bits 16-23: clkdiv_pre
   uint8_t clkdiv_pre = (clock_val >> 16) & 0xFF;
   return clkdiv_pre + 1;
+#else
+  // Modern chips (S2, S3, C2, C3, C5, C6, H2, P4): Use SPIMEM0 structure
+  if (SPIMEM0.clock.clk_equ_sysclk) {
+    return 1;  // 1:1 clock (no divider)
+  }
+  return SPIMEM0.clock.clkcnt_n + 1;
+#endif
 }
 
 /**
