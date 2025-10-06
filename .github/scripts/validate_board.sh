@@ -46,10 +46,15 @@ validate_board() {
     validate_vid_pid_consistency "$board_name" "$boards_file"
     echo ""
 
+    # Rule 5: Check for DebugLevel menu
+    echo "Rule 5: DebugLevel Menu Validation"
+    echo "=================================="
+    validate_debug_level_menu "$board_name" "$boards_file"
+    echo ""
+
     # Add more validation rules here as needed
-    # Rule 5: Future validation rules can be added here
     echo "=========================================="
-    print_success "🎉 ALL VALIDATION RULES PASSED for board '$board_name'"
+    print_success "ALL VALIDATION RULES PASSED for board '$board_name'"
     echo "=========================================="
 }
 
@@ -392,13 +397,53 @@ validate_vid_pid_consistency() {
     echo "  ✓ VID and PID consistency check passed"
 }
 
-# Future validation rules can be added here
-# Example:
-# validate_custom_rule() {
-#     local board_name="$1"
-#     local boards_file="$2"
-#     # Add custom validation logic here
-# }
+# Rule 5: Check for DebugLevel menu
+validate_debug_level_menu() {
+    local board_name="$1"
+    local boards_file="$2"
+    
+    # Required DebugLevel menu options
+    local required_debug_levels=("none" "error" "warn" "info" "debug" "verbose")
+    local missing_levels=()
+    
+    # Check if DebugLevel menu exists
+    if ! grep -q "^$board_name.menu.DebugLevel\." "$boards_file"; then
+        print_error "Missing DebugLevel menu for board '$board_name'"
+        exit 1
+    fi
+    
+    # Check each required debug level
+    for level in "${required_debug_levels[@]}"; do
+        if ! grep -q "^$board_name.menu.DebugLevel.$level=" "$boards_file"; then
+            missing_levels+=("$level")
+        fi
+    done
+    
+    if [ ${#missing_levels[@]} -gt 0 ]; then
+        print_error "Missing DebugLevel menu options for board '$board_name':"
+        printf '  - %s\n' "${missing_levels[@]}"
+        exit 1
+    fi
+    
+    # Check that each debug level has the correct build.code_debug value
+    local code_debug_values=("0" "1" "2" "3" "4" "5")
+    local debug_level_index=0
+    
+    for level in "${required_debug_levels[@]}"; do
+        local expected_value="${code_debug_values[$debug_level_index]}"
+        local actual_value
+        actual_value=$(grep "^$board_name.menu.DebugLevel.$level.build.code_debug=" "$boards_file" | cut -d'=' -f2)
+        
+        if [ "$actual_value" != "$expected_value" ]; then
+            print_error "Invalid code_debug value for DebugLevel '$level' in board '$board_name': expected '$expected_value', found '$actual_value'"
+            exit 1
+        fi
+        
+        debug_level_index=$((debug_level_index + 1))
+    done
+    
+    echo "  ✓ DebugLevel menu validation completed"
+}
 
 # Main execution
 main() {
