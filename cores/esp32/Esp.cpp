@@ -521,24 +521,7 @@ uint64_t EspClass::getEfuseMac(void) {
 // Flash Frequency Runtime Detection
 // ============================================================================
 
-// Define SPI0 base addresses for different chips
-#if CONFIG_IDF_TARGET_ESP32S3
-  #define FLASH_SPI0_BASE 0x60003000
-#elif CONFIG_IDF_TARGET_ESP32S2
-  #define FLASH_SPI0_BASE 0x3f402000
-#elif CONFIG_IDF_TARGET_ESP32C3
-  #define FLASH_SPI0_BASE 0x60002000
-#elif CONFIG_IDF_TARGET_ESP32C2
-  #define FLASH_SPI0_BASE 0x60002000
-#elif CONFIG_IDF_TARGET_ESP32C6
-  #define FLASH_SPI0_BASE 0x60003000
-#elif CONFIG_IDF_TARGET_ESP32H2
-  #define FLASH_SPI0_BASE 0x60003000
-#elif CONFIG_IDF_TARGET_ESP32
-  #define FLASH_SPI0_BASE 0x3ff42000
-#else
-  #define FLASH_SPI0_BASE 0x60003000  // Default for new chips
-#endif
+// Note: DR_REG_SPI0_BASE is defined in soc/soc.h or soc/reg_base.h for each chip
 
 // Register offsets
 #define FLASH_CORE_CLK_SEL_OFFSET 0x80
@@ -554,7 +537,7 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
   // Note: ESP32 uses the PLL clock (80 MHz) as source and divides it
   return 80;  // Always 80 MHz source, divider determines 40/80 MHz
 #else
-  volatile uint32_t* core_clk_reg = (volatile uint32_t*)(FLASH_SPI0_BASE + FLASH_CORE_CLK_SEL_OFFSET);
+  volatile uint32_t* core_clk_reg = (volatile uint32_t*)(DR_REG_SPI0_BASE + FLASH_CORE_CLK_SEL_OFFSET);
   uint32_t core_clk_sel = (*core_clk_reg) & 0x3;  // Bits 0-1
   
   uint8_t source_freq = 80;  // Default
@@ -595,7 +578,7 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
  * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
  */
 uint8_t EspClass::getFlashClockDivider(void) {
-  volatile uint32_t* clock_reg = (volatile uint32_t*)(FLASH_SPI0_BASE + FLASH_CLOCK_OFFSET);
+  volatile uint32_t* clock_reg = (volatile uint32_t*)(DR_REG_SPI0_BASE + FLASH_CLOCK_OFFSET);
   uint32_t clock_val = *clock_reg;
   
   // Bit 31: if set, clock is 1:1 (no divider)
