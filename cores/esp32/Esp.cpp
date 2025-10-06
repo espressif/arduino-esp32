@@ -41,13 +41,15 @@ extern "C" {
 #include "hal/spi_flash_ll.h"
 #if CONFIG_IDF_TARGET_ESP32
 #include "soc/spi_struct.h"
-#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-#include "hal/spimem_flash_ll.h"
-#include "soc/spi_mem_struct.h"
 #else
-// ESP32-P4, ESP32-C5, and future chips use spi_mem_c_struct.h
+// All modern chips (S2, S3, C2, C3, C5, C6, H2, P4) use spimem
 #include "hal/spimem_flash_ll.h"
+// Try to include the newer c_struct header first, fall back to regular struct
+#if __has_include("soc/spi_mem_c_struct.h")
 #include "soc/spi_mem_c_struct.h"
+#else
+#include "soc/spi_mem_struct.h"
+#endif
 #endif
 
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
