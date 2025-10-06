@@ -556,8 +556,14 @@ uint8_t EspClass::getFlashClockDivider(void) {
     return 1;  // 1:1 clock (no divider)
   }
   return SPI0.clock.clkcnt_n + 1;
+#elif CONFIG_IDF_TARGET_ESP32C5
+  // ESP32-C5: Uses spi_mem_c_clock_reg_t with mem_ prefix
+  if (SPIMEM0.clock.mem_clk_equ_sysclk) {
+    return 1;  // 1:1 clock (no divider)
+  }
+  return SPIMEM0.clock.mem_clkcnt_n + 1;
 #else
-  // All modern chips (S2, S3, C2, C3, C5, C6, H2, P4): Use SPIMEM0 structure
+  // (S2, S3, C2, C3, C6, H2, P4): Use SPIMEM0 structure without mem_ prefix
   if (SPIMEM0.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
