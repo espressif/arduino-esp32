@@ -143,38 +143,6 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 354942,
-                            "flash_percentage": 27,
-                            "ram_bytes": 22504,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
-                    "sizes": [{
-                            "flash_bytes": 354532,
-                            "flash_percentage": 27,
-                            "ram_bytes": 22568,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                    "sizes": [{
-                            "flash_bytes": 357190,
-                            "flash_percentage": 27,
-                            "ram_bytes": 22624,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/ResetReason/ResetReason",
-                    "sizes": [{
-                            "flash_bytes": 339130,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22296,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "libraries/ESP32/examples/ResetReason/ResetReason2",
                     "sizes": [{
                             "flash_bytes": 328096,
@@ -245,6 +213,46 @@
                             "flash_percentage": 25,
                             "ram_bytes": 22096,
                             "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/onReceiveExample",
+                    "sizes": [{
+                            "flash_bytes": 328756,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22112,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
+                    "sizes": [{
+                            "flash_bytes": 333946,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22112,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+                    "sizes": [{
+                            "flash_bytes": 334590,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22120,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Template/ExampleTemplate",
+                    "sizes": [{
+                            "flash_bytes": 310004,
+                            "flash_percentage": 23,
+                            "ram_bytes": 22084,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                    "sizes": [{
+                            "flash_bytes": 847656,
+                            "flash_percentage": 64,
+                            "ram_bytes": 30768,
+                            "ram_percentage": 9
                             }]
                     }
 ]
@@ -393,38 +401,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
-                    "sizes": [{
-                            "flash_bytes": 287882,
-                            "flash_percentage": 21,
-                            "ram_bytes": 16072,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/Touch/TouchRead",
-                    "sizes": [{
-                            "flash_bytes": 287782,
-                            "flash_percentage": 21,
-                            "ram_bytes": 16064,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/ESP_I2S/examples/ES8388_loopback",
-                    "sizes": [{
-                            "flash_bytes": 334926,
-                            "flash_percentage": 25,
-                            "ram_bytes": 17196,
-                            "ram_percentage": 5
-                            }]
-                    },
-{"name": "libraries/ESP_I2S/examples/Simple_tone",
-                    "sizes": [{
-                            "flash_bytes": 285666,
-                            "flash_percentage": 21,
-                            "ram_bytes": 15432,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master",
                     "sizes": [{
                             "flash_bytes": 849562,
@@ -510,6 +486,46 @@
                             "flash_bytes": 901998,
                             "flash_percentage": 68,
                             "ram_bytes": 40148,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/Authorization",
+                    "sizes": [{
+                            "flash_bytes": 978670,
+                            "flash_percentage": 74,
+                            "ram_bytes": 40500,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/BasicHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 978650,
+                            "flash_percentage": 74,
+                            "ram_bytes": 40500,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/BasicHttpsClient",
+                    "sizes": [{
+                            "flash_bytes": 983282,
+                            "flash_percentage": 75,
+                            "ram_bytes": 40548,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/CustomHeaders",
+                    "sizes": [{
+                            "flash_bytes": 977258,
+                            "flash_percentage": 74,
+                            "ram_bytes": 40452,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/HTTPClientEnterprise",
+                    "sizes": [{
+                            "flash_bytes": 1034786,
+                            "flash_percentage": 32,
+                            "ram_bytes": 42044,
                             "ram_percentage": 12
                             }]
                     }

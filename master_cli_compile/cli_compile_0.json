@@ -246,6 +246,14 @@
                             "ram_bytes": 32772,
                             "ram_percentage": 10
                             }]
+                    },
+{"name": "libraries/BLE/examples/Server_secure_static_passkey",
+                    "sizes": [{
+                            "flash_bytes": 793594,
+                            "flash_percentage": 25,
+                            "ram_bytes": 32756,
+                            "ram_percentage": 9
+                            }]
                     }
 ]
 },
@@ -427,9 +435,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 891882,
+                            "flash_bytes": 891994,
                             "flash_percentage": 68,
-                            "ram_bytes": 40332,
+                            "ram_bytes": 40388,
                             "ram_percentage": 12
                             }]
                     },
@@ -510,6 +518,14 @@
                             "flash_bytes": 281634,
                             "flash_percentage": 21,
                             "ram_bytes": 15488,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 288558,
+                            "flash_percentage": 22,
+                            "ram_bytes": 15520,
                             "ram_percentage": 4
                             }]
                     }

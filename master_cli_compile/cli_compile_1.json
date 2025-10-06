@@ -12,9 +12,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 1047542,
+                            "flash_bytes": 1047558,
                             "flash_percentage": 79,
-                            "ram_bytes": 47336,
+                            "ram_bytes": 47400,
                             "ram_percentage": 14
                             }]
                     },
@@ -143,14 +143,6 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 793594,
-                            "flash_percentage": 25,
-                            "ram_bytes": 32756,
-                            "ram_percentage": 9
-                            }]
-                    },
 {"name": "libraries/BLE/examples/UART",
                     "sizes": [{
                             "flash_bytes": 796554,
@@ -177,9 +169,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 881626,
+                            "flash_bytes": 881638,
                             "flash_percentage": 67,
-                            "ram_bytes": 31084,
+                            "ram_bytes": 31132,
                             "ram_percentage": 9
                             }]
                     },
@@ -246,6 +238,22 @@
                             "ram_bytes": 22100,
                             "ram_percentage": 6
                             }]
+                    },
+{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
+                    "sizes": [{
+                            "flash_bytes": 321740,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22256,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
+                    "sizes": [{
+                            "flash_bytes": 336928,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22276,
+                            "ram_percentage": 6
+                            }]
                     }
 ]
 },
@@ -262,9 +270,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 923483,
+                            "flash_bytes": 923595,
                             "flash_percentage": 70,
-                            "ram_bytes": 44968,
+                            "ram_bytes": 45024,
                             "ram_percentage": 13
                             }]
                     },
@@ -409,14 +417,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 288558,
-                            "flash_percentage": 22,
-                            "ram_bytes": 15520,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "libraries/ESP32/examples/ArduinoStackSize",
                     "sizes": [{
                             "flash_bytes": 269594,
@@ -536,6 +536,22 @@
                             "ram_bytes": 16256,
                             "ram_percentage": 4
                             }]
+                    },
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
+                    "sizes": [{
+                            "flash_bytes": 294438,
+                            "flash_percentage": 22,
+                            "ram_bytes": 16364,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 276178,
+                            "flash_percentage": 21,
+                            "ram_bytes": 16264,
+                            "ram_percentage": 4
+                            }]
                     }
 ]
 },
@@ -568,9 +584,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 988806,
+                            "flash_bytes": 988822,
                             "flash_percentage": 75,
-                            "ram_bytes": 35456,
+                            "ram_bytes": 35520,
                             "ram_percentage": 10
                             }]
                     },
@@ -677,9 +693,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 996236,
+                            "flash_bytes": 996252,
                             "flash_percentage": 76,
-                            "ram_bytes": 41676,
+                            "ram_bytes": 41724,
                             "ram_percentage": 12
                             }]
                     },
@@ -975,9 +991,9 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 969167,
+                            "flash_bytes": 969283,
                             "flash_percentage": 73,
-                            "ram_bytes": 45180,
+                            "ram_bytes": 45236,
                             "ram_percentage": 13
                             }]
                     },

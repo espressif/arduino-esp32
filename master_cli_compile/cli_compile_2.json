@@ -143,22 +143,6 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 321740,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22256,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
-                    "sizes": [{
-                            "flash_bytes": 336928,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22276,
-                            "ram_percentage": 6
-                            }]
-                    },
 {"name": "libraries/ESP32/examples/AnalogRead",
                     "sizes": [{
                             "flash_bytes": 341684,
@@ -244,6 +228,30 @@
                             "flash_bytes": 328364,
                             "flash_percentage": 25,
                             "ram_bytes": 22096,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
+                    "sizes": [{
+                            "flash_bytes": 327704,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22096,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/GPIO/BlinkRGB",
+                    "sizes": [{
+                            "flash_bytes": 310004,
+                            "flash_percentage": 23,
+                            "ram_bytes": 22084,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 334760,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22768,
                             "ram_percentage": 6
                             }]
                     }
@@ -393,22 +401,6 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
-                    "sizes": [{
-                            "flash_bytes": 294438,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16364,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
-                    "sizes": [{
-                            "flash_bytes": 276178,
-                            "flash_percentage": 21,
-                            "ram_bytes": 16264,
-                            "ram_percentage": 4
-                            }]
-                    },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
                             "flash_bytes": 276806,
@@ -508,6 +500,30 @@
 {"name": "libraries/ESP32/examples/Serial/BaudRateDetect_Demo",
                     "sizes": [{
                             "flash_bytes": 269658,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15304,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/OnReceiveError_BREAK_Demo",
+                    "sizes": [{
+                            "flash_bytes": 272538,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15344,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/OnReceive_Demo",
+                    "sizes": [{
+                            "flash_bytes": 271262,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15312,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
+                    "sizes": [{
+                            "flash_bytes": 270334,
                             "flash_percentage": 20,
                             "ram_bytes": 15304,
                             "ram_percentage": 4
