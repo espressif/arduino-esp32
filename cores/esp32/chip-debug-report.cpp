@@ -149,10 +149,6 @@ static void printFlashInfo(void) {
   chip_report_printf("  Bus Speed         : %lu MHz\n", actual_freq);
   chip_report_printf("  Flash Frequency   : %lu MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
   
-  if (ESP.isFlashHighPerformanceModeEnabled()) {
-    chip_report_printf("  HPM Mode          : Enabled (> 80 MHz)\n");
-  }
-  
   chip_report_printf("  Bus Mode          : ");
 #if CONFIG_ESPTOOLPY_OCT_FLASH
   chip_report_printf("OPI\n");
