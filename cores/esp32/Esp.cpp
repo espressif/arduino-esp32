@@ -547,27 +547,34 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
 
 /**
  * @brief Read the clock divider from hardware using HAL structures
+ * Based on ESP-IDF HAL implementation:
+ * - ESP32 classic: Uses SPI1.clock (typedef in spi_flash_ll.h line 52)
+ * - All modern chips: Use SPIMEM1.clock (typedef in spimem_flash_ll.h)
  * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
  */
 uint8_t EspClass::getFlashClockDivider(void) {
 #if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic: Use SPI0 structure
-  if (SPI0.clock.clk_equ_sysclk) {
+  // ESP32 classic: Flash uses SPI1 peripheral (not SPI0)
+  // See: esp-idf/components/hal/esp32/include/hal/spi_flash_ll.h line 52
+  if (SPI1.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
-  return SPI0.clock.clkcnt_n + 1;
+  return SPI1.clock.clkcnt_n + 1;
 #elif CONFIG_IDF_TARGET_ESP32C5
-  // ESP32-C5: Uses spi_mem_c_clock_reg_t with mem_ prefix
-  if (SPIMEM0.clock.mem_clk_equ_sysclk) {
+  // ESP32-C5: Flash uses SPIMEM1 with mem_ prefixed fields
+  // See: esp-idf/components/hal/esp32c5/include/hal/spimem_flash_ll.h line 42
+  if (SPIMEM1.clock.mem_clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
-  return SPIMEM0.clock.mem_clkcnt_n + 1;
+  return SPIMEM1.clock.mem_clkcnt_n + 1;
 #else
-  // (S2, S3, C2, C3, C6, H2, P4): Use SPIMEM0 structure without mem_ prefix
-  if (SPIMEM0.clock.clk_equ_sysclk) {
+  // (S2, S3, C2, C3, C6, C61, H2, P4): Flash uses SPIMEM1
+  // See: esp-idf/components/hal/esp32*/include/hal/spimem_flash_ll.h
+  // Example S3: line 38: typedef typeof(SPIMEM1.clock.val) spimem_flash_ll_clock_reg_t;
+  if (SPIMEM1.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
-  return SPIMEM0.clock.clkcnt_n + 1;
+  return SPIMEM1.clock.clkcnt_n + 1;
 #endif
 }
 
