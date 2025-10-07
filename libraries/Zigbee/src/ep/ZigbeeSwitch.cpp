@@ -339,6 +339,7 @@ void ZigbeeSwitch::lightOnWithSceneRecall() {
     log_e("Light not bound");
   }
 }
+
 void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off) {
   if (_is_bound) {
     esp_zb_zcl_on_off_on_with_timed_off_cmd_t cmd_req = {0};
@@ -356,4 +357,83 @@ void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on,
   }
 }
 
+void ZigbeeSwitch::getLightState() {
+  if (_is_bound) {
+    esp_zb_zcl_read_attr_cmd_t read_req = {0};
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
+    read_req.attr_number = 1;
+    uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
+    read_req.attr_field = &attr_id;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeSwitch::getLightState(uint16_t group_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_read_attr_cmd_t read_req = {0};
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
+    read_req.attr_number = 1;
+    uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
+    read_req.attr_field = &attr_id;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeSwitch::getLightState(uint8_t endpoint, uint16_t short_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_read_attr_cmd_t read_req = {0};
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
+    read_req.attr_number = 1;
+    uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
+    read_req.attr_field = &attr_id;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeSwitch::getLightState(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_read_attr_cmd_t read_req = {0};
+    read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+    read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+    read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ON_OFF;
+    read_req.attr_number = 1;
+    uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
+    read_req.attr_field = &attr_id;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_read_attr_cmd_req(&read_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeSwitch::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
+  static uint8_t read_config = 0;
+  if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
+    if (attribute->id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
+      bool light_state = attribute->data.value ? *(bool *)attribute->data.value : false;
+      if (_on_light_state_change) {
+        _on_light_state_change(light_state);
+      }
+      if (_on_light_state_change_with_source) {
+        _on_light_state_change_with_source(light_state, src_endpoint, src_address);
+      }
+    }
+  }
+}
 #endif  // CONFIG_ZB_ENABLED
