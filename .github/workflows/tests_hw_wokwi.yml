@@ -24,9 +24,10 @@ jobs:
       pr_num: ${{ steps.set-ref.outputs.pr_num }}
       ref: ${{ steps.set-ref.outputs.ref }}
       base: ${{ steps.set-ref.outputs.base }}
-      targets: ${{ steps.set-ref.outputs.targets }}
-      wokwi_types: ${{ steps.set-ref.outputs.wokwi_types }}
       hw_types: ${{ steps.set-ref.outputs.hw_types }}
+      hw_targets: ${{ steps.set-ref.outputs.hw_targets }}
+      wokwi_types: ${{ steps.set-ref.outputs.wokwi_types }}
+      wokwi_targets: ${{ steps.set-ref.outputs.wokwi_targets }}
       hw_tests_enabled: ${{ steps.set-ref.outputs.hw_tests_enabled }}
       push_time: ${{ steps.set-ref.outputs.push_time }}
     steps:
@@ -106,14 +107,16 @@ jobs:
             push_time=""
           fi
 
-          wokwi_types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
+          hw_targets=$(cat artifacts/matrix_info/hw_targets.txt | tr -cd "[:alnum:],[]'")
           hw_types=$(cat artifacts/matrix_info/hw_types.txt | tr -cd "[:alpha:],[]'")
-          targets=$(cat artifacts/matrix_info/targets.txt | tr -cd "[:alnum:],[]'")
+          wokwi_targets=$(cat artifacts/matrix_info/wokwi_targets.txt | tr -cd "[:alnum:],[]'")
+          wokwi_types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
 
           echo "base = $base"
-          echo "targets = $targets"
-          echo "wokwi_types = $wokwi_types"
+          echo "hw_targets = $hw_targets"
           echo "hw_types = $hw_types"
+          echo "wokwi_targets = $wokwi_targets"
+          echo "wokwi_types = $wokwi_types"
           echo "pr_num = $pr_num"
           echo "hw_tests_enabled = $hw_tests_enabled"
           echo "push_time = $push_time"
@@ -150,9 +153,10 @@ jobs:
 
           echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
           echo "base=$base" >> $GITHUB_OUTPUT
-          echo "targets=$targets" >> $GITHUB_OUTPUT
-          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
+          echo "hw_targets=$hw_targets" >> $GITHUB_OUTPUT
           echo "hw_types=$hw_types" >> $GITHUB_OUTPUT
+          echo "wokwi_targets=$wokwi_targets" >> $GITHUB_OUTPUT
+          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
           echo "ref=$ref" >> $GITHUB_OUTPUT
           echo "hw_tests_enabled=$hw_tests_enabled" >> $GITHUB_OUTPUT
           echo "push_time=$push_time" >> $GITHUB_OUTPUT
@@ -312,7 +316,7 @@ jobs:
           download_artifacts: 'true'
           download_artifacts_on_failure: 'true'
           download_path: './gitlab-artifacts'
-          variables: '{"TEST_TYPES":"${{ needs.get-artifacts.outputs.hw_types }}","TEST_CHIPS":"${{ needs.get-artifacts.outputs.targets }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
+          variables: '{"TEST_TYPES":"${{ needs.get-artifacts.outputs.hw_types }}","TEST_CHIPS":"${{ needs.get-artifacts.outputs.hw_targets }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
 
       - name: Process Downloaded Artifacts
         if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
@@ -402,7 +406,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.get-artifacts.outputs.wokwi_types) }}
-        chip: ${{ fromJson(needs.get-artifacts.outputs.targets) }}
+        chip: ${{ fromJson(needs.get-artifacts.outputs.wokwi_targets) }}
     steps:
       - name: Report pending
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1

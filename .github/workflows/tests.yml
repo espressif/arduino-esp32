@@ -54,10 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-types: ${{ steps.set-matrix.outputs.build-types }}
-      hw-types: ${{ steps.set-matrix.outputs.hw-types }}
-      wokwi-types: ${{ steps.set-matrix.outputs.wokwi-types }}
+      hw-targets: ${{ steps.set-matrix.outputs.hw-targets }}
       qemu-types: ${{ steps.set-matrix.outputs.qemu-types }}
-      targets: ${{ steps.set-matrix.outputs.targets }}
+      qemu-targets: ${{ steps.set-matrix.outputs.qemu-targets }}
     env:
       IS_PR: ${{ github.event.pull_request.number != null }}
       PERFORMANCE_ENABLED: ${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
@@ -84,7 +83,7 @@ jobs:
     strategy:
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
-        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
+        chip: ${{ fromJson(needs.gen-matrix.outputs.hw-targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
@@ -99,7 +98,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.qemu-types) }}
-        chip: ["esp32", "esp32c3"]
+        chip: ${{ fromJson(needs.gen-matrix.outputs.qemu-targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
