@@ -5,6 +5,9 @@
 
 set -e
 
+# Required properties for all boards
+REQUIRED_PROPERTIES=("upload.flags" "upload.extra_flags")
+
 # Function to print output
 print_error() {
     echo "Error: $1"
@@ -100,10 +103,9 @@ validate_required_properties() {
     local board_name="$1"
     local boards_file="$2"
     
-    local required_props=("upload.flags" "upload.extra_flags")
     local missing_props=()
     
-    for prop in "${required_props[@]}"; do
+    for prop in "${REQUIRED_PROPERTIES[@]}"; do
         if ! grep -q "^$board_name.$prop=" "$boards_file"; then
             missing_props+=("$prop")
         fi
