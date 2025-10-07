@@ -560,17 +560,11 @@ uint8_t EspClass::getFlashClockDivider(void) {
     return 1;  // 1:1 clock (no divider)
   }
   return SPI1.clock.clkcnt_n + 1;
-#elif CONFIG_IDF_TARGET_ESP32C5
-  // ESP32-C5: Flash uses SPIMEM1 with mem_ prefixed fields
-  // See: esp-idf/components/hal/esp32c5/include/hal/spimem_flash_ll.h line 42
-  if (SPIMEM1.clock.mem_clk_equ_sysclk) {
-    return 1;  // 1:1 clock (no divider)
-  }
-  return SPIMEM1.clock.mem_clkcnt_n + 1;
 #else
-  // (S2, S3, C2, C3, C6, C61, H2, P4): Flash uses SPIMEM1
+  // All modern chips (S2, S3, C2, C3, C5, C6, C61, H2, P4): Flash uses SPIMEM1
   // See: esp-idf/components/hal/esp32*/include/hal/spimem_flash_ll.h
   // Example S3: line 38: typedef typeof(SPIMEM1.clock.val) spimem_flash_ll_clock_reg_t;
+  // Example C5: esp-idf/components/soc/esp32c5/mp/include/soc/spi_mem_struct.h lines 97-99
   if (SPIMEM1.clock.clk_equ_sysclk) {
     return 1;  // 1:1 clock (no divider)
   }
