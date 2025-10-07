@@ -408,7 +408,7 @@ size_t USBCDC::write(const uint8_t *buffer, size_t size) {
   // writeTimeout will prevent that TinyUSB failure locks the while(to_send) loop 
   uint32_t writeTimeout = millis() + tx_timeout_ms;
   while (to_send) {
-    if (!tud_cdc_n_connected(itf) || millis() > writeTimeout) {
+    if (!tud_cdc_n_connected(itf) || (int32_t)(millis() - writeTimeout) >= 0) {
       log_e("USB is disconnected or CDC writing has timed out.");
       size = so_far;
       break;
