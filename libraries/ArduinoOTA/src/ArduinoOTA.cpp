@@ -89,6 +89,27 @@ ArduinoOTAClass &ArduinoOTAClass::setPasswordHash(const char *password) {
     // Store the pre-hashed password directly
     _password.clear();
     _password = password;
+
+    size_t len = strlen(password);
+
+    if (len == 32) {
+      // Check if it's a valid hex string (all chars are 0-9, a-f, A-F)
+      bool is_hex = true;
+      for (size_t i = 0; i < len; i++) {
+        char c = password[i];
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+          is_hex = false;
+          break;
+        }
+      }
+
+      // Warn if MD5 hash is detected (32 hex characters)
+      if (is_hex) {
+        log_w("MD5 password hash detected. MD5 is deprecated and insecure.");
+        log_w("Please use setPassword() with plain text or setPasswordHash() with SHA256 hash (64 chars).");
+        log_w("To generate SHA256: echo -n 'yourpassword' | sha256sum");
+      }
+    }
   }
   return *this;
 }
