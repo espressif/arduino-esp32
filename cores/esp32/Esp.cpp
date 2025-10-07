@@ -537,10 +537,10 @@ uint64_t EspClass::getEfuseMac(void) {
  */
 uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
 #if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic: Use HAL function
+  // ESP32: Use HAL function
   return spi_flash_ll_get_source_clock_freq_mhz(0);  // host_id = 0 for SPI0
 #else
-  // For newer chips (S2, S3, C2, C3, C6, H2): Use spimem HAL function
+  // All modern MCUs: Use spimem HAL function
   return spimem_flash_ll_get_source_freq_mhz();
 #endif
 }
@@ -548,25 +548,25 @@ uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
 /**
  * @brief Read the clock divider from hardware using HAL structures
  * Based on ESP-IDF HAL implementation:
- * - ESP32 classic: Uses SPI1.clock (typedef in spi_flash_ll.h line 52)
- * - All modern chips: Use SPIMEM1.clock (typedef in spimem_flash_ll.h)
+ * - ESP32: Uses SPI1.clock (typedef in spi_flash_ll.h)
+ * - All newer MCUs: Use SPIMEM1.clock (typedef in spimem_flash_ll.h)
  * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
  */
 uint8_t EspClass::getFlashClockDivider(void) {
 #if CONFIG_IDF_TARGET_ESP32
-  // ESP32 classic: Flash uses SPI1 peripheral (not SPI0)
-  // See: esp-idf/components/hal/esp32/include/hal/spi_flash_ll.h line 52
+  // ESP32: Flash uses SPI1
+  // See: line 52: esp-idf/components/hal/esp32/include/hal/spi_flash_ll.h
   if (SPI1.clock.clk_equ_sysclk) {
-    return 1;  // 1:1 clock (no divider)
+    return 1;  // 1:1 clock
   }
   return SPI1.clock.clkcnt_n + 1;
 #else
-  // All modern chips (S2, S3, C2, C3, C5, C6, C61, H2, P4): Flash uses SPIMEM1
+  // All newer MCUs: Flash uses SPIMEM1
   // See: esp-idf/components/hal/esp32*/include/hal/spimem_flash_ll.h
   // Example S3: line 38: typedef typeof(SPIMEM1.clock.val) spimem_flash_ll_clock_reg_t;
-  // Example C5: esp-idf/components/soc/esp32c5/mp/include/soc/spi_mem_struct.h lines 97-99
+  // Example C5: lines 97-99: esp-idf/components/soc/esp32c5/mp/include/soc/spi_mem_struct.h
   if (SPIMEM1.clock.clk_equ_sysclk) {
-    return 1;  // 1:1 clock (no divider)
+    return 1;  // 1:1 clock
   }
   return SPIMEM1.clock.clkcnt_n + 1;
 #endif
@@ -574,7 +574,7 @@ uint8_t EspClass::getFlashClockDivider(void) {
 
 /**
  * @brief Get the actual flash frequency in MHz
- * @return Flash frequency in MHz (e.g., 80, 120, 160, 240)
+ * @return Flash frequency in MHz (80, 120, 160, or 240)
  */
 uint32_t EspClass::getFlashFrequencyMHz(void) {
   uint8_t source = getFlashSourceFrequencyMHz();
