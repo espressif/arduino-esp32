@@ -2033,9 +2033,6 @@ esp32wrover.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5M
 esp32wrover.menu.PartitionScheme.default.build.partitions=default
 esp32wrover.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32wrover.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32wrover.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-esp32wrover.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-esp32wrover.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32wrover.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32wrover.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32wrover.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -2056,9 +2053,6 @@ esp32wrover.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32wrover.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32wrover.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32wrover.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32wrover.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-esp32wrover.menu.PartitionScheme.fatflash.build.partitions=ffat
-esp32wrover.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 esp32wrover.menu.PartitionScheme.rainmaker=RainMaker 4MB
 esp32wrover.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32wrover.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -2067,7 +2061,7 @@ esp32wrover.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no
 esp32wrover.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 esp32wrover.menu.PartitionScheme.custom=Custom
 esp32wrover.menu.PartitionScheme.custom.build.partitions=
-esp32wrover.menu.PartitionScheme.custom.upload.maximum_size=16777216
+esp32wrover.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 esp32wrover.menu.FlashMode.qio=QIO
 esp32wrover.menu.FlashMode.qio.build.flash_mode=dio
@@ -2159,7 +2153,7 @@ pico32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 pico32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 pico32.menu.PartitionScheme.custom=Custom
 pico32.menu.PartitionScheme.custom.build.partitions=
-pico32.menu.PartitionScheme.custom.upload.maximum_size=16777216
+pico32.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 pico32.menu.UploadSpeed.921600=921600
 pico32.menu.UploadSpeed.921600.upload.speed=921600
@@ -2284,12 +2278,11 @@ esp32s3-octal.menu.FlashMode.dio.build.boot_freq=80m
 esp32s3-octal.menu.FlashMode.dio.build.flash_freq=80m
 
 esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
+esp32s3-octal.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3-octal.menu.FlashSize.4M=4MB (32Mb)
 esp32s3-octal.menu.FlashSize.4M.build.flash_size=4MB
 esp32s3-octal.menu.FlashSize.8M=8MB (64Mb)
 esp32s3-octal.menu.FlashSize.8M.build.flash_size=8MB
-esp32s3-octal.menu.FlashSize.16M=16MB (128Mb)
-esp32s3-octal.menu.FlashSize.16M.build.flash_size=16MB
 esp32s3-octal.menu.FlashSize.32M=32MB (256Mb)
 esp32s3-octal.menu.FlashSize.32M.build.flash_size=32MB
 
@@ -2331,6 +2324,8 @@ esp32s3-octal.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 esp32s3-octal.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s3-octal.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 esp32s3-octal.menu.PartitionScheme.default.build.partitions=default
 esp32s3-octal.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -2361,9 +2356,6 @@ esp32s3-octal.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 esp32s3-octal.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 esp32s3-octal.menu.PartitionScheme.fatflash.build.partitions=ffat
 esp32s3-octal.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-esp32s3-octal.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s3-octal.menu.PartitionScheme.rainmaker=RainMaker 4MB
 esp32s3-octal.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 esp32s3-octal.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -2612,15 +2604,9 @@ esp32s3usbotg.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3usbotg.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3usbotg.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3usbotg.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3usbotg.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-esp32s3usbotg.menu.PartitionScheme.fatflash.build.partitions=ffat
-esp32s3usbotg.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-esp32s3usbotg.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 esp32s3usbotg.menu.PartitionScheme.custom=Custom
 esp32s3usbotg.menu.PartitionScheme.custom.build.partitions=
-esp32s3usbotg.menu.PartitionScheme.custom.upload.maximum_size=16777216
+esp32s3usbotg.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 esp32s3usbotg.menu.DebugLevel.none=None
 esp32s3usbotg.menu.DebugLevel.none.build.code_debug=0
@@ -2698,9 +2684,6 @@ esp32s3camlcd.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.
 esp32s3camlcd.menu.PartitionScheme.default.build.partitions=default
 esp32s3camlcd.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 esp32s3camlcd.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-esp32s3camlcd.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-esp32s3camlcd.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-esp32s3camlcd.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 esp32s3camlcd.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 esp32s3camlcd.menu.PartitionScheme.minimal.build.partitions=minimal
 esp32s3camlcd.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -2721,12 +2704,6 @@ esp32s3camlcd.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32s3camlcd.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 esp32s3camlcd.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32s3camlcd.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32s3camlcd.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-esp32s3camlcd.menu.PartitionScheme.fatflash.build.partitions=ffat
-esp32s3camlcd.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-esp32s3camlcd.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 
 esp32s3camlcd.menu.UploadSpeed.921600=921600
 esp32s3camlcd.menu.UploadSpeed.921600.upload.speed=921600
@@ -5394,7 +5371,7 @@ um_tinyc6.build.bootloader_addr=0x0
 
 um_tinyc6.build.cdc_on_boot=1
 um_tinyc6.build.f_cpu=160000000L
-um_tinyc6.build.flash_size=4MB
+um_tinyc6.build.flash_size=8MB
 um_tinyc6.build.flash_freq=80m
 um_tinyc6.build.flash_mode=qio
 um_tinyc6.build.boot=qio
@@ -5439,7 +5416,7 @@ um_tinyc6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 um_tinyc6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 um_tinyc6.menu.PartitionScheme.custom=Custom
 um_tinyc6.menu.PartitionScheme.custom.build.partitions=
-um_tinyc6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+um_tinyc6.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 um_tinyc6.menu.CPUFreq.160=160MHz (WiFi)
 um_tinyc6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -5867,6 +5844,8 @@ S_ODI_Ultra.menu.DebugLevel.info=Info
 S_ODI_Ultra.menu.DebugLevel.info.build.code_debug=3
 S_ODI_Ultra.menu.DebugLevel.debug=Debug
 S_ODI_Ultra.menu.DebugLevel.debug.build.code_debug=4
+S_ODI_Ultra.menu.DebugLevel.verbose=Verbose
+S_ODI_Ultra.menu.DebugLevel.verbose.build.code_debug=5
 
 S_ODI_Ultra.menu.EraseFlash.none=Disabled
 S_ODI_Ultra.menu.EraseFlash.none.upload.erase_cmd=
@@ -8450,7 +8429,7 @@ sparkfun_esp32s3_thing_plus.menu.PartitionScheme.zigbee_zczr.build.partitions=zi
 sparkfun_esp32s3_thing_plus.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 sparkfun_esp32s3_thing_plus.menu.PartitionScheme.custom=Custom
 sparkfun_esp32s3_thing_plus.menu.PartitionScheme.custom.build.partitions=
-sparkfun_esp32s3_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=16777216
+sparkfun_esp32s3_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 sparkfun_esp32s3_thing_plus.menu.CPUFreq.240=240MHz (WiFi)
 sparkfun_esp32s3_thing_plus.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -10446,8 +10425,6 @@ lolin_s2_mini.build.flash_freq=80m
 lolin_s2_mini.build.flash_mode=dio
 lolin_s2_mini.build.boot=qio
 lolin_s2_mini.build.partitions=default
-lolin_s2_mini.build.defines=
-
 lolin_s2_mini.build.defines=-DBOARD_HAS_PSRAM
 
 lolin_s2_mini.menu.CDCOnBoot.default=Enabled
@@ -10544,8 +10521,6 @@ lolin_s2_pico.build.flash_freq=80m
 lolin_s2_pico.build.flash_mode=dio
 lolin_s2_pico.build.boot=qio
 lolin_s2_pico.build.partitions=default
-lolin_s2_pico.build.defines=
-
 lolin_s2_pico.build.defines=-DBOARD_HAS_PSRAM
 
 lolin_s2_pico.menu.CDCOnBoot.default=Enabled
@@ -12249,9 +12224,6 @@ dfrobot_beetle_esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2
 dfrobot_beetle_esp32c3.menu.PartitionScheme.default.build.partitions=default
 dfrobot_beetle_esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-dfrobot_beetle_esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 dfrobot_beetle_esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
 dfrobot_beetle_esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -12272,12 +12244,6 @@ dfrobot_beetle_esp32c3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 dfrobot_beetle_esp32c3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash.build.partitions=ffat
-dfrobot_beetle_esp32c3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-dfrobot_beetle_esp32c3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 dfrobot_beetle_esp32c3.menu.PartitionScheme.rainmaker=RainMaker 4MB
 dfrobot_beetle_esp32c3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 dfrobot_beetle_esp32c3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -12438,7 +12404,7 @@ dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_
 dfrobot_beetle_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.build.partitions=
-dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+dfrobot_beetle_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 dfrobot_beetle_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 dfrobot_beetle_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -12984,7 +12950,7 @@ dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zi
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom=Custom
 dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.build.partitions=
-dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+dfrobot_firebeetle2_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 dfrobot_firebeetle2_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 dfrobot_firebeetle2_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -16132,9 +16098,6 @@ adafruit_feather_esp32c6.menu.PartitionScheme.default=Default 4MB with spiffs (1
 adafruit_feather_esp32c6.menu.PartitionScheme.default.build.partitions=default
 adafruit_feather_esp32c6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 adafruit_feather_esp32c6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-adafruit_feather_esp32c6.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-adafruit_feather_esp32c6.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-adafruit_feather_esp32c6.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 adafruit_feather_esp32c6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 adafruit_feather_esp32c6.menu.PartitionScheme.minimal.build.partitions=minimal
 adafruit_feather_esp32c6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -16155,12 +16118,6 @@ adafruit_feather_esp32c6.menu.PartitionScheme.huge_app.upload.maximum_size=31457
 adafruit_feather_esp32c6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 adafruit_feather_esp32c6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 adafruit_feather_esp32c6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-adafruit_feather_esp32c6.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-adafruit_feather_esp32c6.menu.PartitionScheme.fatflash.build.partitions=ffat
-adafruit_feather_esp32c6.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-adafruit_feather_esp32c6.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-adafruit_feather_esp32c6.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-adafruit_feather_esp32c6.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 adafruit_feather_esp32c6.menu.PartitionScheme.rainmaker=RainMaker 4MB
 adafruit_feather_esp32c6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 adafruit_feather_esp32c6.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -16175,7 +16132,7 @@ adafruit_feather_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbe
 adafruit_feather_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 adafruit_feather_esp32c6.menu.PartitionScheme.custom=Custom
 adafruit_feather_esp32c6.menu.PartitionScheme.custom.build.partitions=
-adafruit_feather_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+adafruit_feather_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 adafruit_feather_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 adafruit_feather_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -18360,9 +18317,6 @@ nologo_esp32c3_super_mini.menu.PartitionScheme.default=Default 4MB with spiffs (
 nologo_esp32c3_super_mini.menu.PartitionScheme.default.build.partitions=default
 nologo_esp32c3_super_mini.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 nologo_esp32c3_super_mini.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-nologo_esp32c3_super_mini.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 nologo_esp32c3_super_mini.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 nologo_esp32c3_super_mini.menu.PartitionScheme.minimal.build.partitions=minimal
 nologo_esp32c3_super_mini.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -18611,12 +18565,6 @@ nologo_esp32s3_pico.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=40386
 nologo_esp32s3_pico.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
 nologo_esp32s3_pico.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
 nologo_esp32s3_pico.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
-nologo_esp32s3_pico.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
 nologo_esp32s3_pico.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
 nologo_esp32s3_pico.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 nologo_esp32s3_pico.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
@@ -18981,6 +18929,8 @@ esp32doit-devkit-v1.menu.DebugLevel.info=Info
 esp32doit-devkit-v1.menu.DebugLevel.info.build.code_debug=3
 esp32doit-devkit-v1.menu.DebugLevel.debug=Debug
 esp32doit-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
+esp32doit-devkit-v1.menu.DebugLevel.verbose=Verbose
+esp32doit-devkit-v1.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32doit-devkit-v1.menu.EraseFlash.none=Disabled
 esp32doit-devkit-v1.menu.EraseFlash.none.upload.erase_cmd=
@@ -19585,8 +19535,6 @@ esp32-devkitlipo.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 esp32-devkitlipo.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (Large APPS with OTA)
 esp32-devkitlipo.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 esp32-devkitlipo.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-esp32-devkitlipo.menu.PartitionScheme.fatflash=16M Fat
-esp32-devkitlipo.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 esp32-devkitlipo.menu.FlashMode.qio=QIO
 esp32-devkitlipo.menu.FlashMode.qio.build.flash_mode=dio
@@ -21955,9 +21903,6 @@ m5stack_stickc.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1
 m5stack_stickc.menu.PartitionScheme.default.build.partitions=default
 m5stack_stickc.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_stickc.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_stickc.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_stickc.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_stickc.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_stickc.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_stickc.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_stickc.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -21975,9 +21920,6 @@ m5stack_stickc.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 m5stack_stickc.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_stickc.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_stickc.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_stickc.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_stickc.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_stickc.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_stickc.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_stickc.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_stickc.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -21986,7 +21928,7 @@ m5stack_stickc.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB
 m5stack_stickc.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_stickc.menu.PartitionScheme.custom=Custom
 m5stack_stickc.menu.PartitionScheme.custom.build.partitions=
-m5stack_stickc.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_stickc.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 m5stack_stickc.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_stickc.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -22110,9 +22052,6 @@ m5stack_stickc_plus.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB 
 m5stack_stickc_plus.menu.PartitionScheme.default.build.partitions=default
 m5stack_stickc_plus.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_stickc_plus.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_stickc_plus.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_stickc_plus.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_stickc_plus.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_stickc_plus.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_stickc_plus.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_stickc_plus.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -22130,9 +22069,6 @@ m5stack_stickc_plus.menu.PartitionScheme.noota_3gffat.upload.maximum_size=104857
 m5stack_stickc_plus.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_stickc_plus.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_stickc_plus.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_stickc_plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_stickc_plus.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_stickc_plus.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_stickc_plus.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_stickc_plus.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_stickc_plus.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -22141,7 +22077,7 @@ m5stack_stickc_plus.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmake
 m5stack_stickc_plus.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_stickc_plus.menu.PartitionScheme.custom=Custom
 m5stack_stickc_plus.menu.PartitionScheme.custom.build.partitions=
-m5stack_stickc_plus.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_stickc_plus.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 m5stack_stickc_plus.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_stickc_plus.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -22291,9 +22227,6 @@ m5stack_stickc_plus2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=10485
 m5stack_stickc_plus2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_stickc_plus2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_stickc_plus2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_stickc_plus2.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_stickc_plus2.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_stickc_plus2.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_stickc_plus2.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_stickc_plus2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_stickc_plus2.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -22305,7 +22238,7 @@ m5stack_stickc_plus2.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmak
 m5stack_stickc_plus2.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
 m5stack_stickc_plus2.menu.PartitionScheme.custom=Custom
 m5stack_stickc_plus2.menu.PartitionScheme.custom.build.partitions=
-m5stack_stickc_plus2.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_stickc_plus2.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 m5stack_stickc_plus2.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_stickc_plus2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -22428,9 +22361,6 @@ m5stack_atom.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5
 m5stack_atom.menu.PartitionScheme.default.build.partitions=default
 m5stack_atom.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_atom.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_atom.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_atom.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_atom.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_atom.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_atom.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_atom.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -22448,9 +22378,6 @@ m5stack_atom.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 m5stack_atom.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_atom.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_atom.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_atom.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_atom.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_atom.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_atom.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_atom.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_atom.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -22459,7 +22386,7 @@ m5stack_atom.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_n
 m5stack_atom.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_atom.menu.PartitionScheme.custom=Custom
 m5stack_atom.menu.PartitionScheme.custom.build.partitions=
-m5stack_atom.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_atom.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 m5stack_atom.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_atom.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -22695,12 +22622,6 @@ m5stack_atoms3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 m5stack_atoms3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_atoms3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_atoms3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_atoms3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_atoms3.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_atoms3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-m5stack_atoms3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-m5stack_atoms3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-m5stack_atoms3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 m5stack_atoms3.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_atoms3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_atoms3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -22710,19 +22631,9 @@ m5stack_atoms3.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_atoms3.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
 m5stack_atoms3.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
 m5stack_atoms3.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
-m5stack_atoms3.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
-m5stack_atoms3.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
-m5stack_atoms3.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
-m5stack_atoms3.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
-m5stack_atoms3.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
-m5stack_atoms3.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
-m5stack_atoms3.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
-m5stack_atoms3.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
-m5stack_atoms3.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
-m5stack_atoms3.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
 m5stack_atoms3.menu.PartitionScheme.custom=Custom
 m5stack_atoms3.menu.PartitionScheme.custom.build.partitions=
-m5stack_atoms3.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_atoms3.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 m5stack_atoms3.menu.CPUFreq.240=240MHz (WiFi)
 m5stack_atoms3.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -23240,9 +23151,6 @@ m5stack_timer_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB AP
 m5stack_timer_cam.menu.PartitionScheme.default.build.partitions=default
 m5stack_timer_cam.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_timer_cam.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_timer_cam.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_timer_cam.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_timer_cam.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_timer_cam.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_timer_cam.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_timer_cam.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -23391,9 +23299,6 @@ m5stack_unit_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP
 m5stack_unit_cam.menu.PartitionScheme.default.build.partitions=default
 m5stack_unit_cam.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_unit_cam.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_unit_cam.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_unit_cam.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_unit_cam.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_unit_cam.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_unit_cam.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_unit_cam.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -23775,9 +23680,6 @@ m5stack_poe_cam.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/
 m5stack_poe_cam.menu.PartitionScheme.default.build.partitions=default
 m5stack_poe_cam.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_poe_cam.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_poe_cam.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_poe_cam.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_poe_cam.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_poe_cam.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_poe_cam.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_poe_cam.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -24091,9 +23993,6 @@ m5stack_coreink.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/
 m5stack_coreink.menu.PartitionScheme.default.build.partitions=default
 m5stack_coreink.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_coreink.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_coreink.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_coreink.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_coreink.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_coreink.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_coreink.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_coreink.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -24114,9 +24013,6 @@ m5stack_coreink.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 m5stack_coreink.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_coreink.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_coreink.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_coreink.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_coreink.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_coreink.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_coreink.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_coreink.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_coreink.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -24125,7 +24021,7 @@ m5stack_coreink.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4M
 m5stack_coreink.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_coreink.menu.PartitionScheme.custom=Custom
 m5stack_coreink.menu.PartitionScheme.custom.build.partitions=
-m5stack_coreink.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_coreink.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 m5stack_coreink.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_coreink.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -24245,9 +24141,6 @@ m5stack_stamp_pico.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB A
 m5stack_stamp_pico.menu.PartitionScheme.default.build.partitions=default
 m5stack_stamp_pico.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 m5stack_stamp_pico.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-m5stack_stamp_pico.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-m5stack_stamp_pico.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-m5stack_stamp_pico.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 m5stack_stamp_pico.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 m5stack_stamp_pico.menu.PartitionScheme.minimal.build.partitions=minimal
 m5stack_stamp_pico.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -24268,9 +24161,6 @@ m5stack_stamp_pico.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 m5stack_stamp_pico.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 m5stack_stamp_pico.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 m5stack_stamp_pico.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-m5stack_stamp_pico.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-m5stack_stamp_pico.menu.PartitionScheme.fatflash.build.partitions=ffat
-m5stack_stamp_pico.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 m5stack_stamp_pico.menu.PartitionScheme.rainmaker=RainMaker 4MB
 m5stack_stamp_pico.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 m5stack_stamp_pico.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -24279,7 +24169,7 @@ m5stack_stamp_pico.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker
 m5stack_stamp_pico.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
 m5stack_stamp_pico.menu.PartitionScheme.custom=Custom
 m5stack_stamp_pico.menu.PartitionScheme.custom.build.partitions=
-m5stack_stamp_pico.menu.PartitionScheme.custom.upload.maximum_size=16777216
+m5stack_stamp_pico.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 m5stack_stamp_pico.menu.CPUFreq.240=240MHz (WiFi/BT)
 m5stack_stamp_pico.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -26191,7 +26081,7 @@ heltec_wifi_lora_32.menu.CPUFreq.240.build.f_cpu=240000000L
 heltec_wifi_lora_32.menu.CPUFreq.160=160MHz (WiFi/BT)
 heltec_wifi_lora_32.menu.CPUFreq.160.build.f_cpu=160000000L
 heltec_wifi_lora_32.menu.CPUFreq.80=80MHz (WiFi/BT)
-heltec_wifi_lora_32.menu.CPUFreq.160.build.f_cpu=80000000L
+heltec_wifi_lora_32.menu.CPUFreq.80.build.f_cpu=80000000L
 
 heltec_wifi_lora_32.menu.UploadSpeed.921600=921600
 heltec_wifi_lora_32.menu.UploadSpeed.921600.upload.speed=921600
@@ -29533,7 +29423,7 @@ wesp32.build.board=WESP32
 
 wesp32.build.f_cpu=240000000L
 wesp32.build.flash_mode=dio
-wesp32.build.flash_size=4MB
+wesp32.build.flash_size=16MB
 wesp32.build.boot=dio
 wesp32.build.partitions=default
 wesp32.build.defines=
@@ -29542,6 +29432,23 @@ wesp32.menu.FlashFreq.80=80MHz
 wesp32.menu.FlashFreq.80.build.flash_freq=80m
 wesp32.menu.FlashFreq.40=40MHz
 wesp32.menu.FlashFreq.40.build.flash_freq=40m
+
+wesp32.menu.FlashSize.default=16MB (128Mb) rev 7+
+wesp32.menu.FlashSize.default.build.flash_size=16MB
+wesp32.menu.FlashSize.default_4m_flash=4MB (32Mb) rev 5 and below
+wesp32.menu.FlashSize.default_4m_flash.build.flash_size=4MB
+
+wesp32.menu.PartitionScheme.default=16M OTA with large SPIFFS (4.5MB APP/6.8MB SPIFFS)
+wesp32.menu.PartitionScheme.default.build.partitions=large_spiffs_16MB
+wesp32.menu.PartitionScheme.default.upload.maximum_size=4718592
+wesp32.menu.PartitionScheme.default_large_app=16M large OTA app with SPIFFS (6.2MB APP/3.3MB SPIFFS)
+wesp32.menu.PartitionScheme.default_large_app.build.partitions=default_16MB
+wesp32.menu.PartitionScheme.default_large_app.upload.maximum_size=6553600
+wesp32.menu.PartitionScheme.default_fatfs=16M OTA with large FATFS (3MB APP/9.8MB FATFS)
+wesp32.menu.PartitionScheme.default_fatfs.build.partitions=app3M_fat9M_16MB
+wesp32.menu.PartitionScheme.default_fatfs.upload.maximum_size=3145728
+wesp32.menu.PartitionScheme.default_4m_flash=4M OTA app with SPIFFS (1.25MB APP/1.3MB SPIFFS)
+wesp32.menu.PartitionScheme.default_4m_flash.build.partitions=default
 
 wesp32.menu.UploadSpeed.921600=921600
 wesp32.menu.UploadSpeed.921600.upload.speed=921600
@@ -31028,6 +30935,8 @@ vintlabs-devkit-v1.menu.DebugLevel.info=Info
 vintlabs-devkit-v1.menu.DebugLevel.info.build.code_debug=3
 vintlabs-devkit-v1.menu.DebugLevel.debug=Debug
 vintlabs-devkit-v1.menu.DebugLevel.debug.build.code_debug=4
+vintlabs-devkit-v1.menu.DebugLevel.verbose=Verbose
+vintlabs-devkit-v1.menu.DebugLevel.verbose.build.code_debug=5
 
 vintlabs-devkit-v1.menu.EraseFlash.none=Disabled
 vintlabs-devkit-v1.menu.EraseFlash.none.upload.erase_cmd=
@@ -31777,8 +31686,6 @@ mPython.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
 mPython.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 mPython.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 mPython.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-mPython.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-mPython.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 mPython.menu.CPUFreq.240=240MHz (WiFi/BT)
 mPython.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -33941,7 +33848,7 @@ deneyapkartv2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 deneyapkartv2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 deneyapkartv2.menu.PartitionScheme.custom=Custom
 deneyapkartv2.menu.PartitionScheme.custom.build.partitions=
-deneyapkartv2.menu.PartitionScheme.custom.upload.maximum_size=16777216
+deneyapkartv2.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 deneyapkartv2.menu.CPUFreq.240=240MHz (WiFi)
 deneyapkartv2.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -35744,8 +35651,6 @@ dpu_esp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 dpu_esp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 dpu_esp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 dpu_esp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-dpu_esp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-dpu_esp32.menu.PartitionScheme.fatflash.build.partitions=ffat
 
 dpu_esp32.menu.FlashMode.qio=QIO
 dpu_esp32.menu.FlashMode.qio.build.flash_mode=dio
@@ -36487,9 +36392,6 @@ XIAO_ESP32C5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 XIAO_ESP32C5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 XIAO_ESP32C5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 XIAO_ESP32C5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-XIAO_ESP32C5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-XIAO_ESP32C5.menu.PartitionScheme.fatflash.build.partitions=ffat
-XIAO_ESP32C5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 XIAO_ESP32C5.menu.PartitionScheme.rainmaker=RainMaker 4MB
 XIAO_ESP32C5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 XIAO_ESP32C5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -37514,8 +37416,6 @@ Bee_Data_Logger.build.f_cpu=240000000L
 Bee_Data_Logger.build.flash_size=8MB
 Bee_Data_Logger.build.flash_freq=80m
 Bee_Data_Logger.build.flash_mode=dio
-Bee_Data_Logger.build.partitions=default_8MB
-Bee_Data_Logger.build.defines=
 Bee_Data_Logger.build.loop_core=-DARDUINO_RUNNING_CORE=1
 Bee_Data_Logger.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
 Bee_Data_Logger.build.boot=qio
@@ -41003,7 +40903,7 @@ ioxesp32.build.board=IOXESP32
 ioxesp32.build.f_cpu=240000000L
 ioxesp32.build.flash_mode=dio
 ioxesp32.build.flash_size=4MB
-ioxesp32ps.build.flash_freq=40m
+ioxesp32.build.flash_freq=40m
 ioxesp32.build.boot=dio
 ioxesp32.build.partitions=default
 ioxesp32.build.defines=
@@ -41013,9 +40913,6 @@ ioxesp32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB S
 ioxesp32.menu.PartitionScheme.default.build.partitions=default
 ioxesp32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 ioxesp32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-ioxesp32.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-ioxesp32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-ioxesp32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 ioxesp32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 ioxesp32.menu.PartitionScheme.minimal.build.partitions=minimal
 ioxesp32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -41036,9 +40933,6 @@ ioxesp32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 ioxesp32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 ioxesp32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 ioxesp32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-ioxesp32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-ioxesp32.menu.PartitionScheme.fatflash.build.partitions=ffat
-ioxesp32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 ioxesp32.menu.PartitionScheme.rainmaker=RainMaker 4MB
 ioxesp32.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 ioxesp32.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -41125,9 +41019,6 @@ ioxesp32ps.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB
 ioxesp32ps.menu.PartitionScheme.default.build.partitions=default
 ioxesp32ps.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 ioxesp32ps.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-ioxesp32ps.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-ioxesp32ps.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-ioxesp32ps.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 ioxesp32ps.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 ioxesp32ps.menu.PartitionScheme.minimal.build.partitions=minimal
 ioxesp32ps.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -41148,9 +41039,6 @@ ioxesp32ps.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 ioxesp32ps.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 ioxesp32ps.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 ioxesp32ps.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-ioxesp32ps.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-ioxesp32ps.menu.PartitionScheme.fatflash.build.partitions=ffat
-ioxesp32ps.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
 ioxesp32ps.menu.PartitionScheme.rainmaker=RainMaker 4MB
 ioxesp32ps.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 ioxesp32ps.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -41294,7 +41182,7 @@ ioxesp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 ioxesp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 ioxesp32c6.menu.PartitionScheme.custom=Custom
 ioxesp32c6.menu.PartitionScheme.custom.build.partitions=
-ioxesp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+ioxesp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 ioxesp32c6.menu.CPUFreq.160=160MHz (WiFi)
 ioxesp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -42280,6 +42168,8 @@ nano_nora.upload.tool.network=esp_ota
 nano_nora.upload.protocol=serial
 nano_nora.upload.maximum_size=3145728
 nano_nora.upload.maximum_data_size=327680
+nano_nora.upload.flags=
+nano_nora.upload.extra_flags=
 nano_nora.upload.use_1200bps_touch=false
 nano_nora.upload.wait_for_upload_port=false
 
@@ -42340,6 +42230,19 @@ nano_nora.menu.USBMode.default=Normal mode (TinyUSB)
 nano_nora.menu.USBMode.hwcdc=Debug mode (Hardware CDC)
 nano_nora.menu.USBMode.hwcdc.build.usb_mode=1
 nano_nora.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
+
+nano_nora.menu.DebugLevel.none=None
+nano_nora.menu.DebugLevel.none.build.code_debug=0
+nano_nora.menu.DebugLevel.error=Error
+nano_nora.menu.DebugLevel.error.build.code_debug=1
+nano_nora.menu.DebugLevel.warn=Warn
+nano_nora.menu.DebugLevel.warn.build.code_debug=2
+nano_nora.menu.DebugLevel.info=Info
+nano_nora.menu.DebugLevel.info.build.code_debug=3
+nano_nora.menu.DebugLevel.debug=Debug
+nano_nora.menu.DebugLevel.debug.build.code_debug=4
+nano_nora.menu.DebugLevel.verbose=Verbose
+nano_nora.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
@@ -42660,7 +42563,7 @@ epulse_feather_c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 epulse_feather_c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 epulse_feather_c6.menu.PartitionScheme.custom=Custom
 epulse_feather_c6.menu.PartitionScheme.custom.build.partitions=
-epulse_feather_c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+epulse_feather_c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 epulse_feather_c6.menu.CPUFreq.160=160MHz (WiFi)
 epulse_feather_c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -42922,7 +42825,7 @@ Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.build.custom_partitions=max_ap
 Geekble_Nano_ESP32S3.menu.PartitionScheme.all_app.upload.maximum_size=4063232
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom=Custom
 Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.build.partitions=
-Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.upload.maximum_size=16777216
+Geekble_Nano_ESP32S3.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 Geekble_Nano_ESP32S3.menu.PSRAM.disabled=Disabled
 Geekble_Nano_ESP32S3.menu.PSRAM.disabled.build.defines=
@@ -43083,17 +42986,15 @@ waveshare_esp32_s3_zero.menu.PartitionScheme.rainmaker.upload.maximum_size=19660
 waveshare_esp32_s3_zero.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
 waveshare_esp32_s3_zero.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
 waveshare_esp32_s3_zero.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-
 waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs.build.custom_partitions=ota_nofs_4MB
 waveshare_esp32_s3_zero.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_zero.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_zero.menu.PartitionScheme.all_app.build.custom_partitions=max_app_4MB
 waveshare_esp32_s3_zero.menu.PartitionScheme.all_app.upload.maximum_size=4063232
-
 waveshare_esp32_s3_zero.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_zero.menu.PartitionScheme.custom.build.partitions=
-waveshare_esp32_s3_zero.menu.PartitionScheme.custom.upload.maximum_size=16777216
+waveshare_esp32_s3_zero.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 waveshare_esp32_s3_zero.menu.CPUFreq.240=240MHz (WiFi)
 waveshare_esp32_s3_zero.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -43278,17 +43179,15 @@ ws_esp32_s3_matrix.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 ws_esp32_s3_matrix.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
 ws_esp32_s3_matrix.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
 ws_esp32_s3_matrix.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-
 ws_esp32_s3_matrix.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 ws_esp32_s3_matrix.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 ws_esp32_s3_matrix.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 ws_esp32_s3_matrix.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 ws_esp32_s3_matrix.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 ws_esp32_s3_matrix.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 ws_esp32_s3_matrix.menu.PartitionScheme.custom=Custom
 ws_esp32_s3_matrix.menu.PartitionScheme.custom.build.partitions=
-ws_esp32_s3_matrix.menu.PartitionScheme.custom.upload.maximum_size=16777216
+ws_esp32_s3_matrix.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 ws_esp32_s3_matrix.menu.CPUFreq.240=240MHz (WiFi)
 ws_esp32_s3_matrix.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -43443,6 +43342,8 @@ waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=tr
 waveshare_esp32_s3_touch_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -43474,17 +43375,12 @@ waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maxim
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_169.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -43642,6 +43538,8 @@ waveshare_esp32_s3_touch_amoled_18.menu.UploadMode.cdc.upload.use_1200bps_touch=
 waveshare_esp32_s3_touch_amoled_18.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -43673,17 +43571,12 @@ waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.rainmaker_8MB.upload.max
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_amoled_18.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -43841,6 +43734,8 @@ waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_lcd_169.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -43872,17 +43767,12 @@ waveshare_esp32_s3_lcd_169.menu.PartitionScheme.rainmaker_8MB.upload.maximum_siz
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_lcd_169.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_lcd_169.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -44146,9 +44036,6 @@ weact_studio_esp32c3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB
 weact_studio_esp32c3.menu.PartitionScheme.default.build.partitions=default
 weact_studio_esp32c3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
 weact_studio_esp32c3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-weact_studio_esp32c3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
-weact_studio_esp32c3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
-weact_studio_esp32c3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
 weact_studio_esp32c3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
 weact_studio_esp32c3.menu.PartitionScheme.minimal.build.partitions=minimal
 weact_studio_esp32c3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
@@ -45157,30 +45044,18 @@ codecell.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
 codecell.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 codecell.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 codecell.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-codecell.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-codecell.menu.PartitionScheme.fatflash.build.partitions=ffat
-codecell.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-codecell.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-codecell.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-codecell.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 codecell.menu.PartitionScheme.rainmaker=RainMaker 4MB
 codecell.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 codecell.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
 codecell.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
 codecell.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
 codecell.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-codecell.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
-codecell.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
-codecell.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
 codecell.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
 codecell.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 codecell.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
-codecell.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
-codecell.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
-codecell.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
 codecell.menu.PartitionScheme.custom=Custom
 codecell.menu.PartitionScheme.custom.build.partitions=
-codecell.menu.PartitionScheme.custom.upload.maximum_size=16777216
+codecell.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 codecell.menu.CPUFreq.160=160MHz (WiFi)
 codecell.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -45520,10 +45395,11 @@ waveshare_esp32_s3_touch_amoled_241.menu.UploadMode.cdc.upload.use_1200bps_touch
 waveshare_esp32_s3_touch_amoled_241.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.no_ota.build.partitions=no_ota
@@ -45552,18 +45428,12 @@ waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.rainmaker_8MB.upload.ma
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-
-waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_amoled_241.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -45726,6 +45596,8 @@ waveshare_esp32_s3_touch_lcd_43.menu.UploadMode.cdc.upload.use_1200bps_touch=tru
 waveshare_esp32_s3_touch_lcd_43.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -45757,17 +45629,12 @@ waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.rainmaker_8MB.upload.maximu
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_43.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -45925,6 +45792,8 @@ waveshare_esp32_s3_touch_lcd_43B.menu.UploadMode.cdc.upload.use_1200bps_touch=tr
 waveshare_esp32_s3_touch_lcd_43B.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -45956,17 +45825,12 @@ waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.rainmaker_8MB.upload.maxim
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_43B.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -46129,6 +45993,8 @@ waveshare_esp32_s3_touch_lcd_7.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_touch_lcd_7.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -46160,17 +46026,12 @@ waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.rainmaker_8MB.upload.maximum
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_7.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -46328,6 +46189,8 @@ waveshare_esp32_s3_touch_lcd_5.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_touch_lcd_5.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -46359,17 +46222,12 @@ waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.rainmaker_8MB.upload.maximum
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_5.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -46527,6 +46385,8 @@ waveshare_esp32_s3_touch_lcd_5B.menu.UploadMode.cdc.upload.use_1200bps_touch=tru
 waveshare_esp32_s3_touch_lcd_5B.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -46558,17 +46418,12 @@ waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.rainmaker_8MB.upload.maximu
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_5B.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -46726,6 +46581,8 @@ waveshare_esp32_s3_touch_lcd_4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 waveshare_esp32_s3_touch_lcd_4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -46757,17 +46614,12 @@ waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.rainmaker_8MB.upload.maximum
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_lcd_4.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -47152,7 +47004,7 @@ cezerio_dev_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zcz
 cezerio_dev_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 cezerio_dev_esp32c6.menu.PartitionScheme.custom=Custom
 cezerio_dev_esp32c6.menu.PartitionScheme.custom.build.partitions=
-cezerio_dev_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+cezerio_dev_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 cezerio_dev_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 cezerio_dev_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -47322,7 +47174,7 @@ cezerio_mini_dev_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbe
 cezerio_mini_dev_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 cezerio_mini_dev_esp32c6.menu.PartitionScheme.custom=Custom
 cezerio_mini_dev_esp32c6.menu.PartitionScheme.custom.build.partitions=
-cezerio_mini_dev_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+cezerio_mini_dev_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 cezerio_mini_dev_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 cezerio_mini_dev_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
@@ -49402,10 +49254,11 @@ waveshare_esp32_s3_touch_amoled_164.menu.UploadMode.cdc.upload.use_1200bps_touch
 waveshare_esp32_s3_touch_amoled_164.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.no_ota.build.partitions=no_ota
@@ -49434,18 +49287,12 @@ waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.rainmaker_8MB.upload.ma
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-
-waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_amoled_164.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -49604,10 +49451,11 @@ waveshare_esp32_s3_touch_amoled_143.menu.UploadMode.cdc.upload.use_1200bps_touch
 waveshare_esp32_s3_touch_amoled_143.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.no_ota.build.partitions=no_ota
@@ -49636,18 +49484,12 @@ waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.rainmaker_8MB.upload.ma
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-
-waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_amoled_143.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -49806,10 +49648,11 @@ waveshare_esp32_s3_touch_amoled_191.menu.UploadMode.cdc.upload.use_1200bps_touch
 waveshare_esp32_s3_touch_amoled_191.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.default.build.partitions=default
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.no_ota.build.partitions=no_ota
@@ -49838,18 +49681,12 @@ waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.rainmaker_8MB.upload.ma
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.fatflash.build.partitions=ffat
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-
-waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
-
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.otanofs=OTA no FS (2MB APP with OTA)
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.otanofs.build.custom_partitions=partitions_otanofs_4MB
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.otanofs.upload.maximum_size=2031616
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.all_app=Max APP (4MB APP no OTA)
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.all_app.build.custom_partitions=partitions_all_app_4MB
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.all_app.upload.maximum_size=4128768
-
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.custom=Custom
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.custom.build.partitions=
 waveshare_esp32_s3_touch_amoled_191.menu.PartitionScheme.custom.upload.maximum_size=16777216
@@ -50129,7 +49966,7 @@ Pcbcupid_GLYPH_H2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 Pcbcupid_GLYPH_H2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 Pcbcupid_GLYPH_H2.menu.PartitionScheme.custom=Custom
 Pcbcupid_GLYPH_H2.menu.PartitionScheme.custom.build.partitions=
-Pcbcupid_GLYPH_H2.menu.PartitionScheme.custom.upload.maximum_size=16777216
+Pcbcupid_GLYPH_H2.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 Pcbcupid_GLYPH_H2.menu.FlashMode.qio=QIO
 Pcbcupid_GLYPH_H2.menu.FlashMode.qio.build.flash_mode=dio
@@ -51940,6 +51777,19 @@ kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
 kodedot.recipe.output.save_file={build.project_name}.ino.bin
 
+kodedot.menu.DebugLevel.none=None
+kodedot.menu.DebugLevel.none.build.code_debug=0
+kodedot.menu.DebugLevel.error=Error
+kodedot.menu.DebugLevel.error.build.code_debug=1
+kodedot.menu.DebugLevel.warn=Warn
+kodedot.menu.DebugLevel.warn.build.code_debug=2
+kodedot.menu.DebugLevel.info=Info
+kodedot.menu.DebugLevel.info.build.code_debug=3
+kodedot.menu.DebugLevel.debug=Debug
+kodedot.menu.DebugLevel.debug.build.code_debug=4
+kodedot.menu.DebugLevel.verbose=Verbose
+kodedot.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 # FED4 Board
@@ -52489,7 +52339,7 @@ twinaiot.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 twinaiot.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 twinaiot.menu.PartitionScheme.custom=Custom
 twinaiot.menu.PartitionScheme.custom.build.partitions=
-twinaiot.menu.PartitionScheme.custom.upload.maximum_size=16777216
+twinaiot.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 twinaiot.menu.LoopCore.1=Core 1
 twinaiot.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -53033,7 +52883,7 @@ soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee_zczr.build.partitions=zig
 soldered_nula_mini_esp32c6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
 soldered_nula_mini_esp32c6.menu.PartitionScheme.custom=Custom
 soldered_nula_mini_esp32c6.menu.PartitionScheme.custom.build.partitions=
-soldered_nula_mini_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+soldered_nula_mini_esp32c6.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
 soldered_nula_mini_esp32c6.menu.CPUFreq.160=160MHz (WiFi)
 soldered_nula_mini_esp32c6.menu.CPUFreq.160.build.f_cpu=160000000L
