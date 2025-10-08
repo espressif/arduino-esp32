@@ -17,6 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.release.target_commitish }}
           fetch-depth: 0
 
@@ -33,5 +34,5 @@ jobs:
 
       - name: Build Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
         run: bash ./.github/scripts/on-release.sh
