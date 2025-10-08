@@ -176,7 +176,8 @@ def authenticate(
         if use_md5_password:
             # Use MD5 for password hash (for devices that stored MD5 hashes)
             logging.warning(
-                "Using insecure MD5 hash for password due to legacy device support. Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security."
+                "Using insecure MD5 hash for password due to legacy device support. "
+                "Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security."
             )
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
@@ -216,9 +217,9 @@ def authenticate(
         return False, str(e)
 
 
-def serve(
+def serve(  # noqa: C901
     remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH
-):  # noqa: C901
+):
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = (local_addr, local_port)
@@ -488,7 +489,10 @@ def parse_args(unparsed_args):
         "-m",
         "--md5-target",
         dest="md5_target",
-        help="Use MD5 for password hashing (for devices with stored MD5 passwords). By default, SHA256 is tried first, then MD5 as fallback.",
+        help=(
+            "Use MD5 for password hashing (for devices with stored MD5 passwords). "
+            "By default, SHA256 is tried first, then MD5 as fallback."
+        ),
         action="store_true",
         default=False,
     )
