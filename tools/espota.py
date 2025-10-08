@@ -173,7 +173,7 @@ def authenticate(remote_addr, remote_port, password, use_md5_password, use_old_p
         # The password can be hashed with either MD5 or SHA256
         if use_md5_password:
             # Use MD5 for password hash (for devices that stored MD5 hashes)
-            logging.warning("Using insecure MD5 hash for password due to legacy device support. Please upgrade devices if possible.")
+            logging.warning("Using insecure MD5 hash for password due to legacy device support. Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security.")
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
             # Use SHA256 for password hash (recommended)
@@ -324,8 +324,8 @@ def serve(
                             logging.warning("====================================================================")
                             logging.warning("WARNING: Device authenticated with MD5 password hash (deprecated)")
                             logging.warning("MD5 is cryptographically broken and should not be used.")
-                            logging.warning("Please update your sketch to use setPassword() instead of")
-                            logging.warning("setPasswordHash() with MD5, then upload again to migrate to SHA256.")
+                            logging.warning("Please update your sketch to use either setPassword() or setPasswordHash()")
+                            logging.warning("with SHA256, then upload again to migrate to the new secure SHA256 protocol.")
                             logging.warning("======================================================================")
 
                 if not auth_success:
