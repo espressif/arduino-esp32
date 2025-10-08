@@ -19,6 +19,7 @@
 #include "ArduinoOTA.h"
 #include "NetworkClient.h"
 #include "ESPmDNS.h"
+#include "HEXBuilder.h"
 #include "SHA2Builder.h"
 #include "PBKDF2_HMACBuilder.h"
 #include "Update.h"
@@ -86,6 +87,26 @@ ArduinoOTAClass &ArduinoOTAClass::setPassword(const char *password) {
 
 ArduinoOTAClass &ArduinoOTAClass::setPasswordHash(const char *password) {
   if (_state == OTA_IDLE && password) {
+    size_t len = strlen(password);
+    bool is_hex = HEXBuilder::isHexString(password, len);
+
+    if (!is_hex) {
+      log_e("Invalid password hash. Expected hex string (0-9, a-f, A-F).");
+      return *this;
+    }
+
+    if (len == 32) {
+      // Warn if MD5 hash is detected (32 hex characters)
+      log_w("MD5 password hash detected. MD5 is deprecated and insecure.");
+      log_w("Please use setPassword() with plain text or setPasswordHash() with SHA256 hash (64 chars).");
+      log_w("To generate SHA256: echo -n 'yourpassword' | sha256sum");
+    } else if (len == 64) {
+      log_i("Using SHA256 password hash.");
+    } else {
+      log_e("Invalid password hash length. Expected 32 (deprecated MD5) or 64 (SHA256) characters.");
+      return *this;
+    }
+
     // Store the pre-hashed password directly
     _password.clear();
     _password = password;
