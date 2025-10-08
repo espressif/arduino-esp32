@@ -297,6 +297,22 @@ def serve(
                         logging.info("SHA256 password failed, trying MD5 password hash")
                         sys.stderr.write("Retrying with MD5 password...")
                         sys.stderr.flush()
+
+                        # Device is back in OTA_IDLE after auth failure, need to send new invitation
+                        success, data, error = send_invitation_and_get_auth_challenge(remote_addr, remote_port, message)
+                        if not success:
+                            sys.stderr.write("FAIL\n")
+                            logging.error("Failed to get new challenge for MD5 retry: %s", error)
+                            return 1
+
+                        if not data.startswith("AUTH"):
+                            sys.stderr.write("FAIL\n")
+                            logging.error("Expected AUTH challenge for MD5 retry, got: %s", data)
+                            return 1
+
+                        # Get new nonce for second attempt
+                        nonce = data.split()[1]
+
                         auth_success, auth_error = authenticate(
                             remote_addr, remote_port, password,
                             use_md5_password=True, use_old_protocol=False,
