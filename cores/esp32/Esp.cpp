@@ -579,8 +579,10 @@ uint8_t EspClass::getFlashClockDivider(void) {
 uint32_t EspClass::getFlashFrequencyMHz(void) {
   uint8_t source = getFlashSourceFrequencyMHz();
   uint8_t divider = getFlashClockDivider();
-  
-  if (divider == 0) divider = 1;  // Safety check
-  
+
+  if (divider == 0) {
+    divider = 1;  // Safety check
+  }
+
   return source / divider;
 }

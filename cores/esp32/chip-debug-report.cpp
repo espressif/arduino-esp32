@@ -140,15 +140,15 @@ static void printFlashInfo(void) {
   chip_report_printf("  Block Size        : %8lu B (%6.1f KB)\n", g_rom_flashchip.block_size, b2kb(g_rom_flashchip.block_size));
   chip_report_printf("  Sector Size       : %8lu B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
   chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
-  
+
   // Runtime flash frequency detection from hardware registers
   uint32_t actual_freq = ESP.getFlashFrequencyMHz();
   uint8_t source_freq = ESP.getFlashSourceFrequencyMHz();
   uint8_t divider = ESP.getFlashClockDivider();
-  
+
   chip_report_printf("  Bus Speed         : %lu MHz\n", actual_freq);
   chip_report_printf("  Flash Frequency   : %lu MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
-  
+
   chip_report_printf("  Bus Mode          : ");
 #if CONFIG_ESPTOOLPY_OCT_FLASH
   chip_report_printf("OPI\n");
