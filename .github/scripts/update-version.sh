@@ -39,8 +39,13 @@ echo "New Arduino Version: $ESP_ARDUINO_VERSION"
 echo "ESP-IDF Version: $ESP_IDF_VERSION"
 
 echo "Updating issue template..."
-cat .github/ISSUE_TEMPLATE/Issue-report.yml | \
-sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$ESP_ARDUINO_VERSION/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/Issue-report.yml
+if ! grep -q "v$ESP_ARDUINO_VERSION" .github/ISSUE_TEMPLATE/Issue-report.yml; then
+    cat .github/ISSUE_TEMPLATE/Issue-report.yml | \
+    sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$ESP_ARDUINO_VERSION/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/Issue-report.yml
+    echo "Issue template updated with version v$ESP_ARDUINO_VERSION"
+else
+    echo "Version v$ESP_ARDUINO_VERSION already exists in issue template, skipping update"
+fi
 
 echo "Updating GitLab variables..."
 cat .gitlab/workflows/common.yml | \
