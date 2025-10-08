@@ -140,7 +140,9 @@ def send_invitation_and_get_auth_challenge(remote_addr, remote_port, message):
     return True, data, None
 
 
-def authenticate(remote_addr, remote_port, password, use_md5_password, use_old_protocol, filename, content_size, file_md5, nonce):
+def authenticate(
+    remote_addr, remote_port, password, use_md5_password, use_old_protocol, filename, content_size, file_md5, nonce
+):
     """
     Perform authentication with the ESP device.
 
@@ -173,7 +175,9 @@ def authenticate(remote_addr, remote_port, password, use_md5_password, use_old_p
         # The password can be hashed with either MD5 or SHA256
         if use_md5_password:
             # Use MD5 for password hash (for devices that stored MD5 hashes)
-            logging.warning("Using insecure MD5 hash for password due to legacy device support. Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security.")
+            logging.warning(
+                "Using insecure MD5 hash for password due to legacy device support. Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security."
+            )
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
             # Use SHA256 for password hash (recommended)
@@ -253,9 +257,15 @@ def serve(
                 sys.stderr.write("Authenticating (MD5 protocol)...")
                 sys.stderr.flush()
                 auth_success, auth_error = authenticate(
-                    remote_addr, remote_port, password,
-                    use_md5_password=True, use_old_protocol=True,
-                    filename=filename, content_size=content_size, file_md5=file_md5, nonce=nonce
+                    remote_addr,
+                    remote_port,
+                    password,
+                    use_md5_password=True,
+                    use_old_protocol=True,
+                    filename=filename,
+                    content_size=content_size,
+                    file_md5=file_md5,
+                    nonce=nonce,
                 )
 
                 if not auth_success:
@@ -279,18 +289,30 @@ def serve(
                     sys.stderr.write("Authenticating (SHA256 protocol with MD5 password)...")
                     sys.stderr.flush()
                     auth_success, auth_error = authenticate(
-                        remote_addr, remote_port, password,
-                        use_md5_password=True, use_old_protocol=False,
-                        filename=filename, content_size=content_size, file_md5=file_md5, nonce=nonce
+                        remote_addr,
+                        remote_port,
+                        password,
+                        use_md5_password=True,
+                        use_old_protocol=False,
+                        filename=filename,
+                        content_size=content_size,
+                        file_md5=file_md5,
+                        nonce=nonce,
                     )
                 else:
                     # Try SHA256 password hash first
                     sys.stderr.write("Authenticating...")
                     sys.stderr.flush()
                     auth_success, auth_error = authenticate(
-                        remote_addr, remote_port, password,
-                        use_md5_password=False, use_old_protocol=False,
-                        filename=filename, content_size=content_size, file_md5=file_md5, nonce=nonce
+                        remote_addr,
+                        remote_port,
+                        password,
+                        use_md5_password=False,
+                        use_old_protocol=False,
+                        filename=filename,
+                        content_size=content_size,
+                        file_md5=file_md5,
+                        nonce=nonce,
                     )
 
                     # Scenario 3: If SHA256 fails, try MD5 password hash (for devices with stored MD5 passwords)
@@ -315,17 +337,27 @@ def serve(
                         nonce = data.split()[1]
 
                         auth_success, auth_error = authenticate(
-                            remote_addr, remote_port, password,
-                            use_md5_password=True, use_old_protocol=False,
-                            filename=filename, content_size=content_size, file_md5=file_md5, nonce=nonce
+                            remote_addr,
+                            remote_port,
+                            password,
+                            use_md5_password=True,
+                            use_old_protocol=False,
+                            filename=filename,
+                            content_size=content_size,
+                            file_md5=file_md5,
+                            nonce=nonce,
                         )
 
                         if auth_success:
                             logging.warning("====================================================================")
                             logging.warning("WARNING: Device authenticated with MD5 password hash (deprecated)")
                             logging.warning("MD5 is cryptographically broken and should not be used.")
-                            logging.warning("Please update your sketch to use either setPassword() or setPasswordHash()")
-                            logging.warning("with SHA256, then upload again to migrate to the new secure SHA256 protocol.")
+                            logging.warning(
+                                "Please update your sketch to use either setPassword() or setPasswordHash()"
+                            )
+                            logging.warning(
+                                "with SHA256, then upload again to migrate to the new secure SHA256 protocol."
+                            )
                             logging.warning("======================================================================")
 
                 if not auth_success:
