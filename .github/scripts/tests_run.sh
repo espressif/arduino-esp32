@@ -88,10 +88,7 @@ function run_test {
         fi
 
         if [ $platform == "wokwi" ]; then
-            extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi" "--wokwi-timeout=$wokwi_timeout")
-            if [[ -f "$sketchdir/scenario.yaml" ]]; then
-                extra_args+=("--wokwi-scenario" "$sketchdir/scenario.yaml")
-            fi
+            extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi")
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
@@ -137,7 +134,6 @@ SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
 platform="hardware"
-wokwi_timeout=60000
 chunk_run=0
 options=0
 erase=0
@@ -156,7 +152,6 @@ while [ -n "$1" ]; do
         ;;
     -W )
         shift
-        wokwi_timeout=$1
         if [[ -z $WOKWI_CLI_TOKEN ]]; then
             echo "Wokwi CLI token is not set"
             exit 1

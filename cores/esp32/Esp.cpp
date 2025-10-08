@@ -36,6 +36,22 @@ extern "C" {
 #include "esp_chip_info.h"
 #include "esp_mac.h"
 #include "esp_flash.h"
+
+// Include HAL layer for flash clock access
+#include "hal/spi_flash_ll.h"
+#if CONFIG_IDF_TARGET_ESP32
+#include "soc/spi_struct.h"
+#else
+// All modern chips (S2, S3, C2, C3, C5, C6, H2, P4) use spimem
+#include "hal/spimem_flash_ll.h"
+// Try to include the newer c_struct header first, fall back to regular struct
+#if __has_include("soc/spi_mem_c_struct.h")
+#include "soc/spi_mem_c_struct.h"
+#else
+#include "soc/spi_mem_struct.h"
+#endif
+#endif
+
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
 #include "esp32/rom/spi_flash.h"
@@ -348,17 +364,13 @@ uint32_t EspClass::getFlashChipSpeed(void) {
   return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
-// FIXME for P4
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
 FlashMode_t EspClass::getFlashChipMode(void) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-#else
-#if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
   uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
 #else
   uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
-#endif
 #endif
   /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
   if (spi_ctrl & BIT(24)) {  //SPI_FREAD_QIO
@@ -374,9 +386,7 @@ FlashMode_t EspClass::getFlashChipMode(void) {
   } else {
     return (FM_SLOW_READ);
   }
-  return (FM_DOUT);
 }
-#endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 uint32_t EspClass::magicFlashChipSize(uint8_t flashByte) {
   /*
@@ -515,4 +525,64 @@ uint64_t EspClass::getEfuseMac(void) {
   uint64_t _chipmacid = 0LL;
   esp_efuse_mac_get_default((uint8_t *)(&_chipmacid));
   return _chipmacid;
+}
+
+// ============================================================================
+// Flash Frequency Runtime Detection
+// ============================================================================
+
+/**
+ * @brief Read the source clock frequency using ESP-IDF HAL functions
+ * @return Source clock frequency in MHz (80, 120, 160, or 240)
+ */
+uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32: Use HAL function
+  return spi_flash_ll_get_source_clock_freq_mhz(0);  // host_id = 0 for SPI0
+#else
+  // All modern MCUs: Use spimem HAL function
+  return spimem_flash_ll_get_source_freq_mhz();
+#endif
+}
+
+/**
+ * @brief Read the clock divider from hardware using HAL structures
+ * Based on ESP-IDF HAL implementation:
+ * - ESP32: Uses SPI1.clock (typedef in spi_flash_ll.h)
+ * - All newer MCUs: Use SPIMEM1.clock (typedef in spimem_flash_ll.h)
+ * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
+ */
+uint8_t EspClass::getFlashClockDivider(void) {
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32: Flash uses SPI1
+  // See: line 52: esp-idf/components/hal/esp32/include/hal/spi_flash_ll.h
+  if (SPI1.clock.clk_equ_sysclk) {
+    return 1;  // 1:1 clock
+  }
+  return SPI1.clock.clkcnt_n + 1;
+#else
+  // All newer MCUs: Flash uses SPIMEM1
+  // See: esp-idf/components/hal/esp32*/include/hal/spimem_flash_ll.h
+  // Example S3: line 38: typedef typeof(SPIMEM1.clock.val) spimem_flash_ll_clock_reg_t;
+  // Example C5: lines 97-99: esp-idf/components/soc/esp32c5/mp/include/soc/spi_mem_struct.h
+  if (SPIMEM1.clock.clk_equ_sysclk) {
+    return 1;  // 1:1 clock
+  }
+  return SPIMEM1.clock.clkcnt_n + 1;
+#endif
+}
+
+/**
+ * @brief Get the actual flash frequency in MHz
+ * @return Flash frequency in MHz (80, 120, 160, or 240)
+ */
+uint32_t EspClass::getFlashFrequencyMHz(void) {
+  uint8_t source = getFlashSourceFrequencyMHz();
+  uint8_t divider = getFlashClockDivider();
+
+  if (divider == 0) {
+    divider = 1;  // Safety check
+  }
+
+  return source / divider;
 }

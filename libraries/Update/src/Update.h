@@ -29,9 +29,12 @@
 
 #define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF
 
-#define U_FLASH  0
-#define U_SPIFFS 100
-#define U_AUTH   200
+#define U_FLASH    0
+#define U_FLASHFS  100
+#define U_SPIFFS   101
+#define U_FATFS    102
+#define U_LITTLEFS 103
+#define U_AUTH     200
 
 #define ENCRYPTED_BLOCK_SIZE       16
 #define ENCRYPTED_TWEAK_BLOCK_SIZE 32
@@ -267,7 +270,6 @@ private:
   size_t _size;
   THandlerFunction_Progress _progress_callback;
   uint32_t _progress;
-  uint32_t _paroffset;
   uint32_t _command;
   const esp_partition_t *_partition;
 

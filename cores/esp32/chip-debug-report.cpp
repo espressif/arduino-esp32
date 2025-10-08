@@ -9,6 +9,7 @@
 #include "soc/efuse_reg.h"
 #include "soc/rtc.h"
 #include "soc/spi_reg.h"
+#include "soc/soc.h"
 #if CONFIG_IDF_TARGET_ESP32S2
 #include "esp32s2/rom/spi_flash.h"
 #endif
@@ -16,6 +17,7 @@
 
 #include "Arduino.h"
 #include "esp32-hal-periman.h"
+#include "chip-debug-report.h"
 
 #define chip_report_printf log_printf
 
@@ -138,25 +140,15 @@ static void printFlashInfo(void) {
   chip_report_printf("  Block Size        : %8lu B (%6.1f KB)\n", g_rom_flashchip.block_size, b2kb(g_rom_flashchip.block_size));
   chip_report_printf("  Sector Size       : %8lu B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
   chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
-  esp_image_header_t fhdr;
-  esp_flash_read(esp_flash_default_chip, (void *)&fhdr, ESP_FLASH_IMAGE_BASE, sizeof(esp_image_header_t));
-  if (fhdr.magic == ESP_IMAGE_HEADER_MAGIC) {
-    uint32_t f_freq = 0;
-    switch (fhdr.spi_speed) {
-#if CONFIG_IDF_TARGET_ESP32H2
-      case 0x0: f_freq = 32; break;
-      case 0x2: f_freq = 16; break;
-      case 0xf: f_freq = 64; break;
-#else
-      case 0x0: f_freq = 40; break;
-      case 0x1: f_freq = 26; break;
-      case 0x2: f_freq = 20; break;
-      case 0xf: f_freq = 80; break;
-#endif
-      default: f_freq = fhdr.spi_speed; break;
-    }
-    chip_report_printf("  Bus Speed         : %lu MHz\n", f_freq);
-  }
+
+  // Runtime flash frequency detection from hardware registers
+  uint32_t actual_freq = ESP.getFlashFrequencyMHz();
+  uint8_t source_freq = ESP.getFlashSourceFrequencyMHz();
+  uint8_t divider = ESP.getFlashClockDivider();
+
+  chip_report_printf("  Bus Speed         : %lu MHz\n", actual_freq);
+  chip_report_printf("  Flash Frequency   : %lu MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
+
   chip_report_printf("  Bus Mode          : ");
 #if CONFIG_ESPTOOLPY_OCT_FLASH
   chip_report_printf("OPI\n");
