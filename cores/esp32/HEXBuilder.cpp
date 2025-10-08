@@ -18,7 +18,7 @@
 */
 
 #include "HEXBuilder.h"
-#include "WCharacter.h"
+#include <ctype.h>
 
 static uint8_t hex_char_to_byte(uint8_t c) {
   return (c >= 'a' && c <= 'f')   ? (c - ((uint8_t)'a' - 0xa))
@@ -29,7 +29,7 @@ static uint8_t hex_char_to_byte(uint8_t c) {
 
 bool HEXBuilder::isHexString(const char *str, size_t len) {
   for (size_t i = 0; i < len; i++) {
-    if (!isHexadecimalDigit(str[i])) {
+    if (isxdigit(str[i]) == 0) {
       return false;
     }
   }
