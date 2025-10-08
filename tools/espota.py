@@ -173,6 +173,7 @@ def authenticate(remote_addr, remote_port, password, use_md5_password, use_old_p
         # The password can be hashed with either MD5 or SHA256
         if use_md5_password:
             # Use MD5 for password hash (for devices that stored MD5 hashes)
+            logging.warning("Using insecure MD5 hash for password due to legacy device support. Please upgrade devices if possible.")
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
             # Use SHA256 for password hash (recommended)
