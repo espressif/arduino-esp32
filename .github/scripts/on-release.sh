@@ -433,7 +433,8 @@ echo
 echo "Updating libs URLs in JSON template ..."
 
 # Update all libs URLs in the JSON template
-libs_jq_arg="(.packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[].url) = \"$LIBS_ZIP_URL\""
+libs_jq_arg="(.packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[].url) = \"$LIBS_ZIP_URL\" |\
+             (.packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[].archiveFileName) = \"$LIBS_ZIP\""
 
 cat "$PACKAGE_JSON_TEMPLATE" | jq "$libs_jq_arg" > "$OUTPUT_DIR/package-libs-updated.json"
 PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-libs-updated.json"
