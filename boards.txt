@@ -51760,13 +51760,14 @@ kodedot.build.dfu_on_boot=0
 kodedot.build.f_cpu=240000000L
 
 kodedot.build.flash_offset=0x400000
-kodedot.build.flash_size=16MB
+kodedot.build.flash_size=32MB
 kodedot.build.flash_freq=80m
 kodedot.build.flash_mode=dio
+kodedot.build.psram_type=opi
 
 kodedot.build.custom_partitions=kodedot_partitions
 
-kodedot.build.psram_type=qspi
+kodedot.build.psram_type=opi
 kodedot.build.defines=
 
 kodedot.build.loop_core=-DARDUINO_RUNNING_CORE=1
@@ -51776,19 +51777,6 @@ kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern=
 kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
 kodedot.recipe.output.save_file={build.project_name}.ino.bin
-
-kodedot.menu.DebugLevel.none=None
-kodedot.menu.DebugLevel.none.build.code_debug=0
-kodedot.menu.DebugLevel.error=Error
-kodedot.menu.DebugLevel.error.build.code_debug=1
-kodedot.menu.DebugLevel.warn=Warn
-kodedot.menu.DebugLevel.warn.build.code_debug=2
-kodedot.menu.DebugLevel.info=Info
-kodedot.menu.DebugLevel.info.build.code_debug=3
-kodedot.menu.DebugLevel.debug=Debug
-kodedot.menu.DebugLevel.debug.build.code_debug=4
-kodedot.menu.DebugLevel.verbose=Verbose
-kodedot.menu.DebugLevel.verbose.build.code_debug=5
 
 ##############################################################
 
