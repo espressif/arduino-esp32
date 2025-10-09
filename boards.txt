@@ -51778,6 +51778,24 @@ kodedot.recipe.hooks.objcopy.postobjcopy.3.pattern_args=
 
 kodedot.recipe.output.save_file={build.project_name}.ino.bin
 
+kodedot.menu.DebugLevel.none=None
+kodedot.menu.DebugLevel.none.build.code_debug=0
+
+kodedot.menu.DebugLevel.error=Error
+kodedot.menu.DebugLevel.error.build.code_debug=1
+
+kodedot.menu.DebugLevel.warn=Warn
+kodedot.menu.DebugLevel.warn.build.code_debug=2
+
+kodedot.menu.DebugLevel.info=Info
+kodedot.menu.DebugLevel.info.build.code_debug=3
+
+kodedot.menu.DebugLevel.debug=Debug
+kodedot.menu.DebugLevel.debug.build.code_debug=4
+
+kodedot.menu.DebugLevel.verbose=Verbose
+kodedot.menu.DebugLevel.verbose.build.code_debug=5
+
 ##############################################################
 
 # FED4 Board
