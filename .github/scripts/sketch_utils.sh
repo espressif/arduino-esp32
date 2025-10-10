@@ -54,6 +54,8 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
 }
 
 function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [extra-options]
+    local first_only=false
+
     while [ -n "$1" ]; do
         case "$1" in
         -ai )
@@ -92,6 +94,36 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             shift
             debug_level="DebugLevel=$1"
             ;;
+        -b )
+            shift
+            custom_build_dir=$1
+            ;;
+        --first-only )
+            first_only=true
+            ;;
+        -h )
+            echo "Usage: build_sketch [options]"
+            echo ""
+            echo "Build an Arduino sketch for ESP32 targets."
+            echo ""
+            echo "Required options:"
+            echo "  -ai <path>          Arduino IDE path"
+            echo "  -au <path>          Arduino user path"
+            echo "  -s <path>           Sketch directory containing .ino file and ci.json"
+            echo "  -t <target>         Target chip (esp32, esp32s2, esp32c3, esp32s3, esp32c6, esp32h2, esp32p4, esp32c5)"
+            echo "                      Required unless -fqbn is specified"
+            echo ""
+            echo "Optional options:"
+            echo "  -fqbn <fqbn>        Fully qualified board name (alternative to -t)"
+            echo "  -o <options>        Board options (PSRAM, USBMode, etc.) [default: chip-specific]"
+            echo "  -i <index>          Chunk index for parallel builds [default: none]"
+            echo "  -l <file>           Log compilation output to JSON file [default: none]"
+            echo "  -d <level>          Debug level (DebugLevel=...) [default: none]"
+            echo "  -b <path>           Custom build directory [default: \$ARDUINO_BUILD_DIR or \$HOME/.arduino/tests/\$target/\$sketchname/build.tmp]"
+            echo "  --first-only        Build only the first FQBN from ci.json configurations [default: false]"
+            echo "  -h                  Show this help message"
+            exit 0
+            ;;
         * )
             break
             ;;
@@ -128,7 +160,14 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
             if [ "$len" -gt 0 ]; then
-                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | sort' "$sketchdir"/ci.json)
+                if [ "$first_only" = true ]; then
+                    # Get only the first FQBN from the array (original order)
+                    fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | .[0]' "$sketchdir"/ci.json)
+                    len=1
+                    fqbn="[\"$fqbn\"]"
+                else
+                    fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | sort' "$sketchdir"/ci.json)
+                fi
             fi
         fi
 
@@ -219,12 +258,14 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     fi
 
     # The directory that will hold all the artifacts (the build directory) is
-    # provided through:
-    #  1. An env variable called ARDUINO_BUILD_DIR.
-    #  2. Created at the sketch level as "build" in the case of a single
-    #     configuration test.
-    #  3. Created at the sketch level as "buildX" where X is the number
-    #     of configuration built in case of a multiconfiguration test.
+    # determined by the following priority:
+    #  1. Custom build directory via -b flag:
+    #     - If path contains "docs/_static/binaries", use as exact path (for docs builds)
+    #     - Otherwise, append target name to custom directory
+    #  2. ARDUINO_BUILD_DIR environment variable (if set)
+    #  3. Default: $HOME/.arduino/tests/$target/$sketchname/build.tmp
+    #
+    # For multiple configurations, subsequent builds use .1, .2, etc. suffixes
 
     sketchname=$(basename "$sketchdir")
     local has_requirements
@@ -253,22 +294,35 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     fi
 
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
-    if [ -n "$ARDUINO_BUILD_DIR" ]; then
-        build_dir="$ARDUINO_BUILD_DIR"
-    elif [ "$len" -eq 1 ]; then
-        # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
+
+    # Determine base build directory
+    if [ -n "$custom_build_dir" ]; then
+        # If custom_build_dir contains docs/_static/binaries, use it as exact path
+        if [[ "$custom_build_dir" == *"docs/_static/binaries"* ]]; then
+            build_dir_base="$custom_build_dir"
+        else
+            build_dir_base="$custom_build_dir/$target"
+        fi
+    elif [ -n "$ARDUINO_BUILD_DIR" ]; then
+        build_dir_base="$ARDUINO_BUILD_DIR"
+    else
+        build_dir_base="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
     fi
 
     output_file="$HOME/.arduino/cli_compile_output.txt"
     sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
 
     mkdir -p "$ARDUINO_CACHE_DIR"
+
     for i in $(seq 0 $((len - 1))); do
-        if [ "$len" -ne 1 ]; then
-            # build_dir="$sketchdir/build$i"
-            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
+        # Calculate build directory for this configuration
+        if [ "$i" -eq 0 ]; then
+            build_dir="$build_dir_base"
+        else
+            build_dir="${build_dir_base}.${i}"
         fi
+
+        # Prepare build directory
         rm -rf "$build_dir"
         mkdir -p "$build_dir"
 

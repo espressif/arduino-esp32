@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - release/v2.x
+      - wokwi-embed-launchpad
     paths:
       - "docs/**"
       - ".github/workflows/docs_build.yml"
@@ -43,6 +44,25 @@ jobs:
           cd ./docs
           PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
           PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
+
+      - name: Install Arduino CLI
+        run: |
+          source .github/scripts/install-arduino-cli.sh
+
+      - name: Install ESP32 Core
+        run: |
+          source .github/scripts/install-arduino-core-esp32.sh
+
+      - name: Build Examples
+        run: |
+          echo "Configuring Arduino CLI and ESP32 core"
+          source .github/scripts/install-arduino-cli.sh
+          source .github/scripts/install-arduino-core-esp32.sh
+          python3 .github/scripts/docs_build_examples.py -ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH
+
+      - name: Cleanup Binaries
+        run: |
+          python3 .github/scripts/docs_build_examples.py -c
 
       - name: Archive Docs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
