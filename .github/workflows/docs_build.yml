@@ -49,7 +49,7 @@ jobs:
         run: |
           source .github/scripts/install-arduino-cli.sh
           source .github/scripts/install-arduino-core-esp32.sh
-          python3 .github/scripts/docs_build_examples.py -ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH
+          python3 .github/scripts/docs_build_examples.py -ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH -d
 
       - name: Cleanup Binaries
         run: |
