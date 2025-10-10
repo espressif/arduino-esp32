@@ -281,7 +281,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
         setvbuf(_f, NULL, _IOFBF, DEFAULT_FILE_BUFFER_SIZE);
       }
     } else {
-      log_w("stat(%s) failed", temp);
+      log_e("stat(%s) failed", temp);
     }
   }
   free(temp);
