@@ -45,17 +45,8 @@ jobs:
           PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
           PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
 
-      - name: Install Arduino CLI
-        run: |
-          source .github/scripts/install-arduino-cli.sh
-
-      - name: Install ESP32 Core
-        run: |
-          source .github/scripts/install-arduino-core-esp32.sh
-
       - name: Build Examples
         run: |
-          echo "Configuring Arduino CLI and ESP32 core"
           source .github/scripts/install-arduino-cli.sh
           source .github/scripts/install-arduino-core-esp32.sh
           python3 .github/scripts/docs_build_examples.py -ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH
