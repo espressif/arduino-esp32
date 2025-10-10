@@ -68,6 +68,8 @@ jobs:
           path: artifacts/matrix_info
 
       - name: Get info
+        env:
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
         id: set-ref
         run: |
           pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json | tr -cd "[:digit:]")
@@ -90,16 +92,21 @@ jobs:
             base=${{ github.ref }}
           fi
 
-          hw_tests_enabled="true"
-          if [[ -n "$pr_num" ]]; then
-            # This is a PR, check for hil_test label
-            has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
-            echo "Has hil_test label: $has_hil_label"
+          if [ -n "$GITLAB_ACCESS_TOKEN" ]; then
+            hw_tests_enabled="true"
+            if [[ -n "$pr_num" ]]; then
+              # This is a PR, check for hil_test label
+              has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
+              echo "Has hil_test label: $has_hil_label"
 
-            if [[ "$has_hil_label" != "true" ]]; then
-              echo "PR does not have hil_test label, hardware tests will be disabled"
-              hw_tests_enabled="false"
+              if [[ "$has_hil_label" != "true" ]]; then
+                echo "PR does not have hil_test label, hardware tests will be disabled"
+                hw_tests_enabled="false"
+              fi
             fi
+          else
+            echo "GITLAB_ACCESS_TOKEN is not set, hardware tests will be disabled"
+            hw_tests_enabled="false"
           fi
 
           push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
