@@ -113,21 +113,18 @@ Testing
 *******
 
 Be sure you have tested the example in all the supported targets. If the example some specific hardware requirements,
-edit/add the ``ci.json`` in the same folder as the sketch to specify the regular expression for the
+edit/add the ``ci.yml`` in the same folder as the sketch to specify the regular expression for the
 required configurations from ``sdkconfig``.
 This will ensure that the CI system will run the test only on the targets that have the required configurations.
 
 You can check the available configurations in the ``sdkconfig`` file in the ``tools/esp32-arduino-libs/<target>`` folder.
 
-Here is an example of the ``ci.json`` file where the example requires Wi-Fi to work properly:
+Here is an example of the ``ci.yml`` file where the example requires Wi-Fi to work properly:
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-      "requires": [
-        "CONFIG_SOC_WIFI_SUPPORTED=y"
-      ]
-    }
+    requires:
+      - CONFIG_SOC_WIFI_SUPPORTED=y
 
 .. note::
 
@@ -138,21 +135,17 @@ Here is an example of the ``ci.json`` file where the example requires Wi-Fi to w
     That means that the configuration must be at the beginning of the line in the ``sdkconfig`` file.
 
 Sometimes, the example might not be supported by some target, even if the target has the required configurations
-(like resources limitations or requiring a specific SoC). To avoid compilation errors, you can add the target to the ``ci.json``
+(like resources limitations or requiring a specific SoC). To avoid compilation errors, you can add the target to the ``ci.yml``
 file so the CI system will force to skip the test on that target.
 
-Here is an example of the ``ci.json`` file where the example is requires Wi-Fi to work properly but is also not supported by the ESP32-S2 target:
+Here is an example of the ``ci.yml`` file where the example is requires Wi-Fi to work properly but is also not supported by the ESP32-S2 target:
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-      "requires": [
-        "CONFIG_SOC_WIFI_SUPPORTED=y"
-      ],
-      "targets": {
-        "esp32s2": false
-      }
-    }
+    requires:
+      - CONFIG_SOC_WIFI_SUPPORTED=y
+    targets:
+      esp32s2: false
 
 You also need to add this information in the ``README.md`` file, on the **Supported Targets**, and in the example code as an inline comment.
 For example, in the sketch:
@@ -183,29 +176,23 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32h2``
 * ``espressif:esp32:esp32p4:USBMode=default``
 
-There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.json`` file.
+There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
 If you just want to append a string to the default FQBNs, you can use the ``fqbn_append`` field. For example, to add the ``DebugLevel=debug`` to the FQBNs, you would use:
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-      "fqbn_append": "DebugLevel=debug"
-    }
+    fqbn_append: DebugLevel=debug
 
 If you want to override the default FQBNs, you can use the ``fqbn`` field. It is a dictionary where the key is the target name and the value is a list of FQBNs.
 The FQBNs in the list will be used in sequence to compile the sketch. For example, to compile a sketch for ESP32-S2 with and without PSRAM enabled, you would use:
 
-.. code-block:: json
+.. code-block:: yaml
 
-    {
-      "fqbn": {
-        "esp32s2": [
-          "espressif:esp32:esp32s2:PSRAM=enabled,FlashMode=dio",
-          "espressif:esp32:esp32s2:PSRAM=disabled,FlashMode=dio"
-        ]
-      }
-    }
+    fqbn:
+      esp32s2:
+        - espressif:esp32:esp32s2:PSRAM=enabled,FlashMode=dio
+        - espressif:esp32:esp32s2:PSRAM=disabled,FlashMode=dio
 
 .. note::
 
@@ -396,7 +383,7 @@ A test suite contains the following files:
 
 * ``test_<test_name>.py``: The test file that contains the test cases. Required.
 * ``<test_name>.ino``: The sketch that will be tested. Required.
-* ``ci.json``: The file that specifies how the test suite will be run in the CI system. Optional.
+* ``ci.yml``: The file that specifies how the test suite will be run in the CI system. Optional.
 * ``diagram.<target>.json``: The diagram file that specifies the connections between the components in Wokwi. Optional.
 * Any other files that are needed for the test suite.
 
@@ -405,10 +392,10 @@ For more information about the Unity testing framework, you can check the `Unity
 
 After creating the test suite, make sure to test it locally and run it in the CI system to ensure that it works as expected.
 
-CI JSON File
+CI YAML File
 ############
 
-The ``ci.json`` file is used to specify how the test suite and sketches will handled by the CI system. It can contain the following fields:
+The ``ci.yml`` file is used to specify how the test suite and sketches will handled by the CI system. It can contain the following fields:
 
 * ``requires``: A list of configurations in ``sdkconfig`` that are required to run the test suite. The test suite will only run on the targets
   that have **ALL** the required configurations. By default, no configurations are required.
@@ -429,10 +416,10 @@ The ``ci.json`` file is used to specify how the test suite and sketches will han
   or by URL (e.g., ``https://github.com/arduino-libraries/WiFi101.git``).
   More information can be found in the `Arduino CLI documentation <https://arduino.github.io/arduino-cli/1.3/commands/arduino-cli_lib_install/>`_.
 
-The ``wifi`` test suite is a good example of how to use the ``ci.json`` file:
+The ``wifi`` test suite is a good example of how to use the ``ci.yml`` file:
 
-.. literalinclude:: ../../tests/validation/wifi/ci.json
-    :language: json
+.. literalinclude:: ../../tests/validation/wifi/ci.yml
+    :language: yaml
 
 Documentation Checks
 ^^^^^^^^^^^^^^^^^^^^

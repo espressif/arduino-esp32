@@ -34,7 +34,7 @@ hw-test-template:
     - echo "Pipeline ID:$PIPELINE_ID"
     - echo "Running hardware tests for chip:$TEST_CHIP"
     - apt-get update
-    - apt-get install -y jq unzip curl
+    - apt-get install -y jq yq unzip curl
     - rm -rf ~/.arduino/tests
     - mkdir -p ~/.arduino/tests/$TEST_CHIP
     - echo Fetching binaries for $TEST_CHIP $TEST_TYPE

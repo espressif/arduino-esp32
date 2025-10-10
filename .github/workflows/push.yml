@@ -29,7 +29,7 @@ on:
       - "libraries/**/*.c"
       - "libraries/**/*.h"
       - "libraries/**/*.ino"
-      - "libraries/**/ci.json"
+      - "libraries/**/ci.yml"
       - "package/**"
       - "tools/get.*"
       - "platform.txt"

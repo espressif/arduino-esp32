@@ -3,7 +3,7 @@
 ###############################
 
 # This parent workflow generates a dynamic child pipeline with jobs grouped
-# by SOC + runner tags derived from tests' ci.json, then triggers it and waits.
+# by SOC + runner tags derived from tests' ci.yml, then triggers it and waits.
 
 generate-hw-tests:
   stage: generate
@@ -18,7 +18,7 @@ generate-hw-tests:
   before_script:
     - pip install PyYAML
     - apt-get update
-    - apt-get install -y jq unzip curl
+    - apt-get install -y jq yq unzip curl
   script:
     - mkdir -p ~/.arduino/tests
     - |
@@ -65,7 +65,7 @@ collect-hw-results:
     - if: $CI_PIPELINE_SOURCE == "trigger"
       when: always
   before_script:
-    - apt-get update && apt-get install -y jq curl unzip
+    - apt-get update && apt-get install -y jq yq curl unzip
   script:
     - bash .gitlab/scripts/get_results.sh
   artifacts:

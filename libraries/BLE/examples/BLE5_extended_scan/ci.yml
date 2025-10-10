@@ -1,0 +1,5 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_SOC_BLE_50_SUPPORTED=y
+  - CONFIG_BLUEDROID_ENABLED=y

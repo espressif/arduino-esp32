@@ -32,12 +32,12 @@ def str_representer(dumper, data):
     return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
 
 
-def read_json(p: Path):
+def read_yaml(p: Path):
     try:
         with p.open("r", encoding="utf-8") as f:
-            return json.load(f)
+            return yaml.safe_load(f) or {}
     except Exception as e:
-        sys.stderr.write(f"[WARN] Failed to parse JSON file '{p}': {e}\n")
+        sys.stderr.write(f"[WARN] Failed to parse YAML file '{p}': {e}\n")
         sys.stderr.write(traceback.format_exc() + "\n")
         return {}
 
@@ -46,7 +46,7 @@ def find_tests() -> list[Path]:
     tests = []
     if not TESTS_ROOT.exists():
         return tests
-    for ci in TESTS_ROOT.rglob("ci.json"):
+    for ci in TESTS_ROOT.rglob("ci.yml"):
         if ci.is_file():
             tests.append(ci)
     return tests
@@ -209,12 +209,12 @@ def main():
     # Aggregate mapping: (chip, frozenset(tags or generic), test_type) -> list of test paths
     group_map: dict[tuple[str, frozenset[str], str], list[str]] = {}
     all_ci = find_tests()
-    print(f"Discovered {len(all_ci)} ci.json files under tests/")
+    print(f"Discovered {len(all_ci)} ci.yml files under tests/")
 
     matched_count = 0
     for test_type, test_path in find_sketch_test_dirs(types):
-        ci_path = test_path / "ci.json"
-        ci = read_json(ci_path) if ci_path.exists() else {}
+        ci_path = test_path / "ci.yml"
+        ci = read_yaml(ci_path) if ci_path.exists() else {}
         test_dir = str(test_path)
         sketch = test_path.name
         for chip in chips:
