@@ -35,16 +35,6 @@ jobs:
           cache: "pip"
           python-version: "3.10"
 
-      - name: Build
-        run: |
-          sudo apt update
-          sudo apt install python3-pip python3-setuptools
-          # GitHub CI installs pip3 and setuptools outside the path.
-          # Update the path to include them and run.
-          cd ./docs
-          PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
-          PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
-
       - name: Build Examples
         run: |
           source .github/scripts/install-arduino-cli.sh
@@ -54,6 +44,16 @@ jobs:
       - name: Cleanup Binaries
         run: |
           python3 .github/scripts/docs_build_examples.py -c
+
+      - name: Build
+        run: |
+          sudo apt update
+          sudo apt install python3-pip python3-setuptools
+          # GitHub CI installs pip3 and setuptools outside the path.
+          # Update the path to include them and run.
+          cd ./docs
+          PATH=/home/runner/.local/bin:$PATH pip3 install -r requirements.txt --prefer-binary
+          PATH=/home/runner/.local/bin:$PATH SPHINXOPTS="-W" build-docs -l en
 
       - name: Archive Docs
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

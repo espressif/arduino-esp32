@@ -8,6 +8,7 @@ Usage: docs_build_examples.py -ai <arduino_cli_path> -au <arduino_user_path> [op
 
 import argparse
 from argparse import RawDescriptionHelpFormatter
+from esp_docs.generic_extensions.docs_embed.tool.wokwi_tool import DiagramSync
 import json
 import os
 import shutil
@@ -20,6 +21,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 # Determine SDKCONFIG_DIR like the shell script
 ARDUINO_ESP32_PATH = os.environ.get("ARDUINO_ESP32_PATH")
 GITHUB_WORKSPACE = os.environ.get("GITHUB_WORKSPACE")
+DOCS_DEPLOY_URL_BASE = os.environ.get("DOCS_PROD_URL_BASE")
+REPO_URL_PREFIX = os.environ.get("REPO_URL_PREFIX")
+
 
 if ARDUINO_ESP32_PATH and (Path(ARDUINO_ESP32_PATH) / "tools" / "esp32-arduino-libs").is_dir():
     SDKCONFIG_DIR = Path(ARDUINO_ESP32_PATH) / "tools" / "esp32-arduino-libs"
@@ -31,10 +35,15 @@ else:
 # Wrapper functions to call sketch_utils.sh
 SKETCH_UTILS = SCRIPT_DIR / "sketch_utils.sh"
 
-KEEP_FILES = ["*.merged.bin", "ci.json"]
+KEEP_FILES = [
+    "*.merged.bin",
+    "ci.json",
+    "launchpad.toml",
+    "diagram*.json",
+]
 DOCS_BINARIES_DIR = Path("docs/_static/binaries")
 GENERATE_DIAGRAMS = False
-LAUNCHPAD_STORAGE_URL = ""
+GENERATE_LAUNCHPAD_CONFIG = False
 
 
 def run_cmd(cmd, check=True, capture_output=False, text=True):
@@ -117,8 +126,9 @@ def parse_args(argv):
     )
     p.add_argument(
         "-l",
-        dest="launchpad_storage_url",
-        help="LaunchPad storage URL to include in generated config",
+        dest="generate_launchpad_config",
+        action="store_true",
+        help="Generate LaunchPad config with configured storage URL",
     )
     return p.parse_args(argv)
 
@@ -233,42 +243,18 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
             shutil.copy(ci_json, output_dir / 'ci.json')
         if GENERATE_DIAGRAMS:
             print(f"Generating diagram for {relative_path} ({target})...")
-            rc = run_cmd(
-                [
-                    "docs-embed",
-                    "--path",
-                    str(output_dir),
-                    "diagram-from-ci",
-                    "--platform",
-                    target,
-                    "--override",
-                ],
-                check=False,
-            )
-            if rc.returncode == 0:
-                print("Diagram generated successfully for {relative_path} ({target})")
-            else:
-                print("WARNING: Failed to generate diagram for {relative_path} ({target})")
-        if LAUNCHPAD_STORAGE_URL:
+            try:
+                sync = DiagramSync(output_dir)
+                sync.generate_diagram_from_ci(target)
+            except Exception as e:
+                print(f"WARNING: Failed to generate diagram for {relative_path} ({target}): {e}")
+        if GENERATE_LAUNCHPAD_CONFIG:
             print(f"Generating LaunchPad config for {relative_path} ({target})...")
-            rc = run_cmd(
-                [
-                    "docs-embed",
-                    "--path",
-                    str(output_dir),
-                    "launchpad-config",
-                    LAUNCHPAD_STORAGE_URL,
-                    "--repo-url-prefix",
-                    "https://github.com/espressif/arduino-esp32/tree/master",
-                    "--override",
-                ],
-                check=False,
-            )
-            if rc.returncode == 0:
-                print("LaunchPad config generated successfully for {relative_path} ({target})")
-            else:
-                print("WARNING: Failed to generate LaunchPad config for {relative_path} ({target})")
-        return True
+            try:
+                sync = DiagramSync(output_dir)
+                sync.generate_launchpad_config(DOCS_DEPLOY_URL_BASE, REPO_URL_PREFIX)
+            except Exception as e:
+                print(f"WARNING: Failed to generate LaunchPad config for {relative_path} ({target}): {e}")
     else:
         print(f"ERROR: Failed to build {relative_path} for {target}")
         return False
@@ -320,14 +306,14 @@ def build_all_examples(args):
 
 
 def main(argv):
-    global GENERATE_DIAGRAMS, LAUNCHPAD_STORAGE_URL
+    global GENERATE_DIAGRAMS, GENERATE_LAUNCHPAD_CONFIG
     args = parse_args(argv)
     if args.cleanup:
         cleanup_binaries()
         return
     validate_prerequisites(args)
     GENERATE_DIAGRAMS = args.generate_diagrams
-    LAUNCHPAD_STORAGE_URL = args.launchpad_storage_url or ""
+    GENERATE_LAUNCHPAD_CONFIG = args.generate_launchpad_config
     DOCS_BINARIES_DIR.mkdir(parents=True, exist_ok=True)
     result = build_all_examples(args)
     if result == 0:
