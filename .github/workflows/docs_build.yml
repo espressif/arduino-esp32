@@ -35,6 +35,42 @@ jobs:
           cache: "pip"
           python-version: "3.10"
 
+      - name: Restore compiled binaries from cache
+        id: cache-restore
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: compiled-binaries-consolidated-${{ github.sha }}
+          restore-keys: |
+            compiled-binaries-consolidated-
+            compiled-binaries-Linux-${{ github.sha }}-
+            compiled-binaries-Linux-
+          path: compiled_binaries
+          lookup-only: false
+
+      - name: Download compiled binaries artifact (fallback)
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: compiled-binaries-consolidated
+          path: compiled_binaries
+        continue-on-error: true
+
+      - name: Copy cached binaries to local directory
+        run: |
+          if [ -d "compiled_binaries" ]; then
+            echo "Found cached binaries, copying to local workspace..."
+            mkdir -p local_binaries
+            cp -r compiled_binaries/* local_binaries/ || true
+            echo "Available binaries:"
+            find local_binaries -type f -name "*.bin" -o -name "*.elf" | head -20
+            echo "Total binary files found: $(find local_binaries -type f \( -name "*.bin" -o -name "*.elf" \) | wc -l)"
+
+            echo "Contents of compiled_binaries directory:"
+            find compiled_binaries -type f | head -20
+          else
+            echo "No cached binaries found, will build fresh"
+          fi
+
       - name: Build Examples
         run: |
           source .github/scripts/install-arduino-cli.sh
