@@ -648,7 +648,7 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
 
     local libs_type
     libs_type=$(yq eval '.libs | type' "$sketchdir/ci.yml" 2>/dev/null)
-    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ]; then
+    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ] || [ "$libs_type" = "!!null" ]; then
         [ "$verbose" = true ] && echo "No libs field found in ci.yml, skipping library installation"
         return 0
     elif [ "$libs_type" != "!!seq" ]; then

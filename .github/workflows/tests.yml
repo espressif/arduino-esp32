@@ -54,9 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-types: ${{ steps.set-matrix.outputs.build-types }}
-      hw-targets: ${{ steps.set-matrix.outputs.hw-targets }}
+      hw-targets: ${{ steps.set-matrix.outputs.hw_targets }}
       qemu-types: ${{ steps.set-matrix.outputs.qemu-types }}
-      qemu-targets: ${{ steps.set-matrix.outputs.qemu-targets }}
+      qemu-targets: ${{ steps.set-matrix.outputs.qemu_targets }}
     env:
       IS_PR: ${{ github.event.pull_request.number != null }}
       PERFORMANCE_ENABLED: ${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
