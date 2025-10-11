@@ -8,6 +8,10 @@ import sys
 import copy
 import traceback
 from pathlib import Path
+from typing import Iterable
+from urllib.parse import urlencode
+import urllib.request
+import urllib.error
 
 # Resolve repository root from this script location
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -184,6 +188,109 @@ def parse_list_arg(s: str) -> list[str]:
     return [part.strip() for part in txt.split(",") if part.strip()]
 
 
+def _gitlab_auth_header() -> tuple[str, str]:
+    """Return header key and value for GitLab API auth, preferring PRIVATE-TOKEN, then JOB-TOKEN.
+
+    Falls back to empty auth if neither is available.
+    """
+    private = os.environ.get("GITLAB_API_TOKEN") or os.environ.get("PRIVATE_TOKEN")
+    if private:
+        return ("PRIVATE-TOKEN", private)
+    job = os.environ.get("CI_JOB_TOKEN")
+    if job:
+        return ("JOB-TOKEN", job)
+    return ("", "")
+
+
+def _gitlab_api_get(path: str) -> tuple[int, dict | list | None]:
+    """Perform a GET to GitLab API v4 and return (status_code, json_obj_or_None).
+
+    Uses project-level API base from CI env. Returns (0, None) if base env is missing.
+    """
+    base = os.environ.get("CI_API_V4_URL")
+    if not base:
+        return 0, None
+    url = base.rstrip("/") + "/" + path.lstrip("/")
+    key, value = _gitlab_auth_header()
+    req = urllib.request.Request(url)
+    if key:
+        req.add_header(key, value)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            status = resp.getcode()
+            data = resp.read()
+            try:
+                obj = json.loads(data.decode("utf-8")) if data else None
+            except Exception:
+                obj = None
+            return status, obj
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8")
+        except Exception:
+            body = str(e)
+        sys.stderr.write(f"[WARN] GitLab API GET {url} failed: {e} body={body}\n")
+        return e.code, None
+    except Exception as e:
+        sys.stderr.write(f"[WARN] GitLab API GET {url} error: {e}\n")
+        sys.stderr.write(traceback.format_exc() + "\n")
+        return -1, None
+
+
+def list_project_runners() -> list[dict]:
+    """List runners available to this project via GitLab API.
+
+    Requires CI vars CI_API_V4_URL and CI_PROJECT_ID and either GITLAB_API_TOKEN or CI_JOB_TOKEN.
+    Returns an empty list if not accessible.
+    """
+    project_id = os.environ.get("CI_PROJECT_ID")
+    if not project_id:
+        return []
+
+    runners: list[dict] = []
+    page = 1
+    per_page = 100
+    while True:
+        q = urlencode({"per_page": per_page, "page": page})
+        status, obj = _gitlab_api_get(f"projects/{project_id}/runners?{q}")
+        if status != 200 or not isinstance(obj, list):
+            # Project-scoped listing might be restricted for JOB-TOKEN in some instances.
+            # Return what we have (likely nothing) and let caller decide.
+            break
+        runners.extend(x for x in obj if isinstance(x, dict))
+        if len(obj) < per_page:
+            break
+        page += 1
+    return runners
+
+
+def runner_supports_tags(runner: dict, required_tags: Iterable[str]) -> bool:
+    tag_list = runner.get("tag_list") or []
+    if not isinstance(tag_list, list):
+        return False
+    tags = {str(t).strip() for t in tag_list if isinstance(t, str) and t.strip()}
+    if not tags:
+        return False
+    # Skip paused/inactive runners
+    if runner.get("paused") is True:
+        return False
+    if runner.get("active") is False:
+        return False
+    return all(t in tags for t in required_tags)
+
+
+def any_runner_matches(required_tags: Iterable[str], runners: list[dict]) -> bool:
+    req = [t for t in required_tags if t]
+    for r in runners:
+        try:
+            if runner_supports_tags(r, req):
+                return True
+        except Exception:
+            # Be robust to unexpected runner payloads
+            continue
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--chips", required=True, help="Comma-separated or JSON array list of SoCs")
@@ -249,25 +356,72 @@ def main():
 
     # Build child pipeline YAML in deterministic order
     jobs_entries = []  # list of (sort_key, job_name, job_dict)
+
+    # Discover available runners (best-effort)
+    available_runners = list_project_runners()
+    if not available_runners:
+        print("[WARN] Could not enumerate project runners or none found; skipping runner-tag availability checks.")
+
+    # Accumulate all missing-runner groups to emit a single stub job
+    missing_groups: list[dict] = []
+
     for (chip, tagset, test_type), test_dirs in group_map.items():
         tag_list = sorted(tagset)
         # Build name suffix excluding the SOC itself to avoid duplication
         non_soc_tags = [t for t in tag_list if t != chip]
         tag_suffix = "-".join(non_soc_tags) if non_soc_tags else "generic"
-        job_name = f"hw-{chip}-{test_type}-{tag_suffix}"[:255]
 
-        # Clone base job and adjust (preserve key order using deepcopy)
+        # Determine if any runner can serve this job
+        can_schedule = True
+        if available_runners:
+            can_schedule = any_runner_matches(tag_list, available_runners)
+
+        if can_schedule:
+            job_name = f"hw-{chip}-{test_type}-{tag_suffix}"[:255]
+
+            # Clone base job and adjust (preserve key order using deepcopy)
+            job = copy.deepcopy(base_job)
+            # Ensure tags include SOC+extras
+            job["tags"] = tag_list
+            vars_block = job.get("variables", {})
+            vars_block["TEST_CHIP"] = chip
+            vars_block["TEST_TYPE"] = test_type
+            # Provide list of test directories for this job
+            vars_block["TEST_LIST"] = "\n".join(sorted(test_dirs))
+            job["variables"] = vars_block
+
+            sort_key = (chip, test_type, tag_suffix)
+            jobs_entries.append((sort_key, job_name, job))
+        else:
+            # Accumulate for a single combined missing-runner job
+            missing_groups.append(
+                {
+                    "chip": chip,
+                    "test_type": test_type,
+                    "required_tags": tag_list,
+                    "test_dirs": sorted(test_dirs),
+                }
+            )
+
+    # If any groups are missing runners, create one combined stub job to emit all JUnit errors
+    if missing_groups:
+        job_name = "hw-missing-runners"
         job = copy.deepcopy(base_job)
-        # Ensure tags include SOC+extras
-        job["tags"] = tag_list
+        if "tags" in job:
+            del job["tags"]
+        job["before_script"] = [
+            "echo 'No suitable hardware runners found for some groups; generating combined JUnit error stubs.'"
+        ]
         vars_block = job.get("variables", {})
-        vars_block["TEST_CHIP"] = chip
-        vars_block["TEST_TYPE"] = test_type
-        # Provide list of test directories for this job
-        vars_block["TEST_LIST"] = "\n".join(sorted(test_dirs))
+        # Store as JSON string for the generator script to process
+        vars_block["MISSING_GROUPS_JSON"] = json.dumps(missing_groups)
         job["variables"] = vars_block
-
-        sort_key = (chip, test_type, tag_suffix)
+        job["script"] = [
+            "python3 .gitlab/scripts/generate_missing_runner_junit.py",
+            "exit 1",
+        ]
+        # Ensure it sorts after normal jobs
+        sort_key = ("zzz", "zzz", "zzz")
         jobs_entries.append((sort_key, job_name, job))
 
     # Order jobs by (chip, type, tag_suffix)
