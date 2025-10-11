@@ -18,7 +18,13 @@ generate-hw-tests:
   before_script:
     - pip install PyYAML
     - apt-get update
-    - apt-get install -y jq yq unzip curl
+    - apt-get install -y jq unzip curl wget
+    # Install mikefarah/yq (Go version) instead of kislyuk/yq (Python version)
+    - YQ_VERSION=v4.47.2
+    - YQ_BINARY=yq_linux_amd64
+    - wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY} -O /usr/bin/yq
+    - chmod +x /usr/bin/yq
+    - yq --version
   script:
     - mkdir -p ~/.arduino/tests
     - |
@@ -65,7 +71,7 @@ collect-hw-results:
     - if: $CI_PIPELINE_SOURCE == "trigger"
       when: always
   before_script:
-    - apt-get update && apt-get install -y jq yq curl unzip
+    - apt-get update && apt-get install -y jq curl unzip
   script:
     - bash .gitlab/scripts/get_results.sh
   artifacts:

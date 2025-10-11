@@ -34,7 +34,13 @@ hw-test-template:
     - echo "Pipeline ID:$PIPELINE_ID"
     - echo "Running hardware tests for chip:$TEST_CHIP"
     - apt-get update
-    - apt-get install -y jq yq unzip curl
+    - apt-get install -y jq unzip curl wget
+    # Install mikefarah/yq (Go version) instead of kislyuk/yq (Python version)
+    - YQ_VERSION=v4.47.2
+    - YQ_BINARY=yq_linux_amd64
+    - wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY} -O /usr/bin/yq
+    - chmod +x /usr/bin/yq
+    - yq --version
     - rm -rf ~/.arduino/tests
     - mkdir -p ~/.arduino/tests/$TEST_CHIP
     - echo Fetching binaries for $TEST_CHIP $TEST_TYPE
