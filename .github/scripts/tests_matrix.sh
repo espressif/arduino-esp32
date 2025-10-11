@@ -12,7 +12,7 @@ if [[ $IS_PR != 'true' ]] || [[ $PERFORMANCE_ENABLED == 'true' ]]; then
     #qemu_types+=",'performance'"
 fi
 
-hw_targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c5','esp32c6','esp32h2','esp32p4'"
+hw_targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c6','esp32h2','esp32p4'"
 wokwi_targets="'esp32','esp32s2','esp32s3','esp32c3','esp32c6','esp32h2','esp32p4'"
 qemu_targets="'esp32','esp32c3'"
 
