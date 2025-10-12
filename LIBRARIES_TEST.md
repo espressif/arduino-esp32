@@ -2,7 +2,7 @@
 
 Library|ESP32|ESP32C3|ESP32C6|ESP32H2|ESP32P4|ESP32S2|ESP32S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-Adafruit NeoPixel|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
+Adafruit NeoPixel|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :warning: |1 :white_check_mark: |1 :white_check_mark: 
 ArduinoBLE|1 :white_check_mark: |1 :white_check_mark: |1 :x: |1 :x: |N/A|N/A|1 :white_check_mark: 
 ESP32Servo|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: 
 ESPAsyncWebServer|32 :white_check_mark: |32 :white_check_mark: |32 :white_check_mark: |32 :white_check_mark: |32 :white_check_mark: |32 :white_check_mark: |32 :white_check_mark: 
@@ -14,5 +14,5 @@ WS2812FX|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :wh
 ZACwire for TSic|2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: 
 
 
-Generated on: Oct-05-2025 04:29:47
-/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/18253625185)
+Generated on: Oct-12-2025 04:30:09
+/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/18438853893)
