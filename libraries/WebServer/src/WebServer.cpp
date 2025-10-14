@@ -614,7 +614,7 @@ void WebServer::chunkResponseEnd() {
   if (_chunkedClient.write("0\r\n\r\n", 5) != 5) {
     log_e("Failed to write terminating chunk");
   }
-  /* NetworkClient::flush() is deprecated; use clear() to drop buffered data */
+
   _chunkedClient.clear();
   _chunkedResponseActive = false;
   _chunked = false;
