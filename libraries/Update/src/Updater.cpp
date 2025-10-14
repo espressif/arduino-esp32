@@ -128,11 +128,13 @@ bool UpdateClass::rollBack() {
 }
 
 bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
+  (void)label;
+
   if (_size > 0) {
     log_w("already running");
     return false;
   }
-
+  
   _ledPin = ledPin;
   _ledOn = !!ledOn;  // 0(LOW) or 1(HIGH)
 

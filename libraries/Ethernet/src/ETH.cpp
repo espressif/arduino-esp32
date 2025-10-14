@@ -53,7 +53,7 @@ static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-
+  (void)arg;
   if (event_base == ETH_EVENT) {
     esp_eth_handle_t eth_handle = *((esp_eth_handle_t *)event_data);
     for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
@@ -146,6 +146,9 @@ ETHClass::ETHClass(uint8_t eth_index)
 ETHClass::~ETHClass() {}
 
 bool ETHClass::ethDetachBus(void *bus_pointer) {
+  if (!bus_pointer) {
+    return true;
+  }
   ETHClass *bus = (ETHClass *)bus_pointer;
   bus->end();
   return true;

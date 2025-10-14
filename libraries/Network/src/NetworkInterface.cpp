@@ -47,6 +47,7 @@ extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
 #endif
 
 static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
   if (event_base == IP_EVENT) {
     NetworkInterface *netif = NULL;
     if (event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP) {

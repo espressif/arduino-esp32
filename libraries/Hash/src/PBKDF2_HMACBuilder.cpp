@@ -111,6 +111,8 @@ void PBKDF2_HMACBuilder::add(const uint8_t *data, size_t len) {
 
 bool PBKDF2_HMACBuilder::addStream(Stream &stream, const size_t maxLen) {
   log_e("PBKDF2_HMACBuilder does not support addStream. Use setPassword() and setSalt() instead.");
+  (void)stream;
+  (void)maxLen;
   return false;
 }
 
