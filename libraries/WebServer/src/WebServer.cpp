@@ -615,7 +615,7 @@ void WebServer::chunkResponseEnd() {
     log_e("Failed to write terminating chunk");
   }
 
-  _chunkedClient.clear();
+  _chunkedClient.flush();
   _chunkedResponseActive = false;
   _chunked = false;
   _chunkedClient = NetworkClient();
