@@ -42,8 +42,6 @@ jobs:
           key: compiled-binaries-consolidated-${{ github.sha }}
           restore-keys: |
             compiled-binaries-consolidated-
-            compiled-binaries-Linux-${{ github.sha }}-
-            compiled-binaries-Linux-
           path: compiled_binaries
           lookup-only: false
 
@@ -55,31 +53,144 @@ jobs:
           path: compiled_binaries
         continue-on-error: true
 
-      - name: Copy cached binaries to local directory
+      - name: Debug - List cached binaries structure
         run: |
+          echo "=========================================="
+          echo "Debugging cached binaries structure"
+          echo "=========================================="
           if [ -d "compiled_binaries" ]; then
-            echo "Found cached binaries, copying to local workspace..."
-            mkdir -p local_binaries
-            cp -r compiled_binaries/* local_binaries/ || true
-            echo "Available binaries:"
-            find local_binaries -type f -name "*.bin" -o -name "*.elf" | head -20
-            echo "Total binary files found: $(find local_binaries -type f \( -name "*.bin" -o -name "*.elf" \) | wc -l)"
-
-            echo "Contents of compiled_binaries directory:"
-            find compiled_binaries -type f | head -20
+            echo "✓ compiled_binaries directory exists"
+            echo ""
+            echo "Directory tree (first 50 entries):"
+            find compiled_binaries -type f | head -50 | sort
+            echo ""
+            echo "Binary files (.bin):"
+            find compiled_binaries -type f -name "*.bin" | head -30
+            echo ""
+            echo "ELF files:"
+            find compiled_binaries -type f -name "*.elf" | head -30
+            echo ""
+            echo "Total binary files: $(find compiled_binaries -type f -name "*.bin" | wc -l)"
+            echo "Total ELF files: $(find compiled_binaries -type f -name "*.elf" | wc -l)"
+            echo ""
+            echo "Sample directory structure:"
+            ls -la compiled_binaries/ || true
           else
-            echo "No cached binaries found, will build fresh"
+            echo "✗ compiled_binaries directory NOT found"
+            echo "WARNING: No cached binaries available!"
           fi
+          echo "=========================================="
 
-      - name: Build Examples
+      - name: Copy cached binaries to docs/_static/binaries/
         run: |
-          source .github/scripts/install-arduino-cli.sh
-          source .github/scripts/install-arduino-core-esp32.sh
-          python3 .github/scripts/docs_build_examples.py -ai $ARDUINO_IDE_PATH -au $ARDUINO_USR_PATH -d
+          echo "Copying cached binaries to docs/_static/binaries/"
+          mkdir -p docs/_static/binaries
+          
+          if [ ! -d "compiled_binaries" ]; then
+            echo "ERROR: No compiled_binaries directory found!"
+            echo "Cannot proceed without binaries. Exiting."
+            exit 1
+          fi
+          
+          # Find all .bin files in compiled_binaries
+          echo "Processing binary files..."
+          bin_count=0
+          skip_count=0
+          
+          # Binaries are stored in structure like:
+          # compiled_binaries/{home}/.arduino/tests/{target}/{SketchName}/build.tmp/{SketchName}.ino.bin
+          # We need to:
+          # 1. Extract sketch name and target from path
+          # 2. Find the sketch in libraries/ directory
+          # 3. Copy to docs/_static/binaries/libraries/{LibraryName}/examples/{SketchName}/{target}/
+          
+          find compiled_binaries -type f -name "*.bin" | while read -r bin_file; do
+            echo "Processing: $bin_file"
+            
+            # Extract the binary filename (e.g., WiFiClientSecure.ino.bin)
+            bin_name=$(basename "$bin_file")
+            
+            # Extract sketch name (remove .ino.bin or .bin extension)
+            sketch_name="${bin_name%.ino.bin}"
+            if [ "$sketch_name" == "$bin_name" ]; then
+              sketch_name="${bin_name%.bin}"
+            fi
+            
+            # Extract target from path (esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2, esp32p4, esp32c5)
+            if [[ "$bin_file" =~ /(esp32[a-z0-9]*)/ ]]; then
+              target="${BASH_REMATCH[1]}"
+            else
+              echo "  ⚠ Could not determine target from path: $bin_file"
+              skip_count=$((skip_count + 1))
+              continue
+            fi
+            
+            # Search for the sketch in libraries directory
+            sketch_ino_file=$(find libraries -type f -name "${sketch_name}.ino" 2>/dev/null | head -1)
+            
+            if [ -z "$sketch_ino_file" ]; then
+              echo "  ⚠ Could not find sketch '${sketch_name}.ino' in libraries/"
+              skip_count=$((skip_count + 1))
+              continue
+            fi
+            
+            # Extract the relative path from libraries/
+            # e.g., libraries/NetworkClientSecure/examples/WiFiClientSecure/WiFiClientSecure.ino
+            # becomes: NetworkClientSecure/examples/WiFiClientSecure
+            sketch_dir=$(dirname "$sketch_ino_file")
+            relative_path="${sketch_dir#libraries/}"
+            
+            echo "  ✓ Found sketch at: $sketch_ino_file"
+            echo "  ✓ Target: $target"
+            echo "  ✓ Relative path: $relative_path"
+            
+            # Create output directory
+            output_dir="docs/_static/binaries/libraries/${relative_path}/${target}"
+            mkdir -p "$output_dir"
+            
+            # Copy the binary
+            cp "$bin_file" "$output_dir/"
+            echo "  → Copied to: $output_dir/$bin_name"
+            bin_count=$((bin_count + 1))
+          done
+          
+          echo ""
+          echo "=========================================="
+          echo "Binary copy completed!"
+          echo "  Binaries copied: $bin_count"
+          echo "  Binaries skipped: $skip_count"
+          echo "=========================================="
+          echo ""
+          echo "Final structure in docs/_static/binaries/:"
+          find docs/_static/binaries -type f -name "*.bin" | head -30
+          echo ""
+          echo "Total binaries in docs/_static/binaries/: $(find docs/_static/binaries -type f -name "*.bin" | wc -l)"
 
       - name: Cleanup Binaries
         run: |
           python3 .github/scripts/docs_build_examples.py -c
+
+      - name: Debug - Final binaries structure after cleanup
+        run: |
+          echo "=========================================="
+          echo "Final structure in docs/_static/binaries/ (after cleanup)"
+          echo "=========================================="
+          if [ -d "docs/_static/binaries" ]; then
+            echo "Directory tree:"
+            find docs/_static/binaries -type f | sort
+            echo ""
+            echo "Files by type:"
+            echo "  .bin files: $(find docs/_static/binaries -type f -name "*.bin" | wc -l)"
+            echo "  .elf files: $(find docs/_static/binaries -type f -name "*.elf" | wc -l)"
+            echo "  .json files: $(find docs/_static/binaries -type f -name "*.json" | wc -l)"
+            echo "  .toml files: $(find docs/_static/binaries -type f -name "*.toml" | wc -l)"
+            echo ""
+            echo "Example of final structure (first 20 files):"
+            find docs/_static/binaries -type f | head -20
+          else
+            echo "WARNING: docs/_static/binaries/ directory not found!"
+          fi
+          echo "=========================================="
 
       - name: Build
         run: |

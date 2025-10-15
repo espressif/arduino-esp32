@@ -8,7 +8,7 @@ Usage: docs_build_examples.py -ai <arduino_cli_path> -au <arduino_user_path> [op
 
 import argparse
 from argparse import RawDescriptionHelpFormatter
-from esp_docs.generic_extensions.docs_embed.tool.wokwi_tool import DiagramSync
+# from esp_docs.generic_extensions.docs_embed.tool.wokwi_tool import DiagramSync
 import json
 import os
 import shutil
@@ -241,20 +241,20 @@ def build_example_for_target(sketch_dir, target, relative_path, args):
         ci_json = Path(sketch_dir) / 'ci.json'
         if ci_json.exists():
             shutil.copy(ci_json, output_dir / 'ci.json')
-        if GENERATE_DIAGRAMS:
-            print(f"Generating diagram for {relative_path} ({target})...")
-            try:
-                sync = DiagramSync(output_dir)
-                sync.generate_diagram_from_ci(target)
-            except Exception as e:
-                print(f"WARNING: Failed to generate diagram for {relative_path} ({target}): {e}")
-        if GENERATE_LAUNCHPAD_CONFIG:
-            print(f"Generating LaunchPad config for {relative_path} ({target})...")
-            try:
-                sync = DiagramSync(output_dir)
-                sync.generate_launchpad_config(DOCS_DEPLOY_URL_BASE, REPO_URL_PREFIX)
-            except Exception as e:
-                print(f"WARNING: Failed to generate LaunchPad config for {relative_path} ({target}): {e}")
+        # if GENERATE_DIAGRAMS:
+        #     print(f"Generating diagram for {relative_path} ({target})...")
+        #     try:
+        #         sync = DiagramSync(output_dir)
+        #         sync.generate_diagram_from_ci(target)
+        #     except Exception as e:
+        #         print(f"WARNING: Failed to generate diagram for {relative_path} ({target}): {e}")
+        # if GENERATE_LAUNCHPAD_CONFIG:
+        #     print(f"Generating LaunchPad config for {relative_path} ({target})...")
+        #     try:
+        #         sync = DiagramSync(output_dir)
+        #         sync.generate_launchpad_config(DOCS_DEPLOY_URL_BASE, REPO_URL_PREFIX)
+        #     except Exception as e:
+        #         print(f"WARNING: Failed to generate LaunchPad config for {relative_path} ({target}): {e}")
     else:
         print(f"ERROR: Failed to build {relative_path} for {target}")
         return False
