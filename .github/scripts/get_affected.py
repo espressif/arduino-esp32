@@ -63,7 +63,7 @@ High-level workflow
 Build file patterns
 --------------------
 - **build_files**: Core Arduino build system files (platform.txt, variants/**, etc.)
-- **sketch_build_files**: Sketch-specific files (ci.json, *.csv in example directories)
+- **sketch_build_files**: Sketch-specific files (ci.yml, *.csv in example directories)
 - **idf_build_files**: Core IDF build system files (CMakeLists.txt, idf_component.yml, etc.)
 - **idf_project_files**: Project-specific IDF files (per-example CMakeLists.txt, sdkconfig, etc.)
 
@@ -128,7 +128,7 @@ build_files = [
 # Files that are used by the sketch build system.
 # If any of these files change, the sketch should be recompiled.
 sketch_build_files = [
-    "libraries/*/examples/**/ci.json",
+    "libraries/*/examples/**/ci.yml",
     "libraries/*/examples/**/*.csv",
 ]
 
@@ -150,7 +150,7 @@ idf_build_files = [
 # If any of these files change, the example that uses them should be recompiled.
 idf_project_files = [
     "idf_component_examples/*/CMakeLists.txt",
-    "idf_component_examples/*/ci.json",
+    "idf_component_examples/*/ci.yml",
     "idf_component_examples/*/*.csv",
     "idf_component_examples/*/sdkconfig*",
     "idf_component_examples/*/main/*",

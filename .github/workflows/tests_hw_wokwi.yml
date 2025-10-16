@@ -24,10 +24,12 @@ jobs:
       pr_num: ${{ steps.set-ref.outputs.pr_num }}
       ref: ${{ steps.set-ref.outputs.ref }}
       base: ${{ steps.set-ref.outputs.base }}
-      targets: ${{ steps.set-ref.outputs.targets }}
-      wokwi_types: ${{ steps.set-ref.outputs.wokwi_types }}
       hw_types: ${{ steps.set-ref.outputs.hw_types }}
+      hw_targets: ${{ steps.set-ref.outputs.hw_targets }}
+      wokwi_types: ${{ steps.set-ref.outputs.wokwi_types }}
+      wokwi_targets: ${{ steps.set-ref.outputs.wokwi_targets }}
       hw_tests_enabled: ${{ steps.set-ref.outputs.hw_tests_enabled }}
+      wokwi_tests_enabled: ${{ steps.set-ref.outputs.wokwi_tests_enabled }}
       push_time: ${{ steps.set-ref.outputs.push_time }}
     steps:
       - name: Report pending
@@ -67,8 +69,13 @@ jobs:
           path: artifacts/matrix_info
 
       - name: Get info
+        env:
+          GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
+          WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
         id: set-ref
         run: |
+          # Get info and sanitize it to avoid security issues
+
           pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json | tr -cd "[:digit:]")
           if [ -z "$pr_num" ] || [ "$pr_num" == "null" ]; then
             pr_num=""
@@ -89,16 +96,28 @@ jobs:
             base=${{ github.ref }}
           fi
 
-          hw_tests_enabled="true"
-          if [[ -n "$pr_num" ]]; then
-            # This is a PR, check for hil_test label
-            has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
-            echo "Has hil_test label: $has_hil_label"
+          if [ -n "$GITLAB_ACCESS_TOKEN" ]; then
+            hw_tests_enabled="true"
+            if [[ -n "$pr_num" ]]; then
+              # This is a PR, check for hil_test label
+              has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
+              echo "Has hil_test label: $has_hil_label"
 
-            if [[ "$has_hil_label" != "true" ]]; then
-              echo "PR does not have hil_test label, hardware tests will be disabled"
-              hw_tests_enabled="false"
+              if [[ "$has_hil_label" != "true" ]]; then
+                echo "PR does not have hil_test label, hardware tests will be disabled"
+                hw_tests_enabled="false"
+              fi
             fi
+          else
+            echo "GITLAB_ACCESS_TOKEN is not set, hardware tests will be disabled"
+            hw_tests_enabled="false"
+          fi
+
+          if [ -n "$WOKWI_CLI_TOKEN" ]; then
+            wokwi_tests_enabled="true"
+          else
+            echo "WOKWI_CLI_TOKEN is not set, wokwi tests will be disabled"
+            wokwi_tests_enabled="false"
           fi
 
           push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
@@ -106,55 +125,74 @@ jobs:
             push_time=""
           fi
 
-          wokwi_types=$(cat artifacts/matrix_info/wokwi_types.txt | tr -cd "[:alpha:],[]'")
-          hw_types=$(cat artifacts/matrix_info/hw_types.txt | tr -cd "[:alpha:],[]'")
-          targets=$(cat artifacts/matrix_info/targets.txt | tr -cd "[:alnum:],[]'")
+          hw_targets=$(jq -c '.hw_targets' artifacts/matrix_info/test_matrix.json | tr -cd "[:alnum:],[]\"")
+          hw_types=$(jq -c '.hw_types' artifacts/matrix_info/test_matrix.json | tr -cd "[:alpha:],[]\"")
+          wokwi_targets=$(jq -c '.wokwi_targets' artifacts/matrix_info/test_matrix.json | tr -cd "[:alnum:],[]\"")
+          wokwi_types=$(jq -c '.wokwi_types' artifacts/matrix_info/test_matrix.json | tr -cd "[:alpha:],[]\"")
+          qemu_tests_enabled=$(jq -r '.qemu_enabled' artifacts/matrix_info/test_matrix.json | tr -cd "[:alpha:]")
+          qemu_targets=$(jq -c '.qemu_targets' artifacts/matrix_info/test_matrix.json | tr -cd "[:alnum:],[]\"")
+          qemu_types=$(jq -c '.qemu_types' artifacts/matrix_info/test_matrix.json | tr -cd "[:alpha:],[]\"")
 
           echo "base = $base"
-          echo "targets = $targets"
-          echo "wokwi_types = $wokwi_types"
+          echo "hw_targets = $hw_targets"
           echo "hw_types = $hw_types"
+          echo "wokwi_targets = $wokwi_targets"
+          echo "wokwi_types = $wokwi_types"
+          echo "qemu_tests_enabled = $qemu_tests_enabled"
+          echo "qemu_targets = $qemu_targets"
+          echo "qemu_types = $qemu_types"
           echo "pr_num = $pr_num"
           echo "hw_tests_enabled = $hw_tests_enabled"
+          echo "wokwi_tests_enabled = $wokwi_tests_enabled"
           echo "push_time = $push_time"
 
-          printf "$ref" >> artifacts/ref.txt
-          printf "Ref = "
-          cat artifacts/ref.txt
+          conclusion="${{ github.event.workflow_run.conclusion }}"
+          run_id="${{ github.event.workflow_run.id }}"
+          event="${{ github.event.workflow_run.event }}"
+          sha="${{ github.event.workflow_run.head_sha || github.sha }}"
 
-          printf "${{ github.event.workflow_run.event }}" >> artifacts/event.txt
-          printf "\nEvent name = "
-          cat artifacts/event.txt
+          # Create a single JSON file with all workflow run information
+          cat > artifacts/workflow_info.json <<EOF
+          {
+            "hw_tests_enabled": $hw_tests_enabled,
+            "hw_targets": $hw_targets,
+            "hw_types": $hw_types,
+            "wokwi_tests_enabled": $wokwi_tests_enabled,
+            "wokwi_targets": $wokwi_targets,
+            "wokwi_types": $wokwi_types,
+            "qemu_tests_enabled": $qemu_tests_enabled,
+            "qemu_targets": $qemu_targets,
+            "qemu_types": $qemu_types,
+            "ref": "$ref",
+            "event": "$event",
+            "sha": "$sha",
+            "action": "$action",
+            "run_id": "$run_id",
+            "conclusion": "$conclusion"
+          }
+          EOF
 
-          printf "${{ github.event.workflow_run.head_sha || github.sha }}" >> artifacts/sha.txt
-          printf "\nHead SHA = "
-          cat artifacts/sha.txt
-
-          printf "$action" >> artifacts/action.txt
-          printf "\nAction = "
-          cat artifacts/action.txt
-
-          printf "${{ github.event.workflow_run.id }}" >> artifacts/run_id.txt
-          printf "\nRun ID = "
-          cat artifacts/run_id.txt
+          echo "Ref = $ref"
+          echo "Event name = $event"
+          echo "Head SHA = $sha"
+          echo "Action = $action"
+          echo "Run ID = $run_id"
+          echo "Conclusion = $conclusion"
 
           if [ -z "$ref" ] || [ "$ref" == "null" ]; then
             echo "Failed to get PR number or ref"
             exit 1
           fi
 
-          conclusion="${{ github.event.workflow_run.conclusion }}"
-          printf "$conclusion" >> artifacts/conclusion.txt
-          printf "\nConclusion = "
-          cat artifacts/conclusion.txt
-
           echo "pr_num=$pr_num" >> $GITHUB_OUTPUT
           echo "base=$base" >> $GITHUB_OUTPUT
-          echo "targets=$targets" >> $GITHUB_OUTPUT
-          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
+          echo "hw_targets=$hw_targets" >> $GITHUB_OUTPUT
           echo "hw_types=$hw_types" >> $GITHUB_OUTPUT
+          echo "wokwi_targets=$wokwi_targets" >> $GITHUB_OUTPUT
+          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
           echo "ref=$ref" >> $GITHUB_OUTPUT
           echo "hw_tests_enabled=$hw_tests_enabled" >> $GITHUB_OUTPUT
+          echo "wokwi_tests_enabled=$wokwi_tests_enabled" >> $GITHUB_OUTPUT
           echo "push_time=$push_time" >> $GITHUB_OUTPUT
 
       - name: Download and extract parent QEMU results
@@ -256,8 +294,9 @@ jobs:
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
 
-      - name: Wait for GitLab sync
+      - name: Wait for GitLab sync and prepare variables
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        id: prepare-variables
         env:
           PUSH_TIME: ${{ needs.get-artifacts.outputs.push_time }}
         run: |
@@ -299,6 +338,16 @@ jobs:
 
           echo "Proceeding with GitLab pipeline trigger..."
 
+          # Make targets/types comma-separated strings (remove brackets and quotes)
+          test_types=$(printf '%s' "${{ needs.get-artifacts.outputs.hw_types }}" | sed -e 's/[][]//g' -e 's/"//g')
+          test_chips=$(printf '%s' "${{ needs.get-artifacts.outputs.hw_targets }}" | sed -e 's/[][]//g' -e 's/"//g')
+          echo "test_types=$test_types"
+          echo "test_chips=$test_chips"
+
+          # Expose as step outputs
+          echo "test_types=$test_types" >> $GITHUB_OUTPUT
+          echo "test_chips=$test_chips" >> $GITHUB_OUTPUT
+
       - name: Trigger GitLab Pipeline and Download Artifacts
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: digital-blueprint/gitlab-pipeline-trigger-action@20e77989b24af658ba138a0aa5291bdc657f1505 # v1.3.0
@@ -312,7 +361,7 @@ jobs:
           download_artifacts: 'true'
           download_artifacts_on_failure: 'true'
           download_path: './gitlab-artifacts'
-          variables: '{"TEST_TYPES":"${{ needs.get-artifacts.outputs.hw_types }}","TEST_CHIPS":"${{ needs.get-artifacts.outputs.targets }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
+          variables: '{"TEST_TYPES":"${{ steps.prepare-variables.outputs.test_types }}","TEST_CHIPS":"${{ steps.prepare-variables.outputs.test_chips }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
 
       - name: Process Downloaded Artifacts
         if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
@@ -388,9 +437,10 @@ jobs:
   wokwi-test:
     name: Wokwi ${{ matrix.chip }} ${{ matrix.type }} tests
     if: |
-      github.event.workflow_run.conclusion == 'success' ||
+      (github.event.workflow_run.conclusion == 'success' ||
       github.event.workflow_run.conclusion == 'failure' ||
-      github.event.workflow_run.conclusion == 'timed_out'
+      github.event.workflow_run.conclusion == 'timed_out') &&
+      needs.get-artifacts.outputs.wokwi_tests_enabled == 'true'
     runs-on: ubuntu-latest
     needs: get-artifacts
     env:
@@ -402,7 +452,7 @@ jobs:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.get-artifacts.outputs.wokwi_types) }}
-        chip: ${{ fromJson(needs.get-artifacts.outputs.targets) }}
+        chip: ${{ fromJson(needs.get-artifacts.outputs.wokwi_targets) }}
     steps:
       - name: Report pending
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1

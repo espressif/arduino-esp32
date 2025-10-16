@@ -17,8 +17,8 @@ function run_test {
     sketchname=$(basename "$sketchdir")
     test_type=$(basename "$(dirname "$sketchdir")")
 
-    if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.json ]; then
-        len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+    if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.yml ]; then
+        len=$(yq eval ".fqbn.${target} | length" "$sketchdir"/ci.yml 2>/dev/null || echo 0)
         if [ "$len" -eq 0 ]; then
             len=1
         fi
@@ -32,10 +32,10 @@ function run_test {
         sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build0.tmp/sdkconfig"
     fi
 
-    if [ -f "$sketchdir"/ci.json ]; then
+    if [ -f "$sketchdir"/ci.yml ]; then
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
-        selected_platform=$(jq -r --arg platform "$platform" '.platforms[$platform]' "$sketchdir"/ci.json)
+        is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
+        selected_platform=$(yq eval ".platforms.${platform}" "$sketchdir"/ci.yml 2>/dev/null)
 
         if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
             printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$sketchname" "$target" "$platform"
@@ -68,17 +68,17 @@ function run_test {
         fqbn="Default"
 
         if [ "$len" -ne 1 ]; then
-            fqbn=$(jq -r --arg target "$target" --argjson i "$i" '.fqbn[$target] | sort | .[$i]' "$sketchdir"/ci.json)
-        elif [ -f "$sketchdir"/ci.json ]; then
-            has_fqbn=$(jq -r --arg target "$target" '.fqbn[$target]' "$sketchdir"/ci.json)
+            fqbn=$(yq eval ".fqbn.${target} | sort | .[${i}]" "$sketchdir"/ci.yml 2>/dev/null)
+        elif [ -f "$sketchdir"/ci.yml ]; then
+            has_fqbn=$(yq eval ".fqbn.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [ "$has_fqbn" != "null" ]; then
-                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | .[0]' "$sketchdir"/ci.json)
+                fqbn=$(yq eval ".fqbn.${target} | .[0]" "$sketchdir"/ci.yml 2>/dev/null)
             fi
         fi
 
         printf "\033[95mRunning test: %s -- Config: %s\033[0m\n" "$sketchname" "$fqbn"
         if [ "$erase_flash" -eq 1 ]; then
-            esptool.py -c "$target" erase_flash
+            esptool -c "$target" erase-flash
         fi
 
         if [ "$len" -ne 1 ]; then
