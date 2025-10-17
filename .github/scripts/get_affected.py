@@ -358,6 +358,59 @@ def build_qname_from_tag(tag: dict) -> str:
     qname = "::".join([p for p in qparts if p])
     return f"{qname}{signature}"
 
+def find_impl_files_for_qname(qname: str, defs_by_qname: dict[str, set[str]], header_path: str = None) -> set[str]:
+    """
+    Find implementation files for a qualified name, handling namespace mismatches.
+
+    Ctags may capture different namespace scopes in headers vs implementations.
+    For example:
+    - Header: fs::SDFS::begin(...)
+    - Implementation: SDFS::begin(...)
+
+    This happens when implementations use "using namespace" directives.
+
+    Strategy:
+    1. Try exact match first
+    2. If no match and qname has namespaces, try stripping ONLY outer namespace prefixes
+       (keep at least Class::method structure intact)
+    3. If header_path provided, prefer implementations from same directory
+    """
+    # Try exact match first
+    impl_files = defs_by_qname.get(qname, set())
+    if impl_files:
+        return impl_files
+
+    # If no exact match and the qname contains namespaces (::), try stripping them
+    if "::" in qname:
+        parts = qname.split("::")
+        # Only strip outer namespaces, not the class/method structure
+        # For "ns1::ns2::Class::method(...)", we want to try:
+        # - "ns2::Class::method(...)"  (strip 1 level)
+        # - "Class::method(...)"       (strip 2 levels)
+        # But NOT "method(...)" alone (too ambiguous)
+
+        # Only allow stripping if we have more than 2 parts (namespace::Class::method)
+        # If we only have 2 parts (Class::method), don't strip as it would leave just "method"
+        if len(parts) > 2:
+            # Keep at least 2 parts (Class::method) to avoid false positives
+            max_strip = len(parts) - 2
+
+            for i in range(1, max_strip + 1):
+                shorter_qname = "::".join(parts[i:])
+                impl_files = defs_by_qname.get(shorter_qname, set())
+
+                if impl_files:
+                    # If we have the header path, prefer implementations from same directory
+                    if header_path:
+                        header_dir = os.path.dirname(header_path)
+                        same_dir_files = {f for f in impl_files if os.path.dirname(f) == header_dir}
+                        if same_dir_files:
+                            return same_dir_files
+
+                    return impl_files
+
+    return set()
+
 def run_ctags_and_index(paths: list[str]) -> tuple[dict[str, set[str]], dict[str, set[str]], str]:
     """
     Run Universal Ctags over given paths (relative to project_root) and build:
@@ -582,8 +635,10 @@ def build_dependencies_graph() -> None:
                         if qnames:
                             impl_files = set()
                             for qn in qnames:
-                                # For each qualified name, get the implementation files
-                                impl_files |= ctags_defs_by_qname.get(qn, set())
+                                # For each qualified name, find implementation files
+                                # This handles namespace mismatches (e.g., fs::SDFS vs SDFS)
+                                # Pass header_path to prefer implementations from same directory
+                                impl_files |= find_impl_files_for_qname(qn, ctags_defs_by_qname, header_path)
                             for impl in impl_files:
                                 # Skip .ino files - they should never be dependencies of other files
                                 if impl.endswith('.ino'):
