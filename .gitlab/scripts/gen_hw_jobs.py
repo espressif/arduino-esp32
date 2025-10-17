@@ -8,6 +8,10 @@ import sys
 import copy
 import traceback
 from pathlib import Path
+from typing import Iterable
+from urllib.parse import urlencode
+import urllib.request
+import urllib.error
 
 # Resolve repository root from this script location
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -32,12 +36,12 @@ def str_representer(dumper, data):
     return dumper.represent_scalar("tag:yaml.org,2002:str", data, style=style)
 
 
-def read_json(p: Path):
+def read_yaml(p: Path):
     try:
         with p.open("r", encoding="utf-8") as f:
-            return json.load(f)
+            return yaml.safe_load(f) or {}
     except Exception as e:
-        sys.stderr.write(f"[WARN] Failed to parse JSON file '{p}': {e}\n")
+        sys.stderr.write(f"[WARN] Failed to parse YAML file '{p}': {e}\n")
         sys.stderr.write(traceback.format_exc() + "\n")
         return {}
 
@@ -46,7 +50,7 @@ def find_tests() -> list[Path]:
     tests = []
     if not TESTS_ROOT.exists():
         return tests
-    for ci in TESTS_ROOT.rglob("ci.json"):
+    for ci in TESTS_ROOT.rglob("ci.yml"):
         if ci.is_file():
             tests.append(ci)
     return tests
@@ -79,12 +83,11 @@ def find_sketch_test_dirs(types_filter: list[str]) -> list[tuple[str, Path]]:
 def load_tags_for_test(ci_json: dict, chip: str) -> set[str]:
     tags = set()
     # Global tags
-    for key in "tags":
-        v = ci_json.get(key)
-        if isinstance(v, list):
-            for e in v:
-                if isinstance(e, str) and e.strip():
-                    tags.add(e.strip())
+    v = ci_json.get("tags")
+    if isinstance(v, list):
+        for e in v:
+            if isinstance(e, str) and e.strip():
+                tags.add(e.strip())
     # Per-SoC tags
     soc_tags = ci_json.get("soc_tags")
     if isinstance(soc_tags, dict):
@@ -184,6 +187,147 @@ def parse_list_arg(s: str) -> list[str]:
     return [part.strip() for part in txt.split(",") if part.strip()]
 
 
+def _gitlab_auth_header() -> tuple[str, str]:
+    """Return header key and value for GitLab API auth, preferring PRIVATE-TOKEN, then JOB-TOKEN.
+
+    Falls back to empty auth if neither is available.
+    """
+    private = os.environ.get("GITLAB_API_TOKEN") or os.environ.get("PRIVATE_TOKEN")
+    if private:
+        return ("PRIVATE-TOKEN", private)
+    job = os.environ.get("CI_JOB_TOKEN")
+    if job:
+        return ("JOB-TOKEN", job)
+    return ("", "")
+
+
+def _gitlab_api_get(path: str) -> tuple[int, dict | list | None]:
+    """Perform a GET to GitLab API v4 and return (status_code, json_obj_or_None).
+
+    Uses project-level API base from CI env. Returns (0, None) if base env is missing.
+    """
+    base = os.environ.get("CI_API_V4_URL")
+    if not base:
+        return 0, None
+    url = base.rstrip("/") + "/" + path.lstrip("/")
+    key, value = _gitlab_auth_header()
+    req = urllib.request.Request(url)
+    if key:
+        req.add_header(key, value)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            status = resp.getcode()
+            data = resp.read()
+            try:
+                obj = json.loads(data.decode("utf-8")) if data else None
+            except Exception:
+                obj = None
+            return status, obj
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8")
+        except Exception:
+            body = str(e)
+        sys.stderr.write(f"[WARN] GitLab API GET {url} failed: {e} body={body}\n")
+        return e.code, None
+    except Exception as e:
+        sys.stderr.write(f"[WARN] GitLab API GET {url} error: {e}\n")
+        sys.stderr.write(traceback.format_exc() + "\n")
+        return -1, None
+
+
+def list_project_runners() -> list[dict]:
+    """List runners available to this project via GitLab API.
+
+    Requires CI vars CI_API_V4_URL and CI_PROJECT_ID and either GITLAB_API_TOKEN or CI_JOB_TOKEN.
+    Returns an empty list if not accessible.
+    """
+    project_id = os.environ.get("CI_PROJECT_ID")
+    if not project_id:
+        return []
+
+    key, value = _gitlab_auth_header()
+    sys.stderr.write(f"[DEBUG] Attempting to list runners for project {project_id}\n")
+    sys.stderr.write(f"[DEBUG] Auth method: {'Authenticated' if key else 'None'}\n")
+
+    runners: list[dict] = []
+    page = 1
+    per_page = 100
+    while True:
+        q = urlencode({"per_page": per_page, "page": page})
+        status, obj = _gitlab_api_get(f"projects/{project_id}/runners?{q}")
+        if status != 200 or not isinstance(obj, list):
+            # Project-scoped listing might be restricted for JOB-TOKEN in some instances.
+            # Return what we have (likely nothing) and let caller decide.
+            if status == 403:
+                sys.stderr.write("\n[ERROR] 403 Forbidden when listing project runners\n")
+                sys.stderr.write(f"  Project ID: {project_id}\n")
+                sys.stderr.write(f"  Authentication: {'Present' if key else 'None'}\n")
+                sys.stderr.write("  Endpoint: projects/{project_id}/runners\n\n")
+
+                sys.stderr.write("Required permissions:\n")
+                sys.stderr.write("  - Token scope: 'api' (you likely have this)\n")
+                sys.stderr.write("  - Project role: Maintainer or Owner (you may be missing this)\n\n")
+
+                sys.stderr.write("Solutions:\n")
+                sys.stderr.write("  1. Ensure the token owner has Maintainer/Owner role on project {project_id}\n")
+                sys.stderr.write("  2. Use a Group Access Token if available (has higher privileges)\n")
+                sys.stderr.write("  3. Set environment variable: ASSUME_TAGGED_GROUPS_MISSING=0\n")
+                sys.stderr.write("     (This will skip runner enumeration and schedule all groups)\n\n")
+            break
+        runners.extend(x for x in obj if isinstance(x, dict))
+        if len(obj) < per_page:
+            break
+        page += 1
+
+    # The /projects/:id/runners endpoint returns simplified objects without tag_list.
+    # Fetch full details for each runner to get tags.
+    sys.stderr.write(f"[DEBUG] Fetching full details for {len(runners)} runners to get tags...\n")
+    full_runners = []
+    for runner in runners:
+        runner_id = runner.get("id")
+        if not runner_id:
+            continue
+        status, details = _gitlab_api_get(f"runners/{runner_id}")
+        if status == 200 and isinstance(details, dict):
+            full_runners.append(details)
+        else:
+            # If we can't get details, keep the basic info (no tags)
+            full_runners.append(runner)
+
+    return full_runners
+
+
+def runner_supports_tags(runner: dict, required_tags: Iterable[str]) -> bool:
+    tag_list = runner.get("tag_list") or []
+    if not isinstance(tag_list, list):
+        return False
+    tags = {str(t).strip() for t in tag_list if isinstance(t, str) and t.strip()}
+    if not tags:
+        return False
+    # Skip paused/inactive runners
+    if runner.get("paused") is True:
+        return False
+    if runner.get("active") is False:
+        return False
+    return all(t in tags for t in required_tags)
+
+
+def any_runner_matches(required_tags: Iterable[str], runners: list[dict]) -> bool:
+    req = [t for t in required_tags if t]
+    for r in runners:
+        try:
+            if runner_supports_tags(r, req):
+                return True
+        except Exception as e:
+            # Be robust to unexpected runner payloads
+            runner_id = r.get("id", "unknown")
+            sys.stderr.write(f"[WARN] Error checking runner #{runner_id} against required tags: {e}\n")
+            sys.stderr.write(traceback.format_exc() + "\n")
+            continue
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--chips", required=True, help="Comma-separated or JSON array list of SoCs")
@@ -209,12 +353,12 @@ def main():
     # Aggregate mapping: (chip, frozenset(tags or generic), test_type) -> list of test paths
     group_map: dict[tuple[str, frozenset[str], str], list[str]] = {}
     all_ci = find_tests()
-    print(f"Discovered {len(all_ci)} ci.json files under tests/")
+    print(f"Discovered {len(all_ci)} ci.yml files under tests/")
 
     matched_count = 0
     for test_type, test_path in find_sketch_test_dirs(types):
-        ci_path = test_path / "ci.json"
-        ci = read_json(ci_path) if ci_path.exists() else {}
+        ci_path = test_path / "ci.yml"
+        ci = read_yaml(ci_path) if ci_path.exists() else {}
         test_dir = str(test_path)
         sketch = test_path.name
         for chip in chips:
@@ -249,26 +393,89 @@ def main():
 
     # Build child pipeline YAML in deterministic order
     jobs_entries = []  # list of (sort_key, job_name, job_dict)
+
+    # Discover available runners
+    available_runners = list_project_runners()
+    if not available_runners:
+        print("\n[ERROR] Could not enumerate project runners!")
+        print("This is required to match test groups to runners by tags.")
+        print("\nPossible causes:")
+        print("  - No runners are registered to the project")
+        print("  - API token lacks required permissions (needs 'api' scope + Maintainer/Owner role)")
+        print("  - Network/API connectivity issues")
+        sys.exit(1)
+
+    print(f"\n=== Available Runners ({len(available_runners)}) ===")
+    for runner in available_runners:
+        runner_id = runner.get("id", "?")
+        runner_desc = runner.get("description", "")
+        runner_tags = runner.get("tag_list", [])
+        runner_active = runner.get("active", False)
+        runner_paused = runner.get("paused", False)
+        status = "ACTIVE" if (runner_active and not runner_paused) else "INACTIVE/PAUSED"
+        print(f"  Runner #{runner_id} ({status}): {runner_desc}")
+        print(f"    Tags: {', '.join(runner_tags) if runner_tags else '(none)'}")
+    print("=" * 60 + "\n")
+
+    # Track skipped groups for reporting
+    skipped_groups: list[dict] = []
+
+    print("\n=== Test Group Scheduling ===")
     for (chip, tagset, test_type), test_dirs in group_map.items():
         tag_list = sorted(tagset)
         # Build name suffix excluding the SOC itself to avoid duplication
         non_soc_tags = [t for t in tag_list if t != chip]
         tag_suffix = "-".join(non_soc_tags) if non_soc_tags else "generic"
-        job_name = f"hw-{chip}-{test_type}-{tag_suffix}"[:255]
 
-        # Clone base job and adjust (preserve key order using deepcopy)
-        job = copy.deepcopy(base_job)
-        # Ensure tags include SOC+extras
-        job["tags"] = tag_list
-        vars_block = job.get("variables", {})
-        vars_block["TEST_CHIP"] = chip
-        vars_block["TEST_TYPE"] = test_type
-        # Provide list of test directories for this job
-        vars_block["TEST_LIST"] = "\n".join(sorted(test_dirs))
-        job["variables"] = vars_block
+        # Determine if any runner can serve this job
+        can_schedule = any_runner_matches(tag_list, available_runners)
+        print(f"  Group: {chip}-{test_type}-{tag_suffix}")
+        print(f"    Required tags: {', '.join(tag_list)}")
+        print(f"    Tests: {len(test_dirs)}")
+        if can_schedule:
+            print("    ✓ Runner found - scheduling")
+        else:
+            print("    ✗ NO RUNNER FOUND - skipping")
 
-        sort_key = (chip, test_type, tag_suffix)
-        jobs_entries.append((sort_key, job_name, job))
+        if can_schedule:
+            job_name = f"hw-{chip}-{test_type}-{tag_suffix}"[:255]
+
+            # Clone base job and adjust (preserve key order using deepcopy)
+            job = copy.deepcopy(base_job)
+            # Ensure tags include SOC+extras
+            job["tags"] = tag_list
+            vars_block = job.get("variables", {})
+            vars_block["TEST_CHIP"] = chip
+            vars_block["TEST_TYPE"] = test_type
+            # Provide list of test directories for this job
+            vars_block["TEST_LIST"] = "\n".join(sorted(test_dirs))
+            job["variables"] = vars_block
+
+            sort_key = (chip, test_type, tag_suffix)
+            jobs_entries.append((sort_key, job_name, job))
+        else:
+            # Track skipped groups for reporting
+            skipped_groups.append(
+                {
+                    "chip": chip,
+                    "test_type": test_type,
+                    "required_tags": tag_list,
+                    "test_count": len(test_dirs),
+                }
+            )
+
+    # Print summary
+    print("\n=== Summary ===")
+    print(f"  Scheduled groups: {len(jobs_entries)}")
+    print(f"  Skipped groups (no runner): {len(skipped_groups)}")
+    if skipped_groups:
+        print("\n  Skipped group details:")
+        for sg in skipped_groups:
+            chip = sg.get("chip")
+            test_type = sg.get("test_type")
+            tags = sg.get("required_tags", [])
+            test_count = sg.get("test_count", 0)
+            print(f"    - {chip}-{test_type}: requires tags {tags}, {test_count} tests")
 
     # Order jobs by (chip, type, tag_suffix)
     jobs = {}

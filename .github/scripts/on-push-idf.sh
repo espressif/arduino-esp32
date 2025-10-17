@@ -17,9 +17,9 @@ fi
 
 for example in $affected_examples; do
     example_path="$PWD/components/arduino-esp32/$example"
-    if [ -f "$example_path/ci.json" ]; then
+    if [ -f "$example_path/ci.yml" ]; then
         # If the target is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target "$IDF_TARGET" '.targets[$target]' "$example_path/ci.json")
+        is_target=$(yq eval ".targets.${IDF_TARGET}" "$example_path/ci.yml" 2>/dev/null)
         if [[ "$is_target" == "false" ]]; then
             printf "\n\033[93mSkipping %s for target %s\033[0m\n\n" "$example" "$IDF_TARGET"
             continue

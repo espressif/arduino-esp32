@@ -205,6 +205,14 @@ jobs:
       - name: Setup jq
         uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
 
+      - name: Setup yq
+        run: |
+          YQ_VERSION="v4.48.1"
+          YQ_BINARY=yq_linux_amd64
+          wget -q https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_BINARY} -O /usr/bin/yq
+          chmod +x /usr/bin/yq
+          yq --version
+
       - name: Download affected examples
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:

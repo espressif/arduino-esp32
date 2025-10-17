@@ -33,6 +33,7 @@ jobs:
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.json
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/sdkconfig
+            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/ci.yml
 
       - name: Evaluate if tests should be built
         id: check-build
@@ -80,6 +81,7 @@ jobs:
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.json
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/sdkconfig
+            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/ci.yml
 
       - name: Upload ${{ inputs.chip }} ${{ inputs.type }} binaries as artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -91,3 +93,4 @@ jobs:
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.elf
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/*.json
             ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/sdkconfig
+            ~/.arduino/tests/${{ inputs.chip }}/**/build*.tmp/ci.yml
