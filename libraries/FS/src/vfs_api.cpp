@@ -276,8 +276,12 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
     if (!_f) {
       log_e("fopen(%s) failed", temp);
     }
-    if (_f && (_stat.st_blksize == 0)) {
-      setvbuf(_f, NULL, _IOFBF, DEFAULT_FILE_BUFFER_SIZE);
+    if (!stat(temp, &_stat)) {
+      if (_f && (_stat.st_blksize == 0)) {
+        setvbuf(_f, NULL, _IOFBF, DEFAULT_FILE_BUFFER_SIZE);
+      }
+    } else {
+      log_e("stat(%s) failed", temp);
     }
   }
   free(temp);
