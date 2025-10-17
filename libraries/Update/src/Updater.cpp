@@ -134,7 +134,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     log_w("already running");
     return false;
   }
-  
+
   _ledPin = ledPin;
   _ledOn = !!ledOn;  // 0(LOW) or 1(HIGH)
 

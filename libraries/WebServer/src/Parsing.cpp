@@ -205,8 +205,8 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       log_v("Finish Raw");
     } else if (!isForm) {
       size_t plainLength;
-  char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
-  if (plainLength < (size_t)_clientContentLength) {
+      char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+      if (plainLength < (size_t)_clientContentLength) {
         free(plainBuf);
         return false;
       }
@@ -432,7 +432,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
 
       line = client.readStringUntil('\r');
       client.readStringUntil('\n');
-  if (line.length() > (size_t)19 && line.substring(0, 19).equalsIgnoreCase(F("Content-Disposition"))) {
+      if (line.length() > (size_t)19 && line.substring(0, 19).equalsIgnoreCase(F("Content-Disposition"))) {
         int nameStart = line.indexOf('=');
         if (nameStart != -1) {
           argName = line.substring(nameStart + 2);
