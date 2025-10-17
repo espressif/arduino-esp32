@@ -290,7 +290,7 @@ The tests are divided into two categories inside the ``tests`` folder:
 
 .. note::
 
-    Keep in mind that to run the CI scripts locally you need to have the Go-based ``yq`` from `mikefarah/yq <https://github.com/mikefarah/yq>`_
+    Keep in mind that to run the CI scripts locally, you need to have the Go-based ``yq`` from `mikefarah/yq <https://github.com/mikefarah/yq>`_
     installed and not the Python-based ``yq`` from PyPI or `kislyuk/yq <https://github.com/kislyuk/yq>`_.
     The syntax is slightly different and will not work with the CI scripts.
     You can install the Go-based ``yq`` through ``brew``, ``chocolatey`` or downloading the binary directly from the `releases page <https://github.com/mikefarah/yq/releases>`_.
@@ -388,8 +388,8 @@ You can use the ``hello_world`` test suite as a starting point and the other tes
 
 A test suite contains the following files:
 
-* ``test_<test_name>.py``: The test file that contains the test cases. Required.
-* ``<test_name>.ino``: The sketch that will be tested. Required.
+* ``test_<test_name>.py``: Is the test file that contains the test cases. Required.
+* ``<test_name>.ino``: This is the sketch that will be tested. Required.
 * ``ci.yml``: The file that specifies how the test suite will be run in the CI system. Optional.
 * ``diagram.<target>.json``: The diagram file that specifies the connections between the components in Wokwi. Optional.
 * Any other files that are needed for the test suite.
