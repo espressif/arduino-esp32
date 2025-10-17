@@ -68,6 +68,7 @@ esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
 }
 
 static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_MAX;
 

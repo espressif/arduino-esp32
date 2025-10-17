@@ -223,9 +223,10 @@ int start_ssl_client(
       log_e("pre-shared key not valid hex or too long");
       return -1;
     }
-    unsigned char psk[MBEDTLS_PSK_MAX_LEN];
-    size_t psk_len = strlen(psKey) / 2;
-    for (int j = 0; j < strlen(psKey); j += 2) {
+    unsigned char pskBytes[MBEDTLS_PSK_MAX_LEN];
+    size_t pskStrLen = strlen(psKey);
+    size_t pskByteLen = pskStrLen / 2;
+    for (int j = 0; j < pskStrLen; j += 2) {
       char c = psKey[j];
       if (c >= '0' && c <= '9') {
         c -= '0';
@@ -236,7 +237,7 @@ int start_ssl_client(
       } else {
         return -1;
       }
-      psk[j / 2] = c << 4;
+      pskBytes[j / 2] = c << 4;
       c = psKey[j + 1];
       if (c >= '0' && c <= '9') {
         c -= '0';
@@ -247,10 +248,10 @@ int start_ssl_client(
       } else {
         return -1;
       }
-      psk[j / 2] |= c;
+      pskBytes[j / 2] |= c;
     }
     // set mbedtls config
-    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, psk, psk_len, (const unsigned char *)pskIdent, strlen(pskIdent));
+    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, pskBytes, pskByteLen, (const unsigned char *)pskIdent, strlen(pskIdent));
     if (ret != 0) {
       log_e("mbedtls_ssl_conf_psk returned %d", ret);
       return handle_error(ret);

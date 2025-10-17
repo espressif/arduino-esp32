@@ -164,6 +164,7 @@ static QueueHandle_t _udp_queue;
 static volatile TaskHandle_t _udp_task_handle = NULL;
 
 static void _udp_task(void *pvParameters) {
+  (void)pvParameters;
   lwip_event_packet_t *e = NULL;
   for (;;) {
     if (xQueueReceive(_udp_queue, &e, portMAX_DELAY) == pdTRUE) {
