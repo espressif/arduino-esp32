@@ -1174,6 +1174,8 @@ size_t ETHClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ETH)
 ETHClass ETH;
+#endif
 
 #endif /* CONFIG_ETH_ENABLED */
