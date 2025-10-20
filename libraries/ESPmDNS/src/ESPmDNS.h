@@ -127,9 +127,7 @@ private:
   mdns_txt_item_t *_getResultTxt(int idx, int txtIdx);
 };
 
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_MDNS)
 extern MDNSResponder MDNS;
-#endif
 
 #endif  /* CONFIG_MDNS_MAX_INTERFACES */
 #endif  //ESP32MDNS_H

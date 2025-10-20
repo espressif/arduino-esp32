@@ -763,6 +763,8 @@ size_t PPPClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_PPP)
 PPPClass PPP;
+#endif
 
 #endif /* CONFIG_LWIP_PPP_SUPPORT */
