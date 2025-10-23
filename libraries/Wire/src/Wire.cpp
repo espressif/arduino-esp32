@@ -25,6 +25,8 @@
 #include "soc/soc_caps.h"
 #if SOC_I2C_SUPPORTED
 
+#define I2C_HAL_LOCKS_ENABLED (!CONFIG_DISABLE_HAL_LOCKS || CONFIG_FORCE_I2C_HAL_LOCKS)
+
 extern "C" {
 #include <stdlib.h>
 #include <string.h>
@@ -42,7 +44,7 @@ TwoWire::TwoWire(uint8_t bus_num)
   : num(bus_num), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
     ,
     rxBuffer(NULL), rxIndex(0), rxLength(0), txBuffer(NULL), txLength(0), txAddress(0), _timeOutMillis(50), nonStop(false)
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
     ,
     currentTaskHandle(NULL), lock(NULL)
 #endif
@@ -55,7 +57,7 @@ TwoWire::TwoWire(uint8_t bus_num)
 
 TwoWire::~TwoWire() {
   end();
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock != NULL) {
     vSemaphoreDelete(lock);
   }
@@ -115,7 +117,7 @@ bool TwoWire::initPins(int sdaPin, int sclPin) {
 }
 
 bool TwoWire::setPins(int sdaPin, int sclPin) {
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock == NULL) {
     lock = xSemaphoreCreateMutex();
     if (lock == NULL) {
@@ -134,7 +136,7 @@ bool TwoWire::setPins(int sdaPin, int sclPin) {
   } else {
     log_e("bus already initialized. change pins only when not.");
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(lock);
 #endif
@@ -180,7 +182,7 @@ size_t TwoWire::setBufferSize(size_t bSize) {
     return 0;
   }
 
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock == NULL) {
     lock = xSemaphoreCreateMutex();
     if (lock == NULL) {
@@ -211,7 +213,7 @@ size_t TwoWire::setBufferSize(size_t bSize) {
     // no memory allocated yet, just change the size value - allocation in begin()
     bufferSize = bSize;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(lock);
 
@@ -223,7 +225,7 @@ size_t TwoWire::setBufferSize(size_t bSize) {
 // Slave Begin
 bool TwoWire::begin(uint8_t addr, int sdaPin, int sclPin, uint32_t frequency) {
   bool started = false;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock == NULL) {
     lock = xSemaphoreCreateMutex();
     if (lock == NULL) {
@@ -264,7 +266,7 @@ end:
   if (!started) {
     freeWireBuffer();
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(lock);
 #endif
@@ -276,7 +278,7 @@ end:
 bool TwoWire::begin(int sdaPin, int sclPin, uint32_t frequency) {
   bool started = false;
   esp_err_t err = ESP_OK;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock == NULL) {
     lock = xSemaphoreCreateMutex();
     if (lock == NULL) {
@@ -315,7 +317,7 @@ end:
   if (!started) {
     freeWireBuffer();
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(lock);
 #endif
@@ -324,7 +326,7 @@ end:
 
 bool TwoWire::end() {
   esp_err_t err = ESP_OK;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (lock != NULL) {
     //acquire lock
     if (xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
@@ -344,7 +346,7 @@ bool TwoWire::end() {
         err = i2cDeinit(num);
       }
     freeWireBuffer();
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
     //release lock
     xSemaphoreGive(lock);
   }
@@ -354,7 +356,7 @@ bool TwoWire::end() {
 
 uint32_t TwoWire::getClock() {
   uint32_t frequency = 0;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -368,7 +370,7 @@ uint32_t TwoWire::getClock() {
     {
       i2cGetClock(num, &frequency);
     }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
     //release lock
     xSemaphoreGive(lock);
   }
@@ -378,7 +380,7 @@ uint32_t TwoWire::getClock() {
 
 bool TwoWire::setClock(uint32_t frequency) {
   esp_err_t err = ESP_OK;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (lock == NULL || xSemaphoreTake(lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -394,7 +396,7 @@ bool TwoWire::setClock(uint32_t frequency) {
   {
     err = i2cSetClock(num, frequency);
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(lock);
 #endif
@@ -416,7 +418,7 @@ void TwoWire::beginTransmission(uint8_t address) {
     return;
   }
 #endif /* SOC_I2C_SUPPORT_SLAVE */
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
   if (currentTaskHandle != task) {
     //acquire lock
@@ -456,7 +458,7 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
   esp_err_t err = ESP_OK;
   if (sendStop) {
     err = i2cWrite(num, txAddress, txBuffer, txLength, _timeOutMillis);
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
     currentTaskHandle = NULL;
     //release lock
     xSemaphoreGive(lock);
@@ -491,7 +493,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
     return 0;
   }
   esp_err_t err = ESP_OK;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
   if (currentTaskHandle != task) {
     //acquire lock
@@ -505,7 +507,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
   if (nonStop) {
     if (address != txAddress) {
       log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
       currentTaskHandle = NULL;
       //release lock
       xSemaphoreGive(lock);
@@ -527,7 +529,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
       log_e("i2cRead returned Error %d", err);
     }
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   currentTaskHandle = NULL;
   //release lock
   xSemaphoreGive(lock);

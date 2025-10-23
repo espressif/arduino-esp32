@@ -14,11 +14,13 @@
 
 #include "esp32-hal-i2c.h"
 
+#define I2C_HAL_LOCKS_ENABLED (!CONFIG_DISABLE_HAL_LOCKS || CONFIG_FORCE_I2C_HAL_LOCKS)
+
 #if SOC_I2C_SUPPORTED
 #include "esp_idf_version.h"
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #include "esp32-hal.h"
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -32,7 +34,7 @@
 typedef volatile struct {
   bool initialized;
   uint32_t frequency;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   SemaphoreHandle_t lock;
 #endif
   int8_t scl;
@@ -75,7 +77,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (bus[i2c_num].lock == NULL) {
     bus[i2c_num].lock = xSemaphoreCreateMutex();
     if (bus[i2c_num].lock == NULL) {
@@ -147,7 +149,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
     }
     if (!perimanSetPinBus(sda, ESP32_BUS_TYPE_I2C_MASTER_SDA, (void *)(i2c_num + 1), i2c_num, -1)
         || !perimanSetPinBus(scl, ESP32_BUS_TYPE_I2C_MASTER_SCL, (void *)(i2c_num + 1), i2c_num, -1)) {
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
       //release lock so that i2cDetachBus can execute i2cDeinit
       xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -157,7 +159,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
   }
 
 init_fail:
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -169,7 +171,7 @@ esp_err_t i2cDeinit(uint8_t i2c_num) {
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -201,7 +203,7 @@ esp_err_t i2cDeinit(uint8_t i2c_num) {
       bus[i2c_num].bus_handle = NULL;
     }
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -241,7 +243,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t *buff, size_
     log_e("Only 7bit I2C addresses are supported");
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -282,7 +284,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t *buff, size_
   }
 
 end:
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -295,7 +297,7 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t *buff, size_t size,
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -328,7 +330,7 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t *buff, size_t size,
   *readCount = size;
 
 end:
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -343,7 +345,7 @@ esp_err_t i2cWriteReadNonStop(
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -376,7 +378,7 @@ esp_err_t i2cWriteReadNonStop(
   *readCount = rsize;
 
 end:
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif
@@ -388,7 +390,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency) {
   if (i2c_num >= SOC_I2C_NUM) {
     return ESP_ERR_INVALID_ARG;
   }
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //acquire lock
   if (bus[i2c_num].lock == NULL || xSemaphoreTake(bus[i2c_num].lock, portMAX_DELAY) != pdTRUE) {
     log_e("could not acquire lock");
@@ -429,7 +431,7 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency) {
   }
 
 end:
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   //release lock
   xSemaphoreGive(bus[i2c_num].lock);
 #endif

@@ -167,6 +167,12 @@ config DISABLE_HAL_LOCKS
         or interrupt at the same time. Option is best used with Arduino enabled
         and code implemented only in setup/loop and Arduino callbacks
 
+config FORCE_I2C_HAL_LOCKS
+    bool "Enable mutex locks for I2C HAL even if HAL locks are disbled"
+    default "n"
+    help
+        Enabling this option will run I2C hardware abstraction with locks.
+
 menu "Debug Log Configuration"
 choice ARDUHAL_LOG_DEFAULT_LEVEL
     bool "Default log level"

@@ -14,6 +14,8 @@
 
 #include "soc/soc_caps.h"
 
+#define I2C_HAL_LOCKS_ENABLED (!CONFIG_DISABLE_HAL_LOCKS || CONFIG_FORCE_I2C_HAL_LOCKS)
+
 #if SOC_I2C_SUPPORT_SLAVE
 #include <stdint.h>
 #include <stdbool.h>
@@ -107,7 +109,7 @@ typedef struct i2c_slave_struct_t {
 #endif
   QueueHandle_t tx_queue;
   uint32_t rx_data_count;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   SemaphoreHandle_t lock;
 #endif
 } i2c_slave_struct_t;
@@ -123,14 +125,14 @@ typedef union {
 
 static i2c_slave_struct_t _i2c_bus_array[SOC_HP_I2C_NUM] = {
   {&I2C0, 0, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
    ,
    NULL
 #endif
   },
 #if SOC_HP_I2C_NUM > 1
   {&I2C1, 1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
    ,
    NULL
 #endif
@@ -138,7 +140,7 @@ static i2c_slave_struct_t _i2c_bus_array[SOC_HP_I2C_NUM] = {
 #endif
 };
 
-#if CONFIG_DISABLE_HAL_LOCKS
+#if !I2C_HAL_LOCKS_ENABLED
 #define I2C_SLAVE_MUTEX_LOCK()
 #define I2C_SLAVE_MUTEX_UNLOCK()
 #else
@@ -274,7 +276,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   i2c_slave_struct_t *i2c = &_i2c_bus_array[num];
   esp_err_t ret = ESP_OK;
 
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (!i2c->lock) {
     i2c->lock = xSemaphoreCreateMutex();
     if (i2c->lock == NULL) {
@@ -427,7 +429,7 @@ esp_err_t i2cSlaveDeinit(uint8_t num) {
   }
 
   i2c_slave_struct_t *i2c = &_i2c_bus_array[num];
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (!i2c->lock) {
     log_e("Lock is not initialized! Did you call i2c_slave_init()?");
     return ESP_ERR_NO_MEM;
@@ -450,7 +452,7 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
   }
   uint32_t to_queue = 0, to_fifo = 0;
   i2c_slave_struct_t *i2c = &_i2c_bus_array[num];
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   if (!i2c->lock) {
     log_e("Lock is not initialized! Did you call i2c_slave_init()?");
     return ESP_ERR_NO_MEM;

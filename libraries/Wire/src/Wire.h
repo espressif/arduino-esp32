@@ -26,13 +26,15 @@
 #ifndef TwoWire_h
 #define TwoWire_h
 
+#define I2C_HAL_LOCKS_ENABLED (!CONFIG_DISABLE_HAL_LOCKS || CONFIG_FORCE_I2C_HAL_LOCKS)
+
 #include "soc/soc_caps.h"
 #if SOC_I2C_SUPPORTED
 #include "esp_idf_version.h"
 
 #include <esp32-hal.h>
 #include <esp32-hal-log.h>
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
@@ -66,7 +68,7 @@ protected:
 
   uint32_t _timeOutMillis;
   bool nonStop;
-#if !CONFIG_DISABLE_HAL_LOCKS
+#if I2C_HAL_LOCKS_ENABLED
   TaskHandle_t currentTaskHandle;
   SemaphoreHandle_t lock;
 #endif
