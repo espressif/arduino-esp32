@@ -127,10 +127,10 @@ bool ZigbeeTempSensor::reportTemperature() {
 }
 
 void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance) {
-  int16_t zb_min = zb_float_to_s16(min);
-  int16_t zb_max = zb_float_to_s16(max);
+  uint16_t zb_min = (uint16_t)(min * 100);
+  uint16_t zb_max = (uint16_t)(max * 100);
   uint16_t zb_tolerance = (uint16_t)(tolerance * 100);
-  int16_t default_hum = ESP_ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_DEFAULT;
+  uint16_t default_hum = ESP_ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_DEFAULT;
   esp_zb_attribute_list_t *humidity_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT);
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &default_hum);
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &zb_min);
@@ -142,7 +142,7 @@ void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance) 
 
 bool ZigbeeTempSensor::setHumidity(float humidity) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  int16_t zb_humidity = zb_float_to_s16(humidity);
+  uint16_t zb_humidity = (uint16_t)(humidity * 100);
   log_v("Updating humidity sensor value...");
   /* Update humidity sensor measured value */
   log_d("Setting humidity to %d", zb_humidity);

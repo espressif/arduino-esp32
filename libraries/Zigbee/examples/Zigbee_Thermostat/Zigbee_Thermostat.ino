@@ -90,7 +90,7 @@ void setup() {
 #endif
 
   // Set callback function for receiving sensor configuration
-  zbThermostat.onConfigReceive(receiveSensorConfig);
+  zbThermostat.onTempConfigReceive(receiveSensorConfig);
 
   //Optional: set Zigbee device name and model
   zbThermostat.setManufacturerAndModel("Espressif", "ZigbeeThermostat");
@@ -138,10 +138,10 @@ void setup() {
         "Device on endpoint %d, IEEE Address: %02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\r\n", device->endpoint, device->ieee_addr[7], device->ieee_addr[6],
         device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1], device->ieee_addr[0]
       );
-      zbThermostat.getSensorSettings(device->endpoint, device->ieee_addr);
+      zbThermostat.getTemperatureSettings(device->endpoint, device->ieee_addr);
     } else {
       Serial.printf("Device on endpoint %d, short address: 0x%x\r\n", device->endpoint, device->short_addr);
-      zbThermostat.getSensorSettings(device->endpoint, device->short_addr);
+      zbThermostat.getTemperatureSettings(device->endpoint, device->short_addr);
     }
   }
 }
