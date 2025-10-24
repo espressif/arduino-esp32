@@ -38,6 +38,7 @@
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include "BLESecurity.h"
+#include "base64.h"
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
@@ -606,6 +607,181 @@ uint16_t BLEDevice::getMTU() {
 
 bool BLEDevice::getInitialized() {
   return initialized;
+}
+
+/*
+ * @brief Get a peer device's Identity Resolving Key (IRK).
+ * @param [in] peerAddress The address of the bonded peer device.
+ * @param [out] irk Buffer to store the 16-byte IRK.
+ * @return True if successful, false otherwise.
+ * @note IRK is only available after bonding has occurred.
+ */
+bool BLEDevice::getPeerIRK(BLEAddress peerAddress, uint8_t *irk) {
+  log_v(">> BLEDevice::getPeerIRK()");
+
+  if (irk == nullptr) {
+    log_e("IRK buffer is null");
+    return false;
+  }
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  // Get the list of bonded devices
+  int dev_num = esp_ble_get_bond_device_num();
+  if (dev_num == 0) {
+    log_e("No bonded devices found");
+    return false;
+  }
+
+  esp_ble_bond_dev_t *bond_dev = (esp_ble_bond_dev_t *)malloc(sizeof(esp_ble_bond_dev_t) * dev_num);
+  if (bond_dev == nullptr) {
+    log_e("Failed to allocate memory for bond device list");
+    return false;
+  }
+
+  esp_err_t ret = esp_ble_get_bond_device_list(&dev_num, bond_dev);
+  if (ret != ESP_OK) {
+    log_e("Failed to get bond device list: %d", ret);
+    free(bond_dev);
+    return false;
+  }
+
+  // Find the bonded device that matches the peer address
+  bool found = false;
+
+  for (int i = 0; i < dev_num; i++) {
+    BLEAddress bondAddr(bond_dev[i].bd_addr);
+    if (bondAddr.equals(peerAddress)) {
+      // Check if the PID key (which contains the IRK) is present
+      if (bond_dev[i].bond_key.key_mask & ESP_LE_KEY_PID) {
+        memcpy(irk, bond_dev[i].bond_key.pid_key.irk, 16);
+        found = true;
+        log_d("IRK found for peer: %s", peerAddress.toString().c_str());
+        break;
+      } else {
+        log_w("PID key not present for peer: %s", peerAddress.toString().c_str());
+      }
+    }
+  }
+
+  free(bond_dev);
+
+  if (!found) {
+    log_e("IRK not found for peer");
+    return false;
+  }
+
+  log_v("<< BLEDevice::getPeerIRK()");
+  return true;
+#endif  // CONFIG_BLUEDROID_ENABLED
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  // Prepare the key structure to search for the peer's security information
+  struct ble_store_key_sec key_sec;
+  memset(&key_sec, 0, sizeof(key_sec));
+
+  // Convert BLEAddress to ble_addr_t
+  // NOTE: BLEAddress stores bytes in INVERSE order for NimBLE,
+  // but ble_addr_t.val expects them in normal order, so we reverse them
+  ble_addr_t addr;
+  uint8_t *peer_addr = peerAddress.getNative();
+  for (int i = 0; i < 6; i++) {
+    addr.val[i] = peer_addr[5 - i];
+  }
+
+  // Try public address first, then random if that fails
+  addr.type = BLE_ADDR_PUBLIC;
+  memcpy(&key_sec.peer_addr, &addr, sizeof(ble_addr_t));
+
+  // Read the peer's security information from the store
+  struct ble_store_value_sec value_sec;
+  int rc = ble_store_read_peer_sec(&key_sec, &value_sec);
+
+  // If public address failed, try random address type
+  if (rc != 0) {
+    addr.type = BLE_ADDR_RANDOM;
+    memcpy(&key_sec.peer_addr, &addr, sizeof(ble_addr_t));
+    rc = ble_store_read_peer_sec(&key_sec, &value_sec);
+
+    if (rc != 0) {
+      log_e("IRK not found for peer: %s", peerAddress.toString().c_str());
+      return false;
+    }
+  }
+
+  // Check if the IRK is present
+  if (!value_sec.irk_present) {
+    log_e("IRK not present for peer");
+    return false;
+  }
+
+  // Copy the IRK to the output buffer
+  memcpy(irk, value_sec.irk, 16);
+
+  log_d("IRK found for peer: %s (type=%d)", peerAddress.toString().c_str(), addr.type);
+  log_v("<< BLEDevice::getPeerIRK()");
+  return true;
+#endif  // CONFIG_NIMBLE_ENABLED
+}
+
+/*
+ * @brief Get a peer device's IRK as a comma-separated hex string.
+ * @param [in] peerAddress The address of the bonded peer device.
+ * @return String in format "0xXX,0xXX,..." or empty string on failure.
+ */
+String BLEDevice::getPeerIRKString(BLEAddress peerAddress) {
+  uint8_t irk[16];
+  if (!getPeerIRK(peerAddress, irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 0; i < 16; i++) {
+    result += "0x";
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+    if (i < 15) {
+      result += ",";
+    }
+  }
+  return result;
+}
+
+/*
+ * @brief Get a peer device's IRK as a Base64 encoded string.
+ * @param [in] peerAddress The address of the bonded peer device.
+ * @return Base64 encoded string or empty string on failure.
+ */
+String BLEDevice::getPeerIRKBase64(BLEAddress peerAddress) {
+  uint8_t irk[16];
+  if (!getPeerIRK(peerAddress, irk)) {
+    return String();
+  }
+
+  return base64::encode(irk, 16);
+}
+
+/*
+ * @brief Get a peer device's IRK in reverse hex format.
+ * @param [in] peerAddress The address of the bonded peer device.
+ * @return String in reverse hex format (uppercase) or empty string on failure.
+ */
+String BLEDevice::getPeerIRKReverse(BLEAddress peerAddress) {
+  uint8_t irk[16];
+  if (!getPeerIRK(peerAddress, irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 15; i >= 0; i--) {
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+  }
+  result.toUpperCase();
+  return result;
 }
 
 BLEAdvertising *BLEDevice::getAdvertising() {
