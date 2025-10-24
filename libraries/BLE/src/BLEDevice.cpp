@@ -960,6 +960,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     {
       log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
+      // Signal that authentication has completed
+      // This unblocks any GATT operations waiting for pairing when bonding is enabled
+      BLESecurity::signalAuthenticationComplete();
+
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }
