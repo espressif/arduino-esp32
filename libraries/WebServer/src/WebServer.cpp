@@ -565,7 +565,7 @@ void WebServer::chunkResponseBegin(const char *contentType) {
   }
 
   _chunkedResponseActive = true;
-  _chunkedClient = _currentClient;
+  _chunkedClient = client();
 
   _contentLength = CONTENT_LENGTH_UNKNOWN;
 
@@ -574,7 +574,7 @@ void WebServer::chunkResponseBegin(const char *contentType) {
   _currentClientWrite(header.c_str(), header.length());
 
   _chunkedResponseActive = true;
-  _chunkedClient = _currentClient;
+  _chunkedClient = client();
 }
 
 void WebServer::chunkWrite(const char *data, size_t length) {
@@ -734,7 +734,7 @@ void WebServer::sendContent(const char *content, size_t contentLength) {
   }
   _currentClientWrite(content, contentLength);
   if (_chunked) {
-    _currentClient.write(footer, 2);
+    client().write(footer, 2);
     if (contentLength == 0) {
       _chunked = false;
     }
@@ -757,7 +757,7 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
   }
   _currentClientWrite_P(content, size);
   if (_chunked) {
-    _currentClient.write(footer, 2);
+    client().write(footer, 2);
     if (size == 0) {
       _chunked = false;
     }
