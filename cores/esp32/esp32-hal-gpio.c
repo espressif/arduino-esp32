@@ -145,6 +145,10 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode) {
       conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
     }
   }
+  if (gpio_reset_pin(pin) != ESP_OK) {
+    log_e("IO %i reset failed", pin);
+    return;
+  }
   if (gpio_config(&conf) != ESP_OK) {
     log_e("IO %i config failed", pin);
     return;
