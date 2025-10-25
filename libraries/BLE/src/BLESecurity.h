@@ -25,6 +25,7 @@
 #include "BLEDevice.h"
 #include "BLEClient.h"
 #include "BLEServer.h"
+#include "RTOS.h"
 
 /***************************************************************************
  *                           Bluedroid includes                            *
@@ -104,6 +105,8 @@ public:
   static uint32_t generateRandomPassKey();
   static void regenPassKeyOnConnect(bool enable = false);
   static void resetSecurity();
+  static void waitForAuthenticationComplete(uint32_t timeoutMs = 10000);
+  static void signalAuthenticationComplete();
 
   /***************************************************************************
    *                       Bluedroid public declarations                     *
@@ -140,6 +143,7 @@ private:
   static bool m_passkeySet;
   static bool m_staticPasskey;
   static bool m_regenOnConnect;
+  static bool m_authenticationComplete;
   static uint8_t m_iocap;
   static uint8_t m_authReq;
   static uint8_t m_initKey;
@@ -153,6 +157,7 @@ private:
 #if defined(CONFIG_BLUEDROID_ENABLED)
   static uint8_t m_keySize;
   static esp_ble_sec_act_t m_securityLevel;
+  static class FreeRTOS::Semaphore *m_authCompleteSemaphore;
 #endif
 
 };  // BLESecurity

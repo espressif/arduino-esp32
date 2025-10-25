@@ -954,8 +954,18 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         }
         rc = ble_gap_conn_find(conn_handle, &desc);
         assert(rc == 0);
+
+        // Set write context flag to defer notifications
+        pCharacteristic->m_inWriteContext = true;
         pCharacteristic->setValue(buf, len);
         pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
+        pCharacteristic->m_inWriteContext = false;
+
+        // Execute any deferred notifications after write context ends
+        if (pCharacteristic->m_deferNotifications) {
+          pCharacteristic->m_deferNotifications = false;
+          pCharacteristic->notifyDeferred();
+        }
 
         return 0;
       }
@@ -1024,6 +1034,14 @@ void BLECharacteristic::notify(bool is_notification) {
 
   assert(getService() != nullptr);
   assert(getService()->getServer() != nullptr);
+
+  // If we're in a write context, defer the notification
+  if (m_inWriteContext) {
+    log_v("Deferring notification - in write context");
+    m_deferNotifications = true;
+    m_pCallbacks->onNotify(this);  // Still invoke the callback
+    return;
+  }
 
   int rc = 0;
   m_pCallbacks->onNotify(this);  // Invoke the notify callback.
@@ -1152,6 +1170,134 @@ void BLECharacteristic::notify(bool is_notification) {
   }
   log_v("<< notify");
 }  // Notify
+
+/**
+ * @brief Execute deferred notifications.
+ * This function is called after a write context ends to send any notifications
+ * that were deferred during the write operation.
+ * @return N/A.
+ */
+void BLECharacteristic::notifyDeferred() {
+  log_v(">> notifyDeferred: executing deferred notifications");
+
+  assert(getService() != nullptr);
+  assert(getService()->getServer() != nullptr);
+
+  int rc = 0;
+  m_pCallbacks->onNotify(this);  // Invoke the notify callback.
+
+  // GeneralUtils::hexDump() doesn't output anything if the log level is not
+  // "VERBOSE". Additionally, it is very CPU intensive, even when it doesn't
+  // output anything! So it is much better to *not* call it at all if not needed.
+  // In a simple program which calls BLECharacteristic::notify() every 50 ms,
+  // the performance gain of this little optimization is 37% in release mode
+  // (-O3) and 57% in debug mode.
+  // Of course, the "#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE" guard
+  // could also be put inside the GeneralUtils::hexDump() function itself. But
+  // it's better to put it here also, as it is clearer (indicating a verbose log
+  // thing) and it allows to remove the "m_value.getValue().c_str()" call, which
+  // is, in itself, quite CPU intensive.
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
+  GeneralUtils::hexDump((uint8_t *)m_value.getValue().c_str(), m_value.getValue().length());
+#endif
+
+  if (getService()->getServer()->getConnectedCount() == 0) {
+    log_v("<< notifyDeferred: No connected clients.");
+    m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_CLIENT, 0);
+    return;
+  }
+
+  if (m_subscribedVec.size() == 0) {
+    log_v("<< notifyDeferred: No clients subscribed.");
+    m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_NO_SUBSCRIBER, 0);
+    return;
+  }
+
+  bool reqSec = (m_properties & BLE_GATT_CHR_F_READ_AUTHEN) || (m_properties & BLE_GATT_CHR_F_READ_AUTHOR) || (m_properties & BLE_GATT_CHR_F_READ_ENC);
+
+  for (auto &myPair : m_subscribedVec) {
+    uint16_t _mtu = getService()->getServer()->getPeerMTU(myPair.first);
+
+    // check if connected and subscribed
+    if (_mtu == 0 || myPair.second == 0) {
+      continue;
+    }
+
+    if (reqSec) {
+      struct ble_gap_conn_desc desc;
+      rc = ble_gap_conn_find(myPair.first, &desc);
+      if (rc != 0 || !desc.sec_state.encrypted) {
+        continue;
+      }
+    }
+
+    String value = getValue();
+    size_t length = value.length();
+
+    if (length > _mtu - 3) {
+      log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+    }
+
+    // For deferred notifications, default to notification (not indication)
+    bool is_notification = true;
+    if (is_notification && (!(myPair.second & NIMBLE_SUB_NOTIFY))) {
+      log_w("Sending notification to client subscribed to indications, sending indication instead");
+      is_notification = false;
+    }
+
+    if (!is_notification && (!(myPair.second & NIMBLE_SUB_INDICATE))) {
+      log_w("Sending indication to client subscribed to notification, sending notification instead");
+      is_notification = true;
+    }
+
+    if (!is_notification) {  // is indication
+      m_semaphoreConfEvt.take("indicate");
+    }
+
+    // don't create the m_buf until we are sure to send the data or else
+    // we could be allocating a buffer that doesn't get released.
+    // We also must create it in each loop iteration because it is consumed with each host call.
+    os_mbuf *om = ble_hs_mbuf_from_flat((uint8_t *)value.c_str(), length);
+
+    if (!is_notification && (m_properties & BLECharacteristic::PROPERTY_INDICATE)) {
+      if (!BLEDevice::getServer()->setIndicateWait(myPair.first)) {
+        log_e("prior Indication in progress");
+        os_mbuf_free_chain(om);
+        return;
+      }
+
+      rc = ble_gatts_indicate_custom(myPair.first, m_handle, om);
+      if (rc != 0) {
+        BLEDevice::getServer()->clearIndicateWait(myPair.first);
+      }
+    } else {
+      rc = ble_gatts_notify_custom(myPair.first, m_handle, om);
+    }
+
+    if (rc != 0) {
+      log_e("<< ble_gatts_%s_custom: rc=%d %s", is_notification ? "notify" : "indicate", rc, GeneralUtils::errorToString(rc));
+      m_semaphoreConfEvt.give();
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_GATT, rc);  // Invoke the notify callback.
+      return;
+    }
+
+    if (!is_notification) {  // is indication
+      if (!m_semaphoreConfEvt.timedWait("indicate", indicationTimeout)) {
+        m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT, 0);  // Invoke the notify callback.
+      } else {
+        auto code = m_semaphoreConfEvt.value();
+        if (code == ESP_OK) {
+          m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_INDICATE, code);  // Invoke the notify callback.
+        } else {
+          m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE, code);
+        }
+      }
+    } else {
+      m_pCallbacks->onStatus(this, BLECharacteristicCallbacks::Status::SUCCESS_NOTIFY, 0);  // Invoke the notify callback.
+    }
+  }
+  log_v("<< notifyDeferred");
+}  // notifyDeferred
 
 void BLECharacteristicCallbacks::onRead(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc) {
   onRead(pCharacteristic);

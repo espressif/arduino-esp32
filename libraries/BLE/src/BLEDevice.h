@@ -192,6 +192,10 @@ public:
   static esp_err_t setMTU(uint16_t mtu);
   static uint16_t getMTU();
   static bool getInitialized();
+  static bool getPeerIRK(BLEAddress peerAddress, uint8_t *irk);
+  static String getPeerIRKString(BLEAddress peerAddress);
+  static String getPeerIRKBase64(BLEAddress peerAddress);
+  static String getPeerIRKReverse(BLEAddress peerAddress);
   static BLEAdvertising *getAdvertising();
   static void startAdvertising();
   static void stopAdvertising();

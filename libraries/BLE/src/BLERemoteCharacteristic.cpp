@@ -565,6 +565,10 @@ String BLERemoteCharacteristic::readValue() {
     return String();
   }
 
+  // Wait for authentication to complete if bonding is enabled
+  // This prevents the read request from being made while pairing is in progress
+  BLESecurity::waitForAuthenticationComplete();
+
   m_semaphoreReadCharEvt.take("readValue");
 
   // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
@@ -606,6 +610,10 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
     log_e("Disconnected");
     return false;
   }
+
+  // Wait for authentication to complete if bonding is enabled
+  // This prevents the write request from being made while pairing is in progress
+  BLESecurity::waitForAuthenticationComplete();
 
   m_semaphoreWriteCharEvt.take("writeValue");
   // Invoke the ESP-IDF API to perform the write.

@@ -246,6 +246,8 @@ private:
   portMUX_TYPE m_readMux;
   uint8_t m_removed;
   std::vector<std::pair<uint16_t, uint16_t>> m_subscribedVec;
+  bool m_inWriteContext = false;
+  bool m_deferNotifications = false;
 #endif
 
   /***************************************************************************
@@ -271,6 +273,7 @@ private:
 #if defined(CONFIG_NIMBLE_ENABLED)
   void setSubscribe(struct ble_gap_event *event);
   static int handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
+  void notifyDeferred();
 #endif
 };  // BLECharacteristic
 
