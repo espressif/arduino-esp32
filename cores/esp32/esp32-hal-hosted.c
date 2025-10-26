@@ -132,6 +132,19 @@ bool hostedEndUpdate() {
   return err == ESP_OK;
 }
 
+bool hostedActivateUpdate() {
+  esp_err_t err = esp_hosted_slave_ota_activate();
+  if (err != ESP_OK) {
+    log_e("Failed to activate Update: %s", esp_err_to_name(err));
+  }
+  // else {
+  //   hostedDeinit();
+  //   delay(1000);
+  //   hostedInit();
+  // }
+  return err == ESP_OK;
+}
+
 static bool hostedInit() {
   if (!hosted_initialized) {
     log_i("Initializing ESP-Hosted");

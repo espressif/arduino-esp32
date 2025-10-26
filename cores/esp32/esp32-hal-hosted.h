@@ -51,6 +51,7 @@ char * hostedGetUpdateURL();
 bool hostedBeginUpdate();
 bool hostedWriteUpdate(uint8_t* buf, uint32_t len);
 bool hostedEndUpdate();
+bool hostedActivateUpdate();
 
 #ifdef __cplusplus
 }
