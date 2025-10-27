@@ -40,7 +40,7 @@
 #define WS_SYS_EN  35
 
 // Partial voltage measurement method
-#define WS_BAT_ADC 1
+#define WS_BAT_ADC   1
 #define BAT_VOLT_PIN WS_BAT_ADC
 
 // UART0 pins

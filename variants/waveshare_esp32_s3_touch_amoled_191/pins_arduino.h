@@ -29,7 +29,7 @@
 #define TP_INT -1
 
 // Partial voltage measurement method
-#define BAT_ADC 1
+#define BAT_ADC      1
 #define BAT_VOLT_PIN BAT_ADC
 // Onboard  QMI8658 IMU
 #define QMI_INT1 45

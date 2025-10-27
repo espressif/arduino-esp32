@@ -29,13 +29,13 @@
 #define TXD1 17
 
 // GSM Vela connector board pins
-#define GSM_PWRKEY  12
-#define GSM_DTR     13
-#define GSM_CTS     15
-#define GSM_RTS     14
-#define GSM_TX      TXD1
-#define GSM_RX      RXD1
-#define BATTERY_PIN 36  // Battery ADC pin
+#define GSM_PWRKEY   12
+#define GSM_DTR      13
+#define GSM_CTS      15
+#define GSM_RTS      14
+#define GSM_TX       TXD1
+#define GSM_RX       RXD1
+#define BATTERY_PIN  36  // Battery ADC pin
 #define BAT_VOLT_PIN BATTERY_PIN
 
 static const uint8_t TX = 35;
