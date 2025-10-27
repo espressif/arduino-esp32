@@ -43,6 +43,7 @@
 
 // Partial voltage measurement method
 #define BAT_ADC 17
+#define BAT_VOLT_PIN BAT_ADC
 
 // Def for I2C that shares the IMU I2C pins
 static const uint8_t SDA = 47;

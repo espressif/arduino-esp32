@@ -36,6 +36,7 @@
 #define GSM_TX      TXD1
 #define GSM_RX      RXD1
 #define BATTERY_PIN 36  // Battery ADC pin
+#define BAT_VOLT_PIN BATTERY_PIN
 
 static const uint8_t TX = 35;
 static const uint8_t RX = 34;

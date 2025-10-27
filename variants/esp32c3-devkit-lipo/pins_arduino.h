@@ -28,6 +28,7 @@ static const uint8_t SCK = 4;
 //static const uint8_t PWR_SENSE = 4;
 // battery measurement - disabled by default - check the schematic
 //static const uint8_t BAT_SENSE = 3;
+// #define BAT_VOLT_PIN BAT_SENSE
 static const uint8_t A0 = 0;
 static const uint8_t A1 = 1;
 static const uint8_t A2 = 2;

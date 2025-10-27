@@ -41,6 +41,7 @@
 
 // Partial voltage measurement method
 #define WS_BAT_ADC 1
+#define BAT_VOLT_PIN WS_BAT_ADC
 
 // UART0 pins
 static const uint8_t TX = 43;

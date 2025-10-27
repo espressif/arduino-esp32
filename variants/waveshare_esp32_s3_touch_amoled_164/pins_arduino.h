@@ -33,6 +33,7 @@
 #define KEY_0 0
 //ADC
 #define BAT_ADC 4
+#define BAT_VOLT_PIN BAT_ADC
 
 //SD_CARD
 #define SD_CS   38

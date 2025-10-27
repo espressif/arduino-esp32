@@ -35,6 +35,7 @@ static const uint8_t SCK = 7;
 #define PIN_BLASTER     10
 #define PIN_BUZZER      46
 #define PIN_BATTERY     13
+#define BAT_VOLT_PIN PIN_BATTERY
 
 #define PIN_SDCARD_CS SS
 

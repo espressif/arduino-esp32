@@ -10,6 +10,7 @@ static const uint8_t LED_BUILTIN = 0;
 
 //MSR Used in on-board battery measurement
 static const uint8_t BAT_MEASURE = 1;
+#define BAT_VOLT_PIN BAT_MEASURE
 #define MSR BAT_MEASURE
 
 static const uint8_t TX = 24;

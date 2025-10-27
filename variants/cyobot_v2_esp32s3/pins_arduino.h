@@ -12,6 +12,7 @@ static const uint8_t BUTTON1 = 38;
 static const uint8_t LED = 24;
 
 static const uint8_t BAT_MEAS = 6;
+#define BAT_VOLT_PIN BAT_MEAS
 static const uint8_t CHAR_DET = 23;
 
 static const uint8_t NEO_BASE = 7;

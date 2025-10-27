@@ -18,6 +18,7 @@
  * Battery
  */
 #define PIN_VBAT (10)
+#define BAT_VOLT_PIN PIN_VBAT
 
 /*
  * Buttons

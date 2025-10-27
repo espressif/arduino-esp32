@@ -57,6 +57,7 @@ static const uint8_t T13 = 13;
 static const uint8_t T14 = 14;
 
 static const uint8_t BAT_LV = 1;
+#define BAT_VOLT_PIN BAT_LV
 static const uint8_t CHG = 2;
 static const uint8_t TFT_CS = 10;
 static const uint8_t TFT_DC = 18;
