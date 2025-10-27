@@ -44,6 +44,7 @@ static const uint8_t BUTTON_D = PIN_BUTTON4;
 
 static const uint8_t LIGHT_SENSOR = 3;
 static const uint8_t BATT_MONITOR = 4;
+#define BAT_VOLT_PIN BATT_MONITOR
 static const uint8_t SPEAKER_SHUTDOWN = 16;
 
 static const uint8_t SDA = 33;

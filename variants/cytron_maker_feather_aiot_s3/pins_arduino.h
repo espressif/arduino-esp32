@@ -29,6 +29,7 @@ static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + 46;  // RGB LED.
 
 #define VIN             13  // Vin Sense.
 #define VBATT           13
+#define BAT_VOLT_PIN    VBATT
 #define VOLTAGE_MONITOR 13
 
 static const uint8_t TX = 15;
