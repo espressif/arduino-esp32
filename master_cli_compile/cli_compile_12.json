@@ -4,137 +4,137 @@
                 "sketches": [
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                     "sizes": [{
-                            "flash_bytes": 979782,
-                            "flash_percentage": 74,
-                            "ram_bytes": 45632,
-                            "ram_percentage": 13
+                            "flash_bytes": 984060,
+                            "flash_percentage": 75,
+                            "ram_bytes": 45916,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WiFi/examples/WiFiScanTime",
                     "sizes": [{
-                            "flash_bytes": 976822,
+                            "flash_bytes": 981100,
                             "flash_percentage": 74,
-                            "ram_bytes": 45624,
-                            "ram_percentage": 13
+                            "ram_bytes": 45908,
+                            "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WiFi/examples/WiFiSmartConfig",
                     "sizes": [{
-                            "flash_bytes": 1016792,
+                            "flash_bytes": 1021070,
                             "flash_percentage": 77,
-                            "ram_bytes": 45952,
+                            "ram_bytes": 46236,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WiFi/examples/WiFiTelnetToSerial",
                     "sizes": [{
-                            "flash_bytes": 1001006,
+                            "flash_bytes": 1005274,
                             "flash_percentage": 76,
-                            "ram_bytes": 47016,
+                            "ram_bytes": 47300,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WiFi/examples/WiFiUDPClient",
                     "sizes": [{
-                            "flash_bytes": 988352,
+                            "flash_bytes": 992622,
                             "flash_percentage": 75,
-                            "ram_bytes": 47272,
+                            "ram_bytes": 47556,
                             "ram_percentage": 14
                             }]
                     },
 {"name": "libraries/WiFiProv/examples/WiFiProv",
                     "sizes": [{
-                            "flash_bytes": 1451468,
+                            "flash_bytes": 1455466,
                             "flash_percentage": 46,
-                            "ram_bytes": 51836,
+                            "ram_bytes": 52128,
                             "ram_percentage": 15
                             }]
                     },
 {"name": "libraries/Wire/examples/WireMaster",
                     "sizes": [{
-                            "flash_bytes": 310510,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17500,
+                            "flash_bytes": 314780,
+                            "flash_percentage": 24,
+                            "ram_bytes": 17796,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "libraries/Wire/examples/WireScan",
                     "sizes": [{
-                            "flash_bytes": 310258,
+                            "flash_bytes": 314522,
                             "flash_percentage": 23,
-                            "ram_bytes": 17500,
+                            "ram_bytes": 17788,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "libraries/Wire/examples/WireSlave",
                     "sizes": [{
-                            "flash_bytes": 310834,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17500,
+                            "flash_bytes": 315102,
+                            "flash_percentage": 24,
+                            "ram_bytes": 17796,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "libraries/Wire/examples/WireSlaveFunctionalCallback",
                     "sizes": [{
-                            "flash_bytes": 310732,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17500,
+                            "flash_bytes": 315000,
+                            "flash_percentage": 24,
+                            "ram_bytes": 17796,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Analog_Input_Output",
                     "sizes": [{
-                            "flash_bytes": 752484,
+                            "flash_bytes": 756738,
                             "flash_percentage": 57,
-                            "ram_bytes": 37604,
+                            "ram_bytes": 37892,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Binary_Input_Output",
                     "sizes": [{
-                            "flash_bytes": 629112,
-                            "flash_percentage": 47,
-                            "ram_bytes": 34012,
+                            "flash_bytes": 633382,
+                            "flash_percentage": 48,
+                            "ram_bytes": 34292,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_CarbonDioxide_Sensor",
                     "sizes": [{
-                            "flash_bytes": 628328,
-                            "flash_percentage": 47,
-                            "ram_bytes": 33628,
+                            "flash_bytes": 632602,
+                            "flash_percentage": 48,
+                            "ram_bytes": 33924,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Color_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 670818,
+                            "flash_bytes": 675090,
                             "flash_percentage": 51,
-                            "ram_bytes": 33796,
+                            "ram_bytes": 34084,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Color_Dimmer_Switch",
                     "sizes": [{
-                            "flash_bytes": 764580,
+                            "flash_bytes": 768862,
                             "flash_percentage": 58,
-                            "ram_bytes": 37172,
+                            "ram_bytes": 37452,
                             "ram_percentage": 11
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Contact_Switch",
                     "sizes": [{
-                            "flash_bytes": 624902,
-                            "flash_percentage": 47,
-                            "ram_bytes": 33636,
+                            "flash_bytes": 629172,
+                            "flash_percentage": 48,
+                            "ram_bytes": 33916,
                             "ram_percentage": 10
                             }]
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Dimmable_Light",
                     "sizes": [{
-                            "flash_bytes": 650378,
+                            "flash_bytes": 654648,
                             "flash_percentage": 49,
-                            "ram_bytes": 33780,
+                            "ram_bytes": 34068,
                             "ram_percentage": 10
                             }]
                     }
