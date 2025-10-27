@@ -206,6 +206,19 @@ static bool hostedDeinit() {
 
 bool hostedInitBLE() {
   log_i("Initializing ESP-Hosted for BLE");
+  if (!hostedInit()) {
+    return false;
+  }
+  esp_err_t err = esp_hosted_bt_controller_init();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
+    return false;
+  }
+  err = esp_hosted_bt_controller_enable();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
+    return false;
+  }
   hosted_ble_active = true;
   return hostedInit();
 }
@@ -218,6 +231,16 @@ bool hostedInitWiFi() {
 
 bool hostedDeinitBLE() {
   log_i("Deinitializing ESP-Hosted for BLE");
+  esp_err_t err = esp_hosted_bt_controller_disable();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
+    return false;
+  }
+  err = esp_hosted_bt_controller_deinit(false);
+  if (err != ESP_OK) {
+    log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
+    return false;
+  }
   hosted_ble_active = false;
   if (!hosted_wifi_active) {
     return hostedDeinit();
