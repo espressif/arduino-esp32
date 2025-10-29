@@ -129,7 +129,7 @@ bool touchStart() {
   if (running) {  // Already running
     return true;
   }
-  if (enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
+  if (!enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
     log_e("Touch sensor not enabled or failed to start continuous scanning failed!");
     return false;
   }
@@ -395,7 +395,7 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
       return;
     }
 
-    touch_channel_config_t chan_cfg = {};
+    touch_channel_config_t chan_cfg = TOUCH_CHANNEL_DEFAULT_CONFIG();
     for (int i = 0; i < _sample_num; i++) {
 #if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
       chan_cfg.abs_active_thresh[i] = threshold;
@@ -416,17 +416,17 @@ static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Ar
 
 // it keeps backwards compatibility
 static void __touchAttachInterrupt(uint8_t pin, void (*userFunc)(void), touch_value_t threshold) {
-  __touchConfigInterrupt(pin, userFunc, NULL, threshold, false);
+  __touchConfigInterrupt(pin, userFunc, NULL, false, threshold);
 }
 
 // new additional version of the API with User Args
 static void __touchAttachArgsInterrupt(uint8_t pin, void (*userFunc)(void), void *args, touch_value_t threshold) {
-  __touchConfigInterrupt(pin, userFunc, args, threshold, true);
+  __touchConfigInterrupt(pin, userFunc, args, true, threshold);
 }
 
 // new additional API to detach touch ISR
 static void __touchDettachInterrupt(uint8_t pin) {
-  __touchConfigInterrupt(pin, NULL, NULL, 0, false);  // userFunc as NULL acts as detaching
+  __touchConfigInterrupt(pin, NULL, NULL, false, 0);  // userFunc as NULL acts as detaching
 }
 
 // /*
