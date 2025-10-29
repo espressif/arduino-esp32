@@ -239,7 +239,8 @@ set(ARDUINO_LIBRARY_Ticker_SRCS libraries/Ticker/src/Ticker.cpp)
 
 set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/Updater.cpp
-  libraries/Update/src/HttpsOTAUpdate.cpp)
+  libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/Update/src/Updater_Signing.cpp)
 
 set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/USBHID.cpp
