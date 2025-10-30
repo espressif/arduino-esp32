@@ -5,6 +5,9 @@ on:
   repository_dispatch:
     types: [test-boards]
 
+permissions:
+  contents: read
+
 jobs:
   find-boards:
     runs-on: ubuntu-latest
@@ -35,10 +38,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.event.client_payload.branch }}
-
-      - run: npm install
-      - name: Setup jq
-        uses: dcarbone/install-jq-action@e397bd87438d72198f81efd21f876461183d383a # v3.0.1
 
       - id: set-test-chunks
         name: Set Chunks
@@ -72,6 +71,36 @@ jobs:
         run: echo "$FQBN" > fqbns.json
         env:
           FQBN: ${{ toJSON(matrix.chunk) }}
+
+      - name: Make validation script executable
+        run: chmod +x ./.github/scripts/validate_board.sh
+
+      - name: Validate boards in chunk
+        run: |
+          echo "Starting board validation for chunk..."
+          failed_boards=()
+          
+          # Extract board names from FQBNs (remove espressif:esp32: prefix)
+          boards_json=$(cat fqbns.json)
+          board_names=$(echo "$boards_json" | jq -r '.[]' | sed 's/espressif:esp32://')
+          
+          for board in $board_names; do
+            echo "Validating board: $board"
+            if ! ./.github/scripts/validate_board.sh "$board"; then
+              echo "❌ Validation failed for board: $board"
+              failed_boards+=("$board")
+            else
+              echo "✅ Validation passed for board: $board"
+            fi
+          done
+          
+          if [ ${#failed_boards[@]} -gt 0 ]; then
+            echo "❌ Board validation failed for the following boards:"
+            printf '  - %s\n' "${failed_boards[@]}"
+            exit 1
+          else
+            echo "✅ All board validations in chunk passed!"
+          fi
 
       - name: Compile sketch
         uses: P-R-O-C-H-Y/compile-sketches@a62f069b92dc8f5053da4ac439ea6d1950cf6379 # main

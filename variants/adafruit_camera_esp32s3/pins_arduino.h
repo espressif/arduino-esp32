@@ -43,6 +43,7 @@ static const uint8_t MISO = 37;
 static const uint8_t A0 = 17;
 static const uint8_t A1 = 18;
 static const uint8_t BATT_MONITOR = 4;
+#define BAT_VOLT_PIN BATT_MONITOR
 static const uint8_t SHUTTER_BUTTON = 0;
 
 static const uint8_t TX = 43;

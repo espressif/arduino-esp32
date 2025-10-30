@@ -19,18 +19,14 @@
 #include "esp32-hal-ledc.h"
 #include "sdkconfig.h"
 #include "camera_index.h"
+#include "board_config.h"
 
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
 #include "esp32-hal-log.h"
 #endif
 
-// Enable LED FLASH setting
-#define CONFIG_LED_ILLUMINATOR_ENABLED 1
-
 // LED FLASH setup
-#if CONFIG_LED_ILLUMINATOR_ENABLED
-
-#define LED_LEDC_GPIO            22  //configure LED pin
+#if defined(LED_GPIO_NUM)
 #define CONFIG_LED_MAX_INTENSITY 255
 
 int led_duty = 0;
@@ -91,13 +87,13 @@ static int ra_filter_run(ra_filter_t *filter, int value) {
 }
 #endif
 
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
 void enable_led(bool en) {  // Turn LED On or Off
   int duty = en ? led_duty : 0;
   if (en && isStreaming && (led_duty > CONFIG_LED_MAX_INTENSITY)) {
     duty = CONFIG_LED_MAX_INTENSITY;
   }
-  ledcWrite(LED_LEDC_GPIO, duty);
+  ledcWrite(LED_GPIO_NUM, duty);
   //ledc_set_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL, duty);
   //ledc_update_duty(CONFIG_LED_LEDC_SPEED_MODE, CONFIG_LED_LEDC_CHANNEL);
   log_i("Set LED intensity to %d", duty);
@@ -162,7 +158,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
   int64_t fr_start = esp_timer_get_time();
 #endif
 
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
   enable_led(true);
   vTaskDelay(150 / portTICK_PERIOD_MS);  // The LED needs to be turned on ~150ms before the call to esp_camera_fb_get()
   fb = esp_camera_fb_get();              // or it won't be visible in the frame. A better way to do this is needed.
@@ -230,7 +226,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "X-Framerate", "60");
 
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
   isStreaming = true;
   enable_led(true);
 #endif
@@ -293,7 +289,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     );
   }
 
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
   isStreaming = false;
   enable_led(false);
 #endif
@@ -393,7 +389,7 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   } else if (!strcmp(variable, "ae_level")) {
     res = s->set_ae_level(s, val);
   }
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
   else if (!strcmp(variable, "led_intensity")) {
     led_duty = val;
     if (isStreaming) {
@@ -478,9 +474,10 @@ static esp_err_t status_handler(httpd_req_t *req) {
   p += sprintf(p, "\"raw_gma\":%u,", s->status.raw_gma);
   p += sprintf(p, "\"lenc\":%u,", s->status.lenc);
   p += sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
+  p += sprintf(p, "\"vflip\":%u,", s->status.vflip);
   p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
   p += sprintf(p, "\"colorbar\":%u", s->status.colorbar);
-#if CONFIG_LED_ILLUMINATOR_ENABLED
+#if defined(LED_GPIO_NUM)
   p += sprintf(p, ",\"led_intensity\":%u", led_duty);
 #else
   p += sprintf(p, ",\"led_intensity\":%d", -1);
@@ -842,10 +839,10 @@ void startCameraServer() {
   }
 }
 
-void setupLedFlash(int pin) {
-#if CONFIG_LED_ILLUMINATOR_ENABLED
-  ledcAttach(pin, 5000, 8);
+void setupLedFlash() {
+#if defined(LED_GPIO_NUM)
+  ledcAttach(LED_GPIO_NUM, 5000, 8);
 #else
-  log_i("LED flash is disabled -> CONFIG_LED_ILLUMINATOR_ENABLED = 0");
+  log_i("LED flash is disabled -> LED_GPIO_NUM undefined");
 #endif
 }

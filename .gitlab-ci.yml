@@ -1,0 +1,13 @@
+workflow:
+  rules:
+    # Allow only when triggered manually (web), via API, or by a trigger token
+    - if: "$CI_PIPELINE_SOURCE =~ /^(trigger|api|web)$/"
+      when: always
+    # Deny all other sources
+    - when: never
+
+# Place the default settings in `.gitlab/workflows/common.yml` instead
+
+include:
+  - ".gitlab/workflows/common.yml"
+  - ".gitlab/workflows/hardware_tests_dynamic.yml"

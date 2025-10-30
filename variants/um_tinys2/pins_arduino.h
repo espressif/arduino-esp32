@@ -63,6 +63,7 @@ static const uint8_t DAC1 = 17;
 static const uint8_t DAC2 = 18;
 
 static const uint8_t VBAT_SENSE = 3;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 21;
 
 static const uint8_t RGB_DATA = 1;

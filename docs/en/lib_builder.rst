@@ -293,8 +293,9 @@ You have two options to run the Docker image to build the libraries. Manually or
 To run the Docker image manually, use the following command from the root of the ``arduino-esp32`` repository:
 
 .. code-block:: bash
+    :substitutions:
 
-    docker run --rm -it -v $PWD:/arduino-esp32 -e TERM=xterm-256color espressif/esp32-arduino-lib-builder:release-v5.1
+    docker run --rm -it -v $PWD:/arduino-esp32 -e TERM=xterm-256color espressif/esp32-arduino-lib-builder:release-v|idf_version|
 
 This will start the Lib Builder UI for compiling the libraries. The above command explained:
 
@@ -304,7 +305,7 @@ This will start the Lib Builder UI for compiling the libraries. The above comman
 - ``-t`` Allocate a pseudo-TTY;
 - ``-e TERM=xterm-256color``: Optional. Sets the terminal type to ``xterm-256color`` to display colors correctly;
 - ``-v $PWD:/arduino-esp32``: Optional. Mounts the current folder at ``/arduino-esp32`` inside the container. If not provided, the container will not copy the compiled libraries to the host machine;
-- ``espressif/esp32-arduino-lib-builder:release-v5.1``: uses Docker image ``espressif/esp32-arduino-lib-builder`` with tag ``release-v5.1``.
+- :substitution-code:`espressif/esp32-arduino-lib-builder:release-v|idf_version|`: uses Docker image ``espressif/esp32-arduino-lib-builder`` with tag :substitution-code:`release-v|idf_version|`.
   The ``latest`` tag is implicitly added by Docker when no tag is specified. It is recommended to use a specific version tag to ensure reproducibility of the build process.
 
 .. warning::
@@ -324,24 +325,27 @@ By default the docker container will run the user interface script. If you want 
 For example, to run a terminal inside the container, you can run:
 
 .. code-block:: bash
+    :substitutions:
 
-    docker run -it espressif/esp32-arduino-lib-builder:release-v5.1 /bin/bash
+    docker run -it espressif/esp32-arduino-lib-builder:release-v|idf_version| /bin/bash
 
 Running the Docker image using the provided run script will depend on the host OS.
 Use the following command from the root of the ``arduino-esp32`` repository to execute the image in a Linux or macOS environment for
-the ``release-v5.1`` tag:
+the :substitution-code:`release-v|idf_version|` tag:
 
 .. code-block:: bash
+    :substitutions:
 
-    curl -LJO https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v5.1/tools/docker/run.sh
+    curl -LJO https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v|idf_version|/tools/docker/run.sh
     chmod +x run.sh
     ./run.sh $PWD
 
 For Windows, use the following command in PowerShell from the root of the ``arduino-esp32`` repository:
 
 .. code-block:: powershell
+    :substitutions:
 
-    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v5.1/tools/docker/run.ps1" -OutFile "run.ps1"
+    Invoke-WebRequest -Uri "https://raw.githubusercontent.com/espressif/esp32-arduino-lib-builder/refs/heads/release/v|idf_version|/tools/docker/run.ps1" -OutFile "run.ps1"
     .\run.ps1 $pwd
 
 As the script is unsigned, you may need to change the execution policy of the current session before running the script.

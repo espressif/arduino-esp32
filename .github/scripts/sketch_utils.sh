@@ -15,13 +15,13 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local requirements
     local requirements_or
 
-    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.json" ]; then
-        echo "WARNING: sdkconfig or ci.json not found. Assuming requirements are met." 1>&2
+    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.yml" ]; then
+        echo "WARNING: sdkconfig or ci.yml not found. Assuming requirements are met." 1>&2
         # Return 1 on error to force the sketch to be built and fail. This way the
         # CI will fail and the user will know that the sketch has a problem.
     else
         # Check if the sketch requires any configuration options (AND)
-        requirements=$(jq -r '.requires[]? // empty' "$sketchdir/ci.json")
+        requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
             for requirement in $requirements; do
                 requirement=$(echo "$requirement" | xargs)
@@ -33,7 +33,7 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
         fi
 
         # Check if the sketch requires any configuration options (OR)
-        requirements_or=$(jq -r '.requires_any[]? // empty' "$sketchdir/ci.json")
+        requirements_or=$(yq eval '.requires_any[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
             local found=false
             for requirement in $requirements_or; do
@@ -122,13 +122,13 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ -z "$options" ] && [ -f "$sketchdir"/ci.json ]; then
+        if [ -z "$options" ] && [ -f "$sketchdir"/ci.yml ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
-            len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+            len=$(yq eval ".fqbn.${target} | length" "$sketchdir"/ci.yml 2>/dev/null || echo 0)
             if [ "$len" -gt 0 ]; then
-                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | sort' "$sketchdir"/ci.json)
+                fqbn=$(yq eval ".fqbn.${target} | sort | @json" "$sketchdir"/ci.yml)
             fi
         fi
 
@@ -138,8 +138,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=1
 
-            if [ -f "$sketchdir"/ci.json ]; then
-                fqbn_append=$(jq -r '.fqbn_append' "$sketchdir"/ci.json)
+            if [ -f "$sketchdir"/ci.yml ]; then
+                fqbn_append=$(yq eval '.fqbn_append' "$sketchdir"/ci.yml 2>/dev/null)
                 if [ "$fqbn_append" == "null" ]; then
                     fqbn_append=""
                 fi
@@ -156,6 +156,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c5_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -191,6 +192,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                     [ -n "${options:-$esp32p4_opts}" ] && opt=":${options:-$esp32p4_opts}"
                     fqbn="espressif:esp32:esp32p4$opt"
                 ;;
+                "esp32c5")
+                    [ -n "${options:-$esp32c5_opts}" ] && opt=":${options:-$esp32c5_opts}"
+                    fqbn="espressif:esp32:esp32c5$opt"
+                ;;
                 *)
                     echo "ERROR: Invalid chip: $target"
                     exit 1
@@ -224,9 +229,9 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     sketchname=$(basename "$sketchdir")
     local has_requirements
 
-    if [ -f "$sketchdir"/ci.json ]; then
+    if [ -f "$sketchdir"/ci.yml ]; then
         # If the target is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+        is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
         if [[ "$is_target" == "false" ]]; then
             echo "Skipping $sketchname for target $target"
             exit 0
@@ -237,6 +242,14 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             echo "Target $target does not meet the requirements for $sketchname. Skipping."
             exit 0
         fi
+    fi
+
+    # Install libraries from ci.yml if they exist
+    install_libs -ai "$ide_path" -s "$sketchdir"
+    install_result=$?
+    if [ $install_result -ne 0 ]; then
+        echo "ERROR: Library installation failed for $sketchname" >&2
+        exit $install_result
     fi
 
     ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
@@ -279,6 +292,11 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             if [ "$exit_status" -ne 0 ]; then
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit "$exit_status"
+            fi
+
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
+            if [ -f "$sketchdir/ci.yml" ]; then
+                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
             if [ -n "$log_compilation" ]; then
@@ -324,6 +342,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
+            if [ -f "$sketchdir/ci.yml" ]; then
+                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
             #     -warnings="all" \
@@ -344,7 +366,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     unset options
 }
 
-function count_sketches { # count_sketches <path> [target] [file] [ignore-requirements]
+function count_sketches { # count_sketches <path> [target] [ignore-requirements] [file]
     local path=$1
     local target=$2
     local ignore_requirements=$3
@@ -363,7 +385,7 @@ function count_sketches { # count_sketches <path> [target] [file] [ignore-requir
     fi
 
     if [ -f "$file" ]; then
-        sketches=$(cat "$file")
+        sketches=$(cat "$file" | sort)
     else
         sketches=$(find "$path" -name '*.ino' | sort)
     fi
@@ -381,9 +403,9 @@ function count_sketches { # count_sketches <path> [target] [file] [ignore-requir
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.json ]]; then
+        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
-            is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+            is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
                 continue
             fi
@@ -575,6 +597,160 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
     return 0
 }
 
+# Return 0 if the string looks like a git URL we should pass to --git-url
+is_git_like_url() {
+    local u=$1
+    [[ "$u" =~ ^https?://.+ ]] || [[ "$u" =~ ^git@[^:]+:.+ ]]
+}
+
+# If status!=0, print errors/warnings from captured output (fallback to full output)
+print_err_warnings() {
+    local status=$1; shift
+    local out=$*
+    if [ "$status" -ne 0 ]; then
+        printf '%s\n' "$out" | grep -Ei "error|warning|warn" >&2 || printf '%s\n' "$out" >&2
+    fi
+}
+
+function install_libs { # install_libs <ide_path> <sketchdir> [-v]
+    local ide_path=""
+    local sketchdir=""
+    local verbose=false
+
+    while [ -n "$1" ]; do
+        case "$1" in
+        -ai ) shift; ide_path=$1 ;;
+        -s  ) shift; sketchdir=$1 ;;
+        -v  ) verbose=true ;;
+        * )
+            echo "ERROR: Unknown argument: $1" >&2
+            echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+            return 1
+            ;;
+        esac
+        shift
+    done
+
+    if [ -z "$ide_path" ]; then
+        echo "ERROR: IDE path not provided" >&2
+        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+        return 1
+    fi
+    if [ -z "$sketchdir" ]; then
+        echo "ERROR: Sketch directory not provided" >&2
+        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+        return 1
+    fi
+    if [ ! -f "$ide_path/arduino-cli" ]; then
+        echo "ERROR: arduino-cli not found at $ide_path/arduino-cli" >&2
+        return 1
+    fi
+
+    if [ ! -f "$sketchdir/ci.yml" ]; then
+        [ "$verbose" = true ] && echo "No ci.yml found in $sketchdir, skipping library installation"
+        return 0
+    fi
+    if ! yq eval '.' "$sketchdir/ci.yml" >/dev/null 2>&1; then
+        echo "ERROR: $sketchdir/ci.yml is not valid YAML" >&2
+        return 1
+    fi
+
+    local libs_type
+    libs_type=$(yq eval '.libs | type' "$sketchdir/ci.yml" 2>/dev/null)
+    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ] || [ "$libs_type" = "!!null" ]; then
+        [ "$verbose" = true ] && echo "No libs field found in ci.yml, skipping library installation"
+        return 0
+    elif [ "$libs_type" != "!!seq" ]; then
+        echo "ERROR: libs field in ci.yml must be an array, found: $libs_type" >&2
+        return 1
+    fi
+
+    local libs_count
+    libs_count=$(yq eval '.libs | length' "$sketchdir/ci.yml" 2>/dev/null)
+    if [ "$libs_count" -eq 0 ]; then
+        [ "$verbose" = true ] && echo "libs array is empty in ci.yml, skipping library installation"
+        return 0
+    fi
+
+    echo "Installing $libs_count libraries from $sketchdir/ci.yml"
+
+    local needs_unsafe=false
+    local original_unsafe_setting=""
+    local libs
+    libs=$(yq eval '.libs[]' "$sketchdir/ci.yml" 2>/dev/null)
+
+    # Detect any git-like URL (GitHub/GitLab/Bitbucket/self-hosted/ssh)
+    for lib in $libs; do
+        if is_git_like_url "$lib"; then
+            needs_unsafe=true
+            break
+        fi
+    done
+
+    if [ "$needs_unsafe" = true ]; then
+        [ "$verbose" = true ] && echo "Checking current unsafe install setting..."
+        original_unsafe_setting=$("$ide_path/arduino-cli" config get library.enable_unsafe_install 2>/dev/null || echo "false")
+        if [ "$original_unsafe_setting" = "false" ]; then
+            [ "$verbose" = true ] && echo "Enabling unsafe installs for Git URLs..."
+            "$ide_path/arduino-cli" config set library.enable_unsafe_install true >/dev/null 2>&1 || \
+                echo "WARNING: Failed to enable unsafe installs, Git URL installs may fail" >&2
+        else
+            [ "$verbose" = true ] && echo "Unsafe installs already enabled"
+        fi
+    fi
+
+    local rc=0 install_status=0 output=""
+    for lib in $libs; do
+        [ "$verbose" = true ] && echo "Processing library: $lib"
+
+        if is_git_like_url "$lib"; then
+            [ "$verbose" = true ] && echo "Installing library from git URL: $lib"
+            if [ "$verbose" = true ]; then
+                "$ide_path/arduino-cli" lib install --git-url "$lib"
+                install_status=$?
+            else
+                output=$("$ide_path/arduino-cli" lib install --git-url "$lib" 2>&1)
+                install_status=$?
+            fi
+        else
+            [ "$verbose" = true ] && echo "Installing library by name: $lib"
+            if [ "$verbose" = true ]; then
+                "$ide_path/arduino-cli" lib install "$lib"
+                install_status=$?
+            else
+                output=$("$ide_path/arduino-cli" lib install "$lib" 2>&1)
+                install_status=$?
+            fi
+        fi
+
+        # Treat "already installed"/"up to date" as success (idempotent)
+        if [ $install_status -ne 0 ] && echo "$output" | grep -qiE 'already installed|up to date'; then
+            install_status=0
+        fi
+
+        if [ "$verbose" != true ]; then
+            print_err_warnings "$install_status" "$output"
+        fi
+
+        if [ $install_status -ne 0 ]; then
+            echo "ERROR: Failed to install library: $lib" >&2
+            rc=$install_status
+            break
+        else
+            [ "$verbose" = true ] && echo "Successfully installed library: $lib"
+        fi
+    done
+
+    if [ "$needs_unsafe" = true ] && [ "$original_unsafe_setting" = "false" ]; then
+        [ "$verbose" = true ] && echo "Restoring original unsafe install setting..."
+        "$ide_path/arduino-cli" config set library.enable_unsafe_install false >/dev/null 2>&1 || true
+    fi
+
+    [ $rc -eq 0 ] && echo "Library installation completed"
+    return $rc
+}
+
+
 USAGE="
 USAGE: ${0} [command] [options]
 Available commands:
@@ -582,6 +758,7 @@ Available commands:
     build: Build a sketch.
     chunk_build: Build a chunk of sketches.
     check_requirements: Check if target meets sketch requirements.
+    install_libs: Install libraries from ci.yml file.
 "
 
 cmd=$1
@@ -600,6 +777,8 @@ case "$cmd" in
     "chunk_build") build_sketches "$@"
     ;;
     "check_requirements") check_requirements "$@"
+    ;;
+    "install_libs") install_libs "$@"
     ;;
     *)
         echo "ERROR: Unrecognized command"

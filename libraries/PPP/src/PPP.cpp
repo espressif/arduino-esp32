@@ -432,6 +432,11 @@ void PPPClass::end(void) {
     _pin_cts = -1;
     perimanClearPinBus(pin);
   }
+  if (_pin_rst != -1) {
+    pin = _pin_rst;
+    _pin_rst = -1;
+    perimanClearPinBus(pin);
+  }
 
   _mode = ESP_MODEM_MODE_COMMAND;
 }
@@ -758,6 +763,8 @@ size_t PPPClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_PPP)
 PPPClass PPP;
+#endif
 
 #endif /* CONFIG_LWIP_PPP_SUPPORT */

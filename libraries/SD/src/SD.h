@@ -26,6 +26,7 @@ protected:
 
 public:
   SDFS(FSImplPtr impl);
+  ~SDFS();
   bool begin(
     uint8_t ssPin = SS, SPIClass &spi = SPI, uint32_t frequency = 4000000, const char *mountpoint = "/sd", uint8_t max_files = 5, bool format_if_empty = false
   );
@@ -42,7 +43,9 @@ public:
 
 }  // namespace fs
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SD)
 extern fs::SDFS SD;
+#endif
 
 using namespace fs;
 typedef fs::File SDFile;

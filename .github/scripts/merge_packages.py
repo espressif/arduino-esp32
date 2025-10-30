@@ -4,6 +4,7 @@
 # Usage:
 #   python merge_packages.py package_esp8266com_index.json version/new/package_esp8266com_index.json
 # Written by Ivan Grokhotkov, 2015
+# Updated by lucasssvaz to handle Chinese version sorting, 2025
 #
 
 from __future__ import print_function
@@ -16,7 +17,8 @@ import sys
 
 
 def load_package(filename):
-    pkg = json.load(open(filename))["packages"][0]
+    with open(filename) as f:
+        pkg = json.load(f)["packages"][0]
     print("Loaded package {0} from {1}".format(pkg["name"], filename), file=sys.stderr)
     print("{0} platform(s), {1} tools".format(len(pkg["platforms"]), len(pkg["tools"])), file=sys.stderr)
     return pkg
@@ -36,20 +38,19 @@ def merge_objects(versions, obj):
 
 
 # Normalize ESP release version string (x.x.x) by adding '-rc<MAXINT>' (x.x.x-rc9223372036854775807)
-# to ensure having REL above any RC
+# to ensure having REL above any RC. CN version will be sorted after the official version if they happen
+# to be mixed (normally, CN and non-CN versions should not be mixed)
 # Dummy approach, functional anyway for current ESP package versioning
 # (unlike NormalizedVersion/LooseVersion/StrictVersion & similar crap)
 def pkgVersionNormalized(versionString):
-
-    verStr = str(versionString)
+    verStr = str(versionString).replace("-cn", "")
     verParts = re.split(r"\.|-rc|-alpha", verStr, flags=re.IGNORECASE)
 
     if len(verParts) == 3:
-        if sys.version_info > (3, 0):  # Python 3
-            verStr = str(versionString) + "-rc" + str(sys.maxsize)
-        else:  # Python 2
-            verStr = str(versionString) + "-rc" + str(sys.maxint)
-
+        if "-cn" in str(versionString):
+            verStr = verStr + "-rc" + str(sys.maxsize // 2)
+        else:
+            verStr = verStr + "-rc" + str(sys.maxsize)
     elif len(verParts) != 4:
         print("pkgVersionNormalized WARNING: unexpected version format: {0})".format(verStr), file=sys.stderr)
 

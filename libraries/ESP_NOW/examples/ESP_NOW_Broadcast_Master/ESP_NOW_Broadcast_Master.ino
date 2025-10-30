@@ -58,7 +58,7 @@ public:
 uint32_t msg_count = 0;
 
 // Create a broadcast peer object
-ESP_NOW_Broadcast_Peer broadcast_peer(ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, NULL);
+ESP_NOW_Broadcast_Peer broadcast_peer(ESPNOW_WIFI_CHANNEL, WIFI_IF_STA, nullptr);
 
 /* Main */
 
@@ -85,6 +85,8 @@ void setup() {
     delay(5000);
     ESP.restart();
   }
+
+  Serial.printf("ESP-NOW version: %d, max data length: %d\n", ESP_NOW.getVersion(), ESP_NOW.getMaxDataLen());
 
   Serial.println("Setup complete. Broadcasting messages every 5 seconds.");
 }

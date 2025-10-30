@@ -341,9 +341,15 @@ config ARDUINO_SELECTIVE_PPP
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
+config ARDUINO_SELECTIVE_Hash
+    bool "Enable Hash"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
+    select ARDUINO_SELECTIVE_Hash
     select ARDUINO_SELECTIVE_ESPmDNS
     default y
 
@@ -383,6 +389,7 @@ config ARDUINO_SELECTIVE_WebServer
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
     select ARDUINO_SELECTIVE_FS
+    select ARDUINO_SELECTIVE_Hash
 
 config ARDUINO_SELECTIVE_WiFi
     bool "Enable WiFi"

@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Class of Zigbee Temperature sensor endpoint inherited from common EP class */
 
 #pragma once
@@ -34,32 +48,50 @@ public:
   ZigbeeThermostat(uint8_t endpoint);
   ~ZigbeeThermostat() {}
 
-  void onTempRecieve(void (*callback)(float)) {
-    _on_temp_recieve = callback;
+  void onTempReceive(void (*callback)(float)) {
+    _on_temp_receive = callback;
   }
-  void onConfigRecieve(void (*callback)(float, float, float)) {
-    _on_config_recieve = callback;
+  void onTempReceiveWithSource(void (*callback)(float, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_temp_receive_with_source = callback;
+  }
+  void onConfigReceive(void (*callback)(float, float, float)) {
+    _on_config_receive = callback;
   }
 
   void getTemperature();
+  void getTemperature(uint16_t group_addr);
+  void getTemperature(uint8_t endpoint, uint16_t short_addr);
+  void getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
   void getSensorSettings();
+  void getSensorSettings(uint16_t group_addr);
+  void getSensorSettings(uint8_t endpoint, uint16_t short_addr);
+  void getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
   void setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta);
+  void setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
   // save instance of the class in order to use it in static functions
   static ZigbeeThermostat *_instance;
+  zb_device_params_t *_device;
 
-  void (*_on_temp_recieve)(float);
-  void (*_on_config_recieve)(float, float, float);
+  void (*_on_temp_receive)(float);
+  void (*_on_temp_receive_with_source)(float, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_config_receive)(float, float, float);
   float _min_temp;
   float _max_temp;
   float _tolerance;
 
   void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-  static void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  static void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+  void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
+  static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
-  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) override;
+  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) override;
 };
 
 #endif  // CONFIG_ZB_ENABLED

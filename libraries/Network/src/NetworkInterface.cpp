@@ -47,6 +47,7 @@ extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
 #endif
 
 static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
   if (event_base == IP_EVENT) {
     NetworkInterface *netif = NULL;
     if (event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP) {
@@ -606,13 +607,33 @@ int NetworkInterface::impl_index() const {
   return esp_netif_get_netif_impl_index(_esp_netif);
 }
 
-int NetworkInterface::route_prio() const {
+/**
+ * Every netif has a parameter named route_prio, you can refer to file esp_netif_defaults.h.
+ * A higher value of route_prio indicates a higher priority.
+ * The active interface with highest priority will be used for default route (gateway).
+ * Defaults are: STA=100, BR=70, ETH=50, PPP=20, AP/NAN=10
+ */
+int NetworkInterface::getRoutePrio() const {
   if (_esp_netif == NULL) {
     return -1;
   }
   return esp_netif_get_route_prio(_esp_netif);
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+int NetworkInterface::setRoutePrio(int prio) {
+  if (_esp_netif == NULL) {
+    return -1;
+  }
+  return esp_netif_set_route_prio(_esp_netif, prio);
+}
+#endif
+
+/**
+ * This API overrides the automatic configuration of the default interface based on the route_prio
+ * If the selected netif is set default using this API, no other interface could be set-default disregarding
+ * its route_prio number (unless the selected netif gets destroyed)
+ */
 bool NetworkInterface::setDefault() {
   if (_esp_netif == NULL) {
     return false;
@@ -819,7 +840,11 @@ size_t NetworkInterface::printTo(Print &out) const {
   if (flags & ESP_NETIF_FLAG_MLDV6_REPORT) {
     bytes += out.print(",V6_REP");
   }
-  bytes += out.println(")");
+  bytes += out.print(")");
+
+  bytes += out.print(" PRIO: ");
+  bytes += out.print(getRoutePrio());
+  bytes += out.println("");
 
   bytes += out.print("      ");
   bytes += out.print("ether ");

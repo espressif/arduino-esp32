@@ -61,7 +61,7 @@ private:
 public:
   SPIClass(uint8_t spi_bus = HSPI);
   ~SPIClass();
-  void begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1);
+  bool begin(int8_t sck = -1, int8_t miso = -1, int8_t mosi = -1, int8_t ss = -1);
   void end();
 
   void setHwCs(bool use);
@@ -98,7 +98,9 @@ public:
   }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SPI)
 extern SPIClass SPI;
+#endif
 
 #endif /* SOC_GPSPI_SUPPORTED */
 #endif /* _SPI_H_INCLUDED */

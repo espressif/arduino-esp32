@@ -4,21 +4,34 @@
  * During the scanning procedure, we will be finding advertised BLE devices.  This class
  * models a found device.
  *
- *
  * See also:
  * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
  *
  *  Created on: Jul 3, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
+
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
+
 #include <sstream>
 #include "BLEAdvertisedDevice.h"
 #include "BLEUtils.h"
 #include "esp32-hal-log.h"
+
+/***************************************************************************
+ *                           Common functions                              *
+ ***************************************************************************/
 
 BLEAdvertisedDevice::BLEAdvertisedDevice() {
   m_adFlag = 0;
@@ -32,14 +45,46 @@ BLEAdvertisedDevice::BLEAdvertisedDevice() {
   m_serviceDataUUIDs = {};
   m_txPower = 0;
   m_pScan = nullptr;
+  m_advType = 0;
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  m_callbackSent = false;
+#endif
 
   m_haveAppearance = false;
   m_haveManufacturerData = false;
   m_haveName = false;
   m_haveRSSI = false;
   m_haveTXPower = false;
-
+  m_isLegacyAdv = true;
 }  // BLEAdvertisedDevice
+
+bool BLEAdvertisedDevice::isLegacyAdvertisement() {
+  return m_isLegacyAdv;
+}
+
+bool BLEAdvertisedDevice::isScannable() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  return isLegacyAdvertisement() && (m_advType == ESP_BLE_EVT_CONN_ADV || m_advType == ESP_BLE_EVT_DISC_ADV);
+#endif
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  return isLegacyAdvertisement() && (m_advType == BLE_HCI_ADV_TYPE_ADV_IND || m_advType == BLE_HCI_ADV_TYPE_ADV_SCAN_IND);
+#endif
+}
+
+bool BLEAdvertisedDevice::isConnectable() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  return m_advType == ESP_BLE_EVT_CONN_ADV || m_advType == ESP_BLE_EVT_CONN_DIR_ADV;
+#endif
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  if (m_isLegacyAdv) {
+    return m_advType == BLE_HCI_ADV_RPT_EVTYPE_ADV_IND || m_advType == BLE_HCI_ADV_RPT_EVTYPE_DIR_IND;
+  }
+  return (m_advType & BLE_HCI_ADV_CONN_MASK) || (m_advType & BLE_HCI_ADV_DIRECT_MASK);
+#endif
+}
 
 /**
  * @brief Get the address.
@@ -277,75 +322,75 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
       length--;
 
       char *pHex = BLEUtils::buildHexData(nullptr, payload, length);
-      log_d("Type: 0x%.2x (%s), length: %d, data: %s", ad_type, BLEUtils::advTypeToString(ad_type), length, pHex);
+      log_d("Type: 0x%.2x (%s), length: %d, data: %s", ad_type, BLEUtils::advDataTypeToString(ad_type), length, pHex);
       free(pHex);
 
       switch (ad_type) {
-        case ESP_BLE_AD_TYPE_NAME_CMPL:
-        {  // Adv Data Type: 0x09
+        case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
+        {                                // Adv Data Type: ESP_BLE_AD_TYPE_NAME_CMPL
           setName(String(reinterpret_cast<char *>(payload), length));
           break;
-        }  // ESP_BLE_AD_TYPE_NAME_CMPL
+        }  // 0x09
 
-        case ESP_BLE_AD_TYPE_TX_PWR:
-        {  // Adv Data Type: 0x0A
+        case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0A
+        {                             // Adv Data Type: ESP_BLE_AD_TYPE_TX_PWR
           setTXPower(*payload);
           break;
-        }  // ESP_BLE_AD_TYPE_TX_PWR
+        }  // 0x0A
 
-        case ESP_BLE_AD_TYPE_APPEARANCE:
-        {  // Adv Data Type: 0x19
+        case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_APPEARANCE
           setAppearance(*reinterpret_cast<uint16_t *>(payload));
           break;
-        }  // ESP_BLE_AD_TYPE_APPEARANCE
+        }  // 0x19
 
-        case ESP_BLE_AD_TYPE_FLAG:
-        {  // Adv Data Type: 0x01
+        case ESP_BLE_AD_TYPE_FLAG:  // 0x01
+        {                           // Adv Data Type: ESP_BLE_AD_TYPE_FLAG
           setAdFlag(*payload);
           break;
-        }  // ESP_BLE_AD_TYPE_FLAG
+        }  // 0x01
 
-        case ESP_BLE_AD_TYPE_16SRV_CMPL:
-        case ESP_BLE_AD_TYPE_16SRV_PART:
-        {  // Adv Data Type: 0x02
+        case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
+        case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_16SRV_PART/CMPL
           for (int var = 0; var < length / 2; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint16_t *>(payload + var * 2)));
           }
           break;
-        }  // ESP_BLE_AD_TYPE_16SRV_PART
+        }  // 0x02, 0x03
 
-        case ESP_BLE_AD_TYPE_32SRV_CMPL:
-        case ESP_BLE_AD_TYPE_32SRV_PART:
-        {  // Adv Data Type: 0x04
+        case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
+        case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
+        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_32SRV_PART/CMPL
           for (int var = 0; var < length / 4; ++var) {
             setServiceUUID(BLEUUID(*reinterpret_cast<uint32_t *>(payload + var * 4)));
           }
           break;
-        }  // ESP_BLE_AD_TYPE_32SRV_PART
+        }  // 0x04, 0x05
 
-        case ESP_BLE_AD_TYPE_128SRV_CMPL:
-        {  // Adv Data Type: 0x07
+        case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
+        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_CMPL
           setServiceUUID(BLEUUID(payload, 16, false));
           break;
-        }  // ESP_BLE_AD_TYPE_128SRV_CMPL
+        }  // 0x07
 
-        case ESP_BLE_AD_TYPE_128SRV_PART:
-        {  // Adv Data Type: 0x06
+        case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
+        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART
           setServiceUUID(BLEUUID(payload, 16, false));
           break;
-        }  // ESP_BLE_AD_TYPE_128SRV_PART
+        }  // 0x06
 
         // See CSS Part A 1.4 Manufacturer Specific Data
-        case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:
+        case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xFF
         {
           setManufacturerData(String(reinterpret_cast<char *>(payload), length));
           break;
-        }  // ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE
+        }  // 0xFF
 
-        case ESP_BLE_AD_TYPE_SERVICE_DATA:
-        {  // Adv Data Type: 0x16 (Service Data) - 2 byte UUID
+        case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
+        {                                   // Adv Data Type: ESP_BLE_AD_TYPE_SERVICE_DATA - 2 byte UUID
           if (length < 2) {
-            log_e("Length too small for ESP_BLE_AD_TYPE_SERVICE_DATA");
+            log_e("Length too small for SERVICE_DATA");
             break;
           }
           uint16_t uuid = *(uint16_t *)payload;
@@ -354,12 +399,12 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
             setServiceData(String(reinterpret_cast<char *>(payload + 2), length - 2));
           }
           break;
-        }  //ESP_BLE_AD_TYPE_SERVICE_DATA
+        }  // 0x16
 
-        case ESP_BLE_AD_TYPE_32SERVICE_DATA:
-        {  // Adv Data Type: 0x20 (Service Data) - 4 byte UUID
+        case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
+        {                                     // Adv Data Type: ESP_BLE_AD_TYPE_32SERVICE_DATA - 4 byte UUID
           if (length < 4) {
-            log_e("Length too small for ESP_BLE_AD_TYPE_32SERVICE_DATA");
+            log_e("Length too small for 32SERVICE_DATA");
             break;
           }
           uint32_t uuid = *(uint32_t *)payload;
@@ -368,12 +413,12 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
             setServiceData(String(reinterpret_cast<char *>(payload + 4), length - 4));
           }
           break;
-        }  //ESP_BLE_AD_TYPE_32SERVICE_DATA
+        }  // 0x20
 
-        case ESP_BLE_AD_TYPE_128SERVICE_DATA:
-        {  // Adv Data Type: 0x21 (Service Data) - 16 byte UUID
+        case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
+        {                                      // Adv Data Type: ESP_BLE_AD_TYPE_128SERVICE_DATA - 16 byte UUID
           if (length < 16) {
-            log_e("Length too small for ESP_BLE_AD_TYPE_128SERVICE_DATA");
+            log_e("Length too small for 128SERVICE_DATA");
             break;
           }
 
@@ -382,13 +427,13 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
             setServiceData(String(reinterpret_cast<char *>(payload + 16), length - 16));
           }
           break;
-        }  //ESP_BLE_AD_TYPE_32SERVICE_DATA
+        }  // 0x21
 
         default:
         {
           log_d("Unhandled type: adType: %d - 0x%.2x", ad_type, ad_type);
           break;
-        }
+        }  // default
       }  // switch
       payload += length;
     }  // Length <> 0
@@ -405,9 +450,19 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
  * @param [in] payload The payload of the advertised device.
  * @param [in] total_len The length of payload
  */
-void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len) {
-  m_payload = payload;
-  m_payloadLength = total_len;
+void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len, bool append) {
+  if (m_payload == nullptr || m_payloadLength == 0) {
+    return;
+  }
+
+  if (append) {
+    m_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
+    memcpy(m_payload + m_payloadLength, payload, total_len);
+    m_payloadLength += total_len;
+  } else {
+    m_payload = payload;
+    m_payloadLength = total_len;
+  }
 }  // setPayload
 
 /**
@@ -567,7 +622,7 @@ uint8_t *BLEAdvertisedDevice::getPayload() {
   return m_payload;
 }
 
-esp_ble_addr_type_t BLEAdvertisedDevice::getAddressType() {
+uint8_t BLEAdvertisedDevice::getAddressType() {
   return m_addressType;
 }
 
@@ -587,7 +642,7 @@ ble_frame_type_t BLEAdvertisedDevice::getFrameType() {
   return BLE_UNKNOWN_FRAME;
 }
 
-void BLEAdvertisedDevice::setAddressType(esp_ble_addr_type_t type) {
+void BLEAdvertisedDevice::setAddressType(uint8_t type) {
   m_addressType = type;
 }
 
@@ -595,5 +650,13 @@ size_t BLEAdvertisedDevice::getPayloadLength() {
   return m_payloadLength;
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+void BLEAdvertisedDevice::setAdvType(uint8_t type) {
+  m_advType = type;
+}
+
+uint8_t BLEAdvertisedDevice::getAdvType() {
+  return m_advType;
+}
+
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */

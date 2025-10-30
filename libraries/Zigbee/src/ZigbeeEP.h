@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Common Class for Zigbee End point */
 
 #pragma once
@@ -12,7 +26,7 @@
 #define ZB_CMD_TIMEOUT             10000     // 10 seconds
 #define OTA_UPGRADE_QUERY_INTERVAL (1 * 60)  // 1 hour = 60 minutes
 
-#define ZB_ARRAY_LENTH(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ZB_ARRAY_LENGHT(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define RGB_TO_XYZ(r, g, b, X, Y, Z)                               \
   {                                                                \
@@ -37,6 +51,9 @@ typedef enum {
   ZB_POWER_SOURCE_MAINS = 0x01,
   ZB_POWER_SOURCE_BATTERY = 0x03,
 } zb_power_source_t;
+
+// Global function for converting ZCL status to name
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
 
 /* Zigbee End Device Class */
 class ZigbeeEP {
@@ -66,11 +83,14 @@ public:
     return _bound_devices;
   }
 
-  static bool bound() {
+  bool bound() {
     return _is_bound;
   }
-  static void allowMultipleBinding(bool bind) {
+  void allowMultipleBinding(bool bind) {
     _allow_multiple_binding = bind;
+  }
+  void setManualBinding(bool bind) {
+    _use_manual_binding = bind;
   }
 
   // Set Manufacturer name and model
@@ -97,6 +117,9 @@ public:
 
   bool epAllowMultipleBinding() {
     return _allow_multiple_binding;
+  }
+  bool epUseManualBinding() {
+    return _use_manual_binding;
   }
 
   // OTA methods
@@ -125,45 +148,68 @@ public:
 
   // list of all handlers function calls, to be override by EPs implementation
   virtual void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {};
-  virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute) {};
+  virtual void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
+  virtual void
+    zbWriteAttributeResponse(uint16_t cluster_id, uint16_t attribute_id, esp_zb_zcl_status_t status, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {};
   virtual void zbReadBasicCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message);
+  virtual void zbOTAState(bool otaActive);
   virtual void zbWindowCoveringMovementCmd(const esp_zb_zcl_window_covering_movement_message_t *message) {};
   virtual void zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute);  //already implemented
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
+  virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
     _is_bound = true;
   }
 
+  virtual void removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  virtual void removeBoundDevice(zb_device_params_t *device);
+
+  virtual void clearBoundDevices() {
+    _bound_devices.clear();
+    _is_bound = false;
+  }
+
   void onIdentify(void (*callback)(uint16_t)) {
     _on_identify = callback;
   }
+
+  void onOTAStateChange(void (*callback)(bool state)) {
+    _on_ota_state_change = callback;
+  }
+
+  void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status)) {
+    _on_default_response = callback;
+  }
+
+  // Convert ZCL status to name
 
 private:
   char *_read_manufacturer;
   char *_read_model;
   void (*_on_identify)(uint16_t time);
+  void (*_on_ota_state_change)(bool state);
+  void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status);
   time_t _read_time;
   int32_t _read_timezone;
 
 protected:
-  // Convert ZCL status to name
-  const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
-
   uint8_t _endpoint;
   esp_zb_ha_standard_devices_t _device_id;
   esp_zb_endpoint_config_t _ep_config;
   esp_zb_cluster_list_t *_cluster_list;
-  static bool _is_bound;
-  static bool _allow_multiple_binding;
+  bool _is_bound;
+  bool _allow_multiple_binding;
+  bool _use_manual_binding;
   std::list<zb_device_params_t *> _bound_devices;
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
   uint8_t _time_status;
 
+  // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
 };
 

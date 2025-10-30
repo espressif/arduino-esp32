@@ -7,9 +7,13 @@
 #######################################
 
 OThreadCLI	KEYWORD1
+OThread	KEYWORD1
 OpenThreadCLI	KEYWORD1
+OpenThread	KEYWORD1
+DataSet	KEYWORD1
 ot_cmd_return_t	KEYWORD1
 ot_device_role_t	KEYWORD1
+OnReceiveCb_t	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -35,6 +39,44 @@ otGetRespCmd	KEYWORD2
 otExecCommand	KEYWORD2
 otPrintRespCLI	KEYWORD2
 otPrintNetworkInformation	KEYWORD2
+clear	KEYWORD2
+initNew	KEYWORD2
+getDataset	KEYWORD2
+setNetworkName	KEYWORD2
+getNetworkName	KEYWORD2
+setExtendedPanId	KEYWORD2
+getExtendedPanId	KEYWORD2
+setNetworkKey	KEYWORD2
+getNetworkKey	KEYWORD2
+setChannel	KEYWORD2
+getChannel	KEYWORD2
+setPanId	KEYWORD2
+getPanId	KEYWORD2
+apply	KEYWORD2
+otStarted	KEYWORD2
+otCLIStarted	KEYWORD2
+start	KEYWORD2
+stop	KEYWORD2
+networkInterfaceUp	KEYWORD2
+networkInterfaceDown	KEYWORD2
+commitDataSet	KEYWORD2
+getInstance	KEYWORD2
+getCurrentDataSet	KEYWORD2
+getMeshLocalPrefix	KEYWORD2
+getMeshLocalEid	KEYWORD2
+getLeaderRloc	KEYWORD2
+getRloc	KEYWORD2
+getRloc16	KEYWORD2
+getUnicastAddressCount	KEYWORD2
+getUnicastAddress	KEYWORD2
+getAllUnicastAddresses	KEYWORD2
+getMulticastAddressCount	KEYWORD2
+getMulticastAddress	KEYWORD2
+getAllMulticastAddresses	KEYWORD2
+clearUnicastAddressCache	KEYWORD2
+clearMulticastAddressCache	KEYWORD2
+clearAllAddressCache	KEYWORD2
+end	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -45,3 +87,5 @@ OT_ROLE_DETACHED	LITERAL1
 OT_ROLE_CHILD	LITERAL1
 OT_ROLE_ROUTER	LITERAL1
 OT_ROLE_LEADER	LITERAL1
+OT_EXT_PAN_ID_SIZE	LITERAL1
+OT_NETWORK_KEY_SIZE	LITERAL1

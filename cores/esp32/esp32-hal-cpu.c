@@ -19,13 +19,16 @@
 #include "esp_attr.h"
 #include "esp_log.h"
 #include "soc/rtc.h"
-#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4) \
+  && !defined(CONFIG_IDF_TARGET_ESP32C5)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/syscon_reg.h"
 #endif
 #include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
+#include "hal/timer_ll.h"
+#include "esp_private/systimer.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -48,6 +51,8 @@
 #include "esp32h2/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C5
+#include "esp32c5/rom/rtc.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -173,13 +178,15 @@ static uint32_t calculateApb(rtc_cpu_freq_config_t *conf) {
 #endif
 }
 
+#if defined(CONFIG_IDF_TARGET_ESP32) && !defined(LACT_MODULE) && !defined(LACT_TICKS_PER_US)
 void esp_timer_impl_update_apb_freq(uint32_t apb_ticks_per_us);  //private in IDF
+#endif
 
 bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   rtc_cpu_freq_config_t conf, cconf;
   uint32_t capb, apb;
   //Get XTAL Frequency and calculate min CPU MHz
-#if (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
+#if (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32C5))
   rtc_xtal_freq_t xtal = rtc_clk_xtal_freq_get();
 #endif
 #if CONFIG_IDF_TARGET_ESP32
@@ -195,7 +202,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     }
   }
 #endif
-#if (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
+#if (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32C5))
   if (cpu_freq_mhz > xtal && cpu_freq_mhz != 240 && cpu_freq_mhz != 160 && cpu_freq_mhz != 120 && cpu_freq_mhz != 80) {
     if (xtal >= RTC_XTAL_FREQ_40M) {
       log_e("Bad frequency: %u MHz! Options are: 240, 160, 120, 80, %u, %u and %u MHz", cpu_freq_mhz, xtal, xtal / 2, xtal / 4);
@@ -246,7 +253,13 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     //Update APB Freq REG
     rtc_clk_apb_freq_update(apb);
     //Update esp_timer divisor
+#if CONFIG_IDF_TARGET_ESP32
+#if defined(LACT_MODULE) && defined(LACT_TICKS_PER_US)
+    timer_ll_set_lact_clock_prescale(TIMER_LL_GET_HW(LACT_MODULE), apb / MHZ / LACT_TICKS_PER_US);
+#else
     esp_timer_impl_update_apb_freq(apb / MHZ);
+#endif
+#endif
   }
 #endif
   //Update FreeRTOS Tick Divisor
@@ -263,6 +276,12 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   log_d(
     "%s: %u / %u = %u Mhz, APB: %u Hz",
     (conf.source == SOC_CPU_CLK_SRC_PLL) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_APLL) ? "APLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "8M")),
+    conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
+#elif defined(CONFIG_IDF_TARGET_ESP32C5)
+  log_d(
+    "%s: %u / %u = %u Mhz, APB: %u Hz",
+    (conf.source == SOC_CPU_CLK_SRC_PLL_F240M || conf.source == SOC_CPU_CLK_SRC_PLL_F160M) ? "PLL" : ((conf.source == SOC_CPU_CLK_SRC_XTAL) ? "XTAL" : "8M"),
     conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
   );
 #else
