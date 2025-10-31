@@ -117,8 +117,12 @@ bool touchDisable() {
   if (!enabled) {  // Already disabled
     return true;
   }
-  if (!running && (touch_sensor_disable(touch_sensor_handle) != ESP_OK)) {
-    log_e("Touch sensor still running or disable failed!");
+  if (running) {
+    log_e("Touch sensor still running!");
+    return false;
+  }
+  if (touch_sensor_disable(touch_sensor_handle) != ESP_OK) {
+    log_e("Touch sensor disable failed!");
     return false;
   }
   enabled = false;
@@ -129,8 +133,12 @@ bool touchStart() {
   if (running) {  // Already running
     return true;
   }
-  if (!enabled && (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK)) {
-    log_e("Touch sensor not enabled or failed to start continuous scanning failed!");
+  if (!enabled) {
+    log_e("Touch sensor not enabled!");
+    return false;
+  }
+  if (touch_sensor_start_continuous_scanning(touch_sensor_handle) != ESP_OK) {
+    log_e("Touch sensor failed to start continuous scanning!");
     return false;
   }
   running = true;
