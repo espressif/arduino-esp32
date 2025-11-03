@@ -574,12 +574,20 @@ HardwareSerial::operator bool() const {
   return uartIsDriverInstalled(_uart);
 }
 
-void HardwareSerial::setRxInvert(bool invert) {
-  uartSetRxInvert(_uart, invert);
+bool HardwareSerial::setRxInvert(bool invert) {
+  return uartSetRxInvert(_uart, invert);
 }
 
-void HardwareSerial::setTxInvert(bool invert) {
-  uartSetTxInvert(_uart, invert);
+bool HardwareSerial::setTxInvert(bool invert) {
+  return uartSetTxInvert(_uart, invert);
+}
+
+bool HardwareSerial::setCtsInvert(bool invert) {
+  return uartSetCtsInvert(_uart, invert);
+}
+
+bool HardwareSerial::setRtsInvert(bool invert) {
+  return uartSetRtsInvert(_uart, invert);
 }
 
 // negative Pin value will keep it unmodified
