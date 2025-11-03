@@ -190,19 +190,19 @@ void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_att
       uint16_t min_value = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
       _min_humidity = 1.0 * min_value / 100;
       read_humidity_config++;
-      log_d("Received min humidity: %.2f% from endpoint %d", _min_humidity, src_endpoint);
+      log_d("Received min humidity: %.2f%% from endpoint %d", _min_humidity, src_endpoint);
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       uint16_t max_value = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
       _max_humidity = 1.0 * max_value / 100;
       read_humidity_config++;
-      log_d("Received max humidity: %.2f% from endpoint %d", _max_humidity, src_endpoint);
+      log_d("Received max humidity: %.2f%% from endpoint %d", _max_humidity, src_endpoint);
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       uint16_t tolerance = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
       _tolerance_humidity = 1.0 * tolerance / 100;
       read_humidity_config++;
-      log_d("Received tolerance: %.2f% from endpoint %d", _tolerance_humidity, src_endpoint);
+      log_d("Received tolerance: %.2f%% from endpoint %d", _tolerance_humidity, src_endpoint);
     }
     if (read_humidity_config == 3) {
       log_d("All humidity config attributes processed");
