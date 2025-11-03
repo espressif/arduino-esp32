@@ -100,7 +100,7 @@ This function is used to set duty for the LEDC pin.
     bool ledcWrite(uint8_t pin, uint32_t duty);
 
 * ``pin`` select LEDC pin.
-* ``duty`` select duty to be set for selected LEDC pin.
+* ``duty`` select duty to be set for selected LEDC pin. Maximum value is 2 ^ ``resolution`` (number of bits).
 
 This function will return ``true`` if setting duty is successful.
 If ``false`` is returned, error occurs and duty was not set.
@@ -115,7 +115,7 @@ This function is used to set duty for the LEDC channel.
     bool ledcWriteChannel(uint8_t channel, uint32_t duty);
 
 * ``channel`` select LEDC channel.
-* ``duty`` select duty to be set for selected LEDC channel.
+* ``duty`` select duty to be set for selected LEDC channel. Maximum value is 2 ^ ``resolution`` (number of bits).
 
 This function will return ``true`` if setting duty is successful.
 If ``false`` is returned, error occurs and duty was not set.
@@ -240,8 +240,8 @@ This function is used to setup and start fade for the LEDC pin.
     bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms);
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade.  Maximum value is 2 ^ ``resolution`` (number of bits).
+* ``target_duty`` select target duty of fade.  Maximum value is 2 ^ ``resolution`` (number of bits).
 * ``max_fade_time_ms`` select maximum time for fade.
 
 This function will return ``true`` if configuration is successful.
@@ -257,8 +257,8 @@ This function is used to setup and start fade for the LEDC pin with interrupt.
     bool ledcFadeWithInterrupt(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void));
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade. Maximum value is 2 ^ ``resolution`` (number of bits).
+* ``target_duty`` select target duty of fade.  Maximum value is 2 ^ ``resolution`` (number of bits).
 * ``max_fade_time_ms`` select maximum time for fade.
 * ``userFunc`` function to be called when interrupt is triggered.
 
@@ -275,8 +275,8 @@ This function is used to setup and start fade for the LEDC pin with interrupt us
     bool ledcFadeWithInterruptArg(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms, void (*userFunc)(void*), void * arg);
 
 * ``pin`` select LEDC pin.
-* ``start_duty`` select starting duty of fade.
-* ``target_duty`` select target duty of fade.
+* ``start_duty`` select starting duty of fade. Maximum value is 2 ^ ``resolution`` (number of bits).
+* ``target_duty`` select target duty of fade. Maximum value is 2 ^ ``resolution`` (number of bits).
 * ``max_fade_time_ms`` select maximum time for fade.
 * ``userFunc`` function to be called when interrupt is triggered.
 * ``arg`` pointer to the interrupt arguments.
