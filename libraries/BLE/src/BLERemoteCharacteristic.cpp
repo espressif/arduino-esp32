@@ -113,7 +113,7 @@ bool BLERemoteCharacteristic::canWriteNoResponse() {
  */
 std::map<std::string, BLERemoteDescriptor *> *BLERemoteCharacteristic::getDescriptors() {
   // Retrieve descriptors if not already done (lazy loading)
-  if (m_descriptorMap.empty()) {
+  if (!m_descriptorsRetrieved) {
     log_d("Descriptors not yet retrieved, retrieving now...");
     retrieveDescriptors();
   }
@@ -138,7 +138,7 @@ uint16_t BLERemoteCharacteristic::getHandle() {
 BLERemoteDescriptor *BLERemoteCharacteristic::getDescriptor(BLEUUID uuid) {
   log_v(">> getDescriptor: uuid: %s", uuid.toString().c_str());
   // Retrieve descriptors if not already done (lazy loading)
-  if (m_descriptorMap.empty()) {
+  if (!m_descriptorsRetrieved) {
     log_d("Descriptors not yet retrieved, retrieving now...");
     retrieveDescriptors();
   }
@@ -297,6 +297,7 @@ void BLERemoteCharacteristic::removeDescriptors() {
     delete myPair.second;
   }
   m_descriptorMap.clear();
+  m_descriptorsRetrieved = false;  // Allow descriptors to be retrieved again
 }  // removeCharacteristics
 
 /**
@@ -376,6 +377,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(uint16_t handle, BLEUUID uuid, 
   m_notifyCallback = nullptr;
   m_rawData = nullptr;
   m_auth = ESP_GATT_AUTH_REQ_NONE;
+  m_descriptorsRetrieved = false;
 
   retrieveDescriptors();  // Get the descriptors for this characteristic
   log_v("<< BLERemoteCharacteristic");
@@ -559,6 +561,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
     offset++;
   }  // while true
   //m_haveCharacteristics = true; // Remember that we have received the characteristics.
+  m_descriptorsRetrieved = true;
   log_v("<< retrieveDescriptors(): Found %d descriptors.", offset);
 }  // getDescriptors
 
@@ -678,6 +681,7 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(BLERemoteService *pRemoteServic
   m_notifyCallback = nullptr;
   m_rawData = nullptr;
   m_auth = 0;
+  m_descriptorsRetrieved = false;
 
   // Don't retrieve descriptors in constructor for NimBLE to avoid deadlock
   // Descriptors will be retrieved on-demand when needed (e.g., for notifications)
@@ -791,6 +795,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
 
   // If this is the last handle then there are no descriptors
   if (m_handle == getRemoteService()->getEndHandle()) {
+    m_descriptorsRetrieved = true;
     log_d("<< retrieveDescriptors(): No descriptors found");
     return true;
   }
@@ -816,6 +821,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
     return false;
   }
 
+  m_descriptorsRetrieved = true;
   log_d("<< retrieveDescriptors(): Found %d descriptors.", m_descriptorMap.size() - prevDscCount);
   return true;
 }  // retrieveDescriptors
@@ -977,7 +983,7 @@ bool BLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCall
   m_notifyCallback = notifyCallback;
 
   // Retrieve descriptors if not already done (lazy loading)
-  if (m_descriptorMap.empty()) {
+  if (!m_descriptorsRetrieved) {
     log_d("Descriptors not yet retrieved, retrieving now...");
     if (!retrieveDescriptors()) {
       log_e("<< setNotify(): Failed to retrieve descriptors");
