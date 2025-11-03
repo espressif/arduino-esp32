@@ -874,17 +874,17 @@ uart_t *uartBegin(
   if (retCode) {
     if (inverted) {
       // invert signal for both Rx and Tx
-      uint32_t _inv_mask = inv_mask;
+      uint32_t _inv_mask = uart->inv_mask;
       _inv_mask |=  UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, _inv_mask);
       if (retCode) {
-        inv_mask = _inv_mask;
+        uart->inv_mask = _inv_mask;
       }
     } else {
       // disable invert signal for both Rx and Tx
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
       if (retCode) {
-        inv_mask = UART_SIGNAL_INV_DISABLE;
+        uart->inv_mask = UART_SIGNAL_INV_DISABLE;
       }
     }
   }
@@ -995,7 +995,7 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
     return;
   }
   UART_MUTEX_LOCK();
-  uint32_t _inv_mask = inv_mask;
+  uint32_t _inv_mask = uart->inv_mask;
   if (inverted) {
     _inv_mask |= invMask;    
   } else {
@@ -1003,7 +1003,7 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   }
   bool retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
   if (retCode) {
-    inv_mask = _inv_mask;
+    uart->inv_mask = _inv_mask;
   }
   UART_MUTEX_UNLOCK();
   return retCode;
