@@ -17,7 +17,7 @@ const boolean invert = true;  // set true if common anode, false if common catho
 
 uint8_t color = 0;         // a value from 0 to 255 representing the hue
 uint32_t R, G, B;          // the Red Green and Blue color components
-uint16_t brightness = 255; // 255 is maximum brightness, but can be changed.
+uint8_t brightness = 255; // 255 is maximum brightness, but can be changed. Might need 256 for common anode to fully turn off.
 
 // the setup routine runs once when you press reset:
 void setup() {
