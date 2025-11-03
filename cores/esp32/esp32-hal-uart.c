@@ -1010,19 +1010,19 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
 }
 
 bool uartSetRxInvert(uart_t *uart, bool invert) {
-  return _uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
+  return uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
 }
 
 bool uartSetTxInvert(uart_t *uart, bool invert) {
-  return _uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
+  return uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
 }
 
 bool uartSetCtsInvert(uart_t *uart, bool invert) {
-  return _uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert);
+  return uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert);
 }
 
 bool uartSetRtsInvert(uart_t *uart, bool invert) {
-  return _uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert);
+  return uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert);
 }
 
 uint32_t uartAvailable(uart_t *uart) {
