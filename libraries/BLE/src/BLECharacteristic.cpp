@@ -929,7 +929,7 @@ void BLECharacteristic::processDeferredWriteCallback(void *pvParameters) {
     // Wait for at least one connection interval to ensure the write response
     // has been transmitted. Add a small buffer for processing.
     uint16_t intervalMs = (desc.conn_itvl * 125) / 100;  // Convert to milliseconds
-    uint16_t delayMs = intervalMs + 5;  // Add 5ms buffer
+    uint16_t delayMs = intervalMs + 5;                   // Add 5ms buffer
 
     log_v("Deferring write callback by %dms (conn_interval=%d units, %dms)", delayMs, desc.conn_itvl, intervalMs);
     vTaskDelay(pdMS_TO_TICKS(delayMs));
@@ -1017,12 +1017,11 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         // Using priority 1 (low priority) and sufficient stack for callback operations
         // Note: Stack must be large enough to handle notify() calls from within onWrite()
         xTaskCreate(
-          processDeferredWriteCallback,
-          "BLEWriteCB",
+          processDeferredWriteCallback, "BLEWriteCB",
           4096,  // Stack size - increased to handle notify() operations
           pCallback,
-          1,     // Priority (low)
-          NULL   // Task handle (not needed for one-shot task)
+          1,    // Priority (low)
+          NULL  // Task handle (not needed for one-shot task)
         );
 
         return 0;
