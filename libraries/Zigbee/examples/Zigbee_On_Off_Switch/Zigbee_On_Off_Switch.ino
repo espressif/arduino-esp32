@@ -66,12 +66,41 @@ static SwitchData buttonFunctionPair[] = {{GPIO_INPUT_IO_TOGGLE_SWITCH, SWITCH_O
 
 ZigbeeSwitch zbSwitch = ZigbeeSwitch(SWITCH_ENDPOINT_NUMBER);
 
+static bool light_state = false;
+
 /********************* Zigbee functions **************************/
 static void onZbButton(SwitchData *button_func_pair) {
   if (button_func_pair->func == SWITCH_ONOFF_TOGGLE_CONTROL) {
     // Send toggle command to the light
     Serial.println("Toggling light");
     zbSwitch.lightToggle();
+  }
+}
+
+static void onLightStateChange(bool state) {
+  if (state != light_state) {
+    light_state = state;
+    Serial.printf("Light state changed to %d\r\n", state);
+  }
+}
+
+/********************* Periodic task ***************************/
+void periodicTask(void *arg) {
+  while (true) {
+    // print the bound lights every 10 seconds
+    static uint32_t lastPrint = 0;
+    if (millis() - lastPrint > 10000) {
+      lastPrint = millis();
+      zbSwitch.printBoundDevices(Serial);
+    }
+
+    // Poll light state every second
+    static uint32_t lastPoll = 0;
+    if (millis() - lastPoll > 1000) {
+      lastPoll = millis();
+      zbSwitch.getLightState();
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 
@@ -101,6 +130,8 @@ void setup() {
 
   //Optional to allow multiple light to bind to the switch
   zbSwitch.allowMultipleBinding(true);
+
+  zbSwitch.onLightStateChange(onLightStateChange);
 
   //Add endpoint to Zigbee Core
   Serial.println("Adding ZigbeeSwitch endpoint to Zigbee Core");
@@ -154,6 +185,8 @@ void setup() {
   }
 
   Serial.println();
+
+  xTaskCreate(periodicTask, "periodicTask", 1024 * 4, NULL, 10, NULL);
 }
 
 void loop() {
@@ -187,12 +220,5 @@ void loop() {
       break;
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-
-  // print the bound lights every 10 seconds
-  static uint32_t lastPrint = 0;
-  if (millis() - lastPrint > 10000) {
-    lastPrint = millis();
-    zbSwitch.printBoundDevices(Serial);
   }
 }

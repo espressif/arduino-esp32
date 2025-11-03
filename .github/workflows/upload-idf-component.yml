@@ -51,9 +51,9 @@ jobs:
           submodules: "recursive"
 
       - name: Upload components to the component registry
-        uses: espressif/upload-components-ci-action@b78a19fa5424714997596d3ecffa634aef8ae20b # v1.0.5
+        uses: espressif/upload-components-ci-action@df9e740b912c009996df639ba7090c24e9a542c2 # v2.2.0
         with:
-          name: arduino-esp32
+          components: "arduino-esp32: ." # component_name: directory
           version: ${{ env.RELEASE_TAG }}
           namespace: espressif
           api_token: ${{ secrets.IDF_COMPONENT_API_TOKEN }}

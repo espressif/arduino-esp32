@@ -1,3 +1,18 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <algorithm>
 #include "ZigbeeColorDimmableLight.h"
 #if CONFIG_ZB_ENABLED
 
@@ -75,14 +90,13 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       return;
     } else {
       log_w("Received message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
-      //TODO: implement more attributes -> includes/zcl/esp_zigbee_zcl_level.h
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       uint16_t light_color_x = (*(uint16_t *)message->attribute.data.value);
       uint16_t light_color_y = getCurrentColorY();
       //calculate RGB from XY and call setColor()
-      _current_color = espXYToRgbColor(255, light_color_x, light_color_y);  //TODO: Check if level is correct
+      _current_color = espXYToRgbColor(255, light_color_x, light_color_y, false);
       lightChanged();
       return;
 
@@ -90,7 +104,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       uint16_t light_color_x = getCurrentColorX();
       uint16_t light_color_y = (*(uint16_t *)message->attribute.data.value);
       //calculate RGB from XY and call setColor()
-      _current_color = espXYToRgbColor(255, light_color_x, light_color_y);  //TODO: Check if level is correct
+      _current_color = espXYToRgbColor(255, light_color_x, light_color_y, false);
       lightChanged();
       return;
     } else if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
@@ -127,7 +141,8 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
 
   espXyColor_t xy_color = espRgbColorToXYColor(_current_color);
   espHsvColor_t hsv_color = espRgbColorToHsvColor(_current_color);
-  uint8_t hue = (uint8_t)hsv_color.h;
+  uint8_t hue = std::min((uint8_t)hsv_color.h, (uint8_t)254);         // Clamp to 0-254
+  uint8_t saturation = std::min((uint8_t)hsv_color.s, (uint8_t)254);  // Clamp to 0-254
 
   log_v("Updating light state: %d, level: %d, color: %d, %d, %d", state, level, red, green, blue);
   /* Update light clusters */
@@ -174,7 +189,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   }
   //set saturation
   ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &hsv_color.s, false
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, &saturation, false
   );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light saturation: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));

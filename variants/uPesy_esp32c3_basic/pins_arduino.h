@@ -28,5 +28,6 @@ static const uint8_t A4 = 4;
 static const uint8_t A5 = 5;
 
 static const uint8_t VBAT_SENSE = 0;
+#define BAT_VOLT_PIN VBAT_SENSE
 
 #endif /* Pins_Arduino_h */

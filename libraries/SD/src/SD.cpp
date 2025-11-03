@@ -22,12 +22,18 @@ using namespace fs;
 
 SDFS::SDFS(FSImplPtr impl) : FS(impl), _pdrv(0xFF) {}
 
+SDFS::~SDFS() {
+  end();
+}
+
 bool SDFS::begin(uint8_t ssPin, SPIClass &spi, uint32_t frequency, const char *mountpoint, uint8_t max_files, bool format_if_empty) {
   if (_pdrv != 0xFF) {
     return true;
   }
 
-  spi.begin();
+  if (!spi.begin()) {
+    return false;
+  }
 
   _pdrv = sdcard_init(ssPin, &spi, frequency);
   if (_pdrv == 0xFF) {

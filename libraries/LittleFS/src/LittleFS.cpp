@@ -44,6 +44,7 @@ LittleFSFS::~LittleFSFS() {
 }
 
 bool LittleFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles, const char *partitionLabel) {
+  (void)maxOpenFiles;
 
   if (partitionLabel_) {
     free(partitionLabel_);

@@ -17,8 +17,8 @@ function run_test {
     sketchname=$(basename "$sketchdir")
     test_type=$(basename "$(dirname "$sketchdir")")
 
-    if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.json ]; then
-        len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+    if [ "$options" -eq 0 ] && [ -f "$sketchdir"/ci.yml ]; then
+        len=$(yq eval ".fqbn.${target} | length" "$sketchdir"/ci.yml 2>/dev/null || echo 0)
         if [ "$len" -eq 0 ]; then
             len=1
         fi
@@ -32,10 +32,10 @@ function run_test {
         sdkconfig_path="$HOME/.arduino/tests/$target/$sketchname/build0.tmp/sdkconfig"
     fi
 
-    if [ -f "$sketchdir"/ci.json ]; then
+    if [ -f "$sketchdir"/ci.yml ]; then
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
-        selected_platform=$(jq -r --arg platform "$platform" '.platforms[$platform]' "$sketchdir"/ci.json)
+        is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
+        selected_platform=$(yq eval ".platforms.${platform}" "$sketchdir"/ci.yml 2>/dev/null)
 
         if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
             printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$sketchname" "$target" "$platform"
@@ -68,17 +68,17 @@ function run_test {
         fqbn="Default"
 
         if [ "$len" -ne 1 ]; then
-            fqbn=$(jq -r --arg target "$target" --argjson i "$i" '.fqbn[$target] | sort | .[$i]' "$sketchdir"/ci.json)
-        elif [ -f "$sketchdir"/ci.json ]; then
-            has_fqbn=$(jq -r --arg target "$target" '.fqbn[$target]' "$sketchdir"/ci.json)
+            fqbn=$(yq eval ".fqbn.${target} | sort | .[${i}]" "$sketchdir"/ci.yml 2>/dev/null)
+        elif [ -f "$sketchdir"/ci.yml ]; then
+            has_fqbn=$(yq eval ".fqbn.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [ "$has_fqbn" != "null" ]; then
-                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | .[0]' "$sketchdir"/ci.json)
+                fqbn=$(yq eval ".fqbn.${target} | .[0]" "$sketchdir"/ci.yml 2>/dev/null)
             fi
         fi
 
         printf "\033[95mRunning test: %s -- Config: %s\033[0m\n" "$sketchname" "$fqbn"
         if [ "$erase_flash" -eq 1 ]; then
-            esptool.py -c "$target" erase_flash
+            esptool -c "$target" erase-flash
         fi
 
         if [ "$len" -ne 1 ]; then
@@ -88,10 +88,7 @@ function run_test {
         fi
 
         if [ $platform == "wokwi" ]; then
-            extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi" "--wokwi-timeout=$wokwi_timeout")
-            if [[ -f "$sketchdir/scenario.yaml" ]]; then
-                extra_args+=("--wokwi-scenario" "$sketchdir/scenario.yaml")
-            fi
+            extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi")
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
@@ -115,14 +112,14 @@ function run_test {
         rm "$sketchdir"/diagram.json 2>/dev/null || true
 
         result=0
-        printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
-        bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
+        printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
+        bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
-            printf "\033[95mpytest \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
-            bash -c "set +e; pytest \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
+            printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
+            bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
             printf "\n"
             if [ $result -ne 0 ]; then
                 printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
@@ -137,7 +134,6 @@ SCRIPTS_DIR="./.github/scripts"
 COUNT_SKETCHES="${SCRIPTS_DIR}/sketch_utils.sh count"
 
 platform="hardware"
-wokwi_timeout=60000
 chunk_run=0
 options=0
 erase=0
@@ -156,7 +152,6 @@ while [ -n "$1" ]; do
         ;;
     -W )
         shift
-        wokwi_timeout=$1
         if [[ -z $WOKWI_CLI_TOKEN ]]; then
             echo "Wokwi CLI token is not set"
             exit 1

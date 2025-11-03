@@ -1,7 +1,6 @@
 #ifndef __HTTP_UPDATE_SERVER_H
 #define __HTTP_UPDATE_SERVER_H
 
-#include <SPIFFS.h>
 #include <StreamString.h>
 #include <Update.h>
 #include <WebServer.h>
@@ -27,6 +26,7 @@ static const char serverIndex[] PROGMEM =
      </body>
      </html>)";
 static const char successResponse[] PROGMEM = "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...";
+static const char *csrfHeaders[2] = {"Origin", "Host"};
 
 class HTTPUpdateServer {
 public:
@@ -56,6 +56,9 @@ public:
     _username = username;
     _password = password;
 
+    // collect headers for CSRF verification
+    _server->collectHeaders(csrfHeaders, 2);
+
     // handler for the /update form page
     _server->on(path.c_str(), HTTP_GET, [&]() {
       if (_username != emptyString && _password != emptyString && !_server->authenticate(_username.c_str(), _password.c_str())) {
@@ -69,6 +72,10 @@ public:
       path.c_str(), HTTP_POST,
       [&]() {
         if (!_authenticated) {
+          if (_username == emptyString || _password == emptyString) {
+            _server->send(200, F("text/html"), String(F("Update error: Wrong origin received!")));
+            return;
+          }
           return _server->requestAuthentication();
         }
         if (Update.hasError()) {
@@ -100,11 +107,22 @@ public:
             return;
           }
 
+          String origin = _server->header(String(csrfHeaders[0]));
+          String host = _server->header(String(csrfHeaders[1]));
+          String expectedOrigin = String("http://") + host;
+          if (origin != expectedOrigin) {
+            if (_serial_output) {
+              Serial.printf("Wrong origin received! Expected: %s, Received: %s\n", expectedOrigin.c_str(), origin.c_str());
+            }
+            _authenticated = false;
+            return;
+          }
+
           if (_serial_output) {
             Serial.printf("Update: %s\n", upload.filename.c_str());
           }
           if (upload.name == "filesystem") {
-            if (!Update.begin(SPIFFS.totalBytes(), U_SPIFFS)) {  //start with max available size
+            if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASHFS)) {  //Instead of SPIFFS.totalBytes(). Fix https://github.com/espressif/arduino-esp32/issues/9967
               if (_serial_output) {
                 Update.printError(Serial);
               }

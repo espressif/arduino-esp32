@@ -21,6 +21,7 @@
 #include "Esp.h"
 #include "esp_sleep.h"
 #include "spi_flash_mmap.h"
+#include "esp_idf_version.h"
 #include <memory>
 #include <soc/soc.h>
 #include <esp_partition.h>
@@ -35,6 +36,22 @@ extern "C" {
 #include "esp_chip_info.h"
 #include "esp_mac.h"
 #include "esp_flash.h"
+
+// Include HAL layer for flash clock access
+#include "hal/spi_flash_ll.h"
+#if CONFIG_IDF_TARGET_ESP32
+#include "soc/spi_struct.h"
+#else
+// All modern chips (S2, S3, C2, C3, C5, C6, H2, P4) use spimem
+#include "hal/spimem_flash_ll.h"
+// Try to include the newer c_struct header first, fall back to regular struct
+#if __has_include("soc/spi_mem_c_struct.h")
+#include "soc/spi_mem_c_struct.h"
+#else
+#include "soc/spi_mem_struct.h"
+#endif
+#endif
+
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
 #if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
 #include "esp32/rom/spi_flash.h"
@@ -63,6 +80,9 @@ extern "C" {
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/spi_flash.h"
 #define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32p4 is located at 0x2000
+#elif CONFIG_IDF_TARGET_ESP32C5
+#include "esp32c5/rom/spi_flash.h"
+#define ESP_FLASH_IMAGE_BASE 0x2000  // Esp32c5 is located at 0x2000
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -87,39 +107,39 @@ extern "C" {
  *   uint32_t = test = 10_MHz; // --> 10000000
  */
 
-unsigned long long operator"" _kHz(unsigned long long x) {
+unsigned long long operator""_kHz(unsigned long long x) {
   return x * 1000;
 }
 
-unsigned long long operator"" _MHz(unsigned long long x) {
+unsigned long long operator""_MHz(unsigned long long x) {
   return x * 1000 * 1000;
 }
 
-unsigned long long operator"" _GHz(unsigned long long x) {
+unsigned long long operator""_GHz(unsigned long long x) {
   return x * 1000 * 1000 * 1000;
 }
 
-unsigned long long operator"" _kBit(unsigned long long x) {
+unsigned long long operator""_kBit(unsigned long long x) {
   return x * 1024;
 }
 
-unsigned long long operator"" _MBit(unsigned long long x) {
+unsigned long long operator""_MBit(unsigned long long x) {
   return x * 1024 * 1024;
 }
 
-unsigned long long operator"" _GBit(unsigned long long x) {
+unsigned long long operator""_GBit(unsigned long long x) {
   return x * 1024 * 1024 * 1024;
 }
 
-unsigned long long operator"" _kB(unsigned long long x) {
+unsigned long long operator""_kB(unsigned long long x) {
   return x * 1024;
 }
 
-unsigned long long operator"" _MB(unsigned long long x) {
+unsigned long long operator""_MB(unsigned long long x) {
   return x * 1024 * 1024;
 }
 
-unsigned long long operator"" _GB(unsigned long long x) {
+unsigned long long operator""_GB(unsigned long long x) {
   return x * 1024 * 1024 * 1024;
 }
 
@@ -301,7 +321,12 @@ const char *EspClass::getChipModel(void) {
     case CHIP_ESP32C6: return "ESP32-C6";
     case CHIP_ESP32H2: return "ESP32-H2";
     case CHIP_ESP32P4: return "ESP32-P4";
-    default:           return "UNKNOWN";
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    case CHIP_ESP32C5:  return "ESP32-C5";
+    case CHIP_ESP32C61: return "ESP32-C61";
+    case CHIP_ESP32H21: return "ESP32-H21";
+#endif
+    default: return "UNKNOWN";
   }
 #endif
 }
@@ -339,17 +364,13 @@ uint32_t EspClass::getFlashChipSpeed(void) {
   return magicFlashChipSpeed(fhdr.spi_speed);
 }
 
-// FIXME for P4
-#if !defined(CONFIG_IDF_TARGET_ESP32P4)
 FlashMode_t EspClass::getFlashChipMode(void) {
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
   uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
-#else
-#if CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
+#elif CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C6
   uint32_t spi_ctrl = REG_READ(DR_REG_SPI0_BASE + 0x8);
 #else
   uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
-#endif
 #endif
   /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
   if (spi_ctrl & BIT(24)) {  //SPI_FREAD_QIO
@@ -365,11 +386,9 @@ FlashMode_t EspClass::getFlashChipMode(void) {
   } else {
     return (FM_SLOW_READ);
   }
-  return (FM_DOUT);
 }
-#endif  // if !defined(CONFIG_IDF_TARGET_ESP32P4)
 
-uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
+uint32_t EspClass::magicFlashChipSize(uint8_t flashByte) {
   /*
     FLASH_SIZES = {
         "1MB": 0x00,
@@ -382,7 +401,7 @@ uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
         "128MB": 0x70,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0x0: return (1_MB);    // 8 MBit (1MB)
     case 0x1: return (2_MB);    // 16 MBit (2MB)
     case 0x2: return (4_MB);    // 32 MBit (4MB)
@@ -396,7 +415,7 @@ uint32_t EspClass::magicFlashChipSize(uint8_t byte) {
   }
 }
 
-uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
+uint32_t EspClass::magicFlashChipSpeed(uint8_t flashByte) {
 #if CONFIG_IDF_TARGET_ESP32C2
   /*
     FLASH_FREQUENCY = {
@@ -406,7 +425,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "15m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (60_MHz);
     case 0x0: return (30_MHz);
     case 0x1: return (20_MHz);
@@ -423,7 +442,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "20m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0x0: return (80_MHz);
     case 0x2: return (20_MHz);
     default:  // fail?
@@ -440,7 +459,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "12m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (48_MHz);
     case 0x0: return (24_MHz);
     case 0x1: return (16_MHz);
@@ -458,7 +477,7 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
         "20m": 0x2,
     }
 */
-  switch (byte & 0x0F) {
+  switch (flashByte & 0x0F) {
     case 0xF: return (80_MHz);
     case 0x0: return (40_MHz);
     case 0x1: return (26_MHz);
@@ -469,8 +488,8 @@ uint32_t EspClass::magicFlashChipSpeed(uint8_t byte) {
 #endif
 }
 
-FlashMode_t EspClass::magicFlashChipMode(uint8_t byte) {
-  FlashMode_t mode = (FlashMode_t)byte;
+FlashMode_t EspClass::magicFlashChipMode(uint8_t flashByte) {
+  FlashMode_t mode = (FlashMode_t)flashByte;
   if (mode > FM_SLOW_READ) {
     mode = FM_UNKNOWN;
   }
@@ -506,4 +525,64 @@ uint64_t EspClass::getEfuseMac(void) {
   uint64_t _chipmacid = 0LL;
   esp_efuse_mac_get_default((uint8_t *)(&_chipmacid));
   return _chipmacid;
+}
+
+// ============================================================================
+// Flash Frequency Runtime Detection
+// ============================================================================
+
+/**
+ * @brief Read the source clock frequency using ESP-IDF HAL functions
+ * @return Source clock frequency in MHz (80, 120, 160, or 240)
+ */
+uint8_t EspClass::getFlashSourceFrequencyMHz(void) {
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32: Use HAL function
+  return spi_flash_ll_get_source_clock_freq_mhz(0);  // host_id = 0 for SPI0
+#else
+  // All modern MCUs: Use spimem HAL function
+  return spimem_flash_ll_get_source_freq_mhz();
+#endif
+}
+
+/**
+ * @brief Read the clock divider from hardware using HAL structures
+ * Based on ESP-IDF HAL implementation:
+ * - ESP32: Uses SPI1.clock (typedef in spi_flash_ll.h)
+ * - All newer MCUs: Use SPIMEM1.clock (typedef in spimem_flash_ll.h)
+ * @return Clock divider value (1 = no division, 2 = divide by 2, etc.)
+ */
+uint8_t EspClass::getFlashClockDivider(void) {
+#if CONFIG_IDF_TARGET_ESP32
+  // ESP32: Flash uses SPI1
+  // See: line 52: esp-idf/components/hal/esp32/include/hal/spi_flash_ll.h
+  if (SPI1.clock.clk_equ_sysclk) {
+    return 1;  // 1:1 clock
+  }
+  return SPI1.clock.clkcnt_n + 1;
+#else
+  // All newer MCUs: Flash uses SPIMEM1
+  // See: esp-idf/components/hal/esp32*/include/hal/spimem_flash_ll.h
+  // Example S3: line 38: typedef typeof(SPIMEM1.clock.val) spimem_flash_ll_clock_reg_t;
+  // Example C5: lines 97-99: esp-idf/components/soc/esp32c5/mp/include/soc/spi_mem_struct.h
+  if (SPIMEM1.clock.clk_equ_sysclk) {
+    return 1;  // 1:1 clock
+  }
+  return SPIMEM1.clock.clkcnt_n + 1;
+#endif
+}
+
+/**
+ * @brief Get the actual flash frequency in MHz
+ * @return Flash frequency in MHz (80, 120, 160, or 240)
+ */
+uint32_t EspClass::getFlashFrequencyMHz(void) {
+  uint8_t source = getFlashSourceFrequencyMHz();
+  uint8_t divider = getFlashClockDivider();
+
+  if (divider == 0) {
+    divider = 1;  // Safety check
+  }
+
+  return source / divider;
 }

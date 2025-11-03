@@ -34,6 +34,9 @@
 #if defined __has_include && __has_include("soc/emac_ext_struct.h")
 #include "soc/emac_ext_struct.h"
 #endif /* __has_include("soc/emac_ext_struct.h" */
+#if ETH_PHY_LAN867X_SUPPORTED
+#include "esp_eth_phy_lan867x.h"
+#endif
 #include "soc/rtc.h"
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #include "esp32-hal-periman.h"
@@ -50,7 +53,7 @@ static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-
+  (void)arg;
   if (event_base == ETH_EVENT) {
     esp_eth_handle_t eth_handle = *((esp_eth_handle_t *)event_data);
     for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
@@ -143,6 +146,9 @@ ETHClass::ETHClass(uint8_t eth_index)
 ETHClass::~ETHClass() {}
 
 bool ETHClass::ethDetachBus(void *bus_pointer) {
+  if (!bus_pointer) {
+    return true;
+  }
   ETHClass *bus = (ETHClass *)bus_pointer;
   bus->end();
   return true;
@@ -292,7 +298,10 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
     case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
     case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    default:              log_e("Unsupported PHY %d", type); break;
+#if ETH_PHY_LAN867X_SUPPORTED
+    case ETH_PHY_LAN867X: _phy = esp_eth_phy_new_lan867x(&phy_config); break;
+#endif
+    default: log_e("Unsupported PHY %d", type); break;
   }
   if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
@@ -1165,6 +1174,8 @@ size_t ETHClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ETH)
 ETHClass ETH;
+#endif
 
 #endif /* CONFIG_ETH_ENABLED */

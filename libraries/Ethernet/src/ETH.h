@@ -78,6 +78,9 @@
 #include "esp_netif.h"
 
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if defined __has_include && __has_include("esp_eth_phy_lan867x.h")
+#define ETH_PHY_LAN867X_SUPPORTED 1
+#endif
 #define ETH_PHY_IP101 ETH_PHY_TLK110
 #if CONFIG_IDF_TARGET_ESP32
 typedef enum {
@@ -138,6 +141,9 @@ typedef enum {
   ETH_PHY_DP83848,
   ETH_PHY_KSZ8041,
   ETH_PHY_KSZ8081,
+#if ETH_PHY_LAN867X_SUPPORTED
+  ETH_PHY_LAN867X,
+#endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
   ETH_PHY_DM9051,
@@ -268,7 +274,9 @@ private:
   friend class EthernetClass;  // to access beginSPI
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ETH)
 extern ETHClass ETH;
+#endif
 
 #endif /* _ETH_H_ */
 #endif /* CONFIG_ETH_ENABLED */

@@ -54,6 +54,7 @@ static const uint8_t T12 = 12;
 static const uint8_t T14 = 14;
 
 static const uint8_t VBAT_SENSE = 2;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 34;
 
 // User LED

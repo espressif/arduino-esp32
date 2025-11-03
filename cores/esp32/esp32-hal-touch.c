@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "soc/soc_caps.h"
+#include "esp_idf_version.h"
 
 #if SOC_TOUCH_SENSOR_SUPPORTED
-#if SOC_TOUCH_SENSOR_VERSION <= 2  // ESP32, ESP32S2, ESP32S3
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0) && SOC_TOUCH_SENSOR_VERSION <= 2  // ESP32, ESP32S2, ESP32S3
 
 #include "driver/touch_sensor.h"
 #include "esp32-hal-touch.h"
@@ -205,7 +206,6 @@ static void __touchChannelInit(int pad) {
 static touch_value_t __touchRead(uint8_t pin) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return 0;
   }
 
@@ -232,7 +232,6 @@ static touch_value_t __touchRead(uint8_t pin) {
 static void __touchConfigInterrupt(uint8_t pin, void (*userFunc)(void), void *Args, touch_value_t threshold, bool callWithArgs) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return;
   }
 
@@ -294,7 +293,6 @@ bool touchInterruptGetLastStatus(uint8_t pin) {
 void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
   int8_t pad = digitalPinToTouchChannel(pin);
   if (pad < 0) {
-    log_e(" No touch pad on selected pin!");
     return;
   }
 
@@ -325,5 +323,5 @@ extern void touchAttachInterruptArg(uint8_t, voidArgFuncPtr, void *, touch_value
 extern void touchDetachInterrupt(uint8_t) __attribute__((weak, alias("__touchDettachInterrupt")));
 extern void touchSetCycles(uint16_t, uint16_t) __attribute__((weak, alias("__touchSetCycles")));
 
-#endif /* SOC_TOUCH_SENSOR_VERSION <= 2 */
+#endif /* ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0) && SOC_TOUCH_SENSOR_VERSION <= 2 */
 #endif /* SOC_TOUCH_SENSOR_SUPPORTED */

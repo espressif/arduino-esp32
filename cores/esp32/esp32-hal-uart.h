@@ -87,7 +87,6 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 // helper functions
 int8_t uart_get_RxPin(uint8_t uart_num);
 int8_t uart_get_TxPin(uint8_t uart_num);
-void uart_init_PeriMan(void);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 //    UART_HW_FLOWCTRL_DISABLE = 0x0   disable hardware flow control

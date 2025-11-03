@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define USB_VID 0x2886
-#define USB_PID 0x0056
+#define USB_PID 0x0063
 
 static const uint8_t LED_BUILTIN = 21;
 #define BUILTIN_LED LED_BUILTIN  // backward compatibility
@@ -55,6 +55,7 @@ static const uint8_t A8 = 7;
 static const uint8_t A9 = 8;
 static const uint8_t A10 = 9;
 static const uint8_t ADC_BAT = 10;
+#define BAT_VOLT_PIN ADC_BAT
 
 static const uint8_t D0 = 1;
 static const uint8_t D1 = 2;

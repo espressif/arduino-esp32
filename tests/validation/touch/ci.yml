@@ -1,0 +1,8 @@
+fqbn_append: DebugLevel=verbose
+
+platforms:
+  qemu: false
+  wokwi: false
+
+requires:
+  - CONFIG_SOC_TOUCH_SENSOR_SUPPORTED=y

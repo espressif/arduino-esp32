@@ -14,6 +14,7 @@
 #include "USB.h"
 #if SOC_USB_SERIAL_JTAG_SUPPORTED
 
+#include "Arduino.h"  // defines ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE and ARDUINO_SERIAL_EVENT_TASK_PRIORITY
 #include "esp32-hal.h"
 #include "esp32-hal-periman.h"
 #include "HWCDC.h"
@@ -60,7 +61,11 @@ static esp_err_t
   arduino_hw_cdc_event_handler_register_with(esp_event_base_t event_base, int32_t event_id, esp_event_handler_t event_handler, void *event_handler_arg) {
   if (!arduino_hw_cdc_event_loop_handle) {
     esp_event_loop_args_t event_task_args = {
-      .queue_size = 5, .task_name = "arduino_hw_cdc_events", .task_priority = 5, .task_stack_size = 2048, .task_core_id = tskNO_AFFINITY
+      .queue_size = 5,
+      .task_name = "arduino_hw_cdc_events",
+      .task_priority = ARDUINO_SERIAL_EVENT_TASK_PRIORITY,
+      .task_stack_size = ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE,
+      .task_core_id = tskNO_AFFINITY
     };
     if (esp_event_loop_create(&event_task_args, &arduino_hw_cdc_event_loop_handle) != ESP_OK) {
       log_e("esp_event_loop_create failed");
@@ -253,8 +258,6 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
 }
 
 HWCDC::HWCDC() {
-  perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
-  perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
   // SOF in ISR causes problems for uploading firmware
   //  lastSOF_ms = 0;
   //  SOF_TIMEOUT = 5;
@@ -324,14 +327,19 @@ void HWCDC::begin(unsigned long baud) {
 
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_INT_PHY0_DM_GPIO_NUM;
+  if (perimanGetBusDeinit(ESP32_BUS_TYPE_USB_DM) == NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DM, HWCDC::deinit);
+  }
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DM, (void *)this, -1, -1)) {
     goto err;
   }
   pin = USB_INT_PHY0_DP_GPIO_NUM;
+  if (perimanGetBusDeinit(ESP32_BUS_TYPE_USB_DP) == NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_USB_DP, HWCDC::deinit);
+  }
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
     goto err;
   }
-
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
   USB_SERIAL_JTAG.conf0.phy_sel = 0;

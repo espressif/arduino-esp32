@@ -36,6 +36,7 @@ RequestHandler &RequestHandler::removeMiddleware(Middleware *middleware) {
 bool RequestHandler::process(WebServer &server, HTTPMethod requestMethod, String requestUri) {
   if (_chain) {
     return _chain->runChain(server, [this, &server, &requestMethod, &requestUri]() {
+      (void)requestUri;
       return handle(server, requestMethod, requestUri);
     });
   } else {
@@ -71,6 +72,7 @@ public:
   }
 
   bool canRaw(const String &requestUri) override {
+    (void)requestUri;
     if (!_ufn || _method == HTTP_GET) {
       return false;
     }
@@ -95,6 +97,7 @@ public:
   }
 
   bool canRaw(WebServer &server, const String &requestUri) override {
+    (void)requestUri;
     if (!_ufn || _method == HTTP_GET || (_filter != NULL ? _filter(server) == false : false)) {
       return false;
     }

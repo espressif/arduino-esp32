@@ -26,8 +26,8 @@
  * Modified by Pat Clay
  */
 
-#ifndef ZIGBEE_MODE_ED
-#error "Zigbee end device mode is not selected in Tools->Zigbee mode"
+#ifndef ZIGBEE_MODE_ZCZR
+#error "Zigbee coordinator/router device mode is not selected in Tools->Zigbee mode"
 #endif
 
 #include "Zigbee.h"
@@ -70,6 +70,10 @@ void setup() {
   zbAnalogDevice.addAnalogOutput();
   zbAnalogDevice.setAnalogOutputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
   zbAnalogDevice.setAnalogOutputDescription("Fan Speed (RPM)");
+  zbAnalogDevice.setAnalogOutputResolution(1);
+
+  // Set the min and max values for the analog output which is used by HA to limit the range of the analog output
+  zbAnalogDevice.setAnalogOutputMinMax(-10000, 10000);  //-10000 to 10000 RPM
 
   // If analog output cluster is added, set callback function for analog output change
   zbAnalogDevice.onAnalogOutputChange(onAnalogOutputChange);
@@ -99,8 +103,8 @@ void setup() {
   Zigbee.addEndpoint(&zbAnalogPercent);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
-  if (!Zigbee.begin()) {
+  // When all EPs are registered, start Zigbee in Router Device mode
+  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
@@ -151,6 +155,9 @@ void loop() {
         Zigbee.factoryReset();
       }
     }
+    // For demonstration purposes, increment the analog output value by 100
+    zbAnalogDevice.setAnalogOutput(zbAnalogDevice.getAnalogOutput() + 100);
+    zbAnalogDevice.reportAnalogOutput();
   }
   delay(100);
 }

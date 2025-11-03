@@ -5,6 +5,9 @@
     updated by chegewara
 
    Create a BLE server that, once we receive a connection, will send periodic notifications.
+   The server will continue advertising for more connections after the first one and will notify
+   the value of a counter to all connected clients.
+
    The service advertises itself as: 4fafc201-1fb5-459e-8fcc-c5c9c331914b
    And has a characteristic of: beb5483e-36e1-4688-b7f5-ea07361b26a8
 
@@ -26,8 +29,8 @@
 
 BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
+int connectedClients = 0;
 bool deviceConnected = false;
-bool oldDeviceConnected = false;
 uint32_t value = 0;
 
 // See the following for generating UUIDs:
@@ -38,12 +41,17 @@ uint32_t value = 0;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
-    deviceConnected = true;
+    connectedClients++;
+    Serial.print("Client connected. Total clients: ");
+    Serial.println(connectedClients);
+    // Continue advertising for more connections
     BLEDevice::startAdvertising();
   };
 
   void onDisconnect(BLEServer *pServer) {
-    deviceConnected = false;
+    connectedClients--;
+    Serial.print("Client disconnected. Total clients: ");
+    Serial.println(connectedClients);
   }
 };
 
@@ -66,8 +74,7 @@ void setup() {
     BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE
   );
 
-  // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
-  // Create a BLE Descriptor
+  // Descriptor 2902 is not required when using NimBLE as it is automatically added based on the characteristic properties
   pCharacteristic->addDescriptor(new BLE2902());
 
   // Start the service
@@ -79,27 +86,38 @@ void setup() {
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
-  Serial.println("Waiting a client connection to notify...");
+  Serial.println("Waiting for client connections to notify...");
 }
 
 void loop() {
-  // notify changed value
-  if (deviceConnected) {
+  // Notify changed value to all connected clients
+  if (connectedClients > 0) {
+    Serial.print("Notifying value: ");
+    Serial.print(value);
+    Serial.print(" to ");
+    Serial.print(connectedClients);
+    Serial.println(" client(s)");
     pCharacteristic->setValue((uint8_t *)&value, 4);
     pCharacteristic->notify();
     value++;
-    delay(10);  // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+    // Bluetooth stack will go into congestion, if too many packets are sent.
+    // In 6 hours of testing, I was able to go as low as 3ms.
+    // When using core debug level "debug" or "verbose", the delay can be increased in
+    // order to reduce the number of debug messages in the serial monitor.
+    delay(100);
   }
-  // disconnecting
-  if (!deviceConnected && oldDeviceConnected) {
+
+  // Disconnecting - restart advertising when no clients are connected
+  if (connectedClients == 0 && deviceConnected) {
     delay(500);                   // give the bluetooth stack the chance to get things ready
     pServer->startAdvertising();  // restart advertising
-    Serial.println("start advertising");
-    oldDeviceConnected = deviceConnected;
+    Serial.println("No clients connected, restarting advertising");
+    deviceConnected = false;
   }
-  // connecting
-  if (deviceConnected && !oldDeviceConnected) {
-    // do stuff here on connecting
-    oldDeviceConnected = deviceConnected;
+
+  // Connecting - update state when first client connects
+  if (connectedClients > 0 && !deviceConnected) {
+    // do stuff here on first connecting
+    deviceConnected = true;
   }
 }

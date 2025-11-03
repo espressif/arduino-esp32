@@ -25,12 +25,13 @@
 #include "esp_ota_ops.h"
 #endif  //CONFIG_APP_ROLLBACK_ENABLE
 #include "esp_private/startup_internal.h"
-#if defined(CONFIG_BT_BLUEDROID_ENABLED) && SOC_BT_SUPPORTED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
 #include "esp_bt.h"
-#endif  //CONFIG_BT_BLUEDROID_ENABLED
+#endif
 #include <sys/time.h>
 #include "soc/rtc.h"
-#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4) \
+  && !defined(CONFIG_IDF_TARGET_ESP32C5)
 #include "soc/rtc_cntl_reg.h"
 #include "soc/syscon_reg.h"
 #endif
@@ -56,6 +57,8 @@
 #include "esp32h2/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C5
+#include "esp32c5/rom/rtc.h"
 
 #else
 #error Target CONFIG_IDF_TARGET is not supported
@@ -243,7 +246,7 @@ bool verifyRollbackLater() {
 }
 #endif
 
-#ifdef CONFIG_BT_BLUEDROID_ENABLED
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 #if CONFIG_IDF_TARGET_ESP32
 //overwritten in esp32-hal-bt.c
 bool btInUse() __attribute__((weak));
@@ -305,7 +308,7 @@ void initArduino() {
   if (err) {
     log_e("Failed to initialize NVS! Error: %u", err);
   }
-#if defined(CONFIG_BT_BLUEDROID_ENABLED) && SOC_BT_SUPPORTED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
   if (!btInUse()) {
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
   }

@@ -25,6 +25,7 @@ static const uint8_t SCK = 18;
 static const uint8_t A0 = 34;
 static const uint8_t A1 = 35;
 static const uint8_t BATT_VIN = 39;
+#define BAT_VOLT_PIN BATT_VIN
 
 static const uint8_t PWM0 = 13;
 static const uint8_t PWM1 = 12;

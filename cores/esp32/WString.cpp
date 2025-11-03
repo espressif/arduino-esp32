@@ -180,7 +180,7 @@ bool String::changeBuffer(unsigned int maxStrLen) {
   if (maxStrLen < sizeof(sso.buff) - 1) {
     if (isSSO() || !buffer()) {
       // Already using SSO, nothing to do
-      uint16_t oldLen = len();
+      size_t oldLen = len();
       setSSO(true);
       setLen(oldLen);
     } else {  // if bufptr && !isSSO()
@@ -188,7 +188,7 @@ bool String::changeBuffer(unsigned int maxStrLen) {
       char temp[sizeof(sso.buff)];
       memcpy(temp, buffer(), maxStrLen);
       free(wbuffer());
-      uint16_t oldLen = len();
+      size_t oldLen = len();
       setSSO(true);
       memcpy(wbuffer(), temp, maxStrLen);
       setLen(oldLen);
@@ -201,7 +201,7 @@ bool String::changeBuffer(unsigned int maxStrLen) {
   if (newSize > CAPACITY_MAX) {
     return false;
   }
-  uint16_t oldLen = len();
+  size_t oldLen = len();
   char *newbuffer = (char *)realloc(isSSO() ? nullptr : wbuffer(), newSize);
   if (newbuffer) {
     size_t oldSize = capacity() + 1;  // include NULL.
@@ -910,7 +910,7 @@ long String::toInt(void) const {
 
 float String::toFloat(void) const {
   if (buffer()) {
-    return atof(buffer());
+    return static_cast<float>(atof(buffer()));
   }
   return 0;
 }

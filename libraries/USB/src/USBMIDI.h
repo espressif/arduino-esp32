@@ -18,10 +18,40 @@ typedef struct {
 } midiEventPacket_t;
 
 class USBMIDI {
+private:
+  static char *midiUserDeviceName;              // user device name
+  static void setDeviceName(const char *name);  // set user device name limited to 32 characters
+
 public:
+  /**
+   * @brief Default constructor
+   * Will use the compile-time name if set via SET_USB_MIDI_DEVICE_NAME(),
+   * otherwise uses "TinyUSB MIDI"
+  */
   USBMIDI(void);
+
+  /**
+   * @brief Set the current device name
+   * 1. Name set via constructor (if any)
+   * 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+   * 3. Default name "TinyUSB MIDI"
+   * It has no effect if name is set as NULL or ""
+  */
+  USBMIDI(const char *name);
+
+  ~USBMIDI();
+
   void begin(void);
   void end(void);
+
+  /**
+   * @brief Get the current device name
+   * @return The device name in order of precedence:
+   * 1. Name set via constructor (if any)
+   * 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+   * 3. Default name "TinyUSB MIDI"
+  */
+  static const char *getCurrentDeviceName(void);
 
   /* User-level API */
 

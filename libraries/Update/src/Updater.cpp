@@ -75,7 +75,7 @@ UpdateClass::UpdateClass()
 #ifndef UPDATE_NOCRYPT
     _cryptKey(0), _cryptBuffer(0),
 #endif /* UPDATE_NOCRYPT */
-    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _paroffset(0), _command(U_FLASH), _partition(NULL)
+    _buffer(0), _skipBuffer(0), _bufferLen(0), _size(0), _progress_callback(NULL), _progress(0), _command(U_FLASH), _partition(NULL)
 #ifndef UPDATE_NOCRYPT
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
@@ -128,6 +128,8 @@ bool UpdateClass::rollBack() {
 }
 
 bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
+  (void)label;
+
   if (_size > 0) {
     log_w("already running");
     return false;
@@ -154,16 +156,39 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     }
     log_d("OTA Partition: %s", _partition->label);
   } else if (command == U_SPIFFS) {
-    _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, label);
-    _paroffset = 0;
+    _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+    if (!_partition) {
+      _error = UPDATE_ERROR_NO_PARTITION;
+      return false;
+    }
+    log_d("SPIFFS Partition: %s", _partition->label);
+  } else if (command == U_FATFS) {
+    _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, NULL);
+    if (!_partition) {
+      _error = UPDATE_ERROR_NO_PARTITION;
+      return false;
+    }
+    log_d("FATFS Partition: %s", _partition->label);
+  } else if (command == U_LITTLEFS) {
+    _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, NULL);
+    if (!_partition) {
+      _error = UPDATE_ERROR_NO_PARTITION;
+      return false;
+    }
+    log_d("LittleFS Partition: %s", _partition->label);
+  } else if (command == U_FLASHFS) {
+    _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
     if (!_partition) {
       _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_FAT, NULL);
-      _paroffset = 0x1000;  //Offset for ffat, assuming size is already corrected
-      if (!_partition) {
-        _error = UPDATE_ERROR_NO_PARTITION;
-        return false;
-      }
     }
+    if (!_partition) {
+      _partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_LITTLEFS, NULL);
+    }
+    if (!_partition) {
+      _error = UPDATE_ERROR_NO_PARTITION;
+      return false;
+    }
+    log_d("FS Partition: %s", _partition->label);
   } else {
     _error = UPDATE_ERROR_BAD_ARGUMENT;
     log_e("bad command %u", command);
@@ -452,7 +477,7 @@ bool UpdateClass::_verifyHeader(uint8_t data) {
       return false;
     }
     return true;
-  } else if (_command == U_SPIFFS) {
+  } else {
     return true;
   }
   return false;
@@ -471,7 +496,7 @@ bool UpdateClass::_verifyEnd() {
     }
     _reset();
     return true;
-  } else if (_command == U_SPIFFS) {
+  } else {
     _reset();
     return true;
   }

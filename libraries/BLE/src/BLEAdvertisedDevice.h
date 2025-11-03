@@ -3,22 +3,49 @@
  *
  *  Created on: Jul 3, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
 
 #ifndef COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
 #define COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gattc_api.h>
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/***************************************************************************
+ *                           Common includes                               *
+ ***************************************************************************/
 
 #include <map>
-
 #include "BLEAddress.h"
 #include "BLEScan.h"
 #include "BLEUUID.h"
+
+/***************************************************************************
+ *                           Bluedroid includes                            *
+ ***************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include <esp_gattc_api.h>
+#endif
+
+/***************************************************************************
+ *                           NimBLE includes                               *
+ ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+#include <nimble/ble.h>
+#include <host/ble_gap.h>
+#endif
+
+/***************************************************************************
+ *                            Common types                                 *
+ ***************************************************************************/
 
 typedef enum {
   BLE_UNKNOWN_FRAME,
@@ -28,7 +55,12 @@ typedef enum {
   BLE_FRAME_MAX
 } ble_frame_type_t;
 
+/***************************************************************************
+ *                           Forward declarations                          *
+ ***************************************************************************/
+
 class BLEScan;
+
 /**
  * @brief A representation of a %BLE advertised device found by a scan.
  *
@@ -37,8 +69,11 @@ class BLEScan;
  */
 class BLEAdvertisedDevice {
 public:
-  BLEAdvertisedDevice();
+  /***************************************************************************
+   *                       Common public declarations                        *
+   ***************************************************************************/
 
+  BLEAdvertisedDevice();
   BLEAddress getAddress();
   uint16_t getAppearance();
   String getManufacturerData();
@@ -57,10 +92,15 @@ public:
   int8_t getTXPower();
   uint8_t *getPayload();
   size_t getPayloadLength();
-  esp_ble_addr_type_t getAddressType();
+  uint8_t getAddressType();
   ble_frame_type_t getFrameType();
-  void setAddressType(esp_ble_addr_type_t type);
+  void setAddressType(uint8_t type);
+  void setAdvType(uint8_t type);
+  uint8_t getAdvType();
 
+  bool isLegacyAdvertisement();
+  bool isScannable();
+  bool isConnectable();
   bool isAdvertisingService(BLEUUID uuid);
   bool haveAppearance();
   bool haveManufacturerData();
@@ -75,28 +115,15 @@ public:
 private:
   friend class BLEScan;
 
-  void parseAdvertisement(uint8_t *payload, size_t total_len = 62);
-  void setPayload(uint8_t *payload, size_t total_len = 62);
-  void setAddress(BLEAddress address);
-  void setAdFlag(uint8_t adFlag);
-  void setAdvertizementResult(uint8_t *payload);
-  void setAppearance(uint16_t appearance);
-  void setManufacturerData(String manufacturerData);
-  void setName(String name);
-  void setRSSI(int rssi);
-  void setScan(BLEScan *pScan);
-  void setServiceData(String data);
-  void setServiceDataUUID(BLEUUID uuid);
-  void setServiceUUID(const char *serviceUUID);
-  void setServiceUUID(BLEUUID serviceUUID);
-  void setTXPower(int8_t txPower);
+  /***************************************************************************
+   *                       Common private properties                         *
+   ***************************************************************************/
 
   bool m_haveAppearance;
   bool m_haveManufacturerData;
   bool m_haveName;
   bool m_haveRSSI;
   bool m_haveTXPower;
-
   BLEAddress m_address = BLEAddress((uint8_t *)"\0\0\0\0\0\0");
   uint8_t m_adFlag;
   uint16_t m_appearance;
@@ -111,7 +138,37 @@ private:
   std::vector<BLEUUID> m_serviceDataUUIDs;
   uint8_t *m_payload;
   size_t m_payloadLength = 0;
-  esp_ble_addr_type_t m_addressType;
+  uint8_t m_addressType;
+  uint8_t m_advType;
+  bool m_isLegacyAdv;
+
+  /***************************************************************************
+   *                       NimBLE private properties                         *
+   ***************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  bool m_callbackSent;
+#endif
+
+  /***************************************************************************
+   *                       Common private declarations                       *
+   ***************************************************************************/
+
+  void parseAdvertisement(uint8_t *payload, size_t total_len = 62);
+  void setPayload(uint8_t *payload, size_t total_len = 62, bool append = false);
+  void setAddress(BLEAddress address);
+  void setAdFlag(uint8_t adFlag);
+  void setAdvertizementResult(uint8_t *payload);
+  void setAppearance(uint16_t appearance);
+  void setManufacturerData(String manufacturerData);
+  void setName(String name);
+  void setRSSI(int rssi);
+  void setScan(BLEScan *pScan);
+  void setServiceData(String data);
+  void setServiceDataUUID(BLEUUID uuid);
+  void setServiceUUID(const char *serviceUUID);
+  void setServiceUUID(BLEUUID serviceUUID);
+  void setTXPower(int8_t txPower);
 };
 
 /**
@@ -123,30 +180,56 @@ private:
  */
 class BLEAdvertisedDeviceCallbacks {
 public:
+  /***************************************************************************
+   *                       Common public declarations                        *
+   ***************************************************************************/
+
   virtual ~BLEAdvertisedDeviceCallbacks() {}
   /**
-	 * @brief Called when a new scan result is detected.
-	 *
-	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
-	 * device that was found.  During any individual scan, a device will only be detected one time.
-	 */
+   * @brief Called when a new scan result is detected.
+   *
+   * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
+   * device that was found.  During any individual scan, a device will only be detected one time.
+   */
   virtual void onResult(BLEAdvertisedDevice advertisedDevice) = 0;
 };
 
-#ifdef SOC_BLE_50_SUPPORTED
+#if defined(SOC_BLE_50_SUPPORTED) && defined(CONFIG_BLUEDROID_ENABLED)
 class BLEExtAdvertisingCallbacks {
 public:
-  virtual ~BLEExtAdvertisingCallbacks() {}
-  /**
-	 * @brief Called when a new scan result is detected.
-	 *
-	 * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
-	 * device that was found.  During any individual scan, a device will only be detected one time.
-	 */
-  virtual void onResult(esp_ble_gap_ext_adv_report_t report) = 0;
-};
-#endif  // SOC_BLE_50_SUPPORTED
+  /***************************************************************************
+   *                       Common public declarations                        *
+   ***************************************************************************/
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+  virtual ~BLEExtAdvertisingCallbacks() {}
+
+  /***************************************************************************
+   *                      Bluedroid public declarations                      *
+   ***************************************************************************/
+
+  /**
+   * @brief Called when a new scan result is detected.
+   *
+   * As we are scanning, we will find new devices.  When found, this call back is invoked with a reference to the
+   * device that was found.  During any individual scan, a device will only be detected one time.
+   */
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  virtual void onResult(esp_ble_gap_ext_adv_report_t report) = 0;
+#endif
+
+  /***************************************************************************
+   *                      NimBLE public declarations                        *
+   ***************************************************************************/
+
+  // Extended advertising for NimBLE is not supported yet.
+#if defined(CONFIG_NIMBLE_ENABLED)
+  virtual void onResult(struct ble_gap_ext_disc_desc report) = 0;
+#endif
+};
+#endif  // SOC_BLE_50_SUPPORTED && CONFIG_BLUEDROID_ENABLED
+
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+
 #endif /* COMPONENTS_CPP_UTILS_BLEADVERTISEDDEVICE_H_ */

@@ -11,6 +11,8 @@
 
 # CI
 /.github/ @lucasssvaz @me-no-dev @P-R-O-C-H-Y
+/.github/codeql/ @lucasssvaz
+/.gitlab/ @lucasssvaz
 /tests/ @lucasssvaz @P-R-O-C-H-Y
 
 # Tools
@@ -57,6 +59,7 @@
 /libraries/ESP_SR/ @me-no-dev
 /libraries/ESPmDNS/ @me-no-dev
 /libraries/Ethernet/ @me-no-dev
+/libraries/Hash/ @lucasssvaz
 /libraries/Matter/ @SuGlider
 /libraries/NetBIOS/ @me-no-dev
 /libraries/Network/ @me-no-dev
@@ -70,9 +73,9 @@
 /libraries/Wire/ @me-no-dev
 /libraries/Zigbee/ @P-R-O-C-H-Y
 
-# CI JSON
+# CI YAML
 # Keep this after other libraries and tests to avoid being overridden.
-**/ci.json @lucasssvaz
+**/ci.yml @lucasssvaz
 
 # The CODEOWNERS file should be owned by the developers of the ESP32 Arduino Core.
 # Leave this entry as the last one to avoid being overridden.
