@@ -22,13 +22,13 @@
 #define LED_PIN 5
 
 int brightness = 0;  // how bright the LED is
-int fadeAmount = 5;  // how many points to fade the LED by
+int fadeAmount = 4;  // how many points to fade the LED by
 
 // Arduino like analogWrite
 // value has to be between 0 and valueMax
-void ledcAnalogWrite(uint8_t pin, uint32_t value, uint32_t valueMax = 255) {
+void ledcAnalogWrite(uint8_t pin, uint32_t value, uint32_t valueMax = 256) {
   // calculate duty, 4095 from 2 ^ 12 - 1
-  uint32_t duty = (4095 / valueMax) * min(value, valueMax);
+  uint32_t duty = (4096 / valueMax) * min(value, valueMax);
 
   // write duty to LEDC
   ledcWrite(pin, duty);
@@ -47,7 +47,7 @@ void loop() {
   brightness = brightness + fadeAmount;
 
   // reverse the direction of the fading at the ends of the fade:
-  if (brightness <= 0 || brightness >= 255) {
+  if (brightness <= 0 || brightness >= 256) {
     fadeAmount = -fadeAmount;
   }
   // wait for 30 milliseconds to see the dimming effect
