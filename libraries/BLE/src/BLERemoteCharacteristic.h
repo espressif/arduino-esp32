@@ -159,7 +159,6 @@ private:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   uint16_t m_defHandle;
-  uint16_t m_endHandle;
 #endif
 
   /***************************************************************************

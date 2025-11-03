@@ -112,6 +112,11 @@ bool BLERemoteCharacteristic::canWriteNoResponse() {
  * @brief Retrieve the map of descriptors keyed by UUID.
  */
 std::map<std::string, BLERemoteDescriptor *> *BLERemoteCharacteristic::getDescriptors() {
+  // Retrieve descriptors if not already done (lazy loading)
+  if (m_descriptorMap.empty()) {
+    log_d("Descriptors not yet retrieved, retrieving now...");
+    retrieveDescriptors();
+  }
   return &m_descriptorMap;
 }  // getDescriptors
 
@@ -132,6 +137,11 @@ uint16_t BLERemoteCharacteristic::getHandle() {
  */
 BLERemoteDescriptor *BLERemoteCharacteristic::getDescriptor(BLEUUID uuid) {
   log_v(">> getDescriptor: uuid: %s", uuid.toString().c_str());
+  // Retrieve descriptors if not already done (lazy loading)
+  if (m_descriptorMap.empty()) {
+    log_d("Descriptors not yet retrieved, retrieving now...");
+    retrieveDescriptors();
+  }
   std::string v = uuid.toString().c_str();
   for (auto &myPair : m_descriptorMap) {
     if (myPair.first == v) {
@@ -663,14 +673,14 @@ BLERemoteCharacteristic::BLERemoteCharacteristic(BLERemoteService *pRemoteServic
 
   m_handle = chr->val_handle;
   m_defHandle = chr->def_handle;
-  m_endHandle = 0;
   m_charProp = chr->properties;
   m_pRemoteService = pRemoteService;
   m_notifyCallback = nullptr;
   m_rawData = nullptr;
   m_auth = 0;
 
-  retrieveDescriptors();  // Get the descriptors for this characteristic
+  // Don't retrieve descriptors in constructor for NimBLE to avoid deadlock
+  // Descriptors will be retrieved on-demand when needed (e.g., for notifications)
 
   log_v("<< BLERemoteCharacteristic(): %s", m_uuid.toString().c_str());
 }  // BLERemoteCharacteristic
@@ -789,7 +799,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
   desc_filter_t filter = {uuid_filter, &taskData};
   int rc = 0;
 
-  rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(), m_handle, m_endHandle, BLERemoteCharacteristic::descriptorDiscCB, &filter);
+  rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(), m_handle, getRemoteService()->getEndHandle(), BLERemoteCharacteristic::descriptorDiscCB, &filter);
 
   if (rc != 0) {
     log_e("ble_gattc_disc_all_dscs: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
@@ -965,6 +975,15 @@ bool BLERemoteCharacteristic::setNotify(uint16_t val, notify_callback notifyCall
   log_v(">> setNotify(): %s, %02x", toString().c_str(), val);
 
   m_notifyCallback = notifyCallback;
+
+  // Retrieve descriptors if not already done (lazy loading)
+  if (m_descriptorMap.empty()) {
+    log_d("Descriptors not yet retrieved, retrieving now...");
+    if (!retrieveDescriptors()) {
+      log_e("<< setNotify(): Failed to retrieve descriptors");
+      return false;
+    }
+  }
 
   BLERemoteDescriptor *desc = getDescriptor(BLEUUID((uint16_t)0x2902));
   if (desc == nullptr) {
