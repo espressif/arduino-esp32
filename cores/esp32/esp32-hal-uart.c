@@ -712,15 +712,17 @@ uart_t *uartBegin(
   if (retCode) {
     if (inverted) {
       // invert signal for both Rx and Tx
-      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+      uint32_t _inv_mask = inv_mask;
+      _inv_mask |=  UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, _inv_mask);
       if (retCode) {
-        inv_mask |= UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
+        inv_mask = _inv_mask;
       }
     } else {
       // disable invert signal for both Rx and Tx
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
       if (retCode) {
-        inv_mask &= ~(UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+        inv_mask = UART_SIGNAL_INV_DISABLE;
       }
     }
   }
@@ -833,7 +835,7 @@ void uartEnd(uint8_t uart_num) {
 // Helper generic function that takes a uart_sigenl_inv_t mask to be properly applied to the designated uart pin
 // invMask can be UART_SIGNAL_RXD_INV, UART_SIGNAL_TXD_INV, UART_SIGNAL_RTS_INV, UART_SIGNAL_CTS_INV
 // returns the operation success status
-bool _uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
+bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   if (uart == NULL) {
     return;
   }
