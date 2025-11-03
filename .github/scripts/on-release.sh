@@ -391,6 +391,11 @@ pushd "$OUTPUT_DIR" >/dev/null
 tar -cJf "$LIBS_XZ" "esp32-arduino-libs"
 popd >/dev/null
 
+# Copy esp-hosted binaries
+
+mkdir -p "$GITHUB_WORKSPACE/hosted"
+cp "$OUTPUT_DIR/esp32-arduino-libs/hosted"/*.bin "$GITHUB_WORKSPACE/hosted/"
+
 # Upload ZIP and XZ libs to release page
 
 echo "Uploading ZIP libs to release page ..."
