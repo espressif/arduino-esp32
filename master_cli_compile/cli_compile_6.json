@@ -145,7 +145,7 @@
                 "sketches": [
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 917962,
+                            "flash_bytes": 917960,
                             "flash_percentage": 70,
                             "ram_bytes": 29840,
                             "ram_percentage": 9
@@ -810,17 +810,17 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 576440,
-                            "flash_percentage": 43,
-                            "ram_bytes": 19116,
+                            "flash_bytes": 577536,
+                            "flash_percentage": 44,
+                            "ram_bytes": 19204,
                             "ram_percentage": 5
                             }]
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 574758,
+                            "flash_bytes": 575854,
                             "flash_percentage": 43,
-                            "ram_bytes": 19116,
+                            "ram_bytes": 19204,
                             "ram_percentage": 5
                             }]
                     },
@@ -895,9 +895,9 @@
                 "sketches": [
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 550827,
+                            "flash_bytes": 551803,
                             "flash_percentage": 42,
-                            "ram_bytes": 25940,
+                            "ram_bytes": 25972,
                             "ram_percentage": 7
                             }]
                     },
