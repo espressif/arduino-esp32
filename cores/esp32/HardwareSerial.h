@@ -348,8 +348,10 @@ public:
 
   void setDebugOutput(bool);
 
-  void setRxInvert(bool);
-  void setTxInvert(bool);
+  bool setRxInvert(bool);
+  bool setTxInvert(bool);
+  bool setCtsInvert(bool);
+  bool setRtsInvert(bool);
 
   // Negative Pin Number will keep it unmodified, thus this function can set individual pins
   // setPins() can be called after or before begin()
