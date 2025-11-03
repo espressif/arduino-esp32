@@ -992,7 +992,7 @@ void uartEnd(uint8_t uart_num) {
 // returns the operation success status
 bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   if (uart == NULL) {
-    return;
+    return false;
   }
   UART_MUTEX_LOCK();
   uint32_t _inv_mask = uart->inv_mask;
