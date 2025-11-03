@@ -994,18 +994,18 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   if (uart == NULL) {
     return;
   }
-  bool retCode = true;
+  UART_MUTEX_LOCK();
   uint32_t _inv_mask = inv_mask;
   if (inverted) {
     _inv_mask |= invMask;    
-    retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
   } else {
     _inv_mask &= ~invMask;    
-    retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
   }
+  bool retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
   if (retCode) {
     inv_mask = _inv_mask;
   }
+  UART_MUTEX_UNLOCK();
   return retCode;
 }
 
