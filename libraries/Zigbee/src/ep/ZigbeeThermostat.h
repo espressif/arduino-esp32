@@ -56,7 +56,8 @@ public:
     _on_temp_receive_with_source = callback;
   }
   // For backward compatibility: keep onConfigReceive as an alias to onTempConfigReceive (deprecated).
-  [[deprecated("Use onTempConfigReceive instead.")]] void onConfigReceive(void (*callback)(float, float, float)) {
+  [[deprecated("Use onTempConfigReceive instead.")]]
+  void onConfigReceive(void (*callback)(float, float, float)) {
     onTempConfigReceive(callback);
   }
   void onTempConfigReceive(void (*callback)(float, float, float)) {
@@ -69,10 +70,22 @@ public:
   void getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
   // For backward compatibility: keep getSensorSettings as an alias to getTemperatureSettings (deprecated).
-  [[deprecated("Use getTemperatureSettings instead.")]] void getSensorSettings() { getTemperatureSettings(); }
-  [[deprecated("Use getTemperatureSettings instead.")]] void getSensorSettings(uint16_t group_addr) { getTemperatureSettings(group_addr); }
-  [[deprecated("Use getTemperatureSettings instead.")]] void getSensorSettings(uint8_t endpoint, uint16_t short_addr) { getTemperatureSettings(endpoint, short_addr); }
-  [[deprecated("Use getTemperatureSettings instead.")]] void getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) { getTemperatureSettings(endpoint, ieee_addr); }
+  [[deprecated("Use getTemperatureSettings instead.")]]
+  void getSensorSettings() {
+    getTemperatureSettings();
+  }
+  [[deprecated("Use getTemperatureSettings instead.")]]
+  void getSensorSettings(uint16_t group_addr) {
+    getTemperatureSettings(group_addr);
+  }
+  [[deprecated("Use getTemperatureSettings instead.")]]
+  void getSensorSettings(uint8_t endpoint, uint16_t short_addr) {
+    getTemperatureSettings(endpoint, short_addr);
+  }
+  [[deprecated("Use getTemperatureSettings instead.")]]
+  void getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+    getTemperatureSettings(endpoint, ieee_addr);
+  }
 
   void getTemperatureSettings();
   void getTemperatureSettings(uint16_t group_addr);

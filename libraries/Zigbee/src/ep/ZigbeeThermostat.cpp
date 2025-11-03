@@ -108,21 +108,20 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
     /* 2. Send binding request to self */
     bind_req.req_dst_addr = esp_zb_get_short_address();
 
-
     /* populate the src information of the binding */
     esp_zb_get_long_address(bind_req.src_address);
     bind_req.src_endp = instance->_endpoint;
-    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT; 
+    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     memcpy(bind_req.dst_address_u.addr_long, sensor->ieee_addr, sizeof(esp_zb_ieee_addr_t));
     bind_req.dst_endp = endpoint;
-    log_i("Try to bind Humidity Measurement"); // Optional cluster to bind, if fails, continue to bind the temperature measurement cluster
+    log_i("Try to bind Humidity Measurement");  // Optional cluster to bind, if fails, continue to bind the temperature measurement cluster
     // save sensor params in the class
     instance->_device = sensor;
 
     esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, NULL);
     bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
-    log_i("Try to bind Temperature Measurement"); // Mandatory cluster to bind
+    log_i("Try to bind Temperature Measurement");  // Mandatory cluster to bind
     esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, this);
   } else {
     log_d("No temperature sensor endpoint found");
@@ -530,8 +529,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_add
   report_cmd.record_field = records;
 
   log_i(
-    "Sending 'configure temperature reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
-    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'configure temperature reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7],
+    ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
@@ -612,8 +611,8 @@ void ZigbeeThermostat::getHumidity(uint8_t endpoint, esp_zb_ieee_addr_t ieee_add
   read_req.attr_field = attributes;
 
   log_i(
-    "Sending 'read humidity' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
-    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'read humidity' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);

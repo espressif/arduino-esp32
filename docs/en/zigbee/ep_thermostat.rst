@@ -83,7 +83,7 @@ Sets a callback function for receiving humidity data.
 .. code-block:: arduino
 
     void onHumidityReceive(void (*callback)(float humidity));
-    
+
 * ``callback`` - Function to call when humidity data is received
 * ``humidity`` - Humidity value in percentage
 
@@ -265,7 +265,7 @@ getHumiditySettings
 Requests humidity sensor settings from all bound sensors.
 
 .. code-block:: arduino
-    
+
     void getHumiditySettings();
 
 getHumiditySettings (Group)
