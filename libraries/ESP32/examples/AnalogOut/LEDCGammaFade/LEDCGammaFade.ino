@@ -21,7 +21,7 @@
 
 // define starting duty, target duty and maximum fade time
 #define LEDC_START_DUTY  (0)
-#define LEDC_TARGET_DUTY (4095)
+#define LEDC_TARGET_DUTY (4096)
 #define LEDC_FADE_TIME   (2000)
 
 // gamma factor for mathematical calculation
