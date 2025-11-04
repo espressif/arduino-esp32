@@ -356,7 +356,7 @@ public:
 
   void setDebugOutput(bool);
 
-  // fuctions used to enable or disable UART pins signal inversion
+  // functions used to enable or disable UART pins signal inversion
   // returns the requested operation success status
   bool setRxInvert(bool);
   bool setTxInvert(bool);
