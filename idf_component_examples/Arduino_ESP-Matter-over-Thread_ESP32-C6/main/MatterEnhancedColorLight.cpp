@@ -42,11 +42,11 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
-const uint32_t debouceTime = 250;              // button debouncing time (ms)
+const uint32_t debounceTime = 250;              // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Set the RGB LED Light based on the current state of the Enhanced Color Light
-bool setLightState(bool state, espHsvColor_t colorHSV, uint8_t brighteness, uint16_t temperature_Mireds) {
+bool setLightState(bool state, espHsvColor_t colorHSV, uint8_t brightness, uint16_t temperature_Mireds) {
 
   if (state) {
 #ifdef RGB_BUILTIN
@@ -169,7 +169,7 @@ void loop() {
 
   // Onboard User Button is used as a Light toggle switch or to decommission it
   uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
+  if (button_state && time_diff > debounceTime && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
     // Toggle button is released - toggle the light
     Serial.println("User button released. Toggling Light!");
