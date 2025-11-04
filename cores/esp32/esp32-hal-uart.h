@@ -61,7 +61,7 @@ void uartFlushTxOnly(uart_t *uart, bool txOnly);
 bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t *uart);
 
-// Helper generic function that takes a uart_sigenl_inv_t mask to be properly applied to the designated uart pin
+// Helper generic function that takes a uart_signal_inv_t mask to be properly applied to the designated uart pin
 // invMask can be UART_SIGNAL_RXD_INV, UART_SIGNAL_TXD_INV, UART_SIGNAL_RTS_INV, UART_SIGNAL_CTS_INV
 // returns the operation success status
 bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted);
