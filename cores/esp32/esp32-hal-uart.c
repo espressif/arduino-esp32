@@ -999,7 +999,7 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   UART_MUTEX_LOCK();
   uint32_t _inv_mask = uart->inv_mask;
   if (inverted) {
-    _inv_mask |= invMask;    
+    _inv_mask |= invMask;
   } else {
     _inv_mask &= ~invMask;    
   }
