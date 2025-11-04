@@ -1038,7 +1038,7 @@ bool uartSetCtsInvert(uart_t *uart, bool invert) {
 bool uartSetRtsInvert(uart_t *uart, bool invert) {
   if (uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert)) {
     log_v("UART%d: RTS signal is now inverted", uart->num);
-    return true; 
+    return true;
   }
   return false;
 }
