@@ -281,6 +281,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   _mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
   if (_mac == NULL) {
     log_e("esp_eth_mac_new_esp32 failed");
+    _delMacAndPhy();
     return false;
   }
 
@@ -305,6 +306,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   }
   if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
     return false;
   }
 
@@ -738,15 +740,29 @@ bool ETHClass::beginSPI(
     return false;
   }
 
+  if (_mac == NULL) {
+    log_e("esp_eth_mac_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
+  if (_phy == NULL) {
+    log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
   // Init Ethernet driver to default and install it
   esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("SPI Ethernet driver install failed: %d", ret);
+    _delMacAndPhy();
     return false;
   }
   if (_eth_handle == NULL) {
     log_e("esp_eth_driver_install failed! eth_handle is NULL");
+    _delMacAndPhy();
     return false;
   }
 
@@ -923,6 +939,18 @@ static bool empty_ethDetachBus(void *bus_pointer) {
   return true;
 }
 
+void ETHClass::_delMacAndPhy() {
+  if (_mac != NULL) {
+    _mac->del(_mac);
+    _mac = NULL;
+  }
+
+  if (_phy != NULL) {
+    _phy->del(_phy);
+    _phy = NULL;
+  }
+}
+
 void ETHClass::end(void) {
 
   Network.removeEvent(_eth_connected_event_handle);
@@ -954,17 +982,9 @@ void ETHClass::end(void) {
       return;
     }
     _eth_handle = NULL;
-    //delete mac
-    if (_mac != NULL) {
-      _mac->del(_mac);
-      _mac = NULL;
-    }
-    //delete phy
-    if (_phy != NULL) {
-      _phy->del(_phy);
-      _phy = NULL;
-    }
   }
+
+  _delMacAndPhy();
 
   if (_eth_ev_instance != NULL) {
     bool do_not_unreg_ev_handler = false;
