@@ -1030,7 +1030,7 @@ bool uartSetTxInvert(uart_t *uart, bool invert) {
 bool uartSetCtsInvert(uart_t *uart, bool invert) {
   if (uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert)) {
     log_v("UART%d: CTS signal is now inverted", uart->num);
-    return true; 
+    return true;
   }
   return false;
 }
