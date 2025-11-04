@@ -1022,7 +1022,7 @@ bool uartSetRxInvert(uart_t *uart, bool invert) {
 bool uartSetTxInvert(uart_t *uart, bool invert) {
   if (uartPinSignalInversion(uart, UART_SIGNAL_TXD_INV, invert)) {
     log_v("UART%d: TX signal is now inverted", uart->num);
-    return true; 
+    return true;
   }
   return false;
 }
