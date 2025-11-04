@@ -6,7 +6,7 @@ This can be done looking into release information in https://github.com/espressi
 
 Any example from [ESP32 Matter Library examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples)
 can be used to build the application.\
-Feel free to create your own Arduino Matter sketch!\ 
+Feel free to create your own Arduino Matter sketch!\
 Do not forget to rename the `sketch_file_name.ino` to `sketch_file_name.cpp` in `main` folder.
 
 The `main/idf_component.yml` file holds the ESP-Matter component version and Arduino Core version.\
