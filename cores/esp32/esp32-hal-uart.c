@@ -879,6 +879,7 @@ uart_t *uartBegin(
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, _inv_mask);
       if (retCode) {
         uart->inv_mask = _inv_mask;
+        log_v("Inverted RX and TX signals within UART%d", uart_nr);
       }
     } else {
       // disable invert signal for both Rx and Tx
@@ -1010,19 +1011,35 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
 }
 
 bool uartSetRxInvert(uart_t *uart, bool invert) {
-  return uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
+  if (uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert)) {
+    log_v("UART%d: RX signal is now inverted", uart->num);
+    return true;
+  }
+  return false;
 }
 
 bool uartSetTxInvert(uart_t *uart, bool invert) {
-  return uartPinSignalInversion(uart, UART_SIGNAL_TXD_INV, invert);
+  if (uartPinSignalInversion(uart, UART_SIGNAL_TXD_INV, invert)) {
+    log_v("UART%d: TX signal is now inverted", uart->num);
+    return true; 
+  }
+  return false;
 }
 
 bool uartSetCtsInvert(uart_t *uart, bool invert) {
-  return uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert);
+  if (uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert)) {
+    log_v("UART%d: CTS signal is now inverted", uart->num);
+    return true; 
+  }
+  return false;
 }
 
 bool uartSetRtsInvert(uart_t *uart, bool invert) {
-  return uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert);
+  if (uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert)) {
+    log_v("UART%d: RTS signal is now inverted", uart->num);
+    return true; 
+  }
+  return false;
 }
 
 uint32_t uartAvailable(uart_t *uart) {
