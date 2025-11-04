@@ -1001,7 +1001,7 @@ bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   if (inverted) {
     _inv_mask |= invMask;
   } else {
-    _inv_mask &= ~invMask;    
+    _inv_mask &= ~invMask;
   }
   bool retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
   if (retCode) {
