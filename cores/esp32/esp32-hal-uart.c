@@ -886,6 +886,7 @@ uart_t *uartBegin(
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
       if (retCode) {
         uart->inv_mask = UART_SIGNAL_INV_DISABLE;
+        log_v("UART%d: RX and TX signals are set not inverted.", uart_nr);
       }
     }
   }
