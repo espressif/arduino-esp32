@@ -756,9 +756,9 @@ bool ETHClass::beginSPI(
   } else {
     // Derive a new MAC address for this interface
     uint8_t base_mac_addr[ETH_ADDR_LEN];
-    ret = esp_efuse_mac_get_default(base_mac_addr);
+    ret = esp_read_mac(base_mac_addr, ESP_MAC_ETH);
     if (ret != ESP_OK) {
-      log_e("Get EFUSE MAC failed: %d", ret);
+      log_e("Get ETH MAC failed: %d", ret);
       return false;
     }
     base_mac_addr[ETH_ADDR_LEN - 1] += _eth_index;  //Increment by the ETH number
