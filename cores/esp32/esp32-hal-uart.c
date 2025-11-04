@@ -1014,7 +1014,7 @@ bool uartSetRxInvert(uart_t *uart, bool invert) {
 }
 
 bool uartSetTxInvert(uart_t *uart, bool invert) {
-  return uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert);
+  return uartPinSignalInversion(uart, UART_SIGNAL_TXD_INV, invert);
 }
 
 bool uartSetCtsInvert(uart_t *uart, bool invert) {
