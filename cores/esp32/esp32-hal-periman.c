@@ -236,6 +236,20 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
   return true;
 }
 
+static bool empty_bus_deinit_cb(void *bus) {
+  return true;
+}
+
+bool perimanClearBusDeinit(peripheral_bus_type_t type) {
+  if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
+    log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
+    return false;
+  }
+  deinit_functions[type] = empty_bus_deinit_cb;
+  log_v("Deinit function for type %s (%u) cleared", perimanGetTypeName(type), (unsigned int)type);
+  return true;
+}
+
 peripheral_bus_deinit_cb_t perimanGetBusDeinit(peripheral_bus_type_t type) {
   if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
     log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
