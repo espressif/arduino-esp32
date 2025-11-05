@@ -107,14 +107,17 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
   } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
     log_v("%s Disconnected", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+    arduino_event.event_info.eth_disconnected = handle();
     clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
   } else if (event_id == ETHERNET_EVENT_START) {
     log_v("%s Started", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+    arduino_event.event_info.eth_started = handle();
     setStatusBits(ESP_NETIF_STARTED_BIT);
   } else if (event_id == ETHERNET_EVENT_STOP) {
     log_v("%s Stopped", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+    arduino_event.event_info.eth_stopped = handle();
     clearStatusBits(
       ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
       | ESP_NETIF_HAS_STATIC_IP_BIT

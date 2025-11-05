@@ -99,9 +99,13 @@ typedef enum {
 typedef union {
   ip_event_ap_staipassigned_t wifi_ap_staipassigned;
   ip_event_got_ip_t got_ip;
+  ip_event_got_ip_t lost_ip;
   ip_event_got_ip6_t got_ip6;
 #if CONFIG_ETH_ENABLED
+  esp_eth_handle_t eth_started;
+  esp_eth_handle_t eth_stopped;
   esp_eth_handle_t eth_connected;
+  esp_eth_handle_t eth_disconnected;
 #endif
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
   wifi_event_sta_scan_done_t wifi_scan_done;
