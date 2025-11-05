@@ -26,7 +26,7 @@ For Linux or MacOS: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c
 2- Test IDF with `idf.py --version` to check if it is installed and configured correctly.
 
 3- To create a ESP-IDF project from this example with the latest release of Arduino-esp32, you can simply run command:
-`idf.py create-project-from-example "espressif/arduino-esp32:Arduino_ESP-Matter-over-Thread_ESP32_C6"`
+`idf.py create-project-from-example "espressif/arduino-esp32:Arduino_ESP_Matter_over_OpenThread"`
 ESP-IDF will download all dependencies needed from the component registry and setup the project for you.
 
 4- Open an IDF terminal and execute `idf.py set-target esp32c6` (esp32c5 and esp32h2 are also possible targets)
