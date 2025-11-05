@@ -82,7 +82,7 @@ Matter Fabric not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network.
 ====> Decommissioning in 30 seconds. <====
-Matter Node is decommissioned. Commisssioning widget shall start over.
+Matter Node is decommissioned. Commissioning widget shall start over.
 
 Matter Node is not commissioned yet.
 Initiate the device discovery in your Matter environment.
