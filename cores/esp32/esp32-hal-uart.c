@@ -60,6 +60,7 @@ struct uart_struct_t {
   bool _inverted;                             // UART inverted signal
   uint8_t _rxfifo_full_thrhd;                 // UART RX FIFO full threshold
   int8_t _uart_clock_source;                  // UART Clock Source that should be used if user defines an specific one with setClockSource()
+  uint32_t inv_mask;                          // UART inverse mask used to maintain related pin state
 };
 
 #if CONFIG_DISABLE_HAL_LOCKS
@@ -68,21 +69,21 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #if SOC_UART_NUM > 1
-  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 2
-  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 3
-  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 4
-  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 5
-  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 };
 
@@ -97,21 +98,21 @@ static uart_t _uart_bus_array[] = {
   xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #if SOC_UART_NUM > 1
-  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 2
-  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 3
-  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 4
-  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 #if SOC_UART_NUM > 5
-  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1},
+  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0},
 #endif
 };
 
@@ -873,10 +874,20 @@ uart_t *uartBegin(
   if (retCode) {
     if (inverted) {
       // invert signal for both Rx and Tx
-      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+      uint32_t _inv_mask = uart->inv_mask;
+      _inv_mask |= UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
+      retCode &= ESP_OK == uart_set_line_inverse(uart_nr, _inv_mask);
+      if (retCode) {
+        uart->inv_mask = _inv_mask;
+        log_v("UART%d: RX and TX signals are set to be inverted.", uart_nr);
+      }
     } else {
       // disable invert signal for both Rx and Tx
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, UART_SIGNAL_INV_DISABLE);
+      if (retCode) {
+        uart->inv_mask = UART_SIGNAL_INV_DISABLE;
+        log_v("UART%d: RX and TX signals are set not inverted.", uart_nr);
+      }
     }
   }
   // if all fine, set internal parameters
@@ -978,28 +989,58 @@ void uartEnd(uint8_t uart_num) {
   UART_MUTEX_UNLOCK();
 }
 
-void uartSetRxInvert(uart_t *uart, bool invert) {
+// Helper generic function that takes a uart_signal_inv_t mask to be properly applied to the designated uart pin
+// invMask can be UART_SIGNAL_RXD_INV, UART_SIGNAL_TXD_INV, UART_SIGNAL_RTS_INV, UART_SIGNAL_CTS_INV
+// returns the operation success status
+bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted) {
   if (uart == NULL) {
-    return;
+    return false;
   }
-#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32C5
-  // POTENTIAL ISSUE :: original code only set/reset rxd_inv bit
-  // IDF or LL set/reset the whole inv_mask!
-  // if (invert)
-  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_RXD_INV));
-  // else
-  //     ESP_ERROR_CHECK(uart_set_line_inverse(uart->num, UART_SIGNAL_INV_DISABLE));
-  log_e("uartSetRxInvert is not supported in ESP32C6, ESP32H2 and ESP32P4");
-#else
-  // this implementation is better over IDF API because it only affects RXD
-  // this is supported in ESP32, ESP32-S2 and ESP32-C3
-  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
-  if (invert) {
-    hw->conf0.rxd_inv = 1;
+  UART_MUTEX_LOCK();
+  uint32_t _inv_mask = uart->inv_mask;
+  if (inverted) {
+    _inv_mask |= invMask;
   } else {
-    hw->conf0.rxd_inv = 0;
+    _inv_mask &= ~invMask;
   }
-#endif
+  bool retCode = ESP_OK == uart_set_line_inverse(uart->num, _inv_mask);
+  if (retCode) {
+    uart->inv_mask = _inv_mask;
+  }
+  UART_MUTEX_UNLOCK();
+  return retCode;
+}
+
+bool uartSetRxInvert(uart_t *uart, bool invert) {
+  if (uartPinSignalInversion(uart, UART_SIGNAL_RXD_INV, invert)) {
+    log_v("UART%d: RX signal inversion %s", uart->num, invert ? "enabled" : "disabled");
+    return true;
+  }
+  return false;
+}
+
+bool uartSetTxInvert(uart_t *uart, bool invert) {
+  if (uartPinSignalInversion(uart, UART_SIGNAL_TXD_INV, invert)) {
+    log_v("UART%d: TX signal inversion %s", uart->num, invert ? "enabled" : "disabled");
+    return true;
+  }
+  return false;
+}
+
+bool uartSetCtsInvert(uart_t *uart, bool invert) {
+  if (uartPinSignalInversion(uart, UART_SIGNAL_CTS_INV, invert)) {
+    log_v("UART%d: CTS signal inversion %s", uart->num, invert ? "enabled" : "disabled");
+    return true;
+  }
+  return false;
+}
+
+bool uartSetRtsInvert(uart_t *uart, bool invert) {
+  if (uartPinSignalInversion(uart, UART_SIGNAL_RTS_INV, invert)) {
+    log_v("UART%d: RTS signal inversion %s", uart->num, invert ? "enabled" : "disabled");
+    return true;
+  }
+  return false;
 }
 
 uint32_t uartAvailable(uart_t *uart) {
