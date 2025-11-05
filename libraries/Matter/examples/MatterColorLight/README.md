@@ -50,7 +50,7 @@ The application showcases Matter commissioning, device control via smart home ec
 3. Install required libraries:
    - `Matter`
    - `Preferences`
-   - `WiFi`
+   - `WiFi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
