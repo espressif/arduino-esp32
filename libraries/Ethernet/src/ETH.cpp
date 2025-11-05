@@ -281,7 +281,6 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   _mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
   if (_mac == NULL) {
     log_e("esp_eth_mac_new_esp32 failed");
-    _delMacAndPhy();
     return false;
   }
 
