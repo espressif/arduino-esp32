@@ -77,5 +77,5 @@ void loop() {
   Serial.println("====> Decommissioning in 30 seconds. <====");
   delay(30000);
   Matter.decommission();
-  Serial.println("Matter Node is decommissioned. Commsssioning widget shall start over.");
+  Serial.println("Matter Node is decommissioned. Commisssioning widget shall start over.");
 }

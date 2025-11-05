@@ -11,6 +11,7 @@ The application showcases Matter commissioning, device control via smart home ec
 | ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
 | ESP32-S3 | ✅ | ❌ | ✅ | Required | Fully supported |
 | ESP32-C3 | ✅ | ❌ | ✅ | Required | Fully supported |
+| ESP32-C5 | ✅ | ❌ | ✅ | Required | Fully supported |
 | ESP32-C6 | ✅ | ❌ | ✅ | Required | Fully supported |
 | ESP32-H2 | ❌ | ✅ | ✅ | Required | Supported (Thread only) |
 
@@ -18,6 +19,7 @@ The application showcases Matter commissioning, device control via smart home ec
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
 - **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
 
 ## Features
 
@@ -47,7 +49,7 @@ The application showcases Matter commissioning, device control via smart home ec
 
 1. Install the Arduino IDE (2.0 or newer recommended)
 2. Install ESP32 Arduino Core with Matter support
-3. Install required libraries:
+3. ESP32 Arduino libraries:
    - `Matter`
    - `Preferences`
    - `WiFi` (only for ESP32 and ESP32-S2)
@@ -81,7 +83,7 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid

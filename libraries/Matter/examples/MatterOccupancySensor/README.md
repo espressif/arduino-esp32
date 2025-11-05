@@ -11,6 +11,7 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S3 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-C3 | ✅ | ❌ | ✅ | Fully supported |
+| ESP32-C5 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-C6 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-H2 | ❌ | ✅ | ✅ | Supported (Thread only) |
 
@@ -18,6 +19,7 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
 - **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
 
 ## Features
 
