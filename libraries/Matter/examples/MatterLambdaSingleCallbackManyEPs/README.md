@@ -5,7 +5,7 @@ The application showcases Matter commissioning, multiple endpoint management, an
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | GPIO Pins | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | GPIO Pins | Status |
 | --- | ---- | ------ | ----------------- | --------- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Required | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
@@ -17,16 +17,16 @@ The application showcases Matter commissioning, multiple endpoint management, an
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation with multiple endpoints in a single node
 - Six on/off light endpoints sharing a single callback function
 - Lambda function with capture variable for efficient endpoint identification
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - Each endpoint has a unique GPIO pin and friendly name
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -62,16 +62,16 @@ uint8_t lightPins[MAX_LIGHT_NUMBER] = {2, 4, 6, 8, 10, 12};
 3. ESP32 Arduino libraries:
    - `Matter`
    - `Preferences`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **GPIO pin configuration** (optional):
@@ -103,12 +103,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
@@ -182,7 +182,7 @@ The MatterLambdaSingleCallbackManyEPs example consists of the following main com
    - `lightPins[]`: Array of GPIO pins for each light
    - `lightName[]`: Array of friendly names for each light
 
-2. **`setup()`**: Configures WiFi (if needed), initializes all GPIO pins, initializes all Matter endpoints, registers lambda callbacks with capture variables for each endpoint, and starts the Matter stack.
+2. **`setup()`**: Configures Wi-Fi (if needed), initializes all GPIO pins, initializes all Matter endpoints, registers lambda callbacks with capture variables for each endpoint, and starts the Matter stack.
 
 3. **`loop()`**: Checks the Matter commissioning state and connection status, displays appropriate messages, and allows the Matter stack to process events.
 
@@ -193,7 +193,7 @@ The MatterLambdaSingleCallbackManyEPs example consists of the following main com
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Only some endpoints appear**: Some smart home platforms may group or display endpoints differently. Check your app's device list
 - **GPIO pins not responding**: Verify pin configurations match your hardware. Ensure pins are not used by other peripherals
 - **Failed to commission**: Try erasing the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`

@@ -6,7 +6,7 @@ This example demonstrates a Matter Light device that uses Thread network commiss
 
 - **Thread-only commissioning**: Device can only be commissioned over Thread network
 - **On/Off Light control**: Simple light that can be controlled via Matter
-- **Automatic fallback**: On non-Thread capable devices, falls back to WiFi
+- **Automatic fallback**: On non-Thread capable devices, falls back to Wi-Fi
 - **Status monitoring**: Displays network and commissioning status
 - **Decommissioning support**: Long-press boot button to decommission
 
@@ -18,7 +18,7 @@ This example demonstrates a Matter Light device that uses Thread network commiss
 - **ESP32-C5**: Native Thread support
 
 ### Other ESP32 Variants
-- **ESP32, ESP32-S2, ESP32-S3, ESP32-C3**: Will automatically fall back to WiFi commissioning
+- **ESP32, ESP32-S2, ESP32-S3, ESP32-C3**: Will automatically fall back to Wi-Fi commissioning
 
 ## Hardware Setup
 
@@ -72,7 +72,7 @@ Device commissioned: No
 Device connected: No
 Thread connected: No
 Thread commissioning: Enabled
-WiFi commissioning: Disabled
+Wi-Fi commissioning: Disabled
 Light state: OFF
 ================================
 ```
@@ -125,9 +125,9 @@ Light ON
 ### Non-Thread Device Fallback
 ```
 Starting Thread-only Matter Light...
-⚠ Thread support not compiled in, using WiFi commissioning
+⚠ Thread support not compiled in, using Wi-Fi commissioning
 Matter Node is not commissioned yet.
-WiFi commissioning: Enabled
+Wi-Fi commissioning: Enabled
 ```
 
 ## Troubleshooting
@@ -216,23 +216,23 @@ bool isOn = OnOffLight.getOnOff();
 OnOffLight.toggle();
 ```
 
-## Thread vs WiFi Comparison
+## Thread vs Wi-Fi Comparison
 
-| Feature | Thread | WiFi |
+| Feature | Thread | Wi-Fi |
 |---------|--------|------|
 | **Power Consumption** | Low | Higher |
 | **Range** | Mesh network, self-healing | Single point to router |
-| **Setup** | Requires Border Router | Direct to WiFi router |
-| **Reliability** | High (mesh redundancy) | Depends on WiFi quality |
+| **Setup** | Requires Border Router | Direct to Wi-Fi router |
+| **Reliability** | High (mesh redundancy) | Depends on Wi-Fi quality |
 | **Device Limit** | 250+ devices per network | Limited by router |
 | **Security** | Built-in mesh security | WPA2/WPA3 |
 
 ## Related Examples
 
-- **[SimpleNetworkCommissioning](../SimpleNetworkCommissioning/)**: Basic WiFi/Thread selection
+- **[SimpleNetworkCommissioning](../SimpleNetworkCommissioning/)**: Basic Wi-Fi/Thread selection
 - **[MatterNetworkCommissioning](../MatterNetworkCommissioning/)**: Interactive commissioning control
-- **[MatterMinimum](../MatterMinimum/)**: Simplest WiFi-only setup
-- **[MatterOnOffLight](../MatterOnOffLight/)**: WiFi-based light with persistence
+- **[MatterMinimum](../MatterMinimum/)**: Simplest Wi-Fi-only setup
+- **[MatterOnOffLight](../MatterOnOffLight/)**: Wi-Fi-based light with persistence
 
 ## Further Reading
 

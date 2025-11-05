@@ -5,7 +5,7 @@ The application showcases the minimal implementation for Matter commissioning an
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | LED | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | LED | Status |
 | --- | ---- | ------ | ----------------- | --- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Optional | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Optional | Fully supported |
@@ -17,14 +17,14 @@ The application showcases the minimal implementation for Matter commissioning an
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Minimal Matter protocol implementation for an on/off light device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - Simple on/off control via Matter app
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -51,16 +51,16 @@ The application showcases the minimal implementation for Matter commissioning an
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **LED pin configuration** (if not using built-in LED):
@@ -83,12 +83,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 
 Matter Node is not commissioned yet.
 Initiate the device discovery in your Matter environment.
@@ -142,7 +142,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterMinimum example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures WiFi (if needed), initializes the Matter on/off light endpoint, registers the callback function, and starts the Matter stack. Displays commissioning information if not yet commissioned.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the callback function, and starts the Matter stack. Displays commissioning information if not yet commissioned.
 
 2. **`loop()`**: Handles button input for factory reset (long press >5 seconds) and allows the Matter stack to process events. This minimal example does not include commissioning state checking in the loop - it only checks once in setup.
 
@@ -160,7 +160,7 @@ This minimal example can be extended with additional features:
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **LED not responding**: Verify pin configurations and connections. The LED will only respond to Matter app commands after commissioning
 - **Failed to commission**: Try erasing the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection

@@ -5,7 +5,7 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | Status |
 | --- | ---- | ------ | ----------------- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
@@ -17,14 +17,14 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for a pressure sensor device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - Pressure measurement reporting in hectopascals (hPa)
 - Automatic simulation of pressure readings (950-1100 hPa range)
 - Periodic sensor updates every 5 seconds
@@ -51,16 +51,16 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **Button pin configuration** (optional):
@@ -81,12 +81,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
@@ -171,7 +171,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterPressureSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures WiFi (if needed), sets up the Matter Pressure Sensor endpoint with initial value (900 hPa), and waits for Matter commissioning.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Pressure Sensor endpoint with initial value (900 hPa), and waits for Matter commissioning.
 
 2. **`loop()`**: Displays the current pressure value every 5 seconds, updates the sensor reading from the simulated hardware sensor, handles button input for factory reset, and allows the Matter stack to process events.
 
@@ -179,7 +179,7 @@ The MatterPressureSensor example consists of the following main components:
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Pressure readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
 - **Pressure values out of range**: Ensure pressure values are in hectopascals (hPa). The Matter protocol stores values as uint16_t internally. Typical atmospheric pressure ranges from 950-1050 hPa at sea level
 - **State not changing**: The simulated sensor increases by 10 hPa every 5 seconds. If you're using a real sensor, ensure it's properly connected and reading correctly

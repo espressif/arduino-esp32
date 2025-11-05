@@ -5,7 +5,7 @@ The application showcases Matter commissioning, sending button click events to s
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | Status |
 | --- | ---- | ------ | ----------------- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
@@ -17,14 +17,14 @@ The application showcases Matter commissioning, sending button click events to s
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for a smart button (generic switch) device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - Button click event reporting to Matter controller
 - Button control for triggering events and factory reset
 - Matter commissioning via QR code or manual pairing code
@@ -49,16 +49,16 @@ The application showcases Matter commissioning, sending button click events to s
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **Button pin configuration** (optional):
@@ -76,12 +76,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
@@ -151,18 +151,18 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterSmartButton example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures WiFi (if needed), initializes the Matter Generic Switch endpoint, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), initializes the Matter Generic Switch endpoint, and starts the Matter stack.
 
 2. **`loop()`**: Checks the Matter commissioning state, handles button input for sending click events and factory reset, and allows the Matter stack to process events.
 
 3. **Button Event Handling**:
-   - Detects button press and release with debouncing (250ms)
+   - Detects button press and release with debouncing (250 ms)
    - Sends click event to Matter controller using `SmartButton.click()` when button is released
    - Handles long press (>5 seconds) for factory reset
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Button clicks not registering**: Check Serial Monitor for "User button released" messages. Verify button wiring and that debounce time is appropriate
 - **Automations not triggering**: Ensure the device is commissioned and that automations are properly configured in your Matter app. The button sends events, but automations must be set up in the app
 - **Button not responding**: Verify button pin configuration and connections. Check that the button is properly connected with pull-up resistor (INPUT_PULLUP mode)

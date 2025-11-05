@@ -5,7 +5,7 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | Status |
 | --- | ---- | ------ | ----------------- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
@@ -17,14 +17,14 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for an occupancy sensor device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - Occupancy state reporting (Occupied/Unoccupied)
 - Automatic simulation of occupancy state changes every 2 minutes
 - Button control for factory reset (decommission)
@@ -51,16 +51,16 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **Button pin configuration** (optional):
@@ -84,12 +84,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
@@ -130,7 +130,7 @@ Here's a complete example for integrating a simple PIR (Passive Infrared) motion
 #### Hardware Connections
 
 Connect the PIR sensor to your ESP32:
-- **PIR VCC** → ESP32 3.3V or 5V (check your PIR sensor specifications)
+- **PIR VCC** → ESP32 3.3 V or 5 V (check your PIR sensor specifications)
 - **PIR GND** → ESP32 GND
 - **PIR OUT** → ESP32 GPIO pin (e.g., GPIO 4)
 
@@ -240,7 +240,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterOccupancySensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures WiFi (if needed), sets up the Matter Occupancy Sensor endpoint with initial state (unoccupied), and waits for Matter commissioning.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Occupancy Sensor endpoint with initial state (unoccupied), and waits for Matter commissioning.
 
 2. **`loop()`**: Handles button input for factory reset, continuously checks the simulated occupancy sensor and updates the Matter attribute, and allows the Matter stack to process events.
 
@@ -248,12 +248,12 @@ The MatterOccupancySensor example consists of the following main components:
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Occupancy readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
 - **State not changing**: The simulated sensor toggles every 2 minutes (120000 ms). If you're using a real sensor, ensure it's properly connected and reading correctly
 - **PIR sensor not detecting motion**:
   - Verify PIR sensor wiring (VCC, GND, OUT connections)
-  - Check if PIR sensor requires 5V or 3.3V power (some PIR sensors need 5V)
+  - Check if PIR sensor requires 5 V or 3.3 V power (some PIR sensors need 5 V)
   - Allow 30-60 seconds for PIR sensor to stabilize after power-on
   - Adjust PIR sensor sensitivity and time delay potentiometers (if available on your sensor)
   - Ensure the PIR sensor has a clear view of the detection area

@@ -5,7 +5,7 @@ The application showcases Matter commissioning, device control via smart home ec
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | LED | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | LED | Status |
 | --- | ---- | ------ | ----------------- | --- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Required | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
@@ -17,14 +17,14 @@ The application showcases Matter commissioning, device control via smart home ec
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for an on/off light device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - On Identify callback implementation - LED blinks when device is identified
 - Visual identification feedback (red blinking for RGB LED, toggling for regular LED)
 - Button control for factory reset (decommission)
@@ -52,16 +52,16 @@ The application showcases Matter commissioning, device control via smart home ec
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **LED pin configuration** (if not using built-in LED):
@@ -84,12 +84,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 
 Matter Node is not commissioned yet.
 Initiate the device discovery in your Matter environment.
@@ -185,9 +185,9 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterOnIdentify example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, LED), configures WiFi (if needed), initializes the Matter on/off light endpoint, registers the on/off callback and the Identify callback, and starts the Matter stack.
+1. **`setup()`**: Initializes hardware (button, LED), configures Wi-Fi (if needed), initializes the Matter on/off light endpoint, registers the on/off callback and the Identify callback, and starts the Matter stack.
 
-2. **`loop()`**: Handles the Identify blinking logic (if identify flag is active, blinks the LED every 500ms), handles button input for factory reset, and allows the Matter stack to process events.
+2. **`loop()`**: Handles the Identify blinking logic (if identify flag is active, blinks the LED every 500 ms), handles button input for factory reset, and allows the Matter stack to process events.
 
 3. **Callbacks**:
    - `onOffLightCallback()`: Controls the physical LED based on on/off state from Matter controller.
@@ -196,11 +196,11 @@ The MatterOnIdentify example consists of the following main components:
 4. **Identify Blinking Logic**:
    - For RGB LEDs: Blinks in red color (brightness 32) when identify is active
    - For regular LEDs: Toggles on/off when identify is active
-   - Blinking rate: Every 500ms (determined by the delay in loop)
+   - Blinking rate: Every 500 ms (determined by the delay in loop)
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **LED not responding**: Verify pin configurations and connections
 - **Identify feature not working**: Ensure the device is commissioned and you're using a Matter app that supports the Identify cluster. Some apps may not have a visible Identify button
 - **LED not blinking during identify**: Check Serial Monitor for "Identify Cluster is Active" message. If you don't see it, the Identify command may not be reaching the device

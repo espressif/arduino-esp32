@@ -5,7 +5,7 @@ The application showcases Matter commissioning, device control via smart home ec
 
 ## Supported Targets
 
-| SoC | WiFi | Thread | BLE Commissioning | PWM Pin | Status |
+| SoC | Wi-Fi | Thread | BLE Commissioning | PWM Pin | Status |
 | --- | ---- | ------ | ----------------- | ------- | ------ |
 | ESP32 | ✅ | ❌ | ❌ | Required | Fully supported |
 | ESP32-S2 | ✅ | ❌ | ❌ | Required | Fully supported |
@@ -17,14 +17,14 @@ The application showcases Matter commissioning, device control via smart home ec
 
 ### Note on Commissioning:
 
-- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for a fan device
-- Support for both WiFi and Thread(*) connectivity
+- Support for both Wi-Fi and Thread(*) connectivity
 - On/Off control
 - Speed control (0-100% in steps of 10%)
 - Fan modes (OFF, ON, SMART, HIGH)
@@ -56,16 +56,16 @@ The application showcases Matter commissioning, device control via smart home ec
 2. Install ESP32 Arduino Core with Matter support
 3. ESP32 Arduino libraries:
    - `Matter`
-   - `WiFi` (only for ESP32 and ESP32-S2)
+   - `Wi-Fi` (only for ESP32 and ESP32-S2)
 
 ### Configuration
 
 Before uploading the sketch, configure the following:
 
-1. **WiFi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
+1. **Wi-Fi credentials** (if not using BLE commissioning - mandatory for ESP32 | ESP32-S2):
    ```cpp
-   const char *ssid = "your-ssid";         // Change to your WiFi SSID
-   const char *password = "your-password"; // Change to your WiFi password
+   const char *ssid = "your-ssid";         // Change to your Wi-Fi SSID
+   const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
 2. **DC Motor PWM pin configuration** (if not using built-in RGB LED):
@@ -94,12 +94,12 @@ Before uploading the sketch, configure the following:
 
 ## Expected Output
 
-Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The WiFi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
+Once the sketch is running, open the Serial Monitor at a baud rate of **115200**. The Wi-Fi connection messages will be displayed only for ESP32 and ESP32-S2. Other targets will use Matter CHIPoBLE to automatically setup the IP Network. You should see output similar to the following, which provides the necessary information for commissioning:
 
 ```
 Connecting to your-wifi-ssid
 .......
-WiFi connected
+Wi-Fi connected
 IP address: 192.168.1.100
 
 Matter Node is not commissioned yet.
@@ -172,17 +172,17 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterFan example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button, analog input, PWM output), configures WiFi (if needed), sets up the Matter Fan endpoint with initial state (OFF, 0% speed), and registers callbacks for state changes.
+1. **`setup()`**: Initializes hardware (button, analog input, PWM output), configures Wi-Fi (if needed), sets up the Matter Fan endpoint with initial state (OFF, 0% speed), and registers callbacks for state changes.
 2. **`loop()`**: Checks the Matter commissioning state, handles button input for toggling the fan and factory reset, reads analog input to adjust fan speed, and allows the Matter stack to process events.
 3. **Callbacks**:
-   - `onChangeSpeedPercent()`: Handles speed percent changes (0-100%). Automatically turns fan on/off based on speed.
+   - `onChangeSpeedPercent()`: Handles speed percentage changes (0% to 100%). Automatically turns fan on/off based on speed.
    - `onChangeMode()`: Handles fan mode changes (OFF, ON, SMART, HIGH). Automatically sets speed to 50% when switching from OFF to another mode.
    - `onChange()`: Generic callback that controls the DC motor via PWM and reports the current state.
    - `fanDCMotorDrive()`: Drives the DC motor (or simulates it with RGB LED brightness) based on fan state and speed.
 
 ## Troubleshooting
 
-- **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
+- **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Fan speed not responding**: Verify PWM pin configuration and connections. For DC motor control, ensure the pin supports PWM output
 - **Analog input not working**: Verify analog pin configuration and that the input voltage is within the ESP32's ADC range (0-3.3V typically)
 - **Speed changes not synchronized**: The analog input is read continuously, and speed updates only when the value changes by a step (0-9 steps mapped to 10-100%)
