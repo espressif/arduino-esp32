@@ -198,4 +198,3 @@ The Matter library provides specialized endpoint classes that inherit from ``Mat
     :glob:
 
     ep_*
-

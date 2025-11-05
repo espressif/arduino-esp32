@@ -308,4 +308,3 @@ Thermostat
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterThermostat/MatterThermostat.ino
     :language: arduino
-

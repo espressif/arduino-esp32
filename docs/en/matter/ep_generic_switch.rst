@@ -92,4 +92,3 @@ Generic Switch (Smart Button)
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterSmartButton/MatterSmartButton.ino
     :language: arduino
-

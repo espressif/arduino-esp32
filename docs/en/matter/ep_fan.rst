@@ -290,4 +290,3 @@ Fan Control
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterFan/MatterFan.ino
     :language: arduino
-

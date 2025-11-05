@@ -301,4 +301,3 @@ Enhanced Color Light
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterEnhancedColorLight/MatterEnhancedColorLight.ino
     :language: arduino
-

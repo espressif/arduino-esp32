@@ -131,4 +131,3 @@ Pressure Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterPressureSensor/MatterPressureSensor.ino
     :language: arduino
-

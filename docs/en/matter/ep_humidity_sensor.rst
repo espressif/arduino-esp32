@@ -134,4 +134,3 @@ Humidity Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterHumiditySensor/MatterHumiditySensor.ino
     :language: arduino
-

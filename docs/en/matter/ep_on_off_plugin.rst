@@ -185,4 +185,3 @@ On/Off Plugin
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterOnOffPlugin/MatterOnOffPlugin.ino
     :language: arduino
-

@@ -234,4 +234,3 @@ Dimmable Light
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterDimmableLight/MatterDimmableLight.ino
     :language: arduino
-

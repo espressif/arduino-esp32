@@ -134,4 +134,3 @@ Temperature Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterTemperatureSensor/MatterTemperatureSensor.ino
     :language: arduino
-

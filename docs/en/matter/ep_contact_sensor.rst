@@ -135,4 +135,3 @@ Contact Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterContactSensor/MatterContactSensor.ino
     :language: arduino
-

@@ -256,4 +256,3 @@ Color Temperature Light
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterTemperatureLight/MatterTemperatureLight.ino
     :language: arduino
-

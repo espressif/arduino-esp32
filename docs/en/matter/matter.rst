@@ -214,4 +214,3 @@ For debugging and monitoring Matter events, you can set up an event callback:
     });
 
 This allows you to monitor commissioning progress, connectivity changes, and other Matter events in real-time.
-

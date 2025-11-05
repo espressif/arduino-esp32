@@ -150,4 +150,3 @@ Occupancy Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterOccupancySensor/MatterOccupancySensor.ino
     :language: arduino
-

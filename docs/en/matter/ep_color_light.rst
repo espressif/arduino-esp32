@@ -210,4 +210,3 @@ Color Light
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterColorLight/MatterColorLight.ino
     :language: arduino
-
