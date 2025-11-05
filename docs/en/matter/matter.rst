@@ -7,7 +7,7 @@ About
 
 The Matter library provides support for creating Matter-compatible devices including:
 
-* Support for WiFi and Thread connectivity
+* Support for Wi-Fi and Thread connectivity
 * Matter commissioning via QR code or manual pairing code
 * Multiple endpoint types for various device categories
 * Event monitoring and callback support
@@ -23,7 +23,7 @@ Matter (formerly Project CHIP - Connected Home over IP) is an open-source connec
 
 **Key Features:**
 
-* **Multi-Protocol Support**: Works over WiFi, Thread, and Ethernet
+* **Multi-Protocol Support**: Works over Wi-Fi, Thread, and Ethernet
 * **Interoperability**: Devices from different manufacturers work together
 * **Security**: Built-in security features including encryption and authentication
 * **Local Control**: Devices can communicate locally without requiring cloud connectivity
@@ -34,27 +34,27 @@ Matter Network Topology
 
 .. code-block:: text
 
-    ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-    │   Matter Hub    │◄─────►│   WiFi Router   │◄─────►│  ESP Border     │
-    │  (HomePod etc)  │       │                 │       │  Border Router  │
-    └─────────────────┘       └─────────────────┘       └─────────────────┘
+    ┌─────────────────┐       ┌──────────────────┐       ┌─────────────────┐
+    │   Matter Hub    │◄─────►│   Wi-Fi Router   │◄─────►│  ESP Border     │
+    │  (HomePod etc)  │       │                  │       │  Border Router  │
+    └─────────────────┘       └──────────────────┘       └─────────────────┘
             │                          │                         │
             │                          ▼                         │
             │                 ┌─────────────────┐                │
             │                 │  Matter Device  │                │
-            │                 │  (via WiFi)     │                │
+            │                 │  (via Wi-Fi)    │                │
             │                 └─────────────────┘                │
             │                                                    │
             ▼                                                    ▼
     ┌─────────────────┐                                 ┌─────────────────┐
     │  Matter Device  │                                 │  Matter Device  │
-    │  (via WiFi)     │                                 │  (via Thread)   │
+    │  (via Wi-Fi)    │                                 │  (via Thread)   │
     └─────────────────┘                                 └─────────────────┘
 
 
 **Network Interfaces:**
 
-* **WiFi**: High-bandwidth connection for devices that require constant power
+* **Wi-Fi**: High-bandwidth connection for devices that require constant power
 * **Thread**: Low-power mesh networking for battery-operated devices
 * **Ethernet**: Wired connection for stationary devices
 
@@ -73,7 +73,7 @@ Matter
 The ``Matter`` class is the main entry point for all Matter operations. It serves as the central manager that handles:
 
 * **Device Commissioning**: Managing the commissioning process via QR code or manual pairing code
-* **Network Connectivity**: Checking and managing WiFi and Thread connections
+* **Network Connectivity**: Checking and managing Wi-Fi and Thread connections
 * **Event Handling**: Monitoring Matter events and device state changes
 * **Device Management**: Decommissioning and factory reset functionality
 
@@ -83,7 +83,7 @@ The ``Matter`` class provides the following key methods:
 
 * ``begin()``: Initializes the Matter stack
 * ``isDeviceCommissioned()``: Checks if the device is commissioned
-* ``isWiFiConnected()``: Checks WiFi connection status (if WiFi is enabled)
+* ``isWi-FiConnected()``: Checks Wi-Fi connection status (if Wi-Fi is enabled)
 * ``isThreadConnected()``: Checks Thread connection status (if Thread is enabled)
 * ``isDeviceConnected()``: Checks overall device connectivity
 * ``decommission()``: Factory resets the device
@@ -99,7 +99,7 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Endpoint Management**: Each endpoint has a unique endpoint ID for identification
 * **Attribute Access**: Methods to get and set attribute values from Matter clusters
 * **Identify Cluster**: Support for device identification (visual feedback)
-* **Secondary Network Interfaces**: Support for multiple network interfaces (WiFi, Thread, Ethernet)
+* **Secondary Network Interfaces**: Support for multiple network interfaces (Wi-Fi, Thread, Ethernet)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
 .. toctree::
@@ -152,19 +152,19 @@ Common Issues
 
 **Device won't commission**
   * Ensure the Matter hub is in pairing mode
-  * Check that WiFi or Thread connectivity is properly configured
+  * Check that Wi-Fi or Thread connectivity is properly configured
   * Verify the QR code or pairing code is correct
-  * For ESP32/ESP32-S2, ensure WiFi credentials are set in the code
+  * For ESP32/ESP32-S2, ensure Wi-Fi credentials are set in the code
 
 **Commissioning fails**
   * Try factory resetting the device by calling ``Matter.decommission()``
   * Erase flash memory: ``Arduino IDE Menu`` -> ``Tools`` -> ``Erase All Flash Before Sketch Upload: "Enabled"``
   * Or use esptool: ``esptool.py --port <PORT> erase_flash``
 
-**WiFi connection issues**
-  * Verify WiFi credentials (SSID and password) are correct
-  * Check that the device is within range of the WiFi router
-  * Ensure the WiFi network is 2.4 GHz (Matter requires 2.4 GHz WiFi)
+**Wi-Fi connection issues**
+  * Verify Wi-Fi credentials (SSID and password) are correct
+  * Check that the device is within range of the Wi-Fi router
+  * Ensure the Wi-Fi network is 2.4 GHz (Matter requires 2.4 GHz Wi-Fi)
 
 **Thread connection issues**
   * Verify Thread border router is properly configured
@@ -207,7 +207,7 @@ For debugging and monitoring Matter events, you can set up an event callback:
                 Serial.println("Device commissioned!");
                 break;
             case MATTER_WIFI_CONNECTIVITY_CHANGE:
-                Serial.println("WiFi connectivity changed");
+                Serial.println("Wi-Fi connectivity changed");
                 break;
             // ... handle other events
         }

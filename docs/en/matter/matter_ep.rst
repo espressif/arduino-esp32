@@ -10,7 +10,7 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 * **Endpoint Management**: Each endpoint has a unique endpoint ID for identification within the Matter network
 * **Attribute Access**: Methods to get and set attribute values from Matter clusters
 * **Identify Cluster**: Support for device identification (visual feedback like LED blinking)
-* **Secondary Network Interfaces**: Support for multiple network interfaces (WiFi, Thread, Ethernet)
+* **Secondary Network Interfaces**: Support for multiple network interfaces (Wi-Fi, Thread, Ethernet)
 * **Attribute Change Callbacks**: Base framework for handling attribute changes from Matter controllers
 
 All Matter endpoint classes inherit from ``MatterEndPoint``, providing a consistent interface and common functionality across all device types.
