@@ -1,9 +1,0 @@
-dependencies:
-  espressif/esp_matter:
-    version: ">=1.4.1"
-    require: public
-  espressif/arduino-esp32:
-    version: ">=3.3.2"
-    override_path: "../../../"
-    pre_release: true
-
