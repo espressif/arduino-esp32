@@ -276,6 +276,10 @@ void enabled_uart_calls_test(void) {
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
 
+  log_d("Checking if Serial 1 TX can be inverted while running");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
+
   Serial.println("Enabled UART calls test successful");
 }
 
@@ -350,6 +354,10 @@ void disabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 RX can be inverted when stopped");
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
+
+  log_d("Checking if Serial 1 TX can be inverted when stopped");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
 
   Serial.println("Disabled UART calls test successful");
 }
