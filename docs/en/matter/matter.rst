@@ -105,7 +105,7 @@ The ``MatterEndPoint`` class is the base class for all Matter endpoints. It prov
 .. toctree::
     :maxdepth: 2
 
-    matter_endpoint
+    matter_ep
 
 Specific endpoint classes
 *************************
