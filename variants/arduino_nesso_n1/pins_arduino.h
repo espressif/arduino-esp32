@@ -44,17 +44,17 @@ static const uint8_t LCD_RS = 16;
 /* address: 0x43/0x44 */
 class ExpanderPin {
 public:
-    ExpanderPin(uint16_t _pin) : pin(_pin & 0xFF), address(_pin & 0x100 ? 0x44 : 0x43) {};
-    uint8_t pin;
-    uint8_t address;
+  ExpanderPin(uint16_t _pin) : pin(_pin & 0xFF), address(_pin & 0x100 ? 0x44 : 0x43){};
+  uint8_t pin;
+  uint8_t address;
 };
 
 class NessoBattery {
 public:
-    NessoBattery() {};
-    void enableCharge();      // enable charging
-    float getVoltage();      // get battery voltage in Volts
-    uint16_t getChargeLevel();  // get battery charge level in percents
+  NessoBattery(){};
+  void enableCharge();        // enable charging
+  float getVoltage();         // get battery voltage in Volts
+  uint16_t getChargeLevel();  // get battery charge level in percents
 };
 
 extern ExpanderPin LORA_LNA_ENABLE;
