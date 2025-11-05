@@ -236,6 +236,8 @@ bool perimanSetBusDeinit(peripheral_bus_type_t type, peripheral_bus_deinit_cb_t 
   return true;
 }
 
+// This no-op callback is used by perimanClearBusDeinit() to effectively disable bus deinit functionality
+// without setting the callback to NULL, which would cause errors in perimanSetPinBus() at line 146.
 static bool empty_bus_deinit_cb(void *bus) {
   return true;
 }
@@ -253,6 +255,9 @@ bool perimanClearBusDeinit(peripheral_bus_type_t type) {
 peripheral_bus_deinit_cb_t perimanGetBusDeinit(peripheral_bus_type_t type) {
   if (type >= ESP32_BUS_TYPE_MAX || type == ESP32_BUS_TYPE_INIT) {
     log_e("Invalid type: %s (%u)", perimanGetTypeName(type), (unsigned int)type);
+    return NULL;
+  }
+  if (deinit_functions[type] == empty_bus_deinit_cb) {
     return NULL;
   }
   return deinit_functions[type];
