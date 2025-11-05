@@ -53,7 +53,7 @@ void pinMode(ExpanderPin pin, uint8_t mode) {
   }
   writeBitRegister(pin.address, 0x3, pin.pin, mode == OUTPUT);
   if (mode == OUTPUT) {
-    // remove high impedence
+    // remove high impedance
     writeBitRegister(pin.address, 0x7, pin.pin, false);
   } else if (mode == INPUT_PULLUP) {
     // set pull-up resistor
