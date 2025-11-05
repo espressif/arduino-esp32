@@ -94,7 +94,7 @@ Toggles the on/off state.
     bool toggle();
 
 Color Control
-************
+*************
 
 setColorRGB
 ^^^^^^^^^^^

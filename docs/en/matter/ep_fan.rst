@@ -163,7 +163,7 @@ Speed Control
 *************
 
 setSpeedPercent
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 Sets the fan speed percentage.
 
@@ -244,7 +244,7 @@ Sets a callback for mode changes.
     void onChangeMode(EndPointModeCB onChangeCB);
 
 onChangeSpeedPercent
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback for speed changes.
 

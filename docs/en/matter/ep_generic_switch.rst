@@ -60,7 +60,7 @@ Stops processing Matter switch events.
     void end();
 
 Event Generation
-***************
+****************
 
 click
 ^^^^^
@@ -88,7 +88,7 @@ Example
 -------
 
 Generic Switch (Smart Button)
-******************************
+*****************************
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterSmartButton/MatterSmartButton.ino
     :language: arduino

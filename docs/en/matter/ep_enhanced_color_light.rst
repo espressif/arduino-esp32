@@ -32,7 +32,7 @@ Constructor
 ***********
 
 MatterEnhancedColorLight
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creates a new Matter enhanced color light endpoint.
 
@@ -129,7 +129,7 @@ Toggles the on/off state.
     bool toggle();
 
 Color Control
-************
+*************
 
 setColorRGB
 ^^^^^^^^^^^
@@ -201,7 +201,7 @@ Sets the color temperature.
     bool setColorTemperature(uint16_t newTemperature);
 
 getColorTemperature
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 Gets the current color temperature.
 
@@ -255,7 +255,7 @@ Sets a callback for color changes.
     void onChangeColorHSV(EndPointRGBColorCB onChangeCB);
 
 onChangeColorTemperature
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback for color temperature changes.
 

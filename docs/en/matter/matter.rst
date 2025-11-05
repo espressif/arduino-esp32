@@ -17,7 +17,7 @@ The Matter library provides support for creating Matter-compatible devices inclu
 The Matter library is built on top of `ESP Matter SDK <https://github.com/espressif/esp-matter>`_ and provides a high-level Arduino-style interface for creating Matter devices.
 
 Matter Protocol Overview
-***********************
+************************
 
 Matter (formerly Project CHIP - Connected Home over IP) is an open-source connectivity standard for smart home devices. It enables seamless communication between devices from different manufacturers, allowing them to work together within a single ecosystem.
 
@@ -30,7 +30,7 @@ Matter (formerly Project CHIP - Connected Home over IP) is an open-source connec
 * **Simple Setup**: Easy commissioning via QR code or pairing code
 
 Matter Network Topology
-**********************
+***********************
 
 .. code-block:: text
 
@@ -145,7 +145,7 @@ Common Problems and Issues
 --------------------------
 
 Troubleshooting
---------------
+---------------
 
 Common Issues
 *************

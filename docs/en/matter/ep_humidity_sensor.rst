@@ -65,7 +65,7 @@ Stops processing Matter humidity sensor events.
     void end();
 
 Humidity Control
-***************
+****************
 
 setHumidity
 ^^^^^^^^^^^

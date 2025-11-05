@@ -283,7 +283,7 @@ Sets a callback for local temperature changes.
     void onChangeLocalTemperature(EndPointTemperatureCB onChangeCB);
 
 onChangeCoolingSetpoint
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback for cooling setpoint changes.
 
@@ -292,7 +292,7 @@ Sets a callback for cooling setpoint changes.
     void onChangeCoolingSetpoint(EndPointCoolingSetpointCB onChangeCB);
 
 onChangeHeatingSetpoint
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets a callback for heating setpoint changes.
 

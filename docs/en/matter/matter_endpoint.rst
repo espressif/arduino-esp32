@@ -22,7 +22,7 @@ Endpoint Management
 *******************
 
 getEndPointId
-^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 Gets the current Matter Accessory endpoint ID.
 
@@ -33,7 +33,7 @@ Gets the current Matter Accessory endpoint ID.
 This function will return the endpoint number (typically 1-254).
 
 setEndPointId
-^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 Sets the current Matter Accessory endpoint ID.
 
@@ -47,7 +47,7 @@ Secondary Network Interface
 ***************************
 
 createSecondaryNetworkInterface
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creates a secondary network interface endpoint. This can be used for devices that support multiple network interfaces, such as Ethernet, Thread and Wi-Fi.
 
@@ -86,7 +86,7 @@ Gets a pointer to an attribute from its cluster ID and attribute ID.
 This function will return a pointer to the attribute, or ``NULL`` if not found.
 
 getAttributeVal
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 Gets the value of an attribute from its cluster ID and attribute ID.
 
@@ -131,7 +131,7 @@ Updates the value of an attribute from its cluster ID. This is typically used fo
 This function will return ``true`` if successful, ``false`` otherwise.
 
 Identify Cluster
-***************
+****************
 
 onIdentify
 ^^^^^^^^^^
@@ -168,7 +168,7 @@ Example usage:
     });
 
 Attribute Change Callback
-************************
+*************************
 
 attributeChangeCB
 ^^^^^^^^^^^^^^^^^

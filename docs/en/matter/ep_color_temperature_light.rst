@@ -30,7 +30,7 @@ Constructor
 ***********
 
 MatterColorTemperatureLight
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Creates a new Matter color temperature light endpoint.
 
@@ -152,7 +152,7 @@ Color Temperature Control
 *************************
 
 setColorTemperature
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 Sets the color temperature.
 
@@ -165,7 +165,7 @@ Sets the color temperature.
 **Note:** Color temperature is measured in mireds (micro reciprocal degrees). Lower values (100-200) are warm white, higher values (400-500) are cool white.
 
 getColorTemperature
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 Gets the current color temperature.
 
@@ -252,7 +252,7 @@ Example
 -------
 
 Color Temperature Light
-************************
+***********************
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterColorTemperatureLight/MatterColorTemperatureLight.ino
     :language: arduino

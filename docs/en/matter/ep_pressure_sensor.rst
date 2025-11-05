@@ -64,7 +64,7 @@ Stops processing Matter pressure sensor events.
     void end();
 
 Pressure Control
-***************
+****************
 
 setPressure
 ^^^^^^^^^^^
