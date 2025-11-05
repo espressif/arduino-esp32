@@ -52955,3 +52955,149 @@ soldered_nula_mini_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_
 soldered_nula_mini_esp32c6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
 
 ##############################################################
+
+arduino_nesso_n1.name=Arduino Nesso N1
+
+arduino_nesso_n1.bootloader.tool=esptool_py
+arduino_nesso_n1.bootloader.tool.default=esptool_py
+
+arduino_nesso_n1.upload.tool=esptool_py
+arduino_nesso_n1.upload.tool.default=esptool_py
+arduino_nesso_n1.upload.tool.network=esp_ota
+
+arduino_nesso_n1.upload.maximum_size=1310720
+arduino_nesso_n1.upload.maximum_data_size=327680
+arduino_nesso_n1.upload.flags=
+arduino_nesso_n1.upload.extra_flags=
+arduino_nesso_n1.upload.use_1200bps_touch=false
+arduino_nesso_n1.upload.wait_for_upload_port=false
+
+arduino_nesso_n1.serial.disableDTR=false
+arduino_nesso_n1.serial.disableRTS=false
+
+arduino_nesso_n1.build.tarch=riscv32
+arduino_nesso_n1.build.target=esp
+arduino_nesso_n1.build.mcu=esp32c6
+arduino_nesso_n1.build.core=esp32
+arduino_nesso_n1.build.variant=arduino_nesso_n1
+arduino_nesso_n1.build.board=ARDUINO_NESSO_N1
+arduino_nesso_n1.build.bootloader_addr=0x0
+
+arduino_nesso_n1.build.cdc_on_boot=1
+arduino_nesso_n1.build.f_cpu=160000000L
+arduino_nesso_n1.build.flash_size=16MB
+arduino_nesso_n1.build.flash_freq=80m
+arduino_nesso_n1.build.flash_mode=qio
+arduino_nesso_n1.build.boot=qio
+arduino_nesso_n1.build.partitions=default
+arduino_nesso_n1.build.defines=
+
+## IDE 2.0 Seems to not update the value
+arduino_nesso_n1.menu.JTAGAdapter.default=Disabled
+arduino_nesso_n1.menu.JTAGAdapter.default.build.copy_jtag_files=0
+arduino_nesso_n1.menu.JTAGAdapter.builtin=Integrated USB JTAG
+arduino_nesso_n1.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+arduino_nesso_n1.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+arduino_nesso_n1.menu.JTAGAdapter.external=FTDI Adapter
+arduino_nesso_n1.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+arduino_nesso_n1.menu.JTAGAdapter.external.build.copy_jtag_files=1
+arduino_nesso_n1.menu.JTAGAdapter.bridge=ESP USB Bridge
+arduino_nesso_n1.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+arduino_nesso_n1.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+arduino_nesso_n1.menu.CDCOnBoot.default=Enabled
+arduino_nesso_n1.menu.CDCOnBoot.default.build.cdc_on_boot=1
+arduino_nesso_n1.menu.CDCOnBoot.cdc=Disabled
+arduino_nesso_n1.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+arduino_nesso_n1.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+arduino_nesso_n1.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+arduino_nesso_n1.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+arduino_nesso_n1.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+arduino_nesso_n1.menu.PartitionScheme.default.build.partitions=default
+arduino_nesso_n1.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+arduino_nesso_n1.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+arduino_nesso_n1.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+arduino_nesso_n1.menu.PartitionScheme.no_ota.build.partitions=no_ota
+arduino_nesso_n1.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+arduino_nesso_n1.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+arduino_nesso_n1.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+arduino_nesso_n1.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+arduino_nesso_n1.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+arduino_nesso_n1.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+arduino_nesso_n1.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+arduino_nesso_n1.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+arduino_nesso_n1.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+arduino_nesso_n1.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+arduino_nesso_n1.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+arduino_nesso_n1.menu.PartitionScheme.huge_app.build.partitions=huge_app
+arduino_nesso_n1.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+arduino_nesso_n1.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+arduino_nesso_n1.menu.PartitionScheme.zigbee.build.partitions=zigbee
+arduino_nesso_n1.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+arduino_nesso_n1.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+arduino_nesso_n1.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+arduino_nesso_n1.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+
+arduino_nesso_n1.menu.CPUFreq.160=160MHz (WiFi)
+arduino_nesso_n1.menu.CPUFreq.160.build.f_cpu=160000000L
+arduino_nesso_n1.menu.CPUFreq.80=80MHz (WiFi)
+arduino_nesso_n1.menu.CPUFreq.80.build.f_cpu=80000000L
+arduino_nesso_n1.menu.CPUFreq.40=40MHz
+arduino_nesso_n1.menu.CPUFreq.40.build.f_cpu=40000000L
+arduino_nesso_n1.menu.CPUFreq.20=20MHz
+arduino_nesso_n1.menu.CPUFreq.20.build.f_cpu=20000000L
+arduino_nesso_n1.menu.CPUFreq.10=10MHz
+arduino_nesso_n1.menu.CPUFreq.10.build.f_cpu=10000000L
+
+arduino_nesso_n1.menu.FlashMode.qio=QIO
+arduino_nesso_n1.menu.FlashMode.qio.build.flash_mode=dio
+arduino_nesso_n1.menu.FlashMode.qio.build.boot=qio
+arduino_nesso_n1.menu.FlashMode.dio=DIO
+arduino_nesso_n1.menu.FlashMode.dio.build.flash_mode=dio
+arduino_nesso_n1.menu.FlashMode.dio.build.boot=dio
+
+arduino_nesso_n1.menu.UploadSpeed.921600=921600
+arduino_nesso_n1.menu.UploadSpeed.921600.upload.speed=921600
+arduino_nesso_n1.menu.UploadSpeed.115200=115200
+arduino_nesso_n1.menu.UploadSpeed.115200.upload.speed=115200
+arduino_nesso_n1.menu.UploadSpeed.256000.windows=256000
+arduino_nesso_n1.menu.UploadSpeed.256000.upload.speed=256000
+arduino_nesso_n1.menu.UploadSpeed.230400.windows.upload.speed=256000
+arduino_nesso_n1.menu.UploadSpeed.230400=230400
+arduino_nesso_n1.menu.UploadSpeed.230400.upload.speed=230400
+arduino_nesso_n1.menu.UploadSpeed.460800.linux=460800
+arduino_nesso_n1.menu.UploadSpeed.460800.macosx=460800
+arduino_nesso_n1.menu.UploadSpeed.460800.upload.speed=460800
+arduino_nesso_n1.menu.UploadSpeed.512000.windows=512000
+arduino_nesso_n1.menu.UploadSpeed.512000.upload.speed=512000
+
+arduino_nesso_n1.menu.DebugLevel.none=None
+arduino_nesso_n1.menu.DebugLevel.none.build.code_debug=0
+arduino_nesso_n1.menu.DebugLevel.error=Error
+arduino_nesso_n1.menu.DebugLevel.error.build.code_debug=1
+arduino_nesso_n1.menu.DebugLevel.warn=Warn
+arduino_nesso_n1.menu.DebugLevel.warn.build.code_debug=2
+arduino_nesso_n1.menu.DebugLevel.info=Info
+arduino_nesso_n1.menu.DebugLevel.info.build.code_debug=3
+arduino_nesso_n1.menu.DebugLevel.debug=Debug
+arduino_nesso_n1.menu.DebugLevel.debug.build.code_debug=4
+arduino_nesso_n1.menu.DebugLevel.verbose=Verbose
+arduino_nesso_n1.menu.DebugLevel.verbose.build.code_debug=5
+
+arduino_nesso_n1.menu.EraseFlash.none=Disabled
+arduino_nesso_n1.menu.EraseFlash.none.upload.erase_cmd=
+arduino_nesso_n1.menu.EraseFlash.all=Enabled
+arduino_nesso_n1.menu.EraseFlash.all.upload.erase_cmd=-e
+
+arduino_nesso_n1.menu.ZigbeeMode.default=Disabled
+arduino_nesso_n1.menu.ZigbeeMode.default.build.zigbee_mode=
+arduino_nesso_n1.menu.ZigbeeMode.default.build.zigbee_libs=
+arduino_nesso_n1.menu.ZigbeeMode.ed=Zigbee ED (end device)
+arduino_nesso_n1.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+arduino_nesso_n1.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+arduino_nesso_n1.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+arduino_nesso_n1.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+arduino_nesso_n1.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+
+##############################################################
