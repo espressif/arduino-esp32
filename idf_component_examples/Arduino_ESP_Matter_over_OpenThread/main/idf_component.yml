@@ -1,9 +1,17 @@
+targets:
+  - esp32c5
+  - esp32c6
+  - esp32h2
 dependencies:
   espressif/esp_matter:
     version: ">=1.4.1"
     require: public
+  idf:
+    version: ">=5.5.1"
   espressif/arduino-esp32:
     version: ">=3.3.2"
     override_path: "../../../"
     pre_release: true
+  target:
+
 
