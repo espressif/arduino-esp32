@@ -161,10 +161,10 @@ Sets both cooling and heating setpoints.
 
 .. code-block:: arduino
 
-    bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature);
+    bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature);
 
 * ``_setpointHeatingTemperature`` - Heating setpoint in Celsius (or 0xffff to keep current)
-* ``_setpointCollingTemperature`` - Cooling setpoint in Celsius (or 0xffff to keep current)
+* ``_setpointCoolingTemperature`` - Cooling setpoint in Celsius (or 0xffff to keep current)
 
 **Note:** Heating setpoint must be lower than cooling setpoint. In AUTO mode, cooling setpoint must be at least 2.5°C higher than heating setpoint (deadband).
 
