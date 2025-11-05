@@ -1,6 +1,6 @@
-#######
+######
 Matter
-#######
+######
 
 About
 -----
@@ -35,14 +35,14 @@ Matter Network Topology
 .. code-block:: text
 
     ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-    │   Matter Hub    │◄─────►│   WiFi Router   │◄─────►│  Matter Device  │
-    │  (HomePod etc)  │       │                 │       │  (Light/Sensor) │
+    │   Matter Hub    │◄─────►│   WiFi Router   │◄─────►│  ESP Border     │
+    │  (HomePod etc)  │       │                 │       │  Border Router  │
     └─────────────────┘       └─────────────────┘       └─────────────────┘
             │                          │                         │
             │                          ▼                         │
             │                 ┌─────────────────┐                │
             │                 │  Matter Device  │                │
-            │                 │  (via Thread)   │                │
+            │                 │  (via WiFi)     │                │
             │                 └─────────────────┘                │
             │                                                    │
             ▼                                                    ▼
