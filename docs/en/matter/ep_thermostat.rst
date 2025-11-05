@@ -193,7 +193,7 @@ Sets the cooling setpoint.
 
 .. code-block:: arduino
 
-    bool setCoolingSetpoint(double _setpointCollingTemperature);
+    bool setCoolingSetpoint(double _setpointCoolingTemperature);
 
 getCoolingSetpoint
 ^^^^^^^^^^^^^^^^^^
