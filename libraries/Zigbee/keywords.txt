@@ -142,11 +142,17 @@ onLightColorChangeWithSource	KEYWORD2
 
 # ZigbeeThermostat
 onTempRecieve	KEYWORD2
-onConfigRecieve	KEYWORD2
 onTempReceiveWithSource	KEYWORD2
+onTempConfigReceive	KEYWORD2
 getTemperature	KEYWORD2
-getSensorSettings	KEYWORD2
+getTemperatureSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
+onHumidityReceive	KEYWORD2
+onHumidityReceiveWithSource	KEYWORD2
+onHumidityConfigReceive	KEYWORD2
+getHumidity	KEYWORD2
+getHumiditySettings	KEYWORD2
+setHumidityReporting	KEYWORD2
 
 # Common Zigbee Sensor
 setMinMaxValue	KEYWORD2
