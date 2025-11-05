@@ -17,7 +17,7 @@ The application showcases Matter commissioning, device control via smart home ec
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide WiFi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to  build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using WiFi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter WiFi station feature.
 
 ## Features
 
