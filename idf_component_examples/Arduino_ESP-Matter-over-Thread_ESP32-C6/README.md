@@ -1,6 +1,9 @@
-# Arduino ESP-Matter over Thread example using ESP32-C6
-This is an Arduino as IDF Project to build an ESP-Matter over Thread RGB Light using ESP32-C6 and ESP-Matter Arduino API \
-This example shall work with Arduino 3.0.5+ and also IDF 5.1.4+\
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 |
+| ----------------- | -------- | -------- | -------- |
+
+# Arduino ESP-Matter over Thread example using ESP32-C5, ESP32-C6 and ESP32-H2 (any SoC with Thread radio)
+This is an Arduino as IDF Project to build an ESP-Matter over Thread RGB Light using ESP32-C5/C6/H2 and ESP-Matter Arduino API \
+This example shall work with Arduino 3.3.2+ and also IDF 5.5.1+\
 It is necessary to make sure that the IDF version matches with the one used to release the Arduino Core version.\
 This can be done looking into release information in https://github.com/espressif/arduino-esp32/releases \
 
@@ -26,7 +29,7 @@ For Linux or MacOS: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c
 `idf.py create-project-from-example "espressif/arduino-esp32:Arduino_ESP-Matter-over-Thread_ESP32_C6"`
 ESP-IDF will download all dependencies needed from the component registry and setup the project for you.
 
-4- Open an IDF terminal and execute `idf.py set-target esp32c6`
+4- Open an IDF terminal and execute `idf.py set-target esp32c6` (esp32c5 and esp32h2 are also possible targets)
 
 5- Execute `idf.py -p <your COM or /dev/tty port connected to the ESP32-C6> flash monitor`
 
