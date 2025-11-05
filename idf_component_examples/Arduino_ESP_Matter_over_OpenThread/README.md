@@ -35,4 +35,4 @@ ESP-IDF will download all dependencies needed from the component registry and se
 
 6- It will build, upload and show the UART0 output in the screen.
 
-7- Try to add the Matter RGB light to your Matter environment.
+7- Try to add the new Matter device to your local Matter environment.
