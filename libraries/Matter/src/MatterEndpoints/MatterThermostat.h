@@ -105,7 +105,7 @@ public:
 
   // set the heating setpoint in 1/100th of a Celsio degree
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {
-    return setCoolingHeatingSetpoints((double)0xffff, _setpointHeatingTemperature);
+    return setCoolingHeatingSetpoints(_setpointHeatingTemperature, (double)0xffff);
   }
   // get the heating setpoint in 1/100th of a Celsio degree
   double getHeatingSetpoint() {
@@ -113,7 +113,7 @@ public:
   }
   // set the cooling setpoint in 1/100th of a Celsio degree
   bool setCoolingSetpoint(double _setpointCoolingTemperature) {
-    return setCoolingHeatingSetpoints(_setpointCoolingTemperature, (double)0xffff);
+    return setCoolingHeatingSetpoints((double)0xffff, _setpointCoolingTemperature);
   }
   // get the cooling setpoint in 1/100th of a Celsio degree
   double getCoolingSetpoint() {
