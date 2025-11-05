@@ -105,7 +105,7 @@ Matter Node is commissioned and connected to the network. Ready for use.
 
 ## Using the Device
 
-### Manual Control 
+### Manual Control
 
 The user button (BOOT button by default) provides manual control:
 

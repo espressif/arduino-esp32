@@ -169,4 +169,3 @@ This minimal example can be extended with additional features:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

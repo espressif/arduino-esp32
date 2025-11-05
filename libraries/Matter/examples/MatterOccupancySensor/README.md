@@ -151,10 +151,10 @@ const uint8_t pirPin = 4;  // Change this to your PIR sensor pin
 void setup() {
   // ... existing code ...
   pinMode(buttonPin, INPUT_PULLUP);
-  
+
   // Initialize PIR sensor pin
   pinMode(pirPin, INPUT);
-  
+
   // ... rest of setup code ...
 }
 ```
@@ -179,9 +179,9 @@ bool simulatedHWOccupancySensor() {
   static bool lastState = false;
   static uint32_t lastChangeTime = 0;
   const uint32_t debounceTime = 100;  // 100ms debounce
-  
+
   bool currentState = digitalRead(pirPin) == HIGH;
-  
+
   // Only update if state has changed and debounce time has passed
   if (currentState != lastState) {
     if (millis() - lastChangeTime > debounceTime) {
@@ -190,7 +190,7 @@ bool simulatedHWOccupancySensor() {
       Serial.printf("Occupancy state changed: %s\r\n", currentState ? "OCCUPIED" : "UNOCCUPIED");
     }
   }
-  
+
   return lastState;
 }
 ```
@@ -251,7 +251,7 @@ The MatterOccupancySensor example consists of the following main components:
 - **Device not visible during commissioning**: Ensure WiFi or Thread connectivity is properly configured
 - **Occupancy readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
 - **State not changing**: The simulated sensor toggles every 2 minutes (120000 ms). If you're using a real sensor, ensure it's properly connected and reading correctly
-- **PIR sensor not detecting motion**: 
+- **PIR sensor not detecting motion**:
   - Verify PIR sensor wiring (VCC, GND, OUT connections)
   - Check if PIR sensor requires 5V or 3.3V power (some PIR sensors need 5V)
   - Allow 30-60 seconds for PIR sensor to stabilize after power-on
@@ -265,4 +265,3 @@ The MatterOccupancySensor example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

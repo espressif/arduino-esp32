@@ -204,4 +204,3 @@ The MatterTemperatureSensor example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-
