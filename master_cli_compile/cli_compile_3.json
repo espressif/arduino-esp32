@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/ESP32/examples/RMT/RMTReadXJT",
+                    "sizes": [{
+                            "flash_bytes": 306272,
+                            "flash_percentage": 23,
+                            "ram_bytes": 17356,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                     "sizes": [{
                             "flash_bytes": 304790,
@@ -129,20 +137,20 @@
                             "ram_bytes": 16444,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "libraries/ESP32/examples/Time/SimpleTime",
-                    "sizes": [{
-                            "flash_bytes": 1014256,
-                            "flash_percentage": 77,
-                            "ram_bytes": 47324,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 319686,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22792,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptLambda",
                     "sizes": [{
                             "flash_bytes": 319730,
@@ -246,20 +254,20 @@
                             "ram_bytes": 22648,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ResetReason/ResetReason",
-                    "sizes": [{
-                            "flash_bytes": 324048,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22328,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/RMT/RMTCallback",
+                    "sizes": [{
+                            "flash_bytes": 314539,
+                            "flash_percentage": 23,
+                            "ram_bytes": 21728,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/RMT/RMTLoopback",
                     "sizes": [{
                             "flash_bytes": 315847,
@@ -385,14 +393,6 @@
                             "flash_bytes": 290271,
                             "flash_percentage": 22,
                             "ram_bytes": 20700,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/Serial/onReceiveExample",
-                    "sizes": [{
-                            "flash_bytes": 289811,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20716,
                             "ram_percentage": 6
                             }]
                     }
@@ -534,6 +534,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                    "sizes": [{
+                            "flash_bytes": 305640,
+                            "flash_percentage": 23,
+                            "ram_bytes": 13056,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
                             "flash_bytes": 275502,
@@ -645,20 +653,20 @@
                             "ram_bytes": 11928,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
-                    "sizes": [{
-                            "flash_bytes": 272178,
-                            "flash_percentage": 20,
-                            "ram_bytes": 11920,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/ESP32/examples/RMT/RMTReadXJT",
+                    "sizes": [{
+                            "flash_bytes": 268706,
+                            "flash_percentage": 20,
+                            "ram_bytes": 14732,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
                     "sizes": [{
                             "flash_bytes": 267238,
@@ -786,20 +794,20 @@
                             "ram_bytes": 13252,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
-                    "sizes": [{
-                            "flash_bytes": 252860,
-                            "flash_percentage": 19,
-                            "ram_bytes": 13260,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+                    "sizes": [{
+                            "flash_bytes": 273098,
+                            "flash_percentage": 20,
+                            "ram_bytes": 13176,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
                             "flash_bytes": 272346,
@@ -879,20 +887,20 @@
                             "ram_bytes": 14800,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMTLoopback",
-                    "sizes": [{
-                            "flash_bytes": 295364,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16224,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
+                    "sizes": [{
+                            "flash_bytes": 291939,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20984,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
                             "flash_bytes": 291815,
@@ -1010,14 +1018,6 @@
                             "flash_bytes": 307699,
                             "flash_percentage": 23,
                             "ram_bytes": 21620,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMT_LED_Blink",
-                    "sizes": [{
-                            "flash_bytes": 309943,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21668,
                             "ram_percentage": 6
                             }]
                     }

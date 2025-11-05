@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
+                    "sizes": [{
+                            "flash_bytes": 591080,
+                            "flash_percentage": 45,
+                            "ram_bytes": 33100,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Temp_Hum_Sensor_Sleepy",
                     "sizes": [{
                             "flash_bytes": 647730,
@@ -52,9 +60,30 @@
                     }
 ]
 },
+{ "board": "espressif:esp32:esp32p4",
+                "target": "esp32p4",
+                "sketches": [
+{"name": "libraries/Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 344202,
+                            "flash_percentage": 26,
+                            "ram_bytes": 24048,
+                            "ram_percentage": 7
+                            }]
+                    }
+]
+},
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
+                    "sizes": [{
+                            "flash_bytes": 647623,
+                            "flash_percentage": 49,
+                            "ram_bytes": 37412,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
                     "sizes": [{
                             "flash_bytes": 647535,
@@ -153,6 +182,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Gateway",
+                    "sizes": [{
+                            "flash_bytes": 1330666,
+                            "flash_percentage": 39,
+                            "ram_bytes": 51224,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Multistate_Input_Output",
                     "sizes": [{
                             "flash_bytes": 657106,
@@ -206,6 +243,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Range_Extender",
+                    "sizes": [{
+                            "flash_bytes": 706424,
+                            "flash_percentage": 53,
+                            "ram_bytes": 33732,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Scan_Networks",
                     "sizes": [{
                             "flash_bytes": 535154,
@@ -267,6 +312,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Fan_Control",
+                    "sizes": [{
+                            "flash_bytes": 653479,
+                            "flash_percentage": 49,
+                            "ram_bytes": 37604,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                     "sizes": [{
                             "flash_bytes": 1276095,
