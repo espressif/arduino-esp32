@@ -875,7 +875,7 @@ uart_t *uartBegin(
     if (inverted) {
       // invert signal for both Rx and Tx
       uint32_t _inv_mask = uart->inv_mask;
-      _inv_mask |=  UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
+      _inv_mask |= UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV;
       retCode &= ESP_OK == uart_set_line_inverse(uart_nr, _inv_mask);
       if (retCode) {
         uart->inv_mask = _inv_mask;
