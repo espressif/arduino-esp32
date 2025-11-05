@@ -804,7 +804,9 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
   desc_filter_t filter = {uuid_filter, &taskData};
   int rc = 0;
 
-  rc = ble_gattc_disc_all_dscs(getRemoteService()->getClient()->getConnId(), m_handle, getRemoteService()->getEndHandle(), BLERemoteCharacteristic::descriptorDiscCB, &filter);
+  rc = ble_gattc_disc_all_dscs(
+    getRemoteService()->getClient()->getConnId(), m_handle, getRemoteService()->getEndHandle(), BLERemoteCharacteristic::descriptorDiscCB, &filter
+  );
 
   if (rc != 0) {
     log_e("ble_gattc_disc_all_dscs: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
