@@ -21,7 +21,7 @@ Edit this file to set the target versions, if necessary.
 https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/get-started/index.html
 
 For Windows: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/get-started/index.html \
-For Linux or MacOS: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/get-started/linux-macos-setup.html
+For Linux or macOS: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c6/get-started/linux-macos-setup.html
 
 2- Test IDF with `idf.py --version` to check if it is installed and configured correctly.
 
