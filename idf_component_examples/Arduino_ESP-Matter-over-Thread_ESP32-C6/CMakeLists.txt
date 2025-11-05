@@ -10,7 +10,7 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 #list(APPEND compile_definitions "CHIP_HAVE_CONFIG_H=1")
 #list(APPEND compile_definitions "CHIP_ADDRESS_RESOLVE_IMPL_INCLUDE_HEADER=<lib/address_resolve/AddressResolve_DefaultImpl.h>")
 
-project(Matter_C6_Thread_Light)
+project(Matter_Thread_Light)
 
 idf_build_set_property(CXX_COMPILE_OPTIONS "-std=gnu++2a;-Os;-DCHIP_HAVE_CONFIG_H" APPEND)
 idf_build_set_property(C_COMPILE_OPTIONS "-Os" APPEND)
