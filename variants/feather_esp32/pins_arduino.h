@@ -38,6 +38,7 @@ static const uint8_t A12 = 13;
 
 // vbat measure
 static const uint8_t BATT_MONITOR = 35;
+#define BAT_VOLT_PIN BATT_MONITOR
 static const uint8_t A13 = 35;
 //static const uint8_t Ax = 0; // not used/available
 //static const uint8_t Ax = 2; // not used/available

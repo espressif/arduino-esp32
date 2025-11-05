@@ -46,6 +46,7 @@ bool BLESecurity::m_securityStarted = false;
 bool BLESecurity::m_passkeySet = false;
 bool BLESecurity::m_staticPasskey = true;
 bool BLESecurity::m_regenOnConnect = false;
+bool BLESecurity::m_authenticationComplete = false;
 uint8_t BLESecurity::m_iocap = ESP_IO_CAP_NONE;
 uint8_t BLESecurity::m_authReq = 0;
 uint8_t BLESecurity::m_initKey = 0;
@@ -59,6 +60,7 @@ uint32_t BLESecurity::m_passkey = BLE_SM_DEFAULT_PASSKEY;
 #if defined(CONFIG_BLUEDROID_ENABLED)
 uint8_t BLESecurity::m_keySize = 16;
 esp_ble_sec_act_t BLESecurity::m_securityLevel;
+FreeRTOS::Semaphore *BLESecurity::m_authCompleteSemaphore = nullptr;
 #endif
 
 /***************************************************************************
@@ -191,6 +193,7 @@ void BLESecurity::regenPassKeyOnConnect(bool enable) {
 void BLESecurity::resetSecurity() {
   log_d("resetSecurity: Resetting security state");
   m_securityStarted = false;
+  m_authenticationComplete = false;
 }
 
 // This function sets the authentication mode with bonding, MITM, and secure connection options.
@@ -263,6 +266,48 @@ bool BLESecurityCallbacks::onAuthorizationRequest(uint16_t connHandle, uint16_t 
   return true;
 }
 
+// This function waits for authentication to complete when bonding is enabled
+// It prevents GATT operations from proceeding before pairing completes
+void BLESecurity::waitForAuthenticationComplete(uint32_t timeoutMs) {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  // Only wait if bonding is enabled
+  if ((m_authReq & ESP_LE_AUTH_BOND) == 0) {
+    return;
+  }
+
+  // If already authenticated, no need to wait
+  if (m_authenticationComplete) {
+    return;
+  }
+
+  // Semaphore should have been created in startSecurity()
+  if (m_authCompleteSemaphore == nullptr) {
+    log_e("Authentication semaphore not initialized");
+    return;
+  }
+
+  // Wait for authentication with timeout
+  bool success = m_authCompleteSemaphore->timedWait("waitForAuthenticationComplete", timeoutMs / portTICK_PERIOD_MS);
+
+  if (!success) {
+    log_w("Timeout waiting for authentication to complete");
+  }
+#endif
+}
+
+// This function signals that authentication has completed
+// Called from ESP_GAP_BLE_AUTH_CMPL_EVT handler
+void BLESecurity::signalAuthenticationComplete() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  m_authenticationComplete = true;
+
+  // Signal waiting threads if semaphore exists
+  if (m_authCompleteSemaphore != nullptr) {
+    m_authCompleteSemaphore->give();
+  }
+#endif
+}
+
 /***************************************************************************
  *                          Bluedroid functions                            *
  ***************************************************************************/
@@ -285,6 +330,18 @@ bool BLESecurity::startSecurity(esp_bd_addr_t bd_addr, int *rcPtr) {
   }
 
   if (m_securityEnabled) {
+    // Initialize semaphore before starting security to avoid race condition
+    if (m_authCompleteSemaphore == nullptr) {
+      m_authCompleteSemaphore = new FreeRTOS::Semaphore("AuthComplete");
+    }
+
+    // Reset authentication complete flag when starting new security negotiation
+    m_authenticationComplete = false;
+
+    // Consume any pending semaphore signals from previous operations
+    // This ensures the next wait will block until the new auth completes
+    m_authCompleteSemaphore->take("startSecurity-reset");
+
     int rc = esp_ble_set_encryption(bd_addr, m_securityLevel);
     if (rc != ESP_OK) {
       log_e("esp_ble_set_encryption: rc=%d %s", rc, GeneralUtils::errorToString(rc));

@@ -152,6 +152,7 @@ private:
 
   // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
   std::map<std::string, BLERemoteDescriptor *> m_descriptorMap;
+  bool m_descriptorsRetrieved;  // Flag to track if descriptor retrieval has been attempted
 
   /***************************************************************************
    *                       NimBLE private properties                        *
@@ -159,7 +160,6 @@ private:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   uint16_t m_defHandle;
-  uint16_t m_endHandle;
 #endif
 
   /***************************************************************************

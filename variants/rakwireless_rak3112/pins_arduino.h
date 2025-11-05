@@ -19,6 +19,7 @@ static const uint8_t LED_BUILTIN = LED_GREEN;
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t BAT_VOLT = 21;
+#define BAT_VOLT_PIN BAT_VOLT
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;

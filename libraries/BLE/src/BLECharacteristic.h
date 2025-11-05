@@ -47,6 +47,8 @@
 #include <host/ble_gatt.h>
 #include <host/ble_att.h>
 #include "BLEConnInfo.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #define ESP_GATT_MAX_ATTR_LEN            BLE_ATT_ATTR_MAX_LEN
 #define ESP_GATT_CHAR_PROP_BIT_READ      BLE_GATT_CHR_PROP_READ
 #define ESP_GATT_CHAR_PROP_BIT_WRITE     BLE_GATT_CHR_PROP_WRITE
@@ -246,6 +248,13 @@ private:
   portMUX_TYPE m_readMux;
   uint8_t m_removed;
   std::vector<std::pair<uint16_t, uint16_t>> m_subscribedVec;
+
+  // Deferred callback support for maintaining backwards compatibility with Bluedroid timing
+  struct DeferredWriteCallback {
+    BLECharacteristic *pCharacteristic;
+    ble_gap_conn_desc desc;
+    uint16_t conn_handle;
+  };
 #endif
 
   /***************************************************************************
@@ -271,6 +280,7 @@ private:
 #if defined(CONFIG_NIMBLE_ENABLED)
   void setSubscribe(struct ble_gap_event *event);
   static int handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
+  static void processDeferredWriteCallback(void *pvParameters);
 #endif
 };  // BLECharacteristic
 
