@@ -31,6 +31,7 @@
 #endif
 
 #include "Zigbee.h"
+#include <Preferences.h>
 
 /* Zigbee contact sensor configuration */
 #define CONTACT_SWITCH_ENDPOINT_NUMBER 1
@@ -39,8 +40,15 @@ uint8_t sensor_pin = 4;
 
 ZigbeeContactSwitch zbContactSwitch = ZigbeeContactSwitch(CONTACT_SWITCH_ENDPOINT_NUMBER);
 
+/* Preferences for storing ENROLLED flag to persist across reboots */
+Preferences preferences;
+
 void setup() {
   Serial.begin(115200);
+
+  preferences.begin("Zigbee", false);                    // Save ENROLLED flag in flash so it persists across reboots
+  bool enrolled =  preferences.getBool("ENROLLED");      // Get ENROLLED flag from preferences
+  preferences.end();
 
   // Init button + switch
   pinMode(button, INPUT_PULLUP);
@@ -68,20 +76,30 @@ void setup() {
   }
   Serial.println();
 
-  // Request IAS Zone enroll
-  if (!zbContactSwitch.requestIASZoneEnroll()) {
-    Serial.println("Failed to request IAS Zone enroll!");
-    Serial.println("Rebooting...");
-    ESP.restart();
+  // Check if device has been enrolled before restarting - if so, restore IAS Zone enroll, otherwise request new IAS Zone enroll
+  if (enrolled) {
+    Serial.println("Device has been enrolled before - restoring IAS Zone enrollment");
+    zbContactSwitch.restoreIASZoneEnroll();
   } else {
-    Serial.println("IAS Zone enroll requested successfully!");
+    Serial.println("Device is factory new - first time joining network - requesting new IAS Zone enrollment");
+    zbContactSwitch.requestIASZoneEnroll();
   }
+
   while (!zbContactSwitch.enrolled()) {
     Serial.print(".");
     delay(100);
   }
   Serial.println();
   Serial.println("Zigbee enrolled successfully!");
+
+  // Store ENROLLED flag only if this was a new enrollment (previous flag was false)
+  // Skip writing if we just restored enrollment (flag was already true)
+  if (!enrolled) {
+    preferences.begin("Zigbee", false);
+    preferences.putBool("ENROLLED", true); // set ENROLLED flag to true
+    preferences.end();
+    Serial.println("ENROLLED flag saved to preferences");
+  }
 }
 
 void loop() {
@@ -106,6 +124,11 @@ void loop() {
       if ((millis() - startTime) > 3000) {
         // If key pressed for more than 3secs, factory reset Zigbee and reboot
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
+        // Clear the ENROLLED flag from preferences
+        preferences.begin("Zigbee", false);
+        preferences.putBool("ENROLLED", false); // set ENROLLED flag to false
+        preferences.end();
+        Serial.println("ENROLLED flag cleared from preferences");
         delay(1000);
         Zigbee.factoryReset();
       }
