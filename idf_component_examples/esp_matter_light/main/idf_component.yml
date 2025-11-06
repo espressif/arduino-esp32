@@ -4,7 +4,7 @@ dependencies:
     require: public
   # Adds Arduino Core from GitHub repository using main branch
   espressif/arduino-esp32:
-    version: ">=3.0.5"
+    version: ">=3.1.0"
     override_path: "../../../"
     pre_release: true
 
