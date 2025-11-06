@@ -97,6 +97,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     log_v("%s Lost IP", desc());
 #endif
+    memcpy(&arduino_event.event_info.lost_ip, event_data, sizeof(ip_event_got_ip_t));
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
     if (_interface_id == ESP_NETIF_ID_STA) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;

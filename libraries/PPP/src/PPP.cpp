@@ -394,6 +394,11 @@ void PPPClass::end(void) {
     Network.postEvent(&arduino_event);
   }
 
+  if (_dce != NULL) {
+    esp_modem_destroy(_dce);
+    _dce = NULL;
+  }
+
   destroyNetif();
 
   if (_ppp_ev_instance != NULL) {
@@ -406,10 +411,10 @@ void PPPClass::end(void) {
   Network.removeEvent(_ppp_event_handle);
   _ppp_event_handle = 0;
 
-  if (_dce != NULL) {
-    esp_modem_destroy(_dce);
-    _dce = NULL;
-  }
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_CTS);
 
   int8_t pin = -1;
   if (_pin_tx != -1) {
@@ -437,6 +442,11 @@ void PPPClass::end(void) {
     _pin_rst = -1;
     perimanClearPinBus(pin);
   }
+
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_TX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RTS, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_CTS, PPPClass::pppDetachBus);
 
   _mode = ESP_MODEM_MODE_COMMAND;
 }
