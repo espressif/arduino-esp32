@@ -1,6 +1,6 @@
 dependencies:
   espressif/esp_matter:
-    version: ">=1.3.0"
+    version: "^1.3.0"
     require: public
   # Adds Arduino Core from GitHub repository using main branch
   espressif/arduino-esp32:
