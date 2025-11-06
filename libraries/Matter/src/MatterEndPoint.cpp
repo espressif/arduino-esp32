@@ -27,7 +27,7 @@ bool MatterEndPoint::createSecondaryNetworkInterface() {
     log_v("Secondary network interface endpoint already exists with ID %d", secondary_network_endpoint_id);
     return false;
   }
-  
+
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD && CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   // Create a secondary network interface endpoint
   endpoint::secondary_network_interface::config_t secondary_network_interface_config;
@@ -46,7 +46,7 @@ bool MatterEndPoint::createSecondaryNetworkInterface() {
   log_i("Secondary Network Interface not supported");
   return false;
 #endif
-  
+
   return true;
 }
 
