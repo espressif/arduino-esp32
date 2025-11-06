@@ -70,12 +70,19 @@ public:
   // Report the contact switch value, done automatically after setting the position
   bool report();
 
+  // Request a new IAS zone enroll, needed to be called after rebooting already configured device
+  bool requestIASZoneEnroll();
+
+  // Check if the device is enrolled in the IAS Zone
+  bool enrolled() { return _enrolled; }
+
 private:
   void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) override;
   uint8_t _zone_status;
   uint8_t _zone_id;
   esp_zb_ieee_addr_t _ias_cie_addr;
   uint8_t _ias_cie_endpoint;
+  bool _enrolled;
 };
 
 #endif  // CONFIG_ZB_ENABLED

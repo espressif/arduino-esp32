@@ -31,6 +31,7 @@ ZigbeeContactSwitch::ZigbeeContactSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) 
   _zone_status = 0;
   _zone_id = 0xff;
   _ias_cie_endpoint = 1;
+  _enrolled = false;
 
   //Create custom contact switch configuration
   zigbee_contact_switch_cfg_t contact_switch_cfg = ZIGBEE_DEFAULT_CONTACT_SWITCH_CONFIG();
@@ -44,15 +45,16 @@ void ZigbeeContactSwitch::setIASClientEndpoint(uint8_t ep_number) {
 }
 
 bool ZigbeeContactSwitch::setClosed() {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Contact switch to closed");
   uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false
   );
   esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = closed;
@@ -60,15 +62,16 @@ bool ZigbeeContactSwitch::setClosed() {
 }
 
 bool ZigbeeContactSwitch::setOpen() {
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Setting Contact switch to open");
   uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_set_attribute_val(
+  ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false
   );
   esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _zone_status = open;
@@ -90,13 +93,9 @@ bool ZigbeeContactSwitch::report() {
   status_change_notif_cmd.delay = 0;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
+  uint8_t tsn = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
   esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send IAS Zone status changed notification: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  log_v("IAS Zone status changed notification sent");
+  log_v("IAS Zone status changed notification sent with transaction sequence number: %u", tsn);
   return true;
 }
 
@@ -115,11 +114,25 @@ void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enro
       );
       esp_zb_lock_release();
       _zone_id = message->zone_id;
+      _enrolled = true;
     }
-
   } else {
     log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
   }
+}
+
+bool ZigbeeContactSwitch::requestIASZoneEnroll() {
+  esp_zb_zcl_ias_zone_enroll_request_cmd_t enroll_request;
+  enroll_request.zcl_basic_cmd.src_endpoint = _endpoint;
+  enroll_request.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  enroll_request.zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_CONTACT_SWITCH;
+  enroll_request.manuf_code = 0;
+
+  esp_zb_lock_acquire(portMAX_DELAY);
+  uint8_t tsn = esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);
+  esp_zb_lock_release();
+  log_v("IAS Zone enroll request send with transaction sequence number: %u", tsn);
+  return true;
 }
 
 #endif  // CONFIG_ZB_ENABLED

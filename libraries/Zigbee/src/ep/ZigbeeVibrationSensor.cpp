@@ -31,6 +31,7 @@ ZigbeeVibrationSensor::ZigbeeVibrationSensor(uint8_t endpoint) : ZigbeeEP(endpoi
   _zone_status = 0;
   _zone_id = 0xff;
   _ias_cie_endpoint = 1;
+  _enrolled = false;
 
   //Create custom vibration sensor configuration
   zigbee_vibration_sensor_cfg_t vibration_sensor_cfg = ZIGBEE_DEFAULT_VIBRATION_SENSOR_CONFIG();
@@ -57,11 +58,10 @@ bool ZigbeeVibrationSensor::setVibration(bool sensed) {
     return false;
   }
   _zone_status = vibration;
-  report();
-  return true;
+  return report();
 }
 
-void ZigbeeVibrationSensor::report() {
+bool ZigbeeVibrationSensor::report() {
   /* Send IAS Zone status changed notification command */
 
   esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
@@ -75,9 +75,10 @@ void ZigbeeVibrationSensor::report() {
   status_change_notif_cmd.delay = 0;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
+  uint8_t tsn = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
   esp_zb_lock_release();
-  log_v("IAS Zone status changed notification sent");
+  log_v("IAS Zone status changed notification sent with transaction sequence number: %u", tsn);
+  return true;
 }
 
 void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
@@ -95,11 +96,25 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_en
       );
       esp_zb_lock_release();
       _zone_id = message->zone_id;
+      _enrolled = true;
     }
-
   } else {
     log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
   }
+}
+
+bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
+  esp_zb_zcl_ias_zone_enroll_request_cmd_t enroll_request;
+  enroll_request.zcl_basic_cmd.src_endpoint = _endpoint;
+  enroll_request.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  enroll_request.zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_VIBRATION_MOVEMENT;
+  enroll_request.manuf_code = 0;
+
+  esp_zb_lock_acquire(portMAX_DELAY);
+  uint8_t tsn = esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);
+  esp_zb_lock_release();
+  log_v("IAS Zone enroll request send with transaction sequence number: %u", tsn);
+  return true;
 }
 
 #endif  // CONFIG_ZB_ENABLED

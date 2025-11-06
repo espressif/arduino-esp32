@@ -33,7 +33,7 @@
 #include "Zigbee.h"
 
 /* Zigbee contact sensor configuration */
-#define CONTACT_SWITCH_ENDPOINT_NUMBER 10
+#define CONTACT_SWITCH_ENDPOINT_NUMBER 1
 uint8_t button = BOOT_PIN;
 uint8_t sensor_pin = 4;
 
@@ -67,6 +67,21 @@ void setup() {
     delay(100);
   }
   Serial.println();
+
+  // Request IAS Zone enroll
+  if (!zbContactSwitch.requestIASZoneEnroll()) {
+    Serial.println("Failed to request IAS Zone enroll!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  } else {
+    Serial.println("IAS Zone enroll requested successfully!");
+  }
+  while (!zbContactSwitch.enrolled()) {
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
+  Serial.println("Zigbee enrolled successfully!");
 }
 
 void loop() {

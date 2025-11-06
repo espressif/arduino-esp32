@@ -33,7 +33,7 @@
 #include "Zigbee.h"
 
 /* Zigbee vibration sensor configuration */
-#define VIBRATION_SENSOR_ENDPOINT_NUMBER 10
+#define VIBRATION_SENSOR_ENDPOINT_NUMBER 1
 uint8_t button = BOOT_PIN;
 uint8_t sensor_pin = 4;
 
@@ -67,6 +67,20 @@ void setup() {
     delay(100);
   }
   Serial.println();
+  // Request IAS Zone enroll
+  if (!zbVibrationSensor.requestIASZoneEnroll()) {
+    Serial.println("Failed to request IAS Zone enroll!");
+    Serial.println("Rebooting...");
+    ESP.restart();
+  } else {
+    Serial.println("IAS Zone enroll requested successfully!");
+  }
+  while (!zbVibrationSensor.enrolled()) {
+    Serial.print(".");
+    delay(100);
+  }
+  Serial.println();
+  Serial.println("Zigbee enrolled successfully!");
 }
 
 void loop() {
