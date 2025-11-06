@@ -74,8 +74,11 @@ public:
   // Report the door/window handle value, done automatically after setting the position
   bool report();
 
-  // Request a new IAS zone enroll, needed to be called after rebooting already configured device
+  // Request a new IAS zone enroll, can be called to enroll a new device or to re-enroll an already enrolled device
   bool requestIASZoneEnroll();
+
+  // Restore IAS Zone enroll, needed to be called after rebooting already enrolled device - restored from flash memory (faster for sleepy devices)
+  bool restoreIASZoneEnroll();
 
   // Check if the device is enrolled in the IAS Zone
   bool enrolled() { return _enrolled; }

@@ -119,26 +119,26 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
 
 bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
   esp_zb_lock_acquire(portMAX_DELAY);
-  memcpy(
-    _ias_cie_addr,
-        (*(esp_zb_ieee_addr_t *)
-            esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID)
-              ->data_p),
-        sizeof(esp_zb_ieee_addr_t)
-      );
-  _zone_id = (*(uint8_t *)
-            esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID)
-              ->data_p);
+  esp_zb_zcl_attr_t *ias_cie_attr = esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
+  esp_zb_zcl_attr_t *zone_id_attr = esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID);
   esp_zb_lock_release();
+  
+  if (ias_cie_attr == NULL || ias_cie_attr->data_p == NULL) {
+    log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
+    return false;
+  }
+  if (zone_id_attr == NULL || zone_id_attr->data_p == NULL) {
+    log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
+    return false;
+  }
+  
+  memcpy(_ias_cie_addr, (*(esp_zb_ieee_addr_t *)ias_cie_attr->data_p), sizeof(esp_zb_ieee_addr_t));
+  _zone_id = (*(uint8_t *)zone_id_attr->data_p);
   
   log_d("Restored IAS Zone enroll: zone id(%d), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1], _ias_cie_addr[2], _ias_cie_addr[3], _ias_cie_addr[4], _ias_cie_addr[5], _ias_cie_addr[6], _ias_cie_addr[7]);
   
   if (_zone_id == 0xFF) {
-    log_e("Failed to restore IAS Zone enroll: zone id not found");
-    return false;
-  }
-  if (_ias_cie_addr == NULL) {
-    log_e("Failed to restore IAS Zone enroll: ias cie address not found");
+    log_e("Failed to restore IAS Zone enroll: zone id not valid");
     return false;
   }
   _enrolled = true;
