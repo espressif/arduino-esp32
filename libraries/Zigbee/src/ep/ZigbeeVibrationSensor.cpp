@@ -75,9 +75,9 @@ bool ZigbeeVibrationSensor::report() {
   status_change_notif_cmd.delay = 0;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  uint8_t tsn = esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
+  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);  //return transaction sequence number, ignore it
   esp_zb_lock_release();
-  log_v("IAS Zone status changed notification sent with transaction sequence number: %u", tsn);
+  log_v("IAS Zone status changed notification sent");
   return true;
 }
 
@@ -111,9 +111,9 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
   enroll_request.manuf_code = 0;
 
   esp_zb_lock_acquire(portMAX_DELAY);
-  uint8_t tsn = esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);
+  esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);  //return transaction sequence number, ignore it
   esp_zb_lock_release();
-  log_v("IAS Zone enroll request send with transaction sequence number: %u", tsn);
+  log_v("IAS Zone enroll request sent");
   return true;
 }
 
