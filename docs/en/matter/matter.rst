@@ -35,7 +35,7 @@ Matter Network Topology
 .. code-block:: text
 
     ┌─────────────────┐       ┌──────────────────┐       ┌─────────────────┐
-    │   Matter Hub    │◄─────►│   Wi-Fi Router   │◄─────►│  ESP Border     │
+    │   Matter Hub    │◄─────►│   Wi-Fi Router   │◄─────►│  ESP Thread     │
     │  (HomePod etc)  │       │                  │       │  Border Router  │
     └─────────────────┘       └──────────────────┘       └─────────────────┘
             │                          │                         │
