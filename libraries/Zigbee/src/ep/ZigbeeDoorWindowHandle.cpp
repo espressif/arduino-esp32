@@ -167,7 +167,7 @@ bool ZigbeeDoorWindowHandle::restoreIASZoneEnroll() {
     return false;
   }
   
-  memcpy(_ias_cie_addr, (*(esp_zb_ieee_addr_t *)ias_cie_attr->data_p), sizeof(esp_zb_ieee_addr_t));
+  memcpy(_ias_cie_addr, (esp_zb_ieee_addr_t *)ias_cie_attr->data_p, sizeof(esp_zb_ieee_addr_t));
   _zone_id = (*(uint8_t *)zone_id_attr->data_p);
   
   log_d("Restored IAS Zone enroll: zone id(%d), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1], _ias_cie_addr[2], _ias_cie_addr[3], _ias_cie_addr[4], _ias_cie_addr[5], _ias_cie_addr[6], _ias_cie_addr[7]);

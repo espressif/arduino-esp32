@@ -120,7 +120,7 @@ Checks if the device is currently enrolled in the IAS Zone.
 
     bool enrolled();
 
-This function returns ``true`` if the device is enrolled, ``false`` otherwise. Use this method to check the enrollment status after calling ``requestIASZoneEnroll()``.
+This function returns ``true`` if the device is enrolled, ``false`` otherwise. Use this method to check the enrollment status after calling ``requestIASZoneEnroll()`` or ``restoreIASZoneEnroll()``.
 
 Example
 -------
