@@ -302,16 +302,16 @@ bool MatterThermostat::setRawTemperature(int16_t _rawTemperature, uint32_t attri
   return true;
 }
 
-bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature) {
+bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature) {
   // at least one of the setpoints must be valid
-  bool settingCooling = _setpointCollingTemperature != (float)0xffff;
+  bool settingCooling = _setpointCoolingTemperature != (float)0xffff;
   bool settingHeating = _setpointHeatingTemperature != (float)0xffff;
   if (!settingCooling && !settingHeating) {
     log_e("Invalid Setpoints values. Set correctly at least one of them in Celsius.");
     return false;
   }
   int16_t _rawHeatValue = static_cast<int16_t>(_setpointHeatingTemperature * 100.0f);
-  int16_t _rawCoolValue = static_cast<int16_t>(_setpointCollingTemperature * 100.0f);
+  int16_t _rawCoolValue = static_cast<int16_t>(_setpointCoolingTemperature * 100.0f);
 
   // check limits for the setpoints
   if (settingHeating && (_rawHeatValue < kDefaultMinHeatSetpointLimit || _rawHeatValue > kDefaultMaxHeatSetpointLimit)) {
@@ -323,7 +323,7 @@ bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTempera
   }
   if (settingCooling && (_rawCoolValue < kDefaultMinCoolSetpointLimit || _rawCoolValue > kDefaultMaxCoolSetpointLimit)) {
     log_e(
-      "Invalid Cooling Setpoint value: %.01fC - valid range %d..%d", _setpointCollingTemperature, kDefaultMinCoolSetpointLimit / 100,
+      "Invalid Cooling Setpoint value: %.01fC - valid range %d..%d", _setpointCoolingTemperature, kDefaultMinCoolSetpointLimit / 100,
       kDefaultMaxCoolSetpointLimit / 100
     );
     return false;
@@ -337,7 +337,7 @@ bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTempera
     // only setting Cooling Setpoint
     if (settingCooling && !settingHeating && _rawCoolValue < (heatingSetpointTemperature + (kDefaultDeadBand * 10))) {
       log_e(
-        "AutoMode :: Invalid Cooling Setpoint value: %.01fC - must be higher or equal than %.01fC", _setpointCollingTemperature, getHeatingSetpoint() + deadband
+        "AutoMode :: Invalid Cooling Setpoint value: %.01fC - must be higher or equal than %.01fC", _setpointCoolingTemperature, getHeatingSetpoint() + deadband
       );
       return false;
     }
@@ -352,7 +352,7 @@ bool MatterThermostat::setCoolingHeatingSetpoints(double _setpointHeatingTempera
     if (settingCooling && settingHeating && (_rawCoolValue <= _rawHeatValue || _rawCoolValue - _rawHeatValue < kDefaultDeadBand * 10.0)) {
       log_e(
         "AutoMode :: Error - Heating Setpoint %.01fC must be lower than Cooling Setpoint %.01fC with a minimum difference of %0.1fC",
-        _setpointHeatingTemperature, _setpointCollingTemperature, deadband
+        _setpointHeatingTemperature, _setpointCoolingTemperature, deadband
       );
       return false;
     }
