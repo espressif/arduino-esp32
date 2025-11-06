@@ -148,7 +148,7 @@ bool ZigbeeDoorWindowHandle::requestIASZoneEnroll() {
   esp_zb_lock_acquire(portMAX_DELAY);
   uint8_t tsn = esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);
   esp_zb_lock_release();
-  log_v("IAS Zone enroll request send with transaction sequence number: %u", tsn);
+  log_v("IAS Zone enroll request sent with transaction sequence number: %u", tsn);
   return true;
 }
 
