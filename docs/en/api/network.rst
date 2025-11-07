@@ -879,7 +879,7 @@ The ``NetworkServer`` class provides TCP server functionality that works with an
       
       server.begin();
       Serial.print("Server started on: ");
-      Serial.println(WiFi.localIP());
+      Serial.println(WiFi.STA.localIP());
     }
     
     void loop() {
