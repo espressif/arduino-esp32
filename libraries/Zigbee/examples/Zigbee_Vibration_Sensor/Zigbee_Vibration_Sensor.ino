@@ -46,8 +46,8 @@ Preferences preferences;
 void setup() {
   Serial.begin(115200);
 
-  preferences.begin("Zigbee", false);                    // Save ENROLLED flag in flash so it persists across reboots
-  bool enrolled =  preferences.getBool("ENROLLED");      // Get ENROLLED flag from preferences
+  preferences.begin("Zigbee", false);               // Save ENROLLED flag in flash so it persists across reboots
+  bool enrolled = preferences.getBool("ENROLLED");  // Get ENROLLED flag from preferences
   preferences.end();
 
   // Init button + sensor
@@ -96,7 +96,7 @@ void setup() {
   // Skip writing if we just restored enrollment (flag was already true)
   if (!enrolled) {
     preferences.begin("Zigbee", false);
-    preferences.putBool("ENROLLED", true); // set ENROLLED flag to true
+    preferences.putBool("ENROLLED", true);  // set ENROLLED flag to true
     preferences.end();
     Serial.println("ENROLLED flag saved to preferences");
   }
@@ -130,7 +130,7 @@ void loop() {
         Serial.println("Resetting Zigbee to factory and rebooting in 1s.");
         // Clear the ENROLLED flag from preferences
         preferences.begin("Zigbee", false);
-        preferences.putBool("ENROLLED", false); // set ENROLLED flag to false
+        preferences.putBool("ENROLLED", false);  // set ENROLLED flag to false
         preferences.end();
         Serial.println("ENROLLED flag cleared from preferences");
         delay(1000);

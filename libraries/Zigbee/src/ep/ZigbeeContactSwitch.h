@@ -77,7 +77,9 @@ public:
   bool restoreIASZoneEnroll();
 
   // Check if the device is enrolled in the IAS Zone
-  bool enrolled() { return _enrolled; }
+  bool enrolled() {
+    return _enrolled;
+  }
 
 private:
   void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) override;

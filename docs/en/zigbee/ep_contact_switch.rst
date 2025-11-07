@@ -88,7 +88,7 @@ Sets the IAS Client endpoint number (default is 1).
 requestIASZoneEnroll
 ^^^^^^^^^^^^^^^^^^^^
 
-Requests a new IAS Zone enrollment. Can be called to enroll a new device or to re-enroll an already enrolled device. 
+Requests a new IAS Zone enrollment. Can be called to enroll a new device or to re-enroll an already enrolled device.
 
 .. code-block:: arduino
 
