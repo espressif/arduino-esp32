@@ -394,7 +394,7 @@ Example
 -------
 
 Using CLI Helper Functions API
-*******************************
+******************************
 
 .. code-block:: arduino
 
