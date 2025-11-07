@@ -82,6 +82,40 @@ This must be called before using any network interfaces. Returns ``true`` on suc
       Network.begin();  // Initialize Network Manager
     }
 
+Check if Online
+***************
+
+.. code-block:: arduino
+
+    bool isOnline();
+
+Check if the device is online by verifying if any network interface (except AP) has an assigned IPv4 or global IPv6 address.
+Returns ``true`` if such interface has been found, ``false`` if no interface has assigned IP.
+
+**Example:**
+
+.. code-block:: arduino
+
+    #include "Network.h"
+
+    void setup() {
+      Serial.begin(115200);
+      Network.begin();  // Initialize Network Manager
+
+      // Connect to WiFi AP
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
+      
+      // Wait for WiFi to connect
+      while (!WiFi.STA.hasIP()) {
+        delay(500);
+      }
+
+      if (Network.isOnline()) {
+        Serial.println("Network is Online");
+      }
+    }
+
 Default Interface Management
 ****************************
 
