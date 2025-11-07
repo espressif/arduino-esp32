@@ -166,6 +166,11 @@ This minimal example can be extended with additional features:
 - **No serial output**: Check baudrate (115200) and USB connection
 - **LED not turning on/off**: Ensure the device is commissioned and you're controlling it via a Matter app. The minimal example only responds to Matter controller commands, not local button presses
 
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+
 ## License
 
 This example is licensed under the Apache License, Version 2.0.

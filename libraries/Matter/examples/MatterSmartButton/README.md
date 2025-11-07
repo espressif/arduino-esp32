@@ -170,6 +170,12 @@ The MatterSmartButton example consists of the following main components:
 - **No serial output**: Check baudrate (115200) and USB connection
 - **Multiple clicks registered for single press**: Increase the debounce time in the code if needed
 
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+- [Matter Generic Switch Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_generic_switch.html)
+
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
