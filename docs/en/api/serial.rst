@@ -45,7 +45,15 @@ ESP32-P4  5        1
 * HP (High-Performance) UARTs are the standard UART peripherals
 * LP (Low-Power) UARTs are available on some SoCs for ultra-low power applications
 * UART0 is typically used for programming and debug output (Serial Monitor)
-* Additional UARTs (Serial1, Serial2, etc.) are available for general-purpose communication
+* Additional UARTs (Serial1, Serial2, etc.) are available for general-purpose communication, including LP UARTs when available. The ESP32 Arduino Core automatically creates HardwareSerial objects for all available UARTs:
+  
+  * ``Serial0`` (or ``Serial``) - UART0 (HP UART, typically used for programming and debug output)
+  * ``Serial1``, ``Serial2``, etc. - Additional HP UARTs (numbered sequentially)
+  * Additional Serial objects - LP UARTs, when available (numbered after HP UARTs)
+  
+  **Example:** The ESP32-C6 has 2 HP UARTs and 1 LP UART. The Arduino Core creates ``Serial0`` and ``Serial1`` (HP UARTs) plus ``Serial2`` (LP UART) HardwareSerial objects.
+  
+  **Important:** LP UARTs can be used as regular UART ports, but they have fixed GPIO pins for RX, TX, CTS, and RTS. It is not possible to change the pins for LP UARTs using ``setPins()``.
 
 Arduino-ESP32 Serial API
 ------------------------
@@ -61,8 +69,7 @@ Initializes the Serial port with the specified baud rate and configuration.
 
 * ``baud`` - Baud rate (bits per second). Common values: 9600, 115200, 230400, etc.
   
-  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds.
-
+  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the :ref:`Baud Rate Detection Example <baud-rate-detection-example>` for usage details.
 * ``config`` - Serial configuration (data bits, parity, stop bits):
   
   * ``SERIAL_8N1`` - 8 data bits, no parity, 1 stop bit (default)
@@ -640,8 +647,10 @@ Where:
 Example Applications
 ********************
 
-Baud Rate Detection Example:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _baud-rate-detection-example:
+
+Baud Rate Detection Example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/BaudRateDetect_Demo/BaudRateDetect_Demo.ino
     :language: arduino
