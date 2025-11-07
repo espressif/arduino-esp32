@@ -30,14 +30,14 @@ The Network library follows a tree-like hierarchical structure:
     ├── NetworkInterface (Base Class)
     │   │
     │   ├── Wi-Fi
-    │   │   ├── STAClass (Station Mode)
-    │   │   └── APClass (Access Point Mode)
+    │   │   ├── STAClass WiFi.STA (Station Mode)
+    │   │   └── APClass WiFi.AP (Access Point Mode)
     │   │
     │   ├── Ethernet
-    │   │   └── ETHClass
+    │   │   └── ETHClass ETH
     │   │
     │   └── PPP
-    │       └── PPPClass
+    │       └── PPPClass PPP
     │
     └── Network Communication
         ├── NetworkClient
@@ -101,15 +101,16 @@ Sets or gets the default network interface. The default interface is used for ne
 
     void setup() {
       Network.begin();
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
       
       // Wait for WiFi to connect
-      while (WiFi.status() != WL_CONNECTED) {
+      while (!WiFi.STA.hasIP()) {
         delay(500);
       }
       
       // Set WiFi as default interface
-      Network.setDefaultInterface(WiFi);
+      Network.setDefaultInterface(WiFi.STA);
       
       // Get current default interface
       NetworkInterface *defaultIf = Network.getDefaultInterface();
@@ -400,8 +401,9 @@ For server interfaces (Wi-Fi AP), ``dns1`` is the DHCP lease range start and ``d
       IPAddress dns1(8, 8, 8, 8);
       IPAddress dns2(8, 8, 4, 4);
       
-      WiFi.config(local_ip, gateway, subnet, dns1, dns2);
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.config(local_ip, gateway, subnet, dns1, dns2);
+      WiFi.STA.connect("ssid", "password");
     }
 
 Hostname
@@ -418,8 +420,8 @@ Gets or sets the hostname for the specific interface.
 
 .. code-block:: arduino
 
-    WiFi.setHostname("my-wifi-device");
-    Serial.println(WiFi.getHostname());
+    WiFi.STA.setHostname("my-wifi-device");
+    Serial.println(WiFi.STA.getHostname());
 
 Status Checking
 ***************
@@ -439,15 +441,15 @@ Check the status of the network interface.
 
 .. code-block:: arduino
 
-    if (WiFi.started()) {
+    if (WiFi.STA.started()) {
       Serial.println("WiFi interface started");
     }
     
-    if (WiFi.connected()) {
+    if (WiFi.STA.connected()) {
       Serial.println("WiFi connected");
     }
     
-    if (WiFi.hasIP()) {
+    if (WiFi.STA.hasIP()) {
       Serial.println("WiFi has IP address");
     }
 
@@ -464,10 +466,10 @@ Enables or disables IPv6 support on the interface.
 
 .. code-block:: arduino
 
-    WiFi.enableIPv6(true);
+    WiFi.STA.enableIPv6(true);
     
-    if (WiFi.hasGlobalIPv6()) {
-      IPAddress ipv6 = WiFi.globalIPv6();
+    if (WiFi.STA.hasGlobalIPv6()) {
+      IPAddress ipv6 = WiFi.STA.globalIPv6();
       Serial.print("Global IPv6: ");
       Serial.println(ipv6);
     }
@@ -494,25 +496,25 @@ Get IP address information from the interface.
 .. code-block:: arduino
 
     Serial.print("Local IP: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(WiFi.STA.localIP());
     
     Serial.print("Subnet Mask: ");
-    Serial.println(WiFi.subnetMask());
+    Serial.println(WiFi.STA.subnetMask());
     
     Serial.print("Gateway: ");
-    Serial.println(WiFi.gatewayIP());
+    Serial.println(WiFi.STA.gatewayIP());
     
     Serial.print("DNS: ");
-    Serial.println(WiFi.dnsIP());
+    Serial.println(WiFi.STA.dnsIP());
     
     Serial.print("Broadcast: ");
-    Serial.println(WiFi.broadcastIP());
+    Serial.println(WiFi.STA.broadcastIP());
     
     Serial.print("Network ID: ");
-    Serial.println(WiFi.networkID());
+    Serial.println(WiFi.STA.networkID());
     
     Serial.print("Subnet CIDR: /");
-    Serial.println(WiFi.subnetCIDR());
+    Serial.println(WiFi.STA.subnetCIDR());
 
 MAC Address
 ***********
@@ -529,7 +531,7 @@ Get the MAC address of the interface.
 .. code-block:: arduino
 
     uint8_t mac[6];
-    WiFi.macAddress(mac);
+    WiFi.STA.macAddress(mac);
     Serial.print("MAC: ");
     for (int i = 0; i < 6; i++) {
       if (i > 0) Serial.print(":");
@@ -538,7 +540,7 @@ Get the MAC address of the interface.
     Serial.println();
     
     // Or as String
-    Serial.println(WiFi.macAddress());
+    Serial.println(WiFi.STA.macAddress());
 
 Default Interface
 *****************
@@ -554,12 +556,12 @@ Set this interface as the default network interface, or check if it is the defau
 
 .. code-block:: arduino
 
-    // Set WiFi as default
-    WiFi.setDefault();
+    // Set WiFi STA as default
+    WiFi.STA.setDefault();
     
     // Check if it's default
-    if (WiFi.isDefault()) {
-      Serial.println("WiFi is the default interface");
+    if (WiFi.STA.isDefault()) {
+      Serial.println("WiFi STA is the default interface");
     }
 
 Route Priority
@@ -579,7 +581,7 @@ Gets or sets the route priority for the interface. Higher priority interfaces ar
     #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
     // Set higher priority for Ethernet
     ETH.setRoutePrio(100);
-    WiFi.setRoutePrio(50);
+    WiFi.STA.setRoutePrio(50);
     #endif
 
 Status Bits and Waiting
@@ -605,9 +607,9 @@ Get current status bits or wait for specific status bits to be set.
 
 .. code-block:: arduino
 
-    // Wait for WiFi to get IP address (with 10 second timeout)
-    if (WiFi.waitStatusBits(ESP_NETIF_HAS_IP_BIT, 10000) & ESP_NETIF_HAS_IP_BIT) {
-      Serial.println("WiFi got IP address!");
+    // Wait for WiFi STA to get IP address (with 10 second timeout)
+    if (WiFi.STA.waitStatusBits(ESP_NETIF_HAS_IP_BIT, 10000) & ESP_NETIF_HAS_IP_BIT) {
+      Serial.println("WiFi STA got IP address!");
     } else {
       Serial.println("Timeout waiting for IP address");
     }
@@ -630,16 +632,16 @@ Get interface identification and description information.
 .. code-block:: arduino
 
     Serial.print("Interface key: ");
-    Serial.println(WiFi.ifkey());
+    Serial.println(WiFi.STA.ifkey());
     
     Serial.print("Description: ");
-    Serial.println(WiFi.desc());
+    Serial.println(WiFi.STA.desc());
     
     Serial.print("Implementation name: ");
-    Serial.println(WiFi.impl_name());
+    Serial.println(WiFi.STA.impl_name());
     
     Serial.print("Implementation index: ");
-    Serial.println(WiFi.impl_index());
+    Serial.println(WiFi.STA.impl_index());
 
 Network Interface Implementations
 ----------------------------------
@@ -647,7 +649,7 @@ Network Interface Implementations
 Wi-Fi Station (STA)
 ********************
 
-The ``STAClass`` (accessed via ``WiFi`` object) extends ``NetworkInterface`` and provides Wi-Fi Station (client) mode functionality.
+The ``STAClass`` (accessed via ``WiFi.STA`` object) extends ``NetworkInterface`` and provides Wi-Fi Station (client) mode functionality.
 
 **Key Features:**
 * Connect to Wi-Fi access points
@@ -664,16 +666,17 @@ The ``STAClass`` (accessed via ``WiFi`` object) extends ``NetworkInterface`` and
     
     void setup() {
       Network.begin();
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
       
-      while (WiFi.status() != WL_CONNECTED) {
+      while (WiFi.STA.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
       }
       
       Serial.println();
       Serial.print("Connected! IP: ");
-      Serial.println(WiFi.localIP());
+      Serial.println(WiFi.STA.localIP());
     }
 
 For detailed Wi-Fi Station API documentation, see :doc:`wifi`.
@@ -681,7 +684,7 @@ For detailed Wi-Fi Station API documentation, see :doc:`wifi`.
 Wi-Fi Access Point (AP)
 ***********************
 
-The ``APClass`` (accessed via ``WiFiAP`` object) extends ``NetworkInterface`` and provides Wi-Fi Access Point mode functionality.
+The ``APClass`` (accessed via ``WiFi.AP`` object) extends ``NetworkInterface`` and provides Wi-Fi Access Point mode functionality.
 
 **Key Features:**
 * Create Wi-Fi access points
@@ -697,11 +700,11 @@ The ``APClass`` (accessed via ``WiFiAP`` object) extends ``NetworkInterface`` an
     
     void setup() {
       Network.begin();
-      WiFiAP.begin();
-      WiFiAP.create("MyESP32AP", "password123");
+      WiFi.AP.begin();
+      WiFi.AP.create("MyESP32AP", "password123");
       
       Serial.print("AP IP: ");
-      Serial.println(WiFiAP.localIP());
+      Serial.println(WiFi.AP.localIP());
     }
 
 For detailed Wi-Fi AP API documentation, see :doc:`wifi`.
@@ -727,7 +730,7 @@ The ``ETHClass`` (accessed via ``ETH`` object) extends ``NetworkInterface`` and 
       Network.begin();
       ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
       
-      while (!ETH.connected()) {
+      while (!ETH.hasIP()) {
         delay(500);
       }
       
@@ -759,7 +762,7 @@ The ``PPPClass`` (accessed via ``PPP`` object) extends ``NetworkInterface`` and 
       PPP.begin(PPP_MODEM_SIM7600, 1, 115200);
       PPP.setApn("your.apn.here");
       
-      while (!PPP.connected()) {
+      while (!PPP.hasIP()) {
         delay(500);
       }
       
@@ -797,8 +800,9 @@ The ``NetworkClient`` class provides TCP client functionality that works with an
     
     void setup() {
       Network.begin();
-      WiFi.begin("ssid", "password");
-      while (WiFi.status() != WL_CONNECTED) delay(500);
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
+      while (WiFi.STA.status() != WL_CONNECTED) delay(500);
       
       if (client.connect("www.example.com", 80)) {
         client.println("GET / HTTP/1.1");
@@ -835,8 +839,9 @@ The ``NetworkServer`` class provides TCP server functionality that works with an
     
     void setup() {
       Network.begin();
-      WiFi.begin("ssid", "password");
-      while (WiFi.status() != WL_CONNECTED) delay(500);
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
+      while (WiFi.STA.status() != WL_CONNECTED) delay(500);
       
       server.begin();
       Serial.print("Server started on: ");
@@ -873,8 +878,9 @@ The ``NetworkUdp`` class provides UDP communication that works with any network 
     
     void setup() {
       Network.begin();
-      WiFi.begin("ssid", "password");
-      while (WiFi.status() != WL_CONNECTED) delay(500);
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
+      while (WiFi.STA.status() != WL_CONNECTED) delay(500);
       
       udp.begin(1234);
     }
@@ -916,10 +922,11 @@ The Network Manager allows you to manage multiple network interfaces simultaneou
       ETH.begin(ETH_PHY_TYPE, ETH_PHY_ADDR, ETH_PHY_MDC, ETH_PHY_MDIO, ETH_PHY_POWER, ETH_CLK_MODE);
       
       // Start WiFi as backup
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
       
       // Wait for either interface to connect
-      while (!ETH.connected() && WiFi.status() != WL_CONNECTED) {
+      while (!ETH.connected() && WiFi.STA.status() != WL_CONNECTED) {
         delay(500);
       }
       
@@ -927,7 +934,7 @@ The Network Manager allows you to manage multiple network interfaces simultaneou
       if (ETH.connected()) {
         Network.setDefaultInterface(ETH);
         Serial.println("Using Ethernet");
-      } else if (WiFi.status() == WL_CONNECTED) {
+      } else if (WiFi.STA.status() == WL_CONNECTED) {
         Network.setDefaultInterface(WiFi);
         Serial.println("Using WiFi");
       }
@@ -942,12 +949,13 @@ The Network Manager allows you to manage multiple network interfaces simultaneou
       
       // Start both interfaces
       ETH.begin(...);
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
       
       // Set route priorities (ESP-IDF 5.5+)
       #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
       ETH.setRoutePrio(100);  // Higher priority
-      WiFi.setRoutePrio(50);   // Lower priority
+      WiFi.STA.setRoutePrio(50);   // Lower priority
       #endif
       
       // Ethernet will be preferred for routing when both are connected
@@ -1013,7 +1021,8 @@ Event Handling Examples
     void setup() {
       Network.begin();
       Network.onEvent(onWiFiEvent, ARDUINO_EVENT_WIFI_STA_GOT_IP);
-      WiFi.begin("ssid", "password");
+      WiFi.STA.begin();
+      WiFi.STA.connect("ssid", "password");
     }
 
 Troubleshooting
@@ -1047,7 +1056,5 @@ Troubleshooting
 Related Documentation
 ---------------------
 
-* :doc:`wifi` - Wi-Fi API documentation
-* :doc:`ethernet` - Ethernet API documentation
 * `ESP-IDF Network Interface Documentation <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/network/esp_netif.html>`_
 
