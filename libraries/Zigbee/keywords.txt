@@ -209,6 +209,9 @@ setIASClientEndpoint	KEYWORD2
 setClosed	KEYWORD2
 setOpen	KEYWORD2
 setTilted	KEYWORD2
+requestIASZoneEnroll	KEYWORD2
+restoreIASZoneEnroll	KEYWORD2
+enrolled	KEYWORD2
 
 # ZigbeeVibrationSensor
 setVibration	KEYWORD2
