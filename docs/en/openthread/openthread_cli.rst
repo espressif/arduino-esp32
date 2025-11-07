@@ -299,7 +299,7 @@ This function sets the size of the receive buffer used for receiving CLI respons
 **Returns:** The actual buffer size set, or 0 on error.
 
 Stream Interface
-***************
+****************
 
 The ``OpenThreadCLI`` class implements the Arduino ``Stream`` interface, allowing you to use it like any other Stream object.
 
