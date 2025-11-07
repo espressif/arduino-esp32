@@ -140,7 +140,7 @@ Gets or sets the system hostname. The hostname is used for network identificatio
     Serial.println(hostname);
 
 DNS Resolution
-*************
+**************
 
 .. code-block:: arduino
 
@@ -853,7 +853,7 @@ The ``NetworkServer`` class provides TCP server functionality that works with an
     }
 
 NetworkUdp
-*********
+**********
 
 The ``NetworkUdp`` class provides UDP communication that works with any network interface.
 
