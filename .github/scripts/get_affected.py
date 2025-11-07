@@ -790,6 +790,19 @@ def find_affected_sketches(changed_files: list[str]) -> None:
             print(f"Total affected sketches: {len(affected_sketches)}", file=sys.stderr)
         return
 
+    # For component mode: if any *source code* file (not example or documentation) changed, recompile all examples
+    if component_mode:
+        for file in changed_files:
+            if (is_source_file(file) or is_header_file(file)) and not file.endswith(".ino"):
+                if file.startswith("cores/") or file.startswith("libraries/"):
+                    print("Component mode: file changed in cores/ or libraries/ - recompiling all IDF component examples", file=sys.stderr)
+                    all_examples = list_idf_component_examples()
+                    for example in all_examples:
+                        if example not in affected_sketches:
+                            affected_sketches.append(example)
+                    print(f"Total affected IDF component examples: {len(affected_sketches)}", file=sys.stderr)
+                    return
+
     preprocess_changed_files(changed_files)
 
     # Normal dependency-based analysis for non-critical changes
