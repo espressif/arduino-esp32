@@ -969,7 +969,7 @@ The Network Manager allows you to manage multiple network interfaces simultaneou
         Network.setDefaultInterface(ETH);
         Serial.println("Using Ethernet");
       } else if (WiFi.STA.status() == WL_CONNECTED) {
-        Network.setDefaultInterface(WiFi);
+        Network.setDefaultInterface(WiFi.STA);
         Serial.println("Using WiFi");
       }
     }
