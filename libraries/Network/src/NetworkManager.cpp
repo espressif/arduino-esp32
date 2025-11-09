@@ -189,7 +189,7 @@ bool NetworkManager::isOnline() {
   for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
     if (i != ESP_NETIF_ID_AP) {
       NetworkInterface *iface = getNetifByID((Network_Interface_ID)i);
-      if (iface != NULL && (iface->hasIP() || iface->hasGlobalIPv6())) {
+      if (iface != NULL && iface->connected() && (iface->hasIP() || iface->hasGlobalIPv6())) {
         return true;
       }
     }
