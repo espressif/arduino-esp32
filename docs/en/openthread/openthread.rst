@@ -74,7 +74,7 @@ Thread Network Topology
 
 **Other Thread Network Devices:**
 
-* **Thread Border Router**: A device that connects a Thread network to other IP-based networks in the extrenal world. The Thread Border Router is connected to both the Thread network and external IP networks (like Wi-Fi router), enabling Thread devices to communicate with devices on other networks and the Internet. A Border Router can be implemented on a device with any Thread device role (Leader, Router, or Child). It can also act as gateway to other protocols such as MQTT or Zigbee.
+* **Thread Border Router**: A device that connects a Thread network to other IP-based networks in the external world. The Thread Border Router is connected to both the Thread network and external IP networks (like a Wi-Fi router), enabling Thread devices to communicate with devices on other networks and the Internet. A Border Router can be implemented on a device with any Thread device role (Leader, Router, or Child). It can also act as a gateway to other protocols such as MQTT or Zigbee.
 
 OpenThread Library Structure
 ----------------------------
