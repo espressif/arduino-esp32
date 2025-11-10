@@ -41,18 +41,18 @@ ESP32-H2  2        0
 ESP32-P4  5        1
 ========= ======== ========
 
-**Note:** 
+**Note:**
 * HP (High-Performance) UARTs are the standard UART peripherals
 * LP (Low-Power) UARTs are available on some SoCs for ultra-low power applications
 * UART0 is typically used for programming and debug output (Serial Monitor)
 * Additional UARTs (Serial1, Serial2, etc.) are available for general-purpose communication, including LP UARTs when available. The ESP32 Arduino Core automatically creates HardwareSerial objects for all available UARTs:
-  
+
   * ``Serial0`` (or ``Serial``) - UART0 (HP UART, typically used for programming and debug output)
   * ``Serial1``, ``Serial2``, etc. - Additional HP UARTs (numbered sequentially)
   * Additional Serial objects - LP UARTs, when available (numbered after HP UARTs)
-  
+
   **Example:** The ESP32-C6 has 2 HP UARTs and 1 LP UART. The Arduino Core creates ``Serial0`` and ``Serial1`` (HP UARTs) plus ``Serial2`` (LP UART) HardwareSerial objects.
-  
+
   **Important:** LP UARTs can be used as regular UART ports, but they have fixed GPIO pins for RX, TX, CTS, and RTS. It is not possible to change the pins for LP UARTs using ``setPins()``.
 
 Arduino-ESP32 Serial API
@@ -68,10 +68,10 @@ Initializes the Serial port with the specified baud rate and configuration.
     void begin(unsigned long baud, uint32_t config = SERIAL_8N1, int8_t rxPin = -1, int8_t txPin = -1, bool invert = false, unsigned long timeout_ms = 20000UL, uint8_t rxfifo_full_thrhd = 120);
 
 * ``baud`` - Baud rate (bits per second). Common values: 9600, 115200, 230400, etc.
-  
+
   **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the :ref:`Baud Rate Detection Example <baud-rate-detection-example>` for usage details.
 * ``config`` - Serial configuration (data bits, parity, stop bits):
-  
+
   * ``SERIAL_8N1`` - 8 data bits, no parity, 1 stop bit (default)
   * ``SERIAL_8N2`` - 8 data bits, no parity, 2 stop bits
   * ``SERIAL_8E1`` - 8 data bits, even parity, 1 stop bit
@@ -98,10 +98,10 @@ Initializes the Serial port with the specified baud rate and configuration.
 
     // Basic initialization with default pins
     Serial.begin(115200);
-    
+
     // Initialize with custom pins
     Serial1.begin(9600, SERIAL_8N1, 4, 5);
-    
+
     // Initialize with baud rate detection (ESP32, ESP32-S2 only)
     Serial.begin(0, SERIAL_8N1, -1, -1, false, 20000);
 
@@ -349,15 +349,15 @@ Sets the RX timeout threshold in UART symbol periods.
     bool setRxTimeout(uint8_t symbols_timeout);
 
 * ``symbols_timeout`` - Timeout threshold in UART symbol periods. Setting ``0`` disables timeout-based callbacks.
-  
+
   The timeout is calculated based on the current baud rate and serial configuration. For example:
-  
+
   * For ``SERIAL_8N1`` (10 bits per symbol), a timeout of 3 symbols at 9600 baud = 3 / (9600 / 10) = 3.125 ms
   * Maximum timeout is calculated automatically by ESP-IDF based on the serial configuration
 
 **Returns:** ``true`` if timeout is set successfully, ``false`` otherwise.
 
-**Note:** 
+**Note:**
 * When RX timeout occurs, the ``onReceive()`` callback is triggered
 * For ESP32 and ESP32-S2, when using REF_TICK clock source (baud rates ≤ 250000), RX timeout is limited to 1 symbol
 * To use higher RX timeout values on ESP32/ESP32-S2, set the clock source to APB using ``setClockSource(UART_CLK_SRC_APB)`` before ``begin()``
@@ -372,12 +372,12 @@ Sets the RX FIFO full threshold that triggers data transfer from FIFO to RX buff
     bool setRxFIFOFull(uint8_t fifoBytes);
 
 * ``fifoBytes`` - Number of bytes (1-127) that will trigger the FIFO full interrupt
-  
+
   When the UART FIFO reaches this threshold, data is copied to the RX buffer and the ``onReceive()`` callback is triggered.
 
 **Returns:** ``true`` if threshold is set successfully, ``false`` otherwise.
 
-**Note:** 
+**Note:**
 * Lower values (e.g., 1) provide byte-by-byte reception but consume more CPU time
 * Higher values (e.g., 120) provide better performance but introduce latency
 * Default value depends on baud rate: 1 byte for ≤ 115200 baud, 120 bytes for > 115200 baud
@@ -416,7 +416,7 @@ Sets a callback function that is called when data is received.
             Serial.print(c);
         }
     }
-    
+
     void setup() {
         Serial1.begin(115200);
         Serial1.onReceive(onReceiveCallback);
@@ -455,7 +455,7 @@ Sets a callback function that is called when a UART error occurs.
     void onErrorCallback(hardwareSerial_error_t error) {
         Serial.printf("UART Error: %d\n", error);
     }
-    
+
     void setup() {
         Serial1.begin(115200);
         Serial1.onReceiveError(onErrorCallback);
@@ -482,7 +482,7 @@ Enables or disables hardware flow control using RTS and/or CTS pins.
     bool setHwFlowCtrlMode(SerialHwFlowCtrl mode = UART_HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);
 
 * ``mode`` - Hardware flow control mode:
-  
+
   * ``UART_HW_FLOWCTRL_DISABLE`` (0x0) - Disable hardware flow control
   * ``UART_HW_FLOWCTRL_RTS`` (0x1) - Enable RX hardware flow control (RTS)
   * ``UART_HW_FLOWCTRL_CTS`` (0x2) - Enable TX hardware flow control (CTS)
@@ -504,7 +504,7 @@ Sets the UART operating mode.
     bool setMode(SerialMode mode);
 
 * ``mode`` - UART mode:
-  
+
   * ``UART_MODE_UART`` (0x00) - Regular UART mode (default)
   * ``UART_MODE_RS485_HALF_DUPLEX`` (0x01) - Half-duplex RS485 mode (RTS pin controls transceiver)
   * ``UART_MODE_IRDA`` (0x02) - IRDA UART mode
@@ -525,7 +525,7 @@ Sets the UART clock source. Must be called **before** ``begin()`` to take effect
     bool setClockSource(SerialClkSrc clkSrc);
 
 * ``clkSrc`` - Clock source:
-  
+
   * ``UART_CLK_SRC_DEFAULT`` - Default clock source (varies by SoC)
   * ``UART_CLK_SRC_APB`` - APB clock (ESP32, ESP32-S2, ESP32-C3, ESP32-S3)
   * ``UART_CLK_SRC_PLL`` - PLL clock (ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-P4)
@@ -665,4 +665,3 @@ RS485 Communication Example:
     :language: arduino
 
 Complete list of `Serial examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial>`_.
-
