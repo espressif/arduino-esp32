@@ -60,7 +60,7 @@
                     },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 985848,
+                            "flash_bytes": 985844,
                             "flash_percentage": 75,
                             "ram_bytes": 45964,
                             "ram_percentage": 14
@@ -68,7 +68,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 1094526,
+                            "flash_bytes": 1094520,
                             "flash_percentage": 83,
                             "ram_bytes": 47756,
                             "ram_percentage": 14
@@ -76,7 +76,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 1094552,
+                            "flash_bytes": 1094546,
                             "flash_percentage": 83,
                             "ram_bytes": 47788,
                             "ram_percentage": 14
@@ -84,7 +84,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 1096400,
+                            "flash_bytes": 1096394,
                             "flash_percentage": 34,
                             "ram_bytes": 47756,
                             "ram_percentage": 14
@@ -92,7 +92,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1160378,
+                            "flash_bytes": 1160374,
                             "flash_percentage": 36,
                             "ram_bytes": 49268,
                             "ram_percentage": 15
@@ -100,7 +100,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 1095536,
+                            "flash_bytes": 1095532,
                             "flash_percentage": 83,
                             "ram_bytes": 47756,
                             "ram_percentage": 14
@@ -108,7 +108,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1136468,
+                            "flash_bytes": 1136460,
                             "flash_percentage": 86,
                             "ram_bytes": 47780,
                             "ram_percentage": 14
@@ -116,7 +116,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 1108022,
+                            "flash_bytes": 1108016,
                             "flash_percentage": 84,
                             "ram_bytes": 47788,
                             "ram_percentage": 14
@@ -209,7 +209,7 @@
                     },
 {"name": "libraries/LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 887110,
+                            "flash_bytes": 887102,
                             "flash_percentage": 67,
                             "ram_bytes": 30912,
                             "ram_percentage": 9
@@ -217,7 +217,7 @@
                     },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 821448,
+                            "flash_bytes": 821444,
                             "flash_percentage": 62,
                             "ram_bytes": 29368,
                             "ram_percentage": 8
@@ -225,7 +225,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 962138,
+                            "flash_bytes": 962132,
                             "flash_percentage": 73,
                             "ram_bytes": 31268,
                             "ram_percentage": 9
@@ -233,7 +233,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 962156,
+                            "flash_bytes": 962150,
                             "flash_percentage": 73,
                             "ram_bytes": 31300,
                             "ram_percentage": 9
@@ -241,7 +241,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 964004,
+                            "flash_bytes": 963998,
                             "flash_percentage": 30,
                             "ram_bytes": 31268,
                             "ram_percentage": 9
@@ -249,7 +249,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 963138,
+                            "flash_bytes": 963134,
                             "flash_percentage": 73,
                             "ram_bytes": 31268,
                             "ram_percentage": 9
@@ -390,7 +390,7 @@
                     },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 858499,
+                            "flash_bytes": 858487,
                             "flash_percentage": 65,
                             "ram_bytes": 43304,
                             "ram_percentage": 13
@@ -403,7 +403,7 @@
                 "sketches": [
 {"name": "libraries/Matter/examples/MatterPressureSensor",
                     "sizes": [{
-                            "flash_bytes": 1629470,
+                            "flash_bytes": 1629458,
                             "flash_percentage": 51,
                             "ram_bytes": 92308,
                             "ram_percentage": 28
@@ -411,7 +411,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterSmartButton",
                     "sizes": [{
-                            "flash_bytes": 1632938,
+                            "flash_bytes": 1632926,
                             "flash_percentage": 51,
                             "ram_bytes": 92332,
                             "ram_percentage": 28
@@ -419,7 +419,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterTemperatureLight",
                     "sizes": [{
-                            "flash_bytes": 1677942,
+                            "flash_bytes": 1677930,
                             "flash_percentage": 53,
                             "ram_bytes": 92480,
                             "ram_percentage": 28
@@ -427,7 +427,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterTemperatureSensor",
                     "sizes": [{
-                            "flash_bytes": 1629482,
+                            "flash_bytes": 1629470,
                             "flash_percentage": 51,
                             "ram_bytes": 92308,
                             "ram_percentage": 28
@@ -435,7 +435,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterThermostat",
                     "sizes": [{
-                            "flash_bytes": 1649374,
+                            "flash_bytes": 1649362,
                             "flash_percentage": 52,
                             "ram_bytes": 92444,
                             "ram_percentage": 28
@@ -443,7 +443,7 @@
                     },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 826798,
+                            "flash_bytes": 826778,
                             "flash_percentage": 63,
                             "ram_bytes": 38652,
                             "ram_percentage": 11
@@ -451,7 +451,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 924730,
+                            "flash_bytes": 924718,
                             "flash_percentage": 70,
                             "ram_bytes": 40436,
                             "ram_percentage": 12
@@ -459,7 +459,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 924714,
+                            "flash_bytes": 924750,
                             "flash_percentage": 70,
                             "ram_bytes": 40468,
                             "ram_percentage": 12
@@ -467,7 +467,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 926570,
+                            "flash_bytes": 926554,
                             "flash_percentage": 29,
                             "ram_bytes": 40436,
                             "ram_percentage": 12
@@ -475,7 +475,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 982922,
+                            "flash_bytes": 982910,
                             "flash_percentage": 31,
                             "ram_bytes": 42028,
                             "ram_percentage": 12
@@ -483,7 +483,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 925402,
+                            "flash_bytes": 925386,
                             "flash_percentage": 70,
                             "ram_bytes": 40436,
                             "ram_percentage": 12
@@ -491,7 +491,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 965170,
+                            "flash_bytes": 965158,
                             "flash_percentage": 73,
                             "ram_bytes": 40460,
                             "ram_percentage": 12
@@ -499,7 +499,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 937190,
+                            "flash_bytes": 937174,
                             "flash_percentage": 71,
                             "ram_bytes": 40524,
                             "ram_percentage": 12
@@ -515,7 +515,7 @@
                     },
 {"name": "libraries/PPP/examples/PPP_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 915042,
+                            "flash_bytes": 915026,
                             "flash_percentage": 69,
                             "ram_bytes": 38904,
                             "ram_percentage": 11
@@ -544,7 +544,7 @@
                     },
 {"name": "libraries/LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 989896,
+                            "flash_bytes": 989888,
                             "flash_percentage": 75,
                             "ram_bytes": 35312,
                             "ram_percentage": 10
@@ -733,7 +733,7 @@
                     },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
-                            "flash_bytes": 946464,
+                            "flash_bytes": 946460,
                             "flash_percentage": 72,
                             "ram_bytes": 40028,
                             "ram_percentage": 12
@@ -741,7 +741,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
                     "sizes": [{
-                            "flash_bytes": 1055442,
+                            "flash_bytes": 1055436,
                             "flash_percentage": 80,
                             "ram_bytes": 41812,
                             "ram_percentage": 12
@@ -749,7 +749,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
-                            "flash_bytes": 1055468,
+                            "flash_bytes": 1055462,
                             "flash_percentage": 80,
                             "ram_bytes": 41828,
                             "ram_percentage": 12
@@ -757,7 +757,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                     "sizes": [{
-                            "flash_bytes": 1057316,
+                            "flash_bytes": 1057310,
                             "flash_percentage": 33,
                             "ram_bytes": 41812,
                             "ram_percentage": 12
@@ -765,7 +765,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureEnterprise",
                     "sizes": [{
-                            "flash_bytes": 1121354,
+                            "flash_bytes": 1121350,
                             "flash_percentage": 35,
                             "ram_bytes": 43332,
                             "ram_percentage": 13
@@ -773,7 +773,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                     "sizes": [{
-                            "flash_bytes": 1056456,
+                            "flash_bytes": 1056450,
                             "flash_percentage": 80,
                             "ram_bytes": 41812,
                             "ram_percentage": 12
@@ -781,7 +781,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
-                            "flash_bytes": 1089334,
+                            "flash_bytes": 1089328,
                             "flash_percentage": 83,
                             "ram_bytes": 41828,
                             "ram_percentage": 12
@@ -789,7 +789,7 @@
                     },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                     "sizes": [{
-                            "flash_bytes": 1069096,
+                            "flash_bytes": 1069092,
                             "flash_percentage": 81,
                             "ram_bytes": 41844,
                             "ram_percentage": 12
@@ -951,7 +951,7 @@
                     },
 {"name": "libraries/Insights/examples/DiagnosticsSmokeTest",
                     "sizes": [{
-                            "flash_bytes": 1038523,
+                            "flash_bytes": 1038511,
                             "flash_percentage": 79,
                             "ram_bytes": 46900,
                             "ram_percentage": 14
@@ -959,7 +959,7 @@
                     },
 {"name": "libraries/Insights/examples/MinimalDiagnostics",
                     "sizes": [{
-                            "flash_bytes": 1038059,
+                            "flash_bytes": 1038047,
                             "flash_percentage": 79,
                             "ram_bytes": 46788,
                             "ram_percentage": 14
@@ -975,7 +975,7 @@
                     },
 {"name": "libraries/LittleFS/examples/LITTLEFS_time",
                     "sizes": [{
-                            "flash_bytes": 961307,
+                            "flash_bytes": 961295,
                             "flash_percentage": 73,
                             "ram_bytes": 45216,
                             "ram_percentage": 13
@@ -983,7 +983,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterColorLight",
                     "sizes": [{
-                            "flash_bytes": 1766423,
+                            "flash_bytes": 1766407,
                             "flash_percentage": 56,
                             "ram_bytes": 106260,
                             "ram_percentage": 32
@@ -991,7 +991,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterCommissionTest",
                     "sizes": [{
-                            "flash_bytes": 1729647,
+                            "flash_bytes": 1729635,
                             "flash_percentage": 54,
                             "ram_bytes": 106024,
                             "ram_percentage": 32
@@ -999,7 +999,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterComposedLights",
                     "sizes": [{
-                            "flash_bytes": 1756191,
+                            "flash_bytes": 1756179,
                             "flash_percentage": 55,
                             "ram_bytes": 106192,
                             "ram_percentage": 32
@@ -1007,7 +1007,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterContactSensor",
                     "sizes": [{
-                            "flash_bytes": 1727699,
+                            "flash_bytes": 1727687,
                             "flash_percentage": 54,
                             "ram_bytes": 106008,
                             "ram_percentage": 32
@@ -1015,7 +1015,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterDimmableLight",
                     "sizes": [{
-                            "flash_bytes": 1750991,
+                            "flash_bytes": 1750979,
                             "flash_percentage": 55,
                             "ram_bytes": 106260,
                             "ram_percentage": 32
