@@ -200,6 +200,11 @@ The MatterLambdaSingleCallbackManyEPs example consists of the following main com
 - **No serial output**: Check baudrate (115200) and USB connection
 - **Compilation errors with lambda functions**: Ensure you're using a C++11 compatible compiler (ESP32 Arduino Core 2.0+ supports this)
 
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
