@@ -647,6 +647,8 @@ Where:
 Example Applications
 ********************
 
+.. _baud-rate-detection-example:
+
 Baud Rate Detection Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/BaudRateDetect_Demo/BaudRateDetect_Demo.ino
