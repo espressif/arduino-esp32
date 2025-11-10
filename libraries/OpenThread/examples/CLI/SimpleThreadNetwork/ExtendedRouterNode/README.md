@@ -47,7 +47,7 @@ Before uploading the sketch, configure the network parameters to match the Leade
 
 ```cpp
 #define CLI_NETWORK_KEY    "00112233445566778899aabbccddeeff"
-#define CLI_NETWORK_CHANEL "24"
+#define CLI_NETWORK_CHANNEL "24"
 ```
 
 **Important:** 

@@ -17,7 +17,7 @@
 
 // Leader node shall use the same Network Key and channel
 #define CLI_NETWORK_KEY    "00112233445566778899aabbccddeeff"
-#define CLI_NETWORK_CHANEL "24"
+#define CLI_NETWORK_CHANNEL "24"
 bool otStatus = true;
 
 void setup() {
@@ -29,7 +29,7 @@ void setup() {
 
   otStatus &= otExecCommand("dataset", "clear");
   otStatus &= otExecCommand("dataset networkkey", CLI_NETWORK_KEY);
-  otStatus &= otExecCommand("dataset channel", CLI_NETWORK_CHANEL);
+  otStatus &= otExecCommand("dataset channel", CLI_NETWORK_CHANNEL);
   otStatus &= otExecCommand("dataset", "commit active");
   otStatus &= otExecCommand("ifconfig", "up");
   otStatus &= otExecCommand("thread", "start");

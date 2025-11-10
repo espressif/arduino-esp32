@@ -47,7 +47,7 @@ Before uploading the sketch, configure the network parameters to match the Leade
 
 ```cpp
 #define CLI_NETWORK_KEY    "dataset networkkey 00112233445566778899aabbccddeeff"
-#define CLI_NETWORK_CHANEL "dataset channel 24"
+#define CLI_NETWORK_CHANNEL "dataset channel 24"
 ```
 
 **Important:** 
