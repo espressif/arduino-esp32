@@ -216,7 +216,7 @@ This function returns ``true`` when all data has been sent and the channel is re
 
 **Note:** 
 * If ``rmtWrite()`` times out or ``rmtWriteAsync()`` is called, this function will return ``false`` until all data is sent out.
-* ``rmtTransmitCompleted()`` will always return ``true`` when ``rmtWriteLooping()`` is active, because looping mode never completes.
+* ``rmtTransmitCompleted()`` will always return ``true`` when ``rmtWriteLooping()`` is active, because it has no effect in such case.
 
 rmtRead
 *******
