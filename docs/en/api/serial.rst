@@ -204,7 +204,7 @@ Reads multiple bytes from the Serial port, blocking until the specified number o
 
 **Returns:** The number of bytes actually read (may be less than ``length`` if timeout occurs).
 
-**Note:** This function overrides ``Stream::readBytes()`` for better performance using IDF functions.
+**Note:** This function overrides ``Stream::readBytes()`` for better performance using ESP-IDF functions.
 
 write
 *****
@@ -353,7 +353,7 @@ Sets the RX timeout threshold in UART symbol periods.
   The timeout is calculated based on the current baud rate and serial configuration. For example:
   
   * For ``SERIAL_8N1`` (10 bits per symbol), a timeout of 3 symbols at 9600 baud = 3 / (9600 / 10) = 3.125 ms
-  * Maximum timeout is calculated automatically by IDF based on the serial configuration
+  * Maximum timeout is calculated automatically by ESP-IDF based on the serial configuration
 
 **Returns:** ``true`` if timeout is set successfully, ``false`` otherwise.
 
@@ -534,10 +534,10 @@ Sets the UART clock source. Must be called **before** ``begin()`` to take effect
   * ``UART_CLK_SRC_REF_TICK`` - REF_TICK clock (ESP32, ESP32-S2)
 
 **Note:**
-* Clock source availability varies by SoC
-* PLL frequency varies by SoC: ESP32-C2 (40 MHz), ESP32-H2 (48 MHz), ESP32-C5/C6/C61/P4 (80 MHz)
-* ESP32-C5, ESP32-C6, ESP32-C61, and ESP32-P4 have LP UART that uses only RTC_FAST or XTAL/2 as clock source
-* For ESP32 and ESP32-S2, REF_TICK is used by default for baud rates ≤ 250000 to avoid baud rate changes when CPU frequency changes, but this limits RX timeout to 1 symbol
+* Clock source availability varies by SoC.
+* PLL frequency varies by SoC: ESP32-C2 (40 MHz), ESP32-H2 (48 MHz), ESP32-C5/C6/C61/P4 (80 MHz).
+* ESP32-C5, ESP32-C6, ESP32-C61, and ESP32-P4 have LP UART that uses only RTC_FAST or XTAL/2 as clock source.
+* For ESP32 and ESP32-S2, REF_TICK is used by default for baud rates ≤ 250000 to avoid baud rate changes when CPU frequency changes, but this limits RX timeout to 1 symbol.
 
 **Returns:** ``true`` if clock source is set successfully, ``false`` otherwise.
 
