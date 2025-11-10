@@ -15,6 +15,27 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
+#ifndef CONFIG_ARDUINO_UDP_TASK_STACK_SIZE
+#define CONFIG_ARDUINO_UDP_TASK_STACK_SIZE 4096
+#endif
+#ifndef ARDUINO_UDP_TASK_STACK_SIZE
+#define ARDUINO_UDP_TASK_STACK_SIZE CONFIG_ARDUINO_UDP_TASK_STACK_SIZE
+#endif
+
+#ifndef CONFIG_ARDUINO_UDP_TASK_PRIORITY
+#define CONFIG_ARDUINO_UDP_TASK_PRIORITY 3
+#endif
+#ifndef ARDUINO_UDP_TASK_PRIORITY
+#define ARDUINO_UDP_TASK_PRIORITY CONFIG_ARDUINO_UDP_TASK_PRIORITY
+#endif
+
+#ifndef CONFIG_ARDUINO_UDP_RUNNING_CORE
+#define CONFIG_ARDUINO_UDP_RUNNING_CORE -1
+#endif
+#ifndef ARDUINO_UDP_RUNNING_CORE
+#define ARDUINO_UDP_RUNNING_CORE CONFIG_ARDUINO_UDP_RUNNING_CORE
+#endif
+
 #ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
 #define UDP_MUTEX_LOCK()                                \
   if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
@@ -189,7 +210,7 @@ static bool _udp_task_start() {
   }
   if (!_udp_task_handle) {
     xTaskCreateUniversal(
-      _udp_task, "async_udp", 4096, NULL, CONFIG_ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE
+      _udp_task, "async_udp", ARDUINO_UDP_TASK_STACK_SIZE, NULL, ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, ARDUINO_UDP_RUNNING_CORE
     );
     if (!_udp_task_handle) {
       return false;
