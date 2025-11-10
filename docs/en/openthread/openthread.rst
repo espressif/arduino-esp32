@@ -66,8 +66,8 @@ Thread Network Topology
 
 **Thread Device Roles:**
 
-* **Leader**: Manages the Thread network, assigns router IDs, and maintains network state. This device shall be powered by a wall adapter.
-* **Router**: Extends network range, routes messages, maintains network topology. This device shall be powered by a wall adapter.
+* **Leader**: Manages the Thread network, assigns router IDs, and maintains network state. This device should be powered by a wall adapter.
+* **Router**: Extends network range, routes messages, maintains network topology. This device should be powered by a wall adapter.
 * **Child**: End device that can sleep for extended periods (battery-powered devices). It can be powered by a battery or a wall adapter.
 * **Detached**: Device not currently participating in a Thread network.
 * **Disabled**: The Thread stack and interface are disabled.
