@@ -647,22 +647,17 @@ Where:
 Example Applications
 ********************
 
-.. _baud-rate-detection-example:
-
-Baud Rate Detection Example
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Baud Rate Detection Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/BaudRateDetect_Demo/BaudRateDetect_Demo.ino
     :language: arduino
 
 OnReceive Callback Example:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/OnReceive_Demo/OnReceive_Demo.ino
     :language: arduino
 
 RS485 Communication Example:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
     :language: arduino
