@@ -176,6 +176,12 @@ The MatterOnOffLight example consists of the following main components:
 - **Button not toggling light**: Ensure the button is properly connected and the debounce time is appropriate. Check Serial Monitor for "User button released" messages
 - **No serial output**: Check baudrate (115200) and USB connection
 
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+- [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
+- [Matter On/Off Light Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_on_off_light.html)
+
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
