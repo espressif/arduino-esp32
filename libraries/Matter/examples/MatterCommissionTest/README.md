@@ -146,6 +146,10 @@ The MatterCommissionTest example consists of the following main components:
 - **No serial output**: Check baudrate (115200) and USB connection
 - **Device keeps decommissioning**: This is expected behavior - the device automatically decommissions after 30 seconds to allow continuous testing
 
+## Related Documentation
+
+- [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
+
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
