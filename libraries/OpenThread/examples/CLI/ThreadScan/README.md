@@ -111,7 +111,7 @@ The ThreadScan example consists of the following main components:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(true)` (auto-start required for discovery)
    - Initializes OpenThread CLI
-   - Sets CLI timeout to 100ms using `OThreadCLI.setTimeout()`
+   - Sets CLI timeout to 100 ms using `OThreadCLI.setTimeout()`
 
 2. **`loop()`**:
    - Performs IEEE 802.15.4 scan using `otPrintRespCLI("scan", Serial, 3000)`
