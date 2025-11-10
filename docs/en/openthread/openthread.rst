@@ -70,7 +70,7 @@ Thread Network Topology
 * **Router**: Extends network range, routes messages, maintains network topology. This device shall be powered by a wall adapter.
 * **Child**: End device that can sleep for extended periods (battery-powered devices). It can be powered by a battery or a wall adapter.
 * **Detached**: Device not currently participating in a Thread network.
-* **Disabled**: The Thread stack and  interface is disabled.
+* **Disabled**: The Thread stack and interface are disabled.
 
 **Other Thread Network Devices:**
 
