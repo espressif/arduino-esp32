@@ -28,6 +28,9 @@ html_context["github_repo"] = "arduino-esp32"  # noqa: F405
 
 html_static_path = ["../_static"]
 
+html_js_files = ["../_static/chatbot_widget_en.js"]
+html_css_files = ["../_static/chatbot_widget.css"]
+
 # Conditional content
 
 extensions += [  # noqa: F405
