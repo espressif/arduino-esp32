@@ -54,12 +54,12 @@ Initializes an RMT channel for a specific GPIO pin with the specified direction,
 
 * ``pin`` - GPIO pin number to use for RMT
 * ``channel_direction`` - Channel direction:
-  
+
   * ``RMT_RX_MODE`` - Receive mode (for reading signals)
   * ``RMT_TX_MODE`` - Transmit mode (for sending signals)
 
 * ``memsize`` - Number of memory blocks to reserve for this channel:
-  
+
   * ``RMT_MEM_NUM_BLOCKS_1`` - 1 block
   * ``RMT_MEM_NUM_BLOCKS_2`` - 2 blocks
   * ``RMT_MEM_NUM_BLOCKS_3`` - 3 blocks (ESP32 only)
@@ -67,9 +67,9 @@ Initializes an RMT channel for a specific GPIO pin with the specified direction,
   * ``RMT_MEM_NUM_BLOCKS_5`` through ``RMT_MEM_NUM_BLOCKS_8`` - 5-8 blocks (ESP32 only)
 
 * ``frequency_Hz`` - RMT channel frequency in Hz (tick frequency). Must be between 312.5 kHz and 80 MHz.
-  
+
   The frequency determines the resolution of pulse durations. For example:
-  
+
   * 10 MHz (100 ns tick) - High precision, suitable for WS2812 LEDs
   * 1 MHz (1 µs tick) - Good for most IR protocols
   * 400 kHz (2.5 µs tick) - Suitable for slower protocols
@@ -103,7 +103,7 @@ This function affects how ``rmtWrite()``, ``rmtWriteAsync()``, or ``rmtWriteLoop
 
 * ``pin`` - GPIO pin number configured for RMT TX mode
 * ``EOT_Level`` - End of transmission level:
-  
+
   * ``0`` (LOW) - Pin will be set to LOW after transmission (default)
   * Non-zero (HIGH) - Pin will be set to HIGH after transmission
 
@@ -137,7 +137,7 @@ This function returns ``true`` if transmission is successful, ``false`` on error
         {8, 1, 4, 0},  // High for 8 ticks, Low for 4 ticks (bit '1')
         {4, 1, 8, 0}   // High for 4 ticks, Low for 8 ticks (bit '0')
     };
-    
+
     rmtWrite(pin, symbols, 2, RMT_WAIT_FOR_EVER);
 
 rmtWriteAsync
@@ -192,7 +192,7 @@ Sends RMT data a fixed number of times (repeated transmission).
 * ``num_rmt_symbols`` - Number of RMT symbols to transmit
 * ``loop_count`` - Number of times to repeat the transmission (must be at least 1)
 
-**Note:** 
+**Note:**
 * ``loop_count == 0`` is invalid (no transmission)
 * ``loop_count == 1`` transmits once (no looping)
 * ``loop_count > 1`` transmits the data repeatedly
@@ -214,7 +214,7 @@ Checks if the RMT transmission is completed and the channel is ready for transmi
 
 This function returns ``true`` when all data has been sent and the channel is ready for a new transmission, ``false`` otherwise.
 
-**Note:** 
+**Note:**
 * If ``rmtWrite()`` times out or ``rmtWriteAsync()`` is called, this function will return ``false`` until all data is sent out.
 * ``rmtTransmitCompleted()`` will always return ``true`` when ``rmtWriteLooping()`` is active, because it has no effect in such case.
 
@@ -229,10 +229,10 @@ Initiates blocking receive operation. Reads RMT data and stores it in the provid
 
 * ``pin`` - GPIO pin number configured for RMT RX mode
 * ``data`` - Pointer to buffer where received RMT symbols will be stored
-* ``num_rmt_symbols`` - Pointer to variable containing maximum number of symbols to read. 
-  
+* ``num_rmt_symbols`` - Pointer to variable containing maximum number of symbols to read.
+
   On return, this variable will contain the actual number of symbols read.
-  
+
 * ``timeout_ms`` - Timeout in milliseconds. Use ``RMT_WAIT_FOR_EVER`` for indefinite wait
 
 **Blocking mode:** The function waits until data is received or timeout occurs.
@@ -253,7 +253,7 @@ Initiates non-blocking (asynchronous) receive operation. Returns immediately aft
 * ``pin`` - GPIO pin number configured for RMT RX mode
 * ``data`` - Pointer to buffer where received RMT symbols will be stored
 * ``num_rmt_symbols`` - Pointer to variable containing maximum number of symbols to read.
-  
+
   On completion, this variable will be updated with the actual number of symbols read.
 
 **Non-blocking mode:** Returns immediately after execution. Use ``rmtReceiveCompleted()`` to check if data is available.
@@ -287,7 +287,7 @@ Sets carrier frequency modulation/demodulation for RMT TX or RX channel.
 * ``pin`` - GPIO pin number configured for RMT
 * ``carrier_en`` - Enable/disable carrier modulation (TX) or demodulation (RX)
 * ``carrier_level`` - Carrier polarity level:
-  
+
   * ``true`` - Positive polarity (active high)
   * ``false`` - Negative polarity (active low)
 
@@ -311,7 +311,7 @@ Sets the minimum pulse width filter threshold for RX channel. Pulses smaller tha
 
 * ``pin`` - GPIO pin number configured for RMT RX mode
 * ``filter_pulse_ticks`` - Minimum pulse width in RMT ticks. Pulses (high or low) smaller than this will be filtered out.
-  
+
   Set to ``0`` to disable the filter.
 
 **Note:** The filter threshold is specified in RMT ticks, which depends on the RMT frequency set during ``rmtInit()``.
@@ -329,7 +329,7 @@ Sets the maximum idle threshold for RX channel. When no edge is detected for lon
 
 * ``pin`` - GPIO pin number configured for RMT RX mode
 * ``idle_thres_ticks`` - Maximum idle time in RMT ticks. When no edge is detected for longer than this time, reception ends.
-  
+
   This threshold also defines how many low/high bits are read at the end of the received data.
 
 **Note:** The idle threshold is specified in RMT ticks, which depends on the RMT frequency set during ``rmtInit()``.
@@ -371,7 +371,7 @@ Each RMT symbol contains two pulses:
         .duration1 = 4,
         .level1 = 0
     };
-    
+
     // Or using struct initialization
     rmt_data_t symbol2 = {8, 1, 4, 0};
 
@@ -395,7 +395,7 @@ Helper macro to calculate the number of RMT symbols in an array.
         {8, 1, 4, 0},
         {4, 1, 8, 0}
     };
-    
+
     size_t num_symbols = RMT_SYMBOLS_OF(data);  // Returns 2
 
 RMT_WAIT_FOR_EVER
