@@ -75,7 +75,7 @@ Done
 
 The example performs two types of scans:
 
-1. **IEEE 802.15.4 Scan**: 
+1. **IEEE 802.15.4 Scan**:
    - Scans for all IEEE 802.15.4 compatible devices in the area
    - Works even when the device is not part of a Thread network
    - Shows devices on all channels
@@ -107,13 +107,13 @@ The example continuously scans:
 
 The ThreadScan example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(true)` (auto-start required for discovery)
    - Initializes OpenThread CLI
    - Sets CLI timeout to 100ms using `OThreadCLI.setTimeout()`
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Performs IEEE 802.15.4 scan using `otPrintRespCLI("scan", Serial, 3000)`
    - Checks if device is in Thread network (Child, Router, or Leader)
    - If in network, performs Thread discovery scan using `otPrintRespCLI("discover", Serial, 3000)`
@@ -135,4 +135,3 @@ The ThreadScan example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

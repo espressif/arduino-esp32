@@ -52,7 +52,7 @@ uint8_t networkKey[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0
 dataset.setNetworkKey(networkKey);
 ```
 
-**Important:** 
+**Important:**
 - The network key must be a 16-byte array
 - The channel must be between 11 and 26 (IEEE 802.15.4 channels)
 - All devices in the same network must use the same network key and channel
@@ -133,7 +133,7 @@ To join other devices to this network:
 
 The LeaderNode example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Creates and configures a `DataSet` object:
@@ -146,7 +146,7 @@ The LeaderNode example consists of the following main components:
    - Applies dataset: `threadLeaderNode.commitDataSet(dataset)`
    - Starts network: `threadLeaderNode.networkInterfaceUp()` and `threadLeaderNode.start()`
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Gets current device role using `threadLeaderNode.otGetDeviceRole()`
    - Displays network information using Classes API methods:
      - `threadLeaderNode.otGetStringDeviceRole()` - Device role as string
@@ -181,4 +181,3 @@ The LeaderNode example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

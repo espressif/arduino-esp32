@@ -96,18 +96,18 @@ You can modify the `otReceivedLine()` function to:
 
 The onReceive example consists of the following main components:
 
-1. **`otReceivedLine()` callback function**: 
+1. **`otReceivedLine()` callback function**:
    - Reads all available data from OpenThread CLI
    - Filters out empty lines (EOL sequences)
    - Prints non-empty lines with a prefix
 
-2. **`setup()`**: 
+2. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin()` (auto-start)
    - Initializes OpenThread CLI
    - Registers the callback function using `OThreadCLI.onReceive(otReceivedLine)`
 
-3. **`loop()`**: 
+3. **`loop()`**:
    - Sends "state" CLI command every second using `OThreadCLI.println("state")`
    - The callback function processes the response asynchronously
    - Non-blocking operation allows other tasks to run
@@ -128,4 +128,3 @@ The onReceive example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

@@ -47,7 +47,7 @@ Before uploading the sketch, you can modify the network configuration:
 #define CLI_NETWORK_CHANNEL "dataset channel 24"
 ```
 
-**Important:** 
+**Important:**
 - The network key must be a 32-character hexadecimal string (16 bytes)
 - The channel must be between 11 and 26 (IEEE 802.15.4 channels)
 - All devices in the same network must use the same network key and channel
@@ -112,7 +112,7 @@ To join other devices to this network:
 
 The LeaderNode example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)` (no auto-start)
    - Initializes OpenThread CLI
@@ -120,7 +120,7 @@ The LeaderNode example consists of the following main components:
      - `OThreadCLI.println()` - Sends CLI commands
      - Commands: "dataset init new", "dataset networkkey", "dataset channel", "dataset commit active", "ifconfig up", "thread start"
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Checks if device role is Leader using `OpenThread.otGetDeviceRole()`
    - Displays network information using native OpenThread API calls:
      - `otThreadGetNetworkName()` - Network name
@@ -148,4 +148,3 @@ The LeaderNode example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

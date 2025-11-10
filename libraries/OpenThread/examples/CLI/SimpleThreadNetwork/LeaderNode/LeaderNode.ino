@@ -28,7 +28,7 @@
 #include "OThreadCLI.h"
 #include "OThreadCLI_Util.h"
 
-#define CLI_NETWORK_KEY    "dataset networkkey 00112233445566778899aabbccddeeff"
+#define CLI_NETWORK_KEY     "dataset networkkey 00112233445566778899aabbccddeeff"
 #define CLI_NETWORK_CHANNEL "dataset channel 24"
 
 otInstance *aInstance = NULL;

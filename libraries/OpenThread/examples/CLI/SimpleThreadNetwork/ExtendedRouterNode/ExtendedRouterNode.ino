@@ -16,7 +16,7 @@
 #include "OThreadCLI_Util.h"
 
 // Leader node shall use the same Network Key and channel
-#define CLI_NETWORK_KEY    "00112233445566778899aabbccddeeff"
+#define CLI_NETWORK_KEY     "00112233445566778899aabbccddeeff"
 #define CLI_NETWORK_CHANNEL "24"
 bool otStatus = true;
 

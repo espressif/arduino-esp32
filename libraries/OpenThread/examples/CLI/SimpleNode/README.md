@@ -103,13 +103,13 @@ To create a multi-device Thread network:
 
 The SimpleNode example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin()` (auto-start with default settings)
    - Initializes OpenThread CLI
    - Prints current Thread network information using `OpenThread.otPrintNetworkInformation()`
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Periodically displays the current device role using `OpenThread.otGetStringDeviceRole()`
    - Updates every 5 seconds
 
@@ -129,4 +129,3 @@ The SimpleNode example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

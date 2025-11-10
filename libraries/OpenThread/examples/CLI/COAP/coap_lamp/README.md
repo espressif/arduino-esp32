@@ -54,7 +54,7 @@ Before uploading the sketch, you can modify the network and CoAP configuration:
 #define OT_COAP_RESOURCE_NAME "Lamp"
 ```
 
-**Important:** 
+**Important:**
 - The network key and channel must match the Switch device configuration
 - The multicast address and resource name must match the Switch device
 - The network key must be a 32-character hexadecimal string (16 bytes)
@@ -118,30 +118,30 @@ The RGB LED provides visual feedback:
 
 The coap_lamp example consists of the following main components:
 
-1. **`otDeviceSetup()` function**: 
+1. **`otDeviceSetup()` function**:
    - Configures the device as a Leader node using CLI Helper Functions
    - Sets up CoAP server and resource
    - Waits for device to become Leader
    - Returns success/failure status
 
-2. **`setupNode()` function**: 
+2. **`setupNode()` function**:
    - Retries setup until successful
    - Calls `otDeviceSetup()` with Leader role configuration
 
-3. **`otCOAPListen()` function**: 
+3. **`otCOAPListen()` function**:
    - Listens for CoAP requests from the Switch device
    - Parses CoAP PUT requests
    - Controls RGB LED based on payload (0 = OFF, 1 = ON)
    - Implements smooth fade transitions
 
-4. **`setup()`**: 
+4. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Initializes OpenThread CLI
    - Sets CLI timeout
    - Calls `setupNode()` to configure the device
 
-5. **`loop()`**: 
+5. **`loop()`**:
    - Continuously calls `otCOAPListen()` to process incoming CoAP requests
    - Small delay for responsiveness
 
@@ -163,4 +163,3 @@ The coap_lamp example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

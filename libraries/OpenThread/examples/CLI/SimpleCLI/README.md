@@ -55,7 +55,7 @@ Once the sketch is running, open the Serial Monitor at a baud rate of **115200**
 
 ```
 OpenThread CLI started - type 'help' for a list of commands.
-ot> 
+ot>
 ```
 
 The `ot> ` prompt indicates that the OpenThread CLI console is ready. You can now type OpenThread CLI commands directly.
@@ -139,13 +139,13 @@ ipaddr
 
 The SimpleCLI example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)` (no auto-start)
    - Initializes OpenThread CLI
    - Starts the interactive CLI console on Serial
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Empty - all interaction happens through the CLI console
 
 ## Troubleshooting
@@ -164,4 +164,3 @@ The SimpleCLI example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

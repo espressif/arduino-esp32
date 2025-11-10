@@ -51,7 +51,7 @@ uint8_t networkKey[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0
 dataset.setNetworkKey(networkKey);
 ```
 
-**Important:** 
+**Important:**
 - The network key **must match** the Leader node's network key exactly
 - The network key must be a 16-byte array
 - Only the network key is required to join (other parameters are learned from the Leader)
@@ -129,7 +129,7 @@ To create a multi-device Thread network:
 
 The RouterNode example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Creates and configures a `DataSet` object:
@@ -138,7 +138,7 @@ The RouterNode example consists of the following main components:
    - Applies dataset: `threadChildNode.commitDataSet(dataset)`
    - Starts network: `threadChildNode.networkInterfaceUp()` and `threadChildNode.start()`
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Gets current device role using `threadChildNode.otGetDeviceRole()`
    - Retrieves active dataset using `threadChildNode.getCurrentDataSet()`
    - Displays network information using Classes API methods:
@@ -172,4 +172,3 @@ The RouterNode example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

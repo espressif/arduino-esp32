@@ -56,7 +56,7 @@ Before uploading the sketch, you can modify the network and CoAP configuration:
 #define OT_COAP_RESOURCE_NAME "Lamp"
 ```
 
-**Important:** 
+**Important:**
 - The network key and channel **must match** the Lamp device configuration
 - The multicast address and resource name **must match** the Lamp device
 - The network key must be a 32-character hexadecimal string (16 bytes)
@@ -123,36 +123,36 @@ The RGB LED provides visual feedback:
 
 The coap_switch example consists of the following main components:
 
-1. **`otDeviceSetup()` function**: 
+1. **`otDeviceSetup()` function**:
    - Configures the device to join an existing network using CLI Helper Functions
    - Sets up CoAP client
    - Waits for device to become Router or Child
    - Returns success/failure status
 
-2. **`setupNode()` function**: 
+2. **`setupNode()` function**:
    - Retries setup until successful
    - Calls `otDeviceSetup()` with Router/Child role configuration
 
-3. **`otCoapPUT()` function**: 
+3. **`otCoapPUT()` function**:
    - Sends CoAP PUT request to the lamp device
    - Waits for CoAP confirmation response
    - Returns success/failure status
    - Uses CLI Helper Functions to send commands and read responses
 
-4. **`checkUserButton()` function**: 
+4. **`checkUserButton()` function**:
    - Monitors button state with debouncing
    - Toggles lamp state on button press
    - Calls `otCoapPUT()` to send commands
    - Restarts setup if CoAP request fails
 
-5. **`setup()`**: 
+5. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)`
    - Initializes OpenThread CLI
    - Sets CLI timeout
    - Calls `setupNode()` to configure the device
 
-6. **`loop()`**: 
+6. **`loop()`**:
    - Continuously calls `checkUserButton()` to monitor button input
    - Small delay for responsiveness
 
@@ -174,4 +174,3 @@ The coap_switch example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

@@ -50,7 +50,7 @@ Before uploading the sketch, configure the network parameters to match the Leade
 #define CLI_NETWORK_CHANNEL "24"
 ```
 
-**Important:** 
+**Important:**
 - The network key **must match** the Leader node's network key
 - The channel **must match** the Leader node's channel
 - The network key must be a 32-character hexadecimal string (16 bytes)
@@ -76,7 +76,7 @@ PanID[using CLI]: 0x1234
 
 PanID[using OT API]: 0x1234
 
-Thread NetworkInformation: 
+Thread NetworkInformation:
 ---------------------------
 Role: Router
 RLOC16: 0xfc00
@@ -129,7 +129,7 @@ Once the device joins the network, the `loop()` function displays comprehensive 
 
 The ExtendedRouterNode example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(false)` (no auto-start)
    - Initializes OpenThread CLI
@@ -139,7 +139,7 @@ The ExtendedRouterNode example consists of the following main components:
    - Waits for device to become Router or Child (with 90-second timeout)
    - Demonstrates dual API usage for getting PAN ID
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Displays comprehensive network information using `OpenThread.otPrintNetworkInformation()`
    - Updates every 10 seconds
    - Shows error message if setup failed
@@ -161,4 +161,3 @@ The ExtendedRouterNode example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-
