@@ -228,17 +228,19 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 #if defined(CONFIG_IDF_TARGET_ESP32P4) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   host.slot = SDMMC_HOST_SLOT_0;
   // reconfigure slot_config to remove all pins in order to use IO_MUX
+  // Use 0 instead of GPIO_NUM_NC (-1) because ESP-IDF's s_check_pin_not_set()
+  // function uses !pin which doesn't work correctly with -1 (GPIO_NUM_NC)
   slot_config = sdmmc_slot_config_t{
-    .clk = GPIO_NUM_NC,
-    .cmd = GPIO_NUM_NC,
-    .d0 = GPIO_NUM_NC,
-    .d1 = GPIO_NUM_NC,
-    .d2 = GPIO_NUM_NC,
-    .d3 = GPIO_NUM_NC,
-    .d4 = GPIO_NUM_NC,
-    .d5 = GPIO_NUM_NC,
-    .d6 = GPIO_NUM_NC,
-    .d7 = GPIO_NUM_NC,
+    .clk = GPIO_NUM_0,
+    .cmd = GPIO_NUM_0,
+    .d0 = GPIO_NUM_0,
+    .d1 = GPIO_NUM_0,
+    .d2 = GPIO_NUM_0,
+    .d3 = GPIO_NUM_0,
+    .d4 = GPIO_NUM_0,
+    .d5 = GPIO_NUM_0,
+    .d6 = GPIO_NUM_0,
+    .d7 = GPIO_NUM_0,
     .cd = SDMMC_SLOT_NO_CD,
     .wp = SDMMC_SLOT_NO_WP,
     .width = 4,

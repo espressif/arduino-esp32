@@ -31,6 +31,7 @@ ZigbeeDoorWindowHandle::ZigbeeDoorWindowHandle(uint8_t endpoint) : ZigbeeEP(endp
   _zone_status = 0;
   _zone_id = 0xff;
   _ias_cie_endpoint = 1;
+  _enrolled = false;
 
   //Create custom door window handle configuration
   zigbee_door_window_handle_cfg_t door_window_handle_cfg = ZIGBEE_DEFAULT_DOOR_WINDOW_HANDLE_CONFIG();
@@ -108,9 +109,8 @@ bool ZigbeeDoorWindowHandle::report() {
   status_change_notif_cmd.zone_id = _zone_id;
   status_change_notif_cmd.delay = 0;
 
-  //NOTE: Check result of esp_zb_zcl_ias_zone_status_change_notif_cmd_req() and return true if success, false if failure
   esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);
+  esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);  //return transaction sequence number, ignore it
   esp_zb_lock_release();
   log_v("IAS Zone status changed notification sent");
   return true;
@@ -131,11 +131,58 @@ void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_e
       );
       esp_zb_lock_release();
       _zone_id = message->zone_id;
+      _enrolled = true;
     }
-
   } else {
     log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
   }
+}
+
+bool ZigbeeDoorWindowHandle::requestIASZoneEnroll() {
+  esp_zb_zcl_ias_zone_enroll_request_cmd_t enroll_request;
+  enroll_request.zcl_basic_cmd.src_endpoint = _endpoint;
+  enroll_request.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  enroll_request.zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_DOOR_WINDOW_HANDLE;
+  enroll_request.manuf_code = 0;
+
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);  //return transaction sequence number, ignore it
+  esp_zb_lock_release();
+  log_v("IAS Zone enroll request sent");
+  return true;
+}
+
+bool ZigbeeDoorWindowHandle::restoreIASZoneEnroll() {
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_attr_t *ias_cie_attr =
+    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
+  esp_zb_zcl_attr_t *zone_id_attr =
+    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID);
+  esp_zb_lock_release();
+
+  if (ias_cie_attr == NULL || ias_cie_attr->data_p == NULL) {
+    log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
+    return false;
+  }
+  if (zone_id_attr == NULL || zone_id_attr->data_p == NULL) {
+    log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
+    return false;
+  }
+
+  memcpy(_ias_cie_addr, (esp_zb_ieee_addr_t *)ias_cie_attr->data_p, sizeof(esp_zb_ieee_addr_t));
+  _zone_id = (*(uint8_t *)zone_id_attr->data_p);
+
+  log_d(
+    "Restored IAS Zone enroll: zone id(%d), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1],
+    _ias_cie_addr[2], _ias_cie_addr[3], _ias_cie_addr[4], _ias_cie_addr[5], _ias_cie_addr[6], _ias_cie_addr[7]
+  );
+
+  if (_zone_id == 0xFF) {
+    log_e("Failed to restore IAS Zone enroll: zone id not valid");
+    return false;
+  }
+  _enrolled = true;
+  return true;
 }
 
 #endif  // CONFIG_ZB_ENABLED
