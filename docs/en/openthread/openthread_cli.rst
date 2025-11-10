@@ -28,7 +28,7 @@ Executes a CLI command and gets the response.
 
 * ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``)
 * ``resp`` - Buffer to store the response (optional, can be ``NULL``)
-* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000ms)
+* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms)
 
 This function executes a CLI command and collects all response lines until "Done" or "Error" is received. If ``resp`` is not ``NULL``, the response is stored in the buffer.
 
