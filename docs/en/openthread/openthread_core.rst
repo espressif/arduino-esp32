@@ -36,9 +36,9 @@ Initializes the OpenThread stack.
 
     static void begin(bool OThreadAutoStart = true);
 
-* ``OThreadAutoStart`` - If ``true``, automatically starts Thread with default dataset from NVS or IDF settings (default: ``true``)
+* ``OThreadAutoStart`` - If ``true``, automatically starts Thread with default dataset from NVS or ESP-IDF settings (default: ``true``)
 
-This function initializes the OpenThread stack and creates the OpenThread task. If ``OThreadAutoStart`` is ``true``, it will attempt to start Thread using the active dataset from NVS or IDF default settings.
+This function initializes the OpenThread stack and creates the OpenThread task. If ``OThreadAutoStart`` is ``true``, it will attempt to start Thread using the active dataset from NVS or ESP-IDF default settings.
 
 **Note:** This is a static function and should be called before creating an ``OpenThread`` instance.
 
