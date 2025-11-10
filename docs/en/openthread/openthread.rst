@@ -34,7 +34,7 @@ Thread Network Topology
                                ┌─────────────────┐
                                │     Internet    │
                                └─────────────────┘
-                                        ▲                                       
+                                        ▲
                                         │
                                         │
                                ┌─────────────────┐
@@ -233,26 +233,26 @@ Using the Classes API:
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread stack
         OpenThread::begin();
-        
+
         // Wait for OpenThread to be ready
         while (!OThread) {
             delay(100);
         }
-        
+
         // Create and configure dataset
         DataSet dataset;
         dataset.initNew();
         dataset.setNetworkName("MyThreadNetwork");
         dataset.setChannel(15);
-        
+
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
         OThread.start();
         OThread.networkInterfaceUp();
-        
+
         // Print network information
         OpenThread::otPrintNetworkInformation(Serial);
     }
@@ -267,31 +267,30 @@ Using the CLI Helper Functions API:
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread stack
         OpenThread::begin();
-        
+
         // Initialize and start CLI
         OThreadCLI.begin();
         OThreadCLI.startConsole(Serial);
-        
+
         // Wait for CLI to be ready
         while (!OThreadCLI) {
             delay(100);
         }
-        
+
         // Execute CLI commands
         char resp[256];
         if (otGetRespCmd("state", resp)) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
-        
+
         if (otExecCommand("networkname", "MyThreadNetwork", NULL)) {
             Serial.println("Network name set successfully");
         }
-        
+
         if (otExecCommand("ifconfig", "up", NULL)) {
             Serial.println("Network interface up");
         }
     }
-

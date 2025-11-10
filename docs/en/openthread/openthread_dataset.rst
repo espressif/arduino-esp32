@@ -292,38 +292,38 @@ Creating a New Network
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Create a new dataset
         DataSet dataset;
         dataset.initNew();  // Generate random values
-        
+
         // Configure network parameters
         dataset.setNetworkName("MyNewThreadNetwork");
         dataset.setChannel(15);
-        
+
         // Set network key (16 bytes)
         uint8_t networkKey[16] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
         dataset.setNetworkKey(networkKey);
-        
+
         // Set extended PAN ID (8 bytes)
         uint8_t extPanId[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
         dataset.setExtendedPanId(extPanId);
-        
+
         // Set PAN ID
         dataset.setPanId(0x1234);
-        
+
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
         OThread.start();
         OThread.networkInterfaceUp();
-        
+
         Serial.println("New Thread network created");
     }
 
@@ -336,37 +336,37 @@ Joining an Existing Network
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Create dataset for existing network
         DataSet dataset;
-        
+
         // Configure with existing network parameters
         dataset.setNetworkName("ExistingThreadNetwork");
         dataset.setChannel(15);
-        
+
         // Set the network key from the existing network
         uint8_t networkKey[16] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
         dataset.setNetworkKey(networkKey);
-        
+
         // Set the extended PAN ID from the existing network
         uint8_t extPanId[8] = {0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef};
         dataset.setExtendedPanId(extPanId);
-        
+
         // Set PAN ID
         dataset.setPanId(0x1234);
-        
+
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
         OThread.start();
         OThread.networkInterfaceUp();
-        
+
         Serial.println("Joining existing Thread network");
     }
 
@@ -378,13 +378,13 @@ Reading Current Dataset
     void printCurrentDataset() {
         // Get current dataset from OpenThread
         const DataSet &currentDataset = OThread.getCurrentDataSet();
-        
+
         // Print dataset parameters
         Serial.println("Current Thread Dataset:");
         Serial.printf("  Network Name: %s\r\n", currentDataset.getNetworkName());
         Serial.printf("  Channel: %d\r\n", currentDataset.getChannel());
         Serial.printf("  PAN ID: 0x%04x\r\n", currentDataset.getPanId());
-        
+
         // Print extended PAN ID
         const uint8_t *extPanId = currentDataset.getExtendedPanId();
         if (extPanId) {
@@ -394,7 +394,7 @@ Reading Current Dataset
             }
             Serial.println();
         }
-        
+
         // Print network key (first 4 bytes for security)
         const uint8_t *networkKey = currentDataset.getNetworkKey();
         if (networkKey) {
@@ -414,13 +414,13 @@ Modifying Dataset Parameters
     void modifyNetworkChannel() {
         // Get current dataset
         DataSet dataset = OThread.getCurrentDataSet();
-        
+
         // Modify channel
         dataset.setChannel(20);  // Change to channel 20
-        
+
         // Apply modified dataset
         OThread.commitDataSet(dataset);
-        
+
         Serial.println("Network channel changed to 20");
     }
 
@@ -459,4 +459,3 @@ However, it's your responsibility to ensure:
 * Network key is properly generated (use ``initNew()`` for random generation)
 * Extended PAN ID is unique within your network environment
 * All required parameters are set before applying the dataset
-

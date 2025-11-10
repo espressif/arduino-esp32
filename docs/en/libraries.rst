@@ -114,7 +114,7 @@ OpenThread APIs
     openthread/openthread_cli
     openthread/openthread_core
     openthread/openthread_dataset
-    
+
 Zigbee APIs
 -----------
 

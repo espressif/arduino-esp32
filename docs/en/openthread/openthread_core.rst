@@ -483,39 +483,39 @@ Basic Thread Network Setup
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread stack
         OpenThread::begin();
-        
+
         // Wait for OpenThread to be ready
         while (!OThread) {
             delay(100);
         }
-        
+
         // Create and configure dataset
         DataSet dataset;
         dataset.initNew();
         dataset.setNetworkName("MyThreadNetwork");
         dataset.setChannel(15);
-        
+
         // Set network key (16 bytes)
         uint8_t networkKey[16] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
                                   0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
         dataset.setNetworkKey(networkKey);
-        
+
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
         OThread.start();
         OThread.networkInterfaceUp();
-        
+
         // Wait for network to be ready
         while (OpenThread::otGetDeviceRole() == OT_ROLE_DETACHED) {
             delay(100);
         }
-        
+
         // Print network information
         OpenThread::otPrintNetworkInformation(Serial);
-        
+
         // Get and print addresses
         Serial.printf("Mesh Local EID: %s\r\n", OThread.getMeshLocalEid().toString().c_str());
         Serial.printf("RLOC: %s\r\n", OThread.getRloc().toString().c_str());
@@ -530,9 +530,9 @@ Monitoring Device Role
     void loop() {
         ot_device_role_t role = OpenThread::otGetDeviceRole();
         const char *roleStr = OpenThread::otGetStringDeviceRole();
-        
+
         Serial.printf("Current role: %s\r\n", roleStr);
-        
+
         switch (role) {
             case OT_ROLE_LEADER:
                 Serial.println("This device is the Thread Leader");
@@ -550,7 +550,7 @@ Monitoring Device Role
                 Serial.println("Thread is disabled");
                 break;
         }
-        
+
         delay(5000);
     }
 
@@ -566,15 +566,14 @@ Address Management
         for (size_t i = 0; i < unicastCount; i++) {
             Serial.printf("  [%zu] %s\r\n", i, OThread.getUnicastAddress(i).toString().c_str());
         }
-        
+
         // Print multicast addresses
         size_t multicastCount = OThread.getMulticastAddressCount();
         Serial.printf("Multicast addresses: %zu\r\n", multicastCount);
         for (size_t i = 0; i < multicastCount; i++) {
             Serial.printf("  [%zu] %s\r\n", i, OThread.getMulticastAddress(i).toString().c_str());
         }
-        
+
         // Clear cache to force refresh
         OThread.clearAllAddressCache();
     }
-

@@ -42,7 +42,7 @@ This function executes a CLI command and collects all response lines until "Done
     if (otGetRespCmd("state", response)) {
         Serial.printf("Thread state: %s\r\n", response);
     }
-    
+
     if (otGetRespCmd("networkname", response)) {
         Serial.printf("Network name: %s\r\n", response);
     }
@@ -78,19 +78,19 @@ This function executes a CLI command with an optional argument and returns the s
 .. code-block:: arduino
 
     ot_cmd_return_t errorInfo;
-    
+
     // Set network name
     if (otExecCommand("networkname", "MyThreadNetwork", &errorInfo)) {
         Serial.println("Network name set successfully");
     } else {
         Serial.printf("Error %d: %s\r\n", errorInfo.errorCode, errorInfo.errorMessage.c_str());
     }
-    
+
     // Set channel
     if (otExecCommand("channel", "15", &errorInfo)) {
         Serial.println("Channel set successfully");
     }
-    
+
     // Bring interface up
     if (otExecCommand("ifconfig", "up", NULL)) {
         Serial.println("Interface is up");
@@ -121,7 +121,7 @@ This function executes a CLI command and prints all response lines to the specif
     if (otPrintRespCLI("ipaddr", Serial, 5000)) {
         Serial.println("IP addresses printed");
     }
-    
+
     // Print all multicast addresses
     if (otPrintRespCLI("ipmaddr", Serial, 5000)) {
         Serial.println("Multicast addresses printed");
@@ -262,7 +262,7 @@ The callback function is called whenever a complete line of output is received f
             // Process response character
         }
     }
-    
+
     OThreadCLI.onReceive(handleCLIResponse);
 
 Buffer Management
@@ -404,25 +404,25 @@ Using CLI Helper Functions API
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Initialize CLI
         OThreadCLI.begin();
         while (!OThreadCLI) {
             delay(100);
         }
-        
+
         // Get network state
         char resp[256];
         if (otGetRespCmd("state", resp)) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
-        
+
         // Set network name
         ot_cmd_return_t errorInfo;
         if (otExecCommand("networkname", "MyThreadNetwork", &errorInfo)) {
@@ -430,17 +430,17 @@ Using CLI Helper Functions API
         } else {
             Serial.printf("Error: %s\r\n", errorInfo.errorMessage.c_str());
         }
-        
+
         // Set channel
         if (otExecCommand("channel", "15", NULL)) {
             Serial.println("Channel set");
         }
-        
+
         // Bring interface up
         if (otExecCommand("ifconfig", "up", NULL)) {
             Serial.println("Interface up");
         }
-        
+
         // Print IP addresses
         otPrintRespCLI("ipaddr", Serial, 5000);
     }
@@ -458,17 +458,17 @@ Interactive Console
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Initialize and start CLI console
         OThreadCLI.begin();
         OThreadCLI.startConsole(Serial, true, "ot> ");
-        
+
         Serial.println("OpenThread CLI Console Ready");
         Serial.println("Type OpenThread CLI commands (e.g., 'state', 'networkname')");
     }
@@ -483,19 +483,19 @@ Programmatic CLI Access
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Initialize CLI
         OThreadCLI.begin();
         while (!OThreadCLI) {
             delay(100);
         }
-        
+
         // Send CLI commands programmatically
         OThreadCLI.println("state");
         delay(100);
@@ -503,7 +503,7 @@ Programmatic CLI Access
             char c = OThreadCLI.read();
             Serial.write(c);
         }
-        
+
         // Send command with argument
         OThreadCLI.print("networkname ");
         OThreadCLI.println("MyThreadNetwork");
@@ -539,17 +539,17 @@ Using Callback for Responses
 
     void setup() {
         Serial.begin(115200);
-        
+
         // Initialize OpenThread
         OpenThread::begin();
         while (!OThread) {
             delay(100);
         }
-        
+
         // Initialize CLI with callback
         OThreadCLI.begin();
         OThreadCLI.onReceive(handleCLIResponse);
-        
+
         // Send commands
         OThreadCLI.println("state");
         delay(500);
@@ -578,4 +578,3 @@ Here are some commonly used OpenThread CLI commands:
 * ``child table`` - Get child table
 
 For a complete list of OpenThread CLI commands, refer to the `OpenThread CLI Reference <https://openthread.io/reference/cli>`_.
-
