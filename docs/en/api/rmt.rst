@@ -155,7 +155,7 @@ Sends RMT data in non-blocking (asynchronous) mode. The function returns immedia
 
 **Non-blocking mode:** Returns immediately after execution. Use ``rmtTransmitCompleted()`` to check if transmission is finished.
 
-**Note:** If more than one ``rmtWriteAsync()`` is called in sequence, it will wait for the first transmission to finish, returning ``false`` to indicate failure.
+**Note:** If ``rmtWriteAsync()`` is called while a previous transmission is still in progress, it will return ``false`` immediately to indicate failure; it does not wait for the previous transmission to finish.
 
 This function returns ``true`` on execution success, ``false`` otherwise.
 
