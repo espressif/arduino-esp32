@@ -107,7 +107,7 @@ Executes a CLI command and prints the response to a Stream.
 
 * ``cmd`` - The CLI command to execute
 * ``output`` - The Stream object to print responses to (e.g., ``Serial``)
-* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000ms)
+* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000 ms)
 
 This function executes a CLI command and prints all response lines to the specified Stream until "Done" or "Error" is received.
 
