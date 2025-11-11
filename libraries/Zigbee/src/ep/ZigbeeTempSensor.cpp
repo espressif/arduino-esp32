@@ -92,7 +92,7 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
   int16_t zb_temperature = zb_float_to_s16(temperature);
   log_v("Updating temperature sensor value...");
   /* Update temperature sensor measured value */
-  log_d("Setting temperature to %d", zb_temperature);
+  log_d("Setting temperature test test test !!! to %d", zb_temperature);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &zb_temperature, false
