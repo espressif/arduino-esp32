@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       idf_ver:
-        description: "IDF Versions"
-        default: "release-v5.3,release-v5.4,release-v5.5"
+        description: "Comma separated list of IDF branches to build"
+        default: "release-v5.5"
         type: "string"
         required: true
       idf_targets:
-        description: "IDF Targets"
-        default: "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
+        description: "Comma separated list of IDF targets to build"
+        default: "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32c61,esp32h2,esp32p4"
         type: "string"
         required: false
   push:
@@ -37,6 +37,7 @@ on:
       - "variants/esp32c3/**"
       - "variants/esp32c5/**"
       - "variants/esp32c6/**"
+      - "variants/esp32c61/**"
       - "variants/esp32h2/**"
       - "variants/esp32p4/**"
       - "variants/esp32s2/**"
@@ -125,7 +126,7 @@ jobs:
                 echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
                 ;;
               "release-v5.5")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32h2,esp32p4"
+                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32c61,esp32h2,esp32p4"
                 ;;
               *)
                 echo ""

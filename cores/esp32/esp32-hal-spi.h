@@ -32,7 +32,7 @@ extern "C" {
 #define HSPI 2  //SPI 2 bus normally mapped to pins 12 - 15, but can be matrixed to any pins
 #define VSPI 3  //SPI 3 bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
 #else
-#define FSPI 0  // ESP32C2, C3, C6, H2, S2, S3, P4 - SPI 2 bus
+#define FSPI 0  // ESP32C2, C3, C5, C6, C61, H2, S2, S3, P4 - SPI 2 bus
 #define HSPI 1  // ESP32S2, S3, P4 - SPI 3 bus
 #endif
 

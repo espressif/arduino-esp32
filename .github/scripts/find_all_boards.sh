@@ -8,7 +8,7 @@ boards_list=$(grep '.tarch=' boards.txt)
 while read -r line; do
     board_name=$(echo "$line" | cut -d '.' -f1 | cut -d '#' -f1)
     # skip esp32c2 as we dont build libs for it
-    if [ "$board_name" == "esp32c2" ]; then
+    if [ "$board_name" == "esp32c2" ] || [ "$board_name" == "esp32c61" ]; then
         echo "Skipping 'espressif:esp32:$board_name'"
         continue
     fi
