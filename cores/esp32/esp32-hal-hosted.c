@@ -47,24 +47,18 @@ static sdio_pin_config_t sdio_pin_config = {
 #endif
 };
 
-static esp_hosted_coprocessor_fwver_t slave_version_struct = {
-  .major1 = 0,
-  .minor1 = 0,
-  .patch1 = 0
-};
+static esp_hosted_coprocessor_fwver_t slave_version_struct = {.major1 = 0, .minor1 = 0, .patch1 = 0};
 static esp_hosted_coprocessor_fwver_t host_version_struct = {
-  .major1 = ESP_HOSTED_VERSION_MAJOR_1,
-  .minor1 = ESP_HOSTED_VERSION_MINOR_1,
-  .patch1 = ESP_HOSTED_VERSION_PATCH_1
+  .major1 = ESP_HOSTED_VERSION_MAJOR_1, .minor1 = ESP_HOSTED_VERSION_MINOR_1, .patch1 = ESP_HOSTED_VERSION_PATCH_1
 };
 
-void hostedGetHostVersion(uint32_t * major, uint32_t * minor, uint32_t * patch) {
+void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
   *minor = host_version_struct.minor1;
   *patch = host_version_struct.patch1;
 }
 
-void hostedGetSlaveVersion(uint32_t * major, uint32_t * minor, uint32_t * patch) {
+void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = slave_version_struct.major1;
   *minor = slave_version_struct.minor1;
   *patch = slave_version_struct.patch1;
@@ -73,14 +67,14 @@ void hostedGetSlaveVersion(uint32_t * major, uint32_t * minor, uint32_t * patch)
 bool hostedHasUpdate() {
   uint32_t host_version = ESP_HOSTED_VERSION_VAL(host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
   uint32_t slave_version = 0;
-  
+
   esp_err_t ret = esp_hosted_get_coprocessor_fwversion(&slave_version_struct);
   if (ret != ESP_OK) {
     log_e("Could not get slave firmware version: %s", esp_err_to_name(ret));
   } else {
     slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
   }
-  
+
   log_i("Host firmware version: %" PRIu32 ".%" PRIu32 ".%" PRIu32, host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
   log_i("Slave firmware version: %" PRIu32 ".%" PRIu32 ".%" PRIu32, slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
 
@@ -100,11 +94,13 @@ bool hostedHasUpdate() {
   return false;
 }
 
-char * hostedGetUpdateURL() {
+char *hostedGetUpdateURL() {
   // https://espressif.github.io/arduino-esp32/hosted/esp32c6-v1.2.3.bin
   static char url[92] = {0};
-  snprintf(url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin",
-    CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET, host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
+  snprintf(
+    url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET,
+    host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
+  );
   return url;
 }
 
@@ -116,7 +112,7 @@ bool hostedBeginUpdate() {
   return err == ESP_OK;
 }
 
-bool hostedWriteUpdate(uint8_t* buf, uint32_t len) {
+bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
   esp_err_t err = esp_hosted_slave_ota_write(buf, len);
   if (err != ESP_OK) {
     log_e("Failed to write Update: %s", esp_err_to_name(err));
