@@ -17,6 +17,7 @@
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
+#include "pins_arduino.h"
 
 #include "esp_hosted.h"
 #include "esp_hosted_transport_config.h"
