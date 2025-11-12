@@ -1061,7 +1061,7 @@ esp32c61.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
 esp32c61.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
 esp32c61.menu.PartitionScheme.custom=Custom
 esp32c61.menu.PartitionScheme.custom.build.partitions=
-esp32c61.menu.PartitionScheme.custom.upload.maximum_size=16777216
+esp32c61.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 esp32c61.menu.CPUFreq.160=160MHz (WiFi)
 esp32c61.menu.CPUFreq.160.build.f_cpu=160000000L
