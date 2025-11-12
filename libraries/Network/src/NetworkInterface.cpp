@@ -352,7 +352,7 @@ bool NetworkInterface::enableIPv6(bool en) {
 }
 
 bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip) {
-  if (_esp_netif == NULL || dns_no > 2) {
+  if (_esp_netif == NULL || dns_no >= ESP_NETIF_DNS_MAX) {
     return false;
   }
   esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
@@ -708,11 +708,11 @@ IPAddress NetworkInterface::gatewayIP() const {
 }
 
 IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const {
-  if (_esp_netif == NULL) {
+  if (_esp_netif == NULL || dns_no >= ESP_NETIF_DNS_MAX) {
     return IPAddress();
   }
   esp_netif_dns_info_t d;
-  if (esp_netif_get_dns_info(_esp_netif, dns_no ? ESP_NETIF_DNS_BACKUP : ESP_NETIF_DNS_MAIN, &d) != ESP_OK) {
+  if (esp_netif_get_dns_info(_esp_netif, (esp_netif_dns_type_t)dns_no, &d) != ESP_OK) {
     return IPAddress();
   }
   if (d.ip.type == ESP_IPADDR_TYPE_V6) {
