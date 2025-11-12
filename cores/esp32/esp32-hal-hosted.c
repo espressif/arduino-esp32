@@ -220,7 +220,7 @@ bool hostedInitBLE() {
     return false;
   }
   hosted_ble_active = true;
-  return hostedInit();
+  return true;
 }
 
 bool hostedInitWiFi() {
