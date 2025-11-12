@@ -72,7 +72,7 @@ void hostedGetSlaveVersion(uint32_t * major, uint32_t * minor, uint32_t * patch)
 
 bool hostedHasUpdate() {
   uint32_t host_version = ESP_HOSTED_VERSION_VAL(host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
-  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t slave_version = 0;
   
   esp_err_t ret = esp_hosted_get_coprocessor_fwversion(&slave_version_struct);
   if (ret != ESP_OK) {
