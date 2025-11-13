@@ -361,7 +361,14 @@ jobs:
           download_artifacts: 'true'
           download_artifacts_on_failure: 'true'
           download_path: './gitlab-artifacts'
-          variables: '{"TEST_TYPES":"${{ steps.prepare-variables.outputs.test_types }}","TEST_CHIPS":"${{ steps.prepare-variables.outputs.test_chips }}","PIPELINE_ID":"${{ env.id }}","BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}","GITHUB_REPOSITORY":"${{ github.repository }}"}'
+          variables: >-
+            {
+              "TEST_TYPES":"${{ steps.prepare-variables.outputs.test_types }}",
+              "TEST_CHIPS":"${{ steps.prepare-variables.outputs.test_chips }}",
+              "PIPELINE_ID":"${{ env.id }}",
+              "BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}",
+              "GITHUB_REPOSITORY":"${{ github.repository }}"
+            }
 
       - name: Process Downloaded Artifacts
         if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
@@ -536,8 +543,11 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         env:
           WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+          WOKWI_WIFI_SSID: "Wokwi-GUEST"
+          # The Wokwi Wi-Fi does not have a password, so we use an empty string
+          WOKWI_WIFI_PASSWORD: ""
         run: |
-          bash .github/scripts/tests_run.sh -c -type ${{ matrix.type }} -t ${{ matrix.chip }} -i 0 -m 1 -W
+          bash .github/scripts/tests_run.sh -c -type "${{ matrix.type }}" -t "${{ matrix.chip }}" -i 0 -m 1 -W -wifi-ssid "${{ env.WOKWI_WIFI_SSID }}" -wifi-password "${{ env.WOKWI_WIFI_PASSWORD }}"
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as cache
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
