@@ -51,7 +51,7 @@ static const uint8_t T13 = 15;
 
 //SDMMC
 #define BOARD_HAS_SDMMC
-#define BOARD_SDMMC_SLOT            0
+#define BOARD_SDMMC_SLOT 0
 
 //WIFI - ESP32C6
 #define BOARD_HAS_SDIO_ESP_HOSTED
