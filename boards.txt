@@ -42936,10 +42936,10 @@ waveshare_esp32_s3_zero.menu.USBMode.hwcdc.build.usb_mode=1
 waveshare_esp32_s3_zero.menu.USBMode.default=USB-OTG (TinyUSB)
 waveshare_esp32_s3_zero.menu.USBMode.default.build.usb_mode=0
 
-waveshare_esp32_s3_zero.menu.CDCOnBoot.default=Disabled
-waveshare_esp32_s3_zero.menu.CDCOnBoot.default.build.cdc_on_boot=0
-waveshare_esp32_s3_zero.menu.CDCOnBoot.cdc=Enabled
-waveshare_esp32_s3_zero.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+waveshare_esp32_s3_zero.menu.CDCOnBoot.default=Enabled
+waveshare_esp32_s3_zero.menu.CDCOnBoot.default.build.cdc_on_boot=1
+waveshare_esp32_s3_zero.menu.CDCOnBoot.cdc=Disabled
+waveshare_esp32_s3_zero.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 waveshare_esp32_s3_zero.menu.MSCOnBoot.default=Disabled
 waveshare_esp32_s3_zero.menu.MSCOnBoot.default.build.msc_on_boot=0
