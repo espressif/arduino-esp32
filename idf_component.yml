@@ -94,7 +94,7 @@ dependencies:
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/cbor:
-    version: "0.6.0~1"
+    version: "0.6.1~4"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
   espressif/qrcode:
