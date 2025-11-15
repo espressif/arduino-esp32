@@ -1220,6 +1220,23 @@ void BLEDevice::setCustomGattsHandler(gatts_event_handler handler) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 
 /**
+ * @brief Set the SDIO pins for connection to external ESP MCU when using ESP-Hosted with NimBLE
+ * @param [in] clk The clock pin
+ * @param [in] cmd The command pin
+ * @param [in] d0 The data pin 0
+ * @param [in] d1 The data pin 1
+ * @param [in] d2 The data pin 2
+ * @param [in] d3 The data pin 3
+ * @param [in] rst The reset pin
+ * @return True if the pins were set successfully.
+ */
+#if CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
+bool BLEDevice::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
+  return hostedSetPins(clk, cmd, d0, d1, d2, d3, rst);
+}
+#endif
+
+/**
  * @brief Checks if a peer device is whitelisted.
  * @param [in] address The address to check for in the whitelist.
  * @returns True if the address is in the whitelist.
