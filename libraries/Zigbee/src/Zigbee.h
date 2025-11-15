@@ -29,6 +29,7 @@
 #include "ep/ZigbeeSwitch.h"
 //// Lights
 #include "ep/ZigbeeColorDimmableLight.h"
+#include "ep/ZigbeeTemperatureDimmableLight.h"
 #include "ep/ZigbeeDimmableLight.h"
 #include "ep/ZigbeeLight.h"
 //// Controllers
