@@ -32,6 +32,8 @@ env = DefaultEnvironment()
 platform = env.PioPlatform()
 board_config = env.BoardConfig()
 build_mcu = board_config.get("build.mcu", "").lower()
+chip_variant = board_config.get("build.chip_variant", "").lower()
+chip_variant = chip_variant if chip_variant else build_mcu
 partitions_name = board_config.get("build.partitions", board_config.get("build.arduino.partitions", ""))
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
@@ -80,7 +82,7 @@ def get_bootloader_image(variants_dir):
         else generate_bootloader_image(
             join(
                 FRAMEWORK_LIBS_DIR,
-                build_mcu,
+                chip_variant,
                 "bin",
                 "bootloader_${__get_board_boot_mode(__env__)}_${__get_board_f_boot(__env__)}.elf",
             )
@@ -159,7 +161,7 @@ def add_tinyuf2_extra_image():
 SConscript(
     join(
         FRAMEWORK_LIBS_DIR,
-        build_mcu,
+        chip_variant,
         "pioarduino-build.py",
     )
 )
