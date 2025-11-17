@@ -31,7 +31,8 @@ from SCons.Script import DefaultEnvironment, SConscript
 env = DefaultEnvironment()
 platform = env.PioPlatform()
 board_config = env.BoardConfig()
-build_mcu = board_config.get("build.mcu", "").lower()
+chip_variant = board_config.get("build.chip_variant").lower()
+build_mcu = chip_variant if chip_variant else board_config.get("build.mcu", "").lower()
 partitions_name = board_config.get("build.partitions", board_config.get("build.arduino.partitions", ""))
 
 FRAMEWORK_DIR = platform.get_package_dir("framework-arduinoespressif32")
