@@ -75,7 +75,7 @@ public:
   // Send AT command with timeout in milliseconds
   // Function deprecated - kept for backward compatibility
   // Function may return empty string in multiple cases:
-  // - When timeout occured;
+  // - When timeout occurred;
   // - When "OK" AT response was received;
   // - When "ERROR" AT response was received.
   // For more detailed return, usage of `bool PPPClass::cmd(at_command, response, timeout)` is recommended.
