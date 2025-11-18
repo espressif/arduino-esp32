@@ -1,6 +1,6 @@
-###############################
+##############################
 ZigbeeTemperatureDimmableLight
-###############################
+##############################
 
 About
 -----
@@ -84,14 +84,14 @@ Sets the light brightness level.
 
 Returns ``true`` if successful, ``false`` otherwise.
 
-setColorTemperature
+setLightTemperature
 ^^^^^^^^^^^^^^^^^^^
 
 Sets the light color temperature (in mireds).
 
 .. code-block:: arduino
 
-    bool setColorTemperature(uint16_t mireds);
+    bool setLightTemperature(uint16_t mireds);
 
 * ``mireds`` - Color temperature in mireds (153 = 6500K, 500 = 2000K)
 
@@ -151,14 +151,14 @@ Gets the current brightness level.
 
 Returns current brightness level (0-255).
 
-getColorTemperature
+getLightTemperature
 ^^^^^^^^^^^^^^^^^^^
 
 Gets the current color temperature (in mireds).
 
 .. code-block:: arduino
 
-    uint16_t getColorTemperature();
+    uint16_t getLightTemperature();
 
 Returns current color temperature in mireds.
 

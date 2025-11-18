@@ -89,7 +89,7 @@ public:
 
   bool setLightState(bool state);
   bool setLightLevel(uint8_t level);
-  bool setColorTemperature(uint16_t mireds);
+  bool setLightTemperature(uint16_t mireds);
   bool setLight(bool state, uint8_t level, uint16_t mireds);
 
   bool getLightState() {
@@ -98,7 +98,7 @@ public:
   uint8_t getLightLevel() {
     return _current_level;
   }
-  uint16_t getColorTemperature() {
+  uint16_t getLightTemperature() {
     return _current_color_temperature;
   }
 

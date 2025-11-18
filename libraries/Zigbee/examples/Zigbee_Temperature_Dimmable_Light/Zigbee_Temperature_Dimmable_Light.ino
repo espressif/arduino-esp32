@@ -16,7 +16,7 @@
  * @brief This example demonstrates Zigbee Temperature Dimmable light bulb.
  *
  * The example demonstrates how to use Zigbee library to create an end device with
- * temperature dimmable light end point.
+ * temperature dimmable light endpoint.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
@@ -33,7 +33,7 @@
 
 #include "Zigbee.h"
 
-#define ZIGBEE_TEMP_LIGHT_ENDPOINT 11
+#define ZIGBEE_TEMP_LIGHT_ENDPOINT 1
 uint8_t led = RGB_BUILTIN;
 uint8_t button = BOOT_PIN;
 

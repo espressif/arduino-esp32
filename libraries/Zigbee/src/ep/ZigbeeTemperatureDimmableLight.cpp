@@ -150,7 +150,7 @@ bool ZigbeeTemperatureDimmableLight::setLightLevel(uint8_t level) {
   return setLight(_current_state, level, _current_color_temperature);
 }
 
-bool ZigbeeTemperatureDimmableLight::setColorTemperature(uint16_t mireds) {
+bool ZigbeeTemperatureDimmableLight::setLightTemperature(uint16_t mireds) {
   return setLight(_current_state, _current_level, mireds);
 }
 
