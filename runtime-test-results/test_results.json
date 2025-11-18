@@ -1,5 +1,5 @@
 {
-  "commit_sha": "fc8501052e1b0be2e8b6fc99ba3055b05d336ae0",
+  "commit_sha": "d39181be05bd4b4d6f1ac47a4cda3c43825e79c4",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -174,8 +174,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 10,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "timer": {
@@ -638,5 +638,5 @@
       }
     }
   },
-  "generated_at": "2025-11-17T01:27:15.699681"
+  "generated_at": "2025-11-18T01:14:26.719233"
 }
