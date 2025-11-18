@@ -421,7 +421,7 @@ esp32p4.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
 esp32p4.menu.ChipVariant.prev3.build.f_cpu=360000000L
 esp32p4.menu.ChipVariant.postv3=v3.00 or newer
 esp32p4.menu.ChipVariant.postv3.build.chip_variant=esp32p4
-esp32p4.menu.ChipVariant.prev3.build.f_cpu=400000000L
+esp32p4.menu.ChipVariant.postv3.build.f_cpu=400000000L
 
 ## IDE 2.0 Seems to not update the value
 esp32p4.menu.JTAGAdapter.default=Disabled
@@ -520,12 +520,6 @@ esp32p4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
 esp32p4.menu.PartitionScheme.custom=Custom
 esp32p4.menu.PartitionScheme.custom.build.partitions=
 esp32p4.menu.PartitionScheme.custom.upload.maximum_size=16777216
-
-## From https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/kconfig.html#config-esp-default-cpu-freq-mhz
-esp32p4.menu.CPUFreq.360=360MHz
-esp32p4.menu.CPUFreq.360.build.f_cpu=360000000L
-esp32p4.menu.CPUFreq.40=40MHz
-esp32p4.menu.CPUFreq.40.build.f_cpu=40000000L
 
 esp32p4.menu.FlashMode.qio=QIO
 esp32p4.menu.FlashMode.qio.build.flash_mode=dio
