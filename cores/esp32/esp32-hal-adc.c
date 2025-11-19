@@ -108,11 +108,14 @@ static bool adcDetachBus(void *pin) {
       if (err != ESP_OK) {
         return false;
       }
-#else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
       err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
       if (err != ESP_OK) {
         return false;
       }
+#else
+      log_e("ADC Calibration scheme is not supported!");
+      return false;
 #endif
     }
     adc_handle[adc_unit].adc_cali_handle = NULL;
@@ -160,7 +163,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
             log_e("adc_cali_create_scheme_curve_fitting failed with error: %d", err);
             return err;
           }
-#else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
           log_d("Deleting ADC_UNIT_%d line cali handle", adc_unit);
           err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
           if (err != ESP_OK) {
@@ -178,6 +181,9 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
             log_e("adc_cali_create_scheme_line_fitting failed with error: %d", err);
             return err;
           }
+#else
+          log_e("ADC Calibration scheme is not supported!");
+          return ESP_ERR_NOT_SUPPORTED;
 #endif
         }
       }
@@ -343,13 +349,16 @@ uint32_t __analogReadMilliVolts(uint8_t pin) {
       .bitwidth = __analogWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __analogWidth,
       .atten = __analogAttenuation,
     };
     err = adc_cali_create_scheme_line_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return value;
 #endif
     if (err != ESP_OK) {
       log_e("adc_cali_create_scheme_x failed!");
@@ -412,11 +421,14 @@ static bool adcContinuousDetachBus(void *adc_unit_number) {
       if (err != ESP_OK) {
         return false;
       }
-#else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
       err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
       if (err != ESP_OK) {
         return false;
       }
+#else
+      log_e("ADC Calibration scheme is not supported!");
+      return false;
 #endif
     }
     adc_handle[adc_unit].adc_cali_handle = NULL;
@@ -585,13 +597,16 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
       .bitwidth = __adcContinuousWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#else //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __adcContinuousWidth,
       .atten = __adcContinuousAtten,
     };
     err = adc_cali_create_scheme_line_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return false;
 #endif
     if (err != ESP_OK) {
       log_e("adc_cali_create_scheme_x failed!");
