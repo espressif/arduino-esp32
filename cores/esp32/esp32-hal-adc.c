@@ -24,33 +24,29 @@
 #if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_ESP32P4_REV_MIN_FULL >= 300
 // NOTE: These weak definitions allow successful linkage if the real efuse calibration functions are missing.
 // This is a workaround for the ESP32P4 rev 3.0+, which is missing efuse calibration functions in the IDF.
-__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_ver(void)
-{
-    return 0;
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_ver(void) {
+  return 0;
 }
 
-__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_init_code(uint32_t atten, uint32_t *code)
-{
-    if (code) {
-        *code = 0;
-    }
-    return 0; // 0 means success in ESP-IDF conventions
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_init_code(uint32_t atten, uint32_t *code) {
+  if (code) {
+    *code = 0;
+  }
+  return 0;  // 0 means success in ESP-IDF conventions
 }
 
-__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_chan_compens(uint32_t atten, uint32_t *comp)
-{
-    if (comp) {
-        *comp = 0;
-    }
-    return 0;
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_chan_compens(uint32_t atten, uint32_t *comp) {
+  if (comp) {
+    *comp = 0;
+  }
+  return 0;
 }
 
-__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_cal_voltage(uint32_t atten, uint32_t *voltage)
-{
-    if (voltage) {
-        *voltage = 0;
-    }
-    return 0;
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_cal_voltage(uint32_t atten, uint32_t *voltage) {
+  if (voltage) {
+    *voltage = 0;
+  }
+  return 0;
 }
 #endif
 
