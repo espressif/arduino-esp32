@@ -86,7 +86,7 @@ typedef struct {
   uint8_t channel;     /*!<ADC channel */
   int avg_read_raw;    /*!<ADC average raw data */
   int avg_read_mvolts; /*!<ADC average voltage in mV */
-} adc_continuous_data_t;
+} adc_continuous_result_t;
 
 /*
  * Setup ADC continuous peripheral
@@ -96,7 +96,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
 /*
  * Read ADC continuous conversion data
  * */
-bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms);
+bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms);
 
 /*
  * Start ADC continuous conversions
