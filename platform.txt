@@ -27,8 +27,8 @@ tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_p
 compiler.path={tools.{build.tarch}-esp-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
-compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
-compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.mcu}
+compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.chip_variant}
+compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.chip_variant}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
@@ -85,6 +85,7 @@ build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32p4=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
 build.extra_flags.esp32c5=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32c61=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
 build.zigbee_mode=
@@ -105,6 +106,7 @@ build.event_core=
 build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32=ESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
 build.extra_libs=
 build.memory_type={build.boot}_qspi
+build.chip_variant={build.mcu}
 
 # Custom build options
 build.opt.name=build_opt.h

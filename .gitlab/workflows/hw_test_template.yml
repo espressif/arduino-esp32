@@ -12,13 +12,13 @@ include:
 hw-test-template:
   stage: test
   image: python:3.12-bookworm
+  timeout: 5h
 
   rules:
     - when: on_success
 
   variables:
     RUNNER_SCRIPT_TIMEOUT: 4h
-    RUNNER_AFTER_SCRIPT_TIMEOUT: 2h
     DEBIAN_FRONTEND: "noninteractive"
     TEST_TYPE: $TEST_TYPE
     TEST_CHIP: $TEST_CHIP
@@ -50,7 +50,7 @@ hw-test-template:
         [ -z "$d" ] && continue;
         sketch=$(basename "$d");
         echo Running $sketch in $d;
-        bash .github/scripts/tests_run.sh -t $TEST_CHIP -s $sketch -e || rc=$?;
+        bash .github/scripts/tests_run.sh -t "$TEST_CHIP" -s "$sketch" -e -wifi-ssid "$RUNNER_WIFI_SSID" -wifi-password "$RUNNER_WIFI_PASSWORD" || rc=$?;
       done <<< "$TEST_LIST"; exit $rc
 
   artifacts:

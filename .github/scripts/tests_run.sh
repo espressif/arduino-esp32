@@ -92,7 +92,6 @@ function run_test {
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
-
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args=("--embedded-services" "qemu" "--qemu-image-path" "$build_dir/$sketchname.ino.merged.bin")
@@ -111,15 +110,23 @@ function run_test {
 
         rm "$sketchdir"/diagram.json 2>/dev/null || true
 
+        local wifi_args=""
+        if [ -n "$wifi_ssid" ]; then
+            wifi_args="--wifi-ssid \"$wifi_ssid\""
+        fi
+        if [ -n "$wifi_password" ]; then
+            wifi_args="$wifi_args --wifi-password \"$wifi_password\""
+        fi
+
         result=0
-        printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
-        bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
+        printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}" "$wifi_args"
+        bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q} $wifi_args; exit \$?" || result=$?
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
-            printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}"
-            bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q}; exit \$?" || result=$?
+            printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}" "$wifi_args"
+            bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q} $wifi_args; exit \$?" || result=$?
             printf "\n"
             if [ $result -ne 0 ]; then
                 printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
@@ -137,6 +144,8 @@ platform="hardware"
 chunk_run=0
 options=0
 erase=0
+wifi_ssid=""
+wifi_password=""
 
 while [ -n "$1" ]; do
     case $1 in
@@ -151,7 +160,6 @@ while [ -n "$1" ]; do
         platform="qemu"
         ;;
     -W )
-        shift
         if [[ -z $WOKWI_CLI_TOKEN ]]; then
             echo "Wokwi CLI token is not set"
             exit 1
@@ -187,6 +195,14 @@ while [ -n "$1" ]; do
     -type )
         shift
         test_type=$1
+        ;;
+    -wifi-ssid )
+        shift
+        wifi_ssid=$1
+        ;;
+    -wifi-password )
+        shift
+        wifi_password=$1
         ;;
     * )
         break
