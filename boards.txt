@@ -52949,9 +52949,6 @@ soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.huge_app.upload.maximum_siz
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.rainmaker=RainMaker 4MB
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
