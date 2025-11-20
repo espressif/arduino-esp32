@@ -16,6 +16,7 @@ def wifi_ssid(request):
 def wifi_pass(request):
     return request.config.getoption("--wifi-password")
 
+
 @pytest.fixture(scope="session")
 def ci_job_id(request):
     return os.environ.get("CI_JOB_ID")

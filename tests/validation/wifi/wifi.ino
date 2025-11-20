@@ -108,7 +108,7 @@ void readWiFiCredentials() {
     if (Serial.available()) {
       password = Serial.readStringUntil('\n');
       password.trim();
-      password_received = true; // Accept even empty password
+      password_received = true;  // Accept even empty password
     }
     delay(100);
   }
