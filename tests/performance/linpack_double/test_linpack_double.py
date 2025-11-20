@@ -48,13 +48,14 @@ def test_linpack_double(dut, request):
     results = {"linpack_double": {"runs": runs, "avg_score": avg_score, "min_score": min_score, "max_score": max_score}}
 
     current_folder = os.path.dirname(request.path)
+    os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)
     file_index = 0
     report_file = os.path.join(current_folder, dut.app.target, "result_linpack_double" + str(file_index) + ".json")
     while os.path.exists(report_file):
         report_file = report_file.replace(str(file_index) + ".json", str(file_index + 1) + ".json")
         file_index += 1
 
-    with open(report_file, "w") as f:
+    with open(report_file, "w+") as f:
         try:
             f.write(json.dumps(results))
         except Exception as e:

@@ -234,6 +234,10 @@ public:
   static bool setOwnAddr(uint8_t *addr);
   static void setDeviceCallbacks(BLEDeviceCallbacks *cb);
   static bool onWhiteList(BLEAddress &address);
+#if CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
+  // Set SDIO pins for connection to external ESP MCU
+  static bool setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
+#endif
 #endif
 
 private:
