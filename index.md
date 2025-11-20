@@ -76,7 +76,7 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 | ESP32-S3 |     Yes    |       Yes       | [ESP32-S3](https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf) |
 
 > [!NOTE]
-> ESP32-C2 is also supported by Arduino-ESP32 but requires using Arduino as an ESP-IDF component or rebuilding the static libraries.
+> ESP32-C2 and ESP32-C61 are also supported by Arduino-ESP32 but require using Arduino as an ESP-IDF component or rebuilding the static libraries.
 > For more information, see the [Arduino as an ESP-IDF component documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/esp-idf_component.html) or the
 > [Lib Builder documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/lib_builder.html), respectively.
 
