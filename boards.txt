@@ -52827,7 +52827,7 @@ soldered_nula_deepsleep_esp32s3.build.cdc_on_boot=0
 soldered_nula_deepsleep_esp32s3.build.msc_on_boot=0
 soldered_nula_deepsleep_esp32s3.build.dfu_on_boot=0
 soldered_nula_deepsleep_esp32s3.build.f_cpu=240000000L
-soldered_nula_deepsleep_esp32s3.build.flash_size=4MB
+soldered_nula_deepsleep_esp32s3.build.flash_size=8MB
 soldered_nula_deepsleep_esp32s3.build.flash_freq=80m
 soldered_nula_deepsleep_esp32s3.build.flash_mode=dio
 soldered_nula_deepsleep_esp32s3.build.boot=qio
@@ -52946,7 +52946,7 @@ soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.noota_3gffat.upload.maximum
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.huge_app.build.partitions=huge_app
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 soldered_nula_deepsleep_esp32s3.menu.PartitionScheme.rainmaker=RainMaker 4MB
