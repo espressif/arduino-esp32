@@ -15,11 +15,11 @@ def test_wifi(dut, wifi_ssid, wifi_pass):
 
     dut.expect_exact("Send SSID:")
     LOGGER.info(f"Sending WiFi credentials: SSID={wifi_ssid}")
-    dut.write(f"{wifi_ssid}")
+    dut.write(f"{wifi_ssid}\n")
 
     dut.expect_exact("Send Password:")
     LOGGER.info(f"Sending WiFi password: Password={wifi_pass}")
-    dut.write(f"{wifi_pass or ''}")
+    dut.write(f"{wifi_pass or ''}\n")
 
     # Verify credentials were received
     dut.expect_exact(f"SSID: {wifi_ssid}")

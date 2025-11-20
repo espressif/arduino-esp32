@@ -89,6 +89,12 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
 
 void readWiFiCredentials() {
   Serial.println("Waiting for WiFi credentials...");
+
+  // Flush any existing data in serial buffer
+  while (Serial.available()) {
+    Serial.read();
+  }
+
   Serial.println("Send SSID:");
 
   // Wait for SSID
@@ -100,17 +106,28 @@ void readWiFiCredentials() {
     delay(100);
   }
 
+  // Flush any remaining data from SSID input
+  while (Serial.available()) {
+    Serial.read();
+  }
+
   Serial.println("Send Password:");
 
   // Wait for password (allow empty password)
   bool password_received = false;
-  while (!password_received) {
+  unsigned long timeout = millis() + 10000;  // 10 second timeout
+  while (!password_received && millis() < timeout) {
     if (Serial.available()) {
       password = Serial.readStringUntil('\n');
       password.trim();
       password_received = true;  // Accept even empty password
     }
     delay(100);
+  }
+
+  // Flush any remaining data
+  while (Serial.available()) {
+    Serial.read();
   }
 
   Serial.print("SSID: ");

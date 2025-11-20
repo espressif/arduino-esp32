@@ -92,7 +92,6 @@ function run_test {
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
-
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args=("--embedded-services" "qemu" "--qemu-image-path" "$build_dir/$sketchname.ino.merged.bin")
@@ -161,7 +160,6 @@ while [ -n "$1" ]; do
         platform="qemu"
         ;;
     -W )
-        shift
         if [[ -z $WOKWI_CLI_TOKEN ]]; then
             echo "Wokwi CLI token is not set"
             exit 1
