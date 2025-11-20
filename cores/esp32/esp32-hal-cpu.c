@@ -206,8 +206,11 @@ const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
   int pos = 0;
 
 #if TARGET_CPU_FREQ_MAX_400
-  // P4 does not support 400MHz yet
+#if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_ESP32P4_REV_MIN_FULL < 300
   pos += snprintf(supported_frequencies + pos, 256 - pos, "360");
+#else
+  pos += snprintf(supported_frequencies + pos, 256 - pos, "400");
+#endif
 #elif TARGET_CPU_FREQ_MAX_240
 #if CONFIG_IDF_TARGET_ESP32
   if (!REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_RATED) || !REG_GET_BIT(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_CPU_FREQ_LOW)) {
