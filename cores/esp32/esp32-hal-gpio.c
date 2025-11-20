@@ -127,11 +127,15 @@ extern void ARDUINO_ISR_ATTR __pinMode(uint8_t pin, uint8_t mode) {
   gpiohal.dev = GPIO_LL_GET_HW(GPIO_PORT_0);
 
   gpio_config_t conf = {
-    .pin_bit_mask = (1ULL << pin),              /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
-    .mode = GPIO_MODE_DISABLE,                  /*!< GPIO mode: set input/output mode                     */
-    .pull_up_en = GPIO_PULLUP_DISABLE,          /*!< GPIO pull-up                                         */
-    .pull_down_en = GPIO_PULLDOWN_DISABLE,      /*!< GPIO pull-down                                       */
+    .pin_bit_mask = (1ULL << pin),         /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+    .mode = GPIO_MODE_DISABLE,             /*!< GPIO mode: set input/output mode                     */
+    .pull_up_en = GPIO_PULLUP_DISABLE,     /*!< GPIO pull-up                                         */
+    .pull_down_en = GPIO_PULLDOWN_DISABLE, /*!< GPIO pull-down                                       */
+#ifndef CONFIG_IDF_TARGET_ESP32C61
     .intr_type = gpiohal.dev->pin[pin].int_type /*!< GPIO interrupt type - previously set                 */
+#else
+    .intr_type = gpiohal.dev->pinn[pin].pinn_int_type /*!< GPIO interrupt type - previously set                 */
+#endif
   };
   if (mode < 0x20) {  //io
     conf.mode = mode & (INPUT | OUTPUT);
