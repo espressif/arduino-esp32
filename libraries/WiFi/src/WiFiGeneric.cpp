@@ -264,6 +264,12 @@ bool wifiLowLevelInit(bool persistent) {
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+    // required for proper work when esp-hosted is used.
+    cfg.nvs_enable = false;
+    persistent = false;
+#endif
+
     if (!WiFiGenericClass::useStaticBuffers()) {
       cfg.static_tx_buf_num = 0;
       cfg.dynamic_tx_buf_num = 32;
