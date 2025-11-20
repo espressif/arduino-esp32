@@ -234,8 +234,8 @@ void setup() {
     delay(10);
   }
 
-  void *dest = malloc(MAX_TEST_SIZE);
-  const void *src = malloc(MAX_TEST_SIZE);
+  void *dest = heap_caps_malloc(MAX_TEST_SIZE, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+  const void *src = heap_caps_malloc(MAX_TEST_SIZE, MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
 
   if (!dest || !src) {
     Serial.println("Memory allocation failed");

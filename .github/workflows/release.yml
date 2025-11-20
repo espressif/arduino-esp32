@@ -68,7 +68,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/hosted
 
           # Copy hosted binaries to proper directory without overwriting existing files
-          cp -n ${{ github.workspace }}/hosted-latest/*.bin ${{ github.workspace }}/hosted/
+          cp --update=none ${{ github.workspace }}/hosted-latest/*.bin ${{ github.workspace }}/hosted/
 
           # Commit the changes
           git config user.name "github-actions[bot]"

@@ -38,8 +38,8 @@
 
 #include <WiFi.h>
 
-const char *ssid = "Wokwi-GUEST";
-const char *password = "";
+String ssid = "";
+String password = "";
 
 // WARNING: This function is called from a separate FreeRTOS task (thread)!
 void WiFiEvent(WiFiEvent_t event) {
@@ -87,13 +87,55 @@ void WiFiGotIP(WiFiEvent_t event, WiFiEventInfo_t info) {
   Serial.println(IPAddress(info.got_ip.ip_info.ip.addr));
 }
 
+void readWiFiCredentials() {
+  Serial.println("Waiting for WiFi credentials...");
+  Serial.println("Send SSID:");
+
+  // Wait for SSID
+  while (ssid.length() == 0) {
+    if (Serial.available()) {
+      ssid = Serial.readStringUntil('\n');
+      ssid.trim();
+    }
+    delay(100);
+  }
+
+  Serial.println("Send Password:");
+
+  // Wait for password (allow empty password)
+  bool password_received = false;
+  while (!password_received) {
+    if (Serial.available()) {
+      password = Serial.readStringUntil('\n');
+      password.trim();
+      password_received = true;  // Accept even empty password
+    }
+    delay(100);
+  }
+
+  Serial.print("SSID: ");
+  Serial.println(ssid);
+  Serial.print("Password: ");
+  Serial.println(password);
+}
+
 void setup() {
   Serial.begin(115200);
+
+  while (!Serial) {
+    delay(100);
+  }
 
   // delete old config
   WiFi.disconnect(true);
 
   delay(1000);
+
+  // Wait for test to be ready
+  Serial.println("Device ready for WiFi credentials");
+
+  // Read WiFi credentials from serial
+  readWiFiCredentials();
 
   // Examples of different ways to register wifi events;
   // these handlers will be called from another thread.
@@ -134,7 +176,7 @@ void setup() {
   // Delete the scan result to free memory for code below.
   WiFi.scanDelete();
 
-  WiFi.begin(ssid, password);
+  WiFi.begin(ssid.c_str(), password.c_str());
 
   Serial.println();
   Serial.println();
