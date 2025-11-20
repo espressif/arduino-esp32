@@ -328,13 +328,8 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = 100000L;
   }
   frequency = (frequency * 5) / 4;
-#if CONFIG_IDF_TARGET_ESP32 || \
-    CONFIG_IDF_TARGET_ESP32C2 || \
-    CONFIG_IDF_TARGET_ESP32C3 || \
-    CONFIG_IDF_TARGET_ESP32C6 || \
-    CONFIG_IDF_TARGET_ESP32H2 || \
-    CONFIG_IDF_TARGET_ESP32S2 || \
-    CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
+  || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1

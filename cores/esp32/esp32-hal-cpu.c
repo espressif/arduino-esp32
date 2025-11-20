@@ -34,36 +34,36 @@
 #if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
 #include "xtensa_timer.h"
 #include "esp32/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "8.5M", "APLL" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "8.5M", "APLL"};
 #elif CONFIG_IDF_TARGET_ESP32S2
 #include "xtensa_timer.h"
 #include "esp32s2/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "8.5M", "APLL" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "8.5M", "APLL"};
 #elif CONFIG_IDF_TARGET_ESP32S3
 #include "xtensa_timer.h"
 #include "esp32s3/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "17.5M" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "17.5M"};
 #elif CONFIG_IDF_TARGET_ESP32C2
 #include "esp32c2/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "17.5M" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "17.5M"};
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "17.5M" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "17.5M"};
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "17.5M" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "17.5M"};
 #elif CONFIG_IDF_TARGET_ESP32H2
 #include "esp32h2/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "PLL", "8.5M", "FLASH_PLL" };
+static const char *clock_source_names[] = {"XTAL", "PLL", "8.5M", "FLASH_PLL"};
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "CPLL", "17.5M" };
+static const char *clock_source_names[] = {"XTAL", "CPLL", "17.5M"};
 #elif CONFIG_IDF_TARGET_ESP32C5
 #include "esp32c5/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "17.5M", "PLL_F160M", "PLL_F240M" };
+static const char *clock_source_names[] = {"XTAL", "17.5M", "PLL_F160M", "PLL_F240M"};
 #elif CONFIG_IDF_TARGET_ESP32C61
 #include "esp32c61/rom/rtc.h"
-static const char *clock_source_names[] = { "XTAL", "17.5M", "PLL_F160M" };
+static const char *clock_source_names[] = {"XTAL", "17.5M", "PLL_F160M"};
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -251,7 +251,8 @@ const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
 bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   rtc_cpu_freq_config_t conf, cconf;
   uint32_t capb, apb;
-  [[maybe_unused]] uint8_t xtal = 0;
+  [[maybe_unused]]
+  uint8_t xtal = 0;
 
   // ===== Get XTAL Frequency and validate input =====
 #if TARGET_HAS_XTAL_FREQ
