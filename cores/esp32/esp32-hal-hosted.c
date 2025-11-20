@@ -66,6 +66,11 @@ void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
 }
 
 bool hostedHasUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   uint32_t host_version = ESP_HOSTED_VERSION_VAL(host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
   uint32_t slave_version = 0;
 
@@ -106,6 +111,11 @@ char *hostedGetUpdateURL() {
 }
 
 bool hostedBeginUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_begin();
   if (err != ESP_OK) {
     log_e("Failed to begin Update: %s", esp_err_to_name(err));
@@ -114,6 +124,11 @@ bool hostedBeginUpdate() {
 }
 
 bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_write(buf, len);
   if (err != ESP_OK) {
     log_e("Failed to write Update: %s", esp_err_to_name(err));
@@ -122,6 +137,11 @@ bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
 }
 
 bool hostedEndUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_end();
   if (err != ESP_OK) {
     log_e("Failed to end Update: %s", esp_err_to_name(err));
@@ -130,6 +150,11 @@ bool hostedEndUpdate() {
 }
 
 bool hostedActivateUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_activate();
   if (err != ESP_OK) {
     log_e("Failed to activate Update: %s", esp_err_to_name(err));
@@ -167,6 +192,7 @@ static bool hostedInit() {
     log_i("ESP-Hosted initialized!");
     if (esp_hosted_connect_to_slave() != ESP_OK) {
       log_e("Failed to connect to slave");
+      hosted_initialized = false;
       return false;
     }
     hostedHasUpdate();
