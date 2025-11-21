@@ -182,6 +182,10 @@ recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}
 recipe.hooks.objcopy.postobjcopy.3.pattern_args=--chip {build.mcu} merge-bin -o "{build.path}/{build.project_name}.merged.bin" --pad-to-size {build.flash_size} --flash-mode keep --flash-freq keep --flash-size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
 
+# Generate flash_args file
+recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size}' > '{build.path}/flash_args' && echo '{build.bootloader_addr} {build.project_name}.bootloader.bin' >> '{build.path}/flash_args' && echo '0x8000 {build.project_name}.partitions.bin' >> '{build.path}/flash_args' && echo '0xe000 boot_app0.bin' >> '{build.path}/flash_args' && echo '0x10000 {build.project_name}.bin' >> '{build.path}/flash_args'"
+recipe.hooks.objcopy.postobjcopy.4.pattern.windows=cmd /c echo --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} > "{build.path}\flash_args" && echo {build.bootloader_addr} {build.project_name}.bootloader.bin >> "{build.path}\flash_args" && echo 0x8000 {build.project_name}.partitions.bin >> "{build.path}\flash_args" && echo 0xe000 boot_app0.bin >> "{build.path}\flash_args" && echo 0x10000 {build.project_name}.bin >> "{build.path}\flash_args"
+
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
 recipe.output.save_file={build.project_name}.{build.variant}.bin
