@@ -26,7 +26,6 @@ on:
       - "idf_component_examples/**"
       - "idf_component.yml"
       - "Kconfig.projbuild"
-      - "CMakeLists.txt"
       - ".github/workflows/build_component.yml"
       - ".github/scripts/check-cmakelists.sh"
       - ".github/scripts/on-push-idf.sh"
@@ -45,6 +44,7 @@ on:
       - "!*.md"
       - "!*.txt"
       - "!*.properties"
+      - "CMakeLists.txt"
 
 permissions:
   contents: read
