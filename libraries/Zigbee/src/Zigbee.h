@@ -31,6 +31,7 @@
 #include "ep/ZigbeeColorDimmableLight.h"
 #include "ep/ZigbeeDimmableLight.h"
 #include "ep/ZigbeeLight.h"
+#include "ep/ZigbeeTemperatureDimmableLight.h"
 //// Controllers
 #include "ep/ZigbeeThermostat.h"
 #include "ep/ZigbeeFanControl.h"
