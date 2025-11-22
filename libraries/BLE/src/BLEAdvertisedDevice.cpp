@@ -605,7 +605,7 @@ String BLEAdvertisedDevice::toString() {
     res += val;
   }
   if (haveRSSI()) {
-    char val[4];
+    char val[5];
     snprintf(val, sizeof(val), "%i", getRSSI());
     res += ", rssi: ";
     res += val;
