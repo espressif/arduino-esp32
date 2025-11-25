@@ -26,7 +26,7 @@
 #define LEDC_CHANNEL 0
 
 int brightness = 0;  // how bright the LED is
-int fadeAmount = 5;  // how many points to fade the LED by
+int fadeAmount = 4;  // how many points to fade the LED by
 
 void setup() {
   // Use single LEDC channel 0 for both pins
@@ -42,7 +42,7 @@ void loop() {
   brightness = brightness + fadeAmount;
 
   // reverse the direction of the fading at the ends of the fade:
-  if (brightness <= 0 || brightness >= 255) {
+  if (brightness <= 0 || brightness >= 256) {
     fadeAmount = -fadeAmount;
   }
   // wait for 30 milliseconds to see the dimming effect
