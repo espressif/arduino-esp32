@@ -90,6 +90,7 @@ set(ARDUINO_ALL_LIBRARIES
   ESP_I2S
   ESP_NOW
   ESP_SR
+  ESP_HostedOTA
   ESPmDNS
   Ethernet
   FFat
@@ -145,6 +146,9 @@ set(ARDUINO_LIBRARY_ESP_NOW_SRCS
 set(ARDUINO_LIBRARY_ESP_SR_SRCS
   libraries/ESP_SR/src/ESP_SR.cpp
   libraries/ESP_SR/src/esp32-hal-sr.c)
+
+set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
+  libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
