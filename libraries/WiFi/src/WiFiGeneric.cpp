@@ -375,7 +375,6 @@ static bool espWiFiStop() {
 
 bool WiFiGenericClass::_persistent = true;
 bool WiFiGenericClass::_long_range = false;
-wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
 #if CONFIG_IDF_TARGET_ESP32S2
 wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
 #else
@@ -666,7 +665,7 @@ bool WiFiGenericClass::enableAP(bool enable) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Enable or disable WiFi modem power save mode
  * @param enable bool
  * @return ok
  */
@@ -675,28 +674,33 @@ bool WiFiGenericClass::setSleep(bool enabled) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Set WiFi modem power save mode
  * @param mode wifi_ps_type_t
  * @return ok
  */
 bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
-  if (sleepType != _sleepEnabled) {
+  if (sleepType > WIFI_PS_MAX_MODEM) {
+    return false;
+  }
+
+  if (!WiFi.STA.started()) {
     _sleepEnabled = sleepType;
-    if (WiFi.STA.started()) {
-      esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
-      if (err != ESP_OK) {
-        log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
     return true;
   }
-  return false;
+
+  esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  _sleepEnabled = sleepType;
+  return true;
 }
 
 /**
- * get modem sleep enabled
- * @return true if modem sleep is enabled
+ * Get WiFi modem power save mode
+ * @return wifi_ps_type_t
  */
 wifi_ps_type_t WiFiGenericClass::getSleep() {
   return _sleepEnabled;
