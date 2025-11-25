@@ -1,4 +1,5 @@
 #include "sdkconfig.h"
+#include <stdbool.h>
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
 #include "Arduino.h"
 #include "esp32-hal-hosted.h"
