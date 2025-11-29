@@ -25,6 +25,11 @@
 #include "io_pin_remap.h"
 #include "esp32-hal-log.h"
 
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+#include "sd_pwr_ctrl_by_on_chip_ldo.h"
+#include "soc/sdmmc_pins.h"
+#endif
+
 #if !CONFIG_DISABLE_HAL_LOCKS
 #define SPI_PARAM_LOCK() \
   do {                   \
@@ -77,6 +82,33 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
     log_e("SPI bus %d start failed.", _spi_num);
     return false;
   }
+
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL
+  bool intersection = false;
+  int8_t requested[] = {sck, miso, mosi, ss};
+  int8_t ldo_ctrld[] = {SDMMC_SLOT0_IOMUX_PIN_NUM_CLK, SDMMC_SLOT0_IOMUX_PIN_NUM_CMD, SDMMC_SLOT0_IOMUX_PIN_NUM_D0, SDMMC_SLOT0_IOMUX_PIN_NUM_D1, SDMMC_SLOT0_IOMUX_PIN_NUM_D2, SDMMC_SLOT0_IOMUX_PIN_NUM_D3};
+  for (int i=0; i<4; i++) {
+    for (int j=0; j<6; j++) {
+      if (requested[i] == ldo_ctrld[j]) {
+         intersection = true;
+         break;
+      }
+    }
+      if (intersection) break;
+  }
+  if (intersection) {
+    sd_pwr_ctrl_ldo_config_t ldo_config;
+    ldo_config.ldo_chan_id = BOARD_SDMMC_POWER_CHANNEL;
+    sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
+    sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle);
+    if (sd_pwr_ctrl_set_io_voltage(pwr_ctrl_handle, 3300)) {
+      log_e("Unable to set power control to 3V3");
+      return false;
+    }
+    pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
+    digitalWrite(BOARD_SDMMC_POWER_PIN, BOARD_SDMMC_POWER_ON_LEVEL);
+  }
+#endif
 
   if (sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 #if CONFIG_IDF_TARGET_ESP32
