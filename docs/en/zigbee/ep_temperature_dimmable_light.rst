@@ -5,7 +5,7 @@ ZigbeeTemperatureDimmableLight
 About
 -----
 
-The ``ZigbeeTemperatureDimmableLight`` class provides an endpoint for tunable white (temperature dimmable) lights in Zigbee networks. This endpoint implements the Zigbee Home Automation (HA) standard for color temperature lighting devices, supporting on/off, dimming, color temperature control, and scene management.
+The ``ZigbeeTemperatureDimmableLight`` class provides an endpoint for tunable-white (temperature-dimmable) lights in Zigbee networks. This endpoint implements the Zigbee Home Automation (HA) standard for color temperature lighting devices, supporting on/off, dimming, color-temperature adjustment, and scene management.
 
 **Features:**
 * On/off control
@@ -21,8 +21,8 @@ The ``ZigbeeTemperatureDimmableLight`` class provides an endpoint for tunable wh
 * Smart tunable white bulbs
 * Adjustable white LED panels
 * Human-centric lighting
-* Office and home white lighting
-* Smart home white ambiance lighting
+* Office and home white-lighting
+* Smart-home white ambiance lighting
 
 API Reference
 -------------
@@ -33,7 +33,7 @@ Constructor
 ZigbeeTemperatureDimmableLight
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Creates a new Zigbee temperature dimmable light endpoint.
+Creates a new Zigbee temperature-dimmable light endpoint.
 
 .. code-block:: arduino
 
