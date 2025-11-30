@@ -282,8 +282,15 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 // Peripheral Manager detach callback for each specific UART PIN
 static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_RX: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_rxPin < 0) {
+    log_d("_uartDetachBus_RX: RX pin already detached for UART%d", bus->num);
+    return true;
+  }
   if (bus->_txPin < 0) { // both rx and tx pins are detached, terminate the uart driver
     uartEnd(bus->num);
     return true;  
@@ -293,8 +300,15 @@ static bool _uartDetachBus_RX(void *busptr) {
 
 static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_TX: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_txPin < 0) {
+    log_d("_uartDetachBus_TX: TX pin already detached for UART%d", bus->num);
+    return true;
+  }  
   if (bus->_rxPin < 0) { // both rx and tx pins are detached, terminate the uart driver
     uartEnd(bus->num);
     return true;  
@@ -304,15 +318,29 @@ static bool _uartDetachBus_TX(void *busptr) {
 
 static bool _uartDetachBus_CTS(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_CTS bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_CTS: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_ctsPin < 0) {
+    log_d("_uartDetachBus_CTS: CTS pin already detached for UART%d", bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_ctsPin, UART_PIN_NO_CHANGE);
 }
 
 static bool _uartDetachBus_RTS(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_RTS bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_RTS: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_rtsPin < 0) {
+    log_d("_uartDetachBus_RTS: RTS pin already detached for UART%d", bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_rtsPin);
 }
 
