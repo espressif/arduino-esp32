@@ -292,6 +292,7 @@ static bool _uartDetachBus_RX(void *busptr) {
     return true;
   }
   if (bus->_txPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+    log_d("_uartDetachBus_RX: both RX and TX pins detached for UART%d, terminating driver", bus->num);  
     uartEnd(bus->num);
     return true;  
   }
@@ -310,6 +311,7 @@ static bool _uartDetachBus_TX(void *busptr) {
     return true;
   }  
   if (bus->_rxPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+    log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
     uartEnd(bus->num);
     return true;  
   }
