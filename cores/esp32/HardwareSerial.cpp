@@ -483,9 +483,6 @@ void HardwareSerial::end() {
   // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
   _onReceiveCB = NULL;
   _onReceiveErrorCB = NULL;
-  if (uartGetDebug() == _uart_nr) {
-    uartSetDebug(0);
-  }
   _rxFIFOFull = 0;
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
   _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too

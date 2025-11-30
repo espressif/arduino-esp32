@@ -284,6 +284,10 @@ static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_txPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+    uartEnd(bus->num);
+    return true;  
+  }
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
@@ -291,6 +295,10 @@ static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
   assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_rxPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+    uartEnd(bus->num);
+    return true;  
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
@@ -985,6 +993,9 @@ void uartEnd(uint8_t uart_num) {
   _uartDetachPins(uart_num, uart->_rxPin, uart->_txPin, uart->_ctsPin, uart->_rtsPin);
   if (uart_is_driver_installed(uart_num)) {
     uart_driver_delete(uart_num);
+  }
+  if (uartGetDebug() == uart_num) {
+    uartSetDebug(0);
   }
   UART_MUTEX_UNLOCK();
 }
