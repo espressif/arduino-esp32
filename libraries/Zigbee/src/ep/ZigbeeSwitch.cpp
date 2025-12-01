@@ -22,6 +22,8 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID;
   _instance = this;  // Set the static pointer to this instance
   _device = nullptr;
+  _on_light_state_change = nullptr;
+  _on_light_state_change_with_source = nullptr;
 
   esp_zb_on_off_switch_cfg_t switch_cfg = ESP_ZB_DEFAULT_ON_OFF_SWITCH_CONFIG();
   _cluster_list = esp_zb_on_off_switch_clusters_create(&switch_cfg);
