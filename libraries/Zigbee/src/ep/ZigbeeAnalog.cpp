@@ -18,6 +18,7 @@
 
 ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
+  _on_analog_output_change = nullptr;
 
   //Create basic analog sensor clusters without configuration
   _cluster_list = esp_zb_zcl_cluster_list_create();
