@@ -667,6 +667,16 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   //log_v("setting UART%d pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
   //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
+  // mute bus detaching callbacks to avoid terminating the UART driver when both RX and TX pins are detached
+  peripheral_bus_deinit_cb_t rxDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX);
+  peripheral_bus_deinit_cb_t txDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX);
+  peripheral_bus_deinit_cb_t ctsDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_CTS);
+  peripheral_bus_deinit_cb_t rtsDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_CTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_RTS);
+
   // First step: detaches all previous UART pins
   bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
   if (rxPinChanged) {
@@ -698,6 +708,21 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   if (rtsPinChanged) {
     retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
   }
+
+  // restore bus detaching callbacks
+  if (rxDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, rxDeinit);
+  }
+  if (txDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, txDeinit);
+  }
+  if (ctsDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, ctsDeinit);
+  }
+  if (rtsDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, rtsDeinit);
+  }
+
   UART_MUTEX_UNLOCK();
 
   if (!retCode) {
