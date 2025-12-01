@@ -1,10 +1,10 @@
 /*
  * ESP-Hosted OTA Update Example
- * 
+ *
  * This example demonstrates how to update the ESP-Hosted co-processor firmware
  * over-the-air (OTA). The ESP-Hosted solution allows an ESP32 to act as a WiFi
  * co-processor for other microcontrollers.
- * 
+ *
  * Prerequisites:
  * - ESP32 with ESP-Hosted firmware configured as WiFi co-processor
  * - Network connectivity to download firmware updates
@@ -38,8 +38,8 @@ void setup() {
   // Step 5: Wait for WiFi connection to be established
   // Display progress dots while connecting
   while (WiFi.STA.status() != WL_CONNECTED) {
-    delay(500);           // Wait 500ms between connection attempts
-    Serial.print(".");    // Show connection progress
+    delay(500);         // Wait 500ms between connection attempts
+    Serial.print(".");  // Show connection progress
   }
   Serial.println();
 

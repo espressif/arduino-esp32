@@ -198,7 +198,7 @@ static bool hostedInit() {
     conf.pin_d3.pin = sdio_pin_config.pin_d3;
     conf.pin_reset.pin = sdio_pin_config.pin_reset;
     esp_err_t err = esp_hosted_sdio_set_config(&conf);
-    if (err != ESP_OK) { //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
+    if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
       log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
       return false;
     }
