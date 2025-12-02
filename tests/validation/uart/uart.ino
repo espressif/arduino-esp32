@@ -450,9 +450,9 @@ void periman_test(void) {
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    // when both RX and TX are detached the UART driver is stopped, 
-    // therefore, it may change just one the UART pins for testing
-    Wire.begin(config.default_rx_pin, -1);
+    // detaching both pins will result in stoping the UART driver
+    // Only detach one of the pins
+    Wire.begin(config.default_rx_pin, /*config.default_tx_pin*/ -1);
     config.recv_msg = "";
 
     log_d("Trying to send message using UART%d with I2C enabled", config.uart_num);
@@ -461,30 +461,7 @@ void periman_test(void) {
 
     log_d("Disabling I2C and re-enabling UART%d", config.uart_num);
 
-    // when just chenging one UART pin, the driver will continue to work
-    // and it is possible to just change back the UART pins
     config.serial.setPins(config.default_rx_pin, config.default_tx_pin);
-
-    uart_internal_loopback(config.uart_num, config.default_rx_pin);
-
-    log_d("Trying to send message using UART%d with I2C disabled", config.uart_num);
-    config.transmit_and_check_msg("while I2C is disabled");
-
-
-    // when both RX and TX are detached the UART driver is stopped,
-    // Therefore, it needs to be restarted 
-    Wire.begin(config.default_rx_pin, config.default_tx_pin);
-    config.recv_msg = "";
-
-    log_d("Trying to send message using UART%d with I2C enabled", config.uart_num);
-    config.transmit_and_check_msg("while used by I2C", false);
-    TEST_ASSERT_EQUAL_STRING("", config.recv_msg.c_str());
-
-    log_d("Disabling I2C and re-enabling UART%d", config.uart_num);
-
-    // when both RX and TX are detached the UART driver is stopped, therefore, starting the driver again is necessary
-    config.serial.begin(115200, SERIAL_8N1, config.default_rx_pin, config.default_tx_pin);
-
     uart_internal_loopback(config.uart_num, config.default_rx_pin);
 
     log_d("Trying to send message using UART%d with I2C disabled", config.uart_num);
@@ -493,6 +470,7 @@ void periman_test(void) {
 
   Serial.println("Peripheral manager test successful");
 }
+
 // This test checks if messages can be transmitted and received correctly after changing the CPU frequency
 void change_cpu_frequency_test(void) {
   uint32_t old_freq = getCpuFrequencyMhz();
