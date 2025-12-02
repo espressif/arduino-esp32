@@ -64,16 +64,43 @@
     },                                                                                   \
   }
 
+// Color capabilities bit flags (matching ZCL spec) - can be combined with bitwise OR
+#define ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION  (1 << 0)  // Bit 0: Hue/saturation supported
+#define ZIGBEE_COLOR_CAPABILITY_ENHANCED_HUE    (1 << 1)  // Bit 1: Enhanced hue supported
+#define ZIGBEE_COLOR_CAPABILITY_COLOR_LOOP      (1 << 2)  // Bit 2: Color loop supported
+#define ZIGBEE_COLOR_CAPABILITY_X_Y            (1 << 3)  // Bit 3: XY supported
+#define ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP     (1 << 4)  // Bit 4: Color temperature supported
+
+// Color mode enum values (matching ZCL spec)
+enum ZigbeeColorMode {
+  ZIGBEE_COLOR_MODE_HUE_SATURATION = 0x00,  // CurrentHue and CurrentSaturation
+  ZIGBEE_COLOR_MODE_CURRENT_X_Y = 0x01,     // CurrentX and CurrentY
+  ZIGBEE_COLOR_MODE_TEMPERATURE = 0x02,     // ColorTemperature
+};
+
 class ZigbeeColorDimmableLight : public ZigbeeEP {
 public:
   ZigbeeColorDimmableLight(uint8_t endpoint);
   ~ZigbeeColorDimmableLight() {}
 
+  // Must be called before starting Zigbee, by default XY are selected as color mode
+  bool setLightColorCapabilities(uint16_t capabilities);
+
+  [[deprecated("Use onLightChangeRgb() instead. This will be removed in a future major version.")]]
   void onLightChange(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t)) {
     _on_light_change = callback;
   }
+  void onLightChangeRgb(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t)) {
+    _on_light_change_rgb = callback;
+  }
+  void onLightChangeHsv(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t)) {
+    _on_light_change_hsv = callback;
+  }
+  void onLightChangeTemp(void (*callback)(bool, uint8_t, uint16_t)) {
+    _on_light_change_temp = callback;
+  }
   void restoreLight() {
-    lightChanged();
+    lightChangedByMode();
   }
 
   bool setLightState(bool state);
@@ -81,7 +108,9 @@ public:
   bool setLightColor(uint8_t red, uint8_t green, uint8_t blue);
   bool setLightColor(espRgbColor_t rgb_color);
   bool setLightColor(espHsvColor_t hsv_color);
+  bool setLightColorTemperature(uint16_t color_temperature);
   bool setLight(bool state, uint8_t level, uint8_t red, uint8_t green, uint8_t blue);
+  bool setLightColorTemperatureRange(uint16_t min_temp, uint16_t max_temp);
 
   bool getLightState() {
     return _current_state;
@@ -101,22 +130,56 @@ public:
   uint8_t getLightBlue() {
     return _current_color.b;
   }
+  uint16_t getLightColorTemperature() {
+    return _current_color_temperature;
+  }
+  uint8_t getLightColorMode() {
+    return _current_color_mode;
+  }
+  uint8_t getLightColorHue() {
+    return _current_hsv.h;
+  }
+  uint8_t getLightColorSaturation() {
+    return _current_hsv.s;
+  }
+  uint16_t getLightColorCapabilities() {
+    return _color_capabilities;
+  }
+
+
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  bool setLightColorMode(uint8_t color_mode);
 
   uint16_t getCurrentColorX();
   uint16_t getCurrentColorY();
   uint8_t getCurrentColorHue();
   uint8_t getCurrentColorSaturation();
+  uint16_t getCurrentColorTemperature();
 
   void lightChanged();
-  //callback function to be called on light change (State, R, G, B, Level)
+  void lightChangedRgb();
+  void lightChangedHsv();
+  void lightChangedTemp();
+  void lightChangedByMode();
+  //callback function to be called on light change (State, R, G, B, Level) - legacy
   void (*_on_light_change)(bool, uint8_t, uint8_t, uint8_t, uint8_t);
+  //callback function to be called on light change for RGB (State, R, G, B, Level)
+  void (*_on_light_change_rgb)(bool, uint8_t, uint8_t, uint8_t, uint8_t);
+  //callback function to be called on light change for HSV (State, H, S, V, Level)
+  void (*_on_light_change_hsv)(bool, uint8_t, uint8_t, uint8_t, uint8_t);
+  //callback function to be called on light change for TEMP (State, Level, Temperature)
+  void (*_on_light_change_temp)(bool, uint8_t, uint16_t);
 
   bool _current_state;
   uint8_t _current_level;
   espRgbColor_t _current_color;
+  espHsvColor_t _current_hsv;
+  uint16_t _current_color_temperature;
+  uint8_t _current_color_mode;
+
+  uint16_t _color_capabilities;
 };
 
 #endif  // CONFIG_ZB_ENABLED
