@@ -32,7 +32,7 @@ enum MODIFIER_KEY {
   KEY_CTRL = BIT(0),
   KEY_SHIFT = BIT(1),
   KEY_ALT = BIT(2),
-  KEY_GUI = BIT(3),  /*!< GUI key (Command on macOS, Windows key on Windows) */
+  KEY_GUI = BIT(3), /*!< GUI key (Command on macOS, Windows key on Windows) */
   /* Left modifiers */
   KEY_LEFT_CTRL = BIT(0),
   KEY_LEFT_SHIFT = BIT(1),
