@@ -92,7 +92,7 @@ Callback Functions
 onLightChange
 ^^^^^^^^^^^^^
 
-.. deprecated:: This method is deprecated and will be removed in a future major version. Use :ref:`onLightChangeRgb <onLightChangeRgb>` instead.
+.. deprecated:: This method is deprecated and will be removed in a future major version. Use ``onLightChangeRgb()`` instead.
 
 Sets the legacy callback function for light state changes (RGB mode).
 
@@ -106,7 +106,7 @@ Sets the legacy callback function for light state changes (RGB mode).
    This method is deprecated. Please use ``onLightChangeRgb()`` for RGB/XY mode callbacks.
 
 onLightChangeRgb
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Sets the callback function for RGB/XY color mode changes.
 
@@ -223,7 +223,7 @@ Sets the light color temperature in mireds. Requires ``ZIGBEE_COLOR_CAPABILITY_C
 This function will return ``true`` if successful, ``false`` otherwise. Returns ``false`` if color temperature capability is not enabled.
 
 setLightColorTemperatureRange
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sets the minimum and maximum color temperature range supported by the hardware.
 
@@ -332,7 +332,7 @@ Gets the current blue component.
 This function will return current blue component (0-255).
 
 getLightColorTemperature
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Gets the current color temperature.
 
