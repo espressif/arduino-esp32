@@ -17,6 +17,7 @@
 
 ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID;
+  _on_state_change = nullptr;
 
   esp_zb_mains_power_outlet_cfg_t outlet_cfg = ESP_ZB_DEFAULT_MAINS_POWER_OUTLET_CONFIG();
   _cluster_list = esp_zb_mains_power_outlet_clusters_create(&outlet_cfg);

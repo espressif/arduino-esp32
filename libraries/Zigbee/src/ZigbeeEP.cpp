@@ -29,6 +29,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _cluster_list = nullptr;
   _on_identify = nullptr;
   _on_ota_state_change = nullptr;
+  _on_default_response = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;

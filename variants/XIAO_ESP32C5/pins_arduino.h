@@ -39,4 +39,7 @@ static const uint8_t D8 = 8;
 static const uint8_t D9 = 9;
 static const uint8_t D10 = 10;
 
+static const uint8_t BAT_VOLT_PIN = 6;
+static const uint8_t BAT_VOLT_PIN_EN = 26;
+
 #endif /* Pins_Arduino_h */

@@ -26,6 +26,12 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;
   _instance = this;   // Set the static pointer to this instance
   _device = nullptr;  // Initialize sensor pointer to null
+  _on_temp_receive = nullptr;
+  _on_temp_receive_with_source = nullptr;
+  _on_temp_config_receive = nullptr;
+  _on_humidity_receive = nullptr;
+  _on_humidity_receive_with_source = nullptr;
+  _on_humidity_config_receive = nullptr;
 
   //use custom config to avoid narrowing error -> must be fixed in zigbee-sdk
   esp_zb_thermostat_cfg_t thermostat_cfg = ZB_DEFAULT_THERMOSTAT_CONFIG();
