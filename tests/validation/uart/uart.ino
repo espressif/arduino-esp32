@@ -402,6 +402,7 @@ void change_pins_test(void) {
 
   Serial.println("Change pins test successful");
 }
+
 // This test checks if the auto baudrate detection works on ESP32 and ESP32-S2
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
 void auto_baudrate_test(void) {
