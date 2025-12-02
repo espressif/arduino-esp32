@@ -46,6 +46,8 @@ BLEAdvertisedDevice::BLEAdvertisedDevice() {
   m_txPower = 0;
   m_pScan = nullptr;
   m_advType = 0;
+  m_payload = nullptr;
+  m_payloadLength = 0;
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   m_callbackSent = false;
@@ -58,6 +60,108 @@ BLEAdvertisedDevice::BLEAdvertisedDevice() {
   m_haveTXPower = false;
   m_isLegacyAdv = true;
 }  // BLEAdvertisedDevice
+
+BLEAdvertisedDevice::~BLEAdvertisedDevice() {
+  if (m_payload != nullptr) {
+    free(m_payload);
+    m_payload = nullptr;
+    m_payloadLength = 0;
+  }
+}  // ~BLEAdvertisedDevice
+
+BLEAdvertisedDevice::BLEAdvertisedDevice(const BLEAdvertisedDevice &other) {
+  m_adFlag = other.m_adFlag;
+  m_appearance = other.m_appearance;
+  m_deviceType = other.m_deviceType;
+  m_manufacturerData = other.m_manufacturerData;
+  m_name = other.m_name;
+  m_rssi = other.m_rssi;
+  m_serviceUUIDs = other.m_serviceUUIDs;
+  m_serviceData = other.m_serviceData;
+  m_serviceDataUUIDs = other.m_serviceDataUUIDs;
+  m_txPower = other.m_txPower;
+  m_pScan = other.m_pScan;
+  m_advType = other.m_advType;
+  m_address = other.m_address;
+  m_addressType = other.m_addressType;
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  m_callbackSent = other.m_callbackSent;
+#endif
+
+  m_haveAppearance = other.m_haveAppearance;
+  m_haveManufacturerData = other.m_haveManufacturerData;
+  m_haveName = other.m_haveName;
+  m_haveRSSI = other.m_haveRSSI;
+  m_haveTXPower = other.m_haveTXPower;
+  m_isLegacyAdv = other.m_isLegacyAdv;
+
+  // Deep copy the payload
+  m_payloadLength = other.m_payloadLength;
+  if (other.m_payload != nullptr && other.m_payloadLength > 0) {
+    m_payload = (uint8_t *)malloc(m_payloadLength);
+    if (m_payload != nullptr) {
+      memcpy(m_payload, other.m_payload, m_payloadLength);
+    } else {
+      m_payloadLength = 0;
+    }
+  } else {
+    m_payload = nullptr;
+    m_payloadLength = 0;
+  }
+}  // BLEAdvertisedDevice copy constructor
+
+BLEAdvertisedDevice &BLEAdvertisedDevice::operator=(const BLEAdvertisedDevice &other) {
+  if (this == &other) {
+    return *this;
+  }
+
+  m_adFlag = other.m_adFlag;
+  m_appearance = other.m_appearance;
+  m_deviceType = other.m_deviceType;
+  m_manufacturerData = other.m_manufacturerData;
+  m_name = other.m_name;
+  m_rssi = other.m_rssi;
+  m_serviceUUIDs = other.m_serviceUUIDs;
+  m_serviceData = other.m_serviceData;
+  m_serviceDataUUIDs = other.m_serviceDataUUIDs;
+  m_txPower = other.m_txPower;
+  m_pScan = other.m_pScan;
+  m_advType = other.m_advType;
+  m_address = other.m_address;
+  m_addressType = other.m_addressType;
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  m_callbackSent = other.m_callbackSent;
+#endif
+
+  m_haveAppearance = other.m_haveAppearance;
+  m_haveManufacturerData = other.m_haveManufacturerData;
+  m_haveName = other.m_haveName;
+  m_haveRSSI = other.m_haveRSSI;
+  m_haveTXPower = other.m_haveTXPower;
+  m_isLegacyAdv = other.m_isLegacyAdv;
+
+  // Free existing payload and deep copy the new one
+  if (m_payload != nullptr) {
+    free(m_payload);
+  }
+
+  m_payloadLength = other.m_payloadLength;
+  if (other.m_payload != nullptr && other.m_payloadLength > 0) {
+    m_payload = (uint8_t *)malloc(m_payloadLength);
+    if (m_payload != nullptr) {
+      memcpy(m_payload, other.m_payload, m_payloadLength);
+    } else {
+      m_payloadLength = 0;
+    }
+  } else {
+    m_payload = nullptr;
+    m_payloadLength = 0;
+  }
+
+  return *this;
+}  // BLEAdvertisedDevice assignment operator
 
 bool BLEAdvertisedDevice::isLegacyAdvertisement() {
   return m_isLegacyAdv;
@@ -308,8 +412,27 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
   uint8_t ad_type;
   uint8_t sizeConsumed = 0;
   bool finished = false;
-  m_payload = payload;
-  m_payloadLength = total_len;
+
+  // Store/append raw payload data for later retrieval
+  // This handles both ADV and Scan Response packets by merging them
+  if (m_payload != nullptr && m_payloadLength > 0) {
+    // Append new payload data (scan response) to existing (advertisement)
+    uint8_t *new_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
+    if (new_payload != nullptr) {
+      memcpy(new_payload + m_payloadLength, payload, total_len);
+      m_payload = new_payload;
+      m_payloadLength += total_len;
+    }
+  } else {
+    // First payload - make a copy since the original buffer may be reused
+    m_payload = (uint8_t *)malloc(total_len);
+    if (m_payload != nullptr) {
+      memcpy(m_payload, payload, total_len);
+      m_payloadLength = total_len;
+    } else {
+      m_payloadLength = 0;
+    }
+  }
 
   while (!finished) {
     length = *payload;           // Retrieve the length of the record.
@@ -446,21 +569,38 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
 }  // parseAdvertisement
 
 /**
- * @brief Parse the advertising payload.
+ * @brief Set the advertising payload.
  * @param [in] payload The payload of the advertised device.
  * @param [in] total_len The length of payload
+ * @param [in] append If true, append to existing payload (for scan response merging)
  */
 void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len, bool append) {
-  if (m_payload == nullptr || m_payloadLength == 0) {
+  if (total_len == 0 || payload == nullptr) {
     return;
   }
 
-  if (append) {
-    m_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
-    memcpy(m_payload + m_payloadLength, payload, total_len);
+  if (append && m_payload != nullptr && m_payloadLength > 0) {
+    // Append scan response data to existing advertisement data
+    uint8_t *new_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
+    if (new_payload == nullptr) {
+      log_e("Failed to reallocate payload buffer");
+      return;
+    }
+    memcpy(new_payload + m_payloadLength, payload, total_len);
+    m_payload = new_payload;
     m_payloadLength += total_len;
   } else {
-    m_payload = payload;
+    // First payload or replacing existing - make a copy
+    if (m_payload != nullptr && m_payloadLength > 0) {
+      free(m_payload);
+    }
+    m_payload = (uint8_t *)malloc(total_len);
+    if (m_payload == nullptr) {
+      log_e("Failed to allocate payload buffer");
+      m_payloadLength = 0;
+      return;
+    }
+    memcpy(m_payload, payload, total_len);
     m_payloadLength = total_len;
   }
 }  // setPayload
