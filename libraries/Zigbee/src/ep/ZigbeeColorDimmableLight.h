@@ -68,7 +68,7 @@
 #define ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION  (1 << 0)  // Bit 0: Hue/saturation supported
 #define ZIGBEE_COLOR_CAPABILITY_ENHANCED_HUE    (1 << 1)  // Bit 1: Enhanced hue supported
 #define ZIGBEE_COLOR_CAPABILITY_COLOR_LOOP      (1 << 2)  // Bit 2: Color loop supported
-#define ZIGBEE_COLOR_CAPABILITY_X_Y            (1 << 3)  // Bit 3: XY supported
+#define ZIGBEE_COLOR_CAPABILITY_X_Y            (1 << 3)  // Bit 3: X/Y supported
 #define ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP     (1 << 4)  // Bit 4: Color temperature supported
 
 // Color mode enum values (matching ZCL spec)
@@ -145,8 +145,6 @@ public:
   uint16_t getLightColorCapabilities() {
     return _color_capabilities;
   }
-
-
 
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;

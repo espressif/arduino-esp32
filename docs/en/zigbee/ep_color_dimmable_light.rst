@@ -352,8 +352,8 @@ Gets the current active color mode.
     uint8_t getLightColorMode();
 
 This function will return current color mode:
-* ``ZIGBEE_COLOR_MODE_CURRENT_X_Y`` (0x01) - XY/RGB mode
 * ``ZIGBEE_COLOR_MODE_HUE_SATURATION`` (0x00) - HSV mode
+* ``ZIGBEE_COLOR_MODE_CURRENT_X_Y`` (0x01) - XY/RGB mode
 * ``ZIGBEE_COLOR_MODE_TEMPERATURE`` (0x02) - Temperature mode
 
 getLightColorHue

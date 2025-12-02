@@ -123,7 +123,7 @@ getLightColorMode	KEYWORD2
 getLightColorHue	KEYWORD2
 getLightColorSaturation	KEYWORD2
 getLightColorCapabilities	KEYWORD2
-onLightChange	KEYWORD2	KEYWORD2
+onLightChange	KEYWORD2
 onLightChangeRgb	KEYWORD2
 onLightChangeHsv	KEYWORD2
 onLightChangeTemp	KEYWORD2
@@ -132,7 +132,6 @@ onLightLevelChange	KEYWORD2
 onLightLevelChangeWithSource	KEYWORD2
 onLightStateChange	KEYWORD2
 onLightStateChangeWithSource	KEYWORD2
-
 
 # ZigbeeSwitch + ZigbeeColorDimmerSwitch
 lightToggle	KEYWORD2
