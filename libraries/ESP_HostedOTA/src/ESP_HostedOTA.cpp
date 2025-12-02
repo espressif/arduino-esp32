@@ -143,6 +143,10 @@ bool updateEspHostedSlave() {
     // Step 15: Clean up allocated buffer
     free(buff);
     Serial.println();
+  } else if (httpCode == HTTP_CODE_NOT_FOUND) {
+    Serial.println("ERROR: Update file not found!");
+  } else {
+    Serial.printf("ERROR: HTTP request failed with code %d!", httpCode);
   }
 
   // Step 16: Close HTTP connection
