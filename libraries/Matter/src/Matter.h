@@ -29,6 +29,10 @@
 #include <MatterEndpoints/MatterTemperatureSensor.h>
 #include <MatterEndpoints/MatterHumiditySensor.h>
 #include <MatterEndpoints/MatterContactSensor.h>
+<<<<<<< Updated upstream
+=======
+#include <MatterEndpoints/MatterWaterLeakDetector.h>
+>>>>>>> Stashed changes
 #include <MatterEndpoints/MatterPressureSensor.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
@@ -194,6 +198,10 @@ public:
   friend class MatterTemperatureSensor;
   friend class MatterHumiditySensor;
   friend class MatterContactSensor;
+<<<<<<< Updated upstream
+=======
+  friend class MatterWaterLeakDetector;
+>>>>>>> Stashed changes
   friend class MatterPressureSensor;
   friend class MatterOccupancySensor;
   friend class MatterOnOffPlugin;
