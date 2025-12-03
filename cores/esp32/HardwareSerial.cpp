@@ -66,23 +66,25 @@ extern void HWCDCSerialEvent(void) __attribute__((weak));
 extern "C" void hal_uart_notify_pins_detached(int uart_num) {
   log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
   switch (uart_num) {
-    case UART_NUM_0: Serial0.end(); break;
+    case 0: Serial0.end(); break;
 #if SOC_UART_NUM > 1
-    case UART_NUM_1: Serial1.end(); break;
+    case 1: Serial1.end(); break;
 #endif
 #if SOC_UART_NUM > 2
-    case UART_NUM_2: Serial2.end(); break;
+    case 2: Serial2.end(); break;
 #endif
 #if SOC_UART_NUM > 3
-    case UART_NUM_3: Serial3.end(); break;
+    case 3: Serial3.end(); break;
 #endif
 #if SOC_UART_NUM > 4
-    case UART_NUM_4: Serial4.end(); break;
+    case 4: Serial4.end(); break;
 #endif
 #if SOC_UART_NUM > 5
-    case UART_NUM_5: Serial5.end(); break;
+    case 5: Serial5.end(); break;
 #endif
-    default: break;
+    default:
+      log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); 
+      break;
   }
 }
 
