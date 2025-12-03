@@ -377,7 +377,7 @@ void change_pins_test(void) {
     UARTTestConfig &config = *uart_test_configs[0];
     // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
     pinMode(NEW_RX1, INPUT_PULLUP);
-    // Detaching both pins will result in stoping the UART driver
+    // Detaching both pins will result in stopping the UART driver
     // Only detach one of the pins
     config.serial.setPins(NEW_RX1, /*NEW_TX1*/ -1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
@@ -389,7 +389,7 @@ void change_pins_test(void) {
     for (int i = 0; i < TEST_UART_NUM; i++) {
       UARTTestConfig &config = *uart_test_configs[i];
       UARTTestConfig &next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
-      // Detaching both pins will result in stoping the UART driver
+      // Detaching both pins will result in stopping the UART driver
       // Only detach one of the pins
       config.serial.setPins(next_uart.default_rx_pin, /*next_uart.default_tx_pin*/ -1);
       TEST_ASSERT_EQUAL(uart_get_RxPin(config.uart_num), next_uart.default_rx_pin);
@@ -454,7 +454,7 @@ void periman_test(void) {
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    // Detaching both pins will result in stoping the UART driver
+    // Detaching both pins will result in stopping the UART driver
     // Only detach one of the pins
     Wire.begin(config.default_rx_pin, /*config.default_tx_pin*/ -1);
     config.recv_msg = "";
