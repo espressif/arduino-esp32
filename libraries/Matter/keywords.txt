@@ -21,6 +21,11 @@ FanModeSequence_t	KEYWORD1
 MatterTemperatureSensor	KEYWORD1
 MatterHumiditySensor	KEYWORD1
 MatterContactSensor	KEYWORD1
+<<<<<<< Updated upstream
+=======
+MatterRainSensor	KEYWORD1
+MatterWaterFreezeDetector	KEYWORD1
+>>>>>>> Stashed changes
 MatterPressureSensor	KEYWORD1
 MatterOccupancySensor	KEYWORD1
 MatterOnOffPlugin	KEYWORD1
@@ -90,6 +95,13 @@ setHumidity	KEYWORD2
 getHumidity	KEYWORD2
 setContact	KEYWORD2
 getContact	KEYWORD2
+<<<<<<< Updated upstream
+=======
+setRain	KEYWORD2
+getRain	KEYWORD2
+setFreeze	KEYWORD2
+getFreeze	KEYWORD2
+>>>>>>> Stashed changes
 setPressure	KEYWORD2
 getPressure	KEYWORD2
 setOccupancy	KEYWORD2
