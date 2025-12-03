@@ -294,7 +294,7 @@ static bool _uartDetachBus_RX(void *busptr) {
     log_d("_uartDetachBus_RX: RX pin already detached for UART%d", bus->num);
     return true;
   }
-  if (bus->_txPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+  if (bus->_txPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_RX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
     hal_uart_notify_pins_detached(bus->num);
     return true;
@@ -313,7 +313,7 @@ static bool _uartDetachBus_TX(void *busptr) {
     log_d("_uartDetachBus_TX: TX pin already detached for UART%d", bus->num);
     return true;
   }
-  if (bus->_rxPin < 0) { // both rx and tx pins are detached, terminate the uart driver
+  if (bus->_rxPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
     hal_uart_notify_pins_detached(bus->num);
     return true;

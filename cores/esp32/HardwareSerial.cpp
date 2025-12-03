@@ -82,9 +82,7 @@ extern "C" void hal_uart_notify_pins_detached(int uart_num) {
 #if SOC_UART_NUM > 5
     case 5: Serial5.end(); break;
 #endif
-    default:
-      log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); 
-      break;
+    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
   }
 }
 
