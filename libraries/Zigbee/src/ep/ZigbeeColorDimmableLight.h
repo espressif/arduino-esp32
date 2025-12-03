@@ -66,10 +66,10 @@
 
 // Color capabilities bit flags (matching ZCL spec) - can be combined with bitwise OR
 static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION = (1 << 0);  // Bit 0: Hue/saturation supported
-static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_ENHANCED_HUE = (1 << 1);   // Bit 1: Enhanced hue supported
-static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_COLOR_LOOP = (1 << 2);     // Bit 2: Color loop supported
-static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_X_Y = (1 << 3);            // Bit 3: X/Y supported
-static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP = (1 << 4);     // Bit 4: Color temperature supported
+static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_ENHANCED_HUE = (1 << 1);    // Bit 1: Enhanced hue supported
+static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_COLOR_LOOP = (1 << 2);      // Bit 2: Color loop supported
+static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_X_Y = (1 << 3);             // Bit 3: X/Y supported
+static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP = (1 << 4);      // Bit 4: Color temperature supported
 
 // Color mode enum values (matching ZCL spec)
 enum ZigbeeColorMode {

@@ -61,7 +61,7 @@ Configures which color modes are supported by the light. Must be called before s
     bool setLightColorCapabilities(uint16_t capabilities);
 
 * ``capabilities`` - Bit flags indicating supported color modes (can be combined with bitwise OR):
-  
+
   * ``ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION`` - Hue/Saturation support
   * ``ZIGBEE_COLOR_CAPABILITY_X_Y`` - XY (RGB) support
   * ``ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP`` - Color temperature support
@@ -76,11 +76,11 @@ Configures which color modes are supported by the light. Must be called before s
     light.setLightColorCapabilities(
         ZIGBEE_COLOR_CAPABILITY_X_Y | ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP
     );
-    
+
     // Enable all color modes
     light.setLightColorCapabilities(
-        ZIGBEE_COLOR_CAPABILITY_X_Y | 
-        ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION | 
+        ZIGBEE_COLOR_CAPABILITY_X_Y |
+        ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION |
         ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP
     );
 
@@ -136,7 +136,7 @@ Sets the callback function for RGB/XY color mode changes.
     void onLightChangeRgb(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t));
 
 * ``callback`` - Function pointer to the RGB light change callback (state, red, green, blue, level)
-  
+
   * ``state`` - Light state (true = on, false = off)
   * ``red`` - Red component (0-255)
   * ``green`` - Green component (0-255)
@@ -155,7 +155,7 @@ Sets the callback function for HSV (Hue/Saturation) color mode changes.
     void onLightChangeHsv(void (*callback)(bool, uint8_t, uint8_t, uint8_t));
 
 * ``callback`` - Function pointer to the HSV light change callback (state, hue, saturation, value)
-  
+
   * ``state`` - Light state (true = on, false = off)
   * ``hue`` - Hue component (0-254)
   * ``saturation`` - Saturation component (0-254)
@@ -173,7 +173,7 @@ Sets the callback function for color temperature mode changes.
     void onLightChangeTemp(void (*callback)(bool, uint8_t, uint16_t));
 
 * ``callback`` - Function pointer to the temperature light change callback (state, level, temperature_mireds)
-  
+
   * ``state`` - Light state (true = on, false = off)
   * ``level`` - Brightness level (0-255)
   * ``temperature_mireds`` - Color temperature in mireds (inverse of Kelvin)
@@ -255,7 +255,7 @@ Sets the light color temperature in mireds. Requires ``ZIGBEE_COLOR_CAPABILITY_C
     // Set to 4000K (cool white)
     uint16_t mireds = 1000000 / 4000;  // = 250 mireds
     light.setLightColorTemperature(mireds);
-    
+
     // Set to 2700K (warm white)
     mireds = 1000000 / 2700;  // = 370 mireds
     light.setLightColorTemperature(mireds);
