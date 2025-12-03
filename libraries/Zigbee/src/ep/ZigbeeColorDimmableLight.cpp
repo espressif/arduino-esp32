@@ -423,8 +423,8 @@ bool ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
   lightChangedHsv();
 
   // Clamp hue and saturation to valid Zigbee range (0-254, where 254 = 0xFE is max per ZCL spec)
-  uint8_t hue = std::min(std::max((uint8_t)hsv_color.h, (uint8_t)0), (uint8_t)254);
-  uint8_t saturation = std::min(std::max((uint8_t)hsv_color.s, (uint8_t)0), (uint8_t)254);
+  uint8_t hue = std::clamp((uint8_t)hsv_color.h, (uint8_t)0, (uint8_t)254);
+  uint8_t saturation = std::clamp((uint8_t)hsv_color.s, (uint8_t)0, (uint8_t)254);
 
   log_v("Updating light HSV: H=%d, S=%d, V=%d (level=%d)", hue, saturation, hsv_color.v, _current_level);
   /* Update light clusters */
