@@ -130,20 +130,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       
       // Validate that the requested color mode is supported by capabilities
-      bool mode_supported = false;
-      switch (new_color_mode) {
-        case ZIGBEE_COLOR_MODE_CURRENT_X_Y:
-          mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_X_Y) != 0;
-          break;
-        case ZIGBEE_COLOR_MODE_HUE_SATURATION:
-          mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION) != 0;
-          break;
-        case ZIGBEE_COLOR_MODE_TEMPERATURE:
-          mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP) != 0;
-          break;
-      }
-      
-      if (!mode_supported) {
+      if (!isColorModeSupported(new_color_mode)) {
         log_w("Color mode %d not supported by current capabilities: 0x%04x", new_color_mode, _color_capabilities);
         return;
       }
@@ -362,11 +349,52 @@ unlock_and_return:
 }
 
 bool ZigbeeColorDimmableLight::setLightState(bool state) {
-  return setLight(state, _current_level, _current_color.r, _current_color.g, _current_color.b);
+  if (_current_state == state) {
+    return true;  // No change needed
+  }
+  
+  _current_state = state;
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  esp_zb_lock_acquire(portMAX_DELAY);
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false
+  );
+  esp_zb_lock_release();
+  
+  if (ret == ESP_ZB_ZCL_STATUS_SUCCESS) {
+    lightChangedByMode();  // Call appropriate callback based on current color mode
+  } else {
+    log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+  }
+  
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
 bool ZigbeeColorDimmableLight::setLightLevel(uint8_t level) {
-  return setLight(_current_state, level, _current_color.r, _current_color.g, _current_color.b);
+  if (_current_level == level) {
+    return true;  // No change needed
+  }
+  
+  _current_level = level;
+  // Update HSV value if in HSV mode
+  if (_current_color_mode == ZIGBEE_COLOR_MODE_HUE_SATURATION) {
+    _current_hsv.v = level;
+  }
+  
+  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  esp_zb_lock_acquire(portMAX_DELAY);
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
+  );
+  esp_zb_lock_release();
+  
+  if (ret == ESP_ZB_ZCL_STATUS_SUCCESS) {
+    lightChangedByMode();  // Call appropriate callback based on current color mode
+  } else {
+    log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+  }
+  
+  return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
 bool ZigbeeColorDimmableLight::setLightColor(uint8_t red, uint8_t green, uint8_t blue) {
@@ -461,6 +489,19 @@ unlock_and_return:
   return ret == ESP_ZB_ZCL_STATUS_SUCCESS;
 }
 
+bool ZigbeeColorDimmableLight::isColorModeSupported(uint8_t color_mode) {
+  switch (color_mode) {
+    case ZIGBEE_COLOR_MODE_CURRENT_X_Y:
+      return (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_X_Y) != 0;
+    case ZIGBEE_COLOR_MODE_HUE_SATURATION:
+      return (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION) != 0;
+    case ZIGBEE_COLOR_MODE_TEMPERATURE:
+      return (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP) != 0;
+    default:
+      return false;
+  }
+}
+
 bool ZigbeeColorDimmableLight::setLightColorMode(uint8_t color_mode) {
   if (color_mode > ZIGBEE_COLOR_MODE_TEMPERATURE) {
     log_e("Invalid color mode: %d", color_mode);
@@ -468,20 +509,7 @@ bool ZigbeeColorDimmableLight::setLightColorMode(uint8_t color_mode) {
   }
   
   // Check if the requested color mode is supported by capabilities
-  bool mode_supported = false;
-  switch (color_mode) {
-    case ZIGBEE_COLOR_MODE_CURRENT_X_Y:
-      mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_X_Y) != 0;
-      break;
-    case ZIGBEE_COLOR_MODE_HUE_SATURATION:
-      mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION) != 0;
-      break;
-    case ZIGBEE_COLOR_MODE_TEMPERATURE:
-      mode_supported = (_color_capabilities & ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP) != 0;
-      break;
-  }
-  
-  if (!mode_supported) {
+  if (!isColorModeSupported(color_mode)) {
     log_e("Color mode %d not supported by current capabilities: 0x%04x", color_mode, _color_capabilities);
     return false;
   }

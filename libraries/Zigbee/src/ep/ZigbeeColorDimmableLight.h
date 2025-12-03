@@ -157,6 +157,7 @@ public:
 private:
   void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
   bool setLightColorMode(uint8_t color_mode);
+  bool isColorModeSupported(uint8_t color_mode);
 
   uint16_t getCurrentColorX();
   uint16_t getCurrentColorY();
