@@ -18,6 +18,7 @@
 
 ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID;
+  _on_light_change = nullptr;
 
   esp_zb_color_dimmable_light_cfg_t light_cfg = ZIGBEE_DEFAULT_COLOR_DIMMABLE_LIGHT_CONFIG();
   _cluster_list = esp_zb_color_dimmable_light_clusters_create(&light_cfg);

@@ -17,6 +17,7 @@
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
+#include "esp32-hal.h"
 #include "pins_arduino.h"
 
 #include "esp_hosted.h"
@@ -53,6 +54,9 @@ static esp_hosted_coprocessor_fwver_t host_version_struct = {
   .major1 = ESP_HOSTED_VERSION_MAJOR_1, .minor1 = ESP_HOSTED_VERSION_MINOR_1, .patch1 = ESP_HOSTED_VERSION_PATCH_1
 };
 
+static bool hostedInit();
+static bool hostedDeinit();
+
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
   *minor = host_version_struct.minor1;
@@ -66,6 +70,11 @@ void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
 }
 
 bool hostedHasUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   uint32_t host_version = ESP_HOSTED_VERSION_VAL(host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
   uint32_t slave_version = 0;
 
@@ -106,6 +115,11 @@ char *hostedGetUpdateURL() {
 }
 
 bool hostedBeginUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_begin();
   if (err != ESP_OK) {
     log_e("Failed to begin Update: %s", esp_err_to_name(err));
@@ -114,6 +128,11 @@ bool hostedBeginUpdate() {
 }
 
 bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_write(buf, len);
   if (err != ESP_OK) {
     log_e("Failed to write Update: %s", esp_err_to_name(err));
@@ -122,6 +141,11 @@ bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
 }
 
 bool hostedEndUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
   esp_err_t err = esp_hosted_slave_ota_end();
   if (err != ESP_OK) {
     log_e("Failed to end Update: %s", esp_err_to_name(err));
@@ -130,16 +154,31 @@ bool hostedEndUpdate() {
 }
 
 bool hostedActivateUpdate() {
-  esp_err_t err = esp_hosted_slave_ota_activate();
-  if (err != ESP_OK) {
-    log_e("Failed to activate Update: %s", esp_err_to_name(err));
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
   }
-  // else {
-  //   hostedDeinit();
-  //   delay(1000);
-  //   hostedInit();
-  // }
-  return err == ESP_OK;
+
+  // Activate can fail on older firmwares and that is not critical
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+
+  if (slave_version < min_version) {
+    // Silence messages caused by earlier versions
+    esp_log_level_set("rpc_core", ESP_LOG_NONE);
+  }
+
+  esp_err_t err = esp_hosted_slave_ota_activate();
+
+  // Any further communication will result in logged errors
+  esp_log_level_set("sdmmc_io", ESP_LOG_NONE);
+  esp_log_level_set("H_SDIO_DRV", ESP_LOG_NONE);
+
+  if (err != ESP_OK && slave_version >= min_version) {
+    log_e("Failed to activate Update: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
 }
 
 static bool hostedInit() {
@@ -158,15 +197,22 @@ static bool hostedInit() {
     conf.pin_d2.pin = sdio_pin_config.pin_d2;
     conf.pin_d3.pin = sdio_pin_config.pin_d3;
     conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
-    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
-      log_e("esp_hosted_init failed!");
+    esp_err_t err = esp_hosted_sdio_set_config(&conf);
+    if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
+      log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_init();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
       hosted_initialized = false;
       return false;
     }
     log_i("ESP-Hosted initialized!");
-    if (esp_hosted_connect_to_slave() != ESP_OK) {
-      log_e("Failed to connect to slave");
+    err = esp_hosted_connect_to_slave();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
+      hosted_initialized = false;
       return false;
     }
     hostedHasUpdate();

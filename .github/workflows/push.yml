@@ -32,8 +32,6 @@ on:
       - "libraries/**/ci.yml"
       - "package/**"
       - "tools/get.*"
-      - "platform.txt"
-      - "programmers.txt"
       - "package.json"
       - ".github/workflows/push.yml"
       - ".github/scripts/install-*"
@@ -51,6 +49,8 @@ on:
       - "!*.md"
       - "!*.txt"
       - "!*.properties"
+      - "platform.txt"
+      - "programmers.txt"
 
 concurrency:
   group: build-${{github.event.pull_request.number || github.ref}}
