@@ -103,6 +103,7 @@ BLEAdvertisedDevice::BLEAdvertisedDevice(const BLEAdvertisedDevice &other) {
     if (m_payload != nullptr) {
       memcpy(m_payload, other.m_payload, m_payloadLength);
     } else {
+      log_e("Failed to allocate %zu bytes for payload in copy constructor", m_payloadLength);
       m_payloadLength = 0;
     }
   } else {
@@ -153,6 +154,7 @@ BLEAdvertisedDevice &BLEAdvertisedDevice::operator=(const BLEAdvertisedDevice &o
     if (m_payload != nullptr) {
       memcpy(m_payload, other.m_payload, m_payloadLength);
     } else {
+      log_e("Failed to allocate %zu bytes for payload in assignment operator", m_payloadLength);
       m_payloadLength = 0;
     }
   } else {
@@ -422,6 +424,8 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
       memcpy(new_payload + m_payloadLength, payload, total_len);
       m_payload = new_payload;
       m_payloadLength += total_len;
+    } else {
+      log_e("Failed to reallocate %zu bytes for payload (append)", m_payloadLength + total_len);
     }
   } else {
     // First payload - make a copy since the original buffer may be reused
@@ -430,6 +434,7 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
       memcpy(m_payload, payload, total_len);
       m_payloadLength = total_len;
     } else {
+      log_e("Failed to allocate %zu bytes for payload", total_len);
       m_payloadLength = 0;
     }
   }
@@ -583,7 +588,7 @@ void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len, bool ap
     // Append scan response data to existing advertisement data
     uint8_t *new_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
     if (new_payload == nullptr) {
-      log_e("Failed to reallocate payload buffer");
+      log_e("Failed to reallocate %zu bytes for payload buffer", m_payloadLength + total_len);
       return;
     }
     memcpy(new_payload + m_payloadLength, payload, total_len);
@@ -596,7 +601,7 @@ void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len, bool ap
     }
     m_payload = (uint8_t *)malloc(total_len);
     if (m_payload == nullptr) {
-      log_e("Failed to allocate payload buffer");
+      log_e("Failed to allocate %zu bytes for payload buffer", total_len);
       m_payloadLength = 0;
       return;
     }
