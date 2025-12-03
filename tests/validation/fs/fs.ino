@@ -22,9 +22,8 @@ public:
 };
 
 /**
- * Generic wrapper for any FS implementation
- *  it is not possible to just get the parent FS from the real implementation
- *  since the VFSImpl does not have all the necessary methods for testing (usedBytes, format, etc)
+ * The VFSImpl interface does not expose all methods needed for testing (such as usedBytes, format, etc.),
+ * so we wrap the concrete implementations to provide a unified interface.
  */
 template<typename Impl> class WrappedFS : public IFileSystem {
 public:
@@ -51,9 +50,6 @@ public:
   }
   fs::FS &vfs() override {
     return *impl_;
-  }
-  uint8_t maxOpenFiles() const {
-    return maxOpen_;
   }
 
 private:
@@ -162,23 +158,48 @@ void test_dir_ops_and_list() {
   {
     File d = V.open(fileBasePath);
     TEST_ASSERT_TRUE_MESSAGE(d && d.isDirectory(), "open(/dir/a/b) not a directory");
+
+    auto getExpectedFile = [fileBasePath](int i) -> std::pair<String, String> {
+      return {String(fileBasePath) + "/file" + String(i) + ".txt", "data:" + String(i)};
+    };
+
+    bool found[numFiles] = {false};
     int count = 0;
+
     while (true) {
       File e = d.openNextFile();
       if (!e) {
         break;
       }
 
-      String expectedPath = String(fileBasePath) + String("/file") + String(count) + String(".txt");
-      TEST_ASSERT_EQUAL_STRING_MESSAGE(expectedPath.c_str(), e.path(), "File path mismatch");
+      String path = e.path();
       String content = e.readString();
-      String expectedContent = "data:" + String(count);
-      TEST_ASSERT_EQUAL_STRING_MESSAGE(expectedContent.c_str(), content.c_str(), "File content mismatch");
+      bool matched = false;
+
+      for (int i = 0; i < numFiles; ++i) {
+        if (!found[i]) {
+          auto [expectedPath, expectedContent] = getExpectedFile(i);
+          if (path == expectedPath) {
+            TEST_ASSERT_EQUAL_STRING_MESSAGE(expectedContent.c_str(), content.c_str(), "File content mismatch");
+            found[i] = true;
+            matched = true;
+            break;
+          }
+        }
+      }
+
+      TEST_ASSERT_TRUE_MESSAGE(matched, ("Unexpected file found: " + path).c_str());
       count++;
       e.close();
     }
+
     d.close();
     TEST_ASSERT_EQUAL_INT_MESSAGE(numFiles, count, "File count mismatch in directory listing");
+
+    for (int i = 0; i < numFiles; ++i) {
+      auto [expectedPath, _] = getExpectedFile(i);
+      TEST_ASSERT_TRUE_MESSAGE(found[i], ("Expected file not found: " + expectedPath).c_str());
+    }
   }
 }
 
@@ -525,7 +546,6 @@ void test_error_cases() {
 
   auto &V = gFS->vfs();
 
-  // Try to open non-existent file for reading
   TEST_ASSERT_FALSE(V.open("/nonexistent.txt", FILE_READ));
   TEST_ASSERT_FALSE(V.remove("/nonexistent.txt"));
   TEST_ASSERT_FALSE(V.rename("/nonexistent.txt", "/newname.txt"));
@@ -640,10 +660,14 @@ void test_directory_operations_edge_cases() {
   TEST_ASSERT_TRUE(V.mkdir("/test_dir"));
 
   if (strcmp(gFS->name(), "spiffs") != 0) {
+    // it should be fine to create again the same dir
     TEST_ASSERT_TRUE(V.mkdir("/test_dir"));
+
+    // creating nested dirs without parent should fail same as rmdir non-existent
     TEST_ASSERT_FALSE(V.mkdir("/deep/nested/path"));
     TEST_ASSERT_FALSE(V.rmdir("/nonexistent_dir"));
   }
+  V.rmdir("/test_dir");
 }
 
 void test_max_open_files_limit() {
@@ -656,18 +680,14 @@ void test_max_open_files_limit() {
 
   // Create test files first
   {
-    File f1 = V.open("/max1.txt", FILE_WRITE);
-    File f2 = V.open("/max2.txt", FILE_WRITE);
-    File f3 = V.open("/max3.txt", FILE_WRITE);
-    TEST_ASSERT_TRUE(f1);
-    TEST_ASSERT_TRUE(f2);
-    TEST_ASSERT_TRUE(f3);
-    f1.print("file1");
-    f2.print("file2");
-    f3.print("file3");
-    f1.close();
-    f2.close();
-    f3.close();
+    for (int i = 0; i < MAX_TEST_OPEN_FILES; ++i) {
+      char path[16];
+      snprintf(path, sizeof(path), "/max%d.txt", i + 1);
+      File f = V.open(path, FILE_WRITE);
+      TEST_ASSERT_TRUE(f);
+      f.print("file" + String(i + 1));
+      f.close();
+    }
   }
 
   // Open files up to the limit
@@ -700,17 +720,16 @@ void test_max_open_files_limit() {
   TEST_ASSERT_TRUE(newFile);
   newFile.close();
 
-  // Close remaining files
-  for (int i = 1; i < MAX_TEST_OPEN_FILES; ++i) {
+  // Cleanup test files
+  for (int i = 0; i < MAX_TEST_OPEN_FILES; ++i) {
     if (files[i]) {
       files[i].close();
     }
-  }
 
-  // Cleanup test files
-  V.remove("/max1.txt");
-  V.remove("/max2.txt");
-  V.remove("/max3.txt");
+    char path[16];
+    snprintf(path, sizeof(path), "/max%d.txt", i + 1);
+    V.remove(path);
+  }
 }
 
 // ---------------- Run the same test set over all FS ----------------
