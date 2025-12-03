@@ -61,6 +61,31 @@ HardwareSerial Serial5(5);
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
 
+// C-callable helper used by HAL when pins are detached and the high-level
+// HardwareSerial instance must be finalized.
+extern "C" void hal_uart_notify_pins_detached(int uart_num) {
+  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
+  switch (uart_num) {
+    case UART_NUM_0: Serial0.end(); break;
+#if SOC_UART_NUM > 1
+    case UART_NUM_1: Serial1.end(); break;
+#endif
+#if SOC_UART_NUM > 2
+    case UART_NUM_2: Serial2.end(); break;
+#endif
+#if SOC_UART_NUM > 3
+    case UART_NUM_3: Serial3.end(); break;
+#endif
+#if SOC_UART_NUM > 4
+    case UART_NUM_4: Serial4.end(); break;
+#endif
+#if SOC_UART_NUM > 5
+    case UART_NUM_4: Serial5.end(); break;
+#endif
+    default: break;
+  }
+}
+
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
 extern void USBSerialEvent(void) __attribute__((weak));
