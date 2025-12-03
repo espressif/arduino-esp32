@@ -80,7 +80,7 @@ extern "C" void hal_uart_notify_pins_detached(int uart_num) {
     case UART_NUM_4: Serial4.end(); break;
 #endif
 #if SOC_UART_NUM > 5
-    case UART_NUM_4: Serial5.end(); break;
+    case UART_NUM_5: Serial5.end(); break;
 #endif
     default: break;
   }
