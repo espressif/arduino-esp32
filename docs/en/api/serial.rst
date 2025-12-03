@@ -24,7 +24,7 @@ with additional features for advanced use cases.
 * **Configurable buffers**: Adjustable RX and TX buffer sizes
 
 .. note::
-   In case that both pins RX and TX are detached from UART, the driver will be stopped.
+   In case that both pins, RX and TX are detached from UART, the driver will be stopped.
    Detaching may occur when, for instance, starting another peripheral using RX and TX pins, such as Wire.begin(RX0, TX0).
 
 UART Availability
