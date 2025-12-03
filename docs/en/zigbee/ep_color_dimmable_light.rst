@@ -89,6 +89,19 @@ This function will return ``true`` if successful, ``false`` otherwise.
 Callback Functions
 ******************
 
+Callback Type Definitions
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For better type safety and readability, typedefs are provided for all callback functions:
+
+.. code-block:: arduino
+
+    typedef void (*ZigbeeColorLightRgbCallback)(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level);
+    typedef void (*ZigbeeColorLightHsvCallback)(bool state, uint8_t hue, uint8_t saturation, uint8_t value);
+    typedef void (*ZigbeeColorLightTempCallback)(bool state, uint8_t level, uint16_t color_temperature);
+
+These typedefs can be used instead of raw function pointer syntax for better code clarity.
+
 onLightChange
 ^^^^^^^^^^^^^
 
@@ -102,6 +115,12 @@ Sets the legacy callback function for light state changes (RGB mode).
 
 * ``callback`` - Function pointer to the light change callback (state, red, green, blue, level)
 
+  * ``state`` - Light state (true = on, false = off)
+  * ``red`` - Red component (0-255)
+  * ``green`` - Green component (0-255)
+  * ``blue`` - Blue component (0-255)
+  * ``level`` - Brightness level (0-255)
+
 .. note::
    This method is deprecated. Please use ``onLightChangeRgb()`` for RGB/XY mode callbacks.
 
@@ -112,9 +131,17 @@ Sets the callback function for RGB/XY color mode changes.
 
 .. code-block:: arduino
 
+    void onLightChangeRgb(ZigbeeColorLightRgbCallback callback);
+    // or using raw function pointer syntax:
     void onLightChangeRgb(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t));
 
 * ``callback`` - Function pointer to the RGB light change callback (state, red, green, blue, level)
+  
+  * ``state`` - Light state (true = on, false = off)
+  * ``red`` - Red component (0-255)
+  * ``green`` - Green component (0-255)
+  * ``blue`` - Blue component (0-255)
+  * ``level`` - Brightness level (0-255)
 
 onLightChangeHsv
 ^^^^^^^^^^^^^^^^
@@ -123,9 +150,16 @@ Sets the callback function for HSV (Hue/Saturation) color mode changes.
 
 .. code-block:: arduino
 
-    void onLightChangeHsv(void (*callback)(bool, uint8_t, uint8_t, uint8_t, uint8_t));
+    void onLightChangeHsv(ZigbeeColorLightHsvCallback callback);
+    // or using raw function pointer syntax:
+    void onLightChangeHsv(void (*callback)(bool, uint8_t, uint8_t, uint8_t));
 
-* ``callback`` - Function pointer to the HSV light change callback (state, hue, saturation, value, level)
+* ``callback`` - Function pointer to the HSV light change callback (state, hue, saturation, value)
+  
+  * ``state`` - Light state (true = on, false = off)
+  * ``hue`` - Hue component (0-254)
+  * ``saturation`` - Saturation component (0-254)
+  * ``value`` - Value/brightness component (0-255)
 
 onLightChangeTemp
 ^^^^^^^^^^^^^^^^^
@@ -134,9 +168,15 @@ Sets the callback function for color temperature mode changes.
 
 .. code-block:: arduino
 
+    void onLightChangeTemp(ZigbeeColorLightTempCallback callback);
+    // or using raw function pointer syntax:
     void onLightChangeTemp(void (*callback)(bool, uint8_t, uint16_t));
 
 * ``callback`` - Function pointer to the temperature light change callback (state, level, temperature_mireds)
+  
+  * ``state`` - Light state (true = on, false = off)
+  * ``level`` - Brightness level (0-255)
+  * ``temperature_mireds`` - Color temperature in mireds (inverse of Kelvin)
 
 Control Methods
 ***************

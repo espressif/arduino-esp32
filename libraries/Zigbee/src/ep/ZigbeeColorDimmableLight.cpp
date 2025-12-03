@@ -54,7 +54,6 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
   _color_capabilities = ZIGBEE_COLOR_CAPABILITY_X_Y; //default XY color supported only
 
   // Initialize callbacks to nullptr
-  _on_light_change = nullptr;
   _on_light_change_rgb = nullptr;
   _on_light_change_hsv = nullptr;
   _on_light_change_temp = nullptr;
@@ -245,24 +244,15 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
   }
 }
 
-void ZigbeeColorDimmableLight::lightChanged() {
-  if (_on_light_change) {
-    _on_light_change(_current_state, _current_color.r, _current_color.g, _current_color.b, _current_level);
-  }
-}
-
 void ZigbeeColorDimmableLight::lightChangedRgb() {
   if (_on_light_change_rgb) {
     _on_light_change_rgb(_current_state, _current_color.r, _current_color.g, _current_color.b, _current_level);
-  } else if (_on_light_change) { 
-    // Fallback to legacy callback (deprecated) to maintain backward compatibility.
-    _on_light_change(_current_state, _current_color.r, _current_color.g, _current_color.b, _current_level);
   }
 }
 
 void ZigbeeColorDimmableLight::lightChangedHsv() {
   if (_on_light_change_hsv) {
-    _on_light_change_hsv(_current_state, _current_hsv.h, _current_hsv.s, _current_hsv.v, _current_level);
+    _on_light_change_hsv(_current_state, _current_hsv.h, _current_hsv.s, _current_hsv.v);
   }
 }
 
@@ -309,8 +299,9 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
 
   espXyColor_t xy_color = espRgbColorToXYColor(_current_color);
   espHsvColor_t hsv_color = espRgbColorToHsvColor(_current_color);
-  uint8_t hue = std::min((uint8_t)hsv_color.h, (uint8_t)254);         // Clamp to 0-254
-  uint8_t saturation = std::min((uint8_t)hsv_color.s, (uint8_t)254);  // Clamp to 0-254
+  // Clamp hue and saturation to valid Zigbee range (0-254, where 254 = 0xFE is max per ZCL spec)
+  uint8_t hue = std::min(std::max((uint8_t)hsv_color.h, (uint8_t)0), (uint8_t)254);
+  uint8_t saturation = std::min(std::max((uint8_t)hsv_color.s, (uint8_t)0), (uint8_t)254);
   // Update HSV state
   _current_hsv = hsv_color;
 
@@ -398,16 +389,26 @@ bool ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
     log_e("Failed to set light color mode: %d", ZIGBEE_COLOR_MODE_HUE_SATURATION);
     return false;
   }
-  // Update HSV state
+  // Update HSV state and level from value component
   _current_hsv = hsv_color;
+  _current_level = hsv_color.v;  // Use HSV value component to update brightness level
   lightChangedHsv();
 
-  uint8_t hue = std::min((uint8_t)hsv_color.h, (uint8_t)254);         // Clamp to 0-254
-  uint8_t saturation = std::min((uint8_t)hsv_color.s, (uint8_t)254);  // Clamp to 0-254
+  // Clamp hue and saturation to valid Zigbee range (0-254, where 254 = 0xFE is max per ZCL spec)
+  uint8_t hue = std::min(std::max((uint8_t)hsv_color.h, (uint8_t)0), (uint8_t)254);
+  uint8_t saturation = std::min(std::max((uint8_t)hsv_color.s, (uint8_t)0), (uint8_t)254);
 
-  log_v("Updating light HSV: H=%d, S=%d, V=%d", hue, saturation, hsv_color.v);
+  log_v("Updating light HSV: H=%d, S=%d, V=%d (level=%d)", hue, saturation, hsv_color.v, _current_level);
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
+  //set level (brightness from HSV value component)
+  ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    goto unlock_and_return;
+  }
   //set hue
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, &hue, false
