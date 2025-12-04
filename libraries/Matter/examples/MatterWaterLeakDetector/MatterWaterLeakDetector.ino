@@ -134,7 +134,7 @@ void loop() {
   }
 
   uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
+  if (button_state && time_diff > debounceTime && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
     // button is released - toggle Leak State (Not Detected/Detected)
     WaterLeakDetector.setLeak(!WaterLeakDetector.getLeak());  // same as WaterLeakDetector = !WaterLeakDetector;
