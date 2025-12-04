@@ -115,8 +115,11 @@ Temperature Controlled Cabinet Configuration (Temperature Level Mode):
   Supported Levels Count: 5
   Supported Levels: 0, 1, 2, 3, 4
 Temperature level updated to: 3 (Supported Levels: 0, 1, 2, 3, 4)
+*** Temperature level 2 reached/overpassed while increasing ***
 Temperature level updated to: 4 (Supported Levels: 0, 1, 2, 3, 4)
-Temperature level updated to: 0 (Supported Levels: 0, 1, 2, 3, 4)
+Temperature level updated to: 3 (Supported Levels: 0, 1, 2, 3, 4)
+Temperature level updated to: 2 (Supported Levels: 0, 1, 2, 3, 4)
+*** Temperature level 2 reached/overpassed while decreasing ***
 Temperature level updated to: 1 (Supported Levels: 0, 1, 2, 3, 4)
 ...
 Current Temperature Level: 2 (Supported Levels: 0, 1, 2, 3, 4)
@@ -168,10 +171,19 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 The MatterTemperatureControlledCabinetLevels example consists of the following main components:
 
 1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with temperature level configuration, and waits for Matter commissioning.
+
 2. **`loop()`**: 
-   - **Dynamic Level Updates**: Automatically cycles through all supported temperature levels every 1 second. This demonstrates the temperature level control functionality and allows Matter controllers to observe real-time changes.
+   - **Dynamic Level Updates**: Automatically cycles through all supported temperature levels every 1 second in both directions (increasing and decreasing). This demonstrates the temperature level control functionality and allows Matter controllers to observe real-time changes.
+   - **Level Reached Detection**: Monitors when the initial level is reached or overpassed in each direction and prints a notification message once per direction.
    - Periodically prints the current temperature level (every 5 seconds)
    - Handles button input for factory reset
+
+3. **Helper Functions**:
+   - `initLevelControl()`: Initializes the level control state from the current selected level
+   - `checkLevelReached()`: Checks and logs when the initial level is reached/overpassed
+   - `updateTemperatureLevel()`: Updates the temperature level with cycling logic and boundary detection
+   - `printLevelStatus()`: Prints the current level status
+   - `handleButtonPress()`: Handles button press detection and factory reset functionality
 
 ## API Usage
 

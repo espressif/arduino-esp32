@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -59,6 +59,136 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 uint8_t supportedLevels[] = {0, 1, 2, 3, 4};
 const uint16_t levelCount = sizeof(supportedLevels) / sizeof(supportedLevels[0]);
 const uint8_t initialLevel = 2;  // Start with level 2 (Medium)
+
+// Temperature level control state
+struct LevelControlState {
+  bool initialized;
+  bool increasing;
+  uint16_t currentLevelIndex;
+  uint8_t initialLevel;
+  bool levelReachedIncreasing;
+  bool levelReachedDecreasing;
+};
+
+static LevelControlState levelState = {
+  .initialized = false,
+  .increasing = true,
+  .currentLevelIndex = 0,
+  .initialLevel = 0,
+  .levelReachedIncreasing = false,
+  .levelReachedDecreasing = false
+};
+
+// Initialize level control state
+void initLevelControl() {
+  if (!levelState.initialized) {
+    uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
+    levelState.initialLevel = currentLevel;
+    // Find the index of current level in supportedLevels array
+    for (uint16_t i = 0; i < levelCount; i++) {
+      if (supportedLevels[i] == currentLevel) {
+        levelState.currentLevelIndex = i;
+        break;
+      }
+    }
+    levelState.initialized = true;
+  }
+}
+
+// Check and log when initial level is reached/overpassed
+void checkLevelReached(uint8_t newLevel, bool isIncreasing, bool directionChanged) {
+  if (directionChanged) {
+    // Reset flags when direction changes
+    levelState.levelReachedIncreasing = false;
+    levelState.levelReachedDecreasing = false;
+    return;
+  }
+
+  if (isIncreasing && !levelState.levelReachedIncreasing && newLevel >= levelState.initialLevel) {
+    Serial.printf("*** Temperature level %u reached/overpassed while increasing ***\r\n", levelState.initialLevel);
+    levelState.levelReachedIncreasing = true;
+  } else if (!isIncreasing && !levelState.levelReachedDecreasing && newLevel <= levelState.initialLevel) {
+    Serial.printf("*** Temperature level %u reached/overpassed while decreasing ***\r\n", levelState.initialLevel);
+    levelState.levelReachedDecreasing = true;
+  }
+}
+
+// Update temperature level with cycling logic
+void updateTemperatureLevel() {
+  // Cycle through supported levels in both directions
+  bool directionChanged = false;
+  
+  if (levelState.increasing) {
+    levelState.currentLevelIndex++;
+    if (levelState.currentLevelIndex >= levelCount) {
+      levelState.currentLevelIndex = levelCount - 1;
+      levelState.increasing = false;  // Reverse direction
+      directionChanged = true;
+    }
+  } else {
+    if (levelState.currentLevelIndex == 0) {
+      levelState.currentLevelIndex = 0;
+      levelState.increasing = true;  // Reverse direction
+      directionChanged = true;
+    } else {
+      levelState.currentLevelIndex--;
+    }
+  }
+  
+  uint8_t newLevel = supportedLevels[levelState.currentLevelIndex];
+  
+  // Check if initial level has been reached or overpassed
+  checkLevelReached(newLevel, levelState.increasing, directionChanged);
+  
+  // Update the temperature level
+  if (TemperatureCabinet.setSelectedTemperatureLevel(newLevel)) {
+    Serial.printf("Temperature level updated to: %u (Supported Levels: ", newLevel);
+    for (uint16_t i = 0; i < levelCount; i++) {
+      Serial.printf("%u", supportedLevels[i]);
+      if (i < levelCount - 1) {
+        Serial.print(", ");
+      }
+    }
+    Serial.println(")");
+  } else {
+    Serial.printf("Failed to update temperature level to: %u\r\n", newLevel);
+  }
+}
+
+// Print current level status
+void printLevelStatus() {
+  uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
+  Serial.printf("Current Temperature Level: %u (Supported Levels: ", currentLevel);
+  for (uint16_t i = 0; i < levelCount; i++) {
+    Serial.printf("%u", supportedLevels[i]);
+    if (i < levelCount - 1) {
+      Serial.print(", ");
+    }
+  }
+  Serial.println(")");
+}
+
+// Handle button press for decommissioning
+void handleButtonPress() {
+  // Check if the button has been pressed
+  if (digitalRead(buttonPin) == LOW && !button_state) {
+    // deals with button debouncing
+    button_time_stamp = millis();  // record the time while the button is pressed.
+    button_state = true;           // pressed.
+  }
+
+  if (digitalRead(buttonPin) == HIGH && button_state) {
+    button_state = false;  // released
+  }
+
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning Temperature Controlled Cabinet Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  }
+}
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
@@ -131,79 +261,24 @@ void setup() {
 void loop() {
   static uint32_t timeCounter = 0;
   static uint32_t lastUpdateTime = 0;
-  static bool initialized = false;
-  static uint16_t currentLevelIndex = 0;  // Will be initialized from actual level
 
-  // Initialize currentLevelIndex from actual selected level on first run
-  if (!initialized) {
-    uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
-    // Find the index of current level in supportedLevels array
-    for (uint16_t i = 0; i < levelCount; i++) {
-      if (supportedLevels[i] == currentLevel) {
-        currentLevelIndex = i;
-        break;
-      }
-    }
-    initialized = true;
-  }
+  // Initialize level control state on first run
+  initLevelControl();
 
   // Update temperature level dynamically every 1 second
   uint32_t currentTime = millis();
   if (currentTime - lastUpdateTime >= 1000) {  // 1 second interval
     lastUpdateTime = currentTime;
-    
-    // Cycle through supported levels
-    currentLevelIndex = (currentLevelIndex + 1) % levelCount;
-    uint8_t newLevel = supportedLevels[currentLevelIndex];
-    
-    // Update the temperature level
-    if (TemperatureCabinet.setSelectedTemperatureLevel(newLevel)) {
-      Serial.printf("Temperature level updated to: %u (Supported Levels: ", newLevel);
-      for (uint16_t i = 0; i < levelCount; i++) {
-        Serial.printf("%u", supportedLevels[i]);
-        if (i < levelCount - 1) {
-          Serial.print(", ");
-        }
-      }
-      Serial.println(")");
-    } else {
-      Serial.printf("Failed to update temperature level to: %u\r\n", newLevel);
-    }
+    updateTemperatureLevel();
   }
 
   // Print the current temperature level every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
-    // Print the current temperature level value
-    uint8_t currentLevel = TemperatureCabinet.getSelectedTemperatureLevel();
-    Serial.printf("Current Temperature Level: %u (Supported Levels: ", currentLevel);
-    for (uint16_t i = 0; i < levelCount; i++) {
-      Serial.printf("%u", supportedLevels[i]);
-      if (i < levelCount - 1) {
-        Serial.print(", ");
-      }
-    }
-    Serial.println(")");
+    printLevelStatus();
   }
 
-  // Check if the button has been pressed
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    // deals with button debouncing
-    button_time_stamp = millis();  // record the time while the button is pressed.
-    button_state = true;           // pressed.
-  }
-
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;  // released
-  }
-
-  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning Temperature Controlled Cabinet Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
-  }
+  // Handle button press for decommissioning
+  handleButtonPress();
 
   delay(500);
 }
-

@@ -279,7 +279,7 @@ Example
 Temperature Controlled Cabinet
 ******************************
 
-The example demonstrates the temperature_number mode with dynamic temperature updates. The temperature setpoint automatically cycles between the minimum and maximum limits every 1 second using the configured step value, allowing Matter controllers to observe real-time changes.
+The example demonstrates the temperature_number mode with dynamic temperature updates. The temperature setpoint automatically cycles between the minimum and maximum limits every 1 second using the configured step value, allowing Matter controllers to observe real-time changes. The example also monitors and logs when the initial setpoint is reached or overpassed in each direction.
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterTemperatureControlledCabinet/MatterTemperatureControlledCabinet.ino
     :language: arduino
@@ -287,7 +287,7 @@ The example demonstrates the temperature_number mode with dynamic temperature up
 Temperature Controlled Cabinet (Level Mode)
 ********************************************
 
-A separate example demonstrates the temperature_level mode with dynamic level updates. The temperature level automatically cycles through all supported levels every 1 second, allowing Matter controllers to observe real-time changes.
+A separate example demonstrates the temperature_level mode with dynamic level updates. The temperature level automatically cycles through all supported levels every 1 second in both directions (increasing and decreasing), allowing Matter controllers to observe real-time changes. The example also monitors and logs when the initial level is reached or overpassed in each direction.
 
 See ``MatterTemperatureControlledCabinetLevels`` example for the temperature level mode implementation.
 

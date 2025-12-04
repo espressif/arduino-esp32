@@ -299,19 +299,23 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Temperature Level Controlled Cabinet created with temperature_level feature, endpoint_id %d", getEndPointId());
 
+  // Set started flag before calling setter methods (they check for started)
+  started = true;
+
   // Set supported temperature levels using internal copy
   if (!setSupportedTemperatureLevels(supportedLevelsArray, levelCount)) {
     log_e("Failed to set supported temperature levels");
+    started = false;  // Reset on failure
     return false;
   }
   
   // Set selected temperature level
   if (!setSelectedTemperatureLevel(selectedLevel)) {
     log_e("Failed to set selected temperature level");
+    started = false;  // Reset on failure
     return false;
   }
 
-  started = true;
   return true;
 }
 

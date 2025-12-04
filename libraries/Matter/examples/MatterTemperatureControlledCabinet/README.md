@@ -115,10 +115,14 @@ Temperature Controlled Cabinet Configuration:
   Max Temperature: 10.00°C
   Step: 0.50°C
 Temperature setpoint updated to: 4.50°C (Range: -10.00°C to 10.00°C)
+*** Temperature setpoint 4.00°C reached/overpassed while increasing ***
 Temperature setpoint updated to: 5.00°C (Range: -10.00°C to 10.00°C)
 Temperature setpoint updated to: 5.50°C (Range: -10.00°C to 10.00°C)
 ...
 Current Temperature Setpoint: 6.00°C (Range: -10.00°C to 10.00°C)
+...
+*** Temperature setpoint 4.00°C reached/overpassed while decreasing ***
+Temperature setpoint updated to: 3.50°C (Range: -10.00°C to 10.00°C)
 ```
 
 ## Using the Device
@@ -167,10 +171,19 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 The MatterTemperatureControlledCabinet example consists of the following main components:
 
 1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with initial temperature configuration, and waits for Matter commissioning.
+
 2. **`loop()`**: 
    - **Dynamic Temperature Updates**: Automatically changes the temperature setpoint every 1 second, cycling between the minimum and maximum temperature limits using the configured step value. This demonstrates the temperature control functionality and allows Matter controllers to observe real-time changes.
+   - **Setpoint Reached Detection**: Monitors when the initial setpoint is reached or overpassed in each direction and prints a notification message once per direction.
    - Periodically prints the current temperature setpoint (every 5 seconds)
    - Handles button input for factory reset
+
+3. **Helper Functions**:
+   - `initTemperatureControl()`: Initializes the temperature control state from the current setpoint
+   - `checkSetpointReached()`: Checks and logs when the initial setpoint is reached/overpassed
+   - `updateTemperatureSetpoint()`: Updates the temperature setpoint with cycling logic and boundary detection
+   - `printTemperatureStatus()`: Prints the current temperature status
+   - `handleButtonPress()`: Handles button press detection and factory reset functionality
 
 ## API Usage
 

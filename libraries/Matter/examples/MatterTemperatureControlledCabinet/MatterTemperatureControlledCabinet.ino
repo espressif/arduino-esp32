@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -52,6 +52,119 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
+
+// Temperature control state
+struct TemperatureControlState {
+  bool initialized;
+  bool increasing;
+  double currentSetpoint;
+  double initialSetpoint;
+  bool setpointReachedIncreasing;
+  bool setpointReachedDecreasing;
+};
+
+static TemperatureControlState tempState = {
+  .initialized = false,
+  .increasing = true,
+  .currentSetpoint = 0.0,
+  .initialSetpoint = 0.0,
+  .setpointReachedIncreasing = false,
+  .setpointReachedDecreasing = false
+};
+
+// Initialize temperature control state
+void initTemperatureControl() {
+  if (!tempState.initialized) {
+    tempState.currentSetpoint = TemperatureCabinet.getTemperatureSetpoint();
+    tempState.initialSetpoint = tempState.currentSetpoint;
+    tempState.initialized = true;
+  }
+}
+
+// Check and log when initial setpoint is reached/overpassed
+void checkSetpointReached(double newSetpoint, bool isIncreasing, bool directionChanged) {
+  if (directionChanged) {
+    // Reset flags when direction changes
+    tempState.setpointReachedIncreasing = false;
+    tempState.setpointReachedDecreasing = false;
+    return;
+  }
+
+  if (isIncreasing && !tempState.setpointReachedIncreasing && newSetpoint >= tempState.initialSetpoint) {
+    Serial.printf("*** Temperature setpoint %.02f°C reached/overpassed while increasing ***\r\n", tempState.initialSetpoint);
+    tempState.setpointReachedIncreasing = true;
+  } else if (!isIncreasing && !tempState.setpointReachedDecreasing && newSetpoint <= tempState.initialSetpoint) {
+    Serial.printf("*** Temperature setpoint %.02f°C reached/overpassed while decreasing ***\r\n", tempState.initialSetpoint);
+    tempState.setpointReachedDecreasing = true;
+  }
+}
+
+// Update temperature setpoint with cycling logic
+void updateTemperatureSetpoint() {
+  double minTemp = TemperatureCabinet.getMinTemperature();
+  double maxTemp = TemperatureCabinet.getMaxTemperature();
+  double step = TemperatureCabinet.getStep();
+  
+  // Calculate next setpoint based on direction and step
+  bool directionChanged = false;
+  
+  if (tempState.increasing) {
+    tempState.currentSetpoint += step;
+    if (tempState.currentSetpoint >= maxTemp) {
+      tempState.currentSetpoint = maxTemp;
+      tempState.increasing = false;  // Reverse direction
+      directionChanged = true;
+    }
+  } else {
+    tempState.currentSetpoint -= step;
+    if (tempState.currentSetpoint <= minTemp) {
+      tempState.currentSetpoint = minTemp;
+      tempState.increasing = true;  // Reverse direction
+      directionChanged = true;
+    }
+  }
+  
+  // Check if setpoint has been reached or overpassed
+  checkSetpointReached(tempState.currentSetpoint, tempState.increasing, directionChanged);
+  
+  // Update the temperature setpoint
+  if (TemperatureCabinet.setTemperatureSetpoint(tempState.currentSetpoint)) {
+    Serial.printf("Temperature setpoint updated to: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
+                  tempState.currentSetpoint, minTemp, maxTemp);
+  } else {
+    Serial.printf("Failed to update temperature setpoint to: %.02f°C\r\n", tempState.currentSetpoint);
+  }
+}
+
+// Print current temperature status
+void printTemperatureStatus() {
+  Serial.printf("Current Temperature Setpoint: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
+                TemperatureCabinet.getTemperatureSetpoint(),
+                TemperatureCabinet.getMinTemperature(),
+                TemperatureCabinet.getMaxTemperature());
+}
+
+// Handle button press for decommissioning
+void handleButtonPress() {
+  // Check if the button has been pressed
+  if (digitalRead(buttonPin) == LOW && !button_state) {
+    // deals with button debouncing
+    button_time_stamp = millis();  // record the time while the button is pressed.
+    button_state = true;           // pressed.
+  }
+
+  if (digitalRead(buttonPin) == HIGH && button_state) {
+    button_state = false;  // released
+  }
+
+  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
+  uint32_t time_diff = millis() - button_time_stamp;
+  if (button_state && time_diff > decommissioningTimeout) {
+    Serial.println("Decommissioning Temperature Controlled Cabinet Matter Accessory. It shall be commissioned again.");
+    Matter.decommission();
+    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+  }
+}
 
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
@@ -111,77 +224,24 @@ void setup() {
 void loop() {
   static uint32_t timeCounter = 0;
   static uint32_t lastUpdateTime = 0;
-  static bool initialized = false;
-  static bool increasing = true;  // Direction of temperature change
-  static double currentSetpoint = 0.0;  // Will be initialized from actual setpoint
 
-  // Initialize currentSetpoint from actual setpoint on first run
-  if (!initialized) {
-    currentSetpoint = TemperatureCabinet.getTemperatureSetpoint();
-    initialized = true;
-  }
+  // Initialize temperature control state on first run
+  initTemperatureControl();
 
   // Update temperature setpoint dynamically every 1 second
   uint32_t currentTime = millis();
   if (currentTime - lastUpdateTime >= 1000) {  // 1 second interval
     lastUpdateTime = currentTime;
-    
-    double minTemp = TemperatureCabinet.getMinTemperature();
-    double maxTemp = TemperatureCabinet.getMaxTemperature();
-    double step = TemperatureCabinet.getStep();
-    
-    // Calculate next setpoint based on direction and step
-    if (increasing) {
-      currentSetpoint += step;
-      if (currentSetpoint >= maxTemp) {
-        currentSetpoint = maxTemp;
-        increasing = false;  // Reverse direction
-      }
-    } else {
-      currentSetpoint -= step;
-      if (currentSetpoint <= minTemp) {
-        currentSetpoint = minTemp;
-        increasing = true;  // Reverse direction
-      }
-    }
-    
-    // Update the temperature setpoint
-    if (TemperatureCabinet.setTemperatureSetpoint(currentSetpoint)) {
-      Serial.printf("Temperature setpoint updated to: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
-                    currentSetpoint, minTemp, maxTemp);
-    } else {
-      Serial.printf("Failed to update temperature setpoint to: %.02f°C\r\n", currentSetpoint);
-    }
+    updateTemperatureSetpoint();
   }
 
   // Print the current temperature setpoint every 5s
   if (!(timeCounter++ % 10)) {  // delaying for 500ms x 10 = 5s
-    // Print the current temperature setpoint value
-    Serial.printf("Current Temperature Setpoint: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
-                  TemperatureCabinet.getTemperatureSetpoint(),
-                  TemperatureCabinet.getMinTemperature(),
-                  TemperatureCabinet.getMaxTemperature());
+    printTemperatureStatus();
   }
 
-  // Check if the button has been pressed
-  if (digitalRead(buttonPin) == LOW && !button_state) {
-    // deals with button debouncing
-    button_time_stamp = millis();  // record the time while the button is pressed.
-    button_state = true;           // pressed.
-  }
-
-  if (digitalRead(buttonPin) == HIGH && button_state) {
-    button_state = false;  // released
-  }
-
-  // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
-  uint32_t time_diff = millis() - button_time_stamp;
-  if (button_state && time_diff > decommissioningTimeout) {
-    Serial.println("Decommissioning Temperature Controlled Cabinet Matter Accessory. It shall be commissioned again.");
-    Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
-  }
+  // Handle button press for decommissioning
+  handleButtonPress();
 
   delay(500);
 }
-
