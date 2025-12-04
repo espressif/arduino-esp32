@@ -42,6 +42,9 @@
 static int s_uart_debug_nr = 0;         // UART number for debug output
 #define REF_TICK_BAUDRATE_LIMIT 250000  // this is maximum UART badrate using REF_TICK as clock
 
+/* C prototype for the notifier implemented in HardwareSerial.cpp */
+extern void hal_uart_notify_pins_detached(int uart_num);
+
 struct uart_struct_t {
 
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -282,29 +285,67 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
 // Peripheral Manager detach callback for each specific UART PIN
 static bool _uartDetachBus_RX(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_RX bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_RX: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_rxPin < 0) {
+    log_d("_uartDetachBus_RX: RX pin already detached for UART%d", bus->num);
+    return true;
+  }
+  if (bus->_txPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
+    log_d("_uartDetachBus_RX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
+    hal_uart_notify_pins_detached(bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
 static bool _uartDetachBus_TX(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_TX bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_TX: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_txPin < 0) {
+    log_d("_uartDetachBus_TX: TX pin already detached for UART%d", bus->num);
+    return true;
+  }
+  if (bus->_rxPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
+    log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
+    hal_uart_notify_pins_detached(bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
 }
 
 static bool _uartDetachBus_CTS(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_CTS bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_CTS: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_ctsPin < 0) {
+    log_d("_uartDetachBus_CTS: CTS pin already detached for UART%d", bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_ctsPin, UART_PIN_NO_CHANGE);
 }
 
 static bool _uartDetachBus_RTS(void *busptr) {
   // sanity check - it should never happen
-  assert(busptr && "_uartDetachBus_RTS bus NULL pointer.");
+  if (busptr == NULL) {
+    log_e("_uartDetachBus_RTS: busptr is NULL");
+    return false;
+  }
   uart_t *bus = (uart_t *)busptr;
+  if (bus->_rtsPin < 0) {
+    log_d("_uartDetachBus_RTS: RTS pin already detached for UART%d", bus->num);
+    return true;
+  }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, bus->_rtsPin);
 }
 
@@ -629,6 +670,16 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   //log_v("setting UART%d pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
   //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
+  // mute bus detaching callbacks to avoid terminating the UART driver when both RX and TX pins are detached
+  peripheral_bus_deinit_cb_t rxDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX);
+  peripheral_bus_deinit_cb_t txDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_TX);
+  peripheral_bus_deinit_cb_t ctsDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_CTS);
+  peripheral_bus_deinit_cb_t rtsDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_CTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_UART_RTS);
+
   // First step: detaches all previous UART pins
   bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
   if (rxPinChanged) {
@@ -660,6 +711,21 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   if (rtsPinChanged) {
     retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
   }
+
+  // restore bus detaching callbacks
+  if (rxDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, rxDeinit);
+  }
+  if (txDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_TX, txDeinit);
+  }
+  if (ctsDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_CTS, ctsDeinit);
+  }
+  if (rtsDeinit != NULL) {
+    perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RTS, rtsDeinit);
+  }
+
   UART_MUTEX_UNLOCK();
 
   if (!retCode) {
@@ -985,6 +1051,9 @@ void uartEnd(uint8_t uart_num) {
   _uartDetachPins(uart_num, uart->_rxPin, uart->_txPin, uart->_ctsPin, uart->_rtsPin);
   if (uart_is_driver_installed(uart_num)) {
     uart_driver_delete(uart_num);
+  }
+  if (uartGetDebug() == uart_num) {
+    uartSetDebug(0);
   }
   UART_MUTEX_UNLOCK();
 }
