@@ -52,4 +52,3 @@ protected:
   bool freezeState = false;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-

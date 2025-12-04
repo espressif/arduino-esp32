@@ -135,4 +135,3 @@ Water Freeze Detector
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterWaterFreezeDetector/MatterWaterFreezeDetector.ino
     :language: arduino
-

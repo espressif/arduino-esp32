@@ -102,4 +102,3 @@ bool MatterWaterFreezeDetector::setFreeze(bool _freezeState) {
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-
