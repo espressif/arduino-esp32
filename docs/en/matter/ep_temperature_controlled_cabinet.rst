@@ -234,7 +234,7 @@ This function will return ``true`` if successful, ``false`` otherwise.
 **Note:** Temperature level and temperature number features are mutually exclusive. This method will return ``false`` and log an error if called when using temperature_number mode.
 
 getSelectedTemperatureLevel
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Gets the current selected temperature level.
 
