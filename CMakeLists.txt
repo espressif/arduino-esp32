@@ -198,6 +198,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
+  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
   libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterEndPoint.cpp)

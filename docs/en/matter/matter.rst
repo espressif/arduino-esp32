@@ -135,6 +135,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterFan``: Fan with speed and mode control
 * ``MatterThermostat``: Thermostat with temperature control and setpoints
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay)
+* ``MatterDimmablePlugin``: Dimmable plugin unit (power outlet/relay with brightness control)
 * ``MatterGenericSwitch``: Generic switch endpoint (smart button)
 
 .. toctree::

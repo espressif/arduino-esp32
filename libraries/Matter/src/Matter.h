@@ -34,6 +34,7 @@
 #include <MatterEndpoints/MatterPressureSensor.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
+#include <MatterEndpoints/MatterDimmablePlugin.h>
 #include <MatterEndpoints/MatterThermostat.h>
 
 // Matter Event types used when there is a user callback for Matter Events
@@ -189,6 +190,7 @@ public:
   friend class MatterGenericSwitch;
   friend class MatterOnOffLight;
   friend class MatterDimmableLight;
+  friend class MatterDimmablePlugin;
   friend class MatterColorTemperatureLight;
   friend class MatterColorLight;
   friend class MatterEnhancedColorLight;
