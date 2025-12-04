@@ -27,6 +27,7 @@
 #include <MatterEndpoints/MatterEnhancedColorLight.h>
 #include <MatterEndpoints/MatterFan.h>
 #include <MatterEndpoints/MatterTemperatureSensor.h>
+#include <MatterEndpoints/MatterTemperatureControlledCabinet.h>
 #include <MatterEndpoints/MatterHumiditySensor.h>
 #include <MatterEndpoints/MatterContactSensor.h>
 #include <MatterEndpoints/MatterPressureSensor.h>
@@ -192,6 +193,7 @@ public:
   friend class MatterEnhancedColorLight;
   friend class MatterFan;
   friend class MatterTemperatureSensor;
+  friend class MatterTemperatureControlledCabinet;
   friend class MatterHumiditySensor;
   friend class MatterContactSensor;
   friend class MatterPressureSensor;
