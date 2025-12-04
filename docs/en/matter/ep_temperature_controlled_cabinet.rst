@@ -5,17 +5,17 @@ MatterTemperatureControlledCabinet
 About
 -----
 
-The ``MatterTemperatureControlledCabinet`` class provides a temperature controlled cabinet endpoint for Matter networks. This endpoint implements the Matter temperature control standard for managing temperature setpoints with min/max limits, optional step control, or temperature level support.
+The ``MatterTemperatureControlledCabinet`` class provides a temperature controlled cabinet endpoint for Matter networks. This endpoint implements the Matter temperature control standard for managing temperature setpoints with min/max limits, step control (always enabled), or temperature level support.
 
 **Important:** The ``temperature_number`` and ``temperature_level`` features are **mutually exclusive**. Only one can be enabled at a time. Use ``begin(tempSetpoint, minTemp, maxTemp, step)`` for temperature_number mode or ``begin(supportedLevels, levelCount, selectedLevel)`` for temperature_level mode.
 
 **Features:**
 * Two initialization modes:
-  * **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and optional step
+  * **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control (step value can be set in begin() or later)
   * **Temperature Level Mode** (``begin(supportedLevels, levelCount, selectedLevel)``): Temperature level control with array of supported levels
 * 1/100th degree Celsius precision (for temperature_number mode)
 * Min/max temperature limits with validation (temperature_number mode)
-* Optional temperature step control (temperature_number mode)
+* Temperature step control (temperature_number mode, always enabled)
 * Temperature level array support (temperature_level mode)
 * Automatic setpoint validation against limits
 * Feature validation - methods return errors if called with wrong feature mode
@@ -62,11 +62,11 @@ Initializes the Matter temperature controlled cabinet endpoint with **temperatur
 * ``tempSetpoint`` - Initial temperature setpoint in Celsius (default: 0.00)
 * ``minTemperature`` - Minimum allowed temperature in Celsius (default: -10.0)
 * ``maxTemperature`` - Maximum allowed temperature in Celsius (default: 32.0)
-* ``step`` - Temperature step value in Celsius for step control feature (default: 0.50, disabled if 0)
+* ``step`` - Initial temperature step value in Celsius (default: 0.50)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** The implementation stores temperature with 1/100th degree Celsius precision internally. If step is greater than 0, the temperature_step feature will be enabled.
+**Note:** The implementation stores temperature with 1/100th degree Celsius precision internally. The temperature_step feature is always enabled for temperature_number mode, allowing ``setStep()`` to be called later even if step is not provided in ``begin()``.
 
 begin (overloaded)
 ^^^^^^^^^^^^^^^^^^
@@ -182,13 +182,13 @@ Gets the maximum allowed temperature.
 
 This function will return the maximum temperature in Celsius with 1/100th degree precision.
 
-Temperature Step Control (Optional)
-***********************************
+Temperature Step Control
+*************************
 
 setStep
 ^^^^^^^
 
-Sets the temperature step value. This enables the temperature_step feature.
+Sets the temperature step value.
 
 **Requires:** temperature_number feature mode (use ``begin()``)
 
@@ -200,7 +200,7 @@ Sets the temperature step value. This enables the temperature_step feature.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** The temperature_step feature requires the temperature_number feature to be enabled. This method will return ``false`` and log an error if called when using temperature_level mode.
+**Note:** The temperature_step feature is always enabled when using temperature_number mode, so this method can be called at any time to set or change the step value, even if step was not provided in ``begin()``. This method will return ``false`` and log an error if called when using temperature_level mode.
 
 getStep
 ^^^^^^^

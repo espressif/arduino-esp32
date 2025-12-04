@@ -27,7 +27,7 @@ This example demonstrates how to create a Matter-compatible temperature controll
 - Matter protocol implementation for a temperature controlled cabinet device
 - Support for both Wi-Fi and Thread(*) connectivity
 - Temperature setpoint control with min/max limits
-- Temperature step control (optional)
+- Temperature step control (always enabled, can be set via begin() or setStep())
 - Temperature setpoint validation against min/max limits
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
@@ -79,6 +79,7 @@ Before uploading the sketch, configure the following:
    ```cpp
    TemperatureCabinet.begin(4.0, -10.0, 10.0, 0.5);
    // Parameters: setpoint, min_temp, max_temp, step (all in Celsius)
+   // Note: Step can also be set later using setStep() even if not provided here
    ```
 
 ## Building and Flashing

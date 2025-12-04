@@ -166,6 +166,11 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
     return false;
   }
 
+  // Note: esp-matter automatically creates all attributes from the config struct when features are enabled
+  // - temperature_number feature creates: TemperatureSetpoint, MinTemperature, MaxTemperature
+  // - temperature_step feature creates: Step (always enabled for temperature_number mode to allow setStep() later)
+  // No need to manually set attributes here as they are already created with the config values
+
   temperature_controlled_cabinet::config_t cabinet_config;
   cabinet_config.temperature_control.temperature_number.temp_setpoint = _rawTempSetpoint;
   cabinet_config.temperature_control.temperature_number.min_temperature = _rawMinTemperature;
@@ -178,11 +183,10 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   // Only one of them can be enabled at a time.
   cabinet_config.temperature_control.features = temperature_control::feature::temperature_number::get_id();
   
-  // Enable temperature_step feature if step is provided
+  // Always enable temperature_step feature to allow setStep() to be called later
   // Note: temperature_step requires temperature_number feature (which is always enabled for this mode)
-  if (_rawStep > 0) {
-    cabinet_config.temperature_control.features |= temperature_control::feature::temperature_step::get_id();
-  }
+  // The step value can be set initially via begin() or later via setStep()
+  cabinet_config.temperature_control.features |= temperature_control::feature::temperature_step::get_id();
 
   // endpoint handles can be used to add/modify clusters
   endpoint_t *endpoint = temperature_controlled_cabinet::create(node::get(), &cabinet_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -200,6 +204,33 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Temperature Controlled Cabinet created with temperature_number feature, endpoint_id %d", getEndPointId());
+
+  // Workaround: Manually create Step attribute if it wasn't created automatically
+  // This handles the case where temperature_step::add() fails due to feature map timing issue
+  // The feature map check in temperature_step::add() may not see the temperature_number feature
+  // immediately after it's added, causing the Step attribute to not be created
+  cluster_t *cluster = cluster::get(endpoint, TemperatureControl::Id);
+  if (cluster != nullptr) {
+    attribute_t *step_attr = attribute::get(cluster, TemperatureControl::Attributes::Step::Id);
+    if (step_attr == nullptr) {
+      // Step attribute wasn't created, manually create it
+      log_w("Step attribute not found after endpoint creation, manually creating it");
+      step_attr = temperature_control::attribute::create_step(cluster, _rawStep);
+      if (step_attr != nullptr) {
+        // Update the feature map to include temperature_step feature
+        // This ensures the feature is properly registered even though the attribute was created manually
+        esp_matter_attr_val_t feature_map_val = esp_matter_invalid(NULL);
+        attribute_t *feature_map_attr = attribute::get(cluster, Globals::Attributes::FeatureMap::Id);
+        if (feature_map_attr != nullptr && attribute::get_val(feature_map_attr, &feature_map_val) == ESP_OK) {
+          feature_map_val.val.u32 |= temperature_control::feature::temperature_step::get_id();
+          attribute::set_val(feature_map_attr, &feature_map_val);
+        }
+        log_i("Step attribute manually created with value %.02fC", (float)_rawStep / 100.0);
+      } else {
+        log_e("Failed to manually create Step attribute");
+      }
+    }
+  }
 
   started = true;
   return true;
@@ -315,7 +346,6 @@ bool MatterTemperatureControlledCabinet::setRawTemperatureSetpoint(int16_t _rawT
   }
 
   esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::TemperatureSetpoint::Id, &tempVal)) {
     log_e("Failed to get Temperature Controlled Cabinet Temperature Setpoint Attribute.");
     return false;
@@ -369,7 +399,6 @@ bool MatterTemperatureControlledCabinet::setRawMinTemperature(int16_t _rawTemper
   }
 
   esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal)) {
     log_e("Failed to get Temperature Controlled Cabinet Min Temperature Attribute.");
     return false;
@@ -423,7 +452,6 @@ bool MatterTemperatureControlledCabinet::setRawMaxTemperature(int16_t _rawTemper
   }
 
   esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MaxTemperature::Id, &tempVal)) {
     log_e("Failed to get Temperature Controlled Cabinet Max Temperature Attribute.");
     return false;
@@ -477,9 +505,8 @@ bool MatterTemperatureControlledCabinet::setRawStep(int16_t _rawStep) {
   }
 
   esp_matter_attr_val_t stepVal = esp_matter_invalid(NULL);
-
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal)) {
-    log_e("Failed to get Temperature Controlled Cabinet Step Attribute.");
+    log_e("Failed to get Temperature Controlled Cabinet Step Attribute. Temperature_step feature may not be enabled.");
     return false;
   }
   if (stepVal.val.i16 != _rawStep) {
@@ -508,6 +535,8 @@ double MatterTemperatureControlledCabinet::getStep() {
     return 0.0;
   }
   
+  // Read from attribute (should always exist after begin() due to workaround)
+  // If read fails, use stored rawStep value from begin()
   esp_matter_attr_val_t stepVal = esp_matter_invalid(NULL);
   if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal)) {
     rawStep = stepVal.val.i16;
@@ -531,7 +560,6 @@ bool MatterTemperatureControlledCabinet::setSelectedTemperatureLevel(uint8_t lev
   }
 
   esp_matter_attr_val_t levelVal = esp_matter_invalid(NULL);
-
   if (!getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SelectedTemperatureLevel::Id, &levelVal)) {
     log_e("Failed to get Temperature Controlled Cabinet Selected Temperature Level Attribute.");
     return false;
