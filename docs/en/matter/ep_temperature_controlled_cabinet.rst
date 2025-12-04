@@ -11,7 +11,7 @@ The ``MatterTemperatureControlledCabinet`` class provides a temperature controll
 
 **Features:**
 * Two initialization modes:
-   * **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control (step value can be set in begin() or later)
+   * **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control
    * **Temperature Level Mode** (``begin(supportedLevels, levelCount, selectedLevel)``): Temperature level control with array of supported levels
 * 1/100th degree Celsius precision (for temperature_number mode)
 * Min/max temperature limits with validation (temperature_number mode)
