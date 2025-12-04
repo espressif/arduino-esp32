@@ -186,7 +186,7 @@ void handleButtonPress() {
   if (button_state && time_diff > decommissioningTimeout) {
     Serial.println("Decommissioning Temperature Controlled Cabinet Matter Accessory. It shall be commissioned again.");
     Matter.decommission();
-    button_time_stamp = millis();  // avoid running decommissining again, reboot takes a second or so
+    button_time_stamp = millis();  // avoid running decommissioning again, reboot takes a second or so
   }
 }
 
