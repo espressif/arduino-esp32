@@ -102,4 +102,3 @@ bool MatterRainSensor::setRain(bool _rainState) {
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-

@@ -135,4 +135,3 @@ Rain Sensor
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterRainSensor/MatterRainSensor.ino
     :language: arduino
-
