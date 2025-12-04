@@ -2,6 +2,22 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/WebServer/examples/AdvancedWebServer",
+                    "sizes": [{
+                            "flash_bytes": 1082290,
+                            "flash_percentage": 82,
+                            "ram_bytes": 50564,
+                            "ram_percentage": 15
+                            }]
+                    },
+{"name": "libraries/WebServer/examples/ChunkWriting",
+                    "sizes": [{
+                            "flash_bytes": 1061370,
+                            "flash_percentage": 80,
+                            "ram_bytes": 50468,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/WebServer/examples/FSBrowser",
                     "sizes": [{
                             "flash_bytes": 1118242,
@@ -120,22 +136,6 @@
                             "flash_percentage": 44,
                             "ram_bytes": 53716,
                             "ram_percentage": 16
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/WebServer",
-                    "sizes": [{
-                            "flash_bytes": 1141700,
-                            "flash_percentage": 87,
-                            "ram_bytes": 48596,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/WebUpdate",
-                    "sizes": [{
-                            "flash_bytes": 1092752,
-                            "flash_percentage": 83,
-                            "ram_bytes": 50804,
-                            "ram_percentage": 15
                             }]
                     }
 ]
@@ -260,6 +260,22 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/USB/examples/HIDVendor",
+                    "sizes": [{
+                            "flash_bytes": 385059,
+                            "flash_percentage": 29,
+                            "ram_bytes": 43680,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
+                    "sizes": [{
+                            "flash_bytes": 370775,
+                            "flash_percentage": 28,
+                            "ram_bytes": 43624,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
                     "sizes": [{
                             "flash_bytes": 370931,
@@ -379,28 +395,28 @@
                             "ram_bytes": 45364,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 943423,
-                            "flash_percentage": 71,
-                            "ram_bytes": 45040,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 965719,
-                            "flash_percentage": 73,
-                            "ram_bytes": 47688,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/USB/examples/SystemControl",
+                    "sizes": [{
+                            "flash_bytes": 308446,
+                            "flash_percentage": 23,
+                            "ram_bytes": 38112,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "libraries/USB/examples/USBMSC",
+                    "sizes": [{
+                            "flash_bytes": 320830,
+                            "flash_percentage": 24,
+                            "ram_bytes": 45912,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/USB/examples/USBSerial",
                     "sizes": [{
                             "flash_bytes": 315906,
@@ -512,28 +528,28 @@
                             "ram_bytes": 45576,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/WebServer/examples/HttpAuthCallback",
-                    "sizes": [{
-                            "flash_bytes": 937342,
-                            "flash_percentage": 71,
-                            "ram_bytes": 45704,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
-                    "sizes": [{
-                            "flash_bytes": 936774,
-                            "flash_percentage": 71,
-                            "ram_bytes": 45592,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/TFLiteMicro/examples/hello_world",
+                    "sizes": [{
+                            "flash_bytes": 296304,
+                            "flash_percentage": 22,
+                            "ram_bytes": 14224,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/Ticker/examples/Blinker",
+                    "sizes": [{
+                            "flash_bytes": 282694,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12992,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/Ticker/examples/TickerBasic",
                     "sizes": [{
                             "flash_bytes": 282476,
@@ -637,28 +653,28 @@
                             "ram_bytes": 38468,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "libraries/WebServer/examples/HttpAdvancedAuth",
-                    "sizes": [{
-                            "flash_bytes": 1047880,
-                            "flash_percentage": 79,
-                            "ram_bytes": 40780,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/HttpAuthCallback",
-                    "sizes": [{
-                            "flash_bytes": 1048566,
-                            "flash_percentage": 79,
-                            "ram_bytes": 40908,
-                            "ram_percentage": 12
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/Update/examples/OTAWebUpdater",
+                    "sizes": [{
+                            "flash_bytes": 1058100,
+                            "flash_percentage": 80,
+                            "ram_bytes": 44932,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "libraries/Update/examples/SD_Update",
+                    "sizes": [{
+                            "flash_bytes": 332014,
+                            "flash_percentage": 25,
+                            "ram_bytes": 14852,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/WebServer/examples/AdvancedWebServer",
                     "sizes": [{
                             "flash_bytes": 1042710,
@@ -778,28 +794,28 @@
                             "ram_bytes": 44956,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/WebServer/examples/SimpleAuthentification",
-                    "sizes": [{
-                            "flash_bytes": 992114,
-                            "flash_percentage": 75,
-                            "ram_bytes": 41652,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/UploadHugeFile",
-                    "sizes": [{
-                            "flash_bytes": 1338252,
-                            "flash_percentage": 42,
-                            "ram_bytes": 47828,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
+                    "sizes": [{
+                            "flash_bytes": 997484,
+                            "flash_percentage": 76,
+                            "ram_bytes": 46188,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+                    "sizes": [{
+                            "flash_bytes": 994700,
+                            "flash_percentage": 75,
+                            "ram_bytes": 46180,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/PPP/examples/PPP_Basic",
                     "sizes": [{
                             "flash_bytes": 551340,
@@ -871,28 +887,28 @@
                             "ram_bytes": 14248,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/Ticker/examples/TickerParameter",
-                    "sizes": [{
-                            "flash_bytes": 282876,
-                            "flash_percentage": 21,
-                            "ram_bytes": 14272,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 367942,
-                            "flash_percentage": 28,
-                            "ram_bytes": 14816,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/SD_MMC/examples/SDMMC_time",
+                    "sizes": [{
+                            "flash_bytes": 990955,
+                            "flash_percentage": 75,
+                            "ram_bytes": 46184,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 286023,
+                            "flash_percentage": 21,
+                            "ram_bytes": 20972,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
                             "flash_bytes": 327803,
@@ -1002,22 +1018,6 @@
                             "flash_bytes": 978295,
                             "flash_percentage": 74,
                             "ram_bytes": 48168,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/ChunkWriting",
-                    "sizes": [{
-                            "flash_bytes": 972627,
-                            "flash_percentage": 74,
-                            "ram_bytes": 48060,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/FSBrowser",
-                    "sizes": [{
-                            "flash_bytes": 1021531,
-                            "flash_percentage": 77,
-                            "ram_bytes": 48204,
                             "ram_percentage": 14
                             }]
                     }
