@@ -571,6 +571,18 @@ bool MatterTemperatureControlledCabinet::setSelectedTemperatureLevel(uint8_t lev
     return false;
   }
 
+  // Validate that level is in supported levels array
+  bool levelFound = false;
+  for (uint16_t i = 0; i < supportedLevelsCount; i++) {
+    if (supportedLevelsArray[i] == level) {
+      levelFound = true;
+      break;
+    }
+  }
+  if (!levelFound) {
+    log_e("Temperature level %u is not in the supported levels array", level);
+    return false;
+  }
   if (selectedTempLevel == level) {
     return true;
   }
