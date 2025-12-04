@@ -48,7 +48,7 @@ const char *password = "your-password";  // Change this to your WiFi password
 // set your board USER BUTTON pin here - decommissioning button
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
-// Button control - decommision the Matter Node
+// Button control - decommission the Matter Node
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
