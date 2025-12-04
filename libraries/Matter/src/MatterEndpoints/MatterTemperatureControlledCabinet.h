@@ -74,7 +74,7 @@ protected:
   // Note: temperature_number and temperature_level are mutually exclusive
   bool useTemperatureNumber = true;
   
-  // implementation keeps temperature in 1/100th Celsius x 100 (int16_t) normalized value
+  // temperature in 1/100th Celsius (stored as int16_t by multiplying by 100)
   int16_t rawTempSetpoint = 0;
   int16_t rawMinTemperature = 0;
   int16_t rawMaxTemperature = 0;
