@@ -293,10 +293,6 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   }
   
   // Copy supported levels array into internal buffer
-  if (levelCount > temperature_control::k_max_temp_level_count) {
-    log_e("Level count %u exceeds maximum %u", levelCount, temperature_control::k_max_temp_level_count);
-    return false;
-  }
   memcpy(supportedLevelsArray, supportedLevels, levelCount * sizeof(uint8_t));
   supportedLevelsCount = levelCount;
   selectedTempLevel = selectedLevel;
