@@ -102,4 +102,3 @@ bool MatterWaterLeakDetector::setLeak(bool _leakState) {
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-

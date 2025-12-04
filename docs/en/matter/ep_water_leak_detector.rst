@@ -135,4 +135,3 @@ Water Leak Detector
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterWaterLeakDetector/MatterWaterLeakDetector.ino
     :language: arduino
-
