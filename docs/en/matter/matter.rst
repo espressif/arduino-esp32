@@ -127,6 +127,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterPressureSensor``: Pressure sensor (read-only)
 * ``MatterContactSensor``: Contact sensor (open/closed state)
 * ``MatterWaterFreezeDetector``: Water freeze detector (detected/not detected state)
+* ``MatterRainSensor``: Rain sensor (detected/not detected state)
 * ``MatterOccupancySensor``: Occupancy sensor (occupied/unoccupied state)
 
 **Control Endpoints:**

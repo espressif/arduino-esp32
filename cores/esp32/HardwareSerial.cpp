@@ -61,6 +61,31 @@ HardwareSerial Serial5(5);
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
 
+// C-callable helper used by HAL when pins are detached and the high-level
+// HardwareSerial instance must be finalized.
+extern "C" void hal_uart_notify_pins_detached(int uart_num) {
+  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
+  switch (uart_num) {
+    case 0: Serial0.end(); break;
+#if SOC_UART_NUM > 1
+    case 1: Serial1.end(); break;
+#endif
+#if SOC_UART_NUM > 2
+    case 2: Serial2.end(); break;
+#endif
+#if SOC_UART_NUM > 3
+    case 3: Serial3.end(); break;
+#endif
+#if SOC_UART_NUM > 4
+    case 4: Serial4.end(); break;
+#endif
+#if SOC_UART_NUM > 5
+    case 5: Serial5.end(); break;
+#endif
+    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
+  }
+}
+
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
 extern void USBSerialEvent(void) __attribute__((weak));
@@ -483,9 +508,6 @@ void HardwareSerial::end() {
   // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
   _onReceiveCB = NULL;
   _onReceiveErrorCB = NULL;
-  if (uartGetDebug() == _uart_nr) {
-    uartSetDebug(0);
-  }
   _rxFIFOFull = 0;
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
   _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too

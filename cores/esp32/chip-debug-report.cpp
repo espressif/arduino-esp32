@@ -291,7 +291,7 @@ static void printPerimanInfo(void) {
 
 void printBeforeSetupInfo(void) {
 #if ARDUINO_USB_CDC_ON_BOOT
-  Serial.begin(0);
+  Serial.begin();
   Serial.setDebugOutput(true);
   uint8_t t = 0;
   while (!Serial && (t++ < 200)) {

@@ -194,6 +194,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterWaterFreezeDetector.cpp
+  libraries/Matter/src/MatterEndpoints/MatterRainSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
