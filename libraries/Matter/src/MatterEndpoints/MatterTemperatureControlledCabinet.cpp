@@ -247,7 +247,19 @@ bool MatterTemperatureControlledCabinet::begin(uint8_t *supportedLevels, uint16_
     log_e("Level count %u exceeds maximum %u", levelCount, temperature_control::k_max_temp_level_count);
     return false;
   }
-  
+
+  // Validate that selectedLevel exists in supportedLevels array
+  bool levelFound = false;
+  for (uint16_t i = 0; i < levelCount; i++) {
+    if (supportedLevels[i] == selectedLevel) {
+      levelFound = true;
+      break;
+    }
+  }
+  if (!levelFound) {
+    log_e("Selected level %u is not in the supported levels array", selectedLevel);
+    return false;
+  }
   return beginInternal(supportedLevels, levelCount, selectedLevel);
 }
 
