@@ -7,9 +7,8 @@ About
 
 The ``MatterTemperatureControlledCabinet`` class provides a temperature controlled cabinet endpoint for Matter networks. This endpoint implements the Matter temperature control standard for managing temperature setpoints with min/max limits, step control (always enabled), or temperature level support.
 
-**Important:** The ``temperature_number`` and ``temperature_level`` features are **mutually exclusive**. Only one can be enabled at a time. Use ``begin(tempSetpoint, minTemp, maxTemp, step)`` for temperature_number mode or ``begin(supportedLevels, levelCount, selectedLevel)`` for temperature_level mode.
-
 **Features:**
+
 * Two initialization modes:
 
    - **Temperature Number Mode** (``begin(tempSetpoint, minTemp, maxTemp, step)``): Temperature setpoint control with min/max limits and step control
@@ -24,7 +23,10 @@ The ``MatterTemperatureControlledCabinet`` class provides a temperature controll
 * Integration with Apple HomeKit, Amazon Alexa, and Google Home
 * Matter standard compliance
 
+**Important:** The ``temperature_number`` and ``temperature_level`` features are **mutually exclusive**. Only one can be enabled at a time. Use ``begin(tempSetpoint, minTemp, maxTemp, step)`` for temperature_number mode or ``begin(supportedLevels, levelCount, selectedLevel)`` for temperature_level mode.
+
 **Use Cases:**
+
 * Refrigerators and freezers
 * Wine coolers
 * Medical storage cabinets
