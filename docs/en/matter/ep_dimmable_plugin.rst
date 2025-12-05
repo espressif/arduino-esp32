@@ -18,7 +18,6 @@ The ``MatterDimmablePlugin`` class provides a dimmable plugin unit endpoint for 
 **Use Cases:**
 * Dimmable smart power outlets
 * Variable power control
-* Dimmable relay control
 * Smart dimmer plugs
 * Level-controlled device control
 
