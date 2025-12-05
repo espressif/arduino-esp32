@@ -11,6 +11,15 @@
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
 
+// clang-format off
+#define DEFAULT_ESPNOW_RATE_CONFIG { \
+  .phymode = WIFI_PHY_MODE_11G,      \
+  .rate = WIFI_PHY_RATE_1M_L,        \
+  .ersu = false,                     \
+  .dcm = false                       \
+}
+// clang-format on
+
 class ESP_NOW_Peer;  //forward declaration for friend function
 
 class ESP_NOW_Class : public Print {
@@ -29,6 +38,8 @@ public:
   int getVersion() const;
 
   int availableForWrite();
+
+  // You can directly send data to all peers without broadcasting using ESP_NOW.write(data, len)
   size_t write(const uint8_t *data, size_t len);
   size_t write(uint8_t data) {
     return write(&data, 1);
@@ -47,6 +58,7 @@ private:
   uint8_t mac[6];
   uint8_t chan;
   wifi_interface_t ifc;
+  esp_now_rate_config_t rate;
   bool encrypt;
   uint8_t key[16];
 
@@ -56,7 +68,7 @@ protected:
   bool remove();
   size_t send(const uint8_t *data, int len);
 
-  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr);
+  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr, esp_now_rate_config_t *rate_config = nullptr);
 
 public:
   virtual ~ESP_NOW_Peer() {}
@@ -69,6 +81,9 @@ public:
 
   wifi_interface_t getInterface() const;
   bool setInterface(wifi_interface_t iface);
+
+  bool setRate(const esp_now_rate_config_t *rate_config);
+  esp_now_rate_config_t getRate() const;
 
   bool isEncrypted() const;
   bool setKey(const uint8_t *lmk);
