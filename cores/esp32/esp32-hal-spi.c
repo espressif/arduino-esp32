@@ -278,9 +278,11 @@ void setLDOPower(int8_t pin) {
   int8_t ldo_ctrld[] = {
            SDMMC_SLOT0_IOMUX_PIN_NUM_CLK, SDMMC_SLOT0_IOMUX_PIN_NUM_CMD,
            SDMMC_SLOT0_IOMUX_PIN_NUM_D0,  SDMMC_SLOT0_IOMUX_PIN_NUM_D1,
-           SDMMC_SLOT0_IOMUX_PIN_NUM_D2,  SDMMC_SLOT0_IOMUX_PIN_NUM_D3
+           SDMMC_SLOT0_IOMUX_PIN_NUM_D2,  SDMMC_SLOT0_IOMUX_PIN_NUM_D3,
+           SDMMC_SLOT0_IOMUX_PIN_NUM_D4,  SDMMC_SLOT0_IOMUX_PIN_NUM_D5,
+           SDMMC_SLOT0_IOMUX_PIN_NUM_D6,  SDMMC_SLOT0_IOMUX_PIN_NUM_D7
   };
-  for (int j=0; j<6; j++) {
+  for (int j=0; j<10; j++) {
     if (pin == ldo_ctrld[j]) {
 #ifdef BOARD_SDMMC_POWER_PIN
       pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
