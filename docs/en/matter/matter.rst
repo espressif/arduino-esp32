@@ -133,6 +133,8 @@ The library provides specialized endpoint classes for different device types. Ea
 
 **Control Endpoints:**
 
+* ``MatterTemperatureControlledCabinet``: Temperature controlled cabinet (setpoint control with min/max limits)
+
 * ``MatterFan``: Fan with speed and mode control
 * ``MatterThermostat``: Thermostat with temperature control and setpoints
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay)
