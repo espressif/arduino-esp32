@@ -69,7 +69,7 @@ Before uploading the sketch, configure the following:
    ```cpp
    const uint8_t pluginPin = 2;  // Set your PWM-capable pin here for dimmer control
    ```
-   
+
    **Note**: The example uses `RGB_BUILTIN` if available on your board (e.g., ESP32-S3, ESP32-C3) to visually demonstrate the level control. The RGB LED brightness will change based on the power level (0-255). For boards without RGB LED, it falls back to a regular pin with PWM support.
 
 3. **Button pin configuration** (optional):
@@ -220,4 +220,3 @@ The MatterDimmablePlugin example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

@@ -192,4 +192,3 @@ void MatterDimmablePlugin::operator=(bool newState) {
   setOnOff(newState);
 }
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-

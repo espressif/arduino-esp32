@@ -255,4 +255,3 @@ Dimmable Plugin
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterDimmablePlugin/MatterDimmablePlugin.ino
     :language: arduino
-

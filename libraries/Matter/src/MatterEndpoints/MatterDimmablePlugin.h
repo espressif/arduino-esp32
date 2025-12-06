@@ -66,11 +66,10 @@ public:
 
 protected:
   bool started = false;
-  bool onOffState = false;      // default initial state is off, but it can be changed by begin(bool)
-  uint8_t level = 0;            // default initial level is 0, but it can be changed by begin(bool, uint8_t)
+  bool onOffState = false;  // default initial state is off, but it can be changed by begin(bool)
+  uint8_t level = 0;        // default initial level is 0, but it can be changed by begin(bool, uint8_t)
   EndPointOnOffCB _onChangeOnOffCB = NULL;
   EndPointLevelCB _onChangeLevelCB = NULL;
   EndPointCB _onChangeCB = NULL;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-

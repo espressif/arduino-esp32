@@ -50,7 +50,7 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
-const uint32_t debounceTime = 250;              // button debouncing time (ms)
+const uint32_t debounceTime = 250;             // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Set the RGB LED Plugin output based on the current state and level
@@ -184,4 +184,3 @@ void loop() {
     button_time_stamp = millis();  // avoid running decommissioning again, reboot takes a second or so
   }
 }
-
