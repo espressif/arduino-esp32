@@ -29,7 +29,9 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
 #include <initializer_list>
+#endif
 
 // A pure abstract class forward used as a means to proide a unique pointer type
 // but really is never defined.
