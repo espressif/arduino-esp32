@@ -32,6 +32,24 @@ MacAddress::MacAddress(const String &macstr) {
   fromString(macstr.c_str());
 }
 
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+MacAddress::MacAddress(std::initializer_list<uint8_t> list) {
+  size_t size = list.size();
+  memset(_mac.bytes, 0, sizeof(_mac.bytes));
+  if (size == 6) {
+    _type = MAC6;
+  } else if (size == 8) {
+    _type = MAC8;
+  } else {
+    // Default to MAC6 and keep the rest of the bytes as 0
+    _type = MAC6;
+    return;
+  }
+
+  memcpy(_mac.bytes, list.begin(), size);
+}
+#endif
+
 MacAddress::MacAddress(uint8_t b1, uint8_t b2, uint8_t b3, uint8_t b4, uint8_t b5, uint8_t b6) {
   _type = MAC6;
   memset(_mac.bytes, 0, sizeof(_mac.bytes));

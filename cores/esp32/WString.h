@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+#include <initializer_list>
 
 // A pure abstract class forward used as a means to proide a unique pointer type
 // but really is never defined.
@@ -58,6 +59,7 @@ public:
   String(const char *cstr, unsigned int length);
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
   String(const uint8_t *cstr, unsigned int length) : String(reinterpret_cast<const char *>(cstr), length) {}
+  String(std::initializer_list<char> list);
 #endif
   String(const String &str);
   String(const __FlashStringHelper *str) : String(reinterpret_cast<const char *>(str)) {}
