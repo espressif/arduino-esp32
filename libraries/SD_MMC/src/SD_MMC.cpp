@@ -247,8 +247,13 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
     .flags = 0,
   };
 #ifdef SOC_SDMMC_UHS_I_SUPPORTED
-  host.flags &= ~SDMMC_HOST_FLAG_DDR;
+if (sdmmc_frequency == SDMMC_FREQ_DDR50) {
+  host.flags |= SDMMC_HOST_FLAG_DDR;
   slot_config.flags = SDMMC_SLOT_FLAG_UHS1;
+}
+if (sdmmc_frequency == SDMMC_FREQ_SDR50) {
+  slot_config.flags = SDMMC_SLOT_FLAG_UHS1;
+}
 #endif
 #else
   host.slot = SDMMC_HOST_SLOT_1;
