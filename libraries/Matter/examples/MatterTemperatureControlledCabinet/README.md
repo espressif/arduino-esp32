@@ -172,7 +172,7 @@ The MatterTemperatureControlledCabinet example consists of the following main co
 
 1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with initial temperature configuration, and waits for Matter commissioning.
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - **Dynamic Temperature Updates**: Automatically changes the temperature setpoint every 1 second, cycling between the minimum and maximum temperature limits using the configured step value. This demonstrates the temperature control functionality and allows Matter controllers to observe real-time changes.
    - **Setpoint Reached Detection**: Monitors when the initial setpoint is reached or overpassed in each direction and prints a notification message once per direction.
    - Periodically prints the current temperature setpoint (every 5 seconds)
@@ -213,4 +213,3 @@ The example demonstrates the following API methods:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

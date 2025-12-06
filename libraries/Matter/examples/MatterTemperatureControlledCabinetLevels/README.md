@@ -172,7 +172,7 @@ The MatterTemperatureControlledCabinetLevels example consists of the following m
 
 1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Temperature Controlled Cabinet endpoint with temperature level configuration, and waits for Matter commissioning.
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - **Dynamic Level Updates**: Automatically cycles through all supported temperature levels every 1 second in both directions (increasing and decreasing). This demonstrates the temperature level control functionality and allows Matter controllers to observe real-time changes.
    - **Level Reached Detection**: Monitors when the initial level is reached or overpassed in each direction and prints a notification message once per direction.
    - Periodically prints the current temperature level (every 5 seconds)
@@ -213,4 +213,3 @@ The example demonstrates the following API methods:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

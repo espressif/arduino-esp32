@@ -14,7 +14,7 @@
 
 /*
  * This example demonstrates the Temperature Number mode of the Matter Temperature Controlled Cabinet Device.
- * 
+ *
  * This example will create a Matter Device which can be commissioned and controlled from a Matter Environment APP.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
@@ -22,7 +22,7 @@
  * The example will create a Matter Temperature Controlled Cabinet Device using temperature_number feature.
  * The Temperature Controlled Cabinet can be controlled via Matter controllers to set
  * temperature setpoint with min/max limits and optional step control.
- * 
+ *
  * This mode is mutually exclusive with temperature_level mode.
  * See MatterTemperatureControlledCabinetLevels example for temperature level control.
  */
@@ -104,10 +104,10 @@ void updateTemperatureSetpoint() {
   double minTemp = TemperatureCabinet.getMinTemperature();
   double maxTemp = TemperatureCabinet.getMaxTemperature();
   double step = TemperatureCabinet.getStep();
-  
+
   // Calculate next setpoint based on direction and step
   bool directionChanged = false;
-  
+
   if (tempState.increasing) {
     tempState.currentSetpoint += step;
     if (tempState.currentSetpoint >= maxTemp) {
@@ -123,14 +123,13 @@ void updateTemperatureSetpoint() {
       directionChanged = true;
     }
   }
-  
+
   // Check if setpoint has been reached or overpassed
   checkSetpointReached(tempState.currentSetpoint, tempState.increasing, directionChanged);
-  
+
   // Update the temperature setpoint
   if (TemperatureCabinet.setTemperatureSetpoint(tempState.currentSetpoint)) {
-    Serial.printf("Temperature setpoint updated to: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
-                  tempState.currentSetpoint, minTemp, maxTemp);
+    Serial.printf("Temperature setpoint updated to: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", tempState.currentSetpoint, minTemp, maxTemp);
   } else {
     Serial.printf("Failed to update temperature setpoint to: %.02f°C\r\n", tempState.currentSetpoint);
   }
@@ -138,10 +137,10 @@ void updateTemperatureSetpoint() {
 
 // Print current temperature status
 void printTemperatureStatus() {
-  Serial.printf("Current Temperature Setpoint: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", 
-                TemperatureCabinet.getTemperatureSetpoint(),
-                TemperatureCabinet.getMinTemperature(),
-                TemperatureCabinet.getMaxTemperature());
+  Serial.printf(
+    "Current Temperature Setpoint: %.02f°C (Range: %.02f°C to %.02f°C)\r\n", TemperatureCabinet.getTemperatureSetpoint(),
+    TemperatureCabinet.getMinTemperature(), TemperatureCabinet.getMaxTemperature()
+  );
 }
 
 // Handle button press for decommissioning

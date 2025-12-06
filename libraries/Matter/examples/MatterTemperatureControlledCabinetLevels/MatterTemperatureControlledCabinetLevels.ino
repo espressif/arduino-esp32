@@ -14,7 +14,7 @@
 
 /*
  * This example demonstrates the Temperature Level mode of the Matter Temperature Controlled Cabinet Device.
- * 
+ *
  * This example will create a Matter Device which can be commissioned and controlled from a Matter Environment APP.
  * Additionally the ESP32 will send debug messages indicating the Matter activity.
  * Turning DEBUG Level ON may be useful to following Matter Accessory and Controller messages.
@@ -22,7 +22,7 @@
  * The example will create a Matter Temperature Controlled Cabinet Device using temperature_level feature.
  * The Temperature Controlled Cabinet can be controlled via Matter controllers to set
  * temperature levels from a predefined array of supported levels.
- * 
+ *
  * This mode is mutually exclusive with temperature_number mode.
  * See MatterTemperatureControlledCabinet example for temperature setpoint control.
  */
@@ -71,12 +71,7 @@ struct LevelControlState {
 };
 
 static LevelControlState levelState = {
-  .initialized = false,
-  .increasing = true,
-  .currentLevelIndex = 0,
-  .initialLevel = 0,
-  .levelReachedIncreasing = false,
-  .levelReachedDecreasing = false
+  .initialized = false, .increasing = true, .currentLevelIndex = 0, .initialLevel = 0, .levelReachedIncreasing = false, .levelReachedDecreasing = false
 };
 
 // Initialize level control state
@@ -117,7 +112,7 @@ void checkLevelReached(uint8_t newLevel, bool isIncreasing, bool directionChange
 void updateTemperatureLevel() {
   // Cycle through supported levels in both directions
   bool directionChanged = false;
-  
+
   if (levelState.increasing) {
     levelState.currentLevelIndex++;
     if (levelState.currentLevelIndex >= levelCount) {
@@ -134,12 +129,12 @@ void updateTemperatureLevel() {
       levelState.currentLevelIndex--;
     }
   }
-  
+
   uint8_t newLevel = supportedLevels[levelState.currentLevelIndex];
-  
+
   // Check if initial level has been reached or overpassed
   checkLevelReached(newLevel, levelState.increasing, directionChanged);
-  
+
   // Update the temperature level
   if (TemperatureCabinet.setSelectedTemperatureLevel(newLevel)) {
     Serial.printf("Temperature level updated to: %u (Supported Levels: ", newLevel);
@@ -212,7 +207,7 @@ void setup() {
   // - supportedLevels: Array of temperature level values (0-255)
   // - levelCount: Number of levels in the array
   // - initialLevel: Initial selected temperature level
-  // 
+  //
   // Note: This mode is mutually exclusive with temperature_number mode.
   // See MatterTemperatureControlledCabinet example for temperature setpoint control.
   if (!TemperatureCabinet.begin(supportedLevels, levelCount, initialLevel)) {

@@ -294,4 +294,3 @@ Temperature Controlled Cabinet (Level Mode)
 A separate example demonstrates the temperature_level mode with dynamic level updates. The temperature level automatically cycles through all supported levels every 1 second in both directions (increasing and decreasing), allowing Matter controllers to observe real-time changes. The example also monitors and logs when the initial level is reached or overpassed in each direction.
 
 See ``MatterTemperatureControlledCabinetLevels`` example for the temperature level mode implementation.
-
