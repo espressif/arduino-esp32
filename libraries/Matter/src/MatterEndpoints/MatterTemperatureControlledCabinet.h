@@ -23,15 +23,15 @@ class MatterTemperatureControlledCabinet : public MatterEndPoint {
 public:
   MatterTemperatureControlledCabinet();
   ~MatterTemperatureControlledCabinet();
-  
+
   // begin with temperature_number feature (mutually exclusive with temperature_level)
   // This enables temperature setpoint control with min/max limits and optional step
   bool begin(double tempSetpoint = 0.00, double minTemperature = -10.0, double maxTemperature = 32.0, double step = 0.50);
-  
+
   // begin with temperature_level feature (mutually exclusive with temperature_number)
   // This enables temperature level control with an array of supported levels
   bool begin(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel = 0);
-  
+
   // this will stop processing Temperature Controlled Cabinet Matter events
   void end();
 
@@ -73,7 +73,7 @@ protected:
   // Feature mode: true = temperature_number, false = temperature_level
   // Note: temperature_number and temperature_level are mutually exclusive
   bool useTemperatureNumber = true;
-  
+
   // temperature in 1/100th Celsius (stored as int16_t by multiplying by 100)
   int16_t rawTempSetpoint = 0;
   int16_t rawMinTemperature = 0;
@@ -83,7 +83,7 @@ protected:
   // Fixed-size buffer for supported temperature levels (max 16 as per Matter spec: temperature_control::k_max_temp_level_count)
   uint8_t supportedLevelsArray[16];  // Size matches esp_matter::cluster::temperature_control::k_max_temp_level_count
   uint16_t supportedLevelsCount = 0;
-  
+
   // internal functions to set the raw temperature values (Matter Cluster)
   bool setRawTemperatureSetpoint(int16_t _rawTemperature);
   bool setRawMinTemperature(int16_t _rawTemperature);
@@ -93,4 +93,3 @@ protected:
   bool beginInternal(uint8_t *supportedLevels, uint16_t levelCount, uint8_t selectedLevel);
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-
