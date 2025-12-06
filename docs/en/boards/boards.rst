@@ -18,10 +18,16 @@ The ESP32 is divided by family:
 
 * ESP32
     * Wi-Fi, BT and BLE 4
+* ESP32-C2
+    * Wi-Fi and BLE 5
 * ESP32-C3
     * Wi-Fi and BLE 5
+* ESP32-C5
+    * Dual-band Wi-Fi 6, BLE 5 and IEEE 802.15.4
 * ESP32-C6
-    * Wi-Fi, BLE 5 and IEEE 802.15.4
+    * Wi-Fi 6, BLE 5 and IEEE 802.15.4
+* ESP32-C61
+    * Wi-Fi 6, BLE 5
 * ESP32-H2
     * BLE 5 and IEEE 802.15.4
 * ESP32-P4
