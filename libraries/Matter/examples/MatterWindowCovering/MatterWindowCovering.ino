@@ -71,9 +71,9 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined RG
 #endif
 
 void visualizeWindowBlinds(uint8_t liftPercent, uint8_t tiltPercent) {
+#ifdef RGB_BUILTIN
   // Use RGB LED to visualize lift position (brightness) and tilt (color shift)
   float brightness = (float)liftPercent / 100.0;  // 0.0 to 1.0
-#ifdef RGB_BUILTIN
   // Tilt affects color: 0% = red, 100% = blue
   uint8_t red = (uint8_t)(map(tiltPercent, 0, 100, 255, 0) * brightness);
   uint8_t blue = (uint8_t)(map(tiltPercent, 0, 100, 0, 255) * brightness);
