@@ -35,6 +35,7 @@
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
 #include <MatterEndpoints/MatterThermostat.h>
+#include <MatterEndpoints/MatterWindowCovering.h>
 
 // Matter Event types used when there is a user callback for Matter Events
 enum matterEvent_t {
@@ -202,6 +203,7 @@ public:
   friend class MatterOccupancySensor;
   friend class MatterOnOffPlugin;
   friend class MatterThermostat;
+  friend class MatterWindowCovering;
 
 protected:
   static void _init();
