@@ -52,7 +52,7 @@ const uint16_t MIN_LIFT = 0;     // Minimum lift position (fully closed)
 
 // Tilt limits (absolute values for conversion, not physical units)
 // Tilt is a rotation, not a linear measurement
-const uint16_t MAX_TILT = 40;    // Maximum tilt absolute value
+const uint16_t MAX_TILT = 90;    // Maximum tilt absolute value
 const uint16_t MIN_TILT = 0;     // Minimum tilt absolute value
 
 // Current window covering state
@@ -73,12 +73,11 @@ const uint8_t ledPin = 2;  // Set your pin here if your board has not defined RG
 void visualizeWindowBlinds(uint8_t liftPercent, uint8_t tiltPercent) {
   // Use RGB LED to visualize lift position (brightness) and tilt (color shift)
   float brightness = (float)liftPercent / 100.0;  // 0.0 to 1.0
+#ifdef RGB_BUILTIN
   // Tilt affects color: 0% = red, 100% = blue
   uint8_t red = (uint8_t)(map(tiltPercent, 0, 100, 255, 0) * brightness);
   uint8_t blue = (uint8_t)(map(tiltPercent, 0, 100, 0, 255) * brightness);
   uint8_t green = 0;
-  
-#ifdef RGB_BUILTIN
   rgbLedWrite(ledPin, red, green, blue);
 #else
   // For non-RGB boards, just use brightness
