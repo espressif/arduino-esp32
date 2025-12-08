@@ -40,106 +40,43 @@ static const uint8_t SYS_IRQ = 3;
 static const uint8_t LCD_CS = 17;
 static const uint8_t LCD_RS = 16;
 
-#if !defined(MAIN_ESP32_HAL_GPIO_H_) && defined(__cplusplus)
-/* address: 0x43/0x44 */
-class ExpanderPin {
+#if !defined(MAIN_ESP32_HAL_GPIO_H_) && defined(__cplusplus) /* && !defined(ARDUINO_CORE_BUILD) */
+
+#define ATTRIBUTE_ERROR __attribute__((error("Please include Arduino_Nesso_N1.h")))
+
+class ExpanderPinError {
 public:
-  ExpanderPin(uint16_t _pin) : pin(_pin & 0xFF), address(_pin & 0x100 ? 0x44 : 0x43){};
-  uint8_t pin;
-  uint8_t address;
+  ExpanderPinError(uint16_t p){};
 };
 
-class NessoBattery {
-public:
-  static constexpr uint8_t AW32001_I2C_ADDR = 0x49;
-  static constexpr uint8_t BQ27220_I2C_ADDR = 0x55;
+void ATTRIBUTE_ERROR pinMode(ExpanderPinError pin, uint8_t mode);
+void ATTRIBUTE_ERROR digitalWrite(ExpanderPinError pin, uint8_t val);
+int ATTRIBUTE_ERROR digitalRead(ExpanderPinError pin);
 
-  enum AW32001Reg : uint8_t {
-    AW3200_INPUT_SRC = 0x00,
-    AW3200_POWER_ON_CFG = 0x01,
-    AW3200_CHG_CURRENT = 0x02,
-    AW3200_TERM_CURRENT = 0x03,
-    AW3200_CHG_VOLTAGE = 0x04,
-    AW3200_TIMER_WD = 0x05,
-    AW3200_MAIN_CTRL = 0x06,
-    AW3200_SYS_CTRL = 0x07,
-    AW3200_SYS_STATUS = 0x08,
-    AW3200_FAULT_STATUS = 0x09,
-    AW3200_CHIP_ID = 0x0A,
-  };
+extern ExpanderPinError _LORA_LNA_ENABLE;
+extern ExpanderPinError _LORA_ANTENNA_SWITCH;
+extern ExpanderPinError _LORA_ENABLE;
+extern ExpanderPinError _POWEROFF;
+extern ExpanderPinError _GROVE_POWER_EN;
+extern ExpanderPinError _VIN_DETECT;
+extern ExpanderPinError _LCD_RESET;
+extern ExpanderPinError _LCD_BACKLIGHT;
+extern ExpanderPinError _LED_BUILTIN;
+extern ExpanderPinError _KEY1;
+extern ExpanderPinError _KEY2;
 
-  enum BQ27220Reg : uint8_t {
-    BQ27220_VOLTAGE = 0x08,
-    BQ27220_CURRENT = 0x0C,
-    BQ27220_REMAIN_CAPACITY = 0x10,
-    BQ27220_FULL_CAPACITY = 0x12,
-    BQ27220_AVG_POWER = 0x24,
-    BQ27220_TEMPERATURE = 0x28,
-    BQ27220_CYCLE_COUNT = 0x2A,
-  };
+#define LORA_LNA_ENABLE     _LORA_LNA_ENABLE
+#define LORA_ANTENNA_SWITCH _LORA_ANTENNA_SWITCH
+#define LORA_ENABLE         _LORA_ENABLE
+#define POWEROFF            _POWEROFF
+#define GROVE_POWER_EN      _GROVE_POWER_EN
+#define VIN_DETECT          _VIN_DETECT
+#define LCD_RESET           _LCD_RESET
+#define LCD_BACKLIGHT       _LCD_BACKLIGHT
+#define LED_BUILTIN         _LED_BUILTIN
+#define KEY1                _KEY1
+#define KEY2                _KEY2
 
-  enum ChargeStatus {
-    NOT_CHARGING = 0,
-    PRE_CHARGE = 1,
-    CHARGING = 2,
-    FULL_CHARGE = 3,
-  };
-
-  enum UnderVoltageLockout {
-    UVLO_2430mV = 0,
-    UVLO_2490mV = 1,
-    UVLO_2580mV = 2,
-    UVLO_2670mV = 3,
-    UVLO_2760mV = 4,
-    UVLO_2850mV = 5,
-    UVLO_2940mV = 6,
-    UVLO_3030mV = 7,
-  };
-
-  NessoBattery(){};
-  void begin(
-    uint16_t current = 256, uint16_t voltage = 4200, UnderVoltageLockout uvlo = UVLO_2580mV, uint16_t dpm_voltage = 4520, uint8_t timeout = 0
-  );  // default: charge current 256mA, battery 4200mV, uvlo 2580mV, DMP 4520mV, disable watchdog
-
-  // AW32001 functions
-  void enableCharge();                         // enable charging
-  void setChargeEnable(bool enable);           // charge control
-  void setVinDPMVoltage(uint16_t voltage);     // set input voltage limit, 3880mV ~ 5080mV(step 80mV, default 4520mV)
-  void setIinLimitCurrent(uint16_t current);   // set input current limit, 50mA ~ 500mA(step 30mA, default 500mA)
-  void setBatUVLO(UnderVoltageLockout uvlo);   // set battery under voltage lockout(2430mV, 2490mV, 2580mV, 2670mV, 2760mV, 2850mV, 2940mV, 3030mV)
-  void setChargeCurrent(uint16_t current);     // set charging current, 8mA ~ 456mA(step 8mA, default 128mA)
-  void setDischargeCurrent(uint16_t current);  // set discharging current, 200mA ~ 3200mA(step 200mA, default 2000mA)
-  void setChargeVoltage(uint16_t voltage);     // set charging voltage, 3600mV ~ 4545mV(step 15mV, default 4200mV)
-  void setWatchdogTimer(uint8_t sec);          // set charge watchdog timeout(0s, 40s, 80s, 160s, default 160s, 0 to disable)
-  void feedWatchdog();                         // feed watchdog timer
-  void setShipMode(bool en);                   // set ship mode
-  ChargeStatus getChargeStatus();              // get charge status
-  void setHiZ(bool enable);                    // set Hi-Z mode, true: USB -x-> SYS, false: USB -> SYS
-
-  // BQ27220 functions
-  float getVoltage();         // get battery voltage in Volts
-  float getCurrent();         // get battery current in Amperes
-  uint16_t getChargeLevel();  // get battery charge level in percents
-  int16_t getAvgPower();      // get average power in mWatts, can be negative
-  float getTemperature();     // get battery temperature in Celsius
-  uint16_t getCycleCount();   // get battery cycle count
-};
-
-extern ExpanderPin LORA_LNA_ENABLE;
-extern ExpanderPin LORA_ANTENNA_SWITCH;
-extern ExpanderPin LORA_ENABLE;
-extern ExpanderPin POWEROFF;
-extern ExpanderPin GROVE_POWER_EN;
-extern ExpanderPin VIN_DETECT;
-extern ExpanderPin LCD_RESET;
-extern ExpanderPin LCD_BACKLIGHT;
-extern ExpanderPin LED_BUILTIN;
-extern ExpanderPin KEY1;
-extern ExpanderPin KEY2;
-
-void pinMode(ExpanderPin pin, uint8_t mode);
-void digitalWrite(ExpanderPin pin, uint8_t val);
-int digitalRead(ExpanderPin pin);
 #endif
 
 #endif /* Pins_Arduino_h */
