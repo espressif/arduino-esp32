@@ -792,7 +792,8 @@ bool MatterWindowCovering::setOperationalState(OperationalStatusField_t field, O
 
   uint8_t currentStatus = val.val.u8;
   uint8_t fieldMask = (uint8_t)field;
-  uint8_t fieldShift = (field == LIFT) ? 2 : 4;  // LIFT: bits 2-3, TILT: bits 4-5
+  // For clarity: LIFT uses shift 2 (bits 2-3), TILT uses shift 4 (bits 4-5)
+  uint8_t fieldShift = (field == LIFT) ? 2 : 4;
 
   // Extract current state for this field
   uint8_t currentFieldState = (currentStatus & fieldMask) >> fieldShift;
