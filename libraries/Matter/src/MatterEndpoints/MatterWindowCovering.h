@@ -58,7 +58,7 @@ public:
   MatterWindowCovering();
   ~MatterWindowCovering();
   virtual bool begin(uint8_t liftPercent = 100, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE);
-  void end();  // this will just stop processing Matter events
+  void end();  // this will just stop processing Matter events.
 
   // Lift position control
   bool setLiftPosition(uint16_t liftPosition);
