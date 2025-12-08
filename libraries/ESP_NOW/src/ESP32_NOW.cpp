@@ -18,8 +18,10 @@ static void *new_arg = nullptr;  // * tx_arg = nullptr, * rx_arg = nullptr,
 static bool _esp_now_has_begun = false;
 static ESP_NOW_Peer *_esp_now_peers[ESP_NOW_MAX_TOTAL_PEER_NUM];
 
-static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, ESP_NOW_Peer *_peer = nullptr) {
-  log_v(MACSTR, MAC2STR(mac_addr));
+static esp_err_t _esp_now_add_peer(
+  const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, esp_now_rate_config_t *rate_config, ESP_NOW_Peer *_peer = nullptr
+) {
+  log_i("Adding peer " MACSTR, MAC2STR(mac_addr));
   if (esp_now_is_peer_exist(mac_addr)) {
     log_e("Peer Already Exists");
     return ESP_ERR_ESPNOW_EXIST;
@@ -41,9 +43,17 @@ static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wif
       for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
         if (_esp_now_peers[i] == nullptr) {
           _esp_now_peers[i] = _peer;
+          if (_esp_now_has_begun && rate_config != nullptr) {
+            log_i("ESP-NOW already running. Setting PHY rate for peer " MACSTR, MAC2STR(_peer->addr()));
+            result = esp_now_set_peer_rate_config(_peer->addr(), rate_config);
+            if (result != ESP_OK) {
+              log_w("Could not set the ESP-NOW PHY rate for peer " MACSTR, MAC2STR(_peer->addr()));
+            }
+          }
           return ESP_OK;
         }
       }
+      log_e("Library Peer list full");
       return ESP_FAIL;
     }
   } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
@@ -51,7 +61,7 @@ static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wif
   } else if (result == ESP_ERR_ESPNOW_ARG) {
     log_e("Invalid Argument");
   } else if (result == ESP_ERR_ESPNOW_FULL) {
-    log_e("Peer list full");
+    log_e("ESP-NOW Peer list full");
   } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
     log_e("Out of memory");
   } else if (result == ESP_ERR_ESPNOW_EXIST) {
@@ -149,6 +159,21 @@ static void _esp_now_tx_cb(const uint8_t *mac_addr, esp_now_send_status_t status
   }
 }
 
+esp_err_t _esp_now_set_all_peers_rate() {
+  for (uint8_t i = 0; i < ESP_NOW_MAX_TOTAL_PEER_NUM; i++) {
+    if (_esp_now_peers[i] != nullptr) {
+      log_v("Setting PHY rate for peer " MACSTR, MAC2STR(_esp_now_peers[i]->addr()));
+      esp_now_rate_config_t rate = _esp_now_peers[i]->getRate();
+      esp_err_t err = esp_now_set_peer_rate_config(_esp_now_peers[i]->addr(), &rate);
+      if (err != ESP_OK) {
+        log_e("Failed to set rate for peer " MACSTR, MAC2STR(_esp_now_peers[i]->addr()));
+        return err;
+      }
+    }
+  }
+  return ESP_OK;
+}
+
 ESP_NOW_Class::ESP_NOW_Class() {
   max_data_len = 0;
   version = 0;
@@ -191,6 +216,14 @@ bool ESP_NOW_Class::begin(const uint8_t *pmk) {
   err = esp_now_init();
   if (err != ESP_OK) {
     log_e("esp_now_init failed! 0x%x", err);
+    _esp_now_has_begun = false;
+    return false;
+  }
+
+  // Set the peers PHY rate after initializing ESP-NOW.
+  err = _esp_now_set_all_peers_rate();
+  if (err != ESP_OK) {
+    log_e("Failed to set PHY rate for peers! 0x%x", err);
     _esp_now_has_begun = false;
     return false;
   }
@@ -243,6 +276,7 @@ bool ESP_NOW_Class::end() {
 
 int ESP_NOW_Class::getTotalPeerCount() const {
   if (!_esp_now_has_begun) {
+    log_e("ESP-NOW not initialized");
     return -1;
   }
   esp_now_peer_num_t num;
@@ -256,6 +290,7 @@ int ESP_NOW_Class::getTotalPeerCount() const {
 
 int ESP_NOW_Class::getEncryptedPeerCount() const {
   if (!_esp_now_has_begun) {
+    log_e("ESP-NOW not initialized");
     return -1;
   }
   esp_now_peer_num_t num;
@@ -295,6 +330,7 @@ int ESP_NOW_Class::availableForWrite() {
 
 size_t ESP_NOW_Class::write(const uint8_t *data, size_t len) {
   if (!_esp_now_has_begun) {
+    log_e("ESP-NOW not initialized. Please call begin() first to send data.");
     return 0;
   }
   if (len > max_data_len) {
@@ -336,7 +372,7 @@ ESP_NOW_Class ESP_NOW;
  *
 */
 
-ESP_NOW_Peer::ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk) {
+ESP_NOW_Peer::ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, esp_now_rate_config_t *rate_config) {
   added = false;
   if (mac_addr) {
     memcpy(mac, mac_addr, 6);
@@ -347,6 +383,11 @@ ESP_NOW_Peer::ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel, wifi_interf
   if (encrypt) {
     memcpy(key, lmk, 16);
   }
+  if (rate_config) {
+    rate = *rate_config;
+  } else {
+    rate = DEFAULT_ESPNOW_RATE_CONFIG;
+  }
 }
 
 bool ESP_NOW_Peer::add() {
@@ -356,7 +397,8 @@ bool ESP_NOW_Peer::add() {
   if (added) {
     return true;
   }
-  if (_esp_now_add_peer(mac, chan, ifc, encrypt ? key : nullptr, this) != ESP_OK) {
+  if (_esp_now_add_peer(mac, chan, ifc, encrypt ? key : nullptr, &rate, this) != ESP_OK) {
+    log_e("Failed to add peer " MACSTR, MAC2STR(mac));
     return false;
   }
   log_v("Peer added - " MACSTR, MAC2STR(mac));
@@ -371,12 +413,15 @@ bool ESP_NOW_Peer::remove() {
   if (!added) {
     return true;
   }
-  log_v("Peer removed - " MACSTR, MAC2STR(mac));
+  log_i("Removing peer - " MACSTR, MAC2STR(mac));
   esp_err_t err = _esp_now_del_peer(mac);
   if (err == ESP_OK) {
     added = false;
+    log_i("Peer removed - " MACSTR, MAC2STR(mac));
     return true;
   }
+
+  log_e("Failed to remove peer " MACSTR, MAC2STR(mac));
   return false;
 }
 
@@ -389,6 +434,8 @@ bool ESP_NOW_Peer::addr(const uint8_t *mac_addr) {
     memcpy(mac, mac_addr, 6);
     return true;
   }
+  log_e("Peer already added and ESP-NOW is already running. Cannot change the MAC address.");
+  log_e("Please call addr() before adding the peer or before starting ESP-NOW.");
   return false;
 }
 
@@ -414,6 +461,38 @@ bool ESP_NOW_Peer::setInterface(wifi_interface_t iface) {
     return true;
   }
   return _esp_now_modify_peer(mac, chan, ifc, encrypt ? key : nullptr) == ESP_OK;
+}
+
+/**
+ * @brief Set the rate configuration for the peer.
+ *
+ * @param rate_config Pointer to the rate configuration to set. Nullptr to reset to default rate configuration.
+ * @return true if the rate configuration was set successfully, false otherwise.
+ */
+bool ESP_NOW_Peer::setRate(const esp_now_rate_config_t *rate_config) {
+  if (added && _esp_now_has_begun) {
+    log_e("Peer already added and ESP-NOW is already running. Cannot set rate configuration.");
+    log_e("Please call setRate() before adding the peer or before starting ESP-NOW.");
+    return false;
+  }
+
+  if (rate_config == nullptr) {
+    log_i("Resetting rate configuration to default.");
+    rate = DEFAULT_ESPNOW_RATE_CONFIG;
+  } else {
+    rate = *rate_config;
+  }
+
+  return true;
+}
+
+/**
+ * @brief Get the rate configuration for the peer.
+ *
+ * @return esp_now_rate_config_t The rate configuration for the peer.
+ */
+esp_now_rate_config_t ESP_NOW_Peer::getRate() const {
+  return rate;
 }
 
 bool ESP_NOW_Peer::isEncrypted() const {
