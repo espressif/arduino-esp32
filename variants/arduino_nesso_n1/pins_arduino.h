@@ -46,7 +46,7 @@ static const uint8_t LCD_RS = 16;
 
 class ExpanderPinError {
 public:
-  ExpanderPinError(uint16_t p) {};
+  ExpanderPinError(uint16_t p){};
 };
 
 void ATTRIBUTE_ERROR pinMode(ExpanderPinError pin, uint8_t mode);
@@ -65,17 +65,17 @@ extern ExpanderPinError _LED_BUILTIN;
 extern ExpanderPinError _KEY1;
 extern ExpanderPinError _KEY2;
 
-#define LORA_LNA_ENABLE _LORA_LNA_ENABLE
+#define LORA_LNA_ENABLE     _LORA_LNA_ENABLE
 #define LORA_ANTENNA_SWITCH _LORA_ANTENNA_SWITCH
-#define LORA_ENABLE _LORA_ENABLE
-#define POWEROFF _POWEROFF
-#define GROVE_POWER_EN _GROVE_POWER_EN
-#define VIN_DETECT _VIN_DETECT
-#define LCD_RESET _LCD_RESET
-#define LCD_BACKLIGHT _LCD_BACKLIGHT
-#define LED_BUILTIN _LED_BUILTIN
-#define KEY1 _KEY1
-#define KEY2 _KEY2
+#define LORA_ENABLE         _LORA_ENABLE
+#define POWEROFF            _POWEROFF
+#define GROVE_POWER_EN      _GROVE_POWER_EN
+#define VIN_DETECT          _VIN_DETECT
+#define LCD_RESET           _LCD_RESET
+#define LCD_BACKLIGHT       _LCD_BACKLIGHT
+#define LED_BUILTIN         _LED_BUILTIN
+#define KEY1                _KEY1
+#define KEY2                _KEY2
 
 #endif
 
