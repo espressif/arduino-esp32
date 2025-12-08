@@ -152,7 +152,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
 
   if (endpoint_id == getEndPointId() && cluster_id == WindowCovering::Id) {
     switch (attribute_id) {
-      // Current position attributes (read-only, updated by device)
+      // Current position attributes (read-only to external Matter controllers; updated internally by device)
       case WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id: {
         uint16_t liftPercent100ths = val->val.u16;
         uint8_t liftPercent = (uint8_t)(liftPercent100ths / 100);
