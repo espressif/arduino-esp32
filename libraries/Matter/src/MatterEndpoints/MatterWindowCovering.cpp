@@ -205,7 +205,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
           uint8_t targetLiftPercent = (uint8_t)(targetLiftPercent100ths / 100);
           log_d("Window Covering Target Lift Percentage changed to %d%%", targetLiftPercent);
           // Call callback to trigger movement - do NOT update currentLiftPercent here
-          // CurrentPosition will be updated by the application when the device actually moves
+          // `CurrentPosition` will be updated by the application when the device actually moves
           if (_onGoToLiftPercentageCB != NULL) {
             ret &= _onGoToLiftPercentageCB(targetLiftPercent);
           }
