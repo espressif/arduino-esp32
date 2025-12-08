@@ -18,7 +18,9 @@ static void *new_arg = nullptr;  // * tx_arg = nullptr, * rx_arg = nullptr,
 static bool _esp_now_has_begun = false;
 static ESP_NOW_Peer *_esp_now_peers[ESP_NOW_MAX_TOTAL_PEER_NUM];
 
-static esp_err_t _esp_now_add_peer(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, esp_now_rate_config_t *rate_config, ESP_NOW_Peer *_peer = nullptr) {
+static esp_err_t _esp_now_add_peer(
+  const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface, const uint8_t *lmk, esp_now_rate_config_t *rate_config, ESP_NOW_Peer *_peer = nullptr
+) {
   log_i("Adding peer " MACSTR, MAC2STR(mac_addr));
   if (esp_now_is_peer_exist(mac_addr)) {
     log_e("Peer Already Exists");

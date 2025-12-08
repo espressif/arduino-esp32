@@ -68,7 +68,10 @@ protected:
   bool remove();
   size_t send(const uint8_t *data, int len);
 
-  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr, esp_now_rate_config_t *rate_config = nullptr);
+  ESP_NOW_Peer(
+    const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr,
+    esp_now_rate_config_t *rate_config = nullptr
+  );
 
 public:
   virtual ~ESP_NOW_Peer() {}
