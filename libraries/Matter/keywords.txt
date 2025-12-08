@@ -28,6 +28,7 @@ MatterRainSensor	KEYWORD1
 MatterPressureSensor	KEYWORD1
 MatterOccupancySensor	KEYWORD1
 MatterOnOffPlugin	KEYWORD1
+MatterDimmablePlugin	KEYWORD1
 MatterThermostat	KEYWORD1
 ControlSequenceOfOperation_t	KEYWORD1
 ThermostatMode_t	KEYWORD1
@@ -64,6 +65,8 @@ getOnOff	KEYWORD2
 toggle	KEYWORD2
 setBrightness	KEYWORD2
 getBrightness	KEYWORD2
+setLevel	KEYWORD2
+getLevel	KEYWORD2
 setColorTemperature	KEYWORD2
 getColorTemperature	KEYWORD2
 setColorRGB	KEYWORD2

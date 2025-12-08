@@ -39,9 +39,8 @@ body:
     attributes:
       label: Version
       description: What version of Arduino ESP32 are you running? If possible, consider updating to the latest version.
+      placeholder: Select version.
       options:
-        - latest stable Release (if not listed below)
-        - latest development Release Candidate (RC-X)
         - latest master (checkout manually)
         - v3.3.4
         - v3.3.3
@@ -62,26 +61,7 @@ body:
         - v3.0.2
         - v3.0.1
         - v3.0.0
-        - v2.0.17
-        - v2.0.16
-        - v2.0.15
-        - v2.0.14
-        - v2.0.13
-        - v2.0.12
-        - v2.0.11
-        - v2.0.10
-        - v2.0.9
-        - v2.0.8
-        - v2.0.7
-        - v2.0.6
-        - v2.0.5
-        - v2.0.4
-        - v2.0.3
-        - v2.0.2
-        - v2.0.1
-        - v2.0.0
-        - v1.0.6
-        - other
+        - Older versions
     validations:
       required: true
   - type: dropdown
