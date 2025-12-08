@@ -331,18 +331,18 @@ void loop() {
   if (digitalRead(buttonPin) == HIGH && button_state && time_diff > debounceTime) {
     // Button is released - cycle lift percentage by 20%
     button_state = false;  // released
-    uint8_t myTargetLiftPercent = currentLiftPercent;
+    uint8_t targetLiftPercent = currentLiftPercent;
     // go to the closest next 20% or move 20% more
-    if ((myTargetLiftPercent % 20) != 0) {
-      myTargetLiftPercent = ((myTargetLiftPercent / 20) + 1) * 20;
+    if ((targetLiftPercent % 20) != 0) {
+      targetLiftPercent = ((targetLiftPercent / 20) + 1) * 20;
     } else {
-      myTargetLiftPercent += 20;
+      targetLiftPercent += 20;
     }
-    if (myTargetLiftPercent > 100) {
-      myTargetLiftPercent = 0;
+    if (targetLiftPercent > 100) {
+      targetLiftPercent = 0;
     }
-    Serial.printf("User button released. Setting lift to %d%%\r\n", myTargetLiftPercent);
-    WindowBlinds.setTargetLiftPercent100ths(myTargetLiftPercent * 100);
+    Serial.printf("User button released. Setting lift to %d%%\r\n", targetLiftPercent);
+    WindowBlinds.setTargetLiftPercent100ths(targetLiftPercent * 100);
   }
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
