@@ -262,7 +262,7 @@ static bool spiDetachBus_SS(void *bus) {
 }
 
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
-void setLDOPower(int8_t pin) {
+static void setLDOPower(int8_t pin) {
   if (pin<0) {
      return;
   }
