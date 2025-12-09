@@ -214,7 +214,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
               log_d("Window Covering Current Lift Percentage is %d%%", (uint8_t)(currentLiftPercent100ths / 100));
             }
           }
-          
+
           // Detect command type based on target value and call appropriate callbacks
           // Commands modify TargetPositionLiftPercent100ths:
           // - UpOrOpen: sets TargetPosition = 0 (WC_PERCENT100THS_MIN_OPEN)
@@ -244,7 +244,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
               ret &= _onStopCB();
             }
           }
-          
+
           // Always call the generic onGoToLiftPercentage callback for compatibility
           // This handles all target position changes, including commands and direct attribute writes
           if (_onGoToLiftPercentageCB != NULL) {
