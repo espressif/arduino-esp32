@@ -42,22 +42,22 @@ const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 // Button control
 uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
-const uint32_t debounceTime = 250;              // button debouncing time (ms)
+const uint32_t debounceTime = 250;             // button debouncing time (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Window covering limits
 // Lift limits in centimeters (physical position)
 const uint16_t MAX_LIFT = 200;  // Maximum lift position (fully open)
-const uint16_t MIN_LIFT = 0;     // Minimum lift position (fully closed)
+const uint16_t MIN_LIFT = 0;    // Minimum lift position (fully closed)
 
 // Tilt limits (absolute values for conversion, not physical units)
 // Tilt is a rotation, not a linear measurement
-const uint16_t MAX_TILT = 90;    // Maximum tilt absolute value
-const uint16_t MIN_TILT = 0;     // Minimum tilt absolute value
+const uint16_t MAX_TILT = 90;  // Maximum tilt absolute value
+const uint16_t MIN_TILT = 0;   // Minimum tilt absolute value
 
 // Current window covering state
 // These will be initialized in setup() based on installed limits and saved percentages
-uint16_t currentLift = 0;        // Lift position in cm
+uint16_t currentLift = 0;  // Lift position in cm
 uint8_t currentLiftPercent = 100;
 uint8_t currentTiltPercent = 0;  // Tilt rotation percentage (0-100%)
 
@@ -94,16 +94,16 @@ bool fullOpen() {
   currentLift = openLimit;
   currentLiftPercent = 100;
   Serial.printf("Opening window covering to full open (position: %d cm)\r\n", currentLift);
-  
+
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
-  
+
   // Set operational status to STALL when movement is complete
   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
-  
+
   // Store state
   matterPref.putUChar(liftPercentPrefKey, currentLiftPercent);
-  
+
   return true;
 }
 
@@ -114,16 +114,16 @@ bool fullClose() {
   currentLift = closedLimit;
   currentLiftPercent = 0;
   Serial.printf("Closing window covering to full close (position: %d cm)\r\n", currentLift);
-  
+
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
-  
+
   // Set operational status to STALL when movement is complete
   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
-  
+
   // Store state
   matterPref.putUChar(liftPercentPrefKey, currentLiftPercent);
-  
+
   return true;
 }
 
@@ -143,7 +143,7 @@ bool goToLiftPercentage(uint8_t liftPercent) {
   // Calculate absolute position based on installed limits
   uint16_t openLimit = WindowBlinds.getInstalledOpenLimitLift();
   uint16_t closedLimit = WindowBlinds.getInstalledClosedLimitLift();
-  
+
   // Linear interpolation: 0% = openLimit, 100% = closedLimit
   if (openLimit < closedLimit) {
     currentLift = openLimit + ((closedLimit - openLimit) * liftPercent) / 100;
@@ -152,16 +152,16 @@ bool goToLiftPercentage(uint8_t liftPercent) {
   }
   currentLiftPercent = liftPercent;
   Serial.printf("Moving lift to %d%% (position: %d cm)\r\n", currentLiftPercent, currentLift);
-  
+
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
-  
+
   // Set operational status to STALL when movement is complete
   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
-  
+
   // Store state
   matterPref.putUChar(liftPercentPrefKey, currentLiftPercent);
-  
+
   return true;
 }
 
@@ -180,32 +180,32 @@ bool goToTiltPercentage(uint8_t tiltPercent) {
   // For simulation, we update instantly
   currentTiltPercent = tiltPercent;
   Serial.printf("Rotating tilt to %d%%\r\n", currentTiltPercent);
-  
+
   // Update CurrentPosition to reflect actual position
   WindowBlinds.setTiltPercentage(currentTiltPercent);
-  
+
   // Set operational status to STALL when movement is complete
   WindowBlinds.setOperationalState(MatterWindowCovering::TILT, MatterWindowCovering::STALL);
-  
+
   // Store state
   matterPref.putUChar(tiltPercentPrefKey, currentTiltPercent);
-  
+
   return true;
 }
 
 bool stopMotor() {
   // Motor can be stopped while moving cover toward current target
   Serial.println("Stopping window covering motor");
-  
+
   // Update CurrentPosition to reflect actual position when stopped
   // (setLiftPercentage and setTiltPercentage now only update CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
   WindowBlinds.setTiltPercentage(currentTiltPercent);
-  
+
   // Set operational status to STALL for both lift and tilt
   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
   WindowBlinds.setOperationalState(MatterWindowCovering::TILT, MatterWindowCovering::STALL);
-  
+
   return true;
 }
 
@@ -242,16 +242,16 @@ void setup() {
   uint8_t lastLiftPercent = matterPref.getUChar(liftPercentPrefKey, 100);
   // default tilt percentage is 0% if not stored before
   uint8_t lastTiltPercent = matterPref.getUChar(tiltPercentPrefKey, 0);
-  
+
   // Initialize window covering with BLIND_LIFT_AND_TILT type
   WindowBlinds.begin(lastLiftPercent, lastTiltPercent, MatterWindowCovering::BLIND_LIFT_AND_TILT);
-  
+
   // Configure installed limits for lift and tilt
   WindowBlinds.setInstalledOpenLimitLift(MIN_LIFT);
   WindowBlinds.setInstalledClosedLimitLift(MAX_LIFT);
   WindowBlinds.setInstalledOpenLimitTilt(MIN_TILT);
   WindowBlinds.setInstalledClosedLimitTilt(MAX_TILT);
-  
+
   // Initialize current positions based on percentages and installed limits
   uint16_t openLimitLift = WindowBlinds.getInstalledOpenLimitLift();
   uint16_t closedLimitLift = WindowBlinds.getInstalledClosedLimitLift();
@@ -261,25 +261,25 @@ void setup() {
   } else {
     currentLift = openLimitLift - ((openLimitLift - closedLimitLift) * lastLiftPercent) / 100;
   }
-  
+
   currentTiltPercent = lastTiltPercent;
-  
-  Serial.printf("Window Covering limits configured: Lift [%d-%d cm], Tilt [%d-%d]\r\n",
-                WindowBlinds.getInstalledOpenLimitLift(), WindowBlinds.getInstalledClosedLimitLift(),
-                WindowBlinds.getInstalledOpenLimitTilt(), WindowBlinds.getInstalledClosedLimitTilt());
-  Serial.printf("Initial positions: Lift=%d cm (%d%%), Tilt=%d%%\r\n",
-                currentLift, currentLiftPercent, currentTiltPercent);
-  
+
+  Serial.printf(
+    "Window Covering limits configured: Lift [%d-%d cm], Tilt [%d-%d]\r\n", WindowBlinds.getInstalledOpenLimitLift(),
+    WindowBlinds.getInstalledClosedLimitLift(), WindowBlinds.getInstalledOpenLimitTilt(), WindowBlinds.getInstalledClosedLimitTilt()
+  );
+  Serial.printf("Initial positions: Lift=%d cm (%d%%), Tilt=%d%%\r\n", currentLift, currentLiftPercent, currentTiltPercent);
+
   // Set callback functions
   WindowBlinds.onOpen(fullOpen);
   WindowBlinds.onClose(fullClose);
   WindowBlinds.onGoToLiftPercentage(goToLiftPercentage);
   WindowBlinds.onGoToTiltPercentage(goToTiltPercentage);
   WindowBlinds.onStop(stopMotor);
-  
+
   // Generic callback for Lift or Tilt change
   WindowBlinds.onChange([](uint8_t liftPercent, uint8_t tiltPercent) {
-    Serial.printf("Window Covering changed: Lift=%d%%, Tilt=%d%%\r\n", liftPercent, tiltPercent);      
+    Serial.printf("Window Covering changed: Lift=%d%%, Tilt=%d%%\r\n", liftPercent, tiltPercent);
     visualizeWindowBlinds(liftPercent, tiltPercent);
     return true;
   });

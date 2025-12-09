@@ -29,30 +29,30 @@ class MatterWindowCovering : public MatterEndPoint {
 public:
   // Window Covering Type constants (from Matter spec)
   enum WindowCoveringType_t {
-    ROLLERSHADE = (uint8_t) WindowCovering::Type::kRollerShade,                                  // Roller Shade (LIFT support)
-    ROLLERSHADE_2_MOTOR = (uint8_t) WindowCovering::Type::kRollerShade2Motor,                    // Roller Shade 2 Motor (LIFT support)
-    ROLLERSHADE_EXTERIOR = (uint8_t) WindowCovering::Type::kRollerShadeExterior,                 // Roller Shade Exterior (LIFT support)
-    ROLLERSHADE_EXTERIOR_2_MOTOR = (uint8_t) WindowCovering::Type::kRollerShadeExterior2Motor,   // Roller Shade Exterior 2 Motor (LIFT support)
-    DRAPERY = (uint8_t) WindowCovering::Type::kDrapery,                                          // Drapery (LIFT support)
-    AWNING = (uint8_t) WindowCovering::Type::kAwning,                                            // Awning (LIFT support)
-    SHUTTER = (uint8_t) WindowCovering::Type::kShutter,                                          // Shutter (TILT support)
-    BLIND_TILT_ONLY = (uint8_t) WindowCovering::Type::kTiltBlindTiltOnly,                        // Blind Tilt Only (TILT support)
-    BLIND_LIFT_AND_TILT = (uint8_t) WindowCovering::Type::kTiltBlindLiftAndTilt,                 // Blind Lift and Tilt (LIFT and TILT support)
-    PROJECTOR_SCREEN = (uint8_t) WindowCovering::Type::kProjectorScreen,                         // Projector Screen (LIFT support)
+    ROLLERSHADE = (uint8_t)WindowCovering::Type::kRollerShade,                                 // Roller Shade (LIFT support)
+    ROLLERSHADE_2_MOTOR = (uint8_t)WindowCovering::Type::kRollerShade2Motor,                   // Roller Shade 2 Motor (LIFT support)
+    ROLLERSHADE_EXTERIOR = (uint8_t)WindowCovering::Type::kRollerShadeExterior,                // Roller Shade Exterior (LIFT support)
+    ROLLERSHADE_EXTERIOR_2_MOTOR = (uint8_t)WindowCovering::Type::kRollerShadeExterior2Motor,  // Roller Shade Exterior 2 Motor (LIFT support)
+    DRAPERY = (uint8_t)WindowCovering::Type::kDrapery,                                         // Drapery (LIFT support)
+    AWNING = (uint8_t)WindowCovering::Type::kAwning,                                           // Awning (LIFT support)
+    SHUTTER = (uint8_t)WindowCovering::Type::kShutter,                                         // Shutter (TILT support)
+    BLIND_TILT_ONLY = (uint8_t)WindowCovering::Type::kTiltBlindTiltOnly,                       // Blind Tilt Only (TILT support)
+    BLIND_LIFT_AND_TILT = (uint8_t)WindowCovering::Type::kTiltBlindLiftAndTilt,                // Blind Lift and Tilt (LIFT and TILT support)
+    PROJECTOR_SCREEN = (uint8_t)WindowCovering::Type::kProjectorScreen,                        // Projector Screen (LIFT support)
   };
 
   // Operational State constants (from Matter spec)
   enum OperationalState_t {
-    STALL = (uint8_t)WindowCovering::OperationalState::Stall,                                    // Currently not moving
-    MOVING_UP_OR_OPEN = (uint8_t)WindowCovering::OperationalState::MovingUpOrOpen,               // Is currently opening
-    MOVING_DOWN_OR_CLOSE = (uint8_t)WindowCovering::OperationalState::MovingDownOrClose,         // Is currently closing
+    STALL = (uint8_t)WindowCovering::OperationalState::Stall,                             // Currently not moving
+    MOVING_UP_OR_OPEN = (uint8_t)WindowCovering::OperationalState::MovingUpOrOpen,        // Is currently opening
+    MOVING_DOWN_OR_CLOSE = (uint8_t)WindowCovering::OperationalState::MovingDownOrClose,  // Is currently closing
   };
 
   // Operational Status field constants (from Matter spec)
   enum OperationalStatusField_t {
-    GLOBAL = (uint8_t) WindowCovering::OperationalStatus::kGlobal,                              // Global operational state field 0x03 (bits 0-1)
-    LIFT = (uint8_t) WindowCovering::OperationalStatus::kLift,                                  // Lift operational state field 0x0C (bits 2-3)
-    TILT = (uint8_t) WindowCovering::OperationalStatus::kTilt,                                  // Tilt operational state field 0x30 (bits 4-5)
+    GLOBAL = (uint8_t)WindowCovering::OperationalStatus::kGlobal,  // Global operational state field 0x03 (bits 0-1)
+    LIFT = (uint8_t)WindowCovering::OperationalStatus::kLift,      // Lift operational state field 0x0C (bits 2-3)
+    TILT = (uint8_t)WindowCovering::OperationalStatus::kTilt,      // Tilt operational state field 0x30 (bits 4-5)
   };
 
   MatterWindowCovering();
@@ -159,4 +159,3 @@ protected:
   EndPointCB _onChangeCB = NULL;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-
