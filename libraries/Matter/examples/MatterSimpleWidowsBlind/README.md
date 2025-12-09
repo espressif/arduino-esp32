@@ -100,7 +100,7 @@ In the `onBlindLift()` callback, replace the simulation code with actual motor c
 ```cpp
 bool onBlindLift(uint8_t liftPercent) {
   Serial.printf("Moving window covering to %d%%\r\n", liftPercent);
-  
+
   // Here you would control your actual motor/actuator
   // For example:
   // - Calculate target position based on liftPercent and installed limits (if configured)
@@ -108,7 +108,7 @@ bool onBlindLift(uint8_t liftPercent) {
   // - When movement is complete, update current position:
   //   WindowBlinds.setLiftPercentage(finalLiftPercent);
   //   WindowBlinds.setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL);
-  
+
   // For this minimal example, we just return true to accept the command
   return true;  // Indicate command was accepted
 }
@@ -133,4 +133,3 @@ bool onBlindLift(uint8_t liftPercent) {
   3. Set `OperationalState` to `STALL` using `setOperationalState(MatterWindowCovering::LIFT, MatterWindowCovering::STALL)` to indicate the device has reached the target position
 - **Important**: `onGoToLiftPercentage()` is called when `TargetPositionLiftPercent100ths` changes. This happens when commands are executed or when a Matter controller writes directly to the target position attribute.
 - Commands modify `TargetPosition`, not `CurrentPosition`. The application is responsible for updating `CurrentPosition` when the physical device actually moves.
-

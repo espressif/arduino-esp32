@@ -34,59 +34,59 @@ const char *password = "your-password";  // Change this to your WiFi password
 
 // Simple callback - handles window Lift change request
 bool onBlindLift(uint8_t liftPercent) {
-    // This example only uses lift
-    Serial.printf("Window Covering change request: Lift=%d%%\r\n", liftPercent);
-    
-    // Returning true will store the new Lift value into the Matter Cluster 
-    return true;
+  // This example only uses lift
+  Serial.printf("Window Covering change request: Lift=%d%%\r\n", liftPercent);
+
+  // Returning true will store the new Lift value into the Matter Cluster
+  return true;
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("\n========================================");
+  Serial.println("Matter Simple Window Blinds Example");
+  Serial.println("========================================\n");
+
+// CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
+#if !CONFIG_ENABLE_CHIPOBLE
+  // We start by connecting to a WiFi network
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
-  
-  void setup() {
-    Serial.begin(115200);
-    delay(1000);
-    Serial.println("\n========================================");
-    Serial.println("Matter Simple Window Blinds Example");
-    Serial.println("========================================\n");
-  
-  // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
-  #if !CONFIG_ENABLE_CHIPOBLE
-    // We start by connecting to a WiFi network
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(500);
-      Serial.print(".");
-    }
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-  #endif
-  
-    // Initialize Window Covering endpoint
-    // Using ROLLERSHADE type (lift only, no tilt)
-    WindowBlinds.begin(100, 0, MatterWindowCovering::ROLLERSHADE);
-      
-    // Set up the onGoToLiftPercentage callback - this handles all window covering changes requested by the Matter Controller
-    WindowBlinds.onGoToLiftPercentage(onBlindLift);
-    
-    // Start Matter
-    Matter.begin();
-    Serial.println("Matter started");
-    Serial.println();
-    
-    // Print commissioning information
-    Serial.println("========================================");
-    Serial.println("Matter Node is not commissioned yet.");
-    Serial.println("Initiate the device discovery in your Matter environment.");
-    Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
-    Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
-    Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    Serial.println("========================================");
-  }
-  
-  void loop() {
-    delay(100);
-  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+#endif
+
+  // Initialize Window Covering endpoint
+  // Using ROLLERSHADE type (lift only, no tilt)
+  WindowBlinds.begin(100, 0, MatterWindowCovering::ROLLERSHADE);
+
+  // Set up the onGoToLiftPercentage callback - this handles all window covering changes requested by the Matter Controller
+  WindowBlinds.onGoToLiftPercentage(onBlindLift);
+
+  // Start Matter
+  Matter.begin();
+  Serial.println("Matter started");
+  Serial.println();
+
+  // Print commissioning information
+  Serial.println("========================================");
+  Serial.println("Matter Node is not commissioned yet.");
+  Serial.println("Initiate the device discovery in your Matter environment.");
+  Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
+  Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
+  Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
+  Serial.println("========================================");
+}
+
+void loop() {
+  delay(100);
+}
