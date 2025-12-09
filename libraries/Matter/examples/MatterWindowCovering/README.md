@@ -24,8 +24,8 @@ This example demonstrates how to create a Matter-compatible window covering devi
 
 - Matter protocol implementation for a window covering device
 - Support for both Wi-Fi and Thread(*) connectivity
-- Lift position and percentage control (0-100%) - Lift represents the physical position in centimeters
-- Tilt rotation and percentage control (0-100%) - Tilt represents rotation of the shade, not a linear measurement
+- Lift position and percentage control — Lift can be specified either as a physical position (in centimeters) or as a percentage (0–100%).
+- Tilt rotation and percentage control — Lift can be specified either as a physical position (in centimeters) or as a percentage (0–100%).
 - Multiple window covering types support
 - State persistence using `Preferences` library
 - Button control for manual lift adjustment and factory reset
