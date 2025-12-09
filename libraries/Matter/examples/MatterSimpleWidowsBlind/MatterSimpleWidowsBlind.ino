@@ -37,7 +37,7 @@ bool onBlindLift(uint8_t liftPercent) {
   // This example only uses lift
   Serial.printf("Window Covering change request: Lift=%d%%\r\n", liftPercent);
 
-  // Returning true will store the new Lift value into the Matter Cluster 
+  // Returning true will store the new Lift value into the Matter Cluster
   return true;
 }
 
