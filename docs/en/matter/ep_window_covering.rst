@@ -217,13 +217,13 @@ Installed Limit Control
 setInstalledOpenLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed open limit for lift (in centimeters). This defines the physical position when the window covering is fully open.
+Sets the installed open limit for lift in centimeters. This defines the physical position when the window covering is fully open.
 
 .. code-block:: arduino
 
     bool setInstalledOpenLimitLift(uint16_t openLimit);
 
-* ``openLimit`` - Open limit position in centimeters
+* ``openLimit`` - Open limit position (centimeters)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -236,18 +236,18 @@ Gets the installed open limit for lift.
 
     uint16_t getInstalledOpenLimitLift();
 
-This function will return the installed open limit for lift in centimeters.
+This function will return the installed open limit for lift (centimeters).
 
 setInstalledClosedLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed closed limit for lift (in centimeters). This defines the physical position when the window covering is fully closed.
+Sets the installed closed limit for lift in centimeters. This defines the physical position when the window covering is fully closed.
 
 .. code-block:: arduino
 
     bool setInstalledClosedLimitLift(uint16_t closedLimit);
 
-* ``closedLimit`` - Closed limit position in centimeters
+* ``closedLimit`` - Closed limit position (centimeters)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
@@ -260,7 +260,7 @@ Gets the installed closed limit for lift.
 
     uint16_t getInstalledClosedLimitLift();
 
-This function will return the installed closed limit for lift in centimeters.
+This function will return the installed closed limit for lift (centimeters).
 
 setInstalledOpenLimitTilt
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -558,3 +558,4 @@ Window Covering
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterWindowCovering/MatterWindowCovering.ino
     :language: arduino
+
