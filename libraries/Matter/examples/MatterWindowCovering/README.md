@@ -151,7 +151,7 @@ For production use with a motorized window covering:
    - **Important**: Call `setLiftPercentage()` and `setTiltPercentage()` in your `onGoToLiftPercentage()` or `onGoToTiltPercentage()` callbacks to update `CurrentPosition` attributes when the physical device actually moves. This will trigger the `onChange()` callback if registered.
    - Call `setOperationalState(LIFT, STALL)` or `setOperationalState(TILT, STALL)` when movement is complete to indicate the device has reached the target position
    - Configure installed limits using `setInstalledOpenLimitLift()`, `setInstalledClosedLimitLift()`, `setInstalledOpenLimitTilt()`, and `setInstalledClosedLimitTilt()` to define the physical range of your window covering
-   
+
    **Callback Flow:**
    - Matter command → `TargetPosition` changes → `onGoToLiftPercentage()`/`onGoToTiltPercentage()` called
    - Your callback moves the motor → When movement completes, call `setLiftPercentage()`/`setTiltPercentage()`
@@ -203,17 +203,17 @@ The MatterWindowCovering example consists of the following main components:
 2. **`loop()`**: Checks the Matter commissioning state, handles button input for manual lift control and factory reset, and allows the Matter stack to process events.
 
 3. **Callbacks**:
-   
+
    **Target Position Callbacks** (called when `TargetPosition` attributes change):
    - `fullOpen()`: Registered with `onOpen()` - called when `UpOrOpen` command is received. Moves window covering to fully open (100% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
    - `fullClose()`: Registered with `onClose()` - called when `DownOrClose` command is received. Moves window covering to fully closed (0% lift), calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL`
    - `goToLiftPercentage()`: Registered with `onGoToLiftPercentage()` - called when `TargetPositionLiftPercent100ths` changes (from commands, `setTargetLiftPercent100ths()`, or direct attribute writes). Calculates absolute position (cm) based on installed limits, calls `setLiftPercentage()` to update `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `goToTiltPercentage()`: Registered with `onGoToTiltPercentage()` - called when `TargetPositionTiltPercent100ths` changes. Calls `setTiltPercentage()` to update `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `stopMotor()`: Registered with `onStop()` - called when `StopMotion` command is received. Stops any ongoing movement, calls `setLiftPercentage()` and `setTiltPercentage()` to update `CurrentPosition` for both, and sets operational state to `STALL` for both
-   
+
    **Current Position Callback** (called when `CurrentPosition` attributes change):
    - `onChange()`: Registered with `onChange()` - called when `CurrentPositionLiftPercent100ths` or `CurrentPositionTiltPercent100ths` change (after `setLiftPercentage()` or `setTiltPercentage()` are called). Updates RGB LED visualization to reflect current positions
-   
+
    **Note:** The Target Position callbacks (`fullOpen()`, `fullClose()`, `goToLiftPercentage()`, `goToTiltPercentage()`, `stopMotor()`) call `setLiftPercentage()` or `setTiltPercentage()` to update the `CurrentPosition` attributes. This triggers the `onChange()` callback, which updates the visualization.
 
 ## Troubleshooting
@@ -236,4 +236,3 @@ The MatterWindowCovering example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-
