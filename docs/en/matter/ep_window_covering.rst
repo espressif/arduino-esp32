@@ -430,16 +430,32 @@ This function will return the operational state for the specified field (``STALL
 Event Handling
 **************
 
+The ``MatterWindowCovering`` class automatically detects Matter commands and calls the appropriate callbacks when registered. There are two types of callbacks:
+
+**Target Position Callbacks** (triggered when ``TargetPosition`` attributes change):
+* ``onOpen()`` - called when ``UpOrOpen`` command is received (sets target to 0% = fully open)
+* ``onClose()`` - called when ``DownOrClose`` command is received (sets target to 100% = fully closed)
+* ``onStop()`` - called when ``StopMotion`` command is received (sets target to current position)
+* ``onGoToLiftPercentage()`` - called when ``TargetPositionLiftPercent100ths`` changes (from any command, ``setTargetLiftPercent100ths()``, or direct attribute write)
+* ``onGoToTiltPercentage()`` - called when ``TargetPositionTiltPercent100ths`` changes (from any command, ``setTargetTiltPercent100ths()``, or direct attribute write)
+
+**Current Position Callback** (triggered when ``CurrentPosition`` attributes change):
+* ``onChange()`` - called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` change (after ``setLiftPercentage()``/``setTiltPercentage()`` are called or when a Matter controller updates these attributes directly)
+
+**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition``, not ``CurrentPosition``. To trigger ``onChange()``, your ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callback must call ``setLiftPercentage()`` or ``setTiltPercentage()`` when the physical device actually moves.
+
+**Note:** All callbacks are optional. If a specific callback is not registered, only the generic ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callbacks will be called (if registered).
+
 onOpen
 ^^^^^^
 
-Sets a callback function to be called when the window covering is opened.
+Sets a callback function to be called when the ``UpOrOpen`` command is received from a Matter controller. This command sets the target position to 0% (fully open).
 
 .. code-block:: arduino
 
     void onOpen(EndPointOpenCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when window covering is opened
+* ``onChangeCB`` - Function to call when ``UpOrOpen`` command is received
 
 The callback signature is:
 
@@ -450,13 +466,13 @@ The callback signature is:
 onClose
 ^^^^^^^
 
-Sets a callback function to be called when the window covering is closed.
+Sets a callback function to be called when the ``DownOrClose`` command is received from a Matter controller. This command sets the target position to 100% (fully closed).
 
 .. code-block:: arduino
 
     void onClose(EndPointCloseCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when window covering is closed
+* ``onChangeCB`` - Function to call when ``DownOrClose`` command is received
 
 The callback signature is:
 
@@ -467,13 +483,20 @@ The callback signature is:
 onGoToLiftPercentage
 ^^^^^^^^^^^^^^^^^^^^
 
-Sets a callback function to be called when the lift percentage changes.
+Sets a callback function to be called when ``TargetPositionLiftPercent100ths`` changes. This is triggered by:
+* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToLiftPercentage``
+* Calling ``setTargetLiftPercent100ths()``
+* Direct attribute writes to ``TargetPositionLiftPercent100ths``
+
+This callback is always called when the target lift position changes, regardless of which command or method was used to change it.
+
+**Note:** This callback receives the **target** position. To update the **current** position (which triggers ``onChange()``), call ``setLiftPercentage()`` when the physical device actually moves.
 
 .. code-block:: arduino
 
     void onGoToLiftPercentage(EndPointLiftCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when lift percentage changes
+* ``onChangeCB`` - Function to call when target lift percentage changes
 
 The callback signature is:
 
@@ -481,18 +504,25 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t liftPercent);
 
-* ``liftPercent`` - New lift percentage (0-100)
+* ``liftPercent`` - Target lift percentage (0-100, where 0 is fully closed, 100 is fully open)
 
 onGoToTiltPercentage
 ^^^^^^^^^^^^^^^^^^^^
 
-Sets a callback function to be called when the tilt percentage changes.
+Sets a callback function to be called when ``TargetPositionTiltPercent100ths`` changes. This is triggered by:
+* Matter commands: ``UpOrOpen``, ``DownOrClose``, ``StopMotion``, ``GoToTiltPercentage``
+* Calling ``setTargetTiltPercent100ths()``
+* Direct attribute writes to ``TargetPositionTiltPercent100ths``
+
+This callback is always called when the target tilt position changes, regardless of which command or method was used to change it.
+
+**Note:** This callback receives the **target** position. To update the **current** position (which triggers ``onChange()``), call ``setTiltPercentage()`` when the physical device actually moves.
 
 .. code-block:: arduino
 
     void onGoToTiltPercentage(EndPointTiltCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when tilt percentage changes
+* ``onChangeCB`` - Function to call when target tilt percentage changes
 
 The callback signature is:
 
@@ -500,18 +530,18 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t tiltPercent);
 
-* ``tiltPercent`` - New tilt percentage (0-100)
+* ``tiltPercent`` - Target tilt percentage (0-100, where 0 is fully closed, 100 is fully open)
 
 onStop
 ^^^^^^
 
-Sets a callback function to be called when the window covering movement is stopped.
+Sets a callback function to be called when the ``StopMotion`` command is received from a Matter controller. This command sets the target position to the current position, effectively stopping any movement.
 
 .. code-block:: arduino
 
     void onStop(EndPointStopCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when window covering is stopped
+* ``onChangeCB`` - Function to call when ``StopMotion`` command is received
 
 The callback signature is:
 
@@ -522,13 +552,19 @@ The callback signature is:
 onChange
 ^^^^^^^^
 
-Sets a callback function to be called when any parameter changes.
+Sets a callback function to be called when ``CurrentPositionLiftPercent100ths`` or ``CurrentPositionTiltPercent100ths`` attributes change. This is different from ``onGoToLiftPercentage()`` and ``onGoToTiltPercentage()``, which are called when ``TargetPosition`` attributes change.
+
+**When ``onChange()`` is called:**
+* When ``CurrentPositionLiftPercent100ths`` changes (after ``setLiftPercentage()`` is called or when a Matter controller updates this attribute directly)
+* When ``CurrentPositionTiltPercent100ths`` changes (after ``setTiltPercentage()`` is called or when a Matter controller updates this attribute directly)
+
+**Important:** ``onChange()`` is **not** automatically called when Matter commands are executed. Commands modify ``TargetPosition`` attributes, which trigger ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callbacks instead. To trigger ``onChange()`` after a command, your ``onGoToLiftPercentage()`` or ``onGoToTiltPercentage()`` callback must call ``setLiftPercentage()`` or ``setTiltPercentage()`` to update the ``CurrentPosition`` attributes when the physical device actually moves.
 
 .. code-block:: arduino
 
     void onChange(EndPointCB onChangeCB);
 
-* ``onChangeCB`` - Function to call when state changes
+* ``onChangeCB`` - Function to call when current position attributes change
 
 The callback signature is:
 
@@ -536,8 +572,8 @@ The callback signature is:
 
     bool onChangeCallback(uint8_t liftPercent, uint8_t tiltPercent);
 
-* ``liftPercent`` - New lift percentage (0-100)
-* ``tiltPercent`` - New tilt percentage (0-100)
+* ``liftPercent`` - Current lift percentage (0-100)
+* ``tiltPercent`` - Current tilt percentage (0-100)
 
 updateAccessory
 ^^^^^^^^^^^^^^^
@@ -558,3 +594,4 @@ Window Covering
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterWindowCovering/MatterWindowCovering.ino
     :language: arduino
+
