@@ -88,7 +88,7 @@ Window Covering change request: Lift=50%
 ## Code Structure
 
 - **`onBlindLift()`**: Callback function that handles window covering lift changes. This is registered with `WindowBlinds.onGoToLiftPercentage()` and is triggered when `TargetPositionLiftPercent100ths` changes. The callback receives the target lift percentage (0-100%).
-- **`setup()`**: Initializes WiFi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, and starts Matter.
+- **`setup()`**: Initializes Wi-Fi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, and starts Matter.
 - **`loop()`**: Empty - all control is handled via Matter callbacks.
 
 ## Customization
@@ -116,7 +116,7 @@ bool onBlindLift(uint8_t liftPercent) {
 
 ## Troubleshooting
 
-1. **Device not discoverable**: Ensure WiFi is connected (for ESP32/ESP32-S2) or BLE is enabled (for other chips).
+1. **Device not discoverable**: Ensure Wi-Fi is connected (for ESP32/ESP32-S2) or BLE is enabled (for other chips).
 
 2. **Lift percentage not updating**: Check that `onGoToLiftPercentage()` callback is properly registered and that `setLiftPercentage()` is called when movement is complete to update the `CurrentPosition` attribute.
 
