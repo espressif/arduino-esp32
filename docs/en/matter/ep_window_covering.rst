@@ -217,7 +217,7 @@ Installed Limit Control
 setInstalledOpenLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed open limit for lift in centimeters. This defines the physical position when the window covering is fully open.
+Sets the installed open limit for lift (centimeters). This defines the physical position when the window covering is fully open.
 
 .. code-block:: arduino
 
@@ -241,7 +241,7 @@ This function will return the installed open limit for lift (centimeters).
 setInstalledClosedLimitLift
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sets the installed closed limit for lift in centimeters. This defines the physical position when the window covering is fully closed.
+Sets the installed closed limit for lift (centimeters). This defines the physical position when the window covering is fully closed.
 
 .. code-block:: arduino
 
@@ -558,3 +558,4 @@ Window Covering
 
 .. literalinclude:: ../../../libraries/Matter/examples/MatterWindowCovering/MatterWindowCovering.ino
     :language: arduino
+
