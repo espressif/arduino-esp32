@@ -205,6 +205,48 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
           log_d("Window Covering Target Lift Percentage changed to %d%%", targetLiftPercent);
           // Call callback to trigger movement - do NOT update currentLiftPercent here
           // `CurrentPosition` will be updated by the application when the device actually moves
+          // Get current position to detect StopMotion command
+          uint16_t currentLiftPercent100ths = 0;
+          esp_matter_attr_val_t currentVal = esp_matter_invalid(NULL);
+          if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal)) {
+            if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(currentVal.val.u16)) {
+              currentLiftPercent100ths = currentVal.val.u16;
+              log_d("Window Covering Current Lift Percentage is %d%%", (uint8_t)(currentLiftPercent100ths / 100));
+            }
+          }
+          
+          // Detect command type based on target value and call appropriate callbacks
+          // Commands modify TargetPositionLiftPercent100ths:
+          // - UpOrOpen: sets TargetPosition = 0 (WC_PERCENT100THS_MIN_OPEN)
+          // - DownOrClose: sets TargetPosition = 10000 (WC_PERCENT100THS_MAX_CLOSED)
+          // - StopMotion: sets TargetPosition = CurrentPosition
+          // Priority: UpOrOpen/DownOrClose > StopMotion > GoToLiftPercentage
+          // Note: If StopMotion is executed when CurrentPosition is at 0 or 10000,
+          //       it will be detected as UpOrOpen/DownOrClose (acceptable behavior)
+          if (targetLiftPercent100ths == 0) {
+            // UpOrOpen command - fully open (priority check)
+            log_d("Window Covering: UpOrOpen command detected");
+            if (_onOpenCB != NULL) {
+              ret &= _onOpenCB();
+            }
+          } else if (targetLiftPercent100ths == 10000) {
+            // DownOrClose command - fully closed (priority check)
+            log_d("Window Covering: DownOrClose command detected");
+            if (_onCloseCB != NULL) {
+              ret &= _onCloseCB();
+            }
+          } else if (targetLiftPercent100ths == currentLiftPercent100ths && currentLiftPercent100ths != 0 && currentLiftPercent100ths != 10000) {
+            // StopMotion command - target equals current position (but not at limits)
+            // This detects StopMotion when TargetPosition is set to CurrentPosition
+            // and CurrentPosition is not at the limits (0 or 10000)
+            log_d("Window Covering: StopMotion command detected");
+            if (_onStopCB != NULL) {
+              ret &= _onStopCB();
+            }
+          }
+          
+          // Always call the generic onGoToLiftPercentage callback for compatibility
+          // This handles all target position changes, including commands and direct attribute writes
           if (_onGoToLiftPercentageCB != NULL) {
             ret &= _onGoToLiftPercentageCB(targetLiftPercent);
           }
