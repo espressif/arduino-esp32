@@ -17,20 +17,20 @@ This example demonstrates how to create a Matter-compatible window covering devi
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
 
 ## Features
 
 - Matter protocol implementation for a window covering device
 - Support for both Wi-Fi and Thread(*) connectivity
-- Lift position and percentage control — Lift can be specified either as a physical position (in centimeters) or as a percentage (0–100%).
-- Tilt rotation and percentage control — Lift can be specified either as a physical position (in centimeters) or as a percentage (0–100%).
+- Lift position and percentage control (0-100%) - Lift represents the physical position (centimeters)
+- Tilt rotation and percentage control (0-100%) - Tilt represents rotation of the shade, not a linear measurement
 - Multiple window covering types support
 - State persistence using `Preferences` library
 - Button control for manual lift adjustment and factory reset
 - RGB LED visualization of lift (brightness) and tilt (color) positions
-- Installed limit configuration for lift (in cm) and tilt (absolute values)
+- Installed limit configuration for lift (cm) and tilt (absolute values)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
 (*) It is necessary to compile the project using Arduino as IDF Component.
@@ -146,7 +146,7 @@ For production use with a motorized window covering:
 
 2. **Position Feedback**:
    - Use encoders or limit switches to provide position feedback
-   - For lift: Update `currentLift` (in cm) based on actual motor position
+   - For lift: Update `currentLift` (cm) based on actual motor position
    - For tilt: Update `currentTiltPercent` (rotation percentage) based on actual motor rotation
    - Call `setLiftPercentage()` and `setTiltPercentage()` to update `CurrentPosition` attributes (these methods update the device's actual position, not the target)
    - Call `setOperationalState(LIFT, STALL)` or `setOperationalState(TILT, STALL)` when movement is complete to indicate the device has reached the target position
@@ -200,7 +200,7 @@ The MatterWindowCovering example consists of the following main components:
 3. **Callbacks**:
    - `fullOpen()`: Handles open command - moves window covering to fully open (100% lift), updates `CurrentPosition`, and sets operational state to `STALL`
    - `fullClose()`: Handles close command - moves window covering to fully closed (0% lift), updates `CurrentPosition`, and sets operational state to `STALL`
-   - `goToLiftPercentage()`: Handles lift percentage changes (0-100%), calculates absolute position in cm based on installed limits, updates `CurrentPosition`, and sets operational state to `STALL` when movement is complete
+   - `goToLiftPercentage()`: Handles lift percentage changes (0-100%), calculates absolute position (cm) based on installed limits, updates `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `goToTiltPercentage()`: Handles tilt rotation percentage changes (0-100%), updates `CurrentPosition`, and sets operational state to `STALL` when movement is complete
    - `stopMotor()`: Handles stop command - stops any ongoing movement, updates `CurrentPosition` for both lift and tilt, and sets operational state to `STALL` for both
    - `visualizeWindowBlinds()`: Updates RGB LED to reflect current lift and tilt positions
@@ -225,3 +225,4 @@ The MatterWindowCovering example consists of the following main components:
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
+
