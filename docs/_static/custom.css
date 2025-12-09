@@ -1,0 +1,25 @@
+/* Custom styles for Arduino ESP32 documentation */
+
+/* Wide table support - make content container wider */
+/*
+.document {
+  max-width: 1100px !important;
+}
+
+.wy-nav-content {
+  max-width: 1100px !important;
+}
+*/
+
+/* Make tables scrollable when they exceed page width */
+.table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.table-wrap table {
+  font-size: 0.9em;
+  width: auto !important;
+  display: table;
+}
+
