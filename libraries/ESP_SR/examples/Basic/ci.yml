@@ -2,7 +2,7 @@ fqbn:
   esp32s3:
     - espressif:esp32:esp32s3:USBMode=default,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=dio
   esp32p4:
-    - espressif:esp32:esp32p4:USBMode=default,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=qio
+    - espressif:esp32:esp32p4:USBMode=default,ChipVariant=postv3,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=qio
 
 requires:
   - CONFIG_SOC_I2S_SUPPORTED=y

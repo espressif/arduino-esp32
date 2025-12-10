@@ -191,6 +191,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterFan.cpp
   libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterTemperatureControlledCabinet.cpp
   libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterWaterLeakDetector.cpp
@@ -199,7 +200,9 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
+  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
   libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
+  libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterEndPoint.cpp)
 
