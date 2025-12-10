@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "author": "Jakub Andrýsek",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-s3-devkitc-1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-microsd-card", "id": "sd1", "top": 144.23, "left": -201.53, "attrs": {} },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd2",
+      "top": 18.77,
+      "left": 186.73,
+      "rotate": 180,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "sd1:CS", "esp:10", "green", [ "h57.6", "v-38.16" ] ],
+    [ "sd1:DI", "esp:11", "green", [ "h48", "v-19.11" ] ],
+    [ "sd1:SCK", "esp:12", "green", [ "h38.4", "v9.77" ] ],
+    [ "sd1:GND", "esp:GND.1", "black", [ "h9.6", "v57.71" ] ],
+    [ "sd1:DO", "esp:13", "green", [ "h67.2", "v38.69" ] ],
+    [ "sd1:VCC", "esp:3V3.2", "red", [ "h28.8", "v-143.86" ] ],
+    [ "sd2:GND", "esp:GND.3", "black", [ "h-19.2", "v86.47" ] ],
+    [ "sd2:VCC", "esp:3V3.2", "red", [ "h-19.2", "v-48.14", "h0", "v-86.4", "h-172.8", "v57.6" ] ],
+    [ "sd2:SCK", "esp:1", "green", [ "h-57.6", "v-38.39" ] ],
+    [ "sd2:DO", "esp:2", "green", [ "h-48", "v-9.71" ] ],
+    [ "sd2:DI", "esp:3", "green", [ "h-67.2", "v-47.91", "h-144", "v153.78" ] ],
+    [ "sd2:CS", "esp:8", "green", [ "h-57.6", "v-48.06", "h-144", "v153.78" ] ]
+  ],
+  "dependencies": {}
+}
