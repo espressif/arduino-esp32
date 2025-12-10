@@ -59,11 +59,11 @@ using HTTPUpdateProgressCB = std::function<void(int, int)>;
 class HTTPUpdate {
 public:
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
-  HTTPUpdate(UpdateClass* updater = &Update) : HTTPUpdate(8000, updater) {};
-  HTTPUpdate(int httpClientTimeout, UpdateClass* updater = &Update);
+  HTTPUpdate(UpdateClass *updater = &Update) : HTTPUpdate(8000, updater){};
+  HTTPUpdate(int httpClientTimeout, UpdateClass *updater = &Update);
 #else
-  HTTPUpdate(UpdateClass* updater = nullptr) : HTTPUpdate(8000, updater) {};
-  HTTPUpdate(int httpClientTimeout, UpdateClass* updater = nullptr);
+  HTTPUpdate(UpdateClass *updater = nullptr) : HTTPUpdate(8000, updater){};
+  HTTPUpdate(int httpClientTimeout, UpdateClass *updater = nullptr);
 #endif
   ~HTTPUpdate(void);
 
@@ -98,7 +98,9 @@ public:
   }
 
   //Sets instance of UpdateClass to perform updating operations
-  void setUpdaterInstance(UpdateClass* updater){ _updater = updater; };
+  void setUpdaterInstance(UpdateClass *updater) {
+    _updater = updater;
+  };
 
   t_httpUpdate_return update(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 

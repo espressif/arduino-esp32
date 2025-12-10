@@ -35,10 +35,8 @@
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
 
-HTTPUpdate::HTTPUpdate(int httpClientTimeout, UpdateClass* updater) :
-  _httpClientTimeout(httpClientTimeout),
-  _updater(updater),
-  _followRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS) {}
+HTTPUpdate::HTTPUpdate(int httpClientTimeout, UpdateClass *updater)
+  : _httpClientTimeout(httpClientTimeout), _updater(updater), _followRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS) {}
 
 HTTPUpdate::~HTTPUpdate(void) {}
 
@@ -124,8 +122,9 @@ int HTTPUpdate::getLastError(void) {
  * @return String error
  */
 String HTTPUpdate::getLastErrorString(void) {
-  if (!_updater)
+  if (!_updater) {
     return {};
+  }
 
   if (_lastError == 0) {
     return String();  // no error
@@ -441,8 +440,9 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
  * @return true if Update ok
  */
 bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
-  if (!_updater)
+  if (!_updater) {
     return false;
+  }
 
   StreamString error;
 

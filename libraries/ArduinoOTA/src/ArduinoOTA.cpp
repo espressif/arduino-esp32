@@ -26,9 +26,9 @@
 
 // #define OTA_DEBUG Serial
 
-ArduinoOTAClass::ArduinoOTAClass(UpdateClass* updater)
-  : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0), _ota_timeout(1000),
-    _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
+ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
+  : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0),
+    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
   end();
@@ -297,7 +297,7 @@ void ArduinoOTAClass::_onRx() {
 }
 
 void ArduinoOTAClass::_runUpdate() {
-  if (!_updater){
+  if (!_updater) {
     log_e("UpdateClass is NULL!");
     return;
   }
@@ -452,7 +452,7 @@ void ArduinoOTAClass::setTimeout(int timeoutInMillis) {
   _ota_timeout = timeoutInMillis;
 }
 
-ArduinoOTAClass &ArduinoOTAClass::setUpdaterInstance(UpdateClass* updater){
+ArduinoOTAClass &ArduinoOTAClass::setUpdaterInstance(UpdateClass *updater) {
   _updater = updater;
   return *this;
 }

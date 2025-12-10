@@ -42,9 +42,9 @@ public:
   typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
-  ArduinoOTAClass(UpdateClass* updater = &Update);
+  ArduinoOTAClass(UpdateClass *updater = &Update);
 #else
-  ArduinoOTAClass(UpdateClass* updater = nullptr);
+  ArduinoOTAClass(UpdateClass *updater = nullptr);
 #endif
   ~ArduinoOTAClass();
 
@@ -66,7 +66,7 @@ public:
   String getPartitionLabel();
 
   //Sets instance of UpdateClass to perform updating operations
-  ArduinoOTAClass &setUpdaterInstance(UpdateClass* updater);
+  ArduinoOTAClass &setUpdaterInstance(UpdateClass *updater);
 
   //Sets if the device should be rebooted after successful update. Default true
   ArduinoOTAClass &setRebootOnSuccess(bool reboot);
