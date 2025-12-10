@@ -93,7 +93,6 @@ void test_nonexistent_spi_interface(void) {
 void run_multiple_ways(SpiTestFunction test_function, uint8_t max_files = MAX_FILES, bool format_if_empty = false) {
   run_first_init(test_function, max_files, format_if_empty);
   run_init_continuous(test_function, max_files, format_if_empty);
-  test_nonexistent_spi_interface();
 }
 
 void test_sd_basic(void) {
@@ -316,73 +315,16 @@ void test_sd_nested_directories(void) {
   });
 }
 
-void test_sd_file_count_in_directoryOLD(void) {
-  Serial.println("Running test_sd_file_count_in_directory");
-
-  run_multiple_ways([](SPITestConfig &config) {
-    // Create test directory
-    TEST_ASSERT_TRUE_MESSAGE(config.sd->mkdir("/counttest"), "Failed to create /counttest");
-
-    // Function to count files in directory
-    auto countFilesInDir = [&config](const char *dirPath) -> int {
-      File dir = config.sd->open(dirPath);
-      if (!dir || !dir.isDirectory()) {
-        return -1;
-      }
-
-      int count = 0;
-      File entry = dir.openNextFile();
-      while (entry) {
-        if (!entry.isDirectory()) {
-          count++;
-        }
-        entry.close();
-        entry = dir.openNextFile();
-      }
-      dir.close();
-      return count;
-    };
-
-    // Initially should be empty
-    TEST_ASSERT_EQUAL_MESSAGE(0, countFilesInDir("/counttest"), "Directory should initially be empty");
-
-    // Create files one by one and verify count
-    for (int i = 1; i <= 5; i++) {
-      char filename[50];
-      snprintf(filename, sizeof(filename), "/counttest/file_%d.txt", i);
-
-      File file = config.sd->open(filename, FILE_WRITE);
-      TEST_ASSERT_TRUE_MESSAGE(file, "Failed to create numbered file");
-      file.printf("Content of file %d", i);
-      file.close();
-
-      TEST_ASSERT_EQUAL_MESSAGE(i, countFilesInDir("/counttest"), "File count mismatch after creating file");
-    }
-
-    // Create a subdirectory (should not affect file count)
-    TEST_ASSERT_TRUE_MESSAGE(config.sd->mkdir("/counttest/subdir"), "Failed to create subdirectory");
-    TEST_ASSERT_EQUAL_MESSAGE(5, countFilesInDir("/counttest"), "File count should not change with subdirectory");
-
-    // Remove files one by one and verify count
-    for (int i = 5; i >= 1; i--) {
-      char filename[50];
-      snprintf(filename, sizeof(filename), "/counttest/file_%d.txt", i);
-
-      TEST_ASSERT_TRUE_MESSAGE(config.sd->remove(filename), "Failed to remove numbered file");
-      TEST_ASSERT_EQUAL_MESSAGE(i - 1, countFilesInDir("/counttest"), "File count mismatch after removing file");
-    }
-
-    // Clean up
-    TEST_ASSERT_TRUE_MESSAGE(config.sd->rmdir("/counttest/subdir"), "Failed to remove subdirectory");
-    TEST_ASSERT_TRUE_MESSAGE(config.sd->rmdir("/counttest"), "Failed to remove test directory");
-  });
-}
-
 void test_sd_file_count_in_directory(void) {
   Serial.println("Running test_sd_file_count_in_directory");
   run_multiple_ways([](SPITestConfig &config) {
     const char *fileBasePath = "/dir/a/b";
     const int numFiles = 5;
+
+    auto getExpectedFile = [fileBasePath](int i) -> std::pair<String, String> {
+      return {String(fileBasePath) + "/file" + String(i) + ".txt", "data:" + String(i)};
+    };
+
     {
       // create nested directories
       TEST_ASSERT_TRUE_MESSAGE(config.sd->mkdir("/dir"), "mkdir /dir failed");
@@ -403,10 +345,6 @@ void test_sd_file_count_in_directory(void) {
     {
       File d = config.sd->open(fileBasePath);
       TEST_ASSERT_TRUE_MESSAGE(d && d.isDirectory(), "open(/dir/a/b) not a directory");
-
-      auto getExpectedFile = [fileBasePath](int i) -> std::pair<String, String> {
-        return {String(fileBasePath) + "/file" + String(i) + ".txt", "data:" + String(i)};
-      };
 
       bool found[numFiles] = {false};
       int count = 0;
@@ -446,6 +384,16 @@ void test_sd_file_count_in_directory(void) {
         TEST_ASSERT_TRUE_MESSAGE(found[i], ("Expected file not found: " + expectedPath).c_str());
       }
     }
+
+    // Cleanup: remove files and directories in reverse order (deepest first)
+    for (int i = 0; i < numFiles; ++i) {
+      auto [filePath, _] = getExpectedFile(i);
+      TEST_ASSERT_TRUE_MESSAGE(config.sd->remove(filePath.c_str()), ("Failed to remove file: " + filePath).c_str());
+    }
+    // Remove directories
+    TEST_ASSERT_TRUE_MESSAGE(config.sd->rmdir("/dir/a/b"), "Failed to remove directory: /dir/a/b");
+    TEST_ASSERT_TRUE_MESSAGE(config.sd->rmdir("/dir/a"), "Failed to remove directory: /dir/a");
+    TEST_ASSERT_TRUE_MESSAGE(config.sd->rmdir("/dir"), "Failed to remove directory: /dir");
   });
 }
 
@@ -575,6 +523,7 @@ void setup() {
 #endif
 
   UNITY_BEGIN();
+  RUN_TEST(test_nonexistent_spi_interface);
   RUN_TEST(test_sd_basic);
   RUN_TEST(test_sd_dir);
   RUN_TEST(test_sd_file_operations);

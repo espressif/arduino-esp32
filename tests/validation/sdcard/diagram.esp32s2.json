@@ -24,7 +24,6 @@
     [ "esp32:RX", "$serialMonitor:TX", "", [] ],
     [ "esp32:TX", "$serialMonitor:RX", "", [] ],
     [ "sd1:GND", "esp32:GND.1", "black", [ "v-0.11", "h-96", "v115.2", "h-105.33" ] ],
-    [ "sd1:DI", "esp32:23", "green", [ "v14", "h6" ] ],
     [ "sd1:VCC", "esp32:3V3", "red", [ "v-0.14", "h-38.4", "v-105.6", "h-162.93" ] ],
     [ "sd1:CS", "esp32:34", "green", [ "h-86.4", "v-0.06" ] ],
     [ "sd1:DI", "esp32:35", "green", [ "h-76.8", "v0.09" ] ],
