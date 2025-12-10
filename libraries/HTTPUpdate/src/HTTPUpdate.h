@@ -58,8 +58,13 @@ using HTTPUpdateProgressCB = std::function<void(int, int)>;
 
 class HTTPUpdate {
 public:
-  HTTPUpdate(void);
-  HTTPUpdate(int httpClientTimeout);
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
+  HTTPUpdate(UpdateClass *updater = &Update) : HTTPUpdate(8000, updater){};
+  HTTPUpdate(int httpClientTimeout, UpdateClass *updater = &Update);
+#else
+  HTTPUpdate(UpdateClass *updater = nullptr) : HTTPUpdate(8000, updater){};
+  HTTPUpdate(int httpClientTimeout, UpdateClass *updater = nullptr);
+#endif
   ~HTTPUpdate(void);
 
   void rebootOnUpdate(bool reboot) {
@@ -91,6 +96,11 @@ public:
   void setAuthorization(const String &auth) {
     _auth = auth;
   }
+
+  //Sets instance of UpdateClass to perform updating operations
+  void setUpdaterInstance(UpdateClass *updater) {
+    _updater = updater;
+  };
 
   t_httpUpdate_return update(NetworkClient &client, const String &url, const String &currentVersion = "", HTTPUpdateRequestCB requestCB = NULL);
 
@@ -143,6 +153,7 @@ protected:
 
 private:
   int _httpClientTimeout;
+  UpdateClass *_updater;
   followRedirects_t _followRedirects;
   String _user;
   String _password;
@@ -155,7 +166,7 @@ private:
   HTTPUpdateErrorCB _cbError;
   HTTPUpdateProgressCB _cbProgress;
 
-  int _ledPin;
+  int _ledPin{-1};
   uint8_t _ledOn;
 };
 
