@@ -140,6 +140,7 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay)
 * ``MatterDimmablePlugin``: Dimmable plugin unit (power outlet/relay with brightness control)
 * ``MatterGenericSwitch``: Generic switch endpoint (smart button)
+* ``MatterWindowCovering``: Window covering with lift and tilt control (blinds, shades)
 
 .. toctree::
     :maxdepth: 1
