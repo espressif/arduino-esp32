@@ -53,7 +53,7 @@ Here is a matrix of the library support status for the main features and periphe
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | Matter (Thread) [6]_ | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Matter (Wi-Fi)       | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |n/a| | |yes| | |yes| |
+| Matter (Wi-Fi)       | |yes| | |no|  | |yes| | |yes| | |yes| | |no|  | |n/a| | |n/a| | |yes| | |yes| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | MIPI CSI             | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
@@ -105,7 +105,7 @@ Here is a matrix of the library support status for the main features and periphe
 .. [5] Non-native Zigbee SoCs can also run Zigbee, but must use another SOC (with Zigbee radio) as a RCP connected by UART/SPI.
    Check the `Gateway example <https://github.com/espressif/arduino-esp32/tree/master/libraries/Zigbee/examples/Zigbee_Gateway>`_ for more details.
 
-.. [6] Matter over Thread is supported by our library but is not included in the pre-compiled libraries.
+.. [6] Matter over Thread is supported by our library but is not included in the pre-compiled libraries for ESP32-C6 and ESP32-C5.
    In order to use Matter over Thread, you need to use Arduino as an ESP-IDF component or rebuild the static libraries.
    Check the `Arduino_ESP_Matter_over_OpenThread example <https://github.com/espressif/arduino-esp32/tree/master/idf_component_examples/Arduino_ESP_Matter_over_OpenThread>`_ for more details.
 
