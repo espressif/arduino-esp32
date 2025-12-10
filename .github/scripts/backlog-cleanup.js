@@ -10,7 +10,7 @@
  *   exempt labels that have been inactive for 90+ days.
  * - Avoids sending duplicate Friendly Reminder comments if one was 
  *   posted within the last 7 days.
- * - Moves issues labeled 'questions' to GitHub Discussions
+ * - Marks issues labeled 'questions' to 'Move to Discussion'.
  */
 
 const dedent = (strings, ...values) => {
@@ -23,6 +23,39 @@ const dedent = (strings, ...values) => {
     const minIndent = Math.min(...lines.filter(l => l.trim()).map(l => l.match(/^\s*/)[0].length));
     return lines.map(l => l.slice(minIndent)).join('\n').trim();
 };
+
+
+async function addMoveToDiscussionLabel(github, owner, repo, issue, dryRun) {
+    const targetLabel = "Move to Discussion";
+
+    const hasLabel = issue.labels.some(
+        l => l.name.toLowerCase() === targetLabel.toLowerCase()
+    );
+
+    if (hasLabel) return false;
+
+    if (dryRun) {
+        console.log(`[DRY-RUN] Would add '${targetLabel}' to issue #${issue.number}`);
+        return true;
+    }
+
+    try {
+        await github.rest.issues.addLabels({
+            owner,
+            repo,
+            issue_number: issue.number,
+            labels: [targetLabel],
+        });
+
+        console.log(`Added '${targetLabel}' to issue #${issue.number}`);
+        return true;
+
+    } catch (err) {
+        console.error(`Failed to add label to #${issue.number}`, err);
+        return false;
+    }
+}
+
 
 async function fetchAllOpenIssues(github, owner, repo) {
     const issues = [];
@@ -52,42 +85,6 @@ async function fetchAllOpenIssues(github, owner, repo) {
 }
 
 
-async function migrateToDiscussion(github, owner, repo, issue, categories) {
-    const discussionCategory = 'Q&A';
-    try {
-        const category = categories.find(cat =>
-            cat.name.toLowerCase() === discussionCategory.toLowerCase()
-        );
-        if (!category) {
-            throw new Error(`Discussion category '${discussionCategory}' not found.`);
-        }
-        const { data: discussion } = await github.rest.discussions.create({
-            owner,
-            repo,
-            title: issue.title,
-            body: `Originally created by @${issue.user.login} in #${issue.number}\n\n---\n\n${issue.body || ''}`,
-            category_id: category.id,
-        });
-        await github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: issue.number,
-            body: `💬 This issue was moved to [Discussions](${discussion.html_url}) for better visibility.`,
-        });
-        await github.rest.issues.update({
-            owner,
-            repo,
-            issue_number: issue.number,
-            state: 'closed',
-        });
-        return discussion.html_url;
-    } catch (err) {
-        console.error(`Error migrating issue #${issue.number} to discussion:`, err);
-        return null;
-    }
-}
-
-
 const shouldSendReminder = (issue, exemptLabels, closeLabels) => {
     const hasExempt = issue.labels.some(l => exemptLabels.includes(l.name));
     const hasClose = issue.labels.some(l => closeLabels.includes(l.name));
@@ -95,20 +92,25 @@ const shouldSendReminder = (issue, exemptLabels, closeLabels) => {
 };
 
 
-module.exports = async ({ github, context }) => {
+module.exports = async ({ github, context, core }) => {
     const now = new Date();
     const thresholdDays = 90;
-    const exemptLabels = ['Status: Community help needed', 'Status: Needs investigation'];
+    const exemptLabels = ['Status: Community help needed', 'Status: Needs investigation', 'Move to Discussion'];
     const closeLabels = ['Status: Awaiting Response'];
-    const discussionLabel = 'Type: Question';
+    const questionLabel = 'Type: Question';
     const { owner, repo } = context.repo;
+
+    const dryRun = core.getInput("dry-run") === "true";
+    if (dryRun) {
+        console.log("DRY-RUN mode enabled — no changes will be made.");
+    }
 
     let totalClosed = 0;
     let totalReminders = 0;
     let totalSkipped = 0;
-    let totalMigrated = 0;
+    let totalMarkedToMigrate = 0;
+
     let issues = [];
-    let categories = [];
 
     try {
         issues = await fetchAllOpenIssues(github, owner, repo);
@@ -117,22 +119,20 @@ module.exports = async ({ github, context }) => {
         return;
     }
 
-    try {
-        const { data } = await github.rest.discussions.listCategories({ owner, repo });
-        categories = data;
-    } catch (err) {
-        console.error('Error fetching discussion categories:', err);
-    }
-
     for (const issue of issues) {
         const isAssigned = issue.assignees && issue.assignees.length > 0;
         const lastUpdate = new Date(issue.updated_at);
         const daysSinceUpdate = Math.floor((now - lastUpdate) / (1000 * 60 * 60 * 24));
 
-        if (issue.labels.some(label => label.name === discussionLabel)) {
-            const migrated = await migrateToDiscussion(github, owner, repo, issue, categories);
-            if (migrated) totalMigrated++;
+        if (issue.labels.some(label => exemptLabels.includes(label.name))) {
+            totalSkipped++;
             continue;
+        }
+
+        if (issue.labels.some(label => label.name === questionLabel)) {
+            const marked = await addMoveToDiscussionLabel(github, owner, repo, issue, dryRun);
+            if (marked) totalMarkedToMigrate++;
+            continue; // Do not apply reminder logic
         }
 
         if (daysSinceUpdate < thresholdDays) {
@@ -140,12 +140,14 @@ module.exports = async ({ github, context }) => {
             continue;
         }
 
-        if (issue.labels.some(label => exemptLabels.includes(label.name))) {
-            totalSkipped++;
-            continue;
-        }
-
         if (issue.labels.some(label => closeLabels.includes(label.name)) || !isAssigned) {
+
+            if (dryRun) {
+                console.log(`[DRY-RUN] Would close issue #${issue.number}`);
+                totalClosed++;
+                continue;
+            }
+
             try {
                 await github.rest.issues.createComment({
                     owner,
@@ -168,13 +170,20 @@ module.exports = async ({ github, context }) => {
 
         let comments = [];
         try {
-            const { data } = await github.rest.issues.listComments({
-                owner,
-                repo,
-                issue_number: issue.number,
-                per_page: 50,
-            });
-            comments = data;
+            let page = 1;
+            while (true) {
+                const { data } = await github.rest.issues.listComments({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    per_page: 100,
+                    page,
+                });
+                if (!data || data.length === 0) break;
+                comments.push(...data);
+                if (data.length < 100) break;
+                page++;
+            }
         } catch (err) {
             console.error(`Error fetching comments for issue #${issue.number}:`, err);
         }
@@ -201,6 +210,13 @@ module.exports = async ({ github, context }) => {
                 - Or label it 'awaiting-response' if you're waiting on something
 
                 This is just a reminder; the issue remains open for now.`;
+
+            if (dryRun) {
+                console.log(`[DRY-RUN] Would post reminder on #${issue.number}`);
+                totalReminders++;
+                continue;
+            }
+            
             try {
                 await github.rest.issues.createComment({
                     owner,
@@ -220,6 +236,6 @@ module.exports = async ({ github, context }) => {
         Total issues processed: ${issues.length}
         Total issues closed: ${totalClosed}
         Total reminders sent: ${totalReminders}
-        Total migrated to discussions: ${totalMigrated}
+        Total marked to migrate to discussions: ${totalMarkedToMigrate}
         Total skipped: ${totalSkipped}`);
 };

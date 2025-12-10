@@ -3,6 +3,12 @@ name: "Backlog Management Bot"
 on:
   schedule:
     - cron: '0 4 * * *' # Run daily at 4 AM UTC
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Run without modifying issues"
+        required: false
+        default: "false"
 
 permissions: 
   issues: write
@@ -22,5 +28,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const core = require('@actions/core');
             const script = require('./.github/scripts/backlog-cleanup.js');
-            await script({ github, context });
+            await script({ github, context, core });
