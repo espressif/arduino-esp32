@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "author": "P-R-O-C-H-Y",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s2-devkitm-1",
+      "id": "esp32",
+      "top": -61.91,
+      "left": -177.83,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-microsd-card",
+      "id": "sd1",
+      "top": 9.17,
+      "left": 23.53,
+      "rotate": 180,
+      "attrs": {}
+    },
+    { "type": "wokwi-microsd-card", "id": "sd2", "top": -57.37, "left": -345.53, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp32:RX", "$serialMonitor:TX", "", [] ],
+    [ "esp32:TX", "$serialMonitor:RX", "", [] ],
+    [ "sd1:GND", "esp32:GND.1", "black", [ "v-0.11", "h-96", "v115.2", "h-105.33" ] ],
+    [ "sd1:DI", "esp32:23", "green", [ "v14", "h6" ] ],
+    [ "sd1:VCC", "esp32:3V3", "red", [ "v-0.14", "h-38.4", "v-105.6", "h-162.93" ] ],
+    [ "sd1:CS", "esp32:34", "green", [ "h-86.4", "v-0.06" ] ],
+    [ "sd1:DI", "esp32:35", "green", [ "h-76.8", "v0.09" ] ],
+    [ "sd1:DO", "esp32:37", "green", [ "h0" ] ],
+    [ "sd1:SCK", "esp32:36", "green", [ "h-48", "v28.81" ] ],
+    [ "esp32:1", "sd2:SCK", "green", [ "h0" ] ],
+    [ "esp32:2", "sd2:DO", "green", [ "h-48", "v-19.2" ] ],
+    [ "esp32:3", "sd2:DI", "green", [ "h0" ] ],
+    [ "esp32:8", "sd2:CS", "green", [ "h-19.2", "v-38.46" ] ],
+    [ "sd2:VCC", "esp32:3V3", "red", [ "h28.8", "v-57.46", "h67.2" ] ],
+    [ "sd2:GND", "esp32:GND.1", "black", [ "h38.4", "v0.11" ] ]
+  ],
+  "dependencies": {}
+}
