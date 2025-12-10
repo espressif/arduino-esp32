@@ -20,7 +20,7 @@ Here is a matrix of the library support status for the main features and periphe
 
 .. rst-class:: table-wrap
 
-.. Using substitions rather than emojis directly because in macOS vscode the emojis don't take a fixed space in the text
+.. Using substitutions rather than emojis directly because in macOS vscode the emojis don't take a fixed space in the text
    and the table looks weird and hard to edit. This is a workaround to make the table easier to edit. Just write
    |yes|, |no|, |n/a| instead of emojis.
 
@@ -102,7 +102,7 @@ Here is a matrix of the library support status for the main features and periphe
 
 .. [4] SPI Ethernet is supported by all ESP32 families and RMII only for ESP32 and ESP32-P4.
 
-.. [5] Non-native Zigbee SoCs can also run Zigbee, but must use another SOC (with Zigbee radio) as a RCP connected by UART/SPI.
+.. [5] Non-native Zigbee SoCs can also run Zigbee, but must use another SoC (with Zigbee radio) as a RCP connected by UART/SPI.
    Check the `Gateway example <https://github.com/espressif/arduino-esp32/tree/master/libraries/Zigbee/examples/Zigbee_Gateway>`_ for more details.
 
 .. [6] Matter over Thread is supported by our library but is not included in the pre-compiled libraries for ESP32-C6 and ESP32-C5.
