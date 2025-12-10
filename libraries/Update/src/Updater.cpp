@@ -44,6 +44,10 @@ static const char *_err2str(uint8_t _error) {
   } else if (_error == UPDATE_ERROR_DECRYPT) {
     return ("Decryption error");
 #endif /* UPDATE_NOCRYPT */
+#ifdef UPDATE_SIGN
+  } else if (_error == UPDATE_ERROR_SIGN) {
+    return ("Signature Verification Failed");
+#endif /* UPDATE_SIGN */
   }
   return ("UNKNOWN");
 }
@@ -80,6 +84,10 @@ UpdateClass::UpdateClass()
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
 #endif /* UPDATE_NOCRYPT */
+#ifdef UPDATE_SIGN
+    ,
+    _hash(NULL), _sign(NULL), _signatureBuffer(NULL), _signatureSize(0), _hashType(-1)
+#endif /* UPDATE_SIGN */
 {
 }
 
@@ -95,6 +103,17 @@ void UpdateClass::_reset() {
   if (_skipBuffer) {
     delete[] _skipBuffer;
   }
+#ifdef UPDATE_SIGN
+  if (_signatureBuffer) {
+    delete[] _signatureBuffer;
+    _signatureBuffer = nullptr;
+  }
+  if (_hash && _hashType >= 0) {
+    // Clean up internally-created hash object
+    delete _hash;
+    _hash = nullptr;
+  }
+#endif /* UPDATE_SIGN */
 
 #ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
@@ -105,6 +124,9 @@ void UpdateClass::_reset() {
   _progress = 0;
   _size = 0;
   _command = U_FLASH;
+#ifdef UPDATE_SIGN
+  _signatureSize = 0;
+#endif /* UPDATE_SIGN */
 
   if (_ledPin != -1) {
     digitalWrite(_ledPin, !_ledOn);  // off
@@ -127,6 +149,33 @@ bool UpdateClass::rollBack() {
   return _partitionIsBootable(partition) && !esp_ota_set_boot_partition(partition);
 }
 
+#ifdef UPDATE_SIGN
+bool UpdateClass::installSignature(UpdaterVerifyClass *sign) {
+  if (_size > 0) {
+    log_w("Update already running");
+    return false;
+  }
+  if (!sign) {
+    log_e("Invalid verifier");
+    return false;
+  }
+
+  int hashType = sign->getHashType();
+  if (hashType != HASH_SHA256 && hashType != HASH_SHA384 && hashType != HASH_SHA512) {
+    log_e("Invalid hash type: %d", hashType);
+    return false;
+  }
+
+  _sign = sign;
+  _hashType = hashType;
+  _signatureSize = 512;  // Fixed signature size (padded to 512 bytes)
+
+  [[maybe_unused]] const char *hashName = (hashType == HASH_SHA256) ? "SHA-256" : (hashType == HASH_SHA384) ? "SHA-384" : "SHA-512";
+  log_i("Signature verification installed (hash: %s, signature size: %u bytes)", hashName, _signatureSize);
+  return true;
+}
+#endif /* UPDATE_SIGN */
+
 bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
   (void)label;
 
@@ -143,10 +192,48 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _target_md5 = emptyString;
   _md5 = MD5Builder();
 
+#ifdef UPDATE_SIGN
+  // Create and initialize signature hash if signature verification is enabled
+  if (_sign && _hashType >= 0) {
+    // Create the appropriate hash builder based on hashType
+    switch (_hashType) {
+      case HASH_SHA256:
+        _hash = new SHA256Builder();
+        break;
+      case HASH_SHA384:
+        _hash = new SHA384Builder();
+        break;
+      case HASH_SHA512:
+        _hash = new SHA512Builder();
+        break;
+      default:
+        log_e("Invalid hash type");
+        return false;
+    }
+
+    if (_hash) {
+      _hash->begin();
+      log_i("Signature hash initialized");
+    } else {
+      log_e("Failed to create hash builder");
+      return false;
+    }
+  }
+#endif /* UPDATE_SIGN */
+
   if (size == 0) {
     _error = UPDATE_ERROR_SIZE;
     return false;
   }
+
+#ifdef UPDATE_SIGN
+  // Validate size is large enough to contain firmware + signature
+  if (_signatureSize > 0 && size < _signatureSize) {
+    _error = UPDATE_ERROR_SIZE;
+    log_e("Size too small for signature: %u < %u", size, _signatureSize);
+    return false;
+  }
+#endif /* UPDATE_SIGN */
 
   if (command == U_FLASH) {
     _partition = esp_ota_get_next_update_partition(NULL);
@@ -462,6 +549,23 @@ bool UpdateClass::_writeBuffer() {
 #ifndef UPDATE_NOCRYPT
   }
 #endif /* UPDATE_NOCRYPT */
+
+#ifdef UPDATE_SIGN
+  // Add data to signature hash if signature verification is enabled
+  // Only hash firmware bytes, not the signature bytes at the end
+  if (_hash && _signatureSize > 0) {
+    size_t firmwareSize = _size - _signatureSize;
+    if (_progress < firmwareSize) {
+      // Calculate how many bytes of this buffer are firmware (not signature)
+      size_t bytesToHash = _bufferLen;
+      if (_progress + _bufferLen > firmwareSize) {
+        bytesToHash = firmwareSize - _progress;
+      }
+      _hash->add(_buffer, bytesToHash);
+    }
+  }
+#endif /* UPDATE_SIGN */
+
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -546,6 +650,41 @@ bool UpdateClass::end(bool evenIfRemaining) {
       return false;
     }
   }
+
+#ifdef UPDATE_SIGN
+  // Verify signature if signature verification is enabled
+  if (_hash && _sign && _signatureSize > 0) {
+    log_i("Verifying signature...");
+    _hash->calculate();
+
+    // Allocate buffer for signature (max 512 bytes for RSA-4096)
+    const size_t maxSigSize = 512;
+    _signatureBuffer = new (std::nothrow) uint8_t[maxSigSize];
+    if (!_signatureBuffer) {
+      log_e("Failed to allocate signature buffer");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    // Read signature from partition (last 512 bytes of what was written)
+    size_t firmwareSize = _size - _signatureSize;
+    log_d("Reading signature from offset %u (firmware size: %u, total size: %u)", firmwareSize, firmwareSize, _size);
+    if (!ESP.partitionRead(_partition, firmwareSize, (uint32_t *)_signatureBuffer, maxSigSize)) {
+      log_e("Failed to read signature from partition");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    // Verify the signature
+    if (!_sign->verify(_hash, _signatureBuffer, maxSigSize)) {
+      log_e("Signature verification failed");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    log_i("Signature verified successfully");
+  }
+#endif /* UPDATE_SIGN */
 
   return _verifyEnd();
 }
