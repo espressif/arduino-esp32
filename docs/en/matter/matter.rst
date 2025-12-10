@@ -126,14 +126,21 @@ The library provides specialized endpoint classes for different device types. Ea
 * ``MatterHumiditySensor``: Humidity sensor (read-only)
 * ``MatterPressureSensor``: Pressure sensor (read-only)
 * ``MatterContactSensor``: Contact sensor (open/closed state)
+* ``MatterWaterLeakDetector``: Water leak detector (detected/not detected state)
+* ``MatterWaterFreezeDetector``: Water freeze detector (detected/not detected state)
+* ``MatterRainSensor``: Rain sensor (detected/not detected state)
 * ``MatterOccupancySensor``: Occupancy sensor (occupied/unoccupied state)
 
 **Control Endpoints:**
 
+* ``MatterTemperatureControlledCabinet``: Temperature controlled cabinet (setpoint control with min/max limits)
+
 * ``MatterFan``: Fan with speed and mode control
 * ``MatterThermostat``: Thermostat with temperature control and setpoints
 * ``MatterOnOffPlugin``: On/off plugin unit (power outlet/relay)
+* ``MatterDimmablePlugin``: Dimmable plugin unit (power outlet/relay with brightness control)
 * ``MatterGenericSwitch``: Generic switch endpoint (smart button)
+* ``MatterWindowCovering``: Window covering with lift and tilt control (blinds, shades)
 
 .. toctree::
     :maxdepth: 1

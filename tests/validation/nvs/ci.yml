@@ -23,10 +23,10 @@ fqbn:
     - espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=qio120
     - espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app,FlashMode=dio
   esp32p4:
-    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=dio
-    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=dio,FlashFreq=40
-    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio
-    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio,FlashFreq=40
+    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,ChipVariant=postv3,PartitionScheme=huge_app,FlashMode=dio
+    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,ChipVariant=postv3,PartitionScheme=huge_app,FlashMode=dio,FlashFreq=40
+    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,ChipVariant=postv3,PartitionScheme=huge_app,FlashMode=qio
+    - espressif:esp32:esp32p4:PSRAM=enabled,USBMode=default,ChipVariant=postv3,PartitionScheme=huge_app,FlashMode=qio,FlashFreq=40
 
 platforms:
   qemu: false
