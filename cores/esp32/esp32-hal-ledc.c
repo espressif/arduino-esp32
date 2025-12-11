@@ -330,13 +330,13 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
   ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
   if (bus != NULL) {
 
+
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
+    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
 
-    //Fixing if all bits in resolution is set = LEDC FULL ON
-    uint32_t max_duty = (1 << bus->channel_resolution) - 1;
-
-    if ((duty == max_duty) && (max_duty != 1)) {
-      duty = max_duty + 1;
+    if (duty > max_duty) {
+      log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+      duty = max_duty;
     }
 
     if (ledc_set_duty(group, channel, duty) != ESP_OK) {
@@ -368,11 +368,11 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
   ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &resolution);
+  uint32_t max_duty = (1 << resolution); // Max LEDC duty
 
-  uint32_t max_duty = (1 << resolution) - 1;
-
-  if ((duty == max_duty) && (max_duty != 1)) {
-    duty = max_duty + 1;
+  if (duty > max_duty) {
+    log_w("Target duty %d was adjusted to the maximum duty %d", duty, max_duty);
+    duty = max_duty;
   }
 
   if (ledc_set_duty(group, channel, duty) != ESP_OK) {
@@ -435,15 +435,16 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
     bus->channel_resolution = 10;
 
     uint32_t res_freq = ledc_get_freq(group, bus->timer_num);
-    ledcWrite(pin, 0x1FF);
+    ledcWrite(pin, 0x200); // LEDC 50% duty is 2^10 / 2 = 0x200
     return res_freq;
   }
   return 0;
 }
 
 uint32_t ledcWriteNote(uint8_t pin, note_t note, uint8_t octave) {
-  const uint16_t noteFrequencyBase[12] = {//   C        C#       D        Eb       E        F       F#        G       G#        A       Bb        B
-                                          4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
+  const uint16_t noteFrequencyBase[12] = {
+    // C   C#     D    Eb    E     F     F#    G     G#    A     Bb     B
+    4186, 4435, 4699, 4978, 5274, 5588, 5920, 6272, 6645, 7040, 7459, 7902
   };
 
   if (octave > 8 || note >= NOTE_MAX) {
@@ -557,6 +558,21 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 #endif
     uint8_t group = (bus->channel / SOC_LEDC_CHANNEL_NUM), channel = (bus->channel % SOC_LEDC_CHANNEL_NUM);
 
+    uint32_t max_duty = (1 << bus->channel_resolution); // Max LEDC duty
+
+    if (target_duty > max_duty) {
+      log_w("Final duty %d was adjusted to the maximum duty %d", target_duty, max_duty);
+      target_duty = max_duty;
+    }
+    if (start_duty > max_duty) {
+      log_w("Starting duty %d was adjusted to the maximum duty %d", start_duty, max_duty);
+      start_duty = max_duty;
+    }
+    if (start_duty >= target_duty) {
+      log_e("Starting duty must be lower than the final duty");
+      return false;
+    }
+
     // Initialize fade service.
     if (!fade_initialized) {
       ledc_fade_func_install(0);
@@ -568,15 +584,6 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 
     ledc_cbs_t callbacks = {.fade_cb = ledcFnWrapper};
     ledc_cb_register(group, channel, &callbacks, (void *)bus);
-
-    //Fixing if all bits in resolution is set = LEDC FULL ON
-    uint32_t max_duty = (1 << bus->channel_resolution) - 1;
-
-    if ((target_duty == max_duty) && (max_duty != 1)) {
-      target_duty = max_duty + 1;
-    } else if ((start_duty == max_duty) && (max_duty != 1)) {
-      start_duty = max_duty + 1;
-    }
 
 #if SOC_LEDC_SUPPORT_FADE_STOP
     ledc_fade_stop(group, channel);
@@ -779,6 +786,17 @@ void analogWrite(uint8_t pin, int value) {
         return;
       }
     }
+    // Arduino API says that duty goes from 0 to (2^resolution) - 1
+    // But LEDC works with duty from 0 to (2^resolution)
+    // Therefore, it will adjust Arduino MAX Duty to be the LEDC MAx Duty
+    uint32_t max_duty = (1 << bus->channel_resolution) - 1;
+    if (value < 0 || value > max_duty) {
+      log_e("Duty is out of range. Valid duty range for pin %d is 0 to %d", pin, max_duty);
+      return;
+    }
+    if (value == max_duty) {
+      value = max_duty + 1;
+    }    
     ledcWrite(pin, value);
   }
 }
