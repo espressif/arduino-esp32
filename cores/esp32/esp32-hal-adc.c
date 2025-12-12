@@ -20,6 +20,7 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_continuous.h"
 #include "esp_adc/adc_cali_scheme.h"
+#include "esp_heap_caps.h"
 
 #if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_ESP32P4_REV_MIN_FULL >= 300
 // NOTE: These weak definitions allow successful linkage if the real efuse calibration functions are missing.
@@ -403,43 +404,40 @@ adc_continuous_result_t *adc_result = NULL;
 static bool adcContinuousDetachBus(void *adc_unit_number) {
   adc_unit_t adc_unit = (adc_unit_t)adc_unit_number - 1;
 
+  // Guard against double-cleanup: check if already cleaned up
   if (adc_handle[adc_unit].adc_continuous_handle == NULL) {
     return true;
-  } else {
-    esp_err_t err = adc_continuous_deinit(adc_handle[adc_unit].adc_continuous_handle);
+  }
+
+  // Clean up ADC driver
+  esp_err_t err = adc_continuous_deinit(adc_handle[adc_unit].adc_continuous_handle);
+  if (err != ESP_OK) {
+    return false;
+  }
+  adc_handle[adc_unit].adc_continuous_handle = NULL;
+
+  // Clean up calibration handle if exists
+  if (adc_handle[adc_unit].adc_cali_handle != NULL) {
+#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
+    err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
     if (err != ESP_OK) {
       return false;
     }
-    adc_handle[adc_unit].adc_continuous_handle = NULL;
-    if (adc_handle[adc_unit].adc_cali_handle != NULL) {
-#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
-      err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
-      if (err != ESP_OK) {
-        return false;
-      }
 #elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
-      err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
-      if (err != ESP_OK) {
-        return false;
-      }
-#else
-      log_e("ADC Calibration scheme is not supported!");
+    err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
+    if (err != ESP_OK) {
       return false;
+    }
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return false;
 #endif
-    }
     adc_handle[adc_unit].adc_cali_handle = NULL;
-
-    //set all used pins to INIT state
-    for (uint8_t channel = 0; channel < SOC_ADC_CHANNEL_NUM(adc_unit); channel++) {
-      int io_pin;
-      adc_oneshot_channel_to_io(adc_unit, channel, &io_pin);
-      if (perimanGetPinBusType(io_pin) == ESP32_BUS_TYPE_ADC_CONT) {
-        if (!perimanClearPinBus(io_pin)) {
-          return false;
-        }
-      }
-    }
   }
+
+  // Don't call perimanClearPinBus() here - the peripheral manager already handles it.
+  // This callback is only responsible for cleaning up the IDF's ADC driver and calibration handles.
+  // It does NOT free the adc_result buffer. The caller is responsible for freeing adc_result.
   return true;
 }
 
@@ -549,6 +547,14 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   }
 #endif
 
+#if CONFIG_IDF_TARGET_ESP32P4
+  // Align conversion frame size to cache line size (required for DMA on targets with cache)
+  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % CONFIG_CACHE_L1_CACHE_LINE_SIZE;
+  if (alignment_remainder != 0) {
+    adc_handle[adc_unit].conversion_frame_size += (CONFIG_CACHE_L1_CACHE_LINE_SIZE - alignment_remainder);
+  }
+#endif
+
   adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
 
   //Conversion frame size buffer cant be bigger than 4092 bytes
@@ -626,8 +632,21 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
     uint32_t bytes_read = 0;
     uint32_t read_raw[used_adc_channels];
     uint32_t read_count[used_adc_channels];
-    uint8_t adc_read[adc_handle[ADC_UNIT_1].conversion_frame_size];
-    memset(adc_read, 0xcc, sizeof(adc_read));
+
+    // Allocate DMA buffer with cache line alignment (required for ESP32-P4 and other targets with cache)
+    size_t buffer_size = adc_handle[ADC_UNIT_1].conversion_frame_size;
+#if CONFIG_IDF_TARGET_ESP32P4
+    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(CONFIG_CACHE_L1_CACHE_LINE_SIZE, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+#else
+    uint8_t *adc_read = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+#endif
+    if (adc_read == NULL) {
+      log_e("Failed to allocate DMA buffer");
+      *buffer = NULL;
+      return false;
+    }
+
+    memset(adc_read, 0xcc, buffer_size);
     memset(read_raw, 0, sizeof(read_raw));
     memset(read_count, 0, sizeof(read_count));
 
@@ -638,6 +657,8 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
       } else {
         log_e("Reading data failed with error: %X", err);
       }
+      free(adc_read);
+      adc_read = NULL;
       *buffer = NULL;
       return false;
     }
@@ -676,6 +697,8 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
       }
     }
 
+    free(adc_read);
+    adc_read = NULL;
     *buffer = adc_result;
     return true;
 
@@ -708,16 +731,29 @@ bool analogContinuousStop() {
 }
 
 bool analogContinuousDeinit() {
-  if (adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL) {
-    esp_err_t err = adc_continuous_deinit(adc_handle[ADC_UNIT_1].adc_continuous_handle);
-    if (err != ESP_OK) {
-      return false;
-    }
-    free(adc_result);
-    adc_handle[ADC_UNIT_1].adc_continuous_handle = NULL;
-  } else {
+  if (adc_handle[ADC_UNIT_1].adc_continuous_handle == NULL) {
     log_i("ADC Continuous was not initialized");
+    return true;
   }
+
+  // Clear all used pins from peripheral manager
+  // This will trigger adcContinuousDetachBus() callback which cleans up the ADC driver
+  for (uint8_t channel = 0; channel < SOC_ADC_CHANNEL_NUM(ADC_UNIT_1); channel++) {
+    int io_pin;
+    adc_oneshot_channel_to_io(ADC_UNIT_1, channel, &io_pin);
+    if (perimanGetPinBusType(io_pin) == ESP32_BUS_TYPE_ADC_CONT) {
+      if (!perimanClearPinBus(io_pin)) {
+        return false;
+      }
+    }
+  }
+
+  // Free the result buffer (callback doesn't do this)
+  if (adc_result != NULL) {
+    free(adc_result);
+    adc_result = NULL;
+  }
+
   return true;
 }
 
