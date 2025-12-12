@@ -9,6 +9,7 @@ on:
 
 permissions:
   statuses: write
+  pull-requests: write
 
 jobs:
   report-success:
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Report success
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
@@ -43,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Report pending
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
@@ -62,3 +63,92 @@ jobs:
               target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}'
             })).data;
             core.info(`${name} is ${state}`);
+
+  manage-labels:
+    name: Manage PR labels
+    if: github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        continue-on-error: true
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: pr-artifacts
+          path: ./pr-artifacts
+
+      - name: Get PR information
+        id: pr-info
+        run: |
+          if [ -f "./pr-artifacts/pr_number.txt" ]; then
+            pr_number=$(cat ./pr-artifacts/pr_number.txt | tr -cd '[:digit:]')
+            pre_commit_outcome=$(cat ./pr-artifacts/pre_commit_outcome.txt | tr -cd '[:alpha:]_')
+            pending_commit=$(cat ./pr-artifacts/pending_commit.txt | tr -cd '[:digit:]')
+            has_retrigger_label=$(cat ./pr-artifacts/has_retrigger_label.txt | tr -cd '[:alpha:]')
+
+            echo "pr_number=$pr_number" >> $GITHUB_OUTPUT
+            echo "pre_commit_outcome=$pre_commit_outcome" >> $GITHUB_OUTPUT
+            echo "pending_commit=$pending_commit" >> $GITHUB_OUTPUT
+            echo "has_retrigger_label=$has_retrigger_label" >> $GITHUB_OUTPUT
+            echo "artifacts_found=true" >> $GITHUB_OUTPUT
+
+            echo "PR number: $pr_number"
+            echo "Pre-commit outcome: $pre_commit_outcome"
+            echo "Pending commit: $pending_commit"
+            echo "Has retrigger label: $has_retrigger_label"
+          else
+            echo "No PR artifacts found"
+            echo "artifacts_found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Remove re-trigger label if it was present
+        if: |
+          steps.pr-info.outputs.artifacts_found == 'true' &&
+          steps.pr-info.outputs.has_retrigger_label == 'true'
+        continue-on-error: true
+        run: |
+          gh pr edit ${{ steps.pr-info.outputs.pr_number }} --repo ${{ github.repository }} --remove-label 'Re-trigger Pre-commit Hooks'
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Add label if pre-commit fixes are required
+        if: |
+          steps.pr-info.outputs.artifacts_found == 'true' &&
+          steps.pr-info.outputs.pre_commit_outcome == 'failure' &&
+          steps.pr-info.outputs.pending_commit == '0'
+        continue-on-error: true
+        run: |
+          gh pr edit ${{ steps.pr-info.outputs.pr_number }} --repo ${{ github.repository }} --add-label 'Status: Pre-commit fixes required ⚠️'
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Remove label if pre-commit was successful
+        if: |
+          steps.pr-info.outputs.artifacts_found == 'true' &&
+          steps.pr-info.outputs.pre_commit_outcome == 'success'
+        continue-on-error: true
+        run: |
+          gh pr edit ${{ steps.pr-info.outputs.pr_number }} --repo ${{ github.repository }} --remove-label 'Status: Pre-commit fixes required ⚠️'
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Comment on PR about pre-commit failures
+        if: |
+          steps.pr-info.outputs.artifacts_found == 'true' &&
+          steps.pr-info.outputs.pre_commit_outcome == 'failure' &&
+          steps.pr-info.outputs.pending_commit == '0'
+        uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
+        with:
+          pr-number: ${{ steps.pr-info.outputs.pr_number }}
+          message: |
+            ## ⚠️ Pre-commit Hooks Failed
+
+            Some pre-commit hooks failed and require manual fixes. Please see the detailed error report below.
+
+            **What to do:**
+            1. 📋 [**View the detailed error report**](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}) to see which hooks failed
+            2. 🔧 Fix the issues locally in your code
+            3. 💾 Commit and push your changes
+            4. 🔄 The hooks will run again automatically
+
+            **Need help?** Ask in the comments below.

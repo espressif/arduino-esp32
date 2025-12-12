@@ -50,6 +50,49 @@ elif __file__:
 dist_dir = current_dir + "/dist/"
 
 
+def is_safe_archive_path(path):
+    # Check for absolute paths (both Unix and Windows style)
+    if path.startswith("/") or (len(path) > 1 and path[1] == ":" and path[2] in "\\/"):
+        raise ValueError(f"Absolute path not allowed: {path}")
+
+    # Normalize the path to handle any path separators
+    normalized_path = os.path.normpath(path)
+
+    # Check for directory traversal attempts using normalized path
+    if ".." in normalized_path.split(os.sep):
+        raise ValueError(f"Directory traversal not allowed: {path}")
+
+    # Additional check for paths that would escape the target directory
+    if normalized_path.startswith(".."):
+        raise ValueError(f"Path would escape target directory: {path}")
+
+    # Check for any remaining directory traversal patterns in the original path
+    # This catches cases that might not be normalized properly
+    path_parts = path.replace("\\", "/").split("/")
+    if ".." in path_parts:
+        raise ValueError(f"Directory traversal not allowed: {path}")
+
+    return True
+
+
+def safe_tar_extract(tar_file, destination):
+    # Validate all paths before extraction
+    for member in tar_file.getmembers():
+        is_safe_archive_path(member.name)
+
+    # If all paths are safe, proceed with extraction
+    tar_file.extractall(destination, filter="tar")
+
+
+def safe_zip_extract(zip_file, destination):
+    # Validate all paths before extraction
+    for name in zip_file.namelist():
+        is_safe_archive_path(name)
+
+    # If all paths are safe, proceed with extraction
+    zip_file.extractall(destination)
+
+
 def sha256sum(filename, blocksize=65536):
     hash = hashlib.sha256()
     with open(filename, "rb") as f:
@@ -177,6 +220,7 @@ def is_latest_version(destination, dirname, rename_to, cfile, checksum):
 
 
 def unpack(filename, destination, force_extract, checksum):  # noqa: C901
+    sys_name = platform.system()
     dirname = ""
     cfile = None  # Compressed file
     file_is_corrupted = False
@@ -211,6 +255,10 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         print("File corrupted or incomplete!")
         cfile = None
         file_is_corrupted = True
+    except ValueError as e:
+        print(f"Security validation failed: {e}")
+        cfile = None
+        file_is_corrupted = True
 
     if file_is_corrupted:
         corrupted_filename = filename + ".corrupted"
@@ -223,6 +271,8 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     rename_to = re.match(r"^([a-z][^\-]*\-*)+", dirname).group(0).strip("-")
     if rename_to == dirname and dirname.startswith("esp32-arduino-libs-"):
         rename_to = "esp32-arduino-libs"
+    elif rename_to == dirname and dirname.startswith("esptool-"):
+        rename_to = "esptool"
 
     if not force_extract:
         if is_latest_version(destination, dirname, rename_to, cfile, checksum):
@@ -240,21 +290,26 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     if filename.endswith("tar.gz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:gz")
-        cfile.extractall(destination)
+        safe_tar_extract(cfile, destination)
     elif filename.endswith("tar.xz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:xz")
-        cfile.extractall(destination)
+        safe_tar_extract(cfile, destination)
     elif filename.endswith("zip"):
         if not cfile:
             cfile = zipfile.ZipFile(filename)
-        cfile.extractall(destination)
+        safe_zip_extract(cfile, destination)
     else:
         raise NotImplementedError("Unsupported archive type")
 
     if rename_to != dirname:
         print("Renaming {0} to {1} ...".format(dirname, rename_to))
         shutil.move(dirname, rename_to)
+
+    # Add execute permission to esptool on non-Windows platforms
+    if rename_to.startswith("esptool") and "CYGWIN_NT" not in sys_name and "Windows" not in sys_name:
+        st = os.stat(os.path.join(destination, rename_to, "esptool"))
+        os.chmod(os.path.join(destination, rename_to, "esptool"), st.st_mode | 0o111)
 
     with open(os.path.join(destination, rename_to, ".package_checksum"), "w") as f:
         f.write(checksum)
@@ -340,9 +395,8 @@ def get_tool(tool, force_download, force_extract):
             urlretrieve(url, local_path, report_progress, context=ctx)
         elif "Windows" in sys_name:
             r = requests.get(url)
-            f = open(local_path, "wb")
-            f.write(r.content)
-            f.close()
+            with open(local_path, "wb") as f:
+                f.write(r.content)
         else:
             is_ci = os.environ.get("GITHUB_WORKSPACE")
             if is_ci:
@@ -366,7 +420,8 @@ def get_tool(tool, force_download, force_extract):
 
 
 def load_tools_list(filename, platform):
-    tools_info = json.load(open(filename))["packages"][0]["tools"]
+    with open(filename, "r") as f:
+        tools_info = json.load(f)["packages"][0]["tools"]
     tools_to_download = []
     for t in tools_info:
         if platform == "x86_64-mingw32":

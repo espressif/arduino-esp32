@@ -14,6 +14,11 @@ Author:
 Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#error "WPS is only supported in SoCs with native Wi-Fi support"
+#endif
+
 #include "WiFi.h"
 #include "esp_wps.h"
 /*

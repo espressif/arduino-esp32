@@ -18,7 +18,8 @@
 
 */
 #include "soc/soc_caps.h"
-#if SOC_WIFI_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_WIFI_SUPPORTED && CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
 
 #include <stdio.h>
 #include <stdint.h>
@@ -33,7 +34,7 @@
 #endif
 
 #include <nvs_flash.h>
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
 #include "network_provisioning/scheme_ble.h"
 #endif
 #include <network_provisioning/scheme_softap.h>
@@ -46,7 +47,7 @@
 
 bool wifiLowLevelInit(bool persistent);
 
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
 static const uint8_t custom_service_uuid[16] = {
   0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02,
 };
@@ -60,39 +61,37 @@ static void get_device_service_name(prov_scheme_t prov_scheme, char *service_nam
     log_e("esp_wifi_get_mac failed!");
     return;
   }
-#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
+#if CONFIG_IDF_TARGET_ESP32 && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
     snprintf(service_name, max, "%s%02X%02X%02X", SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
   } else {
 #endif
     snprintf(service_name, max, "%s%02X%02X%02X", SERV_NAME_PREFIX_PROV, eth_mac[3], eth_mac[4], eth_mac[5]);
-#if CONFIG_IDF_TARGET_ESP32 && defined(CONFIG_BLUEDROID_ENABLED)
+#if CONFIG_IDF_TARGET_ESP32 && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   }
 #endif
 }
 
-void WiFiProvClass ::beginProvision(
-  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
-  const char *service_key, uint8_t *uuid, bool reset_provisioned
-) {
-  bool provisioned = false;
-  static char service_name_temp[32];
-
+void WiFiProvClass ::initProvision(prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, bool reset_provisioned) {
+  if (this->provInitDone) {
+    log_i("provInit was already done!");
+    return;
+  }
   network_prov_mgr_config_t config;
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
     config.scheme = network_prov_scheme_ble;
   } else {
 #endif
     config.scheme = network_prov_scheme_softap;
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   }
 
   if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_NONE) {
 #endif
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_EVENT_HANDLER_NONE;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
   } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM) {
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
@@ -117,13 +116,24 @@ void WiFiProvClass ::beginProvision(
   if (reset_provisioned) {
     log_i("Resetting provisioned data.");
     network_prov_mgr_reset_wifi_provisioning();
-  } else if (network_prov_mgr_is_wifi_provisioned(&provisioned) != ESP_OK) {
+  } else if (network_prov_mgr_is_wifi_provisioned(&(this->provisioned)) != ESP_OK) {
     log_e("network_prov_mgr_is_wifi_provisioned failed!");
     network_prov_mgr_deinit();
     return;
   }
+  this->provInitDone = true;
+}
+
+void WiFiProvClass ::beginProvision(
+  prov_scheme_t prov_scheme, scheme_handler_t scheme_handler, network_prov_security_t security, const char *pop, const char *service_name,
+  const char *service_key, uint8_t *uuid, bool reset_provisioned
+) {
+  if (!this->provInitDone) {
+    WiFiProvClass ::initProvision(prov_scheme, scheme_handler, reset_provisioned);
+  }
+  static char service_name_temp[32];
   if (provisioned == false) {
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
     if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       service_key = NULL;
       if (uuid == NULL) {
@@ -138,7 +148,7 @@ void WiFiProvClass ::beginProvision(
       service_name = (const char *)service_name_temp;
     }
 
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
     if (prov_scheme == NETWORK_PROV_SCHEME_BLE) {
       log_i("Starting AP using BLE. service_name : %s, pop : %s", service_name, pop);
     } else {
@@ -148,7 +158,7 @@ void WiFiProvClass ::beginProvision(
       } else {
         log_i("Starting provisioning AP using SOFTAP. service_name : %s, password : %s, pop : %s", service_name, service_key, pop);
       }
-#if CONFIG_BLUEDROID_ENABLED
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
     }
 #endif
     if (network_prov_mgr_start_provisioning(security, pop, service_name, service_key) != ESP_OK) {

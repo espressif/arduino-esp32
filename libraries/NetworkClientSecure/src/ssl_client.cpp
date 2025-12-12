@@ -83,6 +83,7 @@ int start_ssl_client(
 
   fcntl(ssl_client->socket, F_SETFL, fcntl(ssl_client->socket, F_GETFL, 0) | O_NONBLOCK);
   struct sockaddr_storage serv_addr = {};
+#if CONFIG_LWIP_IPV6
   if (domain == AF_INET6) {
     struct sockaddr_in6 *tmpaddr = (struct sockaddr_in6 *)&serv_addr;
     tmpaddr->sin6_family = AF_INET6;
@@ -92,11 +93,14 @@ int start_ssl_client(
     tmpaddr->sin6_port = htons(port);
     tmpaddr->sin6_scope_id = ip.zone();
   } else {
+#endif
     struct sockaddr_in *tmpaddr = (struct sockaddr_in *)&serv_addr;
     tmpaddr->sin_family = AF_INET;
     tmpaddr->sin_addr.s_addr = ip;
     tmpaddr->sin_port = htons(port);
+#if CONFIG_LWIP_IPV6
   }
+#endif
 
   if (timeout <= 0) {
     timeout = 30000;  // Milli seconds.
@@ -219,9 +223,10 @@ int start_ssl_client(
       log_e("pre-shared key not valid hex or too long");
       return -1;
     }
-    unsigned char psk[MBEDTLS_PSK_MAX_LEN];
-    size_t psk_len = strlen(psKey) / 2;
-    for (int j = 0; j < strlen(psKey); j += 2) {
+    unsigned char pskBytes[MBEDTLS_PSK_MAX_LEN];
+    size_t pskStrLen = strlen(psKey);
+    size_t pskByteLen = pskStrLen / 2;
+    for (int j = 0; j < pskStrLen; j += 2) {
       char c = psKey[j];
       if (c >= '0' && c <= '9') {
         c -= '0';
@@ -232,7 +237,7 @@ int start_ssl_client(
       } else {
         return -1;
       }
-      psk[j / 2] = c << 4;
+      pskBytes[j / 2] = c << 4;
       c = psKey[j + 1];
       if (c >= '0' && c <= '9') {
         c -= '0';
@@ -243,10 +248,10 @@ int start_ssl_client(
       } else {
         return -1;
       }
-      psk[j / 2] |= c;
+      pskBytes[j / 2] |= c;
     }
     // set mbedtls config
-    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, psk, psk_len, (const unsigned char *)pskIdent, strlen(pskIdent));
+    ret = mbedtls_ssl_conf_psk(&ssl_client->ssl_conf, pskBytes, pskByteLen, (const unsigned char *)pskIdent, strlen(pskIdent));
     if (ret != 0) {
       log_e("mbedtls_ssl_conf_psk returned %d", ret);
       return handle_error(ret);
@@ -405,25 +410,41 @@ int data_to_read(sslclient_context *ssl_client) {
 }
 
 int send_ssl_data(sslclient_context *ssl_client, const uint8_t *data, size_t len) {
-  unsigned long write_start_time = millis();
-  int ret = -1;
+  if (len == 0) {
+    return 0;  // Skipping zero-length write
+  }
 
-  while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
-    if ((millis() - write_start_time) > ssl_client->socket_timeout) {
+  static constexpr size_t max_write_chunk_size = 4096;
+  unsigned long last_progress = millis();  // Timeout since last progress
+  size_t sent = 0;
+
+  while (sent < len) {
+    size_t to_send = len - sent;
+    if (to_send > max_write_chunk_size) {
+      to_send = max_write_chunk_size;
+    }
+
+    int ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data + sent, to_send);
+    if (ret > 0) {
+      sent += ret;
+      last_progress = millis();  // refresh timeout window
+      continue;
+    }
+
+    if ((millis() - last_progress) > ssl_client->socket_timeout) {
       log_v("SSL write timed out.");
       return -1;
     }
 
     if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
-      log_v("Handling error %d", ret);  //for low level debug
+      log_v("Handling error %d", ret);
       return handle_error(ret);
     }
 
-    //wait for space to become available
     vTaskDelay(2);
   }
 
-  return ret;
+  return (int)sent;
 }
 
 // Some protocols, such as SMTP, XMPP, MySQL/Posgress and various others

@@ -41,6 +41,9 @@ License (MIT license):
 #ifndef ESP32MDNS_H
 #define ESP32MDNS_H
 
+#include "sdkconfig.h"
+#ifdef CONFIG_MDNS_MAX_INTERFACES
+
 #include "Arduino.h"
 #include "mdns.h"
 #include "esp_interface.h"
@@ -107,6 +110,7 @@ public:
   }
 
   String hostname(int idx);
+  String instanceName(int idx);
   IPAddress address(int idx);
   IPAddress addressV6(int idx);
   uint16_t port(int idx);
@@ -125,4 +129,5 @@ private:
 
 extern MDNSResponder MDNS;
 
+#endif  /* CONFIG_MDNS_MAX_INTERFACES */
 #endif  //ESP32MDNS_H

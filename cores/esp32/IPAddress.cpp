@@ -22,6 +22,10 @@
 #include "lwip/netif.h"
 #include "StreamString.h"
 
+#ifndef CONFIG_LWIP_IPV6
+#define IP6_NO_ZONE 0
+#endif
+
 IPAddress::IPAddress() : IPAddress(IPv4) {}
 
 IPAddress::IPAddress(IPType ip_type) {
@@ -201,7 +205,13 @@ bool IPAddress::fromString6(const char *address) {
       colons++;
       acc = 0;
     } else if (c == '%') {
-      _zone = netif_name_to_index(address);
+      // netif_index_to_name crashes on latest esp-idf
+      // _zone = netif_name_to_index(address);
+      // in the interim, we parse the suffix as a zone number
+      while ((*address != '\0') && (!isdigit(*address))) {  // skip all non-digit after '%'
+        address++;
+      }
+      _zone = atol(address) + 1;  // increase by one by convention, so we can have zone '0'
       while (*address != '\0') {
         address++;
       }
@@ -344,12 +354,25 @@ size_t IPAddress::printTo(Print &p, bool includeZone) const {
         n += p.print(':');
       }
     }
-    // add a zone if zone-id is non-zero
+    // add a zone if zone-id is non-zero (causes exception on recent IDF builds)
+    // if (_zone > 0 && includeZone) {
+    //   n += p.print('%');
+    //   char if_name[NETIF_NAMESIZE];
+    //   netif_index_to_name(_zone, if_name);
+    //   n += p.print(if_name);
+    // }
+    // In the interim, we just output the index number
     if (_zone > 0 && includeZone) {
       n += p.print('%');
-      char if_name[NETIF_NAMESIZE];
-      netif_index_to_name(_zone, if_name);
-      n += p.print(if_name);
+      // look for the interface name
+      for (netif *intf = netif_list; intf != nullptr; intf = intf->next) {
+        if (_zone - 1 == intf->num) {
+          n += p.print(intf->name[0]);
+          n += p.print(intf->name[1]);
+          break;
+        }
+      }
+      n += p.print(_zone - 1);
     }
     return n;
   }
@@ -368,6 +391,7 @@ IPAddress::IPAddress(const ip_addr_t *addr) {
 }
 
 void IPAddress::to_ip_addr_t(ip_addr_t *addr) const {
+#if CONFIG_LWIP_IPV6
   if (_type == IPv6) {
     addr->type = IPADDR_TYPE_V6;
     addr->u_addr.ip6.addr[0] = _address.dword[0];
@@ -381,9 +405,13 @@ void IPAddress::to_ip_addr_t(ip_addr_t *addr) const {
     addr->type = IPADDR_TYPE_V4;
     addr->u_addr.ip4.addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
   }
+#else
+  addr->addr = _address.dword[IPADDRESS_V4_DWORD_INDEX];
+#endif
 }
 
 IPAddress &IPAddress::from_ip_addr_t(const ip_addr_t *addr) {
+#if CONFIG_LWIP_IPV6
   if (addr->type == IPADDR_TYPE_V6) {
     _type = IPv6;
     _address.dword[0] = addr->u_addr.ip6.addr[0];
@@ -394,13 +422,21 @@ IPAddress &IPAddress::from_ip_addr_t(const ip_addr_t *addr) {
     _zone = addr->u_addr.ip6.zone;
 #endif /* LWIP_IPV6_SCOPES */
   } else {
+#endif
     _type = IPv4;
     memset(_address.bytes, 0, sizeof(_address.bytes));
+#if CONFIG_LWIP_IPV6
     _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->u_addr.ip4.addr;
+#else
+  _address.dword[IPADDRESS_V4_DWORD_INDEX] = addr->addr;
+#endif
+#if CONFIG_LWIP_IPV6
   }
+#endif
   return *this;
 }
 
+#if CONFIG_LWIP_IPV6
 esp_ip6_addr_type_t IPAddress::addr_type() const {
   if (_type != IPv6) {
     return ESP_IP6_ADDR_IS_UNKNOWN;
@@ -409,6 +445,9 @@ esp_ip6_addr_type_t IPAddress::addr_type() const {
   to_ip_addr_t(&addr);
   return esp_netif_ip6_get_addr_type((esp_ip6_addr_t *)(&(addr.u_addr.ip6)));
 }
+#endif
 
+#if CONFIG_LWIP_IPV6
 const IPAddress IN6ADDR_ANY(IPv6);
+#endif
 const IPAddress INADDR_NONE(0, 0, 0, 0);

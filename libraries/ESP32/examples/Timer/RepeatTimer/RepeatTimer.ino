@@ -33,7 +33,7 @@ void setup() {
   Serial.begin(115200);
 
   // Set BTN_STOP_ALARM to input mode
-  pinMode(BTN_STOP_ALARM, INPUT);
+  pinMode(BTN_STOP_ALARM, INPUT_PULLUP);
 
   // Create semaphore to inform us when the timer has fired
   timerSemaphore = xSemaphoreCreateBinary();

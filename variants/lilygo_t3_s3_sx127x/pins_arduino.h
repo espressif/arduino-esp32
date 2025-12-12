@@ -12,6 +12,7 @@ static const uint8_t LED_BUILTIN = 37;
 
 static const uint8_t BUTTON_1 = 0;
 static const uint8_t BAT_VOLT = 1;
+#define BAT_VOLT_PIN BAT_VOLT
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -35,7 +36,6 @@ static const uint8_t SCK = 14;
 #define LORA_CS   7  // SX1276/SX1278 CS
 #define LORA_RST  8  // SX1276/SX1278 RST
 
-#define LORA_BUSY 33
 #define LORA_DIO0 9  //IRQ
 #define LORA_DIO1 33
 #define LORA_DIO2 34

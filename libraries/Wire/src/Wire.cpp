@@ -39,7 +39,7 @@ extern "C" {
 #include "Arduino.h"
 
 TwoWire::TwoWire(uint8_t bus_num)
-  : num(bus_num & 1), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
+  : num(bus_num), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
     ,
     rxBuffer(NULL), rxIndex(0), rxLength(0), txBuffer(NULL), txLength(0), txAddress(0), _timeOutMillis(50), nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -48,7 +48,7 @@ TwoWire::TwoWire(uint8_t bus_num)
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
     ,
-    is_slave(false), user_onRequest(NULL), user_onReceive(NULL)
+    is_slave(false), user_onRequest(nullptr), user_onReceive(nullptr)
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 {
 }
@@ -60,6 +60,10 @@ TwoWire::~TwoWire() {
     vSemaphoreDelete(lock);
   }
 #endif
+}
+
+uint8_t TwoWire::getBusNum() {
+  return num;
 }
 
 bool TwoWire::initPins(int sdaPin, int sclPin) {
@@ -462,10 +466,11 @@ uint8_t TwoWire::endTransmission(bool sendStop) {
     nonStop = true;
   }
   switch (err) {
-    case ESP_OK:          return 0;
-    case ESP_FAIL:        return 2;
-    case ESP_ERR_TIMEOUT: return 5;
-    default:              break;
+    case ESP_OK:            return 0;
+    case ESP_FAIL:          return 2;
+    case ESP_ERR_NOT_FOUND: return 2;
+    case ESP_ERR_TIMEOUT:   return 5;
+    default:                break;
   }
   return 4;
 }
@@ -591,14 +596,14 @@ void TwoWire::flush() {
   //i2cFlush(num); // cleanup
 }
 
-void TwoWire::onReceive(void (*function)(int)) {
+void TwoWire::onReceive(const std::function<void(int)> &function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onReceive = function;
 #endif
 }
 
 // sets function called on slave read
-void TwoWire::onRequest(void (*function)(void)) {
+void TwoWire::onRequest(const std::function<void()> &function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onRequest = function;
 #endif
@@ -646,8 +651,16 @@ void TwoWire::onRequestService(uint8_t num, void *arg) {
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 
 TwoWire Wire = TwoWire(0);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #if SOC_I2C_NUM > 1
 TwoWire Wire1 = TwoWire(1);
+#elif SOC_I2C_NUM > 2
+TwoWire Wire2 = TwoWire(2);
 #endif /* SOC_I2C_NUM */
+#else
+#if SOC_HP_I2C_NUM > 1
+TwoWire Wire1 = TwoWire(1);
+#endif /* SOC_HP_I2C_NUM */
+#endif
 
 #endif /* SOC_I2C_SUPPORTED */

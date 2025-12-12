@@ -1,10 +1,24 @@
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "esp_wifi_types.h"
 #include "Print.h"
 #include "esp_now.h"
 #include "esp32-hal-log.h"
 #include "esp_mac.h"
+
+// clang-format off
+#define DEFAULT_ESPNOW_RATE_CONFIG { \
+  .phymode = WIFI_PHY_MODE_11G,      \
+  .rate = WIFI_PHY_RATE_1M_L,        \
+  .ersu = false,                     \
+  .dcm = false                       \
+}
+// clang-format on
 
 class ESP_NOW_Peer;  //forward declaration for friend function
 
@@ -15,13 +29,17 @@ public:
   ESP_NOW_Class();
   ~ESP_NOW_Class();
 
-  bool begin(const uint8_t *pmk = NULL /* 16 bytes */);
+  bool begin(const uint8_t *pmk = nullptr /* 16 bytes */);
   bool end();
 
-  int getTotalPeerCount();
-  int getEncryptedPeerCount();
+  int getTotalPeerCount() const;
+  int getEncryptedPeerCount() const;
+  int getMaxDataLen() const;
+  int getVersion() const;
 
   int availableForWrite();
+
+  // You can directly send data to all peers without broadcasting using ESP_NOW.write(data, len)
   size_t write(const uint8_t *data, size_t len);
   size_t write(uint8_t data) {
     return write(&data, 1);
@@ -29,6 +47,10 @@ public:
 
   void onNewPeer(void (*cb)(const esp_now_recv_info_t *info, const uint8_t *data, int len, void *arg), void *arg);
   bool removePeer(ESP_NOW_Peer &peer);
+
+protected:
+  size_t max_data_len;
+  uint32_t version;
 };
 
 class ESP_NOW_Peer {
@@ -36,6 +58,7 @@ private:
   uint8_t mac[6];
   uint8_t chan;
   wifi_interface_t ifc;
+  esp_now_rate_config_t rate;
   bool encrypt;
   uint8_t key[16];
 
@@ -45,7 +68,10 @@ protected:
   bool remove();
   size_t send(const uint8_t *data, int len);
 
-  ESP_NOW_Peer(const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL);
+  ESP_NOW_Peer(
+    const uint8_t *mac_addr, uint8_t channel = 0, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr,
+    esp_now_rate_config_t *rate_config = nullptr
+  );
 
 public:
   virtual ~ESP_NOW_Peer() {}
@@ -58,6 +84,9 @@ public:
 
   wifi_interface_t getInterface() const;
   bool setInterface(wifi_interface_t iface);
+
+  bool setRate(const esp_now_rate_config_t *rate_config);
+  esp_now_rate_config_t getRate() const;
 
   bool isEncrypted() const;
   bool setKey(const uint8_t *lmk);
@@ -76,4 +105,8 @@ public:
   friend bool ESP_NOW_Class::removePeer(ESP_NOW_Peer &);
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ESP_NOW)
 extern ESP_NOW_Class ESP_NOW;
+#endif
+
+#endif

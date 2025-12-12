@@ -11,16 +11,10 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 
-#ifndef ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE
-#define ARDUINO_SERIAL_EVENT_TASK_STACK_SIZE 2048
-#endif
-
-#ifndef ARDUINO_SERIAL_EVENT_TASK_PRIORITY
-#define ARDUINO_SERIAL_EVENT_TASK_PRIORITY (configMAX_PRIORITIES - 1)
-#endif
-
-#ifndef ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
-#define ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE -1
+#if (SOC_UART_LP_NUM >= 1)
+#define UART_HW_FIFO_LEN(uart_num) ((uart_num < SOC_UART_HP_NUM) ? SOC_UART_FIFO_LEN : SOC_LP_UART_FIFO_LEN)
+#else
+#define UART_HW_FIFO_LEN(uart_num) SOC_UART_FIFO_LEN
 #endif
 
 void serialEvent(void) __attribute__((weak));
@@ -33,6 +27,18 @@ void serialEvent1(void) __attribute__((weak));
 void serialEvent2(void) __attribute__((weak));
 #endif /* SOC_UART_NUM > 2 */
 
+#if SOC_UART_NUM > 3
+void serialEvent3(void) __attribute__((weak));
+#endif /* SOC_UART_NUM > 3 */
+
+#if SOC_UART_NUM > 4
+void serialEvent4(void) __attribute__((weak));
+#endif /* SOC_UART_NUM > 4 */
+
+#if SOC_UART_NUM > 5
+void serialEvent5(void) __attribute__((weak));
+#endif /* SOC_UART_NUM > 5 */
+
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL)
 // There is always Seria0 for UART0
 HardwareSerial Serial0(0);
@@ -42,10 +48,43 @@ HardwareSerial Serial1(1);
 #if SOC_UART_NUM > 2
 HardwareSerial Serial2(2);
 #endif
-
+#if SOC_UART_NUM > 3
+HardwareSerial Serial3(3);
+#endif
+#if SOC_UART_NUM > 4
+HardwareSerial Serial4(4);
+#endif
+#if (SOC_UART_NUM > 5)
+HardwareSerial Serial5(5);
+#endif
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
+
+// C-callable helper used by HAL when pins are detached and the high-level
+// HardwareSerial instance must be finalized.
+extern "C" void hal_uart_notify_pins_detached(int uart_num) {
+  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
+  switch (uart_num) {
+    case 0: Serial0.end(); break;
+#if SOC_UART_NUM > 1
+    case 1: Serial1.end(); break;
+#endif
+#if SOC_UART_NUM > 2
+    case 2: Serial2.end(); break;
+#endif
+#if SOC_UART_NUM > 3
+    case 3: Serial3.end(); break;
+#endif
+#if SOC_UART_NUM > 4
+    case 4: Serial4.end(); break;
+#endif
+#if SOC_UART_NUM > 5
+    case 5: Serial5.end(); break;
+#endif
+    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
+  }
+}
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
@@ -75,6 +114,21 @@ void serialEventRun(void) {
 #if SOC_UART_NUM > 2
   if (serialEvent2 && Serial2.available()) {
     serialEvent2();
+  }
+#endif
+#if SOC_UART_NUM > 3
+  if (serialEvent3 && Serial3.available()) {
+    serialEvent3();
+  }
+#endif
+#if SOC_UART_NUM > 4
+  if (serialEvent4 && Serial4.available()) {
+    serialEvent4();
+  }
+#endif
+#if SOC_UART_NUM > 5
+  if (serialEvent5 && Serial5.available()) {
+    serialEvent5();
   }
 #endif
 }
@@ -107,8 +161,6 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     }
   }
 #endif
-  // set deinit function in the Peripheral Manager
-  uart_init_PeriMan();
 }
 
 HardwareSerial::~HardwareSerial() {
@@ -161,7 +213,8 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout) {
 
     // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
     // this is a work around for an IDF issue with events and low FIFO Full value (< 3)
-    if (_onReceiveTimeout) {
+    // Not valid for the LP UART
+    if (_onReceiveTimeout && _uart_nr < SOC_UART_HP_NUM) {
       uartSetRxFIFOFull(_uart, 120);
       log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
     }
@@ -183,12 +236,13 @@ bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes) {
   HSERIAL_MUTEX_LOCK();
   // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
   // this is a work around for an IDF issue with events and low FIFO Full value (< 3)
-  if (_onReceiveCB != NULL && _onReceiveTimeout) {
+  // Not valid for the LP UART
+  if (_onReceiveCB != NULL && _onReceiveTimeout && _uart_nr < SOC_UART_HP_NUM) {
     fifoBytes = 120;
     log_w("OnReceive is set to Timeout only, thus FIFO Full is now 120 bytes.");
   }
   bool retCode = uartSetRxFIFOFull(_uart, fifoBytes);  // Set new timeout
-  if (fifoBytes > 0 && fifoBytes < SOC_UART_FIFO_LEN - 1) {
+  if (fifoBytes > 0 && fifoBytes < UART_HW_FIFO_LEN(_uart_nr) - 1) {
     _rxFIFOFull = fifoBytes;
   }
   HSERIAL_MUTEX_UNLOCK();
@@ -289,6 +343,11 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   // map logical pins to GPIO numbers
   rxPin = digitalPinToGPIONumber(rxPin);
   txPin = digitalPinToGPIONumber(txPin);
+  int8_t _rxPin = uart_get_RxPin(_uart_nr);
+  int8_t _txPin = uart_get_TxPin(_uart_nr);
+
+  rxPin = rxPin < 0 ? _rxPin : rxPin;
+  txPin = txPin < 0 ? _txPin : txPin;
 
   HSERIAL_MUTEX_LOCK();
   // First Time or after end() --> set default Pins
@@ -304,7 +363,7 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           txPin = _txPin < 0 ? (int8_t)SOC_TX0 : _txPin;
         }
         break;
-#if SOC_UART_NUM > 1  // may save some flash bytes...
+#if SOC_UART_HP_NUM > 1
       case UART_NUM_1:
         if (rxPin < 0 && txPin < 0) {
           // do not change RX1/TX1 if it has already been set before
@@ -312,17 +371,67 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
           txPin = _txPin < 0 ? (int8_t)TX1 : _txPin;
         }
         break;
-#endif
-#if SOC_UART_NUM > 2  // may save some flash bytes...
+#endif  // UART_NUM_1
+#if SOC_UART_HP_NUM > 2
       case UART_NUM_2:
         if (rxPin < 0 && txPin < 0) {
           // do not change RX2/TX2 if it has already been set before
+#ifdef RX2
           rxPin = _rxPin < 0 ? (int8_t)RX2 : _rxPin;
+#endif
+#ifdef TX2
           txPin = _txPin < 0 ? (int8_t)TX2 : _txPin;
+#endif
         }
         break;
+#endif  // UART_NUM_2
+#if SOC_UART_HP_NUM > 3
+      case UART_NUM_3:
+        if (rxPin < 0 && txPin < 0) {
+          // do not change RX3/TX3 if it has already been set before
+#ifdef RX3
+          rxPin = _rxPin < 0 ? (int8_t)RX3 : _rxPin;
 #endif
+#ifdef TX3
+          txPin = _txPin < 0 ? (int8_t)TX3 : _txPin;
+#endif
+        }
+        break;
+#endif  // UART_NUM_3
+#if SOC_UART_HP_NUM > 4
+      case UART_NUM_4:
+        if (rxPin < 0 && txPin < 0) {
+          // do not change RX4/TX4 if it has already been set before
+#ifdef RX4
+          rxPin = _rxPin < 0 ? (int8_t)RX4 : _rxPin;
+#endif
+#ifdef TX4
+          txPin = _txPin < 0 ? (int8_t)TX4 : _txPin;
+#endif
+        }
+        break;
+#endif  // UART_NUM_4
+#if (SOC_UART_LP_NUM >= 1)
+      case LP_UART_NUM_0:
+        if (rxPin < 0 && txPin < 0) {
+          // do not change RX0_LP/TX0_LP if it has already been set before
+#ifdef LP_RX0
+          rxPin = _rxPin < 0 ? (int8_t)LP_RX0 : _rxPin;
+#endif
+#ifdef LP_TX0
+          txPin = _txPin < 0 ? (int8_t)LP_TX0 : _txPin;
+#endif
+        }
+        break;
+#endif  // LP_UART_NUM_0
     }
+  }
+
+  // if no RX/TX pins are defined, it will not start the UART driver
+  if (rxPin < 0 && txPin < 0) {
+    log_e("No RX/TX pins defined. Please set RX/TX pins.");
+    HSERIAL_MUTEX_UNLOCK();
+    return;
   }
 
   // IDF UART driver keeps Pin setting on restarting. Negative Pin number will keep it unmodified.
@@ -379,7 +488,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
   if (!_rxFIFOFull) {  // it has not being changed before calling begin()
     //  set a default FIFO Full value for the IDF driver
     uint8_t fifoFull = 1;
-    if (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout)) {
+    // if baud rate is higher than 57600 or onReceive() is set, it will set FIFO Full to 120 bytes, except for LP UART
+    if (_uart_nr < SOC_UART_HP_NUM && (baud > 57600 || (_onReceiveCB != NULL && _onReceiveTimeout))) {
       fifoFull = 120;
     }
     uartSetRxFIFOFull(_uart, fifoFull);
@@ -398,9 +508,6 @@ void HardwareSerial::end() {
   // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
   _onReceiveCB = NULL;
   _onReceiveErrorCB = NULL;
-  if (uartGetDebug() == _uart_nr) {
-    uartSetDebug(0);
-  }
   _rxFIFOFull = 0;
   uartEnd(_uart_nr);    // fully detach all pins and delete the UART driver
   _destroyEventTask();  // when IDF uart driver is deleted, _eventTask must finish too
@@ -411,6 +518,12 @@ void HardwareSerial::setDebugOutput(bool en) {
   if (_uart == 0) {
     return;
   }
+#if (SOC_UART_LP_NUM >= 1)
+  if (_uart_nr >= SOC_UART_HP_NUM) {
+    log_e("LP UART does not support Debug Output.");
+    return;
+  }
+#endif
   if (en) {
     uartSetDebug(_uart);
   } else {
@@ -481,8 +594,20 @@ HardwareSerial::operator bool() const {
   return uartIsDriverInstalled(_uart);
 }
 
-void HardwareSerial::setRxInvert(bool invert) {
-  uartSetRxInvert(_uart, invert);
+bool HardwareSerial::setRxInvert(bool invert) {
+  return uartSetRxInvert(_uart, invert);
+}
+
+bool HardwareSerial::setTxInvert(bool invert) {
+  return uartSetTxInvert(_uart, invert);
+}
+
+bool HardwareSerial::setCtsInvert(bool invert) {
+  return uartSetCtsInvert(_uart, invert);
+}
+
+bool HardwareSerial::setRtsInvert(bool invert) {
+  return uartSetRtsInvert(_uart, invert);
 }
 
 // negative Pin value will keep it unmodified
@@ -514,35 +639,56 @@ bool HardwareSerial::setMode(SerialMode mode) {
   return uartSetMode(_uart, mode);
 }
 
+// Sets the UART Clock Source based on the compatible SoC options
+// This method must be called before starting UART using begin(), otherwise it won't have any effect.
+// Clock Source Options are:
+// UART_CLK_SRC_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
+// UART_CLK_SRC_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
+// UART_CLK_SRC_PLL          :: ESP32-C2, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2 and ESP32-P4
+// UART_CLK_SRC_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_CLK_SRC_RTC          :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_CLK_SRC_REF_TICK     :: ESP32 and ESP32-S2
+// Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
+// Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
+bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
+  if (_uart) {
+    log_e("No Clock Source change was done. This function must be called before beginning UART%d.", _uart_nr);
+    return false;
+  }
+  return uartSetClockSource(_uart_nr, (uart_sclk_t)clkSrc);
+}
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
+// LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 
   if (_uart) {
     log_e("RX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
   }
-
-  if (new_size <= SOC_UART_FIFO_LEN) {
-    log_w("RX Buffer set to minimum value: %d.", SOC_UART_FIFO_LEN + 1);  // ESP32, S2, S3 and C3 means higher than 128
-    new_size = SOC_UART_FIFO_LEN + 1;
+  uint8_t FIFOLen = UART_HW_FIFO_LEN(_uart_nr);
+  // Valid value is higher than the FIFO length
+  if (new_size <= FIFOLen) {
+    new_size = FIFOLen + 1;
+    log_w("RX Buffer set to minimum value: %d.", new_size);
   }
 
   _rxBufferSize = new_size;
   return _rxBufferSize;
 }
 
-// minimum total TX Buffer size is the UART FIFO space (128 bytes for most SoC).
+// minimum total TX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1.
+// LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setTxBufferSize(size_t new_size) {
 
   if (_uart) {
     log_e("TX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
   }
-
-  if (new_size <= SOC_UART_FIFO_LEN) {
-    log_w("TX Buffer set to minimum value: %d.", SOC_UART_FIFO_LEN);  // ESP32, S2, S3 and C3 means higher than 128
-    _txBufferSize = 0;                                                // it will use just UART FIFO with SOC_UART_FIFO_LEN bytes (128 for most SoC)
-    return SOC_UART_FIFO_LEN;
+  uint8_t FIFOLen = UART_HW_FIFO_LEN(_uart_nr);
+  // Valid values are zero or higher than the FIFO length
+  if (new_size > 0 && new_size <= FIFOLen) {
+    new_size = FIFOLen + 1;
+    log_w("TX Buffer set to minimum value: %d.", new_size);
   }
   // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
   _txBufferSize = new_size;

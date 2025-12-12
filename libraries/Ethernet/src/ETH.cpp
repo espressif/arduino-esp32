@@ -22,6 +22,7 @@
 #define ARDUINO_CORE_BUILD
 
 #include "ETH.h"
+#if CONFIG_ETH_ENABLED
 #include "esp_system.h"
 #include "esp_event.h"
 #include "esp_eth.h"
@@ -30,7 +31,12 @@
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if defined __has_include && __has_include("soc/emac_ext_struct.h")
 #include "soc/emac_ext_struct.h"
+#endif /* __has_include("soc/emac_ext_struct.h" */
+#if ETH_PHY_LAN867X_SUPPORTED
+#include "esp_eth_phy_lan867x.h"
+#endif
 #include "soc/rtc.h"
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #include "esp32-hal-periman.h"
@@ -47,7 +53,7 @@ static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
 static esp_event_handler_instance_t _eth_ev_instance = NULL;
 
 static void _eth_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-
+  (void)arg;
   if (event_base == ETH_EVENT) {
     esp_eth_handle_t eth_handle = *((esp_eth_handle_t *)event_data);
     for (int i = 0; i < NUM_SUPPORTED_ETH_PORTS; ++i) {
@@ -72,6 +78,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
       log_e("Could not find ETH interface with that handle!");
       return;
     }
+#if CONFIG_LWIP_IPV6
     if (_ethernets[index]->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_ethernets[index]->netif());
       if (err != ESP_OK) {
@@ -80,6 +87,7 @@ static void onEthConnected(arduino_event_id_t event, arduino_event_info_t info) 
         log_v("Enabled IPv6 Link Local on %s", _ethernets[index]->desc());
       }
     }
+#endif
   }
 }
 
@@ -99,14 +107,17 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
   } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
     log_v("%s Disconnected", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+    arduino_event.event_info.eth_disconnected = handle();
     clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
   } else if (event_id == ETHERNET_EVENT_START) {
     log_v("%s Started", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+    arduino_event.event_info.eth_started = handle();
     setStatusBits(ESP_NETIF_STARTED_BIT);
   } else if (event_id == ETHERNET_EVENT_STOP) {
     log_v("%s Stopped", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+    arduino_event.event_info.eth_stopped = handle();
     clearStatusBits(
       ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
       | ESP_NETIF_HAS_STATIC_IP_BIT
@@ -119,7 +130,8 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
 }
 
 ETHClass::ETHClass(uint8_t eth_index)
-  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL)
+  : _eth_handle(NULL), _eth_index(eth_index), _phy_type(ETH_PHY_MAX), _glue_handle(NULL), _mac(NULL), _phy(NULL), _eth_started(false), _link_speed(100),
+    _full_duplex(true), _auto_negotiation(true)
 #if ETH_SPI_SUPPORTS_CUSTOM
     ,
     _spi(NULL)
@@ -131,12 +143,15 @@ ETHClass::ETHClass(uint8_t eth_index)
     _pin_mcd(-1), _pin_mdio(-1), _pin_power(-1), _pin_rmii_clock(-1)
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
     ,
-    _task_stack_size(4096) {
+    _task_stack_size(4096), _eth_connected_event_handle(0) {
 }
 
 ETHClass::~ETHClass() {}
 
 bool ETHClass::ethDetachBus(void *bus_pointer) {
+  if (!bus_pointer) {
+    return true;
+  }
   ETHClass *bus = (ETHClass *)bus_pointer;
   bus->end();
   return true;
@@ -147,6 +162,42 @@ void ETHClass::setTaskStackSize(size_t size) {
 }
 
 #if CONFIG_ETH_USE_ESP32_EMAC
+#if CONFIG_IDF_TARGET_ESP32
+#define ETH_EMAC_DEFAULT_CONFIG() ETH_ESP32_EMAC_DEFAULT_CONFIG()
+#elif CONFIG_IDF_TARGET_ESP32P4
+// clang-format off
+#define ETH_EMAC_DEFAULT_CONFIG()                                                  \
+  {                                                                                \
+    .smi_gpio = {.mdc_num = 31, .mdio_num = 52},                                   \
+    .interface = EMAC_DATA_INTERFACE_RMII,                                         \
+    .clock_config = {                                                              \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t)ETH_RMII_CLK                         \
+      }                                                                            \
+    },                                                                             \
+    .dma_burst_len = ETH_DMA_BURST_LEN_32,                                         \
+    .intr_priority = 0,                                                            \
+    .emac_dataif_gpio = {                                                          \
+      .rmii = {                                                                    \
+        .tx_en_num = ETH_RMII_TX_EN,                                               \
+        .txd0_num = ETH_RMII_TX0,                                                  \
+        .txd1_num = ETH_RMII_TX1,                                                  \
+        .crs_dv_num = ETH_RMII_CRS_DV,                                             \
+        .rxd0_num = ETH_RMII_RX0,                                                  \
+        .rxd1_num = ETH_RMII_RX1_EN                                                \
+      }                                                                            \
+    },                                                                             \
+    .clock_config_out_in = {                                                       \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
+      }                                                                            \
+    },                                                                             \
+  }
+#endif
+// clang-format on
+
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode) {
   esp_err_t ret = ESP_OK;
   if (_eth_index > 2) {
@@ -170,14 +221,23 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   Network.begin();
   _ethernets[_eth_index] = this;
 
-  eth_esp32_emac_config_t mac_config = ETH_ESP32_EMAC_DEFAULT_CONFIG();
+#if CONFIG_IDF_TARGET_ESP32
+#undef DEFAULT_RMII_CLK_GPIO
+#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(0)
+#endif
+
+  eth_esp32_emac_config_t mac_config = ETH_EMAC_DEFAULT_CONFIG();
+#if CONFIG_IDF_TARGET_ESP32
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
   mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO
                                             : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
                                             : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
                                                                 : EMAC_CLK_IN_GPIO;
-  mac_config.smi_mdc_gpio_num = digitalPinToGPIONumber(mdc);
-  mac_config.smi_mdio_gpio_num = digitalPinToGPIONumber(mdio);
+#elif CONFIG_IDF_TARGET_ESP32P4
+  mac_config.clock_config.rmii.clock_mode = (emac_rmii_clock_mode_t)clock_mode;
+#endif
+  mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
+  mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
   _pin_mcd = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
@@ -221,8 +281,8 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   eth_mac_config.sw_reset_timeout_ms = 1000;
   eth_mac_config.rx_task_stack_size = _task_stack_size;
 
-  esp_eth_mac_t *mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
-  if (mac == NULL) {
+  _mac = esp_eth_mac_new_esp32(&mac_config, &eth_mac_config);
+  if (_mac == NULL) {
     log_e("esp_eth_mac_new_esp32 failed");
     return false;
   }
@@ -231,23 +291,29 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   phy_config.phy_addr = phy_addr;
   phy_config.reset_gpio_num = _pin_power;
 
-  esp_eth_phy_t *phy = NULL;
   switch (type) {
-    case ETH_PHY_LAN8720: phy = esp_eth_phy_new_lan87xx(&phy_config); break;
-    case ETH_PHY_TLK110:  phy = esp_eth_phy_new_ip101(&phy_config); break;
-    case ETH_PHY_RTL8201: phy = esp_eth_phy_new_rtl8201(&phy_config); break;
-    case ETH_PHY_DP83848: phy = esp_eth_phy_new_dp83848(&phy_config); break;
-    case ETH_PHY_KSZ8041: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    case ETH_PHY_KSZ8081: phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    default:              log_e("Unsupported PHY %d", type); break;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+    case ETH_PHY_GENERIC: _phy = esp_eth_phy_new_generic(&phy_config); break;
+#endif
+    case ETH_PHY_LAN8720: _phy = esp_eth_phy_new_lan87xx(&phy_config); break;
+    case ETH_PHY_TLK110:  _phy = esp_eth_phy_new_ip101(&phy_config); break;
+    case ETH_PHY_RTL8201: _phy = esp_eth_phy_new_rtl8201(&phy_config); break;
+    case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
+    case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+#if ETH_PHY_LAN867X_SUPPORTED
+    case ETH_PHY_LAN867X: _phy = esp_eth_phy_new_lan867x(&phy_config); break;
+#endif
+    default: log_e("Unsupported PHY %d", type); break;
   }
-  if (phy == NULL) {
+  if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
     return false;
   }
 
   _eth_handle = NULL;
-  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(mac, phy);
+  esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("Ethernet driver install failed: %d", ret);
@@ -299,6 +365,19 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     return false;
   }
 
+  // auto negotiation needs to be disabled to change duplex mode and link speed
+  if (!_auto_negotiation) {
+    if (!_setAutoNegotiation(_auto_negotiation)) {
+      return false;
+    }
+    if (!_setFullDuplex(_full_duplex)) {
+      return false;
+    }
+    if (!_setLinkSpeed(_link_speed)) {
+      return false;
+    }
+  }
+
   if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
@@ -307,13 +386,15 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   /* attach to receive events */
   initNetif((Network_Interface_ID)(ESP_NETIF_ID_ETH + _eth_index));
 
-  Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
   ret = esp_eth_start(_eth_handle);
   if (ret != ESP_OK) {
     log_e("esp_eth_start failed: %d", ret);
     return false;
   }
+
+  _eth_started = true;
 
   if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
     goto err;
@@ -661,15 +742,29 @@ bool ETHClass::beginSPI(
     return false;
   }
 
+  if (_mac == NULL) {
+    log_e("esp_eth_mac_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
+  if (_phy == NULL) {
+    log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
   // Init Ethernet driver to default and install it
   esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("SPI Ethernet driver install failed: %d", ret);
+    _delMacAndPhy();
     return false;
   }
   if (_eth_handle == NULL) {
     log_e("esp_eth_driver_install failed! eth_handle is NULL");
+    _delMacAndPhy();
     return false;
   }
 
@@ -679,9 +774,9 @@ bool ETHClass::beginSPI(
   } else {
     // Derive a new MAC address for this interface
     uint8_t base_mac_addr[ETH_ADDR_LEN];
-    ret = esp_efuse_mac_get_default(base_mac_addr);
+    ret = esp_read_mac(base_mac_addr, ESP_MAC_ETH);
     if (ret != ESP_OK) {
-      log_e("Get EFUSE MAC failed: %d", ret);
+      log_e("Get ETH MAC failed: %d", ret);
       return false;
     }
     base_mac_addr[ETH_ADDR_LEN - 1] += _eth_index;  //Increment by the ETH number
@@ -736,6 +831,19 @@ bool ETHClass::beginSPI(
     return false;
   }
 
+  // auto negotiation needs to be disabled to change duplex mode and link speed
+  if (!_auto_negotiation) {
+    if (!_setAutoNegotiation(_auto_negotiation)) {
+      return false;
+    }
+    if (!_setFullDuplex(_full_duplex)) {
+      return false;
+    }
+    if (!_setLinkSpeed(_link_speed)) {
+      return false;
+    }
+  }
+
   if (_eth_ev_instance == NULL && esp_event_handler_instance_register(ETH_EVENT, ESP_EVENT_ANY_ID, &_eth_event_cb, NULL, &_eth_ev_instance)) {
     log_e("event_handler_instance_register for ETH_EVENT Failed!");
     return false;
@@ -750,6 +858,8 @@ bool ETHClass::beginSPI(
     log_e("esp_eth_start failed: %d", ret);
     return false;
   }
+
+  _eth_started = true;
 
   // If Arduino's SPI is used, cs pin is in GPIO mode
 #if ETH_SPI_SUPPORTS_CUSTOM
@@ -797,7 +907,7 @@ bool ETHClass::beginSPI(
     perimanSetPinBusExtraType(_pin_rst, "ETH_RST");
   }
 
-  Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
   return true;
 
@@ -831,9 +941,22 @@ static bool empty_ethDetachBus(void *bus_pointer) {
   return true;
 }
 
+void ETHClass::_delMacAndPhy() {
+  if (_mac != NULL) {
+    _mac->del(_mac);
+    _mac = NULL;
+  }
+
+  if (_phy != NULL) {
+    _phy->del(_phy);
+    _phy = NULL;
+  }
+}
+
 void ETHClass::end(void) {
 
-  Network.removeEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+  Network.removeEvent(_eth_connected_event_handle);
+  _eth_connected_event_handle = 0;
 
   if (_eth_handle != NULL) {
     if (esp_eth_stop(_eth_handle) != ESP_OK) {
@@ -844,6 +967,9 @@ void ETHClass::end(void) {
     while (getStatusBits() & ESP_NETIF_STARTED_BIT) {
       delay(10);
     }
+
+    _eth_started = false;
+
     //delete glue first
     if (_glue_handle != NULL) {
       if (esp_eth_del_netif_glue(_glue_handle) != ESP_OK) {
@@ -858,17 +984,9 @@ void ETHClass::end(void) {
       return;
     }
     _eth_handle = NULL;
-    //delete mac
-    if (_mac != NULL) {
-      _mac->del(_mac);
-      _mac = NULL;
-    }
-    //delete phy
-    if (_phy != NULL) {
-      _phy->del(_phy);
-      _phy = NULL;
-    }
   }
+
+  _delMacAndPhy();
 
   if (_eth_ev_instance != NULL) {
     bool do_not_unreg_ev_handler = false;
@@ -893,7 +1011,7 @@ void ETHClass::end(void) {
 #if ETH_SPI_SUPPORTS_CUSTOM
   _spi = NULL;
 #endif
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if (CONFIG_ETH_USE_ESP32_EMAC && !defined(CONFIG_IDF_TARGET_ESP32P4))
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);
@@ -957,6 +1075,30 @@ bool ETHClass::fullDuplex() const {
   return (link_duplex == ETH_DUPLEX_FULL);
 }
 
+bool ETHClass::_setFullDuplex(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_duplex_t link_duplex = on ? ETH_DUPLEX_FULL : ETH_DUPLEX_HALF;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_DUPLEX_MODE, &link_duplex);
+  if (err != ESP_OK) {
+    log_e("Failed to set duplex mode: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool ETHClass::setFullDuplex(bool on) {
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  if (_auto_negotiation) {
+    log_w("Auto Negotiation MUST be OFF for this setting to be applied");
+  }
+  _full_duplex = on;
+  return true;
+}
+
 bool ETHClass::autoNegotiation() const {
   if (_eth_handle == NULL) {
     return false;
@@ -964,6 +1106,26 @@ bool ETHClass::autoNegotiation() const {
   bool auto_nego;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_AUTONEGO, &auto_nego);
   return auto_nego;
+}
+
+bool ETHClass::_setAutoNegotiation(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_AUTONEGO, &on);
+  if (err != ESP_OK) {
+    log_e("Failed to set auto negotiation: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool ETHClass::setAutoNegotiation(bool on) {
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  _auto_negotiation = on;
+  return true;
 }
 
 uint32_t ETHClass::phyAddr() const {
@@ -975,13 +1137,41 @@ uint32_t ETHClass::phyAddr() const {
   return phy_addr;
 }
 
-uint8_t ETHClass::linkSpeed() const {
+uint16_t ETHClass::linkSpeed() const {
   if (_eth_handle == NULL) {
     return 0;
   }
   eth_speed_t link_speed;
   esp_eth_ioctl(_eth_handle, ETH_CMD_G_SPEED, &link_speed);
   return (link_speed == ETH_SPEED_10M) ? 10 : 100;
+}
+
+bool ETHClass::_setLinkSpeed(uint16_t speed) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  eth_speed_t link_speed = (speed == 10) ? ETH_SPEED_10M : ETH_SPEED_100M;
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_SPEED, &link_speed);
+  if (err != ESP_OK) {
+    log_e("Failed to set link speed: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool ETHClass::setLinkSpeed(uint16_t speed) {
+  if (speed != 10 && speed != 100) {
+    log_e("Ethernet currently supports only 10 or 100 Mbps link speed");
+    return false;
+  }
+  if (_eth_started) {
+    log_e("This method must be called before ETH.begin()");
+    return false;
+  }
+  if (_auto_negotiation) {
+    log_w("Auto Negotiation MUST be OFF for this setting to be applied");
+  }
+  _link_speed = speed;
+  return true;
 }
 
 // void ETHClass::getMac(uint8_t* mac)
@@ -1006,4 +1196,8 @@ size_t ETHClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ETH)
 ETHClass ETH;
+#endif
+
+#endif /* CONFIG_ETH_ENABLED */

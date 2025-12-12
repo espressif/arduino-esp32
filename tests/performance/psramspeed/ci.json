@@ -1,9 +1,0 @@
-{
-  "platforms": {
-    "qemu": false,
-    "wokwi": false
-  },
-  "requires": [
-    "CONFIG_SPIRAM=y"
-  ]
-}

@@ -2,6 +2,15 @@
 
 from esp_docs.conf_docs import *  # noqa: F403,F401
 
+# Used for substituting variables in the documentation
+rst_prolog = """
+.. |version| replace:: 3.3.4
+.. |idf_version| replace:: 5.5
+.. |no| replace:: ❌
+.. |yes| replace:: ✅
+.. |n/a| replace:: ➖
+"""
+
 languages = ["en"]
 
 # idf_targets = [
@@ -22,11 +31,18 @@ html_context["github_repo"] = "arduino-esp32"  # noqa: F405
 
 html_static_path = ["../_static"]
 
+html_js_files = ["../_static/chatbot_widget_en.js"]
+html_css_files = [
+    "../_static/chatbot_widget.css",
+    "../_static/custom.css",
+]
+
 # Conditional content
 
 extensions += [  # noqa: F405
     "sphinx_copybutton",
     "sphinx_tabs.tabs",
+    "sphinx_substitution_extensions",  # For allowing substitutions inside code blocks
     "esp_docs.esp_extensions.dummy_build_system",
 ]
 

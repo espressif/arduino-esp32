@@ -1,14 +1,31 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Zigbee core class */
 
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_IEEE802154_SUPPORTED
+#include "sdkconfig.h"
+#if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee_core.h"
 #include "zdo/esp_zigbee_zdo_common.h"
+#include "aps/esp_zigbee_aps.h"
 #include <esp32-hal-log.h>
 #include <list>
+#include "ZigbeeTypes.h"
 #include "ZigbeeEP.h"
 class ZigbeeEP;
 
@@ -26,6 +43,8 @@ typedef enum {
 
 #define ZB_SCAN_RUNNING (-1)
 #define ZB_SCAN_FAILED  (-2)
+
+#define ZB_BEGIN_TIMEOUT_DEFAULT 30000  // 30 seconds
 
 #define ZIGBEE_DEFAULT_ED_CONFIG()                                      \
   {                                                                     \
@@ -59,42 +78,81 @@ typedef enum {
     }                                                                                         \
   }
 
+#define ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG()   \
+  {                                              \
+    .radio_mode = ZB_RADIO_MODE_UART_RCP,        \
+    .radio_uart_config = {                       \
+      .port = UART_NUM_1,                        \
+      .rx_pin = GPIO_NUM_NC,                     \
+      .tx_pin = GPIO_NUM_NC,                     \
+      .uart_config =                             \
+        {                                        \
+          .baud_rate = 460800,                   \
+          .data_bits = UART_DATA_8_BITS,         \
+          .parity = UART_PARITY_DISABLE,         \
+          .stop_bits = UART_STOP_BITS_1,         \
+          .flow_ctrl = UART_HW_FLOWCTRL_DISABLE, \
+          .rx_flow_ctrl_thresh = 0,              \
+          .source_clk = UART_SCLK_DEFAULT,       \
+        },                                       \
+    },                                           \
+  }
+
 class ZigbeeCore {
 private:
   esp_zb_radio_config_t _radio_config;
   esp_zb_host_config_t _host_config;
   uint32_t _primary_channel_mask;
+  uint32_t _begin_timeout;
   int16_t _scan_status;
+  uint8_t _scan_duration;
+  bool _rx_on_when_idle;
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
   bool _started;
+  bool _connected;
 
   uint8_t _open_network;
   zigbee_scan_result_t *_scan_result;
+  SemaphoreHandle_t lock;
+  bool _debug;
+  bool _allow_multi_endpoint_binding;
+
+  // Global default response callback
+  void (*_global_default_response_cb)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
 
   bool zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(esp_zb_zdp_status_t zdo_status, uint8_t count, esp_zb_network_descriptor_t *nwk_descriptor);
   const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);
+  void searchBindings();
+  static void bindingTableCb(const esp_zb_zdo_binding_table_info_t *table_info, void *user_ctx);
+  void resetNVRAMChannelMask();             // Reset to default mask also in NVRAM
+  void setNVRAMChannelMask(uint32_t mask);  // Set channel mask in NVRAM
 
 public:
   ZigbeeCore();
-  ~ZigbeeCore();
+  ~ZigbeeCore() {}
 
   std::list<ZigbeeEP *> ep_objects;
 
   bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
   bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
   // bool end();
+  void stop();
+  void start();
 
-  bool isStarted() {
+  bool started() {
     return _started;
+  }
+  bool connected() {
+    return _connected;
   }
   zigbee_role_t getRole() {
     return _role;
   }
 
-  void addEndpoint(ZigbeeEP *ep);
+  bool addEndpoint(ZigbeeEP *ep);
   //void removeEndpoint(ZigbeeEP *ep);
 
   void setRadioConfig(esp_zb_radio_config_t config);
@@ -103,9 +161,25 @@ public:
   void setHostConfig(esp_zb_host_config_t config);
   esp_zb_host_config_t getHostConfig();
 
-  void setPrimaryChannelMask(uint32_t mask);
+  void setPrimaryChannelMask(uint32_t mask);  // By default all channels are scanned (11-26) -> mask 0x07FFF800
+
+  void setScanDuration(uint8_t duration);  // Can be set from 1 - 4. 1 is fastest, 4 is slowest
+  uint8_t getScanDuration() {
+    return _scan_duration;
+  }
+
+  void setRxOnWhenIdle(bool rx_on_when_idle) {
+    _rx_on_when_idle = rx_on_when_idle;
+  }
+  bool getRxOnWhenIdle() {
+    return _rx_on_when_idle;
+  }
+  void setTimeout(uint32_t timeout) {
+    _begin_timeout = timeout;
+  }
   void setRebootOpenNetwork(uint8_t time);
   void openNetwork(uint8_t time);
+  void closeNetwork();
 
   //scan_duration Time spent scanning each channel, in units of ((1 << scan_duration) + 1) * a beacon time. (15.36 microseconds)
   void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
@@ -114,12 +188,50 @@ public:
   zigbee_scan_result_t *getScanResult();
   void scanDelete();
 
-  void factoryReset();
+  void factoryReset(bool restart = true);
+
+  void setDebugMode(bool debug) {
+    _debug = debug;
+  }
+  bool getDebugMode() {
+    return _debug;
+  }
+
+  void allowMultiEndpointBinding(bool allow) {
+    _allow_multi_endpoint_binding = allow;
+  }
+  bool allowMultiEndpointBinding() {
+    return _allow_multi_endpoint_binding;
+  }
+
+  // Set global default response callback
+  void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster)) {
+    _global_default_response_cb = callback;
+  }
+
+  // Call global default response callback (for internal use)
+  void callDefaultResponseCallback(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
 
   // Friend function declaration to allow access to private members
   friend void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct);
+  friend bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
+
+  // Helper functions for formatting addresses
+  static inline const char *formatIEEEAddress(const esp_zb_ieee_addr_t addr) {
+    static char buf[24];
+    snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", addr[7], addr[6], addr[5], addr[4], addr[3], addr[2], addr[1], addr[0]);
+    return buf;
+  }
+
+  static inline const char *formatShortAddress(uint16_t addr) {
+    static char buf[7];
+    snprintf(buf, sizeof(buf), "0x%04X", addr);
+    return buf;
+  }
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ZIGBEE)
 extern ZigbeeCore Zigbee;
+#endif
 
-#endif  //SOC_IEEE802154_SUPPORTED
+#endif  // CONFIG_ZB_ENABLED

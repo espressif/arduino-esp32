@@ -41,7 +41,11 @@ public:
   typedef std::function<void(ota_error_t)> THandlerFunction_Error;
   typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
 
-  ArduinoOTAClass();
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
+  ArduinoOTAClass(UpdateClass *updater = &Update);
+#else
+  ArduinoOTAClass(UpdateClass *updater = nullptr);
+#endif
   ~ArduinoOTAClass();
 
   //Sets the service port. Default 3232
@@ -54,12 +58,15 @@ public:
   //Sets the password that will be required for OTA. Default NULL
   ArduinoOTAClass &setPassword(const char *password);
 
-  //Sets the password as above but in the form MD5(password). Default NULL
+  //Sets the password as above but in the form SHA256(password). Default NULL
   ArduinoOTAClass &setPasswordHash(const char *password);
 
   //Sets the partition label to write to when updating SPIFFS. Default NULL
   ArduinoOTAClass &setPartitionLabel(const char *partition_label);
   String getPartitionLabel();
+
+  //Sets instance of UpdateClass to perform updating operations
+  ArduinoOTAClass &setUpdaterInstance(UpdateClass *updater);
 
   //Sets if the device should be rebooted after successful update. Default true
   ArduinoOTAClass &setRebootOnSuccess(bool reboot);
@@ -94,6 +101,7 @@ public:
   void setTimeout(int timeoutInMillis);
 
 private:
+  UpdateClass *_updater;
   int _port;
   String _password;
   String _hostname;

@@ -1,5 +1,10 @@
 #pragma once
 
+#include "sdkconfig.h"
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
+#else
+
 #include "esp_wifi_types.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -23,7 +28,9 @@ private:
   size_t tryToSend();
 
 public:
-  ESP_NOW_Serial_Class(const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = NULL, bool remove_on_fail = false);
+  ESP_NOW_Serial_Class(
+    const uint8_t *mac_addr, uint8_t channel, wifi_interface_t iface = WIFI_IF_AP, const uint8_t *lmk = nullptr, bool remove_on_fail = false
+  );
   ~ESP_NOW_Serial_Class();
   size_t setRxBufferSize(size_t);
   size_t setTxBufferSize(size_t);
@@ -48,3 +55,5 @@ public:
   void onReceive(const uint8_t *data, size_t len, bool broadcast);
   void onSent(bool success);
 };
+
+#endif

@@ -23,7 +23,8 @@
 #pragma once
 
 #include "soc/soc_caps.h"
-#if SOC_WIFI_SUPPORTED
+#include "sdkconfig.h"
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 
 #include "esp_err.h"
 #include "esp_event.h"
@@ -32,8 +33,12 @@
 #include "IPAddress.h"
 #include "esp_smartconfig.h"
 #include "esp_netif_types.h"
+#if CONFIG_ETH_ENABLED
 #include "esp_eth_driver.h"
+#endif
+#if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
 #include "network_provisioning/manager.h"
+#endif
 #include "lwip/ip_addr.h"
 
 #include "Network.h"
@@ -77,6 +82,11 @@ class WiFiGenericClass {
 public:
   WiFiGenericClass();
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+  // Set SDIO pins for connection to external ESP MCU
+  static bool setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
+#endif
+
   wifi_event_id_t onEvent(WiFiEventCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   wifi_event_id_t onEvent(WiFiEventFuncCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
   wifi_event_id_t onEvent(WiFiEventSysCb cbEvent, arduino_event_id_t event = ARDUINO_EVENT_MAX);
@@ -106,6 +116,12 @@ public:
   bool setTxPower(wifi_power_t power);
   wifi_power_t getTxPower();
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+  bool setBandMode(wifi_band_mode_t band_mode);
+  wifi_band_mode_t getBandMode();
+#endif
+  wifi_band_t getBand();
+
   bool initiateFTM(uint8_t frm_count = 16, uint16_t burst_period = 2, uint8_t channel = 1, const uint8_t *mac = NULL);
 
   static bool setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode);
@@ -133,7 +149,6 @@ public:
 protected:
   static bool _persistent;
   static bool _long_range;
-  static wifi_mode_t _forceSleepLastMode;
   static wifi_ps_type_t _sleepEnabled;
   static bool _wifiUseStaticBuffers;
 

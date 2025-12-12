@@ -12,18 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "LittleFS.h"
+
+#ifdef CONFIG_LITTLEFS_PAGE_SIZE
 #include "vfs_api.h"
 
 extern "C" {
 #include <sys/unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
-}
-#include "sdkconfig.h"
-#include "LittleFS.h"
-
-#ifdef CONFIG_LITTLEFS_PAGE_SIZE
-extern "C" {
 #include "esp_littlefs.h"
 }
 
@@ -47,6 +44,7 @@ LittleFSFS::~LittleFSFS() {
 }
 
 bool LittleFSFS::begin(bool formatOnFail, const char *basePath, uint8_t maxOpenFiles, const char *partitionLabel) {
+  (void)maxOpenFiles;
 
   if (partitionLabel_) {
     free(partitionLabel_);
@@ -98,9 +96,13 @@ void LittleFSFS::end() {
 }
 
 bool LittleFSFS::format() {
-  disableCore0WDT();
+  esp_log_level_set("*", ESP_LOG_NONE);
+  bool wdt_active = disableCore0WDT();
   esp_err_t err = esp_littlefs_format(partitionLabel_);
-  enableCore0WDT();
+  if (wdt_active) {
+    enableCore0WDT();
+  }
+  esp_log_level_set("*", (esp_log_level_t)CONFIG_LOG_DEFAULT_LEVEL);
   if (err) {
     log_e("Formatting LittleFS failed! Error: %d", err);
     return false;
@@ -125,4 +127,4 @@ size_t LittleFSFS::usedBytes() {
 }
 
 LittleFSFS LittleFS;
-#endif
+#endif /* CONFIG_LITTLEFS_PAGE_SIZE */

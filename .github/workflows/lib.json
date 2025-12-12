@@ -9,7 +9,8 @@
     {
         "name": "ArduinoBLE",
         "exclude_targets": [
-            "esp32s2"
+            "esp32s2",
+            "esp32p4"
         ],
         "sketch_path": [
             "~/Arduino/libraries/ArduinoBLE/examples/Central/Scan/Scan.ino"
@@ -23,16 +24,44 @@
         ]
     },
     {
-        "source-url": "https://github.com/me-no-dev/ESPAsyncWebServer.git",
+        "source-url": "https://github.com/ESP32Async/ESPAsyncWebServer.git",
         "required-libs": [
-            {"source-url": "https://github.com/me-no-dev/AsyncTCP.git"}
+            {"source-url": "https://github.com/ESP32Async/AsyncTCP.git"}
         ],
         "exclude_targets": [],
         "sketch_path": [
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Auth/Auth.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/CORS/CORS.ino",
             "~/Arduino/libraries/ESPAsyncWebServer/examples/CaptivePortal/CaptivePortal.ino",
-            "~/Arduino/libraries/ESPAsyncWebServer/examples/ESP_AsyncFSBrowser/ESP_AsyncFSBrowser.ino",
-            "~/Arduino/libraries/ESPAsyncWebServer/examples/regex_patterns/regex_patterns.ino",
-            "~/Arduino/libraries/ESPAsyncWebServer/examples/simple_server/simple_server.ino"
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/CatchAllHandler/CatchAllHandler.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ChunkResponse/ChunkResponse.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ChunkRetryResponse/ChunkRetryResponse.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/EndBegin/EndBegin.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Filters/Filters.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/FlashResponse/FlashResponse.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/HeaderManipulation/HeaderManipulation.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Headers/Headers.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Json/Json.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Logging/Logging.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/MessagePack/MessagePack.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Middleware/Middleware.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Params/Params.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/PartitionDownloader/PartitionDownloader.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/PerfTests/PerfTests.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/RateLimit/RateLimit.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Redirect/Redirect.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/RequestContinuation/RequestContinuation.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/RequestContinuationComplete/RequestContinuationComplete.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ResumableDownload/ResumableDownload.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Rewrite/Rewrite.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ServerSentEvents/ServerSentEvents.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/ServerState/ServerState.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/SkipServerMiddleware/SkipServerMiddleware.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/SlowChunkResponse/SlowChunkResponse.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/StaticFile/StaticFile.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Templates/Templates.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/Upload/Upload.ino",
+            "~/Arduino/libraries/ESPAsyncWebServer/examples/WebSocket/WebSocket.ino"
         ]
     },
     {

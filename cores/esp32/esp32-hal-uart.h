@@ -1,4 +1,4 @@
-// Copyright 2015-2023 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 
 #include "soc/soc_caps.h"
 #if SOC_UART_SUPPORTED
+#include "soc/uart_pins.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,10 +58,18 @@ void uartWriteBuf(uart_t *uart, const uint8_t *data, size_t len);
 void uartFlush(uart_t *uart);
 void uartFlushTxOnly(uart_t *uart, bool txOnly);
 
-void uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
+bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t *uart);
 
-void uartSetRxInvert(uart_t *uart, bool invert);
+// Helper generic function that takes a uart_signal_inv_t mask to be properly applied to the designated uart pin
+// invMask can be UART_SIGNAL_RXD_INV, UART_SIGNAL_TXD_INV, UART_SIGNAL_RTS_INV, UART_SIGNAL_CTS_INV
+// returns the operation success status
+bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted);
+// functions used to individually enable or disable UART pins inversion
+bool uartSetRxInvert(uart_t *uart, bool invert);
+bool uartSetTxInvert(uart_t *uart, bool invert);
+bool uartSetCtsInvert(uart_t *uart, bool invert);
+bool uartSetRtsInvert(uart_t *uart, bool invert);
 bool uartSetRxTimeout(uart_t *uart, uint8_t numSymbTimeout);
 bool uartSetRxFIFOFull(uart_t *uart, uint8_t numBytesFIFOFull);
 void uartSetFastReading(uart_t *uart);
@@ -78,7 +87,6 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 // helper functions
 int8_t uart_get_RxPin(uint8_t uart_num);
 int8_t uart_get_TxPin(uint8_t uart_num);
-void uart_init_PeriMan(void);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 //    UART_HW_FLOWCTRL_DISABLE = 0x0   disable hardware flow control
@@ -95,6 +103,19 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
 //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
 bool uartSetMode(uart_t *uart, uart_mode_t mode);
+
+// Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
+// Not all clock source are available to every SoC. The compatible option are listed here:
+// UART_SCLK_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
+// UART_SCLK_APB          :: ESP32, ESP32-S2, ESP32-C3 and ESP32-S3
+// UART_SCLK_PLL_F80M     :: ESP32-C5, ESP32-C6, ESP32-C61 and ESP32-P4
+// UART_SCLK_PLL_F40M     :: ESP32-C2
+// UART_SCLK_PLL_F48M     :: ESP32-H2
+// UART_SCLK_XTAL         :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_SCLK_RTC          :: ESP32-C2, ESP32-C3, ESP32-C5, ESP32-C6, ESP32-C61, ESP32-H2, ESP32-S3 and ESP32-P4
+// UART_SCLK_REF_TICK     :: ESP32 and ESP32-S2
+// Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only LP_UART_SCLK_LP_FAST (RTC_FAST) or LP_UART_SCLK_XTAL_D2 (XTAL/2) as Clock Source
+bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
@@ -114,6 +135,10 @@ void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
 void uart_send_break(uint8_t uartNum);
 // Sends a buffer and at the end of the stream, it generates BREAK in the line
 int uart_send_msg_with_break(uint8_t uartNum, uint8_t *msg, size_t msgSize);
+
+// UART RX Timeout (in UART Symbols) depends on the UART Clock Source and the SoC that is used
+// This is a helper function that calculates what is the maximum RX Timeout that a running UART IDF driver allows.
+uint16_t uart_get_max_rx_timeout(uint8_t uartNum);
 
 #ifdef __cplusplus
 }

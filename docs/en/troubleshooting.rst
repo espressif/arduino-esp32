@@ -14,6 +14,23 @@ Installing
 
 Here are the common issues during the installation.
 
+Slow or unstable downloads
+**************************
+
+Users in China might have troubles with connection and download speeds using GitHub. Please use our Jihulab mirror as the repository source:
+
+`https://jihulab.com/esp-mirror/espressif/arduino-esp32.git <https://jihulab.com/esp-mirror/espressif/arduino-esp32.git>`_
+
+JSON files for the boards manager are available here:
+
+- Stable release::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_index_cn.json
+
+- Development release::
+
+   https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_dev_index_cn.json
+
 Building
 --------
 
@@ -132,7 +149,7 @@ Solution
 ^^^^^^^^
 
 Newer ESP32 variants have two possible USB connectors - USB and UART. The UART connector will go through a USB->UART adapter, and will typically present itself with the name of that mfr (eg, Silicon Labs CP210x UART Bridge). The USB connector can be used as a USB-CDC bridge and will appear as an Espressif device (Espressif USB JTAG/serial debug unit). On Espressif devkits, both connections are available, and will be labeled. ESP32 can only use UART, so will only have one connector. Other variants with one connector will typically be using USB. Please check in the product [datasheet](https://products.espressif.com) or [hardware guide](https://www.espressif.com/en/products/devkits) to find Espressif products with the appropriate USB connections for your needs.
-If you use the UART connector, you should disable USB-CDC on boot under the Tools menu (-D ARDUINO_USB_CDC_ON_BOOT=0). If you use the USB connector, you should have that enabled (-D ARDUINO_USB_CDC_ON_BOOT=1) and set USB Mode to "Hardware CDC and JTAG" (-D ARDUINO_USB_MODE=0).
+If you use the UART connector, you should disable USB-CDC on boot under the Tools menu (-D ARDUINO_USB_CDC_ON_BOOT=0). If you use the USB connector, you should have that enabled (-D ARDUINO_USB_CDC_ON_BOOT=1) and set USB Mode to "Hardware CDC and JTAG" (-D ARDUINO_USB_MODE=1).
 USB-CDC may not be able to initialize in time to catch all the data if your device is in a tight reboot loop. This can make it difficult to troubleshoot initialization issues.
 
 SPIFFS mount failed

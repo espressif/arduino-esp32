@@ -16,6 +16,10 @@ static const uint8_t RX = 44;
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
 
+#define WIRE1_PIN_DEFINED 1  // See Wire.cpp at bool TwoWire::initPins(int sdaPin, int sclPin)
+static const uint8_t SDA1 = 16;
+static const uint8_t SCL1 = 15;
+
 static const uint8_t SS = 5;
 static const uint8_t MOSI = 35;
 static const uint8_t MISO = 37;
@@ -50,6 +54,7 @@ static const uint8_t T12 = 12;
 static const uint8_t T14 = 14;
 
 static const uint8_t VBAT_SENSE = 2;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 34;
 
 // User LED

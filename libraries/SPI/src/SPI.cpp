@@ -63,9 +63,9 @@ SPIClass::~SPIClass() {
 #endif
 }
 
-void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
+bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   if (_spi) {
-    return;
+    return true;
   }
 
   if (!_div) {
@@ -74,25 +74,26 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
 
   _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
   if (!_spi) {
-    return;
+    log_e("SPI bus %d start failed.", _spi_num);
+    return false;
   }
 
   if (sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-    _sck = (_spi_num == FSPI) ? SCK : -1;
-    _miso = (_spi_num == FSPI) ? MISO : -1;
-    _mosi = (_spi_num == FSPI) ? MOSI : -1;
-    _ss = (_spi_num == FSPI) ? SS : -1;
-#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2
-    _sck = SCK;
-    _miso = MISO;
-    _mosi = MOSI;
-    _ss = SS;
-#else
+#if CONFIG_IDF_TARGET_ESP32
     _sck = (_spi_num == VSPI) ? SCK : 14;
     _miso = (_spi_num == VSPI) ? MISO : 12;
     _mosi = (_spi_num == VSPI) ? MOSI : 13;
     _ss = (_spi_num == VSPI) ? SS : 15;
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    _sck = (_spi_num == FSPI) ? SCK : -1;
+    _miso = (_spi_num == FSPI) ? MISO : -1;
+    _mosi = (_spi_num == FSPI) ? MOSI : -1;
+    _ss = (_spi_num == FSPI) ? SS : -1;
+#else
+    _sck = SCK;
+    _miso = MISO;
+    _mosi = MOSI;
+    _ss = SS;
 #endif
   } else {
     _sck = sck;
@@ -110,10 +111,11 @@ void SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   if (_mosi >= 0 && !spiAttachMOSI(_spi, _mosi)) {
     goto err;
   }
-  return;
+  return true;
 
 err:
   log_e("Attaching pins to SPI failed.");
+  return false;
 }
 
 void SPIClass::end() {
@@ -142,6 +144,12 @@ void SPIClass::setHwCs(bool use) {
     spiDetachSS(_spi);
   }
   _use_hw_ss = use;
+}
+
+void SPIClass::setSSInvert(bool invert) {
+  if (_spi) {
+    spiSSInvert(_spi, invert);
+  }
 }
 
 void SPIClass::setFrequency(uint32_t freq) {

@@ -46,8 +46,13 @@ NetworkClient NetworkServer::accept() {
     client_sock = _accepted_sockfd;
     _accepted_sockfd = -1;
   } else {
+#if CONFIG_LWIP_IPV6
     struct sockaddr_in6 _client;
     int cs = sizeof(struct sockaddr_in6);
+#else
+    struct sockaddr_in _client;
+    int cs = sizeof(struct sockaddr_in);
+#endif
 #ifdef ESP_IDF_VERSION_MAJOR
     client_sock = lwip_accept(sockfd, (struct sockaddr *)&_client, (socklen_t *)&cs);
 #else
@@ -77,6 +82,7 @@ void NetworkServer::begin(uint16_t port, int enable) {
   if (port) {
     _port = port;
   }
+#if CONFIG_LWIP_IPV6
   struct sockaddr_in6 server;
   sockfd = socket(AF_INET6, SOCK_STREAM, 0);
   if (sockfd < 0) {
@@ -93,6 +99,18 @@ void NetworkServer::begin(uint16_t port, int enable) {
   }
   memset(server.sin6_addr.s6_addr, 0x0, 16);
   server.sin6_port = htons(_port);
+#else
+  struct sockaddr_in server;
+  memset(&server, 0x0, sizeof(sockaddr_in));
+  server.sin_family = AF_INET;
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0) {
+    return;
+  }
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
+  memcpy((uint8_t *)&(server.sin_addr.s_addr), (uint8_t *)&_addr[0], 4);
+  server.sin_port = htons(_port);
+#endif
   if (bind(sockfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
     return;
   }
@@ -117,8 +135,13 @@ bool NetworkServer::hasClient() {
   if (_accepted_sockfd >= 0) {
     return true;
   }
+#if CONFIG_LWIP_IPV6
   struct sockaddr_in6 _client;
   int cs = sizeof(struct sockaddr_in6);
+#else
+  struct sockaddr _client;
+  int cs = sizeof(struct sockaddr);
+#endif
 #ifdef ESP_IDF_VERSION_MAJOR
   _accepted_sockfd = lwip_accept(sockfd, (struct sockaddr *)&_client, (socklen_t *)&cs);
 #else

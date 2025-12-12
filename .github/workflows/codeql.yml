@@ -1,0 +1,94 @@
+name: CodeQL Analysis
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    paths:
+      - "**/*.c"
+      - "**/*.cpp"
+      - "**/*.h"
+      - "**/*.ino"
+      - "**/*.py"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+  security-events: write
+
+jobs:
+  codeql-analysis:
+    name: CodeQL ${{ matrix.language }} analysis
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [python, actions, cpp]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Process .ino files
+        if: matrix.language == 'cpp'
+        run: |
+          # Create a mapping file to track renamed files
+          echo "{}" > renamed_files.json
+
+          # Find all .ino files and process them
+          find . -name "*.ino" -type f | while read -r file; do
+            echo "Processing $file"
+
+            # Get the relative path from repository root
+            rel_path=$(realpath --relative-to=. "$file")
+            cpp_path="${rel_path%.ino}.cpp"
+
+            # Create new .cpp file with Arduino.h include
+            echo "#include <Arduino.h>" > "$cpp_path"
+
+            # Append the original content
+            cat "$file" >> "$cpp_path"
+
+            # Update the mapping file
+            jq --arg ino "$rel_path" --arg cpp "$cpp_path" '. += {($cpp): $ino}' renamed_files.json > temp.json && mv temp.json renamed_files.json
+
+            # Remove the original .ino file
+            rm "$file"
+
+            echo "Converted $file to $cpp_path"
+          done
+
+          echo "Renamed files mapping:"
+          cat renamed_files.json
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        with:
+          build-mode: none
+          languages: ${{ matrix.language }}
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Run CodeQL Analysis
+        uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        with:
+          category: "/language:${{ matrix.language }}"
+          output: sarif-results
+          upload: failure-only
+
+      - name: Process SARIF file
+        if: matrix.language == 'cpp'
+        run: |
+          sarif_file="sarif-results/${{ matrix.language }}.sarif"
+
+          # Run the Python script to process the SARIF file
+          python3 .github/scripts/process_sarif.py "$sarif_file" "renamed_files.json"
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        with:
+          sarif_file: sarif-results/${{ matrix.language }}.sarif
+          category: "/language:${{ matrix.language }}"

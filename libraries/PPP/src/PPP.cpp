@@ -1,12 +1,13 @@
 #define ARDUINO_CORE_BUILD
 #include "PPP.h"
-#if CONFIG_LWIP_PPP_SUPPORT
+#if CONFIG_LWIP_PPP_SUPPORT && ARDUINO_HAS_ESP_MODEM
 #include "esp32-hal-periman.h"
 #include "esp_netif.h"
 #include "esp_netif_ppp.h"
 #include <string>
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
+#include "esp_private/uart_share_hw_ctrl.h"
 
 #define PPP_CMD_MODE_CHECK(x)                                    \
   if (_dce == NULL) {                                            \
@@ -151,7 +152,8 @@ esp_modem_dce_t *PPPClass::handle() const {
 
 PPPClass::PPPClass()
   : _dce(NULL), _pin_tx(-1), _pin_rx(-1), _pin_rts(-1), _pin_cts(-1), _flow_ctrl(ESP_MODEM_FLOW_CONTROL_NONE), _pin_rst(-1), _pin_rst_act_low(true),
-    _pin_rst_delay(200), _pin(NULL), _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512), _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1) {}
+    _pin_rst_delay(200), _pin(NULL), _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512), _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1),
+    _ppp_event_handle(0) {}
 
 PPPClass::~PPPClass() {}
 
@@ -279,7 +281,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   dte_config.uart_config.flow_control = _flow_ctrl;
   dte_config.uart_config.rx_buffer_size = _rx_buffer_size;
   dte_config.uart_config.tx_buffer_size = _tx_buffer_size;
-  dte_config.uart_config.port_num = _uart_num;
+  dte_config.uart_config.port_num = (uart_port_t)_uart_num;
   dte_config.uart_config.baud_rate = baud_rate;
 
   /* Configure the DCE */
@@ -359,7 +361,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
     }
   }
 
-  Network.onSysEvent(onPppArduinoEvent);
+  _ppp_event_handle = Network.onSysEvent(onPppArduinoEvent);
 
   setStatusBits(ESP_NETIF_STARTED_BIT);
   arduino_event_t arduino_event;
@@ -392,6 +394,11 @@ void PPPClass::end(void) {
     Network.postEvent(&arduino_event);
   }
 
+  if (_dce != NULL) {
+    esp_modem_destroy(_dce);
+    _dce = NULL;
+  }
+
   destroyNetif();
 
   if (_ppp_ev_instance != NULL) {
@@ -401,12 +408,13 @@ void PPPClass::end(void) {
   }
   _esp_modem = NULL;
 
-  Network.removeEvent(onPppArduinoEvent);
+  Network.removeEvent(_ppp_event_handle);
+  _ppp_event_handle = 0;
 
-  if (_dce != NULL) {
-    esp_modem_destroy(_dce);
-    _dce = NULL;
-  }
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_CTS);
 
   int8_t pin = -1;
   if (_pin_tx != -1) {
@@ -429,6 +437,16 @@ void PPPClass::end(void) {
     _pin_cts = -1;
     perimanClearPinBus(pin);
   }
+  if (_pin_rst != -1) {
+    pin = _pin_rst;
+    _pin_rst = -1;
+    perimanClearPinBus(pin);
+  }
+
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_TX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RTS, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_CTS, PPPClass::pppDetachBus);
 
   _mode = ESP_MODEM_MODE_COMMAND;
 }
@@ -653,7 +671,10 @@ bool PPPClass::setBaudrate(int baudrate) {
     log_e("uart_get_sclk_freq failed with %d %s", err, esp_err_to_name(err));
     return false;
   }
-  uart_ll_set_baudrate(UART_LL_GET_HW(_uart_num), (uint32_t)baudrate, sclk_freq);
+
+  HP_UART_SRC_CLK_ATOMIC() {
+    uart_ll_set_baudrate(UART_LL_GET_HW(_uart_num), (uint32_t)baudrate, sclk_freq);
+  }
 
   return true;
 }
@@ -736,6 +757,30 @@ String PPPClass::cmd(const char *at_command, int timeout) {
   return String(out);
 }
 
+bool PPPClass::cmd(const char *at_command, String &response, int timeout) {
+  PPP_CMD_MODE_CHECK(false);
+
+  char out[128] = {0};
+  esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
+  response = String(out);
+
+  if (err != ESP_OK) {
+    log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
+
+    if (err == ESP_FAIL && response.isEmpty()) {
+      response = "ERROR";
+    }
+
+    return false;
+  }
+
+  if (response.isEmpty()) {
+    response = "OK";
+  }
+
+  return true;
+}
+
 size_t PPPClass::printDriverInfo(Print &out) const {
   size_t bytes = 0;
   if (_dce == NULL || _mode == ESP_MODEM_MODE_DATA) {
@@ -752,6 +797,8 @@ size_t PPPClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_PPP)
 PPPClass PPP;
+#endif
 
 #endif /* CONFIG_LWIP_PPP_SUPPORT */

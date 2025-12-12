@@ -21,7 +21,6 @@
 #include "esp_openthread.h"
 #include "esp_openthread_cli.h"
 #include "esp_openthread_lock.h"
-#include "esp_openthread_netif_glue.h"
 #include "esp_openthread_types.h"
 
 #include "openthread/cli.h"
@@ -31,13 +30,14 @@
 #include "openthread/dataset_ftd.h"
 
 #include "Arduino.h"
+#include "OThread.h"
 
 typedef std::function<void(void)> OnReceiveCb_t;
 
 class OpenThreadCLI : public Stream {
 private:
   static size_t setBuffer(QueueHandle_t &queue, size_t len);
-  bool otStarted = false;
+  static bool otCLIStarted;
 
 public:
   OpenThreadCLI();
@@ -53,7 +53,7 @@ public:
   void setStream(Stream &otStream);    // changes the console Stream object
   void onReceive(OnReceiveCb_t func);  // called on a complete line of output from OT CLI, as OT Response
 
-  void begin(bool OThreadAutoStart = true);
+  void begin();
   void end();
 
   // default size is 256 bytes
@@ -68,7 +68,9 @@ public:
   void flush();
 };
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_OPENTHREADCLI)
 extern OpenThreadCLI OThreadCLI;
+#endif
 
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 #endif /* SOC_IEEE802154_SUPPORTED */

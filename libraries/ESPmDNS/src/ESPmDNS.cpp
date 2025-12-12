@@ -39,6 +39,7 @@ License (MIT license):
 #endif
 
 #include "ESPmDNS.h"
+#ifdef CONFIG_MDNS_MAX_INTERFACES
 #include <functional>
 #include "esp_mac.h"
 #include "soc/soc_caps.h"
@@ -298,6 +299,15 @@ String MDNSResponder::hostname(int idx) {
   return String(result->hostname);
 }
 
+String MDNSResponder::instanceName(int idx) {
+  mdns_result_t *result = _getResult(idx);
+  if (!result) {
+    log_e("Result %d not found", idx);
+    return String();
+  }
+  return String(result->instance_name);
+}
+
 IPAddress MDNSResponder::address(int idx) {
   mdns_result_t *result = _getResult(idx);
   if (!result) {
@@ -391,3 +401,5 @@ String MDNSResponder::txtKey(int idx, int txtIdx) {
 }
 
 MDNSResponder MDNS;
+
+#endif /* CONFIG_MDNS_MAX_INTERFACES */

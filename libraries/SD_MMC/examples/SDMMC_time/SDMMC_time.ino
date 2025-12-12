@@ -14,6 +14,7 @@
  * Connections for     ║   ║   ╔═══╩═║═║═══╗   ║  ║    ║
  * full-sized          ║   ║   ║   ╔═╝ ║   ║   ║  ║    ║
  * SD card             ║   ║   ║   ║   ║   ║   ║  ║    ║
+ * ESP32-P4 Func EV | 40  39  GND  43 3V3 GND  44 43  42  | SLOT 0 (IO_MUX)
  * ESP32-S3 DevKit  | 21  47  GND  39 3V3 GND  40 41  42  |
  * ESP32-S3-USB-OTG | 38  37  GND  36 3V3 GND  35 34  33  |
  * ESP32            |  4   2  GND  14 3V3 GND  15 13  12  |
@@ -82,10 +83,11 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
       Serial.print("  DIR : ");
       Serial.print(file.name());
       time_t t = file.getLastWrite();
-      struct tm *tmstruct = localtime(&t);
+      struct tm tmstruct;
+      localtime_r(&t, &tmstruct);
       Serial.printf(
-        "  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct->tm_year) + 1900, (tmstruct->tm_mon) + 1, tmstruct->tm_mday, tmstruct->tm_hour,
-        tmstruct->tm_min, tmstruct->tm_sec
+        "  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct.tm_year) + 1900, (tmstruct.tm_mon) + 1, tmstruct.tm_mday, tmstruct.tm_hour, tmstruct.tm_min,
+        tmstruct.tm_sec
       );
       if (levels) {
         listDir(fs, file.path(), levels - 1);
@@ -96,10 +98,11 @@ void listDir(fs::FS &fs, const char *dirname, uint8_t levels) {
       Serial.print("  SIZE: ");
       Serial.print(file.size());
       time_t t = file.getLastWrite();
-      struct tm *tmstruct = localtime(&t);
+      struct tm tmstruct;
+      localtime_r(&t, &tmstruct);
       Serial.printf(
-        "  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct->tm_year) + 1900, (tmstruct->tm_mon) + 1, tmstruct->tm_mday, tmstruct->tm_hour,
-        tmstruct->tm_min, tmstruct->tm_sec
+        "  LAST WRITE: %d-%02d-%02d %02d:%02d:%02d\n", (tmstruct.tm_year) + 1900, (tmstruct.tm_mon) + 1, tmstruct.tm_mday, tmstruct.tm_hour, tmstruct.tm_min,
+        tmstruct.tm_sec
       );
     }
     file = root.openNextFile();

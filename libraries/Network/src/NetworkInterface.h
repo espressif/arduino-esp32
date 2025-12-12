@@ -57,7 +57,10 @@ public:
   const char *desc() const;
   String impl_name() const;
   int impl_index() const;
-  int route_prio() const;
+  int getRoutePrio() const;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  int setRoutePrio(int prio);
+#endif
   bool setDefault();
   bool isDefault() const;
 
@@ -70,8 +73,10 @@ public:
   IPAddress broadcastIP() const;
   IPAddress networkID() const;
   uint8_t subnetCIDR() const;
+#if CONFIG_LWIP_IPV6
   IPAddress linkLocalIPv6() const;
   IPAddress globalIPv6() const;
+#endif
 
   size_t printTo(Print &out) const;
 

@@ -38,17 +38,19 @@ Here are the ESP32 series supported by the Arduino-ESP32 project:
 SoC        Stable Development Datasheet
 ========== ====== =========== =================================
 ESP32      Yes    Yes         `ESP32`_
-ESP32-S2   Yes    Yes         `ESP32-S2`_
 ESP32-C3   Yes    Yes         `ESP32-C3`_
-ESP32-S3   Yes    Yes         `ESP32-S3`_
+ESP32-C5   Yes    Yes         `ESP32-C5`_
 ESP32-C6   Yes    Yes         `ESP32-C6`_
 ESP32-H2   Yes    Yes         `ESP32-H2`_
+ESP32-P4   Yes    Yes         `ESP32-P4`_
+ESP32-S2   Yes    Yes         `ESP32-S2`_
+ESP32-S3   Yes    Yes         `ESP32-S3`_
 ========== ====== =========== =================================
 
 .. note::
-    ESP32-C2 is also supported by Arduino-ESP32 but requires rebuilding the static libraries.
-    This is not trivial and requires a good understanding of the ESP-IDF build system.
-    For more information, see the `Lib Builder documentation <lib_builder.html>`_.
+    ESP32-C2 and ESP32-C61 are also supported by Arduino-ESP32 but require using Arduino as an ESP-IDF component or rebuilding the static libraries.
+    For more information, see the `Arduino as an ESP-IDF component documentation <esp-idf_component.html>`_ or the
+    `Lib Builder documentation <lib_builder.html>`_, respectively.
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
 
@@ -102,7 +104,8 @@ Here are some community channels where you may find information and ask for some
 - `ESP32 Forum`_: Official Espressif Forum.
 - `ESP32 Forum - Arduino`_: Official Espressif Forum for Arduino related discussions.
 - `ESP32 Forum - Hardware`_: Official Espressif Forum for Hardware related discussions.
-- `Gitter`_
+- `Espressif Developer Portal`_: Official Espressif Developer Portal with tutorials, examples, workshops, and more.
+- `Arduino Core for Espressif (Discord)`_: Official Espressif Discord channel for the Arduino Core.
 - `Espressif MCUs (Discord)`_
 - `ESP32 on Reddit`_
 
@@ -148,12 +151,13 @@ Resources
 
 .. _Espressif Systems: https://www.espressif.com
 .. _Espressif Product Selector: https://products.espressif.com/
+.. _Espressif Developer Portal: https://developer.espressif.com/
 .. _Arduino.cc: https://www.arduino.cc/en/Main/Software
 .. _Arduino Reference: https://www.arduino.cc/reference/en/
 .. _ESP32 Forum: https://esp32.com
 .. _ESP32 Forum - Arduino: https://esp32.com/viewforum.php?f=19
 .. _ESP32 Forum - Hardware: https://esp32.com/viewforum.php?f=12
-.. _Gitter: https://gitter.im/espressif/arduino-esp32
+.. _Arduino Core for Espressif (Discord): https://discord.gg/8xY6e9crwv
 .. _Adafruit (Discord): https://discord.gg/adafruit
-.. _Espressif MCUs (Discord): https://discord.gg/nKxMTnkD
+.. _Espressif MCUs (Discord): https://discord.com/invite/XqnZPbF
 .. _ESP32 on Reddit: https://www.reddit.com/r/esp32

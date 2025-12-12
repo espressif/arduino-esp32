@@ -15,6 +15,8 @@
 #include "esp32-hal-i2c.h"
 
 #if SOC_I2C_SUPPORTED
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
 #include "esp32-hal.h"
 #if !CONFIG_DISABLE_HAL_LOCKS
 #include "freertos/FreeRTOS.h"
@@ -29,6 +31,19 @@
 #include "hal/i2c_ll.h"
 #include "driver/i2c.h"
 #include "esp32-hal-periman.h"
+#include "esp_private/periph_ctrl.h"
+
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define I2C_CLOCK_SRC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_CLOCK_SRC_ATOMIC()
+#endif
+
+#if !SOC_RCC_IS_INDEPENDENT
+#define I2C_RCC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_RCC_ATOMIC()
+#endif
 
 #if SOC_I2C_SUPPORT_APB || SOC_I2C_SUPPORT_XTAL
 #include "esp_private/esp_clk.h"
@@ -388,7 +403,9 @@ esp_err_t i2cSetClock(uint8_t i2c_num, uint32_t frequency) {
       periph_rtc_dig_clk8m_enable();
     }
 #endif
-    i2c_hal_set_bus_timing(&(hal), frequency, i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
+    I2C_CLOCK_SRC_ATOMIC() {
+      i2c_hal_set_bus_timing(&(hal), frequency, i2c_clk_alloc[src_clk].clk, i2c_clk_alloc[src_clk].clk_freq);
+    }
     bus[i2c_num].frequency = frequency;
     //Clock Stretching Timeout: 20b:esp32, 5b:esp32-c3, 24b:esp32-s2
     i2c_set_timeout((i2c_port_t)i2c_num, I2C_LL_MAX_TIMEOUT);
@@ -414,4 +431,5 @@ esp_err_t i2cGetClock(uint8_t i2c_num, uint32_t *frequency) {
   return ESP_OK;
 }
 
+#endif /* ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0) */
 #endif /* SOC_I2C_SUPPORTED */

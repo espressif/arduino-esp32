@@ -10,6 +10,8 @@
  * - ETH: ETH requires a ethernet port to be connected before the pins are attached
  */
 
+#include <Arduino.h>
+
 #if SOC_I2S_SUPPORTED
 #include "ESP_I2S.h"
 #endif
@@ -71,7 +73,10 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
 
   pinMode(uart1_rx_pin, INPUT_PULLUP);
   pinMode(uart1_tx_pin, OUTPUT);
+  // Ensure Serial1 is initialized and callback is set (in case it was terminated previously)
   Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
   uart_internal_loopback(1, uart1_rx_pin);
   delay(100);
   log_v("Running %s test", test_name.c_str());
@@ -86,11 +91,15 @@ void teardown_test(void) {
     Serial1.print(current_test);
     Serial1.println(" test: This should not be printed");
     Serial1.flush();
-
-    Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
-    uart_internal_loopback(1, uart1_rx_pin);
-    delay(100);
   }
+
+  // Even if test didn't execute, ensure Serial1 is initialized
+  // (in case it was terminated by a previous test or setup issue)
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
 
   Serial1.print(current_test);
   Serial1.println(" test: This should be printed");
@@ -158,7 +167,7 @@ void adc_continuous_test(void) {
   test_executed = true;
   uint8_t adc_pins[] = {ADC1_DEFAULT, ADC2_DEFAULT};
   uint8_t adc_pins_count = 2;
-  adc_continuous_data_t *result = NULL;
+  adc_continuous_result_t *result = NULL;
 
   analogContinuousSetWidth(12);
   analogContinuousSetAtten(ADC_11db);

@@ -6,6 +6,13 @@
 #include "Arduino.h"
 #include "esp32-hal-tinyusb.h"
 
+// Initialize static members
+char *USBMIDI::midiUserDeviceName = nullptr;
+// Weak definition of getUSBMIDIDefaultDeviceName to provide a default name
+__attribute__((weak)) const char *getUSBMIDIDefaultDeviceName() {
+  return ESP32_USB_MIDI_DEFAULT_NAME;
+}
+
 // Default Cable Number (for simplified APIs that do not expose this)
 #define DEFAULT_CN 0
 
@@ -18,13 +25,13 @@ extern "C" uint16_t tusb_midi_load_descriptor(uint8_t *dst, uint8_t *itf) {
   }
   tinyusb_midi_descriptor_loaded = true;
 
-  uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB MIDI");
+  uint8_t str_index = tinyusb_add_string_descriptor(USBMIDI::getCurrentDeviceName());
   uint8_t ep_in = tinyusb_get_free_in_endpoint();
   TU_VERIFY(ep_in != 0);
   uint8_t ep_out = tinyusb_get_free_out_endpoint();
   TU_VERIFY(ep_out != 0);
   uint8_t descriptor[TUD_MIDI_DESC_LEN] = {
-    TUD_MIDI_DESCRIPTOR(*itf, str_index, ep_out, (uint8_t)(0x80 | ep_in), 64),
+    TUD_MIDI_DESCRIPTOR(*itf, str_index, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE),
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_MIDI_DESC_LEN);
@@ -41,8 +48,67 @@ USBMIDI::USBMIDI() {
   }
 }
 
+// private function for setting a not null/empty MIDI device name limited to 32 characters
+void USBMIDI::setDeviceName(const char *name) {
+  const uint8_t maxNameLength = 32;  // tinyUSB Descriptor limit
+  if (name != nullptr && strlen(name) > 0) {
+    if (strlen(name) > maxNameLength) {
+      log_w("USBMIDI: Device name too long, truncating to %d characters.", maxNameLength);
+    }
+    if (!midiUserDeviceName) {
+      midiUserDeviceName = new char[maxNameLength + 1];  // +1 for null-terminator
+    }
+    if (midiUserDeviceName) {
+      strncpy(midiUserDeviceName, name, maxNameLength);
+      // Ensure null-termination when overflowing
+      midiUserDeviceName[maxNameLength] = '\0';
+    } else {
+      log_e("USBMIDI: Failed to allocate memory for device name, using default name.");
+    }
+  } else {
+    log_w("USBMIDI: No device name provided, using default name [%s].", getUSBMIDIDefaultDeviceName());
+  }
+}
+
+/**
+* @brief Constructor for setting the current device name
+* 1. Name set via constructor (if any)
+* 2. Name set via SET_USB_MIDI_DEVICE_NAME() macro (if defined)
+* 3. Default name "TinyUSB MIDI"
+* If device name is set as "", it will be ignored
+*/
+USBMIDI::USBMIDI(const char *name) {
+  if (!tinyusb_midi_interface_enabled) {
+    setDeviceName(name);
+    tinyusb_midi_interface_enabled = true;
+    tinyusb_enable_interface(USB_INTERFACE_MIDI, TUD_MIDI_DESC_LEN, tusb_midi_load_descriptor);
+  } else {
+    log_e("USBMIDI: Multiple instances of USBMIDI not supported!");
+  }
+}
+
+USBMIDI::~USBMIDI() {
+  if (midiUserDeviceName) {
+    delete[] midiUserDeviceName;
+    midiUserDeviceName = nullptr;
+  }
+}
+
 void USBMIDI::begin() {}
 void USBMIDI::end() {}
+
+const char *USBMIDI::getCurrentDeviceName(void) {
+  if (midiUserDeviceName) {
+    return midiUserDeviceName;
+  }
+  // If no user name set, use the compile-time default name limited to 32 characters
+  setDeviceName(getUSBMIDIDefaultDeviceName());
+  if (midiUserDeviceName && strlen(midiUserDeviceName)) {
+    return midiUserDeviceName;
+  } else {
+    return "TinyUSB MIDI";
+  }
+}
 
 // uint compatible version of constrain
 #define uconstrain(amt, low, high) ((amt) <= (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
@@ -92,7 +158,7 @@ void USBMIDI::channelPressure(uint8_t pressure, uint8_t channel) {
 // Pitch Bend Change [-8192,0,8191]
 void USBMIDI::pitchBend(int16_t value, uint8_t channel) {
   uint16_t pitchBendValue = constrain(value, -8192, 8191) + 8192;
-  pitchBend(pitchBendValue);
+  pitchBend(pitchBendValue, channel);
 }
 
 // Pitch Bend Change [0,8192,16383]

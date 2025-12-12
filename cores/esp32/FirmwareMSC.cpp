@@ -19,8 +19,8 @@
 #include "esp_partition.h"
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
-#include "esp32-hal.h"
 #include "pins_arduino.h"
+#include "esp32-hal.h"
 #include "firmware_msc_fat.h"
 #include "spi_flash_mmap.h"
 

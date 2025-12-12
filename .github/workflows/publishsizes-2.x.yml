@@ -9,13 +9,17 @@ env:
   RESULT_SIZES_TEST_FILE: SIZES_TEST.md
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   sizes-test-results:
-    name: Sizes Comparsion Results
+    name: Sizes Comparison Results
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4  # This step checks out the repository's code at gh-pages branch
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: gh-pages
 
@@ -34,15 +38,14 @@ jobs:
           mv v2.x_cli_compile/*.json artifacts/sizes-report/master/
 
       - name: Report results
-        uses: P-R-O-C-H-Y/report-size-deltas@sizes_v2
+        uses: P-R-O-C-H-Y/report-size-deltas@2043188c68f483a7b50527c4eacf609d05bb67a5 # sizes_v2
         with:
           sketches-reports-source: ${{ env.SKETCHES_REPORTS_PATH }}
           github-token: ${{ env.GITHUB_TOKEN }}
           destination-file: ${{ env.RESULT_SIZES_TEST_FILE }}
 
       - name: Append file with action URL
-        run:
-          echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_SIZES_TEST_FILE }}
+        run: echo "/ [GitHub Action Link](https://github.com/${{github.repository}}/actions/runs/${{github.run_id}})" >> ${{ env.RESULT_SIZES_TEST_FILE }}
 
       - name: Push to github repo
         run: |

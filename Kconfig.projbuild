@@ -147,6 +147,12 @@ config ARDUINO_UDP_TASK_PRIORITY
     help
         Select at what priority you want the UDP task to run.
 
+config ARDUINO_UDP_TASK_STACK_SIZE
+    int "UDP task stack size"
+    default 4096
+    help
+        Amount of stack available for the UDP task.
+
 config ARDUINO_ISR_IRAM
     bool "Run interrupts in IRAM"
     default "n"
@@ -266,6 +272,11 @@ config ARDUINO_SELECTIVE_Wire
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
+config ARDUINO_SELECTIVE_ESP_SR
+    bool "Enable ESP-SR"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 config ARDUINO_SELECTIVE_EEPROM
     bool "Enable EEPROM"
     depends on ARDUINO_SELECTIVE_COMPILATION
@@ -283,6 +294,11 @@ config ARDUINO_SELECTIVE_Ticker
 
 config ARDUINO_SELECTIVE_Update
     bool "Enable Update"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_Zigbee
+    bool "Enable Zigbee"
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
@@ -331,9 +347,15 @@ config ARDUINO_SELECTIVE_PPP
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
+config ARDUINO_SELECTIVE_Hash
+    bool "Enable Hash"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 config ARDUINO_SELECTIVE_ArduinoOTA
     bool "Enable ArduinoOTA"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
+    select ARDUINO_SELECTIVE_Hash
     select ARDUINO_SELECTIVE_ESPmDNS
     default y
 
@@ -358,6 +380,11 @@ config ARDUINO_SELECTIVE_HTTPClient
     select ARDUINO_SELECTIVE_NetworkClientSecure
     default y
 
+config ARDUINO_SELECTIVE_Matter
+    bool "Enable Matter"
+    depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
+    default y
+
 config ARDUINO_SELECTIVE_NetBIOS
     bool "Enable NetBIOS"
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
@@ -368,6 +395,7 @@ config ARDUINO_SELECTIVE_WebServer
     depends on ARDUINO_SELECTIVE_COMPILATION && ARDUINO_SELECTIVE_Network
     default y
     select ARDUINO_SELECTIVE_FS
+    select ARDUINO_SELECTIVE_Hash
 
 config ARDUINO_SELECTIVE_WiFi
     bool "Enable WiFi"
@@ -396,6 +424,21 @@ config ARDUINO_SELECTIVE_BluetoothSerial
 
 config ARDUINO_SELECTIVE_SimpleBLE
     bool "Enable SimpleBLE"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_RainMaker
+    bool "Enable RainMaker"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_OpenThread
+    bool "Enable OpenThread"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
+config ARDUINO_SELECTIVE_Insights
+    bool "Enable Insights"
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 

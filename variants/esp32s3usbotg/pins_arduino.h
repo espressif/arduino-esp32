@@ -2,6 +2,7 @@
 #define Pins_Arduino_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define USB_VID 0x303a
 #define USB_PID 0x1001
@@ -67,6 +68,7 @@ static const uint8_t T3 = 3;
 #define OVER_CURRENT 21  // Current overrun signal, high level means overrun.
 #define HOST_VOLTS   1   // USB_DEV voltage monitoring, ADC1 channel 0. actual_v = value_v * 3.7
 #define BAT_VOLTS    2   // Battery voltage monitoring, ADC1 channel 1. actual_v = value_v * 2
+#define BAT_VOLT_PIN BAT_VOLTS
 
 // USB Port
 #define USB_DN 19  // USB D-

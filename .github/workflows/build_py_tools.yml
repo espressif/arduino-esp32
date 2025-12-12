@@ -3,22 +3,26 @@ name: Build Python Tools
 on:
   pull_request:
     paths:
-      - '.github/workflows/build_py_tools.yml'
-      - 'tools/get.py'
-      - 'tools/espota.py'
-      - 'tools/gen_esp32part.py'
-      - 'tools/gen_insights_package.py'
+      - ".github/workflows/build_py_tools.yml"
+      - "tools/get.py"
+      - "tools/espota.py"
+      - "tools/gen_esp32part.py"
+      - "tools/gen_insights_package.py"
+
+permissions:
+  contents: write
+  pull-requests: read
 
 jobs:
   find-changed-tools:
     name: Check if tools have been changed
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     outputs:
       any_changed: ${{ steps.verify-changed-files.outputs.any_changed }}
       all_changed_files: ${{ steps.verify-changed-files.outputs.all_changed_files }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 2
           ref: ${{ github.event.pull_request.head.ref }}
@@ -30,16 +34,17 @@ jobs:
           echo "Make sure you are using a branch inside the repository and not a fork."
 
       - name: Verify Python Tools Changed
-        uses: tj-actions/changed-files@v41
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
         id: verify-changed-files
         with:
-          fetch_depth: '2'
-          since_last_remote_commit: 'true'
+          fetch_depth: "2"
+          since_last_remote_commit: "true"
           files: |
             tools/get.py
             tools/espota.py
             tools/gen_esp32part.py
             tools/gen_insights_package.py
+
       - name: List all changed files
         shell: bash
         run: |
@@ -55,23 +60,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-20.04, ARM]
+        os: [windows-latest, macos-latest, ubuntu-latest, ubuntu-24.04-arm]
         include:
-        - os: windows-latest
-          TARGET: win64
-          EXTEN: .exe
-          SEPARATOR: ';'
-        - os: macos-latest
-          TARGET: macos
-          SEPARATOR: ':'
-        - os: ubuntu-20.04
-          TARGET: linux-amd64
-          SEPARATOR: ':'
-        - os: ARM
-          CONTAINER: python:3.8-bullseye
-          TARGET: arm
-          SEPARATOR: ':'
-    container: ${{ matrix.CONTAINER }} # use python container on ARM
+          - os: windows-latest
+            TARGET: win64
+            EXTEN: .exe
+            SEPARATOR: ";"
+          - os: macos-latest
+            TARGET: macos
+            SEPARATOR: ":"
+          - os: ubuntu-latest
+            TARGET: linux-amd64
+            SEPARATOR: ":"
+          - os: ubuntu-24.04-arm
+            TARGET: arm
+            SEPARATOR: ":"
     env:
       DISTPATH: pytools-${{ matrix.TARGET }}
       PIP_EXTRA_INDEX_URL: "https://dl.espressif.com/pypi"
@@ -90,27 +93,30 @@ jobs:
           for tool in ${{ env.CHANGED_TOOLS }}; do
             echo "tool $tool was changed"
           done
+
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           token: ${{ secrets.TOOLS_UPLOAD_PAT }}
           ref: ${{ github.event.pull_request.head.ref }}
+
       - name: Set up Python 3.8
-        # Skip setting python on ARM because of missing compatibility: https://github.com/actions/setup-python/issues/108
-        if: matrix.os != 'ARM'
-        uses: actions/setup-python@master
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
         with:
           python-version: 3.8
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyinstaller requests
+
       - name: Build with PyInstaller
         shell: bash
         run: |
           for tool in ${{ env.CHANGED_TOOLS }}; do
             pyinstaller --distpath ./${{ env.DISTPATH }} -F --icon=.github/pytools/espressif.ico tools/$tool.py
           done
+
       - name: Sign binaries
         if: matrix.os == 'windows-latest'
         env:
@@ -123,12 +129,14 @@ jobs:
           {
             ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/$node.exe
           }
+
       - name: Test binaries
         shell: bash
         run: |
           for tool in ${{ env.CHANGED_TOOLS }}; do
             ./${{ env.DISTPATH }}/$tool${{ matrix.EXTEN }} -h
           done
+
       - name: Push binary to tools
         if: matrix.os == 'windows-latest'
         env:
@@ -139,8 +147,9 @@ jobs:
             cp -f ./${{ env.DISTPATH }}/$tool.exe tools/$tool.exe
           done
           bash .github/scripts/upload_py_tools.sh "${{ env.CHANGED_TOOLS }}"
+
       - name: Archive artifact
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ env.DISTPATH }}
           path: ${{ env.DISTPATH }}

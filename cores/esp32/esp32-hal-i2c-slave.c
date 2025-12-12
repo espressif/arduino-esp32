@@ -41,21 +41,43 @@
 #include "esp_intr_alloc.h"
 #include "soc/i2c_reg.h"
 #include "soc/i2c_struct.h"
+#include "soc/periph_defs.h"
 #include "hal/i2c_ll.h"
+#include "hal/i2c_types.h"
+#if !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C61)
 #include "hal/clk_gate_ll.h"
+#endif
 #include "esp32-hal-log.h"
 #include "esp32-hal-i2c-slave.h"
 #include "esp32-hal-periman.h"
+#include "esp_private/periph_ctrl.h"
+
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define I2C_CLOCK_SRC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_CLOCK_SRC_ATOMIC()
+#endif
+
+#if !SOC_RCC_IS_INDEPENDENT
+#define I2C_RCC_ATOMIC() PERIPH_RCC_ATOMIC()
+#else
+#define I2C_RCC_ATOMIC()
+#endif
 
 #define I2C_SLAVE_USE_RX_QUEUE 0  // 1: Queue, 0: RingBuffer
 
-#if SOC_I2C_NUM > 1
+#ifdef CONFIG_IDF_TARGET_ESP32P4
+#define I2C_SCL_IDX(p) ((p == 0) ? I2C0_SCL_PAD_OUT_IDX : ((p == 1) ? I2C1_SCL_PAD_OUT_IDX : 0))
+#define I2C_SDA_IDX(p) ((p == 0) ? I2C0_SDA_PAD_OUT_IDX : ((p == 1) ? I2C1_SDA_PAD_OUT_IDX : 0))
+#else
+#if SOC_HP_I2C_NUM > 1
 #define I2C_SCL_IDX(p) ((p == 0) ? I2CEXT0_SCL_OUT_IDX : ((p == 1) ? I2CEXT1_SCL_OUT_IDX : 0))
 #define I2C_SDA_IDX(p) ((p == 0) ? I2CEXT0_SDA_OUT_IDX : ((p == 1) ? I2CEXT1_SDA_OUT_IDX : 0))
 #else
 #define I2C_SCL_IDX(p) I2CEXT0_SCL_OUT_IDX
 #define I2C_SDA_IDX(p) I2CEXT0_SDA_OUT_IDX
 #endif
+#endif  // ifdef CONFIG_IDF_TARGET_ESP32P4
 
 #if CONFIG_IDF_TARGET_ESP32
 #define I2C_TXFIFO_WM_INT_ENA I2C_TXFIFO_EMPTY_INT_ENA
@@ -99,14 +121,14 @@ typedef union {
   uint32_t val;
 } i2c_slave_queue_event_t;
 
-static i2c_slave_struct_t _i2c_bus_array[SOC_I2C_NUM] = {
+static i2c_slave_struct_t _i2c_bus_array[SOC_HP_I2C_NUM] = {
   {&I2C0, 0, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
 #if !CONFIG_DISABLE_HAL_LOCKS
    ,
    NULL
 #endif
   },
-#if SOC_I2C_NUM > 1
+#if SOC_HP_I2C_NUM > 1
   {&I2C1, 1, -1, -1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0
 #if !CONFIG_DISABLE_HAL_LOCKS
    ,
@@ -173,19 +195,19 @@ static inline void i2c_ll_stretch_clr(i2c_dev_t *hw) {
 }
 
 static inline bool i2c_ll_slave_addressed(i2c_dev_t *hw) {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
-  return hw->sr.slave_addressed;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.slave_addressed;
+#else
+  return hw->sr.slave_addressed;
 #endif
 }
 
 static inline bool i2c_ll_slave_rw(i2c_dev_t *hw)  //not exposed by hal_ll
 {
-#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32H2
-  return hw->sr.slave_rw;
-#else
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2
   return hw->status_reg.slave_rw;
+#else
+  return hw->sr.slave_rw;
 #endif
 }
 
@@ -210,7 +232,7 @@ static bool i2cSlaveDetachBus(void *bus_i2c_num);
 //=====================================================================================================================
 
 esp_err_t i2cSlaveAttachCallbacks(uint8_t num, i2c_slave_request_cb_t request_callback, i2c_slave_receive_cb_t receive_callback, void *arg) {
-  if (num >= SOC_I2C_NUM) {
+  if (num >= SOC_HP_I2C_NUM) {
     log_e("Invalid port num: %u", num);
     return ESP_ERR_INVALID_ARG;
   }
@@ -224,7 +246,7 @@ esp_err_t i2cSlaveAttachCallbacks(uint8_t num, i2c_slave_request_cb_t request_ca
 }
 
 esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t frequency, size_t rx_len, size_t tx_len) {
-  if (num >= SOC_I2C_NUM) {
+  if (num >= SOC_HP_I2C_NUM) {
     log_e("Invalid port num: %u", num);
     return ESP_ERR_INVALID_ARG;
   }
@@ -306,17 +328,30 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     frequency = 100000L;
   }
   frequency = (frequency * 5) / 4;
-
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
+  || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
-#if SOC_I2C_NUM > 1
+#if SOC_HP_I2C_NUM > 1
   } else {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
   }
+#endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \
+  || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 3, 3) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0))
+  i2c_ll_set_mode(i2c->dev, I2C_BUS_MODE_SLAVE);
+  i2c_ll_enable_pins_open_drain(i2c->dev, true);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+  i2c_ll_enable_fifo_mode(i2c->dev, true);
+#else
+  i2c_ll_slave_set_fifo_mode(i2c->dev, true);
+#endif
+#else
   i2c_ll_slave_init(i2c->dev);
-  i2c_ll_set_fifo_mode(i2c->dev, true);
+  i2c_ll_slave_set_fifo_mode(i2c->dev, true);
+#endif
   i2c_ll_set_slave_addr(i2c->dev, slaveID, false);
   i2c_ll_set_tout(i2c->dev, I2C_LL_MAX_TIMEOUT);
   i2c_slave_set_frequency(i2c, frequency);
@@ -337,15 +372,27 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
 
   i2c_ll_disable_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
   i2c_ll_clear_intr_mask(i2c->dev, I2C_LL_INTR_MASK);
-  i2c_ll_set_fifo_mode(i2c->dev, true);
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+  i2c_ll_enable_fifo_mode(i2c->dev, true);
+#else
+  i2c_ll_slave_set_fifo_mode(i2c->dev, true);
+#endif
 
   if (!i2c->intr_handle) {
     uint32_t flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;
     if (i2c->num == 0) {
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
       ret = esp_intr_alloc(ETS_I2C_EXT0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
-#if SOC_I2C_NUM > 1
+#else
+      ret = esp_intr_alloc(ETS_I2C0_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
+#endif
+#if SOC_HP_I2C_NUM > 1
     } else {
+#if !defined(CONFIG_IDF_TARGET_ESP32P4)
       ret = esp_intr_alloc(ETS_I2C_EXT1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
+#else
+      ret = esp_intr_alloc(ETS_I2C1_INTR_SOURCE, flags, &i2c_slave_isr_handler, i2c, &i2c->intr_handle);
+#endif
 #endif
     }
 
@@ -375,7 +422,7 @@ fail:
 }
 
 esp_err_t i2cSlaveDeinit(uint8_t num) {
-  if (num >= SOC_I2C_NUM) {
+  if (num >= SOC_HP_I2C_NUM) {
     log_e("Invalid port num: %u", num);
     return ESP_ERR_INVALID_ARG;
   }
@@ -398,7 +445,7 @@ esp_err_t i2cSlaveDeinit(uint8_t num) {
 }
 
 size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t timeout_ms) {
-  if (num >= SOC_I2C_NUM) {
+  if (num >= SOC_HP_I2C_NUM) {
     log_e("Invalid port num: %u", num);
     return 0;
   }
@@ -515,16 +562,23 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
 
   i2c_hal_clk_config_t clk_cal;
 #if SOC_I2C_SUPPORT_APB
-  i2c_ll_cal_bus_clk(APB_CLK_FREQ, clk_speed, &clk_cal);
-  i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB); /*!< I2C source clock from APB, 80M*/
+  i2c_ll_master_cal_bus_clk(APB_CLK_FREQ, clk_speed, &clk_cal);
+  I2C_CLOCK_SRC_ATOMIC() {
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_APB); /*!< I2C source clock from APB, 80M*/
+  }
 #elif SOC_I2C_SUPPORT_XTAL
-  i2c_ll_cal_bus_clk(XTAL_CLK_FREQ, clk_speed, &clk_cal);
-  i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL); /*!< I2C source clock from XTAL, 40M */
+#ifndef XTAL_CLK_FREQ
+#define XTAL_CLK_FREQ APB_CLK_FREQ
+#endif
+  i2c_ll_master_cal_bus_clk(XTAL_CLK_FREQ, clk_speed, &clk_cal);
+  I2C_CLOCK_SRC_ATOMIC() {
+    i2c_ll_set_source_clk(i2c->dev, SOC_MOD_CLK_XTAL); /*!< I2C source clock from XTAL, 40M */
+  }
 #endif
   i2c_ll_set_txfifo_empty_thr(i2c->dev, a);
   i2c_ll_set_rxfifo_full_thr(i2c->dev, SOC_I2C_FIFO_LEN - a);
-  i2c_ll_set_bus_timing(i2c->dev, &clk_cal);
-  i2c_ll_set_filter(i2c->dev, 3);
+  i2c_ll_master_set_bus_timing(i2c->dev, &clk_cal);
+  i2c_ll_master_set_filter(i2c->dev, 3);
   return true;
 }
 
@@ -565,7 +619,7 @@ static bool i2c_slave_check_line_state(int8_t sda, int8_t scl) {
         log_w("Recovered after %d Cycles", a);
         gpio_set_level(sda, 0);  // start
         i2c_slave_delay_us(5);
-        for (uint8_t a = 0; a < 9; a++) {
+        for (uint8_t b = 0; b < 9; b++) {
           gpio_set_level(scl, 1);
           i2c_slave_delay_us(5);
           gpio_set_level(scl, 0);

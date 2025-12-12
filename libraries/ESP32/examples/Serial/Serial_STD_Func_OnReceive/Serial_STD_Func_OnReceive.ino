@@ -11,7 +11,7 @@
  */
 
 // soc/soc_caps.h has information about each SoC target
-// in this example, we use SOC_UART_NUM that goes from 1 to 3,
+// in this example, we use SOC_UART_HP_NUM that goes from 1 to 3,
 // depending on the number of available UARTs in the ESP32xx
 // This makes the code transparent to what SoC is used.
 #include "soc/soc_caps.h"
@@ -24,9 +24,9 @@
 #define TXPIN     5  // GPIO 5 => TX for Serial1 or Serial2
 
 // declare testingSerial (as reference) related to TEST_UART number defined above (only for Serial1 and Serial2)
-#if SOC_UART_NUM > 1 && TEST_UART == 1
+#if SOC_UART_HP_NUM > 1 && TEST_UART == 1
 HardwareSerial &testingSerial = Serial1;
-#elif SOC_UART_NUM > 2 && TEST_UART == 2
+#elif SOC_UART_HP_NUM > 2 && TEST_UART == 2
 HardwareSerial &testingSerial = Serial2;
 #endif
 
@@ -36,11 +36,11 @@ void processOnReceiving(HardwareSerial &mySerial) {
   int8_t uart_num = -1;
   if (&mySerial == &Serial0) {
     uart_num = 0;
-#if SOC_UART_NUM > 1
+#if SOC_UART_HP_NUM > 1
   } else if (&mySerial == &Serial1) {
     uart_num = 1;
 #endif
-#if SOC_UART_NUM > 2
+#if SOC_UART_HP_NUM > 2
   } else if (&mySerial == &Serial2) {
     uart_num = 2;
 #endif

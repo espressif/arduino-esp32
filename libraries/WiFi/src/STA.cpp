@@ -6,7 +6,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiSTA.h"
-#if SOC_WIFI_SUPPORTED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -118,6 +118,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
     _sta_network_if->_setStatus(WL_STOPPED);
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_CONNECTED) {
     _sta_network_if->_setStatus(WL_IDLE_STATUS);
+#if CONFIG_LWIP_IPV6
     if (_sta_network_if->getStatusBits() & ESP_NETIF_WANT_IP6_BIT) {
       esp_err_t err = esp_netif_create_ip6_linklocal(_sta_network_if->netif());
       if (err != ESP_OK) {
@@ -126,6 +127,7 @@ static void _onStaArduinoEvent(arduino_event_t *ev) {
         log_v("Enabled IPv6 Link Local on %s", _sta_network_if->desc());
       }
     }
+#endif
   } else if (ev->event_id == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
     uint8_t reason = ev->event_info.wifi_sta_disconnected.reason;
     // Reason 0 causes crash, use reason 1 (UNSPECIFIED) instead
@@ -226,7 +228,8 @@ void STAClass::_onStaEvent(int32_t event_id, void *event_data) {
 }
 
 STAClass::STAClass()
-  : _minSecurity(WIFI_AUTH_WPA2_PSK), _scanMethod(WIFI_FAST_SCAN), _sortMethod(WIFI_CONNECT_AP_BY_SIGNAL), _autoReconnect(true), _status(WL_STOPPED) {
+  : _minSecurity(WIFI_AUTH_WPA2_PSK), _scanMethod(WIFI_FAST_SCAN), _sortMethod(WIFI_CONNECT_AP_BY_SIGNAL), _autoReconnect(true), _status(WL_STOPPED),
+    _wifi_sta_event_handle(0) {
   _sta_network_if = this;
 }
 
@@ -274,14 +277,15 @@ bool STAClass::onEnable() {
       return false;
     }
     /* attach to receive events */
-    Network.onSysEvent(_onStaArduinoEvent);
+    _wifi_sta_event_handle = Network.onSysEvent(_onStaArduinoEvent);
     initNetif(ESP_NETIF_ID_STA);
   }
   return true;
 }
 
 bool STAClass::onDisable() {
-  Network.removeEvent(_onStaArduinoEvent);
+  Network.removeEvent(_wifi_sta_event_handle);
+  _wifi_sta_event_handle = 0;
   // we just set _esp_netif to NULL here, so destroyNetif() does not try to destroy it.
   // That would be done by WiFi.enableSTA(false) if AP is not enabled, or when it gets disabled
   _esp_netif = NULL;
@@ -419,6 +423,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
   return true;
 }
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
 /**
  * Start Wifi connection with a WPA2 Enterprise AP
  * if passphrase is set the most secure supported mode will be automatically selected
@@ -517,27 +522,9 @@ bool STAClass::connect(
 
   return connect(wpa2_ssid, NULL, channel, bssid, tryConnect);  //connect to wifi
 }
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
-  if (eraseap) {
-    if (!started()) {
-      log_e("STA not started! You must call begin first.");
-      return false;
-    }
-    wifi_config_t conf;
-    memset(&conf, 0, sizeof(wifi_config_t));
-    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
-    if (err != ESP_OK) {
-      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-  }
-
-  if (!connected()) {
-    log_w("STA already disconnected.");
-    return true;
-  }
-
   esp_err_t err = esp_wifi_disconnect();
   if (err != ESP_OK) {
     log_e("STA disconnect failed! 0x%x: %s", err, esp_err_to_name(err));
@@ -550,6 +537,20 @@ bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
       delay(5);
     }
     if (connected()) {
+      return false;
+    }
+  }
+
+  if (eraseap) {
+    if (!started()) {
+      log_e("STA not started! You must call begin first.");
+      return false;
+    }
+    wifi_config_t conf;
+    memset(&conf, 0, sizeof(wifi_config_t));
+    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
+    if (err != ESP_OK) {
+      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
       return false;
     }
   }

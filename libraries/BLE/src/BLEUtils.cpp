@@ -3,12 +3,21 @@
  *
  *  Created on: Mar 25, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/*****************************************************************************
+ *                             Common includes                               *
+ *****************************************************************************/
+
 #include "BLEAddress.h"
 #include "BLEClient.h"
 #include "BLEUtils.h"
@@ -17,17 +26,58 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
-#include <esp_bt.h>           // ESP32 BLE
-#include <esp_bt_main.h>      // ESP32 BLE
-#include <esp_gap_ble_api.h>  // ESP32 BLE
-#include <esp_gattc_api.h>    // ESP32 BLE
-#include <esp_err.h>          // ESP32 ESP-IDF
-#include <map>                // Part of C++ STL
+#if SOC_BLE_SUPPORTED
+#include <esp_bt.h>
+#endif
+
+#include <esp_err.h>
+#include <map>
 #include <sstream>
 #include <iomanip>
 
 #include "esp32-hal-log.h"
 
+/*****************************************************************************
+ *                            Bluedroid includes                             *
+ *****************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include <esp_bt_main.h>
+#include <esp_gap_ble_api.h>
+#include <esp_gattc_api.h>
+#endif
+
+/*****************************************************************************
+ *                       NimBLE includes and definitions                     *
+ *****************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+#include <host/ble_gap.h>
+#include <host/ble_att.h>
+#include <host/ble_hs.h>
+#include <host/ble_sm.h>
+#include <host/ble_l2cap.h>
+#include <nimble/hci_common.h>
+#include <nimble/ble.h>
+
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+#define CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT
+#define CONFIG_NIMBLE_ENABLE_ADVERTISMENT_TYPE_TEXT
+#define CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT
+#endif
+
+#ifndef CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT
+#define CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT 31
+#endif
+
+constexpr uint32_t TASK_BLOCK_BIT = (1 << CONFIG_NIMBLE_FREERTOS_TASK_BLOCK_BIT);
+#endif
+
+/*****************************************************************************
+ *                       Bluedroid types and constants                       *
+ *****************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
 typedef struct {
   uint32_t assignedNumber;
   const char *name;
@@ -593,13 +643,126 @@ static const gattService_t g_gattServices[] = {
 #endif
   {"", "", 0}
 };
+#endif
+
+/*****************************************************************************
+ *                             Common functions                              *
+ *****************************************************************************/
+
+/**
+ * @brief Create a hex representation of data.
+ *
+ * @param [in] target Where to write the hex string.  If this is null, we malloc storage.
+ * @param [in] source The start of the binary data.
+ * @param [in] length The length of the data to convert.
+ * @return A pointer to the formatted buffer.
+ */
+char *BLEUtils::buildHexData(uint8_t *target, const uint8_t *source, uint8_t length) {
+  // Guard against too much data.
+  if (length > 100) {
+    length = 100;
+  }
+
+  if (target == nullptr) {
+    target = (uint8_t *)malloc(length * 2 + 1);
+    if (target == nullptr) {
+      log_e("buildHexData: malloc failed");
+      return nullptr;
+    }
+  }
+  char *startOfData = (char *)target;
+
+  for (int i = 0; i < length; i++) {
+    sprintf((char *)target, "%.2x", (char)source[i]);
+    target += 2;
+  }
+
+  // Handle the special case where there was no data.
+  if (length == 0) {
+    *startOfData = 0;
+  }
+
+  return startOfData;
+}  // buildHexData
+
+/**
+ * @brief Given an advertising data type, return a string representation of the type.
+ *
+ * For details see ...
+ * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
+ *
+ * @return A string representation of the type.
+ */
+const char *BLEUtils::advDataTypeToString(uint8_t advType) {
+  switch (advType) {
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
+    case ESP_BLE_AD_TYPE_FLAG:  // 0x01
+      return "ESP_BLE_AD_TYPE_FLAG";
+    case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
+      return "ESP_BLE_AD_TYPE_16SRV_PART";
+    case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
+      return "ESP_BLE_AD_TYPE_16SRV_CMPL";
+    case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
+      return "ESP_BLE_AD_TYPE_32SRV_PART";
+    case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
+      return "ESP_BLE_AD_TYPE_32SRV_CMPL";
+    case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
+      return "ESP_BLE_AD_TYPE_128SRV_PART";
+    case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
+      return "ESP_BLE_AD_TYPE_128SRV_CMPL";
+    case ESP_BLE_AD_TYPE_NAME_SHORT:  // 0x08
+      return "ESP_BLE_AD_TYPE_NAME_SHORT";
+    case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
+      return "ESP_BLE_AD_TYPE_NAME_CMPL";
+    case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0a
+      return "ESP_BLE_AD_TYPE_TX_PWR";
+    case ESP_BLE_AD_TYPE_DEV_CLASS:  // 0x0b
+      return "ESP_BLE_AD_TYPE_DEV_CLASS";
+    case ESP_BLE_AD_TYPE_SM_TK:  // 0x10
+      return "ESP_BLE_AD_TYPE_SM_TK";
+    case ESP_BLE_AD_TYPE_SM_OOB_FLAG:  // 0x11
+      return "ESP_BLE_AD_TYPE_SM_OOB_FLAG";
+    case ESP_BLE_AD_TYPE_INT_RANGE:  // 0x12
+      return "ESP_BLE_AD_TYPE_INT_RANGE";
+    case ESP_BLE_AD_TYPE_SOL_SRV_UUID:  // 0x14
+      return "ESP_BLE_AD_TYPE_SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_128SOL_SRV_UUID:  // 0x15
+      return "ESP_BLE_AD_TYPE_128SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
+      return "ESP_BLE_AD_TYPE_SERVICE_DATA";
+    case ESP_BLE_AD_TYPE_PUBLIC_TARGET:  // 0x17
+      return "ESP_BLE_AD_TYPE_PUBLIC_TARGET";
+    case ESP_BLE_AD_TYPE_RANDOM_TARGET:  // 0x18
+      return "ESP_BLE_AD_TYPE_RANDOM_TARGET";
+    case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
+      return "ESP_BLE_AD_TYPE_APPEARANCE";
+    case ESP_BLE_AD_TYPE_ADV_INT:  // 0x1a
+      return "ESP_BLE_AD_TYPE_ADV_INT";
+    case ESP_BLE_AD_TYPE_32SOL_SRV_UUID:  // 0x1f
+      return "ESP_BLE_AD_TYPE_32SOL_SRV_UUID";
+    case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
+      return "ESP_BLE_AD_TYPE_32SERVICE_DATA";
+    case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
+      return "ESP_BLE_AD_TYPE_128SERVICE_DATA";
+    case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xff
+      return "ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE";
+#endif
+    default: log_v(" adv data type: 0x%x", advType); return "";
+  }  // End switch
+}  // advDataTypeToString
+
+/*****************************************************************************
+ *                            Bluedroid functions                            *
+ *****************************************************************************/
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
 
 /**
  * @brief Convert characteristic properties into a string representation.
  * @param [in] prop Characteristic properties.
  * @return A string representation of characteristic properties.
  */
-String BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop) {
+String BLEUtils::characteristicPropertiesToString(uint8_t prop) {
   String res = "broadcast: ";
   res += ((prop & ESP_GATT_CHAR_PROP_BIT_BROADCAST) ? "1" : "0");
   res += ", read: ";
@@ -616,6 +779,24 @@ String BLEUtils::characteristicPropertiesToString(esp_gatt_char_prop_t prop) {
   res += ((prop & ESP_GATT_CHAR_PROP_BIT_AUTH) ? "1" : "0");
   return res;
 }  // characteristicPropertiesToString
+
+/**
+ * @brief Build a printable string of memory range.
+ * Create a string representation of a piece of memory. Only printable characters will be included
+ * while those that are not printable will be replaced with '.'.
+ * @param [in] source Start of memory.
+ * @param [in] length Length of memory.
+ * @return A string representation of a piece of memory.
+ */
+String BLEUtils::buildPrintData(uint8_t *source, size_t length) {
+  String res;
+  for (int i = 0; i < length; i++) {
+    char c = *source;
+    res += (isprint(c) ? c : '.');
+    source++;
+  }
+  return res;
+}  // buildPrintData
 
 /**
  * @brief Convert an esp_gatt_id_t to a string.
@@ -668,71 +849,6 @@ String BLEUtils::adFlagsToString(uint8_t adFlags) {
   return res;
 }  // adFlagsToString
 
-/**
- * @brief Given an advertising type, return a string representation of the type.
- *
- * For details see ...
- * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
- *
- * @return A string representation of the type.
- */
-const char *BLEUtils::advTypeToString(uint8_t advType) {
-  switch (advType) {
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-    case ESP_BLE_AD_TYPE_FLAG:  // 0x01
-      return "ESP_BLE_AD_TYPE_FLAG";
-    case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
-      return "ESP_BLE_AD_TYPE_16SRV_PART";
-    case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
-      return "ESP_BLE_AD_TYPE_16SRV_CMPL";
-    case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
-      return "ESP_BLE_AD_TYPE_32SRV_PART";
-    case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
-      return "ESP_BLE_AD_TYPE_32SRV_CMPL";
-    case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
-      return "ESP_BLE_AD_TYPE_128SRV_PART";
-    case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
-      return "ESP_BLE_AD_TYPE_128SRV_CMPL";
-    case ESP_BLE_AD_TYPE_NAME_SHORT:  // 0x08
-      return "ESP_BLE_AD_TYPE_NAME_SHORT";
-    case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
-      return "ESP_BLE_AD_TYPE_NAME_CMPL";
-    case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0a
-      return "ESP_BLE_AD_TYPE_TX_PWR";
-    case ESP_BLE_AD_TYPE_DEV_CLASS:  // 0x0b
-      return "ESP_BLE_AD_TYPE_DEV_CLASS";
-    case ESP_BLE_AD_TYPE_SM_TK:  // 0x10
-      return "ESP_BLE_AD_TYPE_SM_TK";
-    case ESP_BLE_AD_TYPE_SM_OOB_FLAG:  // 0x11
-      return "ESP_BLE_AD_TYPE_SM_OOB_FLAG";
-    case ESP_BLE_AD_TYPE_INT_RANGE:  // 0x12
-      return "ESP_BLE_AD_TYPE_INT_RANGE";
-    case ESP_BLE_AD_TYPE_SOL_SRV_UUID:  // 0x14
-      return "ESP_BLE_AD_TYPE_SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_128SOL_SRV_UUID:  // 0x15
-      return "ESP_BLE_AD_TYPE_128SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
-      return "ESP_BLE_AD_TYPE_SERVICE_DATA";
-    case ESP_BLE_AD_TYPE_PUBLIC_TARGET:  // 0x17
-      return "ESP_BLE_AD_TYPE_PUBLIC_TARGET";
-    case ESP_BLE_AD_TYPE_RANDOM_TARGET:  // 0x18
-      return "ESP_BLE_AD_TYPE_RANDOM_TARGET";
-    case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
-      return "ESP_BLE_AD_TYPE_APPEARANCE";
-    case ESP_BLE_AD_TYPE_ADV_INT:  // 0x1a
-      return "ESP_BLE_AD_TYPE_ADV_INT";
-    case ESP_BLE_AD_TYPE_32SOL_SRV_UUID: return "ESP_BLE_AD_TYPE_32SOL_SRV_UUID";
-    case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
-      return "ESP_BLE_AD_TYPE_32SERVICE_DATA";
-    case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
-      return "ESP_BLE_AD_TYPE_128SERVICE_DATA";
-    case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xff
-      return "ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE";
-#endif
-    default: log_v(" adv data type: 0x%x", advType); return "";
-  }  // End switch
-}  // advTypeToString
-
 esp_gatt_id_t BLEUtils::buildGattId(esp_bt_uuid_t uuid, uint8_t inst_id) {
   esp_gatt_id_t retGattId;
   retGattId.uuid = uuid;
@@ -746,61 +862,6 @@ esp_gatt_srvc_id_t BLEUtils::buildGattSrvcId(esp_gatt_id_t gattId, bool is_prima
   retSrvcId.is_primary = is_primary;
   return retSrvcId;
 }
-
-/**
- * @brief Create a hex representation of data.
- *
- * @param [in] target Where to write the hex string.  If this is null, we malloc storage.
- * @param [in] source The start of the binary data.
- * @param [in] length The length of the data to convert.
- * @return A pointer to the formatted buffer.
- */
-char *BLEUtils::buildHexData(uint8_t *target, uint8_t *source, uint8_t length) {
-  // Guard against too much data.
-  if (length > 100) {
-    length = 100;
-  }
-
-  if (target == nullptr) {
-    target = (uint8_t *)malloc(length * 2 + 1);
-    if (target == nullptr) {
-      log_e("buildHexData: malloc failed");
-      return nullptr;
-    }
-  }
-  char *startOfData = (char *)target;
-
-  for (int i = 0; i < length; i++) {
-    sprintf((char *)target, "%.2x", (char)*source);
-    source++;
-    target += 2;
-  }
-
-  // Handle the special case where there was no data.
-  if (length == 0) {
-    *startOfData = 0;
-  }
-
-  return startOfData;
-}  // buildHexData
-
-/**
- * @brief Build a printable string of memory range.
- * Create a string representation of a piece of memory. Only printable characters will be included
- * while those that are not printable will be replaced with '.'.
- * @param [in] source Start of memory.
- * @param [in] length Length of memory.
- * @return A string representation of a piece of memory.
- */
-String BLEUtils::buildPrintData(uint8_t *source, size_t length) {
-  String res;
-  for (int i = 0; i < length; i++) {
-    char c = *source;
-    res += (isprint(c) ? c : '.');
-    source++;
-  }
-  return res;
-}  // buildPrintData
 
 /**
  * @brief Convert a close/disconnect reason to a string.
@@ -1507,7 +1568,7 @@ void BLEUtils::dumpGattServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gat
     // - uint32_t trans_id
     // - esp_bd_addr_t bda
     // - uint8_t exec_write_flag
-#ifdef ARDUHAL_LOG_LEVEL_VERBOSE
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     case ESP_GATTS_EXEC_WRITE_EVT:
     {
       char *pWriteFlagText;
@@ -1817,5 +1878,383 @@ const char *BLEUtils::searchEventTypeToString(esp_gap_search_evt_t searchEvt) {
   }
 }  // searchEventTypeToString
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif  // CONFIG_BLUEDROID_ENABLED
+
+/*****************************************************************************
+ *                             NimBLE functions                              *
+ *****************************************************************************/
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+
+/**
+ * @brief Construct a BLETaskData instance.
+ * @param [in] pInstance An instance of the class that will be waiting.
+ * @param [in] flags General purpose flags for the caller.
+ * @param [in] buf A buffer for data.
+ */
+BLETaskData::BLETaskData(void *pInstance, int flags, void *buf) : m_pInstance{pInstance}, m_flags{flags}, m_pBuf{buf}, m_pHandle{xTaskGetCurrentTaskHandle()} {}
+
+/**
+ * @brief Destructor.
+ */
+BLETaskData::~BLETaskData() {}
+
+/**
+ * @brief A function for checking validity of connection parameters.
+ * @param [in] params A pointer to the structure containing the parameters to check.
+ * @return valid == 0 or error code.
+ */
+int BLEUtils::checkConnParams(ble_gap_conn_params *params) {
+  /* Check connection interval min */
+  if ((params->itvl_min < BLE_HCI_CONN_ITVL_MIN) || (params->itvl_min > BLE_HCI_CONN_ITVL_MAX)) {
+    return BLE_ERR_INV_HCI_CMD_PARMS;
+  }
+  /* Check connection interval max */
+  if ((params->itvl_max < BLE_HCI_CONN_ITVL_MIN) || (params->itvl_max > BLE_HCI_CONN_ITVL_MAX) || (params->itvl_max < params->itvl_min)) {
+    return BLE_ERR_INV_HCI_CMD_PARMS;
+  }
+
+  /* Check connection latency */
+  if (params->latency > BLE_HCI_CONN_LATENCY_MAX) {
+    return BLE_ERR_INV_HCI_CMD_PARMS;
+  }
+
+  /* Check supervision timeout */
+  if ((params->supervision_timeout < BLE_HCI_CONN_SPVN_TIMEOUT_MIN) || (params->supervision_timeout > BLE_HCI_CONN_SPVN_TIMEOUT_MAX)) {
+    return BLE_ERR_INV_HCI_CMD_PARMS;
+  }
+
+  /* Check connection event length */
+  if (params->min_ce_len > params->max_ce_len) {
+    return BLE_ERR_INV_HCI_CMD_PARMS;
+  }
+
+  return 0;
+}
+
+/**
+ * @brief Converts a return code from the NimBLE stack to a text string.
+ * @param [in] rc The return code to convert.
+ * @return A string representation of the return code.
+ */
+const char *BLEUtils::returnCodeToString(int rc) {
+#if defined(CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT)
+  switch (rc) {
+    case 0:                                             return "SUCCESS";
+    case BLE_HS_EAGAIN:                                 return "Temporary failure; try again.";
+    case BLE_HS_EALREADY:                               return "Operation already in progress or completed.";
+    case BLE_HS_EINVAL:                                 return "One or more arguments are invalid.";
+    case BLE_HS_EMSGSIZE:                               return "The provided buffer is too small.";
+    case BLE_HS_ENOENT:                                 return "No entry matching the specified criteria.";
+    case BLE_HS_ENOMEM:                                 return "Operation failed due to resource exhaustion.";
+    case BLE_HS_ENOTCONN:                               return "No open connection with the specified handle.";
+    case BLE_HS_ENOTSUP:                                return "Operation disabled at compile time.";
+    case BLE_HS_EAPP:                                   return "Application callback behaved unexpectedly.";
+    case BLE_HS_EBADDATA:                               return "Command from peer is invalid.";
+    case BLE_HS_EOS:                                    return "Mynewt OS error.";
+    case BLE_HS_ECONTROLLER:                            return "Event from controller is invalid.";
+    case BLE_HS_ETIMEOUT:                               return "Operation timed out.";
+    case BLE_HS_EDONE:                                  return "Operation completed successfully.";
+    case BLE_HS_EBUSY:                                  return "Operation cannot be performed until procedure completes.";
+    case BLE_HS_EREJECT:                                return "Peer rejected a connection parameter update request.";
+    case BLE_HS_EUNKNOWN:                               return "Unexpected failure; catch all.";
+    case BLE_HS_EROLE:                                  return "Operation requires different role (e.g., central vs. peripheral).";
+    case BLE_HS_ETIMEOUT_HCI:                           return "HCI request timed out; controller unresponsive.";
+    case BLE_HS_ENOMEM_EVT:                             return "Controller failed to send event due to memory exhaustion (combined host-controller only).";
+    case BLE_HS_ENOADDR:                                return "Operation requires an identity address but none configured.";
+    case BLE_HS_ENOTSYNCED:                             return "Attempt to use the host before it is synced with controller.";
+    case BLE_HS_EAUTHEN:                                return "Insufficient authentication.";
+    case BLE_HS_EAUTHOR:                                return "Insufficient authorization.";
+    case BLE_HS_EENCRYPT:                               return "Insufficient encryption level.";
+    case BLE_HS_EENCRYPT_KEY_SZ:                        return "Insufficient key size.";
+    case BLE_HS_ESTORE_CAP:                             return "Storage at capacity.";
+    case BLE_HS_ESTORE_FAIL:                            return "Storage IO error.";
+    case BLE_HS_EPREEMPTED:                             return "Operation was preempted.";
+    case BLE_HS_EDISABLED:                              return "Operation disabled.";
+    case BLE_HS_ESTALLED:                               return "Operation stalled.";
+    case (0x0100 + BLE_ATT_ERR_INVALID_HANDLE):         return "The attribute handle given was not valid on this server.";
+    case (0x0100 + BLE_ATT_ERR_READ_NOT_PERMITTED):     return "The attribute cannot be read.";
+    case (0x0100 + BLE_ATT_ERR_WRITE_NOT_PERMITTED):    return "The attribute cannot be written.";
+    case (0x0100 + BLE_ATT_ERR_INVALID_PDU):            return "The attribute PDU was invalid.";
+    case (0x0100 + BLE_ATT_ERR_INSUFFICIENT_AUTHEN):    return "The attribute requires authentication before it can be read or written.";
+    case (0x0100 + BLE_ATT_ERR_REQ_NOT_SUPPORTED):      return "Attribute server does not support the request received from the client.";
+    case (0x0100 + BLE_ATT_ERR_INVALID_OFFSET):         return "Offset specified was past the end of the attribute.";
+    case (0x0100 + BLE_ATT_ERR_INSUFFICIENT_AUTHOR):    return "The attribute requires authorization before it can be read or written.";
+    case (0x0100 + BLE_ATT_ERR_PREPARE_QUEUE_FULL):     return "Too many prepare writes have been queued.";
+    case (0x0100 + BLE_ATT_ERR_ATTR_NOT_FOUND):         return "No attribute found within the given attribute handle range.";
+    case (0x0100 + BLE_ATT_ERR_ATTR_NOT_LONG):          return "The attribute cannot be read or written using the Read Blob Request.";
+    case (0x0100 + BLE_ATT_ERR_INSUFFICIENT_KEY_SZ):    return "The Encryption Key Size used for encrypting this link is insufficient.";
+    case (0x0100 + BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN): return "The attribute value length is invalid for the operation.";
+    case (0x0100 + BLE_ATT_ERR_UNLIKELY):               return "The attribute request has encountered an error that was unlikely, could not be completed as requested.";
+    case (0x0100 + BLE_ATT_ERR_INSUFFICIENT_ENC):       return "The attribute requires encryption before it can be read or written.";
+    case (0x0100 + BLE_ATT_ERR_UNSUPPORTED_GROUP):
+      return "The attribute type is not a supported grouping attribute as defined by a higher layer specification.";
+    case (0x0100 + BLE_ATT_ERR_INSUFFICIENT_RES):         return "Insufficient Resources to complete the request.";
+    case (0x0200 + BLE_ERR_UNKNOWN_HCI_CMD):              return "Unknown HCI Command";
+    case (0x0200 + BLE_ERR_UNK_CONN_ID):                  return "Unknown Connection Identifier";
+    case (0x0200 + BLE_ERR_HW_FAIL):                      return "Hardware Failure";
+    case (0x0200 + BLE_ERR_PAGE_TMO):                     return "Page Timeout";
+    case (0x0200 + BLE_ERR_AUTH_FAIL):                    return "Authentication Failure";
+    case (0x0200 + BLE_ERR_PINKEY_MISSING):               return "PIN or Key Missing";
+    case (0x0200 + BLE_ERR_MEM_CAPACITY):                 return "Memory Capacity Exceeded";
+    case (0x0200 + BLE_ERR_CONN_SPVN_TMO):                return "Connection Timeout";
+    case (0x0200 + BLE_ERR_CONN_LIMIT):                   return "Connection Limit Exceeded";
+    case (0x0200 + BLE_ERR_SYNCH_CONN_LIMIT):             return "Synchronous Connection Limit To A Device Exceeded";
+    case (0x0200 + BLE_ERR_ACL_CONN_EXISTS):              return "ACL Connection Already Exists";
+    case (0x0200 + BLE_ERR_CMD_DISALLOWED):               return "Command Disallowed";
+    case (0x0200 + BLE_ERR_CONN_REJ_RESOURCES):           return "Connection Rejected due to Limited Resources";
+    case (0x0200 + BLE_ERR_CONN_REJ_SECURITY):            return "Connection Rejected Due To Security Reasons";
+    case (0x0200 + BLE_ERR_CONN_REJ_BD_ADDR):             return "Connection Rejected due to Unacceptable BD_ADDR";
+    case (0x0200 + BLE_ERR_CONN_ACCEPT_TMO):              return "Connection Accept Timeout Exceeded";
+    case (0x0200 + BLE_ERR_UNSUPPORTED):                  return "Unsupported Feature or Parameter Value";
+    case (0x0200 + BLE_ERR_INV_HCI_CMD_PARMS):            return "Invalid HCI Command Parameters";
+    case (0x0200 + BLE_ERR_REM_USER_CONN_TERM):           return "Remote User Terminated Connection";
+    case (0x0200 + BLE_ERR_RD_CONN_TERM_RESRCS):          return "Remote Device Terminated Connection due to Low Resources";
+    case (0x0200 + BLE_ERR_RD_CONN_TERM_PWROFF):          return "Remote Device Terminated Connection due to Power Off";
+    case (0x0200 + BLE_ERR_CONN_TERM_LOCAL):              return "Connection Terminated By Local Host";
+    case (0x0200 + BLE_ERR_REPEATED_ATTEMPTS):            return "Repeated Attempts";
+    case (0x0200 + BLE_ERR_NO_PAIRING):                   return "Pairing Not Allowed";
+    case (0x0200 + BLE_ERR_UNK_LMP):                      return "Unknown LMP PDU";
+    case (0x0200 + BLE_ERR_UNSUPP_REM_FEATURE):           return "Unsupported Remote Feature / Unsupported LMP Feature";
+    case (0x0200 + BLE_ERR_SCO_OFFSET):                   return "SCO Offset Rejected";
+    case (0x0200 + BLE_ERR_SCO_ITVL):                     return "SCO Interval Rejected";
+    case (0x0200 + BLE_ERR_SCO_AIR_MODE):                 return "SCO Air Mode Rejected";
+    case (0x0200 + BLE_ERR_INV_LMP_LL_PARM):              return "Invalid LMP Parameters / Invalid LL Parameters";
+    case (0x0200 + BLE_ERR_UNSPECIFIED):                  return "Unspecified Error";
+    case (0x0200 + BLE_ERR_UNSUPP_LMP_LL_PARM):           return "Unsupported LMP Parameter Value / Unsupported LL Parameter Value";
+    case (0x0200 + BLE_ERR_NO_ROLE_CHANGE):               return "Role Change Not Allowed";
+    case (0x0200 + BLE_ERR_LMP_LL_RSP_TMO):               return "LMP Response Timeout / LL Response Timeout";
+    case (0x0200 + BLE_ERR_LMP_COLLISION):                return "LMP Error Transaction Collision";
+    case (0x0200 + BLE_ERR_LMP_PDU):                      return "LMP PDU Not Allowed";
+    case (0x0200 + BLE_ERR_ENCRYPTION_MODE):              return "Encryption Mode Not Acceptable";
+    case (0x0200 + BLE_ERR_LINK_KEY_CHANGE):              return "Link Key cannot be Changed";
+    case (0x0200 + BLE_ERR_UNSUPP_QOS):                   return "Requested QoS Not Supported";
+    case (0x0200 + BLE_ERR_INSTANT_PASSED):               return "Instant Passed";
+    case (0x0200 + BLE_ERR_UNIT_KEY_PAIRING):             return "Pairing With Unit Key Not Supported";
+    case (0x0200 + BLE_ERR_DIFF_TRANS_COLL):              return "Different Transaction Collision";
+    case (0x0200 + BLE_ERR_QOS_PARM):                     return "QoS Unacceptable Parameter";
+    case (0x0200 + BLE_ERR_QOS_REJECTED):                 return "QoS Rejected";
+    case (0x0200 + BLE_ERR_CHAN_CLASS):                   return "Channel Classification Not Supported";
+    case (0x0200 + BLE_ERR_INSUFFICIENT_SEC):             return "Insufficient Security";
+    case (0x0200 + BLE_ERR_PARM_OUT_OF_RANGE):            return "Parameter Out Of Mandatory Range";
+    case (0x0200 + BLE_ERR_PENDING_ROLE_SW):              return "Role Switch Pending";
+    case (0x0200 + BLE_ERR_RESERVED_SLOT):                return "Reserved Slot Violation";
+    case (0x0200 + BLE_ERR_ROLE_SW_FAIL):                 return "Role Switch Failed";
+    case (0x0200 + BLE_ERR_INQ_RSP_TOO_BIG):              return "Extended Inquiry Response Too Large";
+    case (0x0200 + BLE_ERR_SEC_SIMPLE_PAIR):              return "Secure Simple Pairing Not Supported By Host";
+    case (0x0200 + BLE_ERR_HOST_BUSY_PAIR):               return "Host Busy - Pairing";
+    case (0x0200 + BLE_ERR_CONN_REJ_CHANNEL):             return "Connection Rejected, No Suitable Channel Found";
+    case (0x0200 + BLE_ERR_CTLR_BUSY):                    return "Controller Busy";
+    case (0x0200 + BLE_ERR_CONN_PARMS):                   return "Unacceptable Connection Parameters";
+    case (0x0200 + BLE_ERR_DIR_ADV_TMO):                  return "Directed Advertising Timeout";
+    case (0x0200 + BLE_ERR_CONN_TERM_MIC):                return "Connection Terminated due to MIC Failure";
+    case (0x0200 + BLE_ERR_CONN_ESTABLISHMENT):           return "Connection Failed to be Established";
+    case (0x0200 + BLE_ERR_MAC_CONN_FAIL):                return "MAC Connection Failed";
+    case (0x0200 + BLE_ERR_COARSE_CLK_ADJ):               return "Coarse Clock Adjustment Rejected";
+    case (0x0300 + BLE_L2CAP_SIG_ERR_CMD_NOT_UNDERSTOOD): return "Invalid or unsupported incoming L2CAP sig command.";
+    case (0x0300 + BLE_L2CAP_SIG_ERR_MTU_EXCEEDED):       return "Incoming packet too large.";
+    case (0x0300 + BLE_L2CAP_SIG_ERR_INVALID_CID):        return "No channel with specified ID.";
+    case (0x0400 + BLE_SM_ERR_PASSKEY):                   return "The user input of passkey failed, for example, the user canceled the operation.";
+    case (0x0400 + BLE_SM_ERR_OOB):                       return "The OOB data is not available.";
+    case (0x0400 + BLE_SM_ERR_AUTHREQ):
+      return "The pairing procedure cannot be performed as authentication requirements cannot be met due to IO capabilities of one or both devices.";
+    case (0x0400 + BLE_SM_ERR_CONFIRM_MISMATCH): return "The confirm value does not match the calculated compare value.";
+    case (0x0400 + BLE_SM_ERR_PAIR_NOT_SUPP):    return "Pairing is not supported by the device.";
+    case (0x0400 + BLE_SM_ERR_ENC_KEY_SZ):       return "The resultant encryption key size is insufficient for the security requirements of this device.";
+    case (0x0400 + BLE_SM_ERR_CMD_NOT_SUPP):     return "The SMP command received is not supported on this device.";
+    case (0x0400 + BLE_SM_ERR_UNSPECIFIED):      return "Pairing failed due to an unspecified reason.";
+    case (0x0400 + BLE_SM_ERR_REPEATED):
+      return "Pairing or authentication procedure disallowed, too little time has elapsed since last pairing request or security request.";
+    case (0x0400 + BLE_SM_ERR_INVAL):   return "Command length is invalid or that a parameter is outside of the specified range.";
+    case (0x0400 + BLE_SM_ERR_DHKEY):   return "DHKey Check value received doesn't match the one calculated by the local device.";
+    case (0x0400 + BLE_SM_ERR_NUMCMP):  return "Confirm values in the numeric comparison protocol do not match.";
+    case (0x0400 + BLE_SM_ERR_ALREADY): return "Pairing over the LE transport failed - Pairing Request sent over the BR/EDR transport in process.";
+    case (0x0400 + BLE_SM_ERR_CROSS_TRANS):
+      return "BR/EDR Link Key generated on the BR/EDR transport cannot be used to derive and distribute keys for the LE transport.";
+    case (0x0500 + BLE_SM_ERR_PASSKEY): return "The user input of passkey failed or the user canceled the operation.";
+    case (0x0500 + BLE_SM_ERR_OOB):     return "The OOB data is not available.";
+    case (0x0500 + BLE_SM_ERR_AUTHREQ):
+      return "The pairing procedure cannot be performed as authentication requirements cannot be met due to IO capabilities of one or both devices.";
+    case (0x0500 + BLE_SM_ERR_CONFIRM_MISMATCH): return "The confirm value does not match the calculated compare value.";
+    case (0x0500 + BLE_SM_ERR_PAIR_NOT_SUPP):    return "Pairing is not supported by the device.";
+    case (0x0500 + BLE_SM_ERR_ENC_KEY_SZ):       return "The resultant encryption key size is insufficient for the security requirements of this device.";
+    case (0x0500 + BLE_SM_ERR_CMD_NOT_SUPP):     return "The SMP command received is not supported on this device.";
+    case (0x0500 + BLE_SM_ERR_UNSPECIFIED):      return "Pairing failed due to an unspecified reason.";
+    case (0x0500 + BLE_SM_ERR_REPEATED):
+      return "Pairing or authentication procedure is disallowed because too little time has elapsed since last pairing request or security request.";
+    case (0x0500 + BLE_SM_ERR_INVAL): return "Command length is invalid or a parameter is outside of the specified range.";
+    case (0x0500 + BLE_SM_ERR_DHKEY):
+      return "Indicates to the remote device that the DHKey Check value received doesn't match the one calculated by the local device.";
+    case (0x0500 + BLE_SM_ERR_NUMCMP):  return "Confirm values in the numeric comparison protocol do not match.";
+    case (0x0500 + BLE_SM_ERR_ALREADY): return "Pairing over the LE transport failed - Pairing Request sent over the BR/EDR transport in process.";
+    case (0x0500 + BLE_SM_ERR_CROSS_TRANS):
+      return "BR/EDR Link Key generated on the BR/EDR transport cannot be used to derive and distribute keys for the LE transport.";
+    default: return "Unknown";
+  }
+#else   // #if defined(CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT)
+  return "";
+#endif  // #if defined(CONFIG_NIMBLE_ENABLE_RETURN_CODE_TEXT)
+}
+
+/**
+ * @brief Utility function to log the gap event info.
+ * @param [in] event A pointer to the gap event structure.
+ * @param [in] arg Unused.
+ */
+void BLEUtils::dumpGapEvent(ble_gap_event *event, void *arg) {
+#if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
+  log_d("Received a GAP event: %s", gapEventToString(event->type));
+#endif
+}
+
+/**
+ * @brief Convert a GAP event type to a string representation.
+ * @param [in] eventType The type of event.
+ * @return A string representation of the event type.
+ */
+const char *BLEUtils::gapEventToString(uint8_t eventType) {
+#if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
+  switch (eventType) {
+    case BLE_GAP_EVENT_CONNECT:  //0
+      return "BLE_GAP_EVENT_CONNECT ";
+
+    case BLE_GAP_EVENT_DISCONNECT:  //1
+      return "BLE_GAP_EVENT_DISCONNECT";
+
+    case BLE_GAP_EVENT_CONN_UPDATE:  //3
+      return "BLE_GAP_EVENT_CONN_UPDATE";
+
+    case BLE_GAP_EVENT_CONN_UPDATE_REQ:  //4
+      return "BLE_GAP_EVENT_CONN_UPDATE_REQ";
+
+    case BLE_GAP_EVENT_L2CAP_UPDATE_REQ:  //5
+      return "BLE_GAP_EVENT_L2CAP_UPDATE_REQ";
+
+    case BLE_GAP_EVENT_TERM_FAILURE:  //6
+      return "BLE_GAP_EVENT_TERM_FAILURE";
+
+    case BLE_GAP_EVENT_DISC:  //7
+      return "BLE_GAP_EVENT_DISC";
+
+    case BLE_GAP_EVENT_DISC_COMPLETE:  //8
+      return "BLE_GAP_EVENT_DISC_COMPLETE";
+
+    case BLE_GAP_EVENT_ADV_COMPLETE:  //9
+      return "BLE_GAP_EVENT_ADV_COMPLETE";
+
+    case BLE_GAP_EVENT_ENC_CHANGE:  //10
+      return "BLE_GAP_EVENT_ENC_CHANGE";
+
+    case BLE_GAP_EVENT_PASSKEY_ACTION:  //11
+      return "BLE_GAP_EVENT_PASSKEY_ACTION";
+
+    case BLE_GAP_EVENT_NOTIFY_RX:  //12
+      return "BLE_GAP_EVENT_NOTIFY_RX";
+
+    case BLE_GAP_EVENT_NOTIFY_TX:  //13
+      return "BLE_GAP_EVENT_NOTIFY_TX";
+
+    case BLE_GAP_EVENT_SUBSCRIBE:  //14
+      return "BLE_GAP_EVENT_SUBSCRIBE";
+
+    case BLE_GAP_EVENT_MTU:  //15
+      return "BLE_GAP_EVENT_MTU";
+
+    case BLE_GAP_EVENT_IDENTITY_RESOLVED:  //16
+      return "BLE_GAP_EVENT_IDENTITY_RESOLVED";
+
+    case BLE_GAP_EVENT_REPEAT_PAIRING:  //17
+      return "BLE_GAP_EVENT_REPEAT_PAIRING";
+
+    case BLE_GAP_EVENT_PHY_UPDATE_COMPLETE:  //18
+      return "BLE_GAP_EVENT_PHY_UPDATE_COMPLETE";
+
+    case BLE_GAP_EVENT_EXT_DISC:  //19
+      return "BLE_GAP_EVENT_EXT_DISC";
+
+    case BLE_GAP_EVENT_AUTHORIZE:  //32
+      return "BLE_GAP_EVENT_AUTHORIZE";
+#ifdef BLE_GAP_EVENT_PERIODIC_SYNC     // IDF 4.0 does not support these
+    case BLE_GAP_EVENT_PERIODIC_SYNC:  //20
+      return "BLE_GAP_EVENT_PERIODIC_SYNC";
+
+    case BLE_GAP_EVENT_PERIODIC_REPORT:  //21
+      return "BLE_GAP_EVENT_PERIODIC_REPORT";
+
+    case BLE_GAP_EVENT_PERIODIC_SYNC_LOST:  //22
+      return "BLE_GAP_EVENT_PERIODIC_SYNC_LOST";
+
+    case BLE_GAP_EVENT_SCAN_REQ_RCVD:  //23
+      return "BLE_GAP_EVENT_SCAN_REQ_RCVD";
+#endif
+    default: log_d("gapEventToString: Unknown event type %d 0x%.2x", eventType, eventType); return "Unknown event type";
+  }
+#else   // #if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
+  return "";
+#endif  // #if defined(CONFIG_NIMBLE_ENABLE_GAP_EVENT_CODE_TEXT)
+}  // gapEventToString
+
+/**
+ * @brief Convert characteristic properties into a string representation.
+ * @param [in] prop Characteristic properties.
+ * @return A string representation of characteristic properties.
+ */
+String BLEUtils::characteristicPropertiesToString(uint8_t prop) {
+  String res = "broadcast: ";
+  res += ((prop & BLE_GATT_CHR_PROP_BROADCAST) ? "1" : "0");
+  res += ", read: ";
+  res += ((prop & BLE_GATT_CHR_PROP_READ) ? "1" : "0");
+  res += ", write_nr: ";
+  res += ((prop & BLE_GATT_CHR_PROP_WRITE_NO_RSP) ? "1" : "0");
+  res += ", write: ";
+  res += ((prop & BLE_GATT_CHR_PROP_WRITE) ? "1" : "0");
+  res += ", notify: ";
+  res += ((prop & BLE_GATT_CHR_PROP_NOTIFY) ? "1" : "0");
+  res += ", indicate: ";
+  res += ((prop & BLE_GATT_CHR_PROP_INDICATE) ? "1" : "0");
+  res += ", auth_sign_write: ";
+  res += ((prop & BLE_GATT_CHR_PROP_AUTH_SIGN_WRITE) ? "1" : "0");
+  res += ", extended: ";
+  res += ((prop & BLE_GATT_CHR_PROP_EXTENDED) ? "1" : "0");
+  return res;
+}  // characteristicPropertiesToString
+
+/**
+ * @brief Blocks the calling task until released or timeout.
+ * @param [in] taskData A pointer to the task data structure.
+ * @param [in] timeout The time to wait in milliseconds.
+ * @return True if the task completed, false if the timeout was reached.
+ */
+bool BLEUtils::taskWait(const BLETaskData &taskData, uint32_t timeout) {
+  ble_npl_time_t ticks;
+  if (timeout == BLE_NPL_TIME_FOREVER) {
+    ticks = BLE_NPL_TIME_FOREVER;
+  } else {
+    ble_npl_time_ms_to_ticks(timeout, &ticks);
+  }
+
+  uint32_t notificationValue;
+  xTaskNotifyWait(0, TASK_BLOCK_BIT, &notificationValue, 0);
+  if (notificationValue & TASK_BLOCK_BIT) {
+    return true;
+  }
+
+  return xTaskNotifyWait(0, TASK_BLOCK_BIT, nullptr, ticks) == pdTRUE;
+}  // taskWait
+
+/**
+ * @brief Release a task.
+ * @param [in] taskData A pointer to the task data structure.
+ * @param [in] flags A return value to set in the task data structure.
+ */
+void BLEUtils::taskRelease(const BLETaskData &taskData, int flags) {
+  taskData.m_flags = flags;
+  if (taskData.m_pHandle != nullptr) {
+    xTaskNotify(static_cast<TaskHandle_t>(taskData.m_pHandle), TASK_BLOCK_BIT, eSetBits);
+  }
+}  // taskRelease
+
+#endif  // CONFIG_NIMBLE_ENABLED
+
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
