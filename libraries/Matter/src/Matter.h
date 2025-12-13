@@ -179,6 +179,14 @@ public:
     return String("https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00");
   }
   static void begin();
+
+  // Network and Commissioning Capability Queries
+  // These methods check both hardware support (SOC capabilities) and Matter configuration
+  static bool isWiFiStationEnabled();        // Check if WiFi Station mode is supported and enabled
+  static bool isWiFiAccessPointEnabled();    // Check if WiFi AP mode is supported and enabled
+  static bool isThreadEnabled();             // Check if Thread network is supported and enabled
+  static bool isBLECommissioningEnabled();   // Check if BLE commissioning is supported and enabled
+
   static bool isDeviceCommissioned();
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   static bool isWiFiConnected();

@@ -175,9 +175,67 @@ void ArduinoMatter::begin() {
   }
 }
 
+// Network and Commissioning Capability Queries
+bool ArduinoMatter::isWiFiStationEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+  #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+    return true;
+  #else
+    return false;
+  #endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isWiFiAccessPointEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+  #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
+    return true;
+  #else
+    return false;
+  #endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isThreadEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+  // Thread requires IEEE 802.15.4 radio support (ESP32-H2, ESP32-C6, ESP32-C5)
+  // For now, we check Matter configuration as hardware detection is complex
+#if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isBLECommissioningEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter/ESP configuration
+  // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
+#ifdef SOC_BLE_SUPPORTED
+  #if CONFIG_NETWORK_LAYER_BLE || CONFIG_ENABLE_CHIPOBLE
+    return true;
+  #else
+    // Also check if BLE stack is enabled (Bluedroid or NimBLE)
+    #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+      return true;
+    #else
+      return false;
+    #endif
+  #endif
+#else
+  return false;
+#endif
+}
+
+
 #if CHIP_DEVICE_CONFIG_ENABLE_THREAD
 bool ArduinoMatter::isThreadConnected() {
-  return false;  // Thread Network TBD
+  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
 }
 #endif
 
