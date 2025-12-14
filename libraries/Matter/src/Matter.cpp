@@ -218,7 +218,7 @@ bool ArduinoMatter::isBLECommissioningEnabled() {
   #if CONFIG_ENABLE_CHIPOBLE
     return true;
   #else
-      return false;
+    return false;
   #endif
 #else
   return false;
