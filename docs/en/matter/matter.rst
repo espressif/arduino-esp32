@@ -32,7 +32,7 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 
   .. figure:: ../../_static/matter_erase_flash.png
       :align: center
-      :alt: Erase All Flash Before Sketch Upload: Enabled" Arduino IDE menu option
+      :alt: "Erase All Flash Before Sketch Upload: Enabled" Arduino IDE menu option
       :figclass: align-center
 
 These settings are required for the following reasons:
