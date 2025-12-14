@@ -215,7 +215,7 @@ bool ArduinoMatter::isBLECommissioningEnabled() {
   // Check hardware support (SOC capabilities) AND Matter/ESP configuration
   // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
 #ifdef SOC_BLE_SUPPORTED
-  #if CONFIG_NETWORK_LAYER_BLE || CONFIG_ENABLE_CHIPOBLE
+  #if CONFIG_ENABLE_CHIPOBLE
     return true;
   #else
     // Also check if BLE stack is enabled (Bluedroid or NimBLE)
