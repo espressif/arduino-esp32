@@ -53,6 +53,15 @@ Before uploading the sketch, configure the following:
    const char *password = "your-password";
    ```
 
+## Building and Flashing
+
+1. Open the `MatterSimpleWidowsBlind.ino` sketch in the Arduino IDE.
+2. Select your ESP32 board from the **Tools > Board** menu.
+3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+5. Connect your ESP32 board to your computer via USB.
+6. Click the **Upload** button to compile and flash the sketch.
+
 ## Expected Output
 
 ```
