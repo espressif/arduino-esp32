@@ -204,8 +204,6 @@ bool ArduinoMatter::isWiFiAccessPointEnabled() {
 
 bool ArduinoMatter::isThreadEnabled() {
   // Check hardware support (SOC capabilities) AND Matter configuration
-  // Thread requires IEEE 802.15.4 radio support (ESP32-H2, ESP32-C6, ESP32-C5)
-  // For now, we check Matter configuration as hardware detection is complex
 #if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
   return true;
 #else
