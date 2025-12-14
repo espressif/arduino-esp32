@@ -107,8 +107,8 @@ The ``Matter`` class provides the following key methods:
 
 * ``begin()``: Initializes the Matter stack
 * ``isDeviceCommissioned()``: Checks if the device is commissioned
-* ``isWiFiConnected()``: Checks Wi-Fi connection status (if Wi-Fi is enabled)
-* ``isThreadConnected()``: Checks Thread connection status (if Thread is enabled)
+* ``isWiFiConnected()``: Checks Wi-Fi connection status
+* ``isThreadConnected()``: Checks Thread connection status
 * ``isDeviceConnected()``: Checks overall device connectivity
 * ``isWiFiStationEnabled()``: Checks if WiFi Station mode is supported and enabled
 * ``isWiFiAccessPointEnabled()``: Checks if WiFi AP mode is supported and enabled
