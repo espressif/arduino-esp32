@@ -153,8 +153,8 @@ These functions are useful for:
 
 The example periodically reports connection status every 10 seconds:
 
-- **`Matter.isWiFiConnected()`**: Returns `true` if WiFi Station is connected (only available if WiFi Station is enabled)
-- **`Matter.isThreadConnected()`**: Returns `true` if Thread is attached to a network (only available if Thread is enabled)
+- **`Matter.isWiFiConnected()`**: Returns `true` if WiFi Station is connected. If WiFi Station is not enabled, always returns `false`.
+- **`Matter.isThreadConnected()`**: Returns `true` if Thread is attached to a network. If Thread is not enabled, always returns `false`.
 - **`Matter.isDeviceConnected()`**: Returns `true` if the device is connected via WiFi or Thread (overall connectivity status)
 - **`Matter.isDeviceCommissioned()`**: Returns `true` if the device has been commissioned to a Matter fabric
 
