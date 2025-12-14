@@ -23,13 +23,17 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 
 1. **Partition Scheme**: Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
 
-   .. image:: ../_static/matter_partition_scheme.png
+  .. figure:: ../../_static/matter_partition_scheme.png
+      :align: center
       :alt: "Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)"" Arduino IDE menu option
+      :figclass: align-center
 
 2. **Erase Flash**: Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
 
-   .. image:: ../_static/matter_erase_flash.png
+  .. figure:: ../../_static/matter_erase_flash.png
+      :align: center
       :alt: Erase All Flash Before Sketch Upload: Enabled" Arduino IDE menu option
+      :figclass: align-center
 
 These settings are required for the following reasons:
 
