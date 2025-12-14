@@ -233,31 +233,20 @@ bool ArduinoMatter::isBLECommissioningEnabled() {
 }
 
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-bool ArduinoMatter::isThreadConnected() {
-  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
-}
-#endif
-
 bool ArduinoMatter::isDeviceCommissioned() {
   return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 bool ArduinoMatter::isWiFiConnected() {
   return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationConnected();
 }
-#endif
+
+bool ArduinoMatter::isThreadConnected() {
+  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
+}
 
 bool ArduinoMatter::isDeviceConnected() {
-  bool retCode = false;
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-  retCode |= ArduinoMatter::isThreadConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  retCode |= ArduinoMatter::isWiFiConnected();
-#endif
-  return retCode;
+  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected();
 }
 
 void ArduinoMatter::decommission() {

@@ -188,12 +188,8 @@ public:
   static bool isBLECommissioningEnabled();   // Check if BLE commissioning is supported and enabled
 
   static bool isDeviceCommissioned();
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   static bool isWiFiConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
   static bool isThreadConnected();
-#endif
   static bool isDeviceConnected();
   static void decommission();
 
