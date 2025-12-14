@@ -218,12 +218,7 @@ bool ArduinoMatter::isBLECommissioningEnabled() {
   #if CONFIG_ENABLE_CHIPOBLE
     return true;
   #else
-    // Also check if BLE stack is enabled (Bluedroid or NimBLE)
-    #if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-      return true;
-    #else
       return false;
-    #endif
   #endif
 #else
   return false;
