@@ -203,7 +203,7 @@ bool ArduinoMatter::isWiFiAccessPointEnabled() {
 }
 
 bool ArduinoMatter::isThreadEnabled() {
-  // Check hardware support (SOC capabilities) AND Matter configuration
+  // Check Matter configuration only
 #if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
   return true;
 #else
