@@ -1,4 +1,4 @@
-# Matter Simple Window Blinds Example
+# Matter Simple Blinds Example
 
 This is a minimal example demonstrating how to create a Matter-compatible window covering device with lift control only. This example uses a single `onGoToLiftPercentage()` callback to handle all window covering lift changes, making it ideal for simple implementations.
 
@@ -55,7 +55,7 @@ Before uploading the sketch, configure the following:
 
 ## Building and Flashing
 
-1. Open the `MatterSimpleWidowsBlind.ino` sketch in the Arduino IDE.
+1. Open the `MatterSimpleWindowBlind.ino` sketch in the Arduino IDE.
 2. Select your ESP32 board from the **Tools > Board** menu.
 3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
 4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
@@ -66,7 +66,7 @@ Before uploading the sketch, configure the following:
 
 ```
 ========================================
-Matter Simple Window Blinds Example
+Matter Simple Blinds Example
 ========================================
 
 Connecting to your-ssid

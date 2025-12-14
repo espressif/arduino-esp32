@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Matter Simple Window Blinds Example
+// Matter Simple Blind Example
 // This is a minimal example that only controls Lift percentage using a single onGoToLiftPercentage() callback
 
 #include <Matter.h>
@@ -45,7 +45,7 @@ void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println("\n========================================");
-  Serial.println("Matter Simple Window Blinds Example");
+  Serial.println("Matter Simple Blinds Example");
   Serial.println("========================================\n");
 
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network

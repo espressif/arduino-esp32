@@ -219,7 +219,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Dimmable Plugin** - Creates a Matter-compatible dimmable plugin unit (power outlet with level control) device with state persistence for dimmable power control applications. `View Matter Dimmable Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDimmablePlugin>`_
 * **Matter Smart Button** - Creates a Matter-compatible smart button (generic switch) device that sends button click events to smart home ecosystems and triggers automations. `View Matter Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
 * **Matter Window Covering** - Creates a Matter-compatible window covering device with lift and tilt control (blinds, shades) with manual control using a physical button. `View Matter Window Covering code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWindowCovering>`_
-* **Matter Simple Window Blinds** - A minimal example that only controls lift percentage using a single onGoToLiftPercentage() callback. `View Matter Simple Window Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSimpleWidowsBlind>`_
+* **Matter Simple Blinds** - A minimal example that only controls lift percentage using a single onGoToLiftPercentage() callback. `View Matter Simple Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSimpleBlinds>`_
 
 **Advanced Examples:**
 
