@@ -13,7 +13,6 @@
 
 volatile int interruptCounter = 0;
 volatile bool interruptFlag = false;
-volatile unsigned long lastInterruptTime = 0;
 
 // Variables for interrupt with argument test
 volatile int argInterruptCounter = 0;
@@ -34,7 +33,6 @@ void waitForSyncAck(const String &token = "OK") {
 void setUp(void) {
   interruptCounter = 0;
   interruptFlag = false;
-  lastInterruptTime = 0;
   argInterruptCounter = 0;
   argInterruptFlag = false;
   receivedArg = 0;
@@ -43,22 +41,14 @@ void setUp(void) {
 void tearDown(void) {}
 
 void IRAM_ATTR buttonISR() {
-  unsigned long currentTime = millis();
-  if (currentTime - lastInterruptTime > 50) {
-    interruptCounter = interruptCounter + 1;
-    interruptFlag = true;
-    lastInterruptTime = currentTime;
-  }
+  interruptCounter = interruptCounter + 1;
+  interruptFlag = true;
 }
 
 void IRAM_ATTR buttonISRWithArg(void *arg) {
-  unsigned long currentTime = millis();
-  if (currentTime - lastInterruptTime > 50) {
-    argInterruptCounter = argInterruptCounter + 1;
-    argInterruptFlag = true;
-    receivedArg = *(int *)arg;
-    lastInterruptTime = currentTime;
-  }
+  argInterruptCounter = argInterruptCounter + 1;
+  argInterruptFlag = true;
+  receivedArg = *(int *)arg;
 }
 
 void test_read_basic(void) {
