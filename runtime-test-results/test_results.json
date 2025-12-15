@@ -22,7 +22,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -63,8 +63,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 51,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -796,5 +796,5 @@
       }
     }
   },
-  "generated_at": "2025-12-14T01:00:53.849657"
+  "generated_at": "2025-12-15T00:52:34.508550"
 }
