@@ -2,6 +2,10 @@
 
 set -e
 
+# Source centralized SoC configuration
+SCRIPTS_DIR_CONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR_CONFIG}/socs_config.sh"
+
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 
 function build {
@@ -89,15 +93,10 @@ if [ "$BUILD_LOG" -eq 1 ]; then
     echo "{\"boards\": [" > "$sizes_file"
 fi
 
-#build sketches for different targets
-build "esp32c5" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32p4" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c6" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32h2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32"   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+#build sketches for different targets (using centralized config)
+for target in "${BUILD_TEST_TARGETS[@]}"; do
+    build "$target" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+done
 
 if [ "$BUILD_LOG" -eq 1 ]; then
     #remove last comma from the last JSON object
