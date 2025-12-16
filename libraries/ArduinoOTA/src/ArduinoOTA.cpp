@@ -323,7 +323,7 @@ void ArduinoOTAClass::_runUpdate() {
 #ifdef UPDATE_SIGN
   // Install signature verification if enabled
   if (_sign) {
-    if (!Update.installSignature(_sign)) {
+    if (!_updater->installSignature(_sign)) {
       log_e("Failed to install signature verification");
       if (_error_callback) {
         _error_callback(OTA_BEGIN_ERROR);
