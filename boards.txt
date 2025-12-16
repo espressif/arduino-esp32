@@ -44315,7 +44315,7 @@ waveshare_esp32s3_touch_lcd_128.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
-waveshare_esp32_c6_zero.name=Waveshare ESP32-C6 Zero
+waveshare_esp32_c6_zero.name=Waveshare ESP32-C6-Zero
 
 waveshare_esp32_c6_zero.bootloader.tool=esptool_py
 waveshare_esp32_c6_zero.bootloader.tool.default=esptool_py
@@ -44364,10 +44364,10 @@ waveshare_esp32_c6_zero.menu.JTAGAdapter.bridge=ESP USB Bridge
 waveshare_esp32_c6_zero.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
 waveshare_esp32_c6_zero.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-waveshare_esp32_c6_zero.menu.CDCOnBoot.default=Disabled
-waveshare_esp32_c6_zero.menu.CDCOnBoot.default.build.cdc_on_boot=0
-waveshare_esp32_c6_zero.menu.CDCOnBoot.cdc=Enabled
-waveshare_esp32_c6_zero.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+waveshare_esp32_c6_zero.menu.CDCOnBoot.default=Enabled
+waveshare_esp32_c6_zero.menu.CDCOnBoot.default.build.cdc_on_boot=1
+waveshare_esp32_c6_zero.menu.CDCOnBoot.cdc=Disabled
+waveshare_esp32_c6_zero.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 waveshare_esp32_c6_zero.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 waveshare_esp32_c6_zero.menu.PartitionScheme.default.build.partitions=default
