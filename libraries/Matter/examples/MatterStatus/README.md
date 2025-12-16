@@ -164,7 +164,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 ## Code Structure
 
-- **`setup()`**: 
+- **`setup()`**:
   - Initializes hardware (LED)
   - Reports enabled features using capability query functions
   - Connects to WiFi (if needed and enabled)
@@ -172,7 +172,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
   - Starts Matter stack
   - Prints commissioning information
 
-- **`loop()`**: 
+- **`loop()`**:
   - Reports connection status every 10 seconds
   - All light control is handled via Matter callbacks
 
@@ -200,4 +200,3 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 ## License
 
 This example is licensed under the Apache License, Version 2.0.
-

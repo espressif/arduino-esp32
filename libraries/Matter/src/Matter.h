@@ -182,10 +182,10 @@ public:
 
   // Network and Commissioning Capability Queries
   // These methods check both hardware support (SOC capabilities) and Matter configuration
-  static bool isWiFiStationEnabled();        // Check if WiFi Station mode is supported and enabled
-  static bool isWiFiAccessPointEnabled();    // Check if WiFi AP mode is supported and enabled
-  static bool isThreadEnabled();             // Check if Thread network is supported and enabled
-  static bool isBLECommissioningEnabled();   // Check if BLE commissioning is supported and enabled
+  static bool isWiFiStationEnabled();       // Check if WiFi Station mode is supported and enabled
+  static bool isWiFiAccessPointEnabled();   // Check if WiFi AP mode is supported and enabled
+  static bool isThreadEnabled();            // Check if Thread network is supported and enabled
+  static bool isBLECommissioningEnabled();  // Check if BLE commissioning is supported and enabled
 
   static bool isDeviceCommissioned();
   static bool isWiFiConnected();

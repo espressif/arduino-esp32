@@ -179,11 +179,11 @@ void ArduinoMatter::begin() {
 bool ArduinoMatter::isWiFiStationEnabled() {
   // Check hardware support (SOC capabilities) AND Matter configuration
 #ifdef SOC_WIFI_SUPPORTED
-  #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-    return true;
-  #else
-    return false;
-  #endif
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  return true;
+#else
+  return false;
+#endif
 #else
   return false;
 #endif
@@ -192,11 +192,11 @@ bool ArduinoMatter::isWiFiStationEnabled() {
 bool ArduinoMatter::isWiFiAccessPointEnabled() {
   // Check hardware support (SOC capabilities) AND Matter configuration
 #ifdef SOC_WIFI_SUPPORTED
-  #if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
-    return true;
-  #else
-    return false;
-  #endif
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
+  return true;
+#else
+  return false;
+#endif
 #else
   return false;
 #endif
@@ -215,16 +215,15 @@ bool ArduinoMatter::isBLECommissioningEnabled() {
   // Check hardware support (SOC capabilities) AND Matter/ESP configuration
   // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
 #ifdef SOC_BLE_SUPPORTED
-  #if CONFIG_ENABLE_CHIPOBLE
-    return true;
-  #else
-    return false;
-  #endif
+#if CONFIG_ENABLE_CHIPOBLE
+  return true;
+#else
+  return false;
+#endif
 #else
   return false;
 #endif
 }
-
 
 bool ArduinoMatter::isDeviceCommissioned() {
   return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
