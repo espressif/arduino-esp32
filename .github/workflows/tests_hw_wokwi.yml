@@ -10,9 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  TESTS_BRANCH: "master" # Branch that will be checked out to run the tests
-
 jobs:
   get-artifacts:
     name: Get required artifacts
@@ -371,7 +368,7 @@ jobs:
         with:
           host: ${{ secrets.GITLAB_URL }}
           id: ${{ secrets.GITLAB_PROJECT_ID }}
-          ref: ${{ env.TESTS_BRANCH }}
+          ref: ${{ needs.get-artifacts.outputs.base || github.ref }}
           trigger_token: ${{ secrets.GITLAB_TRIGGER_TOKEN }}
           access_token: ${{ secrets.GITLAB_ACCESS_TOKEN }}
           download_artifacts: 'true'
@@ -383,7 +380,8 @@ jobs:
               "TEST_CHIPS":"${{ steps.prepare-variables.outputs.test_chips }}",
               "PIPELINE_ID":"${{ env.id }}",
               "BINARIES_RUN_ID":"${{ github.event.workflow_run.id }}",
-              "GITHUB_REPOSITORY":"${{ github.repository }}"
+              "GITHUB_REPOSITORY":"${{ github.repository }}",
+              "GITHUB_REF":"${{ needs.get-artifacts.outputs.base || github.ref }}"
             }
 
       - name: Process Downloaded Artifacts
