@@ -1,5 +1,5 @@
 {
-  "commit_sha": "b859bdf676171ffbba370985243d0035e44ed135",
+  "commit_sha": "6199914e602a400e0df5db95006f76b75b72d96e",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -158,7 +158,7 @@
       },
       "periman": {
         "esp32": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -168,7 +168,7 @@
           "errors": 0
         },
         "esp32c5": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -178,17 +178,22 @@
           "errors": 0
         },
         "esp32h2": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
-        "esp32s2": {
+        "esp32p4": {
           "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s2": {
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32s3": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         }
@@ -796,5 +801,5 @@
       }
     }
   },
-  "generated_at": "2025-12-16T01:18:17.134807"
+  "generated_at": "2025-12-16T03:58:39.405864"
 }
