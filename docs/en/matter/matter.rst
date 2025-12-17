@@ -39,7 +39,9 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 
 These settings are required for the following reasons:
 
+<!-- vale off -->
 * **Partition Scheme**: Matter firmware requires a large application partition (3MB) to accommodate the Matter stack and application code.
+<!-- vale on -->
 * **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
 
 Matter Protocol Overview
