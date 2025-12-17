@@ -45,5 +45,4 @@ static const uint8_t D10 = 10;
 static const uint8_t D11 = 20;
 static const uint8_t D12 = 21;
 
-
 #endif /* Pins_Arduino_h */
