@@ -24,14 +24,14 @@ This example demonstrates how to check enabled Matter features and connectivity 
 
 - Matter protocol implementation for an on/off light device
 - **Capability reporting**: Checks and reports enabled Matter features at startup
-  - `isWiFiStationEnabled()`: Checks if WiFi Station mode is supported and enabled
-  - `isWiFiAccessPointEnabled()`: Checks if WiFi AP mode is supported and enabled
+  - `isWiFiStationEnabled()`: Checks if Wi-Fi Station mode is supported and enabled
+  - `isWiFiAccessPointEnabled()`: Checks if Wi-Fi AP mode is supported and enabled
   - `isThreadEnabled()`: Checks if Thread network is supported and enabled
   - `isBLECommissioningEnabled()`: Checks if BLE commissioning is supported and enabled
 - **Connection status monitoring**: Reports connection status every 10 seconds
-  - `isWiFiConnected()`: Checks WiFi connection status (if WiFi Station is enabled)
+  - `isWiFiConnected()`: Checks Wi-Fi connection status (if Wi-Fi Station is enabled)
   - `isThreadConnected()`: Checks Thread connection status (if Thread is enabled)
-  - `isDeviceConnected()`: Checks overall device connectivity (WiFi or Thread)
+  - `isDeviceConnected()`: Checks overall device connectivity (Wi-Fi or Thread)
   - `isDeviceCommissioned()`: Checks if the device is commissioned to a Matter fabric
 - Simple on/off light control
 - Matter commissioning via QR code or manual pairing code
@@ -75,7 +75,9 @@ Before uploading the sketch, configure the following:
 
 1. Open the `MatterStatus.ino` sketch in the Arduino IDE.
 2. Select your ESP32 board from the **Tools > Board** menu.
+<!-- vale off -->
 3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+<!-- vale on -->
 4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
 5. Connect your ESP32 board to your computer via USB.
 6. Click the **Upload** button to compile and flash the sketch.
@@ -139,8 +141,8 @@ Device Commissioned: YES
 
 The example demonstrates the use of capability query functions that check both hardware support (SOC capabilities) and Matter configuration:
 
-- **`Matter.isWiFiStationEnabled()`**: Returns `true` if the device supports WiFi Station mode and it's enabled in Matter configuration
-- **`Matter.isWiFiAccessPointEnabled()`**: Returns `true` if the device supports WiFi AP mode and it's enabled in Matter configuration
+- **`Matter.isWiFiStationEnabled()`**: Returns `true` if the device supports Wi-Fi Station mode and it's enabled in Matter configuration
+- **`Matter.isWiFiAccessPointEnabled()`**: Returns `true` if the device supports Wi-Fi AP mode and it's enabled in Matter configuration
 - **`Matter.isThreadEnabled()`**: Returns `true` if the device supports Thread networking and it's enabled in Matter configuration
 - **`Matter.isBLECommissioningEnabled()`**: Returns `true` if the device supports BLE and BLE commissioning is enabled
 
@@ -153,9 +155,9 @@ These functions are useful for:
 
 The example periodically reports connection status every 10 seconds:
 
-- **`Matter.isWiFiConnected()`**: Returns `true` if WiFi Station is connected. If WiFi Station is not enabled, always returns `false`.
+- **`Matter.isWiFiConnected()`**: Returns `true` if Wi-Fi Station is connected. If Wi-Fi Station is not enabled, always returns `false`.
 - **`Matter.isThreadConnected()`**: Returns `true` if Thread is attached to a network. If Thread is not enabled, always returns `false`.
-- **`Matter.isDeviceConnected()`**: Returns `true` if the device is connected via WiFi or Thread (overall connectivity status)
+- **`Matter.isDeviceConnected()`**: Returns `true` if the device is connected via Wi-Fi or Thread (overall connectivity status)
 - **`Matter.isDeviceCommissioned()`**: Returns `true` if the device has been commissioned to a Matter fabric
 
 ### Smart Home Integration
@@ -167,7 +169,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 - **`setup()`**:
   - Initializes hardware (LED)
   - Reports enabled features using capability query functions
-  - Connects to WiFi (if needed and enabled)
+  - Connects to Wi-Fi (if needed and enabled)
   - Initializes On/Off Light endpoint
   - Starts Matter stack
   - Prints commissioning information

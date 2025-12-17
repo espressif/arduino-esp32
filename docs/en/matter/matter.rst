@@ -38,7 +38,7 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 These settings are required for the following reasons:
 
 * **Partition Scheme**: Matter firmware requires a large application partition (3MB) to accommodate the Matter stack and application code.
-* **Erase Flash**: Erasing flash is necessary to remove any leftover WiFi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
+* **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
 
 Matter Protocol Overview
 ************************
@@ -110,8 +110,8 @@ The ``Matter`` class provides the following key methods:
 * ``isWiFiConnected()``: Checks Wi-Fi connection status
 * ``isThreadConnected()``: Checks Thread connection status
 * ``isDeviceConnected()``: Checks overall device connectivity
-* ``isWiFiStationEnabled()``: Checks if WiFi Station mode is supported and enabled
-* ``isWiFiAccessPointEnabled()``: Checks if WiFi AP mode is supported and enabled
+* ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
+* ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
 * ``isThreadEnabled()``: Checks if Thread network is supported and enabled
 * ``isBLECommissioningEnabled()``: Checks if BLE commissioning is supported and enabled
 * ``decommission()``: Factory resets the device
