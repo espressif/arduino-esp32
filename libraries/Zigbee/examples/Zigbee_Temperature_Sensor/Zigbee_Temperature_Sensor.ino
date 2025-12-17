@@ -68,6 +68,9 @@ void setup() {
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
 
+  // Optional: Set default (initial) value for the temperature sensor to 10.0°C to match the minimum temperature measurement value
+  zbTempSensor.setDefaultValue(10.0);
+
   // Optional: Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 

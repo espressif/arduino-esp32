@@ -135,6 +135,9 @@ void setup() {
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
 
+  // Set default (initial) value for the temperature sensor to 10.0°C to match the minimum temperature measurement value (default value is 0.0°C)
+  zbTempSensor.setDefaultValue(10.0);
+
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
@@ -142,8 +145,8 @@ void setup() {
   // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) or zbTempSensor.setBatteryVoltage(voltage) anytime after Zigbee.begin()
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100, 35);
 
-  // Add humidity cluster to the temperature sensor device with min, max and tolerance values
-  zbTempSensor.addHumiditySensor(0, 100, 1);
+  // Add humidity cluster to the temperature sensor device with min, max, tolerance and default values
+  zbTempSensor.addHumiditySensor(0, 100, 1, 0.0);
 
   // Set callback for default response to handle status of reported data, there are 2 options.
 
