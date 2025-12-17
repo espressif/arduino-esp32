@@ -21,9 +21,7 @@ Building and Flashing Matter Examples
 
 Before uploading any Matter example sketch, it is necessary to configure the Arduino IDE with the following settings:
 
-<!-- vale off -->
-1. **Partition Scheme**: Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
-<!-- vale on -->
+1. **Partition Scheme**: Select **"Huge APP (3 MB No OTA / 1 MB SPIFFS)"** from **Tools > Partition Scheme** menu.
 
   .. figure:: ../../_static/matter_partition_scheme.png
       :align: center
