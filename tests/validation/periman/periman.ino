@@ -216,7 +216,7 @@ void adc_continuous_test(void) {
 #if SOC_ADC_SUPPORTED
   // Now test manual deinit path
   setup_test("ADC_Continuous_deinit", ADC1_DEFAULT, ADC2_DEFAULT);
-  test_executed = false;  // Skip the pinMode test in teardown
+  test_executed = false;        // Skip the pinMode test in teardown
   adc_conversion_done = false;  // Reset flag
 
   analogContinuousSetWidth(12);
