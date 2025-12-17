@@ -139,7 +139,7 @@ Device Commissioned: YES
 
 ### Capability Queries
 
-The example demonstrates the use of capability query functions that check both hardware support (SOC capabilities) and Matter configuration:
+The example demonstrates the use of capability query functions that check both hardware support (SoC capabilities) and Matter configuration:
 
 - **`Matter.isWiFiStationEnabled()`**: Returns `true` if the device supports Wi-Fi Station mode and it's enabled in Matter configuration
 - **`Matter.isWiFiAccessPointEnabled()`**: Returns `true` if the device supports Wi-Fi AP mode and it's enabled in Matter configuration
