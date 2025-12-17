@@ -30,6 +30,7 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
       :figclass: align-center
 <!-- vale on -->
 
+
 2. **Erase Flash**: Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
 
   .. figure:: ../../_static/matter_erase_flash.png
