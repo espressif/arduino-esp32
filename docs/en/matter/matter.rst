@@ -21,15 +21,12 @@ Building and Flashing Matter Examples
 
 Before uploading any Matter example sketch, it is necessary to configure the Arduino IDE with the following settings:
 
-<!-- vale off -->
-1. **Partition Scheme**: Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+1. **Partition Scheme**: Select **``"Huge APP (3MB No OTA/1MB SPIFFS)"``** from **Tools > Partition Scheme** menu.
 
   .. figure:: ../../_static/matter_partition_scheme.png
       :align: center
-      :alt: "Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)" Arduino IDE menu option
+      :alt: "Partition Scheme: Huge APP (3 MB No OTA / 1 MB SPIFFS)" Arduino IDE menu option
       :figclass: align-center
-
-<!-- vale on -->
 
 2. **Erase Flash**: Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
 
@@ -40,9 +37,7 @@ Before uploading any Matter example sketch, it is necessary to configure the Ard
 
 These settings are required for the following reasons:
 
-<!-- vale off -->
-* **Partition Scheme**: Matter firmware requires a large application partition (3MB) to accommodate the Matter stack and application code.
-<!-- vale on -->
+* **Partition Scheme**: Matter firmware requires a large application partition (3 MB) to accommodate the Matter stack and application code.
 * **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
 
 Matter Protocol Overview
