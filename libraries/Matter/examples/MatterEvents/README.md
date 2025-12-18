@@ -11,15 +11,15 @@ The application showcases Matter event handling, commissioning, and automatic de
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S3 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-C3 | ✅ | ❌ | ✅ | Fully supported |
-| ESP32-C5 | ✅ | ❌ | ✅ | Fully supported |
+| ESP32-C5 | ❌ | ✅ | ✅ | Supported (Thread only) |
 | ESP32-C6 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-H2 | ❌ | ✅ | ✅ | Supported (Thread only) |
 
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been pre compiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
 ## Features
 
