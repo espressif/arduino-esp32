@@ -58,6 +58,10 @@ public:
   // Set the pressure value in 1 hPa
   bool setPressure(int16_t value);
 
+  // Set the default (initial) value for the pressure sensor in 1 hPa
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(int16_t defaultValue);
+
   // Set the min and max value for the pressure sensor in 1 hPa
   bool setMinMaxValue(int16_t min, int16_t max);
 
