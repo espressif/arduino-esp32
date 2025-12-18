@@ -311,4 +311,3 @@ For issues and questions:
 ## License
 
 This library is part of the Arduino-ESP32 project and is licensed under the Apache License 2.0.
-

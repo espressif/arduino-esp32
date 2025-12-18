@@ -56,9 +56,7 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
     case HASH_SHA256: md_type = MBEDTLS_MD_SHA256; break;
     case HASH_SHA384: md_type = MBEDTLS_MD_SHA384; break;
     case HASH_SHA512: md_type = MBEDTLS_MD_SHA512; break;
-    default:
-      log_e("Invalid hash type");
-      return false;
+    default:          log_e("Invalid hash type"); return false;
   }
 
   // Get hash bytes from the builder
@@ -119,9 +117,7 @@ bool UpdaterECDSAVerifier::verify(SHA2Builder *hash, const void *signature, size
     case HASH_SHA256: md_type = MBEDTLS_MD_SHA256; break;
     case HASH_SHA384: md_type = MBEDTLS_MD_SHA384; break;
     case HASH_SHA512: md_type = MBEDTLS_MD_SHA512; break;
-    default:
-      log_e("Invalid hash type");
-      return false;
+    default:          log_e("Invalid hash type"); return false;
   }
 
   // Get hash bytes from the builder

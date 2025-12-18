@@ -147,7 +147,10 @@ ArduinoOTAClass &ArduinoOTAClass::setSignature(UpdaterVerifyClass *sign) {
   if (_state == OTA_IDLE && sign) {
     _sign = sign;
     int hashType = sign->getHashType();
-    [[maybe_unused]] const char *hashName = (hashType == HASH_SHA256) ? "SHA-256" : (hashType == HASH_SHA384) ? "SHA-384" : "SHA-512";
+    [[maybe_unused]]
+    const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                           : (hashType == HASH_SHA384) ? "SHA-384"
+                                                       : "SHA-512";
     log_i("Signature verification enabled for ArduinoOTA (hash: %s)", hashName);
   }
   return *this;

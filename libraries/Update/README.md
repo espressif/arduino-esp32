@@ -429,4 +429,3 @@ https://github.com/espressif/arduino-esp32
 - Documentation: https://docs.espressif.com/
 - Forum: https://esp32.com/
 - GitHub Issues: https://github.com/espressif/arduino-esp32/issues
-

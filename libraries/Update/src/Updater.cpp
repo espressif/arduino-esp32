@@ -170,7 +170,10 @@ bool UpdateClass::installSignature(UpdaterVerifyClass *sign) {
   _hashType = hashType;
   _signatureSize = 512;  // Fixed signature size (padded to 512 bytes)
 
-  [[maybe_unused]] const char *hashName = (hashType == HASH_SHA256) ? "SHA-256" : (hashType == HASH_SHA384) ? "SHA-384" : "SHA-512";
+  [[maybe_unused]]
+  const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                         : (hashType == HASH_SHA384) ? "SHA-384"
+                                                     : "SHA-512";
   log_i("Signature verification installed (hash: %s, signature size: %u bytes)", hashName, _signatureSize);
   return true;
 }
@@ -197,18 +200,10 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   if (_sign && _hashType >= 0) {
     // Create the appropriate hash builder based on hashType
     switch (_hashType) {
-      case HASH_SHA256:
-        _hash = new SHA256Builder();
-        break;
-      case HASH_SHA384:
-        _hash = new SHA384Builder();
-        break;
-      case HASH_SHA512:
-        _hash = new SHA512Builder();
-        break;
-      default:
-        log_e("Invalid hash type");
-        return false;
+      case HASH_SHA256: _hash = new SHA256Builder(); break;
+      case HASH_SHA384: _hash = new SHA384Builder(); break;
+      case HASH_SHA512: _hash = new SHA512Builder(); break;
+      default:          log_e("Invalid hash type"); return false;
     }
 
     if (_hash) {

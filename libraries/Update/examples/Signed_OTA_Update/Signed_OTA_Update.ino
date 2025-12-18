@@ -53,7 +53,7 @@ const char *firmwareUrl = "http://your-server.com/firmware_signed.bin";
 #include "public_key.h"
 
 // Uncomment the key type you're using:
-#define USE_RSA   // RSA signature verification
+#define USE_RSA  // RSA signature verification
 //#define USE_ECDSA // ECDSA signature verification
 
 // Uncomment the hash algorithm you're using (must match the one used for signing):
@@ -229,4 +229,3 @@ void loop() {
   // Nothing to do here
   delay(1000);
 }
-
