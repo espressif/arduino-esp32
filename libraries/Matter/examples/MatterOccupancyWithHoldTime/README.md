@@ -1,7 +1,7 @@
-# Matter Occupancy Sensor Example
+# Matter Occupancy Sensor with HoldTime Example
 
-This example demonstrates how to create a Matter-compatible occupancy sensor device using an ESP32 SoC microcontroller.\
-The application showcases Matter commissioning, sensor data reporting to smart home ecosystems, and automatic simulation of occupancy state changes.
+This example demonstrates how to create a Matter-compatible occupancy sensor device with HoldTime functionality using an ESP32 SoC microcontroller.\
+The application showcases Matter commissioning, sensor data reporting to smart home ecosystems, automatic simulation of occupancy state changes, and HoldTime configuration with persistence across reboots.
 
 ## Supported Targets
 
@@ -23,10 +23,14 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 ## Features
 
-- Matter protocol implementation for an occupancy sensor device
+- Matter protocol implementation for an occupancy sensor device with HoldTime support
 - Support for both Wi-Fi and Thread(*) connectivity
 - Occupancy state reporting (Occupied/Unoccupied)
-- Automatic simulation of occupancy state changes every 2 minutes
+- HoldTime attribute for configuring how long the sensor holds the "occupied" state
+- HoldTimeLimits (min, max, default) for validation and controller guidance
+- HoldTime persistence across reboots using Preferences (NVS)
+- Automatic simulation of occupancy state changes every 2 minutes with HoldTime expiration
+- HoldTime change callback for real-time updates from Matter controllers
 - Button control for factory reset (decommission)
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -63,13 +67,21 @@ Before uploading the sketch, configure the following:
    const char *password = "your-password"; // Change to your Wi-Fi password
    ```
 
-2. **Button pin configuration** (optional):
+2. **HoldTime configuration** (optional):
+   The example uses default HoldTime limits. You can customize them:
+   ```cpp
+   const uint16_t HOLD_TIME_MIN = 0;        // Minimum HoldTime in seconds
+   const uint16_t HOLD_TIME_MAX = 3600;     // Maximum HoldTime in seconds (1 hour)
+   const uint16_t HOLD_TIME_DEFAULT = 30;   // Default HoldTime in seconds
+   ```
+
+3. **Button pin configuration** (optional):
    By default, the `BOOT` button (GPIO 0) is used for factory reset. You can change this to a different pin if needed.
    ```cpp
    const uint8_t buttonPin = BOOT_PIN;  // Set your button pin here
    ```
 
-3. **PIR sensor pin configuration** (optional, if using a real PIR sensor):
+4. **PIR sensor pin configuration** (optional, if using a real PIR sensor):
    ```cpp
    const uint8_t pirPin = 4;  // Set your PIR sensor pin here
    ```
@@ -77,7 +89,7 @@ Before uploading the sketch, configure the following:
 
 ## Building and Flashing
 
-1. Open the `MatterOccupancySensor.ino` sketch in the Arduino IDE.
+1. Open the `MatterOccupancyWithHoldTime.ino` sketch in the Arduino IDE.
 2. Select your ESP32 board from the **Tools > Board** menu.
 <!-- vale off -->
 3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
@@ -96,6 +108,11 @@ Connecting to your-wifi-ssid
 Wi-Fi connected
 IP address: 192.168.1.100
 
+Restored HoldTime from Preferences: 30 seconds
+HoldTimeLimits set: Min=0, Max=3600, Default=30 seconds
+HoldTime set to: 30 seconds
+Initial HoldTime: 30 seconds
+
 Matter Node is not commissioned yet.
 Initiate the device discovery in your Matter environment.
 Commission it to your Matter hub with the manual pairing code or QR code
@@ -105,9 +122,11 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network. Ready for use.
+Occupancy detected! Holding state for 30 seconds (HoldTime)
+HoldTime expired. Switching to unoccupied state.
 ```
 
-After commissioning, the occupancy sensor will automatically toggle between occupied and unoccupied states every 2 minutes, and the Matter controller will receive these state updates.
+After commissioning, the occupancy sensor will automatically simulate occupancy detections every 2 minutes. When occupancy is detected, the sensor holds the "occupied" state for the configured HoldTime duration (default: 30 seconds). After HoldTime expires, it automatically switches to "unoccupied" state. The Matter controller will receive these state updates and can also configure the HoldTime value.
 
 ## Using the Device
 
@@ -119,13 +138,22 @@ The user button (BOOT button by default) provides factory reset functionality:
 
 ### Sensor Simulation
 
-The example includes a simulated occupancy sensor that:
+The example includes a simulated occupancy sensor with HoldTime support that:
 
 - Starts in the unoccupied state (false)
-- Toggles between occupied (true) and unoccupied (false) every 2 minutes
+- Simulates occupancy detection every 2 minutes
+- When occupancy is detected, holds the "occupied" state for the HoldTime duration
+- After HoldTime expires, automatically switches to "unoccupied" state
+- If new detections occur while occupied, the HoldTime timer resets (continuous occupancy)
 - Updates the Matter attribute automatically
 
-To use a real occupancy sensor, replace the `simulatedHWOccupancySensor()` function with your sensor library code.
+**HoldTime Behavior:**
+- The HoldTime value determines how long the sensor maintains the "occupied" state after the last detection
+- HoldTime can be configured via Matter Controller (within the min/max limits)
+- HoldTime value is persisted to Preferences and restored on reboot
+- When HoldTime expires, the sensor transitions to "unoccupied" even if no new detection occurs
+
+To use a real occupancy sensor, replace the `simulatedHWOccupancySensor()` function with your sensor library code. The HoldTime functionality will work the same way - the sensor will hold the occupied state for the configured HoldTime duration after motion is no longer detected.
 
 ### PIR Sensor Integration Example
 
@@ -221,6 +249,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 5. Follow the prompts to complete setup
 6. The device will appear as an occupancy sensor in your Home app
 7. You can monitor the occupancy state and set up automations based on occupancy (e.g., turn on lights when occupied)
+8. You can configure the HoldTime value through the device settings (if supported by your Home app version)
 
 #### Amazon Alexa
 
@@ -242,19 +271,42 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 ## Code Structure
 
-The MatterOccupancySensor example consists of the following main components:
+The MatterOccupancyWithHoldTime example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Occupancy Sensor endpoint with initial state (unoccupied), and waits for Matter commissioning.
+1. **`setup()`**:
+   - Initializes hardware (button), configures Wi-Fi (if needed)
+   - Initializes Preferences and restores stored HoldTime value
+   - Registers HoldTime change callback for persistence
+   - Sets up the Matter Occupancy Sensor endpoint with initial state (unoccupied)
+   - Calls `Matter.begin()` to start the Matter stack
+   - Sets HoldTimeLimits (min, max, default) after Matter.begin()
+   - Sets initial HoldTime value (from Preferences or default)
+   - Waits for Matter commissioning
 
-2. **`loop()`**: Handles button input for factory reset, continuously checks the simulated occupancy sensor and updates the Matter attribute, and allows the Matter stack to process events.
+2. **`loop()`**:
+   - Handles button input for factory reset
+   - Continuously checks the simulated occupancy sensor and updates the Matter attribute
+   - Allows the Matter stack to process events
 
-3. **`simulatedHWOccupancySensor()`**: Simulates a hardware occupancy sensor by toggling the occupancy state every 2 minutes. Replace this function with your actual sensor reading code.
+3. **`simulatedHWOccupancySensor()`**:
+   - Simulates a hardware occupancy sensor with HoldTime support
+   - Detects occupancy every 2 minutes
+   - Holds the "occupied" state for HoldTime seconds after detection
+   - Automatically transitions to "unoccupied" when HoldTime expires
+   - Resets HoldTime timer on new detections while occupied (continuous occupancy)
+   - Replace this function with your actual sensor reading code
+
+4. **HoldTime Callback**:
+   - `onHoldTimeChange()` callback persists HoldTime changes to Preferences
+   - Ensures HoldTime value is maintained across device reboots
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Occupancy readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
-- **State not changing**: The simulated sensor toggles every 2 minutes (120000 ms). If you're using a real sensor, ensure it's properly connected and reading correctly
+- **State not changing**: The simulated sensor detects occupancy every 2 minutes (120000 ms). The state will hold for HoldTime seconds after detection. If you're using a real sensor, ensure it's properly connected and reading correctly
+- **HoldTime not persisting**: Verify that Preferences is properly initialized and the callback is saving the value. Check Serial Monitor for "HoldTime changed" messages
+- **HoldTime not working**: Ensure `setHoldTimeLimits()` and `setHoldTime()` are called after `Matter.begin()`. Check Serial Monitor for error messages
 - **PIR sensor not detecting motion**:
   - Verify PIR sensor wiring (VCC, GND, OUT connections)
   - Check if PIR sensor requires 5 V or 3.3 V power (some PIR sensors need 5 V)
