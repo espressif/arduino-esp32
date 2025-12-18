@@ -69,6 +69,56 @@ uint32_t button_time_stamp = 0;                // debouncing control
 bool button_state = false;                     // false = released | true = pressed
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
+// Simulated Occupancy Sensor with HoldTime support
+// When occupancy is detected, it holds the "occupied" state for HoldTime seconds
+// After HoldTime expires, it automatically switches to "unoccupied"
+// 
+// Behavior for different HoldTime vs detectionInterval relationships:
+// - holdTime_ms < detectionInterval: State switches to unoccupied after HoldTime, then waits for next detection
+// - holdTime_ms == detectionInterval: If detections keep coming, timer resets (continuous occupancy)
+// - holdTime_ms > detectionInterval: If detections keep coming, timer resets (continuous occupancy)
+//   If detections stop, HoldTime expires after the last detection
+bool simulatedHWOccupancySensor() {
+  static bool occupancyState = false;
+  static uint32_t lastDetectionTime = 0;
+  static uint32_t lastDetectionEvent = millis();
+  const uint32_t detectionInterval = 120000;  // Simulate detection every 2 minutes
+  
+  // Get current HoldTime from the sensor (can be changed by Matter Controller)
+  uint32_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
+  
+  // Check HoldTime expiration FIRST (before processing new detections)
+  // This ensures HoldTime can expire even if a detection occurs in the same iteration
+  if (occupancyState && (millis() - lastDetectionTime > holdTime_ms)) {
+    occupancyState = false;
+    // Reset detection interval counter so next detection can happen immediately
+    // This makes the simulation more responsive after the room becomes unoccupied
+    lastDetectionEvent = millis();
+    Serial.println("HoldTime expired. Switching to unoccupied state.");
+  }
+  
+  // Simulate periodic occupancy detection (e.g., motion detected)
+  // Check this AFTER HoldTime expiration so new detections can immediately re-trigger occupancy
+  if (millis() - lastDetectionEvent > detectionInterval) {
+    // New detection event occurred
+    lastDetectionEvent = millis();
+    
+    if (!occupancyState) {
+      // Transition from unoccupied to occupied - start hold timer
+      occupancyState = true;
+      lastDetectionTime = millis();
+      Serial.printf("Occupancy detected! Holding state for %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
+    } else {
+      // Already occupied - new detection extends the hold period by resetting the timer
+      // This simulates continuous occupancy (person still present)
+      lastDetectionTime = millis();
+      Serial.printf("Occupancy still detected. Resetting hold timer to %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
+    }
+  }
+  
+  return occupancyState;
+}
+
 void setup() {
   // Initialize the USER BUTTON (Boot button) that will be used to decommission the Matter Node
   pinMode(buttonPin, INPUT_PULLUP);
@@ -152,57 +202,6 @@ void setup() {
     }
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
   }
-}
-
-  // Simulated Occupancy Sensor with HoldTime support
-  // When occupancy is detected, it holds the "occupied" state for HoldTime seconds
-  // After HoldTime expires, it automatically switches to "unoccupied"
-  // 
-  // Behavior for different HoldTime vs detectionInterval relationships:
-  // - holdTime_ms < detectionInterval: State switches to unoccupied after HoldTime, then waits for next detection
-  // - holdTime_ms == detectionInterval: If detections keep coming, timer resets (continuous occupancy)
-  // - holdTime_ms > detectionInterval: If detections keep coming, timer resets (continuous occupancy)
-  //   If detections stop, HoldTime expires after the last detection
-  bool simulatedHWOccupancySensor() {
-  
-  static bool occupancyState = false;
-  static uint32_t lastDetectionTime = 0;
-  static uint32_t lastDetectionEvent = millis();
-  const uint32_t detectionInterval = 120000;  // Simulate detection every 2 minutes
-  
-  // Get current HoldTime from the sensor (can be changed by Matter Controller)
-  uint32_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
-  
-  // Check HoldTime expiration FIRST (before processing new detections)
-  // This ensures HoldTime can expire even if a detection occurs in the same iteration
-  if (occupancyState && (millis() - lastDetectionTime > holdTime_ms)) {
-    occupancyState = false;
-    // Reset detection interval counter so next detection can happen immediately
-    // This makes the simulation more responsive after the room becomes unoccupied
-    lastDetectionEvent = millis();
-    Serial.println("HoldTime expired. Switching to unoccupied state.");
-  }
-  
-  // Simulate periodic occupancy detection (e.g., motion detected)
-  // Check this AFTER HoldTime expiration so new detections can immediately re-trigger occupancy
-  if (millis() - lastDetectionEvent > detectionInterval) {
-    // New detection event occurred
-    lastDetectionEvent = millis();
-    
-    if (!occupancyState) {
-      // Transition from unoccupied to occupied - start hold timer
-      occupancyState = true;
-      lastDetectionTime = millis();
-      Serial.printf("Occupancy detected! Holding state for %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
-    } else {
-      // Already occupied - new detection extends the hold period by resetting the timer
-      // This simulates continuous occupancy (person still present)
-      lastDetectionTime = millis();
-      Serial.printf("Occupancy still detected. Resetting hold timer to %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
-    }
-  }
-  
-  return occupancyState;
 }
 
 void loop() {
