@@ -1,4 +1,4 @@
-# Matter Simple Window Blinds Example
+# Matter Simple Blinds Example
 
 This is a minimal example demonstrating how to create a Matter-compatible window covering device with lift control only. This example uses a single `onGoToLiftPercentage()` callback to handle all window covering lift changes, making it ideal for simple implementations.
 
@@ -53,12 +53,23 @@ Before uploading the sketch, configure the following:
    const char *password = "your-password";
    ```
 
+## Building and Flashing
+
+1. Open the `MatterSimpleBlinds.ino` sketch in the Arduino IDE.
+2. Select your ESP32 board from the **Tools > Board** menu.
+<!-- vale off -->
+3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+<!-- vale on -->
+4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+5. Connect your ESP32 board to your computer via USB.
+6. Click the **Upload** button to compile and flash the sketch.
+
 ## Expected Output
 
 ```
-========================================
-Matter Simple Window Blinds Example
-========================================
+============================
+Matter Simple Blinds Example
+============================
 
 Connecting to your-ssid
 WiFi connected
@@ -87,7 +98,7 @@ Window Covering change request: Lift=50%
 
 ## Code Structure
 
-- **`onBlindLift()`**: Callback function that handles window covering lift changes. This is registered with `WindowBlinds.onGoToLiftPercentage()` and is triggered when `TargetPositionLiftPercent100ths` changes. The callback receives the target lift percentage (0-100%).
+- **`onBlindsLift()`**: Callback function that handles window covering lift changes. This is registered with `WindowBlinds.onGoToLiftPercentage()` and is triggered when `TargetPositionLiftPercent100ths` changes. The callback receives the target lift percentage (0-100%).
 - **`setup()`**: Initializes Wi-Fi (if needed), Window Covering endpoint with `ROLLERSHADE` type, registers the callback, and starts Matter.
 - **`loop()`**: Empty - all control is handled via Matter callbacks.
 
@@ -95,10 +106,10 @@ Window Covering change request: Lift=50%
 
 ### Adding Motor Control
 
-In the `onBlindLift()` callback, replace the simulation code with actual motor control:
+In the `onBlindsLift()` callback, replace the simulation code with actual motor control:
 
 ```cpp
-bool onBlindLift(uint8_t liftPercent) {
+bool onBlindsLift(uint8_t liftPercent) {
   Serial.printf("Moving window covering to %d%%\r\n", liftPercent);
 
   // Here you would control your actual motor/actuator
@@ -122,7 +133,7 @@ bool onBlindLift(uint8_t liftPercent) {
 
 3. **Commands not working**: Ensure the callback returns `true` to accept the command. If it returns `false`, the command will be rejected.
 
-4. **Motor not responding**: Replace the simulation code in `onBlindLift()` with your actual motor control implementation. Remember to update `CurrentPosition` and set `OperationalState` to `STALL` when movement is complete.
+4. **Motor not responding**: Replace the simulation code in `onBlindsLift()` with your actual motor control implementation. Remember to update `CurrentPosition` and set `OperationalState` to `STALL` when movement is complete.
 
 ## Notes
 

@@ -16,6 +16,30 @@ The Matter library provides support for creating Matter-compatible devices inclu
 
 The Matter library is built on top of `ESP Matter SDK <https://github.com/espressif/esp-matter>`_ and provides a high-level Arduino-style interface for creating Matter devices.
 
+Building and Flashing Matter Examples
+--------------------------------------
+
+Before uploading any Matter example sketch, it is necessary to configure the Arduino IDE with the following settings:
+
+1. **Partition Scheme**: Select **"Huge APP (3 MB No OTA / 1 MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+
+  .. figure:: ../../_static/matter_partition_scheme.png
+      :align: center
+      :alt: "Partition Scheme: Huge APP (3 MB No OTA / 1 MB SPIFFS)" Arduino IDE menu option
+      :figclass: align-center
+
+2. **Erase Flash**: Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+
+  .. figure:: ../../_static/matter_erase_flash.png
+      :align: center
+      :alt: "Erase All Flash Before Sketch Upload: Enabled" Arduino IDE menu option
+      :figclass: align-center
+
+These settings are required for the following reasons:
+
+* **Partition Scheme**: Matter firmware requires a large application partition (3 MB) to accommodate the Matter stack and application code.
+* **Erase Flash**: Erasing flash is necessary to remove any leftover Wi-Fi or Matter configuration from the NVS (Non-Volatile Storage) partition. Without erasing, previous network credentials, Matter fabric information, or device commissioning data may interfere with the new firmware, causing commissioning failures or connectivity issues.
+
 Matter Protocol Overview
 ************************
 
@@ -83,9 +107,13 @@ The ``Matter`` class provides the following key methods:
 
 * ``begin()``: Initializes the Matter stack
 * ``isDeviceCommissioned()``: Checks if the device is commissioned
-* ``isWi-FiConnected()``: Checks Wi-Fi connection status (if Wi-Fi is enabled)
-* ``isThreadConnected()``: Checks Thread connection status (if Thread is enabled)
+* ``isWiFiConnected()``: Checks Wi-Fi connection status
+* ``isThreadConnected()``: Checks Thread connection status
 * ``isDeviceConnected()``: Checks overall device connectivity
+* ``isWiFiStationEnabled()``: Checks if Wi-Fi Station mode is supported and enabled
+* ``isWiFiAccessPointEnabled()``: Checks if Wi-Fi AP mode is supported and enabled
+* ``isThreadEnabled()``: Checks if Thread network is supported and enabled
+* ``isBLECommissioningEnabled()``: Checks if BLE commissioning is supported and enabled
 * ``decommission()``: Factory resets the device
 * ``getManualPairingCode()``: Gets the manual pairing code for commissioning
 * ``getOnboardingQRCodeUrl()``: Gets the QR code URL for commissioning
@@ -147,6 +175,56 @@ The library provides specialized endpoint classes for different device types. Ea
     :glob:
 
     ep_*
+
+Matter Examples
+---------------
+
+The Matter library includes a comprehensive set of examples demonstrating various device types and use cases. All examples are available in the `ESP Arduino GitHub repository <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples>`_.
+
+**Basic Examples:**
+
+* **Matter Minimum** - The smallest code required to create a Matter-compatible device. Ideal starting point for understanding Matter basics. `View Matter Minimum code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterMinimum>`_
+* **Matter Status** - Demonstrates how to check enabled Matter features and connectivity status. Implements a basic on/off light and periodically reports capability and connection status. `View Matter Status code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterStatus>`_
+* **Matter Events** - Shows how to monitor and handle Matter events. Provides a comprehensive view of all Matter events during device operation. `View Matter Events code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEvents>`_
+* **Matter Commission Test** - Tests Matter commissioning functionality with automatic decommissioning after a 30-second delay for continuous testing cycles. `View Matter Commission Test code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterCommissionTest>`_
+
+**Lighting Examples:**
+
+* **Matter On/Off Light** - Creates a Matter-compatible on/off light device with commissioning, device control via smart home ecosystems, and manual control using a physical button with state persistence. `View Matter On/Off Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnOffLight>`_
+* **Matter Dimmable Light** - Creates a Matter-compatible dimmable light device with brightness control. `View Matter Dimmable Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDimmableLight>`_
+* **Matter Color Temperature Light** - Creates a Matter-compatible color temperature light device with adjustable color temperature control. `View Matter Color Temperature Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureLight>`_
+* **Matter Color Light** - Creates a Matter-compatible color light device with RGB color control (HSV color model). `View Matter Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterColorLight>`_
+* **Matter Enhanced Color Light** - Creates a Matter-compatible enhanced color light with color temperature and brightness control. `View Matter Enhanced Color Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedColorLight>`_
+* **Matter Composed Lights** - Creates a Matter node with multiple light endpoints (On/Off Light, Dimmable Light, and Color Light) in a single node. `View Matter Composed Lights code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterComposedLights>`_
+* **Matter On Identify** - Implements the Matter Identify cluster callback for an on/off light device, making the LED blink when the device is identified from a Matter app. `View Matter On Identify code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnIdentify>`_
+
+**Sensor Examples:**
+
+* **Matter Temperature Sensor** - Creates a Matter-compatible temperature sensor device with sensor data reporting to smart home ecosystems. `View Matter Temperature Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureSensor>`_
+* **Matter Humidity Sensor** - Creates a Matter-compatible humidity sensor device with sensor data reporting. `View Matter Humidity Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterHumiditySensor>`_
+* **Matter Pressure Sensor** - Creates a Matter-compatible pressure sensor device with automatic simulation of pressure readings. `View Matter Pressure Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterPressureSensor>`_
+* **Matter Contact Sensor** - Creates a Matter-compatible contact sensor device (open/closed state). `View Matter Contact Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterContactSensor>`_
+* **Matter Occupancy Sensor** - Creates a Matter-compatible occupancy sensor device with automatic simulation of occupancy state changes. `View Matter Occupancy Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOccupancySensor>`_
+* **Matter Occupancy Sensor with HoldTime** - Creates a Matter-compatible occupancy sensor device with HoldTime functionality, automatic simulation of occupancy state changes, HoldTime configuration with persistence across reboots, and HoldTime change callback for real-time updates from Matter controllers. `View Matter Occupancy Sensor with HoldTime code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOccupancyWithHoldTime>`_
+* **Matter Water Leak Detector** - Creates a Matter-compatible water leak detector device with automatic simulation of water leak detection state changes. `View Matter Water Leak Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterLeakDetector>`_
+* **Matter Water Freeze Detector** - Creates a Matter-compatible water freeze detector device with automatic simulation of water freeze detection state changes. `View Matter Water Freeze Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterFreezeDetector>`_
+* **Matter Rain Sensor** - Creates a Matter-compatible rain sensor device with automatic simulation of rain detection state changes. `View Matter Rain Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterRainSensor>`_
+
+**Control Examples:**
+
+* **Matter Fan** - Creates a Matter-compatible fan device with speed and mode control. `View Matter Fan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterFan>`_
+* **Matter Thermostat** - Creates a Matter-compatible thermostat device with temperature setpoint management and simulated heating/cooling systems with automatic temperature regulation. `View Matter Thermostat code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterThermostat>`_
+* **Matter Temperature Controlled Cabinet** - Creates a Matter-compatible temperature controlled cabinet device with precise temperature setpoint control with min/max limits (temperature_number mode). `View Matter Temperature Controlled Cabinet code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureControlledCabinet>`_
+* **Matter Temperature Controlled Cabinet Levels** - Creates a Matter-compatible temperature controlled cabinet device using predefined temperature levels (temperature_level mode). `View Matter Temperature Controlled Cabinet Levels code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterTemperatureControlledCabinetLevels>`_
+* **Matter On/Off Plugin** - Creates a Matter-compatible on/off plugin unit (power relay) device with state persistence for power control applications. `View Matter On/Off Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterOnOffPlugin>`_
+* **Matter Dimmable Plugin** - Creates a Matter-compatible dimmable plugin unit (power outlet with level control) device with state persistence for dimmable power control applications. `View Matter Dimmable Plugin code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterDimmablePlugin>`_
+* **Matter Smart Button** - Creates a Matter-compatible smart button (generic switch) device that sends button click events to smart home ecosystems and triggers automations. `View Matter Smart Button code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSmartButton>`_
+* **Matter Window Covering** - Creates a Matter-compatible window covering device with lift and tilt control (blinds, shades) with manual control using a physical button. `View Matter Window Covering code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWindowCovering>`_
+* **Matter Simple Blinds** - A minimal example that only controls lift percentage using a single onGoToLiftPercentage() callback. `View Matter Simple Blinds code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterSimpleBlinds>`_
+
+**Advanced Examples:**
+
+* **Matter Lambda Single Callback Many Endpoints** - Demonstrates how to create multiple Matter endpoints in a single node using a shared lambda function callback with capture for efficient callback handling. `View Matter Lambda Single Callback Many Endpoints code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterLambdaSingleCallbackManyEPs>`_
 
 Common Problems and Issues
 --------------------------

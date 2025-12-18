@@ -175,31 +175,70 @@ void ArduinoMatter::begin() {
   }
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-bool ArduinoMatter::isThreadConnected() {
-  return false;  // Thread Network TBD
-}
+// Network and Commissioning Capability Queries
+bool ArduinoMatter::isWiFiStationEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  return true;
+#else
+  return false;
 #endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isWiFiAccessPointEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isThreadEnabled() {
+  // Check Matter configuration only
+#if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isBLECommissioningEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter/ESP configuration
+  // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
+#ifdef SOC_BLE_SUPPORTED
+#if CONFIG_ENABLE_CHIPOBLE
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
 
 bool ArduinoMatter::isDeviceCommissioned() {
   return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 bool ArduinoMatter::isWiFiConnected() {
   return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationConnected();
 }
-#endif
+
+bool ArduinoMatter::isThreadConnected() {
+  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
+}
 
 bool ArduinoMatter::isDeviceConnected() {
-  bool retCode = false;
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-  retCode |= ArduinoMatter::isThreadConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  retCode |= ArduinoMatter::isWiFiConnected();
-#endif
-  return retCode;
+  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected();
 }
 
 void ArduinoMatter::decommission() {
