@@ -273,7 +273,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterOccupancyWithHoldTime example consists of the following main components:
 
-1. **`setup()`**: 
+1. **`setup()`**:
    - Initializes hardware (button), configures Wi-Fi (if needed)
    - Initializes Preferences and restores stored HoldTime value
    - Registers HoldTime change callback for persistence
@@ -283,12 +283,12 @@ The MatterOccupancyWithHoldTime example consists of the following main component
    - Sets initial HoldTime value (from Preferences or default)
    - Waits for Matter commissioning
 
-2. **`loop()`**: 
+2. **`loop()`**:
    - Handles button input for factory reset
    - Continuously checks the simulated occupancy sensor and updates the Matter attribute
    - Allows the Matter stack to process events
 
-3. **`simulatedHWOccupancySensor()`**: 
+3. **`simulatedHWOccupancySensor()`**:
    - Simulates a hardware occupancy sensor with HoldTime support
    - Detects occupancy every 2 minutes
    - Holds the "occupied" state for HoldTime seconds after detection
@@ -296,7 +296,7 @@ The MatterOccupancyWithHoldTime example consists of the following main component
    - Resets HoldTime timer on new detections while occupied (continuous occupancy)
    - Replace this function with your actual sensor reading code
 
-4. **HoldTime Callback**: 
+4. **HoldTime Callback**:
    - `onHoldTimeChange()` callback persists HoldTime changes to Preferences
    - Ensures HoldTime value is maintained across device reboots
 

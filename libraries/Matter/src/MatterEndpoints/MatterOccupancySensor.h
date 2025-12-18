@@ -28,6 +28,7 @@ class OccupancySensingAttrAccessWrapper;
 
 class MatterOccupancySensor : public MatterEndPoint {
   friend class OccupancySensingAttrAccessWrapper;
+
 public:
   // Different Occupancy Sensor Types
   enum OccupancySensorType_t {
@@ -78,7 +79,7 @@ public:
 
   // User callback for HoldTime attribute changes
   using HoldTimeChangeCB = std::function<bool(uint16_t holdTime_seconds)>;
-  
+
   // Set callback for HoldTime changes (called when Matter Controller changes HoldTime)
   void onHoldTimeChange(HoldTimeChangeCB onHoldTimeChangeCB);
 
@@ -97,12 +98,12 @@ protected:
   bool started = false;
   bool occupancyState = false;
   uint16_t holdTime_seconds = 0;
-  
+
   // HoldTimeLimits settings (set via setHoldTimeLimits() after Matter.begin())
   uint16_t holdTimeMin_seconds = 0;
-  uint16_t holdTimeMax_seconds = 0;       // 0 means no maximum, no limits enforced
+  uint16_t holdTimeMax_seconds = 0;  // 0 means no maximum, no limits enforced
   uint16_t holdTimeDefault_seconds = 0;
-  
+
   // User callback
   HoldTimeChangeCB _onHoldTimeChangeCB = nullptr;
 };

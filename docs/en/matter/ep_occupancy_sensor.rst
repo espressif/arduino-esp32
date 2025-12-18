@@ -149,7 +149,7 @@ Sets the HoldTime limits (minimum, maximum, and default values). These limits de
 * ``_holdTimeMax_seconds`` - Maximum HoldTime value in seconds
 * ``_holdTimeDefault_seconds`` - Default/recommended HoldTime value in seconds (informational metadata for controllers)
 
-**Important:** 
+**Important:**
 * This function must be called after ``Matter.begin()`` has been called, as it requires the Matter event loop to be running.
 * The ``holdTimeDefault_seconds`` parameter is informational metadata for Matter controllers (recommended default value). It does NOT automatically set the HoldTime attribute - use ``setHoldTime()`` to set the actual value.
 * If the current HoldTime value is outside the new limits, it will be automatically adjusted to the nearest limit (minimum or maximum).

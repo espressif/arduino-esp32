@@ -49,9 +49,9 @@ const char *password = "your-password";  // Change this to your WiFi password
 #include <Preferences.h>
 
 // HoldTime configuration constants
-const uint16_t HOLD_TIME_MIN = 0;        // Minimum HoldTime in seconds
-const uint16_t HOLD_TIME_MAX = 3600;     // Maximum HoldTime in seconds (1 hour)
-const uint16_t HOLD_TIME_DEFAULT = 30;   // Default HoldTime in seconds
+const uint16_t HOLD_TIME_MIN = 0;       // Minimum HoldTime in seconds
+const uint16_t HOLD_TIME_MAX = 3600;    // Maximum HoldTime in seconds (1 hour)
+const uint16_t HOLD_TIME_DEFAULT = 30;  // Default HoldTime in seconds
 
 // List of Matter Endpoints for this Node
 // Matter Occupancy Sensor Endpoint
@@ -72,7 +72,7 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 // Simulated Occupancy Sensor with HoldTime support
 // When occupancy is detected, it holds the "occupied" state for HoldTime seconds
 // After HoldTime expires, it automatically switches to "unoccupied"
-// 
+//
 // Behavior for different HoldTime vs detectionInterval relationships:
 // - holdTime_ms < detectionInterval: State switches to unoccupied after HoldTime, then waits for next detection
 // - holdTime_ms == detectionInterval: If detections keep coming, timer resets (continuous occupancy)
@@ -83,10 +83,10 @@ bool simulatedHWOccupancySensor() {
   static uint32_t lastDetectionTime = 0;
   static uint32_t lastDetectionEvent = millis();
   const uint32_t detectionInterval = 120000;  // Simulate detection every 2 minutes
-  
+
   // Get current HoldTime from the sensor (can be changed by Matter Controller)
   uint32_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
-  
+
   // Check HoldTime expiration FIRST (before processing new detections)
   // This ensures HoldTime can expire even if a detection occurs in the same iteration
   if (occupancyState && (millis() - lastDetectionTime > holdTime_ms)) {
@@ -96,13 +96,13 @@ bool simulatedHWOccupancySensor() {
     lastDetectionEvent = millis();
     Serial.println("HoldTime expired. Switching to unoccupied state.");
   }
-  
+
   // Simulate periodic occupancy detection (e.g., motion detected)
   // Check this AFTER HoldTime expiration so new detections can immediately re-trigger occupancy
   if (millis() - lastDetectionEvent > detectionInterval) {
     // New detection event occurred
     lastDetectionEvent = millis();
-    
+
     if (!occupancyState) {
       // Transition from unoccupied to occupied - start hold timer
       occupancyState = true;
@@ -115,7 +115,7 @@ bool simulatedHWOccupancySensor() {
       Serial.printf("Occupancy still detected. Resetting hold timer to %u seconds (HoldTime)\n", OccupancySensor.getHoldTime());
     }
   }
-  
+
   return occupancyState;
 }
 
@@ -140,7 +140,7 @@ void setup() {
   // Initialize Preferences and read stored HoldTime value
   matterPref.begin("MatterPrefs", false);
   uint16_t storedHoldTime = matterPref.getUShort(holdTimePrefKey, HOLD_TIME_DEFAULT);
-  
+
   // Validate stored value is within limits
   if (storedHoldTime < HOLD_TIME_MIN || storedHoldTime > HOLD_TIME_MAX) {
     uint16_t invalidValue = storedHoldTime;
@@ -165,15 +165,14 @@ void setup() {
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
-  
+
   // Set HoldTimeLimits after Matter.begin() (optional, but recommended for validation)
   if (!OccupancySensor.setHoldTimeLimits(HOLD_TIME_MIN, HOLD_TIME_MAX, HOLD_TIME_DEFAULT)) {
     Serial.println("Warning: Failed to set HoldTimeLimits");
   } else {
-    Serial.printf("HoldTimeLimits set: Min=%u, Max=%u, Default=%u seconds\n", 
-                  HOLD_TIME_MIN, HOLD_TIME_MAX, HOLD_TIME_DEFAULT);
+    Serial.printf("HoldTimeLimits set: Min=%u, Max=%u, Default=%u seconds\n", HOLD_TIME_MIN, HOLD_TIME_MAX, HOLD_TIME_DEFAULT);
   }
-  
+
   // Set initial HoldTime (use stored value if valid, otherwise use default)
   // This must be done after Matter.begin() because setHoldTime() requires the Matter event loop
   if (!OccupancySensor.setHoldTime(storedHoldTime)) {
@@ -181,7 +180,7 @@ void setup() {
   } else {
     Serial.printf("HoldTime set to: %u seconds\n", storedHoldTime);
   }
-  
+
   Serial.printf("Initial HoldTime: %u seconds\n", OccupancySensor.getHoldTime());
 
   // Check Matter Accessory Commissioning state, which may change during execution of loop()

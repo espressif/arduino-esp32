@@ -38,10 +38,9 @@ using namespace chip::app::Clusters;
 // This wraps the standard OccupancySensing::Instance to add callback support
 class OccupancySensingAttrAccessWrapper : public chip::app::AttributeAccessInterface {
 public:
-  OccupancySensingAttrAccessWrapper() 
+  OccupancySensingAttrAccessWrapper()
     : chip::app::AttributeAccessInterface(chip::Optional<chip::EndpointId>::Missing(), OccupancySensing::Id),
-      mInstance(chip::BitMask<OccupancySensing::Feature>(0)) {
-  }
+      mInstance(chip::BitMask<OccupancySensing::Feature>(0)) {}
 
   CHIP_ERROR Init() {
     // Register THIS wrapper instance, not the standard instance
@@ -54,12 +53,12 @@ public:
     return CHIP_NO_ERROR;
   }
 
-  CHIP_ERROR Read(const chip::app::ConcreteReadAttributePath & aPath, chip::app::AttributeValueEncoder & aEncoder) override {
+  CHIP_ERROR Read(const chip::app::ConcreteReadAttributePath &aPath, chip::app::AttributeValueEncoder &aEncoder) override {
     // Delegate reads to the standard instance
     return mInstance.Read(aPath, aEncoder);
   }
 
-  CHIP_ERROR Write(const chip::app::ConcreteDataAttributePath & aPath, chip::app::AttributeValueDecoder & aDecoder) override {
+  CHIP_ERROR Write(const chip::app::ConcreteDataAttributePath &aPath, chip::app::AttributeValueDecoder &aDecoder) override {
     // Intercept HoldTime writes to call user callbacks
     if (aPath.mAttributeId == OccupancySensing::Attributes::HoldTime::Id) {
       uint16_t newHoldTime;
@@ -69,8 +68,7 @@ public:
       }
 
       // Validate against HoldTimeLimits first (same as Instance::Write does)
-      OccupancySensing::Structs::HoldTimeLimitsStruct::Type * currHoldTimeLimits = 
-        OccupancySensing::GetHoldTimeLimitsForEndpoint(aPath.mEndpointId);
+      OccupancySensing::Structs::HoldTimeLimitsStruct::Type *currHoldTimeLimits = OccupancySensing::GetHoldTimeLimitsForEndpoint(aPath.mEndpointId);
       if (currHoldTimeLimits == nullptr) {
         return CHIP_ERROR_INVALID_ARGUMENT;
       }
@@ -79,7 +77,7 @@ public:
       }
 
       // Find the MatterOccupancySensor instance for this endpoint and call its callback
-      MatterOccupancySensor* sensor = FindOccupancySensorForEndpoint(aPath.mEndpointId);
+      MatterOccupancySensor *sensor = FindOccupancySensorForEndpoint(aPath.mEndpointId);
       if (sensor != nullptr) {
         // Call the user callback if set (this allows rejection of the change)
         if (sensor->_onHoldTimeChangeCB) {
@@ -107,19 +105,19 @@ private:
   OccupancySensing::Instance mInstance;
 
   // Helper to find MatterOccupancySensor instance for an endpoint
-  static MatterOccupancySensor* FindOccupancySensorForEndpoint(chip::EndpointId endpointId) {
+  static MatterOccupancySensor *FindOccupancySensorForEndpoint(chip::EndpointId endpointId) {
     // Get the endpoint's private data (set when creating the endpoint)
-    void* priv_data = esp_matter::endpoint::get_priv_data(endpointId);
+    void *priv_data = esp_matter::endpoint::get_priv_data(endpointId);
     if (priv_data == nullptr) {
       return nullptr;
     }
-    
-    MatterOccupancySensor* sensor = static_cast<MatterOccupancySensor*>(priv_data);
+
+    MatterOccupancySensor *sensor = static_cast<MatterOccupancySensor *>(priv_data);
     // Verify it's actually a MatterOccupancySensor by checking if it's started
     if (sensor != nullptr && sensor->started) {
       return sensor;
     }
-    
+
     return nullptr;
   }
 };
@@ -127,45 +125,45 @@ private:
 // Static AttributeAccessInterface wrapper instance
 // Registered once globally to handle all OccupancySensing endpoints
 namespace {
-  static OccupancySensingAttrAccessWrapper sOccupancySensingAttrAccess;
-  static bool sOccupancySensingAttrAccessRegistered = false;
-}
+static OccupancySensingAttrAccessWrapper sOccupancySensingAttrAccess;
+static bool sOccupancySensingAttrAccessRegistered = false;
+}  // namespace
 
 // Static helper functions for Matter event loop operations
 namespace {
-  void SetHoldTimeInEventLoop(uint16_t endpoint_id, uint16_t holdTime_seconds) {
-    CHIP_ERROR err = OccupancySensing::SetHoldTime(endpoint_id, holdTime_seconds);
-    if (err != CHIP_NO_ERROR) {
-      ChipLogError(NotSpecified, "Failed to set HoldTime: %" CHIP_ERROR_FORMAT, err.Format());
-    } else {
-      ChipLogDetail(NotSpecified, "HoldTime set to %u seconds", holdTime_seconds);
-    }
-  }
-
-  void SetHoldTimeLimitsInEventLoop(uint16_t endpoint_id, uint16_t min_seconds, uint16_t max_seconds, uint16_t default_seconds) {
-    OccupancySensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimits;
-    holdTimeLimits.holdTimeMin = min_seconds;
-    holdTimeLimits.holdTimeMax = max_seconds;
-    holdTimeLimits.holdTimeDefault = default_seconds;
-    
-    CHIP_ERROR err = OccupancySensing::SetHoldTimeLimits(endpoint_id, holdTimeLimits);
-    if (err != CHIP_NO_ERROR) {
-      ChipLogError(NotSpecified, "Failed to set HoldTimeLimits: %" CHIP_ERROR_FORMAT, err.Format());
-    } else {
-      ChipLogDetail(NotSpecified, "HoldTimeLimits set: Min=%u, Max=%u, Default=%u seconds", 
-                    min_seconds, max_seconds, default_seconds);
-    }
-  }
-
-  void SetHoldTimeLimitsAndHoldTimeInEventLoop(uint16_t endpoint_id, uint16_t min_seconds, uint16_t max_seconds, 
-                                                uint16_t default_seconds, uint16_t holdTime_seconds) {
-    // Set HoldTimeLimits first
-    SetHoldTimeLimitsInEventLoop(endpoint_id, min_seconds, max_seconds, default_seconds);
-    
-    // Then adjust HoldTime to be within the new limits
-    SetHoldTimeInEventLoop(endpoint_id, holdTime_seconds);
+void SetHoldTimeInEventLoop(uint16_t endpoint_id, uint16_t holdTime_seconds) {
+  CHIP_ERROR err = OccupancySensing::SetHoldTime(endpoint_id, holdTime_seconds);
+  if (err != CHIP_NO_ERROR) {
+    ChipLogError(NotSpecified, "Failed to set HoldTime: %" CHIP_ERROR_FORMAT, err.Format());
+  } else {
+    ChipLogDetail(NotSpecified, "HoldTime set to %u seconds", holdTime_seconds);
   }
 }
+
+void SetHoldTimeLimitsInEventLoop(uint16_t endpoint_id, uint16_t min_seconds, uint16_t max_seconds, uint16_t default_seconds) {
+  OccupancySensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimits;
+  holdTimeLimits.holdTimeMin = min_seconds;
+  holdTimeLimits.holdTimeMax = max_seconds;
+  holdTimeLimits.holdTimeDefault = default_seconds;
+
+  CHIP_ERROR err = OccupancySensing::SetHoldTimeLimits(endpoint_id, holdTimeLimits);
+  if (err != CHIP_NO_ERROR) {
+    ChipLogError(NotSpecified, "Failed to set HoldTimeLimits: %" CHIP_ERROR_FORMAT, err.Format());
+  } else {
+    ChipLogDetail(NotSpecified, "HoldTimeLimits set: Min=%u, Max=%u, Default=%u seconds", min_seconds, max_seconds, default_seconds);
+  }
+}
+
+void SetHoldTimeLimitsAndHoldTimeInEventLoop(
+  uint16_t endpoint_id, uint16_t min_seconds, uint16_t max_seconds, uint16_t default_seconds, uint16_t holdTime_seconds
+) {
+  // Set HoldTimeLimits first
+  SetHoldTimeLimitsInEventLoop(endpoint_id, min_seconds, max_seconds, default_seconds);
+
+  // Then adjust HoldTime to be within the new limits
+  SetHoldTimeInEventLoop(endpoint_id, holdTime_seconds);
+}
+}  // namespace
 
 // clang-format off
 const uint8_t MatterOccupancySensor::occupancySensorTypeBitmap[4] = {
@@ -184,7 +182,7 @@ bool MatterOccupancySensor::attributeChangeCB(uint16_t endpoint_id, uint32_t clu
 
   log_d("Occupancy Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u", endpoint_id, cluster_id, attribute_id);
 
-  // Note: HoldTime writes are handled by OccupancySensingAttrAccessWrapper::Write() 
+  // Note: HoldTime writes are handled by OccupancySensingAttrAccessWrapper::Write()
   // since HoldTime is MANAGED_INTERNALLY and doesn't go through the normal esp-matter callback path
 
   return true;
@@ -215,24 +213,18 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   occupancy_sensor_config.occupancy_sensing.occupancy = _occupancyState;
   occupancy_sensor_config.occupancy_sensing.occupancy_sensor_type = _occupancySensorType;
   occupancy_sensor_config.occupancy_sensing.occupancy_sensor_type_bitmap = occupancySensorTypeBitmap[_occupancySensorType];
-  
+
   // Set features based on sensor type
   // Available features: other, passive_infrared, ultrasonic, physical_contact, active_infrared, radar, rf_sensing, vision
   using namespace esp_matter::cluster::occupancy_sensing::feature;
-  
+
   switch (_occupancySensorType) {
-    case OCCUPANCY_SENSOR_TYPE_PIR:
-      occupancy_sensor_config.occupancy_sensing.features = passive_infrared::get_id();
-      break;
-    case OCCUPANCY_SENSOR_TYPE_ULTRASONIC:
-      occupancy_sensor_config.occupancy_sensing.features = ultrasonic::get_id();
-      break;
+    case OCCUPANCY_SENSOR_TYPE_PIR:        occupancy_sensor_config.occupancy_sensing.features = passive_infrared::get_id(); break;
+    case OCCUPANCY_SENSOR_TYPE_ULTRASONIC: occupancy_sensor_config.occupancy_sensing.features = ultrasonic::get_id(); break;
     case OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC:
       occupancy_sensor_config.occupancy_sensing.features = passive_infrared::get_id() | ultrasonic::get_id();
       break;
-    case OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT:
-      occupancy_sensor_config.occupancy_sensing.features = physical_contact::get_id();
-      break;
+    case OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT: occupancy_sensor_config.occupancy_sensing.features = physical_contact::get_id(); break;
     default:
       // For unknown types, use "other" feature
       occupancy_sensor_config.occupancy_sensing.features = other::get_id();
@@ -246,7 +238,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   }
   setEndPointId(endpoint::get_id(endpoint));
   occupancyState = _occupancyState;
-  
+
   // Register AttributeAccessInterface for OccupancySensing cluster if not already registered
   // This enables HoldTime and HoldTimeLimits (MANAGED_INTERNALLY attributes) to be read
   // via the server implementation instead of falling back to esp-matter's placeholder storage
@@ -258,7 +250,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
       log_e("Failed to register OccupancySensing AttributeAccessInterface: %" CHIP_ERROR_FORMAT, err.Format());
     }
   }
-  
+
   // Add HoldTime and HoldTimeLimits attributes to the occupancy sensing cluster
   cluster_t *cluster = cluster::get(endpoint, OccupancySensing::Id);
   if (cluster != nullptr) {
@@ -367,7 +359,7 @@ bool MatterOccupancySensor::setHoldTime(uint16_t _holdTime_seconds) {
   }
 
   uint16_t endpoint_id = getEndPointId();
-  
+
   CHIP_ERROR schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, holdTime = _holdTime_seconds]() {
     SetHoldTimeInEventLoop(endpoint_id, holdTime);
   });
@@ -402,8 +394,7 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   }
 
   if (_holdTimeDefault_seconds < _holdTimeMin_seconds || _holdTimeDefault_seconds > _holdTimeMax_seconds) {
-    log_e("HoldTimeDefault (%u) must be between HoldTimeMin (%u) and HoldTimeMax (%u)", 
-          _holdTimeDefault_seconds, _holdTimeMin_seconds, _holdTimeMax_seconds);
+    log_e("HoldTimeDefault (%u) must be between HoldTimeMin (%u) and HoldTimeMax (%u)", _holdTimeDefault_seconds, _holdTimeMin_seconds, _holdTimeMax_seconds);
     return false;
   }
 
@@ -424,35 +415,33 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   // Check if current HoldTime is outside the new limits and adjust if necessary
   uint16_t adjustedHoldTime = holdTime_seconds;
   bool holdTimeAdjusted = false;
-  
+
   if (holdTime_seconds < _holdTimeMin_seconds) {
     adjustedHoldTime = _holdTimeMin_seconds;
     holdTimeAdjusted = true;
-    log_i("Current HoldTime (%u) is below new minimum (%u), adjusting to minimum", 
-          holdTime_seconds, _holdTimeMin_seconds);
+    log_i("Current HoldTime (%u) is below new minimum (%u), adjusting to minimum", holdTime_seconds, _holdTimeMin_seconds);
   } else if (holdTime_seconds > _holdTimeMax_seconds) {
     adjustedHoldTime = _holdTimeMax_seconds;
     holdTimeAdjusted = true;
-    log_i("Current HoldTime (%u) exceeds new maximum (%u), adjusting to maximum", 
-          holdTime_seconds, _holdTimeMax_seconds);
+    log_i("Current HoldTime (%u) exceeds new maximum (%u), adjusting to maximum", holdTime_seconds, _holdTimeMax_seconds);
   }
 
   uint16_t endpoint_id = getEndPointId();
   CHIP_ERROR schedule_err;
-  
+
   if (holdTimeAdjusted) {
     // Schedule both limits and HoldTime updates together
-    schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds, 
-                                                                     def = _holdTimeDefault_seconds, holdTime = adjustedHoldTime]() {
+    schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds,
+                                                                    def = _holdTimeDefault_seconds, holdTime = adjustedHoldTime]() {
       SetHoldTimeLimitsAndHoldTimeInEventLoop(endpoint_id, min, max, def, holdTime);
     });
     holdTime_seconds = adjustedHoldTime;
   } else {
     // No adjustment needed, just schedule the limits update
-    schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds, 
-                                                                     def = _holdTimeDefault_seconds]() {
-      SetHoldTimeLimitsInEventLoop(endpoint_id, min, max, def);
-    });
+    schedule_err =
+      chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds, def = _holdTimeDefault_seconds]() {
+        SetHoldTimeLimitsInEventLoop(endpoint_id, min, max, def);
+      });
   }
 
   if (schedule_err != CHIP_NO_ERROR) {
@@ -460,11 +449,9 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
     return false;
   }
 
-  log_v("HoldTimeLimits scheduled for update: Min=%u, Max=%u, Default=%u seconds", 
-        _holdTimeMin_seconds, _holdTimeMax_seconds, _holdTimeDefault_seconds);
+  log_v("HoldTimeLimits scheduled for update: Min=%u, Max=%u, Default=%u seconds", _holdTimeMin_seconds, _holdTimeMax_seconds, _holdTimeDefault_seconds);
 
   return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
-
