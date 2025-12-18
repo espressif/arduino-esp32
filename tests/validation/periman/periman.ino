@@ -71,8 +71,6 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
   uart1_tx_pin = tx_pin;
   test_executed = false;
 
-  pinMode(uart1_rx_pin, INPUT_PULLUP);
-  pinMode(uart1_tx_pin, OUTPUT);
   // Ensure Serial1 is initialized and callback is set (in case it was terminated previously)
   Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
   Serial1.begin(115200);
@@ -86,20 +84,20 @@ void setup_test(String test_name, int8_t rx_pin = UART1_RX_DEFAULT, int8_t tx_pi
 void teardown_test(void) {
   log_v("Tearing down %s test", current_test.c_str());
   if (test_executed) {
+    // Test 1: Peripheral manager auto-detach via pinMode
     pinMode(uart1_rx_pin, INPUT_PULLUP);
     pinMode(uart1_tx_pin, OUTPUT);
     Serial1.print(current_test);
     Serial1.println(" test: This should not be printed");
     Serial1.flush();
-  }
 
-  // Even if test didn't execute, ensure Serial1 is initialized
-  // (in case it was terminated by a previous test or setup issue)
-  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
-  Serial1.begin(115200);
-  Serial1.onReceive(onReceive_cb);
-  uart_internal_loopback(1, uart1_rx_pin);
-  delay(100);
+    // Restore Serial1 via peripheral manager
+    Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+    Serial1.begin(115200);
+    Serial1.onReceive(onReceive_cb);
+    uart_internal_loopback(1, uart1_rx_pin);
+    delay(100);
+  }
 
   Serial1.print(current_test);
   Serial1.println(" test: This should be printed");
@@ -134,7 +132,35 @@ void sigmadelta_test(void) {
     Serial.println("SigmaDelta init failed");
   }
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_SDM_SUPPORTED
+  // Now test manual deinit path
+  setup_test("SigmaDelta_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  if (!sigmaDeltaAttach(uart1_rx_pin, 312500)) {
+    Serial.println("SigmaDelta init failed");
+  }
+  if (!sigmaDeltaAttach(uart1_tx_pin, 312500)) {
+    Serial.println("SigmaDelta init failed");
+  }
+
+  // Manual deinit
+  sigmaDeltaDetach(uart1_rx_pin);
+  sigmaDeltaDetach(uart1_tx_pin);
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("SigmaDelta_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void adc_oneshot_test(void) {
@@ -153,9 +179,9 @@ void adc_oneshot_test(void) {
 }
 
 #if SOC_ADC_SUPPORTED
-volatile bool adc_coversion_done = false;
+volatile bool adc_conversion_done = false;
 void ARDUINO_ISR_ATTR adcComplete() {
-  adc_coversion_done = true;
+  adc_conversion_done = true;
 }
 #endif
 
@@ -175,7 +201,7 @@ void adc_continuous_test(void) {
   analogContinuous(adc_pins, adc_pins_count, 6, 20000, &adcComplete);
   analogContinuousStart();
 
-  while (adc_coversion_done == false) {
+  while (adc_conversion_done == false) {
     delay(1);
   }
 
@@ -185,7 +211,43 @@ void adc_continuous_test(void) {
 
   analogContinuousStop();
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_ADC_SUPPORTED
+  // Now test manual deinit path
+  setup_test("ADC_Continuous_deinit", ADC1_DEFAULT, ADC2_DEFAULT);
+  test_executed = false;        // Skip the pinMode test in teardown
+  adc_conversion_done = false;  // Reset flag
+
+  analogContinuousSetWidth(12);
+  analogContinuousSetAtten(ADC_11db);
+  analogContinuous(adc_pins, adc_pins_count, 6, 20000, &adcComplete);
+  analogContinuousStart();
+
+  while (adc_conversion_done == false) {
+    delay(1);
+  }
+
+  if (!analogContinuousRead(&result, 0)) {
+    Serial.println("ADC continuous read failed");
+  }
+
+  analogContinuousStop();
+
+  // Manual deinit
+  analogContinuousDeinit();
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("ADC_Continuous_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void dac_test(void) {
@@ -211,7 +273,35 @@ void ledc_test(void) {
     Serial.println("LEDC init failed");
   }
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_LEDC_SUPPORTED
+  // Now test manual deinit path
+  setup_test("LEDC_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  if (!ledcAttach(uart1_rx_pin, 5000, 12)) {
+    Serial.println("LEDC init failed");
+  }
+  if (!ledcAttach(uart1_tx_pin, 5000, 12)) {
+    Serial.println("LEDC init failed");
+  }
+
+  // Manual deinit
+  ledcDetach(uart1_rx_pin);
+  ledcDetach(uart1_tx_pin);
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("LEDC_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void rmt_test(void) {
@@ -225,7 +315,35 @@ void rmt_test(void) {
     Serial.println("RMT init failed");
   }
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_RMT_SUPPORTED
+  // Now test manual deinit path
+  setup_test("RMT_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  if (!rmtInit(uart1_rx_pin, RMT_TX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
+    Serial.println("RMT init failed");
+  }
+  if (!rmtInit(uart1_tx_pin, RMT_RX_MODE, RMT_MEM_NUM_BLOCKS_1, 10000000)) {
+    Serial.println("RMT init failed");
+  }
+
+  // Manual deinit
+  rmtDeinit(uart1_rx_pin);
+  rmtDeinit(uart1_tx_pin);
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("RMT_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void i2s_test(void) {
@@ -240,7 +358,34 @@ void i2s_test(void) {
     Serial.println("I2S init failed");
   }
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_I2S_SUPPORTED
+  // Now test manual deinit path
+  setup_test("I2S_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  I2SClass i2s2;
+  i2s2.setPins(uart1_rx_pin, uart1_tx_pin, -1);
+  i2s2.setTimeout(1000);
+  if (!i2s2.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO)) {
+    Serial.println("I2S init failed");
+  }
+
+  // Manual deinit
+  i2s2.end();
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("I2S_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void i2c_test(void) {
@@ -251,7 +396,31 @@ void i2c_test(void) {
     Serial.println("I2C init failed");
   }
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_I2C_SUPPORTED
+  // Now test manual deinit path
+  setup_test("I2C_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  if (!Wire.begin(uart1_rx_pin, uart1_tx_pin)) {
+    Serial.println("I2C init failed");
+  }
+
+  // Manual deinit
+  Wire.end();
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("I2C_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void spi_test(void) {
@@ -260,7 +429,29 @@ void spi_test(void) {
   test_executed = true;
   SPI.begin(uart1_rx_pin, uart1_tx_pin, -1, -1);
 #endif
-  teardown_test();
+  teardown_test();  // Tests auto-detach via pinMode
+
+#if SOC_GPSPI_SUPPORTED
+  // Now test manual deinit path
+  setup_test("SPI_deinit");
+  test_executed = false;  // Skip the pinMode test in teardown
+
+  SPI.begin(uart1_rx_pin, uart1_tx_pin, -1, -1);
+
+  // Manual deinit
+  SPI.end();
+
+  // Verify Serial1 can be restored after manual deinit
+  Serial1.setPins(uart1_rx_pin, uart1_tx_pin);
+  Serial1.begin(115200);
+  Serial1.onReceive(onReceive_cb);
+  uart_internal_loopback(1, uart1_rx_pin);
+  delay(100);
+
+  Serial1.print("SPI_deinit");
+  Serial1.println(" test: This should be printed");
+  Serial1.flush();
+#endif
 }
 
 void touch_test(void) {
