@@ -28,7 +28,13 @@
 
 ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
   : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0),
-    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
+    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL)
+#ifdef UPDATE_SIGN
+    ,
+    _sign(NULL)
+#endif /* UPDATE_SIGN */
+{
+}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
   end();
@@ -135,6 +141,21 @@ ArduinoOTAClass &ArduinoOTAClass::setMdnsEnabled(bool enabled) {
   _mdnsEnabled = enabled;
   return *this;
 }
+
+#ifdef UPDATE_SIGN
+ArduinoOTAClass &ArduinoOTAClass::setSignature(UpdaterVerifyClass *sign) {
+  if (_state == OTA_IDLE && sign) {
+    _sign = sign;
+    int hashType = sign->getHashType();
+    [[maybe_unused]]
+    const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                           : (hashType == HASH_SHA384) ? "SHA-384"
+                                                       : "SHA-512";
+    log_i("Signature verification enabled for ArduinoOTA (hash: %s)", hashName);
+  }
+  return *this;
+}
+#endif /* UPDATE_SIGN */
 
 void ArduinoOTAClass::begin() {
   if (_initialized) {
@@ -301,6 +322,22 @@ void ArduinoOTAClass::_runUpdate() {
     log_e("UpdateClass is NULL!");
     return;
   }
+
+#ifdef UPDATE_SIGN
+  // Install signature verification if enabled
+  if (_sign) {
+    if (!_updater->installSignature(_sign)) {
+      log_e("Failed to install signature verification");
+      if (_error_callback) {
+        _error_callback(OTA_BEGIN_ERROR);
+      }
+      _state = OTA_IDLE;
+      return;
+    }
+    log_i("Signature verification installed for OTA update");
+  }
+#endif /* UPDATE_SIGN */
+
   const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
   if (!_updater->begin(_size, _cmd, -1, LOW, partition_label)) {
 
