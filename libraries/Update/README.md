@@ -4,7 +4,7 @@ The Update library provides functionality for Over-The-Air (OTA) firmware update
 
 ## Features
 
-- **OTA Updates**: Update firmware over WiFi
+- **OTA Updates**: Update firmware over Wi-Fi
 - **Signature Verification**: RSA and ECDSA signature verification for secure updates (optional, must be enabled with `UPDATE_SIGN`)
 - **Image Encryption**: Support for encrypted firmware updates (optional, can be disabled with `UPDATE_NOCRYPT`)
 - **Multiple Sources**: HTTP, HTTPS, SD card, and custom sources

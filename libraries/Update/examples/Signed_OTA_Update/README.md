@@ -47,7 +47,7 @@ Where `<ARDUINO_ROOT>` is your ESP32 Arduino installation path (e.g., `~/Arduino
 
 1. Copy the generated `public_key.h` to the example directory
 2. Open `Signed_OTA_Update.ino`
-3. Update WiFi credentials:
+3. Update Wi-Fi credentials:
    ```cpp
    const char *ssid = "YOUR_SSID";
    const char *password = "YOUR_PASSWORD";
@@ -88,7 +88,7 @@ Upload `firmware_signed.bin` to your web server and make it accessible at the UR
 ### Step 6: Perform OTA Update
 
 Reset your ESP32. It will:
-1. Connect to WiFi
+1. Connect to Wi-Fi
 2. Download the signed firmware
 3. Verify the signature
 4. Apply the update if signature is valid

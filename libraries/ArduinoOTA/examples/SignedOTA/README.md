@@ -26,7 +26,9 @@ Even if an attacker gains access to your network, they **cannot** install unsign
 
 - **ESP32 Arduino Core 3.3.0+**
 - **Python 3.6+** with `cryptography` library
+<!-- vale Espressif-latest.Units = NO -->
 - **OTA-capable partition scheme** (e.g., "Minimal SPIFFS (1.9MB APP with OTA)")
+<!-- vale Espressif-latest.Units = YES -->
 
 ## Quick Start Guide
 
@@ -52,13 +54,17 @@ python bin_signing.py --extract-pubkey private_key.pem --out public_key.pem
 
 1. Copy `public_key.h` (generated in step 1) to this sketch directory
 2. Open `SignedOTA.ino` in Arduino IDE
+<!-- vale Espressif-latest.TermsSingleCorrectSpelling = NO -->
 3. Configure WiFi credentials:
    ```cpp
    const char *ssid = "YourWiFiSSID";
    const char *password = "YourWiFiPassword";
    ```
+<!-- vale Espressif-latest.TermsSingleCorrectSpelling = YES -->
+<!-- vale Espressif-latest.Units = NO -->
 4. Select appropriate partition scheme:
    - **Tools → Partition Scheme → "Minimal SPIFFS (1.9MB APP with OTA)"**
+<!-- vale Espressif-latest.Units = YES -->
 
 ### 3. Upload Initial Firmware
 
@@ -189,9 +195,11 @@ const char *ota_password = "yourpassword";  // Set password
 **Cause**: Signature verification setup failed, or partition scheme issue
 
 **Solutions**:
+<!-- vale Espressif-latest.Units = NO -->
 1. Check partition scheme (use "Minimal SPIFFS (1.9MB APP with OTA)")
 2. Verify `public_key.h` is in the sketch directory
 3. Check hash and signature algorithm match your key type
+<!-- vale Espressif-latest.Units = YES -->
 
 ### "End Failed" Error
 
@@ -208,7 +216,7 @@ const char *ota_password = "yourpassword";  // Set password
 **Cause**: Network timeout or connection issue
 
 **Solutions**:
-1. Check WiFi signal strength
+1. Check Wi-Fi signal strength
 2. Ensure device is reachable on the network
 3. Try increasing timeout: `ArduinoOTA.setTimeout(5000)`
 
@@ -219,7 +227,7 @@ const char *ota_password = "yourpassword";  // Set password
 **Solutions**:
 1. Verify device is on the same network
 2. Check firewall settings aren't blocking port 3232
-3. Ensure WiFi signal strength is adequate
+3. Ensure Wi-Fi signal strength is adequate
 4. If using password protection, ensure the password is correct
 5. Try: `python <ARDUINO_ROOT>/tools/espota.py -i <device-ip> -f firmware_signed.bin -d`
 
@@ -242,10 +250,12 @@ const char *ota_password = "yourpassword";  // Set password
 
 ### What This Does NOT Protect Against
 
+<!-- vale Espressif-latest.Cursing = NO -->
 - ❌ Physical access (USB flashing still works)
 - ❌ Downgrade attacks (no version checking by default)
 - ❌ Replay attacks (no timestamp/nonce by default)
 - ❌ Key compromise (if private key is stolen)
+<!-- vale Espressif-latest.Cursing = YES -->
 
 ### Additional Security
 
