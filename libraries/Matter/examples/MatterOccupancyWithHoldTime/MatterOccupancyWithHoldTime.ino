@@ -171,7 +171,7 @@ void setup() {
   const uint32_t detectionInterval = 120000;  // Simulate detection every 2 minutes
   
   // Get current HoldTime from the sensor (can be changed by Matter Controller)
-  uint16_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
+  uint32_t holdTime_ms = OccupancySensor.getHoldTime() * 1000;  // Convert seconds to milliseconds
   
   // Check HoldTime expiration FIRST (before processing new detections)
   // This ensures HoldTime can expire even if a detection occurs in the same iteration
