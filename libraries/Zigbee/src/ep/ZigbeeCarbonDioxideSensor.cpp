@@ -42,7 +42,8 @@ bool ZigbeeCarbonDioxideSensor::setDefaultValue(float defaultValue) {
   float zb_default_value = defaultValue / 1000000.0f;
   esp_zb_attribute_list_t *carbon_dioxide_measure_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(carbon_dioxide_measure_cluster, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID, (void *)&zb_default_value);
+  esp_err_t ret =
+    esp_zb_cluster_update_attr(carbon_dioxide_measure_cluster, ESP_ZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID, (void *)&zb_default_value);
   if (ret != ESP_OK) {
     log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
