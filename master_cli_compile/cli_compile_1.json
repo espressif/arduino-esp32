@@ -1,7 +1,28 @@
 {"boards": [
+{ "board": "espressif:esp32:esp32c5",
+                "target": "esp32c5",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                    "sizes": [{
+                            "flash_bytes": 1082028,
+                            "flash_percentage": 82,
+                            "ram_bytes": 52508,
+                            "ram_percentage": 16
+                            }]
+                    }
+]
+},
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/BLE/examples/Server",
+                    "sizes": [{
+                            "flash_bytes": 793568,
+                            "flash_percentage": 25,
+                            "ram_bytes": 32840,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Server_multiconnect",
                     "sizes": [{
                             "flash_bytes": 798066,
@@ -105,26 +126,18 @@
                             "ram_bytes": 22292,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 300022,
-                            "flash_percentage": 22,
-                            "ram_bytes": 22136,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
                     "sizes": [{
-                            "flash_bytes": 857275,
-                            "flash_percentage": 65,
-                            "ram_bytes": 43300,
-                            "ram_percentage": 13
+                            "flash_bytes": 944371,
+                            "flash_percentage": 72,
+                            "ram_bytes": 49296,
+                            "ram_percentage": 15
                             }]
                     }
 ]
@@ -132,6 +145,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 271318,
+                            "flash_percentage": 20,
+                            "ram_bytes": 15512,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/ArduinoStackSize",
                     "sizes": [{
                             "flash_bytes": 251974,
@@ -259,20 +280,20 @@
                             "ram_bytes": 16372,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
-                    "sizes": [{
-                            "flash_bytes": 258882,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16272,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/BLE/examples/Server_secure_authorization",
+                    "sizes": [{
+                            "flash_bytes": 638122,
+                            "flash_percentage": 20,
+                            "ram_bytes": 22964,
+                            "ram_percentage": 7
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                     "sizes": [{
                             "flash_bytes": 636312,
@@ -392,13 +413,18 @@
                             "ram_bytes": 12140,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c6",
+                "target": "esp32c6",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
                     "sizes": [{
-                            "flash_bytes": 290798,
-                            "flash_percentage": 22,
-                            "ram_bytes": 12140,
-                            "ram_percentage": 3
+                            "flash_bytes": 1042430,
+                            "flash_percentage": 79,
+                            "ram_bytes": 46612,
+                            "ram_percentage": 14
                             }]
                     }
 ]
@@ -499,6 +525,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/BLE/examples/UART",
+                    "sizes": [{
+                            "flash_bytes": 1097939,
+                            "flash_percentage": 34,
+                            "ram_bytes": 39960,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Write",
                     "sizes": [{
                             "flash_bytes": 1093867,
@@ -622,14 +656,6 @@
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
                     "sizes": [{
                             "flash_bytes": 285659,
-                            "flash_percentage": 21,
-                            "ram_bytes": 21068,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
-                    "sizes": [{
-                            "flash_bytes": 285771,
                             "flash_percentage": 21,
                             "ram_bytes": 21068,
                             "ram_percentage": 6

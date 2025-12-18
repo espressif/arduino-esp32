@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
+                    "sizes": [{
+                            "flash_bytes": 313618,
+                            "flash_percentage": 23,
+                            "ram_bytes": 22124,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/GPIO/BlinkRGB",
                     "sizes": [{
                             "flash_bytes": 295780,
@@ -105,13 +113,18 @@
                             "ram_bytes": 22540,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMT_EndOfTransmissionState",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32s3",
+                "target": "esp32s3",
+                "sketches": [
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 340472,
-                            "flash_percentage": 25,
-                            "ram_bytes": 22604,
-                            "ram_percentage": 6
+                            "flash_bytes": 857603,
+                            "flash_percentage": 65,
+                            "ram_bytes": 43300,
+                            "ram_percentage": 13
                             }]
                     }
 ]
@@ -119,6 +132,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
+                    "sizes": [{
+                            "flash_bytes": 252690,
+                            "flash_percentage": 19,
+                            "ram_bytes": 15312,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
                     "sizes": [{
                             "flash_bytes": 252954,
@@ -238,20 +259,20 @@
                             "ram_bytes": 17204,
                             "ram_percentage": 5
                             }]
-                    },
-{"name": "libraries/ESP_I2S/examples/Simple_tone",
-                    "sizes": [{
-                            "flash_bytes": 269250,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15440,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/MacAddress/GetMacAddress",
+                    "sizes": [{
+                            "flash_bytes": 275592,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12016,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/RMT/Legacy_RMT_Driver_Compatible",
                     "sizes": [{
                             "flash_bytes": 275202,
@@ -371,14 +392,6 @@
                             "ram_bytes": 11928,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
-                    "sizes": [{
-                            "flash_bytes": 272836,
-                            "flash_percentage": 20,
-                            "ram_bytes": 11936,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
@@ -478,6 +491,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+                    "sizes": [{
+                            "flash_bytes": 291907,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20884,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
                             "flash_bytes": 291323,
@@ -603,14 +624,6 @@
                             "flash_bytes": 298955,
                             "flash_percentage": 22,
                             "ram_bytes": 20956,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/ResetReason/ResetReason2",
-                    "sizes": [{
-                            "flash_bytes": 291327,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20884,
                             "ram_percentage": 6
                             }]
                     }

@@ -1,4 +1,17 @@
 {"boards": [
+{ "board": "espressif:esp32:esp32c5",
+                "target": "esp32c5",
+                "sketches": [
+{"name": "libraries/ArduinoOTA/examples/BasicOTA",
+                    "sizes": [{
+                            "flash_bytes": 1075228,
+                            "flash_percentage": 82,
+                            "ram_bytes": 52428,
+                            "ram_percentage": 15
+                            }]
+                    }
+]
+},
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
@@ -7,6 +20,14 @@
                             "flash_bytes": 905564,
                             "flash_percentage": 69,
                             "ram_bytes": 35212,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                    "sizes": [{
+                            "flash_bytes": 937694,
+                            "flash_percentage": 71,
+                            "ram_bytes": 35344,
                             "ram_percentage": 10
                             }]
                     },
@@ -105,14 +126,6 @@
                             "ram_bytes": 32848,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "libraries/BLE/examples/Server",
-                    "sizes": [{
-                            "flash_bytes": 793568,
-                            "flash_percentage": 25,
-                            "ram_bytes": 32840,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
@@ -137,6 +150,14 @@
                             "flash_bytes": 900862,
                             "flash_percentage": 68,
                             "ram_bytes": 45136,
+                            "ram_percentage": 13
+                            }]
+                    },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                    "sizes": [{
+                            "flash_bytes": 905274,
+                            "flash_percentage": 69,
+                            "ram_bytes": 45184,
                             "ram_percentage": 13
                             }]
                     },
@@ -251,14 +272,6 @@
                             "ram_bytes": 15496,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 271318,
-                            "flash_percentage": 20,
-                            "ram_bytes": 15512,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -270,6 +283,14 @@
                             "flash_bytes": 1014276,
                             "flash_percentage": 77,
                             "ram_bytes": 40332,
+                            "ram_percentage": 12
+                            }]
+                    },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                    "sizes": [{
+                            "flash_bytes": 1019580,
+                            "flash_percentage": 77,
+                            "ram_bytes": 40396,
                             "ram_percentage": 12
                             }]
                     },
@@ -383,14 +404,6 @@
                             "flash_percentage": 20,
                             "ram_bytes": 22652,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/BLE/examples/Server_secure_authorization",
-                    "sizes": [{
-                            "flash_bytes": 638122,
-                            "flash_percentage": 20,
-                            "ram_bytes": 22964,
-                            "ram_percentage": 7
                             }]
                     }
 ]
@@ -512,6 +525,14 @@
                             "ram_percentage": 15
                             }]
                     },
+{"name": "libraries/ArduinoOTA/examples/SignedOTA",
+                    "sizes": [{
+                            "flash_bytes": 969795,
+                            "flash_percentage": 73,
+                            "ram_bytes": 50120,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
                             "flash_bytes": 901943,
@@ -627,14 +648,6 @@
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                     "sizes": [{
                             "flash_bytes": 1099523,
-                            "flash_percentage": 34,
-                            "ram_bytes": 39960,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 1097939,
                             "flash_percentage": 34,
                             "ram_bytes": 39960,
                             "ram_percentage": 12

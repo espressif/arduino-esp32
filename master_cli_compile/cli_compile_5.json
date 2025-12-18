@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
+                    "sizes": [{
+                            "flash_bytes": 320484,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22148,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Template/ExampleTemplate",
                     "sizes": [{
                             "flash_bytes": 295780,
@@ -105,20 +113,20 @@
                             "ram_bytes": 31680,
                             "ram_percentage": 9
                             }]
-                    },
-{"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
-                    "sizes": [{
-                            "flash_bytes": 884558,
-                            "flash_percentage": 67,
-                            "ram_bytes": 32988,
-                            "ram_percentage": 10
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/HTTPClientEnterprise",
+                    "sizes": [{
+                            "flash_bytes": 1018122,
+                            "flash_percentage": 32,
+                            "ram_bytes": 42652,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "libraries/HTTPClient/examples/ReuseConnection",
                     "sizes": [{
                             "flash_bytes": 962670,
@@ -238,20 +246,20 @@
                             "ram_bytes": 42492,
                             "ram_percentage": 12
                             }]
-                    },
-{"name": "libraries/LittleFS/examples/LITTLEFS_test",
-                    "sizes": [{
-                            "flash_bytes": 294786,
-                            "flash_percentage": 22,
-                            "ram_bytes": 15984,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
+                    "sizes": [{
+                            "flash_bytes": 953058,
+                            "flash_percentage": 72,
+                            "ram_bytes": 36100,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
                     "sizes": [{
                             "flash_bytes": 975466,
@@ -371,14 +379,6 @@
                             "ram_bytes": 36260,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
-                    "sizes": [{
-                            "flash_bytes": 1121450,
-                            "flash_percentage": 35,
-                            "ram_bytes": 36796,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
+                    "sizes": [{
+                            "flash_bytes": 305767,
+                            "flash_percentage": 23,
+                            "ram_bytes": 21172,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Touch/TouchRead",
                     "sizes": [{
                             "flash_bytes": 305647,
@@ -604,14 +612,6 @@
                             "flash_percentage": 26,
                             "ram_bytes": 21936,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/FFat/examples/FFat_time",
-                    "sizes": [{
-                            "flash_bytes": 961315,
-                            "flash_percentage": 73,
-                            "ram_bytes": 45880,
-                            "ram_percentage": 14
                             }]
                     }
 ]

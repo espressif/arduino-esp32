@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/HTTPUpdate/examples/httpUpdateSPIFFS",
+                    "sizes": [{
+                            "flash_bytes": 899952,
+                            "flash_percentage": 68,
+                            "ram_bytes": 31180,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
                             "flash_bytes": 1034844,
@@ -105,20 +113,20 @@
                             "ram_bytes": 31288,
                             "ram_percentage": 9
                             }]
-                    },
-{"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
-                    "sizes": [{
-                            "flash_bytes": 967390,
-                            "flash_percentage": 73,
-                            "ram_bytes": 31320,
-                            "ram_percentage": 9
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterOnIdentify",
+                    "sizes": [{
+                            "flash_bytes": 1656246,
+                            "flash_percentage": 52,
+                            "ram_bytes": 93192,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterOnOffLight",
                     "sizes": [{
                             "flash_bytes": 1657794,
@@ -238,20 +246,20 @@
                             "ram_bytes": 93336,
                             "ram_percentage": 28
                             }]
-                    },
-{"name": "libraries/NetBIOS/examples/ESP_NBNST",
-                    "sizes": [{
-                            "flash_bytes": 825606,
-                            "flash_percentage": 62,
-                            "ram_bytes": 39228,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterContactSensor",
+                    "sizes": [{
+                            "flash_bytes": 1837954,
+                            "flash_percentage": 58,
+                            "ram_bytes": 95796,
+                            "ram_percentage": 29
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterDimmableLight",
                     "sizes": [{
                             "flash_bytes": 1857906,
@@ -371,14 +379,6 @@
                             "ram_bytes": 95796,
                             "ram_percentage": 29
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterSimpleBlinds",
-                    "sizes": [{
-                            "flash_bytes": 1832434,
-                            "flash_percentage": 58,
-                            "ram_bytes": 95260,
-                            "ram_percentage": 29
-                            }]
                     }
 ]
 },
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Hash/examples/SHA3",
+                    "sizes": [{
+                            "flash_bytes": 295923,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20892,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/Hash/examples/SHA3Stream",
                     "sizes": [{
                             "flash_bytes": 296927,
@@ -603,14 +611,6 @@
                             "flash_bytes": 1739943,
                             "flash_percentage": 55,
                             "ram_bytes": 107240,
-                            "ram_percentage": 32
-                            }]
-                    },
-{"name": "libraries/Matter/examples/MatterMinimum",
-                    "sizes": [{
-                            "flash_bytes": 1738927,
-                            "flash_percentage": 55,
-                            "ram_bytes": 106920,
                             "ram_percentage": 32
                             }]
                     }

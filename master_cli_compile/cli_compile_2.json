@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+                    "sizes": [{
+                            "flash_bytes": 300022,
+                            "flash_percentage": 22,
+                            "ram_bytes": 22136,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
                     "sizes": [{
                             "flash_bytes": 307334,
@@ -105,23 +113,15 @@
                             "ram_bytes": 22124,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
-                    "sizes": [{
-                            "flash_bytes": 313618,
-                            "flash_percentage": 23,
-                            "ram_bytes": 22124,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 857603,
+                            "flash_bytes": 857275,
                             "flash_percentage": 65,
                             "ram_bytes": 43300,
                             "ram_percentage": 13
@@ -132,6 +132,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/GPIO/FunctionalInterruptStruct",
+                    "sizes": [{
+                            "flash_bytes": 258882,
+                            "flash_percentage": 19,
+                            "ram_bytes": 16272,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/GPIO/GPIOInterrupt",
                     "sizes": [{
                             "flash_bytes": 259554,
@@ -251,20 +259,20 @@
                             "ram_bytes": 15320,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
-                    "sizes": [{
-                            "flash_bytes": 252690,
-                            "flash_percentage": 19,
-                            "ram_bytes": 15312,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                    "sizes": [{
+                            "flash_bytes": 290798,
+                            "flash_percentage": 22,
+                            "ram_bytes": 12140,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/ArduinoStackSize",
                     "sizes": [{
                             "flash_bytes": 271578,
@@ -384,13 +392,18 @@
                             "ram_bytes": 13064,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/MacAddress/GetMacAddress",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c6",
+                "target": "esp32c6",
+                "sketches": [
+{"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 275592,
-                            "flash_percentage": 21,
-                            "ram_bytes": 12016,
-                            "ram_percentage": 3
+                            "flash_bytes": 944466,
+                            "flash_percentage": 72,
+                            "ram_bytes": 40028,
+                            "ram_percentage": 12
                             }]
                     }
 ]
@@ -491,6 +504,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
+                    "sizes": [{
+                            "flash_bytes": 285771,
+                            "flash_percentage": 21,
+                            "ram_bytes": 21068,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
                     "sizes": [{
                             "flash_bytes": 280387,
@@ -624,14 +645,6 @@
                             "flash_bytes": 292031,
                             "flash_percentage": 22,
                             "ram_bytes": 21000,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                    "sizes": [{
-                            "flash_bytes": 291907,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20884,
                             "ram_percentage": 6
                             }]
                     }

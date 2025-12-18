@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 304238,
+                            "flash_percentage": 23,
+                            "ram_bytes": 22184,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
                             "flash_bytes": 356200,
@@ -105,20 +113,20 @@
                             "ram_bytes": 53324,
                             "ram_percentage": 16
                             }]
-                    },
-{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
-                    "sizes": [{
-                            "flash_bytes": 367340,
-                            "flash_percentage": 28,
-                            "ram_bytes": 53324,
-                            "ram_percentage": 16
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/SD/examples/SD_Test",
+                    "sizes": [{
+                            "flash_bytes": 332002,
+                            "flash_percentage": 25,
+                            "ram_bytes": 16556,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "libraries/SD/examples/SD_time",
                     "sizes": [{
                             "flash_bytes": 904226,
@@ -145,7 +153,7 @@
                     },
 {"name": "libraries/SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 877474,
+                            "flash_bytes": 877466,
                             "flash_percentage": 66,
                             "ram_bytes": 40620,
                             "ram_percentage": 12
@@ -238,20 +246,20 @@
                             "ram_bytes": 38144,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
-                    "sizes": [{
-                            "flash_bytes": 309770,
-                            "flash_percentage": 23,
-                            "ram_bytes": 38144,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
+                    "sizes": [{
+                            "flash_bytes": 1035758,
+                            "flash_percentage": 79,
+                            "ram_bytes": 35612,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                     "sizes": [{
                             "flash_bytes": 1076710,
@@ -371,14 +379,6 @@
                             "ram_bytes": 35204,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "libraries/TFLiteMicro/examples/hello_world",
-                    "sizes": [{
-                            "flash_bytes": 296304,
-                            "flash_percentage": 22,
-                            "ram_bytes": 14224,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
@@ -478,6 +478,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterWaterLeakDetector",
+                    "sizes": [{
+                            "flash_bytes": 1732819,
+                            "flash_percentage": 55,
+                            "ram_bytes": 106896,
+                            "ram_percentage": 32
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterWindowCovering",
                     "sizes": [{
                             "flash_bytes": 1757747,
@@ -604,14 +612,6 @@
                             "flash_percentage": 28,
                             "ram_bytes": 22128,
                             "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/SD_MMC/examples/SDMMC_time",
-                    "sizes": [{
-                            "flash_bytes": 990955,
-                            "flash_percentage": 75,
-                            "ram_bytes": 46184,
-                            "ram_percentage": 14
                             }]
                     }
 ]
