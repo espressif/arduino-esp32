@@ -65,10 +65,14 @@ begin	KEYWORD2
 end	KEYWORD2
 getManualPairingCode	KEYWORD2
 getOnboardingQRCodeUrl	KEYWORD2
+isBLECommissioningEnabled	KEYWORD2
 isDeviceCommissioned	KEYWORD2
-isWiFiConnected	KEYWORD2
-isThreadConnected	KEYWORD2
 isDeviceConnected	KEYWORD2
+isThreadConnected	KEYWORD2
+isThreadEnabled	KEYWORD2
+isWiFiAccessPointEnabled	KEYWORD2
+isWiFiConnected	KEYWORD2
+isWiFiStationEnabled	KEYWORD2
 decommission	KEYWORD2
 attributeChangeCB	KEYWORD2
 setOnOff	KEYWORD2
