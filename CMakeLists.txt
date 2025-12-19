@@ -206,9 +206,7 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterEndPoint.cpp)
 
-set(ARDUINO_LIBRARY_PPP_SRCS
-  libraries/PPP/src/PPP.cpp
-  libraries/PPP/src/ppp.c)
+set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
 
