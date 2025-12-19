@@ -1,8 +1,5 @@
 targets:
-  esp32s2: false
-  esp32s3: false
   esp32c2: false
-  esp32c61: false
   esp32p4: false
 requires:
   - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y
