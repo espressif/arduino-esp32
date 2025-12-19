@@ -1,5 +1,5 @@
 {
-  "commit_sha": "a048db00b2d8c32dec8eef7538bc76039fc4d4f7",
+  "commit_sha": "77ab98fc74adff3f69eee37cf7dcb90d219c053e",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -57,8 +57,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 51,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -99,7 +99,7 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -141,7 +141,7 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
+          "failures": 4,
           "total": 4,
           "errors": 0
         },
@@ -163,7 +163,7 @@
           "errors": 0
         },
         "esp32c3": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
@@ -173,12 +173,17 @@
           "errors": 0
         },
         "esp32c6": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
         "esp32h2": {
           "failures": 0,
+          "total": 1,
+          "errors": 0
+        },
+        "esp32p4": {
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -205,8 +210,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 8,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -217,48 +222,6 @@
         "esp32s3": {
           "failures": 0,
           "total": 10,
-          "errors": 0
-        }
-      },
-      "sdcard": {
-        "esp32": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32c3": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32c5": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32c6": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32h2": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32p4": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32s2": {
-          "failures": 10,
-          "total": 11,
-          "errors": 0
-        },
-        "esp32s3": {
-          "failures": 10,
-          "total": 11,
           "errors": 0
         }
       },
@@ -289,8 +252,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 4,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -311,8 +274,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 3,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -353,8 +316,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 10,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -395,8 +358,8 @@
           "errors": 0
         },
         "esp32p4": {
-          "failures": 0,
-          "total": 2,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s2": {
@@ -636,12 +599,12 @@
           "errors": 0
         },
         "esp32h2": {
-          "failures": 10,
+          "failures": 0,
           "total": 11,
           "errors": 0
         },
         "esp32p4": {
-          "failures": 10,
+          "failures": 0,
           "total": 11,
           "errors": 0
         },
@@ -796,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2025-12-18T01:01:57.059407"
+  "generated_at": "2025-12-19T01:27:46.652469"
 }
