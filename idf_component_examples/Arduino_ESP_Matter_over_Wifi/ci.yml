@@ -5,6 +5,5 @@ targets:
   esp32c61: false
   esp32p4: false
 requires:
-  - CONFIG_OPENTHREAD_ENABLED=y
   - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y
   - CONFIG_MBEDTLS_HKDF_C=y
