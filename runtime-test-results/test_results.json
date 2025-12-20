@@ -1,5 +1,5 @@
 {
-  "commit_sha": "77ab98fc74adff3f69eee37cf7dcb90d219c053e",
+  "commit_sha": "11bc7ac1a458f1f4e7afc8fd4de1dfa710f31562",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -106,7 +106,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -148,7 +148,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 2,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -158,27 +158,27 @@
       },
       "periman": {
         "esp32": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32c3": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32c5": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32c6": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32h2": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -188,12 +188,12 @@
           "errors": 0
         },
         "esp32s2": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
         "esp32s3": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         }
@@ -759,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2025-12-19T01:27:46.652469"
+  "generated_at": "2025-12-20T01:35:10.853425"
 }
