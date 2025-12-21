@@ -8,16 +8,16 @@
 
 Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-democfg|2/2 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
-fs|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|0/1 :x:|51/51 :white_check_mark:|51/51 :white_check_mark:
-hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|0/1 :x:|Error :fire:|1/1 :white_check_mark:
-nvs|2/2 :white_check_mark:|2/2 :white_check_mark:|1/1 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|0/4 :x:|Error :fire:|3/3 :white_check_mark:
-periman|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:
-psram|10/10 :white_check_mark:|-|10/10 :white_check_mark:|-|-|0/1 :x:|10/10 :white_check_mark:|10/10 :white_check_mark:
-timer|3/3 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|0/1 :x:|4/4 :white_check_mark:|4/4 :white_check_mark:
-touch|3/3 :white_check_mark:|-|-|-|-|0/1 :x:|3/3 :white_check_mark:|3/3 :white_check_mark:
-uart|11/11 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|0/1 :x:|11/11 :white_check_mark:|10/10 :white_check_mark:
-unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|0/1 :x:|2/2 :white_check_mark:|2/2 :white_check_mark:
+democfg|Error :fire:|-|Error :fire:|Error :fire:|-|-|Error :fire:|Error :fire:
+fs|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+hello_world|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+nvs|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+periman|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+psram|Error :fire:|-|Error :fire:|-|-|Error :fire:|Error :fire:|Error :fire:
+timer|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+touch|Error :fire:|-|-|-|-|Error :fire:|Error :fire:|Error :fire:
+uart|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
+unity|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:
 
 #### Wokwi
 
@@ -36,8 +36,8 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2025/12/20 01:35:10
+Generated on: 2025/12/21 00:31:35
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/11bc7ac1a458f1f4e7afc8fd4de1dfa710f31562) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20385914212) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20386049863) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20387090312)
+[Commit](https://github.com/espressif/arduino-esp32/commit/11bc7ac1a458f1f4e7afc8fd4de1dfa710f31562) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20401970111) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20402051819) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20402174578)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/58589999963)
+[Test results](https://github.com/espressif/arduino-esp32/runs/58626155095)
