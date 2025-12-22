@@ -143,7 +143,7 @@ public:
         } else if (_authenticated && upload.status == UPLOAD_FILE_END && !_updaterError.length()) {
           if (Update.end(true)) {  //true to set the size to the current progress
             if (_serial_output) {
-              Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+              Serial.printf("Update Success: %zu\nRebooting...\n", upload.totalSize);
             }
           } else {
             _setUpdaterError();

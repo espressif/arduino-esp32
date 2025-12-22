@@ -233,7 +233,7 @@ void testFileIO(fs::FS &fs, const char *path) {
     }
     Serial.println("");
     end = millis() - start;
-    Serial.printf("- %u bytes read in %lu ms\r\n", flen, end);
+    Serial.printf("- %zu bytes read in %lu ms\r\n", flen, end);
     file.close();
   } else {
     Serial.println("- failed to open file for reading");

@@ -104,7 +104,7 @@ void printProgress(size_t progress, size_t size) {
     progress = (progress * 100) / size;
     progress = (progress > 100 ? 100 : progress);  //0-100
     if (progress != last_progress) {
-      Serial.printf("\nProgress: %d%%", progress);
+      Serial.printf("\nProgress: %zu%%", progress);
       last_progress = progress;
     }
   }
@@ -167,7 +167,7 @@ void setupHttpUpdateServer() {
         }
       } else if (upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {  //true to set the size to the current progress
-          Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
+          Serial.printf("Update Success: %zu\nRebooting...\n", upload.totalSize);
         } else {
           Update.printError(Serial);
         }

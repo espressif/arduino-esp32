@@ -60,7 +60,7 @@ void onReceiveFunction(void) {
   // This is a callback function that will be activated on UART RX events
   size_t available = Serial1.available();
   received_bytes = received_bytes + available;
-  Serial.printf("onReceive Callback:: There are %d bytes available: ", available);
+  Serial.printf("onReceive Callback:: There are %zu bytes available: ", available);
   while (available--) {
     Serial.print((char)Serial1.read());
   }
@@ -106,7 +106,7 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
     dataSent[i] = 'A' + i;  // fill it with characters A..Z
   }
 
-  Serial.printf("\nTesting onReceive for receiving %d bytes at %d baud, using RX FIFO Full = %d.\n", sent_bytes, BAUD, fifoFull);
+  Serial.printf("\nTesting onReceive for receiving %zu bytes at %d baud, using RX FIFO Full = %d.\n", sent_bytes, BAUD, fifoFull);
   if (onlyOnTimeOut) {
     Serial.println("onReceive is called just on RX Timeout!");
   } else {
@@ -122,8 +122,8 @@ void testAndReport(uint8_t fifoFull, bool onlyOnTimeOut) {
     // just wait for receiving all byte in the callback...
   }
 
-  Serial.printf("\nIt has sent %d bytes from Serial1 TX to Serial1 RX\n", sent_bytes);
-  Serial.printf("onReceive() has read a total of %d bytes\n", received_bytes);
+  Serial.printf("\nIt has sent %zu bytes from Serial1 TX to Serial1 RX\n", sent_bytes);
+  Serial.printf("onReceive() has read a total of %zu bytes\n", received_bytes);
   Serial.println("========================\nFinished!");
 
   Serial1.onReceive(NULL);  // resets/disables the RX callback function for Serial 1

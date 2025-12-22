@@ -136,7 +136,7 @@ void printProgress(size_t progress, const size_t &size) {
     progress = (progress * 100) / size;
     progress = (progress > 100 ? 100 : progress);  //0-100
     if (progress != last_progress) {
-      Serial.printf("Progress: %d%%\n", progress);
+      Serial.printf("Progress: %zu%%\n", progress);
       last_progress = progress;
     }
   }
