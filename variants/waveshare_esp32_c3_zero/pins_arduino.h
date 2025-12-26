@@ -12,6 +12,8 @@ static const uint8_t LED_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 // RGB_BUILTIN and RGB_BRIGHTNESS can be used in new Arduino API rgbLedWrite()
 #define RGB_BUILTIN    LED_BUILTIN
 #define RGB_BRIGHTNESS 64
+// Define the color order for the built-in RGB LED
+#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_RGB
 
 static const uint8_t TX = 21;
 static const uint8_t RX = 20;
