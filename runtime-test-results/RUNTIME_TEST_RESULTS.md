@@ -36,8 +36,8 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2025/12/26 01:26:19
+Generated on: 2025/12/27 01:34:08
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/11bc7ac1a458f1f4e7afc8fd4de1dfa710f31562) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20512838684) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20512918801) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20513729753)
+[Commit](https://github.com/espressif/arduino-esp32/commit/11bc7ac1a458f1f4e7afc8fd4de1dfa710f31562) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20531620483) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20531695974) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20532528550)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/58938055505)
+[Test results](https://github.com/espressif/arduino-esp32/runs/58985927230)
