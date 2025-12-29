@@ -39,6 +39,7 @@ static uint8_t rx_data_buf[64] = {0};
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
+static bool hw_cdc_started = false;
 
 // SOF in ISR causes problems for uploading firmware
 //static volatile unsigned long lastSOF_ms;
@@ -297,9 +298,11 @@ bool HWCDC::deinit(void *busptr) {
     pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
     digitalWrite(USB_INT_PHY0_DM_GPIO_NUM, LOW);
     digitalWrite(USB_INT_PHY0_DP_GPIO_NUM, LOW);
+    delay(5); // necessary for the UDB Host to enumerate it
   }
   // release the flag
   running = false;
+  hw_cdc_started = false;
   return retCode;
 }
 
@@ -320,11 +323,6 @@ void HWCDC::begin(unsigned long baud) {
     }
   }
 
-  // the HW Serial pins needs to be first deinited in order to allow `if(Serial)` to work :-(
-  // But this is also causing terminal to hang, so they are disabled
-  // deinit(NULL);
-  // delay(10);  // USB Host has to enumerate it again
-
   // Peripheral Manager setting for USB D+ D- pins
   uint8_t pin = USB_INT_PHY0_DM_GPIO_NUM;
   if (perimanGetBusDeinit(ESP32_BUS_TYPE_USB_DM) == NULL) {
@@ -340,6 +338,18 @@ void HWCDC::begin(unsigned long baud) {
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
     goto err;
   }
+  
+  // begin() executed after another begin()
+  if (hw_cdc_started) {
+    // avoid reseting the pins and causing an interruption of the USB flow
+    return;
+  }
+
+  // the HW Serial pins needs to be first set to a non-USB state in order to allow `if(Serial)` to work :-(
+  // But this is also causing terminal to hang, so they are disabled
+  pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+  delay(5); // necessary for USB Host reenumerate it.
+  
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
   USB_SERIAL_JTAG.conf0.phy_sel = 0;
@@ -360,6 +370,7 @@ void HWCDC::begin(unsigned long baud) {
     end();
     return;
   }
+  hw_cdc_started = true;
   return;
 
 err:
