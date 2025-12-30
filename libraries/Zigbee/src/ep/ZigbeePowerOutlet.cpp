@@ -1,8 +1,23 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ZigbeePowerOutlet.h"
 #if CONFIG_ZB_ENABLED
 
 ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID;
+  _on_state_change = nullptr;
 
   esp_zb_mains_power_outlet_cfg_t outlet_cfg = ESP_ZB_DEFAULT_MAINS_POWER_OUTLET_CONFIG();
   _cluster_list = esp_zb_mains_power_outlet_clusters_create(&outlet_cfg);

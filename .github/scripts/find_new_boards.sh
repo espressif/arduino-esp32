@@ -27,12 +27,25 @@ echo "$modified_lines"
 boards_array=()
 previous_board=""
 
+# Define excluded entries that are not actual boards
+excluded_entries=("" "+" "-" "esp32_family" "menu")
+
 # Extract board names from the modified lines, and add them to the boards_array
 while read -r line; do
     board_name=$(echo "$line" | cut -d '.' -f1 | cut -d '#' -f1)
     # remove + or - from the board name at the beginning
     board_name=${board_name#[-+]}
-    if [ "$board_name" != "" ] && [ "$board_name" != "+" ] && [ "$board_name" != "-" ] && [ "$board_name" != "esp32_family" ]; then
+    
+    # Check if board_name is in excluded entries
+    is_excluded=false
+    for excluded in "${excluded_entries[@]}"; do
+        if [ "$board_name" = "$excluded" ]; then
+            is_excluded=true
+            break
+        fi
+    done
+    
+    if [ "$is_excluded" = false ]; then
         if [ "$board_name" != "$previous_board" ]; then
             boards_array+=("espressif:esp32:$board_name")
             previous_board="$board_name"

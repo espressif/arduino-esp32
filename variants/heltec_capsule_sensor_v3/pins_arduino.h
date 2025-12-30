@@ -76,6 +76,7 @@ static const uint8_t GPS_RESET_PIN = 3;
 static const uint8_t GPS_PPS_PIN = 1;
 
 static const uint8_t ADC_BATTERY_PIN = 7;
+#define BAT_VOLT_PIN ADC_BATTERY_PIN
 static const uint8_t ADC_BATTERY_CTRL_PIN = 36;
 
 static const uint8_t RST_LoRa = 12;

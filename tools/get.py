@@ -50,6 +50,49 @@ elif __file__:
 dist_dir = current_dir + "/dist/"
 
 
+def is_safe_archive_path(path):
+    # Check for absolute paths (both Unix and Windows style)
+    if path.startswith("/") or (len(path) > 1 and path[1] == ":" and path[2] in "\\/"):
+        raise ValueError(f"Absolute path not allowed: {path}")
+
+    # Normalize the path to handle any path separators
+    normalized_path = os.path.normpath(path)
+
+    # Check for directory traversal attempts using normalized path
+    if ".." in normalized_path.split(os.sep):
+        raise ValueError(f"Directory traversal not allowed: {path}")
+
+    # Additional check for paths that would escape the target directory
+    if normalized_path.startswith(".."):
+        raise ValueError(f"Path would escape target directory: {path}")
+
+    # Check for any remaining directory traversal patterns in the original path
+    # This catches cases that might not be normalized properly
+    path_parts = path.replace("\\", "/").split("/")
+    if ".." in path_parts:
+        raise ValueError(f"Directory traversal not allowed: {path}")
+
+    return True
+
+
+def safe_tar_extract(tar_file, destination):
+    # Validate all paths before extraction
+    for member in tar_file.getmembers():
+        is_safe_archive_path(member.name)
+
+    # If all paths are safe, proceed with extraction
+    tar_file.extractall(destination, filter="tar")
+
+
+def safe_zip_extract(zip_file, destination):
+    # Validate all paths before extraction
+    for name in zip_file.namelist():
+        is_safe_archive_path(name)
+
+    # If all paths are safe, proceed with extraction
+    zip_file.extractall(destination)
+
+
 def sha256sum(filename, blocksize=65536):
     hash = hashlib.sha256()
     with open(filename, "rb") as f:
@@ -212,6 +255,10 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         print("File corrupted or incomplete!")
         cfile = None
         file_is_corrupted = True
+    except ValueError as e:
+        print(f"Security validation failed: {e}")
+        cfile = None
+        file_is_corrupted = True
 
     if file_is_corrupted:
         corrupted_filename = filename + ".corrupted"
@@ -243,15 +290,15 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
     if filename.endswith("tar.gz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:gz")
-        cfile.extractall(destination, filter="tar")
+        safe_tar_extract(cfile, destination)
     elif filename.endswith("tar.xz"):
         if not cfile:
             cfile = tarfile.open(filename, "r:xz")
-        cfile.extractall(destination, filter="tar")
+        safe_tar_extract(cfile, destination)
     elif filename.endswith("zip"):
         if not cfile:
             cfile = zipfile.ZipFile(filename)
-        cfile.extractall(destination)
+        safe_zip_extract(cfile, destination)
     else:
         raise NotImplementedError("Unsupported archive type")
 
@@ -348,9 +395,8 @@ def get_tool(tool, force_download, force_extract):
             urlretrieve(url, local_path, report_progress, context=ctx)
         elif "Windows" in sys_name:
             r = requests.get(url)
-            f = open(local_path, "wb")
-            f.write(r.content)
-            f.close()
+            with open(local_path, "wb") as f:
+                f.write(r.content)
         else:
             is_ci = os.environ.get("GITHUB_WORKSPACE")
             if is_ci:
@@ -374,7 +420,8 @@ def get_tool(tool, force_download, force_extract):
 
 
 def load_tools_list(filename, platform):
-    tools_info = json.load(open(filename))["packages"][0]["tools"]
+    with open(filename, "r") as f:
+        tools_info = json.load(f)["packages"][0]["tools"]
     tools_to_download = []
     for t in tools_info:
         if platform == "x86_64-mingw32":

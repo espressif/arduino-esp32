@@ -5,8 +5,11 @@
  *      Author: Thomas M. (ArcticSnowSky)
  */
 
-#ifndef __BTSCAN_H__
-#define __BTSCAN_H__
+#pragma once
+#include "sdkconfig.h"
+#include "soc/soc_caps.h"
+
+#if SOC_BT_SUPPORTED && defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
 #include <map>
 #include <string>

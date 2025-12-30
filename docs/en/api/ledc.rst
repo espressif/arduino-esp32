@@ -296,6 +296,7 @@ It is compatible with Arduinos analogWrite function.
 
 * ``pin`` select the GPIO pin.
 * ``value`` select the duty cycle of pwm.
+
   * range is from 0 (always off) to 255 (always on).
 
 analogWriteResolution

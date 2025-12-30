@@ -68,6 +68,7 @@ esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
 }
 
 static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_MAX;
 
@@ -240,62 +241,18 @@ extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-extern "C" {
-//#include "esp_hosted.h"
-#include "esp_hosted_transport_config.h"
-extern esp_err_t esp_hosted_init();
-extern esp_err_t esp_hosted_deinit();
-};
-static bool hosted_initialized = false;
 
-static bool wifiHostedInit() {
-  if (!hosted_initialized) {
-    hosted_initialized = true;
-    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
-#ifdef BOARD_HAS_SDIO_ESP_HOSTED
-    conf.pin_clk.pin = BOARD_SDIO_ESP_HOSTED_CLK;
-    conf.pin_cmd.pin = BOARD_SDIO_ESP_HOSTED_CMD;
-    conf.pin_d0.pin = BOARD_SDIO_ESP_HOSTED_D0;
-    conf.pin_d1.pin = BOARD_SDIO_ESP_HOSTED_D1;
-    conf.pin_d2.pin = BOARD_SDIO_ESP_HOSTED_D2;
-    conf.pin_d3.pin = BOARD_SDIO_ESP_HOSTED_D3;
-    conf.pin_reset.pin = BOARD_SDIO_ESP_HOSTED_RESET;
-#else
-    conf.pin_clk.pin = CONFIG_ESP_SDIO_PIN_CLK;
-    conf.pin_cmd.pin = CONFIG_ESP_SDIO_PIN_CMD;
-    conf.pin_d0.pin = CONFIG_ESP_SDIO_PIN_D0;
-    conf.pin_d1.pin = CONFIG_ESP_SDIO_PIN_D1;
-    conf.pin_d2.pin = CONFIG_ESP_SDIO_PIN_D2;
-    conf.pin_d3.pin = CONFIG_ESP_SDIO_PIN_D3;
-    conf.pin_reset.pin = CONFIG_ESP_SDIO_GPIO_RESET_SLAVE;
-#endif
-    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
-    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
-      log_e("esp_hosted_init failed!");
-      hosted_initialized = false;
-      return false;
-    }
-    log_v("ESP-HOSTED initialized!");
-  }
-  // Attach pins to PeriMan here
-  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
-  // CONFIG_ESP_SDIO_PIN_CMD
-  // CONFIG_ESP_SDIO_PIN_CLK
-  // CONFIG_ESP_SDIO_PIN_D0
-  // CONFIG_ESP_SDIO_PIN_D1
-  // CONFIG_ESP_SDIO_PIN_D2
-  // CONFIG_ESP_SDIO_PIN_D3
-  // CONFIG_ESP_SDIO_GPIO_RESET_SLAVE
-
-  return true;
+bool WiFiGenericClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
+  return hostedSetPins(clk, cmd, d0, d1, d2, d3, rst);
 }
+
 #endif
 
 bool wifiLowLevelInit(bool persistent) {
   if (!lowLevelInitDone) {
     lowLevelInitDone = true;
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-    if (!wifiHostedInit()) {
+    if (!hostedInitWiFi()) {
       lowLevelInitDone = false;
       return lowLevelInitDone;
     }
@@ -306,6 +263,12 @@ bool wifiLowLevelInit(bool persistent) {
     }
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+    // required for proper work when esp-hosted is used.
+    cfg.nvs_enable = false;
+    persistent = false;
+#endif
 
     if (!WiFiGenericClass::useStaticBuffers()) {
       cfg.static_tx_buf_num = 0;
@@ -364,11 +327,7 @@ static bool wifiLowLevelDeinit() {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
       Network.postEvent(&arduino_event);
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
-      if (hosted_initialized && esp_hosted_deinit() == ESP_OK) {
-        hosted_initialized = false;
-        log_v("ESP-HOSTED uninitialized!");
-        // detach SDIO pins from PeriMan
-      }
+      hostedDeinitWiFi();
 #endif
     }
   }
@@ -388,6 +347,10 @@ static bool espWiFiStart() {
     log_e("esp_wifi_start 0x%x: %s", err, esp_err_to_name(err));
     return _esp_wifi_started;
   }
+#if SOC_WIFI_SUPPORT_5G
+  log_v("Setting Band Mode to AUTO");
+  esp_wifi_set_band_mode(WIFI_BAND_MODE_AUTO);
+#endif
   return _esp_wifi_started;
 }
 
@@ -412,7 +375,6 @@ static bool espWiFiStop() {
 
 bool WiFiGenericClass::_persistent = true;
 bool WiFiGenericClass::_long_range = false;
-wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
 #if CONFIG_IDF_TARGET_ESP32S2
 wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
 #else
@@ -703,7 +665,7 @@ bool WiFiGenericClass::enableAP(bool enable) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Enable or disable WiFi modem power save mode
  * @param enable bool
  * @return ok
  */
@@ -712,31 +674,122 @@ bool WiFiGenericClass::setSleep(bool enabled) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Set WiFi modem power save mode
  * @param mode wifi_ps_type_t
  * @return ok
  */
 bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
-  if (sleepType != _sleepEnabled) {
+  if (sleepType > WIFI_PS_MAX_MODEM) {
+    return false;
+  }
+
+  if (!WiFi.STA.started()) {
     _sleepEnabled = sleepType;
-    if (WiFi.STA.started()) {
-      esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
-      if (err != ESP_OK) {
-        log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
     return true;
   }
-  return false;
+
+  esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  _sleepEnabled = sleepType;
+  return true;
 }
 
 /**
- * get modem sleep enabled
- * @return true if modem sleep is enabled
+ * Get WiFi modem power save mode
+ * @return wifi_ps_type_t
  */
 wifi_ps_type_t WiFiGenericClass::getSleep() {
   return _sleepEnabled;
+}
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+/**
+ * control wifi band mode
+ * @param band_mode enum possible band modes
+ * @return ok
+ */
+bool WiFiGenericClass::setBandMode(wifi_band_mode_t band_mode) {
+#if SOC_WIFI_SUPPORT_5G
+  if (!WiFi.STA.started() && !WiFi.AP.started()) {
+    log_e("You need to start WiFi first");
+    return false;
+  }
+  wifi_band_mode_t bm = WIFI_BAND_MODE_AUTO;
+  esp_err_t err = esp_wifi_get_band_mode(&bm);
+  if (err != ESP_OK) {
+    log_e("Failed to get Current Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  } else if (bm == band_mode) {
+    log_d("No change in Band Mode");
+    return true;
+  } else {
+    log_d("Switching Band Mode from %d to %d", bm, band_mode);
+  }
+#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_ERROR
+  if (WiFi.STA.connected() || WiFi.AP.connected()) {
+    log_e("Your network will get disconnected!");
+  }
+#endif
+  err = esp_wifi_set_band_mode(band_mode);
+  if (err != ESP_OK) {
+    log_e("Failed to set Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  delay(100);
+  return true;
+#else
+  if (band_mode == WIFI_BAND_MODE_5G_ONLY) {
+    log_e("This chip supports only 2.4GHz WiFi");
+  }
+  return band_mode != WIFI_BAND_MODE_5G_ONLY;
+#endif
+}
+
+/**
+ * get the current enabled wifi band mode
+ * @return enum band mode
+ */
+wifi_band_mode_t WiFiGenericClass::getBandMode() {
+#if SOC_WIFI_SUPPORT_5G
+  wifi_band_mode_t band_mode = WIFI_BAND_MODE_AUTO;
+  if (!WiFi.STA.started() && !WiFi.AP.started()) {
+    log_e("You need to start WiFi first");
+    return band_mode;
+  }
+  esp_err_t err = esp_wifi_get_band_mode(&band_mode);
+  if (err != ESP_OK) {
+    log_e("Failed to get Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return band_mode;
+#else
+  return WIFI_BAND_MODE_2G_ONLY;
+#endif
+}
+#endif
+
+/**
+ * get the current active wifi band
+ * @return enum band
+ */
+wifi_band_t WiFiGenericClass::getBand() {
+#if SOC_WIFI_SUPPORT_5G
+  wifi_band_t band = WIFI_BAND_2G;
+  if (!WiFi.STA.started() && !WiFi.AP.started()) {
+    log_e("You need to start WiFi first");
+    return band;
+  }
+  esp_err_t err = esp_wifi_get_band(&band);
+  if (err != ESP_OK) {
+    log_e("Failed to get Band: 0x%x: %s", err, esp_err_to_name(err));
+  }
+  return band;
+#else
+  return WIFI_BAND_2G;
+#endif
 }
 
 /**

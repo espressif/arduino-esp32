@@ -23,5 +23,6 @@ static const uint8_t A2 = 4;
 static const uint8_t A3 = 5;
 
 static const uint8_t BAT_ADC_PIN = 2;
+#define BAT_VOLT_PIN BAT_ADC_PIN
 
 #endif /* Pins_Arduino_h */

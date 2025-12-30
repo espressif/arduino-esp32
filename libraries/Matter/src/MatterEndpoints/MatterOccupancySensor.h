@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,10 +19,16 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 #include <app-common/zap-generated/cluster-objects.h>
+#include <functional>
 
 using namespace chip::app::Clusters::OccupancySensing;
 
+// Forward declaration for friend class
+class OccupancySensingAttrAccessWrapper;
+
 class MatterOccupancySensor : public MatterEndPoint {
+  friend class OccupancySensingAttrAccessWrapper;
+
 public:
   // Different Occupancy Sensor Types
   enum OccupancySensorType_t {
@@ -32,9 +38,11 @@ public:
     OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT = (uint8_t)OccupancySensorTypeEnum::kPhysicalContact
   };
 
+  // Constructor
   MatterOccupancySensor();
   ~MatterOccupancySensor();
   // begin Matter Occupancy Sensor endpoint with initial occupancy state and default PIR sensor type
+  // Note: Call setHoldTimeLimits() after Matter.begin() to configure HoldTimeLimits (optional)
   bool begin(bool _occupancyState = false, OccupancySensorType_t _occupancySensorType = OCCUPANCY_SENSOR_TYPE_PIR);
   // this will just stop processing Occupancy Sensor Matter events
   void end();
@@ -46,6 +54,20 @@ public:
     return occupancyState;
   }
 
+  // set the hold time (in seconds)
+  // Must be called after Matter.begin() has been called (requires Matter event loop to be running)
+  bool setHoldTime(uint16_t _holdTime_seconds);
+  // returns the hold time (in seconds)
+  uint16_t getHoldTime() {
+    return holdTime_seconds;
+  }
+
+  // set the hold time limits (min, max, default in seconds)
+  // Must be called after Matter.begin() has been called (requires Matter event loop to be running)
+  // Note: holdTimeDefault_seconds is informational metadata for Matter controllers (recommended default value).
+  //       It does NOT automatically set the HoldTime attribute - use setHoldTime() to set the actual value.
+  bool setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uint16_t _holdTimeMax_seconds, uint16_t _holdTimeDefault_seconds);
+
   // bool conversion operator
   void operator=(bool _occupancyState) {
     setOccupancy(_occupancyState);
@@ -54,6 +76,12 @@ public:
   operator bool() {
     return getOccupancy();
   }
+
+  // User callback for HoldTime attribute changes
+  using HoldTimeChangeCB = std::function<bool(uint16_t holdTime_seconds)>;
+
+  // Set callback for HoldTime changes (called when Matter Controller changes HoldTime)
+  void onHoldTimeChange(HoldTimeChangeCB onHoldTimeChangeCB);
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
@@ -69,5 +97,14 @@ protected:
 
   bool started = false;
   bool occupancyState = false;
+  uint16_t holdTime_seconds = 0;
+
+  // HoldTimeLimits settings (set via setHoldTimeLimits() after Matter.begin())
+  uint16_t holdTimeMin_seconds = 0;
+  uint16_t holdTimeMax_seconds = 0;  // 0 means no maximum, no limits enforced
+  uint16_t holdTimeDefault_seconds = 0;
+
+  // User callback
+  HoldTimeChangeCB _onHoldTimeChangeCB = nullptr;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

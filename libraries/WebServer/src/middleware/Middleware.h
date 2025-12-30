@@ -15,6 +15,7 @@ public:
   virtual ~Middleware() {}
 
   virtual bool run(WebServer &server, Callback next) {
+    (void)server;
     return next();
   };
 

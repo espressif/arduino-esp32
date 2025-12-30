@@ -28,8 +28,8 @@
 #include "OThreadCLI.h"
 #include "OThreadCLI_Util.h"
 
-#define CLI_NETWORK_KEY    "dataset networkkey 00112233445566778899aabbccddeeff"
-#define CLI_NETWORK_CHANEL "dataset channel 24"
+#define CLI_NETWORK_KEY     "dataset networkkey 00112233445566778899aabbccddeeff"
+#define CLI_NETWORK_CHANNEL "dataset channel 24"
 
 otInstance *aInstance = NULL;
 
@@ -43,7 +43,7 @@ void setup() {
 
   OThreadCLI.println("dataset init new");
   OThreadCLI.println(CLI_NETWORK_KEY);
-  OThreadCLI.println(CLI_NETWORK_CHANEL);
+  OThreadCLI.println(CLI_NETWORK_CHANNEL);
   OThreadCLI.println("dataset commit active");
   OThreadCLI.println("ifconfig up");
   OThreadCLI.println("thread start");

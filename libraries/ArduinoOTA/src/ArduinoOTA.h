@@ -41,7 +41,11 @@ public:
   typedef std::function<void(ota_error_t)> THandlerFunction_Error;
   typedef std::function<void(unsigned int, unsigned int)> THandlerFunction_Progress;
 
-  ArduinoOTAClass();
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_UPDATE)
+  ArduinoOTAClass(UpdateClass *updater = &Update);
+#else
+  ArduinoOTAClass(UpdateClass *updater = nullptr);
+#endif
   ~ArduinoOTAClass();
 
   //Sets the service port. Default 3232
@@ -54,18 +58,29 @@ public:
   //Sets the password that will be required for OTA. Default NULL
   ArduinoOTAClass &setPassword(const char *password);
 
-  //Sets the password as above but in the form MD5(password). Default NULL
+  //Sets the password as above but in the form SHA256(password). Default NULL
   ArduinoOTAClass &setPasswordHash(const char *password);
 
   //Sets the partition label to write to when updating SPIFFS. Default NULL
   ArduinoOTAClass &setPartitionLabel(const char *partition_label);
   String getPartitionLabel();
 
+  //Sets instance of UpdateClass to perform updating operations
+  ArduinoOTAClass &setUpdaterInstance(UpdateClass *updater);
+
   //Sets if the device should be rebooted after successful update. Default true
   ArduinoOTAClass &setRebootOnSuccess(bool reboot);
 
   //Sets if the device should advertise itself to Arduino IDE. Default true
   ArduinoOTAClass &setMdnsEnabled(bool enabled);
+
+#ifdef UPDATE_SIGN
+  //Install signature verification for OTA updates
+  //Must be called before begin()
+  //sign: Signature verifier to use (e.g., UpdaterRSAVerifier or UpdaterECDSAVerifier)
+  //      The hash type is determined from the verifier's configuration
+  ArduinoOTAClass &setSignature(UpdaterVerifyClass *sign);
+#endif /* UPDATE_SIGN */
 
   //This callback will be called when OTA connection has begun
   ArduinoOTAClass &onStart(THandlerFunction fn);
@@ -94,6 +109,7 @@ public:
   void setTimeout(int timeoutInMillis);
 
 private:
+  UpdateClass *_updater;
   int _port;
   String _password;
   String _hostname;
@@ -115,6 +131,10 @@ private:
   THandlerFunction _end_callback;
   THandlerFunction_Error _error_callback;
   THandlerFunction_Progress _progress_callback;
+
+#ifdef UPDATE_SIGN
+  UpdaterVerifyClass *_sign;
+#endif /* UPDATE_SIGN */
 
   void _runUpdate(void);
   void _onRx(void);

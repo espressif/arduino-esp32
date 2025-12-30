@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ZigbeeTempSensor.h"
 #if CONFIG_ZB_ENABLED
 
@@ -7,6 +21,9 @@ ZigbeeTempSensor::ZigbeeTempSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   esp_zb_temperature_sensor_cfg_t temp_sensor_cfg = ESP_ZB_DEFAULT_TEMPERATURE_SENSOR_CONFIG();
   _cluster_list = esp_zb_temperature_sensor_clusters_create(&temp_sensor_cfg);
+
+  // Set default (initial) value for the temperature sensor to 0.0°C
+  setDefaultValue(0.0);
 
   _ep_config = {
     .endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID, .app_device_version = 0
@@ -30,6 +47,18 @@ bool ZigbeeTempSensor::setMinMaxValue(float min, float max) {
   ret = esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_MAX_VALUE_ID, (void *)&zb_max);
   if (ret != ESP_OK) {
     log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeTempSensor::setDefaultValue(float defaultValue) {
+  int16_t zb_default_value = zb_float_to_s16(defaultValue);
+  esp_zb_attribute_list_t *temp_measure_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(temp_measure_cluster, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, (void *)&zb_default_value);
+  if (ret != ESP_OK) {
+    log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
   return true;
@@ -112,11 +141,11 @@ bool ZigbeeTempSensor::reportTemperature() {
   return true;
 }
 
-void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance) {
-  int16_t zb_min = zb_float_to_s16(min);
-  int16_t zb_max = zb_float_to_s16(max);
+void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance, float defaultValue) {
+  uint16_t zb_min = (uint16_t)(min * 100);
+  uint16_t zb_max = (uint16_t)(max * 100);
   uint16_t zb_tolerance = (uint16_t)(tolerance * 100);
-  int16_t default_hum = ESP_ZB_ZCL_REL_HUMIDITY_MEASUREMENT_MEASURED_VALUE_DEFAULT;
+  uint16_t default_hum = (uint16_t)(defaultValue * 100);
   esp_zb_attribute_list_t *humidity_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT);
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID, &default_hum);
   esp_zb_humidity_meas_cluster_add_attr(humidity_cluster, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, &zb_min);
@@ -128,7 +157,7 @@ void ZigbeeTempSensor::addHumiditySensor(float min, float max, float tolerance) 
 
 bool ZigbeeTempSensor::setHumidity(float humidity) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  int16_t zb_humidity = zb_float_to_s16(humidity);
+  uint16_t zb_humidity = (uint16_t)(humidity * 100);
   log_v("Updating humidity sensor value...");
   /* Update humidity sensor measured value */
   log_d("Setting humidity to %d", zb_humidity);

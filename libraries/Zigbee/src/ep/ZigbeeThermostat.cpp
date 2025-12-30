@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ZigbeeThermostat.h"
 #if CONFIG_ZB_ENABLED
 
@@ -12,6 +26,12 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;
   _instance = this;   // Set the static pointer to this instance
   _device = nullptr;  // Initialize sensor pointer to null
+  _on_temp_receive = nullptr;
+  _on_temp_receive_with_source = nullptr;
+  _on_temp_config_receive = nullptr;
+  _on_humidity_receive = nullptr;
+  _on_humidity_receive_with_source = nullptr;
+  _on_humidity_config_receive = nullptr;
 
   //use custom config to avoid narrowing error -> must be fixed in zigbee-sdk
   esp_zb_thermostat_cfg_t thermostat_cfg = ZB_DEFAULT_THERMOSTAT_CONFIG();
@@ -25,6 +45,7 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   esp_zb_cluster_list_add_thermostat_cluster(_cluster_list, esp_zb_thermostat_cluster_create(&(thermostat_cfg.thermostat_cfg)), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
   /* Add temperature measurement cluster for attribute reporting */
   esp_zb_cluster_list_add_temperature_meas_cluster(_cluster_list, esp_zb_temperature_meas_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
+  esp_zb_cluster_list_add_humidity_meas_cluster(_cluster_list, esp_zb_humidity_meas_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_CLIENT_ROLE);
 
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID, .app_device_version = 0};
 }
@@ -65,7 +86,8 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
   ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     log_i("Found temperature sensor");
-    esp_zb_zdo_bind_req_param_t bind_req = {0};
+    esp_zb_zdo_bind_req_param_t bind_req;
+    memset(&bind_req, 0, sizeof(bind_req));
     /* Store the information of the remote device */
     zb_device_params_t *sensor = (zb_device_params_t *)malloc(sizeof(zb_device_params_t));
     sensor->endpoint = endpoint;
@@ -85,21 +107,27 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
     log_i("Request temperature sensor to bind us");
     esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, NULL);
 
+    log_i("Request humidity sensor to bind us");
+    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+    esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, NULL);
+
     /* 2. Send binding request to self */
     bind_req.req_dst_addr = esp_zb_get_short_address();
 
     /* populate the src information of the binding */
     esp_zb_get_long_address(bind_req.src_address);
     bind_req.src_endp = instance->_endpoint;
-    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
     bind_req.dst_addr_mode = ESP_ZB_ZDO_BIND_DST_ADDR_MODE_64_BIT_EXTENDED;
     memcpy(bind_req.dst_address_u.addr_long, sensor->ieee_addr, sizeof(esp_zb_ieee_addr_t));
     bind_req.dst_endp = endpoint;
-    log_i("Try to bind Temperature Measurement");
-    //save sensor params in the class
+    log_i("Try to bind Humidity Measurement");  // Optional cluster to bind, if fails, continue to bind the temperature measurement cluster
+    // save sensor params in the class
     instance->_device = sensor;
 
-    log_d("Find callback on EP %d", instance->_endpoint);
+    esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, NULL);
+    bind_req.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
+    log_i("Try to bind Temperature Measurement");  // Mandatory cluster to bind
     esp_zb_zdo_device_bind_req(&bind_req, ZigbeeThermostat::bindCbWrapper, this);
   } else {
     log_d("No temperature sensor endpoint found");
@@ -107,9 +135,9 @@ void ZigbeeThermostat::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uin
 }
 
 void ZigbeeThermostat::findEndpoint(esp_zb_zdo_match_desc_req_param_t *param) {
-  uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT};
+  uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT};
   param->profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-  param->num_in_clusters = 1;
+  param->num_in_clusters = 2;
   param->num_out_clusters = 0;
   param->cluster_list = cluster_list;
   esp_zb_zdo_match_cluster(param, ZigbeeThermostat::findCbWrapper, this);
@@ -141,21 +169,60 @@ void ZigbeeThermostat::zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_att
     }
     if (attribute->id == ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_TOLERANCE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       uint16_t tolerance = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
-      _tolerance = 1.0 * tolerance / 100;
+      _tolerance_temp = 1.0 * tolerance / 100;
       read_config++;
-      log_d("Received tolerance: %.2f°C from endpoint %d", _tolerance, src_endpoint);
+      log_d("Received tolerance: %.2f°C from endpoint %d", _tolerance_temp, src_endpoint);
     }
     if (read_config == 3) {
-      log_d("All config attributes processed");
+      log_d("All temperature config attributes processed");
       read_config = 0;
+      xSemaphoreGive(lock);
+    }
+  }
+  static uint8_t read_humidity_config = 0;
+  if (cluster_id == ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT) {
+    if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      uint16_t value = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
+      float humidity = 1.0 * value / 100;
+      if (_on_humidity_receive) {
+        _on_humidity_receive(humidity);
+      }
+      if (_on_humidity_receive_with_source) {
+        _on_humidity_receive_with_source(humidity, src_endpoint, src_address);
+      }
+    }
+    if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      uint16_t min_value = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
+      _min_humidity = 1.0 * min_value / 100;
+      read_humidity_config++;
+      log_d("Received min humidity: %.2f%% from endpoint %d", _min_humidity, src_endpoint);
+    }
+    if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      uint16_t max_value = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
+      _max_humidity = 1.0 * max_value / 100;
+      read_humidity_config++;
+      log_d("Received max humidity: %.2f%% from endpoint %d", _max_humidity, src_endpoint);
+    }
+    if (attribute->id == ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      uint16_t tolerance = attribute->data.value ? *(uint16_t *)attribute->data.value : 0;
+      _tolerance_humidity = 1.0 * tolerance / 100;
+      read_humidity_config++;
+      log_d("Received tolerance: %.2f%% from endpoint %d", _tolerance_humidity, src_endpoint);
+    }
+    if (read_humidity_config == 3) {
+      log_d("All humidity config attributes processed");
+      read_humidity_config = 0;
       xSemaphoreGive(lock);
     }
   }
 }
 
+// Temperature measuring methods
+
 void ZigbeeThermostat::getTemperature() {
   /* Send "read attributes" command to all bound sensors */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -172,7 +239,8 @@ void ZigbeeThermostat::getTemperature() {
 
 void ZigbeeThermostat::getTemperature(uint16_t group_addr) {
   /* Send "read attributes" command to the group */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -190,7 +258,8 @@ void ZigbeeThermostat::getTemperature(uint16_t group_addr) {
 
 void ZigbeeThermostat::getTemperature(uint8_t endpoint, uint16_t short_addr) {
   /* Send "read attributes" command to specific endpoint */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -209,7 +278,8 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, uint16_t short_addr) {
 
 void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   /* Send "read attributes" command to specific endpoint */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -229,9 +299,10 @@ void ZigbeeThermostat::getTemperature(uint8_t endpoint, esp_zb_ieee_addr_t ieee_
   esp_zb_lock_release();
 }
 
-void ZigbeeThermostat::getSensorSettings() {
+void ZigbeeThermostat::getTemperatureSettings() {
   /* Send "read attributes" command to all bound sensors */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -253,13 +324,14 @@ void ZigbeeThermostat::getSensorSettings() {
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_receive(_min_temp, _max_temp, _tolerance);
+    _on_temp_config_receive(_min_temp, _max_temp, _tolerance_temp);
   }
 }
 
-void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
+void ZigbeeThermostat::getTemperatureSettings(uint16_t group_addr) {
   /* Send "read attributes" command to the group */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -282,13 +354,14 @@ void ZigbeeThermostat::getSensorSettings(uint16_t group_addr) {
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_receive(_min_temp, _max_temp, _tolerance);
+    _on_temp_config_receive(_min_temp, _max_temp, _tolerance_temp);
   }
 }
 
-void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) {
+void ZigbeeThermostat::getTemperatureSettings(uint8_t endpoint, uint16_t short_addr) {
   /* Send "read attributes" command to specific endpoint */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -312,13 +385,14 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, uint16_t short_addr) 
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_receive(_min_temp, _max_temp, _tolerance);
+    _on_temp_config_receive(_min_temp, _max_temp, _tolerance_temp);
   }
 }
 
-void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+void ZigbeeThermostat::getTemperatureSettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   /* Send "read attributes" command to specific endpoint */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
   read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   read_req.zcl_basic_cmd.src_endpoint = _endpoint;
   read_req.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -345,13 +419,14 @@ void ZigbeeThermostat::getSensorSettings(uint8_t endpoint, esp_zb_ieee_addr_t ie
     return;
   } else {
     //Call the callback function when all attributes are read
-    _on_config_receive(_min_temp, _max_temp, _tolerance);
+    _on_temp_config_receive(_min_temp, _max_temp, _tolerance_temp);
   }
 }
 
 void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
   /* Send "configure report attribute" command to all bound sensors */
-  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT;
@@ -370,7 +445,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
-  log_i("Sending 'configure reporting' command");
+  log_i("Sending 'configure temperature reporting' command");
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
   esp_zb_lock_release();
@@ -378,7 +453,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t min_interval, uint16_t m
 
 void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
   /* Send "configure report attribute" command to the group */
-  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
@@ -398,7 +474,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
-  log_i("Sending 'configure reporting' command to group address 0x%x", group_addr);
+  log_i("Sending 'configure temperature reporting' command to group address 0x%x", group_addr);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
   esp_zb_lock_release();
@@ -406,7 +482,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint16_t group_addr, uint16_t min
 
 void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
   /* Send "configure report attribute" command to specific endpoint */
-  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -427,7 +504,7 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
   report_cmd.record_number = ZB_ARRAY_LENGHT(records);
   report_cmd.record_field = records;
 
-  log_i("Sending 'configure reporting' command to endpoint %d, address 0x%x", endpoint, short_addr);
+  log_i("Sending 'configure temperature reporting' command to endpoint %d, address 0x%x", endpoint, short_addr);
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
   esp_zb_lock_release();
@@ -435,7 +512,8 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, uint16_t short_
 
 void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
   /* Send "configure report attribute" command to specific endpoint */
-  esp_zb_zcl_config_report_cmd_t report_cmd = {0};
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
   report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
   report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
@@ -457,12 +535,337 @@ void ZigbeeThermostat::setTemperatureReporting(uint8_t endpoint, esp_zb_ieee_add
   report_cmd.record_field = records;
 
   log_i(
-    "Sending 'configure reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
-    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+    "Sending 'configure temperature reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7],
+    ieee_addr[6], ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_config_report_cmd_req(&report_cmd);
   esp_zb_lock_release();
 }
 
+// Humidity measuring methods
+
+void ZigbeeThermostat::getHumidity() {
+  /* Send "read attributes" command to all bound sensors */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID};
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity' command");
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::getHumidity(uint16_t group_addr) {
+  /* Send "read attributes" command to the group */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID};
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity' command to group address 0x%x", group_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::getHumidity(uint8_t endpoint, uint16_t short_addr) {
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+  read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID};
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity' command to endpoint %d, address 0x%x", endpoint, short_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::getHumidity(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+  memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+
+  uint16_t attributes[] = {ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID};
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i(
+    "Sending 'read humidity' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+    ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+  );
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::getHumiditySettings() {
+  /* Send "read attributes" command to all bound sensors */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {
+    ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID
+  };
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity settings' command");
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+
+  //Take semaphore to wait for response of all attributes
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+    log_e("Error while reading attributes");
+    return;
+  } else {
+    //Call the callback function when all attributes are read
+    _on_humidity_config_receive(_min_humidity, _max_humidity, _tolerance_humidity);
+  }
+}
+
+void ZigbeeThermostat::getHumiditySettings(uint16_t group_addr) {
+  /* Send "read attributes" command to the group */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {
+    ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID
+  };
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity settings' command to group address 0x%x", group_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+
+  //Take semaphore to wait for response of all attributes
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+    log_e("Error while reading attributes");
+    return;
+  } else {
+    //Call the callback function when all attributes are read
+    _on_humidity_config_receive(_min_humidity, _max_humidity, _tolerance_humidity);
+  }
+}
+
+void ZigbeeThermostat::getHumiditySettings(uint8_t endpoint, uint16_t short_addr) {
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+  read_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  uint16_t attributes[] = {
+    ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID
+  };
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i("Sending 'read humidity settings' command to endpoint %d, address 0x%x", endpoint, short_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+
+  //Take semaphore to wait for response of all attributes
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+    log_e("Error while reading attributes");
+    return;
+  } else {
+    //Call the callback function when all attributes are read
+    _on_humidity_config_receive(_min_humidity, _max_humidity, _tolerance_humidity);
+  }
+}
+
+void ZigbeeThermostat::getHumiditySettings(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+  /* Send "read attributes" command to specific endpoint */
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
+  read_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+  read_req.zcl_basic_cmd.src_endpoint = _endpoint;
+  read_req.zcl_basic_cmd.dst_endpoint = endpoint;
+  read_req.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+  memcpy(read_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+
+  uint16_t attributes[] = {
+    ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MIN_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_MAX_VALUE_ID, ESP_ZB_ZCL_ATTR_REL_HUMIDITY_TOLERANCE_ID
+  };
+  read_req.attr_number = ZB_ARRAY_LENGHT(attributes);
+  read_req.attr_field = attributes;
+
+  log_i(
+    "Sending 'read humidity settings' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+  );
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
+
+  //Take semaphore to wait for response of all attributes
+  if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
+    log_e("Error while reading attributes");
+    return;
+  } else {
+    //Call the callback function when all attributes are read
+    _on_humidity_config_receive(_min_humidity, _max_humidity, _tolerance_humidity);
+  }
+}
+
+void ZigbeeThermostat::setHumidityReporting(uint16_t min_interval, uint16_t max_interval, float delta) {
+  /* Send "configure report attribute" command to all bound sensors */
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
+  report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+  report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  int16_t report_change = (int16_t)delta * 100;
+  esp_zb_zcl_config_report_record_t records[] = {
+    {
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
+      .attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
+      .attrType = ESP_ZB_ZCL_ATTR_TYPE_U16,
+      .min_interval = min_interval,
+      .max_interval = max_interval,
+      .reportable_change = (void *)&report_change,
+    },
+  };
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
+  report_cmd.record_field = records;
+
+  log_i("Sending 'configure humidity reporting' command");
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_config_report_cmd_req(&report_cmd);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::setHumidityReporting(uint16_t group_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
+  /* Send "configure report attribute" command to the group */
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
+  report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
+  report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
+  report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  int16_t report_change = (int16_t)delta * 100;
+  esp_zb_zcl_config_report_record_t records[] = {
+    {
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
+      .attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
+      .attrType = ESP_ZB_ZCL_ATTR_TYPE_U16,
+      .min_interval = min_interval,
+      .max_interval = max_interval,
+      .reportable_change = (void *)&report_change,
+    },
+  };
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
+  report_cmd.record_field = records;
+
+  log_i("Sending 'configure humidity reporting' command to group address 0x%x", group_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_config_report_cmd_req(&report_cmd);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::setHumidityReporting(uint8_t endpoint, uint16_t short_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
+  /* Send "configure report attribute" command to specific endpoint */
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
+  report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+  report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
+  report_cmd.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+  report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+
+  int16_t report_change = (int16_t)delta * 100;
+  esp_zb_zcl_config_report_record_t records[] = {
+    {
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
+      .attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
+      .attrType = ESP_ZB_ZCL_ATTR_TYPE_U16,
+      .min_interval = min_interval,
+      .max_interval = max_interval,
+      .reportable_change = (void *)&report_change,
+    },
+  };
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
+  report_cmd.record_field = records;
+
+  log_i("Sending 'configure humidity reporting' command to endpoint %d, address 0x%x", endpoint, short_addr);
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_config_report_cmd_req(&report_cmd);
+  esp_zb_lock_release();
+}
+
+void ZigbeeThermostat::setHumidityReporting(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr, uint16_t min_interval, uint16_t max_interval, float delta) {
+  /* Send "configure report attribute" command to specific endpoint */
+  esp_zb_zcl_config_report_cmd_t report_cmd;
+  memset(&report_cmd, 0, sizeof(report_cmd));
+  report_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+  report_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
+  report_cmd.zcl_basic_cmd.dst_endpoint = endpoint;
+  report_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_REL_HUMIDITY_MEASUREMENT;
+  memcpy(report_cmd.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+
+  int16_t report_change = (int16_t)delta * 100;
+  esp_zb_zcl_config_report_record_t records[] = {
+    {
+      .direction = ESP_ZB_ZCL_REPORT_DIRECTION_SEND,
+      .attributeID = ESP_ZB_ZCL_ATTR_REL_HUMIDITY_MEASUREMENT_VALUE_ID,
+      .attrType = ESP_ZB_ZCL_ATTR_TYPE_U16,
+      .min_interval = min_interval,
+      .max_interval = max_interval,
+      .reportable_change = (void *)&report_change,
+    },
+  };
+  report_cmd.record_number = ZB_ARRAY_LENGHT(records);
+  report_cmd.record_field = records;
+
+  log_i(
+    "Sending 'configure humidity reporting' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6],
+    ieee_addr[5], ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
+  );
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_zb_zcl_config_report_cmd_req(&report_cmd);
+  esp_zb_lock_release();
+}
 #endif  // CONFIG_ZB_ENABLED

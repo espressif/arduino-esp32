@@ -1,0 +1,16 @@
+soc_tags:
+  esp32:
+    - psram
+  esp32s2:
+    - psram
+  esp32s3:
+    - octal_psram
+  esp32c5:
+    - psram
+  # Runners for ESP32-P4 have PSRAM by default. There are no runners with psram tag.
+
+platforms:
+  qemu: false
+
+requires:
+  - CONFIG_SPIRAM=y

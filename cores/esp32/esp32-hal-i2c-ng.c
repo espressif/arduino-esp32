@@ -56,6 +56,13 @@ static bool i2cDetachBus(void *bus_i2c_num) {
   return true;
 }
 
+void *i2cBusHandle(uint8_t i2c_num) {
+  if (i2c_num >= SOC_I2C_NUM) {
+    return NULL;
+  }
+  return bus[i2c_num].bus_handle;
+}
+
 bool i2cIsInit(uint8_t i2c_num) {
   if (i2c_num >= SOC_I2C_NUM) {
     return false;
@@ -148,6 +155,9 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
       return ESP_FAIL;
     }
   }
+
+  // Silence messages coming from the IDF driver
+  esp_log_level_set("i2c.master", ESP_LOG_NONE);
 
 init_fail:
 #if !CONFIG_DISABLE_HAL_LOCKS

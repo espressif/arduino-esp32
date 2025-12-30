@@ -45,13 +45,13 @@ extern "C" {
  * @param p Print interface
  */
 void WiFiClass::printDiag(Print &p) {
-  const char *modes[] = {"NULL", "STA", "AP", "STA+AP"};
+  const char *modes[] = {"NULL", "STA", "AP", "STA+AP", "NAN"};
 
-  wifi_mode_t mode;
+  wifi_mode_t mode = WIFI_MODE_NULL;
   esp_wifi_get_mode(&mode);
 
-  uint8_t primaryChan;
-  wifi_second_chan_t secondChan;
+  uint8_t primaryChan = 0;
+  wifi_second_chan_t secondChan = WIFI_SECOND_CHAN_NONE;
   esp_wifi_get_channel(&primaryChan, &secondChan);
 
   p.print("Mode: ");
@@ -67,7 +67,7 @@ void WiFiClass::printDiag(Print &p) {
         p.println(wifi_station_get_connect_status());
     */
 
-  wifi_config_t conf;
+  wifi_config_t conf = {0};
   esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA, &conf);
 
   const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);
