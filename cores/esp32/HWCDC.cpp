@@ -294,11 +294,11 @@ bool HWCDC::deinit(void *busptr) {
   retCode &= perimanClearPinBus(USB_INT_PHY0_DP_GPIO_NUM);
   if (retCode) {
     // Force the host to re-enumerate (BUS_RESET)
-    pinMode(USB_INT_PHY0_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
+    //pinMode(USB_INT_PHY0_DM_GPIO_NUM, OUTPUT_OPEN_DRAIN);
     pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
-    digitalWrite(USB_INT_PHY0_DM_GPIO_NUM, LOW);
-    digitalWrite(USB_INT_PHY0_DP_GPIO_NUM, LOW);
-    delay(5); // necessary for the UDB Host to enumerate it
+    //digitalWrite(USB_INT_PHY0_DM_GPIO_NUM, LOW);
+    //digitalWrite(USB_INT_PHY0_DP_GPIO_NUM, LOW);
+    delay(5); // necessary for the USB Host to enumerate it
   }
   // release the flag
   running = false;
@@ -341,7 +341,7 @@ void HWCDC::begin(unsigned long baud) {
   
   // begin() executed after another begin()
   if (hw_cdc_started) {
-    // avoid reseting the pins and causing an interruption of the USB flow
+    // avoid resetting the pins and causing an interruption of the USB flow
     return;
   }
 
