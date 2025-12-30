@@ -7,10 +7,10 @@
 
 #ifndef COMPONENTS_CPP_UTILS_BLEEXCEPTIONS_H_
 #define COMPONENTS_CPP_UTILS_BLEEXCEPTIONS_H_
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
 
 #if CONFIG_CXX_EXCEPTIONS != 1
 #error "C++ exception handling must be enabled within make menuconfig. See Compiler Options > Enable C++ Exceptions."
@@ -30,5 +30,6 @@ class BLEUuidNotFoundException : public std::exception {
   }
 };
 
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+
 #endif /* COMPONENTS_CPP_UTILS_BLEEXCEPTIONS_H_ */

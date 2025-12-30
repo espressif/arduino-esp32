@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Class of Zigbee On/Off Switch endpoint inherited from common EP class */
 
 #pragma once
@@ -44,10 +58,60 @@ public:
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
 
+  void getLightState();
+  void getLightState(uint16_t group_addr);
+  void getLightState(uint8_t endpoint, uint16_t short_addr);
+  void getLightState(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+  void getLightLevel();
+  void getLightLevel(uint16_t group_addr);
+  void getLightLevel(uint8_t endpoint, uint16_t short_addr);
+  void getLightLevel(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+  void getLightColor();
+  void getLightColor(uint16_t group_addr);
+  void getLightColor(uint8_t endpoint, uint16_t short_addr);
+  void getLightColor(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+  void getLightColorHS();
+  void getLightColorHS(uint16_t group_addr);
+  void getLightColorHS(uint8_t endpoint, uint16_t short_addr);
+  void getLightColorHS(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+  void onLightStateChange(void (*callback)(bool)) {
+    _on_light_state_change = callback;
+  }
+  void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_light_state_change_with_source = callback;
+  }
+  void onLightLevelChange(void (*callback)(uint8_t)) {
+    _on_light_level_change = callback;
+  }
+  void onLightLevelChangeWithSource(void (*callback)(uint8_t, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_light_level_change_with_source = callback;
+  }
+  void onLightColorChange(void (*callback)(uint8_t, uint8_t, uint8_t)) {
+    _on_light_color_change = callback;
+  }
+  void onLightColorChangeWithSource(void (*callback)(uint8_t, uint8_t, uint8_t, uint8_t, esp_zb_zcl_addr_t)) {
+    _on_light_color_change_with_source = callback;
+  }
+
 private:
   // save instance of the class in order to use it in static functions
   static ZigbeeColorDimmerSwitch *_instance;
   zb_device_params_t *_device;
+
+  espHsvColor_t _light_color_hsv;
+  espXyColor_t _light_color_xy;
+  espRgbColor_t _light_color_rgb;
+
+  void (*_on_light_state_change)(bool);
+  void (*_on_light_state_change_with_source)(bool, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_level_change)(uint8_t);
+  void (*_on_light_level_change_with_source)(uint8_t, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_color_change)(uint8_t, uint8_t, uint8_t);
+  void (*_on_light_color_change_with_source)(uint8_t, uint8_t, uint8_t, uint8_t, esp_zb_zcl_addr_t);
 
   void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
   void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
@@ -55,7 +119,7 @@ private:
   static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
   static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
 
-  void calculateXY(uint8_t red, uint8_t green, uint8_t blue, uint16_t &x, uint16_t &y);
+  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) override;
 };
 
 #endif  // CONFIG_ZB_ENABLED

@@ -199,8 +199,31 @@ set -e
 ##
 
 mkdir -p "$OUTPUT_DIR"
-PKG_DIR="$OUTPUT_DIR/$PACKAGE_NAME"
+PKG_DIR="${OUTPUT_DIR:?}/$PACKAGE_NAME"
 PACKAGE_ZIP="$PACKAGE_NAME.zip"
+PACKAGE_XZ="$PACKAGE_NAME.tar.xz"
+LIBS_ZIP="$PACKAGE_NAME-libs.zip"
+LIBS_XZ="$PACKAGE_NAME-libs.tar.xz"
+
+echo "Updating version..."
+if ! "${SCRIPTS_DIR}/update-version.sh" "$RELEASE_TAG"; then
+    echo "ERROR: update_version failed!"
+    exit 1
+fi
+git config --global github.user "github-actions[bot]"
+git config --global user.name "github-actions[bot]"
+git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+git add .
+
+# We should only commit if there are changes
+need_update_commit=true
+if git diff --cached --quiet; then
+    echo "Version already updated"
+    need_update_commit=false
+else
+    echo "Creating version update commit..."
+    git commit -m "change(version): Update core version to $RELEASE_TAG"
+fi
 
 echo "Updating submodules ..."
 git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
@@ -283,7 +306,7 @@ echo \#define ARDUINO_ESP32_GIT_DESC "$(git -C "$GITHUB_WORKSPACE" describe --ta
 echo \#define ARDUINO_ESP32_RELEASE_"$ver_define" >> "$PKG_DIR/cores/esp32/core_version.h"
 echo \#define ARDUINO_ESP32_RELEASE \""$ver_define"\" >> "$PKG_DIR/cores/esp32/core_version.h"
 
-# Compress package folder
+# Compress ZIP package folder
 echo "Creating ZIP ..."
 pushd "$OUTPUT_DIR" >/dev/null
 zip -qr "$PACKAGE_ZIP" "$PACKAGE_NAME"
@@ -293,21 +316,117 @@ if [ $? -ne 0 ]; then
 fi
 
 # Calculate SHA-256
-echo "Calculating SHA sum ..."
-PACKAGE_PATH="$OUTPUT_DIR/$PACKAGE_ZIP"
+echo "Calculating ZIP SHA sum ..."
+PACKAGE_PATH="${OUTPUT_DIR:?}/$PACKAGE_ZIP"
 PACKAGE_SHA=$(shasum -a 256 "$PACKAGE_ZIP" | cut -f 1 -d ' ')
 PACKAGE_SIZE=$(get_file_size "$PACKAGE_ZIP")
 popd >/dev/null
-rm -rf "$PKG_DIR"
 echo "'$PACKAGE_ZIP' Created! Size: $PACKAGE_SIZE, SHA-256: $PACKAGE_SHA"
 echo
 
-# Upload package to release page
-echo "Uploading package to release page ..."
+# Compress XZ package folder
+echo "Creating XZ ..."
+pushd "$OUTPUT_DIR" >/dev/null
+tar -cJf "$PACKAGE_XZ" "$PACKAGE_NAME"
+if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to create $PACKAGE_XZ ($?)"
+    exit 1
+fi
+
+# Calculate SHA-256
+echo "Calculating XZ SHA sum ..."
+PACKAGE_XZ_PATH="${OUTPUT_DIR:?}/$PACKAGE_XZ"
+PACKAGE_XZ_SHA=$(shasum -a 256 "$PACKAGE_XZ" | cut -f 1 -d ' ')
+PACKAGE_XZ_SIZE=$(get_file_size "$PACKAGE_XZ")
+popd >/dev/null
+echo "'$PACKAGE_XZ' Created! Size: $PACKAGE_XZ_SIZE, SHA-256: $PACKAGE_XZ_SHA"
+echo
+
+# Upload ZIP package to release page
+echo "Uploading ZIP package to release page ..."
 PACKAGE_URL=$(git_safe_upload_asset "$PACKAGE_PATH")
 echo "Package Uploaded"
 echo "Download URL: $PACKAGE_URL"
 echo
+
+# Upload XZ package to release page
+echo "Uploading XZ package to release page ..."
+PACKAGE_XZ_URL=$(git_safe_upload_asset "$PACKAGE_XZ_PATH")
+echo "Package Uploaded"
+echo "Download URL: $PACKAGE_XZ_URL"
+echo
+
+# Remove package folder
+rm -rf "$PKG_DIR"
+
+# Copy Libs from lib-builder to release in ZIP and XZ
+
+libs_url=$(cat "$PACKAGE_JSON_TEMPLATE" | jq -r ".packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[0].url")
+libs_sha=$(cat "$PACKAGE_JSON_TEMPLATE" | jq -r ".packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[0].checksum" | sed 's/^SHA-256://')
+libs_size=$(cat "$PACKAGE_JSON_TEMPLATE" | jq -r ".packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[0].size")
+echo "Downloading libs from lib-builder ..."
+echo "URL: $libs_url"
+echo "Expected SHA: $libs_sha"
+echo "Expected Size: $libs_size"
+echo
+
+echo "Downloading libs from lib-builder ..."
+curl -L -o "$OUTPUT_DIR/$LIBS_ZIP" "$libs_url"
+
+# Check SHA and Size
+zip_sha=$(sha256sum "$OUTPUT_DIR/$LIBS_ZIP" | awk '{print $1}')
+zip_size=$(stat -c%s "$OUTPUT_DIR/$LIBS_ZIP")
+echo "Downloaded SHA: $zip_sha"
+echo "Downloaded Size: $zip_size"
+if [ "$zip_sha" != "$libs_sha" ] || [ "$zip_size" != "$libs_size" ]; then
+    echo "ERROR: ZIP SHA and Size do not match"
+    exit 1
+fi
+
+# Extract ZIP
+
+echo "Repacking libs to XZ ..."
+unzip -q "$OUTPUT_DIR/$LIBS_ZIP" -d "$OUTPUT_DIR"
+pushd "$OUTPUT_DIR" >/dev/null
+tar -cJf "$LIBS_XZ" "esp32-arduino-libs"
+popd >/dev/null
+
+# Copy esp-hosted binaries
+
+mkdir -p "$GITHUB_WORKSPACE/hosted"
+cp "$OUTPUT_DIR/esp32-arduino-libs/hosted"/*.bin "$GITHUB_WORKSPACE/hosted/"
+
+# Upload ZIP and XZ libs to release page
+
+echo "Uploading ZIP libs to release page ..."
+LIBS_ZIP_URL=$(git_safe_upload_asset "$OUTPUT_DIR/$LIBS_ZIP")
+echo "ZIP libs Uploaded"
+echo "Download URL: $LIBS_ZIP_URL"
+echo
+
+echo "Uploading XZ libs to release page ..."
+LIBS_XZ_URL=$(git_safe_upload_asset "$OUTPUT_DIR/$LIBS_XZ")
+echo "XZ libs Uploaded"
+echo "Download URL: $LIBS_XZ_URL"
+echo
+
+# Update libs URLs in JSON template
+echo "Updating libs URLs in JSON template ..."
+
+# Update all libs URLs in the JSON template
+libs_jq_arg="(.packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[].url) = \"$LIBS_ZIP_URL\" |\
+             (.packages[0].tools[] | select(.name == \"esp32-arduino-libs\") | .systems[].archiveFileName) = \"$LIBS_ZIP\""
+
+cat "$PACKAGE_JSON_TEMPLATE" | jq "$libs_jq_arg" > "$OUTPUT_DIR/package-libs-updated.json"
+PACKAGE_JSON_TEMPLATE="$OUTPUT_DIR/package-libs-updated.json"
+
+echo "Libs URLs updated in JSON template"
+echo
+
+# Clean up
+rm -rf "${OUTPUT_DIR:?}/esp32-arduino-libs"
+rm -rf "${OUTPUT_DIR:?}/$LIBS_ZIP"
+rm -rf "${OUTPUT_DIR:?}/$LIBS_XZ"
 
 ##
 ## TEMP WORKAROUND FOR RV32 LONG PATH ON WINDOWS
@@ -467,6 +586,17 @@ if [ "$RELEASE_PRE" == "false" ]; then
     echo "Download CN URL: $(git_safe_upload_asset "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
     echo "Pages CN URL: $(git_safe_upload_to_pages "$PACKAGE_JSON_REL_CN" "$OUTPUT_DIR/$PACKAGE_JSON_REL_CN")"
     echo
+fi
+
+if [ "$need_update_commit" == "true" ]; then
+    echo "Pushing version update commit..."
+    git push
+    new_tag_commit=$(git rev-parse HEAD)
+    echo "New commit: $new_tag_commit"
+
+    echo "Moving tag $RELEASE_TAG to $new_tag_commit..."
+    git tag -f "$RELEASE_TAG" "$new_tag_commit"
+    git push --force origin "$RELEASE_TAG"
 fi
 
 set +e

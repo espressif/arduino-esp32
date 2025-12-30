@@ -39,7 +39,7 @@ extern "C" {
 #include "Arduino.h"
 
 TwoWire::TwoWire(uint8_t bus_num)
-  : num(bus_num & 1), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
+  : num(bus_num), sda(-1), scl(-1), bufferSize(I2C_BUFFER_LENGTH)  // default Wire Buffer Size
     ,
     rxBuffer(NULL), rxIndex(0), rxLength(0), txBuffer(NULL), txLength(0), txAddress(0), _timeOutMillis(50), nonStop(false)
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -48,7 +48,7 @@ TwoWire::TwoWire(uint8_t bus_num)
 #endif
 #if SOC_I2C_SUPPORT_SLAVE
     ,
-    is_slave(false), user_onRequest(NULL), user_onReceive(NULL)
+    is_slave(false), user_onRequest(nullptr), user_onReceive(nullptr)
 #endif /* SOC_I2C_SUPPORT_SLAVE */
 {
 }
@@ -60,6 +60,10 @@ TwoWire::~TwoWire() {
     vSemaphoreDelete(lock);
   }
 #endif
+}
+
+uint8_t TwoWire::getBusNum() {
+  return num;
 }
 
 bool TwoWire::initPins(int sdaPin, int sclPin) {
@@ -592,14 +596,14 @@ void TwoWire::flush() {
   //i2cFlush(num); // cleanup
 }
 
-void TwoWire::onReceive(void (*function)(int)) {
+void TwoWire::onReceive(const std::function<void(int)> &function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onReceive = function;
 #endif
 }
 
 // sets function called on slave read
-void TwoWire::onRequest(void (*function)(void)) {
+void TwoWire::onRequest(const std::function<void()> &function) {
 #if SOC_I2C_SUPPORT_SLAVE
   user_onRequest = function;
 #endif

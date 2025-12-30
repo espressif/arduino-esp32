@@ -79,21 +79,21 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   }
 
   if (sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-    _sck = (_spi_num == FSPI) ? SCK : -1;
-    _miso = (_spi_num == FSPI) ? MISO : -1;
-    _mosi = (_spi_num == FSPI) ? MOSI : -1;
-    _ss = (_spi_num == FSPI) ? SS : -1;
-#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
-    _sck = SCK;
-    _miso = MISO;
-    _mosi = MOSI;
-    _ss = SS;
-#else
+#if CONFIG_IDF_TARGET_ESP32
     _sck = (_spi_num == VSPI) ? SCK : 14;
     _miso = (_spi_num == VSPI) ? MISO : 12;
     _mosi = (_spi_num == VSPI) ? MOSI : 13;
     _ss = (_spi_num == VSPI) ? SS : 15;
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    _sck = (_spi_num == FSPI) ? SCK : -1;
+    _miso = (_spi_num == FSPI) ? MISO : -1;
+    _mosi = (_spi_num == FSPI) ? MOSI : -1;
+    _ss = (_spi_num == FSPI) ? SS : -1;
+#else
+    _sck = SCK;
+    _miso = MISO;
+    _mosi = MOSI;
+    _ss = SS;
 #endif
   } else {
     _sck = sck;

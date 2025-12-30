@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 #include "sdkconfig.h"
-#if CONFIG_IDF_TARGET_ESP32S3 && (CONFIG_USE_WAKENET || CONFIG_USE_MULTINET)
+#if (CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4) && (CONFIG_MODEL_IN_FLASH || CONFIG_MODEL_IN_SDCARD)
 
 #if !defined(ARDUINO_PARTITION_esp_sr_32) && !defined(ARDUINO_PARTITION_esp_sr_16) && !defined(ARDUINO_PARTITION_esp_sr_8)
 #warning Compatible partition must be selected for ESP_SR to work
@@ -313,7 +313,8 @@ esp_err_t sr_set_mode(sr_mode_t mode) {
 }
 
 esp_err_t sr_start(
-  sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const sr_cmd_t sr_commands[], size_t cmd_number, sr_event_cb cb, void *cb_arg
+  sr_fill_cb fill_cb, void *fill_cb_arg, sr_channels_t rx_chan, sr_mode_t mode, const char *input_format, const sr_cmd_t sr_commands[], size_t cmd_number,
+  sr_event_cb cb, void *cb_arg
 ) {
   esp_err_t ret = ESP_OK;
   ESP_RETURN_ON_FALSE(NULL == g_sr_data, ESP_ERR_INVALID_STATE, "SR already running");
@@ -340,12 +341,11 @@ esp_err_t sr_start(
   models = esp_srmodel_init("model");
 
   // Load WakeWord Detection
-  g_sr_data->afe_handle = (esp_afe_sr_iface_t *)&ESP_AFE_SR_HANDLE;
-  afe_config_t afe_config = AFE_CONFIG_DEFAULT();
-  afe_config.wakenet_model_name = esp_srmodel_filter(models, ESP_WN_PREFIX, "hiesp");
-  afe_config.aec_init = false;
-  log_d("load wakenet '%s'", afe_config.wakenet_model_name);
-  g_sr_data->afe_data = g_sr_data->afe_handle->create_from_config(&afe_config);
+  afe_config_t *afe_config = afe_config_init(input_format, models, AFE_TYPE_SR, AFE_MODE_LOW_COST);
+  g_sr_data->afe_handle = esp_afe_handle_from_config(afe_config);
+  log_d("load wakenet '%s'", afe_config->wakenet_model_name);
+  g_sr_data->afe_data = g_sr_data->afe_handle->create_from_config(afe_config);
+  afe_config_free(afe_config);
 
   // Load Custom Command Detection
   char *mn_name = esp_srmodel_filter(models, ESP_MN_PREFIX, ESP_MN_ENGLISH);

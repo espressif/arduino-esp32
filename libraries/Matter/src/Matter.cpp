@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,10 @@
 
 #include <Matter.h>
 #include <app/server/Server.h>
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+#include "esp_openthread_types.h"
+#include "platform/ESP32/OpenthreadLauncher.h"
+#endif
 
 using namespace esp_matter;
 using namespace esp_matter::attribute;
@@ -151,6 +155,18 @@ void ArduinoMatter::begin() {
     return;
   }
 
+#if CONFIG_ENABLE_MATTER_OVER_THREAD
+  // Set OpenThread platform config
+  esp_openthread_platform_config_t config;
+  memset(&config, 0, sizeof(esp_openthread_platform_config_t));
+  config.radio_config.radio_mode = RADIO_MODE_NATIVE;
+  config.host_config.host_connection_mode = HOST_CONNECTION_MODE_NONE;
+  config.port_config.storage_partition_name = "nvs";
+  config.port_config.netif_queue_size = 10;
+  config.port_config.task_queue_size = 10;
+  set_openthread_platform_config(&config);
+#endif
+
   /* Matter start */
   esp_err_t err = esp_matter::start(app_event_cb);
   if (err != ESP_OK) {
@@ -159,31 +175,70 @@ void ArduinoMatter::begin() {
   }
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-bool ArduinoMatter::isThreadConnected() {
-  return false;  // Thread Network TBD
-}
+// Network and Commissioning Capability Queries
+bool ArduinoMatter::isWiFiStationEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  return true;
+#else
+  return false;
 #endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isWiFiAccessPointEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isThreadEnabled() {
+  // Check Matter configuration only
+#if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isBLECommissioningEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter/ESP configuration
+  // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
+#ifdef SOC_BLE_SUPPORTED
+#if CONFIG_ENABLE_CHIPOBLE
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
 
 bool ArduinoMatter::isDeviceCommissioned() {
   return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 bool ArduinoMatter::isWiFiConnected() {
   return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationConnected();
 }
-#endif
+
+bool ArduinoMatter::isThreadConnected() {
+  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
+}
 
 bool ArduinoMatter::isDeviceConnected() {
-  bool retCode = false;
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-  retCode |= ArduinoMatter::isThreadConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  retCode |= ArduinoMatter::isWiFiConnected();
-#endif
-  return retCode;
+  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected();
 }
 
 void ArduinoMatter::decommission() {

@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=3.2.1
+version=3.3.5
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
@@ -27,8 +27,8 @@ tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_p
 compiler.path={tools.{build.tarch}-esp-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
-compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.mcu}
-compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.mcu}
+compiler.sdk.path={tools.esp32-arduino-libs.path}/{build.chip_variant}
+compiler.sdk.path.windows={tools.esp32-arduino-libs.path}\{build.chip_variant}
 
 # EXPERIMENTAL feature: optimization flags
 #  - this is alpha and may be subject to change without notice
@@ -84,6 +84,8 @@ build.extra_flags.esp32c3=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.
 build.extra_flags.esp32c6=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32h2=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 build.extra_flags.esp32p4=-DARDUINO_USB_MODE={build.usb_mode} -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot} -DARDUINO_USB_MSC_ON_BOOT={build.msc_on_boot} -DARDUINO_USB_DFU_ON_BOOT={build.dfu_on_boot}
+build.extra_flags.esp32c5=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
+build.extra_flags.esp32c61=-DARDUINO_USB_MODE=1 -DARDUINO_USB_CDC_ON_BOOT={build.cdc_on_boot}
 
 # This can be overriden in boards.txt
 build.zigbee_mode=
@@ -104,6 +106,7 @@ build.event_core=
 build.extra_flags=-DARDUINO_HOST_OS="{runtime.os}" -DARDUINO_FQBN="{build.fqbn}" -DESP32=ESP32 -DCORE_DEBUG_LEVEL={build.code_debug} {build.loop_core} {build.event_core} {build.defines} {build.extra_flags.{build.mcu}} {build.zigbee_mode}
 build.extra_libs=
 build.memory_type={build.boot}_qspi
+build.chip_variant={build.mcu}
 
 # Custom build options
 build.opt.name=build_opt.h
@@ -179,6 +182,10 @@ recipe.hooks.objcopy.postobjcopy.2.pattern.windows=cmd /c if exist "{build.path}
 recipe.hooks.objcopy.postobjcopy.3.pattern_args=--chip {build.mcu} merge-bin -o "{build.path}/{build.project_name}.merged.bin" --pad-to-size {build.flash_size} --flash-mode keep --flash-freq keep --flash-size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin"
 recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
 
+# Generate flash_args file
+recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size}' > '{build.path}/flash_args' && echo '{build.bootloader_addr} {build.project_name}.bootloader.bin' >> '{build.path}/flash_args' && echo '0x8000 {build.project_name}.partitions.bin' >> '{build.path}/flash_args' && echo '0xe000 boot_app0.bin' >> '{build.path}/flash_args' && echo '0x10000 {build.project_name}.bin' >> '{build.path}/flash_args'"
+recipe.hooks.objcopy.postobjcopy.4.pattern.windows=cmd /c echo --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} > "{build.path}\flash_args" && echo {build.bootloader_addr} {build.project_name}.bootloader.bin >> "{build.path}\flash_args" && echo 0x8000 {build.project_name}.partitions.bin >> "{build.path}\flash_args" && echo 0xe000 boot_app0.bin >> "{build.path}\flash_args" && echo 0x10000 {build.project_name}.bin >> "{build.path}\flash_args"
+
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
 recipe.output.save_file={build.project_name}.{build.variant}.bin
@@ -187,6 +194,36 @@ recipe.output.save_file={build.project_name}.{build.variant}.bin
 recipe.size.pattern="{compiler.path}{compiler.size.cmd}" -A "{build.path}/{build.project_name}.elf"
 recipe.size.regex=^(?:\.iram0\.text|\.iram0\.vectors|\.dram0\.data|\.dram1\.data|\.flash\.text|\.flash\.rodata|\.flash\.appdesc|\.flash\.init_array|\.eh_frame|)\s+([0-9]+).*
 recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.dram1\.data|\.dram1\.bss|\.noinit)\s+([0-9]+).*
+
+## Export extra build artifacts when "Export compiled Binary" is selected
+
+## By default Arduino IDE exports everything that starts with the sketch name
+## We need to export other files as well
+
+## Define FQBN transformation logic as reusable properties
+## Converts FQBN to vendor.arch.board format matching Arduino IDE default export path
+recipe.hooks.savehex.fqbn_to_dir=FQBN_DIR=$(echo '{build.fqbn}' | cut -d: -f1-3 | tr ':' '.')
+recipe.hooks.savehex.fqbn_to_dir.windows=$env:FQBN_DIR=('{build.fqbn}' -split ':')[0..2] -join '.'
+
+## Export partitions.csv (for reference)
+recipe.hooks.savehex.postsavehex.1.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/partitions.csv' '{sketch_path}/build/'$FQBN_DIR'/partitions.csv' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.1.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\partitions.csv' ('{sketch_path}\build\' + $env:FQBN_DIR + '\partitions.csv')"
+
+## Export sdkconfig (for reference)
+recipe.hooks.savehex.postsavehex.2.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/sdkconfig' '{sketch_path}/build/'$FQBN_DIR'/sdkconfig' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.2.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\sdkconfig' ('{sketch_path}\build\' + $env:FQBN_DIR + '\sdkconfig')"
+
+## Export flash_args
+recipe.hooks.savehex.postsavehex.3.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/flash_args' '{sketch_path}/build/'$FQBN_DIR'/flash_args' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.3.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\flash_args' ('{sketch_path}\build\' + $env:FQBN_DIR + '\flash_args')"
+
+## Export boot_app0.bin
+recipe.hooks.savehex.postsavehex.4.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{runtime.platform.path}/tools/partitions/boot_app0.bin' '{sketch_path}/build/'$FQBN_DIR'/boot_app0.bin' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.4.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{runtime.platform.path}\tools\partitions\boot_app0.bin' ('{sketch_path}\build\' + $env:FQBN_DIR + '\boot_app0.bin')"
+
+## Export build.options.json
+recipe.hooks.savehex.postsavehex.5.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/build.options.json' '{sketch_path}/build/'$FQBN_DIR'/build.options.json' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.5.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\build.options.json' ('{sketch_path}\build\' + $env:FQBN_DIR + '\build.options.json')"
 
 ## Required discoveries and monitors
 ## ---------------------------------
@@ -259,6 +296,14 @@ debug_config.esp32c6=
 # ESP32-H2 debug configuration (TBD)
 debug_script.esp32h2=esp32h2-builtin.cfg
 debug_config.esp32h2=
+
+# ESP32-P4 debug configuration (TBD)
+debug_script.esp32p4=esp32p4-builtin.cfg
+debug_config.esp32p4=
+
+# ESP32-C5 debug configuration (TBD)
+debug_script.esp32c5=esp32c5-builtin.cfg
+debug_config.esp32c5=
 
 # Debug API variable definitions
 debug.executable={build.path}/{build.project_name}.elf
@@ -343,6 +388,6 @@ tools.esptool_py_app_only.upload.protocol=serial
 tools.esptool_py_app_only.upload.params.verbose=
 tools.esptool_py_app_only.upload.params.quiet=
 
-tools.esptool_py_app_only.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default_reset --after hard_reset write_flash --flash_mode {build.flash_mode} --flash_freq {build.flash_freq} --flash_size {build.flash_size} {build.flash_offset} "{build.path}/{build.project_name}.bin" {upload.extra_flags}
+tools.esptool_py_app_only.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash --flash-mode {build.flash_mode} --flash-freq {build.flash_freq} --flash-size {build.flash_size} {build.flash_offset} "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 
 tools.esptool_py_app_only.upload.pattern="{path}/{cmd}" {tools.esptool_py_app_only.upload.pattern_args}

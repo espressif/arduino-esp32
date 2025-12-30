@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,19 +101,19 @@ public:
   // Heating Setpoint must be lower than Cooling Setpoint
   // When using AUTO mode the Cooling Setpoint must be higher than Heating Setpoint by at least the 2.5C (deadband)
   // Thermostat Matter Server will enforce those rules and the Max/Min setpoints limits as in the Matter Specification
-  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCollingTemperature);
+  bool setCoolingHeatingSetpoints(double _setpointHeatingTemperature, double _setpointCoolingTemperature);
 
   // set the heating setpoint in 1/100th of a Celsio degree
   bool setHeatingSetpoint(double _setpointHeatingTemperature) {
-    return setCoolingHeatingSetpoints((double)0xffff, _setpointHeatingTemperature);
+    return setCoolingHeatingSetpoints(_setpointHeatingTemperature, (double)0xffff);
   }
   // get the heating setpoint in 1/100th of a Celsio degree
   double getHeatingSetpoint() {
     return heatingSetpointTemperature / 100.0;
   }
   // set the cooling setpoint in 1/100th of a Celsio degree
-  bool setCoolingSetpoint(double _setpointCollingTemperature) {
-    return setCoolingHeatingSetpoints(_setpointCollingTemperature, (double)0xffff);
+  bool setCoolingSetpoint(double _setpointCoolingTemperature) {
+    return setCoolingHeatingSetpoints((double)0xffff, _setpointCoolingTemperature);
   }
   // get the cooling setpoint in 1/100th of a Celsio degree
   double getCoolingSetpoint() {

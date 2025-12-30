@@ -1,14 +1,21 @@
 /*
- * BLEEddystoneTLM.cpp
+ * BLEEddystoneTLM.h
  *
  *  Created on: Mar 12, 2018
  *      Author: pcbreflux
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on pcbreflux's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
 
 #ifndef _BLEEddystoneTLM_H_
 #define _BLEEddystoneTLM_H_
+
 #include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
+#include "sdkconfig.h"
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
 
 #include "BLEUUID.h"
 #include <BLEAdvertisedDevice.h>
@@ -57,5 +64,7 @@ private:
   } __attribute__((packed)) m_eddystoneData;
 };  // BLEEddystoneTLM
 
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+
 #endif /* _BLEEddystoneTLM_H_ */

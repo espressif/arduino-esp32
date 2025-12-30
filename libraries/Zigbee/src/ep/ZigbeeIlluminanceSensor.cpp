@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ZigbeeIlluminanceSensor.h"
 #if CONFIG_ZB_ENABLED
 
@@ -8,6 +22,17 @@ ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(en
   _cluster_list = esp_zb_light_sensor_clusters_create(&light_sensor_cfg);
 
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0};
+}
+
+bool ZigbeeIlluminanceSensor::setDefaultValue(uint16_t defaultValue) {
+  esp_zb_attribute_list_t *light_measure_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, (void *)&defaultValue);
+  if (ret != ESP_OK) {
+    log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
 bool ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {

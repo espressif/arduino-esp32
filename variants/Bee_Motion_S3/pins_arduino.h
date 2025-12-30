@@ -66,6 +66,7 @@ static const uint8_t T14 = 14;
 
 static const uint8_t BOOT_BTN = 0;
 static const uint8_t VBAT_VOLTAGE = 1;
+#define BAT_VOLT_PIN VBAT_VOLTAGE
 static const uint8_t VBUS_SENSE = 2;
 static const uint8_t PIR = 4;
 static const uint8_t LIGHT = 3;

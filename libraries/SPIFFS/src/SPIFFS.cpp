@@ -91,11 +91,13 @@ void SPIFFSFS::end() {
 }
 
 bool SPIFFSFS::format() {
+  esp_log_level_set("*", ESP_LOG_NONE);
   bool wdt_active = disableCore0WDT();
   esp_err_t err = esp_spiffs_format(partitionLabel_);
   if (wdt_active) {
     enableCore0WDT();
   }
+  esp_log_level_set("*", (esp_log_level_t)CONFIG_LOG_DEFAULT_LEVEL);
   if (err) {
     log_e("Formatting SPIFFS failed! Error: %d", err);
     return false;

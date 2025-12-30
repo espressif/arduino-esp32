@@ -88,6 +88,9 @@ static bool find_free_timer(uint8_t speed_mode, uint8_t *timer_num) {
     }
   }
 
+#ifndef SOC_LEDC_TIMER_NUM
+#define SOC_LEDC_TIMER_NUM 4
+#endif
   // Find first unused timer
   for (uint8_t i = 0; i < SOC_LEDC_TIMER_NUM; i++) {
     if (!(used_timers & (1 << i))) {
@@ -781,17 +784,23 @@ void analogWrite(uint8_t pin, int value) {
 }
 
 void analogWriteFrequency(uint8_t pin, uint32_t freq) {
-  if (ledcChangeFrequency(pin, freq, analog_resolution) == 0) {
-    log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
-    return;
+  ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+  if (bus != NULL) {  // if pin is attached to LEDC change frequency, otherwise update the global frequency
+    if (ledcChangeFrequency(pin, freq, analog_resolution) == 0) {
+      log_e("analogWrite frequency cant be set due to selected resolution! Try to adjust resolution first");
+      return;
+    }
   }
   analog_frequency = freq;
 }
 
 void analogWriteResolution(uint8_t pin, uint8_t resolution) {
-  if (ledcChangeFrequency(pin, analog_frequency, resolution) == 0) {
-    log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
-    return;
+  ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
+  if (bus != NULL) {  // if pin is attached to LEDC change resolution, otherwise update the global resolution
+    if (ledcChangeFrequency(pin, analog_frequency, resolution) == 0) {
+      log_e("analogWrite resolution cant be set due to selected frequency! Try to adjust frequency first");
+      return;
+    }
   }
   analog_resolution = resolution;
 }

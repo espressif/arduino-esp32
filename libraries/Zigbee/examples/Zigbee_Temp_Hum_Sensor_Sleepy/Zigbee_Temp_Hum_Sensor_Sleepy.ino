@@ -32,18 +32,49 @@
 
 #include "Zigbee.h"
 
+#define USE_GLOBAL_ON_RESPONSE_CALLBACK 1  // Set to 0 to use local callback specified directly for the endpoint.
+
 /* Zigbee temperature + humidity sensor configuration */
 #define TEMP_SENSOR_ENDPOINT_NUMBER 10
 
 #define uS_TO_S_FACTOR 1000000ULL /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP  55         /* Sleep for 55s will + 5s delay for establishing connection => data reported every 1 minute */
+#define REPORT_TIMEOUT 1000       /* Timeout for response from coordinator in ms */
 
 uint8_t button = BOOT_PIN;
 
 ZigbeeTempSensor zbTempSensor = ZigbeeTempSensor(TEMP_SENSOR_ENDPOINT_NUMBER);
 
+uint8_t dataToSend = 2;  // Temperature and humidity values are reported in same endpoint, so 2 values are reported
+bool resend = false;
+
+/************************ Callbacks *****************************/
+#if USE_GLOBAL_ON_RESPONSE_CALLBACK
+void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
+  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
+  if ((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)) {
+    switch (status) {
+      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+    }
+  }
+}
+#else
+void onResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status) {
+  Serial.printf("Response command: %d, status: %s\r\n", command, esp_zb_zcl_status_to_name(status));
+  if (command == ZB_CMD_REPORT_ATTRIBUTE) {
+    switch (status) {
+      case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;
+      case ESP_ZB_ZCL_STATUS_FAIL:    resend = true; break;
+      default:                        break;  // add more statuses like ESP_ZB_ZCL_STATUS_INVALID_VALUE, ESP_ZB_ZCL_STATUS_TIMEOUT etc.
+    }
+  }
+}
+#endif
+
 /************************ Temp sensor *****************************/
-void meausureAndSleep() {
+static void meausureAndSleep(void *arg) {
   // Measure temperature sensor value
   float temperature = temperatureRead();
 
@@ -55,13 +86,35 @@ void meausureAndSleep() {
   zbTempSensor.setHumidity(humidity);
 
   // Report temperature and humidity values
-  zbTempSensor.report();
+  zbTempSensor.report();  // reports temperature and humidity values (if humidity sensor is not added, only temperature is reported)
   Serial.printf("Reported temperature: %.2f°C, Humidity: %.2f%%\r\n", temperature, humidity);
 
-  // Add small delay to allow the data to be sent before going to sleep
-  delay(100);
+  unsigned long startTime = millis();
+  const unsigned long timeout = REPORT_TIMEOUT;
 
-  // Put device to deep sleep
+  Serial.printf("Waiting for data report to be confirmed \r\n");
+  // Wait until data was successfully sent
+  int tries = 0;
+  const int maxTries = 3;
+  while (dataToSend != 0 && tries < maxTries) {
+    if (resend) {
+      Serial.println("Resending data on failure!");
+      resend = false;
+      dataToSend = 2;
+      zbTempSensor.report();  // report again
+    }
+    if (millis() - startTime >= timeout) {
+      Serial.println("\nReport timeout! Report Again");
+      dataToSend = 2;
+      zbTempSensor.report();  // report again
+      startTime = millis();
+      tries++;
+    }
+    Serial.printf(".");
+    delay(50);  // 50ms delay to avoid busy-waiting
+  }
+
+  // Put device to deep sleep after data was sent successfully or timeout
   Serial.println("Going to sleep now");
   esp_deep_sleep_start();
 }
@@ -82,6 +135,9 @@ void setup() {
   // Set minimum and maximum temperature measurement value (10-50°C is default range for chip temperature measurement)
   zbTempSensor.setMinMaxValue(10, 50);
 
+  // Set default (initial) value for the temperature sensor to 10.0°C to match the minimum temperature measurement value (default value is 0.0°C)
+  zbTempSensor.setDefaultValue(10.0);
+
   // Set tolerance for temperature measurement in °C (lowest possible value is 0.01°C)
   zbTempSensor.setTolerance(1);
 
@@ -89,8 +145,18 @@ void setup() {
   // The value can be also updated by calling zbTempSensor.setBatteryPercentage(percentage) or zbTempSensor.setBatteryVoltage(voltage) anytime after Zigbee.begin()
   zbTempSensor.setPowerSource(ZB_POWER_SOURCE_BATTERY, 100, 35);
 
-  // Add humidity cluster to the temperature sensor device with min, max and tolerance values
-  zbTempSensor.addHumiditySensor(0, 100, 1);
+  // Add humidity cluster to the temperature sensor device with min, max, tolerance and default values
+  zbTempSensor.addHumiditySensor(0, 100, 1, 0.0);
+
+  // Set callback for default response to handle status of reported data, there are 2 options.
+
+#if USE_GLOBAL_ON_RESPONSE_CALLBACK
+  // Global callback for all endpoints with more params to determine the endpoint and cluster in the callback function.
+  Zigbee.onGlobalDefaultResponse(onGlobalResponse);
+#else
+  // Callback specified for endpoint
+  zbTempSensor.onDefaultResponse(onResponse);
+#endif
 
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
@@ -117,8 +183,8 @@ void setup() {
   Serial.println();
   Serial.println("Successfully connected to Zigbee network");
 
-  // Delay approx 1s (may be adjusted) to allow establishing proper connection with coordinator, needed for sleepy devices
-  delay(1000);
+  // Start Temperature sensor reading task
+  xTaskCreate(meausureAndSleep, "temp_sensor_update", 2048, NULL, 10, NULL);
 }
 
 void loop() {
@@ -141,7 +207,5 @@ void loop() {
       }
     }
   }
-
-  // Call the function to measure temperature and put the device to sleep
-  meausureAndSleep();
+  delay(100);
 }

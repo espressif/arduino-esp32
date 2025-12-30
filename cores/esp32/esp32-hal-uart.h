@@ -61,7 +61,15 @@ void uartFlushTxOnly(uart_t *uart, bool txOnly);
 bool uartSetBaudRate(uart_t *uart, uint32_t baud_rate);
 uint32_t uartGetBaudRate(uart_t *uart);
 
-void uartSetRxInvert(uart_t *uart, bool invert);
+// Helper generic function that takes a uart_signal_inv_t mask to be properly applied to the designated uart pin
+// invMask can be UART_SIGNAL_RXD_INV, UART_SIGNAL_TXD_INV, UART_SIGNAL_RTS_INV, UART_SIGNAL_CTS_INV
+// returns the operation success status
+bool uartPinSignalInversion(uart_t *uart, uint32_t invMask, bool inverted);
+// functions used to individually enable or disable UART pins inversion
+bool uartSetRxInvert(uart_t *uart, bool invert);
+bool uartSetTxInvert(uart_t *uart, bool invert);
+bool uartSetCtsInvert(uart_t *uart, bool invert);
+bool uartSetRtsInvert(uart_t *uart, bool invert);
 bool uartSetRxTimeout(uart_t *uart, uint8_t numSymbTimeout);
 bool uartSetRxFIFOFull(uart_t *uart, uint8_t numBytesFIFOFull);
 void uartSetFastReading(uart_t *uart);
@@ -79,7 +87,6 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
 // helper functions
 int8_t uart_get_RxPin(uint8_t uart_num);
 int8_t uart_get_TxPin(uint8_t uart_num);
-void uart_init_PeriMan(void);
 
 // Enables or disables HW Flow Control function -- needs also to set CTS and/or RTS pins
 //    UART_HW_FLOWCTRL_DISABLE = 0x0   disable hardware flow control

@@ -52,6 +52,7 @@ static const uint8_t BUTTON_C = 33;
 static const uint8_t BUTTON_D = 34;
 
 static const uint8_t VBAT_SENSE = 17;
+#define BAT_VOLT_PIN VBAT_SENSE
 static const uint8_t VBUS_SENSE = 16;
 
 static const uint8_t I2S_MIC_SEL = 39;

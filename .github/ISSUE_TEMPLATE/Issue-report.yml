@@ -40,9 +40,14 @@ body:
       label: Version
       description: What version of Arduino ESP32 are you running? If possible, consider updating to the latest version.
       options:
-        - latest stable Release (if not listed below)
-        - latest development Release Candidate (RC-X)
+        - Please select a version from the list below
         - latest master (checkout manually)
+        - v3.3.5
+        - v3.3.4
+        - v3.3.3
+        - v3.3.2
+        - v3.3.1
+        - v3.3.0
         - v3.2.1
         - v3.2.0
         - v3.1.3
@@ -57,26 +62,18 @@ body:
         - v3.0.2
         - v3.0.1
         - v3.0.0
-        - v2.0.17
-        - v2.0.16
-        - v2.0.15
-        - v2.0.14
-        - v2.0.13
-        - v2.0.12
-        - v2.0.11
-        - v2.0.10
-        - v2.0.9
-        - v2.0.8
-        - v2.0.7
-        - v2.0.6
-        - v2.0.5
-        - v2.0.4
-        - v2.0.3
-        - v2.0.2
-        - v2.0.1
-        - v2.0.0
-        - v1.0.6
-        - other
+        - Older versions
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: How would you define the type of the issue? Please select from the types below.
+      options:
+        - "Task"
+        - "Bug"
+        - "Question"
     validations:
       required: true
   - type: input

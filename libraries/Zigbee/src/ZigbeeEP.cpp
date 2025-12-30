@@ -1,3 +1,17 @@
+// Copyright 2025 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 /* Common Class for Zigbee End Point */
 
 #include "ZigbeeEP.h"
@@ -14,6 +28,8 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
+  _on_ota_state_change = nullptr;
+  _on_default_response = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -145,7 +161,8 @@ bool ZigbeeEP::setBatteryVoltage(uint8_t voltage) {
 
 bool ZigbeeEP::reportBatteryPercentage() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd = {0};
+  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
+  memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
   report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
   report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID;
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
@@ -166,7 +183,8 @@ bool ZigbeeEP::reportBatteryPercentage() {
 
 char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer Manufacture Name & Model Identifier */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
 
   if (short_addr != 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
@@ -204,7 +222,8 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
 
 char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer Manufacture Name & Model Identifier */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
 
   if (short_addr != 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
@@ -304,6 +323,12 @@ void ZigbeeEP::zbIdentify(const esp_zb_zcl_set_attr_value_message_t *message) {
   }
 }
 
+void ZigbeeEP::zbOTAState(bool otaActive) {
+  if (_on_ota_state_change != NULL) {
+    _on_ota_state_change(otaActive);
+  }
+}
+
 bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   time_t utc_time = 0;
   // Check if time is set
@@ -375,7 +400,8 @@ bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
 
 tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer time */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
 
   if (short_addr >= 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
@@ -427,7 +453,8 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
 
 int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ieee_addr) {
   /* Read peer timezone */
-  esp_zb_zcl_read_attr_cmd_t read_req = {0};
+  esp_zb_zcl_read_attr_cmd_t read_req;
+  memset(&read_req, 0, sizeof(read_req));
 
   if (short_addr >= 0) {
     read_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
@@ -543,7 +570,8 @@ static void findOTAServer(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
 }
 
 void ZigbeeEP::requestOTAUpdate() {
-  esp_zb_zdo_match_desc_req_param_t req = {0};
+  esp_zb_zdo_match_desc_req_param_t req;
+  memset(&req, 0, sizeof(req));
   uint16_t cluster_list[] = {ESP_ZB_ZCL_CLUSTER_ID_OTA_UPGRADE};
 
   /* Match the OTA server of coordinator */
@@ -608,7 +636,17 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
   log_w("No matching device found for removal");
 }
 
-const char *ZigbeeEP::esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
+void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message) {
+  log_v("Default response received for endpoint %d", _endpoint);
+  log_v("Status code: %s", esp_zb_zcl_status_to_name(message->status_code));
+  log_v("Response to command: %d", message->resp_to_cmd);
+  if (_on_default_response) {
+    _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
+  }
+}
+
+// Global function implementation
+const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status) {
   switch (status) {
     case ESP_ZB_ZCL_STATUS_SUCCESS:               return "Success";
     case ESP_ZB_ZCL_STATUS_FAIL:                  return "Fail";

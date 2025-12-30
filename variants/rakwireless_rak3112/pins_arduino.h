@@ -19,6 +19,7 @@ static const uint8_t LED_BUILTIN = LED_GREEN;
 #define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t BAT_VOLT = 21;
+#define BAT_VOLT_PIN BAT_VOLT
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -46,5 +47,18 @@ static const uint8_t SCK = 13;
 #define LORA_DIO1 47  //SX1262 DIO1
 #define LORA_BUSY 48
 #define LORA_IRQ  LORA_DIO1
+
+// For WisBlock modules, see: https://docs.rakwireless.com/Product-Categories/WisBlock/
+#define WB_IO1  21
+#define WB_IO2  14
+#define WB_IO3  41
+#define WB_IO4  42
+#define WB_IO5  38
+#define WB_IO6  39
+#define WB_A0   1
+#define WB_A1   2
+#define WB_CS   12
+#define WB_LED1 46
+#define WB_LED2 45
 
 #endif /* Pins_Arduino_h */

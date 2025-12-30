@@ -13,9 +13,13 @@ on:
       - "docs/**"
       - ".github/workflows/docs_deploy.yml"
 
+permissions:
+  contents: read
+
 jobs:
   deploy-prod-docs:
     name: Deploy Documentation on Production
+    if: github.repository == 'espressif/arduino-esp32'
     runs-on: ubuntu-22.04
     defaults:
       run:

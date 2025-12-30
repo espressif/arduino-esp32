@@ -52,6 +52,7 @@ static const uint8_t DAC1 = 25;
 static const uint8_t DAC2 = 26;
 
 static const uint8_t VBAT = 34;
+#define BAT_VOLT_PIN VBAT
 
 static const uint8_t RIGHT_BUTTON = 35;
 static const uint8_t LEFT_BUTTON = 0;

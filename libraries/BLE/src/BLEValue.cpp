@@ -3,14 +3,27 @@
  *
  *  Created on: Jul 17, 2017
  *      Author: kolban
+ *
+ *  Modified on: Feb 18, 2025
+ *      Author: lucasssvaz (based on kolban's and h2zero's work)
+ *      Description: Added support for NimBLE
  */
-#include "soc/soc_caps.h"
-#if SOC_BLE_SUPPORTED
 
+#include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if defined(CONFIG_BLUEDROID_ENABLED)
+#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
+#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+
+/*****************************************************************************
+ *                             Common includes                               *
+ *****************************************************************************/
+
 #include "BLEValue.h"
 #include "esp32-hal-log.h"
+
+/*****************************************************************************
+ *                             Common functions                              *
+ *****************************************************************************/
 
 BLEValue::BLEValue() {
   m_accumulation = "";
@@ -23,7 +36,7 @@ BLEValue::BLEValue() {
  * The accumulation is a growing set of data that is added to until a commit or cancel.
  * @param [in] part A message part being added.
  */
-void BLEValue::addPart(String part) {
+void BLEValue::addPart(const String &part) {
   log_v(">> addPart: length=%d", part.length());
   m_accumulation += part;
 }  // addPart
@@ -34,7 +47,7 @@ void BLEValue::addPart(String part) {
  * @param [in] pData A message part being added.
  * @param [in] length The number of bytes being added.
  */
-void BLEValue::addPart(uint8_t *pData, size_t length) {
+void BLEValue::addPart(const uint8_t *pData, size_t length) {
   log_v(">> addPart: length=%d", length);
   m_accumulation += String((char *)pData, length);
 }  // addPart
@@ -77,7 +90,7 @@ uint8_t *BLEValue::getData() {
  * @brief Get the length of the data in bytes.
  * @return The length of the data in bytes.
  */
-size_t BLEValue::getLength() {
+size_t BLEValue::getLength() const {
   return m_value.length();
 }  // getLength
 
@@ -85,14 +98,14 @@ size_t BLEValue::getLength() {
  * @brief Get the read offset.
  * @return The read offset into the read.
  */
-uint16_t BLEValue::getReadOffset() {
+uint16_t BLEValue::getReadOffset() const {
   return m_readOffset;
 }  // getReadOffset
 
 /**
  * @brief Get the current value.
  */
-String BLEValue::getValue() {
+String BLEValue::getValue() const {
   return m_value;
 }  // getValue
 
@@ -107,7 +120,7 @@ void BLEValue::setReadOffset(uint16_t readOffset) {
 /**
  * @brief Set the current value.
  */
-void BLEValue::setValue(String value) {
+void BLEValue::setValue(const String &value) {
   m_value = value;
 }  // setValue
 
@@ -116,9 +129,9 @@ void BLEValue::setValue(String value) {
  * @param [in] pData The data for the current value.
  * @param [in] The length of the new current value.
  */
-void BLEValue::setValue(uint8_t *pData, size_t length) {
+void BLEValue::setValue(const uint8_t *pData, size_t length) {
   m_value = String((char *)pData, length);
 }  // setValue
 
-#endif /* CONFIG_BLUEDROID_ENABLED */
-#endif /* SOC_BLE_SUPPORTED */
+#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
+#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
