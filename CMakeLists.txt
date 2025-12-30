@@ -37,6 +37,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-i2c-ng.c
   cores/esp32/esp32-hal-i2c-slave.c
   cores/esp32/esp32-hal-ledc.c
+  cores/esp32/esp32-hal-log-wrapper.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
   cores/esp32/esp32-hal-periman.c
@@ -424,6 +425,13 @@ if(CONFIG_AUTOSTART_ARDUINO)
     #
     # (As they are C++ symbol, we need to add the C++ mangled names.)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
+endif()
+
+# Add linker wrap flags for esp_log functions when CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP is not enabled
+# This provides wrapper functions required by WiFi library even when esp_diagnostics is not active
+if(NOT CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_write")
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_writev")
 endif()
 
 # This function adds a dependency on the given component if the component is included into the build.
