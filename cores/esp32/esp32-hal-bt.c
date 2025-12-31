@@ -17,16 +17,10 @@
 #if SOC_BT_SUPPORTED
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
 
-#if CONFIG_IDF_TARGET_ESP32
-bool btInUse() {
+// default: keep BTDM memory; users can override
+__attribute__((weak)) bool btInUse(void) {
   return true;
 }
-#else
-// user may want to change it to free resources
-__attribute__((weak)) bool btInUse() {
-  return true;
-}
-#endif
 
 #include "esp_bt.h"
 
