@@ -17,7 +17,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
@@ -48,8 +48,8 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 51,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -91,7 +91,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -133,7 +133,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 4,
-          "errors": 0
+          "errors": 4
         },
         "esp32h2": {
           "failures": 0,
@@ -173,9 +173,9 @@
           "errors": 0
         },
         "esp32c6": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32h2": {
           "failures": 1,
@@ -221,8 +221,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 10,
+          "errors": 0
         }
       },
       "timer": {
@@ -243,8 +243,8 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 4,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -307,8 +307,8 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 10,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -349,8 +349,8 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 2,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -622,7 +622,7 @@
       "timer": {
         "esp32": {
           "failures": 0,
-          "total": 2,
+          "total": 3,
           "errors": 0
         },
         "esp32c3": {
@@ -759,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2025-12-31T01:36:51.110535"
+  "generated_at": "2026-01-01T03:15:22.277206"
 }
