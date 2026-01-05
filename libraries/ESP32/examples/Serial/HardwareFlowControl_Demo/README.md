@@ -55,6 +55,7 @@ For a basic loopback test with automatic flow control:
 ESP32 Pin Connections:
 - TX1 ────┐
           ├──> RX1  (Data loopback)
+
 - GPIO2 (RTS1) ────┐
                    ├──> GPIO4 (CTS1)  (Flow control loopback)
 ```
@@ -156,7 +157,7 @@ ESP32 Pin Connections:
    - Creates internal GPIO matrix connection for RTS→CTS flow control loopback
    - No external wires needed
 
-2. **`setHwFlowCtrlMode(mode, threshold)`**
+5. **`setHwFlowCtrlMode(mode, threshold)`**
    - Enables hardware flow control
    - Modes:
      - `UART_HW_FLOWCTRL_DISABLE`: Disable flow control
