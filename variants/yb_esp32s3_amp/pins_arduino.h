@@ -7,8 +7,8 @@
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = 47;
-#define BUILTIN_LED LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -55,6 +55,6 @@ static const uint8_t T9 = 9;
 static const uint8_t T10 = 10;
 static const uint8_t T14 = 14;
 
-#define PIN_DAC_MUTE 47 // only if solder bridge "DAC_MUTE" is closed
+#define PIN_DAC_MUTE 47  // only if solder bridge "DAC_MUTE" is closed
 
 #endif /* Pins_Arduino_h */

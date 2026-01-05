@@ -7,8 +7,8 @@
 #define USB_PID 0x1001
 
 static const uint8_t LED_BUILTIN = 47;
-#define BUILTIN_LED LED_BUILTIN // backward compatibility
-#define LED_BUILTIN LED_BUILTIN // allow testing #ifdef LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN  // backward compatibility
+#define LED_BUILTIN LED_BUILTIN  // allow testing #ifdef LED_BUILTIN
 
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
@@ -21,7 +21,7 @@ static const uint8_t TLV_RESET = 21;  // if resp. solder bridge is closed (defau
 static const uint8_t TLV_INT = 48;    // if resp. solder bridge is closed (default open)
 
 // I2S for onboard TLV320DAC3101
-static const uint8_t I2S_MCLK = 4;   // if resp. solder bridge is closed (default open)
+static const uint8_t I2S_MCLK = 4;  // if resp. solder bridge is closed (default open)
 static const uint8_t I2S_BCLK = 5;
 static const uint8_t I2S_LRCLK = 6;
 static const uint8_t I2S_DOUT = 7;
