@@ -1,9 +1,11 @@
-| Supported Targets | ESP32 | ESP32-S3 | ESP32-C3 |
-| ----------------- | ----- | -------- | -------- |
+| Supported Targets | All with BT/BLE support |
+| ----------------- | ----------------------- |
 
 # _free_bt_memory example_
 
 Shows how to override the weak `btInUse()` definition when using Arduino-esp32 as an ESP-IDF component so the Bluetooth controller memory is released when Bluetooth is not needed. Return `true` from `btInUse()` only if your app will use BT/BLE.
+
+This is useful when bluetooth use is decided at runtime. For example, if you want to use bluetooth only when a pin is `HIGH`, you can drive the pin `HIGH` to use bluetooth and drive it `LOW` to free the bluetooth memory.
 
 ## How to use example
 
@@ -16,15 +18,4 @@ Or build directly from a cloned Arduino-esp32 checkout:
 ```
 cd arduino-esp32/idf_component_examples/free_bt_memory
 idf.py build
-```
-
-## Example folder contents
-
-```
-├── CMakeLists.txt
-├── main
-│   ├── CMakeLists.txt
-│   ├── idf_component.yml
-│   └── main.cpp
-└── README.md
 ```
