@@ -24,12 +24,12 @@ void setup() {
   Serial.printf("Arduino Stack was set to %zu bytes", getArduinoLoopTaskStackSize());
 
   // Print unused stack for the task that is running setup()
-  Serial.printf("\nSetup() - Free Stack Space: %zu", uxTaskGetStackHighWaterMark(NULL));
+  Serial.printf("\nSetup() - Free Stack Space: %u", uxTaskGetStackHighWaterMark(NULL));
 }
 
 void loop() {
   delay(1000);
 
   // Print unused stack for the task that is running loop() - the same as for setup()
-  Serial.printf("\nLoop() - Free Stack Space: %zu", uxTaskGetStackHighWaterMark(NULL));
+  Serial.printf("\nLoop() - Free Stack Space: %u", uxTaskGetStackHighWaterMark(NULL));
 }
