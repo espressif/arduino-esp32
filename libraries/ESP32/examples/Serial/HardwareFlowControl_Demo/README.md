@@ -254,7 +254,7 @@ Received: Message #2: Hello from UART1! Time: 2000 ms
 **Behavior:**
 - RTS signal is monitored via GPIO5 (connected to RTS1)
 - CTS signal is controlled via GPIO13 (connected to CTS1)
-- Software can manually block/allowing transmission by controlling GPIO13
+- Software can manually block/allow transmission by controlling GPIO13
 - Demonstrates explicit flow control blocking behavior
 - Shows how external devices can control UART transmission
 - **Note:** This mode only works when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`
