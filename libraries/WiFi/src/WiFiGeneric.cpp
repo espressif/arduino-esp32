@@ -673,7 +673,6 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
       }
     }
   } else {
-    uint32_t current_protocol = 0;
     if (m & WIFI_MODE_STA) {
       if (_wifi_is_lr_enabled(WIFI_IF_STA)) {
         log_v("Disabling long range on STA");
