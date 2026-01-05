@@ -68,7 +68,7 @@
 #define GPIO_CTS_CTRL    13  // GPIO13 - Control CTS signal (connect CTS1 to this)
 
 // Set to true to use GPIO-controlled flow control, false for simple loopback
-// Note: this control will be overriden by USE_INTERNAL_MATRIX_PIN_LOOPBACK when it is 1
+// Note: this control will be overridden by USE_INTERNAL_MATRIX_PIN_LOOPBACK when it is 1
 #define USE_GPIO_CONTROL false
 
 // Variables for demonstration
