@@ -630,6 +630,64 @@ Returns whether the Serial port is initialized and ready.
         delay(10);  // Wait for Serial1 to be ready
     }
 
+Testing and Helper Functions
+----------------------------
+
+The following HAL-level functions are available for testing UART functionality without external hardware connections. These functions use the ESP32 GPIO matrix to create internal loopback connections.
+
+uart_internal_loopback
+**********************
+
+Creates an internal loopback connection from a UART's TX signal to a specified RX pin, allowing testing without external wires.
+
+.. code-block:: arduino
+
+    void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
+
+* ``uartNum`` - UART number (0, 1, 2, etc.)
+* ``rxPin`` - GPIO pin number to receive the TX signal
+
+**Note:** 
+* This function uses the ESP32 GPIO matrix to internally connect the UART's TX output to the specified RX pin.
+* LP (Low-Power) UARTs are not supported for loopback.
+* This is useful for testing UART communication without physical connections.
+
+**Example:**
+
+.. code-block:: arduino
+
+    Serial1.begin(115200);
+    Serial1.setPins(RX1, TX1);
+    uart_internal_loopback(1, RX1);  // Connect TX1 to RX1 internally
+
+uart_internal_hw_flow_ctrl_loopback
+***********************************
+
+Creates an internal loopback connection from a UART's RTS signal to a specified CTS pin, allowing hardware flow control testing without external wires.
+
+.. code-block:: arduino
+
+    void uart_internal_hw_flow_ctrl_loopback(uint8_t uartNum, int8_t ctsPin);
+
+* ``uartNum`` - UART number (0, 1, 2, etc.)
+* ``ctsPin`` - GPIO pin number (CTS pin) to receive the RTS signal
+
+**Note:**
+* This function uses the ESP32 GPIO matrix to internally connect the UART's RTS output to the specified CTS pin.
+* LP (Low-Power) UARTs are not supported for hardware flow control loopback.
+* This is useful for testing hardware flow control (RTS/CTS) without physical connections.
+* Must be used together with ``uart_internal_loopback()`` for complete loopback testing with flow control.
+
+**Example:**
+
+.. code-block:: arduino
+
+    Serial1.begin(115200);
+    Serial1.setPins(RX1, TX1, CTS_PIN, RTS_PIN);
+    Serial1.setHwFlowCtrlMode(UART_HW_FLOWCTRL_CTS_RTS);
+    uart_internal_loopback(1, RX1);  // Connect TX1 to RX1 internally
+    uart_internal_hw_flow_ctrl_loopback(1, CTS_PIN);  // Connect RTS to CTS internally
+
 Serial Configuration Constants
 ------------------------------
 
@@ -666,6 +724,11 @@ OnReceive Callback Example:
 RS485 Communication Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
+    :language: arduino
+
+Hardware Flow Control Example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/HardwareFlowControl_Demo/HardwareFlowControl_Demo.ino
     :language: arduino
 
 Complete list of `Serial examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial>`_.
