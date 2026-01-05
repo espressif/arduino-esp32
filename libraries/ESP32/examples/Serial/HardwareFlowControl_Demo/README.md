@@ -342,7 +342,7 @@ Received: Message #3: Hello from UART1! Time: 3000 ms
 - Explicit messages showing CTS state changes ("Allowing transmission" / "Blocking transmission")
 - Transmission blocking messages when CTS is HIGH
 - RTS/CTS pin states are readable via GPIO5 and GPIO13
-- Demonstrates manual flow control control
+- Demonstrates manual flow control
 - Useful for testing flow control behavior or interfacing with external flow control logic
 - Only works when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`
 
