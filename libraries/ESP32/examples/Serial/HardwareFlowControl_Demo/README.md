@@ -55,6 +55,7 @@ For a basic loopback test with automatic flow control:
 ESP32 Pin Connections:
 - TX1 ────┐
           ├──> RX1  (Data loopback)
+
 - GPIO2 (RTS1) ────┐
                    ├──> GPIO4 (CTS1)  (Flow control loopback)
 ```
@@ -156,7 +157,7 @@ ESP32 Pin Connections:
    - Creates internal GPIO matrix connection for RTS→CTS flow control loopback
    - No external wires needed
 
-2. **`setHwFlowCtrlMode(mode, threshold)`**
+5. **`setHwFlowCtrlMode(mode, threshold)`**
    - Enables hardware flow control
    - Modes:
      - `UART_HW_FLOWCTRL_DISABLE`: Disable flow control
@@ -254,7 +255,7 @@ Received: Message #2: Hello from UART1! Time: 2000 ms
 **Behavior:**
 - RTS signal is monitored via GPIO5 (connected to RTS1)
 - CTS signal is controlled via GPIO13 (connected to CTS1)
-- Software can manually block/allowing transmission by controlling GPIO13
+- Software can manually block/allow transmission by controlling GPIO13
 - Demonstrates explicit flow control blocking behavior
 - Shows how external devices can control UART transmission
 - **Note:** This mode only works when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`
@@ -342,7 +343,7 @@ Received: Message #3: Hello from UART1! Time: 3000 ms
 - Explicit messages showing CTS state changes ("Allowing transmission" / "Blocking transmission")
 - Transmission blocking messages when CTS is HIGH
 - RTS/CTS pin states are readable via GPIO5 and GPIO13
-- Demonstrates manual flow control control
+- Demonstrates manual flow control
 - Useful for testing flow control behavior or interfacing with external flow control logic
 - Only works when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`
 
