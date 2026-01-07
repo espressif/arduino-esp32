@@ -518,7 +518,7 @@ void hardware_flow_control_test(void) {
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    
+
     // Configure pins with CTS and RTS (can be called after begin())
     log_d("Setting UART%d pins: RX=%d, TX=%d, CTS=%d, RTS=%d", config.uart_num, config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
     bool pins_set = config.serial.setPins(config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);

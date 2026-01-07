@@ -118,7 +118,7 @@ ESP32 Pin Connections:
 - Software can read RTS state and control CTS signal via GPIO pins
 - Demonstrates explicit flow control blocking behavior
 - Best for: Testing flow control behavior, interfacing with external logic, or learning how external devices control UART transmission
-- **Wiring (when USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0):** 
+- **Wiring (when USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0):**
   - Connect GPIO2 (RTS1) → GPIO5 (to monitor RTS)
   - Connect GPIO4 (CTS1) → GPIO13 (to control CTS)
 - **Note:** This mode is overridden when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`
@@ -133,7 +133,7 @@ ESP32 Pin Connections:
 4. Make sure your physical wiring matches the selected mode (only if `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`)
 5. Upload the sketch
 
-**Important:** 
+**Important:**
 - When `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`, no external connections are needed
 - When `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`, the wiring configuration must match the `USE_GPIO_CONTROL` setting
 
@@ -349,7 +349,7 @@ Received: Message #3: Hello from UART1! Time: 3000 ms
 
 ## Troubleshooting
 
-1. **No data received**: 
+1. **No data received**:
    - If `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`: Check that the internal loopback functions are being called
    - If `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`: Check that TX1 is connected to RX1
 2. **Transmission always blocked**: Verify CTS pin connection and state (only applies when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`)
@@ -364,4 +364,3 @@ Received: Message #3: Hello from UART1! Time: 3000 ms
 - The threshold parameter controls when RTS is asserted (default: 64 bytes = half of 128-byte FIFO)
 - Flow control is most useful when communicating with devices that support it (modems, some sensors, etc.)
 - For simple point-to-point communication without flow control support, you can disable it
-

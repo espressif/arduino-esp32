@@ -647,7 +647,7 @@ Creates an internal loopback connection from a UART's TX signal to a specified R
 * ``uartNum`` - UART number (0, 1, 2, etc.)
 * ``rxPin`` - GPIO pin number to receive the TX signal
 
-**Note:** 
+**Note:**
 * This function uses the ESP32 GPIO matrix to internally connect the UART's TX output to the specified RX pin.
 * LP (Low-Power) UARTs are not supported for loopback.
 * This is useful for testing UART communication without physical connections.

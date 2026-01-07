@@ -1,51 +1,51 @@
 /*
   Hardware Flow Control Demo for ESP32
-  
-  This sketch demonstrates UART hardware flow control using RTS (Request To Send) 
+
+  This sketch demonstrates UART hardware flow control using RTS (Request To Send)
   and CTS (Clear To Send) signals with UART1 (HardwareSerial Serial1).
-  
+
   CONFIGURATION:
   ==============
-  
+
   Set USE_INTERNAL_MATRIX_PIN_LOOPBACK to 1 for internal GPIO matrix connections
   (no external wires needed). Set to 0 to use external wire connections.
-  
+
   PIN CONNECTIONS (when USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0):
   ============================================================
-  
+
   For basic loopback with hardware flow control:
   - Connect GPIO2 (RTS1) to GPIO4 (CTS1) - Flow control loopback
   - Connect TX1 pin to RX1 pin - Data loopback
-  
+
   For GPIO-controlled flow control demonstration:
   - Connect TX1 pin to RX1 pin - Data loopback
   - Connect GPIO2 (RTS1) to GPIO5 (GPIO_RTS_MONITOR) - Monitor RTS state
   - Connect GPIO4 (CTS1) to GPIO13 (GPIO_CTS_CTRL) - Control CTS signal
   - Use GPIO13 to manually control CTS signal (LOW = allow, HIGH = block)
-  
+
   HARDWARE FLOW CONTROL EXPLANATION:
   ===================================
-  
+
   RTS (Request To Send):
   - Output signal from UART (GPIO2 in this example)
   - Asserted LOW when UART is ready to receive data (RX buffer has space)
   - De-asserted HIGH when RX buffer is getting full (threshold reached)
-  
+
   CTS (Clear To Send):
   - Input signal to UART (GPIO4 in this example)
   - UART will only transmit when CTS is LOW (asserted)
   - UART will pause transmission when CTS is HIGH (de-asserted)
-  
+
   OPERATION:
   ==========
-  
+
   The sketch demonstrates:
   - Periodic transmission of messages every second
   - Automatic flow control when USE_GPIO_CONTROL = false
   - Manual CTS control when USE_GPIO_CONTROL = true
   - Loopback reception of transmitted data
   - Status monitoring of RTS/CTS pin states
-  
+
   NOTE: When USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1, no external connections
   are needed as the ESP32 GPIO matrix handles the loopback internally.
 */
@@ -55,8 +55,8 @@
 #define USE_INTERNAL_MATRIX_PIN_LOOPBACK 1
 
 // Pin definitions for UART1
-#define UART1_RX_PIN RX1   // Default GPIO - UART1 RX pin
-#define UART1_TX_PIN TX1   // Default GPIO - UART1 TX pin
+#define UART1_RX_PIN  RX1  // Default GPIO - UART1 RX pin
+#define UART1_TX_PIN  TX1  // Default GPIO - UART1 TX pin
 #define UART1_RTS_PIN 2    // GPIO2 - UART1 RTS pin (output from UART)
 #define UART1_CTS_PIN 4    // GPIO4 - UART1 CTS pin (input to UART)
 
@@ -86,15 +86,11 @@ void printPinStatus() {
   if (USE_GPIO_CONTROL) {
     // Read RTS state from monitor GPIO (connected to RTS1)
     bool rtsState = digitalRead(GPIO_RTS_MONITOR);
-    Serial.printf("RTS Pin (GPIO%d): %s (LOW = ready to receive)\n",
-                  UART1_RTS_PIN,
-                  rtsState == LOW ? "LOW (Ready)" : "HIGH (Busy)");
+    Serial.printf("RTS Pin (GPIO%d): %s (LOW = ready to receive)\n", UART1_RTS_PIN, rtsState == LOW ? "LOW (Ready)" : "HIGH (Busy)");
 
     // Read CTS state from control GPIO (connected to CTS1)
     bool ctsState = digitalRead(GPIO_CTS_CTRL);
-    Serial.printf("CTS Pin (GPIO%d): %s (LOW = can transmit)\n",
-                  UART1_CTS_PIN,
-                  ctsState == LOW ? "LOW (Clear)" : "HIGH (Blocked)");
+    Serial.printf("CTS Pin (GPIO%d): %s (LOW = can transmit)\n", UART1_CTS_PIN, ctsState == LOW ? "LOW (Clear)" : "HIGH (Blocked)");
   } else {
     Serial.printf("RTS Pin (GPIO%d): Hardware controlled (LOW = ready to receive)\n", UART1_RTS_PIN);
     Serial.printf("CTS Pin (GPIO%d): Hardware controlled (LOW = can transmit)\n", UART1_CTS_PIN);
@@ -137,13 +133,17 @@ void setup() {
   // Set all pins for UART1
   if (!Serial1.setPins(UART1_RX_PIN, UART1_TX_PIN, UART1_CTS_PIN, UART1_RTS_PIN)) {
     Serial.println("ERROR: Failed to set CTS and RTS UART1 pins!");
-    while (1) delay(1000);
+    while (1) {
+      delay(1000);
+    }
   }
 
   Serial.println("Enabling hardware flow control...");
   if (!Serial1.setHwFlowCtrlMode(UART_HW_FLOWCTRL_CTS_RTS, 64)) {
     Serial.println("ERROR: Failed to enable hardware flow control!");
-    while (1) delay(1000);
+    while (1) {
+      delay(1000);
+    }
   }
 
 #if USE_INTERNAL_MATRIX_PIN_LOOPBACK
@@ -171,12 +171,12 @@ void setup() {
 #if USE_INTERNAL_MATRIX_PIN_LOOPBACK
   Serial.println("\nNO EXTERNAL PIN CONNECTIONS ARE REQUIRED:");
   Serial.println("-------------------------");
-    Serial.println("Internal GPIO Matrix connection with flow control mode:");
-    Serial.printf("  1. Automatic Internal Connection of GPIO%d (TX1) to GPIO%d (RX1) - Loopback\n", UART1_TX_PIN, UART1_RX_PIN);
-    Serial.printf("  2. Automatic Internal Connection of GPIO%d (RTS1) to GPIO%d (CTS1) - Flow control loopback\n", UART1_RTS_PIN, UART1_CTS_PIN);
-    Serial.println("\n  Note: In this mode, RTS/CTS are automatically controlled by hardware.");
-    Serial.println("  RTS goes LOW when ready to receive, HIGH when buffer is full.");
-    Serial.println("  CTS must be LOW for transmission to proceed.");
+  Serial.println("Internal GPIO Matrix connection with flow control mode:");
+  Serial.printf("  1. Automatic Internal Connection of GPIO%d (TX1) to GPIO%d (RX1) - Loopback\n", UART1_TX_PIN, UART1_RX_PIN);
+  Serial.printf("  2. Automatic Internal Connection of GPIO%d (RTS1) to GPIO%d (CTS1) - Flow control loopback\n", UART1_RTS_PIN, UART1_CTS_PIN);
+  Serial.println("\n  Note: In this mode, RTS/CTS are automatically controlled by hardware.");
+  Serial.println("  RTS goes LOW when ready to receive, HIGH when buffer is full.");
+  Serial.println("  CTS must be LOW for transmission to proceed.");
 #else
   Serial.println("\nPIN CONNECTIONS REQUIRED:");
   Serial.println("-------------------------");
@@ -235,14 +235,12 @@ void loop() {
 
     if (canTransmit) {
       char message[64];
-      snprintf(message, sizeof(message),
-               "Message #%d: Hello from UART1! Time: %lu ms\r\n",
-               sendCounter, currentTime);
+      snprintf(message, sizeof(message), "Message #%d: Hello from UART1! Time: %lu ms\r\n", sendCounter, currentTime);
 
       Serial.print("Sending: ");
       Serial.print(message);
 
-      size_t bytesWritten = Serial1.write((const uint8_t*)message, strlen(message));
+      size_t bytesWritten = Serial1.write((const uint8_t *)message, strlen(message));
       Serial.printf("  -> Written: %d bytes\n", bytesWritten);
 
       // Flush to ensure data is sent
