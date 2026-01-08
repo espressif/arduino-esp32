@@ -500,7 +500,7 @@ jobs:
 
       - name: Check if already passed
         id: get-cache-results
-        if: needs.get-artifacts.outputs.pr_num
+        if: needs.get-artifacts.outputs.pr_num && needs.get-artifacts.outputs.rerun_wokwi_test == 'false'
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           key: test-${{ env.id }}-results-wokwi
@@ -511,18 +511,18 @@ jobs:
       - name: Evaluate if tests should be run
         id: check-tests
         run: |
-          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          cache_hit="${{ steps.get-cache-results.outputs.cache-hit }}"
           rerun_label=${{ needs.get-artifacts.outputs.rerun_wokwi_test }}
-          enabled=true
 
-          if [[ $cache_exists == 'true' ]]; then
-            if [[ "$rerun_label" == "true" ]]; then
-              echo "Cache exists but Re-trigger Wokwi Tests label is present, ignoring cache and running tests"
-              enabled=true
-            else
-              echo "Already ran, skipping"
-              enabled=false
-            fi
+          if [[ "$rerun_label" == "true" ]]; then
+            echo "Re-trigger Wokwi Tests label is present, running tests (cache restore was skipped)"
+            enabled=true
+          elif [[ "$cache_hit" == "true" ]]; then
+            echo "Already ran, skipping"
+            enabled=false
+          else
+            echo "No cache found, tests will run"
+            enabled=true
           fi
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
