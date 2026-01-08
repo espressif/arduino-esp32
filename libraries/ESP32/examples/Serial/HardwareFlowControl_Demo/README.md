@@ -84,13 +84,13 @@ ESP32 Pin Connections:
 
 ### RTS (Request To Send)
 - **Output signal** from the UART
-- **LOW (0V)**: UART is ready to receive data (RX buffer has space)
-- **HIGH (3.3V)**: UART RX buffer is getting full, cannot receive more data
+- **LOW (0 V)**: UART is ready to receive data (RX buffer has space)
+- **HIGH (3.3 V)**: UART RX buffer is getting full, cannot receive more data
 
 ### CTS (Clear To Send)
 - **Input signal** to the UART
-- **LOW (0V)**: UART is allowed to transmit data
-- **HIGH (3.3V)**: UART must pause transmission (transmission is blocked)
+- **LOW (0 V)**: UART is allowed to transmit data
+- **HIGH (3.3 V)**: UART must pause transmission (transmission is blocked)
 
 ### Flow Control Behavior
 
