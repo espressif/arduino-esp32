@@ -30,6 +30,7 @@ jobs:
       wokwi_targets: ${{ steps.set-ref.outputs.wokwi_targets }}
       hw_tests_enabled: ${{ steps.set-ref.outputs.hw_tests_enabled }}
       wokwi_tests_enabled: ${{ steps.set-ref.outputs.wokwi_tests_enabled }}
+      rerun_wokwi_test: ${{ steps.set-ref.outputs.rerun_wokwi_test }}
       push_time: ${{ steps.set-ref.outputs.push_time }}
     steps:
       - name: Report pending
@@ -120,6 +121,19 @@ jobs:
             wokwi_tests_enabled="false"
           fi
 
+          # Check for Re-trigger Wokwi Tests label
+          rerun_wokwi_test="false"
+          if [[ -n "$pr_num" ]]; then
+            # This is a PR, check for Re-trigger Wokwi Tests label
+            has_rerun_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "Re-trigger Wokwi Tests" && echo "true" || echo "false")
+            echo "Has Re-trigger Wokwi Tests label: $has_rerun_label"
+
+            if [[ "$has_rerun_label" == "true" ]]; then
+              rerun_wokwi_test="true"
+              echo "PR has Re-trigger Wokwi Tests label, cached results will be ignored"
+            fi
+          fi
+
           push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
           if [ -z "$push_time" ] || [ "$push_time" == "null" ]; then
             push_time=""
@@ -144,6 +158,7 @@ jobs:
           echo "pr_num = $pr_num"
           echo "hw_tests_enabled = $hw_tests_enabled"
           echo "wokwi_tests_enabled = $wokwi_tests_enabled"
+          echo "rerun_wokwi_test = $rerun_wokwi_test"
           echo "push_time = $push_time"
 
           conclusion="${{ github.event.workflow_run.conclusion }}"
@@ -193,6 +208,7 @@ jobs:
           echo "ref=$ref" >> $GITHUB_OUTPUT
           echo "hw_tests_enabled=$hw_tests_enabled" >> $GITHUB_OUTPUT
           echo "wokwi_tests_enabled=$wokwi_tests_enabled" >> $GITHUB_OUTPUT
+          echo "rerun_wokwi_test=$rerun_wokwi_test" >> $GITHUB_OUTPUT
           echo "push_time=$push_time" >> $GITHUB_OUTPUT
 
       - name: Download and extract parent QEMU results
@@ -455,6 +471,7 @@ jobs:
     permissions:
       actions: read
       statuses: write
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -495,11 +512,17 @@ jobs:
         id: check-tests
         run: |
           cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
+          rerun_label=${{ needs.get-artifacts.outputs.rerun_wokwi_test }}
           enabled=true
 
           if [[ $cache_exists == 'true' ]]; then
-            echo "Already ran, skipping"
-            enabled=false
+            if [[ "$rerun_label" == "true" ]]; then
+              echo "Cache exists but Re-trigger Wokwi Tests label is present, ignoring cache and running tests"
+              enabled=true
+            else
+              echo "Already ran, skipping"
+              enabled=false
+            fi
           fi
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
@@ -588,3 +611,14 @@ jobs:
               target_url: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
             })).data;
             core.info(`${name} is ${state}`);
+
+      - name: Remove Re-trigger Wokwi Tests label if it was present
+        if: |
+          always() &&
+          needs.get-artifacts.outputs.pr_num &&
+          needs.get-artifacts.outputs.rerun_wokwi_test == 'true'
+        continue-on-error: true
+        run: |
+          gh pr edit ${{ needs.get-artifacts.outputs.pr_num }} --repo ${{ github.repository }} --remove-label 'Re-trigger Wokwi Tests'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
