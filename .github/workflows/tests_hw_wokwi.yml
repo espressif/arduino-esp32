@@ -619,6 +619,8 @@ jobs:
           needs.get-artifacts.outputs.rerun_wokwi_test == 'true'
         continue-on-error: true
         run: |
-          gh pr edit ${{ needs.get-artifacts.outputs.pr_num }} --repo ${{ github.repository }} --remove-label 'Re-trigger Wokwi Tests'
+          gh pr edit "$PR_NUM" --repo "$GITHUB_REPOSITORY" --remove-label 'Re-trigger Wokwi Tests'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ needs.get-artifacts.outputs.pr_num }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
