@@ -101,6 +101,24 @@ public:
     _attach_us(micros, false, reinterpret_cast<callback_with_arg_t>(callback), reinterpret_cast<void *>(arg));
   }
 
+  void restart(float seconds) {
+    if (active() {
+      esp_timer_restart(_timer, 1000000ULL * seconds);
+    }
+  }
+
+  void restart_ms(uint64_t milliseconds) {
+    if (active() {
+      esp_timer_restart(_timer, 1000ULL * milliseconds);
+    }
+  }
+
+  void restart_us(uint64_t micros) {
+    if (active() {
+      esp_timer_restart(_timer, micros);
+    }
+  }
+
   void detach();
   bool active() const;
 
