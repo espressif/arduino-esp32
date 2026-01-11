@@ -513,8 +513,8 @@
           "errors": 0
         },
         "esp32s2": {
-          "failures": 0,
-          "total": 7,
+          "failures": 1,
+          "total": 1,
           "errors": 0
         },
         "esp32s3": {
@@ -525,7 +525,7 @@
       },
       "nvs": {
         "esp32": {
-          "failures": 0,
+          "failures": 2,
           "total": 2,
           "errors": 0
         },
@@ -658,8 +658,8 @@
       },
       "uart": {
         "esp32": {
-          "failures": 0,
-          "total": 11,
+          "failures": 3,
+          "total": 31,
           "errors": 0
         },
         "esp32c3": {
@@ -684,7 +684,7 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 11,
+          "total": 59,
           "errors": 0
         },
         "esp32s3": {
@@ -747,7 +747,7 @@
           "errors": 0
         },
         "esp32s2": {
-          "failures": 0,
+          "failures": 2,
           "total": 2,
           "errors": 0
         },
@@ -759,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2026-01-10T01:00:19.861743"
+  "generated_at": "2026-01-11T00:57:26.739699"
 }
