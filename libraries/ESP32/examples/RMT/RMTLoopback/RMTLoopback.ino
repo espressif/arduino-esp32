@@ -94,7 +94,7 @@ void loop() {
 
   // Once data is available, the number of RMT Symbols is stored in rx_num_symbols
   // and the received data is copied to my_data
-  Serial.printf("Got %d RMT symbols\n", rx_num_symbols);
+  Serial.printf("Got %zu RMT symbols\n", rx_num_symbols);
 
   // Printout the received data plus the original values
   for (int i = 0; i < RMT_NUM_EXCHANGED_DATA; i++) {

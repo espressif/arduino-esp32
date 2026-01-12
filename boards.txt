@@ -51699,6 +51699,420 @@ yb_esp32s3_drv.menu.EraseFlash.all=Enabled
 yb_esp32s3_drv.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
+
+yb_esp32s3_amp.name=YelloByte YB-ESP32-S3-AMP
+
+yb_esp32s3_amp.bootloader.tool=esptool_py
+yb_esp32s3_amp.bootloader.tool.default=esptool_py
+
+yb_esp32s3_amp.upload.tool=esptool_py
+yb_esp32s3_amp.upload.tool.default=esptool_py
+yb_esp32s3_amp.upload.tool.network=esp_ota
+
+yb_esp32s3_amp.upload.maximum_size=1310720
+yb_esp32s3_amp.upload.maximum_data_size=327680
+yb_esp32s3_amp.upload.flags=
+yb_esp32s3_amp.upload.extra_flags=
+yb_esp32s3_amp.upload.use_1200bps_touch=false
+yb_esp32s3_amp.upload.wait_for_upload_port=false
+
+yb_esp32s3_amp.serial.disableDTR=false
+yb_esp32s3_amp.serial.disableRTS=false
+
+yb_esp32s3_amp.build.tarch=xtensa
+yb_esp32s3_amp.build.bootloader_addr=0x0
+yb_esp32s3_amp.build.target=esp32s3
+yb_esp32s3_amp.build.mcu=esp32s3
+yb_esp32s3_amp.build.core=esp32
+yb_esp32s3_amp.build.variant=yb_esp32s3_amp
+yb_esp32s3_amp.build.board=YB_ESP32S3_AMP
+
+yb_esp32s3_amp.build.usb_mode=1
+yb_esp32s3_amp.build.cdc_on_boot=0
+yb_esp32s3_amp.build.msc_on_boot=0
+yb_esp32s3_amp.build.dfu_on_boot=0
+yb_esp32s3_amp.build.f_cpu=240000000L
+yb_esp32s3_amp.build.flash_size=8MB
+yb_esp32s3_amp.build.flash_freq=80m
+yb_esp32s3_amp.build.flash_mode=dio
+yb_esp32s3_amp.build.boot=qio
+yb_esp32s3_amp.build.partitions=default
+yb_esp32s3_amp.build.defines=
+yb_esp32s3_amp.build.loop_core=
+yb_esp32s3_amp.build.event_core=
+yb_esp32s3_amp.build.flash_type=qio
+yb_esp32s3_amp.build.psram_type=qspi
+yb_esp32s3_amp.build.memory_type={build.flash_type}_{build.psram_type}
+
+yb_esp32s3_amp.menu.JTAGAdapter.default=Disabled
+yb_esp32s3_amp.menu.JTAGAdapter.default.build.copy_jtag_files=0
+yb_esp32s3_amp.menu.JTAGAdapter.external=FTDI Adapter
+yb_esp32s3_amp.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+yb_esp32s3_amp.menu.JTAGAdapter.external.build.copy_jtag_files=1
+yb_esp32s3_amp.menu.JTAGAdapter.bridge=ESP USB Bridge
+yb_esp32s3_amp.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+yb_esp32s3_amp.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+yb_esp32s3_amp.menu.LoopCore.1=Core 1
+yb_esp32s3_amp.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+yb_esp32s3_amp.menu.LoopCore.0=Core 0
+yb_esp32s3_amp.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+yb_esp32s3_amp.menu.EventsCore.1=Core 1
+yb_esp32s3_amp.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+yb_esp32s3_amp.menu.EventsCore.0=Core 0
+yb_esp32s3_amp.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+yb_esp32s3_amp.menu.USBMode.hwcdc=Hardware CDC and JTAG
+yb_esp32s3_amp.menu.USBMode.hwcdc.build.usb_mode=1
+yb_esp32s3_amp.menu.USBMode.default=USB-OTG (TinyUSB)
+yb_esp32s3_amp.menu.USBMode.default.build.usb_mode=0
+
+yb_esp32s3_amp.menu.CDCOnBoot.default=Disabled
+yb_esp32s3_amp.menu.CDCOnBoot.default.build.cdc_on_boot=0
+yb_esp32s3_amp.menu.CDCOnBoot.cdc=Enabled
+yb_esp32s3_amp.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+yb_esp32s3_amp.menu.MSCOnBoot.default=Disabled
+yb_esp32s3_amp.menu.MSCOnBoot.default.build.msc_on_boot=0
+yb_esp32s3_amp.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_amp.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+yb_esp32s3_amp.menu.DFUOnBoot.default=Disabled
+yb_esp32s3_amp.menu.DFUOnBoot.default.build.dfu_on_boot=0
+yb_esp32s3_amp.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_amp.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+yb_esp32s3_amp.menu.UploadMode.default=UART0 / Hardware CDC
+yb_esp32s3_amp.menu.UploadMode.default.upload.use_1200bps_touch=false
+yb_esp32s3_amp.menu.UploadMode.default.upload.wait_for_upload_port=false
+yb_esp32s3_amp.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+yb_esp32s3_amp.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+yb_esp32s3_amp.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+yb_esp32s3_amp.menu.PSRAM.enabled=QSPI PSRAM
+yb_esp32s3_amp.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_amp.menu.PSRAM.enabled.build.psram_type=qspi
+yb_esp32s3_amp.menu.PSRAM.disabled=Disabled
+yb_esp32s3_amp.menu.PSRAM.disabled.build.defines=
+yb_esp32s3_amp.menu.PSRAM.disabled.build.psram_type=qspi
+yb_esp32s3_amp.menu.PSRAM.opi=OPI PSRAM
+yb_esp32s3_amp.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_amp.menu.PSRAM.opi.build.psram_type=opi
+
+yb_esp32s3_amp.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+yb_esp32s3_amp.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+yb_esp32s3_amp.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.default.build.partitions=default
+yb_esp32s3_amp.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+yb_esp32s3_amp.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+yb_esp32s3_amp.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.minimal.build.partitions=minimal
+yb_esp32s3_amp.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.no_ota.build.partitions=no_ota
+yb_esp32s3_amp.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+yb_esp32s3_amp.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+yb_esp32s3_amp.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+yb_esp32s3_amp.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+yb_esp32s3_amp.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+yb_esp32s3_amp.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+yb_esp32s3_amp.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+yb_esp32s3_amp.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+yb_esp32s3_amp.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+yb_esp32s3_amp.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.huge_app.build.partitions=huge_app
+yb_esp32s3_amp.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+yb_esp32s3_amp.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+yb_esp32s3_amp.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+yb_esp32s3_amp.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+yb_esp32s3_amp.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+yb_esp32s3_amp.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+yb_esp32s3_amp.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+
+yb_esp32s3_amp.menu.CPUFreq.240=240MHz (WiFi)
+yb_esp32s3_amp.menu.CPUFreq.240.build.f_cpu=240000000L
+yb_esp32s3_amp.menu.CPUFreq.160=160MHz (WiFi)
+yb_esp32s3_amp.menu.CPUFreq.160.build.f_cpu=160000000L
+yb_esp32s3_amp.menu.CPUFreq.80=80MHz (WiFi)
+yb_esp32s3_amp.menu.CPUFreq.80.build.f_cpu=80000000L
+yb_esp32s3_amp.menu.CPUFreq.40=40MHz
+yb_esp32s3_amp.menu.CPUFreq.40.build.f_cpu=40000000L
+yb_esp32s3_amp.menu.CPUFreq.20=20MHz
+yb_esp32s3_amp.menu.CPUFreq.20.build.f_cpu=20000000L
+yb_esp32s3_amp.menu.CPUFreq.10=10MHz
+yb_esp32s3_amp.menu.CPUFreq.10.build.f_cpu=10000000L
+
+yb_esp32s3_amp.menu.FlashMode.qio=QIO 80MHz
+yb_esp32s3_amp.menu.FlashMode.qio.build.flash_mode=dio
+yb_esp32s3_amp.menu.FlashMode.qio.build.boot=qio
+yb_esp32s3_amp.menu.FlashMode.qio.build.boot_freq=80m
+yb_esp32s3_amp.menu.FlashMode.qio.build.flash_freq=80m
+yb_esp32s3_amp.menu.FlashMode.qio120=QIO 120MHz
+yb_esp32s3_amp.menu.FlashMode.qio120.build.flash_mode=dio
+yb_esp32s3_amp.menu.FlashMode.qio120.build.boot=qio
+yb_esp32s3_amp.menu.FlashMode.qio120.build.boot_freq=120m
+yb_esp32s3_amp.menu.FlashMode.qio120.build.flash_freq=80m
+yb_esp32s3_amp.menu.FlashMode.dio=DIO 80MHz
+yb_esp32s3_amp.menu.FlashMode.dio.build.flash_mode=dio
+yb_esp32s3_amp.menu.FlashMode.dio.build.boot=dio
+yb_esp32s3_amp.menu.FlashMode.dio.build.boot_freq=80m
+yb_esp32s3_amp.menu.FlashMode.dio.build.flash_freq=80m
+yb_esp32s3_amp.menu.FlashMode.opi=OPI 80MHz
+yb_esp32s3_amp.menu.FlashMode.opi.build.flash_mode=dout
+yb_esp32s3_amp.menu.FlashMode.opi.build.boot=opi
+yb_esp32s3_amp.menu.FlashMode.opi.build.boot_freq=80m
+yb_esp32s3_amp.menu.FlashMode.opi.build.flash_freq=80m
+
+yb_esp32s3_amp.menu.FlashSize.8M=8MB (64Mb)
+yb_esp32s3_amp.menu.FlashSize.8M.build.flash_size=8MB
+yb_esp32s3_amp.menu.FlashSize.4M=4MB (32Mb)
+yb_esp32s3_amp.menu.FlashSize.4M.build.flash_size=4MB
+yb_esp32s3_amp.menu.FlashSize.16M=16MB (128Mb)
+yb_esp32s3_amp.menu.FlashSize.16M.build.flash_size=16MB
+
+yb_esp32s3_amp.menu.UploadSpeed.921600=921600
+yb_esp32s3_amp.menu.UploadSpeed.921600.upload.speed=921600
+yb_esp32s3_amp.menu.UploadSpeed.115200=115200
+yb_esp32s3_amp.menu.UploadSpeed.115200.upload.speed=115200
+yb_esp32s3_amp.menu.UploadSpeed.256000.windows=256000
+yb_esp32s3_amp.menu.UploadSpeed.256000.upload.speed=256000
+yb_esp32s3_amp.menu.UploadSpeed.230400.windows.upload.speed=256000
+yb_esp32s3_amp.menu.UploadSpeed.230400=230400
+yb_esp32s3_amp.menu.UploadSpeed.230400.upload.speed=230400
+yb_esp32s3_amp.menu.UploadSpeed.460800.linux=460800
+yb_esp32s3_amp.menu.UploadSpeed.460800.macosx=460800
+yb_esp32s3_amp.menu.UploadSpeed.460800.upload.speed=460800
+yb_esp32s3_amp.menu.UploadSpeed.512000.windows=512000
+yb_esp32s3_amp.menu.UploadSpeed.512000.upload.speed=512000
+
+yb_esp32s3_amp.menu.DebugLevel.none=None
+yb_esp32s3_amp.menu.DebugLevel.none.build.code_debug=0
+yb_esp32s3_amp.menu.DebugLevel.error=Error
+yb_esp32s3_amp.menu.DebugLevel.error.build.code_debug=1
+yb_esp32s3_amp.menu.DebugLevel.warn=Warn
+yb_esp32s3_amp.menu.DebugLevel.warn.build.code_debug=2
+yb_esp32s3_amp.menu.DebugLevel.info=Info
+yb_esp32s3_amp.menu.DebugLevel.info.build.code_debug=3
+yb_esp32s3_amp.menu.DebugLevel.debug=Debug
+yb_esp32s3_amp.menu.DebugLevel.debug.build.code_debug=4
+yb_esp32s3_amp.menu.DebugLevel.verbose=Verbose
+yb_esp32s3_amp.menu.DebugLevel.verbose.build.code_debug=5
+
+yb_esp32s3_amp.menu.EraseFlash.none=Disabled
+yb_esp32s3_amp.menu.EraseFlash.none.upload.erase_cmd=
+yb_esp32s3_amp.menu.EraseFlash.all=Enabled
+yb_esp32s3_amp.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
+yb_esp32s3_dac.name=YelloByte YB-ESP32-S3-DAC
+
+yb_esp32s3_dac.bootloader.tool=esptool_py
+yb_esp32s3_dac.bootloader.tool.default=esptool_py
+
+yb_esp32s3_dac.upload.tool=esptool_py
+yb_esp32s3_dac.upload.tool.default=esptool_py
+yb_esp32s3_dac.upload.tool.network=esp_ota
+
+yb_esp32s3_dac.upload.maximum_size=1310720
+yb_esp32s3_dac.upload.maximum_data_size=327680
+yb_esp32s3_dac.upload.flags=
+yb_esp32s3_dac.upload.extra_flags=
+yb_esp32s3_dac.upload.use_1200bps_touch=false
+yb_esp32s3_dac.upload.wait_for_upload_port=false
+
+yb_esp32s3_dac.serial.disableDTR=false
+yb_esp32s3_dac.serial.disableRTS=false
+
+yb_esp32s3_dac.build.tarch=xtensa
+yb_esp32s3_dac.build.bootloader_addr=0x0
+yb_esp32s3_dac.build.target=esp32s3
+yb_esp32s3_dac.build.mcu=esp32s3
+yb_esp32s3_dac.build.core=esp32
+yb_esp32s3_dac.build.variant=yb_esp32s3_dac
+yb_esp32s3_dac.build.board=YB_ESP32S3_DAC
+
+yb_esp32s3_dac.build.usb_mode=1
+yb_esp32s3_dac.build.cdc_on_boot=0
+yb_esp32s3_dac.build.msc_on_boot=0
+yb_esp32s3_dac.build.dfu_on_boot=0
+yb_esp32s3_dac.build.f_cpu=240000000L
+yb_esp32s3_dac.build.flash_size=8MB
+yb_esp32s3_dac.build.flash_freq=80m
+yb_esp32s3_dac.build.flash_mode=dio
+yb_esp32s3_dac.build.boot=qio
+yb_esp32s3_dac.build.partitions=default
+yb_esp32s3_dac.build.defines=
+yb_esp32s3_dac.build.loop_core=
+yb_esp32s3_dac.build.event_core=
+yb_esp32s3_dac.build.flash_type=qio
+yb_esp32s3_dac.build.psram_type=qspi
+yb_esp32s3_dac.build.memory_type={build.flash_type}_{build.psram_type}
+
+yb_esp32s3_dac.menu.JTAGAdapter.default=Disabled
+yb_esp32s3_dac.menu.JTAGAdapter.default.build.copy_jtag_files=0
+yb_esp32s3_dac.menu.JTAGAdapter.external=FTDI Adapter
+yb_esp32s3_dac.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+yb_esp32s3_dac.menu.JTAGAdapter.external.build.copy_jtag_files=1
+yb_esp32s3_dac.menu.JTAGAdapter.bridge=ESP USB Bridge
+yb_esp32s3_dac.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+yb_esp32s3_dac.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+yb_esp32s3_dac.menu.LoopCore.1=Core 1
+yb_esp32s3_dac.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+yb_esp32s3_dac.menu.LoopCore.0=Core 0
+yb_esp32s3_dac.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+yb_esp32s3_dac.menu.EventsCore.1=Core 1
+yb_esp32s3_dac.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+yb_esp32s3_dac.menu.EventsCore.0=Core 0
+yb_esp32s3_dac.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+yb_esp32s3_dac.menu.USBMode.hwcdc=Hardware CDC and JTAG
+yb_esp32s3_dac.menu.USBMode.hwcdc.build.usb_mode=1
+yb_esp32s3_dac.menu.USBMode.default=USB-OTG (TinyUSB)
+yb_esp32s3_dac.menu.USBMode.default.build.usb_mode=0
+
+yb_esp32s3_dac.menu.CDCOnBoot.default=Disabled
+yb_esp32s3_dac.menu.CDCOnBoot.default.build.cdc_on_boot=0
+yb_esp32s3_dac.menu.CDCOnBoot.cdc=Enabled
+yb_esp32s3_dac.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+yb_esp32s3_dac.menu.MSCOnBoot.default=Disabled
+yb_esp32s3_dac.menu.MSCOnBoot.default.build.msc_on_boot=0
+yb_esp32s3_dac.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_dac.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+yb_esp32s3_dac.menu.DFUOnBoot.default=Disabled
+yb_esp32s3_dac.menu.DFUOnBoot.default.build.dfu_on_boot=0
+yb_esp32s3_dac.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+yb_esp32s3_dac.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+yb_esp32s3_dac.menu.UploadMode.default=UART0 / Hardware CDC
+yb_esp32s3_dac.menu.UploadMode.default.upload.use_1200bps_touch=false
+yb_esp32s3_dac.menu.UploadMode.default.upload.wait_for_upload_port=false
+yb_esp32s3_dac.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+yb_esp32s3_dac.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+yb_esp32s3_dac.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+yb_esp32s3_dac.menu.PSRAM.enabled=QSPI PSRAM
+yb_esp32s3_dac.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_dac.menu.PSRAM.enabled.build.psram_type=qspi
+yb_esp32s3_dac.menu.PSRAM.disabled=Disabled
+yb_esp32s3_dac.menu.PSRAM.disabled.build.defines=
+yb_esp32s3_dac.menu.PSRAM.disabled.build.psram_type=qspi
+yb_esp32s3_dac.menu.PSRAM.opi=OPI PSRAM
+yb_esp32s3_dac.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+yb_esp32s3_dac.menu.PSRAM.opi.build.psram_type=opi
+
+yb_esp32s3_dac.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+yb_esp32s3_dac.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+yb_esp32s3_dac.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.default.build.partitions=default
+yb_esp32s3_dac.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+yb_esp32s3_dac.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.minimal.build.partitions=minimal
+yb_esp32s3_dac.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.no_ota.build.partitions=no_ota
+yb_esp32s3_dac.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+yb_esp32s3_dac.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+yb_esp32s3_dac.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+yb_esp32s3_dac.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+yb_esp32s3_dac.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+yb_esp32s3_dac.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+yb_esp32s3_dac.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+yb_esp32s3_dac.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.huge_app.build.partitions=huge_app
+yb_esp32s3_dac.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+yb_esp32s3_dac.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+yb_esp32s3_dac.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
+yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+
+yb_esp32s3_dac.menu.CPUFreq.240=240MHz (WiFi)
+yb_esp32s3_dac.menu.CPUFreq.240.build.f_cpu=240000000L
+yb_esp32s3_dac.menu.CPUFreq.160=160MHz (WiFi)
+yb_esp32s3_dac.menu.CPUFreq.160.build.f_cpu=160000000L
+yb_esp32s3_dac.menu.CPUFreq.80=80MHz (WiFi)
+yb_esp32s3_dac.menu.CPUFreq.80.build.f_cpu=80000000L
+yb_esp32s3_dac.menu.CPUFreq.40=40MHz
+yb_esp32s3_dac.menu.CPUFreq.40.build.f_cpu=40000000L
+yb_esp32s3_dac.menu.CPUFreq.20=20MHz
+yb_esp32s3_dac.menu.CPUFreq.20.build.f_cpu=20000000L
+yb_esp32s3_dac.menu.CPUFreq.10=10MHz
+yb_esp32s3_dac.menu.CPUFreq.10.build.f_cpu=10000000L
+
+yb_esp32s3_dac.menu.FlashMode.qio=QIO 80MHz
+yb_esp32s3_dac.menu.FlashMode.qio.build.flash_mode=dio
+yb_esp32s3_dac.menu.FlashMode.qio.build.boot=qio
+yb_esp32s3_dac.menu.FlashMode.qio.build.boot_freq=80m
+yb_esp32s3_dac.menu.FlashMode.qio.build.flash_freq=80m
+yb_esp32s3_dac.menu.FlashMode.qio120=QIO 120MHz
+yb_esp32s3_dac.menu.FlashMode.qio120.build.flash_mode=dio
+yb_esp32s3_dac.menu.FlashMode.qio120.build.boot=qio
+yb_esp32s3_dac.menu.FlashMode.qio120.build.boot_freq=120m
+yb_esp32s3_dac.menu.FlashMode.qio120.build.flash_freq=80m
+yb_esp32s3_dac.menu.FlashMode.dio=DIO 80MHz
+yb_esp32s3_dac.menu.FlashMode.dio.build.flash_mode=dio
+yb_esp32s3_dac.menu.FlashMode.dio.build.boot=dio
+yb_esp32s3_dac.menu.FlashMode.dio.build.boot_freq=80m
+yb_esp32s3_dac.menu.FlashMode.dio.build.flash_freq=80m
+yb_esp32s3_dac.menu.FlashMode.opi=OPI 80MHz
+yb_esp32s3_dac.menu.FlashMode.opi.build.flash_mode=dout
+yb_esp32s3_dac.menu.FlashMode.opi.build.boot=opi
+yb_esp32s3_dac.menu.FlashMode.opi.build.boot_freq=80m
+yb_esp32s3_dac.menu.FlashMode.opi.build.flash_freq=80m
+
+yb_esp32s3_dac.menu.FlashSize.8M=8MB (64Mb)
+yb_esp32s3_dac.menu.FlashSize.8M.build.flash_size=8MB
+yb_esp32s3_dac.menu.FlashSize.4M=4MB (32Mb)
+yb_esp32s3_dac.menu.FlashSize.4M.build.flash_size=4MB
+yb_esp32s3_dac.menu.FlashSize.16M=16MB (128Mb)
+yb_esp32s3_dac.menu.FlashSize.16M.build.flash_size=16MB
+
+yb_esp32s3_dac.menu.UploadSpeed.921600=921600
+yb_esp32s3_dac.menu.UploadSpeed.921600.upload.speed=921600
+yb_esp32s3_dac.menu.UploadSpeed.115200=115200
+yb_esp32s3_dac.menu.UploadSpeed.115200.upload.speed=115200
+yb_esp32s3_dac.menu.UploadSpeed.256000.windows=256000
+yb_esp32s3_dac.menu.UploadSpeed.256000.upload.speed=256000
+yb_esp32s3_dac.menu.UploadSpeed.230400.windows.upload.speed=256000
+yb_esp32s3_dac.menu.UploadSpeed.230400=230400
+yb_esp32s3_dac.menu.UploadSpeed.230400.upload.speed=230400
+yb_esp32s3_dac.menu.UploadSpeed.460800.linux=460800
+yb_esp32s3_dac.menu.UploadSpeed.460800.macosx=460800
+yb_esp32s3_dac.menu.UploadSpeed.460800.upload.speed=460800
+yb_esp32s3_dac.menu.UploadSpeed.512000.windows=512000
+yb_esp32s3_dac.menu.UploadSpeed.512000.upload.speed=512000
+
+yb_esp32s3_dac.menu.DebugLevel.none=None
+yb_esp32s3_dac.menu.DebugLevel.none.build.code_debug=0
+yb_esp32s3_dac.menu.DebugLevel.error=Error
+yb_esp32s3_dac.menu.DebugLevel.error.build.code_debug=1
+yb_esp32s3_dac.menu.DebugLevel.warn=Warn
+yb_esp32s3_dac.menu.DebugLevel.warn.build.code_debug=2
+yb_esp32s3_dac.menu.DebugLevel.info=Info
+yb_esp32s3_dac.menu.DebugLevel.info.build.code_debug=3
+yb_esp32s3_dac.menu.DebugLevel.debug=Debug
+yb_esp32s3_dac.menu.DebugLevel.debug.build.code_debug=4
+yb_esp32s3_dac.menu.DebugLevel.verbose=Verbose
+yb_esp32s3_dac.menu.DebugLevel.verbose.build.code_debug=5
+
+yb_esp32s3_dac.menu.EraseFlash.none=Disabled
+yb_esp32s3_dac.menu.EraseFlash.none.upload.erase_cmd=
+yb_esp32s3_dac.menu.EraseFlash.all=Enabled
+yb_esp32s3_dac.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
 # Huidu HD-WF2 - esp32-s3 HUB75 driver board
 # https://www.hdwell.com/Product/index46.html
 
@@ -54377,4 +54791,1002 @@ arduino_nesso_n1.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 arduino_nesso_n1.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 arduino_nesso_n1.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
 
+##############################################################
+#PandaByte x32 ESP32
+
+pandabyte_x32.name=PandaByte x32 - ESP32
+
+pandabyte_x32.bootloader.tool=esptool_py
+pandabyte_x32.bootloader.tool.default=esptool_py
+
+pandabyte_x32.upload.tool=esptool_py
+pandabyte_x32.upload.tool.default=esptool_py
+pandabyte_x32.upload.tool.network=esp_ota
+
+pandabyte_x32.upload.maximum_size=1310720
+pandabyte_x32.upload.maximum_data_size=327680
+pandabyte_x32.upload.flags=
+pandabyte_x32.upload.extra_flags=
+
+pandabyte_x32.serial.disableDTR=true
+pandabyte_x32.serial.disableRTS=true
+
+pandabyte_x32.build.tarch=xtensa
+pandabyte_x32.build.bootloader_addr=0x1000
+pandabyte_x32.build.target=esp32
+pandabyte_x32.build.mcu=esp32
+pandabyte_x32.build.core=esp32
+pandabyte_x32.build.variant=pandabyte_x32
+pandabyte_x32.build.board=PANDABYTE_X32
+
+pandabyte_x32.build.f_cpu=240000000L
+pandabyte_x32.build.flash_size=4MB
+pandabyte_x32.build.flash_freq=40m
+pandabyte_x32.build.flash_mode=dio
+pandabyte_x32.build.boot=dio
+pandabyte_x32.build.partitions=default
+pandabyte_x32.build.defines=
+pandabyte_x32.build.loop_core=
+pandabyte_x32.build.event_core=
+
+pandabyte_x32.menu.PSRAM.disabled=Disabled
+pandabyte_x32.menu.PSRAM.disabled.build.defines=
+pandabyte_x32.menu.PSRAM.disabled.build.extra_libs=
+pandabyte_x32.menu.PSRAM.enabled=Enabled
+pandabyte_x32.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM -mfix-esp32-psram-cache-issue -mfix-esp32-psram-cache-strategy=memw
+pandabyte_x32.menu.PSRAM.enabled.build.extra_libs=
+
+pandabyte_x32.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.default.build.partitions=default
+pandabyte_x32.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pandabyte_x32.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pandabyte_x32.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pandabyte_x32.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+pandabyte_x32.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.minimal.build.partitions=minimal
+pandabyte_x32.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+pandabyte_x32.menu.PartitionScheme.no_fs.build.partitions=no_fs
+pandabyte_x32.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+pandabyte_x32.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pandabyte_x32.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pandabyte_x32.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pandabyte_x32.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pandabyte_x32.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pandabyte_x32.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pandabyte_x32.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pandabyte_x32.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pandabyte_x32.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pandabyte_x32.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pandabyte_x32.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pandabyte_x32.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pandabyte_x32.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pandabyte_x32.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pandabyte_x32.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pandabyte_x32.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+pandabyte_x32.menu.PartitionScheme.fatflash.build.partitions=ffat
+pandabyte_x32.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+pandabyte_x32.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+pandabyte_x32.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+pandabyte_x32.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+pandabyte_x32.menu.PartitionScheme.rainmaker=RainMaker 4MB
+pandabyte_x32.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+pandabyte_x32.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+pandabyte_x32.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+pandabyte_x32.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+pandabyte_x32.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+pandabyte_x32.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+pandabyte_x32.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+pandabyte_x32.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+pandabyte_x32.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+pandabyte_x32.menu.PartitionScheme.custom=Custom
+pandabyte_x32.menu.PartitionScheme.custom.build.partitions=
+pandabyte_x32.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+pandabyte_x32.menu.CPUFreq.240=240MHz (WiFi/BT)
+pandabyte_x32.menu.CPUFreq.240.build.f_cpu=240000000L
+pandabyte_x32.menu.CPUFreq.160=160MHz (WiFi/BT)
+pandabyte_x32.menu.CPUFreq.160.build.f_cpu=160000000L
+pandabyte_x32.menu.CPUFreq.80=80MHz (WiFi/BT)
+pandabyte_x32.menu.CPUFreq.80.build.f_cpu=80000000L
+pandabyte_x32.menu.CPUFreq.40=40MHz (40MHz XTAL)
+pandabyte_x32.menu.CPUFreq.40.build.f_cpu=40000000L
+pandabyte_x32.menu.CPUFreq.26=26MHz (26MHz XTAL)
+pandabyte_x32.menu.CPUFreq.26.build.f_cpu=26000000L
+pandabyte_x32.menu.CPUFreq.20=20MHz (40MHz XTAL)
+pandabyte_x32.menu.CPUFreq.20.build.f_cpu=20000000L
+pandabyte_x32.menu.CPUFreq.13=13MHz (26MHz XTAL)
+pandabyte_x32.menu.CPUFreq.13.build.f_cpu=13000000L
+pandabyte_x32.menu.CPUFreq.10=10MHz (40MHz XTAL)
+pandabyte_x32.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pandabyte_x32.menu.FlashMode.qio=QIO
+pandabyte_x32.menu.FlashMode.qio.build.flash_mode=dio
+pandabyte_x32.menu.FlashMode.qio.build.boot=qio
+pandabyte_x32.menu.FlashMode.dio=DIO
+pandabyte_x32.menu.FlashMode.dio.build.flash_mode=dio
+pandabyte_x32.menu.FlashMode.dio.build.boot=dio
+
+pandabyte_x32.menu.FlashFreq.80=80MHz
+pandabyte_x32.menu.FlashFreq.80.build.flash_freq=80m
+pandabyte_x32.menu.FlashFreq.40=40MHz
+pandabyte_x32.menu.FlashFreq.40.build.flash_freq=40m
+
+pandabyte_x32.menu.FlashSize.4M=4MB (32Mb)
+pandabyte_x32.menu.FlashSize.4M.build.flash_size=4MB
+pandabyte_x32.menu.FlashSize.8M=8MB (64Mb)
+pandabyte_x32.menu.FlashSize.8M.build.flash_size=8MB
+pandabyte_x32.menu.FlashSize.2M=2MB (16Mb)
+pandabyte_x32.menu.FlashSize.2M.build.flash_size=2MB
+pandabyte_x32.menu.FlashSize.16M=16MB (128Mb)
+pandabyte_x32.menu.FlashSize.16M.build.flash_size=16MB
+
+pandabyte_x32.menu.UploadSpeed.921600=921600
+pandabyte_x32.menu.UploadSpeed.921600.upload.speed=921600
+pandabyte_x32.menu.UploadSpeed.115200=115200
+pandabyte_x32.menu.UploadSpeed.115200.upload.speed=115200
+pandabyte_x32.menu.UploadSpeed.256000.windows=256000
+pandabyte_x32.menu.UploadSpeed.256000.upload.speed=256000
+pandabyte_x32.menu.UploadSpeed.230400.windows.upload.speed=256000
+pandabyte_x32.menu.UploadSpeed.230400=230400
+pandabyte_x32.menu.UploadSpeed.230400.upload.speed=230400
+pandabyte_x32.menu.UploadSpeed.460800.linux=460800
+pandabyte_x32.menu.UploadSpeed.460800.macosx=460800
+pandabyte_x32.menu.UploadSpeed.460800.upload.speed=460800
+pandabyte_x32.menu.UploadSpeed.512000.windows=512000
+pandabyte_x32.menu.UploadSpeed.512000.upload.speed=512000
+
+pandabyte_x32.menu.LoopCore.1=Core 1
+pandabyte_x32.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+pandabyte_x32.menu.LoopCore.0=Core 0
+pandabyte_x32.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+pandabyte_x32.menu.EventsCore.1=Core 1
+pandabyte_x32.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+pandabyte_x32.menu.EventsCore.0=Core 0
+pandabyte_x32.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+pandabyte_x32.menu.DebugLevel.none=None
+pandabyte_x32.menu.DebugLevel.none.build.code_debug=0
+pandabyte_x32.menu.DebugLevel.error=Error
+pandabyte_x32.menu.DebugLevel.error.build.code_debug=1
+pandabyte_x32.menu.DebugLevel.warn=Warn
+pandabyte_x32.menu.DebugLevel.warn.build.code_debug=2
+pandabyte_x32.menu.DebugLevel.info=Info
+pandabyte_x32.menu.DebugLevel.info.build.code_debug=3
+pandabyte_x32.menu.DebugLevel.debug=Debug
+pandabyte_x32.menu.DebugLevel.debug.build.code_debug=4
+pandabyte_x32.menu.DebugLevel.verbose=Verbose
+pandabyte_x32.menu.DebugLevel.verbose.build.code_debug=5
+
+pandabyte_x32.menu.EraseFlash.none=Disabled
+pandabyte_x32.menu.EraseFlash.none.upload.erase_cmd=
+pandabyte_x32.menu.EraseFlash.all=Enabled
+pandabyte_x32.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pandabyte_x32.menu.ZigbeeMode.default=Disabled
+pandabyte_x32.menu.ZigbeeMode.default.build.zigbee_mode=
+pandabyte_x32.menu.ZigbeeMode.default.build.zigbee_libs=
+pandabyte_x32.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+pandabyte_x32.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_x32.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+
+
+##############################################################
+# PandaByte xC3m ESP32C3
+
+pandabyte_xc3m.name=Pandabyte xC3m - ESP32C3
+
+pandabyte_xc3m.bootloader.tool=esptool_py
+pandabyte_xc3m.bootloader.tool.default=esptool_py
+
+pandabyte_xc3m.upload.tool=esptool_py
+pandabyte_xc3m.upload.tool.default=esptool_py
+pandabyte_xc3m.upload.tool.network=esp_ota
+
+pandabyte_xc3m.upload.maximum_size=1310720
+pandabyte_xc3m.upload.maximum_data_size=327680
+pandabyte_xc3m.upload.flags=
+pandabyte_xc3m.upload.extra_flags=
+pandabyte_xc3m.upload.use_1200bps_touch=false
+pandabyte_xc3m.upload.wait_for_upload_port=false
+
+pandabyte_xc3m.serial.disableDTR=false
+pandabyte_xc3m.serial.disableRTS=false
+
+pandabyte_xc3m.build.tarch=riscv32
+pandabyte_xc3m.build.bootloader_addr=0x0
+pandabyte_xc3m.build.target=esp
+pandabyte_xc3m.build.mcu=esp32c3
+pandabyte_xc3m.build.core=esp32
+pandabyte_xc3m.build.variant=pandabyte_xc3m
+pandabyte_xc3m.build.board=PANDABYTE_XC3M
+
+pandabyte_xc3m.build.cdc_on_boot=1
+pandabyte_xc3m.build.f_cpu=160000000L
+pandabyte_xc3m.build.flash_size=4MB
+pandabyte_xc3m.build.flash_freq=80m
+pandabyte_xc3m.build.flash_mode=dio
+pandabyte_xc3m.build.boot=qio
+pandabyte_xc3m.build.partitions=default
+pandabyte_xc3m.build.defines=
+
+pandabyte_xc3m.menu.CDCOnBoot.cdc=Enabled
+pandabyte_xc3m.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+pandabyte_xc3m.menu.CDCOnBoot.default=Enabled
+pandabyte_xc3m.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+pandabyte_xc3m.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.default.build.partitions=default
+pandabyte_xc3m.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pandabyte_xc3m.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pandabyte_xc3m.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.minimal.build.partitions=minimal
+pandabyte_xc3m.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pandabyte_xc3m.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pandabyte_xc3m.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pandabyte_xc3m.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pandabyte_xc3m.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pandabyte_xc3m.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pandabyte_xc3m.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pandabyte_xc3m.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pandabyte_xc3m.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pandabyte_xc3m.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pandabyte_xc3m.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pandabyte_xc3m.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pandabyte_xc3m.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pandabyte_xc3m.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pandabyte_xc3m.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+pandabyte_xc3m.menu.CPUFreq.160=160MHz (WiFi)
+pandabyte_xc3m.menu.CPUFreq.160.build.f_cpu=160000000L
+pandabyte_xc3m.menu.CPUFreq.80=80MHz (WiFi)
+pandabyte_xc3m.menu.CPUFreq.80.build.f_cpu=80000000L
+pandabyte_xc3m.menu.CPUFreq.40=40MHz
+pandabyte_xc3m.menu.CPUFreq.40.build.f_cpu=40000000L
+pandabyte_xc3m.menu.CPUFreq.20=20MHz
+pandabyte_xc3m.menu.CPUFreq.20.build.f_cpu=20000000L
+pandabyte_xc3m.menu.CPUFreq.10=10MHz
+pandabyte_xc3m.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pandabyte_xc3m.menu.FlashMode.qio=QIO
+pandabyte_xc3m.menu.FlashMode.qio.build.flash_mode=dio
+pandabyte_xc3m.menu.FlashMode.qio.build.boot=qio
+pandabyte_xc3m.menu.FlashMode.dio=DIO
+pandabyte_xc3m.menu.FlashMode.dio.build.flash_mode=dio
+pandabyte_xc3m.menu.FlashMode.dio.build.boot=dio
+pandabyte_xc3m.menu.FlashMode.qout=QOUT
+pandabyte_xc3m.menu.FlashMode.qout.build.flash_mode=dout
+pandabyte_xc3m.menu.FlashMode.qout.build.boot=qout
+pandabyte_xc3m.menu.FlashMode.dout=DOUT
+pandabyte_xc3m.menu.FlashMode.dout.build.flash_mode=dout
+pandabyte_xc3m.menu.FlashMode.dout.build.boot=dout
+
+pandabyte_xc3m.menu.FlashFreq.80=80MHz
+pandabyte_xc3m.menu.FlashFreq.80.build.flash_freq=80m
+pandabyte_xc3m.menu.FlashFreq.40=40MHz
+pandabyte_xc3m.menu.FlashFreq.40.build.flash_freq=40m
+
+pandabyte_xc3m.menu.FlashSize.4M=4MB (32Mb)
+pandabyte_xc3m.menu.FlashSize.4M.build.flash_size=4MB
+
+pandabyte_xc3m.menu.UploadSpeed.921600=921600
+pandabyte_xc3m.menu.UploadSpeed.921600.upload.speed=921600
+pandabyte_xc3m.menu.UploadSpeed.115200=115200
+pandabyte_xc3m.menu.UploadSpeed.115200.upload.speed=115200
+pandabyte_xc3m.menu.UploadSpeed.256000.windows=256000
+pandabyte_xc3m.menu.UploadSpeed.256000.upload.speed=256000
+pandabyte_xc3m.menu.UploadSpeed.230400.windows.upload.speed=256000
+pandabyte_xc3m.menu.UploadSpeed.230400=230400
+pandabyte_xc3m.menu.UploadSpeed.230400.upload.speed=230400
+pandabyte_xc3m.menu.UploadSpeed.460800.linux=460800
+pandabyte_xc3m.menu.UploadSpeed.460800.macosx=460800
+pandabyte_xc3m.menu.UploadSpeed.460800.upload.speed=460800
+pandabyte_xc3m.menu.UploadSpeed.512000.windows=512000
+pandabyte_xc3m.menu.UploadSpeed.512000.upload.speed=512000
+
+pandabyte_xc3m.menu.DebugLevel.none=None
+pandabyte_xc3m.menu.DebugLevel.none.build.code_debug=0
+pandabyte_xc3m.menu.DebugLevel.error=Error
+pandabyte_xc3m.menu.DebugLevel.error.build.code_debug=1
+pandabyte_xc3m.menu.DebugLevel.warn=Warn
+pandabyte_xc3m.menu.DebugLevel.warn.build.code_debug=2
+pandabyte_xc3m.menu.DebugLevel.info=Info
+pandabyte_xc3m.menu.DebugLevel.info.build.code_debug=3
+pandabyte_xc3m.menu.DebugLevel.debug=Debug
+pandabyte_xc3m.menu.DebugLevel.debug.build.code_debug=4
+pandabyte_xc3m.menu.DebugLevel.verbose=Verbose
+pandabyte_xc3m.menu.DebugLevel.verbose.build.code_debug=5
+
+pandabyte_xc3m.menu.EraseFlash.none=Disabled
+pandabyte_xc3m.menu.EraseFlash.none.upload.erase_cmd=
+pandabyte_xc3m.menu.EraseFlash.all=Enabled
+pandabyte_xc3m.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+# PandaByte xC5 ESP32C5
+pandabyte_xc5.name=Pandabyte xC5 - ESP32C5
+
+pandabyte_xc5.bootloader.tool=esptool_py
+pandabyte_xc5.bootloader.tool.default=esptool_py
+
+pandabyte_xc5.upload.tool=esptool_py
+pandabyte_xc5.upload.tool.default=esptool_py
+pandabyte_xc5.upload.tool.network=esp_ota
+
+pandabyte_xc5.upload.maximum_size=1310720
+pandabyte_xc5.upload.maximum_data_size=327680
+pandabyte_xc5.upload.flags=
+pandabyte_xc5.upload.extra_flags=
+pandabyte_xc5.upload.use_1200bps_touch=false
+pandabyte_xc5.upload.wait_for_upload_port=false
+
+pandabyte_xc5.serial.disableDTR=false
+pandabyte_xc5.serial.disableRTS=false
+
+pandabyte_xc5.build.tarch=riscv32
+pandabyte_xc5.build.target=esp
+pandabyte_xc5.build.mcu=esp32c5
+pandabyte_xc5.build.core=esp32
+pandabyte_xc5.build.variant=pandabyte_xc5
+pandabyte_xc5.build.board=PANDABYTE_XC5
+pandabyte_xc5.build.bootloader_addr=0x2000
+
+pandabyte_xc5.build.cdc_on_boot=1
+pandabyte_xc5.build.f_cpu=240000000L
+pandabyte_xc5.build.flash_size=4MB
+pandabyte_xc5.build.flash_freq=80m
+pandabyte_xc5.build.flash_mode=qio
+pandabyte_xc5.build.boot=qio
+pandabyte_xc5.build.partitions=default
+pandabyte_xc5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+pandabyte_xc5.menu.JTAGAdapter.default=Disabled
+pandabyte_xc5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+pandabyte_xc5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+pandabyte_xc5.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+pandabyte_xc5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+pandabyte_xc5.menu.JTAGAdapter.external=FTDI Adapter
+pandabyte_xc5.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+pandabyte_xc5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+pandabyte_xc5.menu.JTAGAdapter.bridge=ESP USB Bridge
+pandabyte_xc5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+pandabyte_xc5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+pandabyte_xc5.menu.PSRAM.disabled=Disabled
+pandabyte_xc5.menu.PSRAM.disabled.build.defines=
+pandabyte_xc5.menu.PSRAM.enabled=Enabled
+pandabyte_xc5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+pandabyte_xc5.menu.CDCOnBoot.default=Enabled
+pandabyte_xc5.menu.CDCOnBoot.default.build.cdc_on_boot=1
+pandabyte_xc5.menu.CDCOnBoot.cdc=Enabled
+pandabyte_xc5.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+pandabyte_xc5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.default.build.partitions=default
+pandabyte_xc5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pandabyte_xc5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pandabyte_xc5.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pandabyte_xc5.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+pandabyte_xc5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.minimal.build.partitions=minimal
+pandabyte_xc5.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+pandabyte_xc5.menu.PartitionScheme.no_fs.build.partitions=no_fs
+pandabyte_xc5.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+pandabyte_xc5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pandabyte_xc5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pandabyte_xc5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pandabyte_xc5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pandabyte_xc5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pandabyte_xc5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pandabyte_xc5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pandabyte_xc5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pandabyte_xc5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pandabyte_xc5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pandabyte_xc5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pandabyte_xc5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pandabyte_xc5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pandabyte_xc5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pandabyte_xc5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pandabyte_xc5.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+pandabyte_xc5.menu.PartitionScheme.fatflash.build.partitions=ffat
+pandabyte_xc5.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+pandabyte_xc5.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+pandabyte_xc5.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+pandabyte_xc5.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+pandabyte_xc5.menu.PartitionScheme.rainmaker=RainMaker 4MB
+pandabyte_xc5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+pandabyte_xc5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+pandabyte_xc5.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+pandabyte_xc5.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+pandabyte_xc5.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+pandabyte_xc5.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+pandabyte_xc5.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+pandabyte_xc5.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+pandabyte_xc5.menu.PartitionScheme.zigbee_2MB=Zigbee 2MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee_2MB.build.partitions=zigbee_2MB
+pandabyte_xc5.menu.PartitionScheme.zigbee_2MB.upload.maximum_size=1310720
+pandabyte_xc5.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee.build.partitions=zigbee
+pandabyte_xc5.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+pandabyte_xc5.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+pandabyte_xc5.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_2MB=Zigbee ZCZR 2MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_2MB.build.partitions=zigbee_zczr_2MB
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_2MB.upload.maximum_size=1310720
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+pandabyte_xc5.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+pandabyte_xc5.menu.PartitionScheme.custom=Custom
+pandabyte_xc5.menu.PartitionScheme.custom.build.partitions=
+pandabyte_xc5.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+pandabyte_xc5.menu.CPUFreq.240=240MHz (WiFi)
+pandabyte_xc5.menu.CPUFreq.240.build.f_cpu=240000000L
+pandabyte_xc5.menu.CPUFreq.120=120MHz (WiFi)
+pandabyte_xc5.menu.CPUFreq.120.build.f_cpu=120000000L
+pandabyte_xc5.menu.CPUFreq.80=80MHz (WiFi)
+pandabyte_xc5.menu.CPUFreq.80.build.f_cpu=80000000L
+pandabyte_xc5.menu.CPUFreq.40=40MHz
+pandabyte_xc5.menu.CPUFreq.40.build.f_cpu=40000000L
+pandabyte_xc5.menu.CPUFreq.20=20MHz
+pandabyte_xc5.menu.CPUFreq.20.build.f_cpu=20000000L
+pandabyte_xc5.menu.CPUFreq.10=10MHz
+pandabyte_xc5.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pandabyte_xc5.menu.FlashMode.qio=QIO
+pandabyte_xc5.menu.FlashMode.qio.build.flash_mode=dio
+pandabyte_xc5.menu.FlashMode.qio.build.boot=qio
+pandabyte_xc5.menu.FlashMode.dio=DIO
+pandabyte_xc5.menu.FlashMode.dio.build.flash_mode=dio
+pandabyte_xc5.menu.FlashMode.dio.build.boot=dio
+
+pandabyte_xc5.menu.FlashFreq.80=80MHz
+pandabyte_xc5.menu.FlashFreq.80.build.flash_freq=80m
+pandabyte_xc5.menu.FlashFreq.40=40MHz
+pandabyte_xc5.menu.FlashFreq.40.build.flash_freq=40m
+
+pandabyte_xc5.menu.FlashSize.4M=4MB (32Mb)
+pandabyte_xc5.menu.FlashSize.4M.build.flash_size=4MB
+pandabyte_xc5.menu.FlashSize.8M=8MB (64Mb)
+pandabyte_xc5.menu.FlashSize.8M.build.flash_size=8MB
+pandabyte_xc5.menu.FlashSize.2M=2MB (16Mb)
+pandabyte_xc5.menu.FlashSize.2M.build.flash_size=2MB
+pandabyte_xc5.menu.FlashSize.16M=16MB (128Mb)
+pandabyte_xc5.menu.FlashSize.16M.build.flash_size=16MB
+
+pandabyte_xc5.menu.UploadSpeed.921600=921600
+pandabyte_xc5.menu.UploadSpeed.921600.upload.speed=921600
+pandabyte_xc5.menu.UploadSpeed.115200=115200
+pandabyte_xc5.menu.UploadSpeed.115200.upload.speed=115200
+pandabyte_xc5.menu.UploadSpeed.256000.windows=256000
+pandabyte_xc5.menu.UploadSpeed.256000.upload.speed=256000
+pandabyte_xc5.menu.UploadSpeed.230400.windows.upload.speed=256000
+pandabyte_xc5.menu.UploadSpeed.230400=230400
+pandabyte_xc5.menu.UploadSpeed.230400.upload.speed=230400
+pandabyte_xc5.menu.UploadSpeed.460800.linux=460800
+pandabyte_xc5.menu.UploadSpeed.460800.macosx=460800
+pandabyte_xc5.menu.UploadSpeed.460800.upload.speed=460800
+pandabyte_xc5.menu.UploadSpeed.512000.windows=512000
+pandabyte_xc5.menu.UploadSpeed.512000.upload.speed=512000
+
+pandabyte_xc5.menu.DebugLevel.none=None
+pandabyte_xc5.menu.DebugLevel.none.build.code_debug=0
+pandabyte_xc5.menu.DebugLevel.error=Error
+pandabyte_xc5.menu.DebugLevel.error.build.code_debug=1
+pandabyte_xc5.menu.DebugLevel.warn=Warn
+pandabyte_xc5.menu.DebugLevel.warn.build.code_debug=2
+pandabyte_xc5.menu.DebugLevel.info=Info
+pandabyte_xc5.menu.DebugLevel.info.build.code_debug=3
+pandabyte_xc5.menu.DebugLevel.debug=Debug
+pandabyte_xc5.menu.DebugLevel.debug.build.code_debug=4
+pandabyte_xc5.menu.DebugLevel.verbose=Verbose
+pandabyte_xc5.menu.DebugLevel.verbose.build.code_debug=5
+
+pandabyte_xc5.menu.EraseFlash.none=Disabled
+pandabyte_xc5.menu.EraseFlash.none.upload.erase_cmd=
+pandabyte_xc5.menu.EraseFlash.all=Enabled
+pandabyte_xc5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pandabyte_xc5.menu.ZigbeeMode.default=Disabled
+pandabyte_xc5.menu.ZigbeeMode.default.build.zigbee_mode=
+pandabyte_xc5.menu.ZigbeeMode.default.build.zigbee_libs=
+pandabyte_xc5.menu.ZigbeeMode.ed=Zigbee ED (end device)
+pandabyte_xc5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+pandabyte_xc5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+pandabyte_xc5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+pandabyte_xc5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_xc5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+pandabyte_xc5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+pandabyte_xc5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+pandabyte_xc5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+pandabyte_xc5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+pandabyte_xc5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_xc5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+# PandaByte xC6 ESP32C6
+pandabyte_xc6.name=PandaByte xC6 - ESP32C6
+
+pandabyte_xc6.bootloader.tool=esptool_py
+pandabyte_xc6.bootloader.tool.default=esptool_py
+
+pandabyte_xc6.upload.tool=esptool_py
+pandabyte_xc6.upload.tool.default=esptool_py
+pandabyte_xc6.upload.tool.network=esp_ota
+
+pandabyte_xc6.upload.maximum_size=1310720
+pandabyte_xc6.upload.maximum_data_size=327680
+pandabyte_xc6.upload.flags=
+pandabyte_xc6.upload.extra_flags=
+pandabyte_xc6.upload.use_1200bps_touch=false
+pandabyte_xc6.upload.wait_for_upload_port=false
+
+pandabyte_xc6.serial.disableDTR=false
+pandabyte_xc6.serial.disableRTS=false
+
+pandabyte_xc6.build.tarch=riscv32
+pandabyte_xc6.build.target=esp
+pandabyte_xc6.build.mcu=esp32c6
+pandabyte_xc6.build.core=esp32
+pandabyte_xc6.build.variant=pandabyte_xc6
+pandabyte_xc6.build.board=PANDABYTE_XC6
+pandabyte_xc6.build.bootloader_addr=0x0
+
+pandabyte_xc6.build.cdc_on_boot=0
+pandabyte_xc6.build.f_cpu=160000000L
+pandabyte_xc6.build.flash_size=4MB
+pandabyte_xc6.build.flash_freq=80m
+pandabyte_xc6.build.flash_mode=qio
+pandabyte_xc6.build.boot=qio
+pandabyte_xc6.build.partitions=default
+pandabyte_xc6.build.defines=
+
+## IDE 2.0 Seems to not update the value
+pandabyte_xc6.menu.JTAGAdapter.default=Disabled
+pandabyte_xc6.menu.JTAGAdapter.default.build.copy_jtag_files=0
+pandabyte_xc6.menu.JTAGAdapter.builtin=Integrated USB JTAG
+pandabyte_xc6.menu.JTAGAdapter.builtin.build.openocdscript=esp32c6-builtin.cfg
+pandabyte_xc6.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+pandabyte_xc6.menu.JTAGAdapter.external=FTDI Adapter
+pandabyte_xc6.menu.JTAGAdapter.external.build.openocdscript=esp32c6-ftdi.cfg
+pandabyte_xc6.menu.JTAGAdapter.external.build.copy_jtag_files=1
+pandabyte_xc6.menu.JTAGAdapter.bridge=ESP USB Bridge
+pandabyte_xc6.menu.JTAGAdapter.bridge.build.openocdscript=esp32c6-bridge.cfg
+pandabyte_xc6.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+pandabyte_xc6.menu.CDCOnBoot.default=Disabled
+pandabyte_xc6.menu.CDCOnBoot.default.build.cdc_on_boot=0
+pandabyte_xc6.menu.CDCOnBoot.cdc=Enabled
+pandabyte_xc6.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+pandabyte_xc6.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.default.build.partitions=default
+pandabyte_xc6.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pandabyte_xc6.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pandabyte_xc6.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pandabyte_xc6.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+pandabyte_xc6.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.minimal.build.partitions=minimal
+pandabyte_xc6.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+pandabyte_xc6.menu.PartitionScheme.no_fs.build.partitions=no_fs
+pandabyte_xc6.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+pandabyte_xc6.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pandabyte_xc6.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pandabyte_xc6.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pandabyte_xc6.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pandabyte_xc6.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pandabyte_xc6.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pandabyte_xc6.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pandabyte_xc6.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pandabyte_xc6.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pandabyte_xc6.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pandabyte_xc6.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pandabyte_xc6.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pandabyte_xc6.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pandabyte_xc6.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pandabyte_xc6.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pandabyte_xc6.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+pandabyte_xc6.menu.PartitionScheme.fatflash.build.partitions=ffat
+pandabyte_xc6.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+pandabyte_xc6.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+pandabyte_xc6.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+pandabyte_xc6.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+pandabyte_xc6.menu.PartitionScheme.rainmaker=RainMaker 4MB
+pandabyte_xc6.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+pandabyte_xc6.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+pandabyte_xc6.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+pandabyte_xc6.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+pandabyte_xc6.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+pandabyte_xc6.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+pandabyte_xc6.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+pandabyte_xc6.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+pandabyte_xc6.menu.PartitionScheme.zigbee_2MB=Zigbee 2MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee_2MB.build.partitions=zigbee_2MB
+pandabyte_xc6.menu.PartitionScheme.zigbee_2MB.upload.maximum_size=1310720
+pandabyte_xc6.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee.build.partitions=zigbee
+pandabyte_xc6.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+pandabyte_xc6.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+pandabyte_xc6.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_2MB=Zigbee ZCZR 2MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_2MB.build.partitions=zigbee_zczr_2MB
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_2MB.upload.maximum_size=1310720
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+pandabyte_xc6.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+pandabyte_xc6.menu.PartitionScheme.custom=Custom
+pandabyte_xc6.menu.PartitionScheme.custom.build.partitions=
+pandabyte_xc6.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+pandabyte_xc6.menu.CPUFreq.160=160MHz (WiFi)
+pandabyte_xc6.menu.CPUFreq.160.build.f_cpu=160000000L
+pandabyte_xc6.menu.CPUFreq.120=120MHz (WiFi)
+pandabyte_xc6.menu.CPUFreq.120.build.f_cpu=120000000L
+pandabyte_xc6.menu.CPUFreq.80=80MHz (WiFi)
+pandabyte_xc6.menu.CPUFreq.80.build.f_cpu=80000000L
+pandabyte_xc6.menu.CPUFreq.40=40MHz
+pandabyte_xc6.menu.CPUFreq.40.build.f_cpu=40000000L
+pandabyte_xc6.menu.CPUFreq.20=20MHz
+pandabyte_xc6.menu.CPUFreq.20.build.f_cpu=20000000L
+pandabyte_xc6.menu.CPUFreq.10=10MHz
+pandabyte_xc6.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pandabyte_xc6.menu.FlashMode.qio=QIO
+pandabyte_xc6.menu.FlashMode.qio.build.flash_mode=dio
+pandabyte_xc6.menu.FlashMode.qio.build.boot=qio
+pandabyte_xc6.menu.FlashMode.dio=DIO
+pandabyte_xc6.menu.FlashMode.dio.build.flash_mode=dio
+pandabyte_xc6.menu.FlashMode.dio.build.boot=dio
+
+pandabyte_xc6.menu.FlashFreq.80=80MHz
+pandabyte_xc6.menu.FlashFreq.80.build.flash_freq=80m
+pandabyte_xc6.menu.FlashFreq.40=40MHz
+pandabyte_xc6.menu.FlashFreq.40.build.flash_freq=40m
+
+pandabyte_xc6.menu.FlashSize.4M=4MB (32Mb)
+pandabyte_xc6.menu.FlashSize.4M.build.flash_size=4MB
+pandabyte_xc6.menu.FlashSize.8M=8MB (64Mb)
+pandabyte_xc6.menu.FlashSize.8M.build.flash_size=8MB
+pandabyte_xc6.menu.FlashSize.2M=2MB (16Mb)
+pandabyte_xc6.menu.FlashSize.2M.build.flash_size=2MB
+pandabyte_xc6.menu.FlashSize.16M=16MB (128Mb)
+pandabyte_xc6.menu.FlashSize.16M.build.flash_size=16MB
+
+pandabyte_xc6.menu.UploadSpeed.921600=921600
+pandabyte_xc6.menu.UploadSpeed.921600.upload.speed=921600
+pandabyte_xc6.menu.UploadSpeed.115200=115200
+pandabyte_xc6.menu.UploadSpeed.115200.upload.speed=115200
+pandabyte_xc6.menu.UploadSpeed.256000.windows=256000
+pandabyte_xc6.menu.UploadSpeed.256000.upload.speed=256000
+pandabyte_xc6.menu.UploadSpeed.230400.windows.upload.speed=256000
+pandabyte_xc6.menu.UploadSpeed.230400=230400
+pandabyte_xc6.menu.UploadSpeed.230400.upload.speed=230400
+pandabyte_xc6.menu.UploadSpeed.460800.linux=460800
+pandabyte_xc6.menu.UploadSpeed.460800.macosx=460800
+pandabyte_xc6.menu.UploadSpeed.460800.upload.speed=460800
+pandabyte_xc6.menu.UploadSpeed.512000.windows=512000
+pandabyte_xc6.menu.UploadSpeed.512000.upload.speed=512000
+
+pandabyte_xc6.menu.DebugLevel.none=None
+pandabyte_xc6.menu.DebugLevel.none.build.code_debug=0
+pandabyte_xc6.menu.DebugLevel.error=Error
+pandabyte_xc6.menu.DebugLevel.error.build.code_debug=1
+pandabyte_xc6.menu.DebugLevel.warn=Warn
+pandabyte_xc6.menu.DebugLevel.warn.build.code_debug=2
+pandabyte_xc6.menu.DebugLevel.info=Info
+pandabyte_xc6.menu.DebugLevel.info.build.code_debug=3
+pandabyte_xc6.menu.DebugLevel.debug=Debug
+pandabyte_xc6.menu.DebugLevel.debug.build.code_debug=4
+pandabyte_xc6.menu.DebugLevel.verbose=Verbose
+pandabyte_xc6.menu.DebugLevel.verbose.build.code_debug=5
+
+pandabyte_xc6.menu.EraseFlash.none=Disabled
+pandabyte_xc6.menu.EraseFlash.none.upload.erase_cmd=
+pandabyte_xc6.menu.EraseFlash.all=Enabled
+pandabyte_xc6.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pandabyte_xc6.menu.ZigbeeMode.default=Disabled
+pandabyte_xc6.menu.ZigbeeMode.default.build.zigbee_mode=
+pandabyte_xc6.menu.ZigbeeMode.default.build.zigbee_libs=
+pandabyte_xc6.menu.ZigbeeMode.ed=Zigbee ED (end device)
+pandabyte_xc6.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+pandabyte_xc6.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+pandabyte_xc6.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+pandabyte_xc6.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_xc6.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+pandabyte_xc6.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+pandabyte_xc6.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+pandabyte_xc6.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+pandabyte_xc6.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+pandabyte_xc6.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_xc6.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+#PandaByte xS3 ESP32S3
+
+pandabyte_xs3.name=PandaByte xS3 - ESP32S3
+
+pandabyte_xs3.bootloader.tool=esptool_py
+pandabyte_xs3.bootloader.tool.default=esptool_py
+
+pandabyte_xs3.upload.tool=esptool_py
+pandabyte_xs3.upload.tool.default=esptool_py
+pandabyte_xs3.upload.tool.network=esp_ota
+
+pandabyte_xs3.upload.maximum_size=1310720
+pandabyte_xs3.upload.maximum_data_size=327680
+pandabyte_xs3.upload.flags=
+pandabyte_xs3.upload.extra_flags=
+pandabyte_xs3.upload.use_1200bps_touch=false
+pandabyte_xs3.upload.wait_for_upload_port=false
+
+pandabyte_xs3.serial.disableDTR=false
+pandabyte_xs3.serial.disableRTS=false
+
+pandabyte_xs3.build.tarch=xtensa
+pandabyte_xs3.build.bootloader_addr=0x0
+pandabyte_xs3.build.target=esp32s3
+pandabyte_xs3.build.mcu=esp32s3
+pandabyte_xs3.build.core=esp32
+pandabyte_xs3.build.variant=pandabyte_xs3
+pandabyte_xs3.build.board=PANDABYTE_XS3
+
+pandabyte_xs3.build.usb_mode=1
+pandabyte_xs3.build.cdc_on_boot=0
+pandabyte_xs3.build.msc_on_boot=0
+pandabyte_xs3.build.dfu_on_boot=0
+pandabyte_xs3.build.f_cpu=240000000L
+pandabyte_xs3.build.flash_size=4MB
+pandabyte_xs3.build.flash_freq=80m
+pandabyte_xs3.build.flash_mode=dio
+pandabyte_xs3.build.boot=qio
+pandabyte_xs3.build.boot_freq=80m
+pandabyte_xs3.build.partitions=default
+pandabyte_xs3.build.defines=
+pandabyte_xs3.build.loop_core=
+pandabyte_xs3.build.event_core=
+pandabyte_xs3.build.psram_type=qspi
+pandabyte_xs3.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+pandabyte_xs3.menu.JTAGAdapter.default=Disabled
+pandabyte_xs3.menu.JTAGAdapter.default.build.copy_jtag_files=0
+pandabyte_xs3.menu.JTAGAdapter.builtin=Integrated USB JTAG
+pandabyte_xs3.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+pandabyte_xs3.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+pandabyte_xs3.menu.JTAGAdapter.external=FTDI Adapter
+pandabyte_xs3.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+pandabyte_xs3.menu.JTAGAdapter.external.build.copy_jtag_files=1
+pandabyte_xs3.menu.JTAGAdapter.bridge=ESP USB Bridge
+pandabyte_xs3.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+pandabyte_xs3.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+pandabyte_xs3.menu.PSRAM.disabled=Disabled
+pandabyte_xs3.menu.PSRAM.disabled.build.defines=
+pandabyte_xs3.menu.PSRAM.disabled.build.psram_type=qspi
+pandabyte_xs3.menu.PSRAM.enabled=QSPI PSRAM
+pandabyte_xs3.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+pandabyte_xs3.menu.PSRAM.enabled.build.psram_type=qspi
+pandabyte_xs3.menu.PSRAM.opi=OPI PSRAM
+pandabyte_xs3.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+pandabyte_xs3.menu.PSRAM.opi.build.psram_type=opi
+
+pandabyte_xs3.menu.FlashMode.qio=QIO 80MHz
+pandabyte_xs3.menu.FlashMode.qio.build.flash_mode=dio
+pandabyte_xs3.menu.FlashMode.qio.build.boot=qio
+pandabyte_xs3.menu.FlashMode.qio.build.boot_freq=80m
+pandabyte_xs3.menu.FlashMode.qio.build.flash_freq=80m
+pandabyte_xs3.menu.FlashMode.qio120=QIO 120MHz
+pandabyte_xs3.menu.FlashMode.qio120.build.flash_mode=dio
+pandabyte_xs3.menu.FlashMode.qio120.build.boot=qio
+pandabyte_xs3.menu.FlashMode.qio120.build.boot_freq=120m
+pandabyte_xs3.menu.FlashMode.qio120.build.flash_freq=80m
+pandabyte_xs3.menu.FlashMode.dio=DIO 80MHz
+pandabyte_xs3.menu.FlashMode.dio.build.flash_mode=dio
+pandabyte_xs3.menu.FlashMode.dio.build.boot=dio
+pandabyte_xs3.menu.FlashMode.dio.build.boot_freq=80m
+pandabyte_xs3.menu.FlashMode.dio.build.flash_freq=80m
+pandabyte_xs3.menu.FlashMode.opi=OPI 80MHz
+pandabyte_xs3.menu.FlashMode.opi.build.flash_mode=dout
+pandabyte_xs3.menu.FlashMode.opi.build.boot=opi
+pandabyte_xs3.menu.FlashMode.opi.build.boot_freq=80m
+pandabyte_xs3.menu.FlashMode.opi.build.flash_freq=80m
+
+pandabyte_xs3.menu.FlashSize.4M=4MB (32Mb)
+pandabyte_xs3.menu.FlashSize.4M.build.flash_size=4MB
+pandabyte_xs3.menu.FlashSize.8M=8MB (64Mb)
+pandabyte_xs3.menu.FlashSize.8M.build.flash_size=8MB
+pandabyte_xs3.menu.FlashSize.16M=16MB (128Mb)
+pandabyte_xs3.menu.FlashSize.16M.build.flash_size=16MB
+pandabyte_xs3.menu.FlashSize.32M=32MB (256Mb)
+pandabyte_xs3.menu.FlashSize.32M.build.flash_size=32MB
+
+pandabyte_xs3.menu.LoopCore.1=Core 1
+pandabyte_xs3.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+pandabyte_xs3.menu.LoopCore.0=Core 0
+pandabyte_xs3.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+pandabyte_xs3.menu.EventsCore.1=Core 1
+pandabyte_xs3.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+pandabyte_xs3.menu.EventsCore.0=Core 0
+pandabyte_xs3.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+pandabyte_xs3.menu.USBMode.hwcdc=Hardware CDC and JTAG
+pandabyte_xs3.menu.USBMode.hwcdc.build.usb_mode=1
+pandabyte_xs3.menu.USBMode.default=USB-OTG (TinyUSB)
+pandabyte_xs3.menu.USBMode.default.build.usb_mode=0
+
+pandabyte_xs3.menu.CDCOnBoot.default=Enabled
+pandabyte_xs3.menu.CDCOnBoot.default.build.cdc_on_boot=1
+pandabyte_xs3.menu.CDCOnBoot.cdc=Enabled
+pandabyte_xs3.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
+
+pandabyte_xs3.menu.MSCOnBoot.default=Disabled
+pandabyte_xs3.menu.MSCOnBoot.default.build.msc_on_boot=0
+pandabyte_xs3.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+pandabyte_xs3.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+pandabyte_xs3.menu.DFUOnBoot.default=Disabled
+pandabyte_xs3.menu.DFUOnBoot.default.build.dfu_on_boot=0
+pandabyte_xs3.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+pandabyte_xs3.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+pandabyte_xs3.menu.UploadMode.default=UART0 / Hardware CDC
+pandabyte_xs3.menu.UploadMode.default.upload.use_1200bps_touch=false
+pandabyte_xs3.menu.UploadMode.default.upload.wait_for_upload_port=false
+pandabyte_xs3.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+pandabyte_xs3.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+pandabyte_xs3.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+pandabyte_xs3.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.default.build.partitions=default
+pandabyte_xs3.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pandabyte_xs3.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+pandabyte_xs3.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+pandabyte_xs3.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.minimal.build.partitions=minimal
+pandabyte_xs3.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+pandabyte_xs3.menu.PartitionScheme.no_fs.build.partitions=no_fs
+pandabyte_xs3.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+pandabyte_xs3.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pandabyte_xs3.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pandabyte_xs3.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pandabyte_xs3.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pandabyte_xs3.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pandabyte_xs3.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pandabyte_xs3.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pandabyte_xs3.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pandabyte_xs3.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pandabyte_xs3.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pandabyte_xs3.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pandabyte_xs3.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pandabyte_xs3.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.fatflash.build.partitions=ffat
+pandabyte_xs3.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+pandabyte_xs3.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+pandabyte_xs3.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+pandabyte_xs3.menu.PartitionScheme.rainmaker=RainMaker 4MB
+pandabyte_xs3.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+pandabyte_xs3.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+pandabyte_xs3.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+pandabyte_xs3.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+pandabyte_xs3.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+pandabyte_xs3.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+pandabyte_xs3.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+pandabyte_xs3.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+pandabyte_xs3.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+pandabyte_xs3.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+pandabyte_xs3.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+pandabyte_xs3.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+pandabyte_xs3.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+pandabyte_xs3.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+pandabyte_xs3.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+pandabyte_xs3.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+pandabyte_xs3.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+pandabyte_xs3.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/7MB SPIFFS/2.9MB MODEL)
+pandabyte_xs3.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+pandabyte_xs3.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xD10000 {build.path}/srmodels.bin
+pandabyte_xs3.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+pandabyte_xs3.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+pandabyte_xs3.menu.PartitionScheme.custom=Custom
+pandabyte_xs3.menu.PartitionScheme.custom.build.partitions=
+pandabyte_xs3.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+pandabyte_xs3.menu.CPUFreq.240=240MHz (WiFi)
+pandabyte_xs3.menu.CPUFreq.240.build.f_cpu=240000000L
+pandabyte_xs3.menu.CPUFreq.160=160MHz (WiFi)
+pandabyte_xs3.menu.CPUFreq.160.build.f_cpu=160000000L
+pandabyte_xs3.menu.CPUFreq.80=80MHz (WiFi)
+pandabyte_xs3.menu.CPUFreq.80.build.f_cpu=80000000L
+pandabyte_xs3.menu.CPUFreq.40=40MHz
+pandabyte_xs3.menu.CPUFreq.40.build.f_cpu=40000000L
+pandabyte_xs3.menu.CPUFreq.20=20MHz
+pandabyte_xs3.menu.CPUFreq.20.build.f_cpu=20000000L
+pandabyte_xs3.menu.CPUFreq.10=10MHz
+pandabyte_xs3.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pandabyte_xs3.menu.UploadSpeed.921600=921600
+pandabyte_xs3.menu.UploadSpeed.921600.upload.speed=921600
+pandabyte_xs3.menu.UploadSpeed.115200=115200
+pandabyte_xs3.menu.UploadSpeed.115200.upload.speed=115200
+pandabyte_xs3.menu.UploadSpeed.256000.windows=256000
+pandabyte_xs3.menu.UploadSpeed.256000.upload.speed=256000
+pandabyte_xs3.menu.UploadSpeed.230400.windows.upload.speed=256000
+pandabyte_xs3.menu.UploadSpeed.230400=230400
+pandabyte_xs3.menu.UploadSpeed.230400.upload.speed=230400
+pandabyte_xs3.menu.UploadSpeed.460800.linux=460800
+pandabyte_xs3.menu.UploadSpeed.460800.macosx=460800
+pandabyte_xs3.menu.UploadSpeed.460800.upload.speed=460800
+pandabyte_xs3.menu.UploadSpeed.512000.windows=512000
+pandabyte_xs3.menu.UploadSpeed.512000.upload.speed=512000
+
+pandabyte_xs3.menu.DebugLevel.none=None
+pandabyte_xs3.menu.DebugLevel.none.build.code_debug=0
+pandabyte_xs3.menu.DebugLevel.error=Error
+pandabyte_xs3.menu.DebugLevel.error.build.code_debug=1
+pandabyte_xs3.menu.DebugLevel.warn=Warn
+pandabyte_xs3.menu.DebugLevel.warn.build.code_debug=2
+pandabyte_xs3.menu.DebugLevel.info=Info
+pandabyte_xs3.menu.DebugLevel.info.build.code_debug=3
+pandabyte_xs3.menu.DebugLevel.debug=Debug
+pandabyte_xs3.menu.DebugLevel.debug.build.code_debug=4
+pandabyte_xs3.menu.DebugLevel.verbose=Verbose
+pandabyte_xs3.menu.DebugLevel.verbose.build.code_debug=5
+
+pandabyte_xs3.menu.EraseFlash.none=Disabled
+pandabyte_xs3.menu.EraseFlash.none.upload.erase_cmd=
+pandabyte_xs3.menu.EraseFlash.all=Enabled
+pandabyte_xs3.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pandabyte_xs3.menu.ZigbeeMode.default=Disabled
+pandabyte_xs3.menu.ZigbeeMode.default.build.zigbee_mode=
+pandabyte_xs3.menu.ZigbeeMode.default.build.zigbee_libs=
+pandabyte_xs3.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+pandabyte_xs3.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pandabyte_xs3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 ##############################################################
