@@ -298,7 +298,7 @@ bool HWCDC::deinit(void *busptr) {
     pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
     //digitalWrite(USB_INT_PHY0_DM_GPIO_NUM, LOW);
     //digitalWrite(USB_INT_PHY0_DP_GPIO_NUM, LOW);
-    delay(5); // necessary for the USB Host to enumerate it
+    delay(5);  // necessary for the USB Host to enumerate it
   }
   // release the flag
   running = false;
@@ -338,7 +338,7 @@ void HWCDC::begin(unsigned long baud) {
   if (!perimanSetPinBus(pin, ESP32_BUS_TYPE_USB_DP, (void *)this, -1, -1)) {
     goto err;
   }
-  
+
   // begin() executed after another begin()
   if (hw_cdc_started) {
     // avoid resetting the pins and causing an interruption of the USB flow
@@ -348,8 +348,8 @@ void HWCDC::begin(unsigned long baud) {
   // the HW Serial pins needs to be first set to a non-USB state in order to allow `if(Serial)` to work :-(
   // But this is also causing terminal to hang, so they are disabled
   pinMode(USB_INT_PHY0_DP_GPIO_NUM, OUTPUT_OPEN_DRAIN);
-  delay(5); // necessary for USB Host reenumerate it.
-  
+  delay(5);  // necessary for USB Host reenumerate it.
+
   // Configure PHY
   // USB_Serial_JTAG use internal PHY
   USB_SERIAL_JTAG.conf0.phy_sel = 0;
