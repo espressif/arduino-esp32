@@ -5,10 +5,11 @@
 #include "soc/soc_caps.h"
 
 
-// SD
+// SDMMC (1-bit)
+#define BOARD_HAS_SD_SDMMC
 #define SDMMC_CLK 2
 #define SDMMC_CMD 1
-#define SDMMC_DATA 3
+#define SDMMC_D0 3
 #define SDMMC_CS 17
 
 
