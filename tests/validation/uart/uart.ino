@@ -507,6 +507,49 @@ void change_cpu_frequency_test(void) {
   Serial.println("Change CPU frequency test successful");
 }
 
+// This test checks if hardware flow control (RTS/CTS) works correctly with internal loopback
+void hardware_flow_control_test(void) {
+  log_d("Starting hardware flow control test");
+
+  // Define CTS and RTS pins for testing
+  // I2C are always valid pins
+  const int8_t TEST_RTS_PIN = SDA;
+  const int8_t TEST_CTS_PIN = SCL;
+
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
+
+    // Configure pins with CTS and RTS (can be called after begin())
+    log_d("Setting UART%d pins: RX=%d, TX=%d, CTS=%d, RTS=%d", config.uart_num, config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    bool pins_set = config.serial.setPins(config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    TEST_ASSERT_TRUE(pins_set);
+
+    // Enable hardware flow control
+    log_d("Enabling hardware flow control (RTS + CTS)");
+    bool flow_ctrl_set = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_CTS_RTS, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_set);
+
+    // Set up internal loopbacks: TX->RX and RTS->CTS
+    log_d("Setting up internal loopbacks: TX->RX and RTS->CTS");
+    uart_internal_loopback(config.uart_num, config.default_rx_pin);
+    uart_internal_hw_flow_ctrl_loopback(config.uart_num, TEST_CTS_PIN);
+
+    delay(100);
+    config.transmit_and_check_msg("Hardware Flow Control ON");
+
+    // Test that flow control can be disabled
+    log_d("Testing disabling hardware flow control");
+    bool flow_ctrl_disabled = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_DISABLE, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_disabled);
+
+    // Test transmission still works after disabling flow control
+    delay(100);
+    config.transmit_and_check_msg("Hardware Flow Control OFF");
+  }
+
+  Serial.println("Hardware flow control test successful");
+}
+
 /* Main functions */
 
 void setup() {
@@ -563,6 +606,7 @@ void setup() {
 #endif
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
+  RUN_TEST(hardware_flow_control_test);
   RUN_TEST(end_when_stopped_test);
   UNITY_END();
 }
