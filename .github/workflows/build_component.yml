@@ -54,6 +54,42 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: bash ./.github/scripts/check-cmakelists.sh
 
+  check-examples:
+    name: Check Examples Match
+    runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check examples consistency
+        run: |
+          # Get list of folders in idf_component_examples (excluding hidden files)
+          actual_examples=$(find idf_component_examples -maxdepth 1 -type d ! -path idf_component_examples | sed 's|idf_component_examples/||' | sort)
+
+          # Extract example paths from idf_component.yml
+          declared_examples=$(grep -A 100 "^examples:" idf_component.yml | grep "path:" | sed 's/.*path: *\.\/idf_component_examples\///' | sort)
+
+          echo "=== Examples in idf_component_examples folder ==="
+          echo "$actual_examples"
+          echo ""
+          echo "=== Examples declared in idf_component.yml ==="
+          echo "$declared_examples"
+          echo ""
+
+          # Compare the two lists
+          if [ "$actual_examples" != "$declared_examples" ]; then
+            echo "❌ ERROR: Examples mismatch detected!"
+            echo ""
+            echo "Examples in folder but NOT in idf_component.yml:"
+            comm -23 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            echo ""
+            echo "Examples in idf_component.yml but NOT in folder:"
+            comm -13 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            exit 1
+          else
+            echo "✅ All examples match correctly!"
+          fi
+
   set-matrix:
     name: Set Matrix
     runs-on: ubuntu-latest
