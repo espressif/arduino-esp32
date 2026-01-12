@@ -27,10 +27,40 @@ env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
 jobs:
-  compile-sketch:
+  gen-matrix:
     if: |
       contains(github.event.pull_request.labels.*.name, 'lib_test') ||
       (github.event_name == 'schedule' && github.repository == 'espressif/arduino-esp32')
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Generate matrix
+        id: set-matrix
+        run: |
+          source .github/scripts/socs_config.sh
+
+          # Generate matrix with target and fqbn from BUILD_TEST_TARGETS
+          echo '{"include": [' > matrix.json
+          first=true
+          for target in "${BUILD_TEST_TARGETS[@]}"; do
+            if [ "$first" = true ]; then
+              first=false
+            else
+              echo ',' >> matrix.json
+            fi
+            echo "{\"target\": \"$target\", \"fqbn\": \"espressif:esp32:$target\"}" >> matrix.json
+          done
+          echo ']}' >> matrix.json
+
+          cat matrix.json
+          printf "matrix=%s\n" "$(cat matrix.json | jq -c .)" >> $GITHUB_OUTPUT
+
+  compile-sketch:
+    needs: gen-matrix
     runs-on: ubuntu-latest
     env:
       REPOSITORY: |
@@ -38,31 +68,7 @@ jobs:
           name: "espressif:esp32"
 
     strategy:
-      matrix:
-        target:
-          - esp32
-          - esp32s2
-          - esp32c3
-          - esp32s3
-          - esp32c6
-          - esp32h2
-          - esp32p4
-
-        include:
-          - target: esp32
-            fqbn: espressif:esp32:esp32
-          - target: esp32s2
-            fqbn: espressif:esp32:esp32s2
-          - target: esp32c3
-            fqbn: espressif:esp32:esp32c3
-          - target: esp32s3
-            fqbn: espressif:esp32:esp32s3
-          - target: esp32c6
-            fqbn: espressif:esp32:esp32c6
-          - target: esp32h2
-            fqbn: espressif:esp32:esp32h2
-          - target: esp32p4
-            fqbn: espressif:esp32:esp32p4
+      matrix: ${{ fromJson(needs.gen-matrix.outputs.matrix) }}
 
     steps:
       # This step makes the contents of the repository available to the workflow
