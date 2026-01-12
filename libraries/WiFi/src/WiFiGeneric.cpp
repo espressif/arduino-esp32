@@ -494,11 +494,11 @@ void WiFiGenericClass::enableLongRange(bool enable) {
 #endif
 
 #if SOC_WIFI_SUPPORT_5G
-  #if CONFIG_SOC_WIFI_HE_SUPPORT
-    #define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC | WIFI_PROTOCOL_11AX)
-  #else
-    #define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC)
-  #endif
+#if CONFIG_SOC_WIFI_HE_SUPPORT
+#define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC | WIFI_PROTOCOL_11AX)
+#else
+#define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC)
+#endif
 #endif
 
 static bool _wifi_is_lr_enabled(wifi_interface_t ifx) {
@@ -510,10 +510,7 @@ static bool _wifi_is_lr_enabled(wifi_interface_t ifx) {
     return false;
   }
   if (band_mode == WIFI_BAND_MODE_AUTO) {
-    wifi_protocols_t protocols = {
-      .ghz_2g = 0,
-      .ghz_5g = 0
-    };
+    wifi_protocols_t protocols = {.ghz_2g = 0, .ghz_5g = 0};
     err = esp_wifi_get_protocols(ifx, &protocols);
     if (err != ESP_OK) {
       log_e("Failed to get Current Protocols: 0x%x: %s", err, esp_err_to_name(err));
@@ -542,10 +539,7 @@ static bool _wifi_enable_lr(wifi_interface_t ifx) {
     return false;
   }
   if (band_mode == WIFI_BAND_MODE_AUTO) {
-    wifi_protocols_t protocols = {
-      .ghz_2g = WIFI_PROTOCOL_LR,
-      .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G
-    };
+    wifi_protocols_t protocols = {.ghz_2g = WIFI_PROTOCOL_LR, .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G};
     err = esp_wifi_set_protocols(ifx, &protocols);
     if (err != ESP_OK) {
       log_e("Failed to set LR Protocol: 0x%x: %s", err, esp_err_to_name(err));
@@ -574,10 +568,7 @@ static bool _wifi_disable_lr(wifi_interface_t ifx) {
     return false;
   }
   if (band_mode == WIFI_BAND_MODE_AUTO) {
-    wifi_protocols_t protocols = {
-      .ghz_2g = WIFI_PROTOCOL_DEFAULT,
-      .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G
-    };
+    wifi_protocols_t protocols = {.ghz_2g = WIFI_PROTOCOL_DEFAULT, .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G};
     err = esp_wifi_set_protocols(ifx, &protocols);
     if (err != ESP_OK) {
       log_e("Failed to set Default Protocol: 0x%x: %s", err, esp_err_to_name(err));
