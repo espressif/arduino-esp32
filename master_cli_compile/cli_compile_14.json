@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor_MultiPhase",
+                    "sizes": [{
+                            "flash_bytes": 649719,
+                            "flash_percentage": 49,
+                            "ram_bytes": 37028,
+                            "ram_percentage": 11
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Fan_Control",
                     "sizes": [{
                             "flash_bytes": 654655,
@@ -12,7 +20,7 @@
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                     "sizes": [{
-                            "flash_bytes": 1276447,
+                            "flash_bytes": 1276459,
                             "flash_percentage": 37,
                             "ram_bytes": 62840,
                             "ram_percentage": 19
@@ -71,9 +79,17 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Fan_Control",
+                    "sizes": [{
+                            "flash_bytes": 672948,
+                            "flash_percentage": 51,
+                            "ram_bytes": 28960,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                     "sizes": [{
-                            "flash_bytes": 1329898,
+                            "flash_bytes": 1329910,
                             "flash_percentage": 39,
                             "ram_bytes": 51236,
                             "ram_percentage": 15
@@ -132,9 +148,17 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/WiFi/examples/WiFiScanTime",
+                    "sizes": [{
+                            "flash_bytes": 825036,
+                            "flash_percentage": 62,
+                            "ram_bytes": 29444,
+                            "ram_percentage": 8
+                            }]
+                    },
 {"name": "libraries/WiFi/examples/WiFiTelnetToSerial",
                     "sizes": [{
-                            "flash_bytes": 855974,
+                            "flash_bytes": 855986,
                             "flash_percentage": 65,
                             "ram_bytes": 30824,
                             "ram_percentage": 9
@@ -142,7 +166,7 @@
                     },
 {"name": "libraries/WiFi/examples/WiFiUDPClient",
                     "sizes": [{
-                            "flash_bytes": 843608,
+                            "flash_bytes": 843618,
                             "flash_percentage": 64,
                             "ram_bytes": 31112,
                             "ram_percentage": 9
@@ -251,7 +275,7 @@
                     },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                     "sizes": [{
-                            "flash_bytes": 1198158,
+                            "flash_bytes": 1198166,
                             "flash_percentage": 35,
                             "ram_bytes": 56660,
                             "ram_percentage": 17

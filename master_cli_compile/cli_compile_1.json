@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/BLE/examples/Server_secure_static_passkey",
+                    "sizes": [{
+                            "flash_bytes": 1100795,
+                            "flash_percentage": 34,
+                            "ram_bytes": 39960,
+                            "ram_percentage": 12
+                            }]
+                    },
 {"name": "libraries/BLE/examples/UART",
                     "sizes": [{
                             "flash_bytes": 1099179,
@@ -92,7 +100,7 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 953095,
+                            "flash_bytes": 953111,
                             "flash_percentage": 72,
                             "ram_bytes": 45852,
                             "ram_percentage": 13
@@ -129,20 +137,20 @@
                             "ram_bytes": 21076,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
-                    "sizes": [{
-                            "flash_bytes": 286743,
-                            "flash_percentage": 21,
-                            "ram_bytes": 21068,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/BLE/examples/Server_multiconnect",
+                    "sizes": [{
+                            "flash_bytes": 634972,
+                            "flash_percentage": 20,
+                            "ram_bytes": 22756,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Server_secure_authorization",
                     "sizes": [{
                             "flash_bytes": 639358,
@@ -185,7 +193,7 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 975924,
+                            "flash_bytes": 975934,
                             "flash_percentage": 74,
                             "ram_bytes": 35572,
                             "ram_percentage": 10
@@ -262,14 +270,6 @@
                             "ram_bytes": 12072,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogRead",
-                    "sizes": [{
-                            "flash_bytes": 285810,
-                            "flash_percentage": 21,
-                            "ram_bytes": 12144,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
@@ -278,7 +278,7 @@
                 "sketches": [
 {"name": "libraries/ArduinoOTA/examples/SignedOTA",
                     "sizes": [{
-                            "flash_bytes": 1084512,
+                            "flash_bytes": 1085732,
                             "flash_percentage": 82,
                             "ram_bytes": 52516,
                             "ram_percentage": 16
@@ -291,7 +291,7 @@
                 "sketches": [
 {"name": "libraries/ArduinoOTA/examples/SignedOTA",
                     "sizes": [{
-                            "flash_bytes": 1044680,
+                            "flash_bytes": 1044690,
                             "flash_percentage": 79,
                             "ram_bytes": 46612,
                             "ram_percentage": 14
@@ -302,6 +302,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/BLE/examples/Server_secure_authorization",
+                    "sizes": [{
+                            "flash_bytes": 750268,
+                            "flash_percentage": 23,
+                            "ram_bytes": 21416,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                     "sizes": [{
                             "flash_bytes": 747784,
@@ -389,20 +397,20 @@
                             "ram_bytes": 13376,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 261374,
-                            "flash_percentage": 19,
-                            "ram_bytes": 13204,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/BLE/examples/Scan",
+                    "sizes": [{
+                            "flash_bytes": 793902,
+                            "flash_percentage": 25,
+                            "ram_bytes": 32936,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/BLE/examples/Server",
                     "sizes": [{
                             "flash_bytes": 796938,
@@ -453,7 +461,7 @@
                     },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
                     "sizes": [{
-                            "flash_bytes": 885728,
+                            "flash_bytes": 885740,
                             "flash_percentage": 67,
                             "ram_bytes": 31184,
                             "ram_percentage": 9
@@ -506,14 +514,6 @@
                             "ram_bytes": 22292,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
-                    "sizes": [{
-                            "flash_bytes": 308154,
-                            "flash_percentage": 23,
-                            "ram_bytes": 22292,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
@@ -554,7 +554,7 @@
                     },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 985890,
+                            "flash_bytes": 985902,
                             "flash_percentage": 5,
                             "ram_bytes": 62652,
                             "ram_percentage": 19
@@ -562,7 +562,7 @@
                     },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 989690,
+                            "flash_bytes": 989702,
                             "flash_percentage": 5,
                             "ram_bytes": 62672,
                             "ram_percentage": 19
@@ -663,7 +663,7 @@
                 "sketches": [
 {"name": "libraries/ArduinoOTA/examples/SignedOTA",
                     "sizes": [{
-                            "flash_bytes": 945495,
+                            "flash_bytes": 945507,
                             "flash_percentage": 72,
                             "ram_bytes": 49296,
                             "ram_percentage": 15

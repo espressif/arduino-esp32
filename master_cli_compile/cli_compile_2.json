@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
+                    "sizes": [{
+                            "flash_bytes": 286743,
+                            "flash_percentage": 21,
+                            "ram_bytes": 21068,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
                     "sizes": [{
                             "flash_bytes": 286855,
@@ -76,7 +84,7 @@
                     },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1055451,
+                            "flash_bytes": 1055459,
                             "flash_percentage": 6,
                             "ram_bytes": 68072,
                             "ram_percentage": 20
@@ -84,7 +92,7 @@
                     },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
                     "sizes": [{
-                            "flash_bytes": 1069127,
+                            "flash_bytes": 1069139,
                             "flash_percentage": 6,
                             "ram_bytes": 68164,
                             "ram_percentage": 20
@@ -137,20 +145,20 @@
                             "ram_bytes": 20964,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
-                    "sizes": [{
-                            "flash_bytes": 293275,
-                            "flash_percentage": 22,
-                            "ram_bytes": 21000,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogRead",
+                    "sizes": [{
+                            "flash_bytes": 285810,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12144,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogReadContinuous",
                     "sizes": [{
                             "flash_bytes": 292000,
@@ -270,14 +278,6 @@
                             "ram_bytes": 12544,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/HWCDC_Events",
-                    "sizes": [{
-                            "flash_bytes": 307066,
-                            "flash_percentage": 23,
-                            "ram_bytes": 13064,
-                            "ram_percentage": 3
-                            }]
                     }
 ]
 },
@@ -286,7 +286,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 987840,
+                            "flash_bytes": 989056,
                             "flash_percentage": 75,
                             "ram_bytes": 46516,
                             "ram_percentage": 14
@@ -299,7 +299,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 946672,
+                            "flash_bytes": 946684,
                             "flash_percentage": 72,
                             "ram_bytes": 40028,
                             "ram_percentage": 12
@@ -310,6 +310,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
+                    "sizes": [{
+                            "flash_bytes": 261374,
+                            "flash_percentage": 19,
+                            "ram_bytes": 13204,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
                     "sizes": [{
                             "flash_bytes": 269542,
@@ -397,20 +405,20 @@
                             "ram_bytes": 13188,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
-                    "sizes": [{
-                            "flash_bytes": 273806,
-                            "flash_percentage": 20,
-                            "ram_bytes": 13188,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
+                    "sizes": [{
+                            "flash_bytes": 308154,
+                            "flash_percentage": 23,
+                            "ram_bytes": 22292,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
                     "sizes": [{
                             "flash_bytes": 303048,
@@ -512,14 +520,6 @@
                             "flash_bytes": 317644,
                             "flash_percentage": 24,
                             "ram_bytes": 22148,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
-                    "sizes": [{
-                            "flash_bytes": 317784,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22132,
                             "ram_percentage": 6
                             }]
                     }
@@ -663,7 +663,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPClient",
                     "sizes": [{
-                            "flash_bytes": 858359,
+                            "flash_bytes": 858371,
                             "flash_percentage": 65,
                             "ram_bytes": 43300,
                             "ram_percentage": 13

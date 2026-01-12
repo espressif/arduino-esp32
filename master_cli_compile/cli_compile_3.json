@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Mutex",
+                    "sizes": [{
+                            "flash_bytes": 293275,
+                            "flash_percentage": 22,
+                            "ram_bytes": 21000,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/FreeRTOS/Queue",
                     "sizes": [{
                             "flash_bytes": 293119,
@@ -129,20 +137,20 @@
                             "ram_bytes": 21684,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/ESP32/examples/ResetReason/ResetReason",
-                    "sizes": [{
-                            "flash_bytes": 300175,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20956,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP32/examples/HWCDC_Events",
+                    "sizes": [{
+                            "flash_bytes": 286982,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12368,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/MacAddress/GetMacAddress",
                     "sizes": [{
                             "flash_bytes": 276778,
@@ -262,13 +270,18 @@
                             "ram_bytes": 11940,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c5",
+                "target": "esp32c5",
+                "sketches": [
+{"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 273476,
-                            "flash_percentage": 20,
-                            "ram_bytes": 11924,
-                            "ram_percentage": 3
+                            "flash_bytes": 989474,
+                            "flash_percentage": 75,
+                            "ram_bytes": 46516,
+                            "ram_percentage": 14
                             }]
                     }
 ]
@@ -278,7 +291,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 947092,
+                            "flash_bytes": 947104,
                             "flash_percentage": 72,
                             "ram_bytes": 40028,
                             "ram_percentage": 12
@@ -289,6 +302,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
+                    "sizes": [{
+                            "flash_bytes": 273806,
+                            "flash_percentage": 20,
+                            "ram_bytes": 13188,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/GPIO/BlinkRGB",
                     "sizes": [{
                             "flash_bytes": 279646,
@@ -331,9 +352,9 @@
                     },
 {"name": "libraries/ESP32/examples/HWCDC_Events",
                     "sizes": [{
-                            "flash_bytes": 308074,
-                            "flash_percentage": 23,
-                            "ram_bytes": 14360,
+                            "flash_bytes": 288450,
+                            "flash_percentage": 22,
+                            "ram_bytes": 13656,
                             "ram_percentage": 4
                             }]
                     },
@@ -376,20 +397,20 @@
                             "ram_bytes": 14684,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMTWrite_RGB_LED",
-                    "sizes": [{
-                            "flash_bytes": 294334,
-                            "flash_percentage": 22,
-                            "ram_bytes": 17276,
-                            "ram_percentage": 5
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/FreeRTOS/Queue",
+                    "sizes": [{
+                            "flash_bytes": 317784,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22132,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/FreeRTOS/Semaphore",
                     "sizes": [{
                             "flash_bytes": 317118,
@@ -493,14 +514,6 @@
                             "ram_bytes": 25636,
                             "ram_percentage": 7
                             }]
-                    },
-{"name": "libraries/ESP32/examples/RMT/RMT_CPUFreq_Test",
-                    "sizes": [{
-                            "flash_bytes": 344424,
-                            "flash_percentage": 26,
-                            "ram_bytes": 22548,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
@@ -589,7 +602,7 @@
                     },
 {"name": "libraries/ESP32/examples/Time/SimpleTime",
                     "sizes": [{
-                            "flash_bytes": 856842,
+                            "flash_bytes": 856854,
                             "flash_percentage": 65,
                             "ram_bytes": 40604,
                             "ram_percentage": 12
@@ -642,7 +655,7 @@
                 "sketches": [
 {"name": "libraries/AsyncUDP/examples/AsyncUDPMulticastServer",
                     "sizes": [{
-                            "flash_bytes": 858663,
+                            "flash_bytes": 858675,
                             "flash_percentage": 65,
                             "ram_bytes": 43300,
                             "ram_percentage": 13
