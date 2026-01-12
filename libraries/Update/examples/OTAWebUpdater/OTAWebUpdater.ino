@@ -83,7 +83,7 @@ void handleUpdate() {
       return;
     }
 
-    Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
+    Serial.printf("Receiving Update: %s, Size: %zu\n", upload.filename.c_str(), fsize);
     if (!Update.begin(fsize)) {
       otaDone = 0;
       Update.printError(Serial);
@@ -96,7 +96,7 @@ void handleUpdate() {
     }
   } else if (authenticated && upload.status == UPLOAD_FILE_END) {
     if (Update.end(true)) {
-      Serial.printf("Update Success: %u bytes\nRebooting...\n", upload.totalSize);
+      Serial.printf("Update Success: %zu bytes\nRebooting...\n", upload.totalSize);
     } else {
       Serial.printf("%s\n", Update.errorString());
       otaDone = 0;
