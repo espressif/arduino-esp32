@@ -244,6 +244,7 @@ CI
 
 In our repository, we have a Continuous Integration (CI) system that runs tests and fixes on every Pull Request. This system will run the tests
 on all supported targets and check if everything is working as expected.
+You can read a more technical explanation in the `CI README <https://github.com/espressif/arduino-esp32/blob/master/.github/CI_README.md>`_.
 
 We have many types of tests and checks, including:
 

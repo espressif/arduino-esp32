@@ -55,14 +55,14 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           );
         } else {
           Serial.println("Found another manufacturers beacon!");
-          Serial.printf("strManufacturerData: %d ", dataLength);
+          Serial.printf("strManufacturerData: %zu ", dataLength);
           for (int i = 0; i < dataLength; i++) {
             Serial.printf("[%X]", cManufacturerData[i]);
           }
           Serial.printf("\n");
         }
       } else {
-        Serial.printf("Manufacturer data too large (%d bytes), skipping\n", dataLength);
+        Serial.printf("Manufacturer data too large (%zu bytes), skipping\n", dataLength);
       }
     }
 

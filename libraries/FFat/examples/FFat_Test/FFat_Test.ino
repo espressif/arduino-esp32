@@ -152,7 +152,7 @@ void testFileIO(fs::FS &fs, const char *path) {
     }
     Serial.println("");
     end = millis() - start;
-    Serial.printf("- %u bytes read in %lu ms\r\n", flen, end);
+    Serial.printf("- %zu bytes read in %lu ms\r\n", flen, end);
     file.close();
   } else {
     Serial.println("- failed to open file for reading");
@@ -170,8 +170,8 @@ void setup() {
     return;
   }
 
-  Serial.printf("Total space: %10u\n", FFat.totalBytes());
-  Serial.printf("Free space: %10u\n", FFat.freeBytes());
+  Serial.printf("Total space: %10zu\n", FFat.totalBytes());
+  Serial.printf("Free space: %10zu\n", FFat.freeBytes());
   listDir(FFat, "/", 0);
   writeFile(FFat, "/hello.txt", "Hello ");
   appendFile(FFat, "/hello.txt", "World!\r\n");
@@ -180,7 +180,7 @@ void setup() {
   readFile(FFat, "/foo.txt");
   deleteFile(FFat, "/foo.txt");
   testFileIO(FFat, "/test.txt");
-  Serial.printf("Free space: %10u\n", FFat.freeBytes());
+  Serial.printf("Free space: %10zu\n", FFat.freeBytes());
   deleteFile(FFat, "/test.txt");
   Serial.println("Test complete");
 }
