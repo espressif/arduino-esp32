@@ -132,6 +132,7 @@ dependencies:
     rules:
       - if: "target in [esp32, esp32p4]"
 examples:
+  - path: ./idf_component_examples/Arduino_ESP_Matter_over_OpenThread
+  - path: ./idf_component_examples/free_bt_memory
   - path: ./idf_component_examples/hello_world
   - path: ./idf_component_examples/hw_cdc_hello_world
-  - path: ./idf_component_examples/Arduino_ESP_Matter_over_OpenThread

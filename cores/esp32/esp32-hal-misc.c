@@ -246,17 +246,9 @@ bool verifyRollbackLater() {
 }
 #endif
 
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-#if CONFIG_IDF_TARGET_ESP32
-//overwritten in esp32-hal-bt.c
-bool btInUse() __attribute__((weak));
-bool btInUse() {
-  return false;
-}
-#else
-//from esp32-hal-bt.c
-extern bool btInUse();
-#endif
+#if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
+// declared here, defined in esp32-hal-bt.c (weak so users can override)
+extern bool btInUse(void);
 #endif
 
 #if CONFIG_SPIRAM_SUPPORT || CONFIG_SPIRAM
