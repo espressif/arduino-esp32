@@ -63,13 +63,13 @@ static const uint8_t T13 = 15;
 
 //WIFI - ESP32C6
 #define BOARD_HAS_SDIO_ESP_HOSTED
-#define BOARD_SDIO_ESP_HOSTED_RESET 54 // chip_pu
-#define BOARD_SDIO_ESP_HOSTED_BOOT  53 // io 9
-#define BOARD_SDIO_ESP_HOSTED_CMD   52 // io 18
-#define BOARD_SDIO_ESP_HOSTED_CLK   51 // io 19
-#define BOARD_SDIO_ESP_HOSTED_D0    50 // io 20
-#define BOARD_SDIO_ESP_HOSTED_D1    49 // io 21
-#define BOARD_SDIO_ESP_HOSTED_D2    48 // io 22
-#define BOARD_SDIO_ESP_HOSTED_D3    47 // io 23
+#define BOARD_SDIO_ESP_HOSTED_RESET 54  // chip_pu
+#define BOARD_SDIO_ESP_HOSTED_BOOT  53  // io 9
+#define BOARD_SDIO_ESP_HOSTED_CMD   52  // io 18
+#define BOARD_SDIO_ESP_HOSTED_CLK   51  // io 19
+#define BOARD_SDIO_ESP_HOSTED_D0    50  // io 20
+#define BOARD_SDIO_ESP_HOSTED_D1    49  // io 21
+#define BOARD_SDIO_ESP_HOSTED_D2    48  // io 22
+#define BOARD_SDIO_ESP_HOSTED_D3    47  // io 23
 
 #endif /* Pins_Arduino_h */
