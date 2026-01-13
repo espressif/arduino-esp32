@@ -4,14 +4,12 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-
 // SDMMC (1-bit)
 #define BOARD_HAS_SD_SDMMC
 #define SDMMC_CLK 2
 #define SDMMC_CMD 1
-#define SDMMC_D0 3
-#define SDMMC_CS 17
-
+#define SDMMC_D0  3
+#define SDMMC_CS  17
 
 // BN: ESP32 Family Device
 #define USB_VID 0x303a
@@ -22,12 +20,12 @@
 #define USB_SERIAL       ""
 
 // display AMOLED SPI2
-#define AMOLED_CS       12
-#define AMOLED_SCK      11
-#define AMOLED_D0       4
-#define AMOLED_D1       5
-#define AMOLED_D2       6
-#define AMOLED_D3       7
+#define AMOLED_CS     12
+#define AMOLED_SCK    11
+#define AMOLED_D0     4
+#define AMOLED_D1     5
+#define AMOLED_D2     6
+#define AMOLED_D3     7
 #define AMOLED_RESET  8
 #define AMOLED_TE     13
 #define AMOLED_PWR_EN 21
@@ -65,8 +63,8 @@ static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 //esp32s3-PSFlash   SPI1/SPI0
-#define SS  32    // FSPICS0
-#define MOSI  35 // FSPID
-#define MISO  34  // FSPIQ
-#define SCK 33   // FSPICLK
-#endif                           /* Pins_Arduino_h */
+#define SS   32  // FSPICS0
+#define MOSI 35  // FSPID
+#define MISO 34  // FSPIQ
+#define SCK  33  // FSPICLK
+#endif           /* Pins_Arduino_h */
