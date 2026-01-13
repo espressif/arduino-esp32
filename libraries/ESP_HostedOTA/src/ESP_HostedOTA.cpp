@@ -73,6 +73,7 @@ bool updateEspHostedSlave() {
     NetworkClient *stream = https.getStreamPtr();
 
     // Step 11: Initialize the ESP-Hosted update process
+    Serial.println("Beginning update process...");
     if (!hostedBeginUpdate()) {
       Serial.println("ERROR: esp-hosted update start failed!");
       https.end();
@@ -118,21 +119,24 @@ bool updateEspHostedSlave() {
 
         // Step 14: Check if entire firmware has been downloaded
         if (len == 0) {
+          Serial.println();
           // Finalize the update process
+          Serial.println("Finalizing update process...");
           if (!hostedEndUpdate()) {
-            Serial.println("\nERROR: esp-hosted update end failed!");
+            Serial.println("ERROR: esp-hosted update end failed!");
             break;
           }
 
           // Activate the new firmware
+          Serial.println("Activating new firmware...");
           if (!hostedActivateUpdate()) {
-            Serial.println("\nERROR: esp-hosted update activate failed!");
+            Serial.println("ERROR: esp-hosted update activate failed!");
             break;
           }
 
           // Update completed successfully
           updateSuccess = true;
-          Serial.println("\nSUCCESS: esp-hosted co-processor updated!");
+          Serial.println("SUCCESS: esp-hosted co-processor updated!");
           break;
         }
       }
