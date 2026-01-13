@@ -44010,10 +44010,10 @@ waveshare_esp32_s3_touch_amoled_206.build.flash_mode=dio
 waveshare_esp32_s3_touch_amoled_206.build.boot=qio
 waveshare_esp32_s3_touch_amoled_206.build.boot_freq=80m
 waveshare_esp32_s3_touch_amoled_206.build.partitions=default
-waveshare_esp32_s3_touch_amoled_206.build.defines=
+waveshare_esp32_s3_touch_amoled_206.build.defines=-DBOARD_HAS_PSRAM
 waveshare_esp32_s3_touch_amoled_206.build.loop_core=
 waveshare_esp32_s3_touch_amoled_206.build.event_core=
-waveshare_esp32_s3_touch_amoled_206.build.psram_type=qspi
+waveshare_esp32_s3_touch_amoled_206.build.psram_type=opi
 waveshare_esp32_s3_touch_amoled_206.build.memory_type={build.boot}_{build.psram_type}
 
 waveshare_esp32_s3_touch_amoled_206.menu.PSRAM.enabled=Enabled
