@@ -17,6 +17,7 @@
 
 ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_THERMOSTAT_DEVICE_ID;  //There is no FAN_CONTROL_DEVICE_ID in the Zigbee spec
+  _on_fan_mode_change = nullptr;
 
   //Create basic analog sensor clusters without configuration
   _cluster_list = esp_zb_zcl_cluster_list_create();

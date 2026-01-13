@@ -174,7 +174,7 @@ Currently, the default FQBNs are:
 * ``espressif:esp32:esp32c3``
 * ``espressif:esp32:esp32c6``
 * ``espressif:esp32:esp32h2``
-* ``espressif:esp32:esp32p4:USBMode=default``
+* ``espressif:esp32:esp32p4:USBMode=default,ChipVariant=postv3``
 
 There are two ways to alter the FQBNs used to compile the sketches: by using the ``fqbn`` or ``fqbn_append`` fields in the ``ci.yml`` file.
 
@@ -244,6 +244,7 @@ CI
 
 In our repository, we have a Continuous Integration (CI) system that runs tests and fixes on every Pull Request. This system will run the tests
 on all supported targets and check if everything is working as expected.
+You can read a more technical explanation in the `CI README <https://github.com/espressif/arduino-esp32/blob/master/.github/CI_README.md>`_.
 
 We have many types of tests and checks, including:
 

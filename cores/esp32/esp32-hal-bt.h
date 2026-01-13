@@ -31,6 +31,9 @@ typedef enum {
   BT_MODE_BTDM
 } bt_mode;
 
+// Users may override to keep/release BT memory as needed.
+bool btInUse(void);
+
 bool btStarted();
 bool btStart();
 bool btStartMode(bt_mode mode);

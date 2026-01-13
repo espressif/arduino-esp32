@@ -2,6 +2,10 @@
 
 set -e
 
+# Source centralized SoC configuration
+SCRIPTS_DIR="./.github/scripts"
+source "${SCRIPTS_DIR}/socs_config.sh"
+
 export ARDUINO_BUILD_DIR="$HOME/.arduino/build.tmp"
 
 function build {
@@ -71,7 +75,6 @@ fi
 #echo "Updating submodules ..."
 #git -C "$GITHUB_WORKSPACE" submodule update --init --recursive > /dev/null 2>&1
 
-SCRIPTS_DIR="./.github/scripts"
 source "${SCRIPTS_DIR}/install-arduino-cli.sh"
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 
@@ -89,15 +92,10 @@ if [ "$BUILD_LOG" -eq 1 ]; then
     echo "{\"boards\": [" > "$sizes_file"
 fi
 
-#build sketches for different targets
-build "esp32c5" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32p4" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32s2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c3" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32c6" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32h2" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
-build "esp32"   "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+#build sketches for different targets (using centralized config)
+for target in "${CORE_SOCS[@]}"; do
+    build "$target" "$CHUNK_INDEX" "$CHUNKS_CNT" "$BUILD_LOG" "$LOG_LEVEL" "$SKETCHES_FILE" "${SKETCHES_ESP32[@]}"
+done
 
 if [ "$BUILD_LOG" -eq 1 ]; then
     #remove last comma from the last JSON object

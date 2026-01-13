@@ -38,14 +38,8 @@ on:
       - ".github/scripts/on-push.sh"
       - ".github/scripts/sketch_utils.sh"
       - ".github/scripts/get_affected.py"
-      - "variants/esp32/**"
-      - "variants/esp32c3/**"
-      - "variants/esp32c5/**"
-      - "variants/esp32c6/**"
-      - "variants/esp32h2/**"
-      - "variants/esp32p4/**"
-      - "variants/esp32s2/**"
-      - "variants/esp32s3/**"
+      - ".github/scripts/socs_config.sh"
+      - "variants/**"
       - "!*.md"
       - "!*.txt"
       - "!*.properties"
@@ -70,6 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
+      should_run: ${{ steps.check-variants.outputs.should_run }}
       should_build: ${{ steps.set-chunks.outputs.should_build }}
       recompile_preset: ${{ steps.set-chunks.outputs.recompile_preset }}
       chunk_count: ${{ steps.set-chunks.outputs.chunk_count }}
@@ -91,8 +86,17 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
 
+      - name: Check if official variants changed
+        id: check-variants
+        run: |
+          bash .github/scripts/check_official_variants.sh \
+            "${{ github.event_name }}" \
+            "BUILD_TEST_TARGETS" \
+            ${{ steps.changed-files.outputs.all_changed_files }}
+
       - name: Set chunks
         id: set-chunks
+        if: steps.check-variants.outputs.should_run == 'true'
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
@@ -102,6 +106,7 @@ jobs:
 
       - name: Upload affected sketches
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_sketches
           path: affected_sketches.txt
@@ -109,6 +114,7 @@ jobs:
 
       - name: Upload debug artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: get_affected_debug
           path: |
@@ -122,7 +128,7 @@ jobs:
   # Ubuntu
   build-arduino-linux:
     name: Arduino ${{ matrix.chunk }} on ubuntu-latest
-    if: ${{ needs.gen-chunks.outputs.should_build == '1' }}
+    if: ${{ needs.gen-chunks.outputs.should_run == 'true' && needs.gen-chunks.outputs.should_build == '1' }}
     needs: gen-chunks
     runs-on: ubuntu-latest
     strategy:
@@ -179,7 +185,7 @@ jobs:
   build-arduino-win-mac:
     name: Arduino on ${{ matrix.os }}
     needs: gen-chunks
-    if: ${{ needs.gen-chunks.outputs.recompile_preset == '1' }}
+    if: ${{ needs.gen-chunks.outputs.should_run == 'true' && needs.gen-chunks.outputs.recompile_preset == '1' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

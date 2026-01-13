@@ -62,6 +62,11 @@ esp_zb_cluster_list_t *ZigbeeWindowCovering::zigbee_window_covering_clusters_cre
 
 ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID;
+  _on_open = nullptr;
+  _on_close = nullptr;
+  _on_go_to_lift_percentage = nullptr;
+  _on_go_to_tilt_percentage = nullptr;
+  _on_stop = nullptr;
 
   // set default values for window covering attributes
   _current_lift_percentage = ESP_ZB_ZCL_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_DEFAULT_VALUE;

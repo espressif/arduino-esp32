@@ -42,6 +42,18 @@ static uint16_t zb_windspeed_to_u16(float windspeed) {
   return (uint16_t)(windspeed * 100);
 }
 
+bool ZigbeeWindSpeedSensor::setDefaultValue(float defaultValue) {
+  uint16_t zb_default_value = zb_windspeed_to_u16(defaultValue);
+  esp_zb_attribute_list_t *windspeed_measure_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(windspeed_measure_cluster, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID, (void *)&zb_default_value);
+  if (ret != ESP_OK) {
+    log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
 bool ZigbeeWindSpeedSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_min = zb_windspeed_to_u16(min);
   uint16_t zb_max = zb_windspeed_to_u16(max);

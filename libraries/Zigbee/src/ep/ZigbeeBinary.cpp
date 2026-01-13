@@ -17,6 +17,7 @@
 
 ZigbeeBinary::ZigbeeBinary(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
+  _on_binary_output_change = nullptr;
 
   //Create basic binary sensor clusters without configuration
   _cluster_list = esp_zb_zcl_cluster_list_create();

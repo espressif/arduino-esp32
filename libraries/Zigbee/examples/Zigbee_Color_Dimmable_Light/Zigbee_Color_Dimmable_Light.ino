@@ -13,10 +13,10 @@
 // limitations under the License.
 
 /**
- * @brief This example demonstrates Zigbee Color Dimmable light bulb.
+ * @brief This example demonstrates Zigbee Color Dimmable light bulb with RGB and Temperature support.
  *
  * The example demonstrates how to use Zigbee library to create an end device with
- * color dimmable light end point.
+ * color dimmable light end point supporting both RGB (X/Y) and Color Temperature modes.
  * The light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator.
  *
  * Proper Zigbee mode must be selected in Tools->Zigbee mode
@@ -40,6 +40,15 @@ uint8_t button = BOOT_PIN;
 
 ZigbeeColorDimmableLight zbColorLight = ZigbeeColorDimmableLight(ZIGBEE_RGB_LIGHT_ENDPOINT);
 
+/********************* Temperature conversion functions **************************/
+uint16_t kelvinToMireds(uint16_t kelvin) {
+  return 1000000 / kelvin;
+}
+
+uint16_t miredsToKelvin(uint16_t mireds) {
+  return 1000000 / mireds;
+}
+
 /********************* RGB LED functions **************************/
 void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t level) {
   if (!state) {
@@ -48,6 +57,20 @@ void setRGBLight(bool state, uint8_t red, uint8_t green, uint8_t blue, uint8_t l
   }
   float brightness = (float)level / 255;
   rgbLedWrite(led, red * brightness, green * brightness, blue * brightness);
+}
+
+/********************* Temperature LED functions **************************/
+void setTempLight(bool state, uint8_t level, uint16_t mireds) {
+  if (!state) {
+    rgbLedWrite(led, 0, 0, 0);
+    return;
+  }
+  float brightness = (float)level / 255;
+  // Convert mireds to color temperature (K) and map to white/yellow
+  uint16_t kelvin = miredsToKelvin(mireds);
+  uint8_t warm = constrain(map(kelvin, 2000, 6500, 255, 0), 0, 255);
+  uint8_t cold = constrain(map(kelvin, 2000, 6500, 0, 255), 0, 255);
+  rgbLedWrite(led, warm * brightness, warm * brightness, cold * brightness);
 }
 
 // Create a task on identify call to handle the identify function
@@ -73,14 +96,22 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
-  // Set callback function for light change
-  zbColorLight.onLightChange(setRGBLight);
+  // Enable both XY (RGB) and Temperature color capabilities
+  uint16_t capabilities = ZIGBEE_COLOR_CAPABILITY_X_Y | ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP;
+  zbColorLight.setLightColorCapabilities(capabilities);
+
+  // Set callback functions for RGB and Temperature modes
+  zbColorLight.onLightChangeRgb(setRGBLight);
+  zbColorLight.onLightChangeTemp(setTempLight);
 
   // Optional: Set callback function for device identify
   zbColorLight.onIdentify(identify);
 
   // Optional: Set Zigbee device name and model
   zbColorLight.setManufacturerAndModel("Espressif", "ZBColorLightBulb");
+
+  // Set min/max temperature range (High Kelvin -> Low Mireds: Min and Max is switched)
+  zbColorLight.setLightColorTemperatureRange(kelvinToMireds(6500), kelvinToMireds(2000));
 
   // Add endpoint to Zigbee Core
   Serial.println("Adding ZigbeeLight endpoint to Zigbee Core");
