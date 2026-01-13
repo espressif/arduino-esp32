@@ -1,5 +1,5 @@
 {
-  "commit_sha": "129b6c2b25d8926fbbe19b4fa7434f663243b2d2",
+  "commit_sha": "c987ddcb12d61d49e104d50d50234250963bcae5",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -658,38 +658,38 @@
       },
       "uart": {
         "esp32": {
-          "failures": 3,
-          "total": 31,
+          "failures": 4,
+          "total": 32,
           "errors": 0
         },
         "esp32c3": {
           "failures": 0,
-          "total": 10,
+          "total": 11,
           "errors": 0
         },
         "esp32c6": {
           "failures": 0,
-          "total": 10,
+          "total": 11,
           "errors": 0
         },
         "esp32h2": {
           "failures": 0,
-          "total": 10,
+          "total": 11,
           "errors": 0
         },
         "esp32p4": {
           "failures": 0,
-          "total": 10,
+          "total": 11,
           "errors": 0
         },
         "esp32s2": {
           "failures": 0,
-          "total": 59,
+          "total": 60,
           "errors": 0
         },
         "esp32s3": {
           "failures": 0,
-          "total": 10,
+          "total": 11,
           "errors": 0
         }
       },
@@ -759,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2026-01-12T00:32:47.814452"
+  "generated_at": "2026-01-13T00:29:33.751958"
 }

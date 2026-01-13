@@ -31,13 +31,13 @@ nvs|0/2 :x:|2/2 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:
 psram|10/10 :white_check_mark:|-|-|-|8/8 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
 sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:
 timer|3/3 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:
-uart|28/31 :x:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:|59/59 :white_check_mark:|10/10 :white_check_mark:
+uart|28/32 :x:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|60/60 :white_check_mark:|11/11 :white_check_mark:
 unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2026/01/12 00:32:47
+Generated on: 2026/01/13 00:29:33
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/129b6c2b25d8926fbbe19b4fa7434f663243b2d2) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20904224175) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20904362794) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20904528063)
+[Commit](https://github.com/espressif/arduino-esp32/commit/c987ddcb12d61d49e104d50d50234250963bcae5) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/20939549367) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/20939716456) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/20939954792)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/60055719368)
+[Test results](https://github.com/espressif/arduino-esp32/runs/60171282266)
