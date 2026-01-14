@@ -227,7 +227,7 @@ public:
     return _md5.getBytes(result);
   }
 
- #ifdef UPDATE_SIGN
+#ifdef UPDATE_SIGN
   /**
    * @brief Install signature verification for update images
    *
@@ -238,7 +238,19 @@ public:
    * @return true if verifier was installed successfully
    */
   bool installSignature(UpdaterVerifyClass *sign);
- #endif /* UPDATE_SIGN */
+#endif /* UPDATE_SIGN */
+
+  //Helpers
+  uint8_t getError() {
+    return _error;
+  }
+  void clearError() {
+    _error = UPDATE_ERROR_OK;
+  }
+  bool hasError() {
+    return _error != UPDATE_ERROR_OK;
+  }
+
   bool isRunning() {
     return _size > 0;
   }
