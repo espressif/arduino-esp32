@@ -102,19 +102,19 @@ public:
   }
 
   void restart(float seconds) {
-    if (active() {
+    if (active()) {
       esp_timer_restart(_timer, 1000000ULL * seconds);
     }
   }
 
   void restart_ms(uint64_t milliseconds) {
-    if (active() {
+    if (active()) {
       esp_timer_restart(_timer, 1000ULL * milliseconds);
     }
   }
 
   void restart_us(uint64_t micros) {
-    if (active() {
+    if (active()) {
       esp_timer_restart(_timer, micros);
     }
   }
