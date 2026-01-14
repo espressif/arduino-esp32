@@ -235,9 +235,6 @@ void init() __attribute__((weak));
 void init() {}
 
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
-#endif
-
-#ifdef CONFIG_APP_ROLLBACK_ENABLE
 /**
  * @brief Verify the OTA image after boot
  *
