@@ -1,5 +1,5 @@
 {
-  "commit_sha": "c987ddcb12d61d49e104d50d50234250963bcae5",
+  "commit_sha": "03a6f9a8f70d1fbfbea3ffd4a59c4e5a1c9408cc",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -525,7 +525,7 @@
       },
       "nvs": {
         "esp32": {
-          "failures": 2,
+          "failures": 0,
           "total": 2,
           "errors": 0
         },
@@ -658,8 +658,8 @@
       },
       "uart": {
         "esp32": {
-          "failures": 4,
-          "total": 32,
+          "failures": 0,
+          "total": 12,
           "errors": 0
         },
         "esp32c3": {
@@ -684,7 +684,7 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 60,
+          "total": 12,
           "errors": 0
         },
         "esp32s3": {
@@ -759,5 +759,5 @@
       }
     }
   },
-  "generated_at": "2026-01-13T00:29:33.751958"
+  "generated_at": "2026-01-14T00:31:18.811227"
 }
