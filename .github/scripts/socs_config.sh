@@ -25,6 +25,19 @@ ALL_SOCS=(
     "esp32s3"
 )
 
+# All supported SoC variants by the ESP32 Arduino core
+CORE_VARIANTS=(
+    "esp32"
+    "esp32c3"
+    "esp32c5"
+    "esp32c6"
+    "esp32h2"
+    "esp32p4"
+    "esp32p4_es"
+    "esp32s2"
+    "esp32s3"
+)
+
 # SoCs to skip in library builds (no pre-built libs available)
 SKIP_LIB_BUILD_SOCS=(
     "esp32c2"
@@ -275,6 +288,7 @@ done < <(_compute_build_test_targets)
 
 ALL_SOCS_CSV=$(array_to_csv "${ALL_SOCS[@]}")
 CORE_SOCS_CSV=$(array_to_csv "${CORE_SOCS[@]}")
+CORE_VARIANTS_CSV=$(array_to_csv "${CORE_VARIANTS[@]}")
 HW_TEST_TARGETS_CSV=$(array_to_csv "${HW_TEST_TARGETS[@]}")
 WOKWI_TEST_TARGETS_CSV=$(array_to_csv "${WOKWI_TEST_TARGETS[@]}")
 QEMU_TEST_TARGETS_CSV=$(array_to_csv "${QEMU_TEST_TARGETS[@]}")
@@ -284,6 +298,7 @@ IDF_COMPONENT_TARGETS_CSV=$(array_to_csv "${IDF_COMPONENT_TARGETS[@]}")
 # Export commonly used variables for backward compatibility
 export ALL_SOCS_CSV
 export CORE_SOCS_CSV
+export CORE_VARIANTS_CSV
 export HW_TEST_TARGETS_CSV
 export WOKWI_TEST_TARGETS_CSV
 export QEMU_TEST_TARGETS_CSV
