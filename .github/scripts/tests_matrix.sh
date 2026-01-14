@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Source centralized SoC configuration
+SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
+source "${SCRIPTS_DIR}/socs_config.sh"
+
 # QEMU is disabled for now
 qemu_enabled="false"
 
@@ -15,9 +19,10 @@ if [[ $IS_PR != 'true' ]] || [[ $PERFORMANCE_ENABLED == 'true' ]]; then
     #qemu_types+=',"performance"'
 fi
 
-hw_targets='"esp32","esp32s2","esp32s3","esp32c3","esp32c5","esp32c6","esp32h2","esp32p4"'
-wokwi_targets='"esp32","esp32s2","esp32s3","esp32c3","esp32c6","esp32h2","esp32p4"'
-qemu_targets='"esp32","esp32c3"'
+# Get target lists from centralized config
+hw_targets=$(array_to_quoted_csv "${HW_TEST_TARGETS[@]}")
+wokwi_targets=$(array_to_quoted_csv "${WOKWI_TEST_TARGETS[@]}")
+qemu_targets=$(array_to_quoted_csv "${QEMU_TEST_TARGETS[@]}")
 
 # The build targets should be the sum of the hw, wokwi and qemu targets without duplicates
 build_targets=$(echo "$hw_targets,$wokwi_targets,$qemu_targets" | tr ',' '\n' | sort -u | tr '\n' ',' | sed 's/,$//')

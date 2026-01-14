@@ -183,7 +183,8 @@ recipe.hooks.objcopy.postobjcopy.3.pattern_args=--chip {build.mcu} merge-bin -o 
 recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.esptool_py.cmd}" {recipe.hooks.objcopy.postobjcopy.3.pattern_args}
 
 # Generate flash_args file
-recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size}' > '{build.path}/flash_args' && echo '{build.bootloader_addr} {build.project_name}.bootloader.bin' >> '{build.path}/flash_args' && echo '0x8000 {build.project_name}.partitions.bin' >> '{build.path}/flash_args' && echo '0xe000 boot_app0.bin' >> '{build.path}/flash_args' && echo '0x10000 {build.project_name}.bin' >> '{build.path}/flash_args'"
+# Do NOT change the spacing: specifically, do not insert whitespace between a closing quote (') and the following redirection/operator symbols (>, >>, &&). This avoids a bug in older arduino-builder versions shipped with IDE 1.x, which occurs if a quote (') character is directly followed by a whitespace.
+recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size}'>'{build.path}/flash_args'&& echo '{build.bootloader_addr} {build.project_name}.bootloader.bin'>> '{build.path}/flash_args'&& echo '0x8000 {build.project_name}.partitions.bin'>> '{build.path}/flash_args'&& echo '0xe000 boot_app0.bin'>> '{build.path}/flash_args'&& echo '0x10000 {build.project_name}.bin'>> '{build.path}/flash_args'"
 recipe.hooks.objcopy.postobjcopy.4.pattern.windows=cmd /c echo --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} > "{build.path}\flash_args" && echo {build.bootloader_addr} {build.project_name}.bootloader.bin >> "{build.path}\flash_args" && echo 0x8000 {build.project_name}.partitions.bin >> "{build.path}\flash_args" && echo 0xe000 boot_app0.bin >> "{build.path}\flash_args" && echo 0x10000 {build.project_name}.bin >> "{build.path}\flash_args"
 
 ## Save bin
@@ -202,28 +203,33 @@ recipe.size.regex.data=^(?:\.dram0\.data|\.dram0\.bss|\.dram1\.data|\.dram1\.bss
 
 ## Define FQBN transformation logic as reusable properties
 ## Converts FQBN to vendor.arch.board format matching Arduino IDE default export path
-recipe.hooks.savehex.fqbn_to_dir=FQBN_DIR=$(echo '{build.fqbn}' | cut -d: -f1-3 | tr ':' '.')
-recipe.hooks.savehex.fqbn_to_dir.windows=$env:FQBN_DIR=('{build.fqbn}' -split ':')[0..2] -join '.'
+recipe.hooks.savehex.fqbn_to_dir=FQBN_DIR=$(echo '{build.fqbn}' | cut -d: -f1-3 | tr ':' '.') && mkdir -p '{sketch_path}/build/'$FQBN_DIR
+recipe.hooks.savehex.fqbn_to_dir.windows=$env:FQBN_DIR=('{build.fqbn}' -split ':')[0..2] -join '.'; $dest='{sketch_path}\build\' + $env:FQBN_DIR; New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+## Export all files starting with sketch name (*.bin, *.elf, *.map, etc.)
+## IDE v1 does not do this automatically like IDE v2
+recipe.hooks.savehex.postsavehex.0.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/{build.project_name}.'* '{sketch_path}/build/'$FQBN_DIR'/' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.0.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue -Path '{build.path}\{build.project_name}.*' -Destination $dest"
 
 ## Export partitions.csv (for reference)
-recipe.hooks.savehex.postsavehex.1.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/partitions.csv' '{sketch_path}/build/'$FQBN_DIR'/partitions.csv' 2>/dev/null || true"
-recipe.hooks.savehex.postsavehex.1.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\partitions.csv' ('{sketch_path}\build\' + $env:FQBN_DIR + '\partitions.csv')"
+recipe.hooks.savehex.postsavehex.1.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/partitions.csv' '{sketch_path}/build/'$FQBN_DIR'/partitions.csv' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.1.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{build.path}\partitions.csv' ($dest + '\partitions.csv')"
 
 ## Export sdkconfig (for reference)
-recipe.hooks.savehex.postsavehex.2.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/sdkconfig' '{sketch_path}/build/'$FQBN_DIR'/sdkconfig' 2>/dev/null || true"
-recipe.hooks.savehex.postsavehex.2.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\sdkconfig' ('{sketch_path}\build\' + $env:FQBN_DIR + '\sdkconfig')"
+recipe.hooks.savehex.postsavehex.2.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/sdkconfig' '{sketch_path}/build/'$FQBN_DIR'/sdkconfig' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.2.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{build.path}\sdkconfig' ($dest + '\sdkconfig')"
 
 ## Export flash_args
-recipe.hooks.savehex.postsavehex.3.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/flash_args' '{sketch_path}/build/'$FQBN_DIR'/flash_args' 2>/dev/null || true"
-recipe.hooks.savehex.postsavehex.3.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\flash_args' ('{sketch_path}\build\' + $env:FQBN_DIR + '\flash_args')"
+recipe.hooks.savehex.postsavehex.3.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/flash_args' '{sketch_path}/build/'$FQBN_DIR'/flash_args' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.3.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{build.path}\flash_args' ($dest + '\flash_args')"
 
 ## Export boot_app0.bin
-recipe.hooks.savehex.postsavehex.4.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{runtime.platform.path}/tools/partitions/boot_app0.bin' '{sketch_path}/build/'$FQBN_DIR'/boot_app0.bin' 2>/dev/null || true"
-recipe.hooks.savehex.postsavehex.4.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{runtime.platform.path}\tools\partitions\boot_app0.bin' ('{sketch_path}\build\' + $env:FQBN_DIR + '\boot_app0.bin')"
+recipe.hooks.savehex.postsavehex.4.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{runtime.platform.path}/tools/partitions/boot_app0.bin' '{sketch_path}/build/'$FQBN_DIR'/boot_app0.bin' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.4.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{runtime.platform.path}\tools\partitions\boot_app0.bin' ($dest + '\boot_app0.bin')"
 
 ## Export build.options.json
-recipe.hooks.savehex.postsavehex.5.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp '{build.path}/build.options.json' '{sketch_path}/build/'$FQBN_DIR'/build.options.json' 2>/dev/null || true"
-recipe.hooks.savehex.postsavehex.5.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -ErrorAction SilentlyContinue '{build.path}\build.options.json' ('{sketch_path}\build\' + $env:FQBN_DIR + '\build.options.json')"
+recipe.hooks.savehex.postsavehex.5.pattern=/usr/bin/env bash -c "{recipe.hooks.savehex.fqbn_to_dir} && cp -f '{build.path}/build.options.json' '{sketch_path}/build/'$FQBN_DIR'/build.options.json' 2>/dev/null || true"
+recipe.hooks.savehex.postsavehex.5.pattern.windows=powershell -Command "{recipe.hooks.savehex.fqbn_to_dir}; Copy-Item -Force -ErrorAction SilentlyContinue '{build.path}\build.options.json' ($dest + '\build.options.json')"
 
 ## Required discoveries and monitors
 ## ---------------------------------

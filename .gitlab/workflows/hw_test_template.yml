@@ -25,6 +25,8 @@ hw-test-template:
     PIPELINE_ID: $PIPELINE_ID
     BINARIES_RUN_ID: $BINARIES_RUN_ID
     GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+    GITHUB_REF: $GITHUB_REF
+    GIT_STRATEGY: none
 
   tags:
     - $TEST_CHIP
@@ -32,7 +34,9 @@ hw-test-template:
   before_script:
     - echo "Running hardware tests for chip:$TEST_CHIP type:$TEST_TYPE"
     - echo "Pipeline ID:$PIPELINE_ID"
-    - echo "Running hardware tests for chip:$TEST_CHIP"
+    - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
     - bash .gitlab/scripts/install_dependencies.sh
     - rm -rf ~/.arduino/tests
     - mkdir -p ~/.arduino/tests/$TEST_CHIP

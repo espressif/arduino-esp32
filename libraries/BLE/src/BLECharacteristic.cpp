@@ -963,9 +963,9 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
     switch (ctxt->op) {
       case BLE_GATT_ACCESS_OP_READ_CHR:
       {
-        // If the packet header is only 8 bytes this is a follow up of a long read
-        // so we don't want to call the onRead() callback again.
-        if (ctxt->om->om_pkthdr_len > 8) {
+        // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
+        // For long reads, follow-up requests will have om_len == 0
+        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE) {
           rc = ble_gap_conn_find(conn_handle, &desc);
           assert(rc == 0);
           pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
