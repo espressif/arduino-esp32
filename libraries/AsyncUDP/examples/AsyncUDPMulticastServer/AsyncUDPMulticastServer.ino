@@ -36,7 +36,7 @@ void setup() {
       Serial.write(packet.data(), packet.length());
       Serial.println();
       //reply to the client
-      packet.printf("Got %u bytes of data", packet.length());
+      packet.printf("Got %zu bytes of data", packet.length());
     });
     //Send multicast
     udp.print("Hello!");
