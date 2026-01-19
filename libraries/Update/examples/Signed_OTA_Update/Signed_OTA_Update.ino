@@ -91,8 +91,8 @@ void performOTAUpdate() {
   const size_t signatureSize = 512;
   size_t firmwareSize = contentLength - signatureSize;
 
-  Serial.printf("Actual firmware size: %d bytes\n", firmwareSize);
-  Serial.printf("Signature size: %d bytes\n", signatureSize);
+  Serial.printf("Actual firmware size: %zu bytes\n", firmwareSize);
+  Serial.printf("Signature size: %zu bytes\n", signatureSize);
 
   // Select hash algorithm
 #ifdef USE_SHA256
@@ -170,7 +170,7 @@ void performOTAUpdate() {
     delay(1);
   }
 
-  Serial.printf("Written: %d bytes\n", written);
+  Serial.printf("Written: %zu bytes\n", written);
 
   // End the update - this will verify the signature
   if (Update.end()) {

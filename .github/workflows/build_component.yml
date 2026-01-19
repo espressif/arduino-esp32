@@ -9,8 +9,8 @@ on:
         type: "string"
         required: true
       idf_targets:
-        description: "Comma separated list of IDF targets to build"
-        default: "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32c61,esp32h2,esp32p4"
+        description: "Comma separated list of IDF targets to build (leave empty to use version-specific defaults from socs_config.sh)"
+        default: ""
         type: "string"
         required: false
   push:
@@ -31,16 +31,8 @@ on:
       - ".github/scripts/on-push-idf.sh"
       - ".github/scripts/sketch_utils.sh"
       - ".github/scripts/get_affected.py"
-      - "variants/esp32/**"
-      - "variants/esp32c2/**"
-      - "variants/esp32c3/**"
-      - "variants/esp32c5/**"
-      - "variants/esp32c6/**"
-      - "variants/esp32c61/**"
-      - "variants/esp32h2/**"
-      - "variants/esp32p4/**"
-      - "variants/esp32s2/**"
-      - "variants/esp32s3/**"
+      - ".github/scripts/socs_config.sh"
+      - "variants/**"
       - "!*.md"
       - "!*.txt"
       - "!*.properties"
@@ -62,11 +54,48 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - run: bash ./.github/scripts/check-cmakelists.sh
 
+  check-examples:
+    name: Check Examples Match
+    runs-on: ubuntu-latest
+    if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check examples consistency
+        run: |
+          # Get list of folders in idf_component_examples (excluding hidden files)
+          actual_examples=$(find idf_component_examples -maxdepth 1 -type d ! -path idf_component_examples | sed 's|idf_component_examples/||' | sort)
+
+          # Extract example paths from idf_component.yml
+          declared_examples=$(grep -A 100 "^examples:" idf_component.yml | grep "path:" | sed 's/.*path: *\.\/idf_component_examples\///' | sort)
+
+          echo "=== Examples in idf_component_examples folder ==="
+          echo "$actual_examples"
+          echo ""
+          echo "=== Examples declared in idf_component.yml ==="
+          echo "$declared_examples"
+          echo ""
+
+          # Compare the two lists
+          if [ "$actual_examples" != "$declared_examples" ]; then
+            echo "❌ ERROR: Examples mismatch detected!"
+            echo ""
+            echo "Examples in folder but NOT in idf_component.yml:"
+            comm -23 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            echo ""
+            echo "Examples in idf_component.yml but NOT in folder:"
+            comm -13 <(echo "$actual_examples") <(echo "$declared_examples") | sed 's/^/  - /'
+            exit 1
+          else
+            echo "✅ All examples match correctly!"
+          fi
+
   set-matrix:
     name: Set Matrix
     runs-on: ubuntu-latest
     if: ${{ !(github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/')) }}
     outputs:
+      should_run: ${{ steps.check-variants.outputs.should_run }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       should_build: ${{ steps.affected-examples.outputs.should_build }}
     steps:
@@ -86,8 +115,17 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
 
+      - name: Check if official variants changed
+        id: check-variants
+        run: |
+          bash .github/scripts/check_official_variants.sh \
+            "${{ github.event_name }}" \
+            "IDF_COMPONENT_TARGETS" \
+            ${{ steps.changed-files.outputs.all_changed_files }}
+
       - name: Get affected examples
         id: affected-examples
+        if: steps.check-variants.outputs.should_run == 'true'
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
         run: |
@@ -96,6 +134,7 @@ jobs:
 
       - name: Upload affected examples
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: affected_examples
           path: affected_examples.txt
@@ -103,6 +142,7 @@ jobs:
 
       - name: Upload debug artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.check-variants.outputs.should_run == 'true'
         with:
           name: get_affected_debug
           path: |
@@ -115,24 +155,10 @@ jobs:
 
       - name: Get Matrix Combinations
         id: set-matrix
+        if: steps.check-variants.outputs.should_run == 'true'
         run: |
-          # Define version-specific target configurations
-          get_targets_for_version() {
-            case "$1" in
-              "release-v5.3")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
-                ;;
-              "release-v5.4")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c6,esp32h2,esp32p4"
-                ;;
-              "release-v5.5")
-                echo "esp32,esp32s2,esp32s3,esp32c2,esp32c3,esp32c5,esp32c6,esp32c61,esp32h2,esp32p4"
-                ;;
-              *)
-                echo ""
-                ;;
-            esac
-          }
+          # Source centralized SoC configuration
+          source .github/scripts/socs_config.sh
 
           # Default versions if not provided via inputs
           DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5"
@@ -158,8 +184,8 @@ jobs:
               # Use provided targets for all versions
               targets="${{ inputs.idf_targets }}"
             else
-              # Use version-specific targets
-              targets=$(get_targets_for_version "$version")
+              # Use version-specific targets from centralized config
+              targets=$(get_targets_for_idf_version "$version")
             fi
 
             if [[ -n "$targets" ]]; then
@@ -190,7 +216,7 @@ jobs:
     name: Build IDF ${{ matrix.idf_ver }} for ${{ matrix.idf_target }}
     runs-on: ubuntu-latest
     needs: set-matrix
-    if: ${{ needs.set-matrix.outputs.should_build == '1' }}
+    if: ${{ needs.set-matrix.outputs.should_run == 'true' && needs.set-matrix.outputs.should_build == '1' }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.set-matrix.outputs.matrix) }}

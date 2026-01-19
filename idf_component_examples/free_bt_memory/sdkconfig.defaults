@@ -1,0 +1,24 @@
+#
+# Arduino ESP32
+#
+CONFIG_AUTOSTART_ARDUINO=y
+# end of Arduino ESP32
+
+#
+# Bluetooth
+#
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+# end of Bluetooth
+
+#
+# FREERTOS
+#
+CONFIG_FREERTOS_HZ=1000
+# end of FREERTOS
+# end of Component config
+
+#
+# DIAGNOSTICS
+#
+CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP=y

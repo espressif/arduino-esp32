@@ -250,6 +250,23 @@ Core Changes
 If you have made changes to the core, it is important to ensure that the changes do not break the existing functionality. You can do this by running the
 tests on all supported targets. You can refer to the `Runtime Tests`_ section for more information.
 
+CI
+**
+
+In our repository, we have a Continuous Integration (CI) system that runs tests and fixes on every Pull Request. This system will run the tests
+on all supported targets and check if everything is working as expected.
+You can read a more technical explanation in the `CI README <https://github.com/espressif/arduino-esp32/blob/master/.github/CI_README.md>`_.
+
+We have many types of tests and checks, including:
+
+* Compilation tests;
+* Runtime tests;
+* Documentation checks;
+* Code style checks;
+* And more.
+
+Let's go deeper into each type of test in the CI system:
+
 Compilation Tests
 *****************
 
