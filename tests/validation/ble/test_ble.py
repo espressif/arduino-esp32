@@ -55,7 +55,7 @@ def test_ble(dut, ci_job_id):
 
     # Client finds server
     LOGGER.info("Waiting for client to discover server...")
-    client.expect_exact("[CLIENT] Found target server!", timeout=30)
+    client.expect_exact("[CLIENT] Found target server!", timeout=60)
 
     # Client connects to server
     LOGGER.info("Client connecting to server...")

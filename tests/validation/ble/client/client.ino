@@ -15,6 +15,10 @@ static BLEClient *pClient = nullptr;
 static BLERemoteCharacteristic *pRemoteInsecureCharacteristic = nullptr;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic = nullptr;
 static BLEAdvertisedDevice *myDevice = nullptr;
+static bool serviceDiscovered = false;
+static bool pinPending = false;
+static bool pinLogged = false;
+static uint32_t pendingPin = 0;
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *pclient) {
@@ -30,8 +34,13 @@ class MyClientCallback : public BLEClientCallbacks {
 class MySecurityCallbacks : public BLESecurityCallbacks {
   // Numeric Comparison callback - both devices display the same PIN
   bool onConfirmPIN(uint32_t pin) override {
-    Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pin);
-    Serial.println("[CLIENT] Confirming PIN match");
+    pendingPin = pin;
+    pinPending = true;
+    if (serviceDiscovered && !pinLogged) {
+      Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pendingPin);
+      Serial.println("[CLIENT] Confirming PIN match");
+      pinLogged = true;
+    }
     // Automatically confirm for testing
     return true;
   }
@@ -91,6 +100,12 @@ bool connectToServer() {
     return false;
   }
   Serial.println("[CLIENT] Found service");
+  serviceDiscovered = true;
+  if (pinPending && !pinLogged) {
+    Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pendingPin);
+    Serial.println("[CLIENT] Confirming PIN match");
+    pinLogged = true;
+  }
 
   pRemoteInsecureCharacteristic = pRemoteService->getCharacteristic(insecureCharUUID);
   if (pRemoteInsecureCharacteristic == nullptr) {

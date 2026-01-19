@@ -256,6 +256,9 @@ private:
   static BLEClient *m_pClient;
   static BLESecurityCallbacks *m_securityCallbacks;
   static BLEAdvertising *m_bleAdvertising;
+#if defined(CONFIG_NIMBLE_ENABLED)
+  static String m_deviceName;
+#endif
   static std::map<uint16_t, conn_status_t> m_connectedClientsMap;
   static portMUX_TYPE mux;
 

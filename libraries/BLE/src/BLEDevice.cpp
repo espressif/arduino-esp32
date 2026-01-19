@@ -96,6 +96,9 @@ static bool initialized = false;
 BLESecurityCallbacks *BLEDevice::m_securityCallbacks = nullptr;
 uint16_t BLEDevice::m_localMTU = 23;  // not sure if this variable is useful
 BLEAdvertising *BLEDevice::m_bleAdvertising = nullptr;
+#if defined(CONFIG_NIMBLE_ENABLED)
+String BLEDevice::m_deviceName = "";
+#endif
 uint16_t BLEDevice::m_appId = 0;
 std::map<uint16_t, conn_status_t> BLEDevice::m_connectedClientsMap;
 gap_event_handler BLEDevice::m_customGapHandler = nullptr;
@@ -167,6 +170,12 @@ BLEServer *BLEDevice::createServer() {
     ble_gatts_reset();
     ble_svc_gap_init();
     ble_svc_gatt_init();
+    if (m_deviceName.length() > 0) {
+      esp_err_t errRc = ble_svc_gap_device_name_set(m_deviceName.c_str());
+      if (errRc != ESP_OK) {
+        log_e("ble_svc_gap_device_name_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      }
+    }
 #endif
   }
   log_v("<< createServer");
@@ -382,6 +391,7 @@ void BLEDevice::init(String deviceName) {
     ble_hs_cfg.sm_their_key_dist |= BLE_SM_PAIR_KEY_DIST_ID;
 #endif
 
+    m_deviceName = deviceName;
     errRc = ble_svc_gap_device_name_set(deviceName.c_str());
     if (errRc != ESP_OK) {
       log_e("ble_svc_gap_device_name_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
