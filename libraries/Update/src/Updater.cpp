@@ -232,7 +232,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
 
   if (command == U_FLASH) {
     _partition = esp_ota_get_next_update_partition(NULL);
-    if (!_partition) {
+    if (!_partition || _partition == esp_ota_get_running_partition()) {
       _error = UPDATE_ERROR_NO_PARTITION;
       return false;
     }
