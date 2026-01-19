@@ -2,6 +2,7 @@
 
 # Source centralized SoC configuration
 SCRIPTS_DIR_CONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKETCH_UTILS="${SCRIPTS_DIR_CONFIG}/sketch_utils.sh"
 source "${SCRIPTS_DIR_CONFIG}/socs_config.sh"
 
 USAGE="
@@ -85,7 +86,7 @@ function build_multi_device_sketch {
     echo "Building sketch $sketch_name for multi-device test $test_name"
 
     # Call sketch_utils.sh build function with custom build directory
-    ARDUINO_BUILD_DIR="$build_dir" ${SCRIPTS_DIR}/sketch_utils.sh build "${build_args[@]}" -s "$sketch_dir"
+    ARDUINO_BUILD_DIR="$build_dir" ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir"
     return $?
 }
 
@@ -99,6 +100,23 @@ function build_multi_device_test {
     local devices
 
     test_name=$(basename "$test_dir")
+
+    # Check if target is supported by this test
+    if [ -f "$test_dir/ci.yml" ]; then
+        # Check if target is explicitly disabled
+        is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
+        if [[ "$is_target" == "false" ]]; then
+            echo "Skipping multi-device test $test_name for $target (explicitly disabled)"
+            return 0
+        fi
+
+        # Check if target meets the requirements using check_requirements from sketch_utils.sh
+        has_requirements=$(${SKETCH_UTILS} check_requirements "$test_dir" "tools/esp32-arduino-libs/$target/sdkconfig")
+        if [ "$has_requirements" == "0" ]; then
+            echo "Skipping multi-device test $test_name for $target (requirements not met)"
+            return 0
+        fi
+    fi
 
     echo "Building multi-device test $test_name"
 
@@ -240,7 +258,7 @@ for current_target in "${targets_to_build[@]}"; do
 
         # Now build regular (non-multi-device) tests using chunk_build
         local_args=("${args[@]}")
-        BUILD_CMD="${SCRIPTS_DIR}/sketch_utils.sh chunk_build"
+        BUILD_CMD="${SKETCH_UTILS} chunk_build"
         local_args+=("-p" "$test_folder" "-i" "0" "-m" "1" "-t" "$current_target")
         ${BUILD_CMD} "${local_args[@]}" "$@"
         regular_error=$?
