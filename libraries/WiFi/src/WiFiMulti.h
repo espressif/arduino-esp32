@@ -35,6 +35,8 @@
 typedef struct {
   char *ssid;
   char *passphrase;
+  char *username; // For WPA2-Enterprise
+  char *identity; // For WPA2-Enterprise
   bool hasFailed;
 } WifiAPlist_t;
 
@@ -45,7 +47,10 @@ public:
   WiFiMulti();
   ~WiFiMulti();
 
-  bool addAP(const char *ssid, const char *passphrase = NULL);
+  // Provide a username and anonymous identity for APs requiring WPA2-Enterprise and supporting e.g. PEAPv0/EAP-MSCHAPv2,
+  // in addition to an SSID and passphrase (password). Certificate-based WPA2-Enterprise is not yet supported,
+  // nor is providing a CA certificate for PEAP.
+  bool addAP(const char *ssid, const char *passphrase = NULL, const char *username = NULL, const char *identity = NULL);
   uint8_t run(uint32_t connectTimeout = 5000, bool scanHidden = false);
 #if CONFIG_LWIP_IPV6
   void enableIPv6(bool state);
