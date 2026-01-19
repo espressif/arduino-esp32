@@ -65,6 +65,7 @@ public:
   BLECharacteristic *bootOutput();
 
 private:
+  BLEServer *m_server;
   BLEService *m_deviceInfoService;   //0x180a
   BLEService *m_hidService;          //0x1812
   BLEService *m_batteryService = 0;  //0x180f
