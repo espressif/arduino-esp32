@@ -572,7 +572,13 @@ static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb,
     SPI_MUTEX_LOCK();
     while (spi->dev->cmd.usr);
   } else {
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+    // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB - use XTAL frequency
+    uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;
+    spi->dev->clock.val = spiFrequencyToClockDiv(xtal_freq / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+#else
     spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+#endif
     SPI_MUTEX_UNLOCK();
   }
 }
@@ -1578,12 +1584,20 @@ typedef union {
 
 uint32_t spiClockDivToFrequency(uint32_t clockDiv) {
   uint32_t apb_freq = getApbFrequency();
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB
+  apb_freq = getXtalFrequencyMhz() * 1000000;
+#endif
   spiClk_t reg = {clockDiv};
   return ClkRegToFreq(&reg);
 }
 
 uint32_t spiFrequencyToClockDiv(uint32_t freq) {
   uint32_t apb_freq = getApbFrequency();
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB
+  apb_freq = getXtalFrequencyMhz() * 1000000;
+#endif
 
   if (freq >= apb_freq) {
     return SPI_CLK_EQU_SYSCLK;
