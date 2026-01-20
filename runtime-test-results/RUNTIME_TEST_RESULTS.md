@@ -1,6 +1,6 @@
 ## Runtime Test Results
 
-:x: **The test workflows are failing. Please check the run logs.** :x:
+:white_check_mark: **The test workflows are passing.** :white_check_mark:
 
 ### Validation Tests
 
@@ -36,8 +36,8 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2026/01/19 01:00:56
+Generated on: 2026/01/20 00:54:19
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/411b5b1909ca5f6254aa8d455ecee99ed56fdb1b) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21121058708) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21121179709) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21121819194)
+[Commit](https://github.com/espressif/arduino-esp32/commit/bc8294203b3d7f0366c05010a02eb38456d5eba5) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21154991429) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21155130413) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21155755334)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/60735941464)
+[Test results](https://github.com/espressif/arduino-esp32/runs/60840291487)
