@@ -492,11 +492,10 @@ static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
 }
 #endif
 
-void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
+static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
   if (!spi) {
     return;
   }
-  SPI_MUTEX_LOCK();
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
   // ESP32P4: Determine clock source from divider
   // The divider was calculated by spiFrequencyToClockDiv() which picks the best match
@@ -513,10 +512,10 @@ void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
     // This divider matches the last one calculated - use the stored source
     new_clk_src = _last_clk_src;
   } else {
-    // Infer: SPLL is better for >40MHz, XTAL for <=40MHz
-    new_clk_src = (freq_with_spll > 40000000 && freq_with_spll <= 80000000) ? 1 :
-                  ((freq_with_xtal > 0 && freq_with_xtal <= 40000000) ? 0 :
-                   ((freq_with_spll > 40000000) ? 1 : 0));
+    // Infer: XTAL cannot exceed 40MHz, so if freq_with_spll > 40MHz, must use SPLL
+    // Otherwise, prefer XTAL for <=40MHz frequencies
+    new_clk_src = (freq_with_spll > 40000000) ? 1 :
+                  ((freq_with_xtal > 0 && freq_with_xtal <= 40000000) ? 0 : 1);
   }
   
   if (spi->clk_src != new_clk_src) {
@@ -533,6 +532,14 @@ void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
   }
 #endif
   spi->dev->clock.val = clockDiv;
+}
+
+void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
+  if (!spi) {
+    return;
+  }
+  SPI_MUTEX_LOCK();
+  _spiSetClockDivInternal(spi, clockDiv);
   SPI_MUTEX_UNLOCK();
 }
 
@@ -1166,7 +1173,8 @@ void spiTransaction(spi_t *spi, uint32_t clockDiv, uint8_t dataMode, uint8_t bit
     return;
   }
   SPI_MUTEX_LOCK();
-  spi->dev->clock.val = clockDiv;
+  // Set clock divider (handles ESP32P4 clock source selection if needed)
+  _spiSetClockDivInternal(spi, clockDiv);
   switch (dataMode) {
     case SPI_MODE1:
 #if CONFIG_IDF_TARGET_ESP32
@@ -1741,7 +1749,17 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
   uint32_t diff_spll = (freq > freq_spll) ? (freq - freq_spll) : (freq_spll - freq);
   
   // Store which source was selected for this divider
-  uint8_t best_is_spll = (diff_spll < diff_xtal);
+  // Pick the one with closest difference to desired frequency
+  // If both are valid (XTAL capped at 40MHz) and differences are equal, prefer XTAL
+  uint8_t best_is_spll;
+  if (diff_spll < diff_xtal) {
+    best_is_spll = 1;  // SPLL is closer
+  } else if (diff_xtal < diff_spll) {
+    best_is_spll = 0;  // XTAL is closer
+  } else {
+    // Equal differences: prefer XTAL if it's valid (XTAL <= 40MHz), otherwise use SPLL
+    best_is_spll = (freq_xtal <= 40000000) ? 0 : 1;
+  }
   uint32_t best_div = best_is_spll ? div_spll : div_xtal;
   _last_clock_div = best_div;
   _last_clk_src = best_is_spll;
