@@ -190,6 +190,7 @@ void SPIClass::beginTransaction(SPISettings settings) {
   if (_freq != settings._clock || _div != cdiv) {
     _freq = settings._clock;
     _div = spiFrequencyToClockDiv(_freq);
+    spiSetClockDiv(_spi, _div); // set clock divider before configuring transaction, ensures SPI runs at correct frequency
   }
   spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
   _inTransaction = true;

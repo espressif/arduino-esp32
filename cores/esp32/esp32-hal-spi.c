@@ -84,6 +84,9 @@ struct spi_struct_t {
   int8_t mosi;
   int8_t ss;
   bool ss_invert;
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  uint8_t clk_src;  // Clock source: 0=XTAL, 1=SPLL
+#endif
 };
 
 #if CONFIG_IDF_TARGET_ESP32S2
@@ -470,11 +473,65 @@ uint32_t spiGetClockDiv(spi_t *spi) {
   return spi->dev->clock.val;
 }
 
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+// Store the last selected clock source for each divider calculation
+// This helps spiSetClockDiv() know which source was used
+static uint32_t _last_clock_div = 0;
+static uint8_t _last_clk_src = 0;  // 0=XTAL, 1=SPLL
+
+// Helper to calculate frequency from divider value
+static inline uint32_t _dividerToFreq(uint32_t divider, uint32_t source_freq) {
+  return source_freq / divider;
+}
+
+// Helper to extract divider from clockDiv register value
+static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
+  uint32_t clkcnt_n = (clockDiv >> 12) & 0x3F;
+  uint32_t clkdiv_pre = (clockDiv >> 18) & 0xF;
+  return ((clkdiv_pre + 1) * (clkcnt_n + 1));
+}
+#endif
+
 void spiSetClockDiv(spi_t *spi, uint32_t clockDiv) {
   if (!spi) {
     return;
   }
   SPI_MUTEX_LOCK();
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Determine clock source from divider
+  // The divider was calculated by spiFrequencyToClockDiv() which picks the best match
+  // We stored which source was selected in static variables, so use that if available.
+  // Otherwise, infer from the divider by checking which gives a "more reasonable" frequency.
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // 40MHz
+  uint32_t spll_freq = 480000000;  // 480MHz
+  uint32_t divider = _clockDivToDivider(clockDiv);
+  uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
+  uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
+  
+  uint8_t new_clk_src;
+  if (clockDiv == _last_clock_div && _last_clock_div != 0) {
+    // This divider matches the last one calculated - use the stored source
+    new_clk_src = _last_clk_src;
+  } else {
+    // Infer: SPLL is better for >40MHz, XTAL for <=40MHz
+    new_clk_src = (freq_with_spll > 40000000 && freq_with_spll <= 80000000) ? 1 :
+                  ((freq_with_xtal > 0 && freq_with_xtal <= 40000000) ? 0 :
+                   ((freq_with_spll > 40000000) ? 1 : 0));
+  }
+  
+  if (spi->clk_src != new_clk_src) {
+    // Determine SPI host ID once to avoid duplicate conditionals
+    int host = (spi->num == FSPI) ? SPI2_HOST : SPI3_HOST;
+    
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_clock(host, false);
+      spi_ll_set_clk_source(spi->dev, new_clk_src ? SPI_CLK_SRC_SPLL : SPI_CLK_SRC_XTAL);
+      spi_ll_enable_clock(host, true);
+    }
+    spi->clk_src = new_clk_src;
+    ets_delay_us(10);
+  }
+#endif
   spi->dev->clock.val = clockDiv;
   SPI_MUTEX_UNLOCK();
 }
@@ -573,9 +630,10 @@ static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb,
     while (spi->dev->cmd.usr);
   } else {
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
-    // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB - use XTAL frequency
-    uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;
-    spi->dev->clock.val = spiFrequencyToClockDiv(xtal_freq / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+    // ESP32P4: Use the stored clock source to determine base frequency
+    uint32_t base_freq = (spi->clk_src == 1) ? 480000000 : (getXtalFrequencyMhz() * 1000000);
+    uint32_t current_freq = base_freq / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1));
+    spi->dev->clock.val = spiFrequencyToClockDiv(current_freq);
 #else
     spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
 #endif
@@ -705,6 +763,10 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   spi->dev->clk_gate.clk_en = 1;
   spi->dev->clk_gate.mst_clk_sel = 1;
   spi->dev->clk_gate.mst_clk_active = 1;
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // Initialize clock source to XTAL (will be changed to SPLL if needed)
+  spi->clk_src = 0;  // 0 = XTAL, 1 = SPLL
+#endif
 #if defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
   spi->dev->dma_conf.tx_seg_trans_clr_en = 1;
   spi->dev->dma_conf.rx_seg_trans_clr_en = 1;
@@ -1585,26 +1647,23 @@ typedef union {
 uint32_t spiClockDivToFrequency(uint32_t clockDiv) {
   uint32_t apb_freq = getApbFrequency();
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
-  // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB
+  // ESP32P4: Default to XTAL (40MHz) if clock source unknown
   apb_freq = getXtalFrequencyMhz() * 1000000;
 #endif
   spiClk_t reg = {clockDiv};
   return ClkRegToFreq(&reg);
 }
 
-uint32_t spiFrequencyToClockDiv(uint32_t freq) {
-  uint32_t apb_freq = getApbFrequency();
-#if defined(CONFIG_IDF_TARGET_ESP32P4)
-  // ESP32P4 SPI uses XTAL (40MHz) as clock source, not APB
-  apb_freq = getXtalFrequencyMhz() * 1000000;
-#endif
-
-  if (freq >= apb_freq) {
+// Helper function to calculate divider for a given clock source frequency
+static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source_freq) {
+  if (freq >= source_freq) {
     return SPI_CLK_EQU_SYSCLK;
   }
 
   const spiClk_t minFreqReg = {0x7FFFF000};
-  uint32_t minFreq = ClkRegToFreq((spiClk_t *)&minFreqReg);
+  uint32_t apb_freq = source_freq;  // Use provided source frequency
+  // Calculate minFreq using the provided source frequency
+  uint32_t minFreq = source_freq / (((minFreqReg.clkdiv_pre + 1) * (minFreqReg.clkcnt_n + 1)));
   if (freq < minFreq) {
     return minFreqReg.value;
   }
@@ -1636,12 +1695,13 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
         reg.clkdiv_pre = calPre;
       }
       reg.clkcnt_l = ((reg.clkcnt_n + 1) / 2);
-      calFreq = ClkRegToFreq(&reg);
+      // Calculate frequency directly using source_freq instead of ClkRegToFreq macro
+      calFreq = source_freq / (((reg.clkdiv_pre + 1) * (reg.clkcnt_n + 1)));
       if (calFreq == freq) {
         memcpy(&bestReg, &reg, sizeof(bestReg));
         break;
       } else if (calFreq < freq) {
-        if ((freq - calFreq) < (freq - bestFreq)) {
+        if (bestFreq == 0 || (freq - calFreq) < (freq - bestFreq)) {
           bestFreq = calFreq;
           memcpy(&bestReg, &reg, sizeof(bestReg));
         }
@@ -1653,6 +1713,45 @@ uint32_t spiFrequencyToClockDiv(uint32_t freq) {
     calN++;
   }
   return bestReg.value;
+}
+
+uint32_t spiFrequencyToClockDiv(uint32_t freq) {
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Limit frequency to SPI peripheral maximum (80MHz)
+  if (freq > 80000000) {
+    freq = 80000000;
+  }
+  
+  // Try both clock sources and pick the one that gives frequency closest to desired
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // 40MHz
+  uint32_t spll_freq = 480000000;  // 480MHz
+  
+  // Calculate dividers for both sources
+  uint32_t div_xtal = _spiFrequencyToClockDivWithSource(freq, xtal_freq);
+  uint32_t div_spll = _spiFrequencyToClockDivWithSource(freq, spll_freq);
+  
+  // Calculate actual frequencies each divider would produce (using helper to avoid bit field extraction)
+  uint32_t divider_xtal = _clockDivToDivider(div_xtal);
+  uint32_t divider_spll = _clockDivToDivider(div_spll);
+  uint32_t freq_xtal = _dividerToFreq(divider_xtal, xtal_freq);
+  uint32_t freq_spll = _dividerToFreq(divider_spll, spll_freq);
+  
+  // Pick the one closest to desired frequency
+  uint32_t diff_xtal = (freq > freq_xtal) ? (freq - freq_xtal) : (freq_xtal - freq);
+  uint32_t diff_spll = (freq > freq_spll) ? (freq - freq_spll) : (freq_spll - freq);
+  
+  // Store which source was selected for this divider
+  uint8_t best_is_spll = (diff_spll < diff_xtal);
+  uint32_t best_div = best_is_spll ? div_spll : div_xtal;
+  _last_clock_div = best_div;
+  _last_clk_src = best_is_spll;
+  
+  // Return divider for the clock source that gives closest match
+  return best_div;
+#else
+  // For non-ESP32P4, use the helper function with APB frequency
+  return _spiFrequencyToClockDivWithSource(freq, getApbFrequency());
+#endif
 }
 
 #endif /* SOC_GPSPI_SUPPORTED */
