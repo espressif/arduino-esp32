@@ -1751,7 +1751,6 @@ static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source
   }
 
   const spiClk_t minFreqReg = {0x7FFFF000};
-  uint32_t apb_freq = source_freq;  // Use provided source frequency
   // Calculate minFreq using the provided source frequency
   uint32_t minFreq = source_freq / (((minFreqReg.clkdiv_pre + 1) * (minFreqReg.clkcnt_n + 1)));
   if (freq < minFreq) {
@@ -1771,7 +1770,7 @@ static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source
     reg.clkcnt_n = calN;
 
     while (calPreVari++ <= 1) {
-      calPre = (((apb_freq / (reg.clkcnt_n + 1)) / freq) - 1) + calPreVari;
+      calPre = (((source_freq / (reg.clkcnt_n + 1)) / freq) - 1) + calPreVari;
 #if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32S2)
       if (calPre > 0xF) {
         reg.clkdiv_pre = 0xF;
