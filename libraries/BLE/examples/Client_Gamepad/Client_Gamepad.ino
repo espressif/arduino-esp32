@@ -40,10 +40,10 @@ static BLEClient *pClient = nullptr;
 // Gamepad report structure (adjust based on your gamepad's report descriptor)
 // This matches the Server_Gamepad example format
 struct GamepadReport {
-  uint8_t reportId;   // Report ID
-  int8_t x;           // X axis (-127 to 127)
-  int8_t y;           // Y axis (-127 to 127)
-  uint8_t buttons;    // 8 buttons (bit 0-7)
+  uint8_t reportId;  // Report ID
+  int8_t x;          // X axis (-127 to 127)
+  int8_t y;          // Y axis (-127 to 127)
+  uint8_t buttons;   // 8 buttons (bit 0-7)
 } __attribute__((packed));
 
 // Callback function to handle gamepad input notifications
@@ -54,8 +54,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
   if (length == sizeof(GamepadReport)) {
     GamepadReport *report = (GamepadReport *)pData;
 
-    Serial.printf("ID=%d, X=%4d, Y=%4d, Buttons=0x%02X [",
-                  report->reportId, report->x, report->y, report->buttons);
+    Serial.printf("ID=%d, X=%4d, Y=%4d, Buttons=0x%02X [", report->reportId, report->x, report->y, report->buttons);
 
     // Display which buttons are pressed
     for (int i = 0; i < 8; i++) {

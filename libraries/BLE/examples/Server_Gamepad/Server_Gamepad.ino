@@ -34,37 +34,37 @@
 // - 8 buttons (usage buttons 1-8)
 // - 2 8-bit axes (X, Y) with range -127 to 127
 const uint8_t hidReportDescriptor[] = {
-  0x05, 0x01,        // Usage Page (Generic Desktop)
-  0x09, 0x05,        // Usage (Gamepad)
-  0xA1, 0x01,        // Collection (Application)
-  0x85, 0x01,        //   Report ID (1)
-  0x09, 0x01,        //   Usage (Pointer)
-  0xA1, 0x00,        //   Collection (Physical)
-  0x09, 0x30,        //     Usage (X)
-  0x09, 0x31,        //     Usage (Y)
-  0x15, 0x81,        //     Logical Minimum (-127)
-  0x25, 0x7F,        //     Logical Maximum (127)
-  0x75, 0x08,        //     Report Size (8)
-  0x95, 0x02,        //     Report Count (2)
-  0x81, 0x02,        //     Input (Data, Variable, Absolute)
-  0xC0,              //   End Collection
-  0x05, 0x09,        //   Usage Page (Button)
-  0x19, 0x01,        //   Usage Minimum (Button 1)
-  0x29, 0x08,        //   Usage Maximum (Button 8)
-  0x15, 0x00,        //   Logical Minimum (0)
-  0x25, 0x01,        //   Logical Maximum (1)
-  0x75, 0x01,        //   Report Size (1)
-  0x95, 0x08,        //   Report Count (8)
-  0x81, 0x02,        //   Input (Data, Variable, Absolute)
-  0xC0               // End Collection
+  0x05, 0x01,  // Usage Page (Generic Desktop)
+  0x09, 0x05,  // Usage (Gamepad)
+  0xA1, 0x01,  // Collection (Application)
+  0x85, 0x01,  //   Report ID (1)
+  0x09, 0x01,  //   Usage (Pointer)
+  0xA1, 0x00,  //   Collection (Physical)
+  0x09, 0x30,  //     Usage (X)
+  0x09, 0x31,  //     Usage (Y)
+  0x15, 0x81,  //     Logical Minimum (-127)
+  0x25, 0x7F,  //     Logical Maximum (127)
+  0x75, 0x08,  //     Report Size (8)
+  0x95, 0x02,  //     Report Count (2)
+  0x81, 0x02,  //     Input (Data, Variable, Absolute)
+  0xC0,        //   End Collection
+  0x05, 0x09,  //   Usage Page (Button)
+  0x19, 0x01,  //   Usage Minimum (Button 1)
+  0x29, 0x08,  //   Usage Maximum (Button 8)
+  0x15, 0x00,  //   Logical Minimum (0)
+  0x25, 0x01,  //   Logical Maximum (1)
+  0x75, 0x01,  //   Report Size (1)
+  0x95, 0x08,  //   Report Count (8)
+  0x81, 0x02,  //   Input (Data, Variable, Absolute)
+  0xC0         // End Collection
 };
 
 // Gamepad report structure (matches the HID descriptor)
 struct GamepadReport {
-  uint8_t reportId;   // Report ID (must be 1)
-  int8_t x;           // X axis (-127 to 127)
-  int8_t y;           // Y axis (-127 to 127)
-  uint8_t buttons;    // 8 buttons (bit 0-7)
+  uint8_t reportId;  // Report ID (must be 1)
+  int8_t x;          // X axis (-127 to 127)
+  int8_t y;          // Y axis (-127 to 127)
+  uint8_t buttons;   // 8 buttons (bit 0-7)
 } __attribute__((packed));
 
 BLEHIDDevice *hid;
@@ -113,9 +113,13 @@ class SecurityCallbacks : public BLESecurityCallbacks {
 #endif
 
   // These are not used with "Just Works" pairing (ESP_IO_CAP_NONE)
-  uint32_t onPassKeyRequest() { return 0; }
+  uint32_t onPassKeyRequest() {
+    return 0;
+  }
   void onPassKeyNotify(uint32_t pass_key) {}
-  bool onConfirmPIN(uint32_t pass_key) { return true; }
+  bool onConfirmPIN(uint32_t pass_key) {
+    return true;
+  }
 };
 
 void setup() {
@@ -191,9 +195,9 @@ void loop() {
       report.reportId = 1;
 
       // Simulate some movement (sine wave pattern)
-      report.x = (int8_t)(127 * sin(counter * 0.1));      // X axis: -127 to 127
-      report.y = (int8_t)(127 * cos(counter * 0.1));      // Y axis: -127 to 127
-      report.buttons = (counter % 40 < 20) ? 0x01 : 0x00; // Toggle first button every second
+      report.x = (int8_t)(127 * sin(counter * 0.1));       // X axis: -127 to 127
+      report.y = (int8_t)(127 * cos(counter * 0.1));       // Y axis: -127 to 127
+      report.buttons = (counter % 40 < 20) ? 0x01 : 0x00;  // Toggle first button every second
 
       // Send the report
       inputGamepad->setValue((uint8_t *)&report, sizeof(report));
@@ -201,8 +205,7 @@ void loop() {
 
       // Print status every 2 seconds
       if (counter % 40 == 0) {
-        Serial.printf("Report #%lu: X=%d, Y=%d, Buttons=0x%02X\n",
-                      counter, report.x, report.y, report.buttons);
+        Serial.printf("Report #%lu: X=%d, Y=%d, Buttons=0x%02X\n", counter, report.x, report.y, report.buttons);
       }
     }
   }
