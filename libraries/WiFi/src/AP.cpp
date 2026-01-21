@@ -319,7 +319,8 @@ bool APClass::enableDhcpCaptivePortal() {
 
   // Create Captive Portal URL: http://192.168.0.4
   strcpy(captiveportal_uri, "http://");
-  strcat(captiveportal_uri, String(localIP()).c_str());
+  strcat(captiveportal_uri, localIP().toString().c_str());
+  log_i("DHCP Captive Portal URL: %s", captiveportal_uri);
 
   // Stop DHCPS
   err = esp_netif_dhcps_stop(_esp_netif);
