@@ -694,7 +694,7 @@ static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb,
     // Use _spiSetClockDivInternal to ensure clock source is updated if needed
     _spiSetClockDivInternal(spi, new_clockDiv);
 #else
-    spi->dev->clock.val = spiFrequencyToClockDiv(old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
+    spi->dev->clock.val = spiFrequencyToClockDiv(spi, old_apb / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1)));
 #endif
     SPI_MUTEX_UNLOCK();
   }
