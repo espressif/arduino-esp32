@@ -63,6 +63,11 @@
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
 #include "hal/spi_ll.h"
+#include "hal/clk_tree_ll.h"
+
+// ESP32P4 SPI clock source frequencies
+#define SPI_P4_SPLL_FREQ_HZ       (CLK_LL_PLL_480M_FREQ_MHZ * MHZ)  // System PLL base frequency (480 MHz)
+#define SPI_P4_MAX_FREQ_HZ        80000000   // SPI peripheral maximum frequency (80 MHz)
 #elif CONFIG_IDF_TARGET_ESP32C5
 #include "esp32c5/rom/ets_sys.h"
 #include "esp32c5/rom/gpio.h"
@@ -536,8 +541,8 @@ static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
   // The divider was calculated by spiFrequencyToClockDiv() which picks the best match
   // We store which source was selected per SPI instance, so use that if available.
   // Otherwise, infer from the divider by checking which gives a "more reasonable" frequency.
-  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // 40MHz
-  uint32_t spll_freq = 480000000;  // 480MHz
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // Actual XTAL frequency (typically 40 MHz)
+  uint32_t spll_freq = SPI_P4_SPLL_FREQ_HZ;
   
   uint8_t new_clk_src;
   if (clockDiv == spi->last_clock_div && spi->last_clock_div != 0) {
@@ -547,10 +552,10 @@ static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
     uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
     uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
     
-    // Infer: XTAL cannot exceed 40MHz, so if freq_with_spll > 40MHz, must use SPLL
-    // Otherwise, prefer XTAL for <=40MHz frequencies
-    new_clk_src = (freq_with_spll > 40000000) ? 1 :
-                  ((freq_with_xtal > 0 && freq_with_xtal <= 40000000) ? 0 : 1);
+    // Infer: XTAL cannot exceed its actual frequency, so if freq_with_spll > xtal_freq, must use SPLL
+    // Otherwise, prefer XTAL for frequencies <= xtal_freq
+    new_clk_src = (freq_with_spll > xtal_freq) ? 1 :
+                  ((freq_with_xtal > 0 && freq_with_xtal <= xtal_freq) ? 0 : 1);
   }
   
   // Store the divider and source for this SPI instance
@@ -677,7 +682,7 @@ static void _on_apb_change(void *arg, apb_change_ev_t ev_type, uint32_t old_apb,
   } else {
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
     // ESP32P4: Use the stored clock source to determine base frequency
-    uint32_t base_freq = (spi->clk_src == 1) ? 480000000 : (getXtalFrequencyMhz() * 1000000);
+    uint32_t base_freq = (spi->clk_src == 1) ? SPI_P4_SPLL_FREQ_HZ : (getXtalFrequencyMhz() * 1000000);
     uint32_t current_freq = base_freq / ((spi->dev->clock.clkdiv_pre + 1) * (spi->dev->clock.clkcnt_n + 1));
     spi->dev->clock.val = spiFrequencyToClockDiv(spi, current_freq);
 #else
@@ -1785,14 +1790,14 @@ static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source
 
 uint32_t spiFrequencyToClockDiv(spi_t *spi, uint32_t freq) {
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
-  // ESP32P4: Limit frequency to SPI peripheral maximum (80MHz)
-  if (freq > 80000000) {
-    freq = 80000000;
+  // ESP32P4: Limit frequency to SPI peripheral maximum
+  if (freq > SPI_P4_MAX_FREQ_HZ) {
+    freq = SPI_P4_MAX_FREQ_HZ;
   }
   
   // Try both clock sources and pick the one that gives frequency closest to desired
-  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // 40MHz
-  uint32_t spll_freq = 480000000;  // 480MHz
+  uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // Actual XTAL frequency (typically 40 MHz)
+  uint32_t spll_freq = SPI_P4_SPLL_FREQ_HZ;
   
   // Calculate dividers for both sources
   uint32_t div_xtal = _spiFrequencyToClockDivWithSource(freq, xtal_freq);
@@ -1809,15 +1814,15 @@ uint32_t spiFrequencyToClockDiv(spi_t *spi, uint32_t freq) {
   uint32_t diff_spll = (freq > freq_spll) ? (freq - freq_spll) : (freq_spll - freq);
   
   // Pick the one with closest difference to desired frequency
-  // If both are valid (XTAL capped at 40MHz) and differences are equal, prefer XTAL
+  // If both are valid (XTAL capped at its actual frequency) and differences are equal, prefer XTAL
   uint8_t best_is_spll;
   if (diff_spll < diff_xtal) {
     best_is_spll = 1;  // SPLL is closer
   } else if (diff_xtal < diff_spll) {
     best_is_spll = 0;  // XTAL is closer
   } else {
-    // Equal differences: prefer XTAL if it's valid (XTAL <= 40MHz), otherwise use SPLL
-    best_is_spll = (freq_xtal <= 40000000) ? 0 : 1;
+    // Equal differences: prefer XTAL if it's valid (freq_xtal <= xtal_freq), otherwise use SPLL
+    best_is_spll = (freq_xtal <= xtal_freq) ? 0 : 1;
   }
   uint32_t best_div = best_is_spll ? div_spll : div_xtal;
   
