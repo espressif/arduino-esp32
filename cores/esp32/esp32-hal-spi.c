@@ -476,7 +476,15 @@ uint32_t spiGetClockDiv(spi_t *spi) {
 }
 
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
-// Helper to calculate frequency from divider value
+/**
+ * @brief Calculate SPI frequency from divider value and source frequency
+ * 
+ * @param divider The clock divider value (must be > 0)
+ * @param source_freq The source clock frequency in Hz (e.g., 40MHz for XTAL, 480MHz for SPLL)
+ * @return uint32_t The calculated SPI clock frequency in Hz, or 0 if divider is 0
+ * 
+ * @note ESP32P4-specific helper function. Calculates: frequency = source_freq / divider
+ */
 static inline uint32_t _dividerToFreq(uint32_t divider, uint32_t source_freq) {
   if (divider == 0) {
     return 0;  // Safety check
@@ -484,7 +492,16 @@ static inline uint32_t _dividerToFreq(uint32_t divider, uint32_t source_freq) {
   return source_freq / divider;
 }
 
-// Helper to extract divider from clockDiv register value
+/**
+ * @brief Extract the divider value from a clockDiv register value
+ * 
+ * @param clockDiv The SPI clock divider register value
+ * @return uint32_t The calculated divider: (clkdiv_pre + 1) * (clkcnt_n + 1)
+ * 
+ * @note ESP32P4-specific helper function. Extracts clkcnt_n (bits 12-17) and 
+ *       clkdiv_pre (bits 18-21) from the register value using bit shifts.
+ *       For SPI_CLK_EQU_SYSCLK (0x80000000), this naturally returns 1 (no division).
+ */
 static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
   uint32_t clkcnt_n = (clockDiv >> 12) & 0x3F;
   uint32_t clkdiv_pre = (clockDiv >> 18) & 0xF;
@@ -492,6 +509,24 @@ static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
 }
 #endif
 
+/**
+ * @brief Internal function to set SPI clock divider and handle ESP32P4 clock source switching
+ * 
+ * @param spi Pointer to SPI bus structure
+ * @param clockDiv The clock divider register value to set
+ * 
+ * @note This function does NOT acquire the SPI mutex - it must be called from within
+ *       a context that already holds the mutex (e.g., from spiTransaction or spiSetClockDiv).
+ * 
+ * @note ESP32P4-specific behavior:
+ *       - Determines the appropriate clock source (XTAL or SPLL) based on the divider value
+ *       - Uses stored per-instance clock source information if available (from last calculation)
+ *       - Otherwise infers clock source by checking which gives a valid frequency:
+ *         * XTAL is capped at 40MHz, so if calculated frequency > 40MHz, must use SPLL
+ *         * For <= 40MHz frequencies, prefers XTAL if valid
+ *       - Switches clock source if needed (with proper clock gating and delay)
+ *       - Updates per-instance tracking variables (last_clock_div, last_clk_src)
+ */
 static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
   if (!spi) {
     return;
@@ -1668,7 +1703,26 @@ uint32_t spiClockDivToFrequency(uint32_t clockDiv) {
   return ClkRegToFreq(&reg);
 }
 
-// Helper function to calculate divider for a given clock source frequency
+/**
+ * @brief Calculate SPI clock divider register value for a given frequency and clock source
+ * 
+ * @param freq Desired SPI clock frequency in Hz
+ * @param source_freq Source clock frequency in Hz (e.g., 40MHz for XTAL, 480MHz for SPLL)
+ * @return uint32_t Clock divider register value, or SPI_CLK_EQU_SYSCLK if freq >= source_freq
+ * 
+ * @note This function calculates the optimal divider values (clkdiv_pre and clkcnt_n) to achieve
+ *       the desired frequency from the given source. It searches for the best match that produces
+ *       a frequency <= the desired frequency (never exceeding it).
+ * 
+ * @note If the desired frequency is >= source_freq, returns SPI_CLK_EQU_SYSCLK (0x80000000)
+ *       which indicates the clock should equal the source without division.
+ * 
+ * @note If the desired frequency is below the minimum achievable, returns the minimum divider
+ *       register value (0x7FFFF000).
+ * 
+ * @note Used by spiFrequencyToClockDiv() to calculate dividers for both XTAL and SPLL sources
+ *       on ESP32P4, allowing selection of the source that gives the closest match.
+ */
 static uint32_t _spiFrequencyToClockDivWithSource(uint32_t freq, uint32_t source_freq) {
   if (freq >= source_freq) {
     return SPI_CLK_EQU_SYSCLK;
