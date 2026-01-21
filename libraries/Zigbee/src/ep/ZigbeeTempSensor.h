@@ -31,6 +31,10 @@ public:
   // Set the temperature value in 0,01°C
   bool setTemperature(float value);
 
+  // Set the default (initial) value for the temperature sensor in 0,01°C
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(float defaultValue);
+
   // Set the min and max value for the temperature sensor in 0,01°C
   bool setMinMaxValue(float min, float max);
 
@@ -44,7 +48,7 @@ public:
   bool reportTemperature();
 
   // Add humidity cluster to the temperature sensor device
-  void addHumiditySensor(float min, float max, float tolerance);
+  void addHumiditySensor(float min = 0.0, float max = 100.0, float tolerance = 0.1, float defaultValue = 0.0);
 
   // Set the humidity value in 0,01%
   bool setHumidity(float value);

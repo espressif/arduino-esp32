@@ -54,6 +54,8 @@ EndPointIdentifyCB	KEYWORD1
 matterEvent_t	KEYWORD1
 matterEventCB	KEYWORD1
 attrOperation_t	KEYWORD1
+OccupancySensorType_t	KEYWORD1
+HoldTimeChangeCB	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -63,10 +65,14 @@ begin	KEYWORD2
 end	KEYWORD2
 getManualPairingCode	KEYWORD2
 getOnboardingQRCodeUrl	KEYWORD2
+isBLECommissioningEnabled	KEYWORD2
 isDeviceCommissioned	KEYWORD2
-isWiFiConnected	KEYWORD2
-isThreadConnected	KEYWORD2
 isDeviceConnected	KEYWORD2
+isThreadConnected	KEYWORD2
+isThreadEnabled	KEYWORD2
+isWiFiAccessPointEnabled	KEYWORD2
+isWiFiConnected	KEYWORD2
+isWiFiStationEnabled	KEYWORD2
 decommission	KEYWORD2
 attributeChangeCB	KEYWORD2
 setOnOff	KEYWORD2
@@ -128,6 +134,10 @@ setPressure	KEYWORD2
 getPressure	KEYWORD2
 setOccupancy	KEYWORD2
 getOccupancy	KEYWORD2
+setHoldTime	KEYWORD2
+getHoldTime	KEYWORD2
+setHoldTimeLimits	KEYWORD2
+onHoldTimeChange	KEYWORD2
 getControlSequence	KEYWORD2
 getMinHeatSetpoint	KEYWORD2
 getMaxHeatSetpoint	KEYWORD2
@@ -269,3 +279,7 @@ MOVING_DOWN_OR_CLOSE	LITERAL1
 GLOBAL	LITERAL1
 LIFT	LITERAL1
 TILT	LITERAL1
+OCCUPANCY_SENSOR_TYPE_PIR	LITERAL1
+OCCUPANCY_SENSOR_TYPE_ULTRASONIC	LITERAL1
+OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC	LITERAL1
+OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT	LITERAL1

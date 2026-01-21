@@ -74,6 +74,14 @@ public:
   //Sets if the device should advertise itself to Arduino IDE. Default true
   ArduinoOTAClass &setMdnsEnabled(bool enabled);
 
+#ifdef UPDATE_SIGN
+  //Install signature verification for OTA updates
+  //Must be called before begin()
+  //sign: Signature verifier to use (e.g., UpdaterRSAVerifier or UpdaterECDSAVerifier)
+  //      The hash type is determined from the verifier's configuration
+  ArduinoOTAClass &setSignature(UpdaterVerifyClass *sign);
+#endif /* UPDATE_SIGN */
+
   //This callback will be called when OTA connection has begun
   ArduinoOTAClass &onStart(THandlerFunction fn);
 
@@ -123,6 +131,10 @@ private:
   THandlerFunction _end_callback;
   THandlerFunction_Error _error_callback;
   THandlerFunction_Progress _progress_callback;
+
+#ifdef UPDATE_SIGN
+  UpdaterVerifyClass *_sign;
+#endif /* UPDATE_SIGN */
 
   void _runUpdate(void);
   void _onRx(void);

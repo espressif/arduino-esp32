@@ -10,15 +10,15 @@ This example demonstrates how to create a Matter-compatible window covering devi
 | ESP32-S2 | ✅ | ❌ | ❌ | Fully supported |
 | ESP32-S3 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-C3 | ✅ | ❌ | ✅ | Fully supported |
-| ESP32-C5 | ✅ | ❌ | ✅ | Fully supported |
+| ESP32-C5 | ❌ | ✅ | ✅ | Supported (Thread only) |
 | ESP32-C6 | ✅ | ❌ | ✅ | Fully supported |
 | ESP32-H2 | ❌ | ✅ | ✅ | Supported (Thread only) |
 
 ### Note on Commissioning:
 
 - **ESP32 & ESP32-S2** do not support commissioning over Bluetooth LE. For these chips, you must provide Wi-Fi credentials directly in the sketch code so they can connect to your network manually.
-- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
-- **ESP32-C5** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project as an ESP-IDF component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C6** Although it has Thread support, the ESP32 Arduino Matter Library has been precompiled using Wi-Fi only. In order to configure it for Thread-only operation it is necessary to build the project using Arduino as an IDF Component and to disable the Matter Wi-Fi station feature.
+- **ESP32-C5** Although it has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only. In order to configure it for Wi-Fi operation it is necessary to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
 
 ## Features
 
@@ -82,8 +82,12 @@ Before uploading the sketch, configure the following:
 
 1. Open the `MatterWindowCovering.ino` sketch in the Arduino IDE.
 2. Select your ESP32 board from the **Tools > Board** menu.
-3. Connect your ESP32 board to your computer via USB.
-4. Click the **Upload** button to compile and flash the sketch.
+<!-- vale off -->
+3. Select **"Huge APP (3MB No OTA/1MB SPIFFS)"** from **Tools > Partition Scheme** menu.
+<!-- vale on -->
+4. Enable **"Erase All Flash Before Sketch Upload"** option from **Tools** menu.
+5. Connect your ESP32 board to your computer via USB.
+6. Click the **Upload** button to compile and flash the sketch.
 
 ## Expected Output
 
