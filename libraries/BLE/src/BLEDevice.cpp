@@ -119,6 +119,7 @@ BLEDeviceCallbacks BLEDevice::defaultDeviceCallbacks{};
 BLEDeviceCallbacks *BLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 uint8_t BLEDevice::m_ownAddrType = BLE_OWN_ADDR_PUBLIC;
 bool BLEDevice::m_synced = false;
+String BLEDevice::m_deviceName;
 #endif
 
 /***************************************************************************
@@ -382,10 +383,8 @@ void BLEDevice::init(String deviceName) {
     ble_hs_cfg.sm_their_key_dist |= BLE_SM_PAIR_KEY_DIST_ID;
 #endif
 
-    errRc = ble_svc_gap_device_name_set(deviceName.c_str());
-    if (errRc != ESP_OK) {
-      log_e("ble_svc_gap_device_name_set: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    }
+    // Store device name to be set after sync (GAP service not ready until then)
+    m_deviceName = deviceName;
 
     ble_store_config_init();
     nimble_port_freertos_init(BLEDevice::host_task);
@@ -1280,6 +1279,14 @@ void BLEDevice::onSync() {
     return;
   }
 
+  // Set device name first, before any other GAP operations
+  if (m_deviceName.length() > 0) {
+    int nameRc = ble_svc_gap_device_name_set(m_deviceName.c_str());
+    if (nameRc != 0) {
+      log_e("ble_svc_gap_device_name_set: rc=%d %s", nameRc, BLEUtils::returnCodeToString(nameRc));
+    }
+  }
+
   int rc = ble_hs_util_ensure_addr(0);
   if (rc == 0) {
     rc = ble_hs_util_ensure_addr(1);
@@ -1318,6 +1325,14 @@ void BLEDevice::setDeviceCallbacks(BLEDeviceCallbacks *cb) {
   } else {
     m_pDeviceCallbacks = cb;
   }
+}
+
+/**
+ * @brief Get the device name.
+ * @return The device name.
+ */
+String BLEDevice::getDeviceName() {
+  return m_deviceName;
 }
 
 /**
