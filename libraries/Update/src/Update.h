@@ -15,23 +15,23 @@
 #include "Updater_Signing.h"
 #endif /* UPDATE_SIGN */
 
-#define UPDATE_ERROR_OK           (0)  ///< Update completed without error
-#define UPDATE_ERROR_WRITE        (1)  ///< Write operation failed
-#define UPDATE_ERROR_ERASE        (2)  ///< Erase operation failed
-#define UPDATE_ERROR_READ         (3)  ///< Read operation failed
-#define UPDATE_ERROR_SPACE        (4)  ///< Not enough space for update
-#define UPDATE_ERROR_SIZE         (5)  ///< Provided size is invalid
-#define UPDATE_ERROR_STREAM       (6)  ///< Stream read timeout or error
-#define UPDATE_ERROR_MD5          (7)  ///< MD5 checksum mismatch
-#define UPDATE_ERROR_MAGIC_BYTE   (8)  ///< Magic byte/header mismatch
-#define UPDATE_ERROR_ACTIVATE     (9)  ///< Activation failed
-#define UPDATE_ERROR_NO_PARTITION (10) ///< No suitable partition found
-#define UPDATE_ERROR_BAD_ARGUMENT (11) ///< Bad argument provided to API
-#define UPDATE_ERROR_ABORT        (12) ///< Update was aborted
-#define UPDATE_ERROR_DECRYPT      (13) ///< Decryption failed
-#define UPDATE_ERROR_SIGN         (14) ///< Signature verification failed
+#define UPDATE_ERROR_OK           (0)   ///< Update completed without error
+#define UPDATE_ERROR_WRITE        (1)   ///< Write operation failed
+#define UPDATE_ERROR_ERASE        (2)   ///< Erase operation failed
+#define UPDATE_ERROR_READ         (3)   ///< Read operation failed
+#define UPDATE_ERROR_SPACE        (4)   ///< Not enough space for update
+#define UPDATE_ERROR_SIZE         (5)   ///< Provided size is invalid
+#define UPDATE_ERROR_STREAM       (6)   ///< Stream read timeout or error
+#define UPDATE_ERROR_MD5          (7)   ///< MD5 checksum mismatch
+#define UPDATE_ERROR_MAGIC_BYTE   (8)   ///< Magic byte/header mismatch
+#define UPDATE_ERROR_ACTIVATE     (9)   ///< Activation failed
+#define UPDATE_ERROR_NO_PARTITION (10)  ///< No suitable partition found
+#define UPDATE_ERROR_BAD_ARGUMENT (11)  ///< Bad argument provided to API
+#define UPDATE_ERROR_ABORT        (12)  ///< Update was aborted
+#define UPDATE_ERROR_DECRYPT      (13)  ///< Decryption failed
+#define UPDATE_ERROR_SIGN         (14)  ///< Signature verification failed
 
-#define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF ///< Constant indicating update size is unknown
+#define UPDATE_SIZE_UNKNOWN 0xFFFFFFFF  ///< Constant indicating update size is unknown
 
 #define U_FLASH    0    ///< Update target: Flash (OTA)
 #define U_FLASHFS  100  ///< Update target: Flash filesystem (legacy)
@@ -40,23 +40,23 @@
 #define U_LITTLEFS 103  ///< Update target: LittleFS filesystem
 #define U_AUTH     200  ///< Update target: Authentication/secure update
 
-#define ENCRYPTED_BLOCK_SIZE       16 ///< Encrypted block size in bytes
-#define ENCRYPTED_TWEAK_BLOCK_SIZE 32 ///< Tweak block size used in encrypted images
-#define ENCRYPTED_KEY_SIZE         32 ///< Encryption key size in bytes
+#define ENCRYPTED_BLOCK_SIZE       16  ///< Encrypted block size in bytes
+#define ENCRYPTED_TWEAK_BLOCK_SIZE 32  ///< Tweak block size used in encrypted images
+#define ENCRYPTED_KEY_SIZE         32  ///< Encryption key size in bytes
 
-#define U_AES_DECRYPT_NONE         0 ///< No AES decryption: image is not encrypted
-#define U_AES_DECRYPT_AUTO         1 ///< Auto-detect decryption needs
-#define U_AES_DECRYPT_ON           2 ///< Force AES decryption on image
-#define U_AES_DECRYPT_MODE_MASK    3 ///< Mask for decryption mode bits
-#define U_AES_IMAGE_DECRYPTING_BIT 4 ///< Bit flag indicating image is being decrypted
+#define U_AES_DECRYPT_NONE         0  ///< No AES decryption: image is not encrypted
+#define U_AES_DECRYPT_AUTO         1  ///< Auto-detect decryption needs
+#define U_AES_DECRYPT_ON           2  ///< Force AES decryption on image
+#define U_AES_DECRYPT_MODE_MASK    3  ///< Mask for decryption mode bits
+#define U_AES_IMAGE_DECRYPTING_BIT 4  ///< Bit flag indicating image is being decrypted
 
 #define SPI_SECTORS_PER_BLOCK 16  // usually large erase block is 32k/64k ///< Number of SPI sectors per erase block (platform dependent)
-#define SPI_FLASH_BLOCK_SIZE  (SPI_SECTORS_PER_BLOCK * SPI_FLASH_SEC_SIZE) ///< Calculated SPI flash block size in bytes
+#define SPI_FLASH_BLOCK_SIZE  (SPI_SECTORS_PER_BLOCK * SPI_FLASH_SEC_SIZE)  ///< Calculated SPI flash block size in bytes
 
 class UpdateClass {
 public:
   typedef std::function<void(size_t, size_t)> THandlerFunction_Progress;
- 
+
   /**
    * @brief Construct a new UpdateClass object
    */
