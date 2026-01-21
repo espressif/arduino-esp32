@@ -69,7 +69,7 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   }
 
   if (!_div) {
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(_spi, _freq);
   }
 
   _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
@@ -158,7 +158,7 @@ void SPIClass::setFrequency(uint32_t freq) {
   uint32_t cdiv = spiGetClockDiv(_spi);
   if (_freq != freq || _div != cdiv) {
     _freq = freq;
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(_spi, _freq);
     spiSetClockDiv(_spi, _div);
   }
   SPI_PARAM_UNLOCK();
@@ -189,7 +189,7 @@ void SPIClass::beginTransaction(SPISettings settings) {
   uint32_t cdiv = spiGetClockDiv(_spi);
   if (_freq != settings._clock || _div != cdiv) {
     _freq = settings._clock;
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(_spi, _freq);
   }
   spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
   _inTransaction = true;
