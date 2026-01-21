@@ -420,7 +420,7 @@ bool BLEDevice::init(String deviceName) {
   }
 #endif  // CONFIG_NIMBLE_ENABLED
 
-  initialized = true;  // Set the initialization flag to ensure we are only initialized once.
+  initialized = true;                    // Set the initialization flag to ensure we are only initialized once.
   vTaskDelay(200 / portTICK_PERIOD_MS);  // Delay for 200 msecs as a workaround to an apparent Arduino environment issue.
   return true;
 }  // init
