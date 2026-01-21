@@ -69,7 +69,7 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   }
 
   if (!_div) {
-    _div = spiFrequencyToClockDiv(_spi, _freq);
+    _div = spiFrequencyToClockDiv(NULL, _freq);
   }
 
   _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
@@ -77,6 +77,19 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
     log_e("SPI bus %d start failed.", _spi_num);
     return false;
   }
+
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Ensure the divider and clock source info are recalculated and stored correctly.
+  uint32_t recalculated_div = spiFrequencyToClockDiv(_spi, _freq);
+  if (recalculated_div != _div) {
+    // Update divider and clock source info if changed
+    _div = recalculated_div;
+    spiSetClockDiv(_spi, _div);
+  } else {
+    // Store correct clock source info
+    _div = recalculated_div;
+  }
+#endif
 
   if (sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
 #if CONFIG_IDF_TARGET_ESP32
