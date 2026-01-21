@@ -521,7 +521,12 @@ static inline uint32_t _clockDivToDivider(uint32_t clockDiv) {
  * @param clockDiv The clock divider register value to set
  * 
  * @note This function does NOT acquire the SPI mutex - it must be called from within
- *       a context that already holds the mutex (e.g., from spiTransaction or spiSetClockDiv).
+ *       a context that already holds the mutex.
+ * 
+ * @note Callers (all properly acquire mutex before calling):
+ *       - spiSetClockDiv() - acquires mutex via SPI_MUTEX_LOCK() before calling
+ *       - spiTransaction() - acquires mutex via SPI_MUTEX_LOCK() before calling
+ *       - _on_apb_change() - acquires mutex via SPI_MUTEX_LOCK() before calling (APB_AFTER_CHANGE case)
  * 
  * @note ESP32P4-specific behavior:
  *       - Determines the appropriate clock source (XTAL or SPLL) based on the divider value
