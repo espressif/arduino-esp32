@@ -1718,7 +1718,7 @@ uint32_t spiClockDivToFrequency(spi_t *spi, uint32_t clockDiv) {
     apb_freq = getXtalFrequencyMhz() * 1000000;
   }
 #else
-  // For non-ESP32P4, spi parameter is unused
+  // For non-ESP32P4 targets, ignore spi parameter; always use system APB frequency.
   (void)spi;
 #endif
   spiClk_t reg = {clockDiv};
@@ -1851,7 +1851,7 @@ uint32_t spiFrequencyToClockDiv(spi_t *spi, uint32_t freq) {
   // Return divider for the clock source that gives closest match
   return best_div;
 #else
-  // For non-ESP32P4, use the helper function with APB frequency (spi parameter unused)
+  // Non-ESP32P4: Only use APB clock, spi parameter unused.
   (void)spi;  // Suppress unused parameter warning
   return _spiFrequencyToClockDivWithSource(freq, getApbFrequency());
 #endif
