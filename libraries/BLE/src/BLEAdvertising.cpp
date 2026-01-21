@@ -36,6 +36,7 @@
 #include "BLEDevice.h"
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
+#include <cstring>
 
 /***************************************************************************
  *                           Common functions                              *
@@ -1215,6 +1216,19 @@ bool BLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(BLEAdvertisi
   }
 
   int rc = 0;
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  // Default advertising name mirrors GAP name unless user set a custom name.
+  if (!m_customAdvData && m_name.length() == 0) {
+    const char *gap_name = ble_svc_gap_device_name();
+    if (gap_name && gap_name[0] != '\0') {
+      m_advData.name = (uint8_t *)gap_name;
+      m_advData.name_len = strlen(gap_name);
+      m_advData.name_is_complete = 1;
+      m_advDataSet = false;
+    }
+  }
+#endif
 
   if (!m_customAdvData && !m_advDataSet) {
     //start with 3 bytes for the flags data
