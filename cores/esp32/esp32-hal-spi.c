@@ -478,6 +478,9 @@ uint32_t spiGetClockDiv(spi_t *spi) {
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
 // Helper to calculate frequency from divider value
 static inline uint32_t _dividerToFreq(uint32_t divider, uint32_t source_freq) {
+  if (divider == 0) {
+    return 0;  // Safety check
+  }
   return source_freq / divider;
 }
 
@@ -500,14 +503,15 @@ static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
   // Otherwise, infer from the divider by checking which gives a "more reasonable" frequency.
   uint32_t xtal_freq = getXtalFrequencyMhz() * 1000000;  // 40MHz
   uint32_t spll_freq = 480000000;  // 480MHz
-  uint32_t divider = _clockDivToDivider(clockDiv);
-  uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
-  uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
   
   uint8_t new_clk_src;
   if (clockDiv == spi->last_clock_div && spi->last_clock_div != 0) {
     new_clk_src = spi->last_clk_src;
   } else {
+    uint32_t divider = _clockDivToDivider(clockDiv);
+    uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
+    uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
+    
     // Infer: XTAL cannot exceed 40MHz, so if freq_with_spll > 40MHz, must use SPLL
     // Otherwise, prefer XTAL for <=40MHz frequencies
     new_clk_src = (freq_with_spll > 40000000) ? 1 :
