@@ -252,15 +252,20 @@ bool hostedInitBLE() {
   if (!hostedInit()) {
     return false;
   }
-  esp_err_t err = esp_hosted_bt_controller_init();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
-    return false;
-  }
-  err = esp_hosted_bt_controller_enable();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
-    return false;
+
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_init();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_enable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
+      return false;
+    }
   }
   hosted_ble_active = true;
   return true;
@@ -274,15 +279,19 @@ bool hostedInitWiFi() {
 
 bool hostedDeinitBLE() {
   log_i("Deinitializing ESP-Hosted for BLE");
-  esp_err_t err = esp_hosted_bt_controller_disable();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
-    return false;
-  }
-  err = esp_hosted_bt_controller_deinit(false);
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
-    return false;
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_disable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_deinit(false);
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
+      return false;
+    }
   }
   hosted_ble_active = false;
   if (!hosted_wifi_active) {
