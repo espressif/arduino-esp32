@@ -2,9 +2,25 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
+                    "sizes": [{
+                            "flash_bytes": 555519,
+                            "flash_percentage": 42,
+                            "ram_bytes": 26004,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
+                    "sizes": [{
+                            "flash_bytes": 554031,
+                            "flash_percentage": 42,
+                            "ram_bytes": 26004,
+                            "ram_percentage": 7
+                            }]
+                    },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 996051,
+                            "flash_bytes": 996055,
                             "flash_percentage": 75,
                             "ram_bytes": 44548,
                             "ram_percentage": 13
@@ -20,7 +36,7 @@
                     },
 {"name": "libraries/FFat/examples/FFat_time",
                     "sizes": [{
-                            "flash_bytes": 963071,
+                            "flash_bytes": 963055,
                             "flash_percentage": 73,
                             "ram_bytes": 45896,
                             "ram_percentage": 14
@@ -121,28 +137,28 @@
                             "ram_bytes": 20876,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/Hash/examples/MD5",
-                    "sizes": [{
-                            "flash_bytes": 294639,
-                            "flash_percentage": 22,
-                            "ram_bytes": 20876,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/Hash/examples/PBKDF2_HMAC",
-                    "sizes": [{
-                            "flash_bytes": 307239,
-                            "flash_percentage": 23,
-                            "ram_bytes": 20876,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/HTTPClient/examples/ReuseConnection",
+                    "sizes": [{
+                            "flash_bytes": 1075800,
+                            "flash_percentage": 82,
+                            "ram_bytes": 35900,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "libraries/HTTPClient/examples/StreamHttpClient",
+                    "sizes": [{
+                            "flash_bytes": 1075242,
+                            "flash_percentage": 82,
+                            "ram_bytes": 35692,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/HTTPUpdate/examples/httpUpdate",
                     "sizes": [{
                             "flash_bytes": 1013514,
@@ -254,21 +270,18 @@
                             "ram_bytes": 12600,
                             "ram_percentage": 3
                             }]
-                    },
-{"name": "libraries/LittleFS/examples/LITTLEFS_time",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c6",
+                "target": "esp32c6",
+                "sketches": [
+{"name": "libraries/BLE/examples/Client",
                     "sizes": [{
-                            "flash_bytes": 990692,
-                            "flash_percentage": 75,
-                            "ram_bytes": 35332,
-                            "ram_percentage": 10
-                            }]
-                    },
-{"name": "libraries/Matter/examples/MatterColorLight",
-                    "sizes": [{
-                            "flash_bytes": 1887418,
-                            "flash_percentage": 59,
-                            "ram_bytes": 89812,
-                            "ram_percentage": 27
+                            "flash_bytes": 748068,
+                            "flash_percentage": 23,
+                            "ram_bytes": 17496,
+                            "ram_percentage": 5
                             }]
                     }
 ]
@@ -276,9 +289,25 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 305794,
+                            "flash_percentage": 23,
+                            "ram_bytes": 13320,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
+                    "sizes": [{
+                            "flash_bytes": 580032,
+                            "flash_percentage": 44,
+                            "ram_bytes": 19224,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 578344,
+                            "flash_bytes": 578348,
                             "flash_percentage": 44,
                             "ram_bytes": 19224,
                             "ram_percentage": 5
@@ -355,28 +384,28 @@
                             "ram_bytes": 13856,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterColorLight",
-                    "sizes": [{
-                            "flash_bytes": 2204674,
-                            "flash_percentage": 70,
-                            "ram_bytes": 104376,
-                            "ram_percentage": 31
-                            }]
-                    },
-{"name": "libraries/Matter/examples/MatterCommissionTest",
-                    "sizes": [{
-                            "flash_bytes": 2149088,
-                            "flash_percentage": 68,
-                            "ram_bytes": 103660,
-                            "ram_percentage": 31
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
+                    "sizes": [{
+                            "flash_bytes": 446752,
+                            "flash_percentage": 34,
+                            "ram_bytes": 23056,
+                            "ram_percentage": 7
+                            }]
+                    },
+{"name": "libraries/ESP_I2S/examples/Simple_tone",
+                    "sizes": [{
+                            "flash_bytes": 354358,
+                            "flash_percentage": 27,
+                            "ram_bytes": 22440,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP_SR/examples/Basic",
                     "sizes": [{
                             "flash_bytes": 821388,
@@ -403,33 +432,33 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_TLK110",
                     "sizes": [{
-                            "flash_bytes": 565892,
+                            "flash_bytes": 566458,
                             "flash_percentage": 43,
-                            "ram_bytes": 27336,
+                            "ram_bytes": 27352,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 606492,
+                            "flash_bytes": 607142,
                             "flash_percentage": 46,
-                            "ram_bytes": 27480,
+                            "ram_bytes": 27496,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 604538,
+                            "flash_bytes": 605110,
                             "flash_percentage": 46,
-                            "ram_bytes": 27480,
+                            "ram_bytes": 27496,
                             "ram_percentage": 8
                             }]
                     },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 927830,
+                            "flash_bytes": 928528,
                             "flash_percentage": 70,
-                            "ram_bytes": 29108,
+                            "ram_bytes": 29172,
                             "ram_percentage": 8
                             }]
                     },
@@ -470,22 +499,6 @@
                             "flash_bytes": 1022372,
                             "flash_percentage": 78,
                             "ram_bytes": 30652,
-                            "ram_percentage": 9
-                            }]
-                    },
-{"name": "libraries/HTTPClient/examples/CustomHeaders",
-                    "sizes": [{
-                            "flash_bytes": 1008318,
-                            "flash_percentage": 76,
-                            "ram_bytes": 30588,
-                            "ram_percentage": 9
-                            }]
-                    },
-{"name": "libraries/HTTPClient/examples/ReuseConnection",
-                    "sizes": [{
-                            "flash_bytes": 1010408,
-                            "flash_percentage": 77,
-                            "ram_bytes": 30836,
                             "ram_percentage": 9
                             }]
                     }
@@ -629,9 +642,9 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Client",
                     "sizes": [{
-                            "flash_bytes": 641995,
+                            "flash_bytes": 642187,
                             "flash_percentage": 20,
-                            "ram_bytes": 26748,
+                            "ram_bytes": 26764,
                             "ram_percentage": 8
                             }]
                     }

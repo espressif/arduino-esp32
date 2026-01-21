@@ -2,6 +2,22 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Time/SimpleTime",
+                    "sizes": [{
+                            "flash_bytes": 934119,
+                            "flash_percentage": 71,
+                            "ram_bytes": 46664,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Timer/RepeatTimer",
+                    "sizes": [{
+                            "flash_bytes": 302103,
+                            "flash_percentage": 23,
+                            "ram_bytes": 20908,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Timer/WatchdogTimer",
                     "sizes": [{
                             "flash_bytes": 301891,
@@ -108,7 +124,7 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_LAN8720",
                     "sizes": [{
-                            "flash_bytes": 521091,
+                            "flash_bytes": 521099,
                             "flash_percentage": 39,
                             "ram_bytes": 25972,
                             "ram_percentage": 7
@@ -116,25 +132,9 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_TLK110",
                     "sizes": [{
-                            "flash_bytes": 521091,
+                            "flash_bytes": 521099,
                             "flash_percentage": 39,
                             "ram_bytes": 25972,
-                            "ram_percentage": 7
-                            }]
-                    },
-{"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
-                    "sizes": [{
-                            "flash_bytes": 555511,
-                            "flash_percentage": 42,
-                            "ram_bytes": 26004,
-                            "ram_percentage": 7
-                            }]
-                    },
-{"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
-                    "sizes": [{
-                            "flash_bytes": 554019,
-                            "flash_percentage": 42,
-                            "ram_bytes": 26004,
                             "ram_percentage": 7
                             }]
                     }
@@ -143,6 +143,22 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Master",
+                    "sizes": [{
+                            "flash_bytes": 934466,
+                            "flash_percentage": 71,
+                            "ram_bytes": 34020,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "libraries/ESP_NOW/examples/ESP_NOW_Broadcast_Slave",
+                    "sizes": [{
+                            "flash_bytes": 934874,
+                            "flash_percentage": 71,
+                            "ram_bytes": 33988,
+                            "ram_percentage": 10
+                            }]
+                    },
 {"name": "libraries/ESP_NOW/examples/ESP_NOW_Network",
                     "sizes": [{
                             "flash_bytes": 938162,
@@ -177,7 +193,7 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                     "sizes": [{
-                            "flash_bytes": 579562,
+                            "flash_bytes": 579568,
                             "flash_percentage": 44,
                             "ram_bytes": 17920,
                             "ram_percentage": 5
@@ -185,7 +201,7 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                     "sizes": [{
-                            "flash_bytes": 577862,
+                            "flash_bytes": 577866,
                             "flash_percentage": 44,
                             "ram_bytes": 17920,
                             "ram_percentage": 5
@@ -193,7 +209,7 @@
                     },
 {"name": "libraries/Ethernet/examples/ETH_WIFI_BRIDGE",
                     "sizes": [{
-                            "flash_bytes": 1043980,
+                            "flash_bytes": 1043986,
                             "flash_percentage": 79,
                             "ram_bytes": 34876,
                             "ram_percentage": 10
@@ -254,21 +270,31 @@
                             "ram_bytes": 36508,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "libraries/HTTPClient/examples/ReuseConnection",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c5",
+                "target": "esp32c5",
+                "sketches": [
+{"name": "libraries/BLE/examples/Beacon_Scanner",
                     "sizes": [{
-                            "flash_bytes": 1075800,
-                            "flash_percentage": 82,
-                            "ram_bytes": 35900,
-                            "ram_percentage": 10
+                            "flash_bytes": 790874,
+                            "flash_percentage": 25,
+                            "ram_bytes": 22116,
+                            "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/HTTPClient/examples/StreamHttpClient",
+                    }
+]
+},
+{ "board": "espressif:esp32:esp32c6",
+                "target": "esp32c6",
+                "sketches": [
+{"name": "libraries/BLE/examples/Beacon_Scanner",
                     "sizes": [{
-                            "flash_bytes": 1075242,
-                            "flash_percentage": 82,
-                            "ram_bytes": 35692,
-                            "ram_percentage": 10
+                            "flash_bytes": 731518,
+                            "flash_percentage": 23,
+                            "ram_bytes": 17448,
+                            "ram_percentage": 5
                             }]
                     }
 ]
@@ -276,6 +302,22 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Serial/RS485_Echo_Demo",
+                    "sizes": [{
+                            "flash_bytes": 274944,
+                            "flash_percentage": 20,
+                            "ram_bytes": 13192,
+                            "ram_percentage": 4
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/RxFIFOFull_Demo",
+                    "sizes": [{
+                            "flash_bytes": 275500,
+                            "flash_percentage": 21,
+                            "ram_bytes": 13192,
+                            "ram_percentage": 4
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Serial/RxTimeout_Demo",
                     "sizes": [{
                             "flash_bytes": 275342,
@@ -355,28 +397,28 @@
                             "ram_bytes": 15628,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/ESP_I2S/examples/Simple_tone",
-                    "sizes": [{
-                            "flash_bytes": 305794,
-                            "flash_percentage": 23,
-                            "ram_bytes": 13320,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
-                    "sizes": [{
-                            "flash_bytes": 580026,
-                            "flash_percentage": 44,
-                            "ram_bytes": 19224,
-                            "ram_percentage": 5
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/ESP32/examples/Serial/Serial_All_CPU_Freqs",
+                    "sizes": [{
+                            "flash_bytes": 318250,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22156,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/ESP32/examples/Serial/Serial_STD_Func_OnReceive",
+                    "sizes": [{
+                            "flash_bytes": 318996,
+                            "flash_percentage": 24,
+                            "ram_bytes": 22132,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/ESP32/examples/Serial/onReceiveExample",
                     "sizes": [{
                             "flash_bytes": 318614,
@@ -472,22 +514,6 @@
                             "ram_bytes": 24272,
                             "ram_percentage": 7
                             }]
-                    },
-{"name": "libraries/ESP_I2S/examples/Record_to_WAV",
-                    "sizes": [{
-                            "flash_bytes": 446752,
-                            "flash_percentage": 34,
-                            "ram_bytes": 23056,
-                            "ram_percentage": 7
-                            }]
-                    },
-{"name": "libraries/ESP_I2S/examples/Simple_tone",
-                    "sizes": [{
-                            "flash_bytes": 354358,
-                            "flash_percentage": 27,
-                            "ram_bytes": 22440,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
@@ -544,7 +570,7 @@
                     },
 {"name": "libraries/HTTPUpdate/examples/httpUpdateSecure",
                     "sizes": [{
-                            "flash_bytes": 1009706,
+                            "flash_bytes": 1009698,
                             "flash_percentage": 32,
                             "ram_bytes": 41656,
                             "ram_percentage": 12
@@ -629,9 +655,9 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Beacon_Scanner",
                     "sizes": [{
-                            "flash_bytes": 611095,
+                            "flash_bytes": 611263,
                             "flash_percentage": 19,
-                            "ram_bytes": 26684,
+                            "ram_bytes": 26700,
                             "ram_percentage": 8
                             }]
                     }

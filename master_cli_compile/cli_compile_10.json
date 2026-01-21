@@ -2,9 +2,25 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Preferences/examples/StartCounter",
+                    "sizes": [{
+                            "flash_bytes": 300539,
+                            "flash_percentage": 22,
+                            "ram_bytes": 20908,
+                            "ram_percentage": 6
+                            }]
+                    },
+{"name": "libraries/SD/examples/SD_Test",
+                    "sizes": [{
+                            "flash_bytes": 356447,
+                            "flash_percentage": 27,
+                            "ram_bytes": 21968,
+                            "ram_percentage": 6
+                            }]
+                    },
 {"name": "libraries/SD/examples/SD_time",
                     "sizes": [{
-                            "flash_bytes": 969471,
+                            "flash_bytes": 969475,
                             "flash_percentage": 73,
                             "ram_bytes": 45920,
                             "ram_percentage": 14
@@ -20,7 +36,7 @@
                     },
 {"name": "libraries/SD_MMC/examples/SDMMC_time",
                     "sizes": [{
-                            "flash_bytes": 992719,
+                            "flash_bytes": 992727,
                             "flash_percentage": 75,
                             "ram_bytes": 46200,
                             "ram_percentage": 14
@@ -28,7 +44,7 @@
                     },
 {"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
-                            "flash_bytes": 287527,
+                            "flash_bytes": 287535,
                             "flash_percentage": 21,
                             "ram_bytes": 20972,
                             "ram_percentage": 6
@@ -44,7 +60,7 @@
                     },
 {"name": "libraries/SPIFFS/examples/SPIFFS_time",
                     "sizes": [{
-                            "flash_bytes": 956879,
+                            "flash_bytes": 956863,
                             "flash_percentage": 73,
                             "ram_bytes": 45696,
                             "ram_percentage": 13
@@ -121,28 +137,28 @@
                             "ram_bytes": 48396,
                             "ram_percentage": 14
                             }]
-                    },
-{"name": "libraries/Update/examples/OTAWebUpdater",
-                    "sizes": [{
-                            "flash_bytes": 993367,
-                            "flash_percentage": 75,
-                            "ram_bytes": 48432,
-                            "ram_percentage": 14
-                            }]
-                    },
-{"name": "libraries/Update/examples/SD_Update",
-                    "sizes": [{
-                            "flash_bytes": 359611,
-                            "flash_percentage": 27,
-                            "ram_bytes": 21672,
-                            "ram_percentage": 6
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/SD/examples/SD_time",
+                    "sizes": [{
+                            "flash_bytes": 1014126,
+                            "flash_percentage": 77,
+                            "ram_bytes": 35988,
+                            "ram_percentage": 10
+                            }]
+                    },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                    "sizes": [{
+                            "flash_bytes": 287522,
+                            "flash_percentage": 21,
+                            "ram_bytes": 12988,
+                            "ram_percentage": 3
+                            }]
+                    },
 {"name": "libraries/SPIFFS/examples/SPIFFS_Test",
                     "sizes": [{
                             "flash_bytes": 315966,
@@ -233,7 +249,7 @@
                     },
 {"name": "libraries/Update/examples/SD_Update",
                     "sizes": [{
-                            "flash_bytes": 368730,
+                            "flash_bytes": 368736,
                             "flash_percentage": 28,
                             "ram_bytes": 13532,
                             "ram_percentage": 4
@@ -254,28 +270,28 @@
                             "ram_bytes": 38476,
                             "ram_percentage": 11
                             }]
-                    },
-{"name": "libraries/WebServer/examples/ChunkWriting",
-                    "sizes": [{
-                            "flash_bytes": 1000830,
-                            "flash_percentage": 76,
-                            "ram_bytes": 37788,
-                            "ram_percentage": 11
-                            }]
-                    },
-{"name": "libraries/WebServer/examples/FSBrowser",
-                    "sizes": [{
-                            "flash_bytes": 1055084,
-                            "flash_percentage": 80,
-                            "ram_bytes": 37940,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
+                    "sizes": [{
+                            "flash_bytes": 1106670,
+                            "flash_percentage": 84,
+                            "ram_bytes": 46592,
+                            "ram_percentage": 14
+                            }]
+                    },
+{"name": "libraries/OpenThread/examples/CLI/ThreadScan",
+                    "sizes": [{
+                            "flash_bytes": 1106268,
+                            "flash_percentage": 84,
+                            "ram_bytes": 46560,
+                            "ram_percentage": 14
+                            }]
+                    },
 {"name": "libraries/OpenThread/examples/CLI/onReceive",
                     "sizes": [{
                             "flash_bytes": 1105878,
@@ -326,7 +342,7 @@
                     },
 {"name": "libraries/SD/examples/SD_Test",
                     "sizes": [{
-                            "flash_bytes": 364724,
+                            "flash_bytes": 364730,
                             "flash_percentage": 27,
                             "ram_bytes": 14964,
                             "ram_percentage": 4
@@ -334,7 +350,7 @@
                     },
 {"name": "libraries/SPI/examples/SPI_Multiple_Buses",
                     "sizes": [{
-                            "flash_bytes": 288146,
+                            "flash_bytes": 288152,
                             "flash_percentage": 21,
                             "ram_bytes": 14284,
                             "ram_percentage": 4
@@ -355,28 +371,28 @@
                             "ram_bytes": 15520,
                             "ram_percentage": 4
                             }]
-                    },
-{"name": "libraries/Ticker/examples/Blinker",
-                    "sizes": [{
-                            "flash_bytes": 284960,
-                            "flash_percentage": 21,
-                            "ram_bytes": 14284,
-                            "ram_percentage": 4
-                            }]
-                    },
-{"name": "libraries/Ticker/examples/TickerBasic",
-                    "sizes": [{
-                            "flash_bytes": 284712,
-                            "flash_percentage": 21,
-                            "ram_bytes": 14252,
-                            "ram_percentage": 4
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/USB/examples/FirmwareMSC",
+                    "sizes": [{
+                            "flash_bytes": 403406,
+                            "flash_percentage": 30,
+                            "ram_bytes": 53324,
+                            "ram_percentage": 16
+                            }]
+                    },
+{"name": "libraries/USB/examples/Gamepad",
+                    "sizes": [{
+                            "flash_bytes": 385638,
+                            "flash_percentage": 29,
+                            "ram_bytes": 53396,
+                            "ram_percentage": 16
+                            }]
+                    },
 {"name": "libraries/USB/examples/HIDVendor",
                     "sizes": [{
                             "flash_bytes": 389116,
@@ -470,22 +486,6 @@
                             "flash_bytes": 367732,
                             "flash_percentage": 28,
                             "ram_bytes": 53328,
-                            "ram_percentage": 16
-                            }]
-                    },
-{"name": "libraries/USB/examples/USBMSC",
-                    "sizes": [{
-                            "flash_bytes": 389090,
-                            "flash_percentage": 29,
-                            "ram_bytes": 61468,
-                            "ram_percentage": 18
-                            }]
-                    },
-{"name": "libraries/USB/examples/USBSerial",
-                    "sizes": [{
-                            "flash_bytes": 383466,
-                            "flash_percentage": 29,
-                            "ram_bytes": 53220,
                             "ram_percentage": 16
                             }]
                     }
