@@ -958,8 +958,22 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         pCharacteristic->setValue(buf, len);
 
         // Call the onWrite callback before returning.
-        // This ensures that when the client receives the acknowledgment, the write has been processed.
-        // NimBLE sends the response automatically based on the return code of this function.
+        // NOTE: This callback is executed synchronously in the NimBLE GATT access context.
+        //       NimBLE sends the write response automatically after this function returns,
+        //       based on its return code. As a result, any work performed in onWrite()
+        //       directly impacts when the client receives the ATT write acknowledgment.
+        //
+        // Behavioral change:
+        //   In earlier implementations that used a deferred callback mechanism, the write
+        //   response was sent before the onWrite() callback executed. Applications that
+        //   relied on that behavior (e.g., long-running or blocking onWrite() handlers,
+        //   or handlers that perform notify/indicate operations) may now experience
+        //   delayed write acknowledgments if onWrite() takes significant time to complete.
+        //
+        // Recommendation:
+        //   Implement onWrite() as a fast, non-blocking callback. Offload long-running
+        //   processing to another task or queue to avoid increasing write latency or
+        //   causing client timeouts.
         pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
 
         return 0;
