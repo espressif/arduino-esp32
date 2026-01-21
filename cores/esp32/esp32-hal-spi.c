@@ -552,10 +552,16 @@ static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
     uint32_t freq_with_xtal = _dividerToFreq(divider, xtal_freq);
     uint32_t freq_with_spll = _dividerToFreq(divider, spll_freq);
     
-    // Infer: XTAL cannot exceed its actual frequency, so if freq_with_spll > xtal_freq, must use SPLL
-    // Otherwise, prefer XTAL for frequencies <= xtal_freq
-    new_clk_src = (freq_with_spll > xtal_freq) ? 1 :
-                  ((freq_with_xtal > 0 && freq_with_xtal <= xtal_freq) ? 0 : 1);
+    // Infer: Prefer XTAL whenever it yields a valid <= 40MHz SPI clock,
+    // and fall back to SPLL only when XTAL cannot produce a valid frequency.
+    if (freq_with_xtal > 0 && freq_with_xtal <= xtal_freq) {
+      new_clk_src = 0;  // XTAL
+    } else if (freq_with_spll > 0) {
+      new_clk_src = 1;  // SPLL
+    } else {
+      // Both inferred frequencies are invalid; keep current source to avoid unnecessary switching.
+      new_clk_src = spi->clk_src;
+    }
   }
   
   // Store the divider and source for this SPI instance
