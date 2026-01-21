@@ -354,7 +354,7 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
       {
         // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
         // For long reads, follow-up requests will have om_len == 0
-        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE) {
+        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE && pDescriptor->m_pCallback != nullptr) {
           pDescriptor->m_pCallback->onRead(pDescriptor);
         }
 
@@ -387,7 +387,9 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
         }
 
         pDescriptor->setValue(buf, len);
-        pDescriptor->m_pCallback->onWrite(pDescriptor);
+        if (pDescriptor->m_pCallback != nullptr) {
+          pDescriptor->m_pCallback->onWrite(pDescriptor);
+        }
         return 0;
       }
 
