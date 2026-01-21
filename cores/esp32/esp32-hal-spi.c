@@ -1706,11 +1706,20 @@ typedef union {
 
 #define ClkRegToFreq(reg) (apb_freq / (((reg)->clkdiv_pre + 1) * ((reg)->clkcnt_n + 1)))
 
-uint32_t spiClockDivToFrequency(uint32_t clockDiv) {
+uint32_t spiClockDivToFrequency(spi_t *spi, uint32_t clockDiv) {
   uint32_t apb_freq = getApbFrequency();
 #if defined(CONFIG_IDF_TARGET_ESP32P4)
-  // ESP32P4: Default to XTAL (40MHz) if clock source unknown
-  apb_freq = getXtalFrequencyMhz() * 1000000;
+  // ESP32P4: Use the actual clock source being used by this SPI instance
+  if (spi && spi->clk_src == 1) {
+    // SPLL is being used
+    apb_freq = SPI_P4_SPLL_FREQ_HZ;
+  } else {
+    // XTAL is being used (default or if spi is NULL)
+    apb_freq = getXtalFrequencyMhz() * 1000000;
+  }
+#else
+  // For non-ESP32P4, spi parameter is unused
+  (void)spi;
 #endif
   spiClk_t reg = {clockDiv};
   return ClkRegToFreq(&reg);

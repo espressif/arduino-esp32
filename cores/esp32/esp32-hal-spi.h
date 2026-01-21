@@ -141,7 +141,7 @@ void spiTransferBitsNL(spi_t *spi, uint32_t data_in, uint32_t *data_out, uint8_t
  * Helper functions to translate frequency to clock divider and back
  * */
 uint32_t spiFrequencyToClockDiv(spi_t *spi, uint32_t freq);
-uint32_t spiClockDivToFrequency(uint32_t freq);
+uint32_t spiClockDivToFrequency(spi_t *spi, uint32_t clockDiv);
 
 #ifdef __cplusplus
 }
