@@ -61,7 +61,7 @@ static const uint8_t P7_IO1 = 9;
 static const uint8_t P7_IO2 = 39;
 
 // Port 8 IO pins
-static const uint8_t P8_IO0 = 48;
+static const uint8_t P8_IO0 = 8;
 static const uint8_t P8_IO1 = 43;
 static const uint8_t P8_IO2 = 44;
 
