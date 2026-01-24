@@ -237,7 +237,7 @@ public:
 
   template<typename T> size_t streamFile(T &file, const String &contentType, const int code = 200) {
     _streamFileCore(file.size(), file.name(), contentType, code);
-    return _currentClient.write(file);
+    return client().write(file);
   }
 
   bool _eTagEnabled = false;
@@ -251,10 +251,10 @@ private:
 
 protected:
   virtual size_t _currentClientWrite(const char *b, size_t l) {
-    return _currentClient.write(b, l);
+    return client().write(b, l);
   }
   virtual size_t _currentClientWrite_P(PGM_P b, size_t l) {
-    return _currentClient.write_P(b, l);
+    return client().write_P(b, l);
   }
   void _addRequestHandler(RequestHandler *handler);
   bool _removeRequestHandler(RequestHandler *handler);
