@@ -129,6 +129,7 @@ public:
   BLEService *getServiceByUUID(const char *uuid);
   BLEService *getServiceByUUID(BLEUUID uuid);
   void start();
+  bool isStarted();
 #if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
   void advertiseOnDisconnect(bool enable);
 #endif

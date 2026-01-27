@@ -1063,18 +1063,13 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           continue;
         }
 
-        auto cMap = &myPair.second->m_characteristicMap;
-        log_d("BLEClient", "checking service %s for handle: %d", myPair.second->getUUID().toString().c_str(), event->notify_rx.attr_handle);
+        // Use m_characteristicMapByHandle for O(log n) lookup by handle
+        // This fixes issues with multiple characteristics sharing the same UUID (e.g., HID Report Data)
+        auto &cMapByHandle = myPair.second->m_characteristicMapByHandle;
+        auto characteristic = cMapByHandle.find(event->notify_rx.attr_handle);
 
-        auto characteristic = cMap->cbegin();
-        for (; characteristic != cMap->cend(); ++characteristic) {
-          if (characteristic->second->m_handle == event->notify_rx.attr_handle) {
-            break;
-          }
-        }
-
-        if (characteristic != cMap->cend()) {
-          log_d("BLEClient", "Got Notification for characteristic %s", characteristic->second->toString().c_str());
+        if (characteristic != cMapByHandle.end()) {
+          log_d("BLEClient", "Got Notification for characteristic %s (handle: %d)", characteristic->second->toString().c_str(), event->notify_rx.attr_handle);
 
           characteristic->second->m_semaphoreReadCharEvt.take();
           characteristic->second->m_value = String((char *)event->notify_rx.om->om_data, event->notify_rx.om->om_len);

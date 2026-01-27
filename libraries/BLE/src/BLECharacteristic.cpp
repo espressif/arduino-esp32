@@ -513,13 +513,13 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
         m_writeEvt = false;
         if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
           m_value.commit();
-          // Invoke the onWrite callback handler.
+          // Invoke the onWrite callback handler before sending the response.
+          // This ensures that when the client receives the acknowledgment, the write has been processed.
           m_pCallbacks->onWrite(this, param);
         } else {
           m_value.cancel();
         }
-        // ???
-        esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, nullptr);
+        esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->exec_write.conn_id, param->exec_write.trans_id, ESP_GATT_OK, nullptr);
         if (errRc != ESP_OK) {
           log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
         }
@@ -609,6 +609,12 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
         free(pHexData);
 #endif
 
+        // Invoke the onWrite callback handler before sending the response.
+        // This ensures that when the client receives the acknowledgment, the write has been processed.
+        if (param->write.is_prep != true) {
+          m_pCallbacks->onWrite(this, param);
+        }
+
         if (param->write.need_rsp) {
           esp_gatt_rsp_t rsp;
 
@@ -623,11 +629,6 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
             log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
           }
         }  // Response needed
-
-        if (param->write.is_prep != true) {
-          // Invoke the onWrite callback handler.
-          m_pCallbacks->onWrite(this, param);
-        }
       }  // Match on handles.
       break;
     }  // ESP_GATTS_WRITE_EVT
@@ -904,52 +905,6 @@ void BLECharacteristicCallbacks::onWrite(BLECharacteristic *pCharacteristic, esp
 
 #if defined(CONFIG_NIMBLE_ENABLED)
 
-/**
- * @brief Process a deferred write callback.
- *
- * This function is called as a FreeRTOS task to execute the onWrite callback
- * after the write response has been sent to the client. This maintains backwards
- * compatibility with Bluedroid, where the write response is sent before the
- * onWrite callback is invoked.
- *
- * The delay is based on the connection interval to ensure the write response
- * packet has been transmitted over the air before the callback executes.
- *
- * See: https://github.com/espressif/arduino-esp32/issues/11938
- */
-void BLECharacteristic::processDeferredWriteCallback(void *pvParameters) {
-  DeferredWriteCallback *pCallback = (DeferredWriteCallback *)pvParameters;
-
-  // Get connection parameters to calculate appropriate delay
-  ble_gap_conn_desc desc;
-  int rc = ble_gap_conn_find(pCallback->conn_handle, &desc);
-
-  if (rc == 0) {
-    // Connection interval is in units of 1.25ms
-    // Wait for at least one connection interval to ensure the write response
-    // has been transmitted. Add a small buffer for processing.
-    uint16_t intervalMs = (desc.conn_itvl * 125) / 100;  // Convert to milliseconds
-    uint16_t delayMs = intervalMs + 5;                   // Add 5ms buffer
-
-    log_v("Deferring write callback by %dms (conn_interval=%d units, %dms)", delayMs, desc.conn_itvl, intervalMs);
-    vTaskDelay(pdMS_TO_TICKS(delayMs));
-  } else {
-    // If we can't get connection parameters, use a conservative default
-    // Most connections use 7.5-30ms intervals, so 50ms should be safe
-    log_w("Could not get connection parameters, using default 50ms delay");
-    vTaskDelay(pdMS_TO_TICKS(50));
-  }
-
-  // Call the onWrite callback now that the response has been transmitted
-  pCallback->pCharacteristic->m_pCallbacks->onWrite(pCallback->pCharacteristic, &pCallback->desc);
-
-  // Free the allocated memory
-  delete pCallback;
-
-  // Delete this one-shot task
-  vTaskDelete(NULL);
-}
-
 int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
   const ble_uuid_t *uuid;
   int rc;
@@ -1002,27 +957,24 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         assert(rc == 0);
         pCharacteristic->setValue(buf, len);
 
-        // Defer the onWrite callback to maintain backwards compatibility with Bluedroid.
-        // In Bluedroid, the write response is sent BEFORE the onWrite callback is invoked.
-        // In NimBLE, the response is sent implicitly when this function returns.
-        // By deferring the callback to a separate task with a delay based on the connection
-        // interval, we ensure the response packet is transmitted before the callback executes.
-        // See: https://github.com/espressif/arduino-esp32/issues/11938
-        DeferredWriteCallback *pCallback = new DeferredWriteCallback();
-        pCallback->pCharacteristic = pCharacteristic;
-        pCallback->desc = desc;
-        pCallback->conn_handle = conn_handle;
-
-        // Create a one-shot task to execute the callback after the response is transmitted
-        // Using priority 1 (low priority) and sufficient stack for callback operations
-        // Note: Stack must be large enough to handle notify() calls from within onWrite()
-        xTaskCreate(
-          processDeferredWriteCallback, "BLEWriteCB",
-          4096,  // Stack size - increased to handle notify() operations
-          pCallback,
-          1,    // Priority (low)
-          NULL  // Task handle (not needed for one-shot task)
-        );
+        // Call the onWrite callback before returning.
+        // NOTE: This callback is executed synchronously in the NimBLE GATT access context.
+        //       NimBLE sends the write response automatically after this function returns,
+        //       based on its return code. As a result, any work performed in onWrite()
+        //       directly impacts when the client receives the ATT write acknowledgment.
+        //
+        // Behavioral change:
+        //   In earlier implementations that used a deferred callback mechanism, the write
+        //   response was sent before the onWrite() callback executed. Applications that
+        //   relied on that behavior (e.g., long-running or blocking onWrite() handlers,
+        //   or handlers that perform notify/indicate operations) may now experience
+        //   delayed write acknowledgments if onWrite() takes significant time to complete.
+        //
+        // Recommendation:
+        //   Implement onWrite() as a fast, non-blocking callback. Offload long-running
+        //   processing to another task or queue to avoid increasing write latency or
+        //   causing client timeouts.
+        pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
 
         return 0;
       }

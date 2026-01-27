@@ -18,7 +18,8 @@ generate-hw-tests:
     GIT_STRATEGY: none
   before_script:
     - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
-    - git clone --branch $GITHUB_REF --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
     - bash .gitlab/scripts/install_dependencies.sh
   script:
     - mkdir -p ~/.arduino/tests
@@ -71,7 +72,8 @@ collect-hw-results:
   before_script:
     - apt-get update && apt-get install -y jq curl unzip
     - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
-    - git clone --branch $GITHUB_REF --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
   script:
     - bash .gitlab/scripts/get_results.sh
   artifacts:
