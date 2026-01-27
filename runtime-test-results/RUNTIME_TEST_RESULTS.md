@@ -36,8 +36,8 @@ unity|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fire:|Error :fi
 wifi|Error :fire:|Error :fire:|Error :fire:|-|-|Error :fire:|Error :fire:
 
 
-Generated on: 2026/01/26 01:09:27
+Generated on: 2026/01/27 01:18:59
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/0ed36b09f4ed307b0f0850e38aa2f6f4104a39f6) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21342051110) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21342180705) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21342950385)
+[Commit](https://github.com/espressif/arduino-esp32/commit/0ed36b09f4ed307b0f0850e38aa2f6f4104a39f6) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21379143400) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21379344191) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21380686337)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/61425347159)
+[Test results](https://github.com/espressif/arduino-esp32/runs/61546810105)
