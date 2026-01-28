@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,35 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _ESP32_ESP32_HAL_BT_H_
-#define _ESP32_ESP32_HAL_BT_H_
+#ifndef ESP32_HAL_BT_MEM_H
+#define ESP32_HAL_BT_MEM_H
 
 #include "soc/soc_caps.h"
-#if SOC_BT_SUPPORTED
+#include "sdkconfig.h"
 
-#include "esp32-hal.h"
+#if defined(SOC_BT_CLASSIC_SUPPORTED) || defined(SOC_BLE_SUPPORTED)
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef enum {
-  BT_MODE_DEFAULT,
-  BT_MODE_BLE,
-  BT_MODE_CLASSIC_BT,
-  BT_MODE_BTDM
-} bt_mode;
+// Flag defined in esp32-hal-bt.c, set by constructors when BT libraries are linked
+extern bool _btLibraryInUse;
 
-// Returns true if BT memory should be kept, false to release it (~36KB).
-// Default (weak): returns false unless a BT library is linked.
-// BT libraries include esp32-hal-bt-mem.h which automatically sets a flag.
-// Users may also provide their own strong btInUse() to override.
-bool btInUse(void);
-
-bool btStarted();
-bool btStart();
-bool btStartMode(bt_mode mode);
-bool btStop();
+// Constructor runs before app_main(), setting the flag if any BT library is used.
+// Multiple libraries including this header just set the same flag to true.
+__attribute__((constructor)) static void _setBtLibraryInUse(void) {
+  _btLibraryInUse = true;
+}
 
 #ifdef __cplusplus
 }
@@ -48,4 +41,4 @@ bool btStop();
 
 #endif /* SOC_BT_SUPPORTED */
 
-#endif /* _ESP32_ESP32_HAL_BT_H_ */
+#endif /* ESP32_HAL_BT_MEM_H */

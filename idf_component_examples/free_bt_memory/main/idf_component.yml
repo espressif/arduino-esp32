@@ -1,6 +1,0 @@
-## IDF Component Manager Manifest File
-dependencies:
-  espressif/arduino-esp32:
-    version: "*"
-    override_path: "../../../"
-    pre_release: true

@@ -25,6 +25,7 @@
 
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
+#include "esp32-hal-bt-mem.h"
 #endif
 
 #include "BluetoothSerial.h"
