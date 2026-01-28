@@ -58,6 +58,7 @@ static const uint8_t T9 = 9;
 static const uint8_t T10 = 10;
 
 static const uint8_t VBAT_VOLTAGE = 1;
+#define BAT_VOLT_PIN VBAT_VOLTAGE
 
 static const uint8_t RGB_DATA = 48;
 static const uint8_t RGB_PWR = 34;

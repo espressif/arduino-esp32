@@ -74,6 +74,9 @@ public:
    ***************************************************************************/
 
   BLEAdvertisedDevice();
+  ~BLEAdvertisedDevice();
+  BLEAdvertisedDevice(const BLEAdvertisedDevice &other);
+  BLEAdvertisedDevice &operator=(const BLEAdvertisedDevice &other);
   BLEAddress getAddress();
   uint16_t getAppearance();
   String getManufacturerData();

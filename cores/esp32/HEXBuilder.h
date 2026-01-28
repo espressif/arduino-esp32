@@ -32,5 +32,8 @@ public:
 
   static String bytes2hex(const unsigned char *in, size_t len);
   static size_t bytes2hex(char *out, size_t maxlen, const unsigned char *in, size_t len);
+
+  static bool isHexString(const char *str, size_t len);
+  static bool isHexString(String str);
 };
 #endif

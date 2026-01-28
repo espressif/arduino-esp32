@@ -276,6 +276,10 @@ void enabled_uart_calls_test(void) {
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
 
+  log_d("Checking if Serial 1 TX can be inverted while running");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
+
   Serial.println("Enabled UART calls test successful");
 }
 
@@ -351,6 +355,10 @@ void disabled_uart_calls_test(void) {
   Serial1.setRxInvert(true);
   Serial1.setRxInvert(false);
 
+  log_d("Checking if Serial 1 TX can be inverted when stopped");
+  Serial1.setTxInvert(true);
+  Serial1.setTxInvert(false);
+
   Serial.println("Disabled UART calls test successful");
 }
 
@@ -369,9 +377,11 @@ void change_pins_test(void) {
     UARTTestConfig &config = *uart_test_configs[0];
     // pinMode will force enabling the internal pullup resistor (IDF 5.3.2 Change)
     pinMode(NEW_RX1, INPUT_PULLUP);
-    config.serial.setPins(NEW_RX1, NEW_TX1);
+    // Detaching both pins will result in stopping the UART driver
+    // Only detach one of the pins
+    config.serial.setPins(NEW_RX1, /*NEW_TX1*/ -1);
     TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(config.uart_num));
-    TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
+    //TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(config.uart_num));
 
     uart_internal_loopback(config.uart_num, NEW_RX1);
     config.transmit_and_check_msg("using new pins");
@@ -379,9 +389,11 @@ void change_pins_test(void) {
     for (int i = 0; i < TEST_UART_NUM; i++) {
       UARTTestConfig &config = *uart_test_configs[i];
       UARTTestConfig &next_uart = *uart_test_configs[(i + 1) % TEST_UART_NUM];
-      config.serial.setPins(next_uart.default_rx_pin, next_uart.default_tx_pin);
+      // Detaching both pins will result in stopping the UART driver
+      // Only detach one of the pins
+      config.serial.setPins(next_uart.default_rx_pin, /*next_uart.default_tx_pin*/ -1);
       TEST_ASSERT_EQUAL(uart_get_RxPin(config.uart_num), next_uart.default_rx_pin);
-      TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
+      //TEST_ASSERT_EQUAL(uart_get_TxPin(config.uart_num), next_uart.default_tx_pin);
 
       uart_internal_loopback(config.uart_num, next_uart.default_rx_pin);
       config.transmit_and_check_msg("using new pins");
@@ -442,7 +454,9 @@ void periman_test(void) {
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    Wire.begin(config.default_rx_pin, config.default_tx_pin);
+    // Detaching both pins will result in stopping the UART driver
+    // Only detach one of the pins
+    Wire.begin(config.default_rx_pin, /*config.default_tx_pin*/ -1);
     config.recv_msg = "";
 
     log_d("Trying to send message using UART%d with I2C enabled", config.uart_num);
@@ -491,6 +505,49 @@ void change_cpu_frequency_test(void) {
   }
 
   Serial.println("Change CPU frequency test successful");
+}
+
+// This test checks if hardware flow control (RTS/CTS) works correctly with internal loopback
+void hardware_flow_control_test(void) {
+  log_d("Starting hardware flow control test");
+
+  // Define CTS and RTS pins for testing
+  // I2C are always valid pins
+  const int8_t TEST_RTS_PIN = SDA;
+  const int8_t TEST_CTS_PIN = SCL;
+
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
+
+    // Configure pins with CTS and RTS (can be called after begin())
+    log_d("Setting UART%d pins: RX=%d, TX=%d, CTS=%d, RTS=%d", config.uart_num, config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    bool pins_set = config.serial.setPins(config.default_rx_pin, config.default_tx_pin, TEST_CTS_PIN, TEST_RTS_PIN);
+    TEST_ASSERT_TRUE(pins_set);
+
+    // Enable hardware flow control
+    log_d("Enabling hardware flow control (RTS + CTS)");
+    bool flow_ctrl_set = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_CTS_RTS, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_set);
+
+    // Set up internal loopbacks: TX->RX and RTS->CTS
+    log_d("Setting up internal loopbacks: TX->RX and RTS->CTS");
+    uart_internal_loopback(config.uart_num, config.default_rx_pin);
+    uart_internal_hw_flow_ctrl_loopback(config.uart_num, TEST_CTS_PIN);
+
+    delay(100);
+    config.transmit_and_check_msg("Hardware Flow Control ON");
+
+    // Test that flow control can be disabled
+    log_d("Testing disabling hardware flow control");
+    bool flow_ctrl_disabled = config.serial.setHwFlowCtrlMode(UART_HW_FLOWCTRL_DISABLE, 64);
+    TEST_ASSERT_TRUE(flow_ctrl_disabled);
+
+    // Test transmission still works after disabling flow control
+    delay(100);
+    config.transmit_and_check_msg("Hardware Flow Control OFF");
+  }
+
+  Serial.println("Hardware flow control test successful");
 }
 
 /* Main functions */
@@ -549,6 +606,7 @@ void setup() {
 #endif
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
+  RUN_TEST(hardware_flow_control_test);
   RUN_TEST(end_when_stopped_test);
   UNITY_END();
 }

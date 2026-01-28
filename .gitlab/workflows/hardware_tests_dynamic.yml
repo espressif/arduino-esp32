@@ -1,0 +1,87 @@
+###############################
+# Dynamic Hardware Tests Parent
+###############################
+
+# This parent workflow generates a dynamic child pipeline with jobs grouped
+# by SOC + runner tags derived from tests' ci.yml, then triggers it and waits.
+
+generate-hw-tests:
+  stage: generate
+  image: python:3.12-bookworm
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
+      when: on_success
+  variables:
+    DEBIAN_FRONTEND: "noninteractive"
+    TEST_TYPES: $TEST_TYPES
+    TEST_CHIPS: $TEST_CHIPS
+    GIT_STRATEGY: none
+  before_script:
+    - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
+    - bash .gitlab/scripts/install_dependencies.sh
+  script:
+    - mkdir -p ~/.arduino/tests
+    - |
+      # Download artifacts for all requested chips/types so sdkconfig exists for grouping
+      CHIPS=$(echo "$TEST_CHIPS" | tr -d "[]' " | tr ',' ' ')
+      TYPES=$(echo "$TEST_TYPES" | tr -d "[]' " | tr ',' ' ')
+      for chip in $CHIPS; do
+        for t in $TYPES; do
+          export TEST_CHIP="$chip"
+          export TEST_TYPE="$t"
+          echo "Fetching artifacts for chip=$chip type=$t"
+          bash .gitlab/scripts/get_artifacts.sh
+        done
+      done
+    - python3 .gitlab/scripts/gen_hw_jobs.py --chips "$TEST_CHIPS" --types "$TEST_TYPES" --out child-hw-jobs.yml
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - child-hw-jobs.yml
+
+trigger-hw-tests:
+  stage: trigger
+  needs: ["generate-hw-tests"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
+      when: on_success
+  variables:
+    # Forward common context to children
+    BINARIES_RUN_ID: $BINARIES_RUN_ID
+    GITHUB_REPOSITORY: $GITHUB_REPOSITORY
+    GITHUB_REF: $GITHUB_REF
+    PIPELINE_ID: $PIPELINE_ID
+  trigger:
+    include:
+      - artifact: child-hw-jobs.yml
+        job: generate-hw-tests
+    strategy: depend
+
+collect-hw-results:
+  stage: result
+  image: python:3.12-bookworm
+  needs: ["trigger-hw-tests"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger" || $CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"
+      when: always
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - apt-get update && apt-get install -y jq curl unzip
+    - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
+    - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
+    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
+  script:
+    - bash .gitlab/scripts/get_results.sh
+  artifacts:
+    name: "hw-test-results-aggregated"
+    expire_in: 7 days
+    when: always
+    paths:
+      - "tests/**/*.xml"
+      - "tests/**/result_*.json"
+    reports:
+      junit: "tests/**/*.xml"

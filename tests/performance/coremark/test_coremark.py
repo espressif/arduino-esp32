@@ -45,13 +45,14 @@ def test_coremark(dut, request):
     results = {"coremark": {"runs": runs, "cores": cores, "avg_score": avg_score}}
 
     current_folder = os.path.dirname(request.path)
+    os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)
     file_index = 0
-    report_file = os.path.join(current_folder, "result_coremark" + str(file_index) + ".json")
+    report_file = os.path.join(current_folder, dut.app.target, "result_coremark" + str(file_index) + ".json")
     while os.path.exists(report_file):
         report_file = report_file.replace(str(file_index) + ".json", str(file_index + 1) + ".json")
         file_index += 1
 
-    with open(report_file, "w") as f:
+    with open(report_file, "w+") as f:
         try:
             f.write(json.dumps(results))
         except Exception as e:

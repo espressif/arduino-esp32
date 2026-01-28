@@ -2,7 +2,7 @@ name: Publish and clean test results
 
 on:
   workflow_run:
-    workflows: ["Wokwi tests"]
+    workflows: ["Hardware and Wokwi tests"]
     types:
       - completed
 
@@ -11,8 +11,96 @@ permissions:
   contents: read
 
 jobs:
+  get-artifacts:
+    name: Get artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      original_event: ${{ steps.get-info.outputs.original_event }}
+      original_action: ${{ steps.get-info.outputs.original_action }}
+      original_sha: ${{ steps.get-info.outputs.original_sha }}
+      original_ref: ${{ steps.get-info.outputs.original_ref }}
+      original_conclusion: ${{ steps.get-info.outputs.original_conclusion }}
+      original_run_id: ${{ steps.get-info.outputs.original_run_id }}
+      hw_tests_enabled: ${{ steps.get-info.outputs.hw_tests_enabled }}
+      hw_targets: ${{ steps.get-info.outputs.hw_targets }}
+      hw_types: ${{ steps.get-info.outputs.hw_types }}
+      wokwi_tests_enabled: ${{ steps.get-info.outputs.wokwi_tests_enabled }}
+      wokwi_targets: ${{ steps.get-info.outputs.wokwi_targets }}
+      wokwi_types: ${{ steps.get-info.outputs.wokwi_types }}
+      qemu_tests_enabled: ${{ steps.get-info.outputs.qemu_tests_enabled }}
+      qemu_targets: ${{ steps.get-info.outputs.qemu_targets }}
+      qemu_types: ${{ steps.get-info.outputs.qemu_types }}
+    steps:
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          path: ./artifacts
+
+      - name: Get original info
+        id: get-info
+        run: |
+          # Inputs in workflow_info.json are already sanitized and safe to use
+
+          original_event=$(jq -r '.event' ./artifacts/parent-artifacts/workflow_info.json)
+          original_action=$(jq -r '.action' ./artifacts/parent-artifacts/workflow_info.json)
+          original_sha=$(jq -r '.sha' ./artifacts/parent-artifacts/workflow_info.json)
+          original_ref=$(jq -r '.ref' ./artifacts/parent-artifacts/workflow_info.json)
+          original_conclusion=$(jq -r '.conclusion' ./artifacts/parent-artifacts/workflow_info.json)
+          original_run_id=$(jq -r '.run_id' ./artifacts/parent-artifacts/workflow_info.json)
+
+          hw_tests_enabled=$(jq -r '.hw_tests_enabled' ./artifacts/parent-artifacts/workflow_info.json)
+          hw_targets=$(jq -c '.hw_targets' ./artifacts/parent-artifacts/workflow_info.json)
+          hw_types=$(jq -c '.hw_types' ./artifacts/parent-artifacts/workflow_info.json)
+          wokwi_tests_enabled=$(jq -r '.wokwi_tests_enabled' ./artifacts/parent-artifacts/workflow_info.json)
+          wokwi_targets=$(jq -c '.wokwi_targets' ./artifacts/parent-artifacts/workflow_info.json)
+          wokwi_types=$(jq -c '.wokwi_types' ./artifacts/parent-artifacts/workflow_info.json)
+          qemu_tests_enabled=$(jq -r '.qemu_tests_enabled' ./artifacts/parent-artifacts/workflow_info.json)
+          qemu_targets=$(jq -c '.qemu_targets' ./artifacts/parent-artifacts/workflow_info.json)
+          qemu_types=$(jq -c '.qemu_types' ./artifacts/parent-artifacts/workflow_info.json)
+
+          echo "hw_tests_enabled=$hw_tests_enabled" >> $GITHUB_OUTPUT
+          echo "hw_targets=$hw_targets" >> $GITHUB_OUTPUT
+          echo "hw_types=$hw_types" >> $GITHUB_OUTPUT
+          echo "wokwi_tests_enabled=$wokwi_tests_enabled" >> $GITHUB_OUTPUT
+          echo "wokwi_targets=$wokwi_targets" >> $GITHUB_OUTPUT
+          echo "wokwi_types=$wokwi_types" >> $GITHUB_OUTPUT
+          echo "qemu_tests_enabled=$qemu_tests_enabled" >> $GITHUB_OUTPUT
+          echo "qemu_targets=$qemu_targets" >> $GITHUB_OUTPUT
+          echo "qemu_types=$qemu_types" >> $GITHUB_OUTPUT
+          echo "original_event=$original_event" >> $GITHUB_OUTPUT
+          echo "original_action=$original_action" >> $GITHUB_OUTPUT
+          echo "original_sha=$original_sha" >> $GITHUB_OUTPUT
+          echo "original_ref=$original_ref" >> $GITHUB_OUTPUT
+          echo "original_conclusion=$original_conclusion" >> $GITHUB_OUTPUT
+          echo "original_run_id=$original_run_id" >> $GITHUB_OUTPUT
+
+          echo "hw_tests_enabled = $hw_tests_enabled"
+          echo "hw_targets = $hw_targets"
+          echo "hw_types = $hw_types"
+          echo "wokwi_tests_enabled = $wokwi_tests_enabled"
+          echo "wokwi_targets = $wokwi_targets"
+          echo "wokwi_types = $wokwi_types"
+          echo "qemu_tests_enabled = $qemu_tests_enabled"
+          echo "qemu_targets = $qemu_targets"
+          echo "qemu_types = $qemu_types"
+          echo "original_event = $original_event"
+          echo "original_action = $original_action"
+          echo "original_sha = $original_sha"
+          echo "original_ref = $original_ref"
+          echo "original_conclusion = $original_conclusion"
+          echo "original_run_id = $original_run_id"
+
+      - name: Print links to other runs
+        env:
+          ORIGINAL_RUN_ID: ${{ steps.get-info.outputs.original_run_id }}
+        run: |
+          echo "Build and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/$ORIGINAL_RUN_ID"
+          echo "Hardware and Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+
   unit-test-results:
     name: Unit Test Results
+    needs: get-artifacts
     if: |
       github.event.workflow_run.conclusion == 'success' ||
       github.event.workflow_run.conclusion == 'failure' ||
@@ -35,88 +123,68 @@ jobs:
           run_id: ${{ github.event.workflow_run.id }}
           path: ./artifacts
 
-      - name: Get original info
+      - name: Download and Extract Artifacts
+        uses: dawidd6/action-download-artifact@07ab29fd4a977ae4d2b275087cf67563dfdf0295 # v9
+        with:
+          run_id: ${{ needs.get-artifacts.outputs.original_run_id }}
+          path: ./build_artifacts
+
+      - name: Generate JUnit files for missing runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HW_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.hw_tests_enabled }}
+          HW_TARGETS: ${{ needs.get-artifacts.outputs.hw_targets }}
+          HW_TYPES: ${{ needs.get-artifacts.outputs.hw_types }}
+          WOKWI_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.wokwi_tests_enabled }}
+          WOKWI_TARGETS: ${{ needs.get-artifacts.outputs.wokwi_targets }}
+          WOKWI_TYPES: ${{ needs.get-artifacts.outputs.wokwi_types }}
+          QEMU_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.qemu_tests_enabled }}
+          QEMU_TARGETS: ${{ needs.get-artifacts.outputs.qemu_targets }}
+          QEMU_TYPES: ${{ needs.get-artifacts.outputs.qemu_types }}
         run: |
-          original_event=$(cat ./artifacts/parent-artifacts/event.txt)
-          original_action=$(cat ./artifacts/parent-artifacts/action.txt)
-          original_sha=$(cat ./artifacts/parent-artifacts/sha.txt)
-          original_ref=$(cat ./artifacts/parent-artifacts/ref.txt)
-          original_conclusion=$(cat ./artifacts/parent-artifacts/conclusion.txt)
-          original_run_id=$(cat ./artifacts/parent-artifacts/run_id.txt)
-
-          # Sanitize the values to avoid security issues
-
-          # Event: Allow alphabetical characters and underscores
-          original_event=$(echo "$original_event" | tr -cd '[:alpha:]_')
-
-          # Action: Allow alphabetical characters and underscores
-          original_action=$(echo "$original_action" | tr -cd '[:alpha:]_')
-
-          # SHA: Allow alphanumeric characters
-          original_sha=$(echo "$original_sha" | tr -cd '[:alnum:]')
-
-          # Ref: Allow alphanumeric characters, slashes, underscores, dots, and dashes
-          original_ref=$(echo "$original_ref" | tr -cd '[:alnum:]/_.-')
-
-          # Conclusion: Allow alphabetical characters and underscores
-          original_conclusion=$(echo "$original_conclusion" | tr -cd '[:alpha:]_')
-
-          # Run ID: Allow numeric characters
-          original_run_id=$(echo "$original_run_id" | tr -cd '[:digit:]')
-
-          echo "original_event=$original_event" >> $GITHUB_ENV
-          echo "original_action=$original_action" >> $GITHUB_ENV
-          echo "original_sha=$original_sha" >> $GITHUB_ENV
-          echo "original_ref=$original_ref" >> $GITHUB_ENV
-          echo "original_conclusion=$original_conclusion" >> $GITHUB_ENV
-          echo "original_run_id=$original_run_id" >> $GITHUB_ENV
-
-          echo "original_event = $original_event"
-          echo "original_action = $original_action"
-          echo "original_sha = $original_sha"
-          echo "original_ref = $original_ref"
-          echo "original_conclusion = $original_conclusion"
-          echo "original_run_id = $original_run_id"
-
-      - name: Print links to other runs
-        run: |
-          echo "Build, Hardware and QEMU tests: https://github.com/${{ github.repository }}/actions/runs/${{ env.original_run_id }}"
-          echo "Wokwi tests: https://github.com/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}"
+          ls -la ./artifacts
+          ls -la ./build_artifacts
+          pip3 install pyyaml
+          wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/generate_missing_junits.py -O ./generate_missing_junits.py
+          python3 ./generate_missing_junits.py ./build_artifacts ./artifacts ./test_errors
 
       - name: Publish Unit Test Results
+        id: publish-test-results
         uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b # v2.18.0
         with:
-          commit: ${{ env.original_sha }}
+          commit: ${{ needs.get-artifacts.outputs.original_sha }}
           event_file: ./artifacts/parent-artifacts/event_file/event.json
-          event_name: ${{ env.original_event }}
-          files: ./artifacts/**/*.xml
+          event_name: ${{ needs.get-artifacts.outputs.original_event }}
+          files: |
+            ./artifacts/**/*.xml
+            ./test_errors/**/*.xml
           action_fail: true
+          action_fail_on_inconclusive: true
           compare_to_earlier_commit: false
           json_file: ./unity_results.json
           json_suite_details: true
 
       - name: Upload JSON
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        if: ${{ always() }}
+        if: always()
         with:
           name: unity_results
           overwrite: true
-          path: |
-            ./unity_results.json
-
-      - name: Fail if tests failed
-        if: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' }}
-        run: exit 1
+          path: ./unity_results.json
 
       - name: Clean up caches
         if: always()
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          ORIGINAL_REF: ${{ needs.get-artifacts.outputs.original_ref }}
+          ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
+          ORIGINAL_ACTION: ${{ needs.get-artifacts.outputs.original_action }}
         with:
           script: |
-            const ref = process.env.original_ref;
+            const ref = process.env.ORIGINAL_REF;
             const key_prefix = 'test-' + ref + '-';
 
-            if (process.env.original_event == 'pull_request' && process.env.original_action != 'closed') {
+            if (process.env.ORIGINAL_EVENT == 'pull_request' && process.env.ORIGINAL_ACTION != 'closed') {
               console.log('Skipping cache cleanup for open PR');
               return;
             }
@@ -142,16 +210,19 @@ jobs:
       - name: Report conclusion
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         if: always()
+        env:
+          ORIGINAL_EVENT: ${{ needs.get-artifacts.outputs.original_event }}
+          ORIGINAL_SHA: ${{ needs.get-artifacts.outputs.original_sha }}
         with:
           script: |
             const owner = '${{ github.repository_owner }}';
             const repo = '${{ github.repository }}'.split('/')[1];
-            const sha = process.env.original_sha;
+            const sha = process.env.ORIGINAL_SHA;
             core.debug(`owner: ${owner}`);
             core.debug(`repo: ${repo}`);
             core.debug(`sha: ${sha}`);
             const { context: name, state } = (await github.rest.repos.createCommitStatus({
-              context: `Runtime Tests / Report results (${process.env.original_event} -> workflow_run -> workflow_run)`,
+              context: `Runtime Tests / Report results (${process.env.ORIGINAL_EVENT} -> workflow_run -> workflow_run)`,
               owner: owner,
               repo: repo,
               sha: sha,
@@ -162,21 +233,52 @@ jobs:
             core.info(`${name} is ${state}`);
 
       - name: Generate report
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         env:
-          REPORT_FILE: ./runtime-test-results/RUNTIME_TEST_RESULTS.md
+          HW_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.hw_tests_enabled }}
+          HW_TARGETS: ${{ needs.get-artifacts.outputs.hw_targets }}
+          HW_TYPES: ${{ needs.get-artifacts.outputs.hw_types }}
+          WOKWI_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.wokwi_tests_enabled }}
+          WOKWI_TARGETS: ${{ needs.get-artifacts.outputs.wokwi_targets }}
+          WOKWI_TYPES: ${{ needs.get-artifacts.outputs.wokwi_types }}
+          QEMU_TESTS_ENABLED: ${{ needs.get-artifacts.outputs.qemu_tests_enabled }}
+          QEMU_TARGETS: ${{ needs.get-artifacts.outputs.qemu_targets }}
+          QEMU_TYPES: ${{ needs.get-artifacts.outputs.qemu_types }}
           WOKWI_RUN_ID: ${{ github.event.workflow_run.id }}
-          BUILD_RUN_ID: ${{ env.original_run_id }}
-          IS_FAILING: ${{ env.original_conclusion == 'failure' || env.original_conclusion == 'timed_out' || github.event.workflow_run.conclusion == 'failure' || github.event.workflow_run.conclusion == 'timed_out' || job.status == 'failure' }}
+          BUILD_RUN_ID: ${{ needs.get-artifacts.outputs.original_run_id }}
+          RESULTS_URL: ${{ fromJSON( steps.publish-test-results.outputs.json ).check_url }}
+          RESULTS_RUN_ID: ${{ github.run_id }}
+          REPORT_FILE: ./runtime-test-results/RUNTIME_TEST_RESULTS.md
+          IS_FAILING: >-
+            ${{
+              needs.get-artifacts.outputs.original_conclusion == 'failure' ||
+              needs.get-artifacts.outputs.original_conclusion == 'cancelled' ||
+              needs.get-artifacts.outputs.original_conclusion == 'timed_out' ||
+              github.event.workflow_run.conclusion == 'failure' ||
+              github.event.workflow_run.conclusion == 'cancelled' ||
+              github.event.workflow_run.conclusion == 'timed_out' ||
+              job.status == 'failure'
+            }}
         run: |
           rm -rf artifacts $REPORT_FILE
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
           touch $REPORT_FILE
-          python3 ./runtime-test-results/table_generator.py ./runtime-test-results/unity_results.json >> $REPORT_FILE
+          wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/runtime_table_generator.py -O ./runtime-test-results/runtime_table_generator.py
+          python3 ./runtime-test-results/runtime_table_generator.py ./runtime-test-results/unity_results.json ${{ needs.get-artifacts.outputs.original_sha }} >> $REPORT_FILE
           mv -f ./test_results.json ./runtime-test-results/test_results.json
 
       - name: Generate badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         uses: jaywcjlove/generated-badges@0e078ae4d4bab3777ea4f137de496ab44688f5ad # v1.0.13
         with:
           label: Runtime Tests
@@ -186,12 +288,17 @@ jobs:
           style: flat
 
       - name: Push badge
-        if: ${{ !cancelled() && (env.original_event == 'schedule' || env.original_event == 'workflow_dispatch') }} # codespell:ignore cancelled
+        if: |
+          (!cancelled() &&
+           needs.get-artifacts.outputs.original_conclusion != 'cancelled' &&
+           github.event.workflow_run.conclusion != 'cancelled') &&
+          (needs.get-artifacts.outputs.original_event == 'schedule' ||
+           needs.get-artifacts.outputs.original_event == 'workflow_dispatch')
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [[ `git status --porcelain` ]]; then
-            git add --all
+            git add runtime-test-results/RUNTIME_TEST_RESULTS.md runtime-test-results/badge.svg runtime-test-results/test_results.json runtime-test-results/unity_results.json
             git commit -m "Updated runtime test results"
             git push origin HEAD:gh-pages
           fi

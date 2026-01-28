@@ -17,10 +17,13 @@
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
+#include "esp32-hal.h"
+#include "pins_arduino.h"
 
+#include "esp_hosted.h"
 #include "esp_hosted_transport_config.h"
-extern esp_err_t esp_hosted_init();
-extern esp_err_t esp_hosted_deinit();
+// extern esp_err_t esp_hosted_init();
+// extern esp_err_t esp_hosted_deinit();
 
 static bool hosted_initialized = false;
 static bool hosted_ble_active = false;
@@ -46,6 +49,138 @@ static sdio_pin_config_t sdio_pin_config = {
 #endif
 };
 
+static esp_hosted_coprocessor_fwver_t slave_version_struct = {.major1 = 0, .minor1 = 0, .patch1 = 0};
+static esp_hosted_coprocessor_fwver_t host_version_struct = {
+  .major1 = ESP_HOSTED_VERSION_MAJOR_1, .minor1 = ESP_HOSTED_VERSION_MINOR_1, .patch1 = ESP_HOSTED_VERSION_PATCH_1
+};
+
+static bool hostedInit();
+static bool hostedDeinit();
+
+void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
+  *major = host_version_struct.major1;
+  *minor = host_version_struct.minor1;
+  *patch = host_version_struct.patch1;
+}
+
+void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
+  *major = slave_version_struct.major1;
+  *minor = slave_version_struct.minor1;
+  *patch = slave_version_struct.patch1;
+}
+
+bool hostedHasUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  uint32_t host_version = ESP_HOSTED_VERSION_VAL(host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
+  uint32_t slave_version = 0;
+
+  esp_err_t ret = esp_hosted_get_coprocessor_fwversion(&slave_version_struct);
+  if (ret != ESP_OK) {
+    log_e("Could not get slave firmware version: %s", esp_err_to_name(ret));
+  } else {
+    slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  }
+
+  log_i("Host firmware version: %" PRIu32 ".%" PRIu32 ".%" PRIu32, host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1);
+  log_i("Slave firmware version: %" PRIu32 ".%" PRIu32 ".%" PRIu32, slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+
+  // compare major.minor only
+  // slave_version &= 0xFFFFFF00;
+  // host_version &= 0xFFFFFF00;
+
+  if (host_version == slave_version) {
+    log_i("Versions Match!");
+  } else if (host_version > slave_version) {
+    log_w("Version on Host is NEWER than version on co-processor");
+    log_w("Update URL: %s", hostedGetUpdateURL());
+    return true;
+  } else {
+    log_w("Version on Host is OLDER than version on co-processor");
+  }
+  return false;
+}
+
+char *hostedGetUpdateURL() {
+  // https://espressif.github.io/arduino-esp32/hosted/esp32c6-v1.2.3.bin
+  static char url[92] = {0};
+  snprintf(
+    url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET,
+    host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
+  );
+  return url;
+}
+
+bool hostedBeginUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  esp_err_t err = esp_hosted_slave_ota_begin();
+  if (err != ESP_OK) {
+    log_e("Failed to begin Update: %s", esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool hostedWriteUpdate(uint8_t *buf, uint32_t len) {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  esp_err_t err = esp_hosted_slave_ota_write(buf, len);
+  if (err != ESP_OK) {
+    log_e("Failed to write Update: %s", esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool hostedEndUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  esp_err_t err = esp_hosted_slave_ota_end();
+  if (err != ESP_OK) {
+    log_e("Failed to end Update: %s", esp_err_to_name(err));
+  }
+  return err == ESP_OK;
+}
+
+bool hostedActivateUpdate() {
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return false;
+  }
+
+  // Activate can fail on older firmwares and that is not critical
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+
+  if (slave_version < min_version) {
+    // Silence messages caused by earlier versions
+    esp_log_level_set("rpc_core", ESP_LOG_NONE);
+  }
+
+  esp_err_t err = esp_hosted_slave_ota_activate();
+
+  // Any further communication will result in logged errors
+  esp_log_level_set("sdmmc_io", ESP_LOG_NONE);
+  esp_log_level_set("H_SDIO_DRV", ESP_LOG_NONE);
+
+  if (err != ESP_OK && slave_version >= min_version) {
+    log_e("Failed to activate Update: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
 static bool hostedInit() {
   if (!hosted_initialized) {
     log_i("Initializing ESP-Hosted");
@@ -62,13 +197,26 @@ static bool hostedInit() {
     conf.pin_d2.pin = sdio_pin_config.pin_d2;
     conf.pin_d3.pin = sdio_pin_config.pin_d3;
     conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    // esp_hosted_sdio_set_config() will fail on second attempt but here temporarily to not cause exception on reinit
-    if (esp_hosted_sdio_set_config(&conf) != ESP_OK || esp_hosted_init() != ESP_OK) {
-      log_e("esp_hosted_init failed!");
+    esp_err_t err = esp_hosted_sdio_set_config(&conf);
+    if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
+      log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_init();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
       hosted_initialized = false;
       return false;
     }
     log_i("ESP-Hosted initialized!");
+    err = esp_hosted_connect_to_slave();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
+      hosted_initialized = false;
+      return false;
+    }
+    hostedHasUpdate();
+    return true;
   }
 
   // Attach pins to PeriMan here
@@ -101,8 +249,26 @@ static bool hostedDeinit() {
 
 bool hostedInitBLE() {
   log_i("Initializing ESP-Hosted for BLE");
+  if (!hostedInit()) {
+    return false;
+  }
+
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_init();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_enable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
+      return false;
+    }
+  }
   hosted_ble_active = true;
-  return hostedInit();
+  return true;
 }
 
 bool hostedInitWiFi() {
@@ -113,6 +279,20 @@ bool hostedInitWiFi() {
 
 bool hostedDeinitBLE() {
   log_i("Deinitializing ESP-Hosted for BLE");
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_disable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_deinit(false);
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
+      return false;
+    }
+  }
   hosted_ble_active = false;
   if (!hosted_wifi_active) {
     return hostedDeinit();

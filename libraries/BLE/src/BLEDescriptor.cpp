@@ -343,7 +343,6 @@ void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_i
 int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
   const ble_uuid_t *uuid;
   int rc;
-  struct ble_gap_conn_desc desc;
   BLEDescriptor *pDescriptor = (BLEDescriptor *)arg;
 
   log_d("Descriptor %s %s event", pDescriptor->getUUID().toString().c_str(), ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC ? "Read" : "Write");
@@ -353,12 +352,9 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
     switch (ctxt->op) {
       case BLE_GATT_ACCESS_OP_READ_DSC:
       {
-        rc = ble_gap_conn_find(conn_handle, &desc);
-        assert(rc == 0);
-
-        // If the packet header is only 8 bytes this is a follow up of a long read
-        // so we don't want to call the onRead() callback again.
-        if (ctxt->om->om_pkthdr_len > 8 || pDescriptor->m_value.attr_len <= (ble_att_mtu(desc.conn_handle) - 3)) {
+        // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
+        // For long reads, follow-up requests will have om_len == 0
+        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE && pDescriptor->m_pCallback != nullptr) {
           pDescriptor->m_pCallback->onRead(pDescriptor);
         }
 
@@ -391,7 +387,9 @@ int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_han
         }
 
         pDescriptor->setValue(buf, len);
-        pDescriptor->m_pCallback->onWrite(pDescriptor);
+        if (pDescriptor->m_pCallback != nullptr) {
+          pDescriptor->m_pCallback->onWrite(pDescriptor);
+        }
         return 0;
       }
 

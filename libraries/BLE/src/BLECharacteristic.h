@@ -47,6 +47,8 @@
 #include <host/ble_gatt.h>
 #include <host/ble_att.h>
 #include "BLEConnInfo.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #define ESP_GATT_MAX_ATTR_LEN            BLE_ATT_ATTR_MAX_LEN
 #define ESP_GATT_CHAR_PROP_BIT_READ      BLE_GATT_CHR_PROP_READ
 #define ESP_GATT_CHAR_PROP_BIT_WRITE     BLE_GATT_CHR_PROP_WRITE

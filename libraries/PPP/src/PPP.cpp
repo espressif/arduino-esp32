@@ -23,17 +23,6 @@ typedef struct {
 } PdpContext;
 #include "esp_modem_api.h"
 
-// Because of how esp_modem functions are declared, we need to workaround some APIs that take strings as input (output works OK)
-// Following APIs work only when called through this interface
-extern "C" {
-esp_err_t _esp_modem_at(esp_modem_dce_t *dce_wrap, const char *at, char *p_out, int timeout);
-esp_err_t _esp_modem_at_raw(esp_modem_dce_t *dce_wrap, const char *cmd, char *p_out, const char *pass, const char *fail, int timeout);
-esp_err_t _esp_modem_send_sms(esp_modem_dce_t *dce_wrap, const char *number, const char *message);
-esp_err_t _esp_modem_set_pin(esp_modem_dce_t *dce_wrap, const char *pin);
-esp_err_t _esp_modem_set_operator(esp_modem_dce_t *dce_wrap, int mode, int format, const char *oper);
-esp_err_t _esp_modem_set_network_bands(esp_modem_dce_t *dce_wrap, const char *mode, const int *bands, int size);
-};
-
 static PPPClass *_esp_modem = NULL;
 static esp_event_handler_instance_t _ppp_ev_instance = NULL;
 
@@ -354,8 +343,8 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   }
 
   /* check if PIN needed */
-  if (esp_modem_read_pin(_dce, pin_ok) == ESP_OK && pin_ok == false) {
-    if (_pin == NULL || _esp_modem_set_pin(_dce, _pin) != ESP_OK) {
+  if (esp_modem_read_pin(_dce, &pin_ok) == ESP_OK && pin_ok == false) {
+    if (_pin == NULL || esp_modem_set_pin(_dce, _pin) != ESP_OK) {
       log_e("PIN verification failed!");
       goto err;
     }
@@ -394,6 +383,11 @@ void PPPClass::end(void) {
     Network.postEvent(&arduino_event);
   }
 
+  if (_dce != NULL) {
+    esp_modem_destroy(_dce);
+    _dce = NULL;
+  }
+
   destroyNetif();
 
   if (_ppp_ev_instance != NULL) {
@@ -406,10 +400,10 @@ void PPPClass::end(void) {
   Network.removeEvent(_ppp_event_handle);
   _ppp_event_handle = 0;
 
-  if (_dce != NULL) {
-    esp_modem_destroy(_dce);
-    _dce = NULL;
-  }
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_TX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RX);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_RTS);
+  perimanClearBusDeinit(ESP32_BUS_TYPE_PPP_CTS);
 
   int8_t pin = -1;
   if (_pin_tx != -1) {
@@ -438,6 +432,11 @@ void PPPClass::end(void) {
     perimanClearPinBus(pin);
   }
 
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_TX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RX, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_RTS, PPPClass::pppDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_PPP_CTS, PPPClass::pppDetachBus);
+
   _mode = ESP_MODEM_MODE_COMMAND;
 }
 
@@ -451,7 +450,7 @@ bool PPPClass::attached() const {
   PPP_CMD_MODE_CHECK(false);
 
   int m = 0;
-  esp_err_t err = esp_modem_get_network_attachment_state(_dce, m);
+  esp_err_t err = esp_modem_get_network_attachment_state(_dce, &m);
   if (err != ESP_OK) {
     // log_e("esp_modem_get_network_attachment_state failed with %d %s", err, esp_err_to_name(err));
     return false;
@@ -516,7 +515,7 @@ int PPPClass::RSSI() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int rssi, ber;
-  esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
+  esp_err_t err = esp_modem_get_signal_quality(_dce, &rssi, &ber);
   if (err != ESP_OK) {
     log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -528,7 +527,7 @@ int PPPClass::BER() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int rssi, ber;
-  esp_err_t err = esp_modem_get_signal_quality(_dce, rssi, ber);
+  esp_err_t err = esp_modem_get_signal_quality(_dce, &rssi, &ber);
   if (err != ESP_OK) {
     log_e("esp_modem_get_signal_quality failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -540,7 +539,7 @@ String PPPClass::IMSI() const {
   PPP_CMD_MODE_CHECK(String());
 
   char imsi[32];
-  esp_err_t err = esp_modem_get_imsi(_dce, (std::string &)imsi);
+  esp_err_t err = esp_modem_get_imsi(_dce, imsi);
   if (err != ESP_OK) {
     log_e("esp_modem_get_imsi failed with %d %s", err, esp_err_to_name(err));
     return String();
@@ -553,7 +552,7 @@ String PPPClass::IMEI() const {
   PPP_CMD_MODE_CHECK(String());
 
   char imei[32];
-  esp_err_t err = esp_modem_get_imei(_dce, (std::string &)imei);
+  esp_err_t err = esp_modem_get_imei(_dce, imei);
   if (err != ESP_OK) {
     log_e("esp_modem_get_imei failed with %d %s", err, esp_err_to_name(err));
     return String();
@@ -566,7 +565,7 @@ String PPPClass::moduleName() const {
   PPP_CMD_MODE_CHECK(String());
 
   char name[32];
-  esp_err_t err = esp_modem_get_module_name(_dce, (std::string &)name);
+  esp_err_t err = esp_modem_get_module_name(_dce, name);
   if (err != ESP_OK) {
     log_e("esp_modem_get_module_name failed with %d %s", err, esp_err_to_name(err));
     return String();
@@ -580,7 +579,7 @@ String PPPClass::operatorName() const {
 
   char oper[32];
   int act = 0;
-  esp_err_t err = esp_modem_get_operator_name(_dce, (std::string &)oper, act);
+  esp_err_t err = esp_modem_get_operator_name(_dce, oper, &act);
   if (err != ESP_OK) {
     log_e("esp_modem_get_operator_name failed with %d %s", err, esp_err_to_name(err));
     return String();
@@ -593,7 +592,7 @@ int PPPClass::networkMode() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int m = 0;
-  esp_err_t err = esp_modem_get_network_system_mode(_dce, m);
+  esp_err_t err = esp_modem_get_network_system_mode(_dce, &m);
   if (err != ESP_OK) {
     log_e("esp_modem_get_network_system_mode failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -605,7 +604,7 @@ int PPPClass::radioState() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int m = 0;
-  esp_err_t err = esp_modem_get_radio_state(_dce, m);
+  esp_err_t err = esp_modem_get_radio_state(_dce, &m);
   if (err != ESP_OK) {
     // log_e("esp_modem_get_radio_state failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -673,7 +672,7 @@ int PPPClass::batteryVoltage() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
-  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  esp_err_t err = esp_modem_get_battery_status(_dce, &volt, &bcs, &bcl);
   if (err != ESP_OK) {
     log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -685,7 +684,7 @@ int PPPClass::batteryLevel() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
-  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  esp_err_t err = esp_modem_get_battery_status(_dce, &volt, &bcs, &bcl);
   if (err != ESP_OK) {
     log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -697,7 +696,7 @@ int PPPClass::batteryStatus() const {
   PPP_CMD_MODE_CHECK(-1);
 
   int volt, bcs, bcl;
-  esp_err_t err = esp_modem_get_battery_status(_dce, volt, bcs, bcl);
+  esp_err_t err = esp_modem_get_battery_status(_dce, &volt, &bcs, &bcl);
   if (err != ESP_OK) {
     log_e("esp_modem_get_battery_status failed with %d %s", err, esp_err_to_name(err));
     return -1;
@@ -727,7 +726,7 @@ bool PPPClass::sms(const char *num, const char *message) {
     return false;
   }
 
-  err = _esp_modem_send_sms(_dce, num, message);
+  err = esp_modem_send_sms(_dce, num, message);
   if (err != ESP_OK) {
     log_e("esp_modem_send_sms() failed with %d %s", err, esp_err_to_name(err));
     return false;
@@ -739,12 +738,36 @@ String PPPClass::cmd(const char *at_command, int timeout) {
   PPP_CMD_MODE_CHECK(String());
 
   char out[128] = {0};
-  esp_err_t err = _esp_modem_at(_dce, at_command, out, timeout);
+  esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
     log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
     return String();
   }
   return String(out);
+}
+
+bool PPPClass::cmd(const char *at_command, String &response, int timeout) {
+  PPP_CMD_MODE_CHECK(false);
+
+  char out[128] = {0};
+  esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
+  response = String(out);
+
+  if (err != ESP_OK) {
+    log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
+
+    if (err == ESP_FAIL && response.isEmpty()) {
+      response = "ERROR";
+    }
+
+    return false;
+  }
+
+  if (response.isEmpty()) {
+    response = "OK";
+  }
+
+  return true;
 }
 
 size_t PPPClass::printDriverInfo(Print &out) const {
@@ -763,6 +786,8 @@ size_t PPPClass::printDriverInfo(Print &out) const {
   return bytes;
 }
 
+#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_PPP)
 PPPClass PPP;
+#endif
 
 #endif /* CONFIG_LWIP_PPP_SUPPORT */

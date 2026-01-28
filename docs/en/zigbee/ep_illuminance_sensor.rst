@@ -60,6 +60,21 @@ Sets the minimum and maximum measurement values.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
+setDefaultValue
+^^^^^^^^^^^^^^^
+
+Sets the default (initial) value for the illuminance sensor. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
+
+.. code-block:: arduino
+
+    bool setDefaultValue(uint16_t defaultValue);
+
+* ``defaultValue`` - Default illuminance value in lux
+
+**Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
+
+This function will return ``true`` if successful, ``false`` otherwise.
+
 setTolerance
 ^^^^^^^^^^^^
 

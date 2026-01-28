@@ -36,6 +36,18 @@ ZigbeeFlowSensor::ZigbeeFlowSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
 }
 
+bool ZigbeeFlowSensor::setDefaultValue(float defaultValue) {
+  uint16_t zb_default_value = (uint16_t)(defaultValue * 10);
+  esp_zb_attribute_list_t *flow_measure_cluster =
+    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  esp_err_t ret = esp_zb_cluster_update_attr(flow_measure_cluster, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_VALUE_ID, (void *)&zb_default_value);
+  if (ret != ESP_OK) {
+    log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
 bool ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
   uint16_t zb_min = (uint16_t)(min * 10);
   uint16_t zb_max = (uint16_t)(max * 10);

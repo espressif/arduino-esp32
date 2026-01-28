@@ -35,6 +35,7 @@ static const uint8_t D8 = 33;
 
 // vbat measure
 static const uint8_t VBAT = 35;
+#define BAT_VOLT_PIN VBAT
 
 static const uint8_t T0 = 4;
 static const uint8_t T1 = 0;

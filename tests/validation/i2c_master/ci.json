@@ -1,9 +1,0 @@
-{
-  "platforms": {
-    "hardware": false,
-    "qemu": false
-  },
-  "requires": [
-    "CONFIG_SOC_I2C_SUPPORTED=y"
-  ]
-}

@@ -19,15 +19,22 @@
 #include "ArduinoOTA.h"
 #include "NetworkClient.h"
 #include "ESPmDNS.h"
+#include "HEXBuilder.h"
 #include "SHA2Builder.h"
 #include "PBKDF2_HMACBuilder.h"
 #include "Update.h"
 
 // #define OTA_DEBUG Serial
 
-ArduinoOTAClass::ArduinoOTAClass()
-  : _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0), _ota_timeout(1000),
-    _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
+ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
+  : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0),
+    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL)
+#ifdef UPDATE_SIGN
+    ,
+    _sign(NULL)
+#endif /* UPDATE_SIGN */
+{
+}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
   end();
@@ -86,6 +93,26 @@ ArduinoOTAClass &ArduinoOTAClass::setPassword(const char *password) {
 
 ArduinoOTAClass &ArduinoOTAClass::setPasswordHash(const char *password) {
   if (_state == OTA_IDLE && password) {
+    size_t len = strlen(password);
+    bool is_hex = HEXBuilder::isHexString(password, len);
+
+    if (!is_hex) {
+      log_e("Invalid password hash. Expected hex string (0-9, a-f, A-F).");
+      return *this;
+    }
+
+    if (len == 32) {
+      // Warn if MD5 hash is detected (32 hex characters)
+      log_w("MD5 password hash detected. MD5 is deprecated and insecure.");
+      log_w("Please use setPassword() with plain text or setPasswordHash() with SHA256 hash (64 chars).");
+      log_w("To generate SHA256: echo -n 'yourpassword' | sha256sum");
+    } else if (len == 64) {
+      log_i("Using SHA256 password hash.");
+    } else {
+      log_e("Invalid password hash length. Expected 32 (deprecated MD5) or 64 (SHA256) characters.");
+      return *this;
+    }
+
     // Store the pre-hashed password directly
     _password.clear();
     _password = password;
@@ -114,6 +141,21 @@ ArduinoOTAClass &ArduinoOTAClass::setMdnsEnabled(bool enabled) {
   _mdnsEnabled = enabled;
   return *this;
 }
+
+#ifdef UPDATE_SIGN
+ArduinoOTAClass &ArduinoOTAClass::setSignature(UpdaterVerifyClass *sign) {
+  if (_state == OTA_IDLE && sign) {
+    _sign = sign;
+    int hashType = sign->getHashType();
+    [[maybe_unused]]
+    const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                           : (hashType == HASH_SHA384) ? "SHA-384"
+                                                       : "SHA-512";
+    log_i("Signature verification enabled for ArduinoOTA (hash: %s)", hashName);
+  }
+  return *this;
+}
+#endif /* UPDATE_SIGN */
 
 void ArduinoOTAClass::begin() {
   if (_initialized) {
@@ -276,10 +318,30 @@ void ArduinoOTAClass::_onRx() {
 }
 
 void ArduinoOTAClass::_runUpdate() {
-  const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
-  if (!Update.begin(_size, _cmd, -1, LOW, partition_label)) {
+  if (!_updater) {
+    log_e("UpdateClass is NULL!");
+    return;
+  }
 
-    log_e("Begin ERROR: %s", Update.errorString());
+#ifdef UPDATE_SIGN
+  // Install signature verification if enabled
+  if (_sign) {
+    if (!_updater->installSignature(_sign)) {
+      log_e("Failed to install signature verification");
+      if (_error_callback) {
+        _error_callback(OTA_BEGIN_ERROR);
+      }
+      _state = OTA_IDLE;
+      return;
+    }
+    log_i("Signature verification installed for OTA update");
+  }
+#endif /* UPDATE_SIGN */
+
+  const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
+  if (!_updater->begin(_size, _cmd, -1, LOW, partition_label)) {
+
+    log_e("Begin ERROR: %s", _updater->errorString());
 
     if (_error_callback) {
       _error_callback(OTA_BEGIN_ERROR);
@@ -288,7 +350,7 @@ void ArduinoOTAClass::_runUpdate() {
     return;
   }
 
-  Update.setMD5(_md5.c_str());  // Note: Update library still uses MD5 for firmware integrity, this is separate from authentication
+  _updater->setMD5(_md5.c_str());  // Note: Update library still uses MD5 for firmware integrity, this is separate from authentication
 
   if (_start_callback) {
     _start_callback();
@@ -307,7 +369,7 @@ void ArduinoOTAClass::_runUpdate() {
 
   uint32_t written = 0, total = 0, tried = 0;
 
-  while (!Update.isFinished() && client.connected()) {
+  while (!_updater->isFinished() && client.connected()) {
     size_t waited = _ota_timeout;
     size_t available = client.available();
     while (!available && waited) {
@@ -330,7 +392,7 @@ void ArduinoOTAClass::_runUpdate() {
         _error_callback(OTA_RECEIVE_ERROR);
       }
       _state = OTA_IDLE;
-      Update.abort();
+      _updater->abort();
       return;
     }
     if (!available) {
@@ -352,7 +414,7 @@ void ArduinoOTAClass::_runUpdate() {
       }
     }
 
-    written = Update.write(buf, r);
+    written = _updater->write(buf, r);
     if (written > 0) {
       if (written != r) {
         log_w("didn't write enough! %u != %u", written, r);
@@ -365,11 +427,11 @@ void ArduinoOTAClass::_runUpdate() {
         _progress_callback(total, _size);
       }
     } else {
-      log_e("Write ERROR: %s", Update.errorString());
+      log_e("Write ERROR: %s", _updater->errorString());
     }
   }
 
-  if (Update.end()) {
+  if (_updater->end()) {
     client.print("OK");
     client.stop();
     delay(10);
@@ -385,10 +447,10 @@ void ArduinoOTAClass::_runUpdate() {
     if (_error_callback) {
       _error_callback(OTA_END_ERROR);
     }
-    Update.printError(client);
+    _updater->printError(client);
     client.stop();
     delay(10);
-    log_e("Update ERROR: %s", Update.errorString());
+    log_e("Update ERROR: %s", _updater->errorString());
     _state = OTA_IDLE;
   }
 }
@@ -425,6 +487,11 @@ int ArduinoOTAClass::getCommand() {
 
 void ArduinoOTAClass::setTimeout(int timeoutInMillis) {
   _ota_timeout = timeoutInMillis;
+}
+
+ArduinoOTAClass &ArduinoOTAClass::setUpdaterInstance(UpdateClass *updater) {
+  _updater = updater;
+  return *this;
 }
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ARDUINOOTA)

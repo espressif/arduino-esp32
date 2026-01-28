@@ -132,7 +132,7 @@ bool DNSServer::requestIncludesOnlyOneQuestion(DNSHeader &dnsHeader) {
 String DNSServer::getDomainNameWithoutWwwPrefix(const unsigned char *start, size_t len) {
   String parsedDomainName(start, --len);  // exclude trailing null byte from labels length, String constructor will add it anyway
 
-  int pos = 0;
+  size_t pos = 0;
   while (pos < len) {
     parsedDomainName.setCharAt(pos, 0x2e);  // replace label len byte with dot char "."
     pos += *(start + pos);

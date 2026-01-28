@@ -63,7 +63,7 @@ High-level workflow
 Build file patterns
 --------------------
 - **build_files**: Core Arduino build system files (platform.txt, variants/**, etc.)
-- **sketch_build_files**: Sketch-specific files (ci.json, *.csv in example directories)
+- **sketch_build_files**: Sketch-specific files (ci.yml, *.csv in example directories)
 - **idf_build_files**: Core IDF build system files (CMakeLists.txt, idf_component.yml, etc.)
 - **idf_project_files**: Project-specific IDF files (per-example CMakeLists.txt, sdkconfig, etc.)
 
@@ -128,7 +128,7 @@ build_files = [
 # Files that are used by the sketch build system.
 # If any of these files change, the sketch should be recompiled.
 sketch_build_files = [
-    "libraries/*/examples/**/ci.json",
+    "libraries/*/examples/**/ci.yml",
     "libraries/*/examples/**/*.csv",
 ]
 
@@ -150,7 +150,7 @@ idf_build_files = [
 # If any of these files change, the example that uses them should be recompiled.
 idf_project_files = [
     "idf_component_examples/*/CMakeLists.txt",
-    "idf_component_examples/*/ci.json",
+    "idf_component_examples/*/ci.yml",
     "idf_component_examples/*/*.csv",
     "idf_component_examples/*/sdkconfig*",
     "idf_component_examples/*/main/*",
@@ -357,6 +357,59 @@ def build_qname_from_tag(tag: dict) -> str:
     qparts.append(name)
     qname = "::".join([p for p in qparts if p])
     return f"{qname}{signature}"
+
+def find_impl_files_for_qname(qname: str, defs_by_qname: dict[str, set[str]], header_path: str = None) -> set[str]:
+    """
+    Find implementation files for a qualified name, handling namespace mismatches.
+
+    Ctags may capture different namespace scopes in headers vs implementations.
+    For example:
+    - Header: fs::SDFS::begin(...)
+    - Implementation: SDFS::begin(...)
+
+    This happens when implementations use "using namespace" directives.
+
+    Strategy:
+    1. Try exact match first
+    2. If no match and qname has namespaces, try stripping ONLY outer namespace prefixes
+       (keep at least Class::method structure intact)
+    3. If header_path provided, prefer implementations from same directory
+    """
+    # Try exact match first
+    impl_files = defs_by_qname.get(qname, set())
+    if impl_files:
+        return impl_files
+
+    # If no exact match and the qname contains namespaces (::), try stripping them
+    if "::" in qname:
+        parts = qname.split("::")
+        # Only strip outer namespaces, not the class/method structure
+        # For "ns1::ns2::Class::method(...)", we want to try:
+        # - "ns2::Class::method(...)"  (strip 1 level)
+        # - "Class::method(...)"       (strip 2 levels)
+        # But NOT "method(...)" alone (too ambiguous)
+
+        # Only allow stripping if we have more than 2 parts (namespace::Class::method)
+        # If we only have 2 parts (Class::method), don't strip as it would leave just "method"
+        if len(parts) > 2:
+            # Keep at least 2 parts (Class::method) to avoid false positives
+            max_strip = len(parts) - 2
+
+            for i in range(1, max_strip + 1):
+                shorter_qname = "::".join(parts[i:])
+                impl_files = defs_by_qname.get(shorter_qname, set())
+
+                if impl_files:
+                    # If we have the header path, prefer implementations from same directory
+                    if header_path:
+                        header_dir = os.path.dirname(header_path)
+                        same_dir_files = {f for f in impl_files if os.path.dirname(f) == header_dir}
+                        if same_dir_files:
+                            return same_dir_files
+
+                    return impl_files
+
+    return set()
 
 def run_ctags_and_index(paths: list[str]) -> tuple[dict[str, set[str]], dict[str, set[str]], str]:
     """
@@ -582,8 +635,10 @@ def build_dependencies_graph() -> None:
                         if qnames:
                             impl_files = set()
                             for qn in qnames:
-                                # For each qualified name, get the implementation files
-                                impl_files |= ctags_defs_by_qname.get(qn, set())
+                                # For each qualified name, find implementation files
+                                # This handles namespace mismatches (e.g., fs::SDFS vs SDFS)
+                                # Pass header_path to prefer implementations from same directory
+                                impl_files |= find_impl_files_for_qname(qn, ctags_defs_by_qname, header_path)
                             for impl in impl_files:
                                 # Skip .ino files - they should never be dependencies of other files
                                 if impl.endswith('.ino'):
@@ -734,6 +789,19 @@ def find_affected_sketches(changed_files: list[str]) -> None:
                     affected_sketches.append(sketch)
             print(f"Total affected sketches: {len(affected_sketches)}", file=sys.stderr)
         return
+
+    # For component mode: if any *source code* file (not example or documentation) changed, recompile all examples
+    if component_mode:
+        for file in changed_files:
+            if (is_source_file(file) or is_header_file(file)) and not file.endswith(".ino"):
+                if file.startswith("cores/") or file.startswith("libraries/"):
+                    print("Component mode: file changed in cores/ or libraries/ - recompiling all IDF component examples", file=sys.stderr)
+                    all_examples = list_idf_component_examples()
+                    for example in all_examples:
+                        if example not in affected_sketches:
+                            affected_sketches.append(example)
+                    print(f"Total affected IDF component examples: {len(affected_sketches)}", file=sys.stderr)
+                    return
 
     preprocess_changed_files(changed_files)
 

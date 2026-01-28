@@ -15,35 +15,41 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local requirements
     local requirements_or
 
-    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.json" ]; then
-        echo "WARNING: sdkconfig or ci.json not found. Assuming requirements are met." 1>&2
+    if [ ! -f "$sdkconfig_path" ] || [ ! -f "$sketchdir/ci.yml" ]; then
+        echo "WARNING: sdkconfig or ci.yml not found. Assuming requirements are met." 1>&2
         # Return 1 on error to force the sketch to be built and fail. This way the
         # CI will fail and the user will know that the sketch has a problem.
     else
         # Check if the sketch requires any configuration options (AND)
-        requirements=$(jq -r '.requires[]? // empty' "$sketchdir/ci.json")
+        requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" == "" ]]; then
                     has_requirements=0
                 fi
-            done
+            done <<< "$requirements"
         fi
 
         # Check if the sketch requires any configuration options (OR)
-        requirements_or=$(jq -r '.requires_any[]? // empty' "$sketchdir/ci.json")
+        requirements_or=$(yq eval '.requires_any[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
             local found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" != "" ]]; then
                     found=true
                     break
                 fi
-            done
+            done <<< "$requirements_or"
             if [[ "$found" == "false" ]]; then
                 has_requirements=0
             fi
@@ -122,13 +128,13 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ -z "$options" ] && [ -f "$sketchdir"/ci.json ]; then
+        if [ -z "$options" ] && [ -f "$sketchdir"/ci.yml ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
-            len=$(jq -r --arg target "$target" '.fqbn[$target] | length' "$sketchdir"/ci.json)
+            len=$(yq eval ".fqbn.${target} | length" "$sketchdir"/ci.yml 2>/dev/null || echo 0)
             if [ "$len" -gt 0 ]; then
-                fqbn=$(jq -r --arg target "$target" '.fqbn[$target] | sort' "$sketchdir"/ci.json)
+                fqbn=$(yq eval ".fqbn.${target} | sort | @json" "$sketchdir"/ci.yml)
             fi
         fi
 
@@ -138,8 +144,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=1
 
-            if [ -f "$sketchdir"/ci.json ]; then
-                fqbn_append=$(jq -r '.fqbn_append' "$sketchdir"/ci.json)
+            if [ -f "$sketchdir"/ci.yml ]; then
+                fqbn_append=$(yq eval '.fqbn_append' "$sketchdir"/ci.yml 2>/dev/null)
                 if [ "$fqbn_append" == "null" ]; then
                     fqbn_append=""
                 fi
@@ -155,8 +161,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             esp32c3_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32c6_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
-            esp32c5_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,ChipVariant=postv3,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32c5_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -229,9 +235,9 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     sketchname=$(basename "$sketchdir")
     local has_requirements
 
-    if [ -f "$sketchdir"/ci.json ]; then
+    if [ -f "$sketchdir"/ci.yml ]; then
         # If the target is listed as false, skip the sketch. Otherwise, include it.
-        is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+        is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
         if [[ "$is_target" == "false" ]]; then
             echo "Skipping $sketchname for target $target"
             exit 0
@@ -244,7 +250,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         fi
     fi
 
-    # Install libraries from ci.json if they exist
+    # Install libraries from ci.yml if they exist
     install_libs -ai "$ide_path" -s "$sketchdir"
     install_result=$?
     if [ $install_result -ne 0 ]; then
@@ -294,6 +300,11 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
+            if [ -f "$sketchdir/ci.yml" ]; then
+                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            fi
+
             if [ -n "$log_compilation" ]; then
                 #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
                 flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
@@ -336,6 +347,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             if [ $exit_status -ne 0 ]; then
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
+            fi
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
+            if [ -f "$sketchdir/ci.yml" ]; then
+                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
@@ -394,9 +409,9 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.json ]]; then
+        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
-            is_target=$(jq -r --arg target "$target" '.targets[$target]' "$sketchdir"/ci.json)
+            is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
                 continue
             fi
@@ -411,7 +426,8 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         echo "$sketch" >> sketches.txt
         sketchnum=$((sketchnum + 1))
     done
-    return $sketchnum
+    # Echo count to stdout instead of using return code (which is limited to 0-255)
+    echo "$sketchnum"
 }
 
 function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
@@ -487,11 +503,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
 
     set +e
     if [ -n "$sketches_file" ]; then
-        count_sketches "$path" "$target" "0" "$sketches_file"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file")
     else
-        count_sketches "$path" "$target"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target")
     fi
     set -e
     local sketches
@@ -637,38 +651,38 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         return 1
     fi
 
-    if [ ! -f "$sketchdir/ci.json" ]; then
-        [ "$verbose" = true ] && echo "No ci.json found in $sketchdir, skipping library installation"
+    if [ ! -f "$sketchdir/ci.yml" ]; then
+        [ "$verbose" = true ] && echo "No ci.yml found in $sketchdir, skipping library installation"
         return 0
     fi
-    if ! jq -e . "$sketchdir/ci.json" >/dev/null 2>&1; then
-        echo "ERROR: $sketchdir/ci.json is not valid JSON" >&2
+    if ! yq eval '.' "$sketchdir/ci.yml" >/dev/null 2>&1; then
+        echo "ERROR: $sketchdir/ci.yml is not valid YAML" >&2
         return 1
     fi
 
     local libs_type
-    libs_type=$(jq -r '.libs | type' "$sketchdir/ci.json" 2>/dev/null)
-    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ]; then
-        [ "$verbose" = true ] && echo "No libs field found in ci.json, skipping library installation"
+    libs_type=$(yq eval '.libs | type' "$sketchdir/ci.yml" 2>/dev/null)
+    if [ -z "$libs_type" ] || [ "$libs_type" = "null" ] || [ "$libs_type" = "!!null" ]; then
+        [ "$verbose" = true ] && echo "No libs field found in ci.yml, skipping library installation"
         return 0
-    elif [ "$libs_type" != "array" ]; then
-        echo "ERROR: libs field in ci.json must be an array, found: $libs_type" >&2
+    elif [ "$libs_type" != "!!seq" ]; then
+        echo "ERROR: libs field in ci.yml must be an array, found: $libs_type" >&2
         return 1
     fi
 
     local libs_count
-    libs_count=$(jq -r '.libs | length' "$sketchdir/ci.json" 2>/dev/null)
+    libs_count=$(yq eval '.libs | length' "$sketchdir/ci.yml" 2>/dev/null)
     if [ "$libs_count" -eq 0 ]; then
-        [ "$verbose" = true ] && echo "libs array is empty in ci.json, skipping library installation"
+        [ "$verbose" = true ] && echo "libs array is empty in ci.yml, skipping library installation"
         return 0
     fi
 
-    echo "Installing $libs_count libraries from $sketchdir/ci.json"
+    echo "Installing $libs_count libraries from $sketchdir/ci.yml"
 
     local needs_unsafe=false
     local original_unsafe_setting=""
     local libs
-    libs=$(jq -r '.libs[]? // empty' "$sketchdir/ci.json")
+    libs=$(yq eval '.libs[]' "$sketchdir/ci.yml" 2>/dev/null)
 
     # Detect any git-like URL (GitHub/GitLab/Bitbucket/self-hosted/ssh)
     for lib in $libs; do
@@ -749,7 +763,7 @@ Available commands:
     build: Build a sketch.
     chunk_build: Build a chunk of sketches.
     check_requirements: Check if target meets sketch requirements.
-    install_libs: Install libraries from ci.json file.
+    install_libs: Install libraries from ci.yml file.
 "
 
 cmd=$1

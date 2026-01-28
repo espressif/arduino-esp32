@@ -525,25 +525,6 @@ bool STAClass::connect(
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
-  if (eraseap) {
-    if (!started()) {
-      log_e("STA not started! You must call begin first.");
-      return false;
-    }
-    wifi_config_t conf;
-    memset(&conf, 0, sizeof(wifi_config_t));
-    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
-    if (err != ESP_OK) {
-      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
-      return false;
-    }
-  }
-
-  if (!connected()) {
-    log_w("STA already disconnected.");
-    return true;
-  }
-
   esp_err_t err = esp_wifi_disconnect();
   if (err != ESP_OK) {
     log_e("STA disconnect failed! 0x%x: %s", err, esp_err_to_name(err));
@@ -556,6 +537,20 @@ bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
       delay(5);
     }
     if (connected()) {
+      return false;
+    }
+  }
+
+  if (eraseap) {
+    if (!started()) {
+      log_e("STA not started! You must call begin first.");
+      return false;
+    }
+    wifi_config_t conf;
+    memset(&conf, 0, sizeof(wifi_config_t));
+    esp_err_t err = esp_wifi_set_config(WIFI_IF_STA, &conf);
+    if (err != ESP_OK) {
+      log_e("STA clear config failed! 0x%x: %s", err, esp_err_to_name(err));
       return false;
     }
   }

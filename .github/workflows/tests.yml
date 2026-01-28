@@ -4,9 +4,8 @@
 # As the Wokwi tests require access to secrets, they are run in a separate workflow.
 # We need to ensure that the artifacts from previous tests in the chain are propagated for publishing the results.
 # This is the current trigger sequence for the tests:
-#  tests.yml -> tests_wokwi.yml -> tests_results.yml
+#  tests.yml -> tests_hw_wokwi.yml -> tests_results.yml
 #   ⌙> tests_build.yml
-#   ⌙> tests_hw.yml
 #   ⌙> tests_qemu.yml
 
 name: Runtime Tests
@@ -54,10 +53,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-types: ${{ steps.set-matrix.outputs.build-types }}
-      hw-types: ${{ steps.set-matrix.outputs.hw-types }}
-      wokwi-types: ${{ steps.set-matrix.outputs.wokwi-types }}
+      build-targets: ${{ steps.set-matrix.outputs.build-targets }}
+      qemu-enabled: ${{ steps.set-matrix.outputs.qemu-enabled }}
       qemu-types: ${{ steps.set-matrix.outputs.qemu-types }}
-      targets: ${{ steps.set-matrix.outputs.targets }}
+      qemu-targets: ${{ steps.set-matrix.outputs.qemu-targets }}
     env:
       IS_PR: ${{ github.event.pull_request.number != null }}
       PERFORMANCE_ENABLED: ${{ contains(github.event.pull_request.labels.*.name, 'perf_test') }}
@@ -65,7 +64,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          sparse-checkout: .github/scripts/tests_matrix.sh
+          sparse-checkout: |
+            .github/scripts/tests_matrix.sh
+            .github/scripts/socs_config.sh
 
       - name: Set matrix
         id: set-matrix
@@ -84,41 +85,23 @@ jobs:
     strategy:
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
-        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
+        chip: ${{ fromJson(needs.gen-matrix.outputs.build-targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
-  call-hardware-tests:
-    name: Hardware
-    uses: ./.github/workflows/tests_hw.yml
-    needs: [gen-matrix, call-build-tests]
-    if: |
-      github.repository == 'espressif/arduino-esp32' &&
-      (github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'hil_test'))
-    strategy:
-      fail-fast: false
-      matrix:
-        type: ${{ fromJson(needs.gen-matrix.outputs.hw-types) }}
-        chip: ${{ fromJson(needs.gen-matrix.outputs.targets) }}
-    with:
-      type: ${{ matrix.type }}
-      chip: ${{ matrix.chip }}
-
-  # This job is disabled for now
   call-qemu-tests:
     name: QEMU
     uses: ./.github/workflows/tests_qemu.yml
     needs: [gen-matrix, call-build-tests]
-    if: false
+    if: ${{ needs.gen-matrix.outputs.qemu-enabled == 'true' }}
     strategy:
       fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.qemu-types) }}
-        chip: ["esp32", "esp32c3"]
+        chip: ${{ fromJson(needs.gen-matrix.outputs.qemu-targets) }}
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
 
-  # Wokwi tests are run after this workflow as it needs access to secrets
+  # Hardware and Wokwi tests are run after this workflow as they need access to secrets

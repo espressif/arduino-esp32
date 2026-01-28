@@ -22,6 +22,9 @@ public:
   bool setDefaultInterface(NetworkInterface &ifc);
   NetworkInterface *getDefaultInterface();
 
+  // Returns true if any interface (except AP) has assigned IPv4 or global IPv6
+  bool isOnline();
+
   size_t printTo(Print &out) const;
 
   static const char *getHostname();
@@ -31,6 +34,4 @@ public:
   }
 };
 
-#if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_NETWORK)
 extern NetworkManager Network;
-#endif

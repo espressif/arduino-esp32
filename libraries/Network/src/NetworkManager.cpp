@@ -20,7 +20,7 @@ bool NetworkManager::begin() {
     initialized = true;
 #if CONFIG_IDF_TARGET_ESP32
     uint8_t mac[8];
-    if (esp_efuse_mac_get_default(mac) == ESP_OK) {
+    if (esp_base_mac_addr_get(mac) != ESP_OK && esp_efuse_mac_get_default(mac) == ESP_OK) {
       esp_base_mac_addr_set(mac);
     }
 #endif
@@ -183,6 +183,18 @@ NetworkInterface *NetworkManager::getDefaultInterface() {
     }
   }
   return NULL;
+}
+
+bool NetworkManager::isOnline() {
+  for (int i = 0; i < ESP_NETIF_ID_MAX; ++i) {
+    if (i != ESP_NETIF_ID_AP) {
+      NetworkInterface *iface = getNetifByID((Network_Interface_ID)i);
+      if (iface != NULL && iface->connected() && (iface->hasIP() || iface->hasGlobalIPv6())) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 size_t NetworkManager::printTo(Print &out) const {

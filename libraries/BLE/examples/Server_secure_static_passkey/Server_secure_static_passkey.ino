@@ -40,6 +40,73 @@
 // This is an example passkey. You should use a different or random passkey.
 #define SERVER_PIN 123456
 
+// Print an IRK buffer as hex with leading zeros and ':' separator
+static void printIrkBinary(uint8_t *irk) {
+  for (int i = 0; i < 16; i++) {
+    if (irk[i] < 0x10) {
+      Serial.print("0");
+    }
+    Serial.print(irk[i], HEX);
+    if (i < 15) {
+      Serial.print(":");
+    }
+  }
+}
+
+static void get_peer_irk(BLEAddress peerAddr) {
+  Serial.println("\n=== Retrieving peer IRK (Client) ===\n");
+
+  uint8_t irk[16];
+
+  // Get IRK in binary format
+  if (BLEDevice::getPeerIRK(peerAddr, irk)) {
+    Serial.println("Successfully retrieved peer IRK in binary format:");
+    printIrkBinary(irk);
+    Serial.println("\n");
+  }
+
+  // Get IRK in different string formats
+  String irkString = BLEDevice::getPeerIRKString(peerAddr);
+  String irkBase64 = BLEDevice::getPeerIRKBase64(peerAddr);
+  String irkReverse = BLEDevice::getPeerIRKReverse(peerAddr);
+
+  if (irkString.length() > 0) {
+    Serial.println("Successfully retrieved peer IRK in multiple formats:\n");
+    Serial.print("IRK (comma-separated hex): ");
+    Serial.println(irkString);
+    Serial.print("IRK (Base64 for Home Assistant Private BLE Device): ");
+    Serial.println(irkBase64);
+    Serial.print("IRK (reverse hex for Home Assistant ESPresense): ");
+    Serial.println(irkReverse);
+    Serial.println();
+  } else {
+    Serial.println("!!! Failed to retrieve peer IRK !!!");
+    Serial.println("This is expected if bonding is disabled or the peer doesn't distribute its Identity Key.");
+    Serial.println("To enable bonding, change setAuthenticationMode to: pSecurity->setAuthenticationMode(true, true, true);\n");
+  }
+
+  Serial.println("=======================================\n");
+}
+
+// Security callbacks to print IRKs once authentication completes
+class MySecurityCallbacks : public BLESecurityCallbacks {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  void onAuthenticationComplete(esp_ble_auth_cmpl_t desc) override {
+    // Print the IRK received by the peer
+    BLEAddress peerAddr(desc.bd_addr);
+    get_peer_irk(peerAddr);
+  }
+#endif
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  void onAuthenticationComplete(ble_gap_conn_desc *desc) override {
+    // Print the IRK received by the peer
+    BLEAddress peerAddr(desc->peer_id_addr.val, desc->peer_id_addr.type);
+    get_peer_irk(peerAddr);
+  }
+#endif
+};
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
@@ -76,8 +143,11 @@ void setup() {
   pSecurity->setCapability(ESP_IO_CAP_OUT);
 
   // Set authentication mode
-  // Require secure connection and MITM (for password prompts) for this example
-  pSecurity->setAuthenticationMode(false, true, true);
+  // Enable bonding, MITM (for password prompts), and secure connection for this example
+  pSecurity->setAuthenticationMode(true, true, true);
+
+  // Set callbacks to handle authentication completion and print IRKs
+  BLEDevice::setSecurityCallbacks(new MySecurityCallbacks());
 
   BLEServer *pServer = BLEDevice::createServer();
   pServer->advertiseOnDisconnect(true);
@@ -115,7 +185,7 @@ void setup() {
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-  pAdvertising->setMinPreferred(0x12);
+  pAdvertising->setMaxPreferred(0x12);
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined! Now you can read it in your phone!");
 }

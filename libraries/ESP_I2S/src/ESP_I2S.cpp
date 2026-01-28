@@ -192,6 +192,7 @@ static esp_err_t i2s_channel_read_16_stereo_to_mono(i2s_chan_handle_t handle, ch
 
 I2SClass::I2SClass() {
   last_error = ESP_OK;
+  _mode = I2S_MODE_MAX;  // Initialize to invalid mode to indicate I2S not started
 
   tx_chan = NULL;
   tx_sample_rate = 0;
@@ -239,7 +240,9 @@ I2SClass::~I2SClass() {
 
 bool I2SClass::i2sDetachBus(void *bus_pointer) {
   I2SClass *bus = (I2SClass *)bus_pointer;
-  if (bus->tx_chan != NULL || bus->tx_chan != NULL) {
+  // Only call end() if I2S has been initialized (begin() was called)
+  // _mode is set to I2S_MODE_MAX in constructor and to a valid mode in begin()
+  if (bus->_mode < I2S_MODE_MAX) {
     bus->end();
   }
   return true;
@@ -703,6 +706,16 @@ bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_c
 }
 
 bool I2SClass::end() {
+  // Check if already ended to prevent recursion
+  if (_mode >= I2S_MODE_MAX) {
+    return true;
+  }
+
+  // Save mode and reset it BEFORE clearing pins to prevent recursive calls
+  // When perimanClearPinBus() is called, it may trigger i2sDetachBus() again
+  i2s_mode_t mode = _mode;
+  _mode = I2S_MODE_MAX;
+
   if (tx_chan != NULL) {
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(tx_chan));
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_del_channel(tx_chan));
@@ -720,7 +733,7 @@ bool I2SClass::end() {
   }
 
   //Peripheral manager deinit used pins
-  switch (_mode) {
+  switch (mode) {
     case I2S_MODE_STD:
 #if SOC_I2S_SUPPORTS_TDM
     case I2S_MODE_TDM:

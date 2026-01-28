@@ -218,6 +218,18 @@ void BLEServer::start() {
 }
 
 /**
+ * @brief Check if the GATT server has been started.
+ *
+ * This method indicates whether the GATT server is ready to handle
+ * operations like notifications and indications.
+ *
+ * @return true if the server is started and ready, false otherwise.
+ */
+bool BLEServer::isStarted() {
+  return m_gattsStarted;
+}
+
+/**
  * @brief Set the server callbacks.
  *
  * As a %BLE server operates, it will generate server level events such as a new client connecting or a previous client

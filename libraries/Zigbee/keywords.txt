@@ -49,6 +49,7 @@ ZigbeeWindowCoveringType	KEYWORD1
 ZigbeeFanMode	KEYWORD1
 ZigbeeFanModeSequence	KEYWORD1
 zb_cmd_type_t	KEYWORD1
+ZigbeeColorMode	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -104,17 +105,33 @@ clearBoundDevices	KEYWORD2
 onDefaultResponse	KEYWORD2
 
 # ZigbeeLight + ZigbeeColorDimmableLight
-onLightChange	KEYWORD2
 restoreLight	KEYWORD2
 setLight	KEYWORD2
 setLightState	KEYWORD2
 setLightLevel	KEYWORD2
 setLightColor	KEYWORD2
+setLightColorTemperature	KEYWORD2
+setLightColorCapabilities	KEYWORD2
+setLightColorTemperatureRange	KEYWORD2
 getLightState	KEYWORD2
 getLightLevel	KEYWORD2
 getLightRed	KEYWORD2
 getLightGreen	KEYWORD2
 getLightBlue	KEYWORD2
+getLightColorTemperature	KEYWORD2
+getLightColorMode	KEYWORD2
+getLightColorHue	KEYWORD2
+getLightColorSaturation	KEYWORD2
+getLightColorCapabilities	KEYWORD2
+onLightChange	KEYWORD2
+onLightChangeRgb	KEYWORD2
+onLightChangeHsv	KEYWORD2
+onLightChangeTemp	KEYWORD2
+onLightColorChangeWithSource	KEYWORD2
+onLightLevelChange	KEYWORD2
+onLightLevelChangeWithSource	KEYWORD2
+onLightStateChange	KEYWORD2
+onLightStateChangeWithSource	KEYWORD2
 
 # ZigbeeSwitch + ZigbeeColorDimmerSwitch
 lightToggle	KEYWORD2
@@ -125,14 +142,29 @@ lightOnWithTimedOff	KEYWORD2
 lightOnWithSceneRecall	KEYWORD2
 setLightLevel	KEYWORD2
 setLightColor	KEYWORD2
+getLightState	KEYWORD2
+getLightLevel	KEYWORD2
+getLightColor	KEYWORD2
+onLightStateChange	KEYWORD2
+onLightStateChangeWithSource	KEYWORD2
+onLightLevelChange	KEYWORD2
+onLightLevelChangeWithSource	KEYWORD2
+onLightColorChange	KEYWORD2
+onLightColorChangeWithSource	KEYWORD2
 
 # ZigbeeThermostat
 onTempRecieve	KEYWORD2
-onConfigRecieve	KEYWORD2
 onTempReceiveWithSource	KEYWORD2
+onTempConfigReceive	KEYWORD2
 getTemperature	KEYWORD2
-getSensorSettings	KEYWORD2
+getTemperatureSettings	KEYWORD2
 setTemperatureReporting	KEYWORD2
+onHumidityReceive	KEYWORD2
+onHumidityReceiveWithSource	KEYWORD2
+onHumidityConfigReceive	KEYWORD2
+getHumidity	KEYWORD2
+getHumiditySettings	KEYWORD2
+setHumidityReporting	KEYWORD2
 
 # Common Zigbee Sensor
 setMinMaxValue	KEYWORD2
@@ -189,6 +221,9 @@ setIASClientEndpoint	KEYWORD2
 setClosed	KEYWORD2
 setOpen	KEYWORD2
 setTilted	KEYWORD2
+requestIASZoneEnroll	KEYWORD2
+restoreIASZoneEnroll	KEYWORD2
+enrolled	KEYWORD2
 
 # ZigbeeVibrationSensor
 setVibration	KEYWORD2
@@ -302,3 +337,13 @@ ZB_MULTISTATE_APPLICATION_TYPE_11_INDEX	LITERAL1
 ZB_MULTISTATE_APPLICATION_TYPE_11_NUM_STATES	LITERAL1
 ZB_MULTISTATE_APPLICATION_TYPE_11_STATE_NAMES	LITERAL1
 ZB_MULTISTATE_APPLICATION_TYPE_OTHER_INDEX	LITERAL1
+
+#ZigbeeColorDimmableLight
+ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION	LITERAL1
+ZIGBEE_COLOR_CAPABILITY_ENHANCED_HUE	LITERAL1
+ZIGBEE_COLOR_CAPABILITY_COLOR_LOOP	LITERAL1
+ZIGBEE_COLOR_CAPABILITY_X_Y	LITERAL1
+ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP	LITERAL1
+ZIGBEE_COLOR_MODE_HUE_SATURATION	LITERAL1
+ZIGBEE_COLOR_MODE_CURRENT_X_Y	LITERAL1
+ZIGBEE_COLOR_MODE_TEMPERATURE	LITERAL1

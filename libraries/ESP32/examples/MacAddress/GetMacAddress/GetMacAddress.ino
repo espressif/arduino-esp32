@@ -35,7 +35,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  Serial.println("Interface\t\t\t\t\t\tMAC address (6 bytes, 4 universally administered, default)");
+  Serial.println("Interface\t\t\t\t\t\tMAC address (6/8 bytes, 4 universally administered, default)");
 
   Serial.print("Wi-Fi Station (using 'esp_efuse_mac_get_default')\t");
   Serial.println(getDefaultMacAddress());
@@ -51,6 +51,14 @@ void setup() {
 
   Serial.print("Ethernet (using 'esp_read_mac')\t\t\t\t");
   Serial.println(getInterfaceMacAddress(ESP_MAC_ETH));
+
+#ifdef CONFIG_SOC_IEEE802154_SUPPORTED
+  Serial.print("IEEE802154 (using 'esp_read_mac')\t\t\t");
+  Serial.println(getInterfaceMacAddress(ESP_MAC_IEEE802154));
+
+  Serial.print("EXT MAC (using 'esp_read_mac')\t\t\t\t");
+  Serial.println(getInterfaceMacAddress(ESP_MAC_EFUSE_EXT));
+#endif
 }
 
 void loop() { /* Nothing in loop */ }
@@ -59,11 +67,17 @@ String getDefaultMacAddress() {
 
   String mac = "";
 
-  unsigned char mac_base[6] = {0};
+  unsigned char mac_base[8] = {0};
 
   if (esp_efuse_mac_get_default(mac_base) == ESP_OK) {
-    char buffer[18];  // 6*2 characters for hex + 5 characters for colons + 1 character for null terminator
+    char buffer[24];  // 8*2 characters for hex + 7 characters for colons + 1 character for null terminator
+#ifdef CONFIG_SOC_IEEE802154_SUPPORTED
+    sprintf(
+      buffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6], mac_base[7]
+    );
+#else
     sprintf(buffer, "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
+#endif
     mac = buffer;
   }
 
@@ -74,11 +88,24 @@ String getInterfaceMacAddress(esp_mac_type_t interface) {
 
   String mac = "";
 
-  unsigned char mac_base[6] = {0};
+  unsigned char mac_base[8] = {0};
 
   if (esp_read_mac(mac_base, interface) == ESP_OK) {
-    char buffer[18];  // 6*2 characters for hex + 5 characters for colons + 1 character for null terminator
-    sprintf(buffer, "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
+    char buffer[24];  // 8*2 characters for hex + 7 characters for colons + 1 character for null terminator
+#ifdef CONFIG_SOC_IEEE802154_SUPPORTED
+    if (interface == ESP_MAC_IEEE802154) {
+      sprintf(
+        buffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
+        mac_base[7]
+      );
+    } else if (interface == ESP_MAC_EFUSE_EXT) {
+      sprintf(buffer, "%02X:%02X", mac_base[0], mac_base[1]);
+    } else {
+#endif
+      sprintf(buffer, "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
+#ifdef CONFIG_SOC_IEEE802154_SUPPORTED
+    }
+#endif
     mac = buffer;
   }
 

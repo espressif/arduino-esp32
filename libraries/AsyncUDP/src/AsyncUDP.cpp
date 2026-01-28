@@ -15,6 +15,29 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
+#define CONFIG_UDP_MSS 1460
+
+#ifndef CONFIG_ARDUINO_UDP_TASK_STACK_SIZE
+#define CONFIG_ARDUINO_UDP_TASK_STACK_SIZE 4096
+#endif
+#ifndef ARDUINO_UDP_TASK_STACK_SIZE
+#define ARDUINO_UDP_TASK_STACK_SIZE CONFIG_ARDUINO_UDP_TASK_STACK_SIZE
+#endif
+
+#ifndef CONFIG_ARDUINO_UDP_TASK_PRIORITY
+#define CONFIG_ARDUINO_UDP_TASK_PRIORITY 3
+#endif
+#ifndef ARDUINO_UDP_TASK_PRIORITY
+#define ARDUINO_UDP_TASK_PRIORITY CONFIG_ARDUINO_UDP_TASK_PRIORITY
+#endif
+
+#ifndef CONFIG_ARDUINO_UDP_RUNNING_CORE
+#define CONFIG_ARDUINO_UDP_RUNNING_CORE -1
+#endif
+#ifndef ARDUINO_UDP_RUNNING_CORE
+#define ARDUINO_UDP_RUNNING_CORE CONFIG_ARDUINO_UDP_RUNNING_CORE
+#endif
+
 #ifdef CONFIG_LWIP_TCPIP_CORE_LOCKING
 #define UDP_MUTEX_LOCK()                                \
   if (!sys_thread_tcpip(LWIP_CORE_LOCK_QUERY_HOLDER)) { \
@@ -164,6 +187,7 @@ static QueueHandle_t _udp_queue;
 static volatile TaskHandle_t _udp_task_handle = NULL;
 
 static void _udp_task(void *pvParameters) {
+  (void)pvParameters;
   lwip_event_packet_t *e = NULL;
   for (;;) {
     if (xQueueReceive(_udp_queue, &e, portMAX_DELAY) == pdTRUE) {
@@ -188,7 +212,7 @@ static bool _udp_task_start() {
   }
   if (!_udp_task_handle) {
     xTaskCreateUniversal(
-      _udp_task, "async_udp", 4096, NULL, CONFIG_ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, CONFIG_ARDUINO_UDP_RUNNING_CORE
+      _udp_task, "async_udp", ARDUINO_UDP_TASK_STACK_SIZE, NULL, ARDUINO_UDP_TASK_PRIORITY, (TaskHandle_t *)&_udp_task_handle, ARDUINO_UDP_RUNNING_CORE
     );
     if (!_udp_task_handle) {
       return false;
@@ -251,8 +275,8 @@ static bool _udp_task_stop(){
 
 AsyncUDPMessage::AsyncUDPMessage(size_t size) {
   _index = 0;
-  if (size > CONFIG_TCP_MSS) {
-    size = CONFIG_TCP_MSS;
+  if (size > CONFIG_UDP_MSS) {
+    size = CONFIG_UDP_MSS;
   }
   _size = size;
   _buffer = (uint8_t *)malloc(size);
@@ -742,8 +766,8 @@ size_t AsyncUDP::writeTo(const uint8_t *data, size_t len, const ip_addr_t *addr,
       return 0;
     }
   }
-  if (len > CONFIG_TCP_MSS) {
-    len = CONFIG_TCP_MSS;
+  if (len > CONFIG_UDP_MSS) {
+    len = CONFIG_UDP_MSS;
   }
   _lastErr = ERR_OK;
   pbuf *pbt = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);

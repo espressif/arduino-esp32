@@ -513,13 +513,13 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
         m_writeEvt = false;
         if (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC) {
           m_value.commit();
-          // Invoke the onWrite callback handler.
+          // Invoke the onWrite callback handler before sending the response.
+          // This ensures that when the client receives the acknowledgment, the write has been processed.
           m_pCallbacks->onWrite(this, param);
         } else {
           m_value.cancel();
         }
-        // ???
-        esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, ESP_GATT_OK, nullptr);
+        esp_err_t errRc = ::esp_ble_gatts_send_response(gatts_if, param->exec_write.conn_id, param->exec_write.trans_id, ESP_GATT_OK, nullptr);
         if (errRc != ESP_OK) {
           log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
         }
@@ -609,6 +609,12 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
         free(pHexData);
 #endif
 
+        // Invoke the onWrite callback handler before sending the response.
+        // This ensures that when the client receives the acknowledgment, the write has been processed.
+        if (param->write.is_prep != true) {
+          m_pCallbacks->onWrite(this, param);
+        }
+
         if (param->write.need_rsp) {
           esp_gatt_rsp_t rsp;
 
@@ -623,11 +629,6 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
             log_e("esp_ble_gatts_send_response: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
           }
         }  // Response needed
-
-        if (param->write.is_prep != true) {
-          // Invoke the onWrite callback handler.
-          m_pCallbacks->onWrite(this, param);
-        }
       }  // Match on handles.
       break;
     }  // ESP_GATTS_WRITE_EVT
@@ -917,9 +918,9 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
     switch (ctxt->op) {
       case BLE_GATT_ACCESS_OP_READ_CHR:
       {
-        // If the packet header is only 8 bytes this is a follow up of a long read
-        // so we don't want to call the onRead() callback again.
-        if (ctxt->om->om_pkthdr_len > 8) {
+        // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
+        // For long reads, follow-up requests will have om_len == 0
+        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE) {
           rc = ble_gap_conn_find(conn_handle, &desc);
           assert(rc == 0);
           pCharacteristic->m_pCallbacks->onRead(pCharacteristic, &desc);
@@ -955,6 +956,24 @@ int BLECharacteristic::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr
         rc = ble_gap_conn_find(conn_handle, &desc);
         assert(rc == 0);
         pCharacteristic->setValue(buf, len);
+
+        // Call the onWrite callback before returning.
+        // NOTE: This callback is executed synchronously in the NimBLE GATT access context.
+        //       NimBLE sends the write response automatically after this function returns,
+        //       based on its return code. As a result, any work performed in onWrite()
+        //       directly impacts when the client receives the ATT write acknowledgment.
+        //
+        // Behavioral change:
+        //   In earlier implementations that used a deferred callback mechanism, the write
+        //   response was sent before the onWrite() callback executed. Applications that
+        //   relied on that behavior (e.g., long-running or blocking onWrite() handlers,
+        //   or handlers that perform notify/indicate operations) may now experience
+        //   delayed write acknowledgments if onWrite() takes significant time to complete.
+        //
+        // Recommendation:
+        //   Implement onWrite() as a fast, non-blocking callback. Offload long-running
+        //   processing to another task or queue to avoid increasing write latency or
+        //   causing client timeouts.
         pCharacteristic->m_pCallbacks->onWrite(pCharacteristic, &desc);
 
         return 0;

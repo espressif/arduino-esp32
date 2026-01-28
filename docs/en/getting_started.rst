@@ -39,6 +39,7 @@ SoC        Stable Development Datasheet
 ========== ====== =========== =================================
 ESP32      Yes    Yes         `ESP32`_
 ESP32-C3   Yes    Yes         `ESP32-C3`_
+ESP32-C5   Yes    Yes         `ESP32-C5`_
 ESP32-C6   Yes    Yes         `ESP32-C6`_
 ESP32-H2   Yes    Yes         `ESP32-H2`_
 ESP32-P4   Yes    Yes         `ESP32-P4`_
@@ -47,7 +48,7 @@ ESP32-S3   Yes    Yes         `ESP32-S3`_
 ========== ====== =========== =================================
 
 .. note::
-    ESP32-C2 is also supported by Arduino-ESP32 but requires using Arduino as an ESP-IDF component or rebuilding the static libraries.
+    ESP32-C2 and ESP32-C61 are also supported by Arduino-ESP32 but require using Arduino as an ESP-IDF component or rebuilding the static libraries.
     For more information, see the `Arduino as an ESP-IDF component documentation <esp-idf_component.html>`_ or the
     `Lib Builder documentation <lib_builder.html>`_, respectively.
 

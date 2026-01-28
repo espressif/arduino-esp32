@@ -2,77 +2,118 @@
 Libraries
 #########
 
-Here is where the Libraries API's descriptions are located:
+Arduino libraries help you use the features of the ESP32 family of chips with the familiar Arduino API.
 
-Supported Peripherals
----------------------
+Supported Features and Peripherals
+----------------------------------
 
-Currently, the Arduino ESP32 supports the following peripherals with Arduino APIs.
+Currently, the Arduino ESP32 supports almost everything available on the ESP32 family with an Arduino-like API.
 
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Peripheral    | ESP32 | C3    | C6    | H2    | P4    | S2    | S3    | Notes |
-+===============+=======+=======+=======+=======+=======+=======+=======+=======+
-| ADC           | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |  (1)  |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| BT Classic    | Yes   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| BLE           | Yes   | Yes   | Yes   | Yes   | No    | N/A   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| DAC           | Yes   | N/A   | N/A   | N/A   | Yes   | Yes   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Ethernet      | Yes   | N/A   | N/A   | N/A   | Yes   | N/A   | N/A   |  (2)  |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| GPIO          | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Hall Sensor   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| I2C           | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| I2S           | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| LEDC          | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| MIPI          | N/A   | N/A   | N/A   | N/A   | No    | N/A   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Motor PWM     | No    | N/A   | N/A   | N/A   | N/A   | N/A   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| MSPI          | N/A   | N/A   | N/A   | N/A   | No    | N/A   | N/A   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Pulse Counter | No    | No    | No    | No    | No    | No    | No    |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| RMT           | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| SDIO          | No    | No    | No    | No    | No    | No    | No    |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| SDMMC         | Yes   | N/A   | N/A   | N/A   | N/A   | N/A   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Timer         | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Temp. Sensor  | N/A   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Touch         | Yes   | N/A   | N/A   | N/A   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| TWAI          | No    | No    | No    | No    | No    | No    | No    |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| UART          | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |       |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| USB           | N/A   | Yes   | Yes   | Yes   | Yes   | Yes   | Yes   |  (3)  |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
-| Wi-Fi         | Yes   | Yes   | Yes   | N/A   | Yes   | Yes   | Yes   |  (4)  |
-+---------------+-------+-------+-------+-------+-------+-------+-------+-------+
+Not all features are available on all SoCs. Please check the `Product Selector <https://products.espressif.com>`_ page
+for more details.
 
-Notes
-^^^^^
+Here is a matrix of the library support status for the main features and peripherals per SoC:
 
-(1) ESP32-P4 calibration schemes not supported yet in IDF and ADC Continuous also lacks IDF support.
+- |yes| Supported through the Arduino Core
+- |no| Not supported through the Arduino Core. It can still be used through the ESP-IDF API, but might require rebuilding the static libraries.
+- |n/a| Not available on the SoC
 
-(2) SPI Ethernet is supported by all ESP32 families and RMII only for ESP32 and ESP32-P4.
+.. rst-class:: table-wrap
 
-(3) ESP32-C3, C6, H2 only support USB CDC/JTAG
+.. Using substitutions rather than emojis directly because in macOS vscode the emojis don't take a fixed space in the text
+   and the table looks weird and hard to edit. This is a workaround to make the table easier to edit. Just write
+   |yes|, |no|, |n/a| instead of emojis.
 
-(4) ESP32-P4 only supports Wi-Fi through another SoC by using ``esp_hosted``.
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Feature              | ESP32 | C2    | C3    | C5    | C6    | C61   | H2    | P4    | S2    | S3    |
++======================+=======+=======+=======+=======+=======+=======+=======+=======+=======+=======+
+| ADC [1]_             | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| BT Classic           | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| BLE [2]_             | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| DAC                  | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| ESP-NOW [3]_         | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |n/a| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Ethernet [4]_        | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| GPIO                 | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Hall Sensor          | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| I2C                  | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| I2S                  | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| I3C                  | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| LEDC                 | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Matter (Thread) [6]_ | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Matter (Wi-Fi) [7]_  | |yes| | |no|  | |yes| | |no|  | |yes| | |no|  | |n/a| | |n/a| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| MIPI CSI             | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| MIPI DSI             | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Motor PWM            | |no|  | |n/a| | |n/a| | |no|  | |no|  | |n/a| | |no|  | |no|  | |n/a| | |no|  |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| MSPI                 | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |no|  | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Pulse Counter        | |no|  | |no|  | |no|  | |no|  | |no|  | |no|  | |no|  | |no|  | |no|  | |no|  |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| RMT                  | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| SDIO                 | |no|  | |n/a| | |n/a| | |no|  | |no|  | |no|  | |n/a| | |no|  | |n/a| | |no|  |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| SDMMC                | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| PSRAM                | |yes| | |n/a| | |n/a| | |yes| | |n/a| | |yes| | |n/a| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Temp. Sensor         | |n/a| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Thread               | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Timer                | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Touch                | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| TWAI/CAN-FD          | |no|  | |n/a| | |no|  | |no|  | |no|  | |n/a| | |no|  | |no|  | |no|  | |no|  |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| UART                 | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| USB OTG              | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| USB Serial           | |n/a| | |n/a| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Wi-Fi [2]_           | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Zigbee [5]_          | |n/a| | |n/a| | |n/a| | |yes| | |yes| | |n/a| | |yes| | |n/a| | |n/a| | |n/a| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 
-.. note:: Some peripherals are not available for all ESP32 families. To see more details about it, see the corresponding SoC at `Product Selector <https://products.espressif.com>`_ page.
+.. [1] ESP32-P4 calibration schemes not supported yet in IDF and ADC Continuous also lacks IDF support.
+
+.. [2] ESP32-P4 only supports Wi-Fi and BLE through another SoC by using ``ESP-Hosted``.
+
+.. [3] ESP-NOW is not supported through ``ESP-Hosted``.
+
+.. [4] SPI Ethernet is supported by all ESP32 families and RMII only for ESP32 and ESP32-P4.
+
+.. [5] Non-native Zigbee SoCs can also run Zigbee, but must use another SoC (with Zigbee radio) as a RCP connected by UART/SPI.
+   Check the `Gateway example <https://github.com/espressif/arduino-esp32/tree/master/libraries/Zigbee/examples/Zigbee_Gateway>`_ for more details.
+
+.. [6] Matter over Thread is supported by our library but is not included in the pre-compiled libraries for ESP32-C6 and ESP32-C5.
+   In order to use Matter over Thread, you need to use Arduino as an ESP-IDF component or rebuild the static libraries.
+   Check the `Arduino_ESP_Matter_over_OpenThread example <https://github.com/espressif/arduino-esp32/tree/master/idf_component_examples/Arduino_ESP_Matter_over_OpenThread>`_ for more details.
+
+.. [7] Matter over Wi-Fi is supported by our library but is not included in the pre-compiled libraries for ESP32-C5.
+   Although ESP32-C5 has Wi-Fi 2.4 GHz and 5 GHz support, the ESP32 Arduino Matter Library has been pre compiled using Thread only.
+   In order to use Matter over Wi-Fi, you need to build the project using Arduino as an ESP-IDF component and disable Thread network, keeping only Wi-Fi station.
+
+.. note:: The ESP32-C2 and ESP32-C61 are only supported using Arduino as an ESP-IDF component or by rebuilding the static libraries.
 
 .. include:: common/datasheet.inc
 
@@ -91,6 +132,29 @@ The Arduino ESP32 offers some unique APIs, described in this section:
     :glob:
 
     api/*
+
+Matter APIs
+-----------
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    matter/matter
+    matter/matter_ep
+    matter/ep_*
+
+OpenThread APIs
+---------------
+
+.. toctree::
+    :maxdepth: 1
+    :glob:
+
+    openthread/openthread
+    openthread/openthread_cli
+    openthread/openthread_core
+    openthread/openthread_dataset
 
 Zigbee APIs
 -----------

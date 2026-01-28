@@ -47,6 +47,7 @@ extern "C" int lwip_hook_ip6_input(struct pbuf *p, struct netif *inp) {
 #endif
 
 static void _ip_event_cb(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+  (void)arg;
   if (event_base == IP_EVENT) {
     NetworkInterface *netif = NULL;
     if (event_id == IP_EVENT_STA_GOT_IP || event_id == IP_EVENT_ETH_GOT_IP || event_id == IP_EVENT_PPP_GOT_IP) {
@@ -96,6 +97,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     log_v("%s Lost IP", desc());
 #endif
+    memcpy(&arduino_event.event_info.lost_ip, event_data, sizeof(ip_event_got_ip_t));
 #if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
     if (_interface_id == ESP_NETIF_ID_STA) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
@@ -350,7 +352,7 @@ bool NetworkInterface::enableIPv6(bool en) {
 }
 
 bool NetworkInterface::dnsIP(uint8_t dns_no, IPAddress ip) {
-  if (_esp_netif == NULL || dns_no > 2) {
+  if (_esp_netif == NULL || dns_no >= ESP_NETIF_DNS_MAX) {
     return false;
   }
   esp_netif_flags_t flags = esp_netif_get_flags(_esp_netif);
@@ -706,11 +708,11 @@ IPAddress NetworkInterface::gatewayIP() const {
 }
 
 IPAddress NetworkInterface::dnsIP(uint8_t dns_no) const {
-  if (_esp_netif == NULL) {
+  if (_esp_netif == NULL || dns_no >= ESP_NETIF_DNS_MAX) {
     return IPAddress();
   }
   esp_netif_dns_info_t d;
-  if (esp_netif_get_dns_info(_esp_netif, dns_no ? ESP_NETIF_DNS_BACKUP : ESP_NETIF_DNS_MAIN, &d) != ESP_OK) {
+  if (esp_netif_get_dns_info(_esp_netif, (esp_netif_dns_type_t)dns_no, &d) != ESP_OK) {
     return IPAddress();
   }
   if (d.ip.type == ESP_IPADDR_TYPE_V6) {
