@@ -16,8 +16,8 @@ static const uint8_t KEY_BUILTIN = 0;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
-static const uint8_t SDA = 21;
-static const uint8_t SCL = 22;
+static const uint8_t SDA = 41;
+static const uint8_t SCL = 42;
 
 static const uint8_t SS = 8;
 static const uint8_t MOSI = 10;
