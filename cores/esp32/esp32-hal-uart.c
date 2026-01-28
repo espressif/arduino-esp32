@@ -1268,7 +1268,7 @@ bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
 #if CONFIG_IDF_TARGET_ESP32C5
       case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_RC_FAST; break;
 #elif CONFIG_IDF_TARGET_ESP32P4
-      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_DEFAULT; break; // default is RTC_FAST for P4
+      case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_DEFAULT; break;  // default is RTC_FAST for P4
 #else
       case UART_SCLK_RTC: uart->_uart_clock_source = LP_UART_SCLK_LP_FAST; break;
 #endif
