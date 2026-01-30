@@ -105,6 +105,7 @@ public:
   esp_gatt_if_t getGattcIf();
   uint16_t getMTU();
   bool setMTU(uint16_t mtu);
+  bool updateConnParams(uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
 
   /***************************************************************************
    *                           Bluedroid public declarations                 *
@@ -207,6 +208,20 @@ public:
    ***************************************************************************/
 
 #if defined(CONFIG_NIMBLE_ENABLED)
+  /**
+   * @brief Callback when the server requests connection parameter updates.
+   * 
+   * This callback is invoked when the peripheral (server) requests to update
+   * connection parameters. The central (client) can accept or reject the request.
+   * 
+   * NOTE: This callback is NimBLE-only. Bluedroid handles parameter update
+   * requests automatically within the Bluetooth stack without application-level
+   * intervention.
+   * 
+   * @param [in] pClient Pointer to the BLEClient instance.
+   * @param [in] params Pointer to the requested connection parameters.
+   * @return true to accept the request, false to reject it.
+   */
   virtual bool onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params);
 #endif
 };

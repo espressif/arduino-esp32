@@ -362,20 +362,78 @@ bool BLEServer::connect(BLEAddress address) {
 }  // connect
 
 /**
- * Update connection parameters can be called only after connection has been established
+ * @brief Request an update to the connection parameters.
+ * 
+ * As the BLE Peripheral (server), this device can request connection parameter
+ * changes from the central. However, the central (client) makes the final decision
+ * and may accept, reject, or negotiate different parameters.
+ * 
+ * Can only be called after a connection has been established.
+ * 
+ * @param [in] remote_bda The Bluetooth device address of the peer.
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
  */
-void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+bool BLEServer::requestConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
   esp_ble_conn_update_params_t conn_params;
   memcpy(conn_params.bda, remote_bda, sizeof(esp_bd_addr_t));
   conn_params.latency = latency;
   conn_params.max_int = maxInterval;  // max_int = 0x20*1.25ms = 40ms
   conn_params.min_int = minInterval;  // min_int = 0x10*1.25ms = 20ms
   conn_params.timeout = timeout;      // timeout = 400*10ms = 4000ms
-  esp_ble_gap_update_conn_params(&conn_params);
+  
+  esp_err_t errRc = esp_ble_gap_update_conn_params(&conn_params);
+  if (errRc != ESP_OK) {
+    log_e("esp_ble_gap_update_conn_params: rc=%d", errRc);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Request an update to the connection parameters.
+ * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
+ */
+void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  requestConnParams(remote_bda, minInterval, maxInterval, latency, timeout);
 }
 
 void BLEServer::disconnect(uint16_t connId) {
   esp_ble_gatts_close(m_gatts_if, connId);
+}
+
+/**
+ * @brief Handle a received GAP event for the server.
+ * @param [in] event The GAP event type.
+ * @param [in] param The GAP event parameter.
+ */
+void BLEServer::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+  log_v(">> BLEServer::handleGAPEvent");
+  
+  switch (event) {
+    case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
+    {
+      if (m_pServerCallbacks != nullptr) {
+        m_pServerCallbacks->onConnParamsUpdate(
+          param->update_conn_params.bda,
+          param->update_conn_params.conn_int,
+          param->update_conn_params.latency,
+          param->update_conn_params.timeout,
+          param->update_conn_params.status
+        );
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  
+  log_v("<< BLEServer::handleGAPEvent");
 }
 
 uint16_t BLEServer::getGattsIf() {
@@ -576,6 +634,13 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
+
+void BLEServerCallbacks::onConnParamsUpdate(esp_bd_addr_t remote_bda, uint16_t interval, uint16_t latency, uint16_t timeout, esp_bt_status_t status) {
+  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
+  log_d("BLEServerCallbacks", "Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d",
+        interval, interval * 1.25, latency, timeout, timeout * 10, status);
+  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
+}  // onConnParamsUpdate
 
 #endif
 
@@ -798,6 +863,18 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_CONN_UPDATE:
     {
       log_d("Connection parameters updated.");
+      if (server->m_pServerCallbacks != nullptr) {
+        rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+        if (rc == 0) {
+          server->m_pServerCallbacks->onConnParamsUpdate(
+            event->conn_update.conn_handle,
+            desc.conn_itvl,
+            desc.conn_latency,
+            desc.supervision_timeout,
+            event->conn_update.status
+          );
+        }
+      }
       return 0;
     }  // BLE_GAP_EVENT_CONN_UPDATE
 
@@ -967,15 +1044,24 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 }
 
 /**
- * @brief Request an Update the connection parameters:
- * * Can only be used after a connection has been established.
+ * @brief Request an update to the connection parameters.
+ * 
+ * As the BLE Peripheral (server), this device can request connection parameter
+ * changes from the central. However, the central (client) makes the final decision
+ * and may accept, reject, or negotiate different parameters.
+ * 
+ * Can only be called after a connection has been established.
+ * 
  * @param [in] conn_handle The connection handle of the peer to send the request to.
- * @param [in] minInterval The minimum connection interval in 1.25ms units.
- * @param [in] maxInterval The maximum connection interval in 1.25ms units.
- * @param [in] latency The number of packets allowed to skip (extends max interval).
- * @param [in] timeout The timeout time in 10ms units before disconnecting.
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
  */
-void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+bool BLEServer::requestConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
   ble_gap_upd_params params;
 
   params.latency = latency;
@@ -987,8 +1073,18 @@ void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uin
 
   int rc = ble_gap_update_params(conn_handle, &params);
   if (rc != 0) {
-    log_e("Update params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
+    log_e("Request params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
+    return false;
   }
+  return true;
+}  // requestConnParams
+
+/**
+ * @brief Request an update to the connection parameters.
+ * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
+ */
+void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  requestConnParams(conn_handle, minInterval, maxInterval, latency, timeout);
 }  // updateConnParams
 
 bool BLEServer::setIndicateWait(uint16_t conn_handle) {
@@ -1056,6 +1152,13 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *des
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
+
+void BLEServerCallbacks::onConnParamsUpdate(uint16_t conn_handle, uint16_t interval, uint16_t latency, uint16_t timeout, uint8_t status) {
+  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
+  log_d("BLEServerCallbacks", "Conn Handle: %d, Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d",
+        conn_handle, interval, interval * 1.25, latency, timeout, timeout * 10, status);
+  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
+}  // onConnParamsUpdate
 
 #endif  // CONFIG_NIMBLE_ENABLED
 
