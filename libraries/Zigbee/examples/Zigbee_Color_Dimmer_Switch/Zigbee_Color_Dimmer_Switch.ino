@@ -18,7 +18,7 @@
  * The example demonstrates how to use Zigbee library to control a RGB light bulb.
  * The RGB light bulb is a Zigbee end device, which is controlled by a Zigbee coordinator (Switch).
  * To turn on/off the light, push the button on the switch.
- * To change the color or level of the light, send serial commands to the switch.
+ * To change the color, level, or step the level of the light, send serial commands to the switch.
  *
  * By setting the switch to allow multiple binding, so it can bind to multiple lights.
  * Also every 30 seconds, all bound lights are printed to the serial console.
@@ -133,8 +133,26 @@ void loop() {
       }
       int level = Serial.parseInt();
       zbSwitch.setLightLevel(level);
+    } else if (command == "stepup") {
+      // Step level up by 20 units over 1 second
+      zbSwitch.setLightLevelStep(ZIGBEE_LEVEL_STEP_UP, 20, 10);
+      Serial.println("Step level up");
+    } else if (command == "stepdown") {
+      // Step level down by 20 units over 1 second
+      zbSwitch.setLightLevelStep(ZIGBEE_LEVEL_STEP_DOWN, 20, 10);
+      Serial.println("Step level down");
+    } else if (command == "stepupfast") {
+      // Step level up by 10 units as fast as possible (transition_time 0xFFFF)
+      zbSwitch.setLightLevelStep(ZIGBEE_LEVEL_STEP_UP, 10, 0xFFFF);
+      Serial.println("Step level up (fast)");
+    } else if (command == "stepdownfast") {
+      // Step level down by 10 units as fast as possible
+      zbSwitch.setLightLevelStep(ZIGBEE_LEVEL_STEP_DOWN, 10, 0xFFFF);
+      Serial.println("Step level down (fast)");
+    } else if (command == "help") {
+      Serial.println("Commands: on, off, toggle, red, green, blue, white, color, level, stepup, stepdown, stepupfast, stepdownfast");
     } else {
-      Serial.println("Unknown command");
+      Serial.println("Unknown command (type 'help' for list)");
     }
   }
 

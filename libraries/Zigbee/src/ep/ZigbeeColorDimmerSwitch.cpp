@@ -826,6 +826,71 @@ void ZigbeeColorDimmerSwitch::getLightColorHS(uint8_t endpoint, esp_zb_ieee_addr
   }
 }
 
+void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time) {
+  if (_is_bound) {
+    esp_zb_zcl_level_step_cmd_t cmd_req;
+    memset(&cmd_req, 0, sizeof(cmd_req));
+    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
+    cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    cmd_req.step_mode = (uint8_t)direction;
+    cmd_req.step_size = step_size;
+    cmd_req.transition_time = transition_time;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_level_step_cmd_req(&cmd_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint16_t group_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_level_step_cmd_t cmd_req;
+    memset(&cmd_req, 0, sizeof(cmd_req));
+    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
+    cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = group_addr;
+    cmd_req.step_mode = (uint8_t)direction;
+    cmd_req.step_size = step_size;
+    cmd_req.transition_time = transition_time;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_level_step_cmd_req(&cmd_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_level_step_cmd_t cmd_req;
+    memset(&cmd_req, 0, sizeof(cmd_req));
+    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
+    cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
+    cmd_req.step_mode = (uint8_t)direction;
+    cmd_req.step_size = step_size;
+    cmd_req.transition_time = transition_time;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_level_step_cmd_req(&cmd_req);
+    esp_zb_lock_release();
+  }
+}
+
+void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+  if (_is_bound) {
+    esp_zb_zcl_level_step_cmd_t cmd_req;
+    memset(&cmd_req, 0, sizeof(cmd_req));
+    cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
+    cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
+    cmd_req.zcl_basic_cmd.dst_endpoint = endpoint;
+    memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
+    cmd_req.step_mode = (uint8_t)direction;
+    cmd_req.step_size = step_size;
+    cmd_req.transition_time = transition_time;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    esp_zb_zcl_level_step_cmd_req(&cmd_req);
+    esp_zb_lock_release();
+  }
+}
+
 void ZigbeeColorDimmerSwitch::zbAttributeRead(
   uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address
 ) {
