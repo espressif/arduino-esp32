@@ -30,6 +30,11 @@
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
 
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "BLE2902.h"
+#include "BLEDevice.h"
+#endif
+
 /***************************************************************************
  *                           Common definitions                            *
  ***************************************************************************/
@@ -289,6 +294,18 @@ void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_i
     {
       if (param->write.handle == m_handle) {
         setValue(param->write.value, param->write.len);  // Set the value of the descriptor.
+
+        // If this is a CCCD (0x2902), persist the value for bonded device reconnection
+        if (m_bleUUID.equals(BLEUUID((uint16_t)0x2902)) && m_pCharacteristic != nullptr) {
+          BLE2902 *pCCCD = (BLE2902 *)this;
+          BLEAddress peerAddr(param->write.bda);
+          uint16_t charHandle = m_pCharacteristic->getHandle();
+          pCCCD->persistValue(peerAddr, charHandle);
+          log_d("CCCD write from %s: notifications=%s, indications=%s",
+                peerAddr.toString().c_str(),
+                pCCCD->getNotifications() ? "enabled" : "disabled",
+                pCCCD->getIndications() ? "enabled" : "disabled");
+        }
 
         if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
           m_pCallback->onWrite(this);  // Invoke the onWrite callback handler.

@@ -1246,6 +1246,14 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       // This unblocks any GATT operations waiting for pairing when bonding is enabled
       BLESecurity::signalAuthenticationComplete();
 
+      // Restore CCCD values for bonded device reconnection
+      // Per GATT spec, CCCD values should persist for bonded devices
+      // Windows and other hosts don't re-write CCCD after reconnection
+      if (param->ble_security.auth_cmpl.success && m_pServer != nullptr) {
+        BLEAddress peerAddress(param->ble_security.auth_cmpl.bd_addr);
+        m_pServer->restoreCCCDValues(peerAddress);
+      }
+
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }

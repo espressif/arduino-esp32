@@ -37,6 +37,7 @@
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt_main.h>
+#include "BLE2902.h"
 #endif
 
 /***************************************************************************
@@ -576,6 +577,47 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
+
+/**
+ * @brief Restore CCCD values for a bonded device from NVS.
+ *
+ * Iterates through all services and their characteristics, restoring any
+ * persisted CCCD values for the given peer address. This enables notifications
+ * and indications to work correctly after a bonded device reconnects.
+ *
+ * @param [in] peerAddress The address of the bonded peer device.
+ */
+void BLEServer::restoreCCCDValues(const BLEAddress &peerAddress) {
+  log_i("Restoring CCCD values for bonded device: %s", peerAddress.toString().c_str());
+
+  int restoredCount = 0;
+
+  // Iterate through all services
+  BLEService *pService = m_serviceMap.getFirst();
+  while (pService != nullptr) {
+    // Get the characteristic map from the service
+    BLECharacteristic *pChar = pService->m_characteristicMap.getFirst();
+    while (pChar != nullptr) {
+      // Check if this characteristic has a CCCD descriptor
+      BLEDescriptor *pDesc = pChar->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
+      if (pDesc != nullptr) {
+        BLE2902 *pCCCD = (BLE2902 *)pDesc;
+        uint16_t charHandle = pChar->getHandle();
+
+        // Try to restore the CCCD value from NVS
+        if (pCCCD->restoreValue(peerAddress, charHandle)) {
+          restoredCount++;
+          log_d("Restored CCCD for characteristic handle 0x%04x: notify=%d, indicate=%d",
+                charHandle, pCCCD->getNotifications(), pCCCD->getIndications());
+        }
+      }
+      pChar = pService->m_characteristicMap.getNext();
+    }
+    pService = m_serviceMap.getNext();
+  }
+
+  log_i("Restored %d CCCD value(s) for peer %s", restoredCount, peerAddress.toString().c_str());
+}
 
 #endif
 
