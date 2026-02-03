@@ -132,12 +132,25 @@ bool ZigbeeWindowCovering::setMode(bool motor_reversed, bool calibration_mode, b
 
   log_v("Updating window covering mode to %d", mode);
 
-  esp_zb_attribute_list_t *window_covering_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(window_covering_cluster, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID, (void *)&mode);
-  if (ret != ESP_OK) {
-    log_e("Failed to set mode: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
+  if (Zigbee.started()) {
+    esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+    esp_zb_lock_acquire(portMAX_DELAY);
+    ret = esp_zb_zcl_set_attribute_val(
+      _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID, &mode, false
+    );
+    esp_zb_lock_release();
+    if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+      log_e("Failed to set mode: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+      return false;
+    }
+  } else {
+    esp_zb_attribute_list_t *window_covering_cluster =
+      esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+    esp_err_t ret = esp_zb_cluster_update_attr(window_covering_cluster, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID, (void *)&mode);
+    if (ret != ESP_OK) {
+      log_e("Failed to set mode: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
   }
   return true;
 }
