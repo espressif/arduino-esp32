@@ -402,9 +402,8 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
   bus->num_symbols_read = num_rmt_symbols;
 
   if (waitForData) {
-    // must force stopping a previous reading first
+    // resets the reading channel to start fresh
     rmt_disable(bus->rmt_channel_h);
-    // enable it again for reading a new data
     rmt_enable(bus->rmt_channel_h);
   }
 
