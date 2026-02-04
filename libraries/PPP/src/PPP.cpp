@@ -299,6 +299,11 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   }
 
   esp_modem_set_error_cb(_dce, _ppp_error_cb);
+  
+  // Send burst of AT to lock auto baurate on modem
+  for (int i = 0; i < 50; i++) {
+    esp_modem_at(_dce, "AT", NULL, 10);
+  }
 
   /* Wait for Modem to respond */
   if (_pin_rst >= 0) {
