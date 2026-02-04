@@ -11,6 +11,16 @@ static const uint8_t RX = 3;
 #define TX1 4
 #define RX1 36
 
+#define TX2 17
+#define RX2 16
+
+#define ETH_PHY_TYPE  ETH_PHY_LAN8720
+#define ETH_PHY_ADDR  0
+#define ETH_PHY_MDC   23
+#define ETH_PHY_MDIO  18
+#define ETH_PHY_POWER -1	                // no POE
+#define ETH_CLK_MODE ETH_CLOCK_GPIO0_IN	  // clock supplied by CR1
+
 static const uint8_t SDA = 13;
 static const uint8_t SCL = 16;
 
