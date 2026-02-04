@@ -420,6 +420,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_CONNECT_EVT:
     {
+      log_i("Client connected, conn_id=%d", param->connect.conn_id);
       m_connId = param->connect.conn_id;
       addPeerDevice((void *)this, false, m_connId);
       if (m_pServerCallbacks != nullptr) {
@@ -459,6 +460,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // we also want to start advertising again.
     case ESP_GATTS_DISCONNECT_EVT:
     {
+      log_i("Client disconnected, conn_id=%d, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
       if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
         m_pServerCallbacks->onDisconnect(this);
         m_pServerCallbacks->onDisconnect(this, param);
@@ -508,6 +510,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_REG_EVT:
     {
+      log_i("GATT server registered, status=%d, app_id=%d, gatts_if=%d", param->reg.status, param->reg.app_id, gatts_if);
       m_gatts_if = gatts_if;
       m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
       break;
