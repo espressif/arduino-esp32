@@ -188,6 +188,17 @@ void BLEServer::start() {
     return;
   }
 
+  // Re-set the device name after ble_gatts_start() because ble_svc_gap_init()
+  // (called in createServer) resets it to the default "nimble" from sdkconfig.
+  // The GAP service device name must be set after the GATT server is started.
+  String deviceName = BLEDevice::getDeviceName();
+  if (deviceName.length() > 0) {
+    rc = ble_svc_gap_device_name_set(deviceName.c_str());
+    if (rc != 0) {
+      log_e("ble_svc_gap_device_name_set: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    }
+  }
+
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   ble_gatts_show_local();
 #endif
