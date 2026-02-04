@@ -567,6 +567,14 @@ bool BLEScan::stop() {
   return true;
 }  // stop
 
+/**
+ * @brief Get the status of the scanner.
+ * @return true if scanning is active.
+ */
+bool BLEScan::isScanning() {
+  return !m_stopped;
+}  // isScanning
+
 #endif  // CONFIG_BLUEDROID_ENABLED
 
 /***************************************************************************

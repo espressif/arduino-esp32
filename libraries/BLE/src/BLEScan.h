@@ -121,6 +121,7 @@ public:
   void erase(BLEAddress address);
   BLEScanResults *getResults();
   void clearResults();
+  bool isScanning();
 
   /***************************************************************************
    *                       Bluedroid public declarations                     *
@@ -141,7 +142,6 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   void setDuplicateFilter(bool enabled);
-  bool isScanning();
   void clearDuplicateCache();
 #endif
 
