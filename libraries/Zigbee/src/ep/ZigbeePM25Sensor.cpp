@@ -127,7 +127,8 @@ bool ZigbeePM25Sensor::report() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;  // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
