@@ -46,6 +46,28 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
 
 void ZigbeeEP::setVersion(uint8_t version) {
   _ep_config.app_device_version = version;
+
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (basic_cluster == nullptr) {
+    log_e("Failed to get basic cluster for application version");
+    return;
+  }
+  esp_err_t ret = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_APPLICATION_VERSION_ID, (void *)&version);
+  if (ret != ESP_OK) {
+    log_e("Failed to add application version to basic cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  }
+}
+
+void ZigbeeEP::setHardwareVersion(uint8_t version) {
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (basic_cluster == nullptr) {
+    log_e("Failed to get basic cluster for hardware version");
+    return;
+  }
+  esp_err_t ret = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_HW_VERSION_ID, (void *)&version);
+  if (ret != ESP_OK) {
+    log_e("Failed to add hardware version to basic cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  }
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {

@@ -42,6 +42,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
+#include "esp32-hal-bt-mem.h"
 #endif
 
 #include "esp32-hal-log.h"
@@ -1246,16 +1247,36 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       // This unblocks any GATT operations waiting for pairing when bonding is enabled
       BLESecurity::signalAuthenticationComplete();
 
+      // Restore CCCD values for bonded device reconnection
+      // Per GATT spec, CCCD values should persist for bonded devices
+      // Windows and other hosts don't re-write CCCD after reconnection
+      if (param->ble_security.auth_cmpl.success && m_pServer != nullptr) {
+        BLEAddress peerAddress(param->ble_security.auth_cmpl.bd_addr);
+        m_pServer->restoreCCCDValues(peerAddress);
+      }
+
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }
 #endif  // CONFIG_BLE_SMP_ENABLE
     } break;
+    case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
+    {
+      log_i(
+        "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%d, latency=%d, timeout=%d", param->update_conn_params.status,
+        param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout
+      );
+      break;
+    }
     default:
     {
       break;
     }
   }  // switch
+
+  if (BLEDevice::m_pServer != nullptr) {
+    BLEDevice::m_pServer->handleGAPEvent(event, param);
+  }
 
   if (BLEDevice::m_pClient != nullptr) {
     BLEDevice::m_pClient->handleGAPEvent(event, param);
