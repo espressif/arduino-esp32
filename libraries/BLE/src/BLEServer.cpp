@@ -607,8 +607,7 @@ void BLEServer::restoreCCCDValues(const BLEAddress &peerAddress) {
         // Try to restore the CCCD value from NVS
         if (pCCCD->restoreValue(peerAddress, charHandle)) {
           restoredCount++;
-          log_d("Restored CCCD for characteristic handle 0x%04x: notify=%d, indicate=%d",
-                charHandle, pCCCD->getNotifications(), pCCCD->getIndications());
+          log_d("Restored CCCD for characteristic handle 0x%04x: notify=%d, indicate=%d", charHandle, pCCCD->getNotifications(), pCCCD->getIndications());
         }
       }
       pChar = pService->m_characteristicMap.getNext();

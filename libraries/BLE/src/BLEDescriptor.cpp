@@ -301,10 +301,10 @@ void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_i
           BLEAddress peerAddr(param->write.bda);
           uint16_t charHandle = m_pCharacteristic->getHandle();
           pCCCD->persistValue(peerAddr, charHandle);
-          log_d("CCCD write from %s: notifications=%s, indications=%s",
-                peerAddr.toString().c_str(),
-                pCCCD->getNotifications() ? "enabled" : "disabled",
-                pCCCD->getIndications() ? "enabled" : "disabled");
+          log_d(
+            "CCCD write from %s: notifications=%s, indications=%s", peerAddr.toString().c_str(), pCCCD->getNotifications() ? "enabled" : "disabled",
+            pCCCD->getIndications() ? "enabled" : "disabled"
+          );
         }
 
         if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
