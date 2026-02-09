@@ -1380,8 +1380,10 @@ bool BLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, uin
 
 bool BLEClientCallbacks::onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params) {
   log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: accepting peer's request by default");
-  log_d("BLEClientCallbacks", "Min Interval: %d (%.2f ms), Max Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms)",
-        params->itvl_min, params->itvl_min * 1.25, params->itvl_max, params->itvl_max * 1.25, params->latency, params->supervision_timeout, params->supervision_timeout * 10);
+  log_d(
+    "BLEClientCallbacks", "Min Interval: %d (%.2f ms), Max Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms)", params->itvl_min, params->itvl_min * 1.25,
+    params->itvl_max, params->itvl_max * 1.25, params->latency, params->supervision_timeout, params->supervision_timeout * 10
+  );
   return true;
 }
 

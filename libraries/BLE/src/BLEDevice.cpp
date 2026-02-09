@@ -1253,11 +1253,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     } break;
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
     {
-      log_i("ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%d, latency=%d, timeout=%d", 
-            param->update_conn_params.status,
-            param->update_conn_params.conn_int,
-            param->update_conn_params.latency,
-            param->update_conn_params.timeout);
+      log_i(
+        "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%d, latency=%d, timeout=%d", param->update_conn_params.status,
+        param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout
+      );
       break;
     }
     default:

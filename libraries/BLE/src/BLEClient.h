@@ -210,14 +210,14 @@ public:
 #if defined(CONFIG_NIMBLE_ENABLED)
   /**
    * @brief Callback when the server requests connection parameter updates.
-   * 
+   *
    * This callback is invoked when the peripheral (server) requests to update
    * connection parameters. The central (client) can accept or reject the request.
-   * 
+   *
    * NOTE: This callback is NimBLE-only. Bluedroid handles parameter update
    * requests automatically within the Bluetooth stack without application-level
    * intervention.
-   * 
+   *
    * @param [in] pClient Pointer to the BLEClient instance.
    * @param [in] params Pointer to the requested connection parameters.
    * @return true to accept the request, false to reject it.
