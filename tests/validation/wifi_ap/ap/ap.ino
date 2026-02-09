@@ -41,25 +41,21 @@ void setup() {
     delay(100);
   }
 
-  // delete old config
-  WiFi.disconnect(true);
-  delay(1000);
-
   // Wait for test to be ready
   Serial.println("[AP] Device ready for WiFi credentials");
 
   // Read WiFi credentials from serial
   readWiFiCredentials();
 
-  WiFi.mode(WIFI_AP);
-  bool ok = WiFi.softAP(ssid, password);
+  WiFi.AP.begin();
+  bool ok = WiFi.AP.create(ssid, password);
 
   if (!ok) {
     Serial.println("[AP] Failed to start AP");
     return;
   }
 
-  IPAddress ip = WiFi.softAPIP();
+  IPAddress ip = WiFi.AP.localIP();
   Serial.printf("[AP] Started SSID=%s Password=%s IP=%s\n",
                 ssid.c_str(), password.c_str(), ip.toString().c_str());
 }
@@ -69,7 +65,7 @@ void loop() {
   static unsigned long last = 0;
   if (millis() - last > 3000) {
     last = millis();
-    int count = WiFi.softAPgetStationNum();
+    int count = WiFi.AP.stationCount();
     Serial.printf("[AP] Stations connected: %d\n", count);
   }
 }

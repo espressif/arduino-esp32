@@ -41,17 +41,13 @@ void setup() {
     delay(100);
   }
 
-  // delete old config
-  WiFi.disconnect(true);
-  delay(1000);
-
   // Wait for test to be ready
   Serial.println("[CLIENT] Device ready for WiFi credentials");
 
   // Read WiFi credentials from serial
   readWiFiCredentials();
 
-  WiFi.mode(WIFI_STA);
+  WiFi.STA.begin();
 
   bool found = false;
   do {
@@ -83,18 +79,18 @@ void setup() {
   // Delete the scan result to free memory for code below.
   WiFi.scanDelete();
 
-  WiFi.begin(ssid, password);
+  WiFi.STA.connect(ssid, password);
 
   Serial.printf("[CLIENT] Connecting to SSID=%s Password=%s ...\n", ssid.c_str(), password.c_str());
 
   int retries = 50;
-  while (WiFi.status() != WL_CONNECTED && retries--) {
+  while (WiFi.STA.status() != WL_CONNECTED && retries--) {
     delay(200);
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.STA.status() == WL_CONNECTED) {
     Serial.printf("[CLIENT] Connected! IP=%s\n",
-                   WiFi.localIP().toString().c_str());
+                   WiFi.STA.localIP().toString().c_str());
   } else {
     Serial.println("[CLIENT] Failed to connect");
   }
@@ -102,6 +98,6 @@ void setup() {
 
 void loop() {
   delay(2000);
-  wl_status_t st = WiFi.status();
+  wl_status_t st = WiFi.STA.status();
   Serial.printf("[CLIENT] Status=%d\n", st);
 }
