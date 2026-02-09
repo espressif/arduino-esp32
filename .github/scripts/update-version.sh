@@ -42,7 +42,7 @@ echo "New Arduino Version: $version"
 echo "ESP-IDF Version: $ESP_IDF_VERSION"
 
 echo "Updating issue template..."
-if ! grep -q "v$version" .github/ISSUE_TEMPLATE/Issue-report.yml; then
+if ! grep -q "^[[:space:]]*- v$version$" .github/ISSUE_TEMPLATE/Issue-report.yml; then
     cat .github/ISSUE_TEMPLATE/Issue-report.yml | \
     sed "s/.*\- latest master .*/        - latest master \(checkout manually\)\\n        - v$version/g" > __issue-report.yml && mv __issue-report.yml .github/ISSUE_TEMPLATE/Issue-report.yml
     echo "Issue template updated with version v$version"

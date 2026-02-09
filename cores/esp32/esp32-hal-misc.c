@@ -235,11 +235,53 @@ void init() __attribute__((weak));
 void init() {}
 
 #ifdef CONFIG_APP_ROLLBACK_ENABLE
+/**
+ * @brief Verify the OTA image after boot
+ *
+ * This weak hook is invoked when a newly-updated application image is in
+ * the `ESP_OTA_IMG_PENDING_VERIFY` state. The default implementation
+ * returns `true`, indicating the image is considered valid. Applications
+ * may override this function (provide a non-weak implementation) to
+ * perform custom checks such as running a self-test, validating
+ * application-specific state, or performing connectivity / sensor checks
+ * before confirming the update.
+ *
+ * Usage:
+ * - Return `true` to mark the OTA image as valid; the system will call
+ *   `esp_ota_mark_app_valid_cancel_rollback()` to cancel rollback.
+ * - Return `false` to indicate verification failure; the system will
+ *   call `esp_ota_mark_app_invalid_rollback_and_reboot()` to rollback.
+ *
+ * @note Keep this function short and non-blocking if possible; blocking
+ *       for long periods may delay boot.
+ *
+ * @return true if verification succeeds and the image should be kept
+ * @return false if verification fails and the image should be rolled back
+ */
 bool verifyOta() __attribute__((weak));
 bool verifyOta() {
   return true;
 }
 
+/**
+ * @brief Optionally defer OTA verification to later
+ *
+ * This weak hook allows an application to postpone the default OTA
+ * verification performed at startup. If this function returns `true`, the
+ * initialization code will skip immediate verification and the application
+ * can choose to verify the update at a later time (for example, after a
+ * lengthy hardware initialization or user interaction). The default weak
+ * implementation returns `false`, meaning verification will run during
+ * `initArduino()` when an image is pending verification.
+ *
+ * Usage:
+ * - Return `true` to delay verification and handle it manually later.
+ * - Return `false` to allow the built-in verification flow to run at
+ *   startup.
+ *
+ * @return true to defer verification to a later time
+ * @return false to perform verification immediately during init
+ */
 bool verifyRollbackLater() __attribute__((weak));
 bool verifyRollbackLater() {
   return false;

@@ -539,8 +539,7 @@ for current_target in "${targets_to_run[@]}"; do
 
         set +e
         # Ignore requirements as we don't have the libs. The requirements will be checked in the run_test function
-        ${COUNT_SKETCHES} "$test_folder" "$current_target" "1"
-        sketchcount=$?
+        sketchcount=$(${COUNT_SKETCHES} "$test_folder" "$current_target" "1")
         set -e
         sketches=$(cat sketches.txt)
         rm -rf sketches.txt

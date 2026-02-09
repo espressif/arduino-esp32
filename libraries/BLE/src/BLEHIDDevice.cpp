@@ -35,6 +35,7 @@
  ***************************************************************************/
 
 BLEHIDDevice::BLEHIDDevice(BLEServer *server) {
+  m_server = server;
   /*
 	 * Here we create mandatory services described in bluetooth specification
 	 */
@@ -70,6 +71,8 @@ BLEHIDDevice::BLEHIDDevice(BLEServer *server) {
   BLE2902 *batLevelIndicator = new BLE2902();
   // Battery Level Notification is ON by default, making it work always on BLE Pairing and Bonding
   batLevelIndicator->setNotifications(true);
+  // IMPORTANT: CCCD must be accessible without encryption for HID enumeration
+  batLevelIndicator->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
   m_batteryLevelCharacteristic->addDescriptor(batLevelIndicator);
 #endif
 
@@ -97,6 +100,7 @@ void BLEHIDDevice::startServices() {
   m_deviceInfoService->start();
   m_hidService->start();
   m_batteryService->start();
+  m_server->start();
 }
 
 /*
@@ -137,11 +141,22 @@ void BLEHIDDevice::hidInfo(uint8_t country, uint8_t flags) {
  * @return pointer to new input report characteristic
  */
 BLECharacteristic *BLEHIDDevice::inputReport(uint8_t reportID) {
-  BLECharacteristic *inputReportCharacteristic =
-    m_hidService->createCharacteristic((uint16_t)0x2a4d, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+  // Note: READ_ENC removed per HOGP specification - characteristics must be readable without encryption for enumeration
+  // Actual report data is still encrypted via BLE connection encryption after pairing
+  uint32_t properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY;
+  // For NimBLE: Characteristic encryption properties can be added if needed
+  // For Bluedroid: Standard properties, permissions set separately below
+
+  BLECharacteristic *inputReportCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a4d, properties);
   BLEDescriptor *inputReportDescriptor = new BLEDescriptor(BLEUUID((uint16_t)0x2908));
+
+  // For Bluedroid: Set access permissions (ignored by NimBLE, but doesn't hurt)
   inputReportCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-  inputReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+
+  // IMPORTANT: Report Reference Descriptor must be readable without encryption per HOGP specification
+  // HID hosts must read Report ID and Report Type during enumeration (before encryption is established)
+  // The descriptor only contains metadata; actual HID reports are encrypted via BLE connection
+  inputReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
 
   uint8_t desc1_val[] = {reportID, 0x01};
   inputReportDescriptor->setValue((uint8_t *)desc1_val, 2);
@@ -149,7 +164,9 @@ BLECharacteristic *BLEHIDDevice::inputReport(uint8_t reportID) {
 
 #if CONFIG_BLUEDROID_ENABLED
   BLE2902 *p2902 = new BLE2902();
-  p2902->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+  // IMPORTANT: CCCD must be readable/writable without encryption for HID enumeration
+  // Host needs to enable notifications before encryption is established
+  p2902->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
   inputReportCharacteristic->addDescriptor(p2902);
 #endif
 
@@ -162,12 +179,20 @@ BLECharacteristic *BLEHIDDevice::inputReport(uint8_t reportID) {
  * @return Pointer to new output report characteristic
  */
 BLECharacteristic *BLEHIDDevice::outputReport(uint8_t reportID) {
-  BLECharacteristic *outputReportCharacteristic = m_hidService->createCharacteristic(
-    (uint16_t)0x2a4d, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR
-  );
+  // Note: Encryption properties removed per HOGP specification - characteristics must be readable without encryption for enumeration
+  // Actual report data is still encrypted via BLE connection encryption after pairing
+  uint32_t properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR;
+  // For NimBLE: Characteristic encryption properties can be added if needed
+  // For Bluedroid: Standard properties, permissions set separately below
+
+  BLECharacteristic *outputReportCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a4d, properties);
   BLEDescriptor *outputReportDescriptor = new BLEDescriptor(BLEUUID((uint16_t)0x2908));
+
+  // For Bluedroid: Set access permissions (ignored by NimBLE, but doesn't hurt)
   outputReportCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-  outputReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+
+  // IMPORTANT: Report Reference Descriptor must be readable without encryption for HID enumeration
+  outputReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
 
   uint8_t desc1_val[] = {reportID, 0x02};
   outputReportDescriptor->setValue((uint8_t *)desc1_val, 2);
@@ -182,12 +207,20 @@ BLECharacteristic *BLEHIDDevice::outputReport(uint8_t reportID) {
  * @return Pointer to new feature report characteristic
  */
 BLECharacteristic *BLEHIDDevice::featureReport(uint8_t reportID) {
-  BLECharacteristic *featureReportCharacteristic =
-    m_hidService->createCharacteristic((uint16_t)0x2a4d, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  // Note: Encryption properties removed per HOGP specification - characteristics must be readable without encryption for enumeration
+  // Actual report data is still encrypted via BLE connection encryption after pairing
+  uint32_t properties = BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE;
+  // For NimBLE: Characteristic encryption properties can be added if needed
+  // For Bluedroid: Standard properties, permissions set separately below
+
+  BLECharacteristic *featureReportCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a4d, properties);
   BLEDescriptor *featureReportDescriptor = new BLEDescriptor(BLEUUID((uint16_t)0x2908));
 
+  // For Bluedroid: Set access permissions (ignored by NimBLE, but doesn't hurt)
   featureReportCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-  featureReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+
+  // IMPORTANT: Report Reference Descriptor must be readable without encryption for HID enumeration
+  featureReportDescriptor->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
 
   uint8_t desc1_val[] = {reportID, 0x03};
   featureReportDescriptor->setValue((uint8_t *)desc1_val, 2);
@@ -197,12 +230,19 @@ BLECharacteristic *BLEHIDDevice::featureReport(uint8_t reportID) {
 }
 
 /*
- * @brief
+ * @brief Create boot input characteristic
  */
 BLECharacteristic *BLEHIDDevice::bootInput() {
-  BLECharacteristic *bootInputCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a22, BLECharacteristic::PROPERTY_NOTIFY);
+  // Note: READ_ENC removed to match input report behavior
+  // Boot mode characteristics follow same security model as report mode
+  uint32_t properties = BLECharacteristic::PROPERTY_NOTIFY;
+
+  BLECharacteristic *bootInputCharacteristic = m_hidService->createCharacteristic((uint16_t)0x2a22, properties);
 #if CONFIG_BLUEDROID_ENABLED
-  bootInputCharacteristic->addDescriptor(new BLE2902());
+  BLE2902 *bootInputCCCD = new BLE2902();
+  // IMPORTANT: CCCD must be accessible without encryption for HID enumeration
+  bootInputCCCD->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
+  bootInputCharacteristic->addDescriptor(bootInputCCCD);
 #endif
 
   return bootInputCharacteristic;
@@ -233,7 +273,9 @@ BLECharacteristic *BLEHIDDevice::protocolMode() {
 
 void BLEHIDDevice::setBatteryLevel(uint8_t level) {
   m_batteryLevelCharacteristic->setValue(&level, 1);
-  m_batteryLevelCharacteristic->notify();
+  if (m_server->isStarted()) {
+    m_batteryLevelCharacteristic->notify();
+  }
 }
 /*
  * @brief Returns battery level characteristic

@@ -23,27 +23,33 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
         # Check if the sketch requires any configuration options (AND)
         requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" == "" ]]; then
                     has_requirements=0
                 fi
-            done
+            done <<< "$requirements"
         fi
 
         # Check if the sketch requires any configuration options (OR)
         requirements_or=$(yq eval '.requires_any[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
             local found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" != "" ]]; then
                     found=true
                     break
                 fi
-            done
+            done <<< "$requirements_or"
             if [[ "$found" == "false" ]]; then
                 has_requirements=0
             fi
@@ -431,7 +437,8 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         echo "$sketch" >> sketches.txt
         sketchnum=$((sketchnum + 1))
     done
-    return $sketchnum
+    # Echo count to stdout instead of using return code (which is limited to 0-255)
+    echo "$sketchnum"
 }
 
 function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
@@ -507,11 +514,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
 
     set +e
     if [ -n "$sketches_file" ]; then
-        count_sketches "$path" "$target" "0" "$sketches_file"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file")
     else
-        count_sketches "$path" "$target"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target")
     fi
     set -e
     local sketches
