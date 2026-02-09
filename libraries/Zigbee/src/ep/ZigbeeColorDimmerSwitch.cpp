@@ -857,7 +857,9 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection directi
   }
 }
 
-void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr) {
+void ZigbeeColorDimmerSwitch::setLightLevelStep(
+  ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr
+) {
   if (_is_bound) {
     esp_zb_zcl_level_step_cmd_t cmd_req;
     memset(&cmd_req, 0, sizeof(cmd_req));
@@ -874,7 +876,9 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection directi
   }
 }
 
-void ZigbeeColorDimmerSwitch::setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
+void ZigbeeColorDimmerSwitch::setLightLevelStep(
+  ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr
+) {
   if (_is_bound) {
     esp_zb_zcl_level_step_cmd_t cmd_req;
     memset(&cmd_req, 0, sizeof(cmd_req));
