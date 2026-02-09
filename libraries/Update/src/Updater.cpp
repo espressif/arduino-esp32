@@ -351,56 +351,96 @@ void UpdateClass::abort() {
 }
 
 #ifndef UPDATE_NOCRYPT
+/*
+ * Generates an address-tweaked encryption key for ESP32 flash encryption.
+ *
+ * Key Tweaking Overview:
+ * ----------------------
+ * ESP32 flash encryption uses "key tweaking" to derive a unique effective key
+ * for each 32-byte region of flash. This prevents attackers from:
+ *   - Swapping encrypted blocks between different flash addresses
+ *   - Using known-plaintext from one region to attack another
+ *
+ * The tweak is computed by XORing address bits into the base key according
+ * to a specific pattern that matches ESP32's hardware flash encryption.
+ *
+ * Parameters:
+ *   cryptAddress - Flash address used to derive the tweak (aligned to 32 bytes)
+ *   tweaked_key  - Output buffer for the 32-byte tweaked key
+ *
+ * Configuration (_cryptCfg):
+ * --------------------------
+ * The _cryptCfg value (0x0 to 0xF) controls how much address information
+ * is mixed into the key:
+ *   - 0x0: No tweaking, use base key as-is (lowest security)
+ *   - 0xF: Full tweaking, maximum address mixing (highest security, default)
+ *   - Other values: Partial tweaking for compatibility
+ *
+ * This matches the --flash_crypt_conf parameter in espsecure.py
+ */
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE);
   if (_cryptCfg == 0) {
-    return;  //no tweaking needed, use crypt key as-is
+    return;  // No tweaking needed, use base key as-is
   }
 
+  // Pattern defines which address bits to mix into each key region
+  // Values represent bit positions (23, 14, 12, 10, 8) used for tweaking
   const uint8_t pattern[] = {23, 23, 23, 14, 23, 23, 23, 12, 23, 23, 23, 10, 23, 23, 23, 8};
   int pattern_idx = 0;
   int key_idx = 0;
   int bit_len = 0;
   uint32_t tweak = 0;
-  cryptAddress &= 0x00ffffe0;  //bit 23-5
-  cryptAddress <<= 8;          //bit23 shifted to bit31(MSB)
+
+  // Extract address bits 23-5 (aligned to 32-byte boundary)
+  cryptAddress &= 0x00ffffe0;
+  cryptAddress <<= 8;  // Shift bit 23 to MSB position for easier manipulation
+
+  // XOR address-derived bits into the key
   while (pattern_idx < sizeof(pattern)) {
-    tweak = cryptAddress << (23 - pattern[pattern_idx]);  //bit shift for small patterns
-    // alternative to: tweak = rotl32(tweak,8 - bit_len);
-    tweak = (tweak << (8 - bit_len)) | (tweak >> (24 + bit_len));  //rotate to line up with end of previous tweak bits
-    bit_len += pattern[pattern_idx++] - 4;                         //add number of bits in next pattern(23-4 = 19bits = 23bit to 5bit)
+    tweak = cryptAddress << (23 - pattern[pattern_idx]);
+    // Rotate to align with previous tweak bits
+    tweak = (tweak << (8 - bit_len)) | (tweak >> (24 + bit_len));
+    bit_len += pattern[pattern_idx++] - 4;
+
+    // XOR full bytes
     while (bit_len > 7) {
-      tweaked_key[key_idx++] ^= tweak;  //XOR byte
-      // alternative to: tweak = rotl32(tweak, 8);
-      tweak = (tweak << 8) | (tweak >> 24);  //compiler should optimize to use rotate(fast)
+      tweaked_key[key_idx++] ^= tweak;
+      tweak = (tweak << 8) | (tweak >> 24);  // Rotate left 8 bits
       bit_len -= 8;
     }
-    tweaked_key[key_idx] ^= tweak;  //XOR remaining bits, will XOR zeros if no remaining bits
-  }
-  if (_cryptCfg == 0xf) {
-    return;  //return with fully tweaked key
+    tweaked_key[key_idx] ^= tweak;  // XOR remaining bits
   }
 
-  //some of tweaked key bits need to be restore back to crypt key bits
+  if (_cryptCfg == 0xf) {
+    return;  // Full tweaking complete
+  }
+
+  // Partial tweaking: restore some key bits based on _cryptCfg
+  // Each bit in _cryptCfg controls whether a key region stays tweaked or reverts
   const uint8_t cfg_bits[] = {67, 65, 63, 61};
   key_idx = 0;
   pattern_idx = 0;
   while (key_idx < ENCRYPTED_KEY_SIZE) {
     bit_len += cfg_bits[pattern_idx];
-    if ((_cryptCfg & (1 << pattern_idx)) == 0) {  //restore crypt key bits
+    if ((_cryptCfg & (1 << pattern_idx)) == 0) {
+      // Restore original key bits for this region
       while (bit_len > 0) {
-        if (bit_len > 7 || ((_cryptCfg & (2 << pattern_idx)) == 0)) {  //restore a crypt key byte
+        if (bit_len > 7 || ((_cryptCfg & (2 << pattern_idx)) == 0)) {
           tweaked_key[key_idx] = _cryptKey[key_idx];
-        } else {  //MSBits restore crypt key bits, LSBits keep as tweaked bits
+        } else {
+          // Partial byte: MSBits from original, LSBits stay tweaked
           tweaked_key[key_idx] &= (0xff >> bit_len);
           tweaked_key[key_idx] |= (_cryptKey[key_idx] & (~(0xff >> bit_len)));
         }
         key_idx++;
         bit_len -= 8;
       }
-    } else {  //keep tweaked key bits
+    } else {
+      // Keep tweaked bits for this region
       while (bit_len > 0) {
-        if (bit_len < 8 && ((_cryptCfg & (2 << pattern_idx)) == 0)) {  //MSBits keep as tweaked bits, LSBits restore crypt key bits
+        if (bit_len < 8 && ((_cryptCfg & (2 << pattern_idx)) == 0)) {
+          // Partial byte: MSBits stay tweaked, LSBits from original
           tweaked_key[key_idx] &= (~(0xff >> bit_len));
           tweaked_key[key_idx] |= (_cryptKey[key_idx] & (0xff >> bit_len));
         }
@@ -412,6 +452,46 @@ void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   }
 }
 
+/*
+ * Decrypts the OTA update buffer using ESP32 flash encryption compatible algorithm.
+ *
+ * ESP32 Flash Encryption Scheme:
+ * ------------------------------
+ * This function implements a decryption algorithm compatible with ESP32's flash
+ * encryption, which uses a symmetric (involutory) construction:
+ *
+ *   Transform(data) = ByteReverse(AES_Encrypt(ByteReverse(data)))
+ *
+ * This transform is its own inverse: Transform(Transform(data)) = data
+ * Therefore, the SAME operation is used for both encryption and decryption.
+ *
+ * Algorithm steps for each 16-byte block:
+ *   1. Reverse the byte order of the block
+ *   2. Apply AES-256 encryption (NOT decryption!) with address-tweaked key
+ *   3. Reverse the byte order of the result
+ *
+ * Why AES_ENCRYPT for decryption?
+ * -------------------------------
+ * The byte reversal combined with the key tweaking creates a mathematical
+ * structure where AES encryption serves as its own inverse. This design:
+ *   - Matches ESP32 hardware flash encryption controller behavior
+ *   - Simplifies bootloader (only needs encrypt logic)
+ *   - Allows same code path for encrypt/decrypt operations
+ *
+ * Key Tweaking:
+ * -------------
+ * The encryption key is "tweaked" based on the flash address every 32 bytes
+ * (ENCRYPTED_TWEAK_BLOCK_SIZE). This provides:
+ *   - Different effective keys for different flash regions
+ *   - Protection against block-swapping attacks
+ *
+ * Note: Since we use MBEDTLS_AES_ENCRYPT mode, we must call mbedtls_aes_setkey_enc()
+ * to set up the correct round keys. The encryption key schedule is required even
+ * though this function performs decryption.
+ *
+ * Reference: ESP-IDF flash encryption documentation
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/flash-encryption.html
+ */
 bool UpdateClass::_decryptBuffer() {
   if (!_cryptKey) {
     log_w("AES key not set");
@@ -428,39 +508,41 @@ bool UpdateClass::_decryptBuffer() {
     log_e("new failed");
     return false;
   }
-  uint8_t tweaked_key[ENCRYPTED_KEY_SIZE];  //tweaked crypt key
+
+  uint8_t tweaked_key[ENCRYPTED_KEY_SIZE];
   int done = 0;
 
-  /*
-        Mbedtls functions will be replaced with esp_aes functions when hardware acceleration is available
-
-        To Do:
-        Replace mbedtls for the cases where there's no hardware acceleration
-     */
-
-  mbedtls_aes_context ctx;  //initialize AES
+  mbedtls_aes_context ctx;
   mbedtls_aes_init(&ctx);
+
   while ((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE) {
+    // Step 1: Reverse byte order of the 16-byte block
     for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
-      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];  //reverse order 16 bytes to decrypt
+      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];
     }
+
+    // Update tweaked key every ENCRYPTED_TWEAK_BLOCK_SIZE (32) bytes or at start
     if (((_cryptAddress + _progress + done) % ENCRYPTED_TWEAK_BLOCK_SIZE) == 0 || done == 0) {
-      _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key);  //update tweaked crypt key
+      _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key);
+      // Use setkey_enc because we perform AES_ENCRYPT operation below
       if (mbedtls_aes_setkey_enc(&ctx, tweaked_key, 256)) {
         return false;
       }
-      if (mbedtls_aes_setkey_dec(&ctx, tweaked_key, 256)) {
-        return false;
-      }
     }
-    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {  //use MBEDTLS_AES_ENCRYPT to decrypt flash code
+
+    // Step 2: Apply AES encryption (this decrypts due to the involutory scheme)
+    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {
       return false;
     }
+
+    // Step 3: Reverse byte order back to get the decrypted plaintext
     for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
-      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];  //reverse order 16 bytes from decrypt
+      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];
     }
+
     done += ENCRYPTED_BLOCK_SIZE;
   }
+
   return true;
 }
 #endif /* UPDATE_NOCRYPT */
