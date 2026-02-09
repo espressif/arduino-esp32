@@ -506,6 +506,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     } else {
       // Other errors, don't retry
       log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
       BLEDevice::removePeerDevice(m_appId, true);
       esp_ble_gattc_app_unregister(m_gattc_if);
       m_gattc_if = ESP_GATT_IF_NONE;
@@ -516,6 +517,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   // Check if we exhausted retries
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_open failed after %d retries: rc=%d %s", maxRetries, errRc, GeneralUtils::errorToString(errRc));
+    m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
     BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
