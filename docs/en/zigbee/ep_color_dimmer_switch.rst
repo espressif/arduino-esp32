@@ -134,7 +134,7 @@ Sends a level step command to bound lights: changes the current level by a fixed
 
 **Transition time (ZCL Step command):**
 
-* The transition time is the duration, in **tenths of a second**, that the device should take to perform the step. A step is a change in CurrentLevel of ``step_size`` units.
+* Transition time is in tenths of a second (1 unit = 100 ms). It is the time the device should take to perform the step. A step is a change in CurrentLevel of ``step_size`` units.
 * The device should take as close to this time as it is able. If the device cannot move at a variable rate, it may disregard the transition time and move at a fixed rate.
 * Use **0xFFFF** (65535) to request the device to move **as fast as it is able** (no specific duration).
 
