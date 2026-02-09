@@ -23,6 +23,7 @@
 
 #include <string>
 #include <string.h>
+#include "Arduino.h"
 #include "BLEDevice.h"
 #include "BLEConnInfo.h"
 #include "BLEUUID.h"
@@ -149,6 +150,8 @@ public:
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   bool connect(BLEAddress address);
+  bool requestConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
+  [[deprecated("Use requestConnParams() instead.")]]
   void updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
   void disconnect(uint16_t connId);
 
@@ -162,6 +165,8 @@ public:
    * @param [in] peerAddress The address of the bonded peer device.
    */
   void restoreCCCDValues(const BLEAddress &peerAddress);
+
+  void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #endif
 
   /***************************************************************************
@@ -170,6 +175,8 @@ public:
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   uint16_t getHandle();
+  bool requestConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
+  [[deprecated("Use requestConnParams() instead.")]]
   void updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
   int disconnect(uint16_t connId, uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
 #endif
@@ -269,6 +276,7 @@ public:
   virtual void onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param);
   virtual void onDisconnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param);
   virtual void onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param_t *param);
+  virtual void onConnParamsUpdate(esp_bd_addr_t remote_bda, uint16_t interval, uint16_t latency, uint16_t timeout, esp_bt_status_t status);
 #endif
 
   /***************************************************************************
@@ -279,6 +287,7 @@ public:
   virtual void onConnect(BLEServer *pServer, ble_gap_conn_desc *desc);
   virtual void onDisconnect(BLEServer *pServer, ble_gap_conn_desc *desc);
   virtual void onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *desc, uint16_t mtu);
+  virtual void onConnParamsUpdate(uint16_t conn_handle, uint16_t interval, uint16_t latency, uint16_t timeout, uint8_t status);
 #endif
 };  // BLEServerCallbacks
 

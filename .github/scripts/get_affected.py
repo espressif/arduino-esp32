@@ -940,12 +940,24 @@ def set_ci_output(print_vars: bool=True):
     try:
         # Write all output values
         f.write(f"recompile_preset={recompile_preset}\n")
-        chunk_count = len(affected_sketches)
-        if chunk_count > 0:
+        sketch_count = len(affected_sketches)
+        if sketch_count > 0:
             f.write(f"should_build=1\n")
-            if chunk_count > max_chunks:
-                print(f"More sketches than the allowed number of chunks found. Limiting to {max_chunks} chunks.", file=sys.stderr)
-                chunk_count = max_chunks
+            # Calculate optimal chunk count to avoid creating empty chunks
+            # Use the same algorithm as sketch_utils.sh to determine how many chunks are actually needed
+            if sketch_count <= max_chunks:
+                # If we have fewer sketches than max chunks, use one chunk per sketch
+                chunk_count = sketch_count
+                print(f"Creating {chunk_count} chunks for {sketch_count} sketches (one per sketch).", file=sys.stderr)
+            else:
+                # If we have more sketches than max chunks, distribute across max_chunks
+                # Calculate chunk size: ceil(sketch_count / max_chunks)
+                chunk_size = (sketch_count + max_chunks - 1) // max_chunks  # ceiling division
+                # Calculate actual chunks needed
+                chunks_needed = (sketch_count + chunk_size - 1) // chunk_size  # ceiling division
+                chunk_count = min(chunks_needed, max_chunks)
+                print(f"More sketches ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} sketches each.", file=sys.stderr)
+            
             chunks='["0"'
             for i in range(1, chunk_count):
                 chunks+=f",\"{i}\""
@@ -953,6 +965,7 @@ def set_ci_output(print_vars: bool=True):
             f.write(f"chunks={chunks}\n")
         else:
             f.write(f"should_build=0\n")
+            chunk_count = 0
         f.write(f"chunk_count={chunk_count}\n")
     finally:
         # Close file if we opened it (CI mode)

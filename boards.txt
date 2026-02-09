@@ -53878,6 +53878,7 @@ esp32p4_4ds_mipi.build.core=esp32
 esp32p4_4ds_mipi.build.variant=esp32p4_4ds_mipi
 esp32p4_4ds_mipi.build.board=ESP32P4_4DS_MIPI
 esp32p4_4ds_mipi.build.bootloader_addr=0x2000
+esp32p4_4ds_mipi.build.chip_variant=esp32p4_es
 
 esp32p4_4ds_mipi.build.usb_mode=0
 esp32p4_4ds_mipi.build.cdc_on_boot=0
@@ -53890,6 +53891,13 @@ esp32p4_4ds_mipi.build.img_freq=80m
 esp32p4_4ds_mipi.build.flash_mode=qio
 esp32p4_4ds_mipi.build.boot=qio
 esp32p4_4ds_mipi.build.partitions=app5M_fat24M_32MB
+
+esp32p4_4ds_mipi.menu.Revision.prev3=Hardware Rev 1.x
+esp32p4_4ds_mipi.menu.Revision.prev3.build.chip_variant=esp32p4_es
+esp32p4_4ds_mipi.menu.Revision.prev3.build.f_cpu=360000000L
+esp32p4_4ds_mipi.menu.Revision.postv3=Hardware Rev 2.x
+esp32p4_4ds_mipi.menu.Revision.postv3.build.chip_variant=esp32p4
+esp32p4_4ds_mipi.menu.Revision.postv3.build.f_cpu=400000000L
 
 ## IDE 2.0 Seems to not update the value
 esp32p4_4ds_mipi.menu.JTAGAdapter.default=Disabled
@@ -53942,10 +53950,6 @@ esp32p4_4ds_mipi.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=defaul
 esp32p4_4ds_mipi.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
 
 ## From https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/kconfig.html#config-esp-default-cpu-freq-mhz
-esp32p4_4ds_mipi.menu.CPUFreq.360=360MHz
-esp32p4_4ds_mipi.menu.CPUFreq.360.build.f_cpu=360000000L
-esp32p4_4ds_mipi.menu.CPUFreq.40=40MHz
-esp32p4_4ds_mipi.menu.CPUFreq.40.build.f_cpu=40000000L
 
 esp32p4_4ds_mipi.menu.UploadSpeed.921600=921600
 esp32p4_4ds_mipi.menu.UploadSpeed.921600.upload.speed=921600
@@ -54035,6 +54039,7 @@ esp32p4_4ds_mipi_round.build.core=esp32
 esp32p4_4ds_mipi_round.build.variant=esp32p4_4ds_mipi_round
 esp32p4_4ds_mipi_round.build.board=ESP32P4_4DS_MIPI_ROUND
 esp32p4_4ds_mipi_round.build.bootloader_addr=0x2000
+esp32p4_4ds_mipi_round.build.chip_variant=esp32p4_es
 
 esp32p4_4ds_mipi_round.build.usb_mode=0
 esp32p4_4ds_mipi_round.build.cdc_on_boot=0
@@ -54047,6 +54052,13 @@ esp32p4_4ds_mipi_round.build.img_freq=80m
 esp32p4_4ds_mipi_round.build.flash_mode=qio
 esp32p4_4ds_mipi_round.build.boot=qio
 esp32p4_4ds_mipi_round.build.partitions=app5M_fat24M_32MB
+
+esp32p4_4ds_mipi_round.menu.Revision.prev3=Hardware Rev 1.x
+esp32p4_4ds_mipi_round.menu.Revision.prev3.build.chip_variant=esp32p4_es
+esp32p4_4ds_mipi_round.menu.Revision.prev3.build.f_cpu=360000000L
+esp32p4_4ds_mipi_round.menu.Revision.postv3=Hardware Rev 2.x
+esp32p4_4ds_mipi_round.menu.Revision.postv3.build.chip_variant=esp32p4
+esp32p4_4ds_mipi_round.menu.Revision.postv3.build.f_cpu=400000000L
 
 esp32p4_4ds_mipi_round.menu.JTAGAdapter.default=Disabled
 esp32p4_4ds_mipi_round.menu.JTAGAdapter.default.build.copy_jtag_files=0
@@ -54096,12 +54108,6 @@ esp32p4_4ds_mipi_round.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_
 esp32p4_4ds_mipi_round.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
 esp32p4_4ds_mipi_round.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
 esp32p4_4ds_mipi_round.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
-
-## From https://docs.espressif.com/projects/esp-idf/en/latest/esp32p4/api-reference/kconfig.html#config-esp-default-cpu-freq-mhz
-esp32p4_4ds_mipi_round.menu.CPUFreq.360=360MHz
-esp32p4_4ds_mipi_round.menu.CPUFreq.360.build.f_cpu=360000000L
-esp32p4_4ds_mipi_round.menu.CPUFreq.40=40MHz
-esp32p4_4ds_mipi_round.menu.CPUFreq.40.build.f_cpu=40000000L
 
 esp32p4_4ds_mipi_round.menu.UploadSpeed.921600=921600
 esp32p4_4ds_mipi_round.menu.UploadSpeed.921600.upload.speed=921600

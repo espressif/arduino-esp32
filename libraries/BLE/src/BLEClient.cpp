@@ -492,6 +492,49 @@ int BLEClient::disconnect(uint8_t reason) {
 }  // disconnect
 
 /**
+ * @brief Update connection parameters.
+ *
+ * As the BLE Central (client), this device controls the connection parameters.
+ * This method directly sets the connection parameters that will be used.
+ * The peripheral (server) can request parameter changes, but the central makes
+ * the final decision.
+ *
+ * Can only be called after a connection has been established.
+ *
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
+ */
+bool BLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  log_v(">> updateConnParams()");
+
+  if (!isConnected()) {
+    log_e("Not connected, cannot update connection parameters");
+    return false;
+  }
+
+  esp_ble_conn_update_params_t conn_params;
+  memcpy(conn_params.bda, m_peerAddress.getNative(), sizeof(esp_bd_addr_t));
+  conn_params.latency = latency;
+  conn_params.max_int = maxInterval;  // max_int in 1.25ms units
+  conn_params.min_int = minInterval;  // min_int in 1.25ms units
+  conn_params.timeout = timeout;      // timeout in 10ms units
+
+  esp_err_t errRc = esp_ble_gap_update_conn_params(&conn_params);
+  if (errRc != ESP_OK) {
+    log_e("esp_ble_gap_update_conn_params: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+    return false;
+  }
+
+  log_v("<< updateConnParams()");
+  return true;
+}  // updateConnParams
+
+/**
  * @brief Handle GATT Client events
  */
 void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *evtParam) {
@@ -1290,8 +1333,57 @@ int BLEClient::disconnect(uint8_t reason) {
   return rc;
 }  // disconnect
 
+/**
+ * @brief Update connection parameters.
+ *
+ * As the BLE Central (client), this device controls the connection parameters.
+ * This method directly sets the connection parameters that will be used.
+ * The peripheral (server) can request parameter changes, but the central makes
+ * the final decision.
+ *
+ * Can only be called after a connection has been established.
+ *
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
+ */
+bool BLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  log_d(">> updateConnParams()");
+
+  if (!isConnected()) {
+    log_e("Not connected, cannot update connection parameters");
+    return false;
+  }
+
+  ble_gap_upd_params params;
+  params.itvl_min = minInterval;                        // min_int in 1.25ms units
+  params.itvl_max = maxInterval;                        // max_int in 1.25ms units
+  params.latency = latency;                             // slave latency
+  params.supervision_timeout = timeout;                 // timeout in 10ms units
+  params.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;  // Minimum length of connection event in 0.625ms units
+  params.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;  // Maximum length of connection event in 0.625ms units
+
+  int rc = ble_gap_update_params(m_conn_id, &params);
+  if (rc != 0) {
+    log_e("Update params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
+    m_lastErr = rc;
+    return false;
+  }
+
+  log_d("<< updateConnParams()");
+  return true;
+}  // updateConnParams
+
 bool BLEClientCallbacks::onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params) {
-  log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: default");
+  log_d("BLEClientCallbacks", "onConnParamsUpdateRequest: accepting peer's request by default");
+  log_d(
+    "BLEClientCallbacks", "Min Interval: %d (%.2f ms), Max Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms)", params->itvl_min, params->itvl_min * 1.25,
+    params->itvl_max, params->itvl_max * 1.25, params->latency, params->supervision_timeout, params->supervision_timeout * 10
+  );
   return true;
 }
 
