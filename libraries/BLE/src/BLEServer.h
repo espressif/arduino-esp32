@@ -154,6 +154,18 @@ public:
   [[deprecated("Use requestConnParams() instead.")]]
   void updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
   void disconnect(uint16_t connId);
+
+  /**
+   * @brief Restore CCCD values for a bonded device from NVS.
+   *
+   * This should be called after a bonded device reconnects and authentication completes.
+   * It restores the notification/indication subscription state that was persisted
+   * when the client originally wrote to the CCCD descriptors.
+   *
+   * @param [in] peerAddress The address of the bonded peer device.
+   */
+  void restoreCCCDValues(const BLEAddress &peerAddress);
+
   void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #endif
 
