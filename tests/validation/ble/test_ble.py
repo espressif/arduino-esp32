@@ -148,4 +148,3 @@ def test_ble(dut, ci_job_id):
     server.expect_exact("[SERVER] Status: Connected", timeout=5)
 
     LOGGER.info("BLE test passed!")
-

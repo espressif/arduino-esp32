@@ -24,7 +24,7 @@ void readWiFiCredentials() {
     if (Serial.available()) {
       password = Serial.readStringUntil('\n');
       password.trim();
-      password_received = true; // Accept even empty password
+      password_received = true;  // Accept even empty password
     }
     delay(100);
   }
@@ -89,8 +89,7 @@ void setup() {
   }
 
   if (WiFi.STA.status() == WL_CONNECTED) {
-    Serial.printf("[CLIENT] Connected! IP=%s\n",
-                   WiFi.STA.localIP().toString().c_str());
+    Serial.printf("[CLIENT] Connected! IP=%s\n", WiFi.STA.localIP().toString().c_str());
   } else {
     Serial.println("[CLIENT] Failed to connect");
   }

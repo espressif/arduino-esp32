@@ -24,7 +24,7 @@ void readWiFiCredentials() {
     if (Serial.available()) {
       password = Serial.readStringUntil('\n');
       password.trim();
-      password_received = true; // Accept even empty password
+      password_received = true;  // Accept even empty password
     }
     delay(100);
   }
@@ -56,8 +56,7 @@ void setup() {
   }
 
   IPAddress ip = WiFi.AP.localIP();
-  Serial.printf("[AP] Started SSID=%s Password=%s IP=%s\n",
-                ssid.c_str(), password.c_str(), ip.toString().c_str());
+  Serial.printf("[AP] Started SSID=%s Password=%s IP=%s\n", ssid.c_str(), password.c_str(), ip.toString().c_str());
 }
 
 void loop() {

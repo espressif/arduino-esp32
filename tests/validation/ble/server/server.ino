@@ -44,9 +44,13 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
     if (BLEDevice::getPeerIRK(peerAddr, irk)) {
       Serial.print("[SERVER] Successfully retrieved peer IRK: ");
       for (int i = 0; i < 16; i++) {
-        if (irk[i] < 0x10) Serial.print("0");
+        if (irk[i] < 0x10) {
+          Serial.print("0");
+        }
         Serial.print(irk[i], HEX);
-        if (i < 15) Serial.print(":");
+        if (i < 15) {
+          Serial.print(":");
+        }
       }
       Serial.println();
     }
@@ -62,9 +66,13 @@ class MySecurityCallbacks : public BLESecurityCallbacks {
     if (BLEDevice::getPeerIRK(peerAddr, irk)) {
       Serial.print("[SERVER] Successfully retrieved peer IRK: ");
       for (int i = 0; i < 16; i++) {
-        if (irk[i] < 0x10) Serial.print("0");
+        if (irk[i] < 0x10) {
+          Serial.print("0");
+        }
         Serial.print(irk[i], HEX);
-        if (i < 15) Serial.print(":");
+        if (i < 15) {
+          Serial.print(":");
+        }
       }
       Serial.println();
     }
@@ -182,4 +190,3 @@ void loop() {
   }
   delay(100);
 }
-

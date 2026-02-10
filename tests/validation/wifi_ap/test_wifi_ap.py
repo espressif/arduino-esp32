@@ -42,7 +42,9 @@ def test_wifi_ap(dut, ci_job_id):
 
     # Verify AP started
     LOGGER.info(f"Starting AP")
-    m = ap.expect(rf"\[AP\] Started SSID={re.escape(ap_ssid)} Password={re.escape(ap_password)} IP={REGEX_IPV4}", timeout=20)
+    m = ap.expect(
+        rf"\[AP\] Started SSID={re.escape(ap_ssid)} Password={re.escape(ap_password)} IP={REGEX_IPV4}", timeout=20
+    )
     ap_ip = m.group(1).decode()
     LOGGER.info(f"AP started successfully. IP: {ap_ip}")
     assert is_valid_ipv4(ap_ip)

@@ -66,10 +66,13 @@ public:
   );
   bool connect(
     const String &wpa2_ssid, wpa2_auth_method_t method, const String &wpa2_identity = emptyString, const String &wpa2_username = emptyString,
-    const String &wpa2_password = emptyString, const String &ca_pem = emptyString, const String &client_crt = emptyString, const String &client_key = emptyString,
-    int ttls_phase2_type = -1, int32_t channel = 0, const uint8_t *bssid = 0, bool tryConnect = true
+    const String &wpa2_password = emptyString, const String &ca_pem = emptyString, const String &client_crt = emptyString,
+    const String &client_key = emptyString, int ttls_phase2_type = -1, int32_t channel = 0, const uint8_t *bssid = 0, bool tryConnect = true
   ) {
-    return connect(wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(), ttls_phase2_type, channel, bssid, tryConnect);
+    return connect(
+      wpa2_ssid.c_str(), method, wpa2_identity.c_str(), wpa2_username.c_str(), wpa2_password.c_str(), ca_pem.c_str(), client_crt.c_str(), client_key.c_str(),
+      ttls_phase2_type, channel, bssid, tryConnect
+    );
   }
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
   bool disconnect(bool eraseap = false, unsigned long timeout = 0);
@@ -142,7 +145,8 @@ public:
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
   wl_status_t begin(const char *ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool tryConnect = true);
-  wl_status_t begin(const String &ssid, const String &passphrase = (const char *)NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool tryConnect = true) {
+  wl_status_t
+    begin(const String &ssid, const String &passphrase = (const char *)NULL, int32_t channel = 0, const uint8_t *bssid = NULL, bool tryConnect = true) {
     return begin(ssid.c_str(), passphrase.c_str(), channel, bssid, tryConnect);
   }
   wl_status_t begin();
