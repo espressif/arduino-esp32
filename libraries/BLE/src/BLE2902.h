@@ -23,6 +23,10 @@
 
 #include "BLEDescriptor.h"
 
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "BLEAddress.h"
+#endif
+
 /**
  * @brief Descriptor for Client Characteristic Configuration.
  *
@@ -55,6 +59,45 @@ This class will be removed in a future version.")]] BLE2902 : public BLEDescript
     bool getIndications();
     void setNotifications(bool flag);
     void setIndications(bool flag);
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+    /***************************************************************************
+     *                       Bluedroid CCCD persistence                        *
+     ***************************************************************************/
+
+    /**
+     * @brief Persist CCCD value to NVS for a bonded device.
+     * @param [in] peerAddress The address of the bonded peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully persisted, false otherwise.
+     */
+    bool persistValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Restore CCCD value from NVS for a bonded device.
+     * @param [in] peerAddress The address of the bonded peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully restored, false otherwise.
+     */
+    bool restoreValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Delete persisted CCCD value from NVS for a device.
+     * @param [in] peerAddress The address of the peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully deleted, false otherwise.
+     */
+    static bool deletePersistedValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Delete all persisted CCCD values from NVS.
+     * @return true if all values were successfully deleted, false otherwise.
+     */
+    static bool deleteAllPersistedValues();
+
+  private:
+    static String getNvsKey(const BLEAddress &peerAddress, uint16_t charHandle);
+#endif
   };  // BLE2902
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */

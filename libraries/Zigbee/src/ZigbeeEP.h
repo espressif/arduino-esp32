@@ -71,7 +71,10 @@ public:
     _cluster_list = cluster_list;
   }
 
+  // Set application version and hardware version
   void setVersion(uint8_t version);
+  void setHardwareVersion(uint8_t version);
+
   uint8_t getEndpoint() {
     return _endpoint;
   }
