@@ -23290,6 +23290,7 @@ m5stack_tab5.build.target=esp
 m5stack_tab5.build.mcu=esp32p4
 m5stack_tab5.build.core=esp32
 m5stack_tab5.build.variant=m5stack_tab5
+m5stack_tab5.build.chip_variant=esp32p4_es
 m5stack_tab5.build.board=M5STACK_TAB5
 m5stack_tab5.build.bootloader_addr=0x2000
 
@@ -23305,6 +23306,13 @@ m5stack_tab5.build.flash_mode=qio
 m5stack_tab5.build.boot=qio
 m5stack_tab5.build.partitions=default
 m5stack_tab5.build.defines=
+
+m5stack_tab5.menu.ChipVariant.prev3=Before v3.00
+m5stack_tab5.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
+m5stack_tab5.menu.ChipVariant.prev3.build.f_cpu=360000000L
+m5stack_tab5.menu.ChipVariant.postv3=v3.00 or newer
+m5stack_tab5.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+m5stack_tab5.menu.ChipVariant.postv3.build.f_cpu=400000000L
 
 ## IDE 2.0 Seems to not update the value
 m5stack_tab5.menu.JTAGAdapter.default=Disabled
