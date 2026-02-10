@@ -447,7 +447,7 @@ The ``wifi`` test suite is a good example of how to use the ``ci.yml`` file:
 Adding a Multi-Device Test Suite
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Multi-device tests allow you to test interactions between multiple ESP32 devices, such as WiFi AP/client communication or BLE connections.
+Multi-device tests allow you to test interactions between multiple ESP32 devices, such as Wi-Fi AP/client communication or BLE connections.
 Each device runs its own sketch, and the test coordinates communication between them.
 
 Creating a Multi-Device Test

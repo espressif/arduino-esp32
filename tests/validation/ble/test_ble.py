@@ -1,4 +1,3 @@
-import re
 import logging
 from conftest import rand_str4
 
@@ -46,8 +45,8 @@ def test_ble(dut, ci_job_id):
     server.expect_exact(f"[SERVER] Advertising started with name: {server_name}", timeout=10)
     LOGGER.info(f"Server advertising with name: {server_name}")
 
-    m = server.expect_exact("[SERVER] Service UUID: 4fafc201-1fb5-459e-8fcc-c5c9c331914b", timeout=10)
-    LOGGER.info(f"Server Service UUID: 4fafc201-1fb5-459e-8fcc-c5c9c331914b")
+    server.expect_exact("[SERVER] Service UUID: 4fafc201-1fb5-459e-8fcc-c5c9c331914b", timeout=10)
+    LOGGER.info("Server Service UUID: 4fafc201-1fb5-459e-8fcc-c5c9c331914b")
 
     # Wait for client to start scanning
     LOGGER.info("Waiting for client to start scanning...")

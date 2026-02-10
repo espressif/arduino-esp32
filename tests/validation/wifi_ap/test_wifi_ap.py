@@ -38,10 +38,10 @@ def test_wifi_ap(dut, ci_job_id):
     ap.expect_exact(f"[AP] Password: {ap_password}")
     client.expect_exact(f"[CLIENT] SSID: {ap_ssid}")
     client.expect_exact(f"[CLIENT] Password: {ap_password}")
-    LOGGER.info(f"Credentials received")
+    LOGGER.info("Credentials received")
 
     # Verify AP started
-    LOGGER.info(f"Starting AP")
+    LOGGER.info("Starting AP")
     m = ap.expect(
         rf"\[AP\] Started SSID={re.escape(ap_ssid)} Password={re.escape(ap_password)} IP={REGEX_IPV4}", timeout=20
     )
@@ -50,7 +50,7 @@ def test_wifi_ap(dut, ci_job_id):
     assert is_valid_ipv4(ap_ip)
 
     # Wait for AP to begin reporting station count
-    LOGGER.info(f"Waiting for AP to begin reporting station count")
+    LOGGER.info("Waiting for AP to begin reporting station count")
     ap.expect(r"\[AP\] Stations connected: \d+", timeout=20)
 
     # Client scans for AP
@@ -58,10 +58,10 @@ def test_wifi_ap(dut, ci_job_id):
     client.expect_exact("[CLIENT] Scan start")
     client.expect_exact("[CLIENT] Scan done")
     client.expect_exact(f"{ap_ssid}")
-    LOGGER.info(f"AP found")
+    LOGGER.info("AP found")
 
     # Client connects to AP
-    LOGGER.info(f"Connecting to AP")
+    LOGGER.info("Connecting to AP")
     client.expect_exact(f"[CLIENT] Connecting to SSID={ap_ssid} Password={ap_password}", timeout=20)
 
     # Client connection success
@@ -71,11 +71,11 @@ def test_wifi_ap(dut, ci_job_id):
     assert is_valid_ipv4(client_ip)
 
     # Verify AP reports 1 station connected
-    LOGGER.info(f"Waiting for AP to report 1 station connected")
+    LOGGER.info("Waiting for AP to report 1 station connected")
     ap.expect_exact("[AP] Stations connected: 1", timeout=30)
 
     # Verify client stays connected
-    LOGGER.info(f"Waiting for client to report connected status")
+    LOGGER.info("Waiting for client to report connected status")
     client.expect_exact("[CLIENT] Status=3", timeout=10)  # WL_CONNECTED
 
-    LOGGER.info(f"WiFi AP test passed")
+    LOGGER.info("WiFi AP test passed")

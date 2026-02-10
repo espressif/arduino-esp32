@@ -1,5 +1,5 @@
 tags:
-  - wifi_router
+  - two_duts
 
 multi_device:
   device0: ap
@@ -21,8 +21,6 @@ platforms:
   # Wokwi and QEMU do not support multi-device tests
   wokwi: false
   qemu: false
-  # Hardware runners not yet assigned
-  hardware: false
 
 requires:
   - CONFIG_SOC_WIFI_SUPPORTED=y

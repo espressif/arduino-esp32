@@ -1,5 +1,5 @@
 tags:
-  - generic_multi_device
+  - two_duts
 
 multi_device:
   device0: server
@@ -9,8 +9,6 @@ platforms:
   # Wokwi and QEMU do not support multi-device tests
   wokwi: false
   qemu: false
-  # Hardware runners not yet assigned
-  hardware: false
 
 requires:
   - CONFIG_SOC_BLE_SUPPORTED=y
