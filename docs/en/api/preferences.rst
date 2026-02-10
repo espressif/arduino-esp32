@@ -540,22 +540,22 @@ Arduino-esp32 Preferences API
 
 .. code-block:: arduino
 
-    size_t getString(const char* key, char* value, size_t len);
+    size_t getString(const char* key, char* value, size_t maxLen);
 ..
 
    **Parameters**
       * ``key`` (Required)
       * ``value`` (Required)
-         - a buffer of a size large enough to hold ``len`` bytes
-      * ``len`` (Required)
-         - the number of type ``char``` to be written to the buffer pointed to by ``value``
+         - buffer to receive the null-terminated string
+      * ``maxLen`` (Required)
+         - maximum number of bytes (including the null terminator) that can be written to ``value``
 
    **Returns**
-      * if successful; the number of bytes equal to ``len`` is written to the buffer pointed to by ``value``, and the method returns ``1``.
-      * if the method fails, nothing is written to the buffer pointed to by ``value`` and the method returns ``0``.
+      * if successful: that many bytes (including the null terminator) are written to the buffer pointed to by ``value``, and the method returns that number of bytes.
+      * if the method fails: nothing is written to the buffer and the method returns ``0``.
 
    **Notes**
-      * ``len`` must equal the number of bytes stored against the key or the call will fail.
+      * ``maxLen`` must be greater than or equal to the number of bytes stored against the key (including the null terminator) or the call will fail. Use ``getStringLength`` to obtain the required size before calling.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 
@@ -582,6 +582,28 @@ Arduino-esp32 Preferences API
       * ``defaultValue`` must be of type ``String``.
 
 
+``getStringLength``
+*******************
+
+   Get the number of bytes (including the null terminator) stored for a string value against a key in the currently open namespace. Use this to size a buffer before calling ``getString(key, value, maxLen)``.
+
+.. code-block:: arduino
+
+   size_t getStringLength(const char* key);
+
+..
+
+   **Parameters**
+      * ``key`` (Required)
+
+   **Returns**
+      * if successful: the number of bytes in the value stored against ``key`` (including the null terminator); ``0`` otherwise.
+
+   **Notes**
+      * This method will fail (return 0) if the key does not exist or is not of type String.
+      * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
+
+
 ``getBytes``
 *************
 
@@ -589,23 +611,23 @@ Copy a series of bytes stored against a given key in the currently open namespac
 
 .. code-block:: arduino
 
-   size_t getBytes(const char* key, void * buf, size_t len);
+   size_t getBytes(const char* key, void * buf, size_t maxLen);
 
 ..
 
    **Parameters**
       * ``key`` (Required)
       * ``buf`` (Required)
-         - a buffer of a size large enough to hold ``len`` bytes.
-      * ``len`` (Required)
-         - the number of bytes to be written to the buffer pointed to by ``buf``
+         - buffer to receive the bytes
+      * ``maxLen`` (Required)
+         - maximum number of bytes that can be written to ``buf``
 
    **Returns**
-      * if successful, the number of bytes equal to ``len`` is written to buffer ``buf``, and the method returns ``len``.
-      * if the method fails, nothing is written to the buffer and the method returns ``0``.
+      * if successful: that many bytes are written to the buffer pointed to by ``buf``, and the method returns that number of bytes.
+      * if the method fails: nothing is written to the buffer and the method returns ``0``.
 
    **Notes**
-      * ``len`` must equal the number of bytes stored against the key or the call will fail.
+      * ``maxLen`` must be greater than or equal to the number of bytes stored against the key or the call will fail. Use ``getBytesLength`` to obtain the required size before calling.
       * A message providing the reason for a failed call is sent to the arduino-esp32 ``log_e`` facility.
 
 
