@@ -72,7 +72,9 @@ wl_status_t WiFiSTAClass::begin(
     return WL_CONNECT_FAILED;
   }
 
-  if (!STA.connect(wpa2_ssid, method, wpa2_identity, wpa2_username, wpa2_password, ca_pem, client_crt, client_key, ttls_phase2_type, channel, bssid, tryConnect)) {
+  if (!STA.connect(
+        wpa2_ssid, method, wpa2_identity, wpa2_username, wpa2_password, ca_pem, client_crt, client_key, ttls_phase2_type, channel, bssid, tryConnect
+      )) {
     return WL_CONNECT_FAILED;
   }
 
