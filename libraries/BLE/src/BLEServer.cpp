@@ -189,6 +189,17 @@ void BLEServer::start() {
     return;
   }
 
+  // Re-set the device name after ble_gatts_start() because ble_svc_gap_init()
+  // (called in createServer) resets it to the default "nimble" from sdkconfig.
+  // The GAP service device name must be set after the GATT server is started.
+  String deviceName = BLEDevice::getDeviceName();
+  if (deviceName.length() > 0) {
+    rc = ble_svc_gap_device_name_set(deviceName.c_str());
+    if (rc != 0) {
+      log_e("ble_svc_gap_device_name_set: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    }
+  }
+
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   ble_gatts_show_local();
 #endif
@@ -475,6 +486,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_CONNECT_EVT:
     {
+      log_i("Client connected, conn_id=%d", param->connect.conn_id);
       m_connId = param->connect.conn_id;
       addPeerDevice((void *)this, false, m_connId);
       if (m_pServerCallbacks != nullptr) {
@@ -514,6 +526,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // we also want to start advertising again.
     case ESP_GATTS_DISCONNECT_EVT:
     {
+      log_i("Client disconnected, conn_id=%d, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
       if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
         m_pServerCallbacks->onDisconnect(this);
         m_pServerCallbacks->onDisconnect(this, param);
@@ -563,6 +576,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_REG_EVT:
     {
+      log_i("GATT server registered, status=%d, app_id=%d, gatts_if=%d", param->reg.status, param->reg.app_id, gatts_if);
       m_gatts_if = gatts_if;
       m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
       break;
