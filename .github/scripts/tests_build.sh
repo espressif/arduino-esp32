@@ -86,7 +86,9 @@ function build_multi_device_sketch {
     echo "Building sketch $sketch_name for multi-device test $test_name"
 
     # Call sketch_utils.sh build function with custom build directory
-    ARDUINO_BUILD_DIR="$build_dir" ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir"
+    # Pass -td to point to the parent test directory where ci.yml lives,
+    # since individual sub-sketch directories don't have their own ci.yml.
+    ARDUINO_BUILD_DIR="$build_dir" ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" -td "$test_dir"
     return $?
 }
 
