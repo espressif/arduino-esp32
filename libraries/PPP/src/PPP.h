@@ -42,6 +42,9 @@ public:
   // Using the reset pin of the module ensures that proper communication can be achieved
   void setResetPin(int8_t rst, bool active_low = true, uint32_t reset_delay = 200, uint32_t boot_delay = 100);
 
+  // If enabled, sends a burst of "AT" commands at startup, before sync, to force autobaud lock on some modems (e.g. SIM7070)
+  void sendAtBurst(bool en);
+
   // Modem DCE APIs
   int RSSI() const;
   int BER() const;
@@ -118,6 +121,7 @@ private:
   bool _pin_rst_act_low;
   uint32_t _pin_rst_delay;
   uint32_t _boot_delay;
+  bool _sendAtBurst;
   const char *_pin;
   const char *_apn;
   int _rx_buffer_size;
