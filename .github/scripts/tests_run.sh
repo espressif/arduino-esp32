@@ -4,6 +4,185 @@
 SCRIPTS_DIR_CONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPTS_DIR_CONFIG}/socs_config.sh"
 
+# Check if a test is a multi-device test
+function is_multi_device_test {
+    local test_dir=$1
+    local has_multi_device
+    if [ -f "$test_dir/ci.yml" ]; then
+        has_multi_device=$(yq eval '.multi_device' "$test_dir/ci.yml" 2>/dev/null)
+        if [[ "$has_multi_device" != "null" && "$has_multi_device" != "" ]]; then
+            echo "1"
+            return
+        fi
+    fi
+    echo "0"
+}
+
+function run_multi_device_test {
+    local target=$1
+    local test_dir=$2
+    local options=$3
+    local erase_flash=$4
+    local test_name
+    local test_type
+    local result=0
+    local error=0
+    local devices
+
+    test_name=$(basename "$test_dir")
+    test_type=$(basename "$(dirname "$test_dir")")
+
+    printf "\033[95mRunning multi-device test: %s\033[0m\n" "$test_name"
+
+    # Get the list of devices from ci.yml
+    devices=$(yq eval '.multi_device | keys | .[]' "$test_dir/ci.yml" 2>/dev/null | sort)
+
+    if [[ -z "$devices" ]]; then
+        echo "ERROR: No devices found in multi_device configuration for $test_name"
+        return 1
+    fi
+
+    # Build the build-dir argument for pytest-embedded
+    local build_dirs=""
+    local device_count=0
+    local sketch_name
+    local build_dir
+    local sdkconfig_path
+    local compiled_target
+    for device in $devices; do
+        sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+        build_dir="$HOME/.arduino/tests/$target/${test_name}_${sketch_name}/build.tmp"
+
+        if [ ! -d "$build_dir" ]; then
+            printf "\033[93mSkipping multi-device test %s: build not found for device %s in %s\033[0m\n" "$test_name" "$device" "$build_dir"
+            return 0
+        fi
+
+        # Check if the build is for the correct target
+        sdkconfig_path="$build_dir/sdkconfig"
+        if [ -f "$sdkconfig_path" ]; then
+            compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
+            if [ "$compiled_target" != "$target" ]; then
+                printf "\033[91mError: Device %s compiled for %s, expected %s\033[0m\n" "$device" "$compiled_target" "$target"
+                return 1
+            fi
+        fi
+
+        if [ $device_count -gt 0 ]; then
+            build_dirs="$build_dirs|$build_dir"
+        else
+            build_dirs="$build_dir"
+        fi
+        device_count=$((device_count + 1))
+    done
+
+    if [ $device_count -lt 2 ]; then
+        echo "ERROR: Multi-device test $test_name requires at least 2 devices, found $device_count"
+        return 1
+    fi
+
+    # Check platform support
+    if [ -f "$test_dir/ci.yml" ]; then
+        is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
+        selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
+
+        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
+            printf "\n\n\n"
+            return 0
+        fi
+    fi
+
+    # Build embedded-services argument
+    if [ $platform == "wokwi" ]; then
+        echo "ERROR: Wokwi platform not supported for multi-device tests"
+        return 1
+    elif [ $platform == "qemu" ]; then
+        echo "ERROR: QEMU platform not supported for multi-device tests"
+        return 1
+    else
+        # For hardware platform, use esp,arduino for each device
+        local services="esp,arduino"
+        for ((i=1; i<device_count; i++)); do
+            services="$services|esp,arduino"
+        done
+        extra_args=("--embedded-services" "$services")
+    fi
+
+    # Verify ports are set for multi-device tests
+    if [ $device_count -eq 2 ]; then
+        if [ -z "${ESPPORT1}" ] || [ -z "${ESPPORT2}" ]; then
+            echo "ERROR: ESPPORT1 and ESPPORT2 must be set for 2-device tests"
+            return 1
+        fi
+    else
+        echo "ERROR: Only 2-device tests are currently supported"
+        return 1
+    fi
+
+    local wifi_args=""
+    if [ -n "$wifi_ssid" ]; then
+        wifi_args="--wifi-ssid \"$wifi_ssid\""
+    fi
+    if [ -n "$wifi_password" ]; then
+        wifi_args="$wifi_args --wifi-password \"$wifi_password\""
+    fi
+
+    local report_file="$test_dir/$target/$test_name.xml"
+
+    if [ "$erase_flash" -eq 1 ]; then
+        esptool -c "$target" erase-flash
+    fi
+
+    result=0
+
+    # Build pytest command as an array to properly handle arguments
+    local pytest_cmd=(
+        pytest -s "$test_dir/test_$test_name.py"
+        --count "$device_count"
+        --build-dir "$build_dirs"
+        --port "${ESPPORT1}|${ESPPORT2}"
+        --target "$target"
+        --junit-xml="$report_file"
+        -o "junit_suite_name=${test_type}_${platform}_${target}_${test_name}"
+        "${extra_args[@]}"
+    )
+
+    if [ -n "$wifi_ssid" ]; then
+        pytest_cmd+=(--wifi-ssid "$wifi_ssid")
+    fi
+    if [ -n "$wifi_password" ]; then
+        pytest_cmd+=(--wifi-password "$wifi_password")
+    fi
+
+    printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+
+    set +e
+    "${pytest_cmd[@]}"
+    result=$?
+    set -e
+    printf "\n"
+
+    if [ $result -ne 0 ]; then
+        result=0
+        printf "\033[95mRetrying test: %s\033[0m\n" "$test_name"
+        printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+
+        set +e
+        "${pytest_cmd[@]}"
+        result=$?
+        set -e
+        printf "\n"
+
+        if [ $result -ne 0 ]; then
+            printf "\033[91mFailed test: %s\033[0m\n\n" "$test_name"
+            error=$result
+        fi
+    fi
+
+    return $error
+}
+
 function run_test {
     local target=$1
     local sketch=$2
@@ -122,23 +301,37 @@ function run_test {
 
         rm "$sketchdir"/diagram.json 2>/dev/null || true
 
-        local wifi_args=""
+        # Build pytest command as an array to properly handle arguments
+        local pytest_cmd=(
+            pytest -s "$sketchdir/test_$sketchname.py"
+            --build-dir "$build_dir"
+            --junit-xml="$report_file"
+            -o "junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i}"
+            "${extra_args[@]}"
+        )
+
         if [ -n "$wifi_ssid" ]; then
-            wifi_args="--wifi-ssid \"$wifi_ssid\""
+            pytest_cmd+=(--wifi-ssid "$wifi_ssid")
         fi
         if [ -n "$wifi_password" ]; then
-            wifi_args="$wifi_args --wifi-password \"$wifi_password\""
+            pytest_cmd+=(--wifi-password "$wifi_password")
         fi
 
         result=0
-        printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}" "$wifi_args"
-        bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q} $wifi_args; exit \$?" || result=$?
+        printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+        set +e
+        "${pytest_cmd[@]}"
+        result=$?
+        set -e
         printf "\n"
         if [ $result -ne 0 ]; then
             result=0
             printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$sketchname" "$i"
-            printf "\033[95mpytest -s \"%s/test_%s.py\" --build-dir \"%s\" --junit-xml=\"%s\" -o junit_suite_name=%s_%s_%s_%s%s %s %s\033[0m\n" "$sketchdir" "$sketchname" "$build_dir" "$report_file" "$test_type" "$platform" "$target" "$sketchname" "$i" "${extra_args[*]@Q}" "$wifi_args"
-            bash -c "set +e; pytest -s \"$sketchdir/test_$sketchname.py\" --build-dir \"$build_dir\" --junit-xml=\"$report_file\" -o junit_suite_name=${test_type}_${platform}_${target}_${sketchname}${i} ${extra_args[*]@Q} $wifi_args; exit \$?" || result=$?
+            printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+            set +e
+            "${pytest_cmd[@]}"
+            result=$?
+            set -e
             printf "\n"
             if [ $result -ne 0 ]; then
                 printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$sketchname" "$i"
@@ -158,6 +351,21 @@ options=0
 erase=0
 wifi_ssid=""
 wifi_password=""
+
+# Check for supplied port. Single dut tests will use ESPPORT.
+if [ -n "${ESPPORT}" ]; then
+  echo "Supplied port [ESPPORT]: ${ESPPORT}"
+elif [ -n "${ESPPORT1}" ]; then
+  echo "Supplied port [ESPPORT1]: ${ESPPORT1}"
+  if [ -n "${ESPPORT2}" ]; then
+    echo "Supplied port [ESPPORT2]: ${ESPPORT2}"
+  fi
+else
+  echo "No port supplied. Using ESPPORT=/dev/ttyUSB0, ESPPORT1=/dev/ttyUSB0, ESPPORT2=/dev/ttyUSB1"
+  ESPPORT="/dev/ttyUSB0"
+  ESPPORT1="/dev/ttyUSB0"
+  ESPPORT2="/dev/ttyUSB1"
+fi
 
 while [ -n "$1" ]; do
     case $1 in
@@ -269,13 +477,12 @@ if [ ! $platform == "qemu" ]; then
     source "${SCRIPTS_DIR}/install-arduino-ide.sh"
 fi
 
+source "${SCRIPTS_DIR}/tests_utils.sh"
+
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ ${#sketches_to_run[@]} -eq 1 ]; then
-        tmp_sketch_path=$(find tests -name "${sketches_to_run[0]}".ino)
-        test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
-        echo "Sketch ${sketches_to_run[0]} test type: $test_type"
-        test_folder="$PWD/tests/$test_type"
+        detect_test_type_and_folder "$sketch"
     else
         test_folder="$PWD/tests"
     fi
@@ -306,8 +513,15 @@ for current_target in "${targets_to_run[@]}"; do
                 sketch_test_folder="$test_folder"
             fi
 
-            run_test "$current_target" "$sketch_test_folder"/"$current_sketch"/"$current_sketch".ino $options $erase
-            current_exit_code=$?
+            # Check if this is a multi-device test
+            test_dir="$sketch_test_folder/$current_sketch"
+            if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
+                run_multi_device_test "$current_target" "$test_dir" $options $erase
+                current_exit_code=$?
+            else
+                run_test "$current_target" "$sketch_test_folder"/"$current_sketch"/"$current_sketch".ino $options $erase
+                current_exit_code=$?
+            fi
             if [ $current_exit_code -ne 0 ]; then
                 error_code=$current_exit_code
             fi
@@ -356,6 +570,20 @@ for current_target in "${targets_to_run[@]}"; do
         sketchnum=0
         target_error=0
 
+        # First, run all multi-device tests in the test folder
+        if [ -d "$test_folder" ]; then
+            for test_dir in "$test_folder"/*; do
+                if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
+                    exit_code=0
+                    run_multi_device_test "$current_target" "$test_dir" $options $erase || exit_code=$?
+                    if [ $exit_code -ne 0 ]; then
+                        target_error=$exit_code
+                    fi
+                fi
+            done
+        fi
+
+        # Then run regular tests
         for sketch in $sketches; do
 
             sketchnum=$((sketchnum + 1))

@@ -214,6 +214,17 @@ If you are contributing to the documentation, please follow the instructions des
 Testing and CI
 --------------
 
+In our repository, we have a Continuous Integration (CI) system that runs tests and code formatting fixes on every Pull Request.
+This system will run the tests on all supported targets and check if everything is working as expected.
+
+We have many types of tests and checks, including:
+
+* Compilation tests;
+* Runtime tests;
+* Documentation checks;
+* Code style checks;
+* And more.
+
 After you have made your changes, you should test them. You can do this in different ways depending on the type of change you have made.
 
 Examples
@@ -257,7 +268,7 @@ We have many types of tests and checks, including:
 Let's go deeper into each type of test in the CI system:
 
 Compilation Tests
-^^^^^^^^^^^^^^^^^
+*****************
 
 The compilation tests are the first type of tests in the CI system. They check if the code compiles on all supported targets.
 If the code does not compile, the CI system will fail the test and the Pull Request will not be merged.
@@ -271,7 +282,7 @@ a sketch that uses the changes you made (you can also add the sketch as an examp
 Make sure to set ``Compiler Warnings`` to ``All`` in the Arduino IDE to catch any potential issues.
 
 Runtime Tests
-^^^^^^^^^^^^^
+*************
 
 Another type of test is the runtime tests. They check if the code runs and behaves as expected on all supported targets. If the
 code does not run as expected, the CI system will fail the test and the Pull Request will not be merged. This is important to ensure that the code
@@ -382,7 +393,7 @@ And to run the ``uart`` test using QEMU, you would run:
     Wokwi support depends on the `currently implemented peripherals <https://docs.wokwi.com/guides/esp32#simulation-features>`_.
 
 Adding a New Test Suite
-#######################
+^^^^^^^^^^^^^^^^^^^^^^^
 
 If you want to add a new test suite, you can create a new folder inside ``tests/validation`` or ``tests/performance`` with the name of the test suite.
 You can use the ``hello_world`` test suite as a starting point and the other test suites as a reference.
@@ -401,10 +412,12 @@ For more information about the Unity testing framework, you can check the `Unity
 After creating the test suite, make sure to test it locally and run it in the CI system to ensure that it works as expected.
 
 CI YAML File
-############
+""""""""""""
 
-The ``ci.yml`` file is used to specify how the test suite and sketches will handled by the CI system. It can contain the following fields:
+The ``ci.yml`` file is used to specify how the test suite and sketches will be handled by the CI system. It can contain the following fields:
 
+* ``multi_device``: A dictionary that matches the device names to their sketch directories. Each device must have its own sketch folder.
+  There are two devices in a multi-device test suite: ``device0`` and ``device1``. This field is only valid for multi-device test suites.
 * ``requires``: A list of configurations in ``sdkconfig`` that are required to run the test suite. The test suite will only run on the targets
   that have **ALL** the required configurations. By default, no configurations are required.
 * ``requires_any``: A list of configurations in ``sdkconfig`` that are required to run the test suite. The test suite will only run on the targets
@@ -431,14 +444,155 @@ The ``wifi`` test suite is a good example of how to use the ``ci.yml`` file:
 .. literalinclude:: ../../tests/validation/wifi/ci.yml
     :language: yaml
 
+Adding a Multi-Device Test Suite
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Multi-device tests allow you to test interactions between multiple ESP32 devices, such as Wi-Fi AP/client communication or BLE connections.
+Each device runs its own sketch, and the test coordinates communication between them.
+
+Creating a Multi-Device Test
+""""""""""""""""""""""""""""
+
+To create a multi-device test, follow these steps. The examples below use the ``wifi_ap`` test as a reference, but you should create your own test with an appropriate name:
+
+1. **Create the test directory structure**: Create a folder for each device sketch within your test directory.
+   For example, using the ``wifi_ap`` test structure:
+
+   .. code-block:: bash
+
+       mkdir -p tests/validation/wifi_ap/ap
+       mkdir -p tests/validation/wifi_ap/client
+
+2. **Create the ``ci.yml`` file**: Create ``ci.yml`` in your test directory with a ``multi_device`` configuration.
+   Example from the ``wifi_ap`` test:
+
+   .. code-block:: yaml
+
+       multi_device:
+         device0: ap
+         device1: client
+
+       platforms:
+         qemu: false
+         wokwi: false
+
+       requires:
+         - CONFIG_SOC_WIFI_SUPPORTED=y
+
+   The ``multi_device`` field maps device names to their sketch directories. Each device must have its own sketch folder.
+
+3. **Create device sketches**: Create an ``.ino`` file in each sketch directory with the same name as the directory.
+   Example from the ``wifi_ap`` test, ``tests/validation/wifi_ap/ap/ap.ino``:
+
+   .. code-block:: arduino
+
+       void setup() {
+         Serial.begin(115200);
+         Serial.println("[AP] Device ready for WiFi credentials");
+       }
+
+       void loop() {
+         // Your AP logic
+       }
+
+   And ``tests/validation/wifi_ap/client/client.ino`` (example):
+
+   .. code-block:: arduino
+
+       void setup() {
+         Serial.begin(115200);
+         Serial.println("[CLIENT] Device ready for WiFi credentials");
+       }
+
+       void loop() {
+         // Your client logic
+       }
+
+4. **Create the test file**: Create ``test_<your_test_name>.py`` in your test directory.
+   Example from the ``wifi_ap`` test, ``tests/validation/wifi_ap/test_wifi_ap.py``:
+
+   .. code-block:: python
+
+       def test_wifi_ap(dut):
+           ap = dut[0]
+           client = dut[1]
+
+           # Wait for devices to be ready
+           ap.expect_exact("[AP] Device ready for WiFi credentials")
+           client.expect_exact("[CLIENT] Device ready for WiFi credentials")
+
+           # Your test logic here
+           # Example: Send commands and verify responses
+           ap.write("command")
+           client.expect("expected_response")
+
+   The ``dut`` parameter is a list where each element corresponds to a device in the order specified in ``ci.yml``.
+
+.. note::
+
+    The examples above use the ``wifi_ap`` test as a reference. You can find the complete working example in ``tests/validation/wifi_ap/``.
+    When creating your own test, replace ``wifi_ap`` with your test name and adapt the device names (``ap``, ``client``) to match your use case.
+
+Building Multi-Device Tests
+"""""""""""""""""""""""""""
+
+To build a specific multi-device test (using ``wifi_ap`` as an example):
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_build.sh -s wifi_ap -t esp32
+
+To build all tests (chunk build):
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_build.sh -c -type validation -t esp32 -i 0 -m 1
+
+The build output will be stored in:
+
+.. code-block:: bash
+
+    $HOME/.arduino/tests/<target>/<test_name>_<sketch_name>/build.tmp
+
+For example, for a ``wifi_ap`` test on ``esp32``:
+* Device0: ``$HOME/.arduino/tests/esp32/wifi_ap_ap/build.tmp``
+* Device1: ``$HOME/.arduino/tests/esp32/wifi_ap_client/build.tmp``
+
+Running Multi-Device Tests
+""""""""""""""""""""""""""
+
+Before running multi-device tests, you need to set up the environment variables for the serial ports:
+
+.. code-block:: bash
+
+    export ESPPORT1=/dev/ttyUSB0  # Port for device0
+    export ESPPORT2=/dev/ttyUSB1  # Port for device1
+
+Then, to run a specific test (using ``wifi_ap`` as an example):
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_run.sh -s wifi_ap -t esp32
+
+To run all tests (chunk run):
+
+.. code-block:: bash
+
+    ./.github/scripts/tests_run.sh -c -type validation -t esp32 -i 0 -m 1
+
+.. note::
+
+    Both ``ESPPORT1`` and ``ESPPORT2`` environment variables must be set before running multi-device tests.
+    The sketch directory name must match the value in the ``multi_device`` configuration in ``ci.yml``, and the ``.ino`` file must have the same name as the directory.
+
 Documentation Checks
-^^^^^^^^^^^^^^^^^^^^
+********************
 
 The CI also checks the documentation for any compilation errors. This is important to ensure that the documentation layout is not broken.
 To build the documentation locally, please refer to the `documentation guidelines <guides/docs_contributing.html>`_.
 
 Code Style Checks
-^^^^^^^^^^^^^^^^^
+*****************
 
 For checking the code style and other code quality checks, we use pre-commit hooks.
 These hooks will be automatically run by the CI when a Pull Request is marked as ``Status: Pending Merge``.
