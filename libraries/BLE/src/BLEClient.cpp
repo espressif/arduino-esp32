@@ -422,6 +422,11 @@ void BLEClientCallbacks::onDisconnect(BLEClient *pClient) {
 bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   log_i(">> connect(%s)", address.toString().c_str());
 
+  // Use explicitly provided type, or fall back to the address's stored type
+  if (type == 0xFF) {
+    type = address.getType();
+  }
+
   // Configuration for retry logic
   const int maxRetries = 3;
   const int retryDelayMs = 100;
@@ -893,9 +898,14 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
+  // Use explicitly provided type, or fall back to the address's stored type
+  if (type == 0xFF) {
+    type = address.getType();
+  }
+
   ble_addr_t peerAddr_t;
   memcpy(&peerAddr_t.val, address.getNative(), 6);
-  peerAddr_t.type = address.getType();
+  peerAddr_t.type = type;
   if (ble_gap_conn_find_by_addr(&peerAddr_t, NULL) == 0) {
     log_e("A connection to %s already exists", address.toString().c_str());
     return false;
