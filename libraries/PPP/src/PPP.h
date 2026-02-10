@@ -40,7 +40,7 @@ public:
   bool setPins(int8_t tx, int8_t rx, int8_t rts = -1, int8_t cts = -1, esp_modem_flow_ctrl_t flow_ctrl = ESP_MODEM_FLOW_CONTROL_NONE);
 
   // Using the reset pin of the module ensures that proper communication can be achieved
-  void setResetPin(int8_t rst, bool active_low = true, uint32_t reset_delay = 200);
+  void setResetPin(int8_t rst, bool active_low = true, uint32_t reset_delay = 200, uint32_t boot_delay = 100);
 
   // Modem DCE APIs
   int RSSI() const;
@@ -117,6 +117,7 @@ private:
   int8_t _pin_rst;
   bool _pin_rst_act_low;
   uint32_t _pin_rst_delay;
+  uint32_t _boot_delay;
   const char *_pin;
   const char *_apn;
   int _rx_buffer_size;
