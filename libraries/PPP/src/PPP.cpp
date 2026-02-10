@@ -737,7 +737,7 @@ bool PPPClass::sms(const char *num, const char *message) {
 String PPPClass::cmd(const char *at_command, int timeout) {
   PPP_CMD_MODE_CHECK(String());
 
-  char out[128] = {0};
+  char out[CONFIG_ESP_MODEM_C_API_STR_MAX + 1] = {0};
   esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
     log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
@@ -749,7 +749,7 @@ String PPPClass::cmd(const char *at_command, int timeout) {
 bool PPPClass::cmd(const char *at_command, String &response, int timeout) {
   PPP_CMD_MODE_CHECK(false);
 
-  char out[128] = {0};
+  char out[CONFIG_ESP_MODEM_C_API_STR_MAX + 1] = {0};
   esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
   response = String(out);
 
