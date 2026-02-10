@@ -33,11 +33,11 @@ sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark
 timer|3/3 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:|4/4 :white_check_mark:
 uart|12/12 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|11/11 :white_check_mark:|12/12 :white_check_mark:|11/11 :white_check_mark:
 unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:
-wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
+wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|1/1 :white_check_mark:|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2026/02/09 01:10:08
+Generated on: 2026/02/10 01:22:49
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/6cfa93f4b4e2c0e3cf492e4a45780bfbe757fcd4) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21808051508) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21808177561) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21808934913)
+[Commit](https://github.com/espressif/arduino-esp32/commit/f9ec698550e9ac2579d1e3923678f20264f9746b) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/21846277268) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/21846509518) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/21847779077)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/62917270409)
+[Test results](https://github.com/espressif/arduino-esp32/runs/63047628206)
