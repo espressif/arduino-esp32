@@ -1232,7 +1232,7 @@ bool BLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(BLEAdvertisi
   // Note: ble_svc_gap_device_name() doesn't reliably return the name set via
   // ble_svc_gap_device_name_set(), so we store and use the name directly (like SimpleBLE does)
   // If setName() was called on advertising, m_name will already be set and we use that
-  if (m_name.isEmpty()) {
+  if (!m_customAdvData && m_name.isEmpty()) {
     m_name = BLEDevice::getDeviceName();
     if (m_name.length() > 0) {
       m_advData.name = (uint8_t *)m_name.c_str();

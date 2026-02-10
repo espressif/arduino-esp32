@@ -402,14 +402,25 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         local sketchdirname
         local sketchname
         local has_requirements
+        local parent_dir
 
         sketchdir=$(dirname "$sketch")
         sketchdirname=$(basename "$sketchdir")
         sketchname=$(basename "$sketch")
+        parent_dir=$(dirname "$sketchdir")
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
+        # Skip sketches that are part of multi-device tests (they are built separately)
+        elif [[ -f "$parent_dir/ci.yml" ]]; then
+            local has_multi_device
+            has_multi_device=$(yq eval '.multi_device' "$parent_dir/ci.yml" 2>/dev/null)
+            if [[ "$has_multi_device" != "null" && "$has_multi_device" != "" ]]; then
+                continue
+            fi
+        fi
+
+        if [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
             is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
