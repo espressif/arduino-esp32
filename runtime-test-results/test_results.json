@@ -1,8 +1,72 @@
 {
-  "commit_sha": "f9ec698550e9ac2579d1e3923678f20264f9746b",
+  "commit_sha": "a5c98a27f8cf0fa83e37fcd978db796e025089d9",
   "tests_failed": true,
   "test_data": {
     "hardware": {
+      "ble_client": {
+        "esp32": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c5": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32h2": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        }
+      },
+      "ble_server": {
+        "esp32": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c5": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32h2": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        }
+      },
       "democfg": {
         "esp32": {
           "failures": 0,
@@ -216,8 +280,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 10,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -371,6 +435,70 @@
           "failures": 0,
           "total": 2,
           "errors": 0
+        }
+      },
+      "wifi_ap_ap": {
+        "esp32": {
+          "failures": 0,
+          "total": 2,
+          "errors": 2
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c5": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s2": {
+          "failures": 0,
+          "total": 2,
+          "errors": 2
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 3,
+          "errors": 3
+        }
+      },
+      "wifi_ap_client": {
+        "esp32": {
+          "failures": 0,
+          "total": 2,
+          "errors": 2
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c5": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 1,
+          "errors": 1
+        },
+        "esp32s2": {
+          "failures": 0,
+          "total": 2,
+          "errors": 2
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 3,
+          "errors": 3
         }
       }
     },
@@ -764,5 +892,5 @@
       }
     }
   },
-  "generated_at": "2026-02-10T01:22:49.941705"
+  "generated_at": "2026-02-11T01:33:49.704355"
 }
