@@ -42,7 +42,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_log.h"
-#include "openthread/instance.h"
+//#include "openthread/instance.h"
 #include "openthread/platform/messagepool.h"
 
 #define OT_MPOOL_TAG "OPENTHREAD"
