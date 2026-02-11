@@ -465,11 +465,13 @@ if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET 
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNew" APPEND)
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolFree" APPEND)
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolDeinit" APPEND)
   target_link_libraries(${COMPONENT_LIB} INTERFACE
     "-u __wrap_otPlatMessagePoolInit"
     "-u __wrap_otPlatMessagePoolNew"
     "-u __wrap_otPlatMessagePoolFree"
-    "-u __wrap_otPlatMessagePoolNumFreeBuffers")
+    "-u __wrap_otPlatMessagePoolNumFreeBuffers"
+    "-u __wrap_otPlatMessagePoolDeinit")
 endif()
 
 # This function adds a dependency on the given component if the component is included into the build.
