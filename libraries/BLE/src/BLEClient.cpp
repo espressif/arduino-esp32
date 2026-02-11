@@ -420,7 +420,39 @@ void BLEClientCallbacks::onDisconnect(BLEClient *pClient) {
  * @return True on success.
  */
 bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
-  log_v(">> connect(%s)", address.toString().c_str());
+  log_i(">> connect(%s)", address.toString().c_str());
+
+  // Use explicitly provided type, or fall back to the address's stored type
+  if (type == 0xFF) {
+    type = address.getType();
+  }
+
+  // Configuration for retry logic
+  const int maxRetries = 3;
+  const int retryDelayMs = 100;
+  int retryCount = 0;
+  esp_err_t errRc;
+  uint32_t rc;
+
+  // Validate address
+  if (address == BLEAddress("")) {
+    log_e("Invalid peer address (NULL)");
+    return false;
+  }
+
+  // Check if already connected
+  if (m_isConnected) {
+    log_e("Client already connected to %s", m_peerAddress.toString().c_str());
+    return false;
+  }
+
+  // Stop any active scan before connecting - scanning can interfere with connection establishment
+  BLEScan *pScan = BLEDevice::getScan();
+  if (pScan != nullptr && pScan->isScanning()) {
+    log_i("Stopping scan before connecting...");
+    pScan->stop();
+    delay(50);  // Give the BLE stack time to settle after stopping scan
+  }
 
   // We need the connection handle that we get from registering the application.  We register the app
   // and then block on its completion.  When the event has arrived, we will have the handle.
@@ -429,14 +461,15 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   m_semaphoreRegEvt.take("connect");
 
   // clearServices(); // we dont need to delete services since every client is unique?
-  esp_err_t errRc = ::esp_ble_gattc_app_register(m_appId);
+  log_d("Registering GATT client app (appId=%d)...", m_appId);
+  errRc = ::esp_ble_gattc_app_register(m_appId);
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     BLEDevice::removePeerDevice(m_appId, true);
     return false;
   }
 
-  uint32_t rc = m_semaphoreRegEvt.wait("connect");
+  rc = m_semaphoreRegEvt.wait("connect");
 
   if (rc != ESP_GATT_OK) {
     // fixes ESP_GATT_NO_RESOURCES error mostly
@@ -448,32 +481,79 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
+  log_d("GATT client registered (gattc_if=%d)", m_gattc_if);
   m_peerAddress = address;
 
-  // Perform the open connection request against the target BLE Server.
-  m_semaphoreOpenEvt.take("connect");
-  errRc = ::esp_ble_gattc_open(
-    m_gattc_if,
-    getPeerAddress().getNative(),  // address
-    (esp_ble_addr_type_t)type,     // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
-    1                              // direct connection <-- maybe needs to be changed in case of direct indirect connection???
-  );
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    BLEDevice::removePeerDevice(m_appId, true);
-    return false;
-  }
+  // Perform the open connection request against the target BLE Server with retry logic.
+  // This helps handle cases where the BLE stack is busy or needs time to settle.
+  do {
+    m_semaphoreOpenEvt.take("connect");
+    log_d("Opening connection to %s (attempt %d/%d)...", address.toString().c_str(), retryCount + 1, maxRetries + 1);
+    errRc = ::esp_ble_gattc_open(
+      m_gattc_if,
+      getPeerAddress().getNative(),  // address
+      (esp_ble_addr_type_t)type,     // Note: This was added on 2018-04-03 when the latest ESP-IDF was detected to have changed the signature.
+      1                              // direct connection <-- maybe needs to be changed in case of direct indirect connection???
+    );
 
-  bool got_sem = m_semaphoreOpenEvt.timedWait("connect", timeoutMs);  // Wait for the connection to complete.
-  rc = m_semaphoreOpenEvt.value();
-  // check the status of the connection and cleanup in case of failure
-  if (!got_sem || rc != ESP_GATT_OK) {
+    if (errRc == ESP_OK) {
+      log_d("esp_ble_gattc_open returned OK, waiting for connection event...");
+      break;  // Success, exit retry loop
+    }
+
+    // Handle specific error cases that may benefit from retry
+    if (errRc == ESP_ERR_INVALID_STATE) {
+      // BLE stack may be busy, retry after delay
+      log_w("esp_ble_gattc_open: stack busy (ESP_ERR_INVALID_STATE), retry %d/%d", retryCount + 1, maxRetries);
+      m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before retry
+      delay(retryDelayMs);
+      retryCount++;
+    } else {
+      // Other errors, don't retry
+      log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
+      BLEDevice::removePeerDevice(m_appId, true);
+      esp_ble_gattc_app_unregister(m_gattc_if);
+      m_gattc_if = ESP_GATT_IF_NONE;
+      return false;
+    }
+  } while (retryCount < maxRetries);
+
+  // Check if we exhausted retries
+  if (errRc != ESP_OK) {
+    log_e("esp_ble_gattc_open failed after %d retries: rc=%d %s", maxRetries, errRc, GeneralUtils::errorToString(errRc));
+    m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
     BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
+    return false;
   }
-  log_v("<< connect(), rc=%d", rc == ESP_GATT_OK);
-  return rc == ESP_GATT_OK;
+
+  log_d("Waiting for connection event (timeout=%d ms)...", timeoutMs);
+  bool got_sem = m_semaphoreOpenEvt.timedWait("connect", timeoutMs);  // Wait for the connection to complete.
+  rc = m_semaphoreOpenEvt.value();
+
+  // check the status of the connection and cleanup in case of failure
+  if (!got_sem) {
+    log_e("Connection timeout after %d ms to %s (no OPEN event received)", timeoutMs, address.toString().c_str());
+    // Cancel any pending connection attempt
+    esp_ble_gap_disconnect(getPeerAddress().getNative());
+    BLEDevice::removePeerDevice(m_appId, true);
+    esp_ble_gattc_app_unregister(m_gattc_if);
+    m_gattc_if = ESP_GATT_IF_NONE;
+    return false;
+  }
+
+  if (rc != ESP_GATT_OK) {
+    log_e("Connection failed to %s, status=%d %s", address.toString().c_str(), rc, GeneralUtils::errorToString(rc));
+    BLEDevice::removePeerDevice(m_appId, true);
+    esp_ble_gattc_app_unregister(m_gattc_if);
+    m_gattc_if = ESP_GATT_IF_NONE;
+    return false;
+  }
+
+  log_i("Connected to %s", address.toString().c_str());
+  return true;
 }  // connect
 
 /**
@@ -818,9 +898,14 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
+  // Use explicitly provided type, or fall back to the address's stored type
+  if (type == 0xFF) {
+    type = address.getType();
+  }
+
   ble_addr_t peerAddr_t;
   memcpy(&peerAddr_t.val, address.getNative(), 6);
-  peerAddr_t.type = address.getType();
+  peerAddr_t.type = type;
   if (ble_gap_conn_find_by_addr(&peerAddr_t, NULL) == 0) {
     log_e("A connection to %s already exists", address.toString().c_str());
     return false;

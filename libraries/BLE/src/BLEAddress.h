@@ -72,6 +72,8 @@ public:
   bool operator>(const BLEAddress &otherAddress) const;
   bool operator>=(const BLEAddress &otherAddress) const;
   uint8_t *getNative();
+  uint8_t getType() const;
+  void setType(uint8_t type);
   String toString() const;
 
   /***************************************************************************
@@ -79,8 +81,8 @@ public:
    ***************************************************************************/
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  BLEAddress(esp_bd_addr_t address);
-  BLEAddress(const String &stringAddress);
+  BLEAddress(esp_bd_addr_t address, uint8_t type = 0);
+  BLEAddress(const String &stringAddress, uint8_t type = 0);
 #endif
 
   /***************************************************************************
@@ -91,7 +93,6 @@ public:
   BLEAddress(ble_addr_t address);
   BLEAddress(const String &stringAddress, uint8_t type = BLE_ADDR_PUBLIC);
   BLEAddress(uint8_t address[ESP_BD_ADDR_LEN], uint8_t type = BLE_ADDR_PUBLIC);
-  uint8_t getType() const;
 #endif
 
 private:
@@ -100,14 +101,7 @@ private:
    ***************************************************************************/
 
   uint8_t m_address[ESP_BD_ADDR_LEN];
-
-  /***************************************************************************
-   *                       NimBLE private properties                         *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
   uint8_t m_addrType;
-#endif
 };
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */

@@ -1,0 +1,14 @@
+tags:
+  - two_duts
+
+multi_device:
+  device0: server
+  device1: client
+
+platforms:
+  # Wokwi and QEMU do not support multi-device tests
+  wokwi: false
+  qemu: false
+
+requires:
+  - CONFIG_SOC_BLE_SUPPORTED=y

@@ -48,9 +48,7 @@
 
 BLEAddress::BLEAddress() {
   memset(m_address, 0, ESP_BD_ADDR_LEN);
-#if defined(CONFIG_NIMBLE_ENABLED)
   m_addrType = 0;
-#endif
 }
 
 /**
@@ -63,11 +61,9 @@ bool BLEAddress::equals(const BLEAddress &otherAddress) const {
 }
 
 bool BLEAddress::operator==(const BLEAddress &otherAddress) const {
-#if defined(CONFIG_NIMBLE_ENABLED)
   if (m_addrType != otherAddress.m_addrType) {
     return false;
   }
-#endif
   return memcmp(otherAddress.m_address, m_address, ESP_BD_ADDR_LEN) == 0;
 }
 
@@ -97,6 +93,22 @@ bool BLEAddress::operator>(const BLEAddress &otherAddress) const {
  */
 uint8_t *BLEAddress::getNative() {
   return m_address;
+}
+
+/**
+ * @brief Return the address type.
+ * @return The address type.
+ */
+uint8_t BLEAddress::getType() const {
+  return m_addrType;
+}
+
+/**
+ * @brief Set the address type.
+ * @param [in] type The address type.
+ */
+void BLEAddress::setType(uint8_t type) {
+  m_addrType = type;
 }
 
 /**
@@ -135,9 +147,11 @@ String BLEAddress::toString() const {
 /**
  * @brief Create an address from the native ESP32 representation.
  * @param [in] address The native representation.
+ * @param [in] type The address type.
  */
-BLEAddress::BLEAddress(esp_bd_addr_t address) {
+BLEAddress::BLEAddress(esp_bd_addr_t address, uint8_t type) {
   memcpy(m_address, address, ESP_BD_ADDR_LEN);
+  m_addrType = type;
 }
 
 /**
@@ -150,13 +164,15 @@ BLEAddress::BLEAddress(esp_bd_addr_t address) {
  * which is 17 characters in length.
  *
  * @param [in] stringAddress The hex representation of the address.
+ * @param [in] type The address type.
  */
-BLEAddress::BLEAddress(const String &stringAddress) {
+BLEAddress::BLEAddress(const String &stringAddress, uint8_t type) {
   if (stringAddress.length() != 17) {
     return;
   }
 
   int data[6];
+  m_addrType = type;
   sscanf(stringAddress.c_str(), "%x:%x:%x:%x:%x:%x", &data[0], &data[1], &data[2], &data[3], &data[4], &data[5]);
 
   for (size_t index = 0; index < sizeof(m_address); index++) {
@@ -184,10 +200,6 @@ BLEAddress::BLEAddress(uint8_t address[ESP_BD_ADDR_LEN], uint8_t type) {
 BLEAddress::BLEAddress(ble_addr_t address) {
   memcpy(m_address, address.val, ESP_BD_ADDR_LEN);
   m_addrType = address.type;
-}
-
-uint8_t BLEAddress::getType() const {
-  return m_addrType;
 }
 
 /**

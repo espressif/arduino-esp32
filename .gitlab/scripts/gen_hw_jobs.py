@@ -374,8 +374,10 @@ def main():
             key_tags = tags.copy()
             # SOC must always be one runner tag
             key_tags.add(chip)
-            if len(key_tags) == 1:
-                # Only SOC present, add generic
+            # Add eco_default tag to all runners
+            key_tags.add("eco_default")
+            if len(key_tags) == 2 and chip in key_tags and "eco_default" in key_tags:
+                # Only SOC and eco_default present, add generic
                 key_tags.add("generic")
             key = (chip, frozenset(sorted(key_tags)), test_type)
             group_map.setdefault(key, []).append(test_dir)

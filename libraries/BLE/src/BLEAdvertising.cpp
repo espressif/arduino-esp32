@@ -702,18 +702,24 @@ bool BLEAdvertising::start() {
 
   if (!m_customAdvData) {
     // Set the configuration for advertising.
+    // This is an async operation - we must wait for ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT
     m_advData.set_scan_rsp = false;
     m_advData.include_name = !m_scanResp;
     m_advData.include_txpower = !m_scanResp;
+    m_semaphoreSetAdv.take("config_adv_data");
     errRc = ::esp_ble_gap_config_adv_data(&m_advData);
     if (errRc != ESP_OK) {
       log_e("<< esp_ble_gap_config_adv_data: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreSetAdv.give();
       return false;
     }
+    m_semaphoreSetAdv.wait("config_adv_data");
+    log_d("Advertising data configured");
   }
 
   if (!m_customScanResponseData && m_scanResp) {
     // Set the configuration for scan response.
+    // This is an async operation - we must wait for ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT
     memcpy(&m_scanRespData, &m_advData, sizeof(esp_ble_adv_data_t));  // Copy the content of m_advData.
     m_scanRespData.set_scan_rsp = true;                               // Define this struct as scan response data
     m_scanRespData.include_name = true;                               // Caution: This may lead to a crash if the device name has more than 29 characters
@@ -721,11 +727,15 @@ bool BLEAdvertising::start() {
     m_scanRespData.appearance = 0;  // If defined the 'Appearance' attribute is already included in the advertising data
     m_scanRespData.flag = 0;        // 'Flags' attribute should no be included in the scan response
 
+    m_semaphoreSetAdv.take("config_scan_rsp");
     errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
     if (errRc != ESP_OK) {
       log_e("<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreSetAdv.give();
       return false;
     }
+    m_semaphoreSetAdv.wait("config_scan_rsp");
+    log_d("Scan response data configured");
   }
 
   // If we had services to advertise then we previously allocated some storage for them.
@@ -765,17 +775,19 @@ void BLEAdvertising::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb
   switch (event) {
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
     {
-      // m_semaphoreSetAdv.give();
+      log_d("Advertising data set complete, status=%d", param->adv_data_cmpl.status);
+      m_semaphoreSetAdv.give();
       break;
     }
     case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT:
     {
-      // m_semaphoreSetAdv.give();
+      log_d("Scan response data set complete, status=%d", param->scan_rsp_data_cmpl.status);
+      m_semaphoreSetAdv.give();
       break;
     }
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
     {
-      // m_semaphoreSetAdv.give();
+      log_d("Advertising start complete, status=%d", param->adv_start_cmpl.status);
       break;
     }
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
@@ -1220,7 +1232,7 @@ bool BLEAdvertising::start(uint32_t duration, void (*advCompleteCB)(BLEAdvertisi
   // Note: ble_svc_gap_device_name() doesn't reliably return the name set via
   // ble_svc_gap_device_name_set(), so we store and use the name directly (like SimpleBLE does)
   // If setName() was called on advertising, m_name will already be set and we use that
-  if (m_name.isEmpty()) {
+  if (!m_customAdvData && m_name.isEmpty()) {
     m_name = BLEDevice::getDeviceName();
     if (m_name.length() > 0) {
       m_advData.name = (uint8_t *)m_name.c_str();

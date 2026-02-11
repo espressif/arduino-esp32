@@ -98,6 +98,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             shift
             debug_level="DebugLevel=$1"
             ;;
+        -td )
+            shift
+            ci_yml_dir=$1
+            ;;
         * )
             break
             ;;
@@ -300,9 +304,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
             if [ -n "$log_compilation" ]; then
@@ -348,9 +355,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
@@ -402,14 +412,25 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         local sketchdirname
         local sketchname
         local has_requirements
+        local parent_dir
 
         sketchdir=$(dirname "$sketch")
         sketchdirname=$(basename "$sketchdir")
         sketchname=$(basename "$sketch")
+        parent_dir=$(dirname "$sketchdir")
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
+        # Skip sketches that are part of multi-device tests (they are built separately)
+        elif [[ -f "$parent_dir/ci.yml" ]]; then
+            local has_multi_device
+            has_multi_device=$(yq eval '.multi_device' "$parent_dir/ci.yml" 2>/dev/null)
+            if [[ "$has_multi_device" != "null" && "$has_multi_device" != "" ]]; then
+                continue
+            fi
+        fi
+
+        if [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
             is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
