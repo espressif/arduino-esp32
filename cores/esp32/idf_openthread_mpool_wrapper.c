@@ -28,6 +28,7 @@
  */
 
 #include "soc/soc_caps.h"
+#include "sdkconfig.h"
 
 #if SOC_IEEE802154_SUPPORTED
 #if CONFIG_OPENTHREAD_ENABLED
