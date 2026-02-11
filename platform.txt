@@ -52,7 +52,7 @@ compiler.cpreprocessor.flags="@{compiler.sdk.path}/flags/defines" "-I{build.sour
 compiler.c.flags=-MMD -c "@{compiler.sdk.path}/flags/c_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
 compiler.cpp.flags=-MMD -c "@{compiler.sdk.path}/flags/cpp_flags" {compiler.warning_flags} {compiler.optimization_flags} {compiler.common_werror_flags}
 compiler.S.flags=-MMD -c -x assembler-with-cpp "@{compiler.sdk.path}/flags/S_flags" {compiler.warning_flags} {compiler.optimization_flags}
-compiler.c.elf.flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler" "-Wl,--wrap=otPlatMessagePoolInit" "-Wl,--wrap=otPlatMessagePoolNew" "-Wl,--wrap=otPlatMessagePoolFree" "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" "@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
+compiler.c.elf.flags="-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" "-L{compiler.sdk.path}/{build.memory_type}" "-Wl,--wrap=esp_panic_handler" "-Wl,--wrap=otPlatMessagePoolInit" "-Wl,--wrap=otPlatMessagePoolNew" "-Wl,--wrap=otPlatMessagePoolFree" "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" "-Wl,--wrap=otPlatMessagePoolDeinit" "@{compiler.sdk.path}/flags/ld_flags" "@{compiler.sdk.path}/flags/ld_scripts"
 compiler.c.elf.libs="@{compiler.sdk.path}/flags/ld_libs"
 compiler.ar.flags=cr
 
