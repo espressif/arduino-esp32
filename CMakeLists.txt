@@ -460,7 +460,7 @@ endif()
 # OpenThread message pool: redirect to Arduino wrapper (BOARD_HAS_PSRAM / PSRAM-aware allocation).
 # Same pattern as esp_log wrap: --wrap so calls use __wrap_* ; -u so linker keeps our wrapper .o.
 # Applied on OpenThread-capable targets (same targets that may add openthread to requires).
-if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5")
+if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5" AND CONFIG_OPENTHREAD_ENABLED)
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolInit" APPEND)
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNew" APPEND)
   idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolFree" APPEND)
