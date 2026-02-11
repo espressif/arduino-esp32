@@ -88,7 +88,7 @@ public:
   ~BLEClient();
   bool connect(BLEAdvertisedDevice *device);
   bool connectTimeout(BLEAdvertisedDevice *device, uint32_t timeoutMS = portMAX_DELAY);
-  bool connect(BLEAddress address, uint8_t type = 0, uint32_t timeoutMS = portMAX_DELAY);
+  bool connect(BLEAddress address, uint8_t type = 0xFF, uint32_t timeoutMS = portMAX_DELAY);
   bool secureConnection();
   int disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
   BLEAddress getPeerAddress();
