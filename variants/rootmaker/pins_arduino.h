@@ -27,9 +27,9 @@ static const uint8_t SCL = 40;
 
 // LCD
 static const uint8_t LCD_SDA = 9;
-static const uint8_t LCD_BL  = 7;
-static const uint8_t LCD_CS  = 5;
-static const uint8_t LCD_RS  = 3;
+static const uint8_t LCD_BL = 7;
+static const uint8_t LCD_CS = 5;
+static const uint8_t LCD_RS = 3;
 static const uint8_t LCD_SCK = 12;
 static const uint8_t LCD_RST = 14;
 
@@ -40,12 +40,12 @@ static const uint8_t TP_SCL = 40;
 static const uint8_t TP_RST = 2;
 
 // SPI
-static const uint8_t SS   = 29;
+static const uint8_t SS = 29;
 static const uint8_t MOSI = 31;
 static const uint8_t MISO = 32;
-static const uint8_t SCK  = 30;
-static const uint8_t WP   = 28;
-static const uint8_t HD   = 27;
+static const uint8_t SCK = 30;
+static const uint8_t WP = 28;
+static const uint8_t HD = 27;
 
 // 4个扩展接口
 static const uint8_t PORT1_SDA = 15;
@@ -61,9 +61,9 @@ static const uint8_t PORT4_SDA = 17;
 static const uint8_t PORT4_SCL = 18;
 
 // F_BUS
-static const uint8_t F_BUS7  = 45;
-static const uint8_t F_BUS8  = 41;
-static const uint8_t F_BUS9  = 40;
+static const uint8_t F_BUS7 = 45;
+static const uint8_t F_BUS8 = 41;
+static const uint8_t F_BUS9 = 40;
 static const uint8_t F_BUS10 = 35;
 static const uint8_t F_BUS11 = 33;
 static const uint8_t F_BUS12 = 39;
@@ -86,15 +86,15 @@ static const uint8_t F_BUS33 = 47;
 static const uint8_t F_BUS34 = 46;
 
 // S_BUS
-static const uint8_t S_BUS1  = 48;
-static const uint8_t S_BUS2  = 47;
-static const uint8_t S_BUS3  = 46;
-static const uint8_t S_BUS4  = 38;
-static const uint8_t S_BUS5  = 39;
-static const uint8_t S_BUS6  = 33;
-static const uint8_t S_BUS7  = 35;
-static const uint8_t S_BUS8  = 40;
-static const uint8_t S_BUS9  = 41;
+static const uint8_t S_BUS1 = 48;
+static const uint8_t S_BUS2 = 47;
+static const uint8_t S_BUS3 = 46;
+static const uint8_t S_BUS4 = 38;
+static const uint8_t S_BUS5 = 39;
+static const uint8_t S_BUS6 = 33;
+static const uint8_t S_BUS7 = 35;
+static const uint8_t S_BUS8 = 40;
+static const uint8_t S_BUS9 = 41;
 static const uint8_t S_BUS10 = 45;
 static const uint8_t S_BUS11 = 37;
 static const uint8_t S_BUS12 = 36;
