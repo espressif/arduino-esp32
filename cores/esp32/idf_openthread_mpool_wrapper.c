@@ -58,27 +58,29 @@
 
 static int s_buffer_pool_head = -1;
 static otMessageBuffer **s_buffer_pool_pointer = NULL;
+static otMessageBuffer *s_buffer_pool = NULL;
 
 void __wrap_otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, size_t aBufferSize)
 {
-    otMessageBuffer *buffer_pool;
+    (void) aInstance;
+
     uint16_t num_buffers;
 
 #ifdef BOARD_HAS_PSRAM
     const uint32_t mem_caps = MALLOC_CAP_SPIRAM;
     const char *mem_type = "PSRAM";
     num_buffers = aMinNumFreeBuffers;
-    printf("OpenThread Message buffer pool: %u buffers, %u bytes (PSRAM)", num_buffers, (unsigned)(num_buffers * aBufferSize));
+    ESP_LOGD(OT_MPOOL_TAG, "OpenThread Message buffer pool: %u buffers, %u bytes (PSRAM)", num_buffers, (unsigned)(num_buffers * aBufferSize));
 #else
     const uint32_t mem_caps = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT;
     const char *mem_type = "internal RAM";
     num_buffers = (aMinNumFreeBuffers > OT_MPOOL_NUM_BUFFERS_NO_PSRAM)
                       ? OT_MPOOL_NUM_BUFFERS_NO_PSRAM
                       : aMinNumFreeBuffers;
-    printf("OpenThread Message buffer pool: %u buffers, %u bytes (internal RAM)", num_buffers, (unsigned)(num_buffers * aBufferSize));
+    ESP_LOGD(OT_MPOOL_TAG, "OpenThread Message buffer pool: %u buffers, %u bytes (internal RAM)", num_buffers, (unsigned)(num_buffers * aBufferSize));
 #endif
 
-    buffer_pool = (otMessageBuffer *)heap_caps_calloc(num_buffers, aBufferSize, mem_caps);
+    otMessageBuffer *buffer_pool = (otMessageBuffer *)heap_caps_calloc(num_buffers, aBufferSize, mem_caps);
     s_buffer_pool_pointer = (otMessageBuffer **)heap_caps_calloc(num_buffers, sizeof(otMessageBuffer *), mem_caps);
 
     if (buffer_pool == NULL || s_buffer_pool_pointer == NULL) {
@@ -101,13 +103,15 @@ void __wrap_otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuf
         s_buffer_pool_pointer[i] = (otMessageBuffer *)((uint8_t *)buffer_pool + i * aBufferSize);
     }
     s_buffer_pool_head = (int)num_buffers - 1;
-
+    s_buffer_pool = buffer_pool;
     ESP_LOGI(OT_MPOOL_TAG, "Message buffer pool: %u buffers, %u bytes (%s)",
              num_buffers, (unsigned)(num_buffers * aBufferSize), mem_type);
 }
 
 otMessageBuffer *__wrap_otPlatMessagePoolNew(otInstance *aInstance)
 {
+    (void) aInstance;
+
     otMessageBuffer *ret = NULL;
     if (s_buffer_pool_head >= 0) {
         ret = s_buffer_pool_pointer[s_buffer_pool_head];
@@ -118,13 +122,32 @@ otMessageBuffer *__wrap_otPlatMessagePoolNew(otInstance *aInstance)
 
 void __wrap_otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer)
 {
+    (void) aInstance;
+
     s_buffer_pool_head++;
     s_buffer_pool_pointer[s_buffer_pool_head] = aBuffer;
 }
 
 uint16_t __wrap_otPlatMessagePoolNumFreeBuffers(otInstance *aInstance)
 {
-    return (s_buffer_pool_head >= 0) ? (uint16_t)(s_buffer_pool_head + 1) : 0;
+    (void) aInstance;
+
+    return s_buffer_pool_head + 1;
+}
+
+void __wrap_otPlatMessagePoolDeinit(otInstance *aInstance)
+{
+    (void) aInstance;
+
+    if (s_buffer_pool_pointer != NULL) {
+        heap_caps_free(s_buffer_pool_pointer);
+        s_buffer_pool_pointer = NULL;
+    }
+    if (s_buffer_pool != NULL) {
+        heap_caps_free(s_buffer_pool);
+        s_buffer_pool = NULL;
+    }
+    s_buffer_pool_head = -1;
 }
 
 #endif /* SOC_IEEE802154_SUPPORTED */
