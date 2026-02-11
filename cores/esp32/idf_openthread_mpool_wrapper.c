@@ -30,7 +30,7 @@
 #include "soc/soc_caps.h"
 
 #if SOC_IEEE802154_SUPPORTED
-
+#if CONFIG_OPENTHREAD_ENABLED
 /*
  * BOARD_HAS_PSRAM is defined by the Arduino build system (boards.txt) when the
  * user selects "PSRAM: Enabled" in the board menu (-DBOARD_HAS_PSRAM).
@@ -42,7 +42,7 @@
 
 #include "esp_heap_caps.h"
 #include "esp_log.h"
-//#include "openthread/instance.h"
+#include "openthread/instance.h"
 #include "openthread/platform/messagepool.h"
 
 #define OT_MPOOL_TAG "OPENTHREAD"
@@ -151,3 +151,4 @@ void __wrap_otPlatMessagePoolDeinit(otInstance *aInstance)
 }
 
 #endif /* SOC_IEEE802154_SUPPORTED */
+#endif /* CONFIG_OPENTHREAD_ENABLED */
