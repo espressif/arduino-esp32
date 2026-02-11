@@ -151,5 +151,5 @@ void __wrap_otPlatMessagePoolDeinit(otInstance *aInstance)
     s_buffer_pool_head = -1;
 }
 
-#endif /* SOC_IEEE802154_SUPPORTED */
 #endif /* CONFIG_OPENTHREAD_ENABLED */
+#endif /* SOC_IEEE802154_SUPPORTED */
