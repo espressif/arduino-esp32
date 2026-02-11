@@ -98,6 +98,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             shift
             debug_level="DebugLevel=$1"
             ;;
+        -td )
+            shift
+            ci_yml_dir=$1
+            ;;
         * )
             break
             ;;
@@ -300,9 +304,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
             if [ -n "$log_compilation" ]; then
@@ -348,9 +355,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
