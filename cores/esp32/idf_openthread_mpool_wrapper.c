@@ -70,7 +70,7 @@ void __wrap_otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuf
     num_buffers = aMinNumFreeBuffers;
     printf("OpenThread Message buffer pool: %u buffers, %u bytes (PSRAM)", num_buffers, (unsigned)(num_buffers * aBufferSize));
 #else
-    const uint32_t mem_caps = MALLOC_CAP_DEFAULT;
+    const uint32_t mem_caps = MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT;
     const char *mem_type = "internal RAM";
     num_buffers = (aMinNumFreeBuffers > OT_MPOOL_NUM_BUFFERS_NO_PSRAM)
                       ? OT_MPOOL_NUM_BUFFERS_NO_PSRAM
