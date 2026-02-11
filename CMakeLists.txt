@@ -58,6 +58,7 @@ set(CORE_SRCS
   cores/esp32/HardwareSerial.cpp
   cores/esp32/HashBuilder.cpp
   cores/esp32/HEXBuilder.cpp
+  cores/esp32/idf_openthread_mpool_wrapper.c
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
@@ -454,6 +455,21 @@ if(NOT CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP)
     idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_write" APPEND)
     idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_writev" APPEND)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u __wrap_esp_log_write" "-u __wrap_esp_log_writev")
+endif()
+
+# OpenThread message pool: redirect to Arduino wrapper (BOARD_HAS_PSRAM / PSRAM-aware allocation).
+# Same pattern as esp_log wrap: --wrap so calls use __wrap_* ; -u so linker keeps our wrapper .o.
+# Only when OpenThread is in the build (same targets that add openthread to requires).
+if(IDF_TARGET STREQUAL "esp32c6" OR IDF_TARGET STREQUAL "esp32h2" OR IDF_TARGET STREQUAL "esp32c5")
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolInit" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNew" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolFree" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" APPEND)
+  target_link_libraries(${COMPONENT_LIB} INTERFACE
+    "-u __wrap_otPlatMessagePoolInit"
+    "-u __wrap_otPlatMessagePoolNew"
+    "-u __wrap_otPlatMessagePoolFree"
+    "-u __wrap_otPlatMessagePoolNumFreeBuffers")
 endif()
 
 # This function adds a dependency on the given component if the component is included into the build.
