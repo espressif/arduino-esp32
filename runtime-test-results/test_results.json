@@ -1,41 +1,9 @@
 {
-  "commit_sha": "c94a9a59dfc294e99a0637cb39a855b8d3e472b5",
+  "commit_sha": "4802814aaf1a2bc27911d5e49eb8c005a142e392",
   "tests_failed": true,
   "test_data": {
     "hardware": {
-      "ble_client": {
-        "esp32": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32c3": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32c5": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32c6": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32h2": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32s3": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        }
-      },
-      "ble_server": {
+      "ble": {
         "esp32": {
           "failures": 0,
           "total": 1,
@@ -437,39 +405,7 @@
           "errors": 0
         }
       },
-      "wifi_ap_ap": {
-        "esp32": {
-          "failures": 0,
-          "total": 2,
-          "errors": 2
-        },
-        "esp32c3": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32c5": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32c6": {
-          "failures": 0,
-          "total": 1,
-          "errors": 1
-        },
-        "esp32s2": {
-          "failures": 0,
-          "total": 2,
-          "errors": 2
-        },
-        "esp32s3": {
-          "failures": 0,
-          "total": 3,
-          "errors": 3
-        }
-      },
-      "wifi_ap_client": {
+      "wifi_ap": {
         "esp32": {
           "failures": 0,
           "total": 2,
@@ -892,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-12T01:39:53.968908"
+  "generated_at": "2026-02-12T14:32:42.329586"
 }
