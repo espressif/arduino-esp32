@@ -141,7 +141,6 @@ private:
   std::vector<BLEUUID> m_serviceDataUUIDs;
   uint8_t *m_payload;
   size_t m_payloadLength = 0;
-  uint8_t m_addressType;
   uint8_t m_advType;
   bool m_isLegacyAdv;
 

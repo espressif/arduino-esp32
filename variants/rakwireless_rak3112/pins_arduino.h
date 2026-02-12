@@ -24,6 +24,9 @@ static const uint8_t BAT_VOLT = 21;
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
+static const uint8_t TX1 = 43;  // UART1 default TX pin for RAK3112
+static const uint8_t RX1 = 44;  // UART1 default RX pin for RAK3112
+
 static const uint8_t SDA = 9;
 static const uint8_t SCL = 40;
 

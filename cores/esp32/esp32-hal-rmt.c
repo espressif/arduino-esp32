@@ -401,6 +401,12 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
   xEventGroupClearBits(bus->rmt_events, RMT_FLAG_RX_DONE);
   bus->num_symbols_read = num_rmt_symbols;
 
+  if (waitForData) {
+    // resets the reading channel to start fresh
+    rmt_disable(bus->rmt_channel_h);
+    rmt_enable(bus->rmt_channel_h);
+  }
+
   rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
   // wait for data if requested
   if (waitForData) {

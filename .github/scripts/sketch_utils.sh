@@ -23,27 +23,33 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
         # Check if the sketch requires any configuration options (AND)
         requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" == "" ]]; then
                     has_requirements=0
                 fi
-            done
+            done <<< "$requirements"
         fi
 
         # Check if the sketch requires any configuration options (OR)
         requirements_or=$(yq eval '.requires_any[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
             local found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" != "" ]]; then
                     found=true
                     break
                 fi
-            done
+            done <<< "$requirements_or"
             if [[ "$found" == "false" ]]; then
                 has_requirements=0
             fi
@@ -91,6 +97,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         -d )
             shift
             debug_level="DebugLevel=$1"
+            ;;
+        -td )
+            shift
+            ci_yml_dir=$1
             ;;
         * )
             break
@@ -294,9 +304,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
             if [ -n "$log_compilation" ]; then
@@ -342,9 +355,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
@@ -396,14 +412,25 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         local sketchdirname
         local sketchname
         local has_requirements
+        local parent_dir
 
         sketchdir=$(dirname "$sketch")
         sketchdirname=$(basename "$sketchdir")
         sketchname=$(basename "$sketch")
+        parent_dir=$(dirname "$sketchdir")
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
+        # Skip sketches that are part of multi-device tests (they are built separately)
+        elif [[ -f "$parent_dir/ci.yml" ]]; then
+            local has_multi_device
+            has_multi_device=$(yq eval '.multi_device' "$parent_dir/ci.yml" 2>/dev/null)
+            if [[ "$has_multi_device" != "null" && "$has_multi_device" != "" ]]; then
+                continue
+            fi
+        fi
+
+        if [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
             is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
@@ -420,7 +447,8 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         echo "$sketch" >> sketches.txt
         sketchnum=$((sketchnum + 1))
     done
-    return $sketchnum
+    # Echo count to stdout instead of using return code (which is limited to 0-255)
+    echo "$sketchnum"
 }
 
 function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
@@ -496,11 +524,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
 
     set +e
     if [ -n "$sketches_file" ]; then
-        count_sketches "$path" "$target" "0" "$sketches_file"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file")
     else
-        count_sketches "$path" "$target"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target")
     fi
     set -e
     local sketches

@@ -448,7 +448,7 @@ begin
 
 .. code-block:: arduino
 
-    wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+    wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
 
 Where:
 
@@ -456,11 +456,11 @@ Where:
 * ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
 * ``channel`` sets the Wi-Fi channel.
 * ``uint8_t* bssid`` sets the AP BSSID.
-* ``connect`` sets ``true`` to connect to the configured network automatically.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
 
 .. code-block:: arduino
 
-    wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+    wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
 
 Where:
 
@@ -468,13 +468,38 @@ Where:
 * ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
 * ``channel`` sets the Wi-Fi channel.
 * ``bssid`` sets the AP BSSID.
-* ``connect`` sets ``true`` to connect to the configured network automatically.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
+
+.. note::
+
+    The ``begin`` function also accepts ``String`` types for the ``ssid`` and ``passphrase`` parameters, providing convenient overloads for use with Arduino ``String`` objects.
 
 Function to start the connection after being configured.
 
 .. code-block:: arduino
 
     wl_status_t begin();
+
+connect
+*******
+
+Function to connect to a Wi-Fi network. This is called internally by ``begin`` but can also be used directly for more control.
+
+.. code-block:: arduino
+
+    bool connect(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
+
+Where:
+
+* ``ssid`` sets the AP SSID.
+* ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
+* ``channel`` sets the Wi-Fi channel.
+* ``bssid`` sets the AP BSSID.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
+
+.. note::
+
+    The ``connect`` function also accepts ``String`` types for the ``ssid`` and ``passphrase`` parameters, providing convenient overloads for use with Arduino ``String`` objects.
 
 config
 ******
