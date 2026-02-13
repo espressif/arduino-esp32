@@ -1,33 +1,33 @@
 {
-  "commit_sha": "4802814aaf1a2bc27911d5e49eb8c005a142e392",
+  "commit_sha": "4a08ef4163b1cec92f1d910cbc0da233cd145ef5",
   "tests_failed": true,
   "test_data": {
     "hardware": {
       "ble": {
         "esp32": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c5": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c6": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32h2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -248,8 +248,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 10,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -409,27 +409,27 @@
         "esp32": {
           "failures": 0,
           "total": 2,
-          "errors": 2
+          "errors": 0
         },
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c5": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32s2": {
           "failures": 0,
           "total": 2,
-          "errors": 2
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -828,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-13T01:18:26.429161"
+  "generated_at": "2026-02-13T18:28:47.833304"
 }
