@@ -42,9 +42,9 @@ Serial.begin(baud, config, rxPin, txPin, invert, timeout_ms, rxfifo_full_thrhd)
 
 ### Baud Rate Range
 
-The baud rate detection works with the following standard baud rates:
-- 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200, 230400
+The baud rate detection works over a wide range of speeds (typically from 300 baud up to high-speed rates such as 921600 baud). The detected value is rounded to the nearest entry in the core’s internal baud-rate table used by `uartDetectBaudrate()`.
 
+Examples of baud rates that can be detected include: 300, 600, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 256000, 460800, 921600, and others defined by the core.
 ## How Baud Rate Detection Works
 
 1. **Detection Phase**:
