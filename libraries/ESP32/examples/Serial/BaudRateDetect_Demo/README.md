@@ -139,7 +139,7 @@ void setup() {
 **Successful Detection**
 
 ```
-==>The baud rate is 115200
+==>The baud rate is approximately 115200 (for example: 115200 or 115201)
 
 [Detection successful - sketch continues normally]
 ```
