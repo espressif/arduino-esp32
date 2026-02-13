@@ -73,7 +73,7 @@ The sketch attempts to detect the baud rate by:
 
 **No external connections are required!** This example works using UART0 (`Serial`) pins (RX0 and TX0)
 
-It can also detect the baud rate from the UART1 `Serial1` (ESP32 / ESP32S2) or UART2 `Serial2` (ESP32 only).
+It can also detect the baud rate from the UART1 `Serial1` (ESP32 / ESP32-S2) or UART2 `Serial2` (ESP32 only).
 
 **Note:** Pin numbers may vary depending on your specific ESP32 board. Refer to your board's documentation for the actual GPIO assignments.
 
