@@ -100,29 +100,29 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
         test_type = m.group(2)
         print(f"[DEBUG] Artifact group target={target} type={test_type} dir={artifact_dir}", file=sys.stderr)
 
-        # Group build*.tmp directories by sketch
-        # Structure: test-bin-<target>-<type>/<sketch>/build*.tmp/
-        sketches_processed = set()
-        # Track multi-device test names to avoid counting them multiple times
-        # (e.g., wifi_ap_ap and wifi_ap_client both map to test name wifi_ap)
-        multi_device_tests_processed = set()
+        # Find all build*.tmp directories and determine test names.
+        # Directory layout:
+        #   Single-device: test-bin-<target>-<type>/<test>/build*.tmp/
+        #   Multi-device:  test-bin-<target>-<type>/<test>/<device>/build*.tmp/
+        # The test name is always the first path component after the artifact group.
+        tests_processed = set()
 
-        # Find all build*.tmp directories and process each sketch once
         for build_tmp in artifact_dir.rglob("build*.tmp"):
             if not build_tmp.is_dir():
                 continue
             if not re.search(r"build\d*\.tmp$", build_tmp.name):
                 continue
 
-            # Path structure is: test-bin-<target>-<type>/<sketch>/build*.tmp/
-            sketch = build_tmp.parent.name
+            # Test name is always the first directory component after the artifact group
+            rel = build_tmp.relative_to(artifact_dir)
+            effective_sketch = rel.parts[0]
 
-            # Skip if we already processed this sketch
-            if sketch in sketches_processed:
+            # Skip if we already processed this test
+            if effective_sketch in tests_processed:
                 continue
-            sketches_processed.add(sketch)
+            tests_processed.add(effective_sketch)
 
-            print(f"[DEBUG]  Processing sketch={sketch} from artifact {artifact_dir.name}", file=sys.stderr)
+            print(f"[DEBUG]  Processing test={effective_sketch} from artifact {artifact_dir.name}", file=sys.stderr)
 
             ci_path = build_tmp / "ci.yml"
             sdk_path = build_tmp / "sdkconfig"
@@ -145,26 +145,6 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
 
             ci = _parse_ci_yml(ci_text)
             fqbn_counts = _fqbn_counts_from_yaml(ci)
-
-            # For multi-device tests, the build artifact sketch name follows the
-            # pattern {test_name}_{device_sketch} (e.g., wifi_ap_ap, wifi_ap_client).
-            # Derive the original test name to match the test result XML structure,
-            # which uses the test name (e.g., validation/wifi_ap/esp32/wifi_ap.xml).
-            effective_sketch = sketch
-            multi_device = ci.get("multi_device") if isinstance(ci, dict) else None
-            if isinstance(multi_device, dict):
-                device_names = [str(v) for v in multi_device.values()]
-                for dname in device_names:
-                    suffix = f"_{dname}"
-                    if sketch.endswith(suffix):
-                        effective_sketch = sketch[:-len(suffix)]
-                        break
-                # Only process each multi-device test once across all its device sketches
-                if effective_sketch in multi_device_tests_processed:
-                    print(f"[DEBUG]   Skip (multi-device test already processed): {sketch} -> {effective_sketch}", file=sys.stderr)
-                    continue
-                multi_device_tests_processed.add(effective_sketch)
-                print(f"[DEBUG]   Multi-device test detected: {sketch} -> {effective_sketch}", file=sys.stderr)
 
             # Determine allowed platforms for this test
             # Performance tests are only run on hardware
@@ -198,7 +178,7 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
                 expected[(plat, target, test_type, effective_sketch)] = exp_runs
                 print(f"[DEBUG]   Expected: plat={plat} target={target} type={test_type} sketch={effective_sketch} runs={exp_runs}", file=sys.stderr)
 
-        if len(sketches_processed) == 0:
+        if len(tests_processed) == 0:
             print(f"[DEBUG]  No sketches found in this artifact group", file=sys.stderr)
     return expected
 

@@ -58,8 +58,14 @@ def find_tests() -> list[Path]:
 
 def find_sketch_test_dirs(types_filter: list[str]) -> list[tuple[str, Path]]:
     """
-    Return list of (test_type, test_dir) where test_dir contains a sketch named <dir>/<dir>.ino
-    If types_filter provided, only include those types.
+    Return list of (test_type, test_dir) for all discoverable tests.
+
+    A test directory is included if it contains either:
+      - A sketch file named <dir>/<dir>.ino (regular single-device test), or
+      - A ci.yml with a ``multi_device`` key (multi-device test where individual
+        sketches live in sub-directories).
+
+    If *types_filter* is provided, only test types in the list are included.
     """
     results: list[tuple[str, Path]] = []
     if not TESTS_ROOT.exists():
@@ -77,6 +83,13 @@ def find_sketch_test_dirs(types_filter: list[str]) -> list[tuple[str, Path]]:
             ino = candidate / f"{sketch}.ino"
             if ino.exists():
                 results.append((test_type, candidate))
+                continue
+            # Check for multi-device test: ci.yml with multi_device key
+            ci_path = candidate / "ci.yml"
+            if ci_path.exists():
+                ci = read_yaml(ci_path)
+                if isinstance(ci.get("multi_device"), dict):
+                    results.append((test_type, candidate))
     return results
 
 
@@ -124,16 +137,23 @@ def sketch_name_from_ci(ci_path: Path) -> str:
 
 
 def sdkconfig_path_for(chip: str, sketch: str, ci_json: dict) -> Path:
-    # Match logic from tests_run.sh: if multiple FQBN entries -> build0.tmp
+    # Determine FQBN count (shared by both regular and multi-device tests)
     fqbn = ci_json.get("fqbn", {}) if isinstance(ci_json, dict) else {}
-    length = 0
+    fqbn_length = 0
     if isinstance(fqbn, dict):
         v = fqbn.get(chip)
         if isinstance(v, list):
-            length = len(v)
-    if length <= 1:
-        return Path.home() / f".arduino/tests/{chip}/{sketch}/build.tmp/sdkconfig"
-    return Path.home() / f".arduino/tests/{chip}/{sketch}/build0.tmp/sdkconfig"
+            fqbn_length = len(v)
+    build_suffix = "build0.tmp" if fqbn_length > 1 else "build.tmp"
+
+    # For multi-device tests the build directory uses a nested layout:
+    # {test_name}/{first_device}/build[0].tmp/ (see tests_build.sh build_multi_device_test).
+    multi_device = ci_json.get("multi_device") if isinstance(ci_json, dict) else None
+    if isinstance(multi_device, dict) and multi_device:
+        first_device = str(next(iter(multi_device.values())))
+        return Path.home() / f".arduino/tests/{chip}/{sketch}/{first_device}/{build_suffix}/sdkconfig"
+
+    return Path.home() / f".arduino/tests/{chip}/{sketch}/{build_suffix}/sdkconfig"
 
 
 def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
@@ -374,10 +394,8 @@ def main():
             key_tags = tags.copy()
             # SOC must always be one runner tag
             key_tags.add(chip)
-            # Add eco_default tag to all runners
-            key_tags.add("eco_default")
-            if len(key_tags) == 2 and chip in key_tags and "eco_default" in key_tags:
-                # Only SOC and eco_default present, add generic
+            if len(key_tags) == 1:
+                # Only SOC present, add generic
                 key_tags.add("generic")
             key = (chip, frozenset(sorted(key_tags)), test_type)
             group_map.setdefault(key, []).append(test_dir)

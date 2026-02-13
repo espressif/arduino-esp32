@@ -34,53 +34,6 @@ function run_multi_device_test {
 
     printf "\033[95mRunning multi-device test: %s\033[0m\n" "$test_name"
 
-    # Get the list of devices from ci.yml
-    devices=$(yq eval '.multi_device | keys | .[]' "$test_dir/ci.yml" 2>/dev/null | sort)
-
-    if [[ -z "$devices" ]]; then
-        echo "ERROR: No devices found in multi_device configuration for $test_name"
-        return 1
-    fi
-
-    # Build the build-dir argument for pytest-embedded
-    local build_dirs=""
-    local device_count=0
-    local sketch_name
-    local build_dir
-    local sdkconfig_path
-    local compiled_target
-    for device in $devices; do
-        sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
-        build_dir="$HOME/.arduino/tests/$target/${test_name}_${sketch_name}/build.tmp"
-
-        if [ ! -d "$build_dir" ]; then
-            printf "\033[93mSkipping multi-device test %s: build not found for device %s in %s\033[0m\n" "$test_name" "$device" "$build_dir"
-            return 0
-        fi
-
-        # Check if the build is for the correct target
-        sdkconfig_path="$build_dir/sdkconfig"
-        if [ -f "$sdkconfig_path" ]; then
-            compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
-            if [ "$compiled_target" != "$target" ]; then
-                printf "\033[91mError: Device %s compiled for %s, expected %s\033[0m\n" "$device" "$compiled_target" "$target"
-                return 1
-            fi
-        fi
-
-        if [ $device_count -gt 0 ]; then
-            build_dirs="$build_dirs|$build_dir"
-        else
-            build_dirs="$build_dir"
-        fi
-        device_count=$((device_count + 1))
-    done
-
-    if [ $device_count -lt 2 ]; then
-        echo "ERROR: Multi-device test $test_name requires at least 2 devices, found $device_count"
-        return 1
-    fi
-
     # Check platform support
     if [ -f "$test_dir/ci.yml" ]; then
         is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
@@ -93,23 +46,42 @@ function run_multi_device_test {
         fi
     fi
 
-    # Build embedded-services argument
     if [ $platform == "wokwi" ]; then
         echo "ERROR: Wokwi platform not supported for multi-device tests"
         return 1
     elif [ $platform == "qemu" ]; then
         echo "ERROR: QEMU platform not supported for multi-device tests"
         return 1
-    else
-        # For hardware platform, use esp,arduino for each device
-        local services="esp,arduino"
-        for ((i=1; i<device_count; i++)); do
-            services="$services|esp,arduino"
-        done
-        extra_args=("--embedded-services" "$services")
+    fi
+
+    # Get the list of devices from ci.yml
+    devices=$(yq eval '.multi_device | keys | .[]' "$test_dir/ci.yml" 2>/dev/null | sort)
+
+    if [[ -z "$devices" ]]; then
+        echo "ERROR: No devices found in multi_device configuration for $test_name"
+        return 1
+    fi
+
+    # Determine number of FQBN configurations (same logic as build side)
+    local fqbn_len=0
+    if [ "$options" -eq 0 ] && [ -f "$test_dir/ci.yml" ]; then
+        fqbn_len=$(yq eval ".fqbn.${target} | length" "$test_dir/ci.yml" 2>/dev/null || echo 0)
+    fi
+    if [ "$fqbn_len" -eq 0 ]; then
+        fqbn_len=1
     fi
 
     # Verify ports are set for multi-device tests
+    local device_count=0
+    for device in $devices; do
+        device_count=$((device_count + 1))
+    done
+
+    if [ $device_count -lt 2 ]; then
+        echo "ERROR: Multi-device test $test_name requires at least 2 devices, found $device_count"
+        return 1
+    fi
+
     if [ $device_count -eq 2 ]; then
         if [ -z "${ESPPORT1}" ] || [ -z "${ESPPORT2}" ]; then
             echo "ERROR: ESPPORT1 and ESPPORT2 must be set for 2-device tests"
@@ -120,52 +92,98 @@ function run_multi_device_test {
         return 1
     fi
 
-    local wifi_args=""
-    if [ -n "$wifi_ssid" ]; then
-        wifi_args="--wifi-ssid \"$wifi_ssid\""
-    fi
-    if [ -n "$wifi_password" ]; then
-        wifi_args="$wifi_args --wifi-password \"$wifi_password\""
-    fi
+    # Build embedded-services argument
+    local services="esp,arduino"
+    for ((s=1; s<device_count; s++)); do
+        services="$services|esp,arduino"
+    done
+    local extra_args=("--embedded-services" "$services")
 
-    local report_file="$test_dir/$target/$test_name.xml"
+    # Loop over FQBN configurations (one run per FQBN)
+    for fqbn_idx in $(seq 0 $((fqbn_len - 1))); do
+        local fqbn="Default"
+        if [ "$fqbn_len" -ne 1 ]; then
+            fqbn=$(yq eval ".fqbn.${target} | sort | .[${fqbn_idx}]" "$test_dir/ci.yml" 2>/dev/null)
+        elif [ -f "$test_dir/ci.yml" ]; then
+            local has_fqbn
+            has_fqbn=$(yq eval ".fqbn.${target}" "$test_dir/ci.yml" 2>/dev/null)
+            if [ "$has_fqbn" != "null" ]; then
+                fqbn=$(yq eval ".fqbn.${target} | .[0]" "$test_dir/ci.yml" 2>/dev/null)
+            fi
+        fi
 
-    if [ "$erase_flash" -eq 1 ]; then
-        esptool -c "$target" erase-flash
-    fi
+        printf "\033[95mRunning multi-device test: %s -- Config: %s\033[0m\n" "$test_name" "$fqbn"
 
-    result=0
+        # Build the build-dir argument for pytest-embedded
+        local build_dirs=""
+        local dev_idx=0
+        local sketch_name
+        local build_dir
+        local sdkconfig_path
+        local compiled_target
+        for device in $devices; do
+            sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+            if [ "$fqbn_len" -eq 1 ]; then
+                build_dir="$HOME/.arduino/tests/$target/${test_name}/${sketch_name}/build.tmp"
+            else
+                build_dir="$HOME/.arduino/tests/$target/${test_name}/${sketch_name}/build${fqbn_idx}.tmp"
+            fi
 
-    # Build pytest command as an array to properly handle arguments
-    local pytest_cmd=(
-        pytest -s "$test_dir/test_$test_name.py"
-        --count "$device_count"
-        --build-dir "$build_dirs"
-        --port "${ESPPORT1}|${ESPPORT2}"
-        --target "$target"
-        --junit-xml="$report_file"
-        -o "junit_suite_name=${test_type}_${platform}_${target}_${test_name}"
-        "${extra_args[@]}"
-    )
+            if [ ! -d "$build_dir" ]; then
+                printf "\033[93mSkipping multi-device test %s: build not found for device %s in %s\033[0m\n" "$test_name" "$device" "$build_dir"
+                return 0
+            fi
 
-    if [ -n "$wifi_ssid" ]; then
-        pytest_cmd+=(--wifi-ssid "$wifi_ssid")
-    fi
-    if [ -n "$wifi_password" ]; then
-        pytest_cmd+=(--wifi-password "$wifi_password")
-    fi
+            # Check if the build is for the correct target
+            sdkconfig_path="$build_dir/sdkconfig"
+            if [ -f "$sdkconfig_path" ]; then
+                compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
+                if [ "$compiled_target" != "$target" ]; then
+                    printf "\033[91mError: Device %s compiled for %s, expected %s\033[0m\n" "$device" "$compiled_target" "$target"
+                    return 1
+                fi
+            fi
 
-    printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+            if [ $dev_idx -gt 0 ]; then
+                build_dirs="$build_dirs|$build_dir"
+            else
+                build_dirs="$build_dir"
+            fi
+            dev_idx=$((dev_idx + 1))
+        done
 
-    set +e
-    "${pytest_cmd[@]}"
-    result=$?
-    set -e
-    printf "\n"
+        if [ "$erase_flash" -eq 1 ]; then
+            esptool -c "$target" erase-flash
+        fi
 
-    if [ $result -ne 0 ]; then
+        # Report file: for multi-FQBN use indexed name like regular tests
+        local report_file
+        if [ "$fqbn_len" -eq 1 ]; then
+            report_file="$test_dir/$target/$test_name.xml"
+        else
+            report_file="$test_dir/$target/$test_name${fqbn_idx}.xml"
+        fi
+
+        # Build pytest command as an array to properly handle arguments
+        local pytest_cmd=(
+            pytest -s "$test_dir/test_$test_name.py"
+            --count "$device_count"
+            --build-dir "$build_dirs"
+            --port "${ESPPORT1}|${ESPPORT2}"
+            --target "$target"
+            --junit-xml="$report_file"
+            -o "junit_suite_name=${test_type}_${platform}_${target}_${test_name}${fqbn_idx}"
+            "${extra_args[@]}"
+        )
+
+        if [ -n "$wifi_ssid" ]; then
+            pytest_cmd+=(--wifi-ssid "$wifi_ssid")
+        fi
+        if [ -n "$wifi_password" ]; then
+            pytest_cmd+=(--wifi-password "$wifi_password")
+        fi
+
         result=0
-        printf "\033[95mRetrying test: %s\033[0m\n" "$test_name"
         printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
 
         set +e
@@ -175,10 +193,22 @@ function run_multi_device_test {
         printf "\n"
 
         if [ $result -ne 0 ]; then
-            printf "\033[91mFailed test: %s\033[0m\n\n" "$test_name"
-            error=$result
+            result=0
+            printf "\033[95mRetrying test: %s -- Config: %s\033[0m\n" "$test_name" "$fqbn"
+            printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
+
+            set +e
+            "${pytest_cmd[@]}"
+            result=$?
+            set -e
+            printf "\n"
+
+            if [ $result -ne 0 ]; then
+                printf "\033[91mFailed test: %s -- Config: %s\033[0m\n\n" "$test_name" "$fqbn"
+                error=$result
+            fi
         fi
-    fi
+    done
 
     return $error
 }

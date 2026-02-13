@@ -64,34 +64,6 @@ function extract_target_and_args {
     done
 }
 
-# Build a single sketch for multi-device tests
-function build_multi_device_sketch {
-    local test_name=$1
-    local sketch_path=$2
-    local target=$3
-    shift 3
-    local build_args=("$@")
-    local sketch_dir
-    local sketch_name
-    local test_dir
-    local build_dir
-
-    sketch_dir=$(dirname "$sketch_path")
-    sketch_name=$(basename "$sketch_dir")
-    test_dir=$(dirname "$sketch_dir")
-
-    # Override build directory to use <test_name>_<sketch_name> pattern
-    build_dir="$HOME/.arduino/tests/$target/${test_name}_${sketch_name}/build.tmp"
-
-    echo "Building sketch $sketch_name for multi-device test $test_name"
-
-    # Call sketch_utils.sh build function with custom build directory
-    # Pass -td to point to the parent test directory where ci.yml lives,
-    # since individual sub-sketch directories don't have their own ci.yml.
-    ARDUINO_BUILD_DIR="$build_dir" ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" -td "$test_dir"
-    return $?
-}
-
 # Build all sketches for a multi-device test
 function build_multi_device_test {
     local test_dir=$1
@@ -133,16 +105,23 @@ function build_multi_device_test {
     local result=0
     local sketch_name
     local sketch_path
+    local sketch_dir
     for device in $devices; do
         sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
         sketch_path="$test_dir/$sketch_name/$sketch_name.ino"
+        sketch_dir="$test_dir/$sketch_name"
 
         if [ ! -f "$sketch_path" ]; then
             echo "ERROR: Sketch not found: $sketch_path"
             return 1
         fi
 
-        build_multi_device_sketch "$test_name" "$sketch_path" "$target" "${build_args[@]}"
+        echo "Building sketch $sketch_name for multi-device test $test_name"
+
+        # -td: ci.yml lives in the parent test directory
+        # -bn: sets the parent build dir to the test name (nested: $test_name/$sketch_name/build.tmp)
+        ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" \
+            -td "$test_dir" -bn "$test_name"
         result=$?
         if [ $result -ne 0 ]; then
             echo "ERROR: Failed to build sketch $sketch_name for test $test_name"
