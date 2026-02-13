@@ -23,7 +23,7 @@ The example detects the baud rate on UART0 (`Serial` or `Serial0`), but it can d
 
 ## Key Features
 
-- **Automatic detection** of baud rates in the range of 300 to 230400 baud
+- **Automatic detection** of baud rates in the range stating on 300 baud
 - **Configurable timeout** (default: 20 seconds) during which the UART listens for incoming data
 - **Fallback mechanism** - if detection fails, automatically sets a safe default baud rate (115200)
 - **Simple setup** - no external hardware or configuration needed
