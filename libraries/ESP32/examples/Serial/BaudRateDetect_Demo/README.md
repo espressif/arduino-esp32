@@ -13,11 +13,13 @@
 | ESP32-P4 | ✗ Not Supported |
 | ESP32-C61 | ✗ Not Supported |
 
-This example demonstrates how to automatically detect and set the baud rate when UART has its RX pin connected to an external UART port sending data, using ESP32's HardwareSerial API.
+This example demonstrates how to automatically detect and set the baud rate when any available UART has its RX pin connected to an external UART port sending data, using ESP32's HardwareSerial API.
 
 ## Overview
 
-Baud rate detection is a feature that allows the ESP32 to automatically determine the communication speed of incoming data. This is useful when the receiving device doesn't know the baud rate of the sender in advance. The sketch will attempt to detect the baud rate by analyzing incoming data and can then configure itself to match.
+Baud rate detection is a feature that automatically determines the communication speed of incoming data. This is useful when the receiving device doesn't know the baud rate of the sender in advance. The sketch will attempt to detect the baud rate by analyzing incoming data and can then configure itself to match.
+
+The example detects the baud rate on UART0 (`Serial` or `Serial0`), but it can detect it for any other available UART port (ESP32/S2 `Serial1` or ESP32 `Serial2`).
 
 ## Key Features
 
@@ -29,12 +31,6 @@ Baud rate detection is a feature that allows the ESP32 to automatically determin
 ## Configuration Options
 
 ### Detection Timeout
-
-**Location in code:** In the `begin()` function call in `BaudRateDetect_Demo.ino`
-
-```cpp
-Serial.begin(0);  // Starts baud rate detection with default 20-second timeout
-```
 
 The timeout can be customized by passing the `timeout_ms` parameter:
 
@@ -140,7 +136,7 @@ void setup() {
 
 ## Expected Output
 
-### Successful Detection
+**Successful Detection**
 
 ```
 ==>The baud rate is 115200
@@ -148,7 +144,7 @@ void setup() {
 [Detection successful - sketch continues normally]
 ```
 
-### Failed Detection
+**Failed Detection**
 
 ```
 [20-second timeout period with no valid data]
@@ -187,14 +183,14 @@ void setup() {
 To change the detection timeout from the default 20 seconds, modify the `Serial.begin()` call:
 
 ```cpp
-// 10-second timeout for detection
+// 10-second timeout for detection using UART0
 Serial.begin(0, SERIAL_8N1, RX0, TX0, false, 10000);
 
-// 5-second timeout for faster detection
-Serial.begin(0, SERIAL_8N1, RX0, TX0, false, 5000);
+// 5-second timeout for faster detection using UART1
+Serial1.begin(0, SERIAL_8N1, RX1, TX1, false, 5000);
 
-// 30-second timeout for slower or intermittent data
-Serial.begin(0, SERIAL_8N1, RX0, TX0, false, 30000);
+// 30-second timeout for slower or intermittent data using UART2 (ESP32 only)
+Serial2.begin(0, SERIAL_8N1, RX2, TX2, false, 30000);
 ```
 
 **Note:** The timeout applies only to the detection phase. After the timeout expires or detection completes, the function returns and the sketch continues.
