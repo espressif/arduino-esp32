@@ -192,6 +192,7 @@ private:
   std::vector<BLEUUID> m_serviceUUIDs;
   bool m_customAdvData = false;
   bool m_customScanResponseData = false;
+  bool m_advDataSet = false;
   FreeRTOS::Semaphore m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
   bool m_scanResp = true;
 
@@ -213,7 +214,6 @@ private:
   ble_hs_adv_fields m_advData;
   ble_hs_adv_fields m_scanData;
   ble_gap_adv_params m_advParams;
-  bool m_advDataSet;
   void (*m_advCompCB)(BLEAdvertising *pAdv);
   uint8_t m_slaveItvl[4];
   uint32_t m_duration;

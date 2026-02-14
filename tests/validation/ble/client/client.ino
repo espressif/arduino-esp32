@@ -15,10 +15,6 @@ static BLEClient *pClient = nullptr;
 static BLERemoteCharacteristic *pRemoteInsecureCharacteristic = nullptr;
 static BLERemoteCharacteristic *pRemoteSecureCharacteristic = nullptr;
 static BLEAdvertisedDevice *myDevice = nullptr;
-static bool serviceDiscovered = false;
-static bool pinPending = false;
-static bool pinLogged = false;
-static uint32_t pendingPin = 0;
 
 class MyClientCallback : public BLEClientCallbacks {
   void onConnect(BLEClient *pclient) {
@@ -34,13 +30,8 @@ class MyClientCallback : public BLEClientCallbacks {
 class MySecurityCallbacks : public BLESecurityCallbacks {
   // Numeric Comparison callback - both devices display the same PIN
   bool onConfirmPIN(uint32_t pin) override {
-    pendingPin = pin;
-    pinPending = true;
-    if (serviceDiscovered && !pinLogged) {
-      Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pendingPin);
-      Serial.println("[CLIENT] Confirming PIN match");
-      pinLogged = true;
-    }
+    Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pin);
+    Serial.println("[CLIENT] Confirming PIN match");
     // Automatically confirm for testing
     return true;
   }
@@ -108,12 +99,6 @@ bool connectToServer() {
     return false;
   }
   Serial.println("[CLIENT] Found service");
-  serviceDiscovered = true;
-  if (pinPending && !pinLogged) {
-    Serial.printf("[CLIENT] Numeric comparison PIN: %lu\n", (unsigned long)pendingPin);
-    Serial.println("[CLIENT] Confirming PIN match");
-    pinLogged = true;
-  }
 
   pRemoteInsecureCharacteristic = pRemoteService->getCharacteristic(insecureCharUUID);
   if (pRemoteInsecureCharacteristic == nullptr) {
@@ -141,7 +126,7 @@ bool connectToServer() {
   // Set auth requirement for secure characteristic (Bluedroid)
   pRemoteSecureCharacteristic->setAuth(ESP_GATT_AUTH_REQ_MITM);
 
-  // Read secure characteristic (triggers authentication in NimBLE)
+  // Read secure characteristic (triggers on-demand authentication for both stacks)
   if (pRemoteSecureCharacteristic->canRead()) {
     Serial.println("[CLIENT] Reading secure characteristic...");
     String value = pRemoteSecureCharacteristic->readValue();
@@ -218,6 +203,9 @@ void setup() {
   pSecurity->setCapability(ESP_IO_CAP_IO);
   // Enable bonding, MITM (required for Numeric Comparison), and secure connection
   pSecurity->setAuthenticationMode(true, true, true);
+  // Disable forced auth on connect so authentication is triggered on-demand
+  // when reading the secure characteristic (consistent ordering for testing)
+  pSecurity->setForceAuthentication(false);
   BLEDevice::setSecurityCallbacks(new MySecurityCallbacks());
 
   Serial.print("[CLIENT] Scanning for server: ");

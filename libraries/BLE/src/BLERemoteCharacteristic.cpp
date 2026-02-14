@@ -448,7 +448,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
         m_value = "";
       }
 
-      m_semaphoreReadCharEvt.give();
+      m_semaphoreReadCharEvt.give(evtParam->read.status);
       break;
     }  // ESP_GATTC_READ_CHAR_EVT
 
@@ -499,7 +499,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 
       // There is nothing further we need to do here.  This is merely an indication
       // that the write has completed and we can unlock the caller.
-      m_semaphoreWriteCharEvt.give();
+      m_semaphoreWriteCharEvt.give(evtParam->write.status);
       break;
     }  // ESP_GATTC_WRITE_CHAR_EVT
 
@@ -578,30 +578,50 @@ String BLERemoteCharacteristic::readValue() {
     return String();
   }
 
-  // Wait for authentication to complete if bonding is enabled
-  // This prevents the read request from being made while pairing is in progress
+  // Wait for authentication to complete if security was started on connection
   BLESecurity::waitForAuthenticationComplete();
 
-  m_semaphoreReadCharEvt.take("readValue");
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
-  // This is an asynchronous request which means that we must block waiting for the response
-  // to become available.
-  esp_err_t errRc = ::esp_ble_gattc_read_char(
-    m_pRemoteService->getClient()->getGattcIf(),
-    m_pRemoteService->getClient()->getConnId(),  // The connection ID to the BLE server
-    getHandle(),                                 // The handle of this characteristic
-    (esp_gatt_auth_req_t)m_auth
-  );  // Security
+  do {
+    m_semaphoreReadCharEvt.take("readValue");
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return "";
-  }
+    // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
+    // This is an asynchronous request which means that we must block waiting for the response
+    // to become available.
+    esp_err_t errRc = ::esp_ble_gattc_read_char(
+      m_pRemoteService->getClient()->getGattcIf(),
+      m_pRemoteService->getClient()->getConnId(),  // The connection ID to the BLE server
+      getHandle(),                                 // The handle of this characteristic
+      (esp_gatt_auth_req_t)m_auth
+    );  // Security
 
-  // Block waiting for the event that indicates that the read has completed.  When it has, the String found
-  // in m_value will contain our data.
-  m_semaphoreReadCharEvt.wait("readValue");
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreReadCharEvt.give();
+      return "";
+    }
+
+    // Block waiting for the event that indicates that the read has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreReadCharEvt.wait("readValue");
+
+    switch (status) {
+      case ESP_GATT_OK:
+        break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && getRemoteService()->getClient()->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default:
+        log_e("readValue: status=%d", status);
+        break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
 
   log_v("<< readValue(): length: %d", m_value.length());
   return m_value;
@@ -624,26 +644,49 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
     return false;
   }
 
-  // Wait for authentication to complete if bonding is enabled
-  // This prevents the write request from being made while pairing is in progress
+  // Wait for authentication to complete if security was started on connection
   BLESecurity::waitForAuthenticationComplete();
 
-  m_semaphoreWriteCharEvt.take("writeValue");
-  // Invoke the ESP-IDF API to perform the write.
-  esp_err_t errRc = ::esp_ble_gattc_write_char(
-    m_pRemoteService->getClient()->getGattcIf(), m_pRemoteService->getClient()->getConnId(), getHandle(), length, data,
-    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
-  );
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return false;
-  }
+  do {
+    m_semaphoreWriteCharEvt.take("writeValue");
 
-  m_semaphoreWriteCharEvt.wait("writeValue");
+    // Invoke the ESP-IDF API to perform the write.
+    esp_err_t errRc = ::esp_ble_gattc_write_char(
+      m_pRemoteService->getClient()->getGattcIf(), m_pRemoteService->getClient()->getConnId(), getHandle(), length, data,
+      response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
+    );
+
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreWriteCharEvt.give();
+      return false;
+    }
+
+    // Block waiting for the event that indicates that the write has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreWriteCharEvt.wait("writeValue");
+
+    switch (status) {
+      case ESP_GATT_OK:
+        break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && getRemoteService()->getClient()->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default:
+        log_e("writeValue: status=%d", status);
+        break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
 
   log_v("<< writeValue");
-  return true;
+  return (status == ESP_GATT_OK);
 }  // writeValue
 
 #endif

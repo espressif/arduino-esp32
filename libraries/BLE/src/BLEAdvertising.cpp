@@ -54,9 +54,7 @@ BLEAdvertising::BLEAdvertising() {
  */
 void BLEAdvertising::addServiceUUID(BLEUUID serviceUUID) {
   m_serviceUUIDs.push_back(serviceUUID);
-#ifdef CONFIG_NIMBLE_ENABLED
   m_advDataSet = false;
-#endif
 }  // addServiceUUID
 
 /**
@@ -65,9 +63,6 @@ void BLEAdvertising::addServiceUUID(BLEUUID serviceUUID) {
  */
 void BLEAdvertising::addServiceUUID(const char *serviceUUID) {
   addServiceUUID(BLEUUID(serviceUUID));
-#ifdef CONFIG_NIMBLE_ENABLED
-  m_advDataSet = false;
-#endif
 }  // addServiceUUID
 
 /**
@@ -83,9 +78,7 @@ bool BLEAdvertising::removeServiceUUID(int index) {
   }
 
   m_serviceUUIDs.erase(m_serviceUUIDs.begin() + index);
-#ifdef CONFIG_NIMBLE_ENABLED
   m_advDataSet = false;
-#endif
   return true;
 }
 
@@ -121,8 +114,8 @@ void BLEAdvertising::setAppearance(uint16_t appearance) {
   m_advData.appearance = appearance;
 #ifdef CONFIG_NIMBLE_ENABLED
   m_advData.appearance_is_present = 1;
-  m_advDataSet = false;
 #endif
+  m_advDataSet = false;
 }  // setAppearance
 
 void BLEAdvertising::setAdvertisementType(uint8_t adv_type) {
@@ -158,6 +151,7 @@ void BLEAdvertising::setMaxInterval(uint16_t maxinterval) {
 void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
 #ifdef CONFIG_BLUEDROID_ENABLED
   m_advData.min_interval = mininterval;
+  m_advDataSet = false;
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -189,6 +183,7 @@ void BLEAdvertising::setMinPreferred(uint16_t mininterval) {
 void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
 #ifdef CONFIG_BLUEDROID_ENABLED
   m_advData.max_interval = maxinterval;
+  m_advDataSet = false;
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -217,9 +212,7 @@ void BLEAdvertising::setMaxPreferred(uint16_t maxinterval) {
 
 void BLEAdvertising::setScanResponse(bool set) {
   m_scanResp = set;
-#ifdef CONFIG_NIMBLE_ENABLED
   m_advDataSet = false;
-#endif
 }
 
 /**
@@ -659,6 +652,7 @@ void BLEAdvertising::reset() {
 
   m_customAdvData = false;           // No custom advertising data
   m_customScanResponseData = false;  // No custom scan response data
+  m_advDataSet = false;              // Force advertising data reconfiguration
 }  // BLEAdvertising
 
 void BLEAdvertising::setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map) {
@@ -671,80 +665,88 @@ void BLEAdvertising::setAdvertisementChannelMap(esp_ble_adv_channel_t channel_ma
  * @return N/A.
  */
 bool BLEAdvertising::start() {
-  log_v(">> start: customAdvData: %d, customScanResponseData: %d", m_customAdvData, m_customScanResponseData);
+  log_v(">> start: customAdvData: %d, customScanResponseData: %d, advDataSet: %d", m_customAdvData, m_customScanResponseData, m_advDataSet);
 
-  // We have a vector of service UUIDs that we wish to advertise.  In order to use the
-  // ESP-IDF framework, these must be supplied in a contiguous array of their 128bit (16 byte)
-  // representations.  If we have 1 or more services to advertise then we allocate enough
-  // storage to host them and then copy them in one at a time into the contiguous storage.
-  int numServices = m_serviceUUIDs.size();
-  if (numServices > 0) {
-    m_advData.service_uuid_len = 16 * numServices;
-    m_advData.p_service_uuid = (uint8_t *)malloc(m_advData.service_uuid_len);
-    if (!m_advData.p_service_uuid) {
-      log_e(">> start failed: out of memory");
-      return false;
+  // If advertising data needs to be (re)configured, kick off the async configuration.
+  // Bluedroid's esp_ble_gap_config_adv_data() is asynchronous and fires a GAP completion
+  // event when done. We must NOT block here with semaphores because start() can be called
+  // from BT callbacks (e.g., the disconnect handler), and both GATT and GAP callbacks are
+  // dispatched on the same BTC task - blocking would deadlock.
+  // Instead, we use the same non-blocking approach as NimBLE: kick off the config and let
+  // the GAP event handler (handleGAPEvent) chain the remaining steps.
+  if (!m_advDataSet) {
+    // Free any previous service UUID allocation
+    free(m_advData.p_service_uuid);
+    m_advData.p_service_uuid = nullptr;
+
+    // We have a vector of service UUIDs that we wish to advertise.  In order to use the
+    // ESP-IDF framework, these must be supplied in a contiguous array of their 128bit (16 byte)
+    // representations.  If we have 1 or more services to advertise then we allocate enough
+    // storage to host them and then copy them in one at a time into the contiguous storage.
+    int numServices = m_serviceUUIDs.size();
+    if (numServices > 0) {
+      m_advData.service_uuid_len = 16 * numServices;
+      m_advData.p_service_uuid = (uint8_t *)malloc(m_advData.service_uuid_len);
+      if (!m_advData.p_service_uuid) {
+        log_e(">> start failed: out of memory");
+        return false;
+      }
+
+      uint8_t *p = m_advData.p_service_uuid;
+      for (int i = 0; i < numServices; i++) {
+        log_d("- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
+        BLEUUID serviceUUID128 = m_serviceUUIDs[i].to128();
+        memcpy(p, serviceUUID128.getNative()->uuid.uuid128, 16);
+        p += 16;
+      }
+    } else {
+      m_advData.service_uuid_len = 0;
+      log_d("- no services advertised");
     }
 
-    uint8_t *p = m_advData.p_service_uuid;
-    for (int i = 0; i < numServices; i++) {
-      log_d("- advertising service: %s", m_serviceUUIDs[i].toString().c_str());
-      BLEUUID serviceUUID128 = m_serviceUUIDs[i].to128();
-      memcpy(p, serviceUUID128.getNative()->uuid.uuid128, 16);
-      p += 16;
+    if (!m_customAdvData) {
+      // Configure advertising data asynchronously.
+      // The GAP event handler will continue the chain when config completes:
+      //   ADV_DATA_SET_COMPLETE -> (scan response config if needed) -> start advertising
+      m_advData.set_scan_rsp = false;
+      m_advData.include_name = !m_scanResp;
+      m_advData.include_txpower = !m_scanResp;
+      esp_err_t errRc = ::esp_ble_gap_config_adv_data(&m_advData);
+      if (errRc != ESP_OK) {
+        log_e("<< esp_ble_gap_config_adv_data: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+        return false;
+      }
+      log_d("Advertising data configuration started (async)");
+      return true;
     }
-  } else {
-    m_advData.service_uuid_len = 0;
-    log_d("- no services advertised");
+
+    if (!m_customScanResponseData && m_scanResp) {
+      // Custom adv data but auto scan response - configure scan response asynchronously.
+      // The GAP event handler will start advertising when config completes.
+      memcpy(&m_scanRespData, &m_advData, sizeof(esp_ble_adv_data_t));
+      m_scanRespData.set_scan_rsp = true;
+      m_scanRespData.include_name = true;
+      m_scanRespData.include_txpower = true;
+      m_scanRespData.appearance = 0;
+      m_scanRespData.flag = 0;
+      esp_err_t errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
+      if (errRc != ESP_OK) {
+        log_e("<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+        return false;
+      }
+      log_d("Scan response data configuration started (async)");
+      return true;
+    }
+
+    // Both adv data and scan response are custom (or no scan response needed).
+    // No async operations, mark as configured and proceed to start.
+    m_advDataSet = true;
+    free(m_advData.p_service_uuid);
+    m_advData.p_service_uuid = nullptr;
   }
 
-  esp_err_t errRc;
-
-  if (!m_customAdvData) {
-    // Set the configuration for advertising.
-    // This is an async operation - we must wait for ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT
-    m_advData.set_scan_rsp = false;
-    m_advData.include_name = !m_scanResp;
-    m_advData.include_txpower = !m_scanResp;
-    m_semaphoreSetAdv.take("config_adv_data");
-    errRc = ::esp_ble_gap_config_adv_data(&m_advData);
-    if (errRc != ESP_OK) {
-      log_e("<< esp_ble_gap_config_adv_data: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-      m_semaphoreSetAdv.give();
-      return false;
-    }
-    m_semaphoreSetAdv.wait("config_adv_data");
-    log_d("Advertising data configured");
-  }
-
-  if (!m_customScanResponseData && m_scanResp) {
-    // Set the configuration for scan response.
-    // This is an async operation - we must wait for ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT
-    memcpy(&m_scanRespData, &m_advData, sizeof(esp_ble_adv_data_t));  // Copy the content of m_advData.
-    m_scanRespData.set_scan_rsp = true;                               // Define this struct as scan response data
-    m_scanRespData.include_name = true;                               // Caution: This may lead to a crash if the device name has more than 29 characters
-    m_scanRespData.include_txpower = true;
-    m_scanRespData.appearance = 0;  // If defined the 'Appearance' attribute is already included in the advertising data
-    m_scanRespData.flag = 0;        // 'Flags' attribute should no be included in the scan response
-
-    m_semaphoreSetAdv.take("config_scan_rsp");
-    errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
-    if (errRc != ESP_OK) {
-      log_e("<< esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-      m_semaphoreSetAdv.give();
-      return false;
-    }
-    m_semaphoreSetAdv.wait("config_scan_rsp");
-    log_d("Scan response data configured");
-  }
-
-  // If we had services to advertise then we previously allocated some storage for them.
-  // Here we release that storage.
-  free(m_advData.p_service_uuid);  //TODO change this variable to local scope?
-  m_advData.p_service_uuid = nullptr;
-
-  // Start advertising.
-  errRc = ::esp_ble_gap_start_advertising(&m_advParams);
+  // Advertising data is already configured, just start advertising.
+  esp_err_t errRc = ::esp_ble_gap_start_advertising(&m_advParams);
   if (errRc != ESP_OK) {
     log_e("<< esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
   } else {
@@ -773,18 +775,61 @@ void BLEAdvertising::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb
   log_d("handleGAPEvent [event no: %d]", (int)event);
 
   switch (event) {
+    // Advertising data has been configured. Next step: configure scan response if needed,
+    // otherwise start advertising directly. This chains the async operations started by start().
     case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
     {
       log_d("Advertising data set complete, status=%d", param->adv_data_cmpl.status);
-      m_semaphoreSetAdv.give();
+      if (param->adv_data_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+        log_e("Advertising data set failed, status=%d", param->adv_data_cmpl.status);
+        break;
+      }
+
+      if (!m_customScanResponseData && m_scanResp) {
+        // Configure scan response data next (async).
+        // Will continue in ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT.
+        memcpy(&m_scanRespData, &m_advData, sizeof(esp_ble_adv_data_t));
+        m_scanRespData.set_scan_rsp = true;
+        m_scanRespData.include_name = true;
+        m_scanRespData.include_txpower = true;
+        m_scanRespData.appearance = 0;
+        m_scanRespData.flag = 0;
+        esp_err_t errRc = ::esp_ble_gap_config_adv_data(&m_scanRespData);
+        if (errRc != ESP_OK) {
+          log_e("esp_ble_gap_config_adv_data (Scan response): rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+        }
+      } else {
+        // No scan response needed, start advertising now.
+        m_advDataSet = true;
+        free(m_advData.p_service_uuid);
+        m_advData.p_service_uuid = nullptr;
+        esp_err_t errRc = ::esp_ble_gap_start_advertising(&m_advParams);
+        if (errRc != ESP_OK) {
+          log_e("esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+        }
+      }
       break;
     }
+
+    // Scan response data has been configured. Final step: start advertising.
     case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT:
     {
       log_d("Scan response data set complete, status=%d", param->scan_rsp_data_cmpl.status);
-      m_semaphoreSetAdv.give();
+      if (param->scan_rsp_data_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+        log_e("Scan response data set failed, status=%d", param->scan_rsp_data_cmpl.status);
+        break;
+      }
+
+      m_advDataSet = true;
+      free(m_advData.p_service_uuid);
+      m_advData.p_service_uuid = nullptr;
+      esp_err_t errRc = ::esp_ble_gap_start_advertising(&m_advParams);
+      if (errRc != ESP_OK) {
+        log_e("esp_ble_gap_start_advertising: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      }
       break;
     }
+
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
     {
       log_d("Advertising start complete, status=%d", param->adv_start_cmpl.status);
@@ -793,7 +838,6 @@ void BLEAdvertising::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
     {
       log_i("STOP advertising");
-      //start();
       break;
     }
     default: break;

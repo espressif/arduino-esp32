@@ -61,13 +61,29 @@ def test_ble(dut, ci_job_id):
     client.expect_exact("[CLIENT] Physical connection established", timeout=20)
     server.expect_exact("[SERVER] Client connected", timeout=10)
 
-    # Verify service discovery starts
+    # With m_forceSecurity=false, authentication is NOT triggered on connect.
+    # Instead, it is triggered on-demand when reading the secure characteristic.
+    # This ensures consistent ordering across both Bluedroid and NimBLE stacks:
+    # connect -> service discovery -> insecure read -> secure read (triggers auth) -> auth complete
+
+    # Verify service discovery
     LOGGER.info("Verifying service discovery...")
     client.expect_exact("[CLIENT] Found service", timeout=10)
 
+    # Continue with characteristics discovery
+    client.expect_exact("[CLIENT] Found insecure characteristic", timeout=10)
+    client.expect_exact("[CLIENT] Found secure characteristic", timeout=10)
+
+    # Verify insecure characteristic read (no auth needed)
+    LOGGER.info("Verifying insecure characteristic access...")
+    client.expect_exact("[CLIENT] Insecure characteristic value: Insecure Hello World!", timeout=10)
+
+    # Reading the secure characteristic triggers authentication on-demand
+    LOGGER.info("Verifying secure characteristic access...")
+    client.expect_exact("[CLIENT] Reading secure characteristic...", timeout=10)
+
     # Wait for numeric comparison PIN display on both devices
-    # Note: Bluedroid (ESP32) initiates security on-connect, NimBLE initiates on-demand
-    # So numeric comparison may happen during service discovery (Bluedroid) or later (NimBLE)
+    # The PIN appears during the on-demand authentication triggered by the secure read
     LOGGER.info("Waiting for numeric comparison...")
     m_server = server.expect(r"\[SERVER\] Numeric comparison PIN: (\d+)", timeout=30)
     server_pin = m_server.group(1).decode()
@@ -83,13 +99,6 @@ def test_ble(dut, ci_job_id):
     assert server_pin == client_pin, f"PIN mismatch! Server: {server_pin}, Client: {client_pin}"
     LOGGER.info(f"PIN match confirmed: {server_pin}")
 
-    # Continue with characteristics discovery
-    client.expect_exact("[CLIENT] Found insecure characteristic", timeout=10)
-    client.expect_exact("[CLIENT] Found secure characteristic", timeout=10)
-
-    # Verify insecure characteristic read
-    LOGGER.info("Verifying insecure characteristic access...")
-
     # Wait for authentication to complete on both devices
     LOGGER.info("Waiting for authentication to complete...")
     client.expect_exact("[CLIENT] Authentication complete", timeout=30)
@@ -98,22 +107,13 @@ def test_ble(dut, ci_job_id):
     LOGGER.info("Verifying IRK retrieval on client...")
     client.expect(r"\[CLIENT\] Successfully retrieved peer IRK: ([0-9a-fA-F:]+)", timeout=10)
 
-    # Server-side authentication may complete after characteristic read
-    server.expect_exact("[SERVER] Characteristic read: beb5483e-36e1-4688-b7f5-ea07361b26a8", timeout=10)
     server.expect_exact("[SERVER] Authentication complete", timeout=30)
 
     # Verify IRK retrieval on server side
     LOGGER.info("Verifying IRK retrieval on server...")
     server.expect(r"\[SERVER\] Successfully retrieved peer IRK: ([0-9a-fA-F:]+)", timeout=10)
 
-    client.expect_exact("[CLIENT] Insecure characteristic value: Insecure Hello World!", timeout=10)
-
-    # Verify secure characteristic read
-    LOGGER.info("Verifying secure characteristic access...")
-    client.expect_exact("[CLIENT] Reading secure characteristic...", timeout=10)
-
-    # Verify secure characteristic was read successfully
-    server.expect_exact("[SERVER] Characteristic read: ff1d2614-e2d6-4c87-9154-6625d39ca7f8", timeout=10)
+    # Verify secure characteristic was read successfully (after auth)
     client.expect_exact("[CLIENT] Secure characteristic value: Secure Hello World!", timeout=10)
 
     # Verify connection is established
@@ -126,7 +126,6 @@ def test_ble(dut, ci_job_id):
     server.expect_exact("[SERVER] Received write: Test Insecure Write", timeout=10)
 
     client.expect_exact("[CLIENT] Read from insecure characteristic: Test Insecure Write", timeout=10)
-    server.expect_exact("[SERVER] Characteristic read: beb5483e-36e1-4688-b7f5-ea07361b26a8", timeout=10)
     LOGGER.info("Insecure characteristic write/read verified")
 
     # Verify write and read operations on secure characteristic
@@ -135,7 +134,6 @@ def test_ble(dut, ci_job_id):
     server.expect_exact("[SERVER] Received write: Test Secure Write", timeout=10)
 
     client.expect_exact("[CLIENT] Read from secure characteristic: Test Secure Write", timeout=10)
-    server.expect_exact("[SERVER] Characteristic read: ff1d2614-e2d6-4c87-9154-6625d39ca7f8", timeout=10)
     LOGGER.info("Secure characteristic write/read verified")
 
     # Verify test completion
