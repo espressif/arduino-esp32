@@ -10,7 +10,7 @@
           "errors": 0
         },
         "esp32c3": {
-          "failures": 0,
+          "failures": 1,
           "total": 1,
           "errors": 0
         },
@@ -20,7 +20,7 @@
           "errors": 0
         },
         "esp32c6": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
@@ -828,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-13T18:28:47.833304"
+  "generated_at": "2026-02-14T01:14:12.729664"
 }
