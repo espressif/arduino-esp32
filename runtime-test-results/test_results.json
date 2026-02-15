@@ -59,7 +59,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         }
       },
       "fs": {
@@ -100,8 +100,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 51,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "hello_world": {
@@ -143,7 +143,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         }
       },
       "nvs": {
@@ -185,7 +185,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 3,
-          "errors": 0
+          "errors": 3
         }
       },
       "periman": {
@@ -227,7 +227,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         }
       },
       "psram": {
@@ -295,8 +295,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 4,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "touch": {
@@ -317,8 +317,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 3,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "uart": {
@@ -359,8 +359,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 11,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "unity": {
@@ -401,8 +401,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 2,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         }
       },
       "wifi_ap": {
@@ -701,7 +701,7 @@
         },
         "esp32h2": {
           "failures": 0,
-          "total": 4,
+          "total": 3,
           "errors": 0
         },
         "esp32p4": {
@@ -828,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-14T01:14:12.729664"
+  "generated_at": "2026-02-15T01:11:58.689406"
 }
