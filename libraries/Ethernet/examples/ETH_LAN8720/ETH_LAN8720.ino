@@ -5,6 +5,7 @@
 
 // Important to be defined BEFORE including ETH.h for ETH.begin() to work.
 // Example RMII LAN8720 (Olimex, etc.)
+#include <Arduino.h>
 #ifndef ETH_PHY_MDC
 #define ETH_PHY_TYPE ETH_PHY_LAN8720
 #if CONFIG_IDF_TARGET_ESP32

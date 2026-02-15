@@ -6,6 +6,8 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <Arduino.h>
+
 // use 12 bit precision for LEDC timer
 #define LEDC_TIMER_12_BIT 12
 

@@ -8,6 +8,8 @@
  This example code is in the public domain.
  */
 
+#include <Arduino.h>
+
 // Stop button is attached to PIN 0 (IO0)
 #define BTN_STOP_ALARM 0
 

@@ -50,6 +50,8 @@
   are needed as the ESP32 GPIO matrix handles the loopback internally.
 */
 
+#include <Arduino.h>
+
 // setting it to 1 will allow internal matrix pin connection for RX1<->TX1 and RTS1<->CTS1
 // otherwise it needs a wire for cross connecting the pins
 #define USE_INTERNAL_MATRIX_PIN_LOOPBACK 1
@@ -241,7 +243,7 @@ void loop() {
       Serial.print(message);
 
       size_t bytesWritten = Serial1.write((const uint8_t *)message, strlen(message));
-      Serial.printf("  -> Written: %d bytes\n", bytesWritten);
+      Serial.printf("  -> Written: %zu bytes\n", bytesWritten);
 
       // Flush to ensure data is sent
       Serial1.flush();

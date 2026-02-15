@@ -10,6 +10,8 @@ an identifier that can be no more than a 32-bit integer
 created 2020-06-07 by cweinhofer
 with help from Cicicok */
 
+#include <Arduino.h>
+
 uint32_t chipId = 0;
 
 void setup() {

@@ -2,6 +2,7 @@
  *  This sketch sends random data over UDP on a ESP32 device
  *
  */
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkUdp.h>
 

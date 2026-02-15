@@ -12,6 +12,8 @@
    4. wait
    5. Stop advertising.
 */
+
+#include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>

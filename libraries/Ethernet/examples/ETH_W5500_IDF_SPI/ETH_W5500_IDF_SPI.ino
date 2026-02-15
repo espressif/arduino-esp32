@@ -3,6 +3,7 @@
 
 */
 
+#include <Arduino.h>
 #include <ETH.h>
 
 // Set this to 1 to enable dual Ethernet support

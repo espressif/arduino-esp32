@@ -7,6 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 
 */
+#include <Arduino.h>
 #include <WiFi.h>
 
 const char *ssid = "your-ssid";

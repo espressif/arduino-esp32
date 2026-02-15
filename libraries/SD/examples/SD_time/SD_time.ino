@@ -38,6 +38,7 @@
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD
  */
 
+#include <Arduino.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"

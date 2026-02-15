@@ -27,6 +27,7 @@
  */
 
 // Matter Manager
+#include <Arduino.h>
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space

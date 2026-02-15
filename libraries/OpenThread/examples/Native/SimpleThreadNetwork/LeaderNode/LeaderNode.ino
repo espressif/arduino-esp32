@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "OThread.h"
 
 OpenThread threadLeaderNode;

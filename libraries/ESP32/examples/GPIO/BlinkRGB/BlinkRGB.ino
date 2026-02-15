@@ -11,6 +11,9 @@
   WARNING: After using digitalWrite to drive RGB LED it will be impossible to drive the same pin
     with normal HIGH/LOW level
 */
+
+#include <Arduino.h>
+
 //#define RGB_BRIGHTNESS 64 // Change white brightness (max 255)
 
 // the setup function runs once when you press reset or power the board

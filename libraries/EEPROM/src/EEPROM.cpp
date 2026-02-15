@@ -342,7 +342,7 @@ size_t EEPROMClass::readString(int address, char *value, size_t maxLen) {
     return 0;
   }
 
-  uint16_t len;
+  size_t len;
   for (len = 0; len <= _size; len++) {
     if (_data[address + len] == 0) {
       break;
@@ -367,7 +367,7 @@ String EEPROMClass::readString(int address) {
     return String();
   }
 
-  uint16_t len;
+  size_t len;
   for (len = 0; len <= _size; len++) {
     if (_data[address + len] == 0) {
       break;
@@ -476,7 +476,7 @@ size_t EEPROMClass::writeString(int address, const char *value) {
     return 0;
   }
 
-  uint16_t len;
+  size_t len;
   for (len = 0; len <= _size; len++) {
     if (value[len] == 0) {
       break;

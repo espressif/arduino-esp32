@@ -28,6 +28,7 @@
  *            UARTx
  */
 
+#include <Arduino.h>
 #include <vector>
 #include <unity.h>
 #include "HardwareSerial.h"

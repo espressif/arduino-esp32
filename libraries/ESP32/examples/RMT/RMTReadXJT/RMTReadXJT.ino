@@ -19,6 +19,8 @@
  *
  */
 
+#include <Arduino.h>
+
 //
 // Note: This example uses a FrSKY device communication
 //          using XJT D16 protocol

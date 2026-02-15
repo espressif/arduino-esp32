@@ -5,6 +5,7 @@
  * updated by chegewara
  */
 
+#include <Arduino.h>
 #include "BLEDevice.h"
 //#include "BLEScan.h"
 

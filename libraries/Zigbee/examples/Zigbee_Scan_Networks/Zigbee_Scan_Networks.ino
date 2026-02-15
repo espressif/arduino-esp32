@@ -25,6 +25,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #if !defined(ZIGBEE_MODE_ED) && !defined(ZIGBEE_MODE_ZCZR)
 #error "Zigbee device mode is not selected in Tools->Zigbee mode"
 #endif

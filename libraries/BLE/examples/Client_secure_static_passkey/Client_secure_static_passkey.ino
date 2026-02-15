@@ -27,6 +27,7 @@
   Created by lucasssvaz.
 */
 
+#include <Arduino.h>
 #include "BLEDevice.h"
 #include "BLESecurity.h"
 #include "nvs_flash.h"

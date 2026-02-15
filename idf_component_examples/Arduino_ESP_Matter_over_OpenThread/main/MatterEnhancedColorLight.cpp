@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <Arduino.h>
+
 // Matter Manager
 #include <Matter.h>
 #include <Preferences.h>

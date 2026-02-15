@@ -18,6 +18,7 @@
    The device state shall change from "disabled" to valid Thread states along time
 */
 
+#include <Arduino.h>
 #include "OThreadCLI.h"
 
 // reads all the lines sent by CLI, one by one

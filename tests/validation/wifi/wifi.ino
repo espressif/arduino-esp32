@@ -36,6 +36,7 @@
 25 ARDUINO_EVENT_MAX
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 
 String ssid = "";

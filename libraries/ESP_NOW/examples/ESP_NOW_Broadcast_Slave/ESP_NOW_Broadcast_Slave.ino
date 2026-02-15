@@ -10,6 +10,7 @@
     using a callback function.
 */
 
+#include <Arduino.h>
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 

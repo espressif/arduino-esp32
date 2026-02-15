@@ -13,6 +13,7 @@
  * min>0, max>0: the minimum time the scan dwells on each channel is min ms. If no AP is found during this time frame, the scan switches to the next channel. Otherwise, the scan dwells on the channel for max ms.
  */
 
+#include <Arduino.h>
 #include "WiFi.h"
 
 void wifiScan(uint16_t min_time, uint16_t max_time) {

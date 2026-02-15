@@ -12,6 +12,7 @@
  * curl -i --raw esp32_chunk_resp.local:80
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>
