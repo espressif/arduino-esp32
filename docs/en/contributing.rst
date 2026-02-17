@@ -548,15 +548,15 @@ To build all tests (chunk build):
 
     ./.github/scripts/tests_build.sh -c -type validation -t esp32 -i 0 -m 1
 
-The build output will be stored in:
+The build output will be stored in a nested layout:
 
 .. code-block:: bash
 
-    $HOME/.arduino/tests/<target>/<test_name>_<sketch_name>/build.tmp
+    $HOME/.arduino/tests/<target>/<test_name>/<sketch_name>/build.tmp
 
 For example, for a ``wifi_ap`` test on ``esp32``:
-* Device0: ``$HOME/.arduino/tests/esp32/wifi_ap_ap/build.tmp``
-* Device1: ``$HOME/.arduino/tests/esp32/wifi_ap_client/build.tmp``
+* Device0 (ap): ``$HOME/.arduino/tests/esp32/wifi_ap/ap/build.tmp``
+* Device1 (client): ``$HOME/.arduino/tests/esp32/wifi_ap/client/build.tmp``
 
 Running Multi-Device Tests
 """"""""""""""""""""""""""

@@ -604,7 +604,7 @@ requires:
 Some tests require two physical devices (e.g., BLE server/client, WiFi AP/client). These are defined using the `multi_device` field in `ci.yml`, where each entry points to a sketch directory for that device.
 
 **How it works:**
-- `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>_<sketch>/build.tmp`.
+- `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>/<sketch>/build.tmp`.
 - `tests_run.sh` assembles multiple build directories and ports using `|` separators, then runs pytest with `--count` and `--embedded-services` for each DUT.
 - Only **2 devices** are supported currently.
 - **Hardware only**: multi-device tests are blocked for Wokwi and QEMU.
