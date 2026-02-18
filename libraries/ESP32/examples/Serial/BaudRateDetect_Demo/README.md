@@ -119,10 +119,10 @@ It can also detect the baud rate from the UART1 `Serial1` (ESP32 / ESP32-S2) or 
 ```cpp
 void setup() {
   Serial.begin(0);  // Start baud rate detection
-  
+
   Serial.print("The baud rate is ");
   Serial.println(Serial.baudRate());
-  
+
   // Check if detection was successful
   if (Serial.baudRate() == 0) {
     // Detection failed, set a safe default
@@ -201,4 +201,3 @@ Serial2.begin(0, SERIAL_8N1, RX2, TX2, false, 30000);
 - Once the baud rate is detected, communication proceeds normally
 - For applications requiring specific baud rates, you can still use `Serial.begin(baudrate)` with an explicit baud rate instead of relying on auto-detection
 - The sketch demonstrates graceful fallback behavior, which is a best practice for production code
-
