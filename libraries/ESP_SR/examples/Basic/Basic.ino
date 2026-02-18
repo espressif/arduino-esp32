@@ -11,6 +11,10 @@
 #define PDM_PIN_CLK 12
 #define PDM_PIN_DATA 9
 
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 3
+#endif
+
 #define LIGHT_PIN LED_BUILTIN
 #define FAN_PIN   18
 
