@@ -7,6 +7,9 @@
 
    author: chegewara
 */
+
+#include <Arduino.h>
+
 #ifndef CONFIG_BLUEDROID_ENABLED
 #error "NimBLE does not support extended scan yet. Try using Bluedroid."
 #elif !defined(SOC_BLE_50_SUPPORTED)

@@ -12,6 +12,8 @@
  This example code is in the public domain.
  */
 
+#include <Arduino.h>
+
 // use 8 bit precision for LEDC timer
 #define LEDC_TIMER_8_BIT 8
 

@@ -34,6 +34,7 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
   text                           = path/filename to open source file from
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <Update.h>

@@ -20,6 +20,8 @@
   Author:
   Pranav Cherukupalli <cherukupallip@gmail.com>
 */
+
+#include <Arduino.h>
 #include "driver/rtc_io.h"
 
 #define BUTTON_PIN_BITMASK(GPIO) (1ULL << GPIO)  // 2 ^ GPIO_NUMBER in hex

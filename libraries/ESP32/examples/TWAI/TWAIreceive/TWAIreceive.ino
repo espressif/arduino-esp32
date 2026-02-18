@@ -24,6 +24,8 @@
   created 05-11-2022 by Stephan Martin (designer2k2)
 */
 
+#include <Arduino.h>
+
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include "driver/twai.h"
 

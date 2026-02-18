@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <unity.h>
 #include "soc/soc_caps.h"
 #include "hal/touch_sensor_ll.h"

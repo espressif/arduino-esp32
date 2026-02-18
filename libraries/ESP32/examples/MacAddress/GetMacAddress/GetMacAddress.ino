@@ -29,6 +29,7 @@ esp_mac_type_t values:
 
 */
 
+#include <Arduino.h>
 #include "esp_mac.h"  // required - exposes esp_mac_type_t values
 
 void setup() {

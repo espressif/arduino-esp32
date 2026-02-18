@@ -29,6 +29,7 @@
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC
  */
 
+#include <Arduino.h>
 #include "FS.h"
 #include "SD_MMC.h"
 #include "SPI.h"

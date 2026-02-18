@@ -198,7 +198,7 @@ def is_source_file(path: str) -> bool:
     return os.path.splitext(path)[1].lower() in source_extensions
 
 def should_skip_file(path: str) -> bool:
-    return os.path.splitext(path)[1].lower() in skip_extensions
+    return os.path.splitext(path)[1].lower() in skip_extensions or path.startswith("tests/") or path.startswith("variants/")
 
 def detect_universal_ctags() -> bool:
     """

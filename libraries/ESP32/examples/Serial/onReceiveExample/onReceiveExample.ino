@@ -53,6 +53,8 @@
    https://minimalmodbus.readthedocs.io/en/stable/serialcommunication.html
 */
 
+#include <Arduino.h>
+
 // global variable to keep the results from onReceive()
 String uart_buffer = "";
 // The Modbus RTU standard prescribes a silent period corresponding to 3.5 characters between each

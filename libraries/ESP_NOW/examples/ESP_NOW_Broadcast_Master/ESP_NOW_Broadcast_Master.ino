@@ -11,6 +11,7 @@
     The slave devices will receive the broadcasted messages and print them to the Serial Monitor.
 */
 
+#include <Arduino.h>
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 

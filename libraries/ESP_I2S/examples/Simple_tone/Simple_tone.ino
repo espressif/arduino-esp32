@@ -28,6 +28,7 @@
  10nd February 2025
  */
 
+#include <Arduino.h>
 #include <ESP_I2S.h>
 
 // The GPIO pins are not fixed, most other pins could be used for the I2S function.

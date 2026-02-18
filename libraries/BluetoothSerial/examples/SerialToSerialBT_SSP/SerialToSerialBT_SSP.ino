@@ -8,6 +8,7 @@
 // If the numbers match the user authenticates the pairing on both devices - on phone simply press "Pair" and in terminal for the sketch send 'Y' or 'y' to confirm.
 // Alternatively uncomment AUTO_PAIR to skip the terminal confirmation.
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 
 //#define AUTO_PAIR // Uncomment to automatically authenticate ESP32 side

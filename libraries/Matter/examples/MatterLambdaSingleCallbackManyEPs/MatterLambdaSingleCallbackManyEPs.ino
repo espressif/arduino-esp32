@@ -28,6 +28,7 @@ Matter App Control: 'Room 5' (OnOffLight[4], Endpoint 5, GPIO 10) changed to: OF
 */
 
 // Matter Manager
+#include <Arduino.h>
 #include <Matter.h>
 #include <Preferences.h>
 #if !CONFIG_ENABLE_CHIPOBLE

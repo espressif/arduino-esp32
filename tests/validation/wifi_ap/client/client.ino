@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <WiFi.h>
 
 String ssid = "";

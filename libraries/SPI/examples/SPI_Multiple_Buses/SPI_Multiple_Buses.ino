@@ -13,6 +13,7 @@
  *
  * created 30/04/2018 by Alistair Symonds
  */
+#include <Arduino.h>
 #include <SPI.h>
 
 // Define ALTERNATE_PINS to use non-standard GPIO pins for SPI bus

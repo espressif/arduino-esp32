@@ -1,4 +1,5 @@
 // This sketch provide the functionality of OTA Firmware Upgrade
+#include <Arduino.h>
 #include "WiFi.h"
 #include "HttpsOTAUpdate.h"
 // This sketch shows how to implement HTTPS firmware update Over The Air.

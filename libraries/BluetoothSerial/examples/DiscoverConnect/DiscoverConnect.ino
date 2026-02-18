@@ -15,6 +15,7 @@
  * use ESP_SPP_SEC_NONE or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE in connect() if remote side has Authentication: False
  */
 
+#include <Arduino.h>
 #include <map>
 #include <BluetoothSerial.h>
 

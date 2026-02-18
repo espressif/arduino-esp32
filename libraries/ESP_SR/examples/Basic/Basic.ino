@@ -1,4 +1,4 @@
-
+#include <Arduino.h>
 #include "ESP_I2S.h"
 #include "ESP_SR.h"
 

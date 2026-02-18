@@ -7,6 +7,7 @@
   by Elochukwu Ifediora (fedy0)
 */
 
+#include <Arduino.h>
 #include "EEPROM.h"
 
 void setup() {

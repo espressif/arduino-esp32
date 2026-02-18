@@ -30,6 +30,7 @@
     After which things switch to TLS/SSL.
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClientSecure.h>
 

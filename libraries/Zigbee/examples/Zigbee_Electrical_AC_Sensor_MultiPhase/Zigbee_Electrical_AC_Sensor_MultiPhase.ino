@@ -33,6 +33,7 @@
  */
 
 // Recommended to use Router mode, as this type of device is expected to be mains powered.
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee coordinator/router mode is not selected in Tools->Zigbee mode"
 #endif

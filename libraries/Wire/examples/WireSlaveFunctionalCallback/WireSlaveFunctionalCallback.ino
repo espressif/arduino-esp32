@@ -1,6 +1,7 @@
 // This example demonstrates the use of functional callbacks with the Wire library
 // for I2C slave communication. It shows how to handle requests and data reception
 
+#include <Arduino.h>
 #include "Wire.h"
 
 #define I2C_DEV_ADDR 0x55

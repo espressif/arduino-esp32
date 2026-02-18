@@ -7,6 +7,8 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <Arduino.h>
+
 void setup() {}
 
 void loop() {}

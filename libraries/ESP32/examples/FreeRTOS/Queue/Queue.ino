@@ -6,6 +6,8 @@
 */
 // Please read file README.md in the folder containing this example./*
 
+#include <Arduino.h>
+
 #define MAX_LINE_LENGTH (64)
 
 // Define two tasks for reading and writing from and to the serial port.

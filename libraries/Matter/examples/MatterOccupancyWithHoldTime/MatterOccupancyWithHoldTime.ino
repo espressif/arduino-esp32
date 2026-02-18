@@ -37,6 +37,7 @@
  */
 
 // Matter Manager
+#include <Arduino.h>
 #include <Matter.h>
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE
