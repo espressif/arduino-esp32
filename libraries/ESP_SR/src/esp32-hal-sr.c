@@ -379,9 +379,8 @@ esp_err_t sr_start(
   }
   #endif
 
-  int audio_chunksize = g_sr_data->afe_handle->get_feed_chunksize(g_sr_data->afe_data);
   int feed_channel = g_sr_data->afe_handle->get_feed_channel_num(g_sr_data->afe_data);
-  log_i("audio_chunksize=%d, feed_channel=%d, i2s_rx_chan_num=%d", audio_chunksize, feed_channel, g_sr_data->i2s_rx_chan_num);
+  log_i("audio_chunksize=%d, feed_channel=%d, i2s_rx_chan_num=%d", g_sr_data->afe_handle->get_feed_chunksize(g_sr_data->afe_data), feed_channel, g_sr_data->i2s_rx_chan_num);
   assert(feed_channel >= g_sr_data->i2s_rx_chan_num);
 
   //Start tasks
