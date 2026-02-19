@@ -8,7 +8,7 @@
 
 Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-ble|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|Error :fire:
+ble|0/1 :x:|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|Error :fire:
 democfg|2/2 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
 fs|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|Error :fire:|51/51 :white_check_mark:|51/51 :white_check_mark:
 hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:
@@ -38,8 +38,8 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|1/1 :white_check_mark:|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2026/02/18 01:15:23
+Generated on: 2026/02/19 01:25:39
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/37ef13003020c8f30a00ef9366572fe6d7c5417c) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/22121085964) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/22121393890) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/22122470180)
+[Commit](https://github.com/espressif/arduino-esp32/commit/6e31ebdde89c613c32f26ce5e890531587b8a640) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/22163098936) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/22163382613) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/22164741509)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/63945506870)
+[Test results](https://github.com/espressif/arduino-esp32/runs/64089519772)
