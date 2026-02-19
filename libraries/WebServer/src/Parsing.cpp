@@ -137,6 +137,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   _currentHandler = handler;
 
   String formData;
+  bool skipBodyRead = false;
   // below is needed only when POST type request
   if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_DELETE) {
     String boundaryStr;
@@ -204,6 +205,15 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       _currentHandler->raw(*this, _currentUri, *_currentRaw);
       log_v("Finish Raw");
     } else if (!isForm) {
+      if (method == HTTP_PUT && _clientContentLength > 0 && !_currentHandler) {
+        // No registered handler matched this PUT request.  Instead of
+        // buffering the entire body in RAM (which can exceed available
+        // heap on constrained devices), leave the payload in the TCP
+        // receive buffer so the onNotFound handler can stream it via
+        // client() in small chunks (e.g. for WebDAV file uploads).
+        _parseArguments(searchStr);
+        skipBodyRead = true;
+      } else {
       size_t plainLength;
       char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
       if (plainLength < (size_t)_clientContentLength) {
@@ -231,6 +241,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       } else {
         // No content - but we can still have arguments in the URL.
         _parseArguments(searchStr);
+      }
       }
     } else {
       // it IS a form
@@ -263,7 +274,9 @@ bool WebServer::_parseRequest(NetworkClient &client) {
     }
     _parseArguments(searchStr);
   }
-  client.clear();
+  if (!skipBodyRead) {
+    client.clear();
+  }
 
   log_v("Request: %s", url.c_str());
   log_v(" Arguments: %s", searchStr.c_str());
