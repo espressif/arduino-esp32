@@ -84,7 +84,7 @@
             {
               "packager": "esp32",
               "name": "esptool_py",
-              "version": "5.1.0"
+              "version": "5.2.0"
             },
             {
               "packager": "esp32",
@@ -472,56 +472,56 @@
         },
         {
           "name": "esptool_py",
-          "version": "5.1.0",
+          "version": "5.2.0",
           "systems": [
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-linux-aarch64.tar.gz",
-              "archiveFileName": "esptool-v5.1.0-linux-aarch64.tar.gz",
-              "checksum": "SHA-256:d2b60d4570cd4919b87eddcbeaab2e0411548b5aab865c234aed8ecc8e5403ac",
-              "size": "56292242"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-aarch64.tar.gz",
+              "archiveFileName": "esptool-v5.2.0-linux-aarch64.tar.gz",
+              "checksum": "SHA-256:a3a0fc13ada8d69dddbdfff1c765fa0b88fb578a83d02315be9c15fefa6ca58e",
+              "size": "66991044"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-linux-amd64.tar.gz",
-              "archiveFileName": "esptool-v5.1.0-linux-amd64.tar.gz",
-              "checksum": "SHA-256:49d572d50f6b1f089d1d81d3bd3bd357fbcc40f4f8fd4874f2dc51ad534abb01",
-              "size": "57690602"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-amd64.tar.gz",
+              "archiveFileName": "esptool-v5.2.0-linux-amd64.tar.gz",
+              "checksum": "SHA-256:0a9f6c913fccfacac9261eb2acd8060010db5933c18c8e47cb32377eaa7202a3",
+              "size": "73991509"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-linux-armv7.tar.gz",
-              "archiveFileName": "esptool-v5.1.0-linux-armv7.tar.gz",
-              "checksum": "SHA-256:e22ecb0293fe73c80d0a5fd05873f9ea49a68985b16991cf5980d2b90c8c7276",
-              "size": "53396928"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-armv7.tar.gz",
+              "archiveFileName": "esptool-v5.2.0-linux-armv7.tar.gz",
+              "checksum": "SHA-256:dbf92966eb6ad5f4d068d8b2461f534b15219cb405083a38d26519284e91b73a",
+              "size": "57875713"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-macos-amd64.tar.gz",
-              "archiveFileName": "esptool-v5.1.0-macos-amd64.tar.gz",
-              "checksum": "SHA-256:c485511e0906cb1e0277c5eecff1c4a77b89d76d0c940b685dc9fce2fad4b242",
-              "size": "59088390"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-macos-amd64.tar.gz",
+              "archiveFileName": "esptool-v5.2.0-macos-amd64.tar.gz",
+              "checksum": "SHA-256:dcb6c38cb10e1d7ca5ce658687e4abe47dfda22284857673b55cae010ff5f5ee",
+              "size": "58174910"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-macos-arm64.tar.gz",
-              "archiveFileName": "esptool-v5.1.0-macos-arm64.tar.gz",
-              "checksum": "SHA-256:5d5aab5b64b10dc5001cfa96b5bfa48393ae561e6d797c41a1fdd3f5d3843d03",
-              "size": "56092727"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-macos-arm64.tar.gz",
+              "archiveFileName": "esptool-v5.2.0-macos-arm64.tar.gz",
+              "checksum": "SHA-256:2b45270273ff96b6394bd6e317b153cf4a42869ca917d2bcebafc9a3cdac0e1e",
+              "size": "54970972"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-windows-amd64.zip",
-              "archiveFileName": "esptool-v5.1.0-windows-amd64.zip",
-              "checksum": "SHA-256:f68a8f7728adfc59cd60f9424928199e76eac66372c7bdc23898aa32753a437a",
-              "size": "59936293"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-windows-amd64.zip",
+              "archiveFileName": "esptool-v5.2.0-windows-amd64.zip",
+              "checksum": "SHA-256:ef0522120afb5e8e673d68726c32e0de416990fc62dc313191721edeb0a74fc6",
+              "size": "58319204"
             },
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.1.0/esptool-v5.1.0-windows-amd64.zip",
-              "archiveFileName": "esptool-v5.1.0-windows-amd64.zip",
-              "checksum": "SHA-256:f68a8f7728adfc59cd60f9424928199e76eac66372c7bdc23898aa32753a437a",
-              "size": "59936293"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-windows-amd64.zip",
+              "archiveFileName": "esptool-v5.2.0-windows-amd64.zip",
+              "checksum": "SHA-256:ef0522120afb5e8e673d68726c32e0de416990fc62dc313191721edeb0a74fc6",
+              "size": "58319204"
             }
           ]
         },
