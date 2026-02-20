@@ -700,7 +700,7 @@ static bool tinyusb_load_enabled_interfaces() {
     //usb_persist_enabled = true;
     //log_d("USB Persist enabled");
   }
-  log_d("Load Done: if_num: %u, descr_len: %u, if_mask: 0x%x", tinyusb_loaded_interfaces_num, tinyusb_config_descriptor_len, tinyusb_loaded_interfaces_mask);
+  log_d("Load Done: if_num: %u, descr_len: %u, if_mask: 0x%" PRIx32, tinyusb_loaded_interfaces_num, tinyusb_config_descriptor_len, tinyusb_loaded_interfaces_mask);
   return true;
 }
 

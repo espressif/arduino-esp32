@@ -65,7 +65,7 @@ int start_ssl_client(
 ) {
   int ret;
   int enable = 1;
-  log_v("Free internal heap before TLS %u", ESP.getFreeHeap());
+  log_v("Free internal heap before TLS %" PRIu32, ESP.getFreeHeap());
 
   if (rootCABuff == NULL && pskIdent == NULL && psKey == NULL && !insecure && !useRootCABundle) {
     return -1;
@@ -356,7 +356,7 @@ int ssl_starttls_handshake(sslclient_context *ssl_client) {
     mbedtls_pk_free(&ssl_client->client_key);
   }
 
-  log_v("Free internal heap after TLS %u", ESP.getFreeHeap());
+  log_v("Free internal heap after TLS %" PRIu32, ESP.getFreeHeap());
 
   return ssl_client->socket;
 }
@@ -492,7 +492,7 @@ int get_net_receive(sslclient_context *ssl_client, uint8_t *data, int length) {
 
 int send_net_data(sslclient_context *ssl_client, const uint8_t *data, size_t len) {
   int ret = mbedtls_net_send(ssl_client, data, len);
-  // log_v("Net sending %d btes->ret %d", len, ret); //for low level debug
+  // log_v("Net sending %lu btes->ret %d", (unsigned long)len, ret); //for low level debug
   return ret;
 }
 

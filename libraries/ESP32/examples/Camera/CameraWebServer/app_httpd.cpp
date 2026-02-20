@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include "Arduino.h"
 #include "esp_http_server.h"
 #include "esp_timer.h"
 #include "esp_camera.h"
@@ -104,7 +106,7 @@ static esp_err_t bmp_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
   esp_err_t res = ESP_OK;
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-  uint64_t fr_start = esp_timer_get_time();
+  int64_t fr_start = esp_timer_get_time();
 #endif
   fb = esp_camera_fb_get();
   if (!fb) {
@@ -118,7 +120,8 @@ static esp_err_t bmp_handler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
   char ts[32];
-  snprintf(ts, 32, "%lld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
+  // Cast to uint32_t is safe until year 2106.
+  snprintf(ts, 32, "%" PRIu32 ".%06" PRIu32, (uint32_t)fb->timestamp.tv_sec, (uint32_t)fb->timestamp.tv_usec);
   httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
 
   uint8_t *buf = NULL;
@@ -133,9 +136,9 @@ static esp_err_t bmp_handler(httpd_req_t *req) {
   res = httpd_resp_send(req, (const char *)buf, buf_len);
   free(buf);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-  uint64_t fr_end = esp_timer_get_time();
+  int64_t fr_end = esp_timer_get_time();
 #endif
-  log_i("BMP: %llums, %uB", (uint64_t)((fr_end - fr_start) / 1000), buf_len);
+  log_i("BMP: %" PRId32 "ms, %" PRIu32 "B", (int32_t)((fr_end - fr_start) / 1000), (uint32_t)buf_len);
   return res;
 }
 
@@ -178,7 +181,8 @@ static esp_err_t capture_handler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
   char ts[32];
-  snprintf(ts, 32, "%lld.%06ld", fb->timestamp.tv_sec, fb->timestamp.tv_usec);
+  // Cast to uint32_t is safe until year 2106.
+  snprintf(ts, 32, "%" PRIu32 ".%06" PRIu32, (uint32_t)fb->timestamp.tv_sec, (uint32_t)fb->timestamp.tv_usec);
   httpd_resp_set_hdr(req, "X-Timestamp", (const char *)ts);
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
@@ -201,7 +205,7 @@ static esp_err_t capture_handler(httpd_req_t *req) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
   int64_t fr_end = esp_timer_get_time();
 #endif
-  log_i("JPG: %uB %ums", (uint32_t)(fb_len), (uint32_t)((fr_end - fr_start) / 1000));
+  log_i("JPG: %" PRIu32 "B %" PRId32 " ms", (uint32_t)fb_len, (int32_t)((fr_end - fr_start) / 1000));
   return res;
 }
 
@@ -284,7 +288,7 @@ static esp_err_t stream_handler(httpd_req_t *req) {
     uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
 #endif
     log_i(
-      "MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps)", (uint32_t)(_jpg_buf_len), (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time, avg_frame_time,
+      "MJPG: %" PRIu32 "B %" PRId32 "ms (%.1ffps), AVG: %" PRIu32 "ms (%.1ffps)", (uint32_t)_jpg_buf_len, (int32_t)frame_time, 1000.0 / frame_time, avg_frame_time,
       1000.0 / avg_frame_time
     );
   }
@@ -410,8 +414,8 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
-static int print_reg(char *p, sensor_t *s, uint16_t reg, uint32_t mask) {
-  return sprintf(p, "\"0x%x\":%u,", reg, s->get_reg(s, reg, mask));
+static int print_reg(char *p, char *end, sensor_t *s, uint16_t reg, uint32_t mask) {
+  return snprintf(p, end - p, "\"0x%04x\":%d,", reg, s->get_reg(s, reg, mask));
 }
 
 static esp_err_t status_handler(httpd_req_t *req) {
@@ -419,68 +423,69 @@ static esp_err_t status_handler(httpd_req_t *req) {
 
   sensor_t *s = esp_camera_sensor_get();
   char *p = json_response;
+  char *end = json_response + sizeof(json_response);
   *p++ = '{';
 
   if (s->id.PID == OV5640_PID || s->id.PID == OV3660_PID) {
     for (int reg = 0x3400; reg < 0x3406; reg += 2) {
-      p += print_reg(p, s, reg, 0xFFF);  //12 bit
+      p += print_reg(p, end, s, reg, 0xFFF);  //12 bit
     }
-    p += print_reg(p, s, 0x3406, 0xFF);
+    p += print_reg(p, end, s, 0x3406, 0xFF);
 
-    p += print_reg(p, s, 0x3500, 0xFFFF0);  //16 bit
-    p += print_reg(p, s, 0x3503, 0xFF);
-    p += print_reg(p, s, 0x350a, 0x3FF);   //10 bit
-    p += print_reg(p, s, 0x350c, 0xFFFF);  //16 bit
+    p += print_reg(p, end, s, 0x3500, 0xFFFF0);  //16 bit
+    p += print_reg(p, end, s, 0x3503, 0xFF);
+    p += print_reg(p, end, s, 0x350a, 0x3FF);   //10 bit
+    p += print_reg(p, end, s, 0x350c, 0xFFFF);  //16 bit
 
     for (int reg = 0x5480; reg <= 0x5490; reg++) {
-      p += print_reg(p, s, reg, 0xFF);
+      p += print_reg(p, end, s, reg, 0xFF);
     }
 
     for (int reg = 0x5380; reg <= 0x538b; reg++) {
-      p += print_reg(p, s, reg, 0xFF);
+      p += print_reg(p, end, s, reg, 0xFF);
     }
 
     for (int reg = 0x5580; reg < 0x558a; reg++) {
-      p += print_reg(p, s, reg, 0xFF);
+      p += print_reg(p, end, s, reg, 0xFF);
     }
-    p += print_reg(p, s, 0x558a, 0x1FF);  //9 bit
+    p += print_reg(p, end, s, 0x558a, 0x1FF);  //9 bit
   } else if (s->id.PID == OV2640_PID) {
-    p += print_reg(p, s, 0xd3, 0xFF);
-    p += print_reg(p, s, 0x111, 0xFF);
-    p += print_reg(p, s, 0x132, 0xFF);
+    p += print_reg(p, end, s, 0xd3, 0xFF);
+    p += print_reg(p, end, s, 0x111, 0xFF);
+    p += print_reg(p, end, s, 0x132, 0xFF);
   }
 
-  p += sprintf(p, "\"xclk\":%u,", s->xclk_freq_hz / 1000000);
-  p += sprintf(p, "\"pixformat\":%u,", s->pixformat);
-  p += sprintf(p, "\"framesize\":%u,", s->status.framesize);
-  p += sprintf(p, "\"quality\":%u,", s->status.quality);
-  p += sprintf(p, "\"brightness\":%d,", s->status.brightness);
-  p += sprintf(p, "\"contrast\":%d,", s->status.contrast);
-  p += sprintf(p, "\"saturation\":%d,", s->status.saturation);
-  p += sprintf(p, "\"sharpness\":%d,", s->status.sharpness);
-  p += sprintf(p, "\"special_effect\":%u,", s->status.special_effect);
-  p += sprintf(p, "\"wb_mode\":%u,", s->status.wb_mode);
-  p += sprintf(p, "\"awb\":%u,", s->status.awb);
-  p += sprintf(p, "\"awb_gain\":%u,", s->status.awb_gain);
-  p += sprintf(p, "\"aec\":%u,", s->status.aec);
-  p += sprintf(p, "\"aec2\":%u,", s->status.aec2);
-  p += sprintf(p, "\"ae_level\":%d,", s->status.ae_level);
-  p += sprintf(p, "\"aec_value\":%u,", s->status.aec_value);
-  p += sprintf(p, "\"agc\":%u,", s->status.agc);
-  p += sprintf(p, "\"agc_gain\":%u,", s->status.agc_gain);
-  p += sprintf(p, "\"gainceiling\":%u,", s->status.gainceiling);
-  p += sprintf(p, "\"bpc\":%u,", s->status.bpc);
-  p += sprintf(p, "\"wpc\":%u,", s->status.wpc);
-  p += sprintf(p, "\"raw_gma\":%u,", s->status.raw_gma);
-  p += sprintf(p, "\"lenc\":%u,", s->status.lenc);
-  p += sprintf(p, "\"hmirror\":%u,", s->status.hmirror);
-  p += sprintf(p, "\"vflip\":%u,", s->status.vflip);
-  p += sprintf(p, "\"dcw\":%u,", s->status.dcw);
-  p += sprintf(p, "\"colorbar\":%u", s->status.colorbar);
+  p += snprintf(p, end - p, "\"xclk\":%u,", s->xclk_freq_hz / 1000000);
+  p += snprintf(p, end - p, "\"pixformat\":%u,", s->pixformat);
+  p += snprintf(p, end - p, "\"framesize\":%u,", s->status.framesize);
+  p += snprintf(p, end - p, "\"quality\":%u,", s->status.quality);
+  p += snprintf(p, end - p, "\"brightness\":%d,", s->status.brightness);
+  p += snprintf(p, end - p, "\"contrast\":%d,", s->status.contrast);
+  p += snprintf(p, end - p, "\"saturation\":%d,", s->status.saturation);
+  p += snprintf(p, end - p, "\"sharpness\":%d,", s->status.sharpness);
+  p += snprintf(p, end - p, "\"special_effect\":%u,", s->status.special_effect);
+  p += snprintf(p, end - p, "\"wb_mode\":%u,", s->status.wb_mode);
+  p += snprintf(p, end - p, "\"awb\":%u,", s->status.awb);
+  p += snprintf(p, end - p, "\"awb_gain\":%u,", s->status.awb_gain);
+  p += snprintf(p, end - p, "\"aec\":%u,", s->status.aec);
+  p += snprintf(p, end - p, "\"aec2\":%u,", s->status.aec2);
+  p += snprintf(p, end - p, "\"ae_level\":%d,", s->status.ae_level);
+  p += snprintf(p, end - p, "\"aec_value\":%u,", s->status.aec_value);
+  p += snprintf(p, end - p, "\"agc\":%u,", s->status.agc);
+  p += snprintf(p, end - p, "\"agc_gain\":%u,", s->status.agc_gain);
+  p += snprintf(p, end - p, "\"gainceiling\":%u,", s->status.gainceiling);
+  p += snprintf(p, end - p, "\"bpc\":%u,", s->status.bpc);
+  p += snprintf(p, end - p, "\"wpc\":%u,", s->status.wpc);
+  p += snprintf(p, end - p, "\"raw_gma\":%u,", s->status.raw_gma);
+  p += snprintf(p, end - p, "\"lenc\":%u,", s->status.lenc);
+  p += snprintf(p, end - p, "\"hmirror\":%u,", s->status.hmirror);
+  p += snprintf(p, end - p, "\"vflip\":%u,", s->status.vflip);
+  p += snprintf(p, end - p, "\"dcw\":%u,", s->status.dcw);
+  p += snprintf(p, end - p, "\"colorbar\":%u", s->status.colorbar);
 #if defined(LED_GPIO_NUM)
-  p += sprintf(p, ",\"led_intensity\":%u", led_duty);
+  p += snprintf(p, end - p, ",\"led_intensity\":%u", led_duty);
 #else
-  p += sprintf(p, ",\"led_intensity\":%d", -1);
+  p += snprintf(p, end - p, ",\"led_intensity\":%d", -1);
 #endif
   *p++ = '}';
   *p++ = 0;
@@ -816,7 +821,7 @@ void startCameraServer() {
 
   ra_filter_init(&ra_filter, 20);
 
-  log_i("Starting web server on port: '%d'", config.server_port);
+  log_i("Starting web server on port: '%u'", config.server_port);
   if (httpd_start(&camera_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(camera_httpd, &index_uri);
     httpd_register_uri_handler(camera_httpd, &cmd_uri);
@@ -833,7 +838,7 @@ void startCameraServer() {
 
   config.server_port += 1;
   config.ctrl_port += 1;
-  log_i("Starting stream server on port: '%d'", config.server_port);
+  log_i("Starting stream server on port: '%u'", config.server_port);
   if (httpd_start(&stream_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(stream_httpd, &stream_uri);
   }

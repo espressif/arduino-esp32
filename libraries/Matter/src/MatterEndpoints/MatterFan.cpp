@@ -44,7 +44,7 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
     return false;
   }
 
-  log_d("Fan Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Fan Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId() && cluster_id == FanControl::Id) {
     switch (attribute_id) {
@@ -62,7 +62,7 @@ bool MatterFan::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uin
         break;
       case FanControl::Attributes::PercentSetting::Id:
       case FanControl::Attributes::PercentCurrent::Id:
-        log_v("FanControl Percent %s changed to %d", attribute_id == FanControl::Attributes::PercentSetting::Id ? "SETTING" : "CURRENT", val->val.u8);
+        log_v("FanControl Percent %s changed to %u", attribute_id == FanControl::Attributes::PercentSetting::Id ? "SETTING" : "CURRENT", val->val.u8);
         if (_onChangeSpeedCB != NULL) {
           ret &= _onChangeSpeedCB(val->val.u8);
         }
@@ -86,7 +86,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter Fan with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Fan with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -109,7 +109,7 @@ bool MatterFan::begin(uint8_t percent, FanMode_t fanMode, FanModeSequence_t fanM
   currentPercent = percent;
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Fan created with endpoint_id %d", getEndPointId());
+  log_i("Fan created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;
@@ -190,7 +190,7 @@ bool MatterFan::setSpeedPercent(uint8_t newPercent, bool performUpdate) {
     }
   }
   currentPercent = newPercent;
-  log_v("Fan Speed %s to %d ==> onOffState[%s]", performUpdate ? "updated" : "set", currentPercent, getOnOff() ? "ON" : "OFF");
+  log_v("Fan Speed %s to %u ==> onOffState[%s]", performUpdate ? "updated" : "set", currentPercent, getOnOff() ? "ON" : "OFF");
   return true;
 }
 
@@ -216,7 +216,7 @@ bool MatterFan::setOnOff(bool newState, bool performUpdate) {
     }
   }
   log_v(
-    "Fan State %s to %s :: Mode[%s]|Speed[%d]", performUpdate ? "updated" : "set", getOnOff() ? "ON" : "OFF", fanModeString[currentFanMode], currentPercent
+    "Fan State %s to %s :: Mode[%s]|Speed[%u]", performUpdate ? "updated" : "set", getOnOff() ? "ON" : "OFF", fanModeString[currentFanMode], currentPercent
   );
   return true;
 }

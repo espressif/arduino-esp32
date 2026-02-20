@@ -36,11 +36,11 @@ void setup() {
   esp_task_wdt_reconfigure(&config);
 
   log_d("Starting CoreMark test");
-  Serial.printf("Runs: %d\n", N_RUNS);
-  Serial.printf("Cores: %d\n", CONFIG_SOC_CPU_CORES_NUM);
+  Serial.printf("Runs: %u\n", N_RUNS);
+  Serial.printf("Cores: %u\n", CONFIG_SOC_CPU_CORES_NUM);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d\n", i);
+    Serial.printf("Run %u\n", i);
     coremark_main();
     Serial.flush();
   }

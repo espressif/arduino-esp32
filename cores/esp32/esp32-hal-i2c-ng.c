@@ -109,7 +109,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
     goto init_fail;
   }
 
-  log_i("Initializing I2C Master: num=%u sda=%d scl=%d freq=%lu", i2c_num, sda, scl, frequency);
+  log_i("Initializing I2C Master: num=%u sda=%d scl=%d freq=%" PRIu32, i2c_num, sda, scl, frequency);
 
   i2c_master_bus_handle_t bus_handle = NULL;
   i2c_master_bus_config_t bus_config;
@@ -228,7 +228,7 @@ static esp_err_t i2cAddDeviceIfNeeded(uint8_t i2c_num, uint16_t address) {
       log_e("i2c_master_bus_add_device failed: [%d] %s", ret, esp_err_to_name(ret));
     } else {
       bus[i2c_num].dev_handles[address] = dev_handle;
-      log_v("added device: bus=%u addr=0x%x handle=0x%08x", i2c_num, address, dev_handle);
+      log_v("added device: bus=%u addr=0x%x handle=%p", i2c_num, address, dev_handle);
     }
   }
   return ret;
@@ -269,7 +269,7 @@ esp_err_t i2cWrite(uint8_t i2c_num, uint16_t address, const uint8_t *buff, size_
       goto end;
     }
 
-    log_v("i2c_master_transmit: bus=%u addr=0x%x handle=0x%08x size=%u", i2c_num, address, bus[i2c_num].dev_handles[address], size);
+    log_v("i2c_master_transmit: bus=%u addr=0x%x handle=%p size=%lu", i2c_num, address, bus[i2c_num].dev_handles[address], (unsigned long)size);
     ret = i2c_master_transmit(bus[i2c_num].dev_handles[address], buff, size, timeOutMillis);
     if (ret != ESP_OK) {
       log_e("i2c_master_transmit failed: [%d] %s", ret, esp_err_to_name(ret));
@@ -315,7 +315,7 @@ esp_err_t i2cRead(uint8_t i2c_num, uint16_t address, uint8_t *buff, size_t size,
     goto end;
   }
 
-  log_v("i2c_master_receive: bus=%u addr=0x%x handle=0x%08x size=%u", i2c_num, address, bus[i2c_num].dev_handles[address], size);
+  log_v("i2c_master_receive: bus=%u addr=0x%x handle=%p size=%lu", i2c_num, address, bus[i2c_num].dev_handles[address], (unsigned long)size);
   ret = i2c_master_receive(bus[i2c_num].dev_handles[address], buff, size, timeOutMillis);
   if (ret != ESP_OK) {
     log_e("i2c_master_receive failed: [%d] %s", ret, esp_err_to_name(ret));
@@ -363,7 +363,7 @@ esp_err_t i2cWriteReadNonStop(
     goto end;
   }
 
-  log_v("i2c_master_transmit_receive: bus=%u addr=0x%x handle=0x%08x write=%u read=%u", i2c_num, address, bus[i2c_num].dev_handles[address], wsize, rsize);
+  log_v("i2c_master_transmit_receive: bus=%u addr=0x%x handle=%p write=%lu read=%lu", i2c_num, address, bus[i2c_num].dev_handles[address], (unsigned long)wsize, (unsigned long)rsize);
   ret = i2c_master_transmit_receive(bus[i2c_num].dev_handles[address], wbuff, wsize, rbuff, rsize, timeOutMillis);
   if (ret != ESP_OK) {
     log_e("i2c_master_transmit_receive failed: [%d] %s", ret, esp_err_to_name(ret));

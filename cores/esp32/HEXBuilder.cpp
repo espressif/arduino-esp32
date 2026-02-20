@@ -70,7 +70,7 @@ size_t HEXBuilder::hex2bytes(unsigned char *out, size_t maxlen, const char *in) 
 size_t HEXBuilder::bytes2hex(char *out, size_t maxlen, const unsigned char *in, size_t len) {
   for (size_t i = 0; i < len; i++) {
     if (i * 2 + 1 < maxlen) {
-      sprintf(out + (i * 2), "%02x", in[i]);
+      snprintf(out + (i * 2), 3, "%02x", in[i]);
     }
   }
   return len * 2 + 1;

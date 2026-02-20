@@ -247,12 +247,12 @@ void setup() {
   }
 
   log_d("Starting PSRAM speed test");
-  Serial.printf("Runs: %d\n", N_RUNS);
-  Serial.printf("Copies: %d\n", N_COPIES);
-  Serial.printf("Max test size: %d\n", MAX_TEST_SIZE);
+  Serial.printf("Runs: %u\n", N_RUNS);
+  Serial.printf("Copies: %u\n", N_COPIES);
+  Serial.printf("Max test size: %u\n", MAX_TEST_SIZE);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d\n", i);
+    Serial.printf("Run %u\n", i);
     memcpy_speed_test(dest, src, MAX_TEST_SIZE, N_COPIES);
     Serial.flush();
     memset_speed_test(dest, FILL_VALUE, MAX_TEST_SIZE, N_COPIES);

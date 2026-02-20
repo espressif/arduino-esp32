@@ -49,9 +49,9 @@ void setBeacon() {
   BLEEddystoneTLM EddystoneTLM;
   EddystoneTLM.setVolt((uint16_t)random(2800, 3700));  // 3300mV = 3.3V
   EddystoneTLM.setTemp(random(-3000, 3000) / 100.0f);  // 3000 = 30.00 ˚C
-  Serial.printf("Random Battery voltage is %d mV = 0x%04X\n", EddystoneTLM.getVolt(), EddystoneTLM.getVolt());
+  Serial.printf("Random Battery voltage is %u mV = 0x%04X\n", EddystoneTLM.getVolt(), EddystoneTLM.getVolt());
   Serial.printf("Random temperature is %.2f°C\n", EddystoneTLM.getTemp());
-  Serial.printf("Converted to 8.8 format: 0x%04X\n", EddystoneTLM.getRawTemp());
+  Serial.printf("Converted to 8.8 format: 0x%X\n", EddystoneTLM.getRawTemp());
 
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   BLEAdvertisementData oScanResponseData = BLEAdvertisementData();
@@ -66,8 +66,9 @@ void setup() {
   Serial.begin(115200);
   gettimeofday(&nowTimeStruct, NULL);
 
-  Serial.printf("Starting ESP32. Bootcount = %lu\n", bootcount++);
-  Serial.printf("Deep sleep (%llds since last reset, %llds since last boot)\n", nowTimeStruct.tv_sec, nowTimeStruct.tv_sec - last);
+  Serial.printf("Starting ESP32. Bootcount = %" PRIu32 "\n", bootcount++);
+  // Cast to uint32_t is safe until year 2106.
+  Serial.printf("Deep sleep (%" PRIu32 "s since last reset, %" PRIu32 "s since last boot)\n", (uint32_t)nowTimeStruct.tv_sec, (uint32_t)(nowTimeStruct.tv_sec - last));
 
   last = nowTimeStruct.tv_sec;
   lastTenth = nowTimeStruct.tv_sec * 10;  // Time since last reset as 0.1 second resolution counter

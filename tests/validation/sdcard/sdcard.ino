@@ -34,7 +34,7 @@ public:
 
   SPITestConfig(std::string name, const char *mountpoint, uint8_t spi_num, int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     : name(name), mountpoint(mountpoint), spi_num(spi_num), sck(sck), miso(miso), mosi(mosi), ss(ss) {
-    Serial.printf("Creating SPITestConfig [%s] on SPI bus %d: SCK=%d, MISO=%d, MOSI=%d, SS=%d\n", name.c_str(), spi_num, sck, miso, mosi, ss);
+    Serial.printf("Creating SPITestConfig [%s] on SPI bus %u: SCK=%d, MISO=%d, MOSI=%d, SS=%d\n", name.c_str(), spi_num, sck, miso, mosi, ss);
   }
 
   void begin(uint8_t max_files = MAX_FILES, bool format_if_empty = false) {
@@ -209,7 +209,7 @@ void test_sd_directory_listing(void) {
         Serial.printf("Found directory: %s\n", entry.name());
       } else {
         fileCount++;
-        Serial.printf("Found file: %s (size: %d bytes)\n", entry.name(), entry.size());
+        Serial.printf("Found file: %s (size: %lu bytes)\n", entry.name(), (unsigned long)entry.size());
       }
       entry.close();
       entry = dir.openNextFile();
@@ -476,7 +476,7 @@ void test_sd_large_file_operations(void) {
       for (size_t i = 0; i < chunkSize; i++) {
         if (readBuffer[i] != writeBuffer[i]) {
           char errorMsg[100];
-          snprintf(errorMsg, sizeof(errorMsg), "Data mismatch at chunk %zu, byte %zu: expected %d, got %d", chunk, i, writeBuffer[i], readBuffer[i]);
+          snprintf(errorMsg, sizeof(errorMsg), "Data mismatch at chunk %lu, byte %lu: expected %d, got %d", (unsigned long)chunk, (unsigned long)i, writeBuffer[i], readBuffer[i]);
           TEST_FAIL_MESSAGE(errorMsg);
         }
       }

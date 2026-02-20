@@ -64,7 +64,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
 
 // Invoked when line coding is change via SET_LINE_CODING
 void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *p_line_coding) {
-  //log_v("ITF: %u, BITRATE: %lu, STOP_BITS: %u, PARITY: %u, DATA_BITS: %u", itf, p_line_coding->bit_rate, p_line_coding->stop_bits, p_line_coding->parity, p_line_coding->data_bits);
+  //log_v("ITF: %u, BITRATE: %" PRIu32 ", STOP_BITS: %u, PARITY: %u, DATA_BITS: %u", itf, p_line_coding->bit_rate, p_line_coding->stop_bits, p_line_coding->parity, p_line_coding->data_bits);
   if (itf < CFG_TUD_CDC && devices[itf] != NULL) {
     devices[itf]->_onLineCoding(p_line_coding->bit_rate, p_line_coding->stop_bits, p_line_coding->parity, p_line_coding->data_bits);
   }
@@ -72,7 +72,7 @@ void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const *p_line_coding)
 
 // Invoked when received new data
 void tud_cdc_rx_cb(uint8_t itf) {
-  //log_v("ITF: %u", itf);
+  //log_v("ITF: %u, DTR: %u, RTS: %u", itf, dtr, rts);
   if (itf < CFG_TUD_CDC && devices[itf] != NULL) {
     devices[itf]->_onRX();
   }

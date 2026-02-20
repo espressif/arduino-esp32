@@ -20,6 +20,7 @@
 #include <esp_system.h>
 #include "esp_chip_info.h"
 #include "esp32-hal-log.h"
+#include <inttypes.h>
 
 static const char kBase64Alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                       "abcdefghijklmnopqrstuvwxyz"
@@ -105,8 +106,8 @@ void GeneralUtils::dumpInfo() {
   esp_chip_info_t chipInfo;
   esp_chip_info(&chipInfo);
   log_v("--- dumpInfo ---");
-  log_v("Free heap: %d", heap_caps_get_free_size(MALLOC_CAP_8BIT));
-  log_v("Chip Info: Model: %d, cores: %d, revision: %d", chipInfo.model, chipInfo.cores, chipInfo.revision);
+  log_v("Free heap: %lu", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_8BIT));
+  log_v("Chip Info: Model: %d, cores: %u, revision: %u", chipInfo.model, chipInfo.cores, chipInfo.revision);
   log_v("ESP-IDF version: %s", esp_get_idf_version());
   log_v("---");
 }  // dumpInfo
@@ -303,32 +304,32 @@ void GeneralUtils::hexDump(const uint8_t *pData, uint32_t length) {
 
   log_v("     00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f");
   log_v("     -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --");
-  strcpy(ascii, "");
-  strcpy(hex, "");
+  ascii[0] = '\0';
+  hex[0] = '\0';
   uint32_t index = 0;
   while (index < length) {
-    sprintf(tempBuf, "%.2x ", pData[index]);
-    strcat(hex, tempBuf);
+    snprintf(tempBuf, sizeof(tempBuf), "%02x ", pData[index]);
+    strncat(hex, tempBuf, sizeof(hex) - strlen(hex) - 1);
     if (isprint(pData[index])) {
-      sprintf(tempBuf, "%c", pData[index]);
+      snprintf(tempBuf, sizeof(tempBuf), "%c", pData[index]);
     } else {
-      sprintf(tempBuf, ".");
+      snprintf(tempBuf, sizeof(tempBuf), ".");
     }
-    strcat(ascii, tempBuf);
+    strncat(ascii, tempBuf, sizeof(ascii) - strlen(ascii) - 1);
     index++;
     if (index % 16 == 0) {
-      log_v("%.4x %s %s", lineNumber * 16, hex, ascii);
-      strcpy(ascii, "");
-      strcpy(hex, "");
+      log_v("%04" PRIx32 " %s %s", lineNumber * 16, hex, ascii);
+      ascii[0] = '\0';
+      hex[0] = '\0';
       lineNumber++;
     }
   }
   if (index % 16 != 0) {
     while (index % 16 != 0) {
-      strcat(hex, "   ");
+      strncat(hex, "   ", sizeof(hex) - strlen(hex) - 1);
       index++;
     }
-    log_v("%.4x %s %s", lineNumber * 16, hex, ascii);
+    log_v("%.4" PRIx32 " %s %s", lineNumber * 16, hex, ascii);
   }
 }  // hexDump
 
@@ -340,7 +341,7 @@ void GeneralUtils::hexDump(const uint8_t *pData, uint32_t length) {
 String GeneralUtils::ipToString(uint8_t *ip) {
   auto size = 16;
   char *val = (char *)malloc(size);
-  snprintf(val, size, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+  snprintf(val, size, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
   String res(val);
   free(val);
   return res;

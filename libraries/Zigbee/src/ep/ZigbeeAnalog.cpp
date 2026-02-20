@@ -177,10 +177,10 @@ void ZigbeeAnalog::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mes
       _output_state = *(float *)message->attribute.data.value;
       analogOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Analog Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Analog Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Analog endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Analog endpoint", message->info.cluster);
   }
 }
 

@@ -64,7 +64,8 @@ void setup() {
   for (uint8_t r = 1; r <= SOC_LEDC_TIMER_BIT_WIDTH; ++r) {
     size_t max_len = std::to_string(UINT32_MAX).length();
     printf(
-      "            %s%d |         %s%lu |         %s%lu\n", std::string(2 - std::to_string(r).length(), ' ').c_str(), r,
+      "            %s%u |         %s%" PRIu32 " |         %s%" PRIu32 "\n",
+      std::string(2 - std::to_string(r).length(), ' ').c_str(), r,
       std::string(max_len - std::to_string(min_freq_array[r - 1]).length(), ' ').c_str(), min_freq_array[r - 1],
       std::string(max_len - std::to_string(max_freq_array[r - 1]).length(), ' ').c_str(), max_freq_array[r - 1]
     );

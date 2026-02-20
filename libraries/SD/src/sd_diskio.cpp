@@ -15,6 +15,7 @@
 // Disable the automatic pin remapping of the API calls in this file
 #define ARDUINO_CORE_BUILD
 
+#include "Arduino.h"
 #include "sd_diskio.h"
 #include "esp_system.h"
 #include "esp32-hal-periman.h"
@@ -536,7 +537,7 @@ DSTATUS ff_sd_initialize(uint8_t pdrv) {
   if (sdTransaction(pdrv, SEND_IF_COND, 0x1AA, &resp) == 1) {
     // Card responded to SEND_IF_COND - likely SDHC/SDXC
     if ((resp & 0xFFF) != 0x1AA) {
-      log_w("SEND_IF_COND failed: %03X", resp & 0xFFF);
+      log_w("SEND_IF_COND failed: %03" PRIX32, (uint32_t)(resp & 0xFFF));
       goto unknown_card;
     }
 

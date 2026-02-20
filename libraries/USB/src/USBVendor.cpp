@@ -40,7 +40,7 @@ uint16_t tusb_vendor_load_descriptor(uint8_t *dst, uint8_t *itf) {
 
 void tud_vendor_rx_cb(uint8_t itf) {
   size_t len = tud_vendor_n_available(itf);
-  log_v("%u", len);
+  log_v("%lu", (unsigned long)len);
   if (len) {
     uint8_t buffer[len];
     len = tud_vendor_n_read(itf, buffer, len);

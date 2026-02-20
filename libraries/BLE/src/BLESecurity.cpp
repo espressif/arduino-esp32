@@ -86,7 +86,7 @@ BLESecurity::BLESecurity() {
 
 // This function sets the authentication mode for the BLE security.
 void BLESecurity::setAuthenticationMode(uint8_t auth_req) {
-  log_d("setAuthenticationMode: auth_req=%d", auth_req);
+  log_d("setAuthenticationMode: auth_req=%u", auth_req);
   m_authReq = auth_req;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &m_authReq, sizeof(uint8_t));
@@ -99,7 +99,7 @@ void BLESecurity::setAuthenticationMode(uint8_t auth_req) {
 
 // This function sets the Input/Output capability for the BLE security.
 void BLESecurity::setCapability(uint8_t iocap) {
-  log_d("setCapability: iocap=%d", iocap);
+  log_d("setCapability: iocap=%u", iocap);
   m_iocap = iocap;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
@@ -113,7 +113,7 @@ void BLESecurity::setCapability(uint8_t iocap) {
 // ESP_BLE_ID_KEY_MASK indicates that the device should distribute the Identity Key to the peer device.
 // Both are set by default.
 void BLESecurity::setInitEncryptionKey(uint8_t init_key) {
-  log_d("setInitEncryptionKey: init_key=%d", init_key);
+  log_d("setInitEncryptionKey: init_key=%u", init_key);
   m_initKey = init_key;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &m_initKey, sizeof(uint8_t));
@@ -127,7 +127,7 @@ void BLESecurity::setInitEncryptionKey(uint8_t init_key) {
 // ESP_BLE_ID_KEY_MASK indicates that the device should distribute the Identity Key to the peer device.
 // Both are set by default.
 void BLESecurity::setRespEncryptionKey(uint8_t resp_key) {
-  log_d("setRespEncryptionKey: resp_key=%d", resp_key);
+  log_d("setRespEncryptionKey: resp_key=%u", resp_key);
   m_respKey = resp_key;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &m_respKey, sizeof(uint8_t));
@@ -139,7 +139,7 @@ void BLESecurity::setRespEncryptionKey(uint8_t resp_key) {
 // This function sets the key size for the BLE security.
 void BLESecurity::setKeySize(uint8_t key_size) {
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  log_d("setKeySize: key_size=%d", key_size);
+  log_d("setKeySize: key_size=%u", key_size);
   m_keySize = key_size;
   esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &m_keySize, sizeof(uint8_t));
 #endif
@@ -155,13 +155,13 @@ uint32_t BLESecurity::generateRandomPassKey() {
 // The second argument is the passkey (ignored when using a random passkey).
 // The function returns the passkey that was set.
 uint32_t BLESecurity::setPassKey(bool staticPasskey, uint32_t passkey) {
-  log_d("setPassKey: staticPasskey=%d, passkey=%d", staticPasskey, passkey);
+  log_d("setPassKey: staticPasskey=%d, passkey=%06" PRIu32, staticPasskey, passkey);
   m_staticPasskey = staticPasskey;
 
   if (m_staticPasskey) {
     m_passkey = passkey;
     if (m_passkey == BLE_SM_DEFAULT_PASSKEY) {
-      log_w("*WARNING* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+      log_w("*WARNING* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
       log_w("*WARNING* Please use a random passkey or set a different static passkey");
     }
   } else {
@@ -248,14 +248,14 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool sc) {
 uint32_t BLESecurityCallbacks::onPassKeyRequest() {
   Serial.println("BLESecurityCallbacks: *ATTENTION* Using insecure onPassKeyRequest.");
   Serial.println("BLESecurityCallbacks: *ATTENTION* Please implement onPassKeyRequest with a suitable passkey in your BLESecurityCallbacks class");
-  Serial.printf("BLESecurityCallbacks: Default passkey: %06d\n", BLE_SM_DEFAULT_PASSKEY);
+  Serial.printf("BLESecurityCallbacks: Default passkey: %06u\n", BLE_SM_DEFAULT_PASSKEY);
   return BLE_SM_DEFAULT_PASSKEY;
 }
 
 // This callback is called by the device that has Output capability when the peer device has Input capability
 // It should display the passkey that will need to be entered on the peer device
 void BLESecurityCallbacks::onPassKeyNotify(uint32_t passkey) {
-  Serial.printf("BLESecurityCallbacks: Using default onPassKeyNotify. Passkey: %06lu\n", passkey);
+  Serial.printf("BLESecurityCallbacks: Using default onPassKeyNotify. Passkey: %06" PRIu32 "\n", passkey);
 }
 
 // This callback is called when the peer device requests a secure connection.
@@ -418,9 +418,9 @@ void BLESecurityCallbacks::onAuthenticationComplete(esp_ble_auth_cmpl_t param) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 // This function initiates security for a given connection handle.
 bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
-  log_d("startSecurity: connHandle=%d", connHandle);
+  log_d("startSecurity: connHandle=%u", connHandle);
   if (m_securityStarted) {
-    log_w("Security already started for connHandle=%d", connHandle);
+    log_w("Security already started for connHandle=%u", connHandle);
     if (rcPtr) {
       *rcPtr = 0;
     }

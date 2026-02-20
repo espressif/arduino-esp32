@@ -163,7 +163,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
         }
 
         if (hidden_scan) {
-          log_v("hidden ssid on channel %d found, trying to connect with known credentials...", chan_scan);
+          log_v("hidden ssid on channel %" PRIi32 " found, trying to connect with known credentials...", chan_scan);
         }
 
         bool known = false;
@@ -205,7 +205,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
                 }
               }
               known = true;
-              log_v("rssi_scan: %d, bestNetworkDb: %d", rssi_scan, bestNetworkDb);
+              log_v("rssi_scan: %" PRIi32 ", bestNetworkDb: %d", rssi_scan, bestNetworkDb);
               if (rssi_scan > bestNetworkDb) {                                            // best network
                 if (_bAllowOpenAP || (sec_scan == WIFI_AUTH_OPEN || entry.passphrase)) {  // check for passphrase if not open wlan
                   log_v("best network is now: %s", ssid_scan);
@@ -226,12 +226,12 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
 
         if (known) {
           log_d(
-            " --->   %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
+            " --->   %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
             BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
           );
         } else {
           log_d(
-            "        %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
+            "        %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
             BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
           );
         }
@@ -247,7 +247,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
 
     if (bestIndex >= 0) {
       log_i(
-        "[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %d (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3],
+        "[WIFI] Connecting BSSID: %02X:%02X:%02X:%02X:%02X:%02X SSID: %s Channel: %" PRIi32 " (%d)", bestBSSID[0], bestBSSID[1], bestBSSID[2], bestBSSID[3],
         bestBSSID[4], bestBSSID[5], bestNetwork.ssid, bestChannel, bestNetworkDb
       );
 
@@ -275,7 +275,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
           log_d("[WIFI] SSID: %s", WiFi.SSID().c_str());
           log_d("[WIFI] IP: %s", WiFi.localIP().toString().c_str());
           log_d("[WIFI] MAC: %s", WiFi.BSSIDstr().c_str());
-          log_d("[WIFI] Channel: %d", WiFi.channel());
+          log_d("[WIFI] Channel: %" PRIi32, WiFi.channel());
 
           if (_connectionTestCBFunc != NULL) {
             // We connected to an AP but if it's a captive portal we're not going anywhere.  Test it.

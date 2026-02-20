@@ -165,6 +165,10 @@ jobs:
             echo "LOG_LEVEL=none" >> $GITHUB_ENV
           fi
 
+      - name: Enable compile commands collection
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: echo "COMPILE_COMMANDS_DIR=${{ github.workspace }}/compile_commands" >> $GITHUB_ENV
+
       - name: Download affected sketches
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
@@ -179,6 +183,15 @@ jobs:
         with:
           name: pr_cli_compile_${{ matrix.chunk }}
           path: cli_compile_${{ matrix.chunk }}.json
+          overwrite: true
+
+      - name: Upload compile commands
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: compile_commands_${{ matrix.chunk }}
+          path: compile_commands/
+          if-no-files-found: warn
           overwrite: true
 
   # Windows and MacOS
@@ -245,6 +258,29 @@ jobs:
           git add --all
           git commit -m "Updated cli compile json files"
           git push origin HEAD:gh-pages
+
+  # Merge compile_commands.json from all chunks into a single file
+  merge-compile-commands:
+    name: Merge compile commands
+    needs: build-arduino-linux
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download compile commands artifacts
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          pattern: compile_commands_*
+          merge-multiple: true
+          path: compile_commands
+
+      - name: Merge compile commands
+        run: jq -s 'add | unique_by(.file + "_" + ._target) | [.[] | del(._target)]' compile_commands/*.json > compile_commands.json
+
+      - name: Upload merged compile commands
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: compile_commands
+          path: compile_commands.json
 
   #Upload PR number as artifact
   upload-pr-number:

@@ -1,6 +1,8 @@
+#include <Arduino.h>
 #include <MacAddress.h>
 #include <stdio.h>
 #include <Print.h>
+#include <inttypes.h>
 
 //Default constructor, blank mac address.
 MacAddress::MacAddress() : MacAddress(MAC6) {}
@@ -132,13 +134,13 @@ void MacAddress::toBytes(uint8_t *buf) {
 }
 
 //Print MAC address into a C string.
-//MAC: Buffer must be at least 18 chars
+//MAC: Buffer must be at least 18 chars for MAC6 and 24 for MAC8
 int MacAddress::toString(char *buf) {
   if (_type == MAC6) {
-    return sprintf(buf, "%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
+    return snprintf(buf, 18, "%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
   } else {
-    return sprintf(
-      buf, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5], _mac.bytes[6],
+    return snprintf(
+      buf, 24, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5], _mac.bytes[6],
       _mac.bytes[7]
     );
   }

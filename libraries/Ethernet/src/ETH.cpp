@@ -207,7 +207,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     return true;
   }
   if (phy_addr < ETH_PHY_ADDR_AUTO) {
-    log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+    log_e("Invalid PHY address: %" PRIi32 ", set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
     return false;
   }
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
@@ -333,11 +333,11 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   char num_str[3];
   itoa(_eth_index, num_str, 10);
   if (_eth_index == 0) {
-    strcpy(if_key_str, "ETH_DEF");
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_DEF");
   } else {
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_%s", num_str);
   }
-  strcat(strcpy(if_desc_str, "eth"), num_str);
+  snprintf(if_desc_str, sizeof(if_desc_str), "eth%s", num_str);
 
   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
   esp_netif_config.if_key = if_key_str;
@@ -465,7 +465,7 @@ esp_err_t ETHClass::eth_spi_read(uint32_t cmd, uint32_t addr, void *data, uint32
   if (_spi == NULL) {
     return ESP_FAIL;
   }
-  // log_i(" 0x%04lx 0x%04lx %lu", cmd, addr, data_len);
+  // log_i(" 0x%04" PRIx32 " 0x%04" PRIx32 " %" PRIu32, cmd, addr, data_len);
   _spi->beginTransaction(SPISettings(_spi_freq_mhz * 1000 * 1000, MSBFIRST, SPI_MODE0));
   digitalWrite(_pin_cs, LOW);
 
@@ -506,7 +506,7 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
   if (_spi == NULL) {
     return ESP_FAIL;
   }
-  // log_i("0x%04lx 0x%04lx %lu", cmd, addr, data_len);
+  // log_i("0x%04" PRIx32 " 0x%04" PRIx32 " %" PRIu32, cmd, addr, data_len);
   _spi->beginTransaction(SPISettings(_spi_freq_mhz * 1000 * 1000, MSBFIRST, SPI_MODE0));
   digitalWrite(_pin_cs, LOW);
 
@@ -567,7 +567,7 @@ bool ETHClass::beginSPI(
     return false;
   }
   if (phy_addr < ETH_PHY_ADDR_AUTO) {
-    log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+    log_e("Invalid PHY address: %" PRIi32 ", set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
     return false;
   }
 
@@ -624,8 +624,7 @@ bool ETHClass::beginSPI(
     digitalWrite(_pin_cs, HIGH);
     char cs_num_str[3];
     itoa(_eth_index, cs_num_str, 10);
-    strcat(strcpy(_cs_str, "ETH_CS["), cs_num_str);
-    strcat(_cs_str, "]");
+    snprintf(_cs_str, sizeof(_cs_str), "ETH_CS[%s]", cs_num_str);
     perimanSetPinBusExtraType(_pin_cs, _cs_str);
   }
 #endif
@@ -800,11 +799,11 @@ bool ETHClass::beginSPI(
   char num_str[3];
   itoa(_eth_index, num_str, 10);
   if (_eth_index == 0) {
-    strcpy(if_key_str, "ETH_DEF");
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_DEF");
   } else {
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_%s", num_str);
   }
-  strcat(strcpy(if_desc_str, "eth"), num_str);
+  snprintf(if_desc_str, sizeof(if_desc_str), "eth%s", num_str);
 
   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
   esp_netif_config.if_key = if_key_str;
@@ -1192,7 +1191,7 @@ size_t ETHClass::printDriverInfo(Print &out) const {
   if (autoNegotiation()) {
     bytes += out.print(",AUTO");
   }
-  bytes += out.printf(",ADDR:0x%lX", phyAddr());
+  bytes += out.printf(",ADDR:0x%" PRIX32, phyAddr());
   return bytes;
 }
 

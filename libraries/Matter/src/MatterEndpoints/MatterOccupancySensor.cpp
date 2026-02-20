@@ -180,7 +180,7 @@ bool MatterOccupancySensor::attributeChangeCB(uint16_t endpoint_id, uint32_t clu
     return false;
   }
 
-  log_d("Occupancy Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u", endpoint_id, cluster_id, attribute_id);
+  log_d("Occupancy Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32, endpoint_id, cluster_id, attribute_id);
 
   // Note: HoldTime writes are handled by OccupancySensingAttrAccessWrapper::Write()
   // since HoldTime is MANAGED_INTERNALLY and doesn't go through the normal esp-matter callback path
@@ -206,7 +206,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   // Initial HoldTime value is 0 (can be set later via setHoldTime() or setHoldTimeLimits())
   holdTime_seconds = 0;
   if (getEndPointId() != 0) {
-    log_e("Matter Occupancy Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Occupancy Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
   occupancy_sensor::config_t occupancy_sensor_config;
@@ -281,7 +281,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
     log_e("Failed to get Occupancy Sensing cluster");
   }
 
-  log_i("Occupancy Sensor created with endpoint_id %d", getEndPointId());
+  log_i("Occupancy Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;

@@ -179,7 +179,7 @@ void HardwareSerial::_createEventTask(void *args) {
     ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
   );
   if (_eventTask == NULL) {
-    log_e(" -- UART%d Event Task not Created!", _uart_nr);
+    log_e(" -- UART%u Event Task not Created!", _uart_nr);
   }
 }
 
@@ -295,26 +295,26 @@ void HardwareSerial::_uartEventTask(void *args) {
             }
             break;
           case UART_FIFO_OVF:
-            log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
+            log_w("UART%u FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
             currentErr = UART_FIFO_OVF_ERROR;
             break;
           case UART_BUFFER_FULL:
-            log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
+            log_w("UART%u Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
             currentErr = UART_BUFFER_FULL_ERROR;
             break;
           case UART_BREAK:
-            log_v("UART%d RX break.", uart->_uart_nr);
+            log_v("UART%u RX break.", uart->_uart_nr);
             currentErr = UART_BREAK_ERROR;
             break;
           case UART_PARITY_ERR:
-            log_v("UART%d parity error.", uart->_uart_nr);
+            log_v("UART%u parity error.", uart->_uart_nr);
             currentErr = UART_PARITY_ERROR;
             break;
           case UART_FRAME_ERR:
-            log_v("UART%d frame error.", uart->_uart_nr);
+            log_v("UART%u frame error.", uart->_uart_nr);
             currentErr = UART_FRAME_ERROR;
             break;
-          default: log_v("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
+          default: log_v("UART%u unknown event type %u", uart->_uart_nr, event.type); break;
         }
         if (currentErr != UART_NO_ERROR) {
           if (uart->_onReceiveErrorCB) {
@@ -652,7 +652,7 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
 bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
   if (_uart) {
-    log_e("No Clock Source change was done. This function must be called before beginning UART%d.", _uart_nr);
+    log_e("No Clock Source change was done. This function must be called before beginning UART%u", _uart_nr);
     return false;
   }
   return uartSetClockSource(_uart_nr, (uart_sclk_t)clkSrc);
@@ -669,7 +669,7 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
   // Valid value is higher than the FIFO length
   if (new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
-    log_w("RX Buffer set to minimum value: %d.", new_size);
+    log_w("RX Buffer set to minimum value: %lu.", (unsigned long)new_size);
   }
 
   _rxBufferSize = new_size;
@@ -688,7 +688,7 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
   // Valid values are zero or higher than the FIFO length
   if (new_size > 0 && new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
-    log_w("TX Buffer set to minimum value: %d.", new_size);
+    log_w("TX Buffer set to minimum value: %lu.", (unsigned long)new_size);
   }
   // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
   _txBufferSize = new_size;

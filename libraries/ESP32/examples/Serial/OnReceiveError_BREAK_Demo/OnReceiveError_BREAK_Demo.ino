@@ -78,7 +78,7 @@ void onReceiveFunction() {
   // This is a callback function that will be activated on UART RX events
   size_t available = Serial1.available();
   received_bytes = received_bytes + available;
-  Serial.printf("onReceive Callback:: There are %zu bytes available: {", available);
+  Serial.printf("onReceive Callback:: There are %lu bytes available: {", (unsigned long)available);
   while (available--) {
     char c = Serial1.read();
     Serial.printf("0x%x='%c'", c, c);
@@ -101,10 +101,10 @@ void setup() {
 #endif
 
   for (uint8_t i = 0; i < sizeof(fifoFullTestCases); i++) {
-    Serial.printf("\n\n================================\nTest Case #%d BREAK at END\n================================\n", i + 1);
+    Serial.printf("\n\n================================\nTest Case #%u BREAK at END\n================================\n", i + 1);
     // First sending BREAK at the end of the UART data transmission
     testAndReport(fifoFullTestCases[i], BREAK_AT_END_MSG);
-    Serial.printf("\n\n================================\nTest Case #%d BREAK at BEGINNING\n================================\n", i + 1);
+    Serial.printf("\n\n================================\nTest Case #%u BREAK at BEGINNING\n================================\n", i + 1);
     // Now sending BREAK at the beginning of the UART data transmission
     testAndReport(fifoFullTestCases[i], BREAK_BEFORE_MSG);
     Serial.println("========================\nFinished!");
@@ -126,12 +126,12 @@ void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
     dataSent[i] = 'A' + i;  // fill it with characters A..Z
   }
 
-  Serial.printf("\nTesting onReceive for receiving %zu bytes at %d baud, using RX FIFO Full = %d.\n", sent_bytes, BAUD, fifoFull);
+  Serial.printf("\nTesting onReceive for receiving %lu bytes at %u baud, using RX FIFO Full = %u.\n", (unsigned long)sent_bytes, BAUD, fifoFull);
   Serial.println("onReceive is called on both FIFO Full and RX Timeout events.");
   if (break_at_the_end) {
-    Serial.printf("BREAK event will be sent at the END of the %zu bytes\n", sent_bytes);
+    Serial.printf("BREAK event will be sent at the END of the %lu bytes\n", (unsigned long)sent_bytes);
   } else {
-    Serial.printf("BREAK event will be sent at the BEGINNING of the %zu bytes\n", sent_bytes);
+    Serial.printf("BREAK event will be sent at the BEGINNING of the %lu bytes\n", (unsigned long)sent_bytes);
   }
   Serial.flush();                                  // wait Serial FIFO to be empty and then spend almost no time processing it
   Serial1.setRxFIFOFull(fifoFull);                 // testing different result based on FIFO Full setup
@@ -150,8 +150,8 @@ void testAndReport(uint8_t fifoFull, bool break_at_the_end) {
     // just wait for receiving all byte in the callback...
   }
 
-  Serial.printf("\nIt has sent %zu bytes from Serial1 TX to Serial1 RX\n", sent_bytes);
-  Serial.printf("onReceive() has read a total of %zu bytes\n", received_bytes);
+  Serial.printf("\nIt has sent %lu bytes from Serial1 TX to Serial1 RX\n", (unsigned long)sent_bytes);
+  Serial.printf("onReceive() has read a total of %lu bytes\n", (unsigned long)received_bytes);
 
   Serial1.onReceiveError(NULL);  // resets/disables the RX Error callback function for Serial 1
   Serial1.onReceive(NULL);       // resets/disables the RX callback function for Serial 1

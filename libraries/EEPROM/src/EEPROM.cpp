@@ -59,7 +59,7 @@ bool EEPROMClass::begin(size_t size) {
     return false;
   }
   if (size < key_size) {  // truncate
-    log_w("truncating EEPROM from %d to %d", key_size, size);
+    log_w("truncating EEPROM from %lu to %lu", (unsigned long)key_size, (unsigned long)size);
     uint8_t *key_data = new (std::nothrow) uint8_t[key_size];
     if (!key_data) {
       log_e("Not enough memory to truncate EEPROM!");
@@ -78,7 +78,7 @@ bool EEPROMClass::begin(size_t size) {
     }
     // check for adequate free space
     if (nvs_set_blob(_handle, "expand", expand_key, expand_size)) {
-      log_e("Not enough space to expand EEPROM from %d to %d", key_size, size);
+      log_e("Not enough space to expand EEPROM from %lu to %lu", (unsigned long)key_size, (unsigned long)size);
       delete[] expand_key;
       return false;
     }
@@ -91,12 +91,12 @@ bool EEPROMClass::begin(size_t size) {
     }
     memset(key_data, 0xFF, size);
     if (key_size) {
-      log_i("Expanding EEPROM from %d to %d", key_size, size);
+      log_i("Expanding EEPROM from %lu to %lu", (unsigned long)key_size, (unsigned long)size);
       // hold data while key is deleted
       nvs_get_blob(_handle, _name, key_data, &key_size);
       nvs_erase_key(_handle, _name);
     } else {
-      log_i("New EEPROM of %d bytes", size);
+      log_i("New EEPROM of %lu bytes", (unsigned long)size);
     }
     nvs_commit(_handle);
     nvs_set_blob(_handle, _name, key_data, size);
@@ -110,7 +110,7 @@ bool EEPROMClass::begin(size_t size) {
 
   _data = new (std::nothrow) uint8_t[size];
   if (!_data) {
-    log_e("Not enough memory for %d bytes in EEPROM", size);
+    log_e("Not enough memory for %lu bytes in EEPROM", (unsigned long)size);
     return false;
   }
   _size = size;

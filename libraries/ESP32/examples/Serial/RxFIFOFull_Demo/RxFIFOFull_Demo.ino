@@ -50,7 +50,7 @@ void setup() {
   uart_internal_loopback(TEST_UART, RXPIN);
 #endif
 
-  for (uint8_t i = 0; i < sizeof(fifoFullTestCases); i++) {
+  for (int i = 0; i < sizeof(fifoFullTestCases); i++) {
     Serial.printf("\n\n================================\nTest Case #%d\n================================\n", i + 1);
     testAndReport(fifoFullTestCases[i]);
   }
@@ -72,7 +72,7 @@ void testAndReport(uint8_t fifoFull) {
     bytesJustReceived[i] = 0;
   }
 
-  Serial.printf("Testing the time for receiving %d bytes at %d baud, using RX FIFO Full = %d:", DATA_SIZE, BAUD, fifoFull);
+  Serial.printf("Testing the time for receiving %u bytes at %u baud, using RX FIFO Full = %u:\n", DATA_SIZE, BAUD, fifoFull);
   Serial.flush();                   // wait Serial FIFO to be empty and then spend almost no time processing it
   Serial1.setRxFIFOFull(fifoFull);  // testing different result based on FIFO Full setup
 
@@ -92,11 +92,11 @@ void testAndReport(uint8_t fifoFull) {
   }
 
   uint32_t pastTime = millis() - now;  // codespell:ignore pasttime
-  Serial.printf("\nIt has sent %zu bytes from Serial1 TX to Serial1 RX\n", sentBytes);
-  Serial.printf("It took %lu milliseconds to read %d bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
+  Serial.printf("\nIt has sent %lu bytes from Serial1 TX to Serial1 RX\n", (unsigned long)sentBytes);
+  Serial.printf("It took %" PRIu32 " milliseconds to read %u bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
   Serial.printf("Per execution Serial.read() number of bytes data and time information:\n");
   for (i = 0; i < DATA_SIZE; i++) {
-    Serial.printf("#%03d - Received %03lu bytes after %lu ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now);
+    Serial.printf("#%03u - Received %03" PRIu32 " bytes after %" PRIu32 " ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now);
     if (i != DATA_SIZE - 1 && bytesJustReceived[i + 1] == 0) {
       break;
     }

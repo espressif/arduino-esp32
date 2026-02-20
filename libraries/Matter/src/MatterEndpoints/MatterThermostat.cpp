@@ -90,7 +90,7 @@ bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     log_e("Matter Thermostat device has not begun.");
     return false;
   }
-  log_d("Thermostat Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Thermostat Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (cluster_id == Thermostat::Id) {
     switch (attribute_id) {
@@ -103,7 +103,7 @@ bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         }
         if (ret == true) {
           currentMode = (ThermostatMode_t)val->val.u8;
-          log_v("Thermostat Mode updated to %d", val->val.u8);
+          log_v("Thermostat Mode updated to %u", val->val.u8);
         }
         break;
       case Thermostat::Attributes::LocalTemperature::Id:
@@ -142,7 +142,7 @@ bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
           log_v("Heating Setpoint updated to %.01fC", (float)val->val.i16 / 100.00);
         }
         break;
-      default: log_w("Unhandled Thermostat Attribute ID: %u", attribute_id); break;
+      default: log_w("Unhandled Thermostat Attribute ID: %" PRIu32, attribute_id); break;
     }
   }
   return ret;
@@ -158,7 +158,7 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter Thermostat with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Thermostat with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -201,7 +201,7 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
   currentMode = _currentMode;
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Thermostat created with endpoint_id %d", getEndPointId());
+  log_i("Thermostat created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;
@@ -266,7 +266,7 @@ bool MatterThermostat::setMode(ThermostatMode_t _mode) {
     }
     currentMode = _mode;
   }
-  log_v("Thermostat Mode set to %d", _mode);
+  log_v("Thermostat Mode set to %u", _mode);
 
   return true;
 }

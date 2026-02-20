@@ -30,7 +30,7 @@ bool MatterWaterFreezeDetector::attributeChangeCB(uint16_t endpoint_id, uint32_t
     return false;
   }
 
-  log_d("Water Freeze Detector Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Water Freeze Detector Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
   return ret;
 }
 
@@ -44,7 +44,7 @@ bool MatterWaterFreezeDetector::begin(bool _freezeState) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter Water Freeze Detector with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Water Freeze Detector with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -59,7 +59,7 @@ bool MatterWaterFreezeDetector::begin(bool _freezeState) {
   }
   freezeState = _freezeState;
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Water Freeze Detector created with endpoint_id %d", getEndPointId());
+  log_i("Water Freeze Detector created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;

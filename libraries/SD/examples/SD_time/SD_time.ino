@@ -246,7 +246,9 @@ void setup() {
   }
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.print("SD Card Size: ");
+  Serial.print(cardSize);
+  Serial.println("MB");
 
   listDir(SD, "/", 0);
   removeDir(SD, "/mydir");

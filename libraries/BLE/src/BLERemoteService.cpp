@@ -23,6 +23,7 @@
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include <esp_err.h>
+#include <inttypes.h>
 #include "esp32-hal-log.h"
 
 /***************************************************************************
@@ -133,7 +134,7 @@ uint16_t BLERemoteService::getStartHandle() {
 
 uint16_t BLERemoteService::getHandle() {
   log_v(">> getHandle: service: %s", getUUID().toString().c_str());
-  log_v("<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
+  log_v("<< getHandle: %u 0x%04x", getStartHandle(), getStartHandle());
   return getStartHandle();
 }  // getHandle
 
@@ -187,13 +188,13 @@ String BLERemoteService::toString() {
   String res = "Service: uuid: " + m_uuid.toString();
   char val[6];
   res += ", start_handle: ";
-  snprintf(val, sizeof(val), "%d", m_startHandle);
+  snprintf(val, sizeof(val), "%u", m_startHandle);
   res += val;
   snprintf(val, sizeof(val), "%04x", m_startHandle);
   res += " 0x";
   res += val;
   res += ", end_handle: ";
-  snprintf(val, sizeof(val), "%d", m_endHandle);
+  snprintf(val, sizeof(val), "%u", m_endHandle);
   res += val;
   snprintf(val, sizeof(val), "%04x", m_endHandle);
   res += " 0x";
@@ -257,7 +258,7 @@ void BLERemoteService::retrieveCharacteristics() {
       break;
     }
 
-    log_d("Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
+    log_d("Found a characteristic: Handle: %u, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
 
     // We now have a new characteristic ... let us add that to our set of known characteristics
     BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(result.char_handle, BLEUUID(result.uuid), result.properties, this);
@@ -388,7 +389,7 @@ void BLERemoteService::retrieveCharacteristics() {
  * @return success == 0 or error code.
  */
 int BLERemoteService::characteristicDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg) {
-  log_d("Characteristic Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? chr->val_handle : -1);
+  log_d("Characteristic Discovered >> status: %u handle: %u", error->status, (error->status == 0) ? chr->val_handle : -1);
 
   BLETaskData *pTaskData = (BLETaskData *)arg;
   BLERemoteService *service = (BLERemoteService *)pTaskData->m_pInstance;

@@ -66,13 +66,13 @@ class MyPeriodicScan : public BLEPeriodicScanCallbacks {
   }
 
   void onSync(esp_ble_periodic_adv_sync_estab_param_t params) {
-    log_i("ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT, status %d", params.status);
+    log_i("ESP_GAP_BLE_PERIODIC_ADV_SYNC_ESTAB_EVT, status %u", params.status);
     // esp_log_buffer_hex("sync addr", param->periodic_adv_sync_estab.adv_addr, 6);
-    log_i("sync handle %d sid %d perioic adv interval %d adv phy %d", params.sync_handle, params.sid, params.period_adv_interval, params.adv_phy);
+    log_i("sync handle %u sid %u perioic adv interval %u adv phy %u", params.sync_handle, params.sid, params.period_adv_interval, params.adv_phy);
   }
 
   void onReport(esp_ble_gap_periodic_adv_report_t params) {
-    log_i("periodic adv report, sync handle %d data status %d data len %d rssi %d", params.sync_handle, params.data_status, params.data_length, params.rssi);
+    log_i("periodic adv report, sync handle %u data status %u data len %u rssi %d", params.sync_handle, params.data_status, params.data_length, params.rssi);
   }
 };
 

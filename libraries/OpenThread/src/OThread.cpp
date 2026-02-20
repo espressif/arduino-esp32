@@ -383,7 +383,7 @@ void OpenThread::otPrintNetworkInformation(Stream &output) {
   output.println();
   output.printf("Network Name: %s", otThreadGetNetworkName(mInstance));
   output.println();
-  output.printf("Channel: %d", otLinkGetChannel(mInstance));
+  output.printf("Channel: %u", otLinkGetChannel(mInstance));
   output.println();
   output.printf("PAN ID: 0x%04x", otLinkGetPanId(mInstance));
   output.println();
@@ -576,7 +576,7 @@ void OpenThread::populateUnicastAddressCache() const {
     addr = addr->mNext;
   }
 
-  log_d("Populated unicast address cache with %zu addresses", mCachedUnicastAddresses.size());
+  log_d("Populated unicast address cache with %lu addresses", (unsigned long)mCachedUnicastAddresses.size());
 }
 
 // Populate multicast address cache from OpenThread
@@ -595,7 +595,7 @@ void OpenThread::populateMulticastAddressCache() const {
     mAddr = mAddr->mNext;
   }
 
-  log_d("Populated multicast address cache with %zu addresses", mCachedMulticastAddresses.size());
+  log_d("Populated multicast address cache with %lu addresses", (unsigned long)mCachedMulticastAddresses.size());
 }
 
 // Clear unicast address cache
@@ -635,7 +635,7 @@ IPAddress OpenThread::getUnicastAddress(size_t index) const {
   }
 
   if (index >= mCachedUnicastAddresses.size()) {
-    log_w("Unicast address index %zu out of range (max: %zu)", index, mCachedUnicastAddresses.size());
+    log_w("Unicast address index %lu out of range (max: %lu)", (unsigned long)index, (unsigned long)mCachedUnicastAddresses.size());
     return IPAddress(IPv6);
   }
 
@@ -670,7 +670,7 @@ IPAddress OpenThread::getMulticastAddress(size_t index) const {
   }
 
   if (index >= mCachedMulticastAddresses.size()) {
-    log_w("Multicast address index %zu out of range (max: %zu)", index, mCachedMulticastAddresses.size());
+    log_w("Multicast address index %lu out of range (max: %lu)", (unsigned long)index, (unsigned long)mCachedMulticastAddresses.size());
     return IPAddress(IPv6);
   }
 

@@ -360,7 +360,7 @@ uint16_t BLEClient::getMTU() {
   @return bool indicating if MTU was successfully set locally and on remote.
 */
 bool BLEClient::setMTU(uint16_t mtu) {
-  log_v(">> setMTU: %d", mtu);
+  log_v(">> setMTU: %u", mtu);
   esp_err_t err = ESP_OK;
 
 #ifdef CONFIG_BLUEDROID_ENABLED
@@ -381,11 +381,11 @@ bool BLEClient::setMTU(uint16_t mtu) {
 #endif
 
     if (err != ESP_OK) {
-      log_e("Error setting send MTU request MTU: %d err=%d", mtu, err);
+      log_e("Error setting send MTU request MTU: %u err=%d", mtu, err);
       return false;
     }
   } else {
-    log_e("can't set local mtu value: %d", mtu);
+    log_e("can't set local mtu value: %u", mtu);
     return false;
   }
   log_v("<< setMTU");
@@ -472,7 +472,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   m_semaphoreRegEvt.take("connect");
 
   // clearServices(); // we dont need to delete services since every client is unique?
-  log_d("Registering GATT client app (appId=%d)...", m_appId);
+  log_d("Registering GATT client app (appId=%u)...", m_appId);
   errRc = ::esp_ble_gattc_app_register(m_appId);
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -492,7 +492,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
-  log_d("GATT client registered (gattc_if=%d)", m_gattc_if);
+  log_d("GATT client registered (gattc_if=%u)", m_gattc_if);
   m_peerAddress = address;
 
   // Perform the open connection request against the target BLE Server with retry logic.
@@ -540,13 +540,13 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
-  log_d("Waiting for connection event (timeout=%d ms)...", timeoutMs);
+  log_d("Waiting for connection event (timeout=%" PRIu32 " ms)...", timeoutMs);
   bool got_sem = m_semaphoreOpenEvt.timedWait("connect", timeoutMs);  // Wait for the connection to complete.
   rc = m_semaphoreOpenEvt.value();
 
   // check the status of the connection and cleanup in case of failure
   if (!got_sem) {
-    log_e("Connection timeout after %d ms to %s (no OPEN event received)", timeoutMs, address.toString().c_str());
+    log_e("Connection timeout after %" PRIu32 " ms to %s (no OPEN event received)", timeoutMs, address.toString().c_str());
     // Cancel any pending connection attempt
     esp_ble_gap_disconnect(getPeerAddress().getNative());
     BLEDevice::removePeerDevice(m_appId, true);
@@ -630,7 +630,7 @@ bool BLEClient::updateConnParams(uint16_t minInterval, uint16_t maxInterval, uin
  */
 void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *evtParam) {
 
-  log_d("gattClientEventHandler [esp_gatt_if: %d] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
+  log_d("gattClientEventHandler [esp_gatt_if: %u] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
 
   // it is possible to receive events from other connections while waiting for registration
   if (m_gattc_if == ESP_GATT_IF_NONE && event != ESP_GATTC_REG_EVT) {
@@ -905,7 +905,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   }
 
   if (m_conn_id != BLE_HS_CONN_HANDLE_NONE || m_isConnected || m_pTaskData != nullptr) {
-    log_e("Client busy, connected to %s, id=%d", m_peerAddress.toString().c_str(), getConnId());
+    log_e("Client busy, connected to %s, id=%u", m_peerAddress.toString().c_str(), getConnId());
     return false;
   }
 
@@ -1011,7 +1011,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
  * the API will call this and report findings.
  */
 int BLEClient::serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg) {
-  log_d("Service Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? service->start_handle : -1);
+  log_d("Service Discovered >> status: %u handle: %d", error->status, (error->status == 0) ? service->start_handle : -1);
 
   BLETaskData *pTaskData = (BLETaskData *)arg;
   BLEClient *client = (BLEClient *)pTaskData->m_pInstance;
@@ -1142,7 +1142,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
       rc = event->connect.status;
       if (rc == 0) {
-        log_i("BLEClient: Connected event. Handle: %d", event->connect.conn_handle);
+        log_i("BLEClient: Connected event. Handle: %u", event->connect.conn_handle);
 
         client->m_conn_id = event->connect.conn_handle;
 
@@ -1235,7 +1235,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
       }
       log_d("Peer requesting to update connection parameters");
       log_d(
-        "MinInterval: %d, MaxInterval: %d, Latency: %d, Timeout: %d", event->conn_update_req.peer_params->itvl_min,
+        "MinInterval: %u, MaxInterval: %u, Latency: %u, Timeout: %u", event->conn_update_req.peer_params->itvl_min,
         event->conn_update_req.peer_params->itvl_max, event->conn_update_req.peer_params->latency, event->conn_update_req.peer_params->supervision_timeout
       );
 
@@ -1293,7 +1293,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
       if (client->m_conn_id != event->mtu.conn_handle) {
         return 0;
       }
-      log_i("mtu update event; conn_handle=%d mtu=%d", event->mtu.conn_handle, event->mtu.value);
+      log_i("mtu update event; conn_handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
       rc = 0;
       break;
     }  // BLE_GAP_EVENT_MTU
@@ -1318,10 +1318,10 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -1335,7 +1335,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         // Check if the passkey on the peer device is correct
         log_d("BLE_SM_IOACT_NUMCMP");
 
-        log_d("Passkey on device's display: %d", event->passkey.params.numcmp);
+        log_d("Passkey on device's display: %06" PRIu32, event->passkey.params.numcmp);
         pkey.action = event->passkey.params.action;
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -1377,10 +1377,10 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);

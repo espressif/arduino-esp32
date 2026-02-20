@@ -26,9 +26,9 @@ void printScannedNetworks(uint16_t networksFound) {
       Serial.print(" | ");
       Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
       Serial.print(" | ");
-      Serial.printf("%4ld", WiFi.RSSI(i));
+      Serial.printf("%4" PRIi32, WiFi.RSSI(i));
       Serial.print(" | ");
-      Serial.printf("%2ld", WiFi.channel(i));
+      Serial.printf("%2" PRIi32, WiFi.channel(i));
       Serial.print(" | ");
       switch (WiFi.encryptionType(i)) {
         case WIFI_AUTH_OPEN:            Serial.print("open"); break;
