@@ -23,7 +23,6 @@
 
 #include "BLEUUID.h"
 #include <vector>
-#include "RTOS.h"
 #include "BLEUtils.h"
 
 /***************************************************************************
@@ -193,7 +192,7 @@ private:
   bool m_customAdvData = false;
   bool m_customScanResponseData = false;
   bool m_advDataSet = false;
-  FreeRTOS::Semaphore m_semaphoreSetAdv = FreeRTOS::Semaphore("startAdvert");
+  bool m_advConfiguring = false;
   bool m_scanResp = true;
 
   /***************************************************************************
@@ -204,6 +203,8 @@ private:
   esp_ble_adv_data_t m_advData;
   esp_ble_adv_data_t m_scanRespData;
   esp_ble_adv_params_t m_advParams;
+  bool configureScanResponseData();
+  void freeServiceUUIDs();
 #endif
 
   /***************************************************************************
