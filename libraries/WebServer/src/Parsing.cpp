@@ -214,34 +214,34 @@ bool WebServer::_parseRequest(NetworkClient &client) {
         _parseArguments(searchStr);
         skipBodyRead = true;
       } else {
-      size_t plainLength;
-      char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
-      if (plainLength < (size_t)_clientContentLength) {
-        free(plainBuf);
-        return false;
-      }
-      if (_clientContentLength > 0) {
-        if (isEncoded) {
-          //url encoded form
-          if (searchStr != "") {
-            searchStr += '&';
+        size_t plainLength;
+        char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+        if (plainLength < (size_t)_clientContentLength) {
+          free(plainBuf);
+          return false;
+        }
+        if (_clientContentLength > 0) {
+          if (isEncoded) {
+            //url encoded form
+            if (searchStr != "") {
+              searchStr += '&';
+            }
+            searchStr += plainBuf;
           }
-          searchStr += plainBuf;
-        }
-        _parseArguments(searchStr);
-        if (!isEncoded) {
-          //plain post json or other data
-          RequestArgument &arg = _currentArgs[_currentArgCount++];
-          arg.key = F("plain");
-          arg.value = String(plainBuf);
-        }
+          _parseArguments(searchStr);
+          if (!isEncoded) {
+            //plain post json or other data
+            RequestArgument &arg = _currentArgs[_currentArgCount++];
+            arg.key = F("plain");
+            arg.value = String(plainBuf);
+          }
 
-        log_v("Plain: %s", plainBuf);
-        free(plainBuf);
-      } else {
-        // No content - but we can still have arguments in the URL.
-        _parseArguments(searchStr);
-      }
+          log_v("Plain: %s", plainBuf);
+          free(plainBuf);
+        } else {
+          // No content - but we can still have arguments in the URL.
+          _parseArguments(searchStr);
+        }
       }
     } else {
       // it IS a form
