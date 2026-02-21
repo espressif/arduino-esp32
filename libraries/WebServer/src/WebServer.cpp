@@ -536,6 +536,10 @@ void WebServer::setContentLength(const size_t contentLength) {
   _contentLength = contentLength;
 }
 
+void WebServer::resetContentLength() {
+  _contentLength = CONTENT_LENGTH_NOT_SET;
+}
+
 void WebServer::enableDelay(boolean value) {
   _nullDelay = value;
 }
@@ -772,6 +776,7 @@ void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, c
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
   send(code, contentType, "");
+  resetContentLength();
 }
 
 String WebServer::pathArg(unsigned int i) const {
