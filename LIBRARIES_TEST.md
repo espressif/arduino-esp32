@@ -14,5 +14,5 @@ WS2812FX|1 :white_check_mark: |1 :white_check_mark: |1 :white_check_mark: |1 :wh
 ZACwire for TSic|2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: |2 :warning: 
 
 
-Generated on: Feb-15-2026 05:05:37
-/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/22029738902)
+Generated on: Feb-22-2026 05:01:48
+/ [GitHub Action Link](https://github.com/espressif/arduino-esp32/actions/runs/22270443695)
