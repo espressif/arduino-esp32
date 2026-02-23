@@ -194,8 +194,7 @@ void ConsoleClass::setHistoryFile(fs::FS &fs, const char *path) {
   size_t pathLen = strlen(path);
   _historyVfsPath = (char *)malloc(mpLen + pathLen + 1);
   if (_historyVfsPath) {
-    strcpy(_historyVfsPath, mp);
-    strcat(_historyVfsPath, path);
+    snprintf(_historyVfsPath, mpLen + pathLen + 1, "%s%s", mp, path);
   }
 }
 
