@@ -19,6 +19,7 @@
 #include <Console.h>
 #include <WiFi.h>
 #include "ping/ping_sock.h"
+#include "argtable3/argtable3.h"
 
 // ---------------------------------------------------------------------------
 // wifi scan

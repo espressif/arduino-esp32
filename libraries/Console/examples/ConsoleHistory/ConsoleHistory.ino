@@ -98,9 +98,9 @@ static int cmd_tokenize(int argc, char **argv) {
 // ---------------------------------------------------------------------------
 static int cmd_heap(int argc, char **argv) {
   printf("Free heap : %lu bytes\n", (unsigned long)ESP.getFreeHeap());
-#if CONFIG_SPIRAM
-  printf("Free PSRAM: %lu bytes\n", (unsigned long)ESP.getFreePsram());
-#endif
+  if (psramFound()) {
+    printf("Free PSRAM: %lu bytes\n", (unsigned long)ESP.getFreePsram());
+  }
   return 0;
 }
 
@@ -117,12 +117,14 @@ void setup() {
   // Mount LittleFS (format on first use)
   if (!LittleFS.begin(true)) {
     Serial.println("LittleFS mount failed — history will not persist.");
+  } else {
+    Serial.println("LittleFS mounted");
+    // Persistent history: lines are stored in a plain text file on LittleFS.
+    // On begin(), existing history is loaded; after every command, the file
+    // is updated automatically.
+    Console.setHistoryFile(HISTORY_PATH);
   }
 
-  // Persistent history: lines are stored in a plain text file on LittleFS.
-  // On begin(), existing history is loaded; after every command, the file
-  // is updated automatically.
-  Console.setHistoryFile(HISTORY_PATH);
   Console.setMaxHistory(50);
 
   // If PSRAM is available, move Console allocations there to save internal

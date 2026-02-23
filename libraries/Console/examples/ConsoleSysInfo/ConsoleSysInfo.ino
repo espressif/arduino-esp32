@@ -67,7 +67,7 @@ static int cmd_tasks(int argc, char **argv) {
     if (core == tskNO_AFFINITY) {
       snprintf(coreStr, sizeof(coreStr), "any");
     } else {
-      snprintf(coreStr, sizeof(coreStr), "%d", core);
+      snprintf(coreStr, sizeof(coreStr), "%" PRIu8, (uint8_t)core);
     }
     printf("%-20s %8s %5lu %5lu %4s\n", t->pcTaskName, stateNames[state], (unsigned long)t->uxCurrentPriority, (unsigned long)t->usStackHighWaterMark, coreStr);
   }

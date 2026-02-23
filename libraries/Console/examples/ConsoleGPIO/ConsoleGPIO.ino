@@ -17,6 +17,7 @@
 
 #include <Arduino.h>
 #include <Console.h>
+#include "argtable3/argtable3.h"
 
 #define RGB_BRIGHTNESS 64 // Change brightness (max 255)
 
@@ -154,6 +155,8 @@ static int cmd_gpio(int argc, char **argv) {
 // Otherwise, it will use the rgbLedWrite function to set the color of the LED.
 // ---------------------------------------------------------------------------
 
+#ifdef LED_BUILTIN
+
 #ifdef RGB_BUILTIN
 struct NamedColor {
   const char *name;
@@ -237,6 +240,8 @@ static int cmd_led(int argc, char **argv) {
   return 1;
 }
 
+#endif
+
 // ---------------------------------------------------------------------------
 // setup / loop
 // ---------------------------------------------------------------------------
@@ -285,10 +290,13 @@ void setup() {
 
   // Add commands
   Console.addCmd("gpio", "Control GPIO pins", "<read|write|mode> ...", cmd_gpio);
+
+#ifdef LED_BUILTIN
 #ifdef RGB_BUILTIN
   Console.addCmd("led", "Control RGB LED", "<on [color]|off>", cmd_led);
 #else
   Console.addCmd("led", "Toggle LED_BUILTIN", "<on|off>", cmd_led);
+#endif
 #endif
 
   // Add built-in help command

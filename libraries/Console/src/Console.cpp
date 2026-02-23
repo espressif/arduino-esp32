@@ -88,7 +88,7 @@ static bool _probeVT100() {
 
 ConsoleClass::ConsoleClass()
   : _initialized(false), _replStarted(false), _replTaskHandle(NULL), _prompt("esp> "), _maxHistory(32), _historyVfsPath(NULL), _historyFs(NULL),
-    _taskStackSize(4096), _taskPriority(2), _taskCore(tskNO_AFFINITY), _usePsram(false), _taskStackInPsram(false), _forceMode(false) {}
+    _taskStackSize(4096), _taskPriority(2), _taskCore(tskNO_AFFINITY), _usePsram(true), _taskStackInPsram(false), _forceMode(false) {}
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -190,18 +190,34 @@ void ConsoleClass::setHistoryFile(const char *path, fs::FS &fs) {
 }
 
 void ConsoleClass::setTaskStackSize(uint32_t size) {
+  if (_initialized) {
+    log_e("Console already initialized — call before begin()");
+    return;
+  }
   _taskStackSize = size;
 }
 
 void ConsoleClass::setTaskPriority(uint32_t priority) {
+  if (_initialized) {
+    log_e("Console already initialized — call before begin()");
+    return;
+  }
   _taskPriority = priority;
 }
 
 void ConsoleClass::setTaskCore(BaseType_t core) {
+  if (_initialized) {
+    log_e("Console already initialized — call before begin()");
+    return;
+  }
   _taskCore = core;
 }
 
 void ConsoleClass::usePsram(bool enable) {
+  if (_initialized) {
+    log_e("Console already initialized — call before begin()");
+    return;
+  }
   _usePsram = enable;
 }
 
@@ -218,7 +234,8 @@ bool ConsoleClass::addCmd(const char *name, const char *help, const char *hint, 
     log_e("Console not initialized");
     return false;
   }
-  esp_console_cmd_t cmd = {};
+  esp_console_cmd_t cmd;
+  memset(&cmd, 0, sizeof(esp_console_cmd_t));
   cmd.command = name;
   cmd.help = help;
   cmd.hint = hint;
@@ -236,7 +253,8 @@ bool ConsoleClass::addCmd(const char *name, const char *help, void *argtable, Co
     log_e("Console not initialized");
     return false;
   }
-  esp_console_cmd_t cmd = {};
+  esp_console_cmd_t cmd;
+  memset(&cmd, 0, sizeof(esp_console_cmd_t));
   cmd.command = name;
   cmd.help = help;
   cmd.hint = NULL;  // auto-generated from argtable
@@ -259,7 +277,8 @@ bool ConsoleClass::addCmdWithContext(const char *name, const char *help, const c
     log_e("Console not initialized");
     return false;
   }
-  esp_console_cmd_t cmd = {};
+  esp_console_cmd_t cmd;
+  memset(&cmd, 0, sizeof(esp_console_cmd_t));
   cmd.command = name;
   cmd.help = help;
   cmd.hint = hint;
@@ -278,7 +297,8 @@ bool ConsoleClass::addCmdWithContext(const char *name, const char *help, void *a
     log_e("Console not initialized");
     return false;
   }
-  esp_console_cmd_t cmd = {};
+  esp_console_cmd_t cmd;
+  memset(&cmd, 0, sizeof(esp_console_cmd_t));
   cmd.command = name;
   cmd.help = help;
   cmd.hint = NULL;

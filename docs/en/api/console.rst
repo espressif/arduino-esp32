@@ -16,8 +16,8 @@ Features include:
 - Tab completion and inline hints powered by the linenoise library.
 - Persistent command history saved to LittleFS or SPIFFS.
 - Typed argument parsing via argtable3 (integers, strings, optional arguments, etc.).
-- Context-aware command callbacks for object-oriented designs.
-- Transport-agnostic: works automatically with UART ``Serial`` and
+- Context-aware command callbacks for object-oriented design.
+- Transport-agnostic: works with UART ``Serial`` and
   HWCDC / USB-JTAG (``HWCDCSerial``) — the same transport that ``Serial`` uses is detected
   automatically from the ``ARDUINO_USB_MODE`` / ``ARDUINO_USB_CDC_ON_BOOT`` build flags.
 
@@ -34,7 +34,7 @@ PuTTY, Minicom or Picocom. If your terminal prints weird sequences of characters
 it means that the terminal does not support VT100 escape sequences.
 To disable VT100 escape sequences, you can use the ``setPlainMode()`` method and use a plain text mode instead.
 
-The Console library is usable by all ESP32 variants. Depending on how the board USB and Serial are implemented, you may
+The Console library is usable by all ESP32 variants. Depending on how the board's USB and Serial are implemented, you may
 need to ensure that USB CDC is enabled on boot and use the Hardware CDC. For example, on the most recent ESP32-P4 revisions,
 you need to enable ``USB CDC On Boot`` and set the USB Mode to ``Hardware CDC and JTAG``.
 
@@ -71,7 +71,7 @@ Two function-pointer typedefs are provided for command callbacks:
     // Simple callback
     typedef int (*ConsoleCommandFunc)(int argc, char **argv);
 
-    // Context-aware callback (receives a user-supplied pointer as first argument)
+    // Context-aware callback (receives a user-supplied pointer as the first argument)
     typedef int (*ConsoleCommandFuncWithCtx)(void *context, int argc, char **argv);
 
 ..
@@ -181,7 +181,7 @@ values:
         return 1;
       }
 
-      // Access parsed values through the typed fields
+      // Access the parsed values through the typed fields
       int pin = my_args.pin->ival[0];   // first (and only) int value
       int val = my_args.value->ival[0];
 
@@ -254,7 +254,7 @@ Arduino-esp32 Console API
    **Parameters**
 
       * ``maxCmdLen`` (Optional)
-         - Maximum length of a single command line in bytes. Default: ``256``.
+         - Maximum length of a single command-line in bytes. Default: ``256``.
 
       * ``maxArgs`` (Optional)
          - Maximum number of whitespace-separated tokens on a line. Default: ``32``.
@@ -321,7 +321,7 @@ Arduino-esp32 Console API
 ``setHistoryFile``
 ******************
 
-   Set a filesystem and file path for persistent command history.
+   Set the filesystem and file path for persistent command history.
 
    .. code-block:: arduino
 
@@ -420,10 +420,10 @@ Arduino-esp32 Console API
      ``xTaskCreatePinnedToCoreWithCaps()``.
 
    This frees internal SRAM for other uses at the cost of slightly higher latency for stack
-   and heap accesses.  Has no effect if PSRAM is not available or not initialised at boot.
+   and heap accesses. Has no effect if PSRAM is not available or not initialised at boot.
 
    **Parameters**
-      * ``enable`` — ``true`` to use PSRAM, ``false`` for internal RAM (default).
+      * ``enable`` — ``true`` to use PSRAM, ``false`` for internal RAM (default: ``true``).
 
    **Notes**
       * Must be called before ``begin()`` to affect heap allocation, and before ``beginRepl()``
@@ -613,7 +613,7 @@ Arduino-esp32 Console API
       USB OTG (CDC via TinyUSB / ``USBSerial``) is **not** currently supported as a REPL
       transport.
 
-   At startup the task probes the terminal for VT100 support by sending a one-time Device
+   At startup, the task probes the terminal for VT100 support by sending a one-time Device
    Status Request (``ESC[5n``).  If the terminal does not respond within 500 ms, plain mode
    is enabled automatically.  Use ``setPlainMode()`` before ``beginRepl()`` to override the
    probe result.
@@ -644,7 +644,7 @@ Arduino-esp32 Console API
 ``run``
 *******
 
-   Execute a command line string directly without a REPL task.
+   Execute a command-line string directly without a REPL task.
 
    .. code-block:: arduino
 
@@ -654,7 +654,7 @@ Arduino-esp32 Console API
    ..
 
    **Parameters**
-      * ``cmdline`` — Full command line (command name followed by arguments).
+      * ``cmdline`` — Full command-line (command name followed by arguments).
 
    **Returns**
       * The command handler's return code (``0`` = success).
@@ -765,7 +765,7 @@ Arduino-esp32 Console API
 ``splitArgv``
 *************
 
-   Split a command line string into ``argv``-style tokens in place.
+   Split a command-line string into ``argv``-style tokens in place.
 
    .. code-block:: arduino
 
@@ -803,12 +803,12 @@ Arduino-esp32 Console API
 Examples
 --------
 
-ConsoleREPL
-***********
+ConsoleBasic
+************
 
 Full interactive REPL with history, tab completion, and inline hints.
 
-.. literalinclude:: ../../../libraries/Console/examples/ConsoleREPL/ConsoleREPL.ino
+.. literalinclude:: ../../../libraries/Console/examples/ConsoleBasic/ConsoleBasic.ino
     :language: arduino
 
 ConsoleManual
@@ -839,6 +839,7 @@ ConsoleGPIO
 ***********
 
 GPIO control with argtable3 argument parsing: ``gpio read``, ``gpio write``, ``gpio mode``.
+LED control is supported with the ``led`` command on boards with a built-in LED.
 
 .. literalinclude:: ../../../libraries/Console/examples/ConsoleGPIO/ConsoleGPIO.ino
     :language: arduino

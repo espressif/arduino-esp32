@@ -16,9 +16,6 @@
 #include "LittleFS.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "esp_console.h"
-#include "linenoise/linenoise.h"
-#include "argtable3/argtable3.h"
 
 /**
  * @brief Callback type for a console command.
@@ -118,7 +115,7 @@ public:
    * Must be called before begin() to affect the heap allocation, and before
    * beginRepl() to affect the task stack.
    *
-   * @param enable  true to use PSRAM, false for internal RAM (default).
+   * @param enable  true to use PSRAM, false for internal RAM (default: true).
    */
   void usePsram(bool enable);
 
