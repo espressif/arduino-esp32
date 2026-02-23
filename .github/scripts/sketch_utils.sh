@@ -23,27 +23,33 @@ function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
         # Check if the sketch requires any configuration options (AND)
         requirements=$(yq eval '.requires[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements" != "null" && "$requirements" != "" ]]; then
-            for requirement in $requirements; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" == "" ]]; then
                     has_requirements=0
                 fi
-            done
+            done <<< "$requirements"
         fi
 
         # Check if the sketch requires any configuration options (OR)
         requirements_or=$(yq eval '.requires_any[]' "$sketchdir/ci.yml" 2>/dev/null)
         if [[ "$requirements_or" != "null" && "$requirements_or" != "" ]]; then
             local found=false
-            for requirement in $requirements_or; do
-                requirement=$(echo "$requirement" | xargs)
+            while IFS= read -r requirement; do
+                # Trim whitespace and newlines (use sed instead of xargs for compatibility)
+                requirement=$(echo "$requirement" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//;s/[\r\n]//g')
+                # Skip empty lines
+                [[ -z "$requirement" ]] && continue
                 found_line=$(grep -E "^$requirement" "$sdkconfig_path")
                 if [[ "$found_line" != "" ]]; then
                     found=true
                     break
                 fi
-            done
+            done <<< "$requirements_or"
             if [[ "$found" == "false" ]]; then
                 has_requirements=0
             fi
@@ -92,6 +98,14 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             shift
             debug_level="DebugLevel=$1"
             ;;
+        -td )
+            shift
+            ci_yml_dir=$1
+            ;;
+        -bn )
+            shift
+            build_name=$1
+            ;;
         * )
             break
             ;;
@@ -122,13 +136,23 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         # precedence.  Note that the following logic also falls to the default
         # parameters if no arguments were passed and no file was found.
 
-        if [ -z "$options" ] && [ -f "$sketchdir"/ci.yml ]; then
+        # Resolve which ci.yml to use for FQBN / fqbn_append lookups.
+        # For multi-device tests (-td), the sub-sketch directory does not
+        # contain its own ci.yml; the parent test directory does.
+        local ci_yml_for_build=""
+        if [ -f "$sketchdir"/ci.yml ]; then
+            ci_yml_for_build="$sketchdir/ci.yml"
+        elif [ -n "$ci_yml_dir" ] && [ -f "$ci_yml_dir/ci.yml" ]; then
+            ci_yml_for_build="$ci_yml_dir/ci.yml"
+        fi
+
+        if [ -z "$options" ] && [ -n "$ci_yml_for_build" ]; then
             # The config file could contain multiple FQBNs for one chip.  If
             # that's the case we build one time for every FQBN.
 
-            len=$(yq eval ".fqbn.${target} | length" "$sketchdir"/ci.yml 2>/dev/null || echo 0)
+            len=$(yq eval ".fqbn.${target} | length" "$ci_yml_for_build" 2>/dev/null || echo 0)
             if [ "$len" -gt 0 ]; then
-                fqbn=$(yq eval ".fqbn.${target} | sort | @json" "$sketchdir"/ci.yml)
+                fqbn=$(yq eval ".fqbn.${target} | sort | @json" "$ci_yml_for_build")
             fi
         fi
 
@@ -138,8 +162,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=1
 
-            if [ -f "$sketchdir"/ci.yml ]; then
-                fqbn_append=$(yq eval '.fqbn_append' "$sketchdir"/ci.yml 2>/dev/null)
+            if [ -n "$ci_yml_for_build" ]; then
+                fqbn_append=$(yq eval '.fqbn_append' "$ci_yml_for_build" 2>/dev/null)
                 if [ "$fqbn_append" == "null" ]; then
                     fqbn_append=""
                 fi
@@ -218,14 +242,6 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         exit 1
     fi
 
-    # The directory that will hold all the artifacts (the build directory) is
-    # provided through:
-    #  1. An env variable called ARDUINO_BUILD_DIR.
-    #  2. Created at the sketch level as "build" in the case of a single
-    #     configuration test.
-    #  3. Created at the sketch level as "buildX" where X is the number
-    #     of configuration built in case of a multiconfiguration test.
-
     sketchname=$(basename "$sketchdir")
     local has_requirements
 
@@ -245,29 +261,36 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
     fi
 
     # Install libraries from ci.yml if they exist
-    install_libs -ai "$ide_path" -s "$sketchdir"
+    local ci_yml_lib_dir="${ci_yml_dir:-$sketchdir}"
+    install_libs -ai "$ide_path" -s "$ci_yml_lib_dir"
     install_result=$?
     if [ $install_result -ne 0 ]; then
         echo "ERROR: Library installation failed for $sketchname" >&2
         exit $install_result
     fi
 
-    ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
-    if [ -n "$ARDUINO_BUILD_DIR" ]; then
-        build_dir="$ARDUINO_BUILD_DIR"
-    elif [ "$len" -eq 1 ]; then
-        # build_dir="$sketchdir/build"
-        build_dir="$HOME/.arduino/tests/$target/$sketchname/build.tmp"
-    fi
+    # Build directory path:
+    #   ARDUINO_BUILD_DIR env var → full override (used by on-push.sh for non-test builds)
+    #   Otherwise → ~/.arduino/tests/$target/$build_output_name/build[N].tmp
+    #     -bn sets a parent directory (test name) for multi-device builds:
+    #       e.g. -bn wifi_ap + sketchname=ap → wifi_ap/ap/build.tmp
+    #     Without -bn, uses $sketchname directly:
+    #       e.g. sketchname=gpio → gpio/build.tmp
+    local build_output_name="${build_name:+$build_name/}$sketchname"
 
+    ARDUINO_CACHE_DIR="$HOME/.arduino/cache.tmp"
     output_file="$HOME/.arduino/cli_compile_output.txt"
     sizes_file="$GITHUB_WORKSPACE/cli_compile_$chunk_index.json"
 
     mkdir -p "$ARDUINO_CACHE_DIR"
     for i in $(seq 0 $((len - 1))); do
-        if [ "$len" -ne 1 ]; then
-            # build_dir="$sketchdir/build$i"
-            build_dir="$HOME/.arduino/tests/$target/$sketchname/build$i.tmp"
+        if [ -n "$ARDUINO_BUILD_DIR" ]; then
+            # Full override from env var (non-test builds like on-push.sh)
+            build_dir="$ARDUINO_BUILD_DIR"
+        elif [ "$len" -eq 1 ]; then
+            build_dir="$HOME/.arduino/tests/$target/$build_output_name/build.tmp"
+        else
+            build_dir="$HOME/.arduino/tests/$target/$build_output_name/build$i.tmp"
         fi
         rm -rf "$build_dir"
         mkdir -p "$build_dir"
@@ -294,9 +317,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 exit "$exit_status"
             fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
             if [ -n "$log_compilation" ]; then
@@ -342,9 +368,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 echo "ERROR: Compilation failed with error code $exit_status"
                 exit $exit_status
             fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools
-            if [ -f "$sketchdir/ci.yml" ]; then
-                cp -f "$sketchdir/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+            # For multi-device tests, ci.yml lives in the parent test directory (-td),
+            # not in individual sketch directories.
+            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+            if [ -f "$ci_yml_source/ci.yml" ]; then
+                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
             # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
             #     -fqbn=\"$currfqbn\" \
@@ -396,14 +425,25 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         local sketchdirname
         local sketchname
         local has_requirements
+        local parent_dir
 
         sketchdir=$(dirname "$sketch")
         sketchdirname=$(basename "$sketchdir")
         sketchname=$(basename "$sketch")
+        parent_dir=$(dirname "$sketchdir")
 
         if [[ "$sketchdirname.ino" != "$sketchname" ]]; then
             continue
-        elif [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
+        # Skip sketches that are part of multi-device tests (they are built separately)
+        elif [[ -f "$parent_dir/ci.yml" ]]; then
+            local has_multi_device
+            has_multi_device=$(yq eval '.multi_device' "$parent_dir/ci.yml" 2>/dev/null)
+            if [[ "$has_multi_device" != "null" && "$has_multi_device" != "" ]]; then
+                continue
+            fi
+        fi
+
+        if [[ -n $target ]] && [[ -f $sketchdir/ci.yml ]]; then
             # If the target is listed as false, skip the sketch. Otherwise, include it.
             is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
             if [[ "$is_target" == "false" ]]; then
@@ -420,7 +460,8 @@ function count_sketches { # count_sketches <path> [target] [ignore-requirements]
         echo "$sketch" >> sketches.txt
         sketchnum=$((sketchnum + 1))
     done
-    return $sketchnum
+    # Echo count to stdout instead of using return code (which is limited to 0-255)
+    echo "$sketchnum"
 }
 
 function build_sketches { # build_sketches <ide_path> <user_path> <target> <path> <chunk> <total-chunks> [extra-options]
@@ -496,11 +537,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
 
     set +e
     if [ -n "$sketches_file" ]; then
-        count_sketches "$path" "$target" "0" "$sketches_file"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target" "0" "$sketches_file")
     else
-        count_sketches "$path" "$target"
-        local sketchcount=$?
+        local sketchcount=$(count_sketches "$path" "$target")
     fi
     set -e
     local sketches

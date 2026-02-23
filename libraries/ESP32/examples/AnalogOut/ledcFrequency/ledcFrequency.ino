@@ -8,6 +8,7 @@
  * Author: Tomas Pilny
  */
 
+#include <Arduino.h>
 #include "soc/soc_caps.h"
 #include <string>
 

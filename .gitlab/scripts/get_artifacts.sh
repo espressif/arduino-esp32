@@ -35,10 +35,6 @@ if [ -n "$error_message" ]; then
     exit 1
 fi
 
-# List all available artifacts for debugging
-echo "Available artifacts:"
-echo "$artifacts_response" | jq -r '.artifacts[]?.name // "No artifacts found"' 2>/dev/null || echo "Could not parse artifacts"
-
 # Find the download URL for our specific artifact
 download_url=$(echo "$artifacts_response" | jq -r ".artifacts[] | select(.name==\"test-bin-$TEST_CHIP-$TEST_TYPE\") | .archive_download_url" 2>/dev/null)
 

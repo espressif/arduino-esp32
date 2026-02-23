@@ -27,6 +27,7 @@
  * If NVS has already a dataset information, it will load it from there.
  */
 
+#include <Arduino.h>
 #include "OThreadCLI.h"
 #include "OThreadCLI_Util.h"
 

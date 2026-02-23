@@ -3,6 +3,7 @@
 
 */
 
+#include <Arduino.h>
 #include <ETH.h>
 
 #ifndef ETH_PHY_MDC

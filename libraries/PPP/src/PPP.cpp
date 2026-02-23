@@ -141,8 +141,8 @@ esp_modem_dce_t *PPPClass::handle() const {
 
 PPPClass::PPPClass()
   : _dce(NULL), _pin_tx(-1), _pin_rx(-1), _pin_rts(-1), _pin_cts(-1), _flow_ctrl(ESP_MODEM_FLOW_CONTROL_NONE), _pin_rst(-1), _pin_rst_act_low(true),
-    _pin_rst_delay(200), _pin(NULL), _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512), _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1),
-    _ppp_event_handle(0) {}
+    _pin_rst_delay(200), _boot_delay(100), _sendAtBurst(false), _pin(NULL), _apn(NULL), _rx_buffer_size(4096), _tx_buffer_size(512),
+    _mode(ESP_MODEM_MODE_COMMAND), _uart_num(UART_NUM_1), _ppp_event_handle(0) {}
 
 PPPClass::~PPPClass() {}
 
@@ -152,10 +152,15 @@ bool PPPClass::pppDetachBus(void *bus_pointer) {
   return true;
 }
 
-void PPPClass::setResetPin(int8_t rst, bool active_low, uint32_t reset_delay) {
+void PPPClass::setResetPin(int8_t rst, bool active_low, uint32_t reset_delay, uint32_t boot_delay) {
   _pin_rst = digitalPinToGPIONumber(rst);
   _pin_rst_act_low = active_low;
   _pin_rst_delay = reset_delay;
+  _boot_delay = boot_delay;
+}
+
+void PPPClass::sendAtBurst(bool en) {
+  _sendAtBurst = en;
 }
 
 bool PPPClass::setPins(int8_t tx, int8_t rx, int8_t rts, int8_t cts, esp_modem_flow_ctrl_t flow_ctrl) {
@@ -288,7 +293,7 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
     digitalWrite(_pin_rst, !_pin_rst_act_low);
     delay(_pin_rst_delay);
     digitalWrite(_pin_rst, _pin_rst_act_low);
-    delay(100);
+    delay(_boot_delay);
   }
 
   /* Start the DCE */
@@ -299,6 +304,13 @@ bool PPPClass::begin(ppp_modem_model_t model, uint8_t uart_num, int baud_rate) {
   }
 
   esp_modem_set_error_cb(_dce, _ppp_error_cb);
+
+  if (_sendAtBurst) {
+    // Send burst of AT to lock auto baurate on modem
+    for (int i = 0; i < 50; i++) {
+      esp_modem_at(_dce, "AT", NULL, 10);
+    }
+  }
 
   /* Wait for Modem to respond */
   if (_pin_rst >= 0) {
@@ -737,7 +749,7 @@ bool PPPClass::sms(const char *num, const char *message) {
 String PPPClass::cmd(const char *at_command, int timeout) {
   PPP_CMD_MODE_CHECK(String());
 
-  char out[128] = {0};
+  char out[CONFIG_ESP_MODEM_C_API_STR_MAX + 1] = {0};
   esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
   if (err != ESP_OK) {
     log_e("esp_modem_at failed %d %s", err, esp_err_to_name(err));
@@ -749,7 +761,7 @@ String PPPClass::cmd(const char *at_command, int timeout) {
 bool PPPClass::cmd(const char *at_command, String &response, int timeout) {
   PPP_CMD_MODE_CHECK(false);
 
-  char out[128] = {0};
+  char out[CONFIG_ESP_MODEM_C_API_STR_MAX + 1] = {0};
   esp_err_t err = esp_modem_at(_dce, at_command, out, timeout);
   response = String(out);
 

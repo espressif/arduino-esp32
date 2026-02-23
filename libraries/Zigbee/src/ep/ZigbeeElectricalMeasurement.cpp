@@ -292,7 +292,8 @@ bool ZigbeeElectricalMeasurement::reportDC(ZIGBEE_DC_MEASUREMENT_TYPE measuremen
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
@@ -597,16 +598,6 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
     default: log_e("Invalid measurement type"); return false;
   }
 
-  [[maybe_unused]]
-  int16_t int16_min_value = (int16_t)min_value;
-  [[maybe_unused]]
-  int16_t int16_max_value = (int16_t)max_value;
-  [[maybe_unused]]
-  uint16_t uint16_min_value = (uint16_t)min_value;
-  [[maybe_unused]]
-  uint16_t uint16_max_value = (uint16_t)max_value;
-
-  //TODO: Log info about min and max values for different measurement types
   switch (measurement_type) {
     case ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE:
       switch (phase_type) {
@@ -668,15 +659,32 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
 
   esp_err_t ret = ESP_OK;
-  ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_min_id, (void *)&min_value);
-  if (ret != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_max_id, (void *)&max_value);
-  if (ret != ESP_OK) {
-    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
+  if (measure_type == ZIGBEE_AC_MEASUREMENT_TYPE_POWER) {
+    int16_t int16_min_value = (int16_t)min_value;
+    int16_t int16_max_value = (int16_t)max_value;
+    ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_min_id, (void *)&int16_min_value);
+    if (ret != ESP_OK) {
+      log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
+    ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_max_id, (void *)&int16_max_value);
+    if (ret != ESP_OK) {
+      log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
+  } else {
+    uint16_t uint16_min_value = (uint16_t)min_value;
+    uint16_t uint16_max_value = (uint16_t)max_value;
+    ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_min_id, (void *)&uint16_min_value);
+    if (ret != ESP_OK) {
+      log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
+    ret = esp_zb_cluster_update_attr(electrical_measurement_cluster, attr_max_id, (void *)&uint16_max_value);
+    if (ret != ESP_OK) {
+      log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
+      return false;
+    }
   }
   return true;
 }
@@ -977,7 +985,8 @@ bool ZigbeeElectricalMeasurement::reportAC(ZIGBEE_AC_MEASUREMENT_TYPE measuremen
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ELECTRICAL_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);

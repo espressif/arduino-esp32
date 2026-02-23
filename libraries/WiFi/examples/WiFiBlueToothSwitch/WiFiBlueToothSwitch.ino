@@ -15,6 +15,7 @@
 // Sketch shows how to switch between WiFi and BlueTooth or use both
 // Button is attached between GPIO 0 and GND and modes are switched with each press
 
+#include <Arduino.h>
 #include "soc/soc_caps.h"
 #if !CONFIG_SOC_BT_SUPPORTED
 #error "This example requires native Bluetooth support"

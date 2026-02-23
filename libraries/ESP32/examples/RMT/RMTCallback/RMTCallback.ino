@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <Arduino.h>
+
 /**
  * @brief This example demonstrate how to use a C++ Class to read several GPIO RMT signals
  * calling a data processor when data is available in background, using tasks.

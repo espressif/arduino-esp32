@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 void setup() {
   //setup on pin 18 with frequency 312500 Hz
   sigmaDeltaAttach(18, 312500);

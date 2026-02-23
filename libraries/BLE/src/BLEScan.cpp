@@ -338,7 +338,7 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
 
           // Examine our list of previously scanned addresses and, if we found this one already,
           // ignore it.
-          BLEAddress advertisedAddress(param->scan_rst.bda);
+          BLEAddress advertisedAddress(param->scan_rst.bda, param->scan_rst.ble_addr_type);
           bool found = false;
           bool shouldDelete = true;
 
@@ -566,6 +566,14 @@ bool BLEScan::stop() {
   log_v("<< stop()");
   return true;
 }  // stop
+
+/**
+ * @brief Get the status of the scanner.
+ * @return true if scanning is active.
+ */
+bool BLEScan::isScanning() {
+  return !m_stopped;
+}  // isScanning
 
 #endif  // CONFIG_BLUEDROID_ENABLED
 

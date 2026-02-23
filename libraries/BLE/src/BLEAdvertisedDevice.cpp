@@ -83,7 +83,6 @@ BLEAdvertisedDevice::BLEAdvertisedDevice(const BLEAdvertisedDevice &other) {
   m_pScan = other.m_pScan;
   m_advType = other.m_advType;
   m_address = other.m_address;
-  m_addressType = other.m_addressType;
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   m_callbackSent = other.m_callbackSent;
@@ -130,7 +129,6 @@ BLEAdvertisedDevice &BLEAdvertisedDevice::operator=(const BLEAdvertisedDevice &o
   m_pScan = other.m_pScan;
   m_advType = other.m_advType;
   m_address = other.m_address;
-  m_addressType = other.m_addressType;
 
 #if defined(CONFIG_NIMBLE_ENABLED)
   m_callbackSent = other.m_callbackSent;
@@ -768,7 +766,7 @@ uint8_t *BLEAdvertisedDevice::getPayload() {
 }
 
 uint8_t BLEAdvertisedDevice::getAddressType() {
-  return m_addressType;
+  return m_address.getType();
 }
 
 ble_frame_type_t BLEAdvertisedDevice::getFrameType() {
@@ -788,7 +786,7 @@ ble_frame_type_t BLEAdvertisedDevice::getFrameType() {
 }
 
 void BLEAdvertisedDevice::setAddressType(uint8_t type) {
-  m_addressType = type;
+  m_address.setType(type);
 }
 
 size_t BLEAdvertisedDevice::getPayloadLength() {

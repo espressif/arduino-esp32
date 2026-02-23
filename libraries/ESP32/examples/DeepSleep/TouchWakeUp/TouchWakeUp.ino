@@ -14,6 +14,8 @@ Author:
 Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
+#include <Arduino.h>
+
 #if CONFIG_IDF_TARGET_ESP32
 #define THRESHOLD 40 /* Greater the value, more the sensitivity */
 #elif (CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3)

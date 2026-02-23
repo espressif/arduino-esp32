@@ -10,6 +10,8 @@
  *
  */
 
+#include <Arduino.h>
+
 // soc/soc_caps.h has information about each SoC target
 // in this example, we use SOC_UART_HP_NUM that goes from 1 to 3,
 // depending on the number of available UARTs in the ESP32xx

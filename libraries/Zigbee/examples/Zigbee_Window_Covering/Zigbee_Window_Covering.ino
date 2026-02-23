@@ -31,6 +31,7 @@
  * Created by hennikul and Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ED
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif

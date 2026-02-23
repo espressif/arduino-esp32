@@ -100,26 +100,29 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
         test_type = m.group(2)
         print(f"[DEBUG] Artifact group target={target} type={test_type} dir={artifact_dir}", file=sys.stderr)
 
-        # Group build*.tmp directories by sketch
-        # Structure: test-bin-<target>-<type>/<sketch>/build*.tmp/
-        sketches_processed = set()
+        # Find all build*.tmp directories and determine test names.
+        # Directory layout:
+        #   Single-device: test-bin-<target>-<type>/<test>/build*.tmp/
+        #   Multi-device:  test-bin-<target>-<type>/<test>/<device>/build*.tmp/
+        # The test name is always the first path component after the artifact group.
+        tests_processed = set()
 
-        # Find all build*.tmp directories and process each sketch once
         for build_tmp in artifact_dir.rglob("build*.tmp"):
             if not build_tmp.is_dir():
                 continue
             if not re.search(r"build\d*\.tmp$", build_tmp.name):
                 continue
 
-            # Path structure is: test-bin-<target>-<type>/<sketch>/build*.tmp/
-            sketch = build_tmp.parent.name
+            # Test name is always the first directory component after the artifact group
+            rel = build_tmp.relative_to(artifact_dir)
+            effective_sketch = rel.parts[0]
 
-            # Skip if we already processed this sketch
-            if sketch in sketches_processed:
+            # Skip if we already processed this test
+            if effective_sketch in tests_processed:
                 continue
-            sketches_processed.add(sketch)
+            tests_processed.add(effective_sketch)
 
-            print(f"[DEBUG]  Processing sketch={sketch} from artifact {artifact_dir.name}", file=sys.stderr)
+            print(f"[DEBUG]  Processing test={effective_sketch} from artifact {artifact_dir.name}", file=sys.stderr)
 
             ci_path = build_tmp / "ci.yml"
             sdk_path = build_tmp / "sdkconfig"
@@ -164,7 +167,7 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
                 "requires_any": ci.get("requires_any") or [],
             }
             if not _sdkconfig_meets(minimal, sdk_text):
-                print(f"[DEBUG]   Skip (requirements not met): target={target} type={test_type} sketch={sketch}", file=sys.stderr)
+                print(f"[DEBUG]   Skip (requirements not met): target={target} type={test_type} sketch={effective_sketch}", file=sys.stderr)
                 continue
 
             # Expected runs = number from fqbn_counts in ci.yml (how many FQBNs for this target)
@@ -172,10 +175,10 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
             print(f"[DEBUG]   ci.yml specifies {exp_runs} FQBN(s) for target={target}", file=sys.stderr)
 
             for plat in allowed_platforms:
-                expected[(plat, target, test_type, sketch)] = exp_runs
-                print(f"[DEBUG]   Expected: plat={plat} target={target} type={test_type} sketch={sketch} runs={exp_runs}", file=sys.stderr)
+                expected[(plat, target, test_type, effective_sketch)] = exp_runs
+                print(f"[DEBUG]   Expected: plat={plat} target={target} type={test_type} sketch={effective_sketch} runs={exp_runs}", file=sys.stderr)
 
-        if len(sketches_processed) == 0:
+        if len(tests_processed) == 0:
             print(f"[DEBUG]  No sketches found in this artifact group", file=sys.stderr)
     return expected
 

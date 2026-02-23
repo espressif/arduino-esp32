@@ -9,6 +9,7 @@
  by Martin Sloup (Arcao)
 */
 
+#include <Arduino.h>
 #include <Preferences.h>
 
 Preferences preferences;

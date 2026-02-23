@@ -779,7 +779,7 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
     return true;
   }
 
-  esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
+  esp_err_t err = esp_wifi_set_ps(sleepType);
   if (err != ESP_OK) {
     log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
     return false;

@@ -15,6 +15,7 @@
 // Matter Simple Blinds Example
 // This is a minimal example that only controls Lift percentage using a single onGoToLiftPercentage() callback
 
+#include <Arduino.h>
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space

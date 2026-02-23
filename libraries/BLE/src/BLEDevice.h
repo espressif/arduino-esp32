@@ -181,7 +181,7 @@ public:
   static BLEServer *getServer();
   static BLEScan *getScan();
   static String getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID);
-  static void init(String deviceName);
+  static bool init(String deviceName = "");
   static void setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
   static int getPower(esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
   static void setValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID, String value);
@@ -229,6 +229,7 @@ public:
   static void onReset(int reason);
   static void onSync(void);
   static void host_task(void *param);
+  static String getDeviceName();
   static bool setOwnAddrType(uint8_t type);
   static bool setOwnAddr(BLEAddress &addr);
   static bool setOwnAddr(uint8_t *addr);
@@ -270,6 +271,7 @@ private:
   static BLEDeviceCallbacks defaultDeviceCallbacks;
   static BLEDeviceCallbacks *m_pDeviceCallbacks;
   static ble_gap_event_listener m_listener;
+  static String m_deviceName;
 #endif
 
   /***************************************************************************

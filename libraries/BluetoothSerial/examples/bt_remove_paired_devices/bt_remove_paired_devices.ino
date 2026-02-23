@@ -11,6 +11,7 @@
 // The only remedy is to delete this saved bound device from your device flash memory
 // and pair with the other device again.
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 //#include "esp_bt_device.h"
 

@@ -357,7 +357,7 @@ bool STAClass::connect() {
  * @param passphrase const char *   Optional. Passphrase. Valid characters in a passphrase must be between ASCII 32-126 (decimal).
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
- * @param connect                   Optional. call connect
+ * @param tryConnect                Optional. call connect
  * @return
  */
 bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel, const uint8_t *bssid, bool tryConnect) {
@@ -437,7 +437,7 @@ bool STAClass::connect(const char *ssid, const char *passphrase, int32_t channel
  * @param client_key const char*        Pointer to a string with the contents of a .key file with client key
  * @param bssid uint8_t[6]          Optional. BSSID / MAC of AP
  * @param channel                   Optional. Channel of AP
- * @param connect                   Optional. call connect
+ * @param tryConnect                Optional. call connect
  * @return
  */
 bool STAClass::connect(

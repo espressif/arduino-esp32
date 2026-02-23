@@ -10,6 +10,7 @@ for a more in-depth explanation of the packet format.
 
 For the spec please visit: https://www.midi.org/specifications-old/item/usb-midi-1-0-specification
 */
+#include <Arduino.h>
 #if ARDUINO_USB_MODE
 #warning This sketch should be used when USB is in OTG mode
 void setup() {}

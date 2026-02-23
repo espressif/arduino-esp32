@@ -9,6 +9,7 @@ This document explains how the Continuous Integration and Continuous Deployment 
 - [Workflows](#workflows)
   - [Compilation Tests](#compilation-tests-pushyml)
   - [Runtime Tests](#runtime-tests)
+  - [Multi-Device (Multi-DUT) Tests](#multi-device-multi-dut-tests)
   - [IDF Component Build](#idf-component-build-build_componentyml)
   - [Board Validation](#board-validation-boardsyml)
   - [Library Tests](#library-tests-libyml)
@@ -19,6 +20,7 @@ This document explains how the Continuous Integration and Continuous Deployment 
   - [Pre-commit](#pre-commit-pre-commityml-pre-commit-statusyml)
   - [CodeQL Security](#codeql-security-codeqlyml)
   - [Build Python Tools](#build-python-tools-build_py_toolsyml)
+  - [Backlog Bot](#backlog-bot-backlog-botyml)
 - [Scripts](#scripts)
 - [Adding a New SoC](#adding-a-new-soc)
 - [Official Variants Filter](#official-variants-filter)
@@ -73,7 +75,16 @@ The configuration defines several target lists for different purposes:
 #### Special Lists
 
 - **`ALL_SOCS`** - Complete list of all supported SoCs
+- **`CORE_VARIANTS`** - SoC variants used for packaging/release flows (includes variant-specific entries)
 - **`SKIP_LIB_BUILD_SOCS`** - SoCs without pre-built libraries (e.g., esp32c2, esp32c61)
+- **`CORE_SOCS`** - Computed list of buildable SoCs (ALL_SOCS minus SKIP_LIB_BUILD_SOCS)
+
+#### Exported CSV Helpers
+
+For compatibility with scripts and workflows that consume CSV strings, the config exports:
+- **`ALL_SOCS_CSV`**, **`CORE_SOCS_CSV`**, **`CORE_VARIANTS_CSV`**
+- **`HW_TEST_TARGETS_CSV`**, **`WOKWI_TEST_TARGETS_CSV`**, **`QEMU_TEST_TARGETS_CSV`**
+- **`BUILD_TEST_TARGETS_CSV`**, **`IDF_COMPONENT_TARGETS_CSV`**
 
 ### Helper Functions
 
@@ -110,12 +121,26 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 - Push to `master` or `release/*` branches
 - Pull requests modifying:
   - `cores/**`
-  - `libraries/**/*.{cpp,c,h,ino}`
+  - `libraries/**/*.cpp`
+  - `libraries/**/*.c`
+  - `libraries/**/*.h`
+  - `libraries/**/*.ino`
   - `libraries/**/ci.yml`
   - `package/**`
+  - `tools/get.*`
+  - `package.json`
+  - `platform.txt`
+  - `programmers.txt`
   - `variants/**`
   - `.github/workflows/push.yml`
-  - `.github/scripts/install-*`, `on-push.sh`, `sketch_utils.sh`, `get_affected.py`, `socs_config.sh`
+  - `.github/scripts/install-*`
+  - `.github/scripts/on-push.sh`
+  - `.github/scripts/sketch_utils.sh`
+  - `.github/scripts/get_affected.py`
+  - `.github/scripts/socs_config.sh`
+  - `!*.md`
+  - `!*.txt`
+  - `!*.properties`
 - Schedule: Every Sunday at 2:00 UTC (verbose logging)
 - Manual workflow dispatch (with configurable log level)
 
@@ -168,7 +193,7 @@ The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine w
 7. Upload compile results JSON
 
 **SoC Config Usage:**
-The build script sources `socs_config.sh` and iterates through all targets in `BUILD_TEST_TARGETS`, building sketches for each SoC variant.
+The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_SOCS minus SKIP_LIB_BUILD_SOCS), building sketches for each supported SoC.
 
 **Environment Variables:**
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
@@ -234,8 +259,8 @@ The build script sources `socs_config.sh` and iterates through all targets in `B
 The runtime test system is a multi-stage pipeline that builds test sketches once and then executes them across multiple platforms (QEMU emulator, physical hardware, and Wokwi simulator). The system uses GitHub Actions for orchestration and building, while actual hardware tests run in GitLab CI for access to the internal test lab.
 
 **Trigger:**
-- Pull requests affecting test code, cores, libraries, or infrastructure
-- Daily schedule for comprehensive testing
+- Pull requests that touch tests, cores, libraries, or CI scripts/workflows
+- Daily schedule (00:00 UTC)
 - Manual workflow dispatch
 
 **Purpose:**
@@ -318,8 +343,12 @@ The main workflow coordinates the initial testing stages using GitHub Actions wo
 
 **Test Type Logic:**
 - **PRs**: Only validation tests (fast feedback)
-- **Scheduled runs**: Both validation and performance tests
-- **PR with `perf_test` label**: Both validation and performance tests
+- **Scheduled runs**: Validation + performance builds (hardware-only execution)
+- **PR with `perf_test` label**: Validation + performance builds (hardware-only execution)
+
+**Platform Gates:**
+- **Hardware tests** require `GITLAB_ACCESS_TOKEN`; on PRs they also require the `hil_test` label
+- **Wokwi tests** require `WOKWI_CLI_TOKEN`
 
 **Concurrency**: Cancels in-progress runs for same PR to save resources
 
@@ -546,6 +575,8 @@ Each test directory contains:
 Defines test requirements and platform support:
 - `targets: {chip: true/false}` - Which SoCs support this test
 - `platforms: {platform: true/false}` - Which platforms can run it
+- `tags: [tag1, tag2]` - Runner tags or infrastructure constraints (hardware tests)
+- `multi_device: {device0: sketchA, device1: sketchB}` - Multi-DUT test mapping
 - `requires: [CONFIG_X=y]` - Required sdkconfig settings
 - `requires_or: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements
 - `libs: [Library1, Library2]` - Required libraries
@@ -567,6 +598,17 @@ platforms:
 requires:
   - CONFIG_SOC_WIFI_SUPPORTED=y
 ```
+
+### Multi-Device (Multi-DUT) Tests
+
+Some tests require two physical devices (e.g., BLE server/client, WiFi AP/client). These are defined using the `multi_device` field in `ci.yml`, where each entry points to a sketch directory for that device.
+
+**How it works:**
+- `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>/<sketch>/build.tmp`.
+- `tests_run.sh` assembles multiple build directories and ports using `|` separators, then runs pytest with `--count` and `--embedded-services` for each DUT.
+- Only **2 devices** are supported currently.
+- **Hardware only**: multi-device tests are blocked for Wokwi and QEMU.
+- Set ports via `ESPPORT1` and `ESPPORT2` (single-device tests can use `ESPPORT`).
 
 **Test Execution:**
 The test runner (`tests_run.sh`) automatically:
@@ -601,12 +643,23 @@ This multi-platform approach ensures comprehensive testing while maintaining rea
 - Push to `master` or `release/*` branches
 - Pull requests modifying:
   - `cores/**`
-  - `libraries/**/*.{cpp,c,h}`
+  - `libraries/**/*.cpp`
+  - `libraries/**/*.c`
+  - `libraries/**/*.h`
   - `idf_component_examples/**`
-  - `idf_component.yml`, `Kconfig.projbuild`, `CMakeLists.txt`
+  - `idf_component.yml`
+  - `Kconfig.projbuild`
+  - `CMakeLists.txt`
   - `variants/**`
+  - `.github/workflows/build_component.yml`
+  - `.github/scripts/check-cmakelists.sh`
+  - `.github/scripts/on-push-idf.sh`
+  - `.github/scripts/sketch_utils.sh`
+  - `.github/scripts/get_affected.py`
   - `.github/scripts/socs_config.sh`
-  - Workflow and script files
+  - `!*.md`
+  - `!*.txt`
+  - `!*.properties`
 - Manual workflow dispatch with customizable IDF versions/targets
 
 **Purpose:** Ensure Arduino core works correctly as an ESP-IDF component
@@ -614,6 +667,10 @@ This multi-platform approach ensures comprehensive testing while maintaining rea
 **Inputs (Manual Dispatch):**
 - `idf_ver`: Comma-separated IDF branches (default: "release-v5.5")
 - `idf_targets`: Comma-separated targets (default: empty = use version-specific defaults)
+
+**Default Matrix (PRs/Pushes):**
+- Versions: `release-v5.3`, `release-v5.4`, `release-v5.5`
+- Targets: derived from `get_targets_for_idf_version()` unless overridden
 
 **Jobs:**
 
@@ -635,7 +692,16 @@ The script compares source files found in the repository against files listed in
 **Why Important:**
 ESP-IDF's CMake-based build system requires explicit source file listing. Missing files won't compile, extra files indicate stale CMakeLists.txt. This check prevents both issues.
 
-##### 2. `set-matrix`
+##### 2. `check-examples`
+**Runs on:** Ubuntu-latest
+
+**Purpose:** Ensure `idf_component_examples/` matches `idf_component.yml` declarations
+
+**Steps:**
+1. Checkout repository
+2. Compare folders in `idf_component_examples/` with `idf_component.yml` entries
+
+##### 3. `set-matrix`
 **Runs on:** Ubuntu-latest
 
 **Purpose:** Generate IDF version × target matrix
@@ -659,7 +725,7 @@ The script sources `socs_config.sh` and creates combinations of IDF versions and
 
 The resulting matrix includes all combinations of supported IDF versions and their respective targets. For example, v5.3 might have 8 targets while v5.5 has 10 (including esp32c5 and esp32c61).
 
-##### 3. `build-esp-idf-component`
+##### 4. `build-esp-idf-component`
 **Runs on:** Ubuntu-latest
 
 **Conditions:**
@@ -884,10 +950,14 @@ The file lists popular Arduino libraries with their names, which examples to tes
 ### Documentation (`docs_build.yml`, `docs_deploy.yml`)
 
 **Trigger:**
-- Push to `master` or `release/*`
-- Pull requests modifying `docs/**`
+- `docs_build.yml`:
+  - Push to `master` or `release/v2.x` (docs or workflow file changes)
+  - Pull requests modifying `docs/**` or the workflow file
+- `docs_deploy.yml`:
+  - `workflow_run` after **ESP32 Arduino Release**
+  - Push to `master` or `release/v2.x` when docs change
 
-**Purpose:** Build and deploy Sphinx documentation to GitHub Pages
+**Purpose:** Build and deploy Sphinx documentation to the production docs server
 
 **Jobs:**
 
@@ -896,57 +966,60 @@ The file lists popular Arduino libraries with their names, which examples to tes
 2. Install documentation dependencies
 3. Build HTML from RST files
 4. Check for warnings/errors
-5. Upload built docs
+5. Upload built docs as an artifact
 
 ##### `docs_deploy.yml`
-**Conditions:** Only on push to master
+**Conditions:** Only runs in `espressif/arduino-esp32`
 
-1. Download built docs
-2. Deploy to gh-pages branch
-3. Available at `espressif.github.io/arduino-esp32`
+1. Build docs
+2. Deploy to production server using `DOCS_*` secrets
+3. Publishes to the configured docs URL
 
 ### Release (`release.yml`)
 
 **Trigger:**
-- Manual workflow dispatch with:
-  - `release_tag` - Version to release (e.g., "3.0.0")
-  - `git_ref` - Branch/tag to release from
-- Push of tags matching version pattern
+- GitHub release event (`published`)
 
 **Purpose:** Create GitHub releases and publish packages
 
 **Jobs:**
 
-##### 1. `validate-release`
+##### 1. `build`
 **Steps:**
-- Check tag format
-- Verify package.json version matches
-- Ensure changelog is updated
+1. Checkout release target commit
+2. Run `on-release.sh` to:
+   - Build ZIP/XZ core package
+   - Download and repackage libs into per-SoC archives
+   - Update `package_esp32_*` JSONs (including CN variants)
+   - Stage hosted binaries extracted from libs
+3. Upload `build/` output and `hosted/` artifacts
 
-##### 2. `build-package`
-**Steps:**
-1. Checkout at release tag
-2. Run `tools/get.py` to download all platform tools
-3. Package libraries, cores, variants, tools
-4. Generate `package_esp32_index.json`
-5. Calculate checksums
+##### 2. `test-package`
+**Runs on:** Windows, macOS, Ubuntu
 
-##### 3. `create-release`
 **Steps:**
-1. Create GitHub release with tag
-2. Upload package artifacts
-3. Generate release notes from changelog
-4. Mark as pre-release if beta/rc version
+- Download `build/` artifacts
+- Run `test-package-json.sh` to validate package installation
 
-##### 4. `upload-idf-component`
+##### 3. `upload-and-finalize`
 **Steps:**
-- Upload to ESP-IDF component registry
-- Uses `upload-idf-component.yml` workflow
-- Published at `components.espressif.com`
+- Upload package JSONs to GitHub Releases and GitHub Pages
+- Use `upload-release-assets.sh` to update version commit and retag if needed
+
+##### 4. `upload-hosted-binaries`
+**Steps:**
+- Copy new `esp-hosted` binaries to `gh-pages/hosted`
+- Commit and push if new binaries are present
+
+**Optional S3 Upload:**
+- `ENABLE_S3=true` with `S3_BUCKET_*` vars uploads per-SoC libs ZIPs to S3
+- Otherwise libs are attached to the GitHub release
 
 ### Size Reporting (`publishsizes.yml`, `publishsizes-2.x.yml`)
 
-**Trigger:** Completion of `push.yml` on PRs
+**Trigger:**
+- `publishsizes.yml`: `workflow_run` after **Compilation Tests** (PRs), plus manual dispatch
+- `publishsizes-2.x.yml`: manual dispatch (master vs `v2.x` comparison)
 
 **Purpose:** Post compile size comparison comment to PR
 
@@ -962,7 +1035,10 @@ The file lists popular Arduino libraries with their names, which examples to tes
 
 ### Pre-commit (`pre-commit.yml`, `pre-commit-status.yml`)
 
-**Trigger:** Pull requests
+**Trigger:**
+- Push to `master`
+- Pull requests (opened/reopened/synchronize/labeled)
+- Manual workflow dispatch
 
 **Purpose:** Run code quality checks
 
@@ -971,6 +1047,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
 - Checks code formatting
 - Validates file structure
 - Ensures style guidelines
+- PRs only run when labeled `Status: Pending Merge` or `Re-trigger Pre-commit Hooks`
 
 **pre-commit-status.yml:**
 - Reports pre-commit status to PR
@@ -979,9 +1056,9 @@ The file lists popular Arduino libraries with their names, which examples to tes
 ### CodeQL Security (`codeql.yml`)
 
 **Trigger:**
-- Schedule: Weekly
-- Push to master
-- Pull requests to master
+- Manual workflow dispatch
+- Push to `master`
+- Pull requests that touch source or workflow files (`**/*.{c,cpp,h,ino,py}` and `.github/workflows/*`)
 
 **Purpose:** Security vulnerability scanning
 
@@ -1115,6 +1192,10 @@ ubuntu-24.04-arm: TARGET: arm,        EXTEN: (none), SEPARATOR: :
    - Commits and pushes to PR branch
    - Only Windows binaries are committed (Linux/macOS built on user machines)
 
+**Windows Signing Notes:**
+- Signing runs only on the Windows matrix job and uses Azure Key Vault credentials.
+- Signed `.exe` artifacts are uploaded and the Windows binaries are committed back to the PR branch.
+
 9. **Archive artifact**:
    - Uploads built binaries as GitHub Actions artifacts
    - Artifact name: `pytools-{TARGET}`
@@ -1138,6 +1219,22 @@ When a developer modifies `tools/espota.py` and creates a PR, this workflow auto
 6. Uploads all platform binaries as artifacts
 
 This ensures the pre-compiled tools stay in sync with source code, and Windows users get properly signed executables that won't trigger security warnings.
+
+### Backlog Bot (`backlog-bot.yml`)
+
+**Trigger:**
+- Manual workflow dispatch (supports `dry-run` input)
+
+**Purpose:** Manage stale issues and keep the backlog tidy
+
+**Behavior (backlog-cleanup.js):**
+- Processes **issues only** (pull requests are skipped)
+- Skips issues with exempt labels
+- Adds **Move to Discussion** label to `Type: Question`
+- Closes issues with `Status: Awaiting Response` or no assignees after 90+ days of inactivity
+- Posts a friendly reminder on stale assigned issues (at most once every 7 days)
+
+**Permissions:** `issues: write`, `discussions: write`, `contents: read`
 
 ---
 
@@ -1248,6 +1345,12 @@ bash .github/scripts/check_official_variants.sh \
 
 #### `install-*.sh`
 **Purpose:** Install Arduino CLI, IDE, and core
+
+#### Release Scripts
+- **`on-release.sh`** - Builds release packages and generates package JSONs
+- **`upload-release-assets.sh`** - Uploads JSONs to release/Pages and updates version commit
+- **`lib-github-release.sh`** - Helper functions for upload and GH API operations
+- **`release_append_cn.py`** - Adds CN mirror metadata to package JSONs
 
 ---
 

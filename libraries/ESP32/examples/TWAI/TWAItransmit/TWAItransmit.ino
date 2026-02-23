@@ -10,6 +10,7 @@
   created 27-06-2023 by Stephan Martin (designer2k2)
 */
 
+#include <Arduino.h>
 #include "driver/twai.h"
 
 // Pins used to connect to CAN bus transceiver:

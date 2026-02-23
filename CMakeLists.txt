@@ -58,6 +58,7 @@ set(CORE_SRCS
   cores/esp32/HardwareSerial.cpp
   cores/esp32/HashBuilder.cpp
   cores/esp32/HEXBuilder.cpp
+  cores/esp32/idf_openthread_mpool_wrapper.c
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
@@ -427,11 +428,50 @@ if(CONFIG_AUTOSTART_ARDUINO)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
 endif()
 
-# Add linker wrap flags for esp_log functions when CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP is not enabled
-# This provides wrapper functions required by WiFi library even when esp_diagnostics is not active
+# Fix for WiFi/Bluetooth linker errors when CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP is not enabled
+#
+# Problem:
+#   WiFi and Bluetooth binary libraries reference __wrap_esp_log_write functions.
+#   When CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP=y, esp_diagnostics provides these wrappers.
+#   When not set, no component provides them, causing "undefined reference" linker errors.
+#
+# Solution:
+#   cores/esp32/esp32-hal-log-wrapper.c provides simple pass-through wrapper implementations
+#   that forward calls to the real ESP-IDF logging functions without additional processing.
+#
+# Two linker flags are required:
+#
+# 1. --wrap=symbol: Sets up the wrapping/redirection mechanism
+#    Effect: esp_log_write() calls → redirected to → __wrap_esp_log_write()
+#            __real_esp_log_write() → created as alias → original esp_log_write()
+#    Note: Applied at build level (idf_build_set_property) so it works when Arduino is a component
+#
+# 2. -u symbol: Forces inclusion of wrapper symbols from static library
+#    Why needed: Static library linking is "lazy" - only pulls objects with referenced symbols.
+#                Without -u, linker sees wrapper as unreferenced and drops it from the library.
+#                The -u flag marks symbols as "undefined", forcing linker to search and include them.
+#    Analogy: Same technique used for setup()/loop() symbols (see above)
 if(NOT CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP)
-    target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_write")
-    target_link_libraries(${COMPONENT_LIB} INTERFACE "-Wl,--wrap=esp_log_writev")
+    idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_write" APPEND)
+    idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_writev" APPEND)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u __wrap_esp_log_write" "-u __wrap_esp_log_writev")
+endif()
+
+# OpenThread message pool: redirect to Arduino wrapper (BOARD_HAS_PSRAM / PSRAM-aware allocation).
+# Same pattern as esp_log wrap: --wrap so calls use __wrap_* ; -u so linker keeps our wrapper .o.
+# Applied on OpenThread-capable targets (same targets that may add openthread to requires).
+if(CONFIG_OPENTHREAD_ENABLED AND CONFIG_SOC_IEEE802154_SUPPORTED)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolInit" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNew" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolFree" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolDeinit" APPEND)
+  target_link_libraries(${COMPONENT_LIB} INTERFACE
+    "-u __wrap_otPlatMessagePoolInit"
+    "-u __wrap_otPlatMessagePoolNew"
+    "-u __wrap_otPlatMessagePoolFree"
+    "-u __wrap_otPlatMessagePoolNumFreeBuffers"
+    "-u __wrap_otPlatMessagePoolDeinit")
 endif()
 
 # This function adds a dependency on the given component if the component is included into the build.
