@@ -1,0 +1,6 @@
+platforms:
+  hardware: false
+  qemu: false
+
+requires:
+  - CONFIG_SOC_USB_OTG_SUPPORTED=y
