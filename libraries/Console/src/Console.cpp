@@ -14,6 +14,9 @@
 #include "esp_console.h"
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
+#include "esp_idf_version.h"
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 
 // Linenoise read function that reads from Arduino Serial instead of VFS stdin.
 // Serial.begin() installs the UART/USB driver whose ISR drains the hardware
@@ -81,6 +84,8 @@ static bool _probeVT100() {
 
   return (read_bytes >= 4 && response[0] == '\x1b' && response[1] == '[' && response[2] == '0' && response[3] == 'n');
 }
+
+#endif
 
 // ---------------------------------------------------------------------------
 // Constructor
@@ -318,12 +323,17 @@ bool ConsoleClass::removeCmd(const char *name) {
     log_e("Console not initialized");
     return false;
   }
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
   esp_err_t err = esp_console_cmd_deregister(name);
   if (err != ESP_OK) {
     log_e("Failed to deregister command '%s': %s", name, esp_err_to_name(err));
     return false;
   }
   return true;
+#else
+  log_e("Commands cannot be deregistered in this version of ESP-IDF");
+  return false;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -348,12 +358,17 @@ bool ConsoleClass::removeHelpCmd() {
     log_e("Console not initialized");
     return false;
   }
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
   esp_err_t err = esp_console_deregister_help_command();
   if (err != ESP_OK) {
     log_e("Failed to deregister help command: %s", esp_err_to_name(err));
     return false;
   }
   return true;
+#else
+  log_e("Help command cannot be deregistered in this version of ESP-IDF");
+  return false;
+#endif
 }
 
 bool ConsoleClass::setHelpVerboseLevel(int level) {
@@ -361,6 +376,7 @@ bool ConsoleClass::setHelpVerboseLevel(int level) {
     log_e("Console not initialized");
     return false;
   }
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
   if (level < 0 || level >= ESP_CONSOLE_HELP_VERBOSE_LEVEL_MAX_NUM) {
     log_e("Invalid verbose level: %d", level);
     return false;
@@ -371,6 +387,10 @@ bool ConsoleClass::setHelpVerboseLevel(int level) {
     return false;
   }
   return true;
+#else
+  log_e("Help verbose level cannot be set in this version of ESP-IDF");
+  return false;
+#endif
 }
 
 // ---------------------------------------------------------------------------
@@ -385,17 +405,28 @@ void ConsoleClass::_replTask(void *arg) {
   // avoiding the race between the UART ISR and VFS read().
   if (!self->_forceMode) {
     log_d("Probing for VT100 support");
-    bool vt100 = _probeVT100();
+    bool vt100;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+    vt100 = _probeVT100();
+#else
+    vt100 = linenoiseProbe() == 0;
+#endif
     log_d("VT100 probe result: %s", vt100 ? "supported" : "not supported");
     linenoiseSetDumbMode(!vt100);
   }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
   // Install our Serial-based read function for linenoise.  This bypasses the
   // VFS stdin path entirely, reading from the same ring buffer that the
   // UART/USB driver ISR fills.  This avoids the race between the ISR and VFS
   // simplified read() that causes lost bytes, and works for UART, USB CDC,
   // and HWCDC.
+
+  // For older versions of ESP-IDF the read function cannot be overridden.
+  // This means that the console will only work with regular UART and or HWCDC
+  // depending on the sdkconfig.
   linenoiseSetReadFunction(_serialRead);
+#endif
 
   while (self->_replStarted) {
     char *line = linenoise(self->_prompt);

@@ -12,6 +12,8 @@
 #include <Console.h>
 #include <LittleFS.h>
 #include <unity.h>
+#include "linenoise/linenoise.h"
+#include "argtable3/argtable3.h"
 
 #define HISTORY_PATH "/console_history.txt"
 
