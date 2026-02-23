@@ -589,7 +589,7 @@ Arduino-esp32 Console API
 
 
 ``attachToSerial``
-*****************
+******************
 
    Attach or detach the console from the serial port.
 
