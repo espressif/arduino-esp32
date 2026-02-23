@@ -3,13 +3,13 @@
  *
  * Covers APIs not shown in the basic examples:
  *
- *   - addCmdWithContext()      — pass state to a command via a context pointer
- *   - removeCmd()              — unregister a command at runtime
- *   - stopRepl() / beginRepl() — pause and resume the REPL
- *   - setHelpVerboseLevel()    — toggle brief / verbose help output
- *   - clearScreen()            — clear the terminal
- *   - setPlainMode()           — force plain (non-VT100) input
- *   - setMultiLine()           — enable multi-line editing
+ *   - addCmdWithContext()        — pass state to a command via a context pointer
+ *   - removeCmd()                — unregister a command at runtime
+ *   - attachToSerial(false/true) — pause and resume the REPL
+ *   - setHelpVerboseLevel()      — toggle brief / verbose help output
+ *   - clearScreen()              — clear the terminal
+ *   - setPlainMode()             — force plain (non-VT100) input
+ *   - setMultiLine()             — enable multi-line editing
  *   - Task tuning: setTaskStackSize(), setTaskPriority(), setTaskCore()
  *
  * Created by lucasssvaz
@@ -78,15 +78,15 @@ static int cmd_unlock(int argc, char **argv) {
 }
 
 // ---------------------------------------------------------------------------
-// stopRepl / beginRepl demo: pause the REPL for 5 seconds
+// attachToSerial(false/true) demo: pause the Read-Eval-Print Loop for 5 seconds
 // ---------------------------------------------------------------------------
 
 static int cmd_pause(int argc, char **argv) {
-  printf("Stopping REPL for 5 seconds...\n");
+  printf("Stopping Read-Eval-Print Loop for 5 seconds...\n");
   fflush(stdout);
-  Console.stopRepl();
+  Console.attachToSerial(false);
   delay(5000);
-  Console.beginRepl();
+  Console.attachToSerial(true);
   return 0;
 }
 
@@ -155,7 +155,7 @@ void setup() {
     delay(10);
   }
 
-  // Console task configuration — must be called before beginRepl()
+  // Console task configuration — must be called before attachToSerial(true)
 
   // Set the task stack size to 4096 bytes
   Console.setTaskStackSize(4096);
@@ -183,7 +183,7 @@ void setup() {
   Console.addCmd("lock",   "Unregister the 'secret' command", cmd_lock);
 
   // REPL control
-  Console.addCmd("pause", "Stop the REPL for 5 seconds", cmd_pause);
+  Console.addCmd("pause", "Stop the Read-Eval-Print Loop for 5 seconds", cmd_pause);
 
   // Help verbosity
   Console.addCmd("verbose_help", "Set help verbosity", "<0|1>", cmd_verbose_help);
@@ -197,8 +197,8 @@ void setup() {
   Console.addHelpCmd();
 
   // Begin Read-Eval-Print Loop
-  if (!Console.beginRepl()) {
-    Serial.println("REPL start failed");
+  if (!Console.attachToSerial(true)) {
+    Serial.println("Failed to attach to serial");
   }
 }
 

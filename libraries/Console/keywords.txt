@@ -29,8 +29,8 @@ removeCmd	KEYWORD2
 addHelpCmd	KEYWORD2
 removeHelpCmd	KEYWORD2
 setHelpVerboseLevel	KEYWORD2
-beginRepl	KEYWORD2
-stopRepl	KEYWORD2
+attachToSerial	KEYWORD2
+isAttachedToSerial	KEYWORD2
 run	KEYWORD2
 clearScreen	KEYWORD2
 setMultiLine	KEYWORD2

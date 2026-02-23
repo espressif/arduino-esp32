@@ -59,9 +59,9 @@ Typical usage:
 2. Call ``Console.begin()`` to initialise the underlying ``esp_console`` module.
 3. Register commands with ``Console.addCmd()`` or ``Console.addCmdWithContext()``.
 4. Call ``Console.addHelpCmd()`` to register the built-in ``help`` command.
-5. Call ``Console.beginRepl()`` to start the interactive session in a background task.
+5. Call ``Console.attachToSerial(true)`` to start the interactive session in a background task.
 
-Alternatively, skip ``beginRepl()`` and call ``Console.run()`` manually from your own input loop
+Alternatively, skip ``attachToSerial(true)`` and call ``Console.run()`` manually from your own input loop
 (see the ``ConsoleManual`` example).
 
 Two function-pointer typedefs are provided for command callbacks:
@@ -325,8 +325,8 @@ Arduino-esp32 Console API
 
    .. code-block:: arduino
 
-       void setHistoryFile(const char *path, fs::FS &fs = LittleFS)
-       void setHistoryFile(const String &path, fs::FS &fs = LittleFS)
+       void setHistoryFile(fs::FS &fs, const char *path)
+       void setHistoryFile(fs::FS &fs, const String &path)
 
    ..
 
@@ -337,8 +337,8 @@ Arduino-esp32 Console API
    **Parameters**
       * ``path`` — File path relative to the filesystem root, e.g. ``"/history.txt"``.
 
-      * ``fs`` — A mounted Arduino filesystem object. Default: ``LittleFS``.
-        Also accepts ``SPIFFS``, ``FFat``, etc.
+      * ``fs`` — A mounted Arduino filesystem object.
+        Accepts ``LittleFS``, ``SPIFFS``, ``FFat``, etc.
 
    **Notes**
       * History is loaded from this file at ``begin()`` and saved after every command.
@@ -349,11 +349,7 @@ Arduino-esp32 Console API
       .. code-block:: arduino
 
           LittleFS.begin(true);
-          Console.setHistoryFile("/history.txt");  // uses LittleFS by default
-
-          // Or with a different filesystem:
-          // FFat.begin(true);
-          // Console.setHistoryFile("/history.txt", FFat);
+          Console.setHistoryFile(LittleFS, "/history.txt");
 
 
 ``setTaskStackSize``
@@ -426,8 +422,8 @@ Arduino-esp32 Console API
       * ``enable`` — ``true`` to use PSRAM, ``false`` for internal RAM (default: ``true``).
 
    **Notes**
-      * Must be called before ``begin()`` to affect heap allocation, and before ``beginRepl()``
-        to affect the task stack.
+      * Must be called before ``begin()`` to affect heap allocation, and before
+        ``attachToSerial(true)`` to affect the task stack.
 
    **Example**
 
@@ -435,7 +431,7 @@ Arduino-esp32 Console API
 
           Console.usePsram(true);  // before begin()
           Console.begin();
-          Console.beginRepl();
+          Console.attachToSerial(true);
 
       ..
 
@@ -592,21 +588,25 @@ Arduino-esp32 Console API
       * ``true`` on success; ``false`` if ``level`` is out of range.
 
 
-``beginRepl``
-*************
+``attachToSerial``
+*****************
 
-   Start the REPL in a background FreeRTOS task.
+   Attach or detach the console from the serial port.
 
    .. code-block:: arduino
 
-       bool beginRepl()
+       bool attachToSerial(bool enable)
 
    ..
 
-   The task reads input through ``Serial`` (bypassing VFS ``stdin`` to avoid a race condition
-   with the UART/USB driver ISR) and passes each line to ``esp_console_run()``.  Non-empty
-   entries are added to the command history.  Because reading goes through ``Serial``, no
+   When ``enable`` is ``true``, starts the Read-Eval-Print Loop in a background FreeRTOS task. The task reads
+   input through ``Serial`` (bypassing VFS ``stdin`` to avoid a race condition with the
+   UART/USB driver ISR) and passes each line to ``esp_console_run()``.  Non-empty entries are
+   added to the command history.  Because reading goes through ``Serial``, no
    transport-specific configuration is required — UART and HWCDC work automatically.
+
+   When ``enable`` is ``false``, stops the background task and frees the serial port for
+   other use.
 
    .. note::
 
@@ -615,30 +615,34 @@ Arduino-esp32 Console API
 
    At startup, the task probes the terminal for VT100 support by sending a one-time Device
    Status Request (``ESC[5n``).  If the terminal does not respond within 500 ms, plain mode
-   is enabled automatically.  Use ``setPlainMode()`` before ``beginRepl()`` to override the
-   probe result.
+   is enabled automatically.  Use ``setPlainMode()`` before ``attachToSerial(true)`` to
+   override the probe result.
+
+   **Parameters**
+      * ``enable`` — ``true`` to attach and start the REPL task, ``false`` to detach and stop it.
 
    **Returns**
       * ``true`` on success.
 
    **Notes**
-      * ``begin()`` must be called before ``beginRepl()``.
-      * Calling ``beginRepl()`` a second time has no effect.
+      * ``begin()`` must be called before ``attachToSerial(true)``.
+      * Calling ``attachToSerial(true)`` a second time has no effect.
+      * Calling ``attachToSerial(false)`` when not attached has no effect.
 
 
-``stopRepl``
-************
+``isAttachedToSerial``
+**********************
 
-   Stop the REPL background task.
+   Check whether the console is currently attached to the serial port.
 
    .. code-block:: arduino
 
-       bool stopRepl()
+       bool isAttachedToSerial()
 
    ..
 
    **Returns**
-      * ``true`` on success.
+      * ``true`` if the REPL background task is running.
 
 
 ``run``
@@ -727,16 +731,16 @@ Arduino-esp32 Console API
    history navigation, or tab-completion rendering.  Useful for terminals that do not support
    ANSI/VT100 escape sequences (such as the Arduino IDE Serial Monitor).
 
-   By default, ``beginRepl()`` probes the terminal at startup (sending a one-time Device
-   Status Request) and enables plain mode automatically if the terminal does not respond.
+   By default, ``attachToSerial(true)`` probes the terminal at startup (sending a one-time
+   Device Status Request) and enables plain mode automatically if the terminal does not respond.
 
    **Parameters**
       * ``enable`` — ``true`` to enable plain mode, ``false`` to restore VT100 mode.
 
-      * ``force`` — When ``true`` (default), the automatic VT100 probe at ``beginRepl()``
-        startup is skipped and the mode set here is kept unconditionally.  When ``false``,
-        the mode is applied immediately but ``beginRepl()`` may still override it based on
-        the probe result.
+      * ``force`` — When ``true`` (default), the automatic VT100 probe at
+        ``attachToSerial(true)`` startup is skipped and the mode set here is kept
+        unconditionally.  When ``false``, the mode is applied immediately but
+        ``attachToSerial(true)`` may still override it based on the probe result.
 
    **Notes**
       * This wraps linenoise's internal "dumb mode", a legacy term from the era of
@@ -755,8 +759,8 @@ Arduino-esp32 Console API
    ..
 
    Returns ``true`` if plain mode is enabled, either because it was set explicitly with
-   ``setPlainMode(true)`` or because the automatic VT100 probe at ``beginRepl()`` startup
-   detected a non-VT100 terminal.
+   ``setPlainMode(true)`` or because the automatic VT100 probe at ``attachToSerial(true)``
+   startup detected a non-VT100 terminal.
 
    **Returns**
       * ``true`` if plain mode is active, ``false`` otherwise.
@@ -849,7 +853,7 @@ ConsoleAdvanced
 
 Demonstrates advanced APIs: context-aware commands (``addCmdWithContext``),
 dynamic command registration and removal (``removeCmd``), REPL pause/resume
-(``stopRepl`` / ``beginRepl``), help verbosity (``setHelpVerboseLevel``),
+(``attachToSerial(false/true)``), help verbosity (``setHelpVerboseLevel``),
 ``clearScreen``, ``setPlainMode``, ``setMultiLine``, and task tuning
 (``setTaskStackSize``, ``setTaskPriority``, ``setTaskCore``).
 

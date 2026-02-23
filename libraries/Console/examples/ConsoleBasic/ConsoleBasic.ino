@@ -95,7 +95,7 @@ void setup() {
   Console.addHelpCmd();
 
   // Begin Read-Eval-Print Loop
-  if (!Console.beginRepl()) {
+  if (!Console.attachToSerial(true)) {
     Serial.println("REPL start failed");
   }
 }

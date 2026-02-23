@@ -13,7 +13,6 @@
 
 #include "Arduino.h"
 #include "FS.h"
-#include "LittleFS.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -47,7 +46,7 @@ public:
   /**
    * @brief Initialise the console.
    *
-   * Must be called before any other method.  Sets up the esp_console module and
+   * Must be called before any other method. Sets up the esp_console module and
    * configures linenoise tab-completion and hints.
    *
    * @param maxCmdLen  Maximum length of a single command line (bytes). Default 256.
@@ -82,12 +81,12 @@ public:
    * When set, history is loaded at begin() and saved after every command.
    * The filesystem must be mounted before calling begin().
    *
+   * @param fs    Arduino filesystem object. Also accepts SPIFFS, FFat, etc.
    * @param path  File path relative to the filesystem root (e.g. "/history.txt").
-   * @param fs    Arduino filesystem object. Default: LittleFS. Also accepts SPIFFS, FFat, etc.
    */
-  void setHistoryFile(const char *path, fs::FS &fs = LittleFS);
-  void setHistoryFile(const String &path, fs::FS &fs = LittleFS) {
-    setHistoryFile(path.c_str(), fs);
+  void setHistoryFile(fs::FS &fs, const char *path);
+  void setHistoryFile(fs::FS &fs, const String &path) {
+    setHistoryFile(fs, path.c_str());
   }
 
   /** @brief Set the REPL background task stack size in bytes. Default: 4096. */
@@ -109,11 +108,11 @@ public:
    *   @c xTaskCreatePinnedToCoreWithCaps.
    *
    * This frees internal SRAM for other uses at the cost of slightly higher
-   * latency for stack and heap accesses.  If PSRAM is not available at
+   * latency for stack and heap accesses. If PSRAM is not available at
    * runtime, the library automatically falls back to internal RAM.
    *
    * Must be called before begin() to affect the heap allocation, and before
-   * beginRepl() to affect the task stack.
+   * attachToSerial(true) to affect the task stack.
    *
    * @param enable  true to use PSRAM, false for internal RAM (default: true).
    */
@@ -192,7 +191,7 @@ public:
    * @brief Register the built-in "help" command.
    *
    * When called with no arguments, prints all registered commands with their
-   * hints and help text.  When called with a command name, prints help for
+   * hints and help text. When called with a command name, prints help for
    * that command only.
    *
    * @return true on success.
@@ -215,7 +214,13 @@ public:
   // ---------------------------------------------------------------------------
 
   /**
-   * @brief Start the REPL in a background FreeRTOS task.
+   * @brief Attach the console to the serial port and start the REPL.
+   *
+   * When enabled this will start the Read-Eval-Print Loop in a background FreeRTOS task
+   * and read input through @c Serial and write output to @c stdout.
+   *
+   * When disabled the REPL will stop and the background task will be stopped.
+   * The serial port will be available for other use.
    *
    * Works with UART and HWCDC automatically: the REPL reads input through
    * @c Serial and writes output to @c stdout. No transport-specific
@@ -224,21 +229,23 @@ public:
    * @note USB OTG (CDC via TinyUSB / USBSerial) is not currently supported.
    *
    * At startup the task probes the terminal for VT100 support (by sending a
-   * one-time Device Status Request).  If the terminal does not respond, plain
-   * mode is enabled automatically.  Use setPlainMode() to override the probe.
+   * one-time Device Status Request). If the terminal does not respond, plain
+   * mode is enabled automatically. Use setPlainMode() to override the probe.
    *
    * Requires begin() to have been called first.
    *
-   * @return true on success.
-   */
-  bool beginRepl();
-
-  /**
-   * @brief Stop the REPL task.
+   * @param enable  true to attach, false to detach.
    *
    * @return true on success.
    */
-  bool stopRepl();
+  bool attachToSerial(bool enable);
+
+  /**
+   * @brief Check if the console is attached to the serial port.
+   *
+   * @return true if the console is attached to the serial port.
+   */
+  bool isAttachedToSerial();
 
   // ---------------------------------------------------------------------------
   // Manual command execution (no REPL task)
@@ -247,12 +254,12 @@ public:
   /**
    * @brief Execute a command line string directly.
    *
-   * Useful when building a custom input loop instead of using beginRepl(),
+   * Useful when building a custom input loop instead of using attachToSerial(true),
    * or for invoking commands from within other command handlers.
    *
    * @note When calling run() from inside a command handler, the caller's
    *       @c argv pointers are invalidated because the underlying IDF
-   *       function shares a single parse buffer.  Copy any @c argv values
+   *       function shares a single parse buffer. Copy any @c argv values
    *       you need into local variables @b before calling run().
    *
    * @param cmdline  Full command line (command name + arguments).
@@ -282,19 +289,19 @@ public:
    * @brief Enable or disable plain (non-VT100) input mode.
    *
    * In plain mode linenoise falls back to basic line input without cursor
-   * movement, arrow-key history, or tab completion rendering.  Useful for
+   * movement, arrow-key history, or tab completion rendering. Useful for
    * terminals that do not support ANSI/VT100 escape sequences.
    *
-   * By default, beginRepl() probes the terminal at startup (sending a one-time
-   * Device Status Request) and enables plain mode automatically if the terminal
-   * does not respond.
+   * By default, attachToSerial(true) probes the terminal at startup (sending a
+   * one-time Device Status Request) and enables plain mode automatically if the
+   * terminal does not respond.
    *
    * @param enable  true to enable plain mode, false to restore VT100 mode.
    * @param force   When true (default), the automatic VT100 probe at
-   *                beginRepl() startup is skipped and the mode set here is
-   *                kept unconditionally.  When false, the mode is set
-   *                immediately but beginRepl() may still override it based
-   *                on the probe result.
+   *                attachToSerial(true) startup is skipped and the mode set
+   *                here is kept unconditionally. When false, the mode is set
+   *                immediately but attachToSerial(true) may still override it
+   *                based on the probe result.
    */
   void setPlainMode(bool enable, bool force = true);
 
@@ -312,7 +319,7 @@ public:
   /**
    * @brief Split a command line string into argv-style tokens in place.
    *
-   * Handles quoted strings and backslash escapes.  Modifies the input buffer.
+   * Handles quoted strings and backslash escapes. Modifies the input buffer.
    *
    * @param line       Null-terminated input string (modified in place).
    * @param argv       Output array of pointers to tokens.
@@ -322,6 +329,31 @@ public:
   static size_t splitArgv(char *line, char **argv, size_t argv_size);
 
 private:
+  /**
+   * @brief Start the REPL in a background FreeRTOS task.
+   *
+   * Works with UART and HWCDC automatically: the REPL reads input through
+   * @c Serial and writes output to @c stdout. No transport-specific
+   * configuration is required.
+   *
+   * @note USB OTG (CDC via TinyUSB / USBSerial) is not currently supported.
+   *
+   * At startup the task probes the terminal for VT100 support (by sending a
+   * one-time Device Status Request). If the terminal does not respond, plain
+   * mode is enabled automatically. Use setPlainMode() to override the probe.
+   *
+   * Requires begin() to have been called first.
+   *
+   * @return true on success.
+   */
+  bool startRepl();
+
+  /**
+   * @brief Stop the REPL task.
+   *
+   * @return true on success.
+   */
+  bool stopRepl();
   static void _replTask(void *arg);
 
   bool         _initialized;
@@ -330,7 +362,6 @@ private:
   const char  *_prompt;
   uint32_t     _maxHistory;
   char        *_historyVfsPath;
-  fs::FS      *_historyFs;
   uint32_t     _taskStackSize;
   uint32_t     _taskPriority;
   BaseType_t   _taskCore;

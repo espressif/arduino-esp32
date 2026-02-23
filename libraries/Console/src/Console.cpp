@@ -92,7 +92,7 @@ static bool _probeVT100() {
 // ---------------------------------------------------------------------------
 
 ConsoleClass::ConsoleClass()
-  : _initialized(false), _replStarted(false), _replTaskHandle(NULL), _prompt("esp> "), _maxHistory(32), _historyVfsPath(NULL), _historyFs(NULL),
+  : _initialized(false), _replStarted(false), _replTaskHandle(NULL), _prompt("esp> "), _maxHistory(32), _historyVfsPath(NULL),
     _taskStackSize(4096), _taskPriority(2), _taskCore(tskNO_AFFINITY), _usePsram(true), _taskStackInPsram(false), _forceMode(false) {}
 
 // ---------------------------------------------------------------------------
@@ -156,7 +156,6 @@ void ConsoleClass::end() {
 
   free(_historyVfsPath);
   _historyVfsPath = NULL;
-  _historyFs = NULL;
   _initialized = false;
 }
 
@@ -175,10 +174,9 @@ void ConsoleClass::setMaxHistory(uint32_t maxLen) {
   }
 }
 
-void ConsoleClass::setHistoryFile(const char *path, fs::FS &fs) {
+void ConsoleClass::setHistoryFile(fs::FS &fs, const char *path) {
   free(_historyVfsPath);
   _historyVfsPath = NULL;
-  _historyFs = &fs;
 
   const char *mp = fs.mountpoint();
   if (!mp || !path) {
@@ -467,7 +465,7 @@ void ConsoleClass::_replTask(void *arg) {
   }
 }
 
-bool ConsoleClass::beginRepl() {
+bool ConsoleClass::startRepl() {
   if (!_initialized) {
     log_e("Console not initialized — call begin() first");
     return false;
@@ -511,6 +509,13 @@ bool ConsoleClass::stopRepl() {
   return true;
 }
 
+bool ConsoleClass::attachToSerial(bool enable) {
+  return enable ? startRepl() : stopRepl();
+}
+
+bool ConsoleClass::isAttachedToSerial() {
+  return _replStarted;
+}
 // ---------------------------------------------------------------------------
 // Manual command execution
 // ---------------------------------------------------------------------------

@@ -283,7 +283,7 @@ void test_history_save_to_file(void) {
   TEST_ASSERT_TRUE(LittleFS.begin(true));
   LittleFS.remove(HISTORY_PATH);
 
-  Console.setHistoryFile(HISTORY_PATH);
+  Console.setHistoryFile(LittleFS, HISTORY_PATH);
   TEST_ASSERT_TRUE(Console.begin());
 
   Console.addCmd("echo", "Echo", cmd_echo);
@@ -325,7 +325,7 @@ void test_history_load_from_file(void) {
     f.close();
   }
 
-  Console.setHistoryFile(HISTORY_PATH);
+  Console.setHistoryFile(LittleFS, HISTORY_PATH);
   TEST_ASSERT_TRUE(Console.begin());
 
   // begin() calls linenoiseHistoryLoad which reads the existing file.

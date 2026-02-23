@@ -312,7 +312,7 @@ void setup() {
   Console.addHelpCmd();
 
   // Begin Read-Eval-Print Loop
-  Console.beginRepl();
+  Console.attachToSerial(true);
 }
 
 void loop() {

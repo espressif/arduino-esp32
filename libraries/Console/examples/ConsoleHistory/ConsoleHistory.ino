@@ -3,7 +3,7 @@
  *
  * Demonstrates APIs not covered by the basic examples:
  *
- *   - setHistoryFile()  — save/load history to LittleFS across reboots
+ *   - setHistoryFile()  — save/load history to a filesystem across reboots
  *   - setMaxHistory()   — limit number of stored history lines
  *   - usePsram()        — allocate Console heap and REPL task stack in PSRAM
  *   - splitArgv()       — split a raw string into argv-style tokens
@@ -122,7 +122,7 @@ void setup() {
     // Persistent history: lines are stored in a plain text file on LittleFS.
     // On begin(), existing history is loaded; after every command, the file
     // is updated automatically.
-    Console.setHistoryFile(HISTORY_PATH);
+    Console.setHistoryFile(LittleFS, HISTORY_PATH);
   }
 
   Console.setMaxHistory(50);
@@ -148,7 +148,7 @@ void setup() {
   // Add built-in help command
   Console.addHelpCmd();
 
-  if (!Console.beginRepl()) {
+  if (!Console.attachToSerial(true)) {
     Serial.println("REPL start failed");
   }
 }
