@@ -216,8 +216,7 @@ String BLERemoteDescriptor::readValue() {
     status = m_semaphoreReadDescrEvt.wait("readValue");
 
     switch (status) {
-      case ESP_GATT_OK:
-        break;
+      case ESP_GATT_OK: break;
       case ESP_GATT_INSUF_AUTHENTICATION:
       case ESP_GATT_INSUF_AUTHORIZATION:
       case ESP_GATT_INSUF_ENCRYPTION:
@@ -225,9 +224,7 @@ String BLERemoteDescriptor::readValue() {
           break;
         }
       /* Else falls through. */
-      default:
-        log_e("readValue: status=%d", status);
-        break;
+      default: log_e("readValue: status=%d", status); break;
     }
   } while (status != ESP_GATT_OK && retryCount--);
 
@@ -280,8 +277,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
     status = m_semaphoreWriteDescrEvt.wait("writeValue");
 
     switch (status) {
-      case ESP_GATT_OK:
-        break;
+      case ESP_GATT_OK: break;
       case ESP_GATT_INSUF_AUTHENTICATION:
       case ESP_GATT_INSUF_AUTHORIZATION:
       case ESP_GATT_INSUF_ENCRYPTION:
@@ -289,9 +285,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
           break;
         }
       /* Else falls through. */
-      default:
-        log_e("writeValue: status=%d", status);
-        break;
+      default: log_e("writeValue: status=%d", status); break;
     }
   } while (status != ESP_GATT_OK && retryCount--);
 
