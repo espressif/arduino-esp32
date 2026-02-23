@@ -22,6 +22,7 @@
 // ---------------------------------------------------------------------------
 
 static volatile bool s_startUnity = false;
+static volatile bool s_replTaskActive = false;
 
 static int cmd_ping(int argc, char **argv) {
   Serial.println("pong");
@@ -30,6 +31,18 @@ static int cmd_ping(int argc, char **argv) {
 
 static int cmd_run_tests(int argc, char **argv) {
   s_startUnity = true;
+  return 0;
+}
+
+// Switches Phase 1 from the manual input loop to the REPL task so the Python
+// test script can verify that the task reads commands and dispatches them.
+// Prints "REPL_TASK_STARTED" before spawning the task so the Python script can
+// safely wait for that marker before sending the first REPL command.
+static int cmd_test_repl(int argc, char **argv) {
+  s_replTaskActive = true;
+  Serial.println("REPL_TASK_STARTED");
+  Serial.flush();
+  Console.attachToSerial(true);
   return 0;
 }
 
@@ -348,6 +361,42 @@ void test_history_load_from_file(void) {
   LittleFS.end();
 }
 
+void test_attach_to_serial(void) {
+  // Before begin(): attach must fail and state must be false
+  Console.end();
+  TEST_ASSERT_FALSE(Console.attachToSerial(true));
+  TEST_ASSERT_FALSE(Console.isAttachedToSerial());
+
+  Console.begin();
+
+  // Detach when not attached — no-op, must return true
+  TEST_ASSERT_TRUE(Console.attachToSerial(false));
+  TEST_ASSERT_FALSE(Console.isAttachedToSerial());
+
+  // Attach
+  TEST_ASSERT_TRUE(Console.attachToSerial(true));
+  TEST_ASSERT_TRUE(Console.isAttachedToSerial());
+
+  // Attach again — no-op, must still return true
+  TEST_ASSERT_TRUE(Console.attachToSerial(true));
+  TEST_ASSERT_TRUE(Console.isAttachedToSerial());
+
+  // Detach
+  TEST_ASSERT_TRUE(Console.attachToSerial(false));
+  TEST_ASSERT_FALSE(Console.isAttachedToSerial());
+
+  // Restart cycle
+  TEST_ASSERT_TRUE(Console.attachToSerial(true));
+  TEST_ASSERT_TRUE(Console.isAttachedToSerial());
+  TEST_ASSERT_TRUE(Console.attachToSerial(false));
+  TEST_ASSERT_FALSE(Console.isAttachedToSerial());
+
+  // end() while attached — must stop the task and clear the flag
+  TEST_ASSERT_TRUE(Console.attachToSerial(true));
+  Console.end();
+  TEST_ASSERT_FALSE(Console.isAttachedToSerial());
+}
+
 // ---------------------------------------------------------------------------
 // Phase 1 — Manual serial input loop
 // ---------------------------------------------------------------------------
@@ -385,6 +434,7 @@ void setup() {
   Console.begin();
   Console.addCmd("ping", "Reply with pong", cmd_ping);
   Console.addCmd("run_tests", "Start Unity tests", cmd_run_tests);
+  Console.addCmd("test_repl", "Switch to REPL task and signal ready", cmd_test_repl);
   Console.addHelpCmd();
 
   Serial.println("REPL_READY");
@@ -392,7 +442,11 @@ void setup() {
 
 void loop() {
   if (s_startUnity) {
-    // Phase 2: Tear down Phase 1 and run Unity tests
+    // Phase 2: Tear down Phase 1 and run Unity tests.
+    // Stop the REPL task if it is still running (run_tests may have been sent
+    // through the REPL task rather than the manual loop).
+    Console.attachToSerial(false);
+    s_replTaskActive = false;
     Console.end();
     delay(100);
 
@@ -418,11 +472,16 @@ void loop() {
     RUN_TEST(test_string_overloads);
     RUN_TEST(test_history_save_to_file);
     RUN_TEST(test_history_load_from_file);
+    RUN_TEST(test_attach_to_serial);
     UNITY_END();
 
     vTaskDelete(NULL);
   }
 
-  processSerialInput();
+  // While the REPL task is active it owns Serial; skip the manual loop to
+  // avoid racing with the task for the same incoming bytes.
+  if (!s_replTaskActive) {
+    processSerialInput();
+  }
   delay(1);
 }

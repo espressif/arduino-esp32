@@ -27,12 +27,19 @@
 //
 // Line-ending normalisation: \r → \n, and \n immediately after \r is dropped.
 // This handles terminals that send \r only, \n only, or \r\n.
+//
+// Returns -1 when the REPL is being stopped so linenoise returns NULL
+// immediately, allowing the task loop to observe _replStarted == false and
+// exit cleanly instead of blocking indefinitely waiting for serial input.
 static ssize_t _serialRead(int fd, void *buf, size_t count) {
   (void)fd;
   static bool s_prevCR = false;
   uint8_t *p = (uint8_t *)buf;
   size_t n = 0;
   while (n < count) {
+    if (!Console.isAttachedToSerial()) {
+      return -1;
+    }
     if (Serial.available()) {
       uint8_t c = Serial.read();
       if (c == '\n' && s_prevCR) {
@@ -502,8 +509,13 @@ bool ConsoleClass::stopRepl() {
   if (!_replStarted) {
     return true;
   }
+  // Setting _replStarted = false causes _serialRead to return -1 immediately,
+  // which makes linenoise return NULL and the task loop exit on its very next
+  // iteration (~1-11 ms). Without this, the task would stay blocked in
+  // _serialRead indefinitely if no serial bytes arrive, and would outlive
+  // stopRepl(), potentially accessing state freed by end().
   _replStarted = false;
-  // The task will exit on its next iteration; give it time to clean up
+  // Give the task time to observe _replStarted and call vTaskDelete().
   vTaskDelay(pdMS_TO_TICKS(100));
   _replTaskHandle = NULL;
   return true;
@@ -516,6 +528,7 @@ bool ConsoleClass::attachToSerial(bool enable) {
 bool ConsoleClass::isAttachedToSerial() {
   return _replStarted;
 }
+
 // ---------------------------------------------------------------------------
 // Manual command execution
 // ---------------------------------------------------------------------------
