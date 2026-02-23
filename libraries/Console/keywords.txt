@@ -1,0 +1,45 @@
+#######################################
+# Syntax Coloring Map for Console
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ConsoleClass	KEYWORD1
+ConsoleCommandFunc	KEYWORD1
+ConsoleCommandFuncWithCtx	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+end	KEYWORD2
+setPrompt	KEYWORD2
+setMaxHistory	KEYWORD2
+setHistoryFile	KEYWORD2
+setTaskStackSize	KEYWORD2
+setTaskPriority	KEYWORD2
+setTaskCore	KEYWORD2
+usePsram	KEYWORD2
+addCmd	KEYWORD2
+addCmdWithContext	KEYWORD2
+removeCmd	KEYWORD2
+addHelpCmd	KEYWORD2
+removeHelpCmd	KEYWORD2
+setHelpVerboseLevel	KEYWORD2
+beginRepl	KEYWORD2
+stopRepl	KEYWORD2
+run	KEYWORD2
+clearScreen	KEYWORD2
+setMultiLine	KEYWORD2
+setPlainMode	KEYWORD2
+isPlainMode	KEYWORD2
+splitArgv	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+Console	KEYWORD2
