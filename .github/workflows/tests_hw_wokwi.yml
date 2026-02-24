@@ -13,6 +13,7 @@ permissions:
 jobs:
   get-artifacts:
     name: Get required artifacts
+    if: github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       actions: read

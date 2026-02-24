@@ -105,6 +105,8 @@ public:
   static uint32_t generateRandomPassKey();
   static void regenPassKeyOnConnect(bool enable = false);
   static void resetSecurity();
+  static void setForceAuthentication(bool force);
+  static bool getForceAuthentication();
   static void waitForAuthenticationComplete(uint32_t timeoutMs = 10000);
   static void signalAuthenticationComplete();
 
