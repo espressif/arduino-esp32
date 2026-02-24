@@ -163,14 +163,15 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
         m_value = "";
       }
       // Unlock the semaphore to ensure that the requester of the data can continue.
-      m_semaphoreReadDescrEvt.give();
+      // Pass the GATT status through the semaphore value for retry logic.
+      m_semaphoreReadDescrEvt.give(evtParam->read.status);
       break;
 
     case ESP_GATTC_WRITE_DESCR_EVT:
       if (evtParam->write.handle != getHandle()) {
         break;
       }
-      m_semaphoreWriteDescrEvt.give();
+      m_semaphoreWriteDescrEvt.give(evtParam->write.status);
       break;
     default: break;
   }
@@ -179,30 +180,53 @@ void BLERemoteDescriptor::gattClientEventHandler(esp_gattc_cb_event_t event, esp
 String BLERemoteDescriptor::readValue() {
   log_v(">> readValue: %s", toString().c_str());
 
+  BLEClient *pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+
   // Check to see that we are connected.
-  if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+  if (!pClient->isConnected()) {
     log_e("Disconnected");
     return String();
   }
 
-  m_semaphoreReadDescrEvt.take("readValue");
+  // Wait for authentication to complete if security was started on connection
+  BLESecurity::waitForAuthenticationComplete();
 
-  // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
-  esp_err_t errRc = ::esp_ble_gattc_read_char_descr(
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(),
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(),  // The connection ID to the BLE server
-    getHandle(),                                                            // The handle of this characteristic
-    (esp_gatt_auth_req_t)m_auth
-  );  // Security
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return "";
-  }
+  do {
+    m_semaphoreReadDescrEvt.take("readValue");
 
-  // Block waiting for the event that indicates that the read has completed.  When it has, the String found
-  // in m_value will contain our data.
-  m_semaphoreReadDescrEvt.wait("readValue");
+    // Ask the BLE subsystem to retrieve the value for the remote hosted descriptor.
+    esp_err_t errRc = ::esp_ble_gattc_read_char_descr(
+      pClient->getGattcIf(),
+      pClient->getConnId(),  // The connection ID to the BLE server
+      getHandle(),           // The handle of this descriptor
+      (esp_gatt_auth_req_t)m_auth
+    );  // Security
+
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_read_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreReadDescrEvt.give();
+      return "";
+    }
+
+    // Block waiting for the event that indicates that the read has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreReadDescrEvt.wait("readValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("readValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
 
   log_v("<< readValue(): length: %d", m_value.length());
   return m_value;
@@ -217,27 +241,56 @@ String BLERemoteDescriptor::readValue() {
  */
 bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response) {
   log_v(">> writeValue: %s", toString().c_str());
+
+  BLEClient *pClient = getRemoteCharacteristic()->getRemoteService()->getClient();
+
   // Check to see that we are connected.
-  if (!getRemoteCharacteristic()->getRemoteService()->getClient()->isConnected()) {
+  if (!pClient->isConnected()) {
     log_e("Disconnected");
     return false;
   }
 
-  m_semaphoreWriteDescrEvt.take("writeValue");
+  // Wait for authentication to complete if security was started on connection
+  BLESecurity::waitForAuthenticationComplete();
 
-  esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
-    m_pRemoteCharacteristic->getRemoteService()->getClient()->getGattcIf(), m_pRemoteCharacteristic->getRemoteService()->getClient()->getConnId(), getHandle(),
-    length,  // Data length
-    data,    // Data
-    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
-  );
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_write_char_descr: %d", errRc);
-  }
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  m_semaphoreWriteDescrEvt.wait("writeValue");
+  do {
+    m_semaphoreWriteDescrEvt.take("writeValue");
+
+    esp_err_t errRc = ::esp_ble_gattc_write_char_descr(
+      pClient->getGattcIf(), pClient->getConnId(), getHandle(),
+      length,  // Data length
+      data,    // Data
+      response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
+    );
+
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_write_char_descr: %d", errRc);
+      m_semaphoreWriteDescrEvt.give();
+      return false;
+    }
+
+    // Block waiting for the event that indicates that the write has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreWriteDescrEvt.wait("writeValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && pClient->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("writeValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
+
   log_v("<< writeValue");
-  return (errRc == ESP_OK);
+  return (status == ESP_GATT_OK);
 }  // writeValue
 
 #endif
