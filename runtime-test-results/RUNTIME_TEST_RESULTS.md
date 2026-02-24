@@ -8,7 +8,7 @@
 
 Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-ble|0/1 :x:|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|Error :fire:
+ble|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|0/1 :x:|-|-|Error :fire:
 democfg|2/2 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
 fs|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|51/51 :white_check_mark:|Error :fire:|51/51 :white_check_mark:|51/51 :white_check_mark:
 hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|Error :fire:|1/1 :white_check_mark:|1/1 :white_check_mark:
@@ -38,8 +38,8 @@ unity|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :white_check_mark:|2/2 :
 wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|1/1 :white_check_mark:|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 
-Generated on: 2026/02/23 01:15:31
+Generated on: 2026/02/24 01:34:50
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/89bcb9c2c7abb6fc90784cef4a870e0e9ff03579) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/22288489419) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/22288703204) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/22289553364)
+[Commit](https://github.com/espressif/arduino-esp32/commit/89bcb9c2c7abb6fc90784cef4a870e0e9ff03579) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/22330696612) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/22331047614) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/22332727600)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/64474324939)
+[Test results](https://github.com/espressif/arduino-esp32/runs/64618611063)
