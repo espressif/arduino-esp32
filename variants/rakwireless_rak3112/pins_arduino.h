@@ -1,6 +1,10 @@
 #ifndef Pins_Arduino_h
 #define Pins_Arduino_h
 
+#ifndef _VARIANT_RAK3112_    //add-audio-support
+#define _VARIANT_RAK3112_
+#endif
+
 #include <stdint.h>
 
 // Reference: RAK3112 Module Datasheet
