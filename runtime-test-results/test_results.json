@@ -1,31 +1,31 @@
 {
-  "commit_sha": "89bcb9c2c7abb6fc90784cef4a870e0e9ff03579",
+  "commit_sha": "e59f55d813b14550d08fc4c205efbaa339ce3a63",
   "tests_failed": true,
   "test_data": {
     "hardware": {
       "ble": {
         "esp32": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
         "esp32c3": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
         "esp32c5": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
         "esp32c6": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
         "esp32h2": {
-          "failures": 1,
+          "failures": 0,
           "total": 1,
           "errors": 0
         },
@@ -828,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-24T01:34:50.460805"
+  "generated_at": "2026-02-25T01:38:42.306313"
 }
