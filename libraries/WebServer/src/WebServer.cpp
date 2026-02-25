@@ -727,7 +727,7 @@ void WebServer::sendContent(const char *content, size_t contentLength) {
   if (_chunked) {
     char *chunkSize = (char *)malloc(11);
     if (chunkSize) {
-      sprintf(chunkSize, "%zx%s", contentLength, footer);
+      sprintf(chunkSize, "%x%s", (unsigned)contentLength, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
       free(chunkSize);
     }
@@ -750,7 +750,7 @@ void WebServer::sendContent_P(PGM_P content, size_t size) {
   if (_chunked) {
     char *chunkSize = (char *)malloc(11);
     if (chunkSize) {
-      sprintf(chunkSize, "%zx%s", size, footer);
+      sprintf(chunkSize, "%x%s", (unsigned)size, footer);
       _currentClientWrite(chunkSize, strlen(chunkSize));
       free(chunkSize);
     }
