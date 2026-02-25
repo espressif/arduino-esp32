@@ -214,6 +214,7 @@ static void audio_detect_task(void *arg) {
     afe_fetch_result_t *res = g_sr_data->afe_handle->fetch(g_sr_data->afe_data);
     if (!res || res->ret_value == ESP_FAIL) {
       log_e("fetch failed");
+      vTaskDelay(100);
       continue;
     }
 
@@ -308,6 +309,10 @@ esp_err_t sr_set_mode(sr_mode_t mode) {
         g_sr_data->afe_handle->disable_wakenet(g_sr_data->afe_data);
       }
       break;
+#else  
+    case SR_MODE_COMMAND:  
+      log_e("SR_MODE_COMMAND is not supported when CONFIG_SR_MN_EN_NONE is enabled");  
+      return ESP_ERR_NOT_SUPPORTED;
 #endif
     default: return ESP_FAIL;
   }
@@ -365,7 +370,11 @@ esp_err_t sr_start(
   log_i("add %d commands", cmd_number);
   for (size_t i = 0; i < cmd_number; i++) {
     char *phonemes = flite_g2p(sr_commands[i].str, 1);
-    esp_mn_commands_phoneme_add(sr_commands[i].command_id, (char *)(sr_commands[i].str), phonemes);
+    if (phonemes == NULL) {  
+      log_e("failed to generate phonemes for cmd[%d] phrase[%d]:'%s'", sr_commands[i].command_id, i, sr_commands[i].str);  
+      continue;  
+    }
+    esp_mn_commands_phoneme_add(sr_commands[i].command_id, (const char *)(sr_commands[i].str), phonemes);
     free(phonemes);
     log_i("  cmd[%d] phrase[%d]:'%s'", sr_commands[i].command_id, i, sr_commands[i].str);
   }
