@@ -35,7 +35,7 @@
 #include "Zigbee.h"
 
 /* Zigbee occupancy sensor configuration */
-#define OCCUPANCY_SENSOR_ENDPOINT_NUMBER 10
+#define OCCUPANCY_SENSOR_ENDPOINT_NUMBER 1
 uint8_t button = BOOT_PIN;
 uint8_t sensor_pin = 4;
 
@@ -48,8 +48,23 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
   pinMode(sensor_pin, INPUT);
 
-  // Optional: set Zigbee device name and model
+  // Set Zigbee device name and model
   zbOccupancySensor.setManufacturerAndModel("Espressif", "ZigbeeOccupancyPIRSensor");
+
+  // Optional: Set sensor type (PIR, Ultrasonic, PIR and Ultrasonic or Physical Contact)
+  zbOccupancySensor.setSensorType(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR, ZIGBEE_OCCUPANCY_SENSOR_BITMAP_PIR);
+
+  // Optional: Set occupied to unoccupied delay (if your sensor supports it) to PIR sensor as its set by setSensorType
+  zbOccupancySensor.setOccupiedToUnoccupiedDelay(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR, 1); // 1 second delay
+
+  // Optional: Set unoccupied to occupied delay (if your sensor supports it) to PIR sensor as its set by setSensorType
+  zbOccupancySensor.setUnoccupiedToOccupiedDelay(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR, 1); // 1 second delay
+  
+  // Optional: Set unoccupied to occupied threshold (if your sensor supports it) to PIR sensor as its set by setSensorType
+  zbOccupancySensor.setUnoccupiedToOccupiedThreshold(ZIGBEE_OCCUPANCY_SENSOR_TYPE_PIR, 1); // 1 movement event threshold
+
+  // Optional: Set callback function for occupancy config change
+  zbOccupancySensor.onOccupancyConfigChange(occupancyConfigChange);
 
   // Add endpoint to Zigbee Core
   Zigbee.addEndpoint(&zbOccupancySensor);
@@ -101,4 +116,10 @@ void loop() {
     }
   }
   delay(100);
+}
+
+// Callback function for occupancy config change
+void occupancyConfigChange(ZigbeeOccupancySensorType sensor_type, uint16_t occ_to_unocc_delay, uint16_t unocc_to_occ_delay, uint8_t unocc_to_occ_threshold) {
+  // Handle sensor configuration here
+  Serial.printf("Occupancy config change: sensor type: %d, occ to unocc delay: %d, unocc to occ delay: %d, unocc to occ threshold: %d\n", sensor_type, occ_to_unocc_delay, unocc_to_occ_delay, unocc_to_occ_threshold);
 }
