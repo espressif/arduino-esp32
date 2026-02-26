@@ -434,7 +434,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   // holds a few milliseconds to let DHCP start and enter into a good state
   // FIX ME -- addresses issue https://github.com/espressif/arduino-esp32/issues/5733
   delay(50);
-  
+
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
   receiveAllMulticast(true);
 #endif
@@ -911,6 +911,7 @@ bool ETHClass::beginSPI(
   }
 
   _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
+
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
   receiveAllMulticast(true);
 #endif
@@ -1186,7 +1187,7 @@ bool ETHClass::addMacFilter(uint8_t *mac_addr) {
   }
   esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_ADD_MAC_FILTER, (void*)mac_addr);
   if (err != ESP_OK) {
-    log_e("Failed to add multicast filter: 0x%x: %s", err, esp_err_to_name(err));
+    log_e("Failed to add MAC filter: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
   return true;
@@ -1198,7 +1199,7 @@ bool ETHClass::removeMacFilter(uint8_t *mac_addr) {
   }
   esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_DEL_MAC_FILTER, (void*)mac_addr);
   if (err != ESP_OK) {
-    log_e("Failed to delete multicast filter: 0x%x: %s", err, esp_err_to_name(err));
+    log_e("Failed to delete MAC filter: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
   return true;
@@ -1237,7 +1238,7 @@ bool ETHClass::receiveAllMulticast(bool on) {
     log_e("Failed to set receive all multicast: 0x%x: %s", err, esp_err_to_name(err));
     return false;
   }
-  return err == ESP_OK;
+  return true;
 }
 #endif
 
