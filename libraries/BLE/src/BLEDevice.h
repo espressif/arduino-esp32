@@ -196,6 +196,10 @@ public:
   static String getPeerIRKString(BLEAddress peerAddress);
   static String getPeerIRKBase64(BLEAddress peerAddress);
   static String getPeerIRKReverse(BLEAddress peerAddress);
+  static bool getLocalIRK(uint8_t *irk);
+  static String getLocalIRKString();
+  static String getLocalIRKBase64();
+  static String getLocalIRKReverse();
   static BLEAdvertising *getAdvertising();
   static void startAdvertising();
   static void stopAdvertising();
