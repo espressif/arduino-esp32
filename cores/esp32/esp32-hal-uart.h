@@ -34,6 +34,11 @@ struct uart_struct_t;
 typedef struct uart_struct_t uart_t;
 
 // C prototype for the notifier that may be implemented in HardwareSerial.cpp
+// This function is called after both RX and TX are detached, for instance, when used
+// by some other peripheral, such as PPP over  UART0 for which case the UART0 IDF
+// driver shall be terminated. This is weak, because its regular implementation in 
+// HardwareSerial.cpp depends on Serial0, Serial1, ... object declaration, which is not 
+// valid when NO_GOLBAL_SERIAL or NO_GLOBAL_INSTANCES are defined.
 extern void hal_uart_notify_pins_detached(int uart_num) __attribute__((weak));
 
 bool _testUartBegin(
