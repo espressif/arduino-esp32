@@ -1,5 +1,5 @@
 {
-  "commit_sha": "e59f55d813b14550d08fc4c205efbaa339ce3a63",
+  "commit_sha": "fb25e62cc1b39327adc584757b79962baf2b3dff",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -54,7 +54,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -95,8 +95,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 51,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -138,7 +138,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -180,7 +180,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 2,
-          "errors": 0
+          "errors": 2
         },
         "esp32s3": {
           "failures": 0,
@@ -222,7 +222,7 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -290,8 +290,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 4,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -312,8 +312,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 3,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -354,8 +354,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 12,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -396,8 +396,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 2,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
@@ -828,5 +828,5 @@
       }
     }
   },
-  "generated_at": "2026-02-25T01:38:42.306313"
+  "generated_at": "2026-02-26T01:36:56.189132"
 }
