@@ -38,20 +38,20 @@ USBMIDI MIDI;
 // General MIDI program numbers (0-indexed for the API, displayed as 1-indexed in Serial output)
 enum GMProgram {
   GM_ACOUSTIC_GRAND_PIANO = 0,
-  GM_ELECTRIC_PIANO       = 4,
-  GM_DRAWBAR_ORGAN        = 16,
-  GM_NYLON_GUITAR         = 24,
-  GM_SLAP_BASS            = 36,
-  GM_STRING_ENSEMBLE      = 48,
-  GM_TRUMPET              = 56,
-  GM_SYNTH_PAD            = 88,
+  GM_ELECTRIC_PIANO = 4,
+  GM_DRAWBAR_ORGAN = 16,
+  GM_NYLON_GUITAR = 24,
+  GM_SLAP_BASS = 36,
+  GM_STRING_ENSEMBLE = 48,
+  GM_TRUMPET = 56,
+  GM_SYNTH_PAD = 88,
 };
 
 // A few notes for the demo
-#define NOTE_C4  60
-#define NOTE_E4  64
-#define NOTE_G4  67
-#define NOTE_C5  72
+#define NOTE_C4    60
+#define NOTE_E4    64
+#define NOTE_G4    67
+#define NOTE_C5    72
 
 // Demo state machine
 enum DemoStep {
@@ -220,9 +220,9 @@ void demoMultiChannel() {
   // Play a C major chord spread across channels
   MIDI.noteOn(NOTE_C4, 100, 1);  // Piano: C4
   delay(100);
-  MIDI.noteOn(NOTE_E4, 90, 2);   // Strings: E4
+  MIDI.noteOn(NOTE_E4, 90, 2);  // Strings: E4
   delay(100);
-  MIDI.noteOn(NOTE_G4, 85, 3);   // Bass: G4
+  MIDI.noteOn(NOTE_G4, 85, 3);  // Bass: G4
   delay(100);
   MIDI.noteOn(NOTE_C5, 110, 4);  // Trumpet: C5
   delay(1500);
@@ -263,12 +263,12 @@ void loop() {
     Serial.printf("\n--- Demo %d of %d ---\n", currentStep + 1, STEP_COUNT);
 
     switch (currentStep) {
-      case STEP_PROGRAM_CHANGE:     demoProgramChange(); break;
-      case STEP_PITCH_BEND_SIGNED:  demoPitchBendSigned(); break;
+      case STEP_PROGRAM_CHANGE:      demoProgramChange(); break;
+      case STEP_PITCH_BEND_SIGNED:   demoPitchBendSigned(); break;
       case STEP_PITCH_BEND_UNSIGNED: demoPitchBendUnsigned(); break;
-      case STEP_PITCH_BEND_FLOAT:   demoPitchBendFloat(); break;
-      case STEP_CHANNEL_PRESSURE:   demoChannelPressure(); break;
-      case STEP_MULTI_CHANNEL:      demoMultiChannel(); break;
+      case STEP_PITCH_BEND_FLOAT:    demoPitchBendFloat(); break;
+      case STEP_CHANNEL_PRESSURE:    demoChannelPressure(); break;
+      case STEP_MULTI_CHANNEL:       demoMultiChannel(); break;
     }
 
     currentStep = (currentStep + 1) % STEP_COUNT;
