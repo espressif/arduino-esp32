@@ -309,10 +309,8 @@ esp_err_t sr_set_mode(sr_mode_t mode) {
         g_sr_data->afe_handle->disable_wakenet(g_sr_data->afe_data);
       }
       break;
-#else  
-    case SR_MODE_COMMAND:  
-      log_e("SR_MODE_COMMAND is not supported when CONFIG_SR_MN_EN_NONE is enabled");  
-      return ESP_ERR_NOT_SUPPORTED;
+#else
+    case SR_MODE_COMMAND: log_e("SR_MODE_COMMAND is not supported when CONFIG_SR_MN_EN_NONE is enabled"); return ESP_ERR_NOT_SUPPORTED;
 #endif
     default: return ESP_FAIL;
   }
@@ -356,8 +354,8 @@ esp_err_t sr_start(
   g_sr_data->afe_data = g_sr_data->afe_handle->create_from_config(afe_config);
   afe_config_free(afe_config);
 
-  // Load Custom Command Detection
-  #ifndef CONFIG_SR_MN_EN_NONE
+// Load Custom Command Detection
+#ifndef CONFIG_SR_MN_EN_NONE
   log_d("init multinet");
   char *mn_name = esp_srmodel_filter(models, ESP_MN_PREFIX, ESP_MN_ENGLISH);
   log_d("load multinet '%s'", mn_name);
@@ -370,9 +368,9 @@ esp_err_t sr_start(
   log_i("add %d commands", cmd_number);
   for (size_t i = 0; i < cmd_number; i++) {
     char *phonemes = flite_g2p(sr_commands[i].str, 1);
-    if (phonemes == NULL) {  
-      log_e("failed to generate phonemes for cmd[%d] phrase[%d]:'%s'", sr_commands[i].command_id, i, sr_commands[i].str);  
-      continue;  
+    if (phonemes == NULL) {
+      log_e("failed to generate phonemes for cmd[%d] phrase[%d]:'%s'", sr_commands[i].command_id, i, sr_commands[i].str);
+      continue;
     }
     esp_mn_commands_phoneme_add(sr_commands[i].command_id, (const char *)(sr_commands[i].str), phonemes);
     free(phonemes);
@@ -386,10 +384,13 @@ esp_err_t sr_start(
       log_e("err cmd id:%d", err_id->phrases[i]->command_id);
     }
   }
-  #endif
+#endif
 
   int feed_channel = g_sr_data->afe_handle->get_feed_channel_num(g_sr_data->afe_data);
-  log_i("audio_chunksize=%d, feed_channel=%d, i2s_rx_chan_num=%d", g_sr_data->afe_handle->get_feed_chunksize(g_sr_data->afe_data), feed_channel, g_sr_data->i2s_rx_chan_num);
+  log_i(
+    "audio_chunksize=%d, feed_channel=%d, i2s_rx_chan_num=%d", g_sr_data->afe_handle->get_feed_chunksize(g_sr_data->afe_data), feed_channel,
+    g_sr_data->i2s_rx_chan_num
+  );
   assert(feed_channel >= g_sr_data->i2s_rx_chan_num);
 
   //Start tasks
@@ -429,11 +430,11 @@ esp_err_t sr_stop(void) {
     g_sr_data->event_group = NULL;
   }
 
-  #ifndef CONFIG_SR_MN_EN_NONE
+#ifndef CONFIG_SR_MN_EN_NONE
   if (g_sr_data->model_data) {
     g_sr_data->multinet->destroy(g_sr_data->model_data);
   }
-  #endif
+#endif
 
   if (g_sr_data->afe_data) {
     g_sr_data->afe_handle->destroy(g_sr_data->afe_data);

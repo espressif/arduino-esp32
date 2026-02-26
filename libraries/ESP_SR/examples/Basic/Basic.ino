@@ -8,7 +8,7 @@
 #define I2S_PIN_WS  15
 
 // Pins for PDM Microphone
-#define PDM_PIN_CLK 12
+#define PDM_PIN_CLK  12
 #define PDM_PIN_DATA 9
 
 #ifndef LED_BUILTIN
@@ -20,7 +20,7 @@
 
 // ESP_SR requires 16bit audio with 16kHz sample rate
 #define I2S_SAMPLE_RATE 16000
-#define I2S_DATA_WIDTH I2S_DATA_BIT_WIDTH_16BIT
+#define I2S_DATA_WIDTH  I2S_DATA_BIT_WIDTH_16BIT
 
 /**
  * SR_INPUT_FORMAT:
@@ -38,8 +38,8 @@
  * This should be equal to SR_INPUT_CHANNELS
  */
 // Mono microphone on mono bus
-#define SR_INPUT_FORMAT "M"
-#define SR_INPUT_CHANNELS SR_CHANNELS_MONO
+#define SR_INPUT_FORMAT     "M"
+#define SR_INPUT_CHANNELS   SR_CHANNELS_MONO
 #define I2S_OUTPUT_CHANNELS I2S_SLOT_MODE_MONO
 
 // Mono microphone (left) on stereo bus
@@ -80,8 +80,8 @@ void onSrEvent(sr_event_t event, int command_id, int phrase_id) {
   switch (event) {
     case SR_EVENT_WAKEWORD:
       Serial.println("WakeWord Detected!");
-      if (strlen(SR_INPUT_FORMAT) == 1) { // Mono recognition does not get CHANNEL event
-        ESP_SR.setMode(SR_MODE_COMMAND);  // Switch to Command detection
+      if (strlen(SR_INPUT_FORMAT) == 1) {  // Mono recognition does not get CHANNEL event
+        ESP_SR.setMode(SR_MODE_COMMAND);   // Switch to Command detection
       }
       break;
     case SR_EVENT_WAKEWORD_CHANNEL:
@@ -95,11 +95,23 @@ void onSrEvent(sr_event_t event, int command_id, int phrase_id) {
     case SR_EVENT_COMMAND:
       Serial.printf("Command ID %d Detected!\n", command_id);
       switch (command_id) {
-        case SR_CMD_LIGHT_ON:  Serial.println("Light On"); digitalWrite(LIGHT_PIN, HIGH); break;
-        case SR_CMD_LIGHT_OFF: Serial.println("Light Off"); digitalWrite(LIGHT_PIN, LOW); break;
-        case SR_CMD_FAN_ON:    Serial.println("Fan On"); digitalWrite(FAN_PIN, HIGH); break;
-        case SR_CMD_FAN_OFF:   Serial.println("Fan Off"); digitalWrite(FAN_PIN, LOW); break;
-        default:               Serial.printf("Unknown Command ID %d!\n", command_id); break;
+        case SR_CMD_LIGHT_ON:
+          Serial.println("Light On");
+          digitalWrite(LIGHT_PIN, HIGH);
+          break;
+        case SR_CMD_LIGHT_OFF:
+          Serial.println("Light Off");
+          digitalWrite(LIGHT_PIN, LOW);
+          break;
+        case SR_CMD_FAN_ON:
+          Serial.println("Fan On");
+          digitalWrite(FAN_PIN, HIGH);
+          break;
+        case SR_CMD_FAN_OFF:
+          Serial.println("Fan Off");
+          digitalWrite(FAN_PIN, LOW);
+          break;
+        default: Serial.printf("Unknown Command ID %d!\n", command_id); break;
       }
       ESP_SR.setMode(SR_MODE_COMMAND);  // Allow for more commands to be given, before timeout
       //ESP_SR.setMode(SR_MODE_WAKEWORD); // Switch back to WakeWord detection

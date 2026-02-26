@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#define SR_CMD_STR_LEN_MAX     256
+#define SR_CMD_STR_LEN_MAX 256
 
 typedef struct sr_cmd_t {
   int command_id;
