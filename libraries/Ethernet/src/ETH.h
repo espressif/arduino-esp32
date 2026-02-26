@@ -210,6 +210,10 @@ public:
 
   esp_eth_handle_t handle() const;
 
+  bool addMulticastFilter(IPAddress address);
+  bool removeMulticastFilter(IPAddress address);
+  bool receiveAllMulticast(bool on);
+
 #if ETH_SPI_SUPPORTS_CUSTOM
   static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
   static esp_err_t _eth_spi_write(void *ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);

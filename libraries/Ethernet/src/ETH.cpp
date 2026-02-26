@@ -1174,6 +1174,50 @@ bool ETHClass::setLinkSpeed(uint16_t speed) {
   return true;
 }
 
+bool ETHClass::addMulticastFilter(IPAddress address) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  uint8_t mac_addr[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
+  mac_addr[3] = address[1] & 0x7F;
+  mac_addr[4] = address[2];
+  mac_addr[5] = address[3];
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_ADD_MAC_FILTER, (void*)mac_addr);
+  if (err != ESP_OK) {
+    log_e("Failed to add multicast filter: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+bool ETHClass::removeMulticastFilter(IPAddress address) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  uint8_t mac_addr[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
+  mac_addr[3] = address[1] & 0x7F;
+  mac_addr[4] = address[2];
+  mac_addr[5] = address[3];
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_DEL_MAC_FILTER, (void*)mac_addr);
+  if (err != ESP_OK) {
+    log_e("Failed to delete multicast filter: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+bool ETHClass::receiveAllMulticast(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_ALL_MULTICAST, &on);
+  if (err != ESP_OK) {
+    log_e("Failed to set receive all multicast: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return err == ESP_OK;
+}
+
 // void ETHClass::getMac(uint8_t* mac)
 // {
 //     if(_eth_handle != NULL && mac != NULL){
