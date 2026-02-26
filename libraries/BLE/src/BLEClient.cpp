@@ -178,8 +178,19 @@ esp_gatt_if_t BLEClient::getGattcIf() {
  */
 bool BLEClient::secureConnection() {
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  log_i("secureConnection() does not need to be called for Bluedroid");
-  return true;
+  if (BLESecurity::m_authenticationComplete) {
+    return true;
+  }
+  if (!BLESecurity::m_securityEnabled) {
+    log_i("Security not enabled");
+    return true;
+  }
+  if (!BLESecurity::startSecurity(m_peerAddress.getNative())) {
+    log_e("Failed to start security");
+    return false;
+  }
+  BLESecurity::waitForAuthenticationComplete();
+  return BLESecurity::m_authenticationComplete;
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -1141,7 +1152,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
           break;
         }
 
-        if (BLESecurity::m_securityEnabled) {
+        if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
           BLESecurity::startSecurity(client->m_conn_id);
         }
 

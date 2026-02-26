@@ -37,8 +37,16 @@
  *                         Common properties                               *
  ***************************************************************************/
 
-// If true, the security will be enforced on connection even if no security is needed
-// TODO: Make this configurable without breaking Bluedroid/NimBLE compatibility
+// Controls when authentication is initiated:
+// - true (default): authentication starts immediately upon connection, running concurrently
+//   with service discovery. Because Bluedroid and NimBLE handle this concurrency differently,
+//   the relative order of events (e.g. "Authentication complete" vs "Service discovered")
+//   is not guaranteed to be the same across stacks.
+// - false: authentication is deferred until a protected characteristic is accessed. This
+//   serializes the flow (connect -> discover -> read -> auth -> retry), producing a
+//   consistent and predictable event order on both stacks.
+// Can be changed at runtime via setForceAuthentication().
+// To Do: Change default to false in v4.0.0
 bool BLESecurity::m_forceSecurity = true;
 
 bool BLESecurity::m_securityEnabled = false;
@@ -187,6 +195,20 @@ uint32_t BLESecurity::getPassKey() {
 // This function sets if the passkey should be regenerated on each connection.
 void BLESecurity::regenPassKeyOnConnect(bool enable) {
   m_regenOnConnect = enable;
+}
+
+// This function sets whether authentication should be forced immediately on connection.
+// When true, security is initiated as soon as the connection is established.
+// When false, security is triggered on-demand when accessing a protected characteristic.
+// Default: true for backward compatibility
+// To Do: Change default to false in v4.0.0
+void BLESecurity::setForceAuthentication(bool force) {
+  m_forceSecurity = force;
+}
+
+// This function returns whether authentication is forced on connection.
+bool BLESecurity::getForceAuthentication() {
+  return m_forceSecurity;
 }
 
 // This function resets the security state on disconnect.

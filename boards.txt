@@ -42152,6 +42152,14 @@ esp32s3_powerfeather.build.mcu=esp32s3
 esp32s3_powerfeather.build.core=esp32
 esp32s3_powerfeather.build.variant=esp32s3_powerfeather
 esp32s3_powerfeather.build.board=ESP32S3_POWERFEATHER
+esp32s3_powerfeather.build.rev_defines=
+
+esp32s3_powerfeather.menu.Revision.V1=ESP32-S3 PowerFeather
+esp32s3_powerfeather.menu.Revision.V1.build.board=ESP32S3_POWERFEATHER
+esp32s3_powerfeather.menu.Revision.V1.build.rev_defines=
+esp32s3_powerfeather.menu.Revision.V2=ESP32-S3 PowerFeather V2
+esp32s3_powerfeather.menu.Revision.V2.build.board=ESP32S3_POWERFEATHER_V2
+esp32s3_powerfeather.menu.Revision.V2.build.rev_defines=-DPOWERFEATHER_BOARD_V2 -DARDUINO_ESP32S3_POWERFEATHER
 
 esp32s3_powerfeather.build.usb_mode=1
 esp32s3_powerfeather.build.cdc_on_boot=1
@@ -42164,7 +42172,7 @@ esp32s3_powerfeather.build.flash_mode=dio
 esp32s3_powerfeather.build.boot=qio
 esp32s3_powerfeather.build.boot_freq=80m
 esp32s3_powerfeather.build.partitions=default_8MB
-esp32s3_powerfeather.build.defines=
+esp32s3_powerfeather.build.defines={build.rev_defines}
 esp32s3_powerfeather.build.loop_core=
 esp32s3_powerfeather.build.event_core=
 esp32s3_powerfeather.build.flash_type=qio
@@ -42172,10 +42180,10 @@ esp32s3_powerfeather.build.psram_type=qspi
 esp32s3_powerfeather.build.memory_type={build.flash_type}_{build.psram_type}
 
 esp32s3_powerfeather.menu.PSRAM.disabled=Disabled
-esp32s3_powerfeather.menu.PSRAM.disabled.build.defines=
+esp32s3_powerfeather.menu.PSRAM.disabled.build.defines={build.rev_defines}
 esp32s3_powerfeather.menu.PSRAM.disabled.build.psram_type=qspi
 esp32s3_powerfeather.menu.PSRAM.enabled=QSPI PSRAM
-esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+esp32s3_powerfeather.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM {build.rev_defines}
 esp32s3_powerfeather.menu.PSRAM.enabled.build.psram_type=qspi
 
 esp32s3_powerfeather.menu.FlashMode.qio=QIO 80MHz
