@@ -1174,6 +1174,7 @@ bool ETHClass::setLinkSpeed(uint16_t speed) {
   return true;
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 bool ETHClass::addMulticastFilter(IPAddress address) {
   if (_eth_handle == NULL) {
     return false;
@@ -1217,6 +1218,7 @@ bool ETHClass::receiveAllMulticast(bool on) {
   }
   return err == ESP_OK;
 }
+#endif
 
 // void ETHClass::getMac(uint8_t* mac)
 // {
