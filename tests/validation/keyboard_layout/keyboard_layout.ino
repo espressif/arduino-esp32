@@ -46,17 +46,9 @@ typedef struct {
 
 // Add new layouts here - all tests run automatically for each entry.
 static const LayoutEntry layouts[] = {
-  {KeyboardLayout_da_DK, "da_DK"},
-  {KeyboardLayout_de_DE, "de_DE"},
-  {KeyboardLayout_en_US, "en_US"},
-  {KeyboardLayout_es_ES, "es_ES"},
-  {KeyboardLayout_fr_CH, "fr_CH"},
-  {KeyboardLayout_fr_FR, "fr_FR"},
-  {KeyboardLayout_hu_HU, "hu_HU"},
-  {KeyboardLayout_it_IT, "it_IT"},
-  {KeyboardLayout_pt_BR, "pt_BR"},
-  {KeyboardLayout_pt_PT, "pt_PT"},
-  {KeyboardLayout_sv_SE, "sv_SE"},
+  {KeyboardLayout_da_DK, "da_DK"}, {KeyboardLayout_de_DE, "de_DE"}, {KeyboardLayout_en_US, "en_US"}, {KeyboardLayout_es_ES, "es_ES"},
+  {KeyboardLayout_fr_CH, "fr_CH"}, {KeyboardLayout_fr_FR, "fr_FR"}, {KeyboardLayout_hu_HU, "hu_HU"}, {KeyboardLayout_it_IT, "it_IT"},
+  {KeyboardLayout_pt_BR, "pt_BR"}, {KeyboardLayout_pt_PT, "pt_PT"}, {KeyboardLayout_sv_SE, "sv_SE"},
 };
 
 #define NUM_LAYOUTS (sizeof(layouts) / sizeof(layouts[0]))
