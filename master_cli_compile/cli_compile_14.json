@@ -326,6 +326,14 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/WiFi/examples/WiFiScanAsync",
+                    "sizes": [{
+                            "flash_bytes": 833022,
+                            "flash_percentage": 63,
+                            "ram_bytes": 29976,
+                            "ram_percentage": 9
+                            }]
+                    },
 {"name": "libraries/WiFi/examples/WiFiScanDualAntenna",
                     "sizes": [{
                             "flash_bytes": 832068,
@@ -395,6 +403,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/Wire/examples/WireMaster",
+                    "sizes": [{
+                            "flash_bytes": 280040,
+                            "flash_percentage": 21,
+                            "ram_bytes": 17936,
+                            "ram_percentage": 5
+                            }]
+                    },
 {"name": "libraries/Wire/examples/WireScan",
                     "sizes": [{
                             "flash_bytes": 279756,
@@ -520,6 +536,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/Wire/examples/WireSlaveFunctionalCallback",
+                    "sizes": [{
+                            "flash_bytes": 317949,
+                            "flash_percentage": 24,
+                            "ram_bytes": 23332,
+                            "ram_percentage": 7
+                            }]
+                    },
 {"name": "libraries/Zigbee/examples/Zigbee_Analog_Input_Output",
                     "sizes": [{
                             "flash_bytes": 646225,

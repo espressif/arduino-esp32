@@ -747,6 +747,14 @@
                             "ram_percentage": 16
                             }]
                     },
+{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+                    "sizes": [{
+                            "flash_bytes": 389602,
+                            "flash_percentage": 29,
+                            "ram_bytes": 54588,
+                            "ram_percentage": 16
+                            }]
+                    },
 {"name": "libraries/USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
                             "flash_bytes": 385394,
@@ -777,14 +785,6 @@
                             "flash_percentage": 28,
                             "ram_bytes": 54592,
                             "ram_percentage": 16
-                            }]
-                    },
-{"name": "libraries/USB/examples/USBMSC",
-                    "sizes": [{
-                            "flash_bytes": 389948,
-                            "flash_percentage": 29,
-                            "ram_bytes": 62732,
-                            "ram_percentage": 19
                             }]
                     }
 ]
@@ -845,6 +845,14 @@
                             "flash_bytes": 317660,
                             "flash_percentage": 24,
                             "ram_bytes": 38968,
+                            "ram_percentage": 11
+                            }]
+                    },
+{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+                    "sizes": [{
+                            "flash_bytes": 324980,
+                            "flash_percentage": 24,
+                            "ram_bytes": 39320,
                             "ram_percentage": 11
                             }]
                     },
@@ -909,14 +917,6 @@
                             "flash_bytes": 863296,
                             "flash_percentage": 65,
                             "ram_bytes": 42036,
-                            "ram_percentage": 12
-                            }]
-                    },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
-                    "sizes": [{
-                            "flash_bytes": 957147,
-                            "flash_percentage": 73,
-                            "ram_bytes": 42396,
                             "ram_percentage": 12
                             }]
                     }
@@ -1013,6 +1013,14 @@
                             "ram_percentage": 13
                             }]
                     },
+{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+                    "sizes": [{
+                            "flash_bytes": 385738,
+                            "flash_percentage": 29,
+                            "ram_bytes": 44908,
+                            "ram_percentage": 13
+                            }]
+                    },
 {"name": "libraries/USB/examples/MIDI/MidiMusicBox",
                     "sizes": [{
                             "flash_bytes": 383022,
@@ -1058,14 +1066,6 @@
                             "flash_bytes": 381578,
                             "flash_percentage": 29,
                             "ram_bytes": 44788,
-                            "ram_percentage": 13
-                            }]
-                    },
-{"name": "libraries/USB/examples/USBVendor",
-                    "sizes": [{
-                            "flash_bytes": 385874,
-                            "flash_percentage": 29,
-                            "ram_bytes": 44948,
                             "ram_percentage": 13
                             }]
                     }
