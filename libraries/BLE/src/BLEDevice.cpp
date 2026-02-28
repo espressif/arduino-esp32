@@ -701,28 +701,44 @@ bool BLEDevice::getPeerIRK(BLEAddress peerAddress, uint8_t *irk) {
     return false;
   }
 
-  // Find the bonded device that matches the peer address
+  // Find the bonded device that matches the peer address.
+  // Bluedroid may store the bond under the connection-time random address,
+  // so we also try matching against pid_key.static_addr (identity address) as a fallback.
   bool found = false;
 
   for (int i = 0; i < dev_num; i++) {
+    // Check if the PID key (which contains the IRK) is present first
+    if (!(bond_dev[i].bond_key.key_mask & ESP_LE_KEY_PID)) {
+      continue;
+    }
+
     BLEAddress bondAddr(bond_dev[i].bd_addr);
-    if (bondAddr.equals(peerAddress)) {
-      // Check if the PID key (which contains the IRK) is present
-      if (bond_dev[i].bond_key.key_mask & ESP_LE_KEY_PID) {
-        memcpy(irk, bond_dev[i].bond_key.pid_key.irk, 16);
-        found = true;
-        log_d("IRK found for peer: %s", peerAddress.toString().c_str());
-        break;
-      } else {
-        log_w("PID key not present for peer: %s", peerAddress.toString().c_str());
+    BLEAddress identityAddr(bond_dev[i].bond_key.pid_key.static_addr);
+
+    if (bondAddr.equals(peerAddress) || identityAddr.equals(peerAddress)) {
+      // Verify the IRK is non-zero before accepting it
+      bool irk_nonzero = false;
+      for (int j = 0; j < 16; j++) {
+        if (bond_dev[i].bond_key.pid_key.irk[j] != 0) {
+          irk_nonzero = true;
+          break;
+        }
       }
+      if (!irk_nonzero) {
+        log_w("PID key present but IRK is all zeroes for peer: %s", peerAddress.toString().c_str());
+        continue;
+      }
+      memcpy(irk, bond_dev[i].bond_key.pid_key.irk, 16);
+      found = true;
+      log_d("IRK found for peer: %s (bond addr: %s)", peerAddress.toString().c_str(), bondAddr.toString().c_str());
+      break;
     }
   }
 
   free(bond_dev);
 
   if (!found) {
-    log_e("IRK not found for peer");
+    log_e("IRK not found for peer: %s", peerAddress.toString().c_str());
     return false;
   }
 
@@ -826,6 +842,105 @@ String BLEDevice::getPeerIRKBase64(BLEAddress peerAddress) {
 String BLEDevice::getPeerIRKReverse(BLEAddress peerAddress) {
   uint8_t irk[16];
   if (!getPeerIRK(peerAddress, irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 15; i >= 0; i--) {
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+  }
+  result.toUpperCase();
+  return result;
+}
+
+/*
+ * @brief Get the local device's own Identity Resolving Key (IRK).
+ * @param [out] irk Buffer to store the 16-byte IRK.
+ * @return True if successful, false otherwise.
+ * @note The local IRK is generated once and stored persistently.
+ *       It is used to generate Resolvable Private Addresses (RPA).
+ */
+bool BLEDevice::getLocalIRK(uint8_t *irk) {
+  log_v(">> BLEDevice::getLocalIRK()");
+
+  if (!initialized) {
+    log_e("BLE is not initialized. Call BLEDevice::init() first");
+    return false;
+  }
+
+  if (irk == nullptr) {
+    log_e("IRK buffer is null");
+    return false;
+  }
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  esp_err_t ret = esp_ble_gap_get_local_irk(irk);
+  if (ret != ESP_OK) {
+    log_e("Failed to get local IRK: %d", ret);
+    return false;
+  }
+  log_v("<< BLEDevice::getLocalIRK()");
+  return true;
+#endif  // CONFIG_BLUEDROID_ENABLED
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  int rc = ble_gap_read_local_irk(irk);
+  if (rc != 0) {
+    log_e("Failed to get local IRK: %d", rc);
+    return false;
+  }
+  log_v("<< BLEDevice::getLocalIRK()");
+  return true;
+#endif  // CONFIG_NIMBLE_ENABLED
+}
+
+/*
+ * @brief Get the local device's IRK as a comma-separated hex string.
+ * @return String in format "0xXX,0xXX,..." or empty string on failure.
+ */
+String BLEDevice::getLocalIRKString() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 0; i < 16; i++) {
+    result += "0x";
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+    if (i < 15) {
+      result += ",";
+    }
+  }
+  return result;
+}
+
+/*
+ * @brief Get the local device's IRK as a Base64 encoded string.
+ * @return Base64 encoded string or empty string on failure.
+ */
+String BLEDevice::getLocalIRKBase64() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
+    return String();
+  }
+
+  return base64::encode(irk, 16);
+}
+
+/*
+ * @brief Get the local device's IRK in reverse hex format.
+ * @return String in reverse hex format (uppercase) or empty string on failure.
+ */
+String BLEDevice::getLocalIRKReverse() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
     return String();
   }
 
@@ -1243,9 +1358,13 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     {
       log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      // Signal that authentication has completed
-      // This unblocks any GATT operations waiting for pairing when bonding is enabled
-      BLESecurity::signalAuthenticationComplete();
+      // Call user callback BEFORE signaling completion.
+      // This ensures callback output (e.g., "Authentication complete") appears before
+      // any waiting GATT operations are unblocked and produce their own output.
+      // This matches NimBLE's ordering where the callback fires before the task is released.
+      if (BLEDevice::m_securityCallbacks != nullptr) {
+        BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
+      }
 
       // Restore CCCD values for bonded device reconnection
       // Per GATT spec, CCCD values should persist for bonded devices
@@ -1255,9 +1374,8 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         m_pServer->restoreCCCDValues(peerAddress);
       }
 
-      if (BLEDevice::m_securityCallbacks != nullptr) {
-        BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
-      }
+      // Signal completion last - this unblocks any GATT operations waiting for pairing
+      BLESecurity::signalAuthenticationComplete();
 #endif  // CONFIG_BLE_SMP_ENABLE
     } break;
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
