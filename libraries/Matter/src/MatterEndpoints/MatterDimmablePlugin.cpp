@@ -30,13 +30,13 @@ bool MatterDimmablePlugin::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
     return false;
   }
 
-  log_d("DimmablePlugin Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("DimmablePlugin Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-          log_d("DimmablePlugin On/Off State changed to %d", val->val.b);
+          log_d("DimmablePlugin On/Off State changed to %u", val->val.b);
           if (_onChangeOnOffCB != NULL) {
             ret &= _onChangeOnOffCB(val->val.b);
           }
@@ -50,7 +50,7 @@ bool MatterDimmablePlugin::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("DimmablePlugin Level changed to %d", val->val.u8);
+          log_d("DimmablePlugin Level changed to %u", val->val.u8);
           if (_onChangeLevelCB != NULL) {
             ret &= _onChangeLevelCB(val->val.u8);
           }
@@ -76,7 +76,7 @@ MatterDimmablePlugin::~MatterDimmablePlugin() {
 bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
   ArduinoMatter::_init();
   if (getEndPointId() != 0) {
-    log_e("Matter Dimmable Plugin with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Dimmable Plugin with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -97,7 +97,7 @@ bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Dimmable Plugin created with endpoint_id %d", getEndPointId());
+  log_i("Dimmable Plugin created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
   cluster_t *level_control_cluster = cluster::get(endpoint, LevelControl::Id);

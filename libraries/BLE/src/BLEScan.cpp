@@ -21,8 +21,8 @@
  *                           Common includes                               *
  ***************************************************************************/
 
+#include "Arduino.h"
 #include <esp_err.h>
-
 #include <map>
 
 #include "BLEAdvertisedDevice.h"
@@ -357,7 +357,7 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
           // We now construct a model of the advertised device that we have just found for the first
           // time.
           // ESP_LOG_BUFFER_HEXDUMP((uint8_t*)param->scan_rst.ble_adv, param->scan_rst.adv_data_len + param->scan_rst.scan_rsp_len, ESP_LOG_DEBUG);
-          // log_w("bytes length: %d + %d, addr type: %d", param->scan_rst.adv_data_len, param->scan_rst.scan_rsp_len, param->scan_rst.ble_addr_type);
+          // log_w("bytes length: %" PRIu32 " + %" PRIu32 ", addr type: %u", param->scan_rst.adv_data_len, param->scan_rst.scan_rsp_len, param->scan_rst.ble_addr_type);
           BLEAdvertisedDevice *advertisedDevice = new BLEAdvertisedDevice();
           advertisedDevice->setAddress(advertisedAddress);
           advertisedDevice->setRSSI(param->scan_rst.rssi);
@@ -398,10 +398,10 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
     case ESP_GAP_BLE_EXT_ADV_REPORT_EVT:
     {
       if (param->ext_adv_report.params.event_type & ESP_BLE_GAP_SET_EXT_ADV_PROP_LEGACY) {
-        log_v("legacy adv, adv type 0x%x data len %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
+        log_v("legacy adv, adv type 0x%x data len %u", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len);
       } else {
         log_v(
-          "extend adv, adv type 0x%x data len %d, data status: %d", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len,
+          "extend adv, adv type 0x%x data len %u, data status: %u", param->ext_adv_report.params.event_type, param->ext_adv_report.params.adv_data_len,
           param->ext_adv_report.params.data_status
         );
       }
@@ -498,7 +498,7 @@ void BLEScan::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_
  * @return True if scan started or false if there was an error.
  */
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
-  log_v(">> start(duration=%d)", duration);
+  log_v(">> start(duration=%" PRIu32 ")", duration);
 
   m_semaphoreScanEnd.take(String("start"));
   m_scanCompleteCB = scanCompleteCB;  // Save the callback to be invoked when the scan completes.
@@ -740,7 +740,7 @@ int BLEScan::handleGAPEvent(ble_gap_event *event, void *arg) {
  * @return True if scan started or false if there was an error.
  */
 bool BLEScan::start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue) {
-  log_d(">> start(duration=%d)", duration);
+  log_d(">> start(duration=%" PRIu32 ")", duration);
 
   if (!is_continue) {
     clearResults();

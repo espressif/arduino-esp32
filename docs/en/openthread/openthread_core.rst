@@ -562,16 +562,16 @@ Address Management
     void printAddresses() {
         // Print unicast addresses
         size_t unicastCount = OThread.getUnicastAddressCount();
-        Serial.printf("Unicast addresses: %zu\r\n", unicastCount);
+        Serial.printf("Unicast addresses: %lu\r\n", (unsigned long)unicastCount);
         for (size_t i = 0; i < unicastCount; i++) {
-            Serial.printf("  [%zu] %s\r\n", i, OThread.getUnicastAddress(i).toString().c_str());
+            Serial.printf("  [%lu] %s\r\n", (unsigned long)i, OThread.getUnicastAddress(i).toString().c_str());
         }
 
         // Print multicast addresses
         size_t multicastCount = OThread.getMulticastAddressCount();
-        Serial.printf("Multicast addresses: %zu\r\n", multicastCount);
+        Serial.printf("Multicast addresses: %lu\r\n", (unsigned long)multicastCount);
         for (size_t i = 0; i < multicastCount; i++) {
-            Serial.printf("  [%zu] %s\r\n", i, OThread.getMulticastAddress(i).toString().c_str());
+            Serial.printf("  [%lu] %s\r\n", (unsigned long)i, OThread.getMulticastAddress(i).toString().c_str());
         }
 
         // Clear cache to force refresh

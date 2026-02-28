@@ -30,11 +30,11 @@ static void _printMemCapsInfo(uint32_t caps, const char *caps_str) {
   heap_caps_get_info(&info, caps);
   chip_report_printf("%s Memory Info:\n", caps_str);
   chip_report_printf("------------------------------------------\n");
-  chip_report_printf("  Total Size        : %8u B (%6.1f KB)\n", total, b2kb(total));
-  chip_report_printf("  Free Bytes        : %8u B (%6.1f KB)\n", info.total_free_bytes, b2kb(info.total_free_bytes));
-  chip_report_printf("  Allocated Bytes   : %8u B (%6.1f KB)\n", info.total_allocated_bytes, b2kb(info.total_allocated_bytes));
-  chip_report_printf("  Minimum Free Bytes: %8u B (%6.1f KB)\n", info.minimum_free_bytes, b2kb(info.minimum_free_bytes));
-  chip_report_printf("  Largest Free Block: %8u B (%6.1f KB)\n", info.largest_free_block, b2kb(info.largest_free_block));
+  chip_report_printf("  Total Size        : %8lu B (%6.1f KB)\n", (unsigned long)total, b2kb(total));
+  chip_report_printf("  Free Bytes        : %8lu B (%6.1f KB)\n", (unsigned long)info.total_free_bytes, b2kb(info.total_free_bytes));
+  chip_report_printf("  Allocated Bytes   : %8lu B (%6.1f KB)\n", (unsigned long)info.total_allocated_bytes, b2kb(info.total_allocated_bytes));
+  chip_report_printf("  Minimum Free Bytes: %8lu B (%6.1f KB)\n", (unsigned long)info.minimum_free_bytes, b2kb(info.minimum_free_bytes));
+  chip_report_printf("  Largest Free Block: %8lu B (%6.1f KB)\n", (unsigned long)info.largest_free_block, b2kb(info.largest_free_block));
 }
 
 static void printPkgVersion(void) {
@@ -55,23 +55,23 @@ static void printPkgVersion(void) {
   switch (pkg_ver) {
     case 1:  chip_report_printf("FH16"); break;
     case 2:  chip_report_printf("FH32"); break;
-    default: chip_report_printf("%lu", pkg_ver); break;
+    default: chip_report_printf("%" PRIu32, pkg_ver); break;
   }
 #elif CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
-  chip_report_printf("%lu", pkg_ver);
+  chip_report_printf("%" PRIu32, pkg_ver);
 #elif CONFIG_IDF_TARGET_ESP32C2
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_BLK2_DATA1_REG, EFUSE_PKG_VERSION);
-  chip_report_printf("%lu", pkg_ver);
+  chip_report_printf("%" PRIu32, pkg_ver);
 #elif CONFIG_IDF_TARGET_ESP32H2
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS_4_REG, EFUSE_PKG_VERSION);
-  chip_report_printf("%lu", pkg_ver);
+  chip_report_printf("%" PRIu32, pkg_ver);
 #elif CONFIG_IDF_TARGET_ESP32P4
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS_2_REG, EFUSE_PKG_VERSION);
-  chip_report_printf("%lu", pkg_ver);
+  chip_report_printf("%" PRIu32, pkg_ver);
 #elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C61
   uint32_t pkg_ver = REG_GET_FIELD(EFUSE_RD_MAC_SYS2_REG, EFUSE_PKG_VERSION);
-  chip_report_printf("%lu", pkg_ver);
+  chip_report_printf("%" PRIu32, pkg_ver);
 #else
   chip_report_printf("Unknown");
 #endif
@@ -102,12 +102,12 @@ static void printChipInfo(void) {
   }
   printPkgVersion();
   chip_report_printf("  Revision          : %.2f\n", (float)(info.revision) / 100.0);
-  chip_report_printf("  Cores             : %d\n", info.cores);
+  chip_report_printf("  Cores             : %u\n", info.cores);
   rtc_cpu_freq_config_t conf;
   rtc_clk_cpu_freq_get_config(&conf);
-  chip_report_printf("  CPU Frequency     : %lu MHz\n", conf.freq_mhz);
+  chip_report_printf("  CPU Frequency     : %" PRIu32 " MHz\n", conf.freq_mhz);
   chip_report_printf("  XTAL Frequency    : %d MHz\n", rtc_clk_xtal_freq_get());
-  chip_report_printf("  Features Bitfield : %#010x\n", info.features);
+  chip_report_printf("  Features Bitfield : %#010" PRIx32 "\n", info.features);
   chip_report_printf("  Embedded Flash    : %s\n", (info.features & CHIP_FEATURE_EMB_FLASH) ? "Yes" : "No");
   chip_report_printf("  Embedded PSRAM    : %s\n", (info.features & CHIP_FEATURE_EMB_PSRAM) ? "Yes" : "No");
   chip_report_printf("  2.4GHz WiFi       : %s\n", (info.features & CHIP_FEATURE_WIFI_BGN) ? "Yes" : "No");
@@ -135,18 +135,18 @@ static void printFlashInfo(void) {
   chip_report_printf("Flash Info:\n");
   chip_report_printf("------------------------------------------\n");
   uint32_t hw_size = 1 << (g_rom_flashchip.device_id & 0xFF);
-  chip_report_printf("  Chip Size         : %8lu B (%.0f MB)\n", hw_size, b2mb(hw_size));
-  chip_report_printf("  Block Size        : %8lu B (%6.1f KB)\n", g_rom_flashchip.block_size, b2kb(g_rom_flashchip.block_size));
-  chip_report_printf("  Sector Size       : %8lu B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
-  chip_report_printf("  Page Size         : %8lu B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
+  chip_report_printf("  Chip Size         : %8" PRIu32 "B (%.0f MB)\n", hw_size, b2mb(hw_size));
+  chip_report_printf("  Block Size        : %8" PRIu32 "B (%6.1f KB)\n", g_rom_flashchip.block_size, b2kb(g_rom_flashchip.block_size));
+  chip_report_printf("  Sector Size       : %8" PRIu32 "B (%6.1f KB)\n", g_rom_flashchip.sector_size, b2kb(g_rom_flashchip.sector_size));
+  chip_report_printf("  Page Size         : %8" PRIu32 "B (%6.1f KB)\n", g_rom_flashchip.page_size, b2kb(g_rom_flashchip.page_size));
 
   // Runtime flash frequency detection from hardware registers
   uint32_t actual_freq = ESP.getFlashFrequencyMHz();
   uint8_t source_freq = ESP.getFlashSourceFrequencyMHz();
   uint8_t divider = ESP.getFlashClockDivider();
 
-  chip_report_printf("  Bus Speed         : %lu MHz\n", actual_freq);
-  chip_report_printf("  Flash Frequency   : %lu MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
+  chip_report_printf("  Bus Speed         : %" PRIu32 " MHz\n", actual_freq);
+  chip_report_printf("  Flash Frequency   : %" PRIu32 " MHz (source: %u MHz, divider: %u)\n", actual_freq, source_freq, divider);
 
   chip_report_printf("  Bus Mode          : ");
 #if CONFIG_ESPTOOLPY_OCT_FLASH
@@ -171,13 +171,13 @@ static void printPartitionsInfo(void) {
     while (it != NULL) {
       const esp_partition_t *partition = esp_partition_get(it);
       if (partition) {
-        chip_report_printf("  %17s : addr: 0x%08X, size: %7.1f KB", partition->label, partition->address, b2kb(partition->size));
+        chip_report_printf("  %17s : addr: 0x%08" PRIX32 ", size: %7.1f KB", partition->label, partition->address, b2kb(partition->size));
         if (partition->type == ESP_PARTITION_TYPE_APP) {
           chip_report_printf(", type:  APP");
           if (partition->subtype == 0) {
             chip_report_printf(", subtype: FACTORY");
           } else if (partition->subtype >= 0x10 && partition->subtype < 0x20) {
-            chip_report_printf(", subtype: OTA_%lu", partition->subtype - 0x10);
+            chip_report_printf(", subtype: OTA_%u", partition->subtype - 0x10);
           } else if (partition->subtype == 0x20) {
             chip_report_printf(", subtype: TEST");
           } else {
@@ -229,17 +229,17 @@ static void printBoardInfo(void) {
   chip_report_printf("  Arduino FQBN      : %s\n", ARDUINO_FQBN);
 #else
 #ifdef CORE_DEBUG_LEVEL
-  chip_report_printf("  Core Debug Level  : %d\n", CORE_DEBUG_LEVEL);
+  chip_report_printf("  Core Debug Level  : %u\n", CORE_DEBUG_LEVEL);
 #endif
 #ifdef ARDUINO_RUNNING_CORE
-  chip_report_printf("  Arduino Runs Core : %d\n", ARDUINO_RUNNING_CORE);
-  chip_report_printf("  Arduino Events on : %d\n", ARDUINO_EVENT_RUNNING_CORE);
+  chip_report_printf("  Arduino Runs Core : %u\n", ARDUINO_RUNNING_CORE);
+  chip_report_printf("  Arduino Events on : %u\n", ARDUINO_EVENT_RUNNING_CORE);
 #endif
 #ifdef ARDUINO_USB_MODE
-  chip_report_printf("  Arduino USB Mode  : %d\n", ARDUINO_USB_MODE);
+  chip_report_printf("  Arduino USB Mode  : %u\n", ARDUINO_USB_MODE);
 #endif
 #ifdef ARDUINO_USB_CDC_ON_BOOT
-  chip_report_printf("  CDC On Boot       : %d\n", ARDUINO_USB_CDC_ON_BOOT);
+  chip_report_printf("  CDC On Boot       : %u\n", ARDUINO_USB_CDC_ON_BOOT);
 #endif
 #endif /* ARDUINO_FQBN */
 }
@@ -279,11 +279,11 @@ static void printPerimanInfo(void) {
     }
     int8_t bus_number = perimanGetPinBusNum(i);
     if (bus_number != -1) {
-      chip_report_printf("[%u]", bus_number);
+      chip_report_printf("[%d]", bus_number);
     }
     int8_t bus_channel = perimanGetPinBusChannel(i);
     if (bus_channel != -1) {
-      chip_report_printf("[%u]", bus_channel);
+      chip_report_printf("[%d]", bus_channel);
     }
     chip_report_printf("\n");
   }

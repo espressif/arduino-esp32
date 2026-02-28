@@ -29,11 +29,11 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
     switch (event_id) {
       case ARDUINO_FIRMWARE_MSC_START_EVENT: Serial.println("MSC Update Start"); break;
       case ARDUINO_FIRMWARE_MSC_WRITE_EVENT:
-        //Serial.printf("MSC Update Write %u bytes at offset %u\n", data->write.size, data->write.offset);
+        //Serial.printf("MSC Update Write %lu bytes at offset %lu\n", (unsigned long)data->write.size, (unsigned long)data->write.offset);
         Serial.print(".");
         break;
-      case ARDUINO_FIRMWARE_MSC_END_EVENT:   Serial.printf("\nMSC Update End: %u bytes\n", data->end.size); break;
-      case ARDUINO_FIRMWARE_MSC_ERROR_EVENT: Serial.printf("MSC Update ERROR! Progress: %u bytes\n", data->error.size); break;
+      case ARDUINO_FIRMWARE_MSC_END_EVENT:   Serial.printf("\nMSC Update End: %lu bytes\n", (unsigned long)data->end.size); break;
+      case ARDUINO_FIRMWARE_MSC_ERROR_EVENT: Serial.printf("MSC Update ERROR! Progress: %lu bytes\n", (unsigned long)data->error.size); break;
       case ARDUINO_FIRMWARE_MSC_POWER_EVENT:
         Serial.printf("MSC Update Power: power: %u, start: %u, eject: %u", data->power.power_condition, data->power.start, data->power.load_eject);
         break;

@@ -52,25 +52,25 @@ const char *multistate_custom_state_names[6] = {"Off", "On", "UltraSlow", "Slow"
 
 void onStateChange(uint16_t state) {
   // print the state
-  Serial.printf("Received state change: %d\r\n", state);
+  Serial.printf("Received state change: %u\r\n", state);
   // print the state name using the stored state names
   const char *const *state_names = ZB_MULTISTATE_APPLICATION_TYPE_7_STATE_NAMES;
   if (state_names && state < zbMultistateDevice.getMultistateOutputStateNamesLength()) {
     Serial.printf("State name: %s\r\n", state_names[state]);
   }
   // print state index of possible options
-  Serial.printf("State index: %d / %d\r\n", state, zbMultistateDevice.getMultistateOutputStateNamesLength() - 1);
+  Serial.printf("State index: %u / %u\r\n", state, zbMultistateDevice.getMultistateOutputStateNamesLength() - 1);
 }
 
 void onStateChangeCustom(uint16_t state) {
   // print the state
-  Serial.printf("Received state change: %d\r\n", state);
+  Serial.printf("Received state change: %u\r\n", state);
   // print the state name using the stored state names
   if (state < zbMultistateDeviceCustom.getMultistateOutputStateNamesLength()) {
     Serial.printf("State name: %s\r\n", multistate_custom_state_names[state]);
   }
   // print state index of possible options
-  Serial.printf("State index: %d / %d\r\n", state, zbMultistateDeviceCustom.getMultistateOutputStateNamesLength() - 1);
+  Serial.printf("State index: %u / %u\r\n", state, zbMultistateDeviceCustom.getMultistateOutputStateNamesLength() - 1);
 
   Serial.print("Changing to fan mode to: ");
   switch (state) {

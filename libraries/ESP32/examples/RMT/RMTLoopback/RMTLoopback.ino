@@ -71,7 +71,7 @@ void setup() {
   Serial.println("Preloaded Data that will sent (time in 0.1us):");
   // Printout the received data plus the original values
   for (int i = 0; i < RMT_NUM_EXCHANGED_DATA; i++) {
-    Serial.printf("%08lx=[%c 0x%02x|%c 0x%02x] ", data[i].val, data[i].level0 ? 'H' : 'L', data[i].duration0, data[i].level1 ? 'H' : 'L', data[i].duration1);
+    Serial.printf("%08" PRIx32 "=[%c 0x%02" PRIx32 "|%c 0x%02" PRIx32 "] ", data[i].val, data[i].level0 ? 'H' : 'L', (uint32_t)data[i].duration0, data[i].level1 ? 'H' : 'L', (uint32_t)data[i].duration1);
 
     if (!((i + 1) % 4)) {
       Serial.println();
@@ -96,11 +96,11 @@ void loop() {
 
   // Once data is available, the number of RMT Symbols is stored in rx_num_symbols
   // and the received data is copied to my_data
-  Serial.printf("Got %zu RMT symbols\n", rx_num_symbols);
+  Serial.printf("Got %lu RMT symbols\n", (unsigned long)rx_num_symbols);
 
   // Printout the received data plus the original values
   for (int i = 0; i < RMT_NUM_EXCHANGED_DATA; i++) {
-    Serial.printf("%08lx=%08lx ", my_data[i].val, data[i].val);
+    Serial.printf("%08" PRIx32 "=%08" PRIx32 " ", my_data[i].val, data[i].val);
     if (!((i + 1) % 4)) {
       Serial.println();
     }

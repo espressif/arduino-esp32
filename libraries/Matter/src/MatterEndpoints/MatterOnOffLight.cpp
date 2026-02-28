@@ -30,10 +30,10 @@ bool MatterOnOffLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     return false;
   }
 
-  log_d("OnOff Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("OnOff Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
 
   if (endpoint_id == getEndPointId()) {
-    log_d("OnOffLight state changed to %d", val->val.b);
+    log_d("OnOffLight state changed to %u", val->val.b);
     if (cluster_id == OnOff::Id) {
       if (attribute_id == OnOff::Attributes::OnOff::Id) {
         if (_onChangeOnOffCB != NULL) {
@@ -61,7 +61,7 @@ bool MatterOnOffLight::begin(bool initialState) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter On-Off Light with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter On-Off Light with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -78,7 +78,7 @@ bool MatterOnOffLight::begin(bool initialState) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("On-Off Light created with endpoint_id %d", getEndPointId());
+  log_i("On-Off Light created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;

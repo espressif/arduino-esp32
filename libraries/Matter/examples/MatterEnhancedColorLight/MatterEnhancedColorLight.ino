@@ -127,7 +127,7 @@ void setup() {
     return true;
   });
   EnhancedColorLight.onChangeColorTemperature([](uint16_t colorTemperature) {
-    Serial.printf("Light Color Temperature changed to %d\r\n", colorTemperature);
+    Serial.printf("Light Color Temperature changed to %u\r\n", colorTemperature);
     // get correspondent Hue and Saturation of the color temperature
     HsvColor_t hsvTemperature = espRgbColorToHsvColor(espCTToRgbColor(colorTemperature));
     // keep previous the brightness and just change the Hue and Saturation
@@ -136,13 +136,13 @@ void setup() {
     return true;
   });
   EnhancedColorLight.onChangeBrightness([](uint8_t brightness) {
-    Serial.printf("Light brightness changed to %d\r\n", brightness);
+    Serial.printf("Light brightness changed to %u\r\n", brightness);
     // change current brightness (HSV value)
     currentHSVColor.v = brightness;
     return true;
   });
   EnhancedColorLight.onChangeColorHSV([](HsvColor_t hsvColor) {
-    Serial.printf("Light HSV Color changed to (%d,%d,%d)\r\n", hsvColor.h, hsvColor.s, hsvColor.v);
+    Serial.printf("Light HSV Color changed to (%u,%u,%u)\r\n", hsvColor.h, hsvColor.s, hsvColor.v);
     // keep the current brightness and just change Hue and Saturation
     currentHSVColor.h = hsvColor.h;
     currentHSVColor.s = hsvColor.s;
@@ -155,7 +155,7 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
+      "Initial state: %s | RGB Color: (%u,%u,%u) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
       EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color
@@ -181,7 +181,7 @@ void loop() {
       }
     }
     Serial.printf(
-      "Initial state: %s | RGB Color: (%d,%d,%d) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
+      "Initial state: %s | RGB Color: (%u,%u,%u) \r\n", EnhancedColorLight ? "ON" : "OFF", EnhancedColorLight.getColorRGB().r,
       EnhancedColorLight.getColorRGB().g, EnhancedColorLight.getColorRGB().b
     );
     // configure the Light based on initial on-off state and its color

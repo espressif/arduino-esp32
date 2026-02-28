@@ -29,7 +29,7 @@ bool MatterTemperatureSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t c
     return false;
   }
 
-  log_d("Temperature Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u", endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d("Temperature Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
   return ret;
 }
 
@@ -43,7 +43,7 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Temperature Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Temperature Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -60,7 +60,7 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   }
   rawTemperature = _rawTemperature;
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Temperature Sensor created with endpoint_id %d", getEndPointId());
+  log_i("Temperature Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;

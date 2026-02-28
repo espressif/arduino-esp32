@@ -50,7 +50,7 @@ ledc_periph_t ledc_handle = {0};
 
 // Helper function to find a timer with matching frequency and resolution
 static bool find_matching_timer(uint8_t speed_mode, uint32_t freq, uint8_t resolution, uint8_t *timer_num) {
-  log_d("Searching for timer with freq=%u, resolution=%u", freq, resolution);
+  log_d("Searching for timer with freq=%" PRIu32 ", resolution=%u", freq, resolution);
   // Check all channels to find one with matching frequency and resolution
   for (uint8_t i = 0; i < SOC_GPIO_PIN_COUNT; i++) {
     if (!perimanPinIsValid(i)) {
@@ -60,13 +60,13 @@ static bool find_matching_timer(uint8_t speed_mode, uint32_t freq, uint8_t resol
     if (type == ESP32_BUS_TYPE_LEDC) {
       ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(i, ESP32_BUS_TYPE_LEDC);
       if (bus != NULL && (bus->channel / SOC_LEDC_CHANNEL_NUM) == speed_mode && bus->freq_hz == freq && bus->channel_resolution == resolution) {
-        log_d("Found matching timer %u for freq=%u, resolution=%u", bus->timer_num, freq, resolution);
+        log_d("Found matching timer %u for freq=%" PRIu32 ", resolution=%u", bus->timer_num, freq, resolution);
         *timer_num = bus->timer_num;
         return true;
       }
     }
   }
-  log_d("No matching timer found for freq=%u, resolution=%u", freq, resolution);
+  log_d("No matching timer found for freq=%" PRIu32 ", resolution=%u", freq, resolution);
   return false;
 }
 
@@ -273,7 +273,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   if (channel_used) {
     uint32_t channel_resolution = 0;
     ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
-    log_i("Channel %u frequency: %u, resolution: %u", channel, ledc_get_freq(group, timer), channel_resolution);
+    log_i("Channel %u frequency: %" PRIu32 ", resolution: %" PRIu32, channel, ledc_get_freq(group, timer), channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
   } else {
     handle->channel_resolution = resolution;
@@ -319,7 +319,7 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
 #endif
 
   log_e(
-    "No free timers available for freq=%u, resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to "
+    "No free timers available for freq=%" PRIu32 ", resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to "
     "share its timer.",
     freq, resolution
   );
@@ -744,7 +744,7 @@ static bool ledcFadeGammaConfig(uint8_t pin, uint32_t start_duty, uint32_t targe
       return false;
     }
 
-    log_d("Gamma curve fade started on pin %u: %u -> %u over %dms", pin, start_duty, target_duty, max_fade_time_ms);
+    log_d("Gamma curve fade started on pin %u: %" PRIu32 " -> %" PRIu32 " over %dms", pin, start_duty, target_duty, max_fade_time_ms);
 
   } else {
     log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
@@ -775,7 +775,8 @@ void analogWrite(uint8_t pin, int value) {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if (bus == NULL && perimanClearPinBus(pin)) {
       if (ledcAttach(pin, analog_frequency, analog_resolution) == 0) {
-        log_e("analogWrite setup failed (freq = %u, resolution = %u). Try setting different resolution or frequency");
+        log_e("analogWrite setup failed (freq = %d, resolution = %u). Try setting different resolution or frequency",
+        analog_frequency, analog_resolution);
         return;
       }
     }

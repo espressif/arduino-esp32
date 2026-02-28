@@ -44,6 +44,16 @@ espsecure.py encrypt_flash_data  = runs the idf encryption function to make a en
   -a 0xnnnnnn00                  = 0x00 to 0x00fffff0 address offset(must be a multiple of 16, but better to use multiple of 32), used to offset the salting (has no effect when = --flash_crypt_conf 0x0)
   -o text                        = path/filename to save encrypted output file to
   text                           = path/filename to open source file from
+
+SECURITY WARNING - NOT SUITABLE FOR PRODUCTION OTA:
+  Both the http_updater path (via updater.php) and the http_direct path fetch
+  firmware over plain HTTP and stream it into Update.writeStream with no
+  transport-level integrity or authenticity. An attacker on the same network or
+  controlling DNS can man-in-the-middle the connection and serve malicious
+  firmware; U_AES_DECRYPT_AUTO accepts unencrypted images, so this can lead to
+  arbitrary code execution. For production OTA: use HTTPS with certificate
+  verification and/or verify firmware with cryptographic signatures or hashes
+  before Update.writeStream(); reject plaintext or unauthenticated images.
 */
 
 #include <Arduino.h>
@@ -136,7 +146,7 @@ void printProgress(size_t progress, const size_t &size) {
     progress = (progress * 100) / size;
     progress = (progress > 100 ? 100 : progress);  //0-100
     if (progress != last_progress) {
-      Serial.printf("Progress: %zu%%\n", progress);
+      Serial.printf("Progress: %lu%%\n", (unsigned long)progress);
       last_progress = progress;
     }
   }
@@ -210,7 +220,7 @@ bool http_updater(const String &host, const uint16_t &port, String uri, const bo
   if (!http.begin(client, host, port, uri)) {
     return false;  //httpclient setup error
   }
-  Serial.printf("Sending HTTP request 'http://%s:%i%s'\n", host.c_str(), port, uri.c_str());
+  Serial.printf("Sending HTTP request 'http://%s:%u%s'\n", host.c_str(), port, uri.c_str());
 
   //set basic authorization, if needed for webpage access
   if (user != NULL && password != NULL) {
@@ -263,7 +273,7 @@ bool http_direct(const String &host, const uint16_t &port, const String &uri, co
   if (!http.begin(client, host, port, uri)) {
     return false;  //httpclient setup error
   }
-  Serial.printf("Sending HTTP request 'http://%s:%i%s'\n", host.c_str(), port, uri.c_str());
+  Serial.printf("Sending HTTP request 'http://%s:%u%s'\n", host.c_str(), port, uri.c_str());
 
   //set basic authorization, if needed for webpage access
   if (user != NULL && password != NULL) {

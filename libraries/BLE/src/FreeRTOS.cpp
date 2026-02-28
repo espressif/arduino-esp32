@@ -4,6 +4,8 @@
  *  Created on: Feb 24, 2017
  *      Author: kolban
  */
+
+#include "Arduino.h"
 #include <freertos/FreeRTOS.h>  // Include the base FreeRTOS definitions
 #include <freertos/task.h>      // Include the task definitions
 #include <freertos/semphr.h>    // Include the semaphore definitions
@@ -223,7 +225,7 @@ bool FreeRTOS::Semaphore::take(uint32_t timeoutMs, String owner) {
 String FreeRTOS::Semaphore::toString() {
   char hex[9];
   String res = "name: " + m_name + " (0x";
-  snprintf(hex, sizeof(hex), "%08lx", (uint32_t)m_semaphore);
+  snprintf(hex, sizeof(hex), "%08" PRIx32, (uint32_t)m_semaphore);
   res += hex;
   res += "), owner: " + m_owner;
   return res;

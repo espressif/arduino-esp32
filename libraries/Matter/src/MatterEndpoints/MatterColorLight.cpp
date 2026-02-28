@@ -90,7 +90,7 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
   }
 
   log_d(
-    "RGB Color Attr update callback: endpoint: %u, cluster: %u, attribute: %u, val: %u, type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32,
+    "RGB Color Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32 ", type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32,
     val->type
   );
 
@@ -98,7 +98,7 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     switch (cluster_id) {
       case OnOff::Id:
         if (attribute_id == OnOff::Attributes::OnOff::Id) {
-          log_d("RGB Color Light On/Off State changed to %d", val->val.b);
+          log_d("RGB Color Light On/Off State changed to %u", val->val.b);
           if (_onChangeOnOffCB != NULL) {
             ret &= _onChangeOnOffCB(val->val.b);
           }
@@ -112,7 +112,7 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         break;
       case LevelControl::Id:
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
-          log_d("RGB Color Light Brightness changed to %d", val->val.u8);
+          log_d("RGB Color Light Brightness changed to %u", val->val.u8);
           if (_onChangeColorCB != NULL) {
             ret &= _onChangeColorCB({colorHSV.h, colorHSV.s, val->val.u8});
           }
@@ -127,15 +127,15 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
       case ColorControl::Id:
       {
         if (attribute_id != ColorControl::Attributes::CurrentHue::Id && attribute_id != ColorControl::Attributes::CurrentSaturation::Id) {
-          log_i("Color Control Attribute ID [%x] not processed.", attribute_id);
+          log_i("Color Control Attribute ID [%]" PRIx32 " not processed.", attribute_id);
           break;
         }
         espHsvColor_t hsvColor = {colorHSV.h, colorHSV.s, colorHSV.v};
         if (attribute_id == ColorControl::Attributes::CurrentHue::Id) {
-          log_d("RGB Light Hue changed to %d", val->val.u8);
+          log_d("RGB Light Hue changed to %u", val->val.u8);
           hsvColor.h = val->val.u8;
         } else {  // attribute_id == ColorControl::Attributes::CurrentSaturation::Id)
-          log_d("RGB Light Saturation changed to %d", val->val.u8);
+          log_d("RGB Light Saturation changed to %u", val->val.u8);
           hsvColor.s = val->val.u8;
         }
         if (_onChangeColorCB != NULL) {
@@ -164,7 +164,7 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter RGB Color Light with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter RGB Color Light with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -190,7 +190,7 @@ bool MatterColorLight::begin(bool initialState, espHsvColor_t _colorHSV) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("RGB Color Light created with endpoint_id %d", getEndPointId());
+  log_i("RGB Color Light created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */
   cluster_t *level_control_cluster = cluster::get(endpoint, LevelControl::Id);

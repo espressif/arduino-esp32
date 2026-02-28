@@ -124,7 +124,7 @@ esp_err_t i2cInit(uint8_t i2c_num, int8_t sda, int8_t scl, uint32_t frequency) {
     goto init_fail;
   }
 
-  log_i("Initializing I2C Master: sda=%d scl=%d freq=%d", sda, scl, frequency);
+  log_i("Initializing I2C Master: sda=%d scl=%d freq=%" PRIu32, sda, scl, frequency);
 
   i2c_config_t conf = {};
   conf.mode = I2C_MODE_MASTER;

@@ -28,7 +28,7 @@ void wifiScan(uint16_t min_time, uint16_t max_time) {
   // WiFi.scanNetworks will return the number of networks found.
   // Scan networks with those options: Synchrone mode, show hidden networks, active scan, max scan time per channel.
   int n = WiFi.scanNetworks(false, true, false, max_time);
-  Serial.printf("Scan done, elapsed time: %lu ms\n", millis() - start);
+  Serial.printf("Scan done, elapsed time: %" PRIu32 " ms\n", millis() - start);
   if (n == 0) {
     Serial.println("no networks found");
   } else {
@@ -41,9 +41,9 @@ void wifiScan(uint16_t min_time, uint16_t max_time) {
       Serial.print(" | ");
       Serial.printf("%-32.32s", WiFi.SSID(i).c_str());
       Serial.print(" | ");
-      Serial.printf("%4ld", WiFi.RSSI(i));
+      Serial.printf("%4" PRIi32, WiFi.RSSI(i));
       Serial.print(" | ");
-      Serial.printf("%2ld", WiFi.channel(i));
+      Serial.printf("%2" PRIi32, WiFi.channel(i));
       Serial.print(" | ");
       switch (WiFi.encryptionType(i)) {
         case WIFI_AUTH_OPEN:            Serial.print("open"); break;

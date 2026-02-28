@@ -71,7 +71,7 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
       return;
     }
     masters.push_back(new_master);
-    Serial.printf("Successfully registered master " MACSTR " (total masters: %zu)\n", MAC2STR(new_master->addr()), masters.size());
+    Serial.printf("Successfully registered master " MACSTR " (total masters: %lu)\n", MAC2STR(new_master->addr()), (unsigned long)masters.size());
   } else {
     // The slave will only receive broadcast messages
     log_v("Received a unicast message from " MACSTR, MAC2STR(info->src_addr));
@@ -95,7 +95,7 @@ void setup() {
   Serial.println("Wi-Fi parameters:");
   Serial.println("  Mode: STA");
   Serial.println("  MAC Address: " + WiFi.macAddress());
-  Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
+  Serial.printf("  Channel: %u\n", ESPNOW_WIFI_CHANNEL);
 
   // Initialize the ESP-NOW protocol
   if (!ESP_NOW.begin()) {
@@ -118,10 +118,10 @@ void loop() {
   static unsigned long last_debug = 0;
   if (millis() - last_debug > 10000) {
     last_debug = millis();
-    Serial.printf("Registered masters: %zu\n", masters.size());
+    Serial.printf("Registered masters: %lu\n", (unsigned long)masters.size());
     for (size_t i = 0; i < masters.size(); i++) {
       if (masters[i]) {
-        Serial.printf("  Master %zu: " MACSTR "\n", i, MAC2STR(masters[i]->addr()));
+        Serial.printf("  Master %lu: " MACSTR "\n", (unsigned long)i, MAC2STR(masters[i]->addr()));
       }
     }
   }

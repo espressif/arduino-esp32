@@ -109,7 +109,7 @@ bool tud_msc_start_stop_cb(uint8_t lun, uint8_t power_condition, bool start, boo
 // Callback invoked when received READ10 command.
 // Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
 int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
-  log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
+  log_v("[%u], lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
   }
@@ -122,7 +122,7 @@ int32_t tud_msc_read10_cb(uint8_t lun, uint32_t lba, uint32_t offset, void *buff
 // Callback invoked when received WRITE10 command.
 // Process data in buffer to disk's storage and return number of written bytes
 int32_t tud_msc_write10_cb(uint8_t lun, uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
-  log_v("[%u], lba: %u, offset: %u, bufsize: %u", lun, lba, offset, bufsize);
+  log_v("[%u], lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lun, lba, offset, bufsize);
   if (!msc_luns[lun].media_present) {
     return 0;
   }

@@ -73,11 +73,12 @@ String getDefaultMacAddress() {
   if (esp_efuse_mac_get_default(mac_base) == ESP_OK) {
     char buffer[24];  // 8*2 characters for hex + 7 characters for colons + 1 character for null terminator
 #ifdef CONFIG_SOC_IEEE802154_SUPPORTED
-    sprintf(
-      buffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6], mac_base[7]
+    snprintf(
+      buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
+      mac_base[7]
     );
 #else
-    sprintf(buffer, "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
+    snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
 #endif
     mac = buffer;
   }
@@ -95,15 +96,15 @@ String getInterfaceMacAddress(esp_mac_type_t interface) {
     char buffer[24];  // 8*2 characters for hex + 7 characters for colons + 1 character for null terminator
 #ifdef CONFIG_SOC_IEEE802154_SUPPORTED
     if (interface == ESP_MAC_IEEE802154) {
-      sprintf(
-        buffer, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
+      snprintf(
+        buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
         mac_base[7]
       );
     } else if (interface == ESP_MAC_EFUSE_EXT) {
-      sprintf(buffer, "%02X:%02X", mac_base[0], mac_base[1]);
+      snprintf(buffer, sizeof(buffer), "%02X:%02X", mac_base[0], mac_base[1]);
     } else {
 #endif
-      sprintf(buffer, "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
+      snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
 #ifdef CONFIG_SOC_IEEE802154_SUPPORTED
     }
 #endif

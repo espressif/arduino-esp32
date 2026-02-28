@@ -151,13 +151,13 @@ public:
       recv_msg_count++;
       if (device_is_master) {
         Serial.printf("Received a message from peer " MACSTR "\n", MAC2STR(addr()));
-        Serial.printf("  Count: %lu\n", msg->count);
-        Serial.printf("  Random data: %lu\n", msg->data);
+        Serial.printf("  Count: %" PRIu32 "\n", msg->count);
+        Serial.printf("  Random data: %" PRIu32 "\n", msg->data);
         last_data.push_back(msg->data);
         last_data.erase(last_data.begin());
       } else if (peer_is_master) {
         Serial.println("Received a message from the master");
-        Serial.printf("  Average data: %lu\n", msg->data);
+        Serial.printf("  Average data: %" PRIu32 "\n", msg->data);
       } else {
         Serial.printf("Peer " MACSTR " says: %s\n", MAC2STR(addr()), msg->str);
       }
@@ -270,12 +270,12 @@ void setup() {
   Serial.println("Wi-Fi parameters:");
   Serial.println("  Mode: STA");
   Serial.println("  MAC Address: " + WiFi.macAddress());
-  Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
+  Serial.printf("  Channel: %u\n", ESPNOW_WIFI_CHANNEL);
 
   // Generate yhis device's priority based on the 3 last bytes of the MAC address
   WiFi.macAddress(self_mac);
   self_priority = self_mac[3] << 16 | self_mac[4] << 8 | self_mac[5];
-  Serial.printf("This device's priority: %lu\n", self_priority);
+  Serial.printf("This device's priority: %" PRIu32 "\n", self_priority);
 
   // Initialize the ESP-NOW protocol
   if (!ESP_NOW.begin((const uint8_t *)ESPNOW_EXAMPLE_PMK)) {
@@ -322,7 +322,7 @@ void loop() {
             if (peers[i]->priority == highest_priority) {
               peers[i]->peer_is_master = true;
               master_peer = peers[i];
-              Serial.printf("Peer " MACSTR " is the master with priority %lu\n", MAC2STR(peers[i]->addr()), highest_priority);
+              Serial.printf("Peer " MACSTR " is the master with priority %" PRIu32 "\n", MAC2STR(peers[i]->addr()), highest_priority);
               break;
             }
           }
@@ -340,7 +340,7 @@ void loop() {
       if (!master_peer->send_message((const uint8_t *)&new_msg, sizeof(new_msg))) {
         Serial.println("Failed to send message to the master");
       } else {
-        Serial.printf("Sent message to the master. Count: %lu, Data: %lu\n", new_msg.count, new_msg.data);
+        Serial.printf("Sent message to the master. Count: %" PRIu32 ", Data: %" PRIu32 "\n", new_msg.count, new_msg.data);
         sent_msg_count++;
       }
 
@@ -369,7 +369,7 @@ void loop() {
             Serial.printf("Failed to send message to peer " MACSTR "\n", MAC2STR(peer->addr()));
           } else {
             Serial.printf(
-              "Sent message to peer " MACSTR ". Recv: %lu, Sent: %lu, Avg: %lu\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count, new_msg.data
+              "Sent message to peer " MACSTR ". Recv: %" PRIu32 ", Sent: %" PRIu32 ", Avg: %" PRIu32 "\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count, new_msg.data
             );
             sent_msg_count++;
           }

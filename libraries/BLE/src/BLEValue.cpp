@@ -37,7 +37,7 @@ BLEValue::BLEValue() {
  * @param [in] part A message part being added.
  */
 void BLEValue::addPart(const String &part) {
-  log_v(">> addPart: length=%d", part.length());
+  log_v(">> addPart: length=%u", part.length());
   m_accumulation += part;
 }  // addPart
 
@@ -48,7 +48,7 @@ void BLEValue::addPart(const String &part) {
  * @param [in] length The number of bytes being added.
  */
 void BLEValue::addPart(const uint8_t *pData, size_t length) {
-  log_v(">> addPart: length=%d", length);
+  log_v(">> addPart: length=%lu", (unsigned long)length);
   m_accumulation += String((char *)pData, length);
 }  // addPart
 

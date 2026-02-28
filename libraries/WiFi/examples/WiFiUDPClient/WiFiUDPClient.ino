@@ -35,7 +35,7 @@ void loop() {
   if (connected) {
     //Send a packet
     udp.beginPacket(udpAddress, udpPort);
-    udp.printf("Seconds since boot: %lu", millis() / 1000);
+    udp.printf("Seconds since boot: %" PRIu32, millis() / 1000);
     udp.endPacket();
   }
   //Wait for 1 second

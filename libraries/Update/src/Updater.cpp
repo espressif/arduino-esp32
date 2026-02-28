@@ -174,7 +174,7 @@ bool UpdateClass::installSignature(UpdaterVerifyClass *sign) {
   const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
                          : (hashType == HASH_SHA384) ? "SHA-384"
                                                      : "SHA-512";
-  log_i("Signature verification installed (hash: %s, signature size: %u bytes)", hashName, _signatureSize);
+  log_i("Signature verification installed (hash: %s, signature size: %lu bytes)", hashName, (unsigned long)_signatureSize);
   return true;
 }
 #endif /* UPDATE_SIGN */
@@ -225,7 +225,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   // Validate size is large enough to contain firmware + signature
   if (_signatureSize > 0 && size < _signatureSize) {
     _error = UPDATE_ERROR_SIZE;
-    log_e("Size too small for signature: %u < %u", size, _signatureSize);
+    log_e("Size too small for signature: %lu < %lu", (unsigned long)size, (unsigned long)_signatureSize);
     return false;
   }
 #endif /* UPDATE_SIGN */
@@ -273,7 +273,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     log_d("FS Partition: %s", _partition->label);
   } else {
     _error = UPDATE_ERROR_BAD_ARGUMENT;
-    log_e("bad command %u", command);
+    log_e("bad command %d", command);
     return false;
   }
 
@@ -281,7 +281,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     size = _partition->size;
   } else if (size > _partition->size) {
     _error = UPDATE_ERROR_SIZE;
-    log_e("too large %u > %u", size, _partition->size);
+    log_e("too large %lu > %" PRIu32, (unsigned long)size, _partition->size);
     return false;
   }
 
@@ -708,7 +708,7 @@ bool UpdateClass::end(bool evenIfRemaining) {
   }
 
   if (!isFinished() && !evenIfRemaining) {
-    log_e("premature end: res:%u, pos:%u/%u\n", getError(), progress(), _size);
+    log_e("premature end: res:%u, pos:%lu/%lu\n", getError(), (unsigned long)progress(), (unsigned long)_size);
     _abort(UPDATE_ERROR_ABORT);
     return false;
   }
@@ -745,7 +745,7 @@ bool UpdateClass::end(bool evenIfRemaining) {
 
     // Read signature from partition (last 512 bytes of what was written)
     size_t firmwareSize = _size - _signatureSize;
-    log_d("Reading signature from offset %u (firmware size: %u, total size: %u)", firmwareSize, firmwareSize, _size);
+    log_d("Reading signature from offset %lu (firmware size: %lu, total size: %lu)", (unsigned long)firmwareSize, (unsigned long)firmwareSize, (unsigned long)_size);
     if (!ESP.partitionRead(_partition, firmwareSize, (uint32_t *)_signatureBuffer, maxSigSize)) {
       log_e("Failed to read signature from partition");
       _abort(UPDATE_ERROR_SIGN);

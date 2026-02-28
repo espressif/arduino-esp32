@@ -101,17 +101,17 @@ void loop() {
   }
   if (alerts_triggered & TWAI_ALERT_BUS_ERROR) {
     Serial.println("Alert: A (Bit, Stuff, CRC, Form, ACK) error has occurred on the bus.");
-    Serial.printf("Bus error count: %lu\n", twaistatus.bus_error_count);
+    Serial.printf("Bus error count: %" PRIu32 "\n", twaistatus.bus_error_count);
   }
   if (alerts_triggered & TWAI_ALERT_TX_FAILED) {
     Serial.println("Alert: The Transmission failed.");
-    Serial.printf("TX buffered: %lu\t", twaistatus.msgs_to_tx);
-    Serial.printf("TX error: %lu\t", twaistatus.tx_error_counter);
-    Serial.printf("TX failed: %lu\n", twaistatus.tx_failed_count);
+    Serial.printf("TX buffered: %" PRIu32 "\t", twaistatus.msgs_to_tx);
+    Serial.printf("TX error: %" PRIu32 "\t", twaistatus.tx_error_counter);
+    Serial.printf("TX failed: %" PRIu32 "\n", twaistatus.tx_failed_count);
   }
   if (alerts_triggered & TWAI_ALERT_TX_SUCCESS) {
     Serial.println("Alert: The Transmission was successful.");
-    Serial.printf("TX buffered: %lu\t", twaistatus.msgs_to_tx);
+    Serial.printf("TX buffered: %" PRIu32 "\t", twaistatus.msgs_to_tx);
   }
 
   // Send message

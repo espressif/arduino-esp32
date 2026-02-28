@@ -269,7 +269,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     return false;
   }
 
-  log_i("Initializing I2C Slave: sda=%d scl=%d freq=%d, addr=0x%x", sda, scl, frequency, slaveID);
+  log_i("Initializing I2C Slave: sda=%d scl=%d freq=%" PRIu32 ", addr=0x%x", sda, scl, frequency, slaveID);
 
   i2c_slave_struct_t *i2c = &_i2c_bus_array[num];
   esp_err_t ret = ESP_OK;
@@ -558,7 +558,7 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
 
   // Adjust Fifo thresholds based on frequency
   uint32_t a = (clk_speed / 50000L) + 2;
-  log_d("Fifo thresholds: rx_fifo_full = %d, tx_fifo_empty = %d", SOC_I2C_FIFO_LEN - a, a);
+  log_d("Fifo thresholds: rx_fifo_full = %" PRIu32 ", tx_fifo_empty = %" PRIu32, SOC_I2C_FIFO_LEN - a, a);
 
   i2c_hal_clk_config_t clk_cal;
 #if SOC_I2C_SUPPORT_APB
@@ -616,7 +616,7 @@ static bool i2c_slave_check_line_state(int8_t sda, int8_t scl) {
     for (uint8_t a = 0; a < 9; a++) {
       i2c_slave_delay_us(5);
       if (gpio_get_level(sda) && gpio_get_level(scl)) {  // bus recovered
-        log_w("Recovered after %d Cycles", a);
+        log_w("Recovered after %u Cycles", a);
         gpio_set_level(sda, 0);  // start
         i2c_slave_delay_us(5);
         for (uint8_t b = 0; b < 9; b++) {
@@ -839,7 +839,7 @@ static size_t i2c_slave_read_rx(i2c_slave_struct_t *i2c, uint8_t *data, size_t l
       res = xQueueReceive(i2c->rx_queue, &d, 0);
     }
     if (res != pdTRUE) {
-      log_e("Read Queue(%u) Failed", i);
+      log_e("Read Queue(%lu) Failed", (unsigned long)i);
       len = i;
       break;
     }
@@ -851,7 +851,7 @@ static size_t i2c_slave_read_rx(i2c_slave_struct_t *i2c, uint8_t *data, size_t l
 
   vRingbufferGetInfo(i2c->rx_ring_buf, NULL, NULL, NULL, NULL, &available);
   if (available < to_read) {
-    log_e("Less available than requested. %u < %u", available, len);
+    log_e("Less available than requested. %lu < %lu", (unsigned long)available, (unsigned long)len);
     to_read = available;
   }
 
@@ -859,7 +859,7 @@ static size_t i2c_slave_read_rx(i2c_slave_struct_t *i2c, uint8_t *data, size_t l
     dlen = 0;
     rx_data = (uint8_t *)xRingbufferReceiveUpTo(i2c->rx_ring_buf, &dlen, 0, to_read);
     if (!rx_data) {
-      log_e("Receive %u Failed", to_read);
+      log_e("Receive %lu Failed", (unsigned long)to_read);
       return so_far;
     }
     if (data) {
@@ -888,7 +888,7 @@ static void i2c_slave_task(void *pv_args) {
         data = (len > 0) ? (uint8_t *)malloc(len) : NULL;
 
         if (len && data == NULL) {
-          log_e("Malloc (%u) Failed", len);
+          log_e("Malloc (%lu) Failed", (unsigned long)len);
         }
         len = i2c_slave_read_rx(i2c, data, len);
         if (i2c->receive_callback) {

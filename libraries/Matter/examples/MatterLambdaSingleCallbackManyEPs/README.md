@@ -139,7 +139,7 @@ This example demonstrates how to use C++ lambda functions with capture variables
 ```cpp
 OnOffLight[i].onChangeOnOff([i](bool state) -> bool {
   Serial.printf(
-    "Matter App Control: '%s' (OnOffLight[%d], Endpoint %d, GPIO %d) changed to: %s\r\n",
+    "Matter App Control: '%s' (OnOffLight[%" PRIu8 "], Endpoint %" PRIu16 ", GPIO %" PRIu8 ") changed to: %s\r\n",
     lightName[i], i, OnOffLight[i].getEndPointId(), lightPins[i], state ? "ON" : "OFF"
   );
   return true;

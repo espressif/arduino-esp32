@@ -481,7 +481,7 @@ void change_cpu_frequency_test(void) {
   uint32_t old_freq = getCpuFrequencyMhz();
   uint32_t new_freq = getXtalFrequencyMhz();
 
-  log_d("Changing CPU frequency from %dMHz to %dMHz", old_freq, new_freq);
+  log_d("Changing CPU frequency from %" PRIu32 "MHz to %" PRIu32 "MHz", old_freq, new_freq);
   Serial.flush();
   setCpuFrequencyMhz(new_freq);
 
@@ -493,7 +493,7 @@ void change_cpu_frequency_test(void) {
     config.transmit_and_check_msg("with new CPU frequency");
   }
 
-  log_d("Changing CPU frequency back to %dMHz", old_freq);
+  log_d("Changing CPU frequency back to %" PRIu32 "MHz", old_freq);
   Serial.flush();
   setCpuFrequencyMhz(old_freq);
 

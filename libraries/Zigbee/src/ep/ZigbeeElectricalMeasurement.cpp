@@ -583,7 +583,7 @@ bool ZigbeeElectricalMeasurement::setACMinMaxValue(
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
     case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
       if (min_value < 0 || min_value > UINT16_MAX || max_value < 0 || max_value > UINT16_MAX) {
-        log_e("AC measurement min/max values must be between 0 and %u (got min=%d, max=%d)", UINT16_MAX, min_value, max_value);
+        log_e("AC measurement min/max values must be between 0 and %u (got min=%u, max=%u)", UINT16_MAX, min_value, max_value);
         return false;
       }
       break;
@@ -761,21 +761,21 @@ bool ZigbeeElectricalMeasurement::setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE me
     case ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT:
     case ZIGBEE_AC_MEASUREMENT_TYPE_FREQUENCY:
       if (value < 0 || value > UINT16_MAX) {
-        log_e("AC measurement value must be between 0 and %u (got %d)", UINT16_MAX, value);
+        log_e("AC measurement value must be between 0 and %u (got %" PRId32 ")", UINT16_MAX, value);
         return false;
       }
       break;
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER:
       if (value < INT16_MIN || value > INT16_MAX) {
-        log_e("AC power value must be between %d and %d (got %d)", INT16_MIN, INT16_MAX, value);
+        log_e("AC power value must be between %d and %d (got %" PRId32 ")", INT16_MIN, INT16_MAX, value);
         return false;
       }
       break;
 
     case ZIGBEE_AC_MEASUREMENT_TYPE_POWER_FACTOR:
       if (value < -100 || value > 100) {
-        log_e("AC power factor value must be between -100 and 100 (got %d)", value);
+        log_e("AC power factor value must be between -100 and 100 (got %" PRId32 ")", value);
         return false;
       }
       break;

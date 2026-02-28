@@ -39,7 +39,7 @@ void loop() {
 
     // Dataset information
     Serial.printf("Network Name: %s\r\n", activeDataset.getNetworkName());
-    Serial.printf("Channel: %d\r\n", activeDataset.getChannel());
+    Serial.printf("Channel: %u\r\n", activeDataset.getChannel());
     Serial.printf("PAN ID: 0x%04x\r\n", activeDataset.getPanId());
 
     // Extended PAN ID from dataset

@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 #include <esp_err.h>
+#include <inttypes.h>
 #include <iomanip>
 #include <sstream>
 #include <string>
@@ -154,7 +155,7 @@ void BLEService::executeDelete() {
  * @return N/A.
  */
 void BLEService::dump() {
-  log_d("Service: uuid:%s, handle: 0x%.2x", m_uuid.toString().c_str(), m_handle);
+  log_d("Service: uuid:%s, handle: 0x%02x", m_uuid.toString().c_str(), m_handle);
   log_d("Characteristics:\n%s", m_characteristicMap.toString().c_str());
 }  // dump
 
@@ -554,7 +555,7 @@ bool BLEService::start() {
     }
 
     size_t numChrs = m_characteristicMap.getRegisteredCharacteristicCount() - removedCount;
-    log_d("Adding %d characteristics for service %s", numChrs, toString().c_str());
+    log_d("Adding %lu characteristics for service %s", (unsigned long)numChrs, toString().c_str());
 
     if (!numChrs) {
       svc[0].characteristics = nullptr;
@@ -584,7 +585,7 @@ bool BLEService::start() {
           }
 
           size_t numDscs = pCharacteristic->m_descriptorMap.getRegisteredDescriptorCount() - removedCount;
-          log_d("Adding %d descriptors for characteristic %s", numDscs, pCharacteristic->getUUID().toString().c_str());
+          log_d("Adding %lu descriptors for characteristic %s", (unsigned long)numDscs, pCharacteristic->getUUID().toString().c_str());
 
           if (!numDscs) {
             pChr_a[i].descriptors = nullptr;
