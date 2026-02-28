@@ -1185,7 +1185,7 @@ bool ETHClass::addMacFilter(uint8_t *mac_addr) {
   if (_eth_handle == NULL) {
     return false;
   }
-  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_ADD_MAC_FILTER, (void*)mac_addr);
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_ADD_MAC_FILTER, (void *)mac_addr);
   if (err != ESP_OK) {
     log_e("Failed to add MAC filter: 0x%x: %s", err, esp_err_to_name(err));
     return false;
@@ -1197,7 +1197,7 @@ bool ETHClass::removeMacFilter(uint8_t *mac_addr) {
   if (_eth_handle == NULL) {
     return false;
   }
-  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_DEL_MAC_FILTER, (void*)mac_addr);
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_DEL_MAC_FILTER, (void *)mac_addr);
   if (err != ESP_OK) {
     log_e("Failed to delete MAC filter: 0x%x: %s", err, esp_err_to_name(err));
     return false;
