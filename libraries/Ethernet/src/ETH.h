@@ -210,6 +210,15 @@ public:
 
   esp_eth_handle_t handle() const;
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  bool addMacFilter(uint8_t *mac_addr);
+  bool removeMacFilter(uint8_t *mac_addr);
+  bool addMulticastFilter(IPAddress address);
+  bool removeMulticastFilter(IPAddress address);
+  // ON by default
+  bool receiveAllMulticast(bool on);
+#endif
+
 #if ETH_SPI_SUPPORTS_CUSTOM
   static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
   static esp_err_t _eth_spi_write(void *ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
