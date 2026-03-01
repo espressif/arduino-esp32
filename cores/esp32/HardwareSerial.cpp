@@ -33,7 +33,7 @@ static void uart_unregister(uint8_t uart_num) {
 
 // validate the HardwareSerial instance
 static bool uart_num_validate(uint8_t uart_num) {
-  if (_uart_nr >= SOC_UART_NUM) {
+  if (uart_num >= SOC_UART_NUM) {
     log_e("This HardwareSerial instance is invalid. UART Number %d is invalid or another instance is already using this UART.", uart_num);
     return false;
   }
