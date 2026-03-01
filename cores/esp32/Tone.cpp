@@ -35,22 +35,23 @@ static void tone_task(void *) {
     switch (tone_msg.tone_cmd) {
       case TONE_START:
         log_d("Task received from queue TONE_START: pin=%d, frequency=%u Hz, duration=%lu ms", tone_msg.pin, tone_msg.frequency, tone_msg.duration);
-
-        if (_pin == -1) {
-          bool ret = true;
-          if (_channel == 255) {
-            ret = ledcAttach(tone_msg.pin, tone_msg.frequency, 10);
-          } else {
-            ret = ledcAttachChannel(tone_msg.pin, tone_msg.frequency, 10, _channel);
+        if(tone_msg.frequency > 0) {
+          if (_pin == -1) {
+            bool ret = true;
+            if (_channel == 255) {
+              ret = ledcAttach(tone_msg.pin, tone_msg.frequency, 10);
+            } else {
+              ret = ledcAttachChannel(tone_msg.pin, tone_msg.frequency, 10, _channel);
+            }
+            if (!ret) {
+              log_e("Tone start failed");
+              break;
+            }
+            _pin = tone_msg.pin;
           }
-          if (!ret) {
-            log_e("Tone start failed");
-            break;
-          }
-          _pin = tone_msg.pin;
+          ledcWriteTone(tone_msg.pin, tone_msg.frequency);
         }
-        ledcWriteTone(tone_msg.pin, tone_msg.frequency);
-
+  
         if (tone_msg.duration) {
           delay(tone_msg.duration);
           ledcWriteTone(tone_msg.pin, 0);
