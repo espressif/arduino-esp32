@@ -15,11 +15,13 @@
 static HardwareSerial* uart_instances[SOC_UART_NUM] = {nullptr};
 
 // Register a HardwareSerial object (internal linkage)
-static void uart_register(uint8_t uart_num, HardwareSerial* serial) {
+static bool uart_register(uint8_t uart_num, HardwareSerial* serial) {
   // only register it once
   if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
     uart_instances[uart_num] = serial;
+    return true;
   }
+  return false;
 }
 
 // Unregister a HardwareSerial object without calling end() (internal linkage)
@@ -27,6 +29,15 @@ static void uart_unregister(uint8_t uart_num) {
   if (uart_num < SOC_UART_NUM) {
     uart_instances[uart_num] = nullptr;
   }
+}
+
+// validate the HardwareSerial instance
+static bool uart_num_validate(uint8_t uart_num) {
+  if (_uart_nr >= SOC_UART_NUM) {
+    log_e("This HardwareSerial instance is invalid. UART Number %d is invalid or another instance is already using this UART.", uart_num);
+    return false;
+  }
+  return true;
 }
 
 extern "C" {
@@ -154,6 +165,10 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     _lock(NULL)
 #endif
 {
+  if (_uart_nr >= SOC_UART_NUM || !uart_register(uart_nr, this)) {
+    _uart_nr = 255; // mark it as an invalid instance because it has already been created
+    return;
+  }
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (_lock == NULL) {
     _lock = xSemaphoreCreateMutex();
@@ -163,10 +178,12 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     }
   }
 #endif
-  uart_register(uart_nr, this);
 }
 
 HardwareSerial::~HardwareSerial() {
+  if (_uart_nr >= SOC_UART_NUM) {
+    return;
+  }
   end();  // explicit Full UART termination
   uart_unregister(_uart_nr);
 #if !CONFIG_DISABLE_HAL_LOCKS
@@ -195,6 +212,9 @@ void HardwareSerial::_destroyEventTask(void) {
 }
 
 void HardwareSerial::onReceiveError(OnReceiveErrorCb function) {
+  if (!uart_num_validate(_uart_nr)) {
+    return;
+  }
   HSERIAL_MUTEX_LOCK();
   // function may be NULL to cancel onReceive() from its respective task
   _onReceiveErrorCB = function;
@@ -206,6 +226,9 @@ void HardwareSerial::onReceiveError(OnReceiveErrorCb function) {
 }
 
 void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout) {
+  if (!uart_num_validate(_uart_nr)) {
+    return;
+  }
   HSERIAL_MUTEX_LOCK();
   // function may be NULL to cancel onReceive() from its respective task
   _onReceiveCB = function;
@@ -237,6 +260,9 @@ void HardwareSerial::onReceive(OnReceiveCb function, bool onlyOnTimeout) {
 // A high value of FIFO Full bytes will make the application wait longer to have byte available for the Stkech in a streaming scenario
 // Both RX FIFO Full and RX Timeout may affect when onReceive() will be called
 bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes) {
+  if (!uart_num_validate(_uart_nr)) {
+    return false;
+  }
   HSERIAL_MUTEX_LOCK();
   // in case that onReceive() shall work only with RX Timeout, FIFO shall be high
   // this is a work around for an IDF issue with events and low FIFO Full value (< 3)
@@ -256,6 +282,9 @@ bool HardwareSerial::setRxFIFOFull(uint8_t fifoBytes) {
 // timeout is calculates in time to receive UART symbols at the UART baudrate.
 // the estimation is about 11 bits per symbol (SERIAL_8N1)
 bool HardwareSerial::setRxTimeout(uint8_t symbols_timeout) {
+  if (!uart_num_validate(_uart_nr)) {
+    return false;
+  }
   HSERIAL_MUTEX_LOCK();
 
   // Zero disables timeout, thus, onReceive callback will only be called when RX FIFO reaches 120 bytes
@@ -332,8 +361,7 @@ void HardwareSerial::_uartEventTask(void *args) {
 }
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd) {
-  if (_uart_nr >= SOC_UART_NUM) {
-    log_e("Serial number is invalid, please use a number from 0 to %u", SOC_UART_NUM - 1);
+  if (!uart_num_validate(_uart_nr)) {
     return;
   }
 
@@ -508,6 +536,9 @@ void HardwareSerial::updateBaudRate(unsigned long baud) {
 }
 
 void HardwareSerial::end() {
+  if (!uart_num_validate(_uart_nr)) {
+    return;
+  }
   // default Serial.end() will completely disable HardwareSerial,
   // including any tasks or debug message channel (log_x()) - but not for IDF log messages!
   _onReceiveCB = NULL;
@@ -519,6 +550,10 @@ void HardwareSerial::end() {
 }
 
 void HardwareSerial::setDebugOutput(bool en) {
+  if (!uart_num_validate(_uart_nr)) {
+    return;
+  }
+
   if (_uart == 0) {
     return;
   }
@@ -617,6 +652,9 @@ bool HardwareSerial::setRtsInvert(bool invert) {
 // negative Pin value will keep it unmodified
 // can be called after or before begin()
 bool HardwareSerial::setPins(int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
+  if (!uart_num_validate(_uart_nr)) {
+    return false;
+  }
   // map logical pins to GPIO numbers
   rxPin = digitalPinToGPIONumber(rxPin);
   txPin = digitalPinToGPIONumber(txPin);
@@ -655,6 +693,9 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
 bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
+  if (!uart_num_validate(_uart_nr)) {
+    return false;
+  }
   if (_uart) {
     log_e("No Clock Source change was done. This function must be called before beginning UART%d.", _uart_nr);
     return false;
@@ -664,7 +705,9 @@ bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
-
+  if (!uart_num_validate(_uart_nr)) {
+    return 0;
+  }
   if (_uart) {
     log_e("RX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
@@ -683,7 +726,9 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 // minimum total TX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setTxBufferSize(size_t new_size) {
-
+  if (!uart_num_validate(_uart_nr)) {
+    return 0;
+  }
   if (_uart) {
     log_e("TX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
