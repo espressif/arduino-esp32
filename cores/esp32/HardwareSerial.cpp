@@ -25,7 +25,7 @@ void uart_register(uint8_t uart_num, HardwareSerial* serial) {
 
 // Unregister a HardwareSerial object without calling end()
 void uart_unregister(uint8_t uart_num) {
-    if (uart_num < UART_NUM_MAX) {
+    if (uart_num < SOC_UART_NUM) {
         uart_instances[uart_num] = nullptr;
     }
 }
