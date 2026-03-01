@@ -51,7 +51,6 @@ static void tone_task(void *) {
           }
           ledcWriteTone(tone_msg.pin, tone_msg.frequency);
         }
-  
         if (tone_msg.duration) {
           delay(tone_msg.duration);
           ledcWriteTone(tone_msg.pin, 0);
