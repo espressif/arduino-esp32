@@ -50,7 +50,10 @@ static void tone_task(void *) {
             _pin = tone_msg.pin;
           }
           ledcWriteTone(tone_msg.pin, tone_msg.frequency);
+        } else {
+          ledcWriteTone(tone_msg.pin, 0); // make sure it stops in case something is playing with 0 duration (endless)
         }
+        
         if (tone_msg.duration) {
           delay(tone_msg.duration);
           ledcWriteTone(tone_msg.pin, 0);
