@@ -16,24 +16,24 @@ static HardwareSerial* uart_instances[SOC_UART_NUM] = {nullptr};
 
 extern "C" {
 // Register a HardwareSerial object
-void uart_register(int idx, HardwareSerial* serial) {
+void uart_register(uint8_t uart_num, HardwareSerial* serial) {
   // only register it once
-  if (idx >= 0 && idx < SOC_UART_NUM && uart_instances[idx] == nullptr) {
-    uart_instances[idx] = serial;
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
+    uart_instances[uart_num] = serial;
   }
 }
 
 // Unregister a HardwareSerial object without calling end()
-void uart_unregister(int idx) {
-    if (idx >= 0 && idx < UART_NUM_MAX) {
-        uart_instances[idx] = nullptr;
+void uart_unregister(uint8_t uart_num) {
+    if (uart_num < UART_NUM_MAX) {
+        uart_instances[uart_num] = nullptr;
     }
 }
 
 // End a HardwareSerial object by index
-void uart_end(int idx) {
-  if (idx >= 0 && idx < SOC_UART_NUM && uart_instances[idx] != nullptr) {
-    uart_instances[idx]->end();
+void hardware_serial_end(uint8_t uart_num) {
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] != nullptr) {
+    uart_instances[uart_num]->end();
   }
 }
 } // extern "C"
