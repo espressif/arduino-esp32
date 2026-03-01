@@ -11,6 +11,33 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 
+// Registry of pointers to active HardwareSerial objects used to allow esp32-hal-uart.c code to terminate any HardwareSerial object
+static HardwareSerial* uart_instances[SOC_UART_NUM] = {nullptr};
+
+extern "C" {
+// Register a HardwareSerial object
+void uart_register(int idx, HardwareSerial* serial) {
+  // only register it once
+  if (idx >= 0 && idx < SOC_UART_NUM && uart_instances[idx] == nullptr) {
+    uart_instances[idx] = serial;
+  }
+}
+
+// Unregister a HardwareSerial object without calling end()
+void uart_unregister(int idx) {
+    if (idx >= 0 && idx < UART_NUM_MAX) {
+        uart_instances[idx] = nullptr;
+    }
+}
+
+// End a HardwareSerial object by index
+void uart_end(int idx) {
+  if (idx >= 0 && idx < SOC_UART_NUM && uart_instances[idx] != nullptr) {
+    uart_instances[idx]->end();
+  }
+}
+} // extern "C"
+
 #if (SOC_UART_LP_NUM >= 1)
 #define UART_HW_FIFO_LEN(uart_num) ((uart_num < SOC_UART_HP_NUM) ? SOC_UART_FIFO_LEN : SOC_LP_UART_FIFO_LEN)
 #else
@@ -60,31 +87,6 @@ HardwareSerial Serial5(5);
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
-
-// C-callable helper used by HAL when pins are detached and the high-level
-// HardwareSerial instance must be finalized.
-extern "C" void hal_uart_notify_pins_detached(int uart_num) {
-  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
-  switch (uart_num) {
-    case 0: Serial0.end(); break;
-#if SOC_UART_NUM > 1
-    case 1: Serial1.end(); break;
-#endif
-#if SOC_UART_NUM > 2
-    case 2: Serial2.end(); break;
-#endif
-#if SOC_UART_NUM > 3
-    case 3: Serial3.end(); break;
-#endif
-#if SOC_UART_NUM > 4
-    case 4: Serial4.end(); break;
-#endif
-#if SOC_UART_NUM > 5
-    case 5: Serial5.end(); break;
-#endif
-    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
-  }
-}
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
@@ -161,10 +163,12 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     }
   }
 #endif
+  uart_register(uart_nr, this);
 }
 
 HardwareSerial::~HardwareSerial() {
   end();  // explicit Full UART termination
+  uart_unregister(_uart_nr);
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (_lock != NULL) {
     vSemaphoreDelete(_lock);
