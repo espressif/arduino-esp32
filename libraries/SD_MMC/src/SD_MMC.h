@@ -30,7 +30,11 @@
 // you can define BOARD_MAX_SDMMC_FREQ with lower value (Ex. SDMMC_FREQ_DEFAULT)
 // in pins_arduino.h for your board variant.
 #ifndef BOARD_MAX_SDMMC_FREQ
+#ifdef SOC_SDMMC_UHS_I_SUPPORTED
+#define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_SDR50
+#else
 #define BOARD_MAX_SDMMC_FREQ SDMMC_FREQ_HIGHSPEED
+#endif
 #endif
 
 namespace fs {

@@ -212,6 +212,25 @@ void testFileIO(fs::FS &fs, const char *path) {
   file.close();
 }
 
+void testRawIO(uint32_t sectors, uint8_t sequential) {
+  uint32_t readSect = 0;
+  uint32_t startTime = millis();
+  uint8_t* buf = (uint8_t*)heap_caps_malloc(SD_MMC.sectorSize(), MALLOC_CAP_DMA);
+  for (uint32_t x=0; x<sectors; x++) {
+    if (! SD_MMC.readRAW(buf, readSect)) {
+      log_e("Unable to read sector %lu\n", readSect);
+      free(buf);
+      return;
+    }
+    readSect = sequential ? readSect + 1 : random(SD_MMC.numSectors()-1);
+  }
+  uint32_t passed = millis() - startTime;
+  uint32_t rate = sectors * SD_MMC.sectorSize() / passed;
+  Serial.printf("%lu %s sectors read in %lu msec (%luKB/s)\n", 
+                 sectors, sequential ? "sequential" : "random", passed, rate);
+  free(buf);
+}
+
 void setup() {
   Serial.begin(115200);
   /*
@@ -263,6 +282,7 @@ void setup() {
   renameFile(SD_MMC, "/hello.txt", "/foo.txt");
   readFile(SD_MMC, "/foo.txt");
   testFileIO(SD_MMC, "/test.txt");
+  testRawIO(2000, 1);
   Serial.printf("Total space: %lluMB\n", SD_MMC.totalBytes() / (1024 * 1024));
   Serial.printf("Used space: %lluMB\n", SD_MMC.usedBytes() / (1024 * 1024));
 }
