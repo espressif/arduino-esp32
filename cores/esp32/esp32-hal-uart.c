@@ -39,11 +39,11 @@
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 
+// Function that calls the HardwareSerial instance associated with a UART number to invoke its end() method.
+extern void hardware_serial_end(uint8_t uart_num);
+
 static int s_uart_debug_nr = 0;         // UART number for debug output
 #define REF_TICK_BAUDRATE_LIMIT 250000  // this is maximum UART badrate using REF_TICK as clock
-
-/* C prototype for the notifier implemented in HardwareSerial.cpp */
-extern void hal_uart_notify_pins_detached(int uart_num);
 
 struct uart_struct_t {
 
@@ -296,7 +296,7 @@ static bool _uartDetachBus_RX(void *busptr) {
   }
   if (bus->_txPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_RX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
-    hal_uart_notify_pins_detached(bus->num);
+    hardware_serial_end(bus->num);
     return true;
   }
   return _uartDetachPins(bus->num, bus->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
@@ -315,7 +315,7 @@ static bool _uartDetachBus_TX(void *busptr) {
   }
   if (bus->_rxPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%d, terminating driver", bus->num);
-    hal_uart_notify_pins_detached(bus->num);
+    hardware_serial_end(bus->num);
     return true;
   }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
