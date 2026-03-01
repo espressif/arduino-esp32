@@ -39,7 +39,7 @@
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 
-// function that can call the HardwareSerial object associated to a UART_NUM in order to execute its end() method
+// Function that calls the HardwareSerial instance associated with a UART number to invoke its end() method.
 extern void hardware_serial_end(uint8_t uart_num);
 
 static int s_uart_debug_nr = 0;         // UART number for debug output
