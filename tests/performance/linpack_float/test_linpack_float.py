@@ -42,10 +42,24 @@ def test_linpack_float(dut, request):
     LOGGER.info("Max MFLOPS: {}".format(max_score))
     assert max_score > 0, "Invalid max MFLOPS"
 
-    # Create JSON with results and write it to file
-    # Always create a JSON with this format (so it can be merged later on):
-    # { TEST_NAME_STR: TEST_RESULTS_DICT }
-    results = {"linpack_float": {"runs": runs, "avg_score": avg_score, "min_score": min_score, "max_score": max_score}}
+    # Match "Median MFLOPS: %f"
+    res = dut.expect(r"Median MFLOPS: (\d+\.\d+)", timeout=120)
+    median_score = float(res.group(0).decode("utf-8").split(" ")[2])
+    LOGGER.info("Median MFLOPS: {}".format(median_score))
+    assert median_score > 0, "Invalid median MFLOPS"
+
+    # Canonical performance result format (see .github/CI_README.md)
+    results = {
+        "test_name": "linpack_float",
+        "runs": runs,
+        "settings": "data_type=float",
+        "metrics": [
+            {"name": "avg_score", "value": avg_score, "unit": "MFLOPS"},
+            {"name": "min_score", "value": min_score, "unit": "MFLOPS"},
+            {"name": "max_score", "value": max_score, "unit": "MFLOPS"},
+            {"name": "median_score", "value": median_score, "unit": "MFLOPS"},
+        ],
+    }
 
     current_folder = os.path.dirname(request.path)
     os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)
