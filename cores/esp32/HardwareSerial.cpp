@@ -159,9 +159,6 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
 }
 
 HardwareSerial::~HardwareSerial() {
-  if (_uart_nr >= SOC_UART_NUM) {
-    return;
-  }
   end();  // explicit Full UART termination
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (_lock != NULL) {
@@ -327,6 +324,7 @@ void HardwareSerial::_uartEventTask(void *args) {
 
 void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, int8_t txPin, bool invert, unsigned long timeout_ms, uint8_t rxfifo_full_thrhd) {
   if (_uart_nr >= SOC_UART_NUM) {
+    log_e("Serial number is invalid, please use a number from 0 to %u", SOC_UART_NUM - 1);
     return;
   }
 
@@ -658,6 +656,7 @@ bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {
+
   if (_uart) {
     log_e("RX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
@@ -676,6 +675,7 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
 // minimum total TX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setTxBufferSize(size_t new_size) {
+
   if (_uart) {
     log_e("TX Buffer can't be resized when Serial is already running. Set it before calling begin().");
     return 0;
