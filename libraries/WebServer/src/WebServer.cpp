@@ -694,6 +694,18 @@ void WebServer::send(int code, const char *content_type, const char *content) {
   send(code, content_type, passStr);
 }
 
+void WebServer::send(int code, const char *content_type, Stream &stream, size_t content_length) {
+  String header;
+  if (content_length == 0) {
+    content_length = stream.available();
+  }
+  _prepareHeader(header, code, content_type, content_length);
+  _currentClientWrite(header.c_str(), header.length());
+  if (content_length) {
+    _currentClient.write(stream);
+  }
+}
+
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
   size_t contentLength = 0;
 
