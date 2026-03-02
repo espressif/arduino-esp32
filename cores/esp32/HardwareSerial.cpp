@@ -11,41 +11,26 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 
-// Registry of pointers to active HardwareSerial objects used to allow esp32-hal-uart.c code to terminate any HardwareSerial object
+// Array of pointers to active HardwareSerial objects used by HAL to call end() when pins are detached
 static HardwareSerial* uart_instances[SOC_UART_NUM] = {nullptr};
 
 // Register a HardwareSerial object (internal linkage)
-static bool uart_register(uint8_t uart_num, HardwareSerial* serial) {
+static void uart_register(uint8_t uart_num, HardwareSerial* serial) {
   // only register it once
   if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
     uart_instances[uart_num] = serial;
-    return true;
   }
-  return false;
 }
 
-// Unregister a HardwareSerial object without calling end() (internal linkage)
+// Unregister a HardwareSerial object (internal linkage)
 static void uart_unregister(uint8_t uart_num) {
   if (uart_num < SOC_UART_NUM) {
     uart_instances[uart_num] = nullptr;
   }
 }
 
-// validate the HardwareSerial instance
-static bool uart_num_validate(uint8_t uart_num) {
-  if (uart_num >= SOC_UART_NUM) {
-    if (uart_num == 255) { // invalid UART number mark - duplicated
-      log_e("Another UART%d has alredy been crated.", uart_num);
-    } else {
-      log_e("This HardwareSerial instance is invalid. UART number %d is out of range (valid 0-%d).", uart_num, SOC_UART_NUM - 1);
-    }
-    return false;
-  }
-  return true;
-}
-
 extern "C" {
-// End a HardwareSerial object by index
+// Strong implementation of weak hardware_serial_end() - called by HAL when pins are detached
 void hardware_serial_end(uint8_t uart_num) {
   if (uart_num < SOC_UART_NUM && uart_instances[uart_num] != nullptr) {
     uart_instances[uart_num]->end();
@@ -169,10 +154,8 @@ HardwareSerial::HardwareSerial(uint8_t uart_nr)
     _lock(NULL)
 #endif
 {
-  if (_uart_nr >= SOC_UART_NUM || !uart_register(uart_nr, this)) {
-    _uart_nr = 255; // mark it as an invalid instance because it has already been created
-    return;
-  }
+  // Register this instance (allows multiple instances per UART)
+  uart_register(uart_nr, this);
 #if !CONFIG_DISABLE_HAL_LOCKS
   if (_lock == NULL) {
     _lock = xSemaphoreCreateMutex();

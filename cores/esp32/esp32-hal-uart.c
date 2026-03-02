@@ -39,8 +39,11 @@
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 
-// Function that calls the HardwareSerial instance associated with a UART number to invoke its end() method.
-extern void hardware_serial_end(uint8_t uart_num);
+// Weak function that is overridden by Arduino layer when HardwareSerial.cpp is linked
+// This removes the upward dependency from HAL to Arduino (HAL calls weak, Arduino provides strong implementation)
+void __attribute__((weak)) hardware_serial_end(uint8_t uart_num) {
+  (void)uart_num;  // Avoid unused parameter warning
+}
 
 static int s_uart_debug_nr = 0;         // UART number for debug output
 #define REF_TICK_BAUDRATE_LIMIT 250000  // this is maximum UART badrate using REF_TICK as clock
