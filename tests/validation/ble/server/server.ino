@@ -137,6 +137,9 @@ void setup() {
   pSecurity->setCapability(ESP_IO_CAP_IO);
   // Enable bonding, MITM (required for Numeric Comparison), and secure connection
   pSecurity->setAuthenticationMode(true, true, true);
+  // Disable forced auth on connect so authentication is triggered on-demand
+  // when reading the secure characteristic (consistent ordering for testing)
+  pSecurity->setForceAuthentication(false);
   BLEDevice::setSecurityCallbacks(new MySecurityCallbacks());
 
   // Create server

@@ -772,6 +772,7 @@ void WebServer::_streamFileCore(const size_t fileSize, const String &fileName, c
     sendHeader(F("Content-Encoding"), F("gzip"));
   }
   send(code, contentType, "");
+  setContentLength(CONTENT_LENGTH_NOT_SET);
 }
 
 String WebServer::pathArg(unsigned int i) const {

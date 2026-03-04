@@ -23,7 +23,7 @@ tools/openocd-esp32
 # Ignore build folder
 /build
 
-# Ignore files built by Visual Studio/Visual Micro
+# Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
 [Rr]elease/
 .vs/
@@ -32,6 +32,7 @@ __vm/
 .vscode/
 platform.sloeber.txt
 boards.sloeber.txt
+/.idea/
 
 # Ignore docs build (Sphinx)
 docs/build

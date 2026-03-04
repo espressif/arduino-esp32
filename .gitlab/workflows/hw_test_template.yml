@@ -46,7 +46,6 @@ hw-test-template:
 
   script:
     - echo "Using binaries for $TEST_CHIP"
-    - ls -laR ~/.arduino/tests || true
     - |
       set -e
       rc=0
