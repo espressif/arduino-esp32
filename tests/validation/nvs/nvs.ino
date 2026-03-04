@@ -77,7 +77,9 @@ void setup() {
   }
 
   Serial.printf("Values from Preferences: ");
-  Serial.printf("char: %c | uchar: %u | short: %d | ushort: %u | int: %" PRIi32 " | uint: %" PRIu32 " | ", val_char, val_uchar, val_short, val_ushort, val_int, val_uint);
+  Serial.printf(
+    "char: %c | uchar: %u | short: %d | ushort: %u | int: %" PRIi32 " | uint: %" PRIu32 " | ", val_char, val_uchar, val_short, val_ushort, val_int, val_uint
+  );
   Serial.printf("long: %" PRIi32 " | ulong: %" PRIu32 " | long64: %" PRIi64 " | ulong64: %" PRIu64 " | ", val_long, val_ulong, val_long64, val_ulong64);
   Serial.printf(
     "float: %.2f | double: %.2f | bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n", val_float, val_double, val_bool ? "true" : "false",

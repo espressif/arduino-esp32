@@ -71,7 +71,10 @@ void setup() {
   Serial.println("Preloaded Data that will sent (time in 0.1us):");
   // Printout the received data plus the original values
   for (int i = 0; i < RMT_NUM_EXCHANGED_DATA; i++) {
-    Serial.printf("%08" PRIx32 "=[%c 0x%02" PRIx32 "|%c 0x%02" PRIx32 "] ", data[i].val, data[i].level0 ? 'H' : 'L', (uint32_t)data[i].duration0, data[i].level1 ? 'H' : 'L', (uint32_t)data[i].duration1);
+    Serial.printf(
+      "%08" PRIx32 "=[%c 0x%02" PRIx32 "|%c 0x%02" PRIx32 "] ", data[i].val, data[i].level0 ? 'H' : 'L', (uint32_t)data[i].duration0,
+      data[i].level1 ? 'H' : 'L', (uint32_t)data[i].duration1
+    );
 
     if (!((i + 1) % 4)) {
       Serial.println();

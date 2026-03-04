@@ -745,7 +745,9 @@ bool UpdateClass::end(bool evenIfRemaining) {
 
     // Read signature from partition (last 512 bytes of what was written)
     size_t firmwareSize = _size - _signatureSize;
-    log_d("Reading signature from offset %lu (firmware size: %lu, total size: %lu)", (unsigned long)firmwareSize, (unsigned long)firmwareSize, (unsigned long)_size);
+    log_d(
+      "Reading signature from offset %lu (firmware size: %lu, total size: %lu)", (unsigned long)firmwareSize, (unsigned long)firmwareSize, (unsigned long)_size
+    );
     if (!ESP.partitionRead(_partition, firmwareSize, (uint32_t *)_signatureBuffer, maxSigSize)) {
       log_e("Failed to read signature from partition");
       _abort(UPDATE_ERROR_SIGN);

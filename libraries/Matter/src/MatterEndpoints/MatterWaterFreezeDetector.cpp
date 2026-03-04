@@ -30,7 +30,10 @@ bool MatterWaterFreezeDetector::attributeChangeCB(uint16_t endpoint_id, uint32_t
     return false;
   }
 
-  log_d("Water Freeze Detector Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Water Freeze Detector Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id,
+    attribute_id, val->val.u32
+  );
   return ret;
 }
 

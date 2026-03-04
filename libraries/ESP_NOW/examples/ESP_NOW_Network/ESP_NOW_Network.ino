@@ -369,7 +369,8 @@ void loop() {
             Serial.printf("Failed to send message to peer " MACSTR "\n", MAC2STR(peer->addr()));
           } else {
             Serial.printf(
-              "Sent message to peer " MACSTR ". Recv: %" PRIu32 ", Sent: %" PRIu32 ", Avg: %" PRIu32 "\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count, new_msg.data
+              "Sent message to peer " MACSTR ". Recv: %" PRIu32 ", Sent: %" PRIu32 ", Avg: %" PRIu32 "\n", MAC2STR(peer->addr()), recv_msg_count, new_msg.count,
+              new_msg.data
             );
             sent_msg_count++;
           }

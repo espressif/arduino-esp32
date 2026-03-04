@@ -74,8 +74,8 @@ String getDefaultMacAddress() {
     char buffer[24];  // 8*2 characters for hex + 7 characters for colons + 1 character for null terminator
 #ifdef CONFIG_SOC_IEEE802154_SUPPORTED
     snprintf(
-      buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
-      mac_base[7]
+      buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5],
+      mac_base[6], mac_base[7]
     );
 #else
     snprintf(buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5]);
@@ -97,8 +97,8 @@ String getInterfaceMacAddress(esp_mac_type_t interface) {
 #ifdef CONFIG_SOC_IEEE802154_SUPPORTED
     if (interface == ESP_MAC_IEEE802154) {
       snprintf(
-        buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5], mac_base[6],
-        mac_base[7]
+        buffer, sizeof(buffer), "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", mac_base[0], mac_base[1], mac_base[2], mac_base[3], mac_base[4], mac_base[5],
+        mac_base[6], mac_base[7]
       );
     } else if (interface == ESP_MAC_EFUSE_EXT) {
       snprintf(buffer, sizeof(buffer), "%02X:%02X", mac_base[0], mac_base[1]);

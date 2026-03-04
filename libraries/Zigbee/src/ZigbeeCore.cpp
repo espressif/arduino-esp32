@@ -472,8 +472,8 @@ bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind) {
   if (Zigbee.getDebugMode()) {
     log_d("APSDE INDICATION - Received APSDE-DATA indication, status: %u", ind.status);
     log_d(
-      "APSDE INDICATION - dst_endpoint: %u, src_endpoint: %u, dst_addr_mode: %u, src_addr_mode: %u, cluster_id: 0x%04x, asdu_length: %" PRIu32, ind.dst_endpoint,
-      ind.src_endpoint, ind.dst_addr_mode, ind.src_addr_mode, ind.cluster_id, ind.asdu_length
+      "APSDE INDICATION - dst_endpoint: %u, src_endpoint: %u, dst_addr_mode: %u, src_addr_mode: %u, cluster_id: 0x%04x, asdu_length: %" PRIu32,
+      ind.dst_endpoint, ind.src_endpoint, ind.dst_addr_mode, ind.src_addr_mode, ind.cluster_id, ind.asdu_length
     );
     log_d(
       "APSDE INDICATION - dst_short_addr: 0x%04x, src_short_addr: 0x%04x, profile_id: 0x%04x, security_status: %u, lqi: %d, rx_time: %d", ind.dst_short_addr,

@@ -399,7 +399,8 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
       case ESP_ZB_ZCL_OTA_UPGRADE_STATUS_FINISH:
         log_i("Zigbee - OTA Finish");
         log_i(
-          "Zigbee - OTA Information: version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image type: 0x%04x, total size: %" PRIu32 " bytes, cost time: %" PRId32 " ms,",
+          "Zigbee - OTA Information: version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image type: 0x%04x, total size: %" PRIu32
+          " bytes, cost time: %" PRId32 " ms,",
           message->ota_header.file_version, message->ota_header.manufacturer_code, message->ota_header.image_type, message->ota_header.image_size,
           (int32_t)((esp_timer_get_time() - start_time) / 1000)
         );
@@ -432,7 +433,10 @@ static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_valu
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message) {
   if (message->info.status == ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_i("Zigbee - Queried OTA image from address: 0x%x, endpoint: %u", message->server_addr.u.short_addr, message->server_endpoint);
-    log_i("Zigbee - Image version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image size: %" PRIu32, message->file_version, message->manufacturer_code, message->image_size);
+    log_i(
+      "Zigbee - Image version: 0x%08" PRIx32 ", manufacturer code: 0x%04x, image size: %" PRIu32, message->file_version, message->manufacturer_code,
+      message->image_size
+    );
     if (message->image_size == 0) {
       log_i("Zigbee - Rejecting OTA image upgrade, image size is 0");
       return ESP_FAIL;

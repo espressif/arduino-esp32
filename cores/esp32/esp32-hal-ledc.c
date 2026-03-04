@@ -319,7 +319,8 @@ bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution) {
 #endif
 
   log_e(
-    "No free timers available for freq=%" PRIu32 ", resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to "
+    "No free timers available for freq=%" PRIu32
+    ", resolution=%u. To attach a new channel, use the same frequency and resolution as an already attached channel to "
     "share its timer.",
     freq, resolution
   );
@@ -775,8 +776,7 @@ void analogWrite(uint8_t pin, int value) {
     ledc_channel_handle_t *bus = (ledc_channel_handle_t *)perimanGetPinBus(pin, ESP32_BUS_TYPE_LEDC);
     if (bus == NULL && perimanClearPinBus(pin)) {
       if (ledcAttach(pin, analog_frequency, analog_resolution) == 0) {
-        log_e("analogWrite setup failed (freq = %d, resolution = %u). Try setting different resolution or frequency",
-        analog_frequency, analog_resolution);
+        log_e("analogWrite setup failed (freq = %d, resolution = %u). Try setting different resolution or frequency", analog_frequency, analog_resolution);
         return;
       }
     }

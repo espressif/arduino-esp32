@@ -36,7 +36,10 @@ bool MatterGenericSwitch::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
     return false;
   }
 
-  log_d("Generic Switch Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Generic Switch Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   return true;
 }
 

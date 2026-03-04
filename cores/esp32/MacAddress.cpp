@@ -140,8 +140,8 @@ int MacAddress::toString(char *buf) {
     return snprintf(buf, 18, "%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5]);
   } else {
     return snprintf(
-      buf, 24, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5], _mac.bytes[6],
-      _mac.bytes[7]
+      buf, 24, "%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X", _mac.bytes[0], _mac.bytes[1], _mac.bytes[2], _mac.bytes[3], _mac.bytes[4], _mac.bytes[5],
+      _mac.bytes[6], _mac.bytes[7]
     );
   }
 }

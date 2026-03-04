@@ -30,7 +30,10 @@ bool MatterDimmableLight::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
     return false;
   }
 
-  log_d("Dimmable Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Dimmable Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {

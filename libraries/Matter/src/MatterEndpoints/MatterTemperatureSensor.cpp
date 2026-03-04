@@ -29,7 +29,10 @@ bool MatterTemperatureSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t c
     return false;
   }
 
-  log_d("Temperature Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Temperature Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   return ret;
 }
 

@@ -29,8 +29,8 @@ void setup() {
   uint64_t big_uint64 = UINT64_MAX;
   int64_t negative_big_int64 = INT64_MIN;
 
-  char positive_buffer[21]; // At least 21 bytes are required for uint64_t
-  char negative_buffer[22]; // At least 22 bytes are required for int64_t
+  char positive_buffer[21];  // At least 21 bytes are required for uint64_t
+  char negative_buffer[22];  // At least 22 bytes are required for int64_t
 
   u64_to_str(big_uint64, positive_buffer);
   i64_to_str(negative_big_int64, negative_buffer);

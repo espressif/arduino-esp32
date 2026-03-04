@@ -25,7 +25,7 @@
  * @param buffer The buffer to store the string. At least 21 bytes are required.
  * @return Pointer to the buffer
  */
-char* u64_to_str(uint64_t value, char *buffer);
+char *u64_to_str(uint64_t value, char *buffer);
 
 /**
  * @brief Convert a int64_t to a string in base 10
@@ -34,7 +34,7 @@ char* u64_to_str(uint64_t value, char *buffer);
  * @param buffer The buffer to store the string. At least 22 bytes are required.
  * @return Pointer to the buffer
  */
-char* i64_to_str(int64_t value, char *buffer);
+char *i64_to_str(int64_t value, char *buffer);
 
 /**
  * @brief Convert a uint64_t to a String in base 10.

@@ -68,7 +68,9 @@ void setup() {
 
   Serial.printf("Starting ESP32. Bootcount = %" PRIu32 "\n", bootcount++);
   // Cast to uint32_t is safe until year 2106.
-  Serial.printf("Deep sleep (%" PRIu32 "s since last reset, %" PRIu32 "s since last boot)\n", (uint32_t)nowTimeStruct.tv_sec, (uint32_t)(nowTimeStruct.tv_sec - last));
+  Serial.printf(
+    "Deep sleep (%" PRIu32 "s since last reset, %" PRIu32 "s since last boot)\n", (uint32_t)nowTimeStruct.tv_sec, (uint32_t)(nowTimeStruct.tv_sec - last)
+  );
 
   last = nowTimeStruct.tv_sec;
   lastTenth = nowTimeStruct.tv_sec * 10;  // Time since last reset as 0.1 second resolution counter

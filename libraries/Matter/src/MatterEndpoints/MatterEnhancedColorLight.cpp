@@ -93,8 +93,8 @@ bool MatterEnhancedColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t 
   }
 
   log_d(
-    "Enhanced ColorAttr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32 ", type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32,
-    val->type
+    "Enhanced ColorAttr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32 ", type: %u", endpoint_id, cluster_id,
+    attribute_id, val->val.u32, val->type
   );
 
   if (endpoint_id == getEndPointId()) {

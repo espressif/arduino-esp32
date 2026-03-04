@@ -90,8 +90,8 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
   }
 
   log_d(
-    "RGB Color Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32 ", type: %u", endpoint_id, cluster_id, attribute_id, val->val.u32,
-    val->type
+    "RGB Color Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32 ", type: %u", endpoint_id, cluster_id,
+    attribute_id, val->val.u32, val->type
   );
 
   if (endpoint_id == getEndPointId()) {

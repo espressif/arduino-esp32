@@ -30,7 +30,10 @@ bool MatterContactSensor::attributeChangeCB(uint16_t endpoint_id, uint32_t clust
     return false;
   }
 
-  log_d("Contact Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Contact Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   return ret;
 }
 

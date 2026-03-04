@@ -1113,7 +1113,9 @@ void BLEUtils::dumpGapEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t
     // ESP_GAP_BLE_NC_REQ_EVT
     case ESP_GAP_BLE_NC_REQ_EVT:
     {
-      log_v("[bd_addr: %s, passkey: %06" PRIu32 "]", BLEAddress(param->ble_security.key_notif.bd_addr).toString().c_str(), param->ble_security.key_notif.passkey);
+      log_v(
+        "[bd_addr: %s, passkey: %06" PRIu32 "]", BLEAddress(param->ble_security.key_notif.bd_addr).toString().c_str(), param->ble_security.key_notif.passkey
+      );
       break;
     }  // ESP_GAP_BLE_NC_REQ_EVT
 

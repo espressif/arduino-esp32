@@ -305,7 +305,9 @@ static bool _rmtWrite(int pin, rmt_data_t *data, size_t num_rmt_symbols, bool bl
   }
 
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
-  log_v("GPIO: %d - Request: %lu RMT Symbols - %s - Timeout: %" PRIu32, pin, (unsigned long)num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms);
+  log_v(
+    "GPIO: %d - Request: %lu RMT Symbols - %s - Timeout: %" PRIu32, pin, (unsigned long)num_rmt_symbols, blocking ? "Blocking" : "Non-Blocking", timeout_ms
+  );
   // loop parameter semantics:
   //   loop == 0: no looping (single transmission)
   //   loop == 1: infinite looping
@@ -389,7 +391,9 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
     log_w("GPIO %d - RMT Read Data and/or Size NULL pointer.", pin);
     return false;
   }
-  log_v("GPIO: %d - Request: %lu RMT Symbols - %s - Timeout: %" PRIu32, pin, (unsigned long)*num_rmt_symbols, waitForData ? "Blocking" : "Non-Blocking", timeout_ms);
+  log_v(
+    "GPIO: %d - Request: %lu RMT Symbols - %s - Timeout: %" PRIu32, pin, (unsigned long)*num_rmt_symbols, waitForData ? "Blocking" : "Non-Blocking", timeout_ms
+  );
   bool retCode = true;
   RMT_MUTEX_LOCK(bus);
 

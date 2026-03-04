@@ -226,13 +226,15 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
 
         if (known) {
           log_d(
-            " --->   %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
-            BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
+            " --->   %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2],
+            BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
+            (hidden_scan) ? "hidden" : "visible"
           );
         } else {
           log_d(
-            "        %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3],
-            BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*', (hidden_scan) ? "hidden" : "visible"
+            "        %d: [%" PRIi32 "][%02X:%02X:%02X:%02X:%02X:%02X] %s (%" PRIi32 ") (%c) (%s)", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2],
+            BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == WIFI_AUTH_OPEN) ? ' ' : '*',
+            (hidden_scan) ? "hidden" : "visible"
           );
         }
       }

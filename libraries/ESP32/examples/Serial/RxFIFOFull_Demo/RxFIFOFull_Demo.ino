@@ -96,7 +96,9 @@ void testAndReport(uint8_t fifoFull) {
   Serial.printf("It took %" PRIu32 " milliseconds to read %u bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
   Serial.printf("Per execution Serial.read() number of bytes data and time information:\n");
   for (i = 0; i < DATA_SIZE; i++) {
-    Serial.printf("#%03u - Received %03" PRIu32 " bytes after %" PRIu32 " ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now);
+    Serial.printf(
+      "#%03u - Received %03" PRIu32 " bytes after %" PRIu32 " ms.\n", i, bytesJustReceived[i], i > 0 ? timeStamp[i] - timeStamp[i - 1] : timeStamp[i] - now
+    );
     if (i != DATA_SIZE - 1 && bytesJustReceived[i + 1] == 0) {
       break;
     }

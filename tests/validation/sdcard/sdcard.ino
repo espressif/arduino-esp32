@@ -476,7 +476,10 @@ void test_sd_large_file_operations(void) {
       for (size_t i = 0; i < chunkSize; i++) {
         if (readBuffer[i] != writeBuffer[i]) {
           char errorMsg[100];
-          snprintf(errorMsg, sizeof(errorMsg), "Data mismatch at chunk %lu, byte %lu: expected %d, got %d", (unsigned long)chunk, (unsigned long)i, writeBuffer[i], readBuffer[i]);
+          snprintf(
+            errorMsg, sizeof(errorMsg), "Data mismatch at chunk %lu, byte %lu: expected %d, got %d", (unsigned long)chunk, (unsigned long)i, writeBuffer[i],
+            readBuffer[i]
+          );
           TEST_FAIL_MESSAGE(errorMsg);
         }
       }

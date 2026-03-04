@@ -314,7 +314,9 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
 
   // ===== Debug logging =====
-  log_d("%s: %" PRIu32 " / %" PRIu32 " = %" PRIu32 " Mhz, APB: %" PRIu32 " Hz", getClockSourceName(conf.source), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+  log_d(
+    "%s: %" PRIu32 " / %" PRIu32 " = %" PRIu32 " Mhz, APB: %" PRIu32 " Hz", getClockSourceName(conf.source), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
 
   return true;
 }

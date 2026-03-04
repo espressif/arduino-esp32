@@ -30,7 +30,10 @@ bool MatterColorTemperatureLight::attributeChangeCB(uint16_t endpoint_id, uint32
     return false;
   }
 
-  log_d("Temperature Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Temperature Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
 
   if (endpoint_id == getEndPointId()) {
     switch (cluster_id) {

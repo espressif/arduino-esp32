@@ -90,7 +90,10 @@ bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
     log_e("Matter Thermostat device has not begun.");
     return false;
   }
-  log_d("Thermostat Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Thermostat Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %" PRIu32, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
 
   if (cluster_id == Thermostat::Id) {
     switch (attribute_id) {

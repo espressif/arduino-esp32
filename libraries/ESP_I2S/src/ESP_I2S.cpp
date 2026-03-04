@@ -1035,8 +1035,8 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
     data_chunk = (wav_data_chunk_t *)(data + WAVE_HEADER_SIZE + data_offset - 8);
   }
   log_d(
-    "Play WAV: rate:%" PRIu32 ", bits:%u, channels:%u, size:%" PRIu32, header->fmt_chunk.sample_rate, header->fmt_chunk.bits_per_sample, header->fmt_chunk.num_of_channels,
-    data_chunk->subchunk_size
+    "Play WAV: rate:%" PRIu32 ", bits:%u, channels:%u, size:%" PRIu32, header->fmt_chunk.sample_rate, header->fmt_chunk.bits_per_sample,
+    header->fmt_chunk.num_of_channels, data_chunk->subchunk_size
   );
   configureTX(header->fmt_chunk.sample_rate, (i2s_data_bit_width_t)header->fmt_chunk.bits_per_sample, (i2s_slot_mode_t)header->fmt_chunk.num_of_channels);
   write(data + WAVE_HEADER_SIZE + data_offset, data_chunk->subchunk_size);
