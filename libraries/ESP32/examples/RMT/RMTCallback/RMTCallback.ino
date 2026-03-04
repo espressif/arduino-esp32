@@ -95,6 +95,6 @@ void setup() {
 
 void loop() {
   // The reading values will come from the 3 tasks started by setup()
-  Serial.printf("GPIO %d: %08lx | %d: %08lx | %d: %08lx\n", mp1.gpio, mp1.val(), mp2.gpio, mp2.val(), mp3.gpio, mp3.val());
+  Serial.printf("GPIO %d: %08" PRIx32 " | %d: %08" PRIx32 " | %d: %08" PRIx32 "\n", mp1.gpio, mp1.val(), mp2.gpio, mp2.val(), mp3.gpio, mp3.val());
   delay(500);
 }

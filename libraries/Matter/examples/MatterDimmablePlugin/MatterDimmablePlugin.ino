@@ -56,7 +56,7 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 
 // Set the RGB LED Plugin output based on the current state and level
 bool setPluginState(bool state, uint8_t level) {
-  Serial.printf("User Callback :: New Plugin State = %s, Level = %d\r\n", state ? "ON" : "OFF", level);
+  Serial.printf("User Callback :: New Plugin State = %s, Level = %u\r\n", state ? "ON" : "OFF", level);
   if (state) {
     // Plugin is ON - set RGB LED level (0-255 maps to 0-100% power)
 #ifdef RGB_BUILTIN
@@ -122,7 +122,7 @@ void setup() {
     return true;
   });
   DimmablePlugin.onChangeLevel([](uint8_t level) {
-    Serial.printf("Plugin Level changed to %d\r\n", level);
+    Serial.printf("Plugin Level changed to %u\r\n", level);
     return true;
   });
 
@@ -131,7 +131,7 @@ void setup() {
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    Serial.printf("Initial state: %s | level: %d\r\n", DimmablePlugin ? "ON" : "OFF", DimmablePlugin.getLevel());
+    Serial.printf("Initial state: %s | level: %u\r\n", DimmablePlugin ? "ON" : "OFF", DimmablePlugin.getLevel());
     // configure the Plugin based on initial on-off state and level
     DimmablePlugin.updateAccessory();
   }
@@ -154,7 +154,7 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: %s | level: %d\r\n", DimmablePlugin ? "ON" : "OFF", DimmablePlugin.getLevel());
+    Serial.printf("Initial state: %s | level: %u\r\n", DimmablePlugin ? "ON" : "OFF", DimmablePlugin.getLevel());
     // configure the Plugin based on initial on-off state and level
     DimmablePlugin.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");

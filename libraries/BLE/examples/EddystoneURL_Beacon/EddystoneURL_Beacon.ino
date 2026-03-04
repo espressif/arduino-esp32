@@ -76,8 +76,9 @@ void setup() {
   Serial.begin(115200);
   gettimeofday(&now, NULL);
 
-  Serial.printf("Start ESP32 %lu\n", bootcount++);
-  Serial.printf("Deep sleep (%llds since last reset, %llds since last boot)\n", now.tv_sec, now.tv_sec - last);
+  Serial.printf("Start ESP32 %" PRIu32 "\n", bootcount++);
+  // Cast to uint32_t is safe until year 2106.
+  Serial.printf("Deep sleep (%" PRIu32 "s since last reset, %" PRIu32 "s since last boot)\n", (uint32_t)now.tv_sec, (uint32_t)(now.tv_sec - last));
 
   last = now.tv_sec;
 

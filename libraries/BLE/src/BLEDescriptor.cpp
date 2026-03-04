@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "sdkconfig.h"
 #include <esp_err.h>
+#include <inttypes.h>
 #include "BLE2904.h"
 #include "BLEService.h"
 #include "BLEDescriptor.h"
@@ -153,7 +154,7 @@ BLECharacteristic *BLEDescriptor::getCharacteristic() const {
  * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
  */
 void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks *pCallback) {
-  log_v(">> setCallbacks: 0x%x", (uint32_t)pCallback);
+  log_v(">> setCallbacks: %p", pCallback);
   if (pCallback != nullptr) {
     m_pCallback = pCallback;
   } else {
@@ -187,7 +188,7 @@ void BLEDescriptor::setHandle(uint16_t handle) {
  */
 void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
   if (length > m_value.attr_max_len) {
-    log_e("Size %d too large, must be no bigger than %d", length, m_value.attr_max_len);
+    log_e("Size %lu too large, must be no bigger than %u", (unsigned long)length, m_value.attr_max_len);
     return;
   }
 
@@ -197,7 +198,7 @@ void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
 #if CONFIG_BLUEDROID_ENABLED
   if (m_handle != NULL_HANDLE) {
     esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t *)data);
-    log_d("Set the value in the GATTS database using handle 0x%x", m_handle);
+    log_d("Set the value in the GATTS database using handle 0x%.2x", m_handle);
   }
 #endif
   m_semaphoreSetValue.give();

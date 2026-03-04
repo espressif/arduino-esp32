@@ -79,7 +79,7 @@ bool MatterTemperatureControlledCabinet::attributeChangeCB(uint16_t endpoint_id,
     return false;
   }
 
-  log_d("Temperature Controlled Cabinet Attr update callback: endpoint: %u, cluster: %u, attribute: %u", endpoint_id, cluster_id, attribute_id);
+  log_d("Temperature Controlled Cabinet Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32, endpoint_id, cluster_id, attribute_id);
 
   // Handle TemperatureControl cluster attribute changes from Matter controller
   if (cluster_id == TemperatureControl::Id) {
@@ -135,7 +135,7 @@ bool MatterTemperatureControlledCabinet::attributeChangeCB(uint16_t endpoint_id,
         log_w("SupportedTemperatureLevels change attempted - this attribute is read-only");
         break;
 
-      default: log_d("Unhandled TemperatureControl Attribute ID: %u", attribute_id); break;
+      default: log_d("Unhandled TemperatureControl Attribute ID: %" PRIu32, attribute_id); break;
     }
   }
 
@@ -160,7 +160,7 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Temperature Controlled Cabinet with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Temperature Controlled Cabinet with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -201,7 +201,7 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   useTemperatureNumber = true;  // Set feature mode to temperature_number
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Temperature Controlled Cabinet created with temperature_number feature, endpoint_id %d", getEndPointId());
+  log_i("Temperature Controlled Cabinet created with temperature_number feature, endpoint_id %u", getEndPointId());
 
   // Workaround: Manually create Step attribute if it wasn't created automatically
   // This handles the case where temperature_step::add() fails due to feature map timing issue
@@ -265,7 +265,7 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Temperature Controlled Cabinet with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Temperature Controlled Cabinet with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -303,7 +303,7 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
   rawStep = 0;
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Temperature Level Controlled Cabinet created with temperature_level feature, endpoint_id %d", getEndPointId());
+  log_i("Temperature Level Controlled Cabinet created with temperature_level feature, endpoint_id %u", getEndPointId());
 
   // Set started flag before calling setter methods (they check for started)
   started = true;

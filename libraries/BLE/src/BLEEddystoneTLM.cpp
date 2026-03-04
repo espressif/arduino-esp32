@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include "esp32-hal-log.h"
 #include "BLEEddystoneTLM.h"
 
@@ -88,7 +89,7 @@ String BLEEddystoneTLM::toString() {
   //out += val;
   out += "\n";
   out += "Battery Voltage ";  // + ENDIAN_CHANGE_U16(m_eddystoneData.volt);
-  snprintf(val, sizeof(val), "%d", ENDIAN_CHANGE_U16(m_eddystoneData.volt));
+  snprintf(val, sizeof(val), "%u", ENDIAN_CHANGE_U16(m_eddystoneData.volt));
   out += val;
   out += " mV\n";
 
@@ -98,30 +99,30 @@ String BLEEddystoneTLM::toString() {
   out += " C\n";
 
   out += "Adv. Count ";
-  snprintf(val, sizeof(val), "%ld", ENDIAN_CHANGE_U32(m_eddystoneData.advCount));
+  snprintf(val, sizeof(val), "%" PRIu32, ENDIAN_CHANGE_U32(m_eddystoneData.advCount));
   out += val;
   out += "\n";
 
   out += "Time in seconds ";
-  snprintf(val, sizeof(val), "%ld", rawsec / 10);
+  snprintf(val, sizeof(val), "%" PRIu32, rawsec / 10);
   out += val;
   out += "\n";
 
   out += "Time ";
 
-  snprintf(val, sizeof(val), "%04ld", rawsec / 864000);
+  snprintf(val, sizeof(val), "%04" PRIu32, rawsec / 864000);
   out += val;
   out += ".";
 
-  snprintf(val, sizeof(val), "%02ld", (rawsec / 36000) % 24);
+  snprintf(val, sizeof(val), "%02" PRIu32, (rawsec / 36000) % 24);
   out += val;
   out += ":";
 
-  snprintf(val, sizeof(val), "%02ld", (rawsec / 600) % 60);
+  snprintf(val, sizeof(val), "%02" PRIu32, (rawsec / 600) % 60);
   out += val;
   out += ":";
 
-  snprintf(val, sizeof(val), "%02ld", (rawsec / 10) % 60);
+  snprintf(val, sizeof(val), "%02" PRIu32, (rawsec / 10) % 60);
   out += val;
   out += "\n";
 
@@ -149,7 +150,7 @@ String BLEEddystoneTLM::toString() {
  */
 void BLEEddystoneTLM::setData(String data) {
   if (data.length() != sizeof(m_eddystoneData)) {
-    log_e("Unable to set the data ... length passed in was %d and expected %d", data.length(), sizeof(m_eddystoneData));
+    log_e("Unable to set the data ... length passed in was %u and expected %lu", data.length(), (unsigned long)sizeof(m_eddystoneData));
     return;
   }
   memcpy(&m_eddystoneData, data.c_str(), data.length());

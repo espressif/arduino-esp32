@@ -131,11 +131,11 @@ void setup() {
     return true;
   });
   CW_WW_Light.onChangeBrightness([](uint8_t level) {
-    Serial.printf("Light Brightness changed to %d\r\n", level);
+    Serial.printf("Light Brightness changed to %u\r\n", level);
     return true;
   });
   CW_WW_Light.onChangeColorTemperature([](uint16_t temperature) {
-    Serial.printf("Light Color Temperature changed to %d\r\n", temperature);
+    Serial.printf("Light Color Temperature changed to %u\r\n", temperature);
     return true;
   });
 
@@ -145,7 +145,7 @@ void setup() {
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
     Serial.printf(
-      "Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
+      "Initial state: %s | brightness: %u | Color Temperature: %u mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
       CW_WW_Light.getColorTemperature()
     );
     // configure the Light based on initial on-off state and brightness
@@ -171,7 +171,7 @@ void loop() {
       }
     }
     Serial.printf(
-      "Initial state: %s | brightness: %d | Color Temperature: %d mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
+      "Initial state: %s | brightness: %u | Color Temperature: %u mireds \r\n", CW_WW_Light ? "ON" : "OFF", CW_WW_Light.getBrightness(),
       CW_WW_Light.getColorTemperature()
     );
     // configure the Light based on initial on-off state and brightness

@@ -213,7 +213,7 @@ void setupOTA() {
         if (server.clientContentLength() > 0) {
           fsize = server.clientContentLength();
         }
-        Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
+        Serial.printf("Receiving Update: %s, Size: %lu\n", upload.filename.c_str(), (unsigned long)fsize);
 
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (!Update.begin(fsize)) {  //start with max available size

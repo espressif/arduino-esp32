@@ -325,6 +325,12 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
             fi
 
+            if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
+                mkdir -p "$COMPILE_COMMANDS_DIR"
+                jq --arg t "$target" '[.[] | . + {_target: $t}]' \
+                    "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketchname}.json"
+            fi
+
             if [ -n "$log_compilation" ]; then
                 #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
                 flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')

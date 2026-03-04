@@ -93,7 +93,7 @@ bool ZigbeeIlluminanceSensor::setIlluminance(uint16_t illuminanceValue) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_v("Updating Illuminance...");
   /* Update illuminance sensor measured illuminance */
-  log_d("Setting Illuminance to %d", illuminanceValue);
+  log_d("Setting Illuminance to %u", illuminanceValue);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID,

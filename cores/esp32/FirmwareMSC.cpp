@@ -93,13 +93,13 @@ static size_t msc_update_get_required_disk_sectors() {
   if (msc_run_partition) {
     fw_size = get_firmware_size(msc_run_partition);
     data_sectors += FAT_SIZE_TO_SECTORS(fw_size);
-    log_d("APP size: %u (%u sectors)", fw_size, FAT_SIZE_TO_SECTORS(fw_size));
+    log_d("APP size: %lu (%lu sectors)", (unsigned long)fw_size, (unsigned long)FAT_SIZE_TO_SECTORS(fw_size));
   } else {
     log_w("APP partition not found. Reading disabled");
   }
   if (msc_ota_partition) {
     data_sectors += FAT_SIZE_TO_SECTORS(msc_ota_partition->size);
-    log_d("OTA size: %u (%u sectors)", msc_ota_partition->size, FAT_SIZE_TO_SECTORS(msc_ota_partition->size));
+    log_d("OTA size: %lu (%lu sectors)", (unsigned long)msc_ota_partition->size, (unsigned long)FAT_SIZE_TO_SECTORS(msc_ota_partition->size));
   } else {
     log_w("OTA partition not found. Writing disabled");
   }
@@ -116,9 +116,9 @@ static size_t msc_update_get_required_disk_sectors() {
     mcs_is_fat16 = false;
   }
   log_d("FAT sector size: %u", DISK_SECTOR_SIZE);
-  log_d("FAT data sectors: %u", data_sectors);
+  log_d("FAT data sectors: %lu", (unsigned long)data_sectors);
   log_d("FAT table sectors: %u", msc_table_sectors);
-  log_d("FAT total sectors: %u (%uKB)", total_sectors, (total_sectors * DISK_SECTOR_SIZE) / 1024);
+  log_d("FAT total sectors: %lu (%luKB)", (unsigned long)total_sectors, (unsigned long)(total_sectors * DISK_SECTOR_SIZE) / 1024);
   return total_sectors;
 }
 
@@ -128,7 +128,7 @@ static bool msc_update_setup_disk(const char *volume_label, uint32_t serial_numb
   uint8_t ram_sectors = msc_table_sectors + 2;
   msc_ram_disk = (uint8_t *)calloc(ram_sectors, DISK_SECTOR_SIZE);
   if (!msc_ram_disk) {
-    log_e("Failed to allocate RAM Disk: %u bytes", ram_sectors * DISK_SECTOR_SIZE);
+    log_e("Failed to allocate RAM Disk: %lu bytes", (unsigned long)ram_sectors * DISK_SECTOR_SIZE);
     return false;
   }
   fw_start_sector = ram_sectors;
@@ -219,7 +219,7 @@ static esp_err_t msc_update_write(const esp_partition_t *partition, uint32_t off
   esp_err_t err = ESP_OK;
   if ((offset & (SPI_FLASH_SEC_SIZE - 1)) == 0) {
     err = esp_partition_erase_range(partition, offset, SPI_FLASH_SEC_SIZE);
-    log_v("ERASE[0x%08X]: %s", offset, (err != ESP_OK) ? "FAIL" : "OK");
+    log_v("ERASE[0x%08" PRIX32 "]: %s", offset, (err != ESP_OK) ? "FAIL" : "OK");
     if (err != ESP_OK) {
       return err;
     }
@@ -229,7 +229,7 @@ static esp_err_t msc_update_write(const esp_partition_t *partition, uint32_t off
 
 //called when error was encountered while updating
 static void msc_update_error() {
-  log_e("UPDATE_ERROR: %u", msc_update_bytes_written);
+  log_e("UPDATE_ERROR: %" PRIu32, msc_update_bytes_written);
   arduino_firmware_msc_event_data_t p;
   p.error.size = msc_update_bytes_written;
   arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_ERROR_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
@@ -241,11 +241,11 @@ static void msc_update_error() {
 
 //called when all firmware bytes have been received
 static void msc_update_end() {
-  log_d("UPDATE_END: %u", msc_update_entry->file_size);
+  log_d("UPDATE_END: %" PRIu32, msc_update_entry->file_size);
   msc_update_state = MSC_UPDATE_END;
   size_t ota_size = get_firmware_size(msc_ota_partition);
   if (ota_size != msc_update_entry->file_size) {
-    log_e("OTA SIZE MISMATCH %u != %u", ota_size, msc_update_entry->file_size);
+    log_e("OTA SIZE MISMATCH %lu != %" PRIu32, (unsigned long)ota_size, msc_update_entry->file_size);
     msc_update_error();
     return;
   }
@@ -260,7 +260,7 @@ static void msc_update_end() {
 }
 
 static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
-  //log_d("lba: %u, offset: %u, bufsize: %u", lba, offset, bufsize);
+  //log_d("lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lba, offset, bufsize);
   if (lba < fw_start_sector) {
     //write to sectors that are in RAM
     memcpy(msc_ram_disk + (lba * DISK_SECTOR_SIZE) + offset, buffer, bufsize);
@@ -297,10 +297,10 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_
       msc_update_state = MSC_UPDATE_RUNNING;
       msc_update_start_sector = lba;
       msc_update_bytes_written = 0;
-      log_d("UPDATE_START: %u (0x%02X)", lba, lba - msc_boot->sectors_per_alloc_table);
+      log_d("UPDATE_START: %" PRIu32 " (0x%02" PRIX32 ")", lba, lba - msc_boot->sectors_per_alloc_table);
       arduino_usb_event_post(ARDUINO_FIRMWARE_MSC_EVENTS, ARDUINO_FIRMWARE_MSC_START_EVENT, &p, sizeof(arduino_firmware_msc_event_data_t), portMAX_DELAY);
       if (msc_update_write(msc_ota_partition, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) == ESP_OK) {
-        log_v("UPDATE_WRITE: %u %u", ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, bufsize);
+        log_v("UPDATE_WRITE: %" PRIu32 " %" PRIu32, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, bufsize);
         msc_update_bytes_written = ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset + bufsize;
         p.write.offset = ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset;
         p.write.size = bufsize;
@@ -315,7 +315,7 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_
         bufsize = msc_update_entry->file_size - msc_update_bytes_written;
       }
       if (msc_update_write(msc_ota_partition, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, buffer, bufsize) == ESP_OK) {
-        log_v("UPDATE_WRITE: %u %u", ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, bufsize);
+        log_v("UPDATE_WRITE: %" PRIu32 " %" PRIu32, ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset, bufsize);
         msc_update_bytes_written = ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset + bufsize;
         p.write.offset = ((lba - msc_update_start_sector) * DISK_SECTOR_SIZE) + offset;
         p.write.size = bufsize;
@@ -333,7 +333,7 @@ static int32_t msc_write(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_
 }
 
 static int32_t msc_read(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
-  //log_d("lba: %u, offset: %u, bufsize: %u", lba, offset, bufsize);
+  //log_d("lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32, lba, offset, bufsize);
   if (lba < fw_start_sector) {
     memcpy(buffer, msc_ram_disk + (lba * DISK_SECTOR_SIZE) + offset, bufsize);
   } else if (msc_run_partition && lba < fw_end_sector) {

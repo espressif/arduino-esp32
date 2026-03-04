@@ -103,7 +103,7 @@ bool updateEspHostedSlave() {
 
         // Prevent reading more data than expected
         if (size > len) {
-          Serial.printf("\nERROR: Update received extra bytes: %u!", size - len);
+          Serial.printf("\nERROR: Update received extra bytes: %lu!", (unsigned long)size - len);
           break;
         }
 

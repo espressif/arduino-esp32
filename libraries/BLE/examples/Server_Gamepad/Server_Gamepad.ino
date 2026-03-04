@@ -206,7 +206,7 @@ void loop() {
 
       // Print status every 2 seconds
       if (counter % 40 == 0) {
-        Serial.printf("Report #%lu: X=%d, Y=%d, Buttons=0x%02X\n", counter, report.x, report.y, report.buttons);
+        Serial.printf("Report #%" PRIu32 ": X=%d, Y=%d, Buttons=0x%02X\n", counter, report.x, report.y, report.buttons);
       }
     }
   }

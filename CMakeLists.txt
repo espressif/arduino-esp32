@@ -69,6 +69,7 @@ set(CORE_SRCS
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/StringUtils.cpp
   cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
@@ -87,6 +88,7 @@ set(ARDUINO_ALL_LIBRARIES
   AsyncUDP
   BLE
   BluetoothSerial
+  Console
   DNSServer
   EEPROM
   ESP_I2S
@@ -134,6 +136,9 @@ set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
   libraries/BluetoothSerial/src/BTAddress.cpp
   libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
   libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
+
+set(ARDUINO_LIBRARY_Console_SRCS libraries/Console/src/Console.cpp)
+set(ARDUINO_LIBRARY_Console_REQUIRES console)
 
 set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
 

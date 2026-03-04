@@ -90,12 +90,12 @@ static void onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t inf
 
 // PPP Error Callback
 static void _ppp_error_cb(esp_modem_terminal_error_t err) {
-  log_v("PPP Driver Error %ld: %s", err, _ppp_terminal_error_name(err));
+  log_v("PPP Driver Error %d: %s", err, _ppp_terminal_error_name(err));
 }
 
 // PPP Arduino Events Callback
 void PPPClass::_onPppArduinoEvent(arduino_event_id_t event, arduino_event_info_t info) {
-  log_v("PPP Arduino Event %ld: %s", event, Network.eventName(event));
+  log_v("PPP Arduino Event %d: %s", event, Network.eventName(event));
   // if(event == ARDUINO_EVENT_PPP_GOT_IP){
   //     if((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0){
   //         setStatusBits(ESP_NETIF_CONNECTED_BIT);
@@ -119,7 +119,7 @@ void PPPClass::_onPppEvent(int32_t event, void *event_data) {
   arduino_event_t arduino_event;
   arduino_event.event_id = ARDUINO_EVENT_MAX;
 
-  log_v("PPP Driver Event %ld: %s", event, _ppp_event_name(event));
+  log_v("PPP Driver Event %" PRId32 ": %s", event, _ppp_event_name(event));
 
   if (event == NETIF_PPP_ERRORNONE) {
     if ((getStatusBits() & ESP_NETIF_CONNECTED_BIT) == 0) {
