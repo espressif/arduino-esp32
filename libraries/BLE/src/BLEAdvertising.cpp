@@ -847,8 +847,7 @@ uint16_t BLEAdvertising::buildRawAdvData(uint8_t *buf, uint16_t bufLen, bool inc
   }
 
   // --- Manufacturer data ---
-  if (m_advData.manufacturer_len > 0 && m_advData.p_manufacturer_data
-      && remaining >= (uint16_t)(2 + m_advData.manufacturer_len)) {
+  if (m_advData.manufacturer_len > 0 && m_advData.p_manufacturer_data && remaining >= (uint16_t)(2 + m_advData.manufacturer_len)) {
     *p++ = m_advData.manufacturer_len + 1;
     *p++ = ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE;
     memcpy(p, m_advData.p_manufacturer_data, m_advData.manufacturer_len);
@@ -857,8 +856,7 @@ uint16_t BLEAdvertising::buildRawAdvData(uint8_t *buf, uint16_t bufLen, bool inc
   }
 
   // --- Service data ---
-  if (m_advData.service_data_len > 0 && m_advData.p_service_data
-      && remaining >= (uint16_t)(2 + m_advData.service_data_len)) {
+  if (m_advData.service_data_len > 0 && m_advData.p_service_data && remaining >= (uint16_t)(2 + m_advData.service_data_len)) {
     *p++ = m_advData.service_data_len + 1;
     *p++ = ESP_BLE_AD_TYPE_SERVICE_DATA;
     memcpy(p, m_advData.p_service_data, m_advData.service_data_len);
