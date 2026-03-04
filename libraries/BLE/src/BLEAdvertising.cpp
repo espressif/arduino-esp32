@@ -669,7 +669,7 @@ void BLEAdvertising::freeServiceUUIDs() {
  *
  * TX power is encoded first (always 3 bytes). The device name is appended only
  * when @ref m_nameInScanResp is true (i.e. the name did not fit in the
- * advertising packet). This mirrors NimBLE's behaviour: the name stays in the
+ * advertising packet). This mirrors NimBLE's behavior: the name stays in the
  * advertising packet when there is room for it there, and is moved to the scan
  * response only when the advertising payload is already full.
  *
@@ -716,7 +716,7 @@ bool BLEAdvertising::configureScanResponseData() {
   // name overflowed the advertising packet (m_nameInScanResp == true), the
   // device name. Service UUIDs are never duplicated here — they are already
   // encoded in the advertising packet.
-  // This mirrors NimBLE's behaviour: the name only moves to the scan response
+  // This mirrors NimBLE's behavior: the name only moves to the scan response
   // when the advertising payload was too full to accommodate it.
   uint8_t rawBuf[ESP_BLE_ADV_DATA_LEN_MAX];
   uint16_t rawLen = buildRawScanRespData(rawBuf, sizeof(rawBuf));
@@ -735,12 +735,12 @@ bool BLEAdvertising::configureScanResponseData() {
  * written in priority order: flags, service UUIDs (16/32/128-bit in native
  * sizes), appearance, manufacturer data, service data, and optionally the
  * device name. TX power and connection interval are intentionally omitted from
- * the advertising packet to maximise space; TX power is placed in the scan
+ * the advertising packet to maximize space; TX power is placed in the scan
  * response when scan response is enabled. If the full name does not fit, it is
  * truncated and the AD type is set to Shortened Local Name (0x08).
  *
  * Encoding UUIDs in their native sizes (rather than expanding all to 128-bit as
- * the Bluedroid structured API does) maximises the available advertising payload.
+ * the Bluedroid structured API does) maximizes the available advertising payload.
  *
  * @param [out] buf         Destination buffer; at most ESP_BLE_ADV_DATA_LEN_MAX
  *                          bytes will be written.
@@ -916,7 +916,7 @@ bool BLEAdvertising::start() {
       // Always use the raw advertising API to encode service UUIDs in their
       // native compact sizes (16/32/128-bit).
       //
-      // Match NimBLE behaviour for name placement: try to fit the device name
+      // Match NimBLE behavior for name placement: try to fit the device name
       // in the advertising packet first; only move it to the scan response when
       // the advertising payload is already full (consistent with NimBLE's
       // name-overflow check at lines 1609-1633 of the NimBLE start() path).
