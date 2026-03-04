@@ -26,7 +26,7 @@ public:
 
   void begin() {
     attachInterrupt(PIN, std::bind(&Button::isr, this), FALLING);
-    Serial.printf("Started button interrupt on pin %d\n", PIN);
+    Serial.printf("Started button interrupt on pin %u\n", PIN);
   }
 
   ~Button() {
@@ -40,7 +40,7 @@ public:
 
   void checkPressed() {
     if (pressed) {
-      Serial.printf("Button on pin %u has been pressed %lu times\n", PIN, numberKeyPresses);
+      Serial.printf("Button on pin %u has been pressed %" PRIu32 " times\n", PIN, numberKeyPresses);
       pressed = false;
     }
   }

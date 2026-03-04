@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Arduino.h"
 #include "vfs_api.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -32,14 +33,14 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
     return FileImplPtr();
   }
 
-  char *temp = (char *)malloc(strlen(fpath) + strlen(_mountpoint) + 2);
+  size_t tempLen = strlen(_mountpoint) + strlen(fpath) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     log_e("malloc failed");
     return FileImplPtr();
   }
 
-  strcpy(temp, _mountpoint);
-  strcat(temp, fpath);
+  snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
 
   // Try to open as file first - let the file operation handle errors
   if (mode && mode[0] != 'r') {
@@ -112,23 +113,22 @@ bool VFSImpl::rename(const char *pathFrom, const char *pathTo) {
   }
 
   size_t mountpointLen = strlen(_mountpoint);
-  char *temp1 = (char *)malloc(strlen(pathFrom) + mountpointLen + 1);
+  size_t temp1Len = mountpointLen + strlen(pathFrom) + 1;
+  char *temp1 = (char *)malloc(temp1Len);
   if (!temp1) {
     log_e("malloc failed");
     return false;
   }
-  char *temp2 = (char *)malloc(strlen(pathTo) + mountpointLen + 1);
+  size_t temp2Len = mountpointLen + strlen(pathTo) + 1;
+  char *temp2 = (char *)malloc(temp2Len);
   if (!temp2) {
     free(temp1);
     log_e("malloc failed");
     return false;
   }
 
-  strcpy(temp1, _mountpoint);
-  strcat(temp1, pathFrom);
-
-  strcpy(temp2, _mountpoint);
-  strcat(temp2, pathTo);
+  snprintf(temp1, temp1Len, "%s%s", _mountpoint, pathFrom);
+  snprintf(temp2, temp2Len, "%s%s", _mountpoint, pathTo);
 
   // Let rename() handle the error if source doesn't exist
   auto rc = ::rename(temp1, temp2);
@@ -148,14 +148,14 @@ bool VFSImpl::remove(const char *fpath) {
     return false;
   }
 
-  char *temp = (char *)malloc(strlen(fpath) + strlen(_mountpoint) + 1);
+  size_t tempLen = strlen(_mountpoint) + strlen(fpath) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     log_e("malloc failed");
     return false;
   }
 
-  strcpy(temp, _mountpoint);
-  strcat(temp, fpath);
+  snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
 
   // Let unlink() handle the error if file doesn't exist
   auto rc = unlink(temp);
@@ -180,14 +180,14 @@ bool VFSImpl::mkdir(const char *fpath) {
     return false;
   }
 
-  char *temp = (char *)malloc(strlen(fpath) + strlen(_mountpoint) + 1);
+  size_t tempLen = strlen(_mountpoint) + strlen(fpath) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     log_e("malloc failed");
     return false;
   }
 
-  strcpy(temp, _mountpoint);
-  strcat(temp, fpath);
+  snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
 
   auto rc = ::mkdir(temp, ACCESSPERMS);
   free(temp);
@@ -205,14 +205,14 @@ bool VFSImpl::rmdir(const char *fpath) {
     return false;
   }
 
-  char *temp = (char *)malloc(strlen(fpath) + strlen(_mountpoint) + 1);
+  size_t tempLen = strlen(_mountpoint) + strlen(fpath) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     log_e("malloc failed");
     return false;
   }
 
-  strcpy(temp, _mountpoint);
-  strcat(temp, fpath);
+  snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
 
   // Let rmdir() handle the error if directory doesn't exist
   auto rc = ::rmdir(temp);
@@ -221,13 +221,13 @@ bool VFSImpl::rmdir(const char *fpath) {
 }
 
 VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _written(false) {
-  char *temp = (char *)malloc(strlen(fpath) + strlen(_fs->_mountpoint) + 1);
+  size_t tempLen = strlen(_fs->_mountpoint) + strlen(fpath) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     return;
   }
 
-  strcpy(temp, _fs->_mountpoint);
-  strcat(temp, fpath);
+  snprintf(temp, tempLen, "%s%s", _fs->_mountpoint, fpath);
 
   _path = strdup(fpath);
   if (!_path) {
@@ -256,7 +256,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
           log_e("opendir(%s) failed", temp);
         }
       } else {
-        log_e("Unknown type 0x%08X for file %s", ((_stat.st_mode) & _IFMT), temp);
+        log_e("Unknown type 0x%08" PRIX32 " for file %s", (uint32_t)((_stat.st_mode) & _IFMT), temp);
       }
     } else {
       //file not found
@@ -319,13 +319,13 @@ void VFSFileImpl::_getStat() const {
   if (!_path) {
     return;
   }
-  char *temp = (char *)malloc(strlen(_path) + strlen(_fs->_mountpoint) + 1);
+  size_t tempLen = strlen(_fs->_mountpoint) + strlen(_path) + 1;
+  char *temp = (char *)malloc(tempLen);
   if (!temp) {
     return;
   }
 
-  strcpy(temp, _fs->_mountpoint);
-  strcat(temp, _path);
+  snprintf(temp, tempLen, "%s%s", _fs->_mountpoint, _path);
 
   if (!stat(temp, &_stat)) {
     _written = false;
@@ -422,19 +422,18 @@ FileImplPtr VFSFileImpl::openNextFile(const char *mode) {
 
   size_t pathLen = strlen(_path);
   size_t fileNameLen = strlen(file->d_name);
-  char *name = (char *)malloc(pathLen + fileNameLen + 2);
+  size_t nameLen = pathLen + fileNameLen + 2;
+  char *name = (char *)malloc(nameLen);
 
   if (name == NULL) {
     return FileImplPtr();
   }
 
-  strcpy(name, _path);
-
   if ((file->d_name[0] != '/') && (_path[pathLen - 1] != '/')) {
-    strcat(name, "/");
+    snprintf(name, nameLen, "%s/%s", _path, file->d_name);
+  } else {
+    snprintf(name, nameLen, "%s%s", _path, file->d_name);
   }
-
-  strcat(name, file->d_name);
 
   FileImplPtr fileImplPtr = std::make_shared<VFSFileImpl>(_fs, name, mode);
   free(name);

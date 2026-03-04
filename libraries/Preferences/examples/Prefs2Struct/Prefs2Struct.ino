@@ -28,7 +28,7 @@ void setup() {
     return;
   }
   schedule_t *schedule = (schedule_t *)buffer;  // cast the bytes into a struct ptr
-  Serial.printf("%02d:%02d %d/%d\n", schedule[1].hour, schedule[1].minute, schedule[1].setting1, schedule[1].setting2);
+  Serial.printf("%02u:%02u %u/%u\n", schedule[1].hour, schedule[1].minute, schedule[1].setting1, schedule[1].setting2);
   schedule[2] = {8, 30, 20, 21};  // add a third entry (unsafely)
                                   // force the struct array into a byte array
   prefs.putBytes("schedule", schedule, 3 * sizeof(schedule_t));

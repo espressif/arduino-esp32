@@ -287,7 +287,7 @@ bool HTTPClient::beginInternal(String url, const char *expectedProtocol) {
   }
   _host = the_host;
   _uri = url;
-  log_d("protocol: %s, host: %s port: %d url: %s", _protocol.c_str(), _host.c_str(), _port, _uri.c_str());
+  log_d("protocol: %s, host: %s port: %u url: %s", _protocol.c_str(), _host.c_str(), _port, _uri.c_str());
   return true;
 }
 
@@ -304,7 +304,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri) {
   _port = port;
   _uri = uri;
   _transportTraits = TransportTraitsPtr(new TransportTraits());
-  log_d("host: %s port: %d uri: %s", host.c_str(), port, uri.c_str());
+  log_d("host: %s port: %u uri: %s", host.c_str(), port, uri.c_str());
   return true;
 }
 
@@ -571,7 +571,7 @@ int HTTPClient::sendRequest(const char *type, uint8_t *payload, size_t size) {
       }
     }
 
-    log_d("request type: '%s' redirCount: %d\n", type, redirectCount);
+    log_d("request type: '%s' redirCount: %u\n", type, redirectCount);
 
     // connect to server
     if (!connect()) {
@@ -637,7 +637,7 @@ int HTTPClient::sendRequest(const char *type, uint8_t *payload, size_t size) {
               // allow GET and HEAD methods without force
               !strcmp(type, "GET") || !strcmp(type, "HEAD")) {
             redirectCount += 1;
-            log_d("following redirect (the same method): '%s' redirCount: %d\n", _location.c_str(), redirectCount);
+            log_d("following redirect (the same method): '%s' redirCount: %u\n", _location.c_str(), redirectCount);
             if (!setURL(_location)) {
               log_d("failed setting URL for redirection\n");
               // no redirection
@@ -654,7 +654,7 @@ int HTTPClient::sendRequest(const char *type, uint8_t *payload, size_t size) {
         case HTTP_CODE_SEE_OTHER:
         {
           redirectCount += 1;
-          log_d("following redirect (dropped to GET/HEAD): '%s' redirCount: %d\n", _location.c_str(), redirectCount);
+          log_d("following redirect (dropped to GET/HEAD): '%s' redirCount: %u\n", _location.c_str(), redirectCount);
           if (!setURL(_location)) {
             log_d("failed setting URL for redirection\n");
             // no redirection
@@ -805,7 +805,7 @@ int HTTPClient::sendRequest(const char *type, Stream *stream, size_t size) {
     free(buff);
 
     if (size && (int)size != bytesWritten) {
-      log_d("Stream payload bytesWritten %d and size %d mismatch!.", bytesWritten, size);
+      log_d("Stream payload bytesWritten %d and size %lu mismatch!.", bytesWritten, (unsigned long)size);
       log_d("ERROR SEND PAYLOAD FAILED!");
       return returnError(HTTPC_ERROR_SEND_PAYLOAD_FAILED);
     } else {

@@ -132,7 +132,7 @@ void loop() {
     uint16_t current = analogReadMilliVolts(analogPin);         // demonstrates approx 0-3.3A
     int16_t power = ((voltage / 100) * (current / 1000) * 10);  //calculate power in W
     uint16_t frequency = 50135;                                 // 50.000 Hz
-    Serial.printf("Updating AC voltage to %d (0.01V), current to %d (mA), power to %d (0.1W), frequency to %d (mHz)\r\n", voltage, current, power, frequency);
+    Serial.printf("Updating AC voltage to %u (0.01V), current to %u (mA), power to %d (0.1W), frequency to %u (mHz)\r\n", voltage, current, power, frequency);
     zbElectricalMeasurement.setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_VOLTAGE, ZIGBEE_AC_PHASE_TYPE_A, voltage);
     zbElectricalMeasurement.setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_CURRENT, ZIGBEE_AC_PHASE_TYPE_A, current);
     zbElectricalMeasurement.setACMeasurement(ZIGBEE_AC_MEASUREMENT_TYPE_POWER, ZIGBEE_AC_PHASE_TYPE_A, power);

@@ -67,7 +67,7 @@ BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice) {
       if (lengthURL <= 18) {
         setData(String(payload + i + 4, lengthURL + 1));
       } else {
-        log_e("Too long URL %d", lengthURL);
+        log_e("Too long URL %u", lengthURL);
       }
     }
   }
@@ -155,7 +155,7 @@ String BLEEddystoneURL::getDecodedURL() {
  */
 void BLEEddystoneURL::setData(String data) {
   if (data.length() > sizeof(m_eddystoneData)) {
-    log_e("Unable to set the data ... length passed in was %d and max expected %d", data.length(), sizeof(m_eddystoneData));
+    log_e("Unable to set the data ... length passed in was %u and max expected %lu", data.length(), (unsigned long)sizeof(m_eddystoneData));
     return;
   }
   memset(&m_eddystoneData, 0, sizeof(m_eddystoneData));
@@ -205,7 +205,7 @@ void BLEEddystoneURL::setPower(int8_t advertisedTxPower) {
 // | Decoded | http:// |   g o o g l e  .com   |
 void BLEEddystoneURL::setURL(String url) {
   if (url.length() > sizeof(m_eddystoneData.url)) {
-    log_e("Unable to set the url ... length passed in was %d and max expected %d", url.length(), sizeof(m_eddystoneData.url));
+    log_e("Unable to set the url ... length passed in was %u and max expected %lu", url.length(), (unsigned long)sizeof(m_eddystoneData.url));
     return;
   }
   memset(m_eddystoneData.url, 0, sizeof(m_eddystoneData.url));
@@ -228,7 +228,7 @@ int BLEEddystoneURL::setSmartURL(String url) {
   bool hasSuffix = false;
   m_eddystoneData.url[0] = 0x00;  // Init with default prefix "http://www."
   uint8_t suffix = 0x0E;          // Init with empty string
-  log_d("Encode url \"%s\" with length %d", url.c_str(), url.length());
+  log_d("Encode url \"%s\" with length %u", url.c_str(), url.length());
   for (uint8_t i = 0; i < 4; ++i) {
     if (url.substring(0, EDDYSTONE_URL_PREFIX[i].length()) == EDDYSTONE_URL_PREFIX[i]) {
       m_eddystoneData.url[0] = i;
@@ -256,7 +256,7 @@ int BLEEddystoneURL::setSmartURL(String url) {
   size_t baseUrlLen = url.length() - (hasPrefix ? EDDYSTONE_URL_PREFIX[m_eddystoneData.url[0]].length() : 0) - EDDYSTONE_URL_SUFFIX[suffix].length();
   lengthURL = baseUrlLen + 1 + (hasSuffix ? 1 : 0);
   if (lengthURL > 18) {
-    log_e("Encoded URL is too long %d B - max 18 B", lengthURL);
+    log_e("Encoded URL is too long %u B - max 18 B", lengthURL);
     return 0;  // ERROR
   }
   String baseUrl = url.substring(

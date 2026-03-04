@@ -145,7 +145,7 @@ BLEClient *BLEDevice::createClient() {
 
 #ifdef CONFIG_NIMBLE_ENABLED
   if (m_connectedClientsMap.size() >= CONFIG_BT_NIMBLE_MAX_CONNECTIONS) {
-    log_e("Unable to create client. Max connections reached. Cur=%d Max=%d", m_connectedClientsMap.size(), CONFIG_BT_NIMBLE_MAX_CONNECTIONS);
+    log_e("Unable to create client. Max connections reached. Cur=%lu Max=%u", (unsigned long)m_connectedClientsMap.size(), CONFIG_BT_NIMBLE_MAX_CONNECTIONS);
     m_pClient = nullptr;
   } else
 #endif
@@ -226,7 +226,7 @@ BLEScan *BLEDevice::getScan() {
     m_pScan = new BLEScan();
     //log_d(" - creating a new scan object");
   }
-  //log_v("<< getScan: Returning object at 0x%x", (uint32_t)m_pScan);
+  //log_v("<< getScan: Returning object at %p", m_pScan);
   return m_pScan;
 }  // getScan
 
@@ -626,7 +626,7 @@ void BLEDevice::setSecurityCallbacks(BLESecurityCallbacks *callbacks) {
  * @param [in] mtu Value to set local mtu, should be larger than 23 and lower or equal to 517
  */
 esp_err_t BLEDevice::setMTU(uint16_t mtu) {
-  log_v(">> setLocalMTU: %d", mtu);
+  log_v(">> setLocalMTU: %u", mtu);
   if (!initialized) {
     log_e("BLE is not initialized. Call BLEDevice::init() first");
     return ESP_FAIL;
@@ -643,7 +643,7 @@ esp_err_t BLEDevice::setMTU(uint16_t mtu) {
   if (err == ESP_OK) {
     m_localMTU = mtu;
   } else {
-    log_e("can't set local mtu value: %d, rc=%d", mtu, err);
+    log_e("can't set local mtu value: %u, rc=%d", mtu, err);
   }
   log_v("<< setLocalMTU");
   return err;
@@ -789,7 +789,7 @@ bool BLEDevice::getPeerIRK(BLEAddress peerAddress, uint8_t *irk) {
   // Copy the IRK to the output buffer
   memcpy(irk, value_sec.irk, 16);
 
-  log_d("IRK found for peer: %s (type=%d)", peerAddress.toString().c_str(), addr.type);
+  log_d("IRK found for peer: %s (type=%u)", peerAddress.toString().c_str(), addr.type);
   log_v("<< BLEDevice::getPeerIRK()");
   return true;
 #endif  // CONFIG_NIMBLE_ENABLED
@@ -1012,7 +1012,7 @@ BLEClient *BLEDevice::getClientByAddress(BLEAddress address) {
 }
 
 void BLEDevice::updatePeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  log_d("update conn_id: %d, GATT role: %s", conn_id, _client ? "client" : "server");
+  log_d("update conn_id: %u, GATT role: %s", conn_id, _client ? "client" : "server");
   std::map<uint16_t, conn_status_t>::iterator it = m_connectedClientsMap.find(ESP_GATT_IF_NONE);
   if (it != m_connectedClientsMap.end()) {
     std::swap(m_connectedClientsMap[conn_id], it->second);
@@ -1028,7 +1028,7 @@ void BLEDevice::updatePeerDevice(void *peer, bool _client, uint16_t conn_id) {
 }
 
 void BLEDevice::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  log_i("add conn_id: %d, GATT role: %s", conn_id, _client ? "client" : "server");
+  log_i("add conn_id: %u, GATT role: %s", conn_id, _client ? "client" : "server");
   conn_status_t status = {.peer_device = peer, .connected = true, .mtu = 23};
 
   m_connectedClientsMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
@@ -1039,7 +1039,7 @@ void BLEDevice::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
 portMUX_TYPE BLEDevice::mux = portMUX_INITIALIZER_UNLOCKED;
 void BLEDevice::removePeerDevice(uint16_t conn_id, bool _client) {
   portENTER_CRITICAL(&mux);
-  log_i("remove: %d, GATT role %s", conn_id, _client ? "client" : "server");
+  log_i("remove: %u, GATT role %s", conn_id, _client ? "client" : "server");
   if (m_connectedClientsMap.find(conn_id) != m_connectedClientsMap.end()) {
     m_connectedClientsMap.erase(conn_id);
   }
@@ -1183,7 +1183,7 @@ bool BLEDevice::isHostedBLE() {
  * @param [in] param Parameters for the event.
  */
 void BLEDevice::gattServerEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  log_d("gattServerEventHandler [esp_gatt_if: %d] ... %s", gatts_if, BLEUtils::gattServerEventTypeToString(event).c_str());
+  log_d("gattServerEventHandler [esp_gatt_if: %u] ... %s", gatts_if, BLEUtils::gattServerEventTypeToString(event).c_str());
 
   BLEUtils::dumpGattServerEvent(event, gatts_if, param);
 
@@ -1223,7 +1223,7 @@ void BLEDevice::gattServerEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t
  */
 void BLEDevice::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param) {
 
-  log_d("gattClientEventHandler [esp_gatt_if: %d] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
+  log_d("gattClientEventHandler [esp_gatt_if: %u] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
   BLEUtils::dumpGattClientEvent(event, gattc_if, param);
 
   switch (event) {
@@ -1294,10 +1294,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       }
 
       if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
-        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
         log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
       } else {
-        log_i("Passkey: %d", passkey);
+        log_i("Passkey: %06" PRIu32, passkey);
       }
 
       esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, passkey);
@@ -1335,10 +1335,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       }
 
       if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
-        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
         log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
       } else {
-        log_i("Passkey: %d", passkey);
+        log_i("Passkey: %06" PRIu32, passkey);
       }
 
       if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -1381,7 +1381,7 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
     {
       log_i(
-        "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%d, latency=%d, timeout=%d", param->update_conn_params.status,
+        "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%u, latency=%u, timeout=%u", param->update_conn_params.status,
         param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout
       );
       break;
@@ -1562,7 +1562,7 @@ bool BLEDevice::setOwnAddrType(uint8_t type) {
   }
   int rc = ble_hs_id_copy_addr(type & 1, NULL, NULL);  // Odd values are random
   if (rc != 0) {
-    log_e("Unable to set address type %d, rc=%d", type, rc);
+    log_e("Unable to set address type %u, rc=%d", type, rc);
     return false;
   }
 

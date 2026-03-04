@@ -24,7 +24,7 @@ ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _ep_config = {
     .endpoint = endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0
   };
-  log_v("Outlet endpoint created %d", _endpoint);
+  log_v("Outlet endpoint created %u", _endpoint);
 }
 
 //set attribute method -> method overridden in child class
@@ -35,10 +35,10 @@ void ZigbeePowerOutlet::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t
       _current_state = *(bool *)message->attribute.data.value;
       stateChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Outlet", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Outlet", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Outlet", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Outlet", message->info.cluster);
   }
 }
 

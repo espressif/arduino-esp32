@@ -15,6 +15,7 @@
   by Lucas Saavedra Vaz (lucasssvaz)
 */
 
+#include "Arduino.h"
 #include <cmath>
 
 #include "ESP_I2S.h"
@@ -102,8 +103,8 @@ void ES8388::reset() {
 
   log_v("Resetting ES8388...");
   log_d(
-    "Current configuration: _bpsamp=%d, _samprate=%d, _nchannels=%d, _audio_mode=%d, _dac_output=%d, _adc_input=%d, _mic_gain=%d", _bpsamp, _samprate,
-    _nchannels, _audio_mode, _dac_output, _adc_input, _mic_gain
+    "Current configuration: _bpsamp=%u, _samprate=%" PRIu32 ", _nchannels=%u, _audio_mode=%u, _dac_output=%u, _adc_input=%u, _mic_gain=%u", _bpsamp, _samprate,
+    _nchannels, _audio_mode, _dac_output, _adc_input, _mic_gain,
   );
 
   writeReg(ES8388_DACCONTROL3, ES8388_DACMUTE_MUTED | ES8388_DACLER_NORMAL | ES8388_DACSOFTRAMP_DISABLE | ES8388_DACRAMPRATE_4LRCK);
@@ -355,7 +356,7 @@ void ES8388::setvolume(es_module_e module, uint16_t volume, uint16_t balance) {
 void ES8388::setmute(es_module_e module, bool enable) {
   uint8_t reg = 0;
 
-  log_d("module=%d, mute=%d", module, (int)enable);
+  log_d("module=%u, mute=%d", module, (int)enable);
 
   _mute = enable;
 
@@ -461,7 +462,7 @@ uint8_t ES8388::readReg(uint8_t reg) {
 
   _i2c->beginTransmission(_addr);
   if (_i2c->write(reg) == 0) {
-    log_e("Error writing register address 0x%02x.", reg);
+    log_e("Error writing register address 0x%02x", reg);
     return 0;
   }
 
@@ -498,12 +499,12 @@ void ES8388::writeReg(uint8_t reg, uint8_t data) {
   _i2c->beginTransmission(_addr);
 
   if (_i2c->write(reg) == 0) {
-    log_e("Error writing register address 0x%02x.", reg);
+    log_e("Error writing register address 0x%02x", reg);
     return;
   }
 
   if (_i2c->write(data) == 0) {
-    log_e("Error writing data 0x%02x.", data);
+    log_e("Error writing data 0x%02x", data);
     return;
   }
 
@@ -529,13 +530,13 @@ void ES8388::setMicGain(uint8_t gain) {
     ES_MIC_GAIN_15DB, ES_MIC_GAIN_18DB, ES_MIC_GAIN_21DB, ES_MIC_GAIN_24DB,
   };
 
-  log_d("gain=%d", gain);
+  log_d("gain=%u", gain);
 
   _mic_gain = gain_map[min(gain, (uint8_t)24) / 3];
 
   writeReg(ES8388_ADCCONTROL1, ES8388_MICAMPR(_mic_gain) | ES8388_MICAMPL(_mic_gain));
 
-  log_v("Mic gain set to %d", _mic_gain);
+  log_v("Mic gain set to %u", _mic_gain);
 }
 
 /*
@@ -627,7 +628,7 @@ void ES8388::setSampleRate(uint32_t rate) {
     writeReg(ES8388_DACCONTROL2, ES8388_DACFSRATIO(_lclk_div));
   }
 
-  log_v("Sample rate set to %d in single speed mode", _samprate);
+  log_v("Sample rate set to %" PRIu32 " in single speed mode", _samprate);
 }
 
 /*

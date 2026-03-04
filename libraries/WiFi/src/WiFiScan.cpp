@@ -279,7 +279,7 @@ String WiFiScanClass::BSSIDstr(uint8_t i) {
   if (!it) {
     return String();
   }
-  sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", it->bssid[0], it->bssid[1], it->bssid[2], it->bssid[3], it->bssid[4], it->bssid[5]);
+  snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X", it->bssid[0], it->bssid[1], it->bssid[2], it->bssid[3], it->bssid[4], it->bssid[5]);
   return String(mac);
 }
 

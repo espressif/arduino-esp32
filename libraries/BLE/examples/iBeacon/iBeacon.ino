@@ -126,7 +126,7 @@ void setup() {
 
 void loop() {
   if (deviceConnected) {
-    Serial.printf("*** NOTIFY: %d ***\n", value);
+    Serial.printf("*** NOTIFY: %u ***\n", value);
     pCharacteristic->setValue(&value, 1);
     pCharacteristic->notify();
     value++;
