@@ -56,7 +56,7 @@ Typical usage:
 
 1. (Optional) Call configuration methods such as ``setPrompt()``, ``setMaxHistory()``, and
    ``setHistoryFile()`` **before** calling ``begin()``.
-2. Call ``Console.begin()`` to initialise the underlying ``esp_console`` module.
+2. Call ``Console.begin()`` to initialize the underlying ``esp_console`` module.
 3. Register commands with ``Console.addCmd()`` or ``Console.addCmdWithContext()``.
 4. Call ``Console.addHelpCmd()`` to register the built-in ``help`` command.
 5. Call ``Console.attachToSerial(true)`` to start the interactive session in a background task.
@@ -85,14 +85,14 @@ Argument Parsing with argtable3
 -------------------------------
 
 The Console library re-exports the `argtable3 <https://www.argtable.org/>`_ C library, which
-provides GNU-style argument parsing for your commands.  Instead of manually parsing ``argv``
+provides GNU-style argument parsing for your commands. Instead of manually parsing ``argv``
 strings, you declare typed argument descriptors and let argtable handle validation, error
 messages, and automatic hint generation.
 
 Declaring Arguments
 *******************
 
-Each argument is created by calling a constructor function.  The two most common variants
+Each argument is created by calling a constructor function. The two most common variants
 are:
 
 - ``arg_xxx1(...)`` — **required** argument (exactly 1 occurrence).
@@ -128,7 +128,7 @@ Every constructor takes four parameters:
 .. code-block:: c
 
     struct arg_xxx* arg_xxx1(
-        const char *shortopts,   // Short option letter, e.g. "p" for -p   (or NULL)
+        const char *shortopts,   // Short option letter, e.g. "p" for -p (or NULL)
         const char *longopts,    // Long option name, e.g. "pin" for --pin (or NULL)
         const char *datatype,    // Placeholder shown in hints, e.g. "<pin>"
         const char *glossary     // Description shown in help text
@@ -152,7 +152,7 @@ Group all argument descriptors into a ``struct`` that ends with ``arg_end``:
     } my_args;
 
     void setup() {
-      // Allocate and initialise each argument descriptor.
+      // Allocate and initialize each argument descriptor.
       // arg_int1: required int arg.  (NULL, NULL) = positional (no -x/--xx flag).
       my_args.pin   = arg_int1(NULL, NULL, "<pin>", "GPIO pin number");
       my_args.value = arg_int1(NULL, NULL, "<0|1>", "0 = LOW, 1 = HIGH");
@@ -243,7 +243,7 @@ Arduino-esp32 Console API
 ``begin``
 *********
 
-   Initialise the console module.  Must be called before any other method.
+   Initialize the console module. Must be called before any other method.
 
    .. code-block:: arduino
 
@@ -271,7 +271,7 @@ Arduino-esp32 Console API
 ``end``
 *******
 
-   De-initialise the console module.
+   De-initialize the console module.
 
    .. code-block:: arduino
 
@@ -331,7 +331,7 @@ Arduino-esp32 Console API
    ..
 
    The method combines ``fs.mountpoint()`` and ``path`` internally to build the full VFS path
-   used by linenoise for loading and saving history.  You only need to pass the
+   used by linenoise for loading and saving history. You only need to pass the
    filesystem-relative path.
 
    **Parameters**
@@ -416,7 +416,7 @@ Arduino-esp32 Console API
      ``xTaskCreatePinnedToCoreWithCaps()``.
 
    This frees internal SRAM for other uses at the cost of slightly higher latency for stack
-   and heap accesses. Has no effect if PSRAM is not available or not initialised at boot.
+   and heap accesses. Has no effect if PSRAM is not available or not initialized at boot.
 
    **Parameters**
       * ``enable`` — ``true`` to use PSRAM, ``false`` for internal RAM (default: ``true``).
@@ -439,7 +439,7 @@ Arduino-esp32 Console API
 ``addCmd``
 **********
 
-   Register a command.  Three overloads are available depending on how the hint is provided.
+   Register a command. Three overloads are available depending on how the hint is provided.
 
    .. code-block:: arduino
 
@@ -546,7 +546,7 @@ Arduino-esp32 Console API
    ..
 
    When called with no arguments, ``help`` lists all registered commands with their hints and
-   help text.  When called with a command name (e.g. ``help gpio``), it prints the details for
+   help text. When called with a command name (e.g. ``help gpio``), it prints the details for
    that command only.
 
    **Returns**
@@ -601,8 +601,8 @@ Arduino-esp32 Console API
 
    When ``enable`` is ``true``, starts the Read-Eval-Print Loop in a background FreeRTOS task. The task reads
    input through ``Serial`` (bypassing VFS ``stdin`` to avoid a race condition with the
-   UART/USB driver ISR) and passes each line to ``esp_console_run()``.  Non-empty entries are
-   added to the command history.  Because reading goes through ``Serial``, no
+   UART/USB driver ISR) and passes each line to ``esp_console_run()``. Non-empty entries are
+   added to the command history. Because reading goes through ``Serial``, no
    transport-specific configuration is required — UART and HWCDC work automatically.
 
    When ``enable`` is ``false``, stops the background task and frees the serial port for
@@ -614,8 +614,8 @@ Arduino-esp32 Console API
       transport.
 
    At startup, the task probes the terminal for VT100 support by sending a one-time Device
-   Status Request (``ESC[5n``).  If the terminal does not respond within 500 ms, plain mode
-   is enabled automatically.  Use ``setPlainMode()`` before ``attachToSerial(true)`` to
+   Status Request (``ESC[5n``). If the terminal does not respond within 500 ms, plain mode
+   is enabled automatically. Use ``setPlainMode()`` before ``attachToSerial(true)`` to
    override the probe result.
 
    **Parameters**
@@ -666,9 +666,9 @@ Arduino-esp32 Console API
 
    **Notes**
       * ``run()`` can be called from inside a command handler to invoke other commands
-        (command composition).  However, the underlying IDF function shares a single
+        (command composition). However, the underlying IDF function shares a single
         parse buffer, so the caller's ``argv`` pointers are **invalidated** after the
-        call returns.  Copy any ``argv`` values you need into local variables **before**
+        call returns. Copy any ``argv`` values you need into local variables **before**
         calling ``run()``.
 
         .. code-block:: arduino
@@ -728,7 +728,7 @@ Arduino-esp32 Console API
    ..
 
    In plain mode linenoise falls back to basic line input without cursor movement, arrow-key
-   history navigation, or tab-completion rendering.  Useful for terminals that do not support
+   history navigation, or tab-completion rendering. Useful for terminals that do not support
    ANSI/VT100 escape sequences (such as the Arduino IDE Serial Monitor).
 
    By default, ``attachToSerial(true)`` probes the terminal at startup (sending a one-time
@@ -739,12 +739,12 @@ Arduino-esp32 Console API
 
       * ``force`` — When ``true`` (default), the automatic VT100 probe at
         ``attachToSerial(true)`` startup is skipped and the mode set here is kept
-        unconditionally.  When ``false``, the mode is applied immediately but
+        unconditionally. When ``false``, the mode is applied immediately but
         ``attachToSerial(true)`` may still override it based on the probe result.
 
    **Notes**
       * This wraps linenoise's internal "dumb mode", a legacy term from the era of
-        character-only display terminals.  The Arduino API uses the friendlier name.
+        character-only display terminals. The Arduino API uses the friendlier name.
 
 
 ``isPlainMode``
@@ -786,7 +786,7 @@ Arduino-esp32 Console API
 
       * ``argv`` — Output array; each element will point into ``line``.
 
-      * ``argv_size`` — Size of the ``argv`` array.  At most ``argv_size - 1`` tokens are
+      * ``argv_size`` — Size of the ``argv`` array. At most ``argv_size - 1`` tokens are
         returned; ``argv[argc]`` is always set to ``NULL``.
 
    **Returns**

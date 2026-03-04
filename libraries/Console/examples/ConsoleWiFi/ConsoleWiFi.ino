@@ -282,7 +282,7 @@ void setup() {
   // Create semaphore for ping done
   ping_done_sem = xSemaphoreCreateBinary();
 
-  // Initialise argtable.
+  // Initialize argtable.
   // arg_str1() = required string.  arg_str0() = optional string.
   // NULL, NULL for shortopts/longopts makes the argument positional.
   wifi_connect_args.ssid = arg_str1(NULL, NULL, "<ssid>", "Network SSID");

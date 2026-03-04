@@ -44,7 +44,7 @@ public:
   // ---------------------------------------------------------------------------
 
   /**
-   * @brief Initialise the console.
+   * @brief Initialize the console.
    *
    * Must be called before any other method. Sets up the esp_console module and
    * configures linenoise tab-completion and hints.
@@ -56,7 +56,7 @@ public:
   bool begin(size_t maxCmdLen = 256, size_t maxArgs = 32);
 
   /**
-   * @brief De-initialise the console.
+   * @brief De-initialize the console.
    *
    * Stops the REPL task if running, saves history, and releases esp_console resources.
    */

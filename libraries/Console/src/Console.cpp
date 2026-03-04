@@ -25,7 +25,7 @@
 // the same ring buffer the ISR fills, eliminating the conflict and working on
 // every transport (UART, USB CDC, HWCDC) without transport-specific VFS calls.
 //
-// Line-ending normalisation: \r → \n, and \n immediately after \r is dropped.
+// Line-ending normalization: \r → \n, and \n immediately after \r is dropped.
 // This handles terminals that send \r only, \n only, or \r\n.
 //
 // Returns -1 when the REPL is being stopped so linenoise returns NULL
