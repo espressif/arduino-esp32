@@ -58,8 +58,8 @@ void setup() {
   }
 
   // Add commands
-  Console.addCmd("heap",   "Show free heap",  cmd_heap);
-  Console.addCmd("uptime", "Show uptime",     cmd_uptime);
+  Console.addCmd("heap", "Show free heap", cmd_heap);
+  Console.addCmd("uptime", "Show uptime", cmd_uptime);
 
   // Add built-in help command
   Console.addHelpCmd();

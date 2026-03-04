@@ -87,9 +87,9 @@ void setup() {
 
   // Add commands
   Console.addCmd("version", "Print firmware version", cmd_version);
-  Console.addCmd("heap",    "Show free heap memory",  cmd_heap);
-  Console.addCmd("restart", "Restart the device",     cmd_restart);
-  Console.addCmd("echo",    "Echo arguments back",    "<message...>", cmd_echo);
+  Console.addCmd("heap", "Show free heap memory", cmd_heap);
+  Console.addCmd("restart", "Restart the device", cmd_restart);
+  Console.addCmd("echo", "Echo arguments back", "<message...>", cmd_echo);
 
   // Add built-in help command
   Console.addHelpCmd();

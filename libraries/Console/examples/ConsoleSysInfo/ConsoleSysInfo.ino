@@ -61,7 +61,9 @@ static int cmd_tasks(int argc, char **argv) {
   for (uint32_t i = 0; i < nTasks; i++) {
     TaskStatus_t *t = &pxTaskStatusArray[i];
     int state = (int)t->eCurrentState;
-    if (state > 5) state = 5;
+    if (state > 5) {
+      state = 5;
+    }
     int core = (int)t->xCoreID;
     char coreStr[4];
     if (core == tskNO_AFFINITY) {
@@ -119,11 +121,11 @@ void setup() {
   }
 
   // Add commands
-  Console.addCmd("uptime",  "Show time since boot",          cmd_uptime);
-  Console.addCmd("heap",    "Show heap memory statistics",   cmd_heap);
-  Console.addCmd("tasks",   "List FreeRTOS tasks",           cmd_tasks);
-  Console.addCmd("version", "Print firmware/chip version",   cmd_version);
-  Console.addCmd("restart", "Restart the device",            cmd_restart);
+  Console.addCmd("uptime", "Show time since boot", cmd_uptime);
+  Console.addCmd("heap", "Show heap memory statistics", cmd_heap);
+  Console.addCmd("tasks", "List FreeRTOS tasks", cmd_tasks);
+  Console.addCmd("version", "Print firmware/chip version", cmd_version);
+  Console.addCmd("restart", "Restart the device", cmd_restart);
 
   // Add built-in help command
   Console.addHelpCmd();

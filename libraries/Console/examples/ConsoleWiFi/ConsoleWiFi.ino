@@ -39,13 +39,13 @@ static int cmd_wifi_scan(int argc, char **argv) {
   for (int i = 0; i < n; i++) {
     const char *enc;
     switch (WiFi.encryptionType(i)) {
-      case WIFI_AUTH_OPEN:          enc = "Open";     break;
-      case WIFI_AUTH_WEP:           enc = "WEP";      break;
-      case WIFI_AUTH_WPA_PSK:       enc = "WPA";      break;
-      case WIFI_AUTH_WPA2_PSK:      enc = "WPA2";     break;
-      case WIFI_AUTH_WPA_WPA2_PSK:  enc = "WPA/WPA2"; break;
-      case WIFI_AUTH_WPA3_PSK:      enc = "WPA3";     break;
-      default:                      enc = "Unknown";  break;
+      case WIFI_AUTH_OPEN:         enc = "Open"; break;
+      case WIFI_AUTH_WEP:          enc = "WEP"; break;
+      case WIFI_AUTH_WPA_PSK:      enc = "WPA"; break;
+      case WIFI_AUTH_WPA2_PSK:     enc = "WPA2"; break;
+      case WIFI_AUTH_WPA_WPA2_PSK: enc = "WPA/WPA2"; break;
+      case WIFI_AUTH_WPA3_PSK:     enc = "WPA3"; break;
+      default:                     enc = "Unknown"; break;
     }
     printf("%-4d  %-32s  %5d  %4d  %s\n", i + 1, WiFi.SSID(i).c_str(), (int)WiFi.RSSI(i), (int)WiFi.channel(i), enc);
   }
@@ -71,7 +71,7 @@ static int cmd_wifi_connect(int argc, char **argv) {
     return 1;
   }
 
-  const char *ssid = wifi_connect_args.ssid->sval[0];       // access parsed string via ->sval[0]
+  const char *ssid = wifi_connect_args.ssid->sval[0];  // access parsed string via ->sval[0]
   // For optional args, check ->count to see if it was provided
   const char *pass = (wifi_connect_args.password->count > 0) ? wifi_connect_args.password->sval[0] : NULL;
 
@@ -113,12 +113,12 @@ static int cmd_wifi_status(int argc, char **argv) {
   wl_status_t s = WiFi.STA.status();
   const char *statusStr;
   switch (s) {
-    case WL_CONNECTED:        statusStr = "Connected";        break;
-    case WL_NO_SSID_AVAIL:    statusStr = "SSID not found";   break;
-    case WL_CONNECT_FAILED:   statusStr = "Connect failed";   break;
-    case WL_DISCONNECTED:     statusStr = "Disconnected";     break;
-    case WL_IDLE_STATUS:      statusStr = "Idle";             break;
-    default:                  statusStr = "Unknown";          break;
+    case WL_CONNECTED:      statusStr = "Connected"; break;
+    case WL_NO_SSID_AVAIL:  statusStr = "SSID not found"; break;
+    case WL_CONNECT_FAILED: statusStr = "Connect failed"; break;
+    case WL_DISCONNECTED:   statusStr = "Disconnected"; break;
+    case WL_IDLE_STATUS:    statusStr = "Idle"; break;
+    default:                statusStr = "Unknown"; break;
   }
 
   printf("Status    : %s\n", statusStr);
@@ -179,14 +179,14 @@ static void ping_on_success(esp_ping_handle_t hdl, void *args) {
   uint32_t seqno;
   uint8_t ttl;
   ip_addr_t addr;
-  esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO,   &seqno,   sizeof(seqno));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_TTL,      &ttl,     sizeof(ttl));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_SIZE,     &size,    sizeof(size));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_TIMEGAP,  &elapsed, sizeof(elapsed));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR,   &addr,    sizeof(addr));
-  printf("%lu bytes from %s: icmp_seq=%lu ttl=%d time=%lu ms\n",
-         (unsigned long)size, ipaddr_ntoa(&addr),
-         (unsigned long)seqno, (int)ttl, (unsigned long)elapsed);
+  esp_ping_get_profile(hdl, ESP_PING_PROF_SEQNO, &seqno, sizeof(seqno));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_TTL, &ttl, sizeof(ttl));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_SIZE, &size, sizeof(size));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_TIMEGAP, &elapsed, sizeof(elapsed));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_IPADDR, &addr, sizeof(addr));
+  printf(
+    "%lu bytes from %s: icmp_seq=%lu ttl=%d time=%lu ms\n", (unsigned long)size, ipaddr_ntoa(&addr), (unsigned long)seqno, (int)ttl, (unsigned long)elapsed
+  );
 }
 
 static void ping_on_timeout(esp_ping_handle_t hdl, void *args) {
@@ -201,14 +201,15 @@ static void ping_on_end(esp_ping_handle_t hdl, void *args) {
   uint32_t transmitted;
   uint32_t received;
   uint32_t total_ms;
-  esp_ping_get_profile(hdl, ESP_PING_PROF_REQUEST,  &transmitted, sizeof(transmitted));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_REPLY,    &received,    sizeof(received));
-  esp_ping_get_profile(hdl, ESP_PING_PROF_DURATION, &total_ms,    sizeof(total_ms));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_REQUEST, &transmitted, sizeof(transmitted));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_REPLY, &received, sizeof(received));
+  esp_ping_get_profile(hdl, ESP_PING_PROF_DURATION, &total_ms, sizeof(total_ms));
   uint32_t loss = transmitted ? ((transmitted - received) * 100 / transmitted) : 0;
   printf("\n--- ping statistics ---\n");
-  printf("%lu packets transmitted, %lu received, %lu%% packet loss, time %lu ms\n",
-         (unsigned long)transmitted, (unsigned long)received,
-         (unsigned long)loss, (unsigned long)total_ms);
+  printf(
+    "%lu packets transmitted, %lu received, %lu%% packet loss, time %lu ms\n", (unsigned long)transmitted, (unsigned long)received, (unsigned long)loss,
+    (unsigned long)total_ms
+  );
   xSemaphoreGive(ping_done_sem);
 }
 
@@ -240,8 +241,7 @@ static int cmd_ping(int argc, char **argv) {
   target_addr.type = IPADDR_TYPE_V4;
   target_addr.u_addr.ip4.addr = (uint32_t)addr;
 
-  printf("PING %s (%s): 64 bytes of data, count=%d\n",
-         host, addr.toString().c_str(), count);
+  printf("PING %s (%s): 64 bytes of data, count=%d\n", host, addr.toString().c_str(), count);
   fflush(stdout);
 
   esp_ping_config_t ping_config = ESP_PING_DEFAULT_CONFIG();
@@ -251,7 +251,7 @@ static int cmd_ping(int argc, char **argv) {
   esp_ping_callbacks_t cbs = {};
   cbs.on_ping_success = ping_on_success;
   cbs.on_ping_timeout = ping_on_timeout;
-  cbs.on_ping_end     = ping_on_end;
+  cbs.on_ping_end = ping_on_end;
 
   esp_ping_handle_t ping_handle = NULL;
   if (esp_ping_new_session(&ping_config, &cbs, &ping_handle) != ESP_OK) {
@@ -285,15 +285,15 @@ void setup() {
   // Initialise argtable.
   // arg_str1() = required string.  arg_str0() = optional string.
   // NULL, NULL for shortopts/longopts makes the argument positional.
-  wifi_connect_args.ssid     = arg_str1(NULL, NULL, "<ssid>",       "Network SSID");
+  wifi_connect_args.ssid = arg_str1(NULL, NULL, "<ssid>", "Network SSID");
   wifi_connect_args.password = arg_str0(NULL, NULL, "[<password>]", "Network password (optional for open networks)");
-  wifi_connect_args.end      = arg_end(2);  // sentinel — stores up to 2 parse errors
+  wifi_connect_args.end = arg_end(2);  // sentinel — stores up to 2 parse errors
 
   // arg_int0() = optional integer.  "c" is the short option (-c), "count"
   // is the long option (--count).  Default ping count is 5 if not given.
-  ping_args.host  = arg_str1(NULL, NULL, "<host>",  "Hostname or IP address to ping");
-  ping_args.count = arg_int0("c", "count", "<n>",   "Number of pings (default 5)");
-  ping_args.end   = arg_end(2);
+  ping_args.host = arg_str1(NULL, NULL, "<host>", "Hostname or IP address to ping");
+  ping_args.count = arg_int0("c", "count", "<n>", "Number of pings (default 5)");
+  ping_args.end = arg_end(2);
 
   // Configure Console prompt
   Console.setPrompt("wifi> ");
@@ -306,7 +306,7 @@ void setup() {
 
   // Add commands
   Console.addCmd("wifi", "Manage Wi-Fi connections", "<scan|connect|disconnect|status>", cmd_wifi);
-  Console.addCmd("ping", "ICMP ping a host",        (void *)&ping_args,                cmd_ping);
+  Console.addCmd("ping", "ICMP ping a host", (void *)&ping_args, cmd_ping);
 
   // Add built-in help command
   Console.addHelpCmd();

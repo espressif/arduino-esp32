@@ -99,8 +99,8 @@ static bool _probeVT100() {
 // ---------------------------------------------------------------------------
 
 ConsoleClass::ConsoleClass()
-  : _initialized(false), _replStarted(false), _replTaskHandle(NULL), _prompt("esp> "), _maxHistory(32), _historyVfsPath(NULL),
-    _taskStackSize(4096), _taskPriority(2), _taskCore(tskNO_AFFINITY), _usePsram(true), _taskStackInPsram(false), _forceMode(false) {}
+  : _initialized(false), _replStarted(false), _replTaskHandle(NULL), _prompt("esp> "), _maxHistory(32), _historyVfsPath(NULL), _taskStackSize(4096),
+    _taskPriority(2), _taskCore(tskNO_AFFINITY), _usePsram(true), _taskStackInPsram(false), _forceMode(false) {}
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -449,10 +449,10 @@ void ConsoleClass::_replTask(void *arg) {
       int ret = 0;
       esp_err_t err = esp_console_run(line, &ret);
       switch (err) {
-        case ESP_OK:           break;
-        case ESP_ERR_NOT_FOUND: printf("Unknown command. Type 'help' for a list of commands.\n"); break;
+        case ESP_OK:              break;
+        case ESP_ERR_NOT_FOUND:   printf("Unknown command. Type 'help' for a list of commands.\n"); break;
         case ESP_ERR_INVALID_ARG: break;  // empty line
-        default: printf("Command error: %s\n", esp_err_to_name(err)); break;
+        default:                  printf("Command error: %s\n", esp_err_to_name(err)); break;
       }
 
       // Flush any command output that did not end with a newline. stdout is
@@ -492,7 +492,9 @@ bool ConsoleClass::startRepl() {
 #endif
 
   if (_taskStackInPsram) {
-    ret = xTaskCreatePinnedToCoreWithCaps(_replTask, "console_repl", _taskStackSize, this, _taskPriority, &_replTaskHandle, _taskCore, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    ret = xTaskCreatePinnedToCoreWithCaps(
+      _replTask, "console_repl", _taskStackSize, this, _taskPriority, &_replTaskHandle, _taskCore, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT
+    );
   } else {
     ret = xTaskCreatePinnedToCore(_replTask, "console_repl", _taskStackSize, this, _taskPriority, &_replTaskHandle, _taskCore);
   }

@@ -141,9 +141,9 @@ void setup() {
   }
 
   // Add commands
-  Console.addCmd("history",  "Show history info",             cmd_history);
-  Console.addCmd("tokenize", "Split a string into tokens",    "<string>", cmd_tokenize);
-  Console.addCmd("heap",     "Show free memory",              cmd_heap);
+  Console.addCmd("history", "Show history info", cmd_history);
+  Console.addCmd("tokenize", "Split a string into tokens", "<string>", cmd_tokenize);
+  Console.addCmd("heap", "Show free memory", cmd_heap);
 
   // Add built-in help command
   Console.addHelpCmd();

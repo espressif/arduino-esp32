@@ -356,18 +356,18 @@ private:
   bool stopRepl();
   static void _replTask(void *arg);
 
-  bool         _initialized;
-  bool         _replStarted;
+  bool _initialized;
+  bool _replStarted;
   TaskHandle_t _replTaskHandle;
-  const char  *_prompt;
-  uint32_t     _maxHistory;
-  char        *_historyVfsPath;
-  uint32_t     _taskStackSize;
-  uint32_t     _taskPriority;
-  BaseType_t   _taskCore;
-  bool         _usePsram;
-  bool         _taskStackInPsram;
-  bool         _forceMode;
+  const char *_prompt;
+  uint32_t _maxHistory;
+  char *_historyVfsPath;
+  uint32_t _taskStackSize;
+  uint32_t _taskPriority;
+  BaseType_t _taskCore;
+  bool _usePsram;
+  bool _taskStackInPsram;
+  bool _forceMode;
 };
 
 extern ConsoleClass Console;

@@ -19,15 +19,15 @@
 #include <Console.h>
 #include "argtable3/argtable3.h"
 
-#define RGB_BRIGHTNESS 64 // Change brightness (max 255)
+#define RGB_BRIGHTNESS 64  // Change brightness (max 255)
 
 // ---------------------------------------------------------------------------
 // gpio read <pin>
 // ---------------------------------------------------------------------------
 
 static struct {
-  struct arg_int *pin;   // required int: GPIO pin number
-  struct arg_end *end;   // sentinel: tracks parse errors
+  struct arg_int *pin;  // required int: GPIO pin number
+  struct arg_end *end;  // sentinel: tracks parse errors
 } gpio_read_args;
 
 static int cmd_gpio_read(int argc, char **argv) {
@@ -164,11 +164,11 @@ struct NamedColor {
 };
 
 static const NamedColor colors[] = {
-  {"red",    RGB_BRIGHTNESS, 0,              0             },
-  {"green",  0,              RGB_BRIGHTNESS, 0             },
-  {"blue",   0,              0,              RGB_BRIGHTNESS},
-  {"white",  RGB_BRIGHTNESS, RGB_BRIGHTNESS, RGB_BRIGHTNESS},
-  {"yellow", RGB_BRIGHTNESS, RGB_BRIGHTNESS, 0             },
+  {"red", RGB_BRIGHTNESS, 0, 0},
+  {"green", 0, RGB_BRIGHTNESS, 0},
+  {"blue", 0, 0, RGB_BRIGHTNESS},
+  {"white", RGB_BRIGHTNESS, RGB_BRIGHTNESS, RGB_BRIGHTNESS},
+  {"yellow", RGB_BRIGHTNESS, RGB_BRIGHTNESS, 0},
 };
 
 static const size_t numColors = sizeof(colors) / sizeof(colors[0]);
@@ -267,17 +267,17 @@ void setup() {
 
   // Arguments for: gpio read <pin>
   gpio_read_args.pin = arg_int1(NULL, NULL, "<pin>", "GPIO pin number to read (required)");
-  gpio_read_args.end = arg_end(1); // Up to 1 error message for reading.
+  gpio_read_args.end = arg_end(1);  // Up to 1 error message for reading.
 
   // Arguments for: gpio write <pin> <0|1>
   gpio_write_args.pin = arg_int1(NULL, NULL, "<pin>", "GPIO pin number to write (required)");
   gpio_write_args.value = arg_int1(NULL, NULL, "<0|1>", "Value to write: 0 = LOW, 1 = HIGH (required)");
-  gpio_write_args.end = arg_end(2); // Up to 2 error messages for writing.
+  gpio_write_args.end = arg_end(2);  // Up to 2 error messages for writing.
 
   // Arguments for: gpio mode <pin> <in|out|in_pu|in_pd>
   gpio_mode_args.pin = arg_int1(NULL, NULL, "<pin>", "GPIO pin number to configure (required)");
   gpio_mode_args.mode = arg_str1(NULL, NULL, "<in|out|in_pu|in_pd>", "Pin mode: in, out, in_pu, or in_pd (required)");
-  gpio_mode_args.end = arg_end(2); // Up to 2 error messages for mode.
+  gpio_mode_args.end = arg_end(2);  // Up to 2 error messages for mode.
 
   // Configure Console prompt
   Console.setPrompt("gpio> ");

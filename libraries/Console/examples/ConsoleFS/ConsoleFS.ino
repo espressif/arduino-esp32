@@ -155,7 +155,7 @@ static int cmd_write(int argc, char **argv) {
 // ---------------------------------------------------------------------------
 static int cmd_df(int argc, char **argv) {
   size_t total = LittleFS.totalBytes();
-  size_t used  = LittleFS.usedBytes();
+  size_t used = LittleFS.usedBytes();
   size_t free_ = total - used;
   printf("Filesystem  Size     Used     Free     Use%%\n");
   printf("LittleFS    %-8zu %-8zu %-8zu %3zu%%\n", total, used, free_, total ? (used * 100 / total) : 0);
@@ -189,12 +189,12 @@ void setup() {
   }
 
   // Add commands
-  Console.addCmd("ls",    "List directory contents",      "[path]",           cmd_ls);
-  Console.addCmd("cat",   "Print file contents",          "<file>",           cmd_cat);
-  Console.addCmd("rm",    "Delete a file",                "<file>",           cmd_rm);
-  Console.addCmd("mkdir", "Create a directory",           "<dir>",            cmd_mkdir);
-  Console.addCmd("write", "Write text to a file",         "<file> <text...>", cmd_write);
-  Console.addCmd("df",    "Show filesystem usage",                            cmd_df);
+  Console.addCmd("ls", "List directory contents", "[path]", cmd_ls);
+  Console.addCmd("cat", "Print file contents", "<file>", cmd_cat);
+  Console.addCmd("rm", "Delete a file", "<file>", cmd_rm);
+  Console.addCmd("mkdir", "Create a directory", "<dir>", cmd_mkdir);
+  Console.addCmd("write", "Write text to a file", "<file> <text...>", cmd_write);
+  Console.addCmd("df", "Show filesystem usage", cmd_df);
 
   // Add built-in help command
   Console.addHelpCmd();

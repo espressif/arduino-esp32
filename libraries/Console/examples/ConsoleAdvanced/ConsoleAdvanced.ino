@@ -32,7 +32,7 @@ struct LedCtx {
   const char *name;
 };
 
-static LedCtx led1 = {2,  false, "LED1"};
+static LedCtx led1 = {2, false, "LED1"};
 static LedCtx led2 = {15, false, "LED2"};
 
 static int cmd_toggle(void *context, int argc, char **argv) {
@@ -162,7 +162,7 @@ void setup() {
   // Set the task priority to 2
   Console.setTaskPriority(2);
   // Set the task core to 1 (core 1)
-  Console.setTaskCore(1);      // pin REPL to core 1
+  Console.setTaskCore(1);  // pin REPL to core 1
 
   // Configure Console prompt
   Console.setPrompt("adv> ");
@@ -179,8 +179,8 @@ void setup() {
   Console.addCmdWithContext("led2", "Toggle LED2", cmd_toggle, &led2);
 
   // Dynamic command management
-  Console.addCmd("unlock", "Register the 'secret' command",   cmd_unlock);
-  Console.addCmd("lock",   "Unregister the 'secret' command", cmd_lock);
+  Console.addCmd("unlock", "Register the 'secret' command", cmd_unlock);
+  Console.addCmd("lock", "Unregister the 'secret' command", cmd_lock);
 
   // REPL control
   Console.addCmd("pause", "Stop the Read-Eval-Print Loop for 5 seconds", cmd_pause);
@@ -189,9 +189,9 @@ void setup() {
   Console.addCmd("verbose_help", "Set help verbosity", "<0|1>", cmd_verbose_help);
 
   // Terminal utilities
-  Console.addCmd("clear",     "Clear the terminal screen",         cmd_clear);
-  Console.addCmd("plain",     "Toggle plain (non-VT100) mode",     "<on|off>", cmd_plain);
-  Console.addCmd("multiline", "Toggle multi-line editing",         "<on|off>", cmd_multiline);
+  Console.addCmd("clear", "Clear the terminal screen", cmd_clear);
+  Console.addCmd("plain", "Toggle plain (non-VT100) mode", "<on|off>", cmd_plain);
+  Console.addCmd("multiline", "Toggle multi-line editing", "<on|off>", cmd_multiline);
 
   // Add built-in help command
   Console.addHelpCmd();
