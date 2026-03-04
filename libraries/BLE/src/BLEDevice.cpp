@@ -100,6 +100,7 @@ BLEAdvertising *BLEDevice::m_bleAdvertising = nullptr;
 uint16_t BLEDevice::m_appId = 0;
 std::map<uint16_t, conn_status_t> BLEDevice::m_connectedClientsMap;
 gap_event_handler BLEDevice::m_customGapHandler = nullptr;
+String BLEDevice::m_deviceName;
 
 /***************************************************************************
  *                           Bluedroid properties                          *
@@ -120,7 +121,6 @@ BLEDeviceCallbacks BLEDevice::defaultDeviceCallbacks{};
 BLEDeviceCallbacks *BLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 uint8_t BLEDevice::m_ownAddrType = BLE_OWN_ADDR_PUBLIC;
 bool BLEDevice::m_synced = false;
-String BLEDevice::m_deviceName;
 #endif
 
 /***************************************************************************
@@ -360,6 +360,7 @@ bool BLEDevice::init(String deviceName) {
   }
 #endif  // CONFIG_GATTS_ENABLE
 
+  m_deviceName = deviceName;
   errRc = ::esp_ble_gap_set_device_name(deviceName.c_str());
   if (errRc != ESP_OK) {
     log_e("esp_ble_gap_set_device_name: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -658,6 +659,14 @@ uint16_t BLEDevice::getMTU() {
 
 bool BLEDevice::getInitialized() {
   return initialized;
+}
+
+/**
+ * @brief Get the device name.
+ * @return The device name.
+ */
+String BLEDevice::getDeviceName() {
+  return m_deviceName;
 }
 
 /*
@@ -1536,14 +1545,6 @@ void BLEDevice::setDeviceCallbacks(BLEDeviceCallbacks *cb) {
   } else {
     m_pDeviceCallbacks = cb;
   }
-}
-
-/**
- * @brief Get the device name.
- * @return The device name.
- */
-String BLEDevice::getDeviceName() {
-  return m_deviceName;
 }
 
 /**

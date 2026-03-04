@@ -215,6 +215,7 @@ public:
   static BLEStack getBLEStack();
   static String getBLEStackString();
   static bool isHostedBLE();
+  static String getDeviceName();
 
   /***************************************************************************
    *                       Bluedroid public declarations                    *
@@ -233,7 +234,6 @@ public:
   static void onReset(int reason);
   static void onSync(void);
   static void host_task(void *param);
-  static String getDeviceName();
   static bool setOwnAddrType(uint8_t type);
   static bool setOwnAddr(BLEAddress &addr);
   static bool setOwnAddr(uint8_t *addr);
@@ -263,6 +263,7 @@ private:
   static BLEAdvertising *m_bleAdvertising;
   static std::map<uint16_t, conn_status_t> m_connectedClientsMap;
   static portMUX_TYPE mux;
+  static String m_deviceName;
 
   /***************************************************************************
    *                        NimBLE private properties                        *
@@ -275,7 +276,6 @@ private:
   static BLEDeviceCallbacks defaultDeviceCallbacks;
   static BLEDeviceCallbacks *m_pDeviceCallbacks;
   static ble_gap_event_listener m_listener;
-  static String m_deviceName;
 #endif
 
   /***************************************************************************
