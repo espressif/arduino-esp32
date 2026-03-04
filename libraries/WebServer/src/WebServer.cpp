@@ -695,15 +695,17 @@ void WebServer::send(int code, const char *content_type, const char *content) {
 }
 
 void WebServer::send(int code, const char *content_type, Stream &stream, size_t content_length) {
-  String header;
-  if (content_length == 0) {
+  if (!content_length) {
     content_length = stream.available();
+    if (!content_length) {
+      log_e("Stream has no data available");
+      return;
+    }
   }
+  String header;
   _prepareHeader(header, code, content_type, content_length);
   _currentClientWrite(header.c_str(), header.length());
-  if (content_length) {
-    _currentClient.write(stream);
-  }
+  _currentClient.write(stream, content_length);
 }
 
 void WebServer::send_P(int code, PGM_P content_type, PGM_P content) {
