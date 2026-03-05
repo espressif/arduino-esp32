@@ -698,7 +698,7 @@ void WebServer::send(int code, const char *content_type, Stream &stream, size_t 
   if (!content_length) {
     content_length = stream.available();
     if (!content_length) {
-      log_e("Stream has no data available");
+      send(204);
       return;
     }
   }
