@@ -1,5 +1,5 @@
 {
-  "commit_sha": "b870cb013cb0b023b21fce7dc053c1a6765b9de4",
+  "commit_sha": "d23c972675ff3c5833cbffa1fb812439e7ecc330",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -248,8 +248,8 @@
         },
         "esp32s2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 10,
+          "errors": 0
         },
         "esp32s3": {
           "failures": 0,
@@ -456,6 +456,43 @@
       }
     },
     "wokwi": {
+      "console": {
+        "esp32": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32c3": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32c6": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32h2": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32p4": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32s2": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        },
+        "esp32s3": {
+          "failures": 0,
+          "total": 17,
+          "errors": 0
+        }
+      },
       "fs": {
         "esp32": {
           "failures": 0,
@@ -862,5 +899,5 @@
       }
     }
   },
-  "generated_at": "2026-03-04T01:38:26.703808"
+  "generated_at": "2026-03-05T01:49:25.078924"
 }
