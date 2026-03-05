@@ -124,9 +124,6 @@ void UpdateClass::_reset() {
   _progress = 0;
   _size = 0;
   _command = U_FLASH;
-#ifdef UPDATE_SIGN
-  _signatureSize = 0;
-#endif /* UPDATE_SIGN */
 
   if (_ledPin != -1) {
     digitalWrite(_ledPin, !_ledOn);  // off
