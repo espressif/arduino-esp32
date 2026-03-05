@@ -15,11 +15,15 @@ generate-hw-tests:
     DEBIAN_FRONTEND: "noninteractive"
     TEST_TYPES: $TEST_TYPES
     TEST_CHIPS: $TEST_CHIPS
-    GIT_STRATEGY: none
+    GIT_STRATEGY: clone
   before_script:
-    - echo "Cloning repository from GitHub:$GITHUB_REPOSITORY at ref $GITHUB_REF"
+    - echo "Fetching ref $GITHUB_REF from GitHub:$GITHUB_REPOSITORY"
     - REF_NAME=$(echo "$GITHUB_REF" | sed 's|refs/heads/||; s|refs/tags/||')
-    - git clone --branch "$REF_NAME" --depth 1 https://github.com/$GITHUB_REPOSITORY.git .
+    - git config --global http.version HTTP/1.1
+    - git config --global http.lowSpeedLimit 0
+    - git config --global http.lowSpeedTime 999999
+    - git fetch origin "$REF_NAME" --depth 1
+    - git checkout FETCH_HEAD
     - bash .gitlab/scripts/install_dependencies.sh
   script:
     - mkdir -p ~/.arduino/tests
