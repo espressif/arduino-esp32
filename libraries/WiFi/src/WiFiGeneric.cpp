@@ -78,7 +78,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
-    log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+    log_v("SCAN Done: ID: %u, Status: %" PRIu32 ", Results: %u", event->scan_id, event->status, event->number);
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
     memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
@@ -458,7 +458,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary) 
   uint8_t max_chan = min_chan + country.nchan - 1;
 
   if (primary < min_chan || primary > max_chan) {
-    log_e("Invalid primary channel: %d. Valid range is %d-%d for country %s", primary, min_chan, max_chan, country.cc);
+    log_e("Invalid primary channel: %u. Valid range is %u-%u for country %s", primary, min_chan, max_chan, country.cc);
     return ESP_ERR_INVALID_ARG;
   }
 

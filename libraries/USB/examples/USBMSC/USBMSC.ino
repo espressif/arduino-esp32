@@ -112,13 +112,13 @@ static uint8_t msc_disk[DISK_SECTOR_COUNT][DISK_SECTOR_SIZE] = {
 };
 
 static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t bufsize) {
-  Serial.printf("MSC WRITE: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
+  Serial.printf("MSC WRITE: lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32 "\n", lba, offset, bufsize);
   memcpy(msc_disk[lba] + offset, buffer, bufsize);
   return bufsize;
 }
 
 static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufsize) {
-  Serial.printf("MSC READ: lba: %lu, offset: %lu, bufsize: %lu\n", lba, offset, bufsize);
+  Serial.printf("MSC READ: lba: %" PRIu32 ", offset: %" PRIu32 ", bufsize: %" PRIu32 "\n", lba, offset, bufsize);
   memcpy(buffer, msc_disk[lba] + offset, bufsize);
   return bufsize;
 }

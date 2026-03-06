@@ -22,7 +22,7 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   esp_zb_on_off_light_cfg_t light_cfg = ESP_ZB_DEFAULT_ON_OFF_LIGHT_CONFIG();
   _cluster_list = esp_zb_on_off_light_clusters_create(&light_cfg);  // use esp_zb_zcl_cluster_list_create() instead of esp_zb_on_off_light_clusters_create()
   _ep_config = {.endpoint = endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID, .app_device_version = 0};
-  log_v("Light endpoint created %d", _endpoint);
+  log_v("Light endpoint created %u", _endpoint);
 }
 
 //set attribute method -> method overridden in child class
@@ -33,10 +33,10 @@ void ZigbeeLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mess
       _current_state = *(bool *)message->attribute.data.value;
       lightChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Light", message->info.cluster);
   }
 }
 
@@ -53,7 +53,7 @@ bool ZigbeeLight::setLight(bool state) {
   _current_state = state;
   lightChanged();
 
-  log_v("Updating on/off light state to %d", state);
+  log_v("Updating on/off light state to %u", state);
   /* Update on/off light state */
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(

@@ -24,7 +24,7 @@ uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 // such as Ethernet, Thread and Wi-Fi.
 bool MatterEndPoint::createSecondaryNetworkInterface() {
   if (secondary_network_endpoint_id != 0) {
-    log_v("Secondary network interface endpoint already exists with ID %d", secondary_network_endpoint_id);
+    log_v("Secondary network interface endpoint already exists with ID %u", secondary_network_endpoint_id);
     return false;
   }
 
@@ -41,7 +41,7 @@ bool MatterEndPoint::createSecondaryNetworkInterface() {
     return false;
   }
   secondary_network_endpoint_id = endpoint::get_id(endpoint);
-  log_i("Secondary Network Interface created with endpoint_id %d", secondary_network_endpoint_id);
+  log_i("Secondary Network Interface created with endpoint_id %u", secondary_network_endpoint_id);
 #else
   log_i("Secondary Network Interface not supported");
   return false;
@@ -63,7 +63,7 @@ void MatterEndPoint::setEndPointId(uint16_t ep) {
     log_e("Invalid endpoint ID");
     return;
   }
-  log_v("Endpoint ID set to %d", ep);
+  log_v("Endpoint ID set to %u", ep);
 
   endpoint_id = ep;
 }
@@ -76,17 +76,17 @@ esp_matter::attribute_t *MatterEndPoint::getAttribute(uint32_t cluster_id, uint3
   }
   endpoint_t *endpoint = endpoint::get(node::get(), endpoint_id);
   if (endpoint == nullptr) {
-    log_e("Endpoint [%d] not found", endpoint_id);
+    log_e("Endpoint [%]u not found", endpoint_id);
     return nullptr;
   }
   cluster_t *cluster = cluster::get(endpoint, cluster_id);
   if (cluster == nullptr) {
-    log_e("Cluster [%d] not found", cluster_id);
+    log_e("Cluster [%]" PRIu32 " not found", cluster_id);
     return nullptr;
   }
   esp_matter::attribute_t *attribute = attribute::get(cluster, attribute_id);
   if (attribute == nullptr) {
-    log_e("Attribute [%d] not found", attribute_id);
+    log_e("Attribute [%]" PRIu32 " not found", attribute_id);
     return nullptr;
   }
   return attribute;
@@ -99,10 +99,10 @@ bool MatterEndPoint::getAttributeVal(uint32_t cluster_id, uint32_t attribute_id,
     return false;
   }
   if (attribute::get_val(attribute, attrVal) == ESP_OK) {
-    log_v("GET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("GET_VAL Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("GET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("GET_VAL FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 
@@ -113,20 +113,20 @@ bool MatterEndPoint::setAttributeVal(uint32_t cluster_id, uint32_t attribute_id,
     return false;
   }
   if (attribute::set_val(attribute, attrVal) == ESP_OK) {
-    log_v("SET_VAL Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("SET_VAL Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("SET_VAL FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("SET_VAL FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 
 // update the value of an attribute from its cluster id and attribute it
 bool MatterEndPoint::updateAttributeVal(uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *attrVal) {
   if (attribute::update(endpoint_id, cluster_id, attribute_id, attrVal) == ESP_OK) {
-    log_v("Update Success for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+    log_v("Update Success for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
     return true;
   }
-  log_e("Update FAILED! for cluster %d, attribute %d with value %d", cluster_id, attribute_id, attrVal->val.u32);
+  log_e("Update FAILED! for cluster %" PRIu32 ", attribute %" PRIu32 " with value %" PRIu32, cluster_id, attribute_id, attrVal->val.u32);
   return false;
 }
 

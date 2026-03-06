@@ -305,7 +305,7 @@ uint16_t __analogRead(uint8_t pin) {
   }
 
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
-    log_d("Calling __analogInit! pin = %d", pin);
+    log_d("Calling __analogInit! pin = %u", pin);
     err = __analogInit(pin, channel, adc_unit);
     if (err != ESP_OK) {
       log_e("Analog initialization failed!");
@@ -670,7 +670,7 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
 
       /* Check the channel number validation, the data is invalid if the channel num exceed the maximum channel */
       if (chan_num >= SOC_ADC_CHANNEL_NUM(0)) {
-        log_e("Invalid data [%d_%d]", chan_num, data);
+        log_e("Invalid data [%" PRIu32 "_%" PRIu32 "]", chan_num, data);
         *buffer = NULL;
         return false;
       }
@@ -693,7 +693,7 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
         adc_result[j].avg_read_raw = read_raw[j] / read_count[j];
         adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
       } else {
-        log_w("No data read for pin %d", adc_result[j].pin);
+        log_w("No data read for pin %u", adc_result[j].pin);
       }
     }
 
@@ -763,7 +763,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 
 void analogContinuousSetWidth(uint8_t bits) {
   if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
-    log_e("Selected width cannot be set. Range is from %d to %d", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
+    log_e("Selected width cannot be set. Range is from %u to %u", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;
   }
   __adcContinuousWidth = bits;

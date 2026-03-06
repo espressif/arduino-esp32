@@ -463,7 +463,8 @@ def main():
             # Clone base job and adjust (preserve key order using deepcopy)
             job = copy.deepcopy(base_job)
             # Ensure tags include SOC+extras
-            job["tags"] = tag_list
+            eco_tags = sorted(tag_list + ["eco_default"])
+            job["tags"] = eco_tags if any_runner_matches(eco_tags, available_runners) else tag_list
             vars_block = job.get("variables", {})
             vars_block["TEST_CHIP"] = chip
             vars_block["TEST_TYPE"] = test_type

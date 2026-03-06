@@ -65,7 +65,7 @@ void setup() {
   uart_internal_loopback(TEST_UART, RXPIN);
 #endif
 
-  for (uint8_t i = 0; i < sizeof(rxTimeoutTestCases); i++) {
+  for (int i = 0; i < sizeof(rxTimeoutTestCases); i++) {
     Serial.printf("\n\n================================\nTest Case #%d\n================================\n", i + 1);
     testAndReport(rxTimeoutTestCases[i]);
   }
@@ -84,7 +84,7 @@ void testAndReport(uint8_t rxTimeout) {
     dataReceived[i] = 0;
   }
 
-  Serial.printf("Testing the time for receiving %d bytes at %d baud, using RX Timeout = %d:", DATA_SIZE, BAUD, rxTimeout);
+  Serial.printf("Testing the time for receiving %u bytes at %u baud, using RX Timeout = %u:\n", DATA_SIZE, BAUD, rxTimeout);
   Serial.flush();                   // wait Serial FIFO to be empty and then spend almost no time processing it
   Serial1.setRxTimeout(rxTimeout);  // testing different results based on Rx Timeout setup
   // For baud rates lower or equal to 57600, ESP32 Arduino makes it get byte-by-byte from FIFO, thus we will change it here:
@@ -101,8 +101,8 @@ void testAndReport(uint8_t rxTimeout) {
   }
 
   uint32_t pastTime = millis() - now;  // codespell:ignore pasttime
-  Serial.printf("\nIt has sent %zu bytes from Serial1 TX to Serial1 RX\n", sentBytes);
-  Serial.printf("It took %lu milliseconds to read %d bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
+  Serial.printf("\nIt has sent %lu bytes from Serial1 TX to Serial1 RX\n", (unsigned long)sentBytes);
+  Serial.printf("It took %" PRIu32 " milliseconds to read %u bytes\n", pastTime, bytesReceived);  // codespell:ignore pasttime
   Serial.print("Received data: [");
   Serial.write(dataReceived, DATA_SIZE);
   Serial.println("]");

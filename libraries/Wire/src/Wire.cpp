@@ -146,14 +146,14 @@ bool TwoWire::allocateWireBuffer() {
   if (rxBuffer == NULL) {
     rxBuffer = (uint8_t *)malloc(bufferSize);
     if (rxBuffer == NULL) {
-      log_e("Can't allocate memory for I2C_%d rxBuffer", num);
+      log_e("Can't allocate memory for I2C_%u rxBuffer", num);
       return false;
     }
   }
   if (txBuffer == NULL) {
     txBuffer = (uint8_t *)malloc(bufferSize);
     if (txBuffer == NULL) {
-      log_e("Can't allocate memory for I2C_%d txBuffer", num);
+      log_e("Can't allocate memory for I2C_%u txBuffer", num);
       freeWireBuffer();  // free rxBuffer for safety!
       return false;
     }

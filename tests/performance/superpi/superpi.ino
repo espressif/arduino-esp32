@@ -21,11 +21,11 @@ void setup() {
   }
 
   log_d("Starting PI calculation");
-  Serial.printf("Runs: %d\n", N_RUNS);
-  Serial.printf("Digits: %d\n", DIGITS);
+  Serial.printf("Runs: %u\n", N_RUNS);
+  Serial.printf("Digits: %u\n", DIGITS);
   Serial.flush();
   for (int i = 0; i < N_RUNS; i++) {
-    Serial.printf("Run %d\n", i);
+    Serial.printf("Run %u\n", i);
     unsigned long start = millis();
     pi_calc(DIGITS);
     unsigned long elapsed = millis() - start;

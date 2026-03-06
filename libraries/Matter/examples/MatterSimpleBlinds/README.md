@@ -110,7 +110,7 @@ In the `onBlindsLift()` callback, replace the simulation code with actual motor 
 
 ```cpp
 bool onBlindsLift(uint8_t liftPercent) {
-  Serial.printf("Moving window covering to %d%%\r\n", liftPercent);
+  Serial.printf("Moving window covering to %" PRIu8 "%%\r\n", liftPercent);
 
   // Here you would control your actual motor/actuator
   // For example:

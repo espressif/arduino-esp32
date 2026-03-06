@@ -25,6 +25,7 @@
 
 #include "BLE2902.h"
 #include "esp32-hal-log.h"
+#include <inttypes.h>
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <Preferences.h>
@@ -176,7 +177,7 @@ bool BLE2902::persistValue(const BLEAddress &peerAddress, uint16_t charHandle) {
     return false;
   }
 
-  log_i("Persisted CCCD value 0x%04x for peer %s, handle 0x%04x (key: %s)", cccdValue, peerAddress.toString().c_str(), charHandle, key.c_str());
+  log_i("Persisted CCCD value 0x%04X for peer %s, handle 0x%04X (key: %s)", cccdValue, peerAddress.toString().c_str(), charHandle, key.c_str());
   return true;
 }
 
@@ -194,7 +195,7 @@ bool BLE2902::restoreValue(const BLEAddress &peerAddress, uint16_t charHandle) {
 
   if (!prefs.isKey(key.c_str())) {
     prefs.end();
-    log_d("No persisted CCCD value for peer %s, handle 0x%04x", peerAddress.toString().c_str(), charHandle);
+    log_d("No persisted CCCD value for peer %s, handle 0x%04X", peerAddress.toString().c_str(), charHandle);
     return false;
   }
 
@@ -205,7 +206,7 @@ bool BLE2902::restoreValue(const BLEAddress &peerAddress, uint16_t charHandle) {
   uint8_t data[2] = {(uint8_t)(cccdValue & 0xFF), (uint8_t)((cccdValue >> 8) & 0xFF)};
   setValue(data, 2);
 
-  log_i("Restored CCCD value 0x%04x for peer %s, handle 0x%04x (key: %s)", cccdValue, peerAddress.toString().c_str(), charHandle, key.c_str());
+  log_i("Restored CCCD value 0x%04X for peer %s, handle 0x%04X (key: %s)", cccdValue, peerAddress.toString().c_str(), charHandle, key.c_str());
   return true;
 }
 
@@ -223,7 +224,7 @@ bool BLE2902::deletePersistedValue(const BLEAddress &peerAddress, uint16_t charH
   prefs.end();
 
   if (result) {
-    log_i("Deleted persisted CCCD value for peer %s, handle 0x%04x", peerAddress.toString().c_str(), charHandle);
+    log_i("Deleted persisted CCCD value for peer %s, handle 0x%04X", peerAddress.toString().c_str(), charHandle);
   }
   return result;
 }

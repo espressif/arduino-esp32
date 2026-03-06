@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "sdkconfig.h"
 #include <esp_err.h>
+#include <inttypes.h>
 #include "BLECharacteristic.h"
 #include "BLEService.h"
 #include "BLEDevice.h"
@@ -244,7 +245,7 @@ void BLECharacteristic::executeCreate(BLEService *pService) {
  */
 void BLECharacteristic::indicate() {
 
-  log_v(">> indicate: length: %d", m_value.getValue().length());
+  log_v(">> indicate: length: %u", m_value.getValue().length());
   notify(false);
   log_v("<< indicate");
 }  // indicate
@@ -270,7 +271,7 @@ void BLECharacteristic::setBroadcastProperty(bool value) {
  * @param [in] pCallbacks An instance of a callbacks structure used to define any callbacks for the characteristic.
  */
 void BLECharacteristic::setCallbacks(BLECharacteristicCallbacks *pCallbacks) {
-  log_v(">> setCallbacks: 0x%x", (uint32_t)pCallbacks);
+  log_v(">> setCallbacks: %p", pCallbacks);
   if (pCallbacks != nullptr) {
     m_pCallbacks = pCallbacks;
   } else {
@@ -350,11 +351,11 @@ void BLECharacteristic::setValue(const uint8_t *data, size_t length) {
 // "VERBOSE". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
   char *pHex = BLEUtils::buildHexData(nullptr, data, length);
-  log_v(">> setValue: length=%d, data=%s, characteristic UUID=%s", length, pHex, getUUID().toString().c_str());
+  log_v(">> setValue: length=%lu, data=%s, characteristic UUID=%s", (unsigned long)length, pHex, getUUID().toString().c_str());
   free(pHex);
 #endif
   if (length > ESP_GATT_MAX_ATTR_LEN) {
-    log_e("Size %d too large, must be no bigger than %d", length, ESP_GATT_MAX_ATTR_LEN);
+    log_e("Size %lu too large, must be no bigger than %u", (unsigned long)length, ESP_GATT_MAX_ATTR_LEN);
     return;
   }
   m_semaphoreSetValue.take();
@@ -605,7 +606,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 // "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
         char *pHexData = BLEUtils::buildHexData(nullptr, param->write.value, param->write.len);
-        log_d(" - Data: length: %d, data: %s", param->write.len, pHexData);
+        log_d(" - Data: length: %u, data: %s", param->write.len, pHexData);
         free(pHexData);
 #endif
 
@@ -697,7 +698,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 
         // get mtu for peer device that we are sending read request to
         uint16_t maxOffset = getService()->getServer()->getPeerMTU(param->read.conn_id) - 1;
-        log_d("mtu value: %d", maxOffset);
+        log_d("mtu value: %u", maxOffset);
         if (param->read.need_rsp) {
           log_d("Sending a response (esp_ble_gatts_send_response)");
           esp_gatt_rsp_t rsp;
@@ -746,7 +747,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
 // "DEBUG". As it is quite CPU intensive, it is much better to not call it if not needed.
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
           char *pHexData = BLEUtils::buildHexData(nullptr, rsp.attr_value.value, rsp.attr_value.len);
-          log_d(" - Data: length=%d, data=%s, offset=%d", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
+          log_d(" - Data: length=%u, data=%s, offset=%u", rsp.attr_value.len, pHexData, rsp.attr_value.offset);
           free(pHexData);
 #endif
 
@@ -767,7 +768,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
     //
     case ESP_GATTS_CONF_EVT:
     {
-      // log_d("m_handle = %d, conf->handle = %d", m_handle, param->conf.handle);
+      // log_d("m_handle = %u, conf->handle = %u", m_handle, param->conf.handle);
       if (param->conf.conn_id
           == getService()->getServer()->getConnId()) {  // && param->conf.handle == m_handle) // bug in esp-idf and not implemented in arduino yet
         m_semaphoreConfEvt.give(param->conf.status);
@@ -807,7 +808,7 @@ void BLECharacteristic::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_ga
  * @return N/A.
  */
 void BLECharacteristic::notify(bool is_notification) {
-  log_v(">> notify: length: %d", m_value.getValue().length());
+  log_v(">> notify: length: %u", m_value.getValue().length());
 
   assert(getService() != nullptr);
   assert(getService()->getServer() != nullptr);
@@ -855,7 +856,7 @@ void BLECharacteristic::notify(bool is_notification) {
   for (auto &myPair : getService()->getServer()->getPeerDevices(false)) {
     uint16_t _mtu = (myPair.second.mtu);
     if (m_value.getValue().length() > _mtu - 3) {
-      log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+      log_w("- Truncating to %u bytes (maximum notify size)", _mtu - 3);
     }
 
     size_t length = m_value.getValue().length();
@@ -1006,7 +1007,7 @@ void BLECharacteristic::setSubscribe(struct ble_gap_event *event) {
     subVal |= NIMBLE_SUB_INDICATE;
   }
 
-  log_i("New subscribe value for conn: %d val: %d", event->subscribe.conn_handle, subVal);
+  log_i("New subscribe value for conn: %u val: %u", event->subscribe.conn_handle, subVal);
 
   if (!event->subscribe.cur_indicate && event->subscribe.prev_indicate) {
     BLEDevice::getServer()->clearIndicateWait(event->subscribe.conn_handle);
@@ -1039,7 +1040,7 @@ void BLECharacteristic::setSubscribe(struct ble_gap_event *event) {
  * @return N/A.
  */
 void BLECharacteristic::notify(bool is_notification) {
-  log_v(">> notify: length: %d", m_value.getValue().length());
+  log_v(">> notify: length: %u", m_value.getValue().length());
 
   assert(getService() != nullptr);
   assert(getService()->getServer() != nullptr);
@@ -1110,7 +1111,7 @@ void BLECharacteristic::notify(bool is_notification) {
     size_t length = value.length();
 
     if (length > _mtu - 3) {
-      log_w("- Truncating to %d bytes (maximum notify size)", _mtu - 3);
+      log_w("- Truncating to %u bytes (maximum notify size)", _mtu - 3);
     }
 
     if (is_notification && (!(myPair.second & NIMBLE_SUB_NOTIFY))) {
