@@ -137,6 +137,7 @@ bool WebServer::_parseRequest(NetworkClient &client) {
   _currentHandler = handler;
 
   String formData;
+  bool bodyLeftForStreaming = false;
   // below is needed only when POST type request
   if (method == HTTP_POST || method == HTTP_PUT || method == HTTP_PATCH || method == HTTP_DELETE) {
     String boundaryStr;
@@ -204,33 +205,43 @@ bool WebServer::_parseRequest(NetworkClient &client) {
       _currentHandler->raw(*this, _currentUri, *_currentRaw);
       log_v("Finish Raw");
     } else if (!isForm) {
-      size_t plainLength;
-      char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
-      if (plainLength < (size_t)_clientContentLength) {
-        free(plainBuf);
-        return false;
-      }
-      if (_clientContentLength > 0) {
-        if (isEncoded) {
-          //url encoded form
-          if (searchStr != "") {
-            searchStr += '&';
-          }
-          searchStr += plainBuf;
-        }
+      if (!_currentHandler && _clientContentLength > 0) {
+        // _currentHandler is null when no registered handler matched this request
+        // (see handler-matching loop above). In that case the request will be
+        // dispatched to the onNotFound callback. Leave the body in the TCP receive
+        // buffer so the onNotFound handler can stream it directly via client()
+        // without risking a heap allocation failure on constrained devices.
         _parseArguments(searchStr);
-        if (!isEncoded) {
-          //plain post json or other data
-          RequestArgument &arg = _currentArgs[_currentArgCount++];
-          arg.key = F("plain");
-          arg.value = String(plainBuf);
-        }
-
-        log_v("Plain: %s", plainBuf);
-        free(plainBuf);
+        bodyLeftForStreaming = true;
       } else {
-        // No content - but we can still have arguments in the URL.
-        _parseArguments(searchStr);
+        size_t plainLength;
+        char *plainBuf = readBytesWithTimeout(client, _clientContentLength, plainLength, HTTP_MAX_POST_WAIT);
+        if (plainLength < (size_t)_clientContentLength) {
+          free(plainBuf);
+          return false;
+        }
+        if (_clientContentLength > 0) {
+          if (isEncoded) {
+            //url encoded form
+            if (searchStr != "") {
+              searchStr += '&';
+            }
+            searchStr += plainBuf;
+          }
+          _parseArguments(searchStr);
+          if (!isEncoded) {
+            //plain post json or other data
+            RequestArgument &arg = _currentArgs[_currentArgCount++];
+            arg.key = F("plain");
+            arg.value = String(plainBuf);
+          }
+
+          log_v("Plain: %s", plainBuf);
+          free(plainBuf);
+        } else {
+          // No content - but we can still have arguments in the URL.
+          _parseArguments(searchStr);
+        }
       }
     } else {
       // it IS a form
@@ -263,7 +274,11 @@ bool WebServer::_parseRequest(NetworkClient &client) {
     }
     _parseArguments(searchStr);
   }
-  client.clear();
+  // Skip client.clear() when the body was intentionally left in the TCP receive
+  // buffer for the onNotFound handler to stream (no matched handler + body present).
+  if (!bodyLeftForStreaming) {
+    client.clear();
+  }
 
   log_v("Request: %s", url.c_str());
   log_v(" Arguments: %s", searchStr.c_str());
