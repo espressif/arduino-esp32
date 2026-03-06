@@ -103,6 +103,16 @@ static String get_body(const String &response) {
   return response.substring(idx + 4);
 }
 
+// Extract HTTP status code from response
+static int get_status_code(const String &response) {
+  // "HTTP/1.1 200 OK" -> 200
+  int idx = response.indexOf(' ');
+  if (idx < 0) {
+    return -1;
+  }
+  return response.substring(idx + 1).toInt();
+}
+
 // Extract Content-Length header value
 static int get_content_length(const String &response) {
   int idx = response.indexOf("Content-Length: ");
@@ -151,13 +161,13 @@ void test_send_stream_explicit_length(void) {
   TEST_ASSERT_EQUAL_MESSAGE((int)strlen(test_body), cl, "Content-Length should match explicit value");
 }
 
-// Test: send(code, content_type, Stream&) with empty stream
+// Test: send(code, content_type, Stream&) with empty stream returns 204
 void test_send_stream_empty(void) {
   String response = http_get("/stream_empty");
   TEST_ASSERT_GREATER_THAN_MESSAGE(0, response.length(), "No response received");
 
-  int cl = get_content_length(response);
-  TEST_ASSERT_EQUAL_MESSAGE(0, cl, "Content-Length should be 0");
+  int status = get_status_code(response);
+  TEST_ASSERT_EQUAL_MESSAGE(204, status, "Empty stream should return 204 No Content");
 
   String body = get_body(response);
   TEST_ASSERT_EQUAL_MESSAGE(0, body.length(), "Body should be empty");
