@@ -12,10 +12,10 @@
 #include "freertos/queue.h"
 
 // Array of pointers to active HardwareSerial objects used by HAL to call end() when pins are detached
-static HardwareSerial* uart_instances[SOC_UART_NUM] = {nullptr};
+static HardwareSerial *uart_instances[SOC_UART_NUM] = {nullptr};
 
 // Register the last HardwareSerial object started with begin
-static void uart_register(uint8_t uart_num, HardwareSerial* serial) {
+static void uart_register(uint8_t uart_num, HardwareSerial *serial) {
   // only register it once
   if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
     uart_instances[uart_num] = serial;
@@ -29,7 +29,7 @@ void hardware_serial_end(uint8_t uart_num) {
     uart_instances[uart_num]->end();
   }
 }
-} // extern "C"
+}  // extern "C"
 
 #if (SOC_UART_LP_NUM >= 1)
 #define UART_HW_FIFO_LEN(uart_num) ((uart_num < SOC_UART_HP_NUM) ? SOC_UART_FIFO_LEN : SOC_LP_UART_FIFO_LEN)
