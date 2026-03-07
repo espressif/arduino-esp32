@@ -318,7 +318,7 @@ static bool _uartDetachBus_TX(void *busptr) {
   }
   if (bus->_rxPin < 0) {  // both rx and tx pins are detached, terminate the uart driver
     log_d("_uartDetachBus_TX: both RX and TX pins detached for UART%u, terminating driver", bus->num);
-    hal_uart_notify_pins_detached(bus->num);
+    hardware_serial_end(bus->num);
     return true;
   }
   return _uartDetachPins(bus->num, UART_PIN_NO_CHANGE, bus->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
