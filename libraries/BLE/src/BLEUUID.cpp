@@ -18,6 +18,7 @@
  *                             Common includes                               *
  *****************************************************************************/
 
+#include "Arduino.h"
 #include <string.h>
 #include <sstream>
 #include <iomanip>
@@ -151,7 +152,7 @@ uint8_t BLEUUID::bitSize() {
     case BLE_UUID_16_BITS:  return 16;
     case BLE_UUID_32_BITS:  return 32;
     case BLE_UUID_128_BITS: return 128;
-    default:                log_e("Unknown UUID length: %d", UUID_LEN(m_uuid)); return 0;
+    default:                log_e("Unknown UUID length: %u", UUID_LEN(m_uuid)); return 0;
   }  // End of switch
 }  // bitSize
 
@@ -258,7 +259,7 @@ String BLEUUID::toString() const {
 
   if (UUID_LEN(m_uuid) == BLE_UUID_32_BITS) {  // If the UUID is 32bit, pad correctly.
     char hex[9];
-    snprintf(hex, sizeof(hex), "%08lx", UUID_VAL_32(m_uuid));
+    snprintf(hex, sizeof(hex), "%08" PRIx32, UUID_VAL_32(m_uuid));
     return String(hex) + "-0000-1000-8000-00805f9b34fb";
   }  // End 32bit UUID
 

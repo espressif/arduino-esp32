@@ -275,7 +275,7 @@ bool device_found() {
   for (uint8_t address = 1; address < 127; ++address) {
     Wire.beginTransmission(address);
     err = Wire.endTransmission();
-    log_d("Address: 0x%02X, Error: %d", address, err);
+    log_d("Address: 0x%02X, Error: %u", address, err);
     if (err == 0) {
       log_i("Found device at address: 0x%02X", address);
     } else if (address == DS1307_ADDR) {

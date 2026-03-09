@@ -45,9 +45,9 @@ void setup() {
   delay(500);
   Serial.printf("\nUsing GPIO %d attached to the RGB LED.\nInitial CPU setup:\n", RGB_LED_GPIO);
 
-  Serial.printf("CPU Freq = %lu MHz\n", getCpuFrequencyMhz());
-  Serial.printf("XTAL Freq = %lu MHz\n", getXtalFrequencyMhz());
-  Serial.printf("APB Freq = %lu Hz\n", getApbFrequency());
+  Serial.printf("CPU Freq = %" PRIu32 " MHz\n", getCpuFrequencyMhz());
+  Serial.printf("XTAL Freq = %" PRIu32 " MHz\n", getXtalFrequencyMhz());
+  Serial.printf("APB Freq = %" PRIu32 " Hz\n", getApbFrequency());
 }
 
 void loop() {
@@ -65,7 +65,7 @@ void loop() {
 
   // resets also UART to adapt to the new CPU Freq
   Serial.updateBaudRate(115200);
-  Serial.printf("\n--changed CPU Frequency to %lu MHz\n", getCpuFrequencyMhz());
+  Serial.printf("\n--changed CPU Frequency to %" PRIu32 " MHz\n", getCpuFrequencyMhz());
 
   rgbLedWrite(RGB_LED_GPIO, BRIGHTNESS, BRIGHTNESS, BRIGHTNESS);  // White
   Serial.println("White");

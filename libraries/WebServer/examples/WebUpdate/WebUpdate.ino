@@ -83,7 +83,7 @@ void setup(void) {
           }
         } else if (authenticated && upload.status == UPLOAD_FILE_END) {
           if (Update.end(true)) {  //true to set the size to the current progress
-            Serial.printf("Update Success: %zu\nRebooting...\n", upload.totalSize);
+            Serial.printf("Update Success: %lu\nRebooting...\n", (unsigned long)upload.totalSize);
           } else {
             Update.printError(Serial);
           }

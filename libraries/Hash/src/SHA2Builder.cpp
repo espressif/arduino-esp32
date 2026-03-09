@@ -75,7 +75,7 @@ SHA2Builder::SHA2Builder(size_t hash_size) : hash_size(hash_size), buffer_size(0
     block_size = SHA2_512_BLOCK_SIZE;
     is_sha512 = true;
   } else {
-    log_e("Invalid hash size: %d", hash_size);
+    log_e("Invalid hash size: %lu", (unsigned long)hash_size);
     block_size = 0;
     is_sha512 = false;
   }

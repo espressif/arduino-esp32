@@ -94,7 +94,7 @@ bool fullOpen() {
   uint16_t openLimit = WindowBlinds.getInstalledOpenLimitLift();
   currentLift = openLimit;
   currentLiftPercent = 100;
-  Serial.printf("Opening window covering to full open (position: %d cm)\r\n", currentLift);
+  Serial.printf("Opening window covering to full open (position: %u cm)\r\n", currentLift);
 
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
@@ -114,7 +114,7 @@ bool fullClose() {
   uint16_t closedLimit = WindowBlinds.getInstalledClosedLimitLift();
   currentLift = closedLimit;
   currentLiftPercent = 0;
-  Serial.printf("Closing window covering to full close (position: %d cm)\r\n", currentLift);
+  Serial.printf("Closing window covering to full close (position: %u cm)\r\n", currentLift);
 
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
@@ -152,7 +152,7 @@ bool goToLiftPercentage(uint8_t liftPercent) {
     currentLift = openLimit - ((openLimit - closedLimit) * liftPercent) / 100;
   }
   currentLiftPercent = liftPercent;
-  Serial.printf("Moving lift to %d%% (position: %d cm)\r\n", currentLiftPercent, currentLift);
+  Serial.printf("Moving lift to %u%% (position: %u cm)\r\n", currentLiftPercent, currentLift);
 
   // Update CurrentPosition to reflect actual position (setLiftPercentage now only updates CurrentPosition)
   WindowBlinds.setLiftPercentage(currentLiftPercent);
@@ -180,7 +180,7 @@ bool goToTiltPercentage(uint8_t tiltPercent) {
   // This is where you would trigger your motor to rotate the shade to tiltPercent
   // For simulation, we update instantly
   currentTiltPercent = tiltPercent;
-  Serial.printf("Rotating tilt to %d%%\r\n", currentTiltPercent);
+  Serial.printf("Rotating tilt to %u%%\r\n", currentTiltPercent);
 
   // Update CurrentPosition to reflect actual position
   WindowBlinds.setTiltPercentage(currentTiltPercent);
@@ -266,10 +266,10 @@ void setup() {
   currentTiltPercent = lastTiltPercent;
 
   Serial.printf(
-    "Window Covering limits configured: Lift [%d-%d cm], Tilt [%d-%d]\r\n", WindowBlinds.getInstalledOpenLimitLift(),
+    "Window Covering limits configured: Lift [%u-%u cm], Tilt [%u-%u]\r\n", WindowBlinds.getInstalledOpenLimitLift(),
     WindowBlinds.getInstalledClosedLimitLift(), WindowBlinds.getInstalledOpenLimitTilt(), WindowBlinds.getInstalledClosedLimitTilt()
   );
-  Serial.printf("Initial positions: Lift=%d cm (%d%%), Tilt=%d%%\r\n", currentLift, currentLiftPercent, currentTiltPercent);
+  Serial.printf("Initial positions: Lift=%u cm (%u%%), Tilt=%u%%\r\n", currentLift, currentLiftPercent, currentTiltPercent);
 
   // Set callback functions
   WindowBlinds.onOpen(fullOpen);
@@ -280,7 +280,7 @@ void setup() {
 
   // Generic callback for Lift or Tilt change
   WindowBlinds.onChange([](uint8_t liftPercent, uint8_t tiltPercent) {
-    Serial.printf("Window Covering changed: Lift=%d%%, Tilt=%d%%\r\n", liftPercent, tiltPercent);
+    Serial.printf("Window Covering changed: Lift=%u%%, Tilt=%u%%\r\n", liftPercent, tiltPercent);
     visualizeWindowBlinds(liftPercent, tiltPercent);
     return true;
   });
@@ -290,7 +290,7 @@ void setup() {
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    Serial.printf("Initial state: Lift=%d%%, Tilt=%d%%\r\n", WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
+    Serial.printf("Initial state: Lift=%u%%, Tilt=%u%%\r\n", WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
     // Update visualization based on initial state
     visualizeWindowBlinds(WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
   }
@@ -313,7 +313,7 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: Lift=%d%%, Tilt=%d%%\r\n", WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
+    Serial.printf("Initial state: Lift=%u%%, Tilt=%u%%\r\n", WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
     // Update visualization based on initial state
     visualizeWindowBlinds(WindowBlinds.getLiftPercentage(), WindowBlinds.getTiltPercentage());
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
@@ -342,7 +342,7 @@ void loop() {
     if (targetLiftPercent > 100) {
       targetLiftPercent = 0;
     }
-    Serial.printf("User button released. Setting lift to %d%%\r\n", targetLiftPercent);
+    Serial.printf("User button released. Setting lift to %u%%\r\n", targetLiftPercent);
     WindowBlinds.setTargetLiftPercent100ths(targetLiftPercent * 100);
   }
 

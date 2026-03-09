@@ -126,7 +126,7 @@ void testFileIO(fs::FS &fs, const char *path) {
   }
   Serial.println("");
   uint32_t end = millis() - start;
-  Serial.printf(" - %u bytes written in %lu ms\r\n", 2048 * 512, end);
+  Serial.printf(" - %u bytes written in %" PRIu32 " ms\r\n", 2048 * 512, end);
   file.close();
 
   file = fs.open(path);
@@ -151,7 +151,7 @@ void testFileIO(fs::FS &fs, const char *path) {
     }
     Serial.println("");
     end = millis() - start;
-    Serial.printf("- %zu bytes read in %lu ms\r\n", flen, end);
+    Serial.printf("- %lu bytes read in %" PRIu32 " ms\r\n", (unsigned long)flen, end);
     file.close();
   } else {
     Serial.println("- failed to open file for reading");

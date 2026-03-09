@@ -135,7 +135,7 @@ SHA3Builder::SHA3Builder(size_t hash_size) : hash_size(hash_size), buffer_size(0
   } else if (hash_size == SHA3_512_HASH_SIZE) {
     rate = SHA3_512_RATE;
   } else {
-    log_e("Invalid hash size: %d", hash_size);
+    log_e("Invalid hash size: %lu", (unsigned long)hash_size);
     rate = 0;  // Invalid hash size
   }
 }

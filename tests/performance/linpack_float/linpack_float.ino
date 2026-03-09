@@ -49,14 +49,14 @@ void setup() {
   }
 
   log_d("Starting Linpack %s test", data_type.c_str());
-  Serial.printf("Runs: %d\n", N_RUNS);
+  Serial.printf("Runs: %u\n", N_RUNS);
   Serial.printf("Type: %s\n", data_type.c_str());
   Serial.flush();
   int i = 0;
 
   floating_point_t minMflops = 1000000000.0, maxMflops = 0.0, avgMflops = 0.0;
   for (i = 0; i < N_RUNS; ++i) {
-    Serial.printf("Run %d\n", i);
+    Serial.printf("Run %u\n", i);
     const auto mflops = benchmark();
     avgMflops += mflops;
     minMflops = fmin(mflops, minMflops);

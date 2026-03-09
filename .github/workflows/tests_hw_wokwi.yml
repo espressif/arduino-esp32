@@ -18,6 +18,7 @@ jobs:
     permissions:
       actions: read
       statuses: write
+      pull-requests: read
     outputs:
       pr_num: ${{ steps.set-ref.outputs.pr_num }}
       ref: ${{ steps.set-ref.outputs.ref }}
@@ -71,41 +72,91 @@ jobs:
         env:
           GITLAB_ACCESS_TOKEN: ${{ secrets.GITLAB_ACCESS_TOKEN }}
           WOKWI_CLI_TOKEN: ${{ secrets.WOKWI_CLI_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          WR_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WR_EVENT: ${{ github.event.workflow_run.event }}
+          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WR_RUN_ID: ${{ github.event.workflow_run.id }}
+          WR_HEAD_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         id: set-ref
         run: |
-          # Get info and sanitize it to avoid security issues
+          # Security: derive ref, base, and labels from trusted sources only.
+          # - workflow_run event properties are passed as env vars (tamper-proof, injection-safe)
+          # - PR metadata is fetched via GitHub API (tamper-proof)
+          # - Artifact event file is NOT trusted for security-critical values
+          #   (a fork PR could upload a crafted event file in the triggering workflow)
+          # - All workflow_run values are passed via env vars rather than inline
+          #   expressions to prevent script injection through crafted branch names
+          # - For PR events, the script fails closed if the base branch cannot be
+          #   determined from trusted sources (never falls back to head branch)
 
-          pr_num=$(jq -r '.pull_request.number' artifacts/event_file/event.json | tr -cd "[:digit:]")
-          if [ -z "$pr_num" ] || [ "$pr_num" == "null" ]; then
-            pr_num=""
+          pr_num=""
+          base=""
+          ref=""
+          has_hil_label="false"
+          has_rerun_label="false"
+
+          if [ "$WR_EVENT" == "pull_request" ]; then
+            echo "Original event: pull_request — resolving PR info from GitHub API..."
+
+            # Trusted: get PR number from commit SHA via GitHub API
+            pr_num=$(gh api "repos/$GH_REPO/commits/$WR_HEAD_SHA/pulls" \
+              --jq '.[0].number // empty' 2>/dev/null | tr -cd "[:digit:]") || true
+
+            if [ -n "$pr_num" ]; then
+              echo "Found PR #$pr_num"
+              ref="$pr_num"
+
+              # Trusted: get base branch and labels from the PR via API
+              pr_data=$(gh api "repos/$GH_REPO/pulls/$pr_num" 2>/dev/null) || true
+
+              if [ -n "$pr_data" ]; then
+                base=$(echo "$pr_data" | jq -r '.base.ref // empty' | tr -cd "[:alnum:]/_.-")
+                has_hil_label=$(echo "$pr_data" | jq -r '[.labels[].name] | if index("hil_test") then "true" else "false" end')
+                has_rerun_label=$(echo "$pr_data" | jq -r '[.labels[].name] | if index("Re-trigger Wokwi Tests") then "true" else "false" end')
+                echo "PR base: $base"
+              fi
+            else
+              echo "WARNING: Could not find PR for SHA $WR_HEAD_SHA"
+            fi
+
+            # Fail closed: refuse to fall back to head branch for PR events
+            if [ -z "$ref" ] || [ -z "$base" ]; then
+              echo "ERROR: Could not determine PR number or base branch from GitHub API"
+              echo "  - pr_num='$pr_num' base='$base' head_sha='$WR_HEAD_SHA'"
+              echo "Failing closed for security — will not fall back to head branch for PR events"
+              exit 1
+            fi
+          else
+            echo "Original event: $WR_EVENT — using workflow_run.head_branch"
+
+            # For non-PR events (workflow_dispatch, schedule), head_branch is the correct value
+            if [ -z "$ref" ]; then
+              ref=$(echo "$WR_HEAD_BRANCH" | tr -cd "[:alnum:]/_.-")
+            fi
+            if [ -z "$base" ]; then
+              base=$(echo "$WR_HEAD_BRANCH" | tr -cd "[:alnum:]/_.-")
+            fi
           fi
 
-          ref=$pr_num
-          if [ -z "$ref" ] || [ "$ref" == "null" ]; then
-            ref=${{ github.ref }}
-          fi
-
+          # Non-security-critical values from artifacts
           action=$(jq -r '.action' artifacts/event_file/event.json | tr -cd "[:alpha:]_")
           if [ "$action" == "null" ]; then
             action=""
           fi
 
-          base=$(jq -r '.pull_request.base.ref' artifacts/event_file/event.json | tr -cd "[:alnum:]/_.-")
-          if [ -z "$base" ] || [ "$base" == "null" ]; then
-            base=${{ github.ref }}
+          push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
+          if [ -z "$push_time" ] || [ "$push_time" == "null" ]; then
+            push_time=""
           fi
 
+          # HW tests enablement
           if [ -n "$GITLAB_ACCESS_TOKEN" ]; then
             hw_tests_enabled="true"
-            if [[ -n "$pr_num" ]]; then
-              # This is a PR, check for hil_test label
-              has_hil_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "hil_test" && echo "true" || echo "false")
-              echo "Has hil_test label: $has_hil_label"
-
-              if [[ "$has_hil_label" != "true" ]]; then
-                echo "PR does not have hil_test label, hardware tests will be disabled"
-                hw_tests_enabled="false"
-              fi
+            if [[ -n "$pr_num" && "$has_hil_label" != "true" ]]; then
+              echo "PR does not have hil_test label, hardware tests will be disabled"
+              hw_tests_enabled="false"
             fi
           else
             echo "GITLAB_ACCESS_TOKEN is not set, hardware tests will be disabled"
@@ -119,24 +170,13 @@ jobs:
             wokwi_tests_enabled="false"
           fi
 
-          # Check for Re-trigger Wokwi Tests label
           rerun_wokwi_test="false"
-          if [[ -n "$pr_num" ]]; then
-            # This is a PR, check for Re-trigger Wokwi Tests label
-            has_rerun_label=$(jq -r '.pull_request.labels[]?.name' artifacts/event_file/event.json 2>/dev/null | grep -q "Re-trigger Wokwi Tests" && echo "true" || echo "false")
-            echo "Has Re-trigger Wokwi Tests label: $has_rerun_label"
-
-            if [[ "$has_rerun_label" == "true" ]]; then
-              rerun_wokwi_test="true"
-              echo "PR has Re-trigger Wokwi Tests label, cached results will be ignored"
-            fi
+          if [[ -n "$pr_num" && "$has_rerun_label" == "true" ]]; then
+            rerun_wokwi_test="true"
+            echo "PR has Re-trigger Wokwi Tests label, cached results will be ignored"
           fi
 
-          push_time=$(jq -r '.repository.pushed_at' artifacts/event_file/event.json | tr -cd "[:alnum:]:-")
-          if [ -z "$push_time" ] || [ "$push_time" == "null" ]; then
-            push_time=""
-          fi
-
+          # Test matrix from artifacts (non-security-critical)
           hw_targets=$(jq -c '.hw_targets' artifacts/matrix_info/test_matrix.json | tr -cd "[:alnum:],[]\"")
           hw_types=$(jq -c '.hw_types' artifacts/matrix_info/test_matrix.json | tr -cd "[:alpha:],[]\"")
           wokwi_targets=$(jq -c '.wokwi_targets' artifacts/matrix_info/test_matrix.json | tr -cd "[:alnum:],[]\"")
@@ -158,13 +198,9 @@ jobs:
           echo "wokwi_tests_enabled = $wokwi_tests_enabled"
           echo "rerun_wokwi_test = $rerun_wokwi_test"
           echo "push_time = $push_time"
+          echo "Has hil_test label: $has_hil_label"
+          echo "Has Re-trigger Wokwi Tests label: $has_rerun_label"
 
-          conclusion="${{ github.event.workflow_run.conclusion }}"
-          run_id="${{ github.event.workflow_run.id }}"
-          event="${{ github.event.workflow_run.event }}"
-          sha="${{ github.event.workflow_run.head_sha || github.sha }}"
-
-          # Create a single JSON file with all workflow run information
           cat > artifacts/workflow_info.json <<EOF
           {
             "hw_tests_enabled": $hw_tests_enabled,
@@ -177,20 +213,20 @@ jobs:
             "qemu_targets": $qemu_targets,
             "qemu_types": $qemu_types,
             "ref": "$ref",
-            "event": "$event",
-            "sha": "$sha",
+            "event": "$WR_EVENT",
+            "sha": "$WR_HEAD_SHA",
             "action": "$action",
-            "run_id": "$run_id",
-            "conclusion": "$conclusion"
+            "run_id": "$WR_RUN_ID",
+            "conclusion": "$WR_CONCLUSION"
           }
           EOF
 
           echo "Ref = $ref"
-          echo "Event name = $event"
-          echo "Head SHA = $sha"
+          echo "Event name = $WR_EVENT"
+          echo "Head SHA = $WR_HEAD_SHA"
           echo "Action = $action"
-          echo "Run ID = $run_id"
-          echo "Conclusion = $conclusion"
+          echo "Run ID = $WR_RUN_ID"
+          echo "Conclusion = $WR_CONCLUSION"
 
           if [ -z "$ref" ] || [ "$ref" == "null" ]; then
             echo "Failed to get PR number or ref"
@@ -294,12 +330,13 @@ jobs:
 
       - name: Evaluate if tests should be run
         id: check-tests
+        env:
+          CACHE_HIT: ${{ steps.get-cache-results.outputs.cache-hit }}
         run: |
-          cache_exists=${{ steps.get-cache-results.outputs.cache-hit == 'true' }}
           enabled=true
 
           # Check cache first
-          if [[ $cache_exists == 'true' ]]; then
+          if [[ "$CACHE_HIT" == 'true' ]]; then
             echo "Already ran, skipping GitLab pipeline trigger"
             enabled=false
           else
@@ -313,6 +350,8 @@ jobs:
         id: prepare-variables
         env:
           PUSH_TIME: ${{ needs.get-artifacts.outputs.push_time }}
+          HW_TYPES: ${{ needs.get-artifacts.outputs.hw_types }}
+          HW_TARGETS: ${{ needs.get-artifacts.outputs.hw_targets }}
         run: |
           # A webhook to sync the repository is sent to GitLab when a commit is pushed to GitHub
           # We wait for 10 minutes after the push to GitHub to be safe
@@ -353,8 +392,8 @@ jobs:
           echo "Proceeding with GitLab pipeline trigger..."
 
           # Make targets/types comma-separated strings (remove brackets and quotes)
-          test_types=$(printf '%s' "${{ needs.get-artifacts.outputs.hw_types }}" | sed -e 's/[][]//g' -e 's/"//g')
-          test_chips=$(printf '%s' "${{ needs.get-artifacts.outputs.hw_targets }}" | sed -e 's/[][]//g' -e 's/"//g')
+          test_types=$(printf '%s' "$HW_TYPES" | sed -e 's/[][]//g' -e 's/"//g')
+          test_chips=$(printf '%s' "$HW_TARGETS" | sed -e 's/[][]//g' -e 's/"//g')
           echo "test_types=$test_types"
           echo "test_chips=$test_chips"
 
@@ -387,15 +426,18 @@ jobs:
 
       - name: Process Downloaded Artifacts
         if: ${{ always() && steps.check-tests.outputs.enabled == 'true' }}
+        env:
+          GL_STATUS: ${{ steps.gitlab-trigger.outputs.status }}
+          GL_ARTIFACTS_DOWNLOADED: ${{ steps.gitlab-trigger.outputs.artifacts_downloaded }}
         run: |
-          echo "GitLab Pipeline Status: ${{ steps.gitlab-trigger.outputs.status }}"
-          echo "Artifacts Downloaded: ${{ steps.gitlab-trigger.outputs.artifacts_downloaded }}"
+          echo "GitLab Pipeline Status: $GL_STATUS"
+          echo "Artifacts Downloaded: $GL_ARTIFACTS_DOWNLOADED"
 
           # Create tests directory structure expected by GitHub caching
           mkdir -p tests
 
           # Process downloaded GitLab artifacts
-          if [ "${{ steps.gitlab-trigger.outputs.artifacts_downloaded }}" = "true" ]; then
+          if [ "$GL_ARTIFACTS_DOWNLOADED" = "true" ]; then
             echo "Processing downloaded GitLab artifacts..."
 
             # Find and copy test result files while preserving directory structure
@@ -509,14 +551,14 @@ jobs:
 
       - name: Evaluate if tests should be run
         id: check-tests
+        env:
+          CACHE_HIT: ${{ steps.get-cache-results.outputs.cache-hit }}
+          RERUN_WOKWI: ${{ needs.get-artifacts.outputs.rerun_wokwi_test }}
         run: |
-          cache_hit="${{ steps.get-cache-results.outputs.cache-hit }}"
-          rerun_label=${{ needs.get-artifacts.outputs.rerun_wokwi_test }}
-
-          if [[ "$rerun_label" == "true" ]]; then
+          if [[ "$RERUN_WOKWI" == "true" ]]; then
             echo "Re-trigger Wokwi Tests label is present, running tests (cache restore was skipped)"
             enabled=true
-          elif [[ "$cache_hit" == "true" ]]; then
+          elif [[ "$CACHE_HIT" == "true" ]]; then
             echo "Already ran, skipping"
             enabled=false
           else
@@ -526,8 +568,9 @@ jobs:
 
           echo "enabled=$enabled" >> $GITHUB_OUTPUT
 
-      # Note that changes to the workflows and tests will only be picked up after the PR is merged
-      # DO NOT CHECKOUT THE USER'S REPOSITORY IN THIS WORKFLOW. IT HAS HIGH SECURITY RISKS.
+      # Security: for PRs, `base` is the PR's base branch (from API), so only trusted code is checked out.
+      # For workflow_dispatch/schedule, `base` is the selected/default branch (from workflow_run event).
+      # DO NOT use artifact-derived values for the checkout ref — they can be forged by a malicious PR.
       - name: Checkout repository
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -568,8 +611,10 @@ jobs:
           WOKWI_WIFI_SSID: "Wokwi-GUEST"
           # The Wokwi Wi-Fi does not have a password, so we use an empty string
           WOKWI_WIFI_PASSWORD: ""
+          TEST_TYPE: ${{ matrix.type }}
+          TEST_CHIP: ${{ matrix.chip }}
         run: |
-          bash .github/scripts/tests_run.sh -c -type "${{ matrix.type }}" -t "${{ matrix.chip }}" -i 0 -m 1 -W -wifi-ssid "${{ env.WOKWI_WIFI_SSID }}" -wifi-password "${{ env.WOKWI_WIFI_PASSWORD }}"
+          bash .github/scripts/tests_run.sh -c -type "$TEST_TYPE" -t "$TEST_CHIP" -i 0 -m 1 -W -wifi-ssid "$WOKWI_WIFI_SSID" -wifi-password "$WOKWI_WIFI_PASSWORD"
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as cache
         uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3

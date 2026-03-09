@@ -21,6 +21,7 @@
 #if SOC_BLE_SUPPORTED
 #include <esp_bt.h>
 #endif
+#include "Arduino.h"
 #include "GeneralUtils.h"
 #include "BLEDevice.h"
 #include "BLEServer.h"
@@ -486,7 +487,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_CONNECT_EVT:
     {
-      log_i("Client connected, conn_id=%d", param->connect.conn_id);
+      log_i("Client connected, conn_id=%u", param->connect.conn_id);
       m_connId = param->connect.conn_id;
       addPeerDevice((void *)this, false, m_connId);
       if (m_pServerCallbacks != nullptr) {
@@ -526,7 +527,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // we also want to start advertising again.
     case ESP_GATTS_DISCONNECT_EVT:
     {
-      log_i("Client disconnected, conn_id=%d, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
+      log_i("Client disconnected, conn_id=%u, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
       if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
         m_pServerCallbacks->onDisconnect(this);
         m_pServerCallbacks->onDisconnect(this, param);
@@ -576,7 +577,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_REG_EVT:
     {
-      log_i("GATT server registered, status=%d, app_id=%d, gatts_if=%d", param->reg.status, param->reg.app_id, gatts_if);
+      log_i("GATT server registered, status=%d, app_id=%u, gatts_if=%u", param->reg.status, param->reg.app_id, gatts_if);
       m_gatts_if = gatts_if;
       m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
       break;
@@ -617,7 +618,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
  * @return N/A
  */
 void BLEServer::registerApp(uint16_t m_appId) {
-  log_v(">> registerApp - %d", m_appId);
+  log_v(">> registerApp - %u", m_appId);
   m_semaphoreRegisterAppEvt.take("registerApp");  // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
   ::esp_ble_gatts_app_register(m_appId);
   m_semaphoreRegisterAppEvt.wait("registerApp");
@@ -825,7 +826,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_SUBSCRIBE:
     {
-      log_i("subscribe event; attr_handle=%d, subscribed: %s", event->subscribe.attr_handle, (event->subscribe.cur_notify ? "true" : "false"));
+      log_i("subscribe event; attr_handle=%u, subscribed: %s", event->subscribe.attr_handle, (event->subscribe.cur_notify ? "true" : "false"));
 
       for (auto &it : server->m_notifyChrVec) {
         if (it->getHandle() == event->subscribe.attr_handle) {
@@ -851,7 +852,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_MTU:
     {
-      log_i("mtu update event; conn_handle=%d mtu=%d", event->mtu.conn_handle, event->mtu.value);
+      log_i("mtu update event; conn_handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
       rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
       if (rc != 0) {
         return 0;
@@ -978,10 +979,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -995,7 +996,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         // Check if the passkey on the peer device is correct
         log_d("BLE_SM_IOACT_NUMCMP");
 
-        log_d("Passkey on device's display: %d", event->passkey.params.numcmp);
+        log_d("Passkey on device's display: %06" PRIu32, event->passkey.params.numcmp);
         pkey.action = event->passkey.params.action;
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -1038,10 +1039,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
@@ -1061,7 +1062,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
       log_d("BLE_GAP_EVENT_AUTHORIZE");
 
       log_i(
-        "Authorization request: conn_handle=%d attr_handle=%d is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
+        "Authorization request: conn_handle=%u attr_handle=%u is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
       );
 
       bool authorized = false;

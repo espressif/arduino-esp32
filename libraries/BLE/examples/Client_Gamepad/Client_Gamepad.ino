@@ -54,13 +54,13 @@ struct GamepadReport {
 
 // Callback function to handle gamepad input notifications
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {
-  Serial.printf("Received %d bytes: ", length);
+  Serial.printf("Received %lu bytes: ", (unsigned long)length);
 
   // Check if data length matches our expected gamepad report
   if (length == sizeof(GamepadReport)) {
     GamepadReport *report = (GamepadReport *)pData;
 
-    Serial.printf("ID=%d, X=%4d, Y=%4d, Buttons=0x%02X [", report->reportId, report->x, report->y, report->buttons);
+    Serial.printf("ID=%u, X=%4d, Y=%4d, Buttons=0x%02X [", report->reportId, report->x, report->y, report->buttons);
 
     // Display which buttons are pressed
     for (int i = 0; i < 8; i++) {
@@ -134,7 +134,7 @@ bool connectToServer() {
           if (refValue.length() >= 2) {
             uint8_t reportId = refValue[0];
             uint8_t reportType = refValue[1];
-            Serial.printf("   Report ID: %d, Type: %d (1=Input, 2=Output, 3=Feature)\n", reportId, reportType);
+            Serial.printf("   Report ID: %u, Type: %u (1=Input, 2=Output, 3=Feature)\n", reportId, reportType);
 
             // We want input reports (type = 1)
             if (reportType == 1) {

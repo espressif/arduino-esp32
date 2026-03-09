@@ -250,7 +250,7 @@ private:
   bool _auto_negotiation;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
-  char _cs_str[10];
+  char _cs_str[12];
 #endif
   uint8_t _spi_freq_mhz;
   int8_t _pin_cs;

@@ -23,7 +23,7 @@ static int32_t onWrite(uint32_t lba, uint32_t offset, uint8_t *buffer, uint32_t 
   if (!secSize) {
     return false;  // disk error
   }
-  log_v("Write lba: %ld\toffset: %ld\tbufsize: %ld", lba, offset, bufsize);
+  log_v("Write lba: %" PRIu32 "\toffset: %" PRIu32 "\tbufsize: %" PRIu32, lba, offset, bufsize);
   for (int x = 0; x < bufsize / secSize; x++) {
     uint8_t blkbuffer[secSize];
     memcpy(blkbuffer, (uint8_t *)buffer + secSize * x, secSize);
@@ -39,7 +39,7 @@ static int32_t onRead(uint32_t lba, uint32_t offset, void *buffer, uint32_t bufs
   if (!secSize) {
     return false;  // disk error
   }
-  log_v("Read lba: %ld\toffset: %ld\tbufsize: %ld\tsector: %lu", lba, offset, bufsize, secSize);
+  log_v("Read lba: %" PRIu32 "\toffset: %" PRIu32 "\tbufsize: %" PRIu32 "\tsector: %" PRIu32, lba, offset, bufsize, secSize);
   for (int x = 0; x < bufsize / secSize; x++) {
     if (!SD_MMC.readRAW((uint8_t *)buffer + (x * secSize), lba + x)) {
       return false;  // outside of volume boundary
@@ -94,7 +94,10 @@ void setup() {
   USB.begin();
   USB.onEvent(usbEventCallback);
 
-  Serial.printf("Card Size: %lluMB\n", SD_MMC.totalBytes() / 1024 / 1024);
+  Serial.print("Card Size: ");
+  Serial.print(SD_MMC.totalBytes() / 1024 / 1024);
+  Serial.println("MB");
+
   Serial.printf("Sector: %d\tCount: %d\n", SD_MMC.sectorSize(), SD_MMC.numSectors());
 }
 

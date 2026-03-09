@@ -382,7 +382,7 @@ Reading Current Dataset
         // Print dataset parameters
         Serial.println("Current Thread Dataset:");
         Serial.printf("  Network Name: %s\r\n", currentDataset.getNetworkName());
-        Serial.printf("  Channel: %d\r\n", currentDataset.getChannel());
+        Serial.printf("  Channel: %u\r\n", currentDataset.getChannel());
         Serial.printf("  PAN ID: 0x%04x\r\n", currentDataset.getPanId());
 
         // Print extended PAN ID

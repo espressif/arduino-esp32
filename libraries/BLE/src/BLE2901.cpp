@@ -48,7 +48,7 @@ BLE2901::BLE2901() : BLEDescriptor(BLEUUID((uint16_t)BLE2901_UUID)) {}
  */
 void BLE2901::setDescription(const String &userDesc) {
   if (userDesc.length() > ESP_GATT_MAX_ATTR_LEN) {
-    log_e("Size %d too large, must be no bigger than %d", userDesc.length(), ESP_GATT_MAX_ATTR_LEN);
+    log_e("Size %u too large, must be no bigger than %u", userDesc.length(), ESP_GATT_MAX_ATTR_LEN);
     return;
   }
   setValue(userDesc);
