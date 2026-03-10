@@ -56785,3 +56785,113 @@ rootmaker.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 rootmaker.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
+
+xteink_x4.name=Xteink X4 eReader
+
+xteink_x4.bootloader.tool=esptool_py
+xteink_x4.bootloader.tool.default=esptool_py
+
+xteink_x4.upload.tool=esptool_py
+xteink_x4.upload.tool.default=esptool_py
+xteink_x4.upload.tool.network=esp_ota
+
+xteink_x4.upload.maximum_size=1310720
+xteink_x4.upload.maximum_data_size=327680
+xteink_x4.upload.speed=921600
+xteink_x4.upload.flags=
+xteink_x4.upload.extra_flags=
+xteink_x4.upload.use_1200bps_touch=false
+xteink_x4.upload.wait_for_upload_port=false
+
+xteink_x4.serial.disableDTR=false
+xteink_x4.serial.disableRTS=false
+
+xteink_x4.build.tarch=riscv32
+xteink_x4.build.target=esp
+xteink_x4.build.mcu=esp32c3
+xteink_x4.build.core=esp32
+xteink_x4.build.variant=xteink_x4
+xteink_x4.build.board=ESP32C3_DEV
+xteink_x4.build.bootloader_addr=0x0
+
+xteink_x4.build.cdc_on_boot=1
+xteink_x4.build.f_cpu=160000000L
+xteink_x4.build.flash_size=16MB
+xteink_x4.build.flash_freq=40m
+xteink_x4.build.flash_mode=dio
+xteink_x4.build.boot=dio
+xteink_x4.build.partitions=Custom
+xteink_x4.build.defines=
+
+## IDE 2.0 Seems to not update the value
+xteink_x4.menu.JTAGAdapter.default=Disabled
+xteink_x4.menu.JTAGAdapter.default.build.copy_jtag_files=0
+xteink_x4.menu.JTAGAdapter.builtin=Integrated USB JTAG
+xteink_x4.menu.JTAGAdapter.builtin.build.openocdscript=esp32c3-builtin.cfg
+xteink_x4.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+xteink_x4.menu.JTAGAdapter.external=FTDI Adapter
+xteink_x4.menu.JTAGAdapter.external.build.openocdscript=esp32c3-ftdi.cfg
+xteink_x4.menu.JTAGAdapter.external.build.copy_jtag_files=1
+xteink_x4.menu.JTAGAdapter.bridge=ESP USB Bridge
+xteink_x4.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
+xteink_x4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+xteink_x4.menu.PartitionScheme.custom=Custom
+xteink_x4.menu.PartitionScheme.custom.build.partitions=partitions.csv
+xteink_x4.menu.PartitionScheme.custom.upload.maximum_size=16777216
+xteink_x4.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+xteink_x4.menu.PartitionScheme.fatflash.build.partitions=ffat
+xteink_x4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+xteink_x4.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+xteink_x4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+xteink_x4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+
+xteink_x4.menu.CPUFreq.160=160MHz (WiFi)
+xteink_x4.menu.CPUFreq.160.build.f_cpu=160000000L
+xteink_x4.menu.CPUFreq.80=80MHz (WiFi)
+xteink_x4.menu.CPUFreq.80.build.f_cpu=80000000L
+xteink_x4.menu.CPUFreq.40=40MHz
+xteink_x4.menu.CPUFreq.40.build.f_cpu=40000000L
+xteink_x4.menu.CPUFreq.20=20MHz
+xteink_x4.menu.CPUFreq.20.build.f_cpu=20000000L
+xteink_x4.menu.CPUFreq.10=10MHz
+xteink_x4.menu.CPUFreq.10.build.f_cpu=10000000L
+
+xteink_x4.menu.FlashMode.qio=QIO
+xteink_x4.menu.FlashMode.qio.build.flash_mode=dio
+xteink_x4.menu.FlashMode.qio.build.boot=qio
+xteink_x4.menu.FlashMode.dio=DIO
+xteink_x4.menu.FlashMode.dio.build.flash_mode=dio
+xteink_x4.menu.FlashMode.dio.build.boot=dio
+
+xteink_x4.menu.FlashFreq.80=80MHz
+xteink_x4.menu.FlashFreq.80.build.flash_freq=80m
+xteink_x4.menu.FlashFreq.40=40MHz
+xteink_x4.menu.FlashFreq.40.build.flash_freq=40m
+
+xteink_x4.menu.DebugLevel.none=None
+xteink_x4.menu.DebugLevel.none.build.code_debug=0
+xteink_x4.menu.DebugLevel.error=Error
+xteink_x4.menu.DebugLevel.error.build.code_debug=1
+xteink_x4.menu.DebugLevel.warn=Warn
+xteink_x4.menu.DebugLevel.warn.build.code_debug=2
+xteink_x4.menu.DebugLevel.info=Info
+xteink_x4.menu.DebugLevel.info.build.code_debug=3
+xteink_x4.menu.DebugLevel.debug=Debug
+xteink_x4.menu.DebugLevel.debug.build.code_debug=4
+xteink_x4.menu.DebugLevel.verbose=Verbose
+xteink_x4.menu.DebugLevel.verbose.build.code_debug=5
+
+xteink_x4.menu.EraseFlash.none=Disabled
+xteink_x4.menu.EraseFlash.none.upload.erase_cmd=
+xteink_x4.menu.EraseFlash.all=Enabled
+xteink_x4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+xteink_x4.menu.ZigbeeMode.default=Disabled
+xteink_x4.menu.ZigbeeMode.default.build.zigbee_mode=
+xteink_x4.menu.ZigbeeMode.default.build.zigbee_libs=
+xteink_x4.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
