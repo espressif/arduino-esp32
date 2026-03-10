@@ -2,7 +2,6 @@
 // APOTA opens an access point which waits to receive a .bin file on /sketch.
 // After successful upload, the file is written to OTA0_Partition, and the microcontroller reboots to the newly uploaded sketch.
 
-#include <Arduino.h>
 #define DISPLAY_ENABLED
 
 #include <WiFi.h>
@@ -213,7 +212,7 @@ void setupOTA() {
         if (server.clientContentLength() > 0) {
           fsize = server.clientContentLength();
         }
-        Serial.printf("Receiving Update: %s, Size: %lu\n", upload.filename.c_str(), (unsigned long)fsize);
+        Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
 
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (!Update.begin(fsize)) {  //start with max available size
