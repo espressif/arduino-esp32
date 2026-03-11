@@ -56785,3 +56785,132 @@ rootmaker.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 rootmaker.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
+
+amyboard.name=AMYboard
+
+amyboard.bootloader.tool=esptool_py
+amyboard.bootloader.tool.default=esptool_py
+
+amyboard.upload.tool=esptool_py
+amyboard.upload.tool.default=esptool_py
+amyboard.upload.tool.network=esp_ota
+
+amyboard.upload.maximum_size=6553600
+amyboard.upload.maximum_data_size=327680
+amyboard.upload.flags=
+amyboard.upload.extra_flags=
+amyboard.upload.use_1200bps_touch=false
+amyboard.upload.wait_for_upload_port=false
+
+amyboard.serial.disableDTR=false
+amyboard.serial.disableRTS=false
+
+amyboard.build.tarch=xtensa
+amyboard.build.bootloader_addr=0x0
+amyboard.build.target=esp32s3
+amyboard.build.mcu=esp32s3
+amyboard.build.core=esp32
+amyboard.build.variant=amyboard
+amyboard.build.board=AMYBOARD
+
+amyboard.build.usb_mode=0
+amyboard.build.cdc_on_boot=0
+amyboard.build.msc_on_boot=0
+amyboard.build.dfu_on_boot=0
+amyboard.build.f_cpu=240000000L
+amyboard.build.flash_size=16MB
+amyboard.build.flash_freq=80m
+amyboard.build.flash_mode=dio
+amyboard.build.boot=qio
+amyboard.build.boot_freq=120m
+amyboard.build.partitions=default_16MB
+amyboard.build.defines=-DBOARD_HAS_PSRAM -DAMYBOARD_ARDUINO
+amyboard.build.loop_core=
+amyboard.build.event_core=
+amyboard.build.psram_type=opi
+amyboard.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+amyboard.menu.JTAGAdapter.default=Disabled
+amyboard.menu.JTAGAdapter.default.build.copy_jtag_files=0
+amyboard.menu.JTAGAdapter.builtin=Integrated USB JTAG
+amyboard.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+amyboard.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+amyboard.menu.JTAGAdapter.external=FTDI Adapter
+amyboard.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+amyboard.menu.JTAGAdapter.external.build.copy_jtag_files=1
+amyboard.menu.JTAGAdapter.bridge=ESP USB Bridge
+amyboard.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+amyboard.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+amyboard.menu.UploadMode.default=USB-OTG CDC (TinyUSB)
+amyboard.menu.UploadMode.default.upload.use_1200bps_touch=true
+amyboard.menu.UploadMode.default.upload.wait_for_upload_port=true
+amyboard.menu.UploadMode.uart=UART0 / Hardware CDC
+amyboard.menu.UploadMode.uart.upload.use_1200bps_touch=false
+amyboard.menu.UploadMode.uart.upload.wait_for_upload_port=false
+
+amyboard.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+amyboard.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+amyboard.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
+amyboard.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+amyboard.menu.PartitionScheme.fatflash.build.partitions=ffat
+amyboard.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+amyboard.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+amyboard.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+amyboard.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+amyboard.menu.PartitionScheme.custom=Custom
+amyboard.menu.PartitionScheme.custom.build.partitions=
+amyboard.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+amyboard.menu.CPUFreq.240=240MHz (WiFi)
+amyboard.menu.CPUFreq.240.build.f_cpu=240000000L
+amyboard.menu.CPUFreq.160=160MHz (WiFi)
+amyboard.menu.CPUFreq.160.build.f_cpu=160000000L
+amyboard.menu.CPUFreq.80=80MHz (WiFi)
+amyboard.menu.CPUFreq.80.build.f_cpu=80000000L
+
+amyboard.menu.UploadSpeed.921600=921600
+amyboard.menu.UploadSpeed.921600.upload.speed=921600
+amyboard.menu.UploadSpeed.115200=115200
+amyboard.menu.UploadSpeed.115200.upload.speed=115200
+amyboard.menu.UploadSpeed.256000.windows=256000
+amyboard.menu.UploadSpeed.256000.upload.speed=256000
+amyboard.menu.UploadSpeed.230400.windows.upload.speed=256000
+amyboard.menu.UploadSpeed.230400=230400
+amyboard.menu.UploadSpeed.230400.upload.speed=230400
+amyboard.menu.UploadSpeed.460800.linux=460800
+amyboard.menu.UploadSpeed.460800.macosx=460800
+amyboard.menu.UploadSpeed.460800.upload.speed=460800
+amyboard.menu.UploadSpeed.512000.windows=512000
+amyboard.menu.UploadSpeed.512000.upload.speed=512000
+
+amyboard.menu.DebugLevel.none=None
+amyboard.menu.DebugLevel.none.build.code_debug=0
+amyboard.menu.DebugLevel.error=Error
+amyboard.menu.DebugLevel.error.build.code_debug=1
+amyboard.menu.DebugLevel.warn=Warn
+amyboard.menu.DebugLevel.warn.build.code_debug=2
+amyboard.menu.DebugLevel.info=Info
+amyboard.menu.DebugLevel.info.build.code_debug=3
+amyboard.menu.DebugLevel.debug=Debug
+amyboard.menu.DebugLevel.debug.build.code_debug=4
+amyboard.menu.DebugLevel.verbose=Verbose
+amyboard.menu.DebugLevel.verbose.build.code_debug=5
+
+amyboard.menu.LoopCore.1=Core 1
+amyboard.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+amyboard.menu.LoopCore.0=Core 0
+amyboard.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+amyboard.menu.EventsCore.1=Core 1
+amyboard.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+amyboard.menu.EventsCore.0=Core 0
+amyboard.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+amyboard.menu.EraseFlash.none=Disabled
+amyboard.menu.EraseFlash.none.upload.erase_cmd=
+amyboard.menu.EraseFlash.all=Enabled
+amyboard.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
