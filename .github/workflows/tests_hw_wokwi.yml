@@ -112,9 +112,11 @@ jobs:
 
             # Fallback: commits API only works for same-repo PRs; use search API for fork PRs
             if [ -z "$pr_num" ]; then
-              echo "Commits API returned empty, trying search API for fork PRs..."
-              pr_num=$(gh api "search/issues" -f q="repo:$GH_REPO type:pr $WR_HEAD_SHA" \
-                --jq '.items[0].number // empty' 2>/dev/null | tr -cd "[:digit:]") || true
+              echo "Commits API returned empty, scanning open PRs by head SHA for fork PRs..."
+              pr_num=$(gh api "repos/$GH_REPO/pulls?state=open&per_page=100" \
+                --paginate \
+                --jq ".[] | select(.head.sha == \"$WR_HEAD_SHA\") | .number" \
+                2>/dev/null | head -1 | tr -cd "[:digit:]") || true
             fi
 
             if [ -n "$pr_num" ]; then
