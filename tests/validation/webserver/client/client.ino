@@ -11,7 +11,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 
-#define SERVER_PORT 80
+#define SERVER_PORT  80
 #define TEST_TIMEOUT 5000
 
 // Test data (must match server)
