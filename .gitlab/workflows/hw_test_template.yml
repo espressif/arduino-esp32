@@ -46,7 +46,7 @@ hw-test-template:
     - mkdir -p ~/.arduino/tests/$TEST_CHIP
     - echo Fetching binaries for $TEST_CHIP $TEST_TYPE
     - bash .gitlab/scripts/get_artifacts.sh
-    - pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+    - pip install -r tests/requirements.txt
 
   script:
     - echo "Using binaries for $TEST_CHIP"

@@ -33,6 +33,7 @@ __vm/
 platform.sloeber.txt
 boards.sloeber.txt
 /.idea/
+.github/copilot-instructions.md
 
 # Ignore docs build (Sphinx)
 docs/build
@@ -46,6 +47,7 @@ debug.cfg
 debug.svd
 debug_custom.json
 libraries/Insights/examples/*/*.ino.zip
+test_results.json
 
 # Vale Style
 .vale/styles/*
@@ -63,4 +65,3 @@ libraries/Insights/examples/*/*.ino.zip
 /affected_sketches.txt
 /affected_examples.txt
 /ctags_*
-.github/copilot-instructions.md

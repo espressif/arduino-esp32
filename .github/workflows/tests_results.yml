@@ -254,6 +254,7 @@ jobs:
           RESULTS_URL: ${{ fromJSON( steps.publish-test-results.outputs.json ).check_url }}
           RESULTS_RUN_ID: ${{ github.run_id }}
           REPORT_FILE: ./runtime-test-results/RUNTIME_TEST_RESULTS.md
+          ORIGINAL_SHA: ${{ needs.get-artifacts.outputs.original_sha }}
           IS_FAILING: >-
             ${{
               needs.get-artifacts.outputs.original_conclusion == 'failure' ||
@@ -265,12 +266,13 @@ jobs:
               job.status == 'failure'
             }}
         run: |
-          rm -rf artifacts $REPORT_FILE
+          rm -rf $REPORT_FILE
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
           touch $REPORT_FILE
           wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/runtime_table_generator.py -O ./runtime-test-results/runtime_table_generator.py
-          python3 ./runtime-test-results/runtime_table_generator.py ./runtime-test-results/unity_results.json ${{ needs.get-artifacts.outputs.original_sha }} >> $REPORT_FILE
+          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts >> $REPORT_FILE
           mv -f ./test_results.json ./runtime-test-results/test_results.json
+          rm -rf artifacts
 
       - name: Generate badge
         if: |
