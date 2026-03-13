@@ -234,51 +234,44 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
   //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
 
   // detaches HP and LP pins and sets Peripheral Manager and UART information
+  // Use IDF uart_release_pin() to properly release GPIO reservations, then handle Arduino-specific Peripheral Manager
+  
   if (rxPin >= 0 && uart->_rxPin == rxPin && perimanGetPinBusType(rxPin) == ESP32_BUS_TYPE_UART_RX) {
-    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rxPin], PIN_FUNC_GPIO);
-    esp_rom_gpio_pad_select_gpio(rxPin);
-    // avoids causing BREAK in the UART line
-    if (uart->_inverted) {
-      esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
-    } else {
-      esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_HIGH, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
-    }
+    uart_release_pin(uart_num, false, true, false, false);  // Release RX only from IDF perspective
     uart->_rxPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(rxPin)) {
       retCode = false;
       log_e("UART%u failed to detach RX pin %d", uart_num, rxPin);
     }
   }
+  
   if (txPin >= 0 && uart->_txPin == txPin && perimanGetPinBusType(txPin) == ESP32_BUS_TYPE_UART_TX) {
-    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[txPin], PIN_FUNC_GPIO);
-    esp_rom_gpio_pad_select_gpio(txPin);
-    esp_rom_gpio_connect_out_signal(txPin, SIG_GPIO_OUT_IDX, false, false);
+    uart_release_pin(uart_num, true, false, false, false);  // Release TX only from IDF perspective
     uart->_txPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(txPin)) {
       retCode = false;
       log_e("UART%u failed to detach TX pin %d", uart_num, txPin);
     }
   }
+  
   if (ctsPin >= 0 && uart->_ctsPin == ctsPin && perimanGetPinBusType(ctsPin) == ESP32_BUS_TYPE_UART_CTS) {
-    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[ctsPin], PIN_FUNC_GPIO);
-    esp_rom_gpio_pad_select_gpio(ctsPin);
-    esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_CTS_PIN_IDX), false);
+    uart_release_pin(uart_num, false, false, false, true);  // Release CTS only from IDF perspective
     uart->_ctsPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(ctsPin)) {
       retCode = false;
       log_e("UART%u failed to detach CTS pin %d", uart_num, ctsPin);
     }
   }
+  
   if (rtsPin >= 0 && uart->_rtsPin == rtsPin && perimanGetPinBusType(rtsPin) == ESP32_BUS_TYPE_UART_RTS) {
-    //gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[rtsPin], PIN_FUNC_GPIO);
-    esp_rom_gpio_pad_select_gpio(rtsPin);
-    esp_rom_gpio_connect_out_signal(rtsPin, SIG_GPIO_OUT_IDX, false, false);
+    uart_release_pin(uart_num, false, false, true, false);  // Release RTS only from IDF perspective
     uart->_rtsPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(rtsPin)) {
       retCode = false;
       log_e("UART%u failed to detach RTS pin %d", uart_num, rtsPin);
     }
   }
+  
   return retCode;
 }
 
