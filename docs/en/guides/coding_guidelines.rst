@@ -79,7 +79,7 @@ Switch / Case
 Pointers and References
 -----------------------
 
-- Pointer ``*`` and reference ``&`` attach to the **type name**, not the variable name (``PointerAlignment: Right``).
+- Pointer ``*`` and reference ``&`` attach to the **variable name**, not the type name (``PointerAlignment: Right``).
 
 .. code-block:: c
 
@@ -247,10 +247,10 @@ Examples
    char buffer[U64_STR_SIZE];
 
    // Correct
-   log_d("pin=%u addr=0x%04x baud=%" PRIu32 " up=%llu len=%lu err=%d",
-         pin, addr, baudrate, uptime, (unsigned long)len, err);
+   log_d("pin=%u addr=0x%04x baud=%" PRIu32 " up=%s len=%lu err=%d",
+         pin, addr, baudrate, u64_to_str(uptime, buffer), (unsigned long)len, err);
 
    // Wrong – uses PRIu8/PRIu16 (breaks NEWLIB-nano), %zu and %llu (breaks NEWLIB-nano),
    //         and %lu for uint32_t (wrong on PICOLIBC/LP64)
-   log_d("pin=%" PRIu8 " addr=0x%04" PRIu16 " baud=%lu up=%s len=%zu err=%d",
-         pin, addr, baudrate, u64_to_str(uptime, buffer), len, err);
+   log_d("pin=%" PRIu8 " addr=0x%04" PRIu16 " baud=%lu up=%llu len=%zu err=%d",
+         pin, addr, baudrate, uptime, len, err);
