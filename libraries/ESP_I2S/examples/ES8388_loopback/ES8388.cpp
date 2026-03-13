@@ -102,10 +102,6 @@ void ES8388::reset() {
   uint8_t regconfig;
 
   log_v("Resetting ES8388...");
-  log_d(
-    "Current configuration: _bpsamp=%u, _samprate=%" PRIu32 ", _nchannels=%u, _audio_mode=%u, _dac_output=%u, _adc_input=%u, _mic_gain=%u", _bpsamp, _samprate,
-    _nchannels, _audio_mode, _dac_output, _adc_input, _mic_gain,
-  );
 
   writeReg(ES8388_DACCONTROL3, ES8388_DACMUTE_MUTED | ES8388_DACLER_NORMAL | ES8388_DACSOFTRAMP_DISABLE | ES8388_DACRAMPRATE_4LRCK);
 
