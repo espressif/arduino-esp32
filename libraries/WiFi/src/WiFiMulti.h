@@ -35,6 +35,10 @@
 typedef struct {
   char *ssid;
   char *passphrase;
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
+  char *username;
+  char *identity;
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
   bool hasFailed;
 } WifiAPlist_t;
 
@@ -45,7 +49,17 @@ public:
   WiFiMulti();
   ~WiFiMulti();
 
+#if CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT
+  // For open networks an ssid must be provided. For networks secured with a passphrase, e.g. WPA2-PSK, both an ssid and
+  // passphrase must be provided. For networks secured with WPA2-Enterprise and supporting e.g. PEAPv0/EAP-MSCHAPv2,
+  // a username and anonymous identity must be provided in addition to an ssid and passphrase (password). The anonymous
+  // identity may be an empty string if it is not required by the network. Certificate-based WPA2-Enterprise is not yet
+  // supported, nor is providing a CA certificate for PEAP.
+  bool addAP(const char *ssid, const char *passphrase = NULL, const char *username = NULL, const char *identity = NULL);
+#else
   bool addAP(const char *ssid, const char *passphrase = NULL);
+#endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
+
   uint8_t run(uint32_t connectTimeout = 5000, bool scanHidden = false);
 #if CONFIG_LWIP_IPV6
   void enableIPv6(bool state);

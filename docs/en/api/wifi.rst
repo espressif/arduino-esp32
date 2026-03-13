@@ -629,7 +629,19 @@ To add the AP, use the following function. You can add multiple AP's and this li
 
 .. code-block:: arduino
 
-    bool addAP(const char* ssid, const char *passphrase = NULL);
+    bool addAP(const char *ssid, const char *passphrase = NULL);
+
+Or, if you have WPA2-Enterprise support enabled (``CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT``):
+
+.. code-block:: arduino
+
+    bool addAP(const char *ssid, const char *passphrase = NULL, const char *username = NULL, const char *identity = NULL);
+
+For:
+
+* Open networks, ``ssid`` must be set.
+* Networks using a passphrase, e.g. WPA2-PSK, ``passphrase`` must be set.
+* Networks using WPA2-Enterprise with PEAPv0/EAP-MSCHAPv2, ``username`` and ``passphrase`` must be set to the username and password required for inner authentication (MSCHAPv2), respectively. ``identity`` must be set to the "anonymous identity" used for PEAP, if required by the network, or must be set to an empty string otherwise. Note that WPA2-Enterprise networks using certificate-based authentication (e.g. EAP-TLS) are currently not supported. It is also currently not possible to supply a CA certificate to validate the server certificate for PEAP. Given these limitations, you should consider whether this is secure enough for your needs.
 
 After adding the AP's, run by the following function.
 
@@ -637,7 +649,7 @@ After adding the AP's, run by the following function.
 
     uint8_t run(uint32_t connectTimeout=5000);
 
-To see how to use the ``WiFiMulti``, take a look at the ``WiFiMulti.ino`` example available.
+To see how to use the ``WiFiMulti``, take a look at the ``WiFiMulti.ino``, ``WiFiMultiAdvanced.ino`` and ``WiFiMultiEnterprise.ino`` examples available.
 
 WiFiScan
 --------
