@@ -1,4 +1,3 @@
-import re
 import logging
 from conftest import REGEX_IPV4, is_valid_ipv4, rand_str4
 
