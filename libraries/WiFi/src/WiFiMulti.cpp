@@ -207,7 +207,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
               known = true;
               log_v("rssi_scan: %" PRIi32 ", bestNetworkDb: %d", rssi_scan, bestNetworkDb);
               if (rssi_scan > bestNetworkDb) {                                            // best network
-                if (_bAllowOpenAP || (sec_scan == WIFI_AUTH_OPEN || entry.passphrase)) {  // check for passphrase if not open wlan
+                if (sec_scan == WIFI_AUTH_OPEN || entry.passphrase) {  // check for passphrase if not open wlan
                   log_v("best network is now: %s", ssid_scan);
                   bestIndex = x;
                   bestNetworkSec = sec_scan;
@@ -260,7 +260,7 @@ uint8_t WiFiMulti::run(uint32_t connectTimeout, bool scanHidden) {
 #endif
       WiFi.disconnect();
       delay(10);
-      WiFi.begin(bestNetwork.ssid, (_bAllowOpenAP && bestNetworkSec == WIFI_AUTH_OPEN) ? NULL : bestNetwork.passphrase, bestChannel, bestBSSID);
+      WiFi.begin(bestNetwork.ssid, (bestNetworkSec == WIFI_AUTH_OPEN) ? NULL : bestNetwork.passphrase, bestChannel, bestBSSID);
       status = WiFi.status();
       _bWFMInit = true;
 
