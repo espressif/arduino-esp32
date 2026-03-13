@@ -11,6 +11,26 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 
+// Array of pointers to active HardwareSerial objects used by HAL to call end() when pins are detached
+static HardwareSerial *uart_instances[SOC_UART_NUM] = {nullptr};
+
+// Register the last HardwareSerial object started with begin
+static void uart_register(uint8_t uart_num, HardwareSerial *serial) {
+  // only register it once
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
+    uart_instances[uart_num] = serial;
+  }
+}
+
+extern "C" {
+// Strong implementation of weak hardware_serial_end() - called by HAL when pins are detached
+void hardware_serial_end(uint8_t uart_num) {
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] != nullptr) {
+    uart_instances[uart_num]->end();
+  }
+}
+}  // extern "C"
+
 #if (SOC_UART_LP_NUM >= 1)
 #define UART_HW_FIFO_LEN(uart_num) ((uart_num < SOC_UART_HP_NUM) ? SOC_UART_FIFO_LEN : SOC_LP_UART_FIFO_LEN)
 #else
@@ -60,31 +80,6 @@ HardwareSerial Serial5(5);
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
-
-// C-callable helper used by HAL when pins are detached and the high-level
-// HardwareSerial instance must be finalized.
-extern "C" void hal_uart_notify_pins_detached(int uart_num) {
-  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
-  switch (uart_num) {
-    case 0: Serial0.end(); break;
-#if SOC_UART_NUM > 1
-    case 1: Serial1.end(); break;
-#endif
-#if SOC_UART_NUM > 2
-    case 2: Serial2.end(); break;
-#endif
-#if SOC_UART_NUM > 3
-    case 3: Serial3.end(); break;
-#endif
-#if SOC_UART_NUM > 4
-    case 4: Serial4.end(); break;
-#endif
-#if SOC_UART_NUM > 5
-    case 5: Serial5.end(); break;
-#endif
-    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
-  }
-}
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
@@ -495,7 +490,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     uartSetRxFIFOFull(_uart, fifoFull);
     _rxFIFOFull = fifoFull;
   }
-
+  // register the last HardwareSerial object started with begin
+  uart_register(_uart_nr, this);
   HSERIAL_MUTEX_UNLOCK();
 }
 
