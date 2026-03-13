@@ -55,6 +55,10 @@ const char *host = "esp32-web";
 const char *ssid = "wifi-ssid";
 const char *password = "wifi-password";
 
+// Set the username and password for firmware upload
+const char *authUser = "........";
+const char *authPass = "........";
+
 const uint8_t OTA_KEY[32] = {0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x20, 0x74, 0x68, 0x69, 0x73, 0x20,
                              0x61, 0x20, 0x73, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79};
 
@@ -70,6 +74,9 @@ const uint8_t OTA_KEY[32] = {'0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',
 const uint32_t OTA_ADDRESS = 0x4320;  //OTA_ADDRESS value has no effect when OTA_CFG = 0x00
 const uint32_t OTA_CFG = 0x0f;
 const uint32_t OTA_MODE = U_AES_DECRYPT_AUTO;
+
+const char *csrfHeaders[2] = {"Origin", "Host"};
+static bool authenticated = false;
 
 /*=================================================================*/
 const char *update_path = "update";
@@ -112,6 +119,8 @@ void printProgress(size_t progress, size_t size) {
 }
 
 void setupHttpUpdateServer() {
+  httpServer.collectHeaders(csrfHeaders, 2);
+
   //redirecting not found web pages back to update page
   httpServer.onNotFound([&]() {  //webpage not found
     httpServer.sendHeader("Location", String("../") + String(update_path));
@@ -120,6 +129,9 @@ void setupHttpUpdateServer() {
 
   // handler for the update web page
   httpServer.on(String("/") + String(update_path), HTTP_GET, [&]() {
+    if (!httpServer.authenticate(authUser, authPass)) {
+      return httpServer.requestAuthentication();
+    }
     httpServer.send_P(200, PSTR("text/html"), UpdatePage_HTML);
   });
 
@@ -128,6 +140,9 @@ void setupHttpUpdateServer() {
     String("/") + String(update_path), HTTP_POST,
     [&]() {
       // handler when file upload finishes
+      if (!authenticated) {
+        return httpServer.requestAuthentication();
+      }
       if (Update.hasError()) {
         httpServer.send(200, F("text/html"), String(F("<META http-equiv=\"refresh\" content=\"5;URL=/\">Update error: ")) + String(Update.errorString()));
       } else {
@@ -143,6 +158,19 @@ void setupHttpUpdateServer() {
       // them through the Update object
       HTTPUpload &upload = httpServer.upload();
       if (upload.status == UPLOAD_FILE_START) {
+        authenticated = httpServer.authenticate(authUser, authPass);
+        if (!authenticated) {
+          Serial.println("Authentication fail!");
+          return;
+        }
+        String origin = httpServer.header(String(csrfHeaders[0]));
+        String host = httpServer.header(String(csrfHeaders[1]));
+        String expectedOrigin = String("http://") + host;
+        if (origin != expectedOrigin) {
+          Serial.printf("Wrong origin received! Expected: %s, Received: %s\n", expectedOrigin.c_str(), origin.c_str());
+          authenticated = false;
+          return;
+        }
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (upload.name == "filesystem") {
           if (!Update.begin(UPDATE_SIZE_UNKNOWN, U_FLASHFS)) {  //start with max available size
@@ -161,12 +189,12 @@ void setupHttpUpdateServer() {
           }
           Serial.println("Update was aborted");
         }
-      } else if (upload.status == UPLOAD_FILE_WRITE) {
+      } else if (authenticated && upload.status == UPLOAD_FILE_WRITE) {
         Serial.printf(".");
         if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
           Update.printError(Serial);
         }
-      } else if (upload.status == UPLOAD_FILE_END) {
+      } else if (authenticated && upload.status == UPLOAD_FILE_END) {
         if (Update.end(true)) {  //true to set the size to the current progress
           Serial.printf("Update Success: %lu\nRebooting...\n", (unsigned long)upload.totalSize);
         } else {
