@@ -4,11 +4,11 @@
 #include <stdint.h>
 #include "soc/soc_caps.h"
 
-#define USB_VID 0xCAF0
-#define USB_PID 0x0001
+#define USB_VID          0xCAF0
+#define USB_PID          0x0001
 #define USB_MANUFACTURER "AMYboard"
-#define USB_PRODUCT "AMYboard"
-#define USB_SERIAL ""
+#define USB_PRODUCT      "AMYboard"
+#define USB_SERIAL       ""
 
 // UART (directly exposed on header)
 static const uint8_t TX = 43;
