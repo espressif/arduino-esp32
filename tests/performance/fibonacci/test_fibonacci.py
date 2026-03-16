@@ -61,10 +61,13 @@ def test_fibonacci(dut, request):
 
     avg_time = round(sum(list_time) / len(list_time), 3)
 
-    # Create JSON with results and write it to file
-    # Always create a JSON with this format (so it can be merged later on):
-    # { TEST_NAME_STR: TEST_RESULTS_DICT }
-    results = {"fibonacci": {"runs": runs, "fib_n": fib_n, "avg_time": avg_time}}
+    # Canonical performance result format (see .github/CI_README.md)
+    results = {
+        "test_name": "fibonacci",
+        "runs": runs,
+        "settings": "fib_n={}".format(fib_n),
+        "metrics": [{"name": "avg_time", "value": avg_time, "unit": "s"}],
+    }
 
     current_folder = os.path.dirname(request.path)
     os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)

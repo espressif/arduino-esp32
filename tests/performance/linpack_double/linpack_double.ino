@@ -54,10 +54,12 @@ void setup() {
   Serial.flush();
   int i = 0;
 
+  floating_point_t *results = new floating_point_t[N_RUNS];
   floating_point_t minMflops = 1000000000.0, maxMflops = 0.0, avgMflops = 0.0;
   for (i = 0; i < N_RUNS; ++i) {
     Serial.printf("Run %u\n", i);
     const auto mflops = benchmark();
+    results[i] = mflops;
     avgMflops += mflops;
     minMflops = fmin(mflops, minMflops);
     maxMflops = fmax(mflops, maxMflops);
@@ -65,10 +67,30 @@ void setup() {
   }
 
   avgMflops /= N_RUNS;
+
+  // Sort to compute median
+  for (int a = 0; a < N_RUNS - 1; ++a) {
+    for (int b = a + 1; b < N_RUNS; ++b) {
+      if (results[b] < results[a]) {
+        floating_point_t tmp = results[a];
+        results[a] = results[b];
+        results[b] = tmp;
+      }
+    }
+  }
+  floating_point_t medianMflops;
+  if (N_RUNS % 2 == 0) {
+    medianMflops = (results[N_RUNS / 2 - 1] + results[N_RUNS / 2]) / 2.0;
+  } else {
+    medianMflops = results[N_RUNS / 2];
+  }
+  delete[] results;
+
   Serial.println(String("Runs completed: ") + i);
   Serial.println(String("Average MFLOPS: ") + avgMflops);
   Serial.println(String("Min MFLOPS: ") + minMflops);
   Serial.println(String("Max MFLOPS: ") + maxMflops);
+  Serial.println(String("Median MFLOPS: ") + medianMflops);
   Serial.flush();
 }
 
