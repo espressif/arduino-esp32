@@ -48,16 +48,15 @@ jobs:
               { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
               { keyword: 'WiFi', label: 'Area: WiFi' },
               { keyword: 'Zigbee', label: 'Area: Zigbee' },
+              { keyword: 'CI Failure Expected', label: 'CI Failure Expected' },
+              { keyword: 'dependencies', label: 'dependencies' },
               { keyword: 'hil_test', label: 'hil_test' },
               { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
               { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
               { keyword: 'lib_test', label: 'lib_test' },
-              { keyword: 'perf_test', label: 'perf_test' },
               { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
-              { keyword: 'python', label: 'python' },
-              { keyword: 'Re-trigger Wokwi', label: 'Re-trigger Wokwi Tests' },
-              { keyword: 'Type: Documentation', label: 'Type: Documentation' },
-              { keyword: 'Type: Question', label: 'Type: Question' },
+              { keyword: 'Type: Chip support', label: 'Type: Chip support' },
+              { keyword: 'System PR', label: '🚫 System PR' }
             ];
             const text = (title + '\n' + body).toLowerCase();
             for (const { keyword, label } of keywordLabelPairs) {
@@ -74,10 +73,7 @@ jobs:
 
             if (isIssueReport) {
               labelsToAdd.add('Status: Awaiting triage');
-              // Parse Type dropdown value (Bug, Task, Question) from Issue report form
-              const typeMatch = body.match(/###\s*Type\s*\n+\s*([^\n#]+)/i);
-              if (typeMatch) {
-                const typeValue = typeMatch[1].trim().toLowerCase();
+            }
 
             if (isFeatureRequest) {
               labelsToAdd.add('Type: Feature request');
