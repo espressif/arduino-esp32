@@ -100,9 +100,24 @@ jobs:
           if [ "$WR_EVENT" == "pull_request" ]; then
             echo "Original event: pull_request — resolving PR info from GitHub API..."
 
+            # Validate SHA format before using in API calls
+            if ! echo "$WR_HEAD_SHA" | grep -qE '^[a-f0-9]{40}$'; then
+              echo "ERROR: Invalid SHA format: $WR_HEAD_SHA"
+              exit 1
+            fi
+
             # Trusted: get PR number from commit SHA via GitHub API
             pr_num=$(gh api "repos/$GH_REPO/commits/$WR_HEAD_SHA/pulls" \
               --jq '.[0].number // empty' 2>/dev/null | tr -cd "[:digit:]") || true
+
+            # Fallback: commits API only works for same-repo PRs; use search API for fork PRs
+            if [ -z "$pr_num" ]; then
+              echo "Commits API returned empty, scanning open PRs by head SHA for fork PRs..."
+              pr_num=$(gh api "repos/$GH_REPO/pulls?state=open&per_page=100" \
+                --paginate \
+                --jq ".[] | select(.head.sha == \"$WR_HEAD_SHA\") | .number" \
+                2>/dev/null | head -1 | tr -cd "[:digit:]") || true
+            fi
 
             if [ -n "$pr_num" ]; then
               echo "Found PR #$pr_num"
