@@ -103,7 +103,7 @@ jobs:
               'Area: OpenThread': ['@SuGlider'],
               'Area: USB': ['@me-no-dev'],
               'Area: WiFi': ['@me-no-dev'],
-              'Area: Zigbee': ['@P-R-O-C-H-Y']
+              'Area: Zigbee': ['Parsaabasi]
             };
             const allLabels = [...new Set([...existingLabels, ...newLabels])];
             const assigneesToAdd = new Set();
