@@ -1,0 +1,137 @@
+# =============================================================================
+# Issue auto-label — final sketch (all 56 labels via keywordToLabel)
+# =============================================================================
+# When an issue is opened or edited:
+#   1. Template: Issue report → Status: Awaiting triage + Type (Bug 🐛 | Question)
+#   2. Template: Feature request → Type: Feature request
+#   3. Keywords in title/body → add matching label from keywordLabelPairs (all 56 labels)
+#
+# Full label list: .github/ISSUE_TEMPLATE/LABELS.md
+# =============================================================================
+
+name: Issue auto-label
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+jobs:
+  label-issue:
+    name: Apply labels from template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply labels based on template and form fields
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            const title = issue.title || '';
+            const existingLabels = (issue.labels || []).map(l => l.name);
+            const labelsToAdd = new Set();
+
+            // All 56 labels: if title/body contains keyword (case-insensitive), add the label.
+            const keywordLabelPairs = [
+              { keyword: 'arduino as esp-idf component', label: 'Area: Arduino as ESP-IDF component' },
+              { keyword: 'BLE', label: 'Area: BLE' },
+              { keyword: 'BT classic', label: 'Area: BT classic' },
+              { keyword: 'ESP-IDF related', label: 'Area: ESP-IDF related' },
+              { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
+              { keyword: 'Area: Libraries', label: 'Area: Libraries' },
+              { keyword: 'Matter', label: 'Area: Matter' },
+              { keyword: 'OpenThread', label: 'Area: OpenThread' },
+              { keyword: 'Area: Performance', label: 'Area: Performance' },
+              { keyword: 'Peripherals API', label: 'Area: Peripherals API' },
+              { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
+              { keyword: 'WiFi', label: 'Area: WiFi' },
+              { keyword: 'Zigbee', label: 'Area: Zigbee' },
+              { keyword: 'Backport needed', label: 'Backport needed 🔙' },
+              { keyword: 'Breaking change', label: 'Breaking change 🔥' },
+              { keyword: 'CI Failure Expected', label: 'CI Failure Expected' },
+              { keyword: 'dependencies', label: 'dependencies' },
+              { keyword: 'hil_test', label: 'hil_test' },
+              { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
+              { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
+              { keyword: 'lib_test', label: 'lib_test' },
+              { keyword: 'perf_test', label: 'perf_test' },
+              { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
+              { keyword: 'python', label: 'python' },
+              { keyword: 'Re-trigger Pre-commit', label: 'Re-trigger Pre-commit Hooks' },
+              { keyword: 'Re-trigger Wokwi', label: 'Re-trigger Wokwi Tests' },
+              { keyword: 'Resolution: Duplicate', label: 'Resolution: Duplicate' },
+              { keyword: 'Resolution: More info needed', label: 'Resolution: More info needed' },
+              { keyword: 'Resolution: Unable to reproduce', label: 'Resolution: Unable to reproduce' },
+              { keyword: 'Resolution: Wontfix', label: 'Resolution: Wontfix' },
+              { keyword: 'run_tests', label: 'run_tests' },
+              { keyword: 'Status: Awaiting Response', label: 'Status: Awaiting Response' },
+              { keyword: 'Status: Awaiting triage', label: 'Status: Awaiting triage' },
+              { keyword: 'Status: Blocked by ESP-IDF', label: 'Status: Blocked by ESP-IDF 🛑' },
+              { keyword: 'Status: Blocked upstream', label: 'Status: Blocked upstream 🛑' },
+              { keyword: 'Status: Community help needed', label: 'Status: Community help needed' },
+              { keyword: 'Status: In Progress', label: 'Status: In Progress ⚠️' },
+              { keyword: 'Status: Needs investigation', label: 'Status: Needs investigation' },
+              { keyword: 'Status: Pending CLA', label: 'Status: Pending CLA ⚠️' },
+              { keyword: 'Status: Pending Merge', label: 'Status: Pending Merge' },
+              { keyword: 'Status: Pre-commit fixes required', label: 'Status: Pre-commit fixes required ⚠️' },
+              { keyword: 'Status: Review needed', label: 'Status: Review needed' },
+              { keyword: 'Status: Solved', label: 'Status: Solved' },
+              { keyword: 'Status: Test needed', label: 'Status: Test needed' },
+              { keyword: 'Status: To be implemented', label: 'Status: To be implemented' },
+              { keyword: 'Type: 3rd party Boards', label: 'Type: 3rd party Boards' },
+              { keyword: 'Type: Bug', label: 'Type: Bug 🐛' },
+              { keyword: 'Type: Chip support', label: 'Type: Chip support' },
+              { keyword: 'Type: CI & Testing', label: 'Type: CI & Testing' },
+              { keyword: 'Type: Documentation', label: 'Type: Documentation' },
+              { keyword: 'Type: Example', label: 'Type: Example' },
+              { keyword: 'Type: Feature request', label: 'Type: Feature request' },
+              { keyword: 'Type: For reference', label: 'Type: For reference' },
+              { keyword: 'Type: Question', label: 'Type: Question' },
+              { keyword: 'Type: Regression', label: 'Type: Regression' },
+              { keyword: 'System PR', label: '🚫 System PR' }
+            ];
+            const text = (title + '\n' + body).toLowerCase();
+            for (const { keyword, label } of keywordLabelPairs) {
+              if (text.includes(keyword.toLowerCase())) labelsToAdd.add(label);
+            }
+
+            // Detect template and form fields by parsing the issue body.
+            // GitHub issue forms render as "### Label\n\nValue"
+
+            // Issue report template: has "### Board" and "### Type" sections
+            const isIssueReport = /###\s*Board\s*\n/i.test(body) && /###\s*Type\s*\n/i.test(body);
+            // Feature request template: has "### Related area" and "### Is your feature request"
+            const isFeatureRequest = /###\s*Related area\s*\n/i.test(body) && /Is your feature request related to a problem/i.test(body);
+
+            if (isIssueReport) {
+              labelsToAdd.add('Status: Awaiting triage');
+              // Parse Type dropdown value (Bug, Task, Question) from Issue report form
+              const typeMatch = body.match(/###\s*Type\s*\n+\s*([^\n#]+)/i);
+              if (typeMatch) {
+                const typeValue = typeMatch[1].trim().toLowerCase();
+if (typeValue === 'bug') labelsToAdd.add('Type: Bug 🐛');
+                else if (typeValue === 'question') labelsToAdd.add('Type: Question');
+                // Type: Task not in repo labels; add the label in repo to enable, then add: else if (typeValue === 'task') labelsToAdd.add('Type: Task');
+              }
+            }
+
+            if (isFeatureRequest) {
+              labelsToAdd.add('Type: Feature request');
+            }
+
+            // Add only labels that are not already on the issue
+            const newLabels = [...labelsToAdd].filter(name => !existingLabels.includes(name));
+            if (newLabels.length === 0) {
+              core.info('No new labels to add.');
+              return;
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: newLabels
+            });
+            core.info('Added labels: ' + newLabels.join(', '));
