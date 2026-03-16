@@ -2,9 +2,10 @@
 # Issue auto-label — final sketch (all 56 labels via keywordToLabel)
 # =============================================================================
 # When an issue is opened or edited:
-#   1. Template: Issue report → Status: Awaiting triage + Type (Bug 🐛 | Question)
+#   1. Template: Issue report → Status: Awaiting triage
 #   2. Template: Feature request → Type: Feature request
-#   3. Keywords in title/body → add matching label from keywordLabelPairs (all 56 labels)
+#   3. Keywords in title/body → add matching label from keywordLabelPairs
+#   4. Area labels → add assignees: BLE→@lucasssvaz, Matter/OpenThread→@SuGlider, USB/WiFi→@me-no-dev, Zigbee→@P-R-O-C-H-Y
 #
 # Full label list: .github/ISSUE_TEMPLATE/LABELS.md
 # =============================================================================
@@ -48,6 +49,7 @@ jobs:
               { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
               { keyword: 'WiFi', label: 'Area: WiFi' },
               { keyword: 'Zigbee', label: 'Area: Zigbee' },
+              { keyword: 'USB', label: 'Area: USB' },
               { keyword: 'CI Failure Expected', label: 'CI Failure Expected' },
               { keyword: 'dependencies', label: 'dependencies' },
               { keyword: 'hil_test', label: 'hil_test' },
@@ -93,3 +95,30 @@ jobs:
               labels: newLabels
             });
             core.info('Added labels: ' + newLabels.join(', '));
+
+            // Area → assignee: when issue has one of these area labels, add the assignee(s)
+            const areaToAssignees = {
+              'Area: BLE': ['lucasssvaz'],
+              'Area: Matter': ['SuGlider'],
+              'Area: OpenThread': ['SuGlider'],
+              'Area: USB': ['me-no-dev'],
+              'Area: WiFi': ['me-no-dev'],
+              'Area: Zigbee': ['P-R-O-C-H-Y']
+            };
+            const allLabels = [...new Set([...existingLabels, ...newLabels])];
+            const assigneesToAdd = new Set();
+            for (const label of allLabels) {
+              const assignees = areaToAssignees[label];
+              if (assignees) assignees.forEach(a => assigneesToAdd.add(a));
+            }
+            const existingAssignees = (issue.assignees || []).map(a => a.login);
+            const newAssignees = [...assigneesToAdd].filter(login => !existingAssignees.includes(login));
+            if (newAssignees.length > 0) {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: newAssignees
+              });
+              core.info('Added assignees: ' + newAssignees.join(', '));
+            }
