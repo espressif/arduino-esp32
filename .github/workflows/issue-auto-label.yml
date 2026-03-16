@@ -40,18 +40,14 @@ jobs:
               { keyword: 'BT classic', label: 'Area: BT classic' },
               { keyword: 'ESP-IDF related', label: 'Area: ESP-IDF related' },
               { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
-              { keyword: 'Area: Libraries', label: 'Area: Libraries' },
+              { keyword: 'Libraries', label: 'Area: Libraries' },
               { keyword: 'Matter', label: 'Area: Matter' },
               { keyword: 'OpenThread', label: 'Area: OpenThread' },
-              { keyword: 'Area: Performance', label: 'Area: Performance' },
+              { keyword: 'Performance', label: 'Area: Performance' },
               { keyword: 'Peripherals API', label: 'Area: Peripherals API' },
               { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
               { keyword: 'WiFi', label: 'Area: WiFi' },
               { keyword: 'Zigbee', label: 'Area: Zigbee' },
-              { keyword: 'Backport needed', label: 'Backport needed 🔙' },
-              { keyword: 'Breaking change', label: 'Breaking change 🔥' },
-              { keyword: 'CI Failure Expected', label: 'CI Failure Expected' },
-              { keyword: 'dependencies', label: 'dependencies' },
               { keyword: 'hil_test', label: 'hil_test' },
               { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
               { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
@@ -59,38 +55,9 @@ jobs:
               { keyword: 'perf_test', label: 'perf_test' },
               { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
               { keyword: 'python', label: 'python' },
-              { keyword: 'Re-trigger Pre-commit', label: 'Re-trigger Pre-commit Hooks' },
               { keyword: 'Re-trigger Wokwi', label: 'Re-trigger Wokwi Tests' },
-              { keyword: 'Resolution: Duplicate', label: 'Resolution: Duplicate' },
-              { keyword: 'Resolution: More info needed', label: 'Resolution: More info needed' },
-              { keyword: 'Resolution: Unable to reproduce', label: 'Resolution: Unable to reproduce' },
-              { keyword: 'Resolution: Wontfix', label: 'Resolution: Wontfix' },
-              { keyword: 'run_tests', label: 'run_tests' },
-              { keyword: 'Status: Awaiting Response', label: 'Status: Awaiting Response' },
-              { keyword: 'Status: Awaiting triage', label: 'Status: Awaiting triage' },
-              { keyword: 'Status: Blocked by ESP-IDF', label: 'Status: Blocked by ESP-IDF 🛑' },
-              { keyword: 'Status: Blocked upstream', label: 'Status: Blocked upstream 🛑' },
-              { keyword: 'Status: Community help needed', label: 'Status: Community help needed' },
-              { keyword: 'Status: In Progress', label: 'Status: In Progress ⚠️' },
-              { keyword: 'Status: Needs investigation', label: 'Status: Needs investigation' },
-              { keyword: 'Status: Pending CLA', label: 'Status: Pending CLA ⚠️' },
-              { keyword: 'Status: Pending Merge', label: 'Status: Pending Merge' },
-              { keyword: 'Status: Pre-commit fixes required', label: 'Status: Pre-commit fixes required ⚠️' },
-              { keyword: 'Status: Review needed', label: 'Status: Review needed' },
-              { keyword: 'Status: Solved', label: 'Status: Solved' },
-              { keyword: 'Status: Test needed', label: 'Status: Test needed' },
-              { keyword: 'Status: To be implemented', label: 'Status: To be implemented' },
-              { keyword: 'Type: 3rd party Boards', label: 'Type: 3rd party Boards' },
-              { keyword: 'Type: Bug', label: 'Type: Bug 🐛' },
-              { keyword: 'Type: Chip support', label: 'Type: Chip support' },
-              { keyword: 'Type: CI & Testing', label: 'Type: CI & Testing' },
               { keyword: 'Type: Documentation', label: 'Type: Documentation' },
-              { keyword: 'Type: Example', label: 'Type: Example' },
-              { keyword: 'Type: Feature request', label: 'Type: Feature request' },
-              { keyword: 'Type: For reference', label: 'Type: For reference' },
               { keyword: 'Type: Question', label: 'Type: Question' },
-              { keyword: 'Type: Regression', label: 'Type: Regression' },
-              { keyword: 'System PR', label: '🚫 System PR' }
             ];
             const text = (title + '\n' + body).toLowerCase();
             for (const { keyword, label } of keywordLabelPairs) {
@@ -111,11 +78,6 @@ jobs:
               const typeMatch = body.match(/###\s*Type\s*\n+\s*([^\n#]+)/i);
               if (typeMatch) {
                 const typeValue = typeMatch[1].trim().toLowerCase();
-if (typeValue === 'bug') labelsToAdd.add('Type: Bug 🐛');
-                else if (typeValue === 'question') labelsToAdd.add('Type: Question');
-                // Type: Task not in repo labels; add the label in repo to enable, then add: else if (typeValue === 'task') labelsToAdd.add('Type: Task');
-              }
-            }
 
             if (isFeatureRequest) {
               labelsToAdd.add('Type: Feature request');
