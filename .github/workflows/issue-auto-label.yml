@@ -58,7 +58,7 @@ jobs:
               { keyword: 'lib_test', label: 'lib_test' },
               { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
               { keyword: 'Type: Chip support', label: 'Type: Chip support' },
-              { keyword: 'System PR', label: '🚫 System PR' }
+              { keyword: 'System PR', label: '\u{1F6AB} System PR' }
             ];
             const text = (title + '\n' + body).toLowerCase();
             for (const { keyword, label } of keywordLabelPairs) {
@@ -98,12 +98,12 @@ jobs:
 
             // Area → assignee: when issue has one of these area labels, add the assignee(s)
             const areaToAssignees = {
-              'Area: BLE': ['@lucasssvaz'],
-              'Area: Matter': ['@SuGlider'],
-              'Area: OpenThread': ['@SuGlider'],
-              'Area: USB': ['@me-no-dev'],
-              'Area: WiFi': ['@me-no-dev'],
-              'Area: Zigbee': ['@Parsaabasi]
+              'Area: BLE': ['lucasssvaz'],
+              'Area: Matter': ['SuGlider'],
+              'Area: OpenThread': ['SuGlider'],
+              'Area: USB': ['me-no-dev'],
+              'Area: WiFi': ['me-no-dev'],
+              'Area: Zigbee': ['P-R-O-C-H-Y']
             };
             const allLabels = [...new Set([...existingLabels, ...newLabels])];
             const assigneesToAdd = new Set();
