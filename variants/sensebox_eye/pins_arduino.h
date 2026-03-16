@@ -10,10 +10,10 @@
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID        "senseBox"     // max 8 chars
-#define USB_FW_MSC_PRODUCT_ID       "Eye"  // max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION "1.4"      // max 4 chars
-#define USB_FW_MSC_VOLUME_NAME      "senseBox_Eye"     // max 11 chars
+#define USB_FW_MSC_VENDOR_ID        "senseBox"      // max 8 chars
+#define USB_FW_MSC_PRODUCT_ID       "Eye"           // max 16 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.4"           // max 4 chars
+#define USB_FW_MSC_VOLUME_NAME      "senseBox_Eye"  // max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 #define PIN_RGB_LED 45  // RGB LED
@@ -44,9 +44,8 @@ static const uint8_t SCL = PIN_WIRE_SCL;
 
 static const uint8_t MOSI = PIN_SPI_MOSI;
 static const uint8_t MISO = PIN_SPI_MISO;
-static const uint8_t SCK  = PIN_SPI_SCK;
-static const uint8_t SS   = PIN_SPI_SS;
-
+static const uint8_t SCK = PIN_SPI_SCK;
+static const uint8_t SS = PIN_SPI_SS;
 
 // IO Pins
 #define PIN_IO14 14
@@ -61,7 +60,7 @@ static const uint8_t T48 = PIN_IO48;  // Touch
 
 // Button
 #define PIN_BUTTON 47
-#define BUTTON 47
+#define BUTTON     47
 
 // =============================================
 // SD Card
@@ -70,16 +69,16 @@ static const uint8_t T48 = PIN_IO48;  // Touch
 #define PIN_SD_CS     41
 #define PIN_SD_SW     42
 #define PIN_SD_ENABLE 3
-#define SD_CS    PIN_SD_CS
-#define SD_SW    PIN_SD_SW
-#define SD_ENABLE PIN_SD_ENABLE
+#define SD_CS         PIN_SD_CS
+#define SD_SW         PIN_SD_SW
+#define SD_ENABLE     PIN_SD_ENABLE
 
 // USB
-#define PIN_USB_DM 19 // DM = D Minus
-#define PIN_USB_DN 19 // DN = D Negative (same as DM)
+#define PIN_USB_DM 19  // DM = D Minus
+#define PIN_USB_DN 19  // DN = D Negative (same as DM)
 #define PIN_USB_DP 20
-#define USB_DN PIN_USB_DN
-#define USB_DP PIN_USB_DP
+#define USB_DN     PIN_USB_DN
+#define USB_DP     PIN_USB_DP
 
 // =============================================
 // Camera
@@ -104,28 +103,27 @@ static const uint8_t T48 = PIN_IO48;  // Touch
 // Schematics
 #define CAM_PWDN  46
 #define CAM_RESET -1
-#define CAM_XMCLK   15
-#define CAM_SDA    4
-#define CAM_SCL    5
-#define CAM_Y9     16
-#define CAM_Y8     17
-#define CAM_Y7     18
-#define CAM_Y6     12
-#define CAM_Y5     10
-#define CAM_Y4     8
-#define CAM_Y3     9
-#define CAM_Y2     11
-#define CAM_VSYNC  6
-#define CAM_HREF   7
-#define CAM_PCLK   13
+#define CAM_XMCLK 15
+#define CAM_SDA   4
+#define CAM_SCL   5
+#define CAM_Y9    16
+#define CAM_Y8    17
+#define CAM_Y7    18
+#define CAM_Y6    12
+#define CAM_Y5    10
+#define CAM_Y4    8
+#define CAM_Y3    9
+#define CAM_Y2    11
+#define CAM_VSYNC 6
+#define CAM_HREF  7
+#define CAM_PCLK  13
 
-    
 // =============================================
 // LoRa
 // =============================================
-#define PIN_LORA_CS 43
+#define PIN_LORA_CS  43
 #define PIN_LORA_INT 44
-#define LORA_CS    PIN_LORA_CS
-#define LORA_INT   PIN_LORA_INT
+#define LORA_CS      PIN_LORA_CS
+#define LORA_INT     PIN_LORA_INT
 
 #endif /* Pins_Arduino_h */
