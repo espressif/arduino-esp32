@@ -25,7 +25,7 @@ static const uint8_t A1 = 1;
 static const uint8_t A2 = 2;
 
 // not broken out
-static const uint8_t SCL = 99;
-static const uint8_t SDA = 99;
+static const uint8_t SCL = -1;
+static const uint8_t SDA = -1;
 
 #endif /* Pins_Arduino_h */
