@@ -8858,7 +8858,7 @@ sparkfun_esp32c5_thing_plus.build.bootloader_addr=0x2000
 
 sparkfun_esp32c5_thing_plus.build.cdc_on_boot=0
 sparkfun_esp32c5_thing_plus.build.f_cpu=240000000L
-sparkfun_esp32c5_thing_plus.build.flash_size=4MB
+sparkfun_esp32c5_thing_plus.build.flash_size=8MB
 sparkfun_esp32c5_thing_plus.build.flash_freq=80m
 sparkfun_esp32c5_thing_plus.build.flash_mode=qio
 sparkfun_esp32c5_thing_plus.build.boot=qio
@@ -8878,10 +8878,10 @@ sparkfun_esp32c5_thing_plus.menu.JTAGAdapter.bridge=ESP USB Bridge
 sparkfun_esp32c5_thing_plus.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
 sparkfun_esp32c5_thing_plus.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
-sparkfun_esp32c5_thing_plus.menu.PSRAM.disabled=Disabled
-sparkfun_esp32c5_thing_plus.menu.PSRAM.disabled.build.defines=
 sparkfun_esp32c5_thing_plus.menu.PSRAM.enabled=Enabled
 sparkfun_esp32c5_thing_plus.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+sparkfun_esp32c5_thing_plus.menu.PSRAM.disabled=Disabled
+sparkfun_esp32c5_thing_plus.menu.PSRAM.disabled.build.defines=
 
 sparkfun_esp32c5_thing_plus.menu.CDCOnBoot.default=Enabled
 sparkfun_esp32c5_thing_plus.menu.CDCOnBoot.default.build.cdc_on_boot=1
@@ -8918,12 +8918,6 @@ sparkfun_esp32c5_thing_plus.menu.PartitionScheme.huge_app.upload.maximum_size=31
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.fatflash.build.partitions=ffat
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.rainmaker=RainMaker 4MB
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
@@ -8953,7 +8947,7 @@ sparkfun_esp32c5_thing_plus.menu.PartitionScheme.zigbee_zczr_8MB.build.partition
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.custom=Custom
 sparkfun_esp32c5_thing_plus.menu.PartitionScheme.custom.build.partitions=
-sparkfun_esp32c5_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=16777216
+sparkfun_esp32c5_thing_plus.menu.PartitionScheme.custom.upload.maximum_size=8388608
 
 sparkfun_esp32c5_thing_plus.menu.CPUFreq.240=240MHz (WiFi)
 sparkfun_esp32c5_thing_plus.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -8980,14 +8974,8 @@ sparkfun_esp32c5_thing_plus.menu.FlashFreq.80.build.flash_freq=80m
 sparkfun_esp32c5_thing_plus.menu.FlashFreq.40=40MHz
 sparkfun_esp32c5_thing_plus.menu.FlashFreq.40.build.flash_freq=40m
 
-sparkfun_esp32c5_thing_plus.menu.FlashSize.4M=4MB (32Mb)
-sparkfun_esp32c5_thing_plus.menu.FlashSize.4M.build.flash_size=4MB
 sparkfun_esp32c5_thing_plus.menu.FlashSize.8M=8MB (64Mb)
 sparkfun_esp32c5_thing_plus.menu.FlashSize.8M.build.flash_size=8MB
-sparkfun_esp32c5_thing_plus.menu.FlashSize.2M=2MB (16Mb)
-sparkfun_esp32c5_thing_plus.menu.FlashSize.2M.build.flash_size=2MB
-sparkfun_esp32c5_thing_plus.menu.FlashSize.16M=16MB (128Mb)
-sparkfun_esp32c5_thing_plus.menu.FlashSize.16M.build.flash_size=16MB
 
 sparkfun_esp32c5_thing_plus.menu.UploadSpeed.921600=921600
 sparkfun_esp32c5_thing_plus.menu.UploadSpeed.921600.upload.speed=921600
