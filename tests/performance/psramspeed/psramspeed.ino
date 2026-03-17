@@ -6,6 +6,11 @@
 
 #include <Arduino.h>
 
+#if __has_include("esp_cache.h")
+#include "esp_cache.h"
+#include "esp_private/esp_cache_private.h"
+#endif
+
 // Test settings
 
 // Number of runs to average
@@ -18,11 +23,11 @@
 #define N_COPIES 400
 
 // Start size for the tests. Value must be a power of 2.
-// Values lower or equal than 32 KB may cause the operations to use the cache instead of the PSRAM.
-#define START_SIZE 65536
+// Using 64KiB to avoid cache effects.
+#define START_SIZE (64 * 1024)  // 64KiB
 
 // Max size to be copied. Must be bigger than 32 and it will be floored to the nearest power of 2
-#define MAX_TEST_SIZE 512 * 1024  // 512KB
+#define MAX_TEST_SIZE (512 * 1024)  // 512KiB
 
 // Implementation macros
 
@@ -49,6 +54,23 @@
   *d8 = x;      \
   d8++;
 #define REPEAT8(expr) expr expr expr expr expr expr expr expr
+
+static size_t s_cache_line_size = 0;
+
+/* Invalidate data cache for region so the next timed access hits actual PSRAM, not cache.
+   addr must be cache-line aligned (guaranteed by heap_caps_aligned_alloc). */
+static inline void invalidate_cache_region(void *addr, size_t size) {
+#if __has_include("esp_cache.h")
+  if (size == 0 || s_cache_line_size == 0) {
+    return;
+  }
+  size_t aligned_size = (size + s_cache_line_size - 1) & ~(s_cache_line_size - 1);
+  esp_cache_msync(addr, aligned_size, ESP_CACHE_MSYNC_FLAG_DIR_M2C);
+#else
+  (void)addr;
+  (void)size;
+#endif
+}
 
 /* Functions */
 
@@ -151,21 +173,21 @@ static void mock_memset(void *dst, uint8_t v, size_t len) {
   }
 }
 
-static void print_rate(const char *name, uint64_t bytes, uint32_t cost_time) {
+static void print_rate(const char *name, uint64_t bytes, unsigned long cost_time_us) {
   uint32_t rate;
-  if (cost_time == 0) {
+  if (cost_time_us == 0) {
     Serial.println("Error: Too little time taken, please increase N_COPIES");
     return;
   }
 
-  rate = bytes * 1000 / cost_time / 1024;
-  Serial.printf("%s Rate = %" PRIu32 " KB/s Time: %" PRIu32 " ms\n", name, rate, cost_time);
+  rate = (bytes / 1024ULL) * 1000000ULL / cost_time_us;
+  Serial.printf("%s Rate = %" PRIu32 " KiB/s Time: %lu us\n", name, rate, cost_time_us);
 }
 
 static void memcpy_speed_test(void *dest, const void *src, size_t size, uint32_t repeat_cnt) {
-  uint32_t start_time;
-  uint32_t cost_time_system;
-  uint32_t cost_time_mock;
+  unsigned long start_time;
+  unsigned long cost_time_system;
+  unsigned long cost_time_mock;
   uint32_t cnt;
   uint32_t step;
   uint64_t total_size;
@@ -175,21 +197,25 @@ static void memcpy_speed_test(void *dest, const void *src, size_t size, uint32_t
 
     Serial.printf("Memcpy %" PRIu32 " Bytes test\n", step);
 
-    start_time = millis();
+    invalidate_cache_region((void *)src, step);
+    invalidate_cache_region(dest, step);
+    start_time = micros();
 
     for (cnt = 0; cnt < repeat_cnt; cnt++) {
       memcpy(dest, src, step);
     }
 
-    cost_time_system = millis() - start_time;
+    cost_time_system = micros() - start_time;
 
-    start_time = millis();
+    invalidate_cache_region((void *)src, step);
+    invalidate_cache_region(dest, step);
+    start_time = micros();
 
     for (cnt = 0; cnt < repeat_cnt; cnt++) {
       mock_memcpy(dest, src, step);
     }
 
-    cost_time_mock = millis() - start_time;
+    cost_time_mock = micros() - start_time;
 
     print_rate("System memcpy():", total_size, cost_time_system);
     print_rate("Mock memcpy():", total_size, cost_time_mock);
@@ -197,9 +223,9 @@ static void memcpy_speed_test(void *dest, const void *src, size_t size, uint32_t
 }
 
 static void memset_speed_test(void *dest, uint8_t value, size_t size, uint32_t repeat_num) {
-  uint32_t start_time;
-  uint32_t cost_time_system;
-  uint32_t cost_time_mock;
+  unsigned long start_time;
+  unsigned long cost_time_system;
+  unsigned long cost_time_mock;
   uint32_t cnt;
   uint32_t step;
   uint64_t total_size;
@@ -209,21 +235,23 @@ static void memset_speed_test(void *dest, uint8_t value, size_t size, uint32_t r
 
     Serial.printf("Memset %" PRIu32 " Bytes test\n", step);
 
-    start_time = millis();
+    invalidate_cache_region(dest, step);
+    start_time = micros();
 
     for (cnt = 0; cnt < repeat_num; cnt++) {
       memset(dest, value, step);
     }
 
-    cost_time_system = millis() - start_time;
+    cost_time_system = micros() - start_time;
 
-    start_time = millis();
+    invalidate_cache_region(dest, step);
+    start_time = micros();
 
     for (cnt = 0; cnt < repeat_num; cnt++) {
       mock_memset(dest, value, step);
     }
 
-    cost_time_mock = millis() - start_time;
+    cost_time_mock = micros() - start_time;
 
     print_rate("System memset():", total_size, cost_time_system);
     print_rate("Mock memset():", total_size, cost_time_mock);
@@ -238,12 +266,29 @@ void setup() {
     delay(10);
   }
 
-  void *dest = ps_malloc(MAX_TEST_SIZE);
-  const void *src = ps_malloc(MAX_TEST_SIZE);
+  size_t alloc_align = sizeof(uint32_t);
+#if __has_include("esp_cache.h")
+  size_t cache_align = 0;
+  if (esp_cache_get_alignment(MALLOC_CAP_SPIRAM, &cache_align) == ESP_OK && cache_align > 0) {
+    alloc_align = cache_align;
+    // Real cache lines are >= 16 bytes (16, 32, 64, 128).
+    // ESP32 reports 4 (bus width) but doesn't support per-address
+    // invalidation (cache_hal_invalidate_addr calls abort()).
+    if (cache_align >= 16) {
+      s_cache_line_size = cache_align;
+    }
+  }
+#endif
+  void *dest = heap_caps_aligned_alloc(alloc_align, MAX_TEST_SIZE, MALLOC_CAP_SPIRAM);
+  const void *src = heap_caps_aligned_alloc(alloc_align, MAX_TEST_SIZE, MALLOC_CAP_SPIRAM);
 
   if (!dest || !src) {
     Serial.println("Memory allocation failed");
     return;
+  }
+
+  if (s_cache_line_size == 0) {
+    log_w("Cache invalidation not available on this SoC. Results may be influenced by CPU cache.");
   }
 
   log_d("Starting PSRAM speed test");
