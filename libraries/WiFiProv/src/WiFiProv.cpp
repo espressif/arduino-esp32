@@ -92,12 +92,14 @@ void WiFiProvClass ::initProvision(prov_scheme_t prov_scheme, scheme_handler_t s
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_EVENT_HANDLER_NONE;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
+#if CONFIG_IDF_TARGET_ESP32
   } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BTDM) {
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
   } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BT) {
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BT;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
+#endif
   } else if (scheme_handler == NETWORK_PROV_SCHEME_HANDLER_FREE_BLE) {
     network_prov_event_handler_t scheme_event_handler = NETWORK_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BLE;
     memcpy(&config.scheme_event_handler, &scheme_event_handler, sizeof(network_prov_event_handler_t));
