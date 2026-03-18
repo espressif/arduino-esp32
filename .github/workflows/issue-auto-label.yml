@@ -1,11 +1,12 @@
 # =============================================================================
-# Issue auto-label — final sketch (all 56 labels via keywordToLabel)
+# Issue auto-label — final sketch
 # =============================================================================
 # When an issue is opened or edited:
 #   1. Template: Issue report → Status: Awaiting triage
 #   2. Template: Feature request → Type: Feature request
-#   3. Keywords in title/body → add matching label from keywordLabelPairs
-#   4. Area labels → add assignees: BLE→@lucasssvaz, Matter/OpenThread→@SuGlider, USB/WiFi→@me-no-dev, Zigbee→@P-R-O-C-H-Y
+#   3. keywordLabelPairs: multi-word keywords = substring match; single-token = whole-word
+#      (so BLE does not match inside "problem"/"table"/"cable")
+#   4. Area labels → assignees: BLE→lucasssvaz, Matter/OpenThread→SuGlider, USB/WiFi→me-no-dev, Zigbee→P-R-O-C-H-Y
 #
 # Full label list: .github/ISSUE_TEMPLATE/LABELS.md
 # =============================================================================
@@ -34,7 +35,7 @@ jobs:
             const existingLabels = (issue.labels || []).map(l => l.name);
             const labelsToAdd = new Set();
 
-            // All 56 labels: if title/body contains keyword (case-insensitive), add the label.
+            // keywordLabelPairs: see keywordMatches() for single-token vs phrase matching.
             const keywordLabelPairs = [
               { keyword: 'arduino as esp-idf component', label: 'Area: Arduino as ESP-IDF component' },
               { keyword: 'BLE', label: 'Area: BLE' },
@@ -58,11 +59,23 @@ jobs:
               { keyword: 'lib_test', label: 'lib_test' },
               { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
               { keyword: 'Type: Chip support', label: 'Type: Chip support' },
-              { keyword: 'System PR', label: ' 🚫 System PR' }
+              { keyword: 'System PR', label: '\u{1F6AB} System PR' }
             ];
-            const text = (title + '\n' + body).toLowerCase();
+            const text = title + '\n' + body;
+            const textLower = text.toLowerCase();
+            function escapeRegex(s) {
+              return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            function keywordMatches(keyword) {
+              const k = keyword.trim();
+              if (k.includes(' ')) {
+                return textLower.includes(k.toLowerCase());
+              }
+              // Single token: whole-word only (avoids "problem"/"table"/"cable" matching "BLE")
+              return new RegExp('(?:^|[^a-z0-9_])' + escapeRegex(k) + '(?:[^a-z0-9_]|$)', 'i').test(text);
+            }
             for (const { keyword, label } of keywordLabelPairs) {
-              if (text.includes(keyword.toLowerCase())) labelsToAdd.add(label);
+              if (keywordMatches(keyword)) labelsToAdd.add(label);
             }
 
             // Detect template and form fields by parsing the issue body.
@@ -103,7 +116,7 @@ jobs:
               'Area: OpenThread': ['SuGlider'],
               'Area: USB': ['me-no-dev'],
               'Area: WiFi': ['me-no-dev'],
-              'Area: Zigbee': ['Parsaabasi']
+              'Area: Zigbee': ['P-R-O-C-H-Y']
             };
             const allLabels = [...new Set([...existingLabels, ...newLabels])];
             const assigneesToAdd = new Set();
