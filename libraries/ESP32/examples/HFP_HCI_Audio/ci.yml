@@ -1,0 +1,4 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_BT_HFP_AUDIO_DATA_PATH_HCI=y
