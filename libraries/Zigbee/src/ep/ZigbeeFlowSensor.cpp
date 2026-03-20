@@ -110,7 +110,7 @@ bool ZigbeeFlowSensor::setFlow(float flow) {
   uint16_t zb_flow = (uint16_t)(flow * 10);
   log_v("Updating flow sensor value...");
   /* Update temperature sensor measured value */
-  log_d("Setting flow to %d", zb_flow);
+  log_d("Setting flow to %u", zb_flow);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(

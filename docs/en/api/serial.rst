@@ -167,7 +167,7 @@ Reads a single byte from the Serial port.
 
     int data = Serial.read();
     if (data != -1) {
-        Serial.printf("Received: %c\n", data);
+        Serial.printf("Received: %c\n", (char)data);
     }
 
 read (buffer)
@@ -191,7 +191,7 @@ Reads multiple bytes from the Serial port into a buffer.
 
     uint8_t buffer[64];
     size_t bytesRead = Serial.read(buffer, sizeof(buffer));
-    Serial.printf("Read %d bytes\n", bytesRead);
+    Serial.printf("Read %lu bytes\n", (unsigned long)bytesRead);
 
 readBytes
 *********

@@ -85,7 +85,7 @@ void setup() {
     OnOffLight[i].onChangeOnOff([i](bool state) -> bool {
       // Display message with the specific light name and details
       Serial.printf(
-        "Matter App Control: '%s' (OnOffLight[%d], Endpoint %d, GPIO %d) changed to: %s\r\n", lightName[i], i, OnOffLight[i].getEndPointId(), lightPins[i],
+        "Matter App Control: '%s' (OnOffLight[%u], Endpoint %u, GPIO %u) changed to: %s\r\n", lightName[i], i, OnOffLight[i].getEndPointId(), lightPins[i],
         state ? "ON" : "OFF"
       );
 

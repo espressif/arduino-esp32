@@ -53,7 +53,7 @@ void USBMIDI::setDeviceName(const char *name) {
   const uint8_t maxNameLength = 32;  // tinyUSB Descriptor limit
   if (name != nullptr && strlen(name) > 0) {
     if (strlen(name) > maxNameLength) {
-      log_w("USBMIDI: Device name too long, truncating to %d characters.", maxNameLength);
+      log_w("USBMIDI: Device name too long, truncating to %u characters.", maxNameLength);
     }
     if (!midiUserDeviceName) {
       midiUserDeviceName = new char[maxNameLength + 1];  // +1 for null-terminator

@@ -52,7 +52,7 @@ bool resend = false;
 /************************ Callbacks *****************************/
 #if USE_GLOBAL_ON_RESPONSE_CALLBACK
 void onGlobalResponse(zb_cmd_type_t command, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster) {
-  Serial.printf("Global response command: %d, status: %s, endpoint: %d, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
+  Serial.printf("Global response command: %d, status: %s, endpoint: %u, cluster: 0x%04x\r\n", command, esp_zb_zcl_status_to_name(status), endpoint, cluster);
   if ((command == ZB_CMD_REPORT_ATTRIBUTE) && (endpoint == TEMP_SENSOR_ENDPOINT_NUMBER)) {
     switch (status) {
       case ESP_ZB_ZCL_STATUS_SUCCESS: dataToSend--; break;

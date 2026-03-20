@@ -254,10 +254,10 @@ void ZigbeeBinary::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mes
       _output_state = *(bool *)message->attribute.data.value;
       binaryOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Binary Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Binary Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Binary endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Binary endpoint", message->info.cluster);
   }
 }
 

@@ -656,7 +656,7 @@ String STAClass::BSSIDstr() {
     return String();
   }
   char mac[18] = {0};
-  sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+  snprintf(mac, sizeof(mac), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
   return String(mac);
 }
 

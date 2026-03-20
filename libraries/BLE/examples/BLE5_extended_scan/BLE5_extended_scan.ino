@@ -31,7 +31,7 @@ class MyBLEExtAdvertisingCallbacks : public BLEExtAdvertisingCallbacks {
       Serial.println("BLE4.2");
     } else {
       // here we will get extended advertising data that are advertised over data channel by BLE5 devices
-      Serial.printf("Ext advertise: data_le: %d, data_status: %d \n", report.adv_data_len, report.data_status);
+      Serial.printf("Ext advertise: data_le: %u, data_status: %u \n", report.adv_data_len, report.data_status);
     }
   }
 };

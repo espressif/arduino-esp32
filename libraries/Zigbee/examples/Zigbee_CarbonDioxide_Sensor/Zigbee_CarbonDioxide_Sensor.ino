@@ -83,7 +83,7 @@ void loop() {
   if (!(timeCounter++ % 20)) {  // delaying for 100ms x 20 = 2s
     // Read sensor value - here is chip temperature used + 300 as a dummy value for demonstration
     uint16_t carbon_dioxide_value = 300 + (uint16_t)temperatureRead();
-    Serial.printf("Updating carbon dioxide sensor value to %d ppm\r\n", carbon_dioxide_value);
+    Serial.printf("Updating carbon dioxide sensor value to %u ppm\r\n", carbon_dioxide_value);
     zbCarbonDioxideSensor.setCarbonDioxide(carbon_dioxide_value);
   }
 

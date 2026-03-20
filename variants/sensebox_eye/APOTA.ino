@@ -102,7 +102,7 @@ void setBootPartitionToOTA0() {
 }
 
 void setupDisplay() {
-  Wire.begin(PIN_QWIIC_SDA, PIN_QWIIC_SCL);
+  Wire.begin();
   displayEnabled = Wire.requestFrom(0x3D, 1);  // Check if the display is connected
   if (displayEnabled) {
     display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
@@ -213,7 +213,7 @@ void setupOTA() {
         if (server.clientContentLength() > 0) {
           fsize = server.clientContentLength();
         }
-        Serial.printf("Receiving Update: %s, Size: %d\n", upload.filename.c_str(), fsize);
+        Serial.printf("Receiving Update: %s, Size: %lu\n", upload.filename.c_str(), (unsigned long)fsize);
 
         Serial.printf("Update: %s\n", upload.filename.c_str());
         if (!Update.begin(fsize)) {  //start with max available size

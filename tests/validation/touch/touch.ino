@@ -120,7 +120,7 @@ void test_touch_read(void) {
   // COMPARE PRESSED <-> UNPRESSED
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
     //log_i("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
-    Serial.printf("Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+    Serial.printf("Touch %u: %" PRIu32 " -> %" PRIu32 "\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
   }
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
 #if CONFIG_IDF_TARGET_ESP32

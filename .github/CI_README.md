@@ -599,6 +599,41 @@ requires:
   - CONFIG_SOC_WIFI_SUPPORTED=y
 ```
 
+#### Performance test result format
+
+Performance tests under `tests/performance/` write result JSON files that the report generator (in `tests_results.yml`) aggregates and displays. All result files must use this format so CPU, memory, LoRa, BLE, WiFi throughput, etc. can be shown in one report.
+
+**Required format:** A single JSON object:
+
+```json
+{
+  "test_name": "string",
+  "runs": 123,
+  "settings": "key1=value1,key2=value2",
+  "metrics": [
+    { "name": "metric_id", "value": 123.45, "unit": "Unit" }
+  ]
+}
+```
+
+| Field       | Required | Description |
+|------------|----------|-------------|
+| `test_name`| Yes      | Short identifier (e.g. `coremark`, `wifi_throughput`). |
+| `runs`     | Yes      | Number of runs used to compute averages. |
+| `settings` | No       | Optional. String encoding test configuration. Use `key=value` pairs separated by commas. Examples: `cores=2`, `digits=16384`, `copies=50000,max_test_size=65536`. No spaces. If omitted or empty, the report shows only "N runs:" under the chip. |
+| `metrics`  | Yes      | Array of metric objects. Each has `name` (string), `value` (number). `unit` is optional (string, e.g. `points`, `KB/s`, `ms`, `Mbps`); default `""`. |
+
+Pass/fail/error status is determined from the JUnit XML results (same as validation tests), not from the result JSON. The report shows :white_check_mark: (success), :x: (failure), or :fire: (error) next to each target. If a test fails before producing a result JSON, it still appears in the report with the appropriate failure/error symbol.
+
+- **Simple tests** (one main number): one element in `metrics` (e.g. score or time).
+- **Multi-metric tests** (e.g. memory bandwidth at several sizes): one element per (operation, size, variant); use a `name` like `memcpy_32_system_avg_rate` or `throughput_tx_1024_avg_rate`.
+
+The report generator only accepts this format.
+
+**File location and naming:** Result files must be named `result_<test_name><optional_index>.json` (e.g. `result_coremark0.json`, `result_ramspeed1.json`) and placed under a path that includes the **target** (e.g. `esp32`, `esp32c5`), e.g. `tests/performance/<test_name>/<target>/result_*.json`, so the report can group by target and test.
+
+**Examples:** CoreMark → `{"test_name":"coremark","runs":3,"settings":"cores=2","metrics":[{"name":"avg_score","value":746.97}]}`. Memory tests → multiple metrics with `name`, `value`, and optional `unit` (e.g. `KB/s`, `ms`). The report generator aggregates multiple result files by target and test: it sums `runs` and computes the average of each metric.
+
 ### Multi-Device (Multi-DUT) Tests
 
 Some tests require two physical devices (e.g., BLE server/client, WiFi AP/client). These are defined using the `multi_device` field in `ci.yml`, where each entry points to a sketch directory for that device.

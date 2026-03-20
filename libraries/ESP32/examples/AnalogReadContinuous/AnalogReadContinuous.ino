@@ -55,7 +55,7 @@ void loop() {
       analogContinuousStop();
 
       for (int i = 0; i < adc_pins_count; i++) {
-        Serial.printf("\nADC PIN %d data:", result[i].pin);
+        Serial.printf("\nADC PIN %u data:", result[i].pin);
         Serial.printf("\n   Avg raw value = %d", result[i].avg_read_raw);
         Serial.printf("\n   Avg millivolts value = %d", result[i].avg_read_mvolts);
       }

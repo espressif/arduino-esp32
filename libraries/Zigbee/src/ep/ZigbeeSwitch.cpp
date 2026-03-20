@@ -37,8 +37,8 @@ void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
     log_i("Bound successfully!");
     if (instance->_device) {
       zb_device_params_t *light = (zb_device_params_t *)instance->_device;
-      log_i("The light originating from address(0x%x) on endpoint(%d)", light->short_addr, light->endpoint);
-      log_d("Light bound to a switch on EP %d", instance->_endpoint);
+      log_i("The light originating from address(0x%x) on endpoint(%u)", light->short_addr, light->endpoint);
+      log_d("Light bound to a switch on EP %u", instance->_endpoint);
       instance->_bound_devices.push_back(light);
     }
     instance->_is_bound = true;
@@ -50,7 +50,7 @@ void ZigbeeSwitch::bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
 void ZigbeeSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx) {
   ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (instance) {
-    log_d("bindCbWrapper on EP %d", instance->_endpoint);
+    log_d("bindCbWrapper on EP %u", instance->_endpoint);
     instance->bindCb(zdo_status, user_ctx);
   }
 }
@@ -59,7 +59,7 @@ void ZigbeeSwitch::bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx)
 void ZigbeeSwitch::findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx) {
   ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
   if (instance) {
-    log_d("findCbWrapper on EP %d", instance->_endpoint);
+    log_d("findCbWrapper on EP %u", instance->_endpoint);
     instance->findCb(zdo_status, addr, endpoint, user_ctx);
   }
 }
@@ -74,7 +74,7 @@ void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
     light->endpoint = endpoint;
     light->short_addr = addr;
     esp_zb_ieee_address_by_short(light->short_addr, light->ieee_addr);
-    log_d("Light found: short address(0x%x), endpoint(%d)", light->short_addr, light->endpoint);
+    log_d("Light found: short address(0x%x), endpoint(%u)", light->short_addr, light->endpoint);
 
     esp_zb_get_long_address(bind_req.src_address);
     bind_req.src_endp = instance->_endpoint;
@@ -87,7 +87,7 @@ void ZigbeeSwitch::findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
     //save light params in the class
     instance->_device = light;
 
-    log_d("Find callback on EP %d", instance->_endpoint);
+    log_d("Find callback on EP %u", instance->_endpoint);
     esp_zb_zdo_device_bind_req(&bind_req, ZigbeeSwitch::bindCbWrapper, this);
   } else {
     log_d("No light endpoint found");
@@ -151,7 +151,7 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
-    log_v("Sending 'light toggle' command to endpoint %d, address 0x%x", endpoint, short_addr);
+    log_v("Sending 'light toggle' command to endpoint %u, address 0x%x", endpoint, short_addr);
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -170,7 +170,7 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
     log_v(
-      "Sending 'light toggle' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      "Sending 'light toggle' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
     esp_zb_lock_acquire(portMAX_DELAY);
@@ -223,7 +223,7 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
-    log_v("Sending 'light on' command to endpoint %d, address 0x%x", endpoint, short_addr);
+    log_v("Sending 'light on' command to endpoint %u, address 0x%x", endpoint, short_addr);
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -242,7 +242,7 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
     log_v(
-      "Sending 'light on' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      "Sending 'light on' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
     esp_zb_lock_acquire(portMAX_DELAY);
@@ -295,7 +295,7 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.zcl_basic_cmd.dst_addr_u.addr_short = short_addr;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
-    log_v("Sending 'light off' command to endpoint %d, address 0x%x", endpoint, short_addr);
+    log_v("Sending 'light off' command to endpoint %u, address 0x%x", endpoint, short_addr);
     esp_zb_lock_acquire(portMAX_DELAY);
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
     esp_zb_lock_release();
@@ -314,7 +314,7 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     memcpy(cmd_req.zcl_basic_cmd.dst_addr_u.addr_long, ieee_addr, sizeof(esp_zb_ieee_addr_t));
     log_v(
-      "Sending 'light off' command to endpoint %d, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+      "Sending 'light off' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
     esp_zb_lock_acquire(portMAX_DELAY);

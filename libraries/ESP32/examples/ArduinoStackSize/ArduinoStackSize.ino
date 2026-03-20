@@ -23,7 +23,7 @@ SET_LOOP_TASK_STACK_SIZE(16 * 1024);  // 16KB
 void setup() {
   Serial.begin(115200);
 
-  Serial.printf("Arduino Stack was set to %zu bytes", getArduinoLoopTaskStackSize());
+  Serial.printf("Arduino Stack was set to %lu bytes", (unsigned long)getArduinoLoopTaskStackSize());
 
   // Print unused stack for the task that is running setup()
   Serial.printf("\nSetup() - Free Stack Space: %u", uxTaskGetStackHighWaterMark(NULL));

@@ -51,9 +51,9 @@ void printScannedNetworks(uint16_t networksFound) {
       // Print all available info for each network found
       Serial.printf("%2d", i + 1);
       Serial.print(" | ");
-      Serial.printf("0x%04hx", scan_result[i].short_pan_id);
+      Serial.printf("0x%04x", scan_result[i].short_pan_id);
       Serial.print(" | ");
-      Serial.printf("%2d", scan_result[i].logic_channel);
+      Serial.printf("%2u", scan_result[i].logic_channel);
       Serial.print(" | ");
       Serial.printf("%-14.14s", scan_result[i].permit_joining ? "Yes" : "No");
       Serial.print(" | ");

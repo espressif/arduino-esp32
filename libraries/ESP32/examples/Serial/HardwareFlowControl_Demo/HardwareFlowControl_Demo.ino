@@ -243,7 +243,7 @@ void loop() {
       Serial.print(message);
 
       size_t bytesWritten = Serial1.write((const uint8_t *)message, strlen(message));
-      Serial.printf("  -> Written: %zu bytes\n", bytesWritten);
+      Serial.printf("  -> Written: %lu bytes\n", (unsigned long)bytesWritten);
 
       // Flush to ensure data is sent
       Serial1.flush();

@@ -31,12 +31,12 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
       case ARDUINO_USB_CDC_LINE_STATE_EVENT:   Serial.printf("CDC LINE STATE: dtr: %u, rts: %u\n", data->line_state.dtr, data->line_state.rts); break;
       case ARDUINO_USB_CDC_LINE_CODING_EVENT:
         Serial.printf(
-          "CDC LINE CODING: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", data->line_coding.bit_rate, data->line_coding.data_bits,
+          "CDC LINE CODING: bit_rate: %" PRIu32 ", data_bits: %u, stop_bits: %u, parity: %u\n", data->line_coding.bit_rate, data->line_coding.data_bits,
           data->line_coding.stop_bits, data->line_coding.parity
         );
         break;
       case ARDUINO_USB_CDC_RX_EVENT:
-        Serial.printf("CDC RX [%u]:", data->rx.len);
+        Serial.printf("CDC RX [%lu]:", (unsigned long)data->rx.len);
         {
           uint8_t buf[data->rx.len];
           size_t len = USBSerial.read(buf, data->rx.len);
@@ -44,7 +44,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
         }
         Serial.println();
         break;
-      case ARDUINO_USB_CDC_RX_OVERFLOW_EVENT: Serial.printf("CDC RX Overflow of %d bytes", data->rx_overflow.dropped_bytes); break;
+      case ARDUINO_USB_CDC_RX_OVERFLOW_EVENT: Serial.printf("CDC RX Overflow of %lu bytes", (unsigned long)data->rx_overflow.dropped_bytes); break;
 
       default: break;
     }

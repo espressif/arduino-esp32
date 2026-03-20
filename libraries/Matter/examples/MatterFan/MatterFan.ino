@@ -140,7 +140,7 @@ void setup() {
   // In this example, it will just print status messages
   Fan.onChange([](MatterFan::FanMode_t fanMode, uint8_t speedPercent) {
     // just report state
-    Serial.printf("Fan State: Mode %s | %d%% speed.\r\n", Fan.getFanModeString(fanMode), speedPercent);
+    Serial.printf("Fan State: Mode %s | %u%% speed.\r\n", Fan.getFanModeString(fanMode), speedPercent);
     // drive the Fan DC motor
     fanDCMotorDrive(fanMode != MatterFan::FAN_MODE_OFF, speedPercent);
     // returns success

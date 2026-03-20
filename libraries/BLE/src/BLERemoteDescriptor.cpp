@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLERemoteDescriptor.cpp
  *
  *  Created on: Jul 8, 2017
@@ -23,6 +42,7 @@
 #include "BLERemoteDescriptor.h"
 #include "GeneralUtils.h"
 #include "esp32-hal-log.h"
+#include <inttypes.h>
 
 /***************************************************************************
  *                           NimBLE includes                               *
@@ -100,7 +120,7 @@ uint32_t BLERemoteDescriptor::readUInt32() {
  */
 String BLERemoteDescriptor::toString() {
   char val[6];
-  snprintf(val, sizeof(val), "%d", getHandle());
+  snprintf(val, sizeof(val), "%u", getHandle());
   String res = "handle: ";
   res += val;
   res += ", uuid: " + getUUID().toString();
@@ -228,7 +248,7 @@ String BLERemoteDescriptor::readValue() {
     }
   } while (status != ESP_GATT_OK && retryCount--);
 
-  log_v("<< readValue(): length: %d", m_value.length());
+  log_v("<< readValue(): length: %u", m_value.length());
   return m_value;
 }  // readValue
 
@@ -381,7 +401,7 @@ exit:
   if (rc != 0) {
     log_e("<< readValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< Descriptor readValue(): length: %d rc=%d", value.length(), rc);
+    log_d("<< Descriptor readValue(): length: %u rc=%d", value.length(), rc);
   }
 
   return value;
@@ -406,7 +426,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
     return 0;
   }
 
-  log_d("Read complete; status=%d conn_handle=%d", error->status, conn_handle);
+  log_d("Read complete; status=%u conn_handle=%u", error->status, conn_handle);
 
   String *strBuf = static_cast<String *>(pTaskData->m_pBuf);
   int rc = error->status;
@@ -417,7 +437,7 @@ int BLERemoteDescriptor::onReadCB(uint16_t conn_handle, const struct ble_gatt_er
       if (((*strBuf).length() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
         rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
       } else {
-        log_d("Got %d bytes", data_len);
+        log_d("Got %" PRIu32 " bytes", data_len);
         (*strBuf) += String((char *)attr->om->om_data, data_len);
         return 0;
       }
@@ -447,7 +467,7 @@ int BLERemoteDescriptor::onWriteCB(uint16_t conn_handle, const struct ble_gatt_e
     return 0;
   }
 
-  log_i("Write complete; status=%d conn_handle=%d", rc, conn_handle);
+  log_i("Write complete; status=%u conn_handle=%u", rc, conn_handle);
 
   BLEUtils::taskRelease(*pTaskData, rc);
   return 0;
@@ -485,7 +505,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
 
   do {
     if (length > mtu) {
-      log_i("long write %d bytes", length);
+      log_i("long write %lu bytes", (unsigned long)length);
       os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
       rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om, BLERemoteDescriptor::onWriteCB, &taskData);
     } else {
@@ -503,7 +523,7 @@ bool BLERemoteDescriptor::writeValue(uint8_t *data, size_t length, bool response
       case 0:
       case BLE_HS_EDONE: rc = 0; break;
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
-        log_e("Long write not supported by peer; Truncating length to %d", mtu);
+        log_e("Long write not supported by peer; Truncating length to %u", mtu);
         retryCount++;
         length = mtu;
         break;
@@ -523,7 +543,7 @@ exit:
   if (rc != 0) {
     log_e("<< writeValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< writeValue success. length: %d rc=%d", length, rc);
+    log_d("<< writeValue success. length: %lu rc=%d", (unsigned long)length, rc);
   }
 
   return (rc == 0);

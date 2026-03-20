@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEAdvertising.h
  *
  *  Created on: Jun 21, 2017
@@ -203,8 +222,12 @@ private:
   esp_ble_adv_data_t m_advData;
   esp_ble_adv_data_t m_scanRespData;
   esp_ble_adv_params_t m_advParams;
+  bool m_nameInScanResp = false;      // true when device name overflows adv packet -> goes in scan response
+  bool m_advertisingPending = false;  // true when start_advertising was issued but start complete event not yet received
   bool configureScanResponseData();
   void freeServiceUUIDs();
+  uint16_t buildRawAdvData(uint8_t *buf, uint16_t bufLen, bool includeName = true);
+  uint16_t buildRawScanRespData(uint8_t *buf, uint16_t bufLen);
 #endif
 
   /***************************************************************************

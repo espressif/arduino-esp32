@@ -42,8 +42,8 @@ void setup() {
   model = tflite::GetModel(g_model);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     MicroPrintf(
-      "Model provided is schema version %d not equal to supported "
-      "version %d.",
+      "Model provided is schema version %" PRIu32 " not equal to supported "
+      "version %u.",
       model->version(), TFLITE_SCHEMA_VERSION
     );
     return;

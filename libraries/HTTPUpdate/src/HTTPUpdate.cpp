@@ -278,8 +278,8 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   }
 
   log_d("ESP32 info:\n");
-  log_d(" - free Space: %d\n", ESP.getFreeSketchSpace());
-  log_d(" - current Sketch Size: %d\n", ESP.getSketchSize());
+  log_d(" - free Space: %" PRIu32 "\n", ESP.getFreeSketchSpace());
+  log_d(" - current Sketch Size: %" PRIu32 "\n", ESP.getSketchSize());
 
   if (currentVersion && currentVersion[0] != 0x00) {
     log_d(" - current version: %s\n", currentVersion.c_str());
@@ -313,7 +313,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
           }
 
           if (len > _partition->size) {
-            log_e("spiffsSize to low (%d) needed: %d\n", _partition->size, len);
+            log_e("spiffsSize to low (%" PRIu32 ") needed: %" PRIu32 "\n", _partition->size, len);
             startUpdate = false;
           }
         } else {

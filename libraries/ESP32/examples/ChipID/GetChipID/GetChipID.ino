@@ -23,8 +23,8 @@ void loop() {
     chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
   }
 
-  Serial.printf("ESP32 Chip model = %s Rev %d\n", ESP.getChipModel(), ESP.getChipRevision());
-  Serial.printf("This chip has %d cores\n", ESP.getChipCores());
+  Serial.printf("ESP32 Chip model = %s Rev %u\n", ESP.getChipModel(), ESP.getChipRevision());
+  Serial.printf("This chip has %u cores\n", ESP.getChipCores());
   Serial.print("Chip ID: ");
   Serial.println(chipId);
 

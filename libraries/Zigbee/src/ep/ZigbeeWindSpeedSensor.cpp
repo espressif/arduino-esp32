@@ -116,7 +116,7 @@ bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   uint16_t zb_windspeed = zb_windspeed_to_u16(windspeed);
   log_v("Updating windspeed sensor value...");
   /* Update windspeed sensor measured value */
-  log_d("Setting windspeed to %d", zb_windspeed);
+  log_d("Setting windspeed to %u", zb_windspeed);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID,

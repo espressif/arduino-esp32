@@ -20,7 +20,7 @@ void loop() {
       Serial.printf("I2C device found at address 0x%02X\n", address);
       nDevices++;
     } else if (error != 2) {
-      Serial.printf("Error %d at address 0x%02X\n", error, address);
+      Serial.printf("Error %u at address 0x%02X\n", error, address);
     }
   }
   if (nDevices == 0) {

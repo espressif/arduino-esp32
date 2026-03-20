@@ -95,7 +95,7 @@ public:
 
   //optional callbacks to be implemented by the upper class
   virtual void onReceive(const uint8_t *data, size_t len, bool broadcast) {
-    log_i("Received %d bytes from " MACSTR " %s", len, MAC2STR(mac), broadcast ? "(broadcast)" : "");
+    log_i("Received %lu bytes from " MACSTR " %s", (unsigned long)len, MAC2STR(mac), broadcast ? "(broadcast)" : "");
   }
 
   virtual void onSent(bool success) {

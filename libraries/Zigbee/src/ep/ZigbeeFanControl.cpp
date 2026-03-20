@@ -66,10 +66,10 @@ void ZigbeeFanControl::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t 
         log_w("Invalid fan mode attribute: value=%p size=%u", message->attribute.data.value, message->attribute.data.size);
       }
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Fan Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Fan Control", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Fan Control", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Fan Control", message->info.cluster);
   }
 }
 

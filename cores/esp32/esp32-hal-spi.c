@@ -744,7 +744,7 @@ void spiStopBus(spi_t *spi) {
 
 spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t bitOrder) {
   if (spi_num >= SPI_COUNT) {
-    log_e("SPI bus index %d is out of range", spi_num);
+    log_e("SPI bus index %u is out of range", spi_num);
     return NULL;
   }
 

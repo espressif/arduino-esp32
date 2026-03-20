@@ -28,7 +28,7 @@ void setup() {
 
 #if CONFIG_IDF_TARGET_ESP32
   char message[64];
-  snprintf(message, 64, "%lu Packets.", i++);
+  snprintf(message, 64, "%" PRIu32 " Packets.", i++);
   Wire.slaveWrite((uint8_t *)message, strlen(message));
 #endif
 }

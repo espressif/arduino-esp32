@@ -120,7 +120,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     static const char *addr_types[] = {"UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6"};
     log_v(
-      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d, Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
+      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %u, Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
       event->ip6_info.ip.zone, IPV62STR(event->ip6_info.ip)
     );
 #endif
@@ -670,7 +670,7 @@ String NetworkInterface::macAddress(void) const {
   uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
   char macStr[18] = {0};
   macAddress(mac);
-  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return String(macStr);
 }
 

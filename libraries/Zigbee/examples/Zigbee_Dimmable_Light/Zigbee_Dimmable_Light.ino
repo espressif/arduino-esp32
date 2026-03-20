@@ -53,7 +53,7 @@ void setLight(bool state, uint8_t level) {
 // Create a task on identify call to handle the identify function
 void identify(uint16_t time) {
   static uint8_t blink = 1;
-  log_d("Identify called for %d seconds", time);
+  log_d("Identify called for %u seconds", time);
   if (time == 0) {
     // If identify time is 0, stop blinking and restore light as it was used for identify
     zbDimmableLight.restoreLight();
