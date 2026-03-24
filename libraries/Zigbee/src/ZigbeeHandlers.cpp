@@ -51,6 +51,40 @@ static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_windo
 static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_value_message_t *message);
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message);
 
+// Raw command handler - provides a "peek" at all ZCL commands before the stack processes them
+[[maybe_unused]]
+static bool zb_raw_command_handler(uint8_t bufid) {
+  zb_zcl_parsed_hdr_t *cmd_info = ZB_BUF_GET_PARAM(bufid, zb_zcl_parsed_hdr_t);
+  uint8_t *payload = (uint8_t *)zb_buf_begin(bufid);
+  uint16_t payload_len = zb_buf_len(bufid);
+
+  zb_raw_command_t command = {};
+  command.src_endpoint = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).src_endpoint;
+  command.dst_endpoint = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).dst_endpoint;
+  command.cluster_id = cmd_info->cluster_id;
+  command.profile_id = cmd_info->profile_id;
+  command.command_id = cmd_info->cmd_id;
+  command.command_direction = cmd_info->cmd_direction;
+  command.is_common_command = cmd_info->is_common_command;
+  command.src_address = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).source.u.short_addr;
+  command.data = payload;
+  command.data_len = payload_len;
+
+  log_v(
+    "Raw command: endpoint(%d), cluster(0x%x), command(0x%x), direction(%d), data_len(%d)", command.dst_endpoint, command.cluster_id, command.command_id,
+    command.command_direction, command.data_len
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (command.dst_endpoint == (*it)->getEndpoint()) {
+      if ((*it)->zbRawCommand(command)) {
+        return true;  // command consumed by endpoint
+      }
+    }
+  }
+  return false;  // let stack process normally
+}
+
 // Zigbee action handlers
 [[maybe_unused]]
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message) {

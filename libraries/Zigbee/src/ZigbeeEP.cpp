@@ -30,6 +30,7 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _on_identify = nullptr;
   _on_ota_state_change = nullptr;
   _on_default_response = nullptr;
+  _on_raw_command = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -643,6 +644,13 @@ void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *me
   if (_on_default_response) {
     _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
   }
+}
+
+bool ZigbeeEP::zbRawCommand(const zb_raw_command_t &command) {
+  if (_on_raw_command) {
+    return _on_raw_command(command);
+  }
+  return false;
 }
 
 // Global function implementation

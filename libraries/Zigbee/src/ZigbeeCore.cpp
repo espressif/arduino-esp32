@@ -58,6 +58,7 @@ ZigbeeCore::ZigbeeCore() {
 
 //forward declaration
 static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id, const void *message);
+static bool zb_raw_command_handler(uint8_t bufid);
 bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
 
 bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
@@ -191,6 +192,9 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
     log_e("Failed to set primary network channel mask");
     return false;
   }
+
+  // Register raw command handler to forward ZCL commands to endpoints
+  esp_zb_raw_command_handler_register(zb_raw_command_handler);
 
   // Register APSDATA INDICATION handler to catch bind/unbind requests
   esp_zb_aps_data_indication_handler_register(zb_apsde_data_indication_handler);
