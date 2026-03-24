@@ -938,6 +938,7 @@ String BLERemoteCharacteristic::readValue() {
 
   m_semaphoreReadCharEvt.take("readValue");
   m_value = value;
+  free(m_rawData);
   m_rawData = (uint8_t *)calloc(value.length(), sizeof(uint8_t));
   for (size_t i = 0; i < value.length(); i++) {
     m_rawData[i] = value[i];
