@@ -46567,9 +46567,9 @@ codecell.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
 codecell.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 codecell.menu.CDCOnBoot.default=Enabled
-codecell.menu.CDCOnBoot.default.build.cdc_on_boot=0
-codecell.menu.CDCOnBoot.cdc=Enabled
-codecell.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+codecell.menu.CDCOnBoot.default.build.cdc_on_boot=1
+codecell.menu.CDCOnBoot.cdc=Disabled
+codecell.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 codecell.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 codecell.menu.PartitionScheme.default.build.partitions=default
