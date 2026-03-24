@@ -37,29 +37,32 @@ jobs:
 
             // keywordLabelPairs: see keywordMatches() for single-token vs phrase matching.
             const keywordLabelPairs = [
-              { keyword: 'arduino as esp-idf component', label: 'Area: Arduino as ESP-IDF component' },
+              { keyword: 'component', label: 'Area: Arduino as ESP-IDF component' },
               { keyword: 'BLE', label: 'Area: BLE' },
+              { keyword: 'Bluetooth', label: 'Area: BLE' },
               { keyword: 'BT classic', label: 'Area: BT classic' },
-              { keyword: 'ESP-IDF related', label: 'Area: ESP-IDF related' },
+              { keyword: 'BT', label: 'Area: BT classic' },
+              { keyword: 'ESP-IDF', label: 'Area: ESP-IDF related' },
+              { keyword: 'IDF', label: 'Area: ESP-IDF related' },
               { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
+              { keyword: 'Library Builder', label: 'Area: Lib Builder' },
               { keyword: 'Libraries', label: 'Area: Libraries' },
               { keyword: 'Matter', label: 'Area: Matter' },
               { keyword: 'OpenThread', label: 'Area: OpenThread' },
+              { keyword: 'OT', label: 'Area: OpenThread' },
               { keyword: 'Performance', label: 'Area: Performance' },
-              { keyword: 'Peripherals API', label: 'Area: Peripherals API' },
-              { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
+              { keyword: 'Peripheral', label: 'Area: Peripherals API' },
+              { keyword: 'Tools', label: 'Area: Tools & Build System' },
               { keyword: 'WiFi', label: 'Area: WiFi' },
+              { keyword: 'Wi-Fi', label: 'Area: WiFi' },
               { keyword: 'Zigbee', label: 'Area: Zigbee' },
+              { keyword: 'ZB', label: 'Area: Zigbee' },
               { keyword: 'USB', label: 'Area: USB' },
-              { keyword: 'CI Failure Expected', label: 'CI Failure Expected' },
-              { keyword: 'dependencies', label: 'dependencies' },
-              { keyword: 'hil_test', label: 'hil_test' },
+              { keyword: 'CI', label: 'CI Failure Expected' },
               { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
               { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
-              { keyword: 'lib_test', label: 'lib_test' },
-              { keyword: 'Peripheral: UART', label: 'Peripheral: UART' },
-              { keyword: 'Type: Chip support', label: 'Type: Chip support' },
-              { keyword: 'System PR', label: '\u{1F6AB} System PR' }
+              { keyword: 'UART', label: 'Peripheral: UART' },
+              { keyword: 'Chip support', label: 'Type: Chip support' }
             ];
             const text = title + '\n' + body;
             const textLower = text.toLowerCase();
