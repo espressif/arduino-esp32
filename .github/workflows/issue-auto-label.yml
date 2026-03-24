@@ -53,15 +53,15 @@ jobs:
               { keyword: 'Performance', label: 'Area: Performance' },
               { keyword: 'Peripheral', label: 'Area: Peripherals API' },
               { keyword: 'Tools', label: 'Area: Tools & Build System' },
+              { keyword: 'UART', label: 'Area: UART' },
+              { keyword: 'USB', label: 'Area: USB' },
               { keyword: 'WiFi', label: 'Area: WiFi' },
               { keyword: 'Wi-Fi', label: 'Area: WiFi' },
               { keyword: 'Zigbee', label: 'Area: Zigbee' },
               { keyword: 'ZB', label: 'Area: Zigbee' },
-              { keyword: 'USB', label: 'Area: USB' },
-              { keyword: 'CI', label: 'CI Failure Expected' },
+              { keyword: 'CI', label: 'Type: CI & Testing' },
               { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
               { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
-              { keyword: 'UART', label: 'Peripheral: UART' },
               { keyword: 'Chip support', label: 'Type: Chip support' }
             ];
             const text = title + '\n' + body;
@@ -117,6 +117,7 @@ jobs:
               'Area: BLE': ['lucasssvaz'],
               'Area: Matter': ['SuGlider'],
               'Area: OpenThread': ['SuGlider'],
+              'Area: UART': ['SuGlider'],
               'Area: USB': ['me-no-dev'],
               'Area: WiFi': ['me-no-dev'],
               'Area: Zigbee': ['P-R-O-C-H-Y']
