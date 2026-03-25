@@ -93,7 +93,6 @@ set(ARDUINO_ALL_LIBRARIES
   EEPROM
   ESP_I2S
   ESP_NOW
-  ESP_SR
   ESP_HostedOTA
   ESPmDNS
   Ethernet
@@ -102,15 +101,12 @@ set(ARDUINO_ALL_LIBRARIES
   Hash
   HTTPClient
   HTTPUpdate
-  Insights
   LittleFS
-  Matter
   NetBIOS
   Network
   OpenThread
   PPP
   Preferences
-  RainMaker
   SD_MMC
   SD
   SimpleBLE
@@ -150,10 +146,6 @@ set(ARDUINO_LIBRARY_ESP_NOW_SRCS
   libraries/ESP_NOW/src/ESP32_NOW.cpp
   libraries/ESP_NOW/src/ESP32_NOW_Serial.cpp)
 
-set(ARDUINO_LIBRARY_ESP_SR_SRCS
-  libraries/ESP_SR/src/ESP_SR.cpp
-  libraries/ESP_SR/src/esp32-hal-sr.c)
-
 set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
   libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
 
@@ -178,8 +170,6 @@ set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
 
 set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 
-set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
-
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
@@ -189,43 +179,9 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
-set(ARDUINO_LIBRARY_Matter_SRCS
-  libraries/Matter/src/MatterEndpoints/MatterGenericSwitch.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmableLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorTemperatureLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterFan.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureControlledCabinet.cpp
-  libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterLeakDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterFreezeDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterRainSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
-  libraries/Matter/src/Matter.cpp
-  libraries/Matter/src/MatterEndPoint.cpp)
-
 set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
-
-set(ARDUINO_LIBRARY_RainMaker_SRCS
-  libraries/RainMaker/src/RMaker.cpp
-  libraries/RainMaker/src/RMakerNode.cpp
-  libraries/RainMaker/src/RMakerParam.cpp
-  libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
-  libraries/RainMaker/src/RMakerQR.cpp
-  libraries/RainMaker/src/RMakerUtils.cpp
-  libraries/RainMaker/src/AppInsights.cpp)
 
 set(ARDUINO_LIBRARY_SD_MMC_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
 
@@ -496,15 +452,6 @@ endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
 endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_SR)
-    maybe_add_component(espressif__esp_sr)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_Matter)
-    maybe_add_component(espressif__esp_matter)
-endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LittleFS)
     maybe_add_component(joltwallet__littlefs)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
-    maybe_add_component(espressif__network_provisioning)
 endif()
