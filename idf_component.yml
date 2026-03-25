@@ -55,6 +55,7 @@ dependencies:
     require: public
   espressif/cjson:
     version: "^1.7.19"
+    require: public
   espressif/usb:
     version: "master"
     git: https://github.com/espressif/esp-usb.git
