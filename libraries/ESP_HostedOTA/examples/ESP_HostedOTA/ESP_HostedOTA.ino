@@ -11,6 +11,7 @@
  * - Valid WiFi credentials
  */
 
+#include <Arduino.h>
 #include "WiFi.h"           // WiFi library for network connectivity
 #include "ESP_HostedOTA.h"  // ESP-Hosted OTA update functionality
 

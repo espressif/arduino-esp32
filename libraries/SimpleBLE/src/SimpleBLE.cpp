@@ -20,6 +20,10 @@
 #include "SimpleBLE.h"
 #include "esp32-hal-log.h"
 
+#if defined(ARDUINO_ARCH_ESP32)
+#include "esp32-hal-bt-mem.h"
+#endif
+
 #if defined(SOC_BLE_SUPPORTED)
 #include "esp_bt.h"
 #endif

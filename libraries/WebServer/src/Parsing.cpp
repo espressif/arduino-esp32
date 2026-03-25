@@ -407,7 +407,7 @@ int WebServer::_uploadReadByte(NetworkClient &client) {
 
 bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32_t len) {
   (void)len;
-  log_v("Parse Form: Boundary: %s Length: %u", boundary.c_str(), len);
+  log_v("Parse Form: Boundary: %s Length: %" PRIu32, boundary.c_str(), len);
   String line;
   int retry = 0;
   do {
@@ -485,7 +485,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
               log_v("Done Parsing POST");
               break;
             } else if (_postArgsLen >= WEBSERVER_MAX_POST_ARGS) {
-              log_e("Too many PostArgs (max: %d) in request.", WEBSERVER_MAX_POST_ARGS);
+              log_e("Too many PostArgs (max: %u) in request.", WEBSERVER_MAX_POST_ARGS);
               return false;
             }
           } else {
@@ -544,7 +544,7 @@ bool WebServer::_parseForm(NetworkClient &client, const String &boundary, uint32
             if (_currentHandler && _currentHandler->canUpload(*this, _currentUri)) {
               _currentHandler->upload(*this, _currentUri, *_currentUpload);
             }
-            log_v("End File: %s Type: %s Size: %d", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), (int)_currentUpload->totalSize);
+            log_v("End File: %s Type: %s Size: %lu", _currentUpload->filename.c_str(), _currentUpload->type.c_str(), (unsigned long)_currentUpload->totalSize);
             if (!client.connected()) {
               return _parseFormUploadAborted();
             }

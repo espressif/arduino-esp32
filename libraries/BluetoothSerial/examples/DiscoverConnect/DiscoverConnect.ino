@@ -15,6 +15,7 @@
  * use ESP_SPP_SEC_NONE or ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE in connect() if remote side has Authentication: False
  */
 
+#include <Arduino.h>
 #include <map>
 #include <BluetoothSerial.h>
 
@@ -63,7 +64,7 @@ void setup() {
         BTAdvertisedDevice *device = btDeviceList->getDevice(i);
         Serial.printf(" ----- %s  %s %d\n", device->getAddress().toString().c_str(), device->getName().c_str(), device->getRSSI());
         std::map<int, std::string> channels = SerialBT.getChannels(device->getAddress());
-        Serial.printf("scanned for services, found %d\n", channels.size());
+        Serial.printf("scanned for services, found %lu\n", (unsigned long)channels.size());
         for (auto const &entry : channels) {
           Serial.printf("     channel %d (%s)\n", entry.first, entry.second.c_str());
         }

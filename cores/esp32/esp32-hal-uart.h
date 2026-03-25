@@ -121,13 +121,17 @@ void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
 
 /*
-    These functions are for testing puspose only and can be used in Arduino Sketches
+    These functions are for testing purposes only and can be used in Arduino Sketches
     Those are used in the UART examples
 */
 
 // Make sure UART's RX signal is connected to TX pin
 // This creates a loop that lets us receive anything we send on the UART
 void uart_internal_loopback(uint8_t uartNum, int8_t rxPin);
+
+// Make sure UART's RTS signal is connected to CTS pin
+// This creates an RTS-CTS connection for testing hardware flow control on the selected UART
+void uart_internal_hw_flow_ctrl_loopback(uint8_t uartNum, int8_t ctsPin);
 
 // Routines that generate BREAK in the UART for testing purpose
 

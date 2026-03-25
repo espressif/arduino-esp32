@@ -116,6 +116,33 @@ Sets the brightness level of bound lights.
 * ``short_addr`` - Target device short address (optional)
 * ``ieee_addr`` - Target device IEEE address (optional)
 
+setLightLevelStep
+^^^^^^^^^^^^^^^^^
+
+Sends a level step command to bound lights: changes the current level by a fixed step size in the given direction.
+
+.. code-block:: arduino
+
+    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time);
+    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint16_t group_addr);
+    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr);
+    void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+
+* ``direction`` - ``ZIGBEE_LEVEL_STEP_UP`` (0) or ``ZIGBEE_LEVEL_STEP_DOWN`` (1)
+* ``step_size`` - Number of level units to step (e.g. 1–254; one step = one unit change in CurrentLevel)
+* ``transition_time`` - Time to perform the step, in tenths of a second (see below)
+
+**Transition time (ZCL Step command):**
+
+* Transition time is in tenths of a second (1 unit = 100 ms). It is the time the device should take to perform the step. A step is a change in CurrentLevel of ``step_size`` units.
+* The device should take as close to this time as it is able. If the device cannot move at a variable rate, it may disregard the transition time and move at a fixed rate.
+* Use **0xFFFF** (65535) to request the device to move **as fast as it is able** (no specific duration).
+
+**Examples:**
+
+* Step level up by 10 units over 1 second: ``setLightLevelStep(ZIGBEE_LEVEL_STEP_UP, 10, 10);``
+* Step level down by 5 units as fast as possible: ``setLightLevelStep(ZIGBEE_LEVEL_STEP_DOWN, 5, 0xFFFF);``
+
 Color Control Commands
 **********************
 

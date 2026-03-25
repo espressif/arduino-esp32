@@ -216,6 +216,7 @@ public:
   void send(int code, char *content_type, const String &content);
   void send(int code, const String &content_type, const String &content);
   void send(int code, const char *content_type, const char *content);
+  void send(int code, const char *content_type, Stream &stream, size_t content_length = 0);
 
   void send_P(int code, PGM_P content_type, PGM_P content);
   void send_P(int code, PGM_P content_type, PGM_P content, size_t contentLength);

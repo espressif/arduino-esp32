@@ -3,6 +3,7 @@
 #warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
 #else
 
+#include "Arduino.h"
 #include "ESP32_NOW.h"
 #include <string.h>
 #include "esp_system.h"
@@ -207,7 +208,7 @@ bool ESP_NOW_Class::begin(const uint8_t *pmk) {
   }
 
   version = esp_now_version;
-  log_i("ESP-NOW version: %lu, max_data_len: %lu", version, max_data_len);
+  log_i("ESP-NOW version: %" PRIu32 ", max_data_len: %lu", (unsigned long)version, max_data_len);
 
   _esp_now_has_begun = true;
 

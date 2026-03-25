@@ -175,10 +175,6 @@ def authenticate(
         # The password can be hashed with either MD5 or SHA256
         if use_md5_password:
             # Use MD5 for password hash (for devices that stored MD5 hashes)
-            logging.warning(
-                "Using insecure MD5 hash for password due to legacy device support. "
-                "Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security."
-            )
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
             # Use SHA256 for password hash (recommended)
@@ -272,6 +268,7 @@ def serve(  # noqa: C901
                 if not auth_success:
                     sys.stderr.write("FAIL\n")
                     logging.error("Authentication Failed: %s", auth_error)
+                    logging.error("Please check your password and try again")
                     return 1
 
                 sys.stderr.write("OK\n")
@@ -300,9 +297,13 @@ def serve(  # noqa: C901
                         file_md5=file_md5,
                         nonce=nonce,
                     )
+
+                    if auth_success:
+                        logging.warning("Using insecure MD5 hash for password due to legacy device support")
+                        logging.warning("Please upgrade devices to ESP32 Arduino Core 3.3.1+ for improved security")
                 else:
                     # Try SHA256 password hash first
-                    sys.stderr.write("Authenticating...")
+                    sys.stderr.write("Authenticating (PBKDF2-HMAC-SHA256)...\n")
                     sys.stderr.flush()
                     auth_success, auth_error = authenticate(
                         remote_addr,
@@ -318,8 +319,9 @@ def serve(  # noqa: C901
 
                     # Scenario 3: If SHA256 fails, try MD5 password hash (for devices with stored MD5 passwords)
                     if not auth_success:
+                        sys.stderr.write("FAIL\n")
                         logging.info("SHA256 password failed, trying MD5 password hash")
-                        sys.stderr.write("Retrying with MD5 password...")
+                        sys.stderr.write("Retrying with MD5 password...\n")
                         sys.stderr.flush()
 
                         # Device is back in OTA_IDLE after auth failure, need to send new invitation
@@ -336,6 +338,9 @@ def serve(  # noqa: C901
 
                         # Get new nonce for second attempt
                         nonce = data.split()[1]
+
+                        sys.stderr.write("Authenticating (MD5)...\n")
+                        sys.stderr.flush()
 
                         auth_success, auth_error = authenticate(
                             remote_addr,
@@ -364,6 +369,7 @@ def serve(  # noqa: C901
                 if not auth_success:
                     sys.stderr.write("FAIL\n")
                     logging.error("Authentication Failed: %s", auth_error)
+                    logging.error("Please check your password and try again")
                     return 1
 
                 sys.stderr.write("OK\n")

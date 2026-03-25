@@ -25,6 +25,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee coordinator/router mode is not selected in Tools->Zigbee mode"
 #endif
@@ -48,7 +49,7 @@ ZigbeeRangeExtender zbExtender = ZigbeeRangeExtender(ZIGBEE_EXTENDER_ENDPOINT);
 // Create a task on identify call to handle the identify function
 void identify(uint16_t time) {
   static uint8_t blink = 1;
-  log_d("Identify called for %d seconds", time);
+  log_d("Identify called for %u seconds", time);
   if (time == 0) {
     digitalWrite(led, LOW);
     return;

@@ -194,10 +194,10 @@ bool touchBenchmarkThreshold(uint8_t pad) {
   for (int i = 0; i < _sample_num; i++) {
 #if SOC_TOUCH_SENSOR_VERSION == 1  // ESP32
     chan_cfg.abs_active_thresh[i] = (uint32_t)(benchmark[i] * (1 - s_thresh2bm_ratio));
-    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.abs_active_thresh[i]);
+    log_v("Configured [CH %u] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.abs_active_thresh[i]);
 #else
     chan_cfg.active_thresh[i] = (uint32_t)(benchmark[i] * s_thresh2bm_ratio);
-    log_v("Configured [CH %d] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
+    log_v("Configured [CH %u] sample %d: benchmark = %" PRIu32 ", threshold = %" PRIu32 "\t", pad, i, benchmark[i], chan_cfg.active_thresh[i]);
 #endif
   }
   /* Update the channel configuration */
@@ -466,7 +466,7 @@ void touchSleepWakeUpEnable(uint8_t pin, touch_value_t threshold) {
     }
   }
 
-  log_v("Touch sensor deep sleep wake-up configuration for pad %d with threshold %d", pad, threshold);
+  log_v("Touch sensor deep sleep wake-up configuration for pad %d with threshold %" PRIu32, pad, threshold);
   if (!touchStop() || !touchDisable()) {
     log_e("Touch sensor stop and disable failed!");
     return;

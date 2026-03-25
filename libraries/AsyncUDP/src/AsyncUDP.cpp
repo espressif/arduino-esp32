@@ -15,6 +15,8 @@ extern "C" {
 
 #include "lwip/priv/tcpip_priv.h"
 
+#define CONFIG_UDP_MSS 1460
+
 #ifndef CONFIG_ARDUINO_UDP_TASK_STACK_SIZE
 #define CONFIG_ARDUINO_UDP_TASK_STACK_SIZE 4096
 #endif
@@ -273,8 +275,8 @@ static bool _udp_task_stop(){
 
 AsyncUDPMessage::AsyncUDPMessage(size_t size) {
   _index = 0;
-  if (size > CONFIG_TCP_MSS) {
-    size = CONFIG_TCP_MSS;
+  if (size > CONFIG_UDP_MSS) {
+    size = CONFIG_UDP_MSS;
   }
   _size = size;
   _buffer = (uint8_t *)malloc(size);
@@ -764,8 +766,8 @@ size_t AsyncUDP::writeTo(const uint8_t *data, size_t len, const ip_addr_t *addr,
       return 0;
     }
   }
-  if (len > CONFIG_TCP_MSS) {
-    len = CONFIG_TCP_MSS;
+  if (len > CONFIG_UDP_MSS) {
+    len = CONFIG_UDP_MSS;
   }
   _lastErr = ERR_OK;
   pbuf *pbt = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);

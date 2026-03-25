@@ -31,6 +31,12 @@ typedef enum {
   BT_MODE_BTDM
 } bt_mode;
 
+// Returns true if BT memory should be kept, false to release it (~36KB).
+// Default (weak): returns false unless a BT library is linked.
+// BT libraries include esp32-hal-bt-mem.h which automatically sets a flag.
+// Users may also provide their own strong btInUse() to override.
+bool btInUse(void);
+
 bool btStarted();
 bool btStart();
 bool btStartMode(bt_mode mode);

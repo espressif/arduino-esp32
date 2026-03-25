@@ -8,9 +8,12 @@ permissions:
   contents: write
   pages: write
 
+env:
+  ENABLE_S3: false # Set to true to upload libs to S3 rather than GitHub releases
+
 jobs:
   build:
-    name: Publish Release
+    name: Build Release Package
     runs-on: ubuntu-latest
 
     steps:
@@ -26,14 +29,22 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install packaging
-        run: pip install packaging
+      - name: Install dependencies
+        run: pip install packaging pyserial
 
-      - name: Install pyserial
-        run: pip install pyserial
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        if: ${{ env.ENABLE_S3 == 'true' && vars.S3_BUCKET_NAME != '' && vars.S3_BUCKET_REGION != '' }}
+        with:
+          aws-access-key-id: ${{ secrets.S3_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.S3_BUCKET_REGION }}
 
       - name: Build Release
         env:
+          ENABLE_S3: ${{ env.ENABLE_S3 }}
+          S3_BUCKET_NAME: ${{ vars.S3_BUCKET_NAME }}
+          S3_BUCKET_REGION: ${{ vars.S3_BUCKET_REGION }}
           GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
         run: bash ./.github/scripts/on-release.sh
 
@@ -43,6 +54,75 @@ jobs:
           name: hosted
           if-no-files-found: ignore
           path: ${{ github.workspace }}/hosted
+
+      - name: Upload build JSONs for testing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: build-output
+          path: ${{ github.workspace }}/build
+          if-no-files-found: error
+
+  test-package:
+    name: Test Package on ${{ matrix.os }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ github.event.release.target_commitish }}
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        with:
+          python-version: "3.x"
+
+      - name: Install pyserial
+        run: pip install pyserial
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: build-output
+          path: ${{ github.workspace }}/build
+
+      - name: Test package installation
+        env:
+          RELEASE_PRE: ${{ github.event.release.prerelease }}
+        run: bash ./.github/scripts/test-package-json.sh
+
+  upload-and-finalize:
+    name: Upload Package JSONs and Finalize Release
+    needs: [build, test-package]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          token: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          ref: ${{ github.event.release.target_commitish }}
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: build-output
+          path: ${{ github.workspace }}/build
+
+      - name: Upload package JSONs to release and GitHub Pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOOLS_UPLOAD_PAT }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_PRE: ${{ github.event.release.prerelease }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: bash ./.github/scripts/upload-release-assets.sh
 
   upload-hosted-binaries:
     name: Upload hosted binaries

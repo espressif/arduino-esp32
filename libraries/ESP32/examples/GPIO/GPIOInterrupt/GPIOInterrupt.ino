@@ -30,11 +30,11 @@ void setup() {
 
 void loop() {
   if (button1.pressed) {
-    Serial.printf("Button 1 has been pressed %lu times\n", button1.numberKeyPresses);
+    Serial.printf("Button 1 has been pressed %" PRIu32 " times\n", button1.numberKeyPresses);
     button1.pressed = false;
   }
   if (button2.pressed) {
-    Serial.printf("Button 2 has been pressed %lu times\n", button2.numberKeyPresses);
+    Serial.printf("Button 2 has been pressed %" PRIu32 " times\n", button2.numberKeyPresses);
     button2.pressed = false;
   }
   static uint32_t lastMillis = 0;

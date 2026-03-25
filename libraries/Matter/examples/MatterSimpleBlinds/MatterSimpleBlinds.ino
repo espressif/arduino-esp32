@@ -15,6 +15,7 @@
 // Matter Simple Blinds Example
 // This is a minimal example that only controls Lift percentage using a single onGoToLiftPercentage() callback
 
+#include <Arduino.h>
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space
@@ -35,7 +36,7 @@ const char *password = "your-password";  // Change this to your WiFi password
 // Simple callback - handles window Lift change request
 bool onBlindsLift(uint8_t liftPercent) {
   // This example only uses lift
-  Serial.printf("Window Covering change request: Lift=%d%%\r\n", liftPercent);
+  Serial.printf("Window Covering change request: Lift=%u%%\r\n", liftPercent);
 
   // Returning true will store the new Lift value into the Matter Cluster
   return true;

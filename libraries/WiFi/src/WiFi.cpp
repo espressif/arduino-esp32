@@ -67,7 +67,8 @@ void WiFiClass::printDiag(Print &p) {
         p.println(wifi_station_get_connect_status());
     */
 
-  wifi_config_t conf = {0};
+  wifi_config_t conf;
+  memset(&conf, 0, sizeof(wifi_config_t));
   esp_wifi_get_config((wifi_interface_t)WIFI_IF_STA, &conf);
 
   const char *ssid = reinterpret_cast<const char *>(conf.sta.ssid);

@@ -38,16 +38,16 @@ def test_psramspeed(dut, request):
         for j in range(2):
             while True:
                 # Match "Memcpy/Memtest %d Bytes test"
-                res = dut.expect(r"(Memcpy|Memset) (\d+) Bytes test", timeout=60)
+                res = dut.expect(r"(Memcpy|Memset) (\d+) Bytes test", timeout=120)
                 current_test = res.group(0).decode("utf-8").split(" ")[0].lower()
                 current_test_size = int(res.group(0).decode("utf-8").split(" ")[1])
                 LOGGER.info("Current {} test size: {}".format(current_test, current_test_size))
                 assert current_test_size > 0, "Invalid test size"
 
                 for k in range(2):
-                    # Match "System/Mock memcpy/memtest(): Rate = %d KB/s Time: %d ms" or "Error: %s"
+                    # Match "System/Mock memcpy/memtest(): Rate = %d KiB/s Time: %d us" or "Error: %s"
                     res = dut.expect(
-                        r"((System|Mock) (memcpy|memset)\(\): Rate = (\d+) KB/s Time: (\d+) ms|^Error)", timeout=90
+                        r"((System|Mock) (memcpy|memset)\(\): Rate = (\d+) KiB/s Time: (\d+) us|^Error)", timeout=180
                     )
                     implementation = res.group(0).decode("utf-8").split(" ")[0].lower()
                     assert implementation != "error:", "Error detected in test output"
@@ -57,7 +57,7 @@ def test_psramspeed(dut, request):
                     assert rate > 0, "Invalid rate"
                     assert time > 0, "Invalid time"
                     assert test_type == current_test, "Missing test output"
-                    LOGGER.info("{} {}: Rate = {} KB/s. Time = {} ms".format(implementation, test_type, rate, time))
+                    LOGGER.info("{} {}: Rate = {} KiB/s. Time = {} us".format(implementation, test_type, rate, time))
 
                     runs_results.append(((current_test, str(current_test_size), implementation), (rate, time)))
 
@@ -78,7 +78,7 @@ def test_psramspeed(dut, request):
         rate_avg = round(sums[(test, size, impl)]["rate_sum"] / runs, 2)
         time_avg = round(sums[(test, size, impl)]["time_sum"] / runs, 2)
         LOGGER.info(
-            "Test: {}-{}-{}: Average rate = {} KB/s. Average time = {} ms".format(test, size, impl, rate_avg, time_avg)
+            "Test: {}-{}-{}: Average rate = {} KiB/s. Average time = {} us".format(test, size, impl, rate_avg, time_avg)
         )
         if test not in avg_results:
             avg_results[test] = {}
@@ -86,10 +86,32 @@ def test_psramspeed(dut, request):
             avg_results[test][size] = {}
         avg_results[test][size][impl] = {"avg_rate": rate_avg, "avg_time": time_avg}
 
-    # Create JSON with results and write it to file
-    # Always create a JSON with this format (so it can be merged later on):
-    # { TEST_NAME_STR: TEST_RESULTS_DICT }
-    results = {"psramspeed": {"runs": runs, "copies": copies, "max_test_size": max_test_size, "results": avg_results}}
+    # Flatten to canonical metrics list (see .github/CI_README.md)
+    metrics = []
+    for test in sorted(avg_results):
+        for size in sorted(avg_results[test], key=int):
+            for impl in sorted(avg_results[test][size]):
+                v = avg_results[test][size][impl]
+                metrics.append(
+                    {
+                        "name": "{}_{}_{}_avg_rate".format(test, size, impl),
+                        "value": v["avg_rate"],
+                        "unit": "KiB/s",
+                    }
+                )
+                metrics.append(
+                    {
+                        "name": "{}_{}_{}_avg_time".format(test, size, impl),
+                        "value": v["avg_time"],
+                        "unit": "us",
+                    }
+                )
+    results = {
+        "test_name": "psramspeed",
+        "runs": runs,
+        "settings": "copies={},max_test_size={}".format(copies, max_test_size),
+        "metrics": metrics,
+    }
 
     current_folder = os.path.dirname(request.path)
     os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Matter Manager
+#include <Arduino.h>
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space
@@ -117,7 +118,7 @@ void setup() {
     return true;
   });
   DimmableLight.onChangeBrightness([](uint8_t level) {
-    Serial.printf("Light Brightness changed to %d\r\n", level);
+    Serial.printf("Light Brightness changed to %u\r\n", level);
     return true;
   });
 
@@ -126,7 +127,7 @@ void setup() {
   // This may be a restart of a already commissioned Matter accessory
   if (Matter.isDeviceCommissioned()) {
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");
-    Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
+    Serial.printf("Initial state: %s | brightness: %u\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
     // configure the Light based on initial on-off state and brightness
     DimmableLight.updateAccessory();
   }
@@ -149,7 +150,7 @@ void loop() {
         Serial.println("Matter Node not commissioned yet. Waiting for commissioning.");
       }
     }
-    Serial.printf("Initial state: %s | brightness: %d\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
+    Serial.printf("Initial state: %s | brightness: %u\r\n", DimmableLight ? "ON" : "OFF", DimmableLight.getBrightness());
     // configure the Light based on initial on-off state and brightness
     DimmableLight.updateAccessory();
     Serial.println("Matter Node is commissioned and connected to the network. Ready for use.");

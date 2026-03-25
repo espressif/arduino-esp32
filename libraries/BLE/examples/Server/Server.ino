@@ -4,6 +4,7 @@
     updates by chegewara
 */
 
+#include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -18,7 +19,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Starting BLE work!");
 
-  BLEDevice::init("Long name works now");
+  if (!BLEDevice::init("BLE Server Example")) {
+    Serial.println("BLE initialization failed!");
+    return;
+  }
+
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
   BLECharacteristic *pCharacteristic =

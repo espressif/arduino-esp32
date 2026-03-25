@@ -46,7 +46,7 @@ static const uint8_t RGB_BUILTIN = SOC_GPIO_PIN_COUNT + PIN_RGB_LED;
 #define RGB_BRIGHTNESS 32  // default brightness level (0-255)
 
 // Define the color order for the built-in RGB LED
-#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_RGB  // default WS2812B color order
+#define RGB_BUILTIN_LED_COLOR_ORDER LED_COLOR_ORDER_RGB
 
 // Define the built-in as LED pin (RGB LED) to use with digitalWrite()
 static const uint8_t LED_BUILTIN = RGB_BUILTIN;

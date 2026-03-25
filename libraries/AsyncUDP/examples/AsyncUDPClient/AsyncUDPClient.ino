@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "WiFi.h"
 #include "AsyncUDP.h"
 
@@ -35,7 +36,7 @@ void setup() {
       Serial.write(packet.data(), packet.length());
       Serial.println();
       //reply to the client
-      packet.printf("Got %u bytes of data", packet.length());
+      packet.printf("Got %lu bytes of data", (unsigned long)packet.length());
     });
     //Send unicast
     udp.print("Hello Server!");

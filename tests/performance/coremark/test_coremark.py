@@ -39,10 +39,13 @@ def test_coremark(dut, request):
     LOGGER.info("Average CoreMark score: {}".format(avg_score))
     assert avg_score > 0 and avg_score < 10000, "Impossible CoreMark score"
 
-    # Create JSON with results and write it to file
-    # Always create a JSON with this format (so it can be merged later on):
-    # { TEST_NAME_STR: TEST_RESULTS_DICT }
-    results = {"coremark": {"runs": runs, "cores": cores, "avg_score": avg_score}}
+    # Canonical performance result format (see .github/CI_README.md)
+    results = {
+        "test_name": "coremark",
+        "runs": runs,
+        "settings": "cores={}".format(cores),
+        "metrics": [{"name": "avg_score", "value": avg_score}],
+    }
 
     current_folder = os.path.dirname(request.path)
     os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)

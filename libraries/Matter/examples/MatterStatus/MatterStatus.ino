@@ -16,6 +16,7 @@
 // This example demonstrates how to check enabled Matter features and connectivity status
 // It implements a basic on/off light and reports capability and connection status
 
+#include <Arduino.h>
 #include <Matter.h>
 // CONFIG_ENABLE_CHIPOBLE is enabled when BLE is used to commission the Matter Network
 #if !CONFIG_ENABLE_CHIPOBLE  // ESP32 and ESP32-S2 do not support BLE commissioning

@@ -101,6 +101,10 @@ public:
     _attach_us(micros, false, reinterpret_cast<callback_with_arg_t>(callback), reinterpret_cast<void *>(arg));
   }
 
+  void restart(float seconds);
+  void restart_ms(uint64_t milliseconds);
+  void restart_us(uint64_t micros);
+
   void detach();
   bool active() const;
 

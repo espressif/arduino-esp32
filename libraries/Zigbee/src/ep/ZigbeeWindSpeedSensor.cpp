@@ -116,7 +116,7 @@ bool ZigbeeWindSpeedSensor::setWindSpeed(float windspeed) {
   uint16_t zb_windspeed = zb_windspeed_to_u16(windspeed);
   log_v("Updating windspeed sensor value...");
   /* Update windspeed sensor measured value */
-  log_d("Setting windspeed to %d", zb_windspeed);
+  log_d("Setting windspeed to %u", zb_windspeed);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_ID,
@@ -138,7 +138,8 @@ bool ZigbeeWindSpeedSensor::reportWindSpeed() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_WIND_SPEED_MEASUREMENT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);

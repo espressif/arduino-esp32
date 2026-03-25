@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEServer.cpp
  *
  *  Created on: Apr 16, 2017
@@ -21,6 +40,7 @@
 #if SOC_BLE_SUPPORTED
 #include <esp_bt.h>
 #endif
+#include "Arduino.h"
 #include "GeneralUtils.h"
 #include "BLEDevice.h"
 #include "BLEServer.h"
@@ -37,6 +57,7 @@
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #include <esp_bt_main.h>
+#include "BLE2902.h"
 #endif
 
 /***************************************************************************
@@ -188,6 +209,17 @@ void BLEServer::start() {
     return;
   }
 
+  // Re-set the device name after ble_gatts_start() because ble_svc_gap_init()
+  // (called in createServer) resets it to the default "nimble" from sdkconfig.
+  // The GAP service device name must be set after the GATT server is started.
+  String deviceName = BLEDevice::getDeviceName();
+  if (deviceName.length() > 0) {
+    rc = ble_svc_gap_device_name_set(deviceName.c_str());
+    if (rc != 0) {
+      log_e("ble_svc_gap_device_name_set: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+    }
+  }
+
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
   ble_gatts_show_local();
 #endif
@@ -215,6 +247,18 @@ void BLEServer::start() {
 #endif
 
   m_gattsStarted = true;
+}
+
+/**
+ * @brief Check if the GATT server has been started.
+ *
+ * This method indicates whether the GATT server is ready to handle
+ * operations like notifications and indications.
+ *
+ * @return true if the server is started and ready, false otherwise.
+ */
+bool BLEServer::isStarted() {
+  return m_gattsStarted;
 }
 
 /**
@@ -350,20 +394,74 @@ bool BLEServer::connect(BLEAddress address) {
 }  // connect
 
 /**
- * Update connection parameters can be called only after connection has been established
+ * @brief Request an update to the connection parameters.
+ *
+ * As the BLE Peripheral (server), this device can request connection parameter
+ * changes from the central. However, the central (client) makes the final decision
+ * and may accept, reject, or negotiate different parameters.
+ *
+ * Can only be called after a connection has been established.
+ *
+ * @param [in] remote_bda The Bluetooth device address of the peer.
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
  */
-void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+bool BLEServer::requestConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
   esp_ble_conn_update_params_t conn_params;
   memcpy(conn_params.bda, remote_bda, sizeof(esp_bd_addr_t));
   conn_params.latency = latency;
   conn_params.max_int = maxInterval;  // max_int = 0x20*1.25ms = 40ms
   conn_params.min_int = minInterval;  // min_int = 0x10*1.25ms = 20ms
   conn_params.timeout = timeout;      // timeout = 400*10ms = 4000ms
-  esp_ble_gap_update_conn_params(&conn_params);
+
+  esp_err_t errRc = esp_ble_gap_update_conn_params(&conn_params);
+  if (errRc != ESP_OK) {
+    log_e("esp_ble_gap_update_conn_params: rc=%d", errRc);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Request an update to the connection parameters.
+ * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
+ */
+void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  requestConnParams(remote_bda, minInterval, maxInterval, latency, timeout);
 }
 
 void BLEServer::disconnect(uint16_t connId) {
   esp_ble_gatts_close(m_gatts_if, connId);
+}
+
+/**
+ * @brief Handle a received GAP event for the server.
+ * @param [in] event The GAP event type.
+ * @param [in] param The GAP event parameter.
+ */
+void BLEServer::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
+  log_v(">> BLEServer::handleGAPEvent");
+
+  switch (event) {
+    case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
+    {
+      if (m_pServerCallbacks != nullptr) {
+        m_pServerCallbacks->onConnParamsUpdate(
+          param->update_conn_params.bda, param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout,
+          param->update_conn_params.status
+        );
+      }
+      break;
+    }
+    default: break;
+  }
+
+  log_v("<< BLEServer::handleGAPEvent");
 }
 
 uint16_t BLEServer::getGattsIf() {
@@ -408,6 +506,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_CONNECT_EVT:
     {
+      log_i("Client connected, conn_id=%u", param->connect.conn_id);
       m_connId = param->connect.conn_id;
       addPeerDevice((void *)this, false, m_connId);
       if (m_pServerCallbacks != nullptr) {
@@ -447,6 +546,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     // we also want to start advertising again.
     case ESP_GATTS_DISCONNECT_EVT:
     {
+      log_i("Client disconnected, conn_id=%u, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
       if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
         m_pServerCallbacks->onDisconnect(this);
         m_pServerCallbacks->onDisconnect(this, param);
@@ -496,6 +596,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
     //
     case ESP_GATTS_REG_EVT:
     {
+      log_i("GATT server registered, status=%d, app_id=%u, gatts_if=%u", param->reg.status, param->reg.app_id, gatts_if);
       m_gatts_if = gatts_if;
       m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
       break;
@@ -536,7 +637,7 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
  * @return N/A
  */
 void BLEServer::registerApp(uint16_t m_appId) {
-  log_v(">> registerApp - %d", m_appId);
+  log_v(">> registerApp - %u", m_appId);
   m_semaphoreRegisterAppEvt.take("registerApp");  // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
   ::esp_ble_gatts_app_register(m_appId);
   m_semaphoreRegisterAppEvt.wait("registerApp");
@@ -564,6 +665,55 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
+
+/**
+ * @brief Restore CCCD values for a bonded device from NVS.
+ *
+ * Iterates through all services and their characteristics, restoring any
+ * persisted CCCD values for the given peer address. This enables notifications
+ * and indications to work correctly after a bonded device reconnects.
+ *
+ * @param [in] peerAddress The address of the bonded peer device.
+ */
+void BLEServer::restoreCCCDValues(const BLEAddress &peerAddress) {
+  log_i("Restoring CCCD values for bonded device: %s", peerAddress.toString().c_str());
+
+  int restoredCount = 0;
+
+  // Iterate through all services
+  BLEService *pService = m_serviceMap.getFirst();
+  while (pService != nullptr) {
+    // Get the characteristic map from the service
+    BLECharacteristic *pChar = pService->m_characteristicMap.getFirst();
+    while (pChar != nullptr) {
+      // Check if this characteristic has a CCCD descriptor
+      BLEDescriptor *pDesc = pChar->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
+      if (pDesc != nullptr) {
+        BLE2902 *pCCCD = (BLE2902 *)pDesc;
+        uint16_t charHandle = pChar->getHandle();
+
+        // Try to restore the CCCD value from NVS
+        if (pCCCD->restoreValue(peerAddress, charHandle)) {
+          restoredCount++;
+          log_d("Restored CCCD for characteristic handle 0x%04x: notify=%d, indicate=%d", charHandle, pCCCD->getNotifications(), pCCCD->getIndications());
+        }
+      }
+      pChar = pService->m_characteristicMap.getNext();
+    }
+    pService = m_serviceMap.getNext();
+  }
+
+  log_i("Restored %d CCCD value(s) for peer %s", restoredCount, peerAddress.toString().c_str());
+}
+
+void BLEServerCallbacks::onConnParamsUpdate(esp_bd_addr_t remote_bda, uint16_t interval, uint16_t latency, uint16_t timeout, esp_bt_status_t status) {
+  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
+  log_d(
+    "BLEServerCallbacks", "Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d", interval, interval * 1.25, latency, timeout, timeout * 10,
+    status
+  );
+  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
+}  // onConnParamsUpdate
 
 #endif
 
@@ -695,7 +845,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_SUBSCRIBE:
     {
-      log_i("subscribe event; attr_handle=%d, subscribed: %s", event->subscribe.attr_handle, (event->subscribe.cur_notify ? "true" : "false"));
+      log_i("subscribe event; attr_handle=%u, subscribed: %s", event->subscribe.attr_handle, (event->subscribe.cur_notify ? "true" : "false"));
 
       for (auto &it : server->m_notifyChrVec) {
         if (it->getHandle() == event->subscribe.attr_handle) {
@@ -721,7 +871,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 
     case BLE_GAP_EVENT_MTU:
     {
-      log_i("mtu update event; conn_handle=%d mtu=%d", event->mtu.conn_handle, event->mtu.value);
+      log_i("mtu update event; conn_handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
       rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
       if (rc != 0) {
         return 0;
@@ -786,6 +936,14 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
     case BLE_GAP_EVENT_CONN_UPDATE:
     {
       log_d("Connection parameters updated.");
+      if (server->m_pServerCallbacks != nullptr) {
+        rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+        if (rc == 0) {
+          server->m_pServerCallbacks->onConnParamsUpdate(
+            event->conn_update.conn_handle, desc.conn_itvl, desc.conn_latency, desc.supervision_timeout, event->conn_update.status
+          );
+        }
+      }
       return 0;
     }  // BLE_GAP_EVENT_CONN_UPDATE
 
@@ -840,10 +998,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -857,7 +1015,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         // Check if the passkey on the peer device is correct
         log_d("BLE_SM_IOACT_NUMCMP");
 
-        log_d("Passkey on device's display: %d", event->passkey.params.numcmp);
+        log_d("Passkey on device's display: %06" PRIu32, event->passkey.params.numcmp);
         pkey.action = event->passkey.params.action;
 
         if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -900,10 +1058,10 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
         }
 
         if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
           log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
         } else {
-          log_i("Passkey: %d", pkey.passkey);
+          log_i("Passkey: %06" PRIu32, pkey.passkey);
         }
 
         rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
@@ -923,7 +1081,7 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
       log_d("BLE_GAP_EVENT_AUTHORIZE");
 
       log_i(
-        "Authorization request: conn_handle=%d attr_handle=%d is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
+        "Authorization request: conn_handle=%u attr_handle=%u is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
       );
 
       bool authorized = false;
@@ -955,15 +1113,24 @@ int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
 }
 
 /**
- * @brief Request an Update the connection parameters:
- * * Can only be used after a connection has been established.
+ * @brief Request an update to the connection parameters.
+ *
+ * As the BLE Peripheral (server), this device can request connection parameter
+ * changes from the central. However, the central (client) makes the final decision
+ * and may accept, reject, or negotiate different parameters.
+ *
+ * Can only be called after a connection has been established.
+ *
  * @param [in] conn_handle The connection handle of the peer to send the request to.
- * @param [in] minInterval The minimum connection interval in 1.25ms units.
- * @param [in] maxInterval The maximum connection interval in 1.25ms units.
- * @param [in] latency The number of packets allowed to skip (extends max interval).
- * @param [in] timeout The timeout time in 10ms units before disconnecting.
+ * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
+ * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
+ * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
+ *                     Higher values save power but increase response latency.
+ * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
+ *                     Must be > (1 + latency) * maxInterval * 2.
+ * @return True on success, false on failure.
  */
-void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+bool BLEServer::requestConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
   ble_gap_upd_params params;
 
   params.latency = latency;
@@ -975,8 +1142,18 @@ void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uin
 
   int rc = ble_gap_update_params(conn_handle, &params);
   if (rc != 0) {
-    log_e("Update params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
+    log_e("Request params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
+    return false;
   }
+  return true;
+}  // requestConnParams
+
+/**
+ * @brief Request an update to the connection parameters.
+ * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
+ */
+void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
+  requestConnParams(conn_handle, minInterval, maxInterval, latency, timeout);
 }  // updateConnParams
 
 bool BLEServer::setIndicateWait(uint16_t conn_handle) {
@@ -1044,6 +1221,15 @@ void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *des
   log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
   log_d("BLEServerCallbacks", "<< onMtuChanged()");
 }  // onMtuChanged
+
+void BLEServerCallbacks::onConnParamsUpdate(uint16_t conn_handle, uint16_t interval, uint16_t latency, uint16_t timeout, uint8_t status) {
+  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
+  log_d(
+    "BLEServerCallbacks", "Conn Handle: %d, Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d", conn_handle, interval, interval * 1.25,
+    latency, timeout, timeout * 10, status
+  );
+  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
+}  // onConnParamsUpdate
 
 #endif  // CONFIG_NIMBLE_ENABLED
 
