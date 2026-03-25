@@ -53,6 +53,8 @@ dependencies:
   espressif/mdns:
     version: "^1.2.3"
     require: public
+  espressif/cjson:
+    version: "^1.7.19"
   espressif/usb:
     version: "master"
     git: https://github.com/espressif/esp-usb.git
