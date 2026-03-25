@@ -391,11 +391,7 @@ set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota)
 set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
-if(IDF_VERSION_MAJOR LESS 6)
-  list(APPEND priv_requires usb)
-else()
-  list(APPEND requires esp_hal_uart esp_hal_ledc esp_hal_ana_conv esp_hal_gpio esp_hal_i2c esp_hal_gpspi esp_hal_timg esp_driver_i2c esp_driver_ledc esp_driver_dac esp_driver_sdm esp_driver_uart esp_driver_rmt esp_driver_tsens)
-endif()
+list(APPEND requires esp_hal_uart esp_hal_ledc esp_hal_ana_conv esp_hal_gpio esp_hal_i2c esp_hal_gpspi esp_hal_timg esp_driver_i2c esp_driver_ledc esp_driver_dac esp_driver_sdm esp_driver_uart esp_driver_rmt esp_driver_tsens)
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
