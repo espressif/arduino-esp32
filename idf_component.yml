@@ -53,6 +53,9 @@ dependencies:
   espressif/mdns:
     version: "^1.2.3"
     require: public
+  espressif/mqtt:
+    version: "^1.0.0"
+    require: public
   espressif/cjson:
     version: "^1.7.19"
     require: public
