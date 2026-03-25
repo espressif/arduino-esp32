@@ -12,8 +12,13 @@
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
 #include <lwip/netdb.h>
-#include <mbedtls/sha256.h>
 #include <mbedtls/oid.h>
+#include "mbedtls/version.h"
+#if MBEDTLS_VERSION_MAJOR >= 4
+#include <psa/crypto.h>
+#else
+#include <mbedtls/sha256.h>
+#endif
 #include <algorithm>
 #include <string>
 #include "ssl_client.h"
@@ -47,7 +52,9 @@ void ssl_init(sslclient_context *ssl_client) {
   memset(ssl_client, 0, sizeof(sslclient_context));
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
+#if MBEDTLS_VERSION_MAJOR < 4
   mbedtls_ctr_drbg_init(&ssl_client->drbg_ctx);
+#endif
   ssl_client->peek_buf = -1;
 }
 
@@ -167,6 +174,7 @@ int start_ssl_client(
   ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)), "TCP_NODELAY");
   ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)), "SO_KEEPALIVE");
 
+#if MBEDTLS_VERSION_MAJOR < 4
   log_v("Seeding the random number generator");
   mbedtls_entropy_init(&ssl_client->entropy_ctx);
 
@@ -174,6 +182,7 @@ int start_ssl_client(
   if (ret < 0) {
     return handle_error(ret);
   }
+#endif
 
   log_v("Setting up the SSL/TLS structure...");
 
@@ -277,10 +286,14 @@ int start_ssl_client(
     }
 
     log_v("Loading private key");
+#if MBEDTLS_VERSION_MAJOR >= 4
+    ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
+#else
     mbedtls_ctr_drbg_context ctr_drbg;
     mbedtls_ctr_drbg_init(&ctr_drbg);
     ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0, mbedtls_ctr_drbg_random, &ctr_drbg);
     mbedtls_ctr_drbg_free(&ctr_drbg);
+#endif
 
     if (ret != 0) {
       mbedtls_x509_crt_free(&ssl_client->client_cert);  // cert+key are free'd in pair
@@ -297,7 +310,9 @@ int start_ssl_client(
     return handle_error(ret);
   }
 
+#if MBEDTLS_VERSION_MAJOR < 4
   mbedtls_ssl_conf_rng(&ssl_client->ssl_conf, mbedtls_ctr_drbg_random, &ssl_client->drbg_ctx);
+#endif
 
   if ((ret = mbedtls_ssl_setup(&ssl_client->ssl_ctx, &ssl_client->ssl_conf)) != 0) {
     return handle_error(ret);
@@ -379,8 +394,10 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   // }
   mbedtls_ssl_free(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_free(&ssl_client->ssl_conf);
+#if MBEDTLS_VERSION_MAJOR < 4
   mbedtls_ctr_drbg_free(&ssl_client->drbg_ctx);
   mbedtls_entropy_free(&ssl_client->entropy_ctx);
+#endif
 
   // save only interesting fields
   int handshake_timeout = ssl_client->handshake_timeout;
@@ -597,11 +614,20 @@ bool get_peer_fingerprint(sslclient_context *ssl_client, uint8_t sha256[32]) {
     return false;
   };
 
+#if MBEDTLS_VERSION_MAJOR >= 4
+  size_t hash_len = 0;
+  psa_status_t status = psa_hash_compute(PSA_ALG_SHA_256, crt->raw.p, crt->raw.len, sha256, 32, &hash_len);
+  if (status != PSA_SUCCESS) {
+    log_d("SHA256 hash failed: %d", (int)status);
+    return false;
+  }
+#else
   mbedtls_sha256_context sha256_ctx;
   mbedtls_sha256_init(&sha256_ctx);
   mbedtls_sha256_starts(&sha256_ctx, false);
   mbedtls_sha256_update(&sha256_ctx, crt->raw.p, crt->raw.len);
   mbedtls_sha256_finish(&sha256_ctx, sha256);
+#endif
 
   return true;
 }

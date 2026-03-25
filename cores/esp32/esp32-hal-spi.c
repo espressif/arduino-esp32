@@ -47,6 +47,7 @@
 #include "soc/dport_reg.h"
 #include "esp32s3/rom/ets_sys.h"
 #include "esp32s3/rom/gpio.h"
+#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C2
 #include "esp32c2/rom/ets_sys.h"
 #include "esp32c2/rom/gpio.h"
@@ -774,11 +775,15 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #elif CONFIG_IDF_TARGET_ESP32S3
   if (spi_num == FSPI) {
-    periph_ll_reset(PERIPH_SPI2_MODULE);
-    periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+    }
   } else if (spi_num == HSPI) {
-    periph_ll_reset(PERIPH_SPI3_MODULE);
-    periph_ll_enable_clk_clear_rst(PERIPH_SPI3_MODULE);
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+    }
   }
 #elif CONFIG_IDF_TARGET_ESP32
   if (spi_num == HSPI) {
@@ -817,8 +822,10 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #pragma GCC diagnostic pop
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
-  periph_ll_reset(PERIPH_SPI2_MODULE);
-  periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+  PERIPH_RCC_ATOMIC() {
+    spi_ll_enable_bus_clock(SPI2_HOST, true);
+    spi_ll_reset_register(SPI2_HOST);
+  }
 #endif
 
   SPI_MUTEX_LOCK();

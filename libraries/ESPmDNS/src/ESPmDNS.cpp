@@ -132,16 +132,16 @@ void MDNSResponder::disableArduino() {
   }
 }
 
-void MDNSResponder::enableWorkstation(esp_interface_t interface) {
+void MDNSResponder::enableWorkstation(wifi_interface_t interface) {
   char winstance[21 + _hostname.length()];
   uint8_t mac[6];
 
   esp_mac_type_t mtype = ESP_MAC_ETH;
 #if SOC_WIFI_SUPPORTED
   switch (interface) {
-    case ESP_IF_WIFI_STA: mtype = ESP_MAC_WIFI_STA; break;
-    case ESP_IF_WIFI_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
-    default:              break;
+    case WIFI_IF_STA: mtype = ESP_MAC_WIFI_STA; break;
+    case WIFI_IF_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
+    default:          break;
   }
 #endif
   if (esp_read_mac(mac, mtype) != ESP_OK) {

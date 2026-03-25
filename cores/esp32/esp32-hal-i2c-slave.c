@@ -26,7 +26,9 @@
 
 #include "sdkconfig.h"
 #include "esp_attr.h"
+#include "esp_idf_version.h"
 #include "rom/gpio.h"
+#include "esp_rom_gpio.h"
 #include "soc/gpio_sig_map.h"
 #include "hal/gpio_types.h"
 #include "driver/gpio.h"
@@ -330,12 +332,9 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   frequency = (frequency * 5) / 4;
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
   || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-  if (i2c->num == 0) {
-    periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
-#if SOC_HP_I2C_NUM > 1
-  } else {
-    periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
-#endif
+  PERIPH_RCC_ATOMIC() {
+    i2c_ll_enable_bus_clock(i2c->num, true);
+    i2c_ll_reset_register(i2c->num);
   }
 #endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
@@ -465,7 +464,7 @@ size_t i2cSlaveWrite(uint8_t num, const uint8_t *buf, uint32_t len, uint32_t tim
   i2c_ll_slave_disable_tx_it(i2c->dev);
   uint32_t txfifo_len = 0;
   i2c_ll_get_txfifo_len(i2c->dev, &txfifo_len);
-  if (txfifo_len < SOC_I2C_FIFO_LEN) {
+  if (txfifo_len < I2C_LL_FIFO_LEN) {
     i2c_ll_txfifo_rst(i2c->dev);
   }
 #endif
@@ -558,7 +557,7 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
 
   // Adjust Fifo thresholds based on frequency
   uint32_t a = (clk_speed / 50000L) + 2;
-  log_d("Fifo thresholds: rx_fifo_full = %" PRIu32 ", tx_fifo_empty = %" PRIu32, SOC_I2C_FIFO_LEN - a, a);
+  log_d("Fifo thresholds: rx_fifo_full = %" PRIu32 ", tx_fifo_empty = %" PRIu32, I2C_LL_FIFO_LEN - a, a);
 
   i2c_hal_clk_config_t clk_cal;
 #if SOC_I2C_SUPPORT_APB
@@ -576,7 +575,7 @@ static bool i2c_slave_set_frequency(i2c_slave_struct_t *i2c, uint32_t clk_speed)
   }
 #endif
   i2c_ll_set_txfifo_empty_thr(i2c->dev, a);
-  i2c_ll_set_rxfifo_full_thr(i2c->dev, SOC_I2C_FIFO_LEN - a);
+  i2c_ll_set_rxfifo_full_thr(i2c->dev, I2C_LL_FIFO_LEN - a);
   i2c_ll_master_set_bus_timing(i2c->dev, &clk_cal);
   i2c_ll_master_set_filter(i2c->dev, 3);
   return true;
@@ -657,14 +656,14 @@ static bool i2c_slave_attach_gpio(i2c_slave_struct_t *i2c, int8_t sda, int8_t sc
   i2c->scl = scl;
   gpio_set_level(scl, 1);
   i2c_slave_gpio_mode(scl, GPIO_MODE_INPUT_OUTPUT_OD);
-  gpio_matrix_out(scl, I2C_SCL_IDX(i2c->num), false, false);
-  gpio_matrix_in(scl, I2C_SCL_IDX(i2c->num), false);
+  esp_rom_gpio_connect_out_signal(scl, I2C_SCL_IDX(i2c->num), false, false);
+  esp_rom_gpio_connect_in_signal(scl, I2C_SCL_IDX(i2c->num), false);
 
   i2c->sda = sda;
   gpio_set_level(sda, 1);
   i2c_slave_gpio_mode(sda, GPIO_MODE_INPUT_OUTPUT_OD);
-  gpio_matrix_out(sda, I2C_SDA_IDX(i2c->num), false, false);
-  gpio_matrix_in(sda, I2C_SDA_IDX(i2c->num), false);
+  esp_rom_gpio_connect_out_signal(sda, I2C_SDA_IDX(i2c->num), false, false);
+  esp_rom_gpio_connect_in_signal(sda, I2C_SDA_IDX(i2c->num), false);
 
   return true;
 }
@@ -675,14 +674,14 @@ static bool i2c_slave_detach_gpio(i2c_slave_struct_t *i2c) {
     return false;
   }
   if (i2c->scl >= 0) {
-    gpio_matrix_out(i2c->scl, 0x100, false, false);
-    gpio_matrix_in(0x30, I2C_SCL_IDX(i2c->num), false);
+    esp_rom_gpio_connect_out_signal(i2c->scl, 0x100, false, false);
+    esp_rom_gpio_connect_in_signal(0x30, I2C_SCL_IDX(i2c->num), false);
     i2c_slave_gpio_mode(i2c->scl, GPIO_MODE_INPUT);
     i2c->scl = -1;  // un attached
   }
   if (i2c->sda >= 0) {
-    gpio_matrix_out(i2c->sda, 0x100, false, false);
-    gpio_matrix_in(0x30, I2C_SDA_IDX(i2c->num), false);
+    esp_rom_gpio_connect_out_signal(i2c->sda, 0x100, false, false);
+    esp_rom_gpio_connect_in_signal(0x30, I2C_SDA_IDX(i2c->num), false);
     i2c_slave_gpio_mode(i2c->sda, GPIO_MODE_INPUT);
     i2c->sda = -1;  // un attached
   }
@@ -719,7 +718,7 @@ static bool i2c_slave_handle_rx_fifo_full(i2c_slave_struct_t *i2c, uint32_t len)
 #if I2C_SLAVE_USE_RX_QUEUE
   uint32_t d = 0;
 #else
-  uint8_t data[SOC_I2C_FIFO_LEN];
+  uint8_t data[I2C_LL_FIFO_LEN];
 #endif
   bool pxHigherPriorityTaskWoken = false;
 #if I2C_SLAVE_USE_RX_QUEUE

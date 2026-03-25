@@ -34,7 +34,7 @@ bool sigmaDeltaAttach(uint8_t pin, uint32_t freq)  //freq 1220-312500
     log_e("Pin %u could not be detached.", pin);
     return false;
   }
-  sdm_config_t config = {.gpio_num = (int)pin, .clk_src = SDM_CLK_SRC_DEFAULT, .sample_rate_hz = freq, .flags = {.invert_out = 0, .io_loop_back = 0}};
+  sdm_config_t config = {.gpio_num = (int)pin, .clk_src = SDM_CLK_SRC_DEFAULT, .sample_rate_hz = freq, .flags = {.invert_out = 0}};
   esp_err_t err = sdm_new_channel(&config, &bus);
   if (err != ESP_OK) {
     log_e("sdm_new_channel failed with error: %d", err);
@@ -58,7 +58,7 @@ bool sigmaDeltaWrite(uint8_t pin, uint8_t duty)  //chan 0-x according to SOC dut
   sdm_channel_handle_t bus = (sdm_channel_handle_t)perimanGetPinBus(pin, ESP32_BUS_TYPE_SIGMADELTA);
   if (bus != NULL) {
     int8_t d = duty - 128;
-    esp_err_t err = sdm_channel_set_duty(bus, d);
+    esp_err_t err = sdm_channel_set_pulse_density(bus, d);
     if (err != ESP_OK) {
       log_e("sdm_channel_set_duty failed with error: %d", err);
       return false;

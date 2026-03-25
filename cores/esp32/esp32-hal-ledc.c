@@ -252,7 +252,6 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
     ledc_channel.speed_mode = group;
     ledc_channel.channel = (channel % SOC_LEDC_CHANNEL_NUM);
     ledc_channel.timer_sel = timer;
-    ledc_channel.intr_type = LEDC_INTR_DISABLE;
     ledc_channel.gpio_num = pin;
     ledc_channel.duty = duty;
     ledc_channel.hpoint = 0;

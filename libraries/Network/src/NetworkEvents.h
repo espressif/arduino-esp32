@@ -97,7 +97,7 @@ typedef enum {
 } arduino_event_id_t;
 
 typedef union {
-  ip_event_ap_staipassigned_t wifi_ap_staipassigned;
+  ip_event_assigned_ip_to_client_t wifi_ap_staipassigned;
   ip_event_got_ip_t got_ip;
   ip_event_got_ip_t lost_ip;
   ip_event_got_ip6_t got_ip6;

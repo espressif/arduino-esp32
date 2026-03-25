@@ -22,7 +22,7 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp_netif.h"
 
-esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
+esp_netif_t *get_esp_interface_netif(wifi_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
   if (!dst || !src || !dst_len) {
@@ -164,7 +164,7 @@ bool APClass::onEnable() {
   }
   if (_esp_netif == NULL) {
     _wifi_ap_event_handle = Network.onSysEvent(_onApArduinoEvent);
-    _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_AP);
+    _esp_netif = get_esp_interface_netif(WIFI_IF_AP);
     /* attach to receive events */
     initNetif(ESP_NETIF_ID_AP);
   }

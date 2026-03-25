@@ -17,6 +17,10 @@
 #if SOC_TOUCH_SENSOR_SUPPORTED
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0) || SOC_TOUCH_SENSOR_VERSION == 3
 
+#ifndef SOC_TOUCH_SENSOR_NUM
+#define SOC_TOUCH_SENSOR_NUM (SOC_TOUCH_MAX_CHAN_ID + 1)
+#endif
+
 #include "esp32-hal-touch-ng.h"
 #include "esp32-hal-periman.h"
 
