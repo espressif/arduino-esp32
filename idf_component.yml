@@ -53,6 +53,12 @@ dependencies:
   espressif/mdns:
     version: "^1.2.3"
     require: public
+  espressif/usb:
+    version: "master"
+    git: https://github.com/espressif/esp-usb.git
+    path: host/usb
+    rules:
+      - if: "target in [esp32s2, esp32s3, esp32p4]"
   espressif/esp_modem:
     version: "^2.0.0"
   espressif/esp-zboss-lib:
