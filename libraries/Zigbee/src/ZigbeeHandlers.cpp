@@ -20,6 +20,14 @@
 
 #if CONFIG_ZB_ENABLED
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "zboss_api.h"
+#ifdef __cplusplus
+}
+#endif
+
 #include "esp_ota_ops.h"
 #if CONFIG_ZB_DELTA_OTA  // Delta OTA, code is prepared for this feature but not enabled by default
 #include "esp_delta_ota_ops.h"
