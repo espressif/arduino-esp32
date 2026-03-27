@@ -20,14 +20,6 @@
 
 #if CONFIG_ZB_ENABLED
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-#include "zboss_api.h"
-#ifdef __cplusplus
-}
-#endif
-
 #include "esp_ota_ops.h"
 #if CONFIG_ZB_DELTA_OTA  // Delta OTA, code is prepared for this feature but not enabled by default
 #include "esp_delta_ota_ops.h"
@@ -60,40 +52,8 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
 static esp_err_t zb_window_covering_movement_resp_handler(const esp_zb_zcl_window_covering_movement_message_t *message);
 static esp_err_t zb_ota_upgrade_status_handler(const esp_zb_zcl_ota_upgrade_value_message_t *message);
 static esp_err_t zb_ota_upgrade_query_image_resp_handler(const esp_zb_zcl_ota_upgrade_query_image_resp_message_t *message);
-
-// Raw command handler - provides a "peek" at all ZCL commands before the stack processes them
-[[maybe_unused]]
-static bool zb_raw_command_handler(uint8_t bufid) {
-  zb_zcl_parsed_hdr_t *cmd_info = ZB_BUF_GET_PARAM(bufid, zb_zcl_parsed_hdr_t);
-  uint8_t *payload = (uint8_t *)zb_buf_begin(bufid);
-  uint16_t payload_len = zb_buf_len(bufid);
-
-  zb_raw_command_t command = {};
-  command.src_endpoint = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).src_endpoint;
-  command.dst_endpoint = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).dst_endpoint;
-  command.cluster_id = cmd_info->cluster_id;
-  command.profile_id = cmd_info->profile_id;
-  command.command_id = cmd_info->cmd_id;
-  command.command_direction = cmd_info->cmd_direction;
-  command.is_common_command = cmd_info->is_common_command;
-  command.src_address = ZB_ZCL_PARSED_HDR_SHORT_DATA(cmd_info).source.u.short_addr;
-  command.data = payload;
-  command.data_len = payload_len;
-
-  log_v(
-    "Raw command: endpoint(%d), cluster(0x%x), command(0x%x), direction(%d), data_len(%d)", command.dst_endpoint, command.cluster_id, command.command_id,
-    command.command_direction, command.data_len
-  );
-
-  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
-    if (command.dst_endpoint == (*it)->getEndpoint()) {
-      if ((*it)->zbRawCommand(command)) {
-        return true;  // command consumed by endpoint
-      }
-    }
-  }
-  return false;  // let stack process normally
-}
+static esp_err_t zb_privilege_command_handler(const esp_zb_zcl_privilege_command_message_t *message);
+static esp_err_t zb_custom_cluster_command_handler(const esp_zb_zcl_custom_cluster_command_message_t *message);
 
 // Zigbee action handlers
 [[maybe_unused]]
@@ -119,7 +79,13 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
       break;
     case ESP_ZB_CORE_CMD_DEFAULT_RESP_CB_ID:    ret = zb_cmd_default_resp_handler((esp_zb_zcl_cmd_default_resp_message_t *)message); break;
     case ESP_ZB_CORE_CMD_WRITE_ATTR_RESP_CB_ID: ret = zb_cmd_write_attr_resp_handler((esp_zb_zcl_cmd_write_attr_resp_message_t *)message); break;
-    default:                                    log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
+    case ESP_ZB_CORE_CMD_PRIVILEGE_COMMAND_REQ_CB_ID:
+      ret = zb_privilege_command_handler((esp_zb_zcl_privilege_command_message_t *)message);
+      break;
+    case ESP_ZB_CORE_CMD_CUSTOM_CLUSTER_REQ_CB_ID:
+      ret = zb_custom_cluster_command_handler((esp_zb_zcl_custom_cluster_command_message_t *)message);
+      break;
+    default: log_w("Receive unhandled Zigbee action(0x%x) callback", callback_id); break;
   }
   return ret;
 }
@@ -515,6 +481,50 @@ static esp_err_t zb_cmd_default_resp_handler(const esp_zb_zcl_cmd_default_resp_m
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_endpoint == (*it)->getEndpoint()) {
       (*it)->zbDefaultResponse(message);  //method zbDefaultResponse is implemented in the common EP class
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_privilege_command_handler(const esp_zb_zcl_privilege_command_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "Privilege command: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) command(0x%x)",
+    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->info.command.id
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbPrivilegeCommand(message);
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_custom_cluster_command_handler(const esp_zb_zcl_custom_cluster_command_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "Custom cluster command: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) command(0x%x)",
+    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->info.command.id
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbCustomClusterCommand(message);
     }
   }
   return ESP_OK;

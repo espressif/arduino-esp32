@@ -52,19 +52,6 @@ typedef enum {
   ZB_POWER_SOURCE_BATTERY = 0x03,
 } zb_power_source_t;
 
-typedef struct zb_raw_command_s {
-  uint8_t src_endpoint;
-  uint8_t dst_endpoint;
-  uint16_t cluster_id;
-  uint16_t profile_id;
-  uint8_t command_id;
-  uint8_t command_direction;  // 0 = client-to-server, 1 = server-to-client
-  bool is_common_command;     // true = foundation command, false = cluster-specific
-  uint16_t src_address;
-  uint8_t *data;
-  uint16_t data_len;
-} zb_raw_command_t;
-
 // Global function for converting ZCL status to name
 const char *esp_zb_zcl_status_to_name(esp_zb_zcl_status_t status);
 
@@ -159,6 +146,9 @@ public:
   */
   void requestOTAUpdate();
 
+  // Register a privilege command to intercept standard cluster commands before the stack processes them
+  void addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id);
+
   // findEndpoint may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
@@ -175,8 +165,8 @@ public:
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
   virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
-  // Return true if command was consumed (stack will skip it), false to let the stack process it normally
-  virtual bool zbRawCommand(const zb_raw_command_t &command);
+  virtual void zbPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message);
+  virtual void zbCustomClusterCommand(const esp_zb_zcl_custom_cluster_command_message_t *message);
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
@@ -203,9 +193,12 @@ public:
     _on_default_response = callback;
   }
 
-  // Return true if command was consumed (stack will skip it), false to let the stack process it normally
-  void onRawCommand(bool (*callback)(const zb_raw_command_t &command)) {
-    _on_raw_command = callback;
+  void onPrivilegeCommand(void (*callback)(const esp_zb_zcl_privilege_command_message_t *message)) {
+    _on_privilege_command = callback;
+  }
+
+  void onCustomClusterCommand(void (*callback)(const esp_zb_zcl_custom_cluster_command_message_t *message)) {
+    _on_custom_cluster_command = callback;
   }
 
   // Convert ZCL status to name
@@ -216,7 +209,8 @@ private:
   void (*_on_identify)(uint16_t time);
   void (*_on_ota_state_change)(bool state);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status);
-  bool (*_on_raw_command)(const zb_raw_command_t &command);
+  void (*_on_privilege_command)(const esp_zb_zcl_privilege_command_message_t *message);
+  void (*_on_custom_cluster_command)(const esp_zb_zcl_custom_cluster_command_message_t *message);
   time_t _read_time;
   int32_t _read_timezone;
 
