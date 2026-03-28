@@ -83,7 +83,7 @@ The ADC peak level is printed every second while a call is active, confirming
 that microphone audio is reaching the phone:
 
 ```
-I2S started: mSBC  fs=16000 Hz  SCKI=8192000 Hz
+I2S started: mSBC  fs=16000 Hz
 ADC peak: 20480  drop: 0
 ADC peak: 20614  drop: 0
 ```
@@ -101,3 +101,13 @@ the PCM1808.
   without any change.
 - The sketch reconnects automatically if the HFP link or SCO channel drops
   during a call.
+- **Other I2S hardware** should work provided it operates in slave mode with
+  32-bit slots. Two codec-specific details may need adjusting:
+  - **ADC bit extraction** (`adcCaptureTask`): the `<< 1 >> 16` shift assumes
+    the PCM1808's 24-bit MSB-first packing with a 1-bit I2S delay. A different
+    ADC may place its bits differently within the 32-bit slot — check its
+    datasheet and update the extraction formula accordingly.
+  - **DAC alignment** (`hfIncomingDataCb`): the `<< 16` left-shift assumes the
+    DAC reads audio from the MSBs of the 32-bit slot, which is standard for
+    most I2S DACs (including the PCM5102A). If your DAC is LSB-aligned, adjust
+    the shift accordingly.
