@@ -211,7 +211,11 @@ void audioTimerCb(void *)
   const uint16_t samples = is_msbc ? 120 : 30; // number of PCM samples per SCO frame
   int16_t buf[120];                             // stack-allocated, sized for the largest frame (mSBC)
   generateToneSamples(buf, samples, is_msbc ? kMsbcRateHz : kCvsdRateHz);
-  xStreamBufferSend(audio_ring, buf, samples * sizeof(int16_t), 0); // non-blocking write; drops frame if ring buffer is full
+  const size_t frame_bytes = samples * sizeof(int16_t);
+  // All-or-nothing write: only send if the full frame fits, to prevent partial
+  // writes that would break frame alignment for the consumer.
+  if (xStreamBufferSpacesAvailable(audio_ring) >= frame_bytes)
+    xStreamBufferSend(audio_ring, buf, frame_bytes, 0);
 #endif
   esp_hf_client_outgoing_data_ready(); // signal the BTA task to start pulling audio from hfOutgoingDataCb
 }
@@ -230,9 +234,14 @@ void startAudioTimer(bool msbc)
     return; // already running; nothing to do
 
   const size_t chunk_bytes = msbc ? 240 : 60; // bytes per SCO frame for the active codec
-  // Allocate a ring buffer deep enough to absorb several frames of BTA task scheduling jitter.
-  // trigger_level=1 means a reader unblocks as soon as any byte is available.
-  audio_ring = xStreamBufferCreate(chunk_bytes * kRingBufFrames, 1);
+  // trigger_level=chunk_bytes ensures the consumer only unblocks when a full
+  // frame is available, preventing partial reads that would break frame alignment.
+  audio_ring = xStreamBufferCreate(chunk_bytes * kRingBufFrames, chunk_bytes);
+  if (!audio_ring)
+  {
+    Serial.println("xStreamBufferCreate failed");
+    return;
+  }
 
   const esp_timer_create_args_t args = {
       .callback              = audioTimerCb,
@@ -241,9 +250,24 @@ void startAudioTimer(bool msbc)
       .name                  = "sco_prod",
       .skip_unhandled_events = false,           // queue missed triggers rather than dropping them silently
   };
-  esp_timer_create(&args, &audio_timer);
-  esp_timer_start_periodic(audio_timer,
-                           msbc ? kMsbcIntervalUs : kCvsdIntervalUs); // fire at exact SCO frame rate
+  esp_err_t err = esp_timer_create(&args, &audio_timer);
+  if (err != ESP_OK)
+  {
+    Serial.printf("esp_timer_create failed: %s\n", esp_err_to_name(err));
+    vStreamBufferDelete(audio_ring);
+    audio_ring = nullptr;
+    return;
+  }
+  err = esp_timer_start_periodic(audio_timer,
+                                 msbc ? kMsbcIntervalUs : kCvsdIntervalUs);
+  if (err != ESP_OK)
+  {
+    Serial.printf("esp_timer_start_periodic failed: %s\n", esp_err_to_name(err));
+    esp_timer_delete(audio_timer);
+    audio_timer = nullptr;
+    vStreamBufferDelete(audio_ring);
+    audio_ring = nullptr;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -349,8 +373,13 @@ uint32_t hfOutgoingDataCb(uint8_t *buf, uint32_t len)
   if (!buf || len == 0 || !audio_ring)
     return 0; // stack not ready or audio not started yet
 
-  // Non-blocking read: returns immediately with however many bytes are available.
-  // If fewer than len bytes are in the buffer we treat it as an underrun.
+  // Only read if a complete frame is available to avoid partial reads that
+  // would break frame alignment and cause audible artifacts.
+  if (xStreamBufferBytesAvailable(audio_ring) < len)
+  {
+    ++outgoing_cb_underrun;
+    return 0;
+  }
   const size_t got = xStreamBufferReceive(audio_ring, buf, len, 0);
 
   ++outgoing_cb_count;
@@ -385,7 +414,10 @@ void hfIncomingDataCb(const uint8_t *buf, uint32_t len)
 #if AUDIO_MODE == AUDIO_MODE_LOOPBACK
   if (!audio_ring || !buf || len == 0)
     return;
-  xStreamBufferSend(audio_ring, buf, len, 0); // non-blocking; drops frame if ring buffer is full
+  // All-or-nothing write: only enqueue if the full frame fits, to prevent
+  // partial writes that would break frame alignment for the outgoing callback.
+  if (xStreamBufferSpacesAvailable(audio_ring) >= len)
+    xStreamBufferSend(audio_ring, buf, len, 0);
 #else
   (void)buf;
   (void)len; // discard in TONE mode — incoming audio not needed
