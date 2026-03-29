@@ -25,8 +25,14 @@
  * without notifying the application.
  *
  * The example creates a dimmable light that registers privilege commands on the
- * On/Off cluster. When any registered command is received, the callback logs
- * the command details to Serial.
+ * On/Off cluster. When a command is registered as a privilege command, the stack
+ * no longer handles it — the application is fully responsible for processing it.
+ *
+ * The example demonstrates both approaches:
+ * - "Off with effect" (0x40): registered as privilege command, handled manually
+ *   in the callback with custom behavior
+ * - Standard On/Off/Toggle (0x00, 0x01, 0x02): left to the stack, which updates
+ *   attributes and triggers onLightChange() as usual
  *
  * Use the Zigbee_On_Off_Switch example as the coordinator/sender, or any
  * Zigbee controller (e.g. Zigbee2MQTT, Philips Hue).
@@ -57,6 +63,8 @@ void setLED(bool value, uint8_t level) {
   Serial.printf("Light state: %s, level: %d\r\n", value ? "ON" : "OFF", level);
 }
 
+// Privilege command callback — the stack will NOT handle registered commands,
+// so we are fully responsible for processing them here.
 void onPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message) {
   Serial.println("--- Privilege command received ---");
   Serial.printf("  Cluster: 0x%04x\r\n", message->info.cluster);
@@ -71,6 +79,12 @@ void onPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message) {
     Serial.println();
   }
   Serial.println("---------------------------------");
+
+  // Handle "Off with effect" (0x40) manually — implement custom fade-out behavior here
+  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF && message->info.command.id == 0x40) {
+    Serial.println("Handling 'Off with effect' — turning light off");
+    zbLight.setLightState(false);
+  }
 }
 
 /********************* Arduino functions **************************/
@@ -87,17 +101,14 @@ void setup() {
   // Optional: set Zigbee device name and model
   zbLight.setManufacturerAndModel("Espressif", "ZBPrivilegeCmd");
 
-  // Set callback for light state changes (standard attribute-based handling)
+  // Standard On/Off/Toggle (0x00, 0x01, 0x02) are NOT registered as privilege commands,
+  // so the stack handles them normally and notifies us via onLightChange().
   zbLight.onLightChange(setLED);
 
-  // Register privilege commands to intercept On/Off cluster commands
-  // These commands will be forwarded to the callback AND still processed by the stack
-  zbLight.addPrivilegeCommand(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 0x00);  // Off
-  zbLight.addPrivilegeCommand(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 0x01);  // On
-  zbLight.addPrivilegeCommand(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 0x02);  // Toggle
+  // Register "Off with effect" (0x40) as a privilege command. The stack will NOT process
+  // this command — our callback is fully responsible for handling it.
   zbLight.addPrivilegeCommand(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 0x40);  // Off with effect
 
-  // Set callback for privilege commands
   zbLight.onPrivilegeCommand(onPrivilegeCommand);
 
   // Add endpoint to Zigbee Core
