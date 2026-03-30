@@ -12,6 +12,7 @@
  * curl -i --raw esp32_chunk_resp.local:80
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <NetworkClient.h>
 #include <WebServer.h>
@@ -27,7 +28,7 @@ void handleChunks() {
   server.chunkResponseBegin();
   char countContent[8];
   while (countDown) {
-    sprintf(countContent, "%d...\r\n", countDown--);
+    snprintf(countContent, sizeof(countContent), "%d...\r\n", countDown--);
     server.chunkWrite(countContent, strlen(countContent));
     // count down shall show up in the browser only after about 5 seconds when finishing the whole transmission
     // using "curl -i esp32_chunk_resp.local:80", it will show the count down as it sends each chunk

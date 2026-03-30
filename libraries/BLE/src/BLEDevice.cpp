@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEDevice.cpp
  *
  *  Created on: Mar 16, 2017
@@ -42,6 +61,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
+#include "esp32-hal-bt-mem.h"
 #endif
 
 #include "esp32-hal-log.h"
@@ -99,6 +119,7 @@ BLEAdvertising *BLEDevice::m_bleAdvertising = nullptr;
 uint16_t BLEDevice::m_appId = 0;
 std::map<uint16_t, conn_status_t> BLEDevice::m_connectedClientsMap;
 gap_event_handler BLEDevice::m_customGapHandler = nullptr;
+String BLEDevice::m_deviceName;
 
 /***************************************************************************
  *                           Bluedroid properties                          *
@@ -119,7 +140,6 @@ BLEDeviceCallbacks BLEDevice::defaultDeviceCallbacks{};
 BLEDeviceCallbacks *BLEDevice::m_pDeviceCallbacks = &defaultDeviceCallbacks;
 uint8_t BLEDevice::m_ownAddrType = BLE_OWN_ADDR_PUBLIC;
 bool BLEDevice::m_synced = false;
-String BLEDevice::m_deviceName;
 #endif
 
 /***************************************************************************
@@ -144,7 +164,7 @@ BLEClient *BLEDevice::createClient() {
 
 #ifdef CONFIG_NIMBLE_ENABLED
   if (m_connectedClientsMap.size() >= CONFIG_BT_NIMBLE_MAX_CONNECTIONS) {
-    log_e("Unable to create client. Max connections reached. Cur=%d Max=%d", m_connectedClientsMap.size(), CONFIG_BT_NIMBLE_MAX_CONNECTIONS);
+    log_e("Unable to create client. Max connections reached. Cur=%lu Max=%u", (unsigned long)m_connectedClientsMap.size(), CONFIG_BT_NIMBLE_MAX_CONNECTIONS);
     m_pClient = nullptr;
   } else
 #endif
@@ -225,7 +245,7 @@ BLEScan *BLEDevice::getScan() {
     m_pScan = new BLEScan();
     //log_d(" - creating a new scan object");
   }
-  //log_v("<< getScan: Returning object at 0x%x", (uint32_t)m_pScan);
+  //log_v("<< getScan: Returning object at %p", m_pScan);
   return m_pScan;
 }  // getScan
 
@@ -359,6 +379,7 @@ bool BLEDevice::init(String deviceName) {
   }
 #endif  // CONFIG_GATTS_ENABLE
 
+  m_deviceName = deviceName;
   errRc = ::esp_ble_gap_set_device_name(deviceName.c_str());
   if (errRc != ESP_OK) {
     log_e("esp_ble_gap_set_device_name: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -625,7 +646,7 @@ void BLEDevice::setSecurityCallbacks(BLESecurityCallbacks *callbacks) {
  * @param [in] mtu Value to set local mtu, should be larger than 23 and lower or equal to 517
  */
 esp_err_t BLEDevice::setMTU(uint16_t mtu) {
-  log_v(">> setLocalMTU: %d", mtu);
+  log_v(">> setLocalMTU: %u", mtu);
   if (!initialized) {
     log_e("BLE is not initialized. Call BLEDevice::init() first");
     return ESP_FAIL;
@@ -642,7 +663,7 @@ esp_err_t BLEDevice::setMTU(uint16_t mtu) {
   if (err == ESP_OK) {
     m_localMTU = mtu;
   } else {
-    log_e("can't set local mtu value: %d, rc=%d", mtu, err);
+    log_e("can't set local mtu value: %u, rc=%d", mtu, err);
   }
   log_v("<< setLocalMTU");
   return err;
@@ -657,6 +678,14 @@ uint16_t BLEDevice::getMTU() {
 
 bool BLEDevice::getInitialized() {
   return initialized;
+}
+
+/**
+ * @brief Get the device name.
+ * @return The device name.
+ */
+String BLEDevice::getDeviceName() {
+  return m_deviceName;
 }
 
 /*
@@ -700,28 +729,44 @@ bool BLEDevice::getPeerIRK(BLEAddress peerAddress, uint8_t *irk) {
     return false;
   }
 
-  // Find the bonded device that matches the peer address
+  // Find the bonded device that matches the peer address.
+  // Bluedroid may store the bond under the connection-time random address,
+  // so we also try matching against pid_key.static_addr (identity address) as a fallback.
   bool found = false;
 
   for (int i = 0; i < dev_num; i++) {
+    // Check if the PID key (which contains the IRK) is present first
+    if (!(bond_dev[i].bond_key.key_mask & ESP_LE_KEY_PID)) {
+      continue;
+    }
+
     BLEAddress bondAddr(bond_dev[i].bd_addr);
-    if (bondAddr.equals(peerAddress)) {
-      // Check if the PID key (which contains the IRK) is present
-      if (bond_dev[i].bond_key.key_mask & ESP_LE_KEY_PID) {
-        memcpy(irk, bond_dev[i].bond_key.pid_key.irk, 16);
-        found = true;
-        log_d("IRK found for peer: %s", peerAddress.toString().c_str());
-        break;
-      } else {
-        log_w("PID key not present for peer: %s", peerAddress.toString().c_str());
+    BLEAddress identityAddr(bond_dev[i].bond_key.pid_key.static_addr);
+
+    if (bondAddr.equals(peerAddress) || identityAddr.equals(peerAddress)) {
+      // Verify the IRK is non-zero before accepting it
+      bool irk_nonzero = false;
+      for (int j = 0; j < 16; j++) {
+        if (bond_dev[i].bond_key.pid_key.irk[j] != 0) {
+          irk_nonzero = true;
+          break;
+        }
       }
+      if (!irk_nonzero) {
+        log_w("PID key present but IRK is all zeroes for peer: %s", peerAddress.toString().c_str());
+        continue;
+      }
+      memcpy(irk, bond_dev[i].bond_key.pid_key.irk, 16);
+      found = true;
+      log_d("IRK found for peer: %s (bond addr: %s)", peerAddress.toString().c_str(), bondAddr.toString().c_str());
+      break;
     }
   }
 
   free(bond_dev);
 
   if (!found) {
-    log_e("IRK not found for peer");
+    log_e("IRK not found for peer: %s", peerAddress.toString().c_str());
     return false;
   }
 
@@ -772,7 +817,7 @@ bool BLEDevice::getPeerIRK(BLEAddress peerAddress, uint8_t *irk) {
   // Copy the IRK to the output buffer
   memcpy(irk, value_sec.irk, 16);
 
-  log_d("IRK found for peer: %s (type=%d)", peerAddress.toString().c_str(), addr.type);
+  log_d("IRK found for peer: %s (type=%u)", peerAddress.toString().c_str(), addr.type);
   log_v("<< BLEDevice::getPeerIRK()");
   return true;
 #endif  // CONFIG_NIMBLE_ENABLED
@@ -825,6 +870,105 @@ String BLEDevice::getPeerIRKBase64(BLEAddress peerAddress) {
 String BLEDevice::getPeerIRKReverse(BLEAddress peerAddress) {
   uint8_t irk[16];
   if (!getPeerIRK(peerAddress, irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 15; i >= 0; i--) {
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+  }
+  result.toUpperCase();
+  return result;
+}
+
+/*
+ * @brief Get the local device's own Identity Resolving Key (IRK).
+ * @param [out] irk Buffer to store the 16-byte IRK.
+ * @return True if successful, false otherwise.
+ * @note The local IRK is generated once and stored persistently.
+ *       It is used to generate Resolvable Private Addresses (RPA).
+ */
+bool BLEDevice::getLocalIRK(uint8_t *irk) {
+  log_v(">> BLEDevice::getLocalIRK()");
+
+  if (!initialized) {
+    log_e("BLE is not initialized. Call BLEDevice::init() first");
+    return false;
+  }
+
+  if (irk == nullptr) {
+    log_e("IRK buffer is null");
+    return false;
+  }
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  esp_err_t ret = esp_ble_gap_get_local_irk(irk);
+  if (ret != ESP_OK) {
+    log_e("Failed to get local IRK: %d", ret);
+    return false;
+  }
+  log_v("<< BLEDevice::getLocalIRK()");
+  return true;
+#endif  // CONFIG_BLUEDROID_ENABLED
+
+#if defined(CONFIG_NIMBLE_ENABLED)
+  int rc = ble_gap_read_local_irk(irk);
+  if (rc != 0) {
+    log_e("Failed to get local IRK: %d", rc);
+    return false;
+  }
+  log_v("<< BLEDevice::getLocalIRK()");
+  return true;
+#endif  // CONFIG_NIMBLE_ENABLED
+}
+
+/*
+ * @brief Get the local device's IRK as a comma-separated hex string.
+ * @return String in format "0xXX,0xXX,..." or empty string on failure.
+ */
+String BLEDevice::getLocalIRKString() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
+    return String();
+  }
+
+  String result = "";
+  for (int i = 0; i < 16; i++) {
+    result += "0x";
+    if (irk[i] < 0x10) {
+      result += "0";
+    }
+    result += String(irk[i], HEX);
+    if (i < 15) {
+      result += ",";
+    }
+  }
+  return result;
+}
+
+/*
+ * @brief Get the local device's IRK as a Base64 encoded string.
+ * @return Base64 encoded string or empty string on failure.
+ */
+String BLEDevice::getLocalIRKBase64() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
+    return String();
+  }
+
+  return base64::encode(irk, 16);
+}
+
+/*
+ * @brief Get the local device's IRK in reverse hex format.
+ * @return String in reverse hex format (uppercase) or empty string on failure.
+ */
+String BLEDevice::getLocalIRKReverse() {
+  uint8_t irk[16];
+  if (!getLocalIRK(irk)) {
     return String();
   }
 
@@ -896,7 +1040,7 @@ BLEClient *BLEDevice::getClientByAddress(BLEAddress address) {
 }
 
 void BLEDevice::updatePeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  log_d("update conn_id: %d, GATT role: %s", conn_id, _client ? "client" : "server");
+  log_d("update conn_id: %u, GATT role: %s", conn_id, _client ? "client" : "server");
   std::map<uint16_t, conn_status_t>::iterator it = m_connectedClientsMap.find(ESP_GATT_IF_NONE);
   if (it != m_connectedClientsMap.end()) {
     std::swap(m_connectedClientsMap[conn_id], it->second);
@@ -912,7 +1056,7 @@ void BLEDevice::updatePeerDevice(void *peer, bool _client, uint16_t conn_id) {
 }
 
 void BLEDevice::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  log_i("add conn_id: %d, GATT role: %s", conn_id, _client ? "client" : "server");
+  log_i("add conn_id: %u, GATT role: %s", conn_id, _client ? "client" : "server");
   conn_status_t status = {.peer_device = peer, .connected = true, .mtu = 23};
 
   m_connectedClientsMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
@@ -923,7 +1067,7 @@ void BLEDevice::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
 portMUX_TYPE BLEDevice::mux = portMUX_INITIALIZER_UNLOCKED;
 void BLEDevice::removePeerDevice(uint16_t conn_id, bool _client) {
   portENTER_CRITICAL(&mux);
-  log_i("remove: %d, GATT role %s", conn_id, _client ? "client" : "server");
+  log_i("remove: %u, GATT role %s", conn_id, _client ? "client" : "server");
   if (m_connectedClientsMap.find(conn_id) != m_connectedClientsMap.end()) {
     m_connectedClientsMap.erase(conn_id);
   }
@@ -1067,7 +1211,7 @@ bool BLEDevice::isHostedBLE() {
  * @param [in] param Parameters for the event.
  */
 void BLEDevice::gattServerEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  log_d("gattServerEventHandler [esp_gatt_if: %d] ... %s", gatts_if, BLEUtils::gattServerEventTypeToString(event).c_str());
+  log_d("gattServerEventHandler [esp_gatt_if: %u] ... %s", gatts_if, BLEUtils::gattServerEventTypeToString(event).c_str());
 
   BLEUtils::dumpGattServerEvent(event, gatts_if, param);
 
@@ -1107,7 +1251,7 @@ void BLEDevice::gattServerEventHandler(esp_gatts_cb_event_t event, esp_gatt_if_t
  */
 void BLEDevice::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param) {
 
-  log_d("gattClientEventHandler [esp_gatt_if: %d] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
+  log_d("gattClientEventHandler [esp_gatt_if: %u] ... %s", gattc_if, BLEUtils::gattClientEventTypeToString(event).c_str());
   BLEUtils::dumpGattClientEvent(event, gattc_if, param);
 
   switch (event) {
@@ -1178,10 +1322,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       }
 
       if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
-        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
         log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
       } else {
-        log_i("Passkey: %d", passkey);
+        log_i("Passkey: %06" PRIu32, passkey);
       }
 
       esp_ble_passkey_reply(param->ble_security.ble_req.bd_addr, true, passkey);
@@ -1219,10 +1363,10 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
       }
 
       if (BLESecurity::m_staticPasskey && passkey == BLE_SM_DEFAULT_PASSKEY) {
-        log_w("*ATTENTION* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+        log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
         log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
       } else {
-        log_i("Passkey: %d", passkey);
+        log_i("Passkey: %06" PRIu32, passkey);
       }
 
       if (BLEDevice::m_securityCallbacks != nullptr) {
@@ -1242,20 +1386,43 @@ void BLEDevice::gapEventHandler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
     {
       log_i("ESP_GAP_BLE_AUTH_CMPL_EVT");
 #ifdef CONFIG_BLE_SMP_ENABLE  // Check that BLE SMP (security) is configured in make menuconfig
-      // Signal that authentication has completed
-      // This unblocks any GATT operations waiting for pairing when bonding is enabled
-      BLESecurity::signalAuthenticationComplete();
-
+      // Call user callback BEFORE signaling completion.
+      // This ensures callback output (e.g., "Authentication complete") appears before
+      // any waiting GATT operations are unblocked and produce their own output.
+      // This matches NimBLE's ordering where the callback fires before the task is released.
       if (BLEDevice::m_securityCallbacks != nullptr) {
         BLEDevice::m_securityCallbacks->onAuthenticationComplete(param->ble_security.auth_cmpl);
       }
+
+      // Restore CCCD values for bonded device reconnection
+      // Per GATT spec, CCCD values should persist for bonded devices
+      // Windows and other hosts don't re-write CCCD after reconnection
+      if (param->ble_security.auth_cmpl.success && m_pServer != nullptr) {
+        BLEAddress peerAddress(param->ble_security.auth_cmpl.bd_addr);
+        m_pServer->restoreCCCDValues(peerAddress);
+      }
+
+      // Signal completion last - this unblocks any GATT operations waiting for pairing
+      BLESecurity::signalAuthenticationComplete();
 #endif  // CONFIG_BLE_SMP_ENABLE
     } break;
+    case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
+    {
+      log_i(
+        "ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT: status=%d, conn_int=%u, latency=%u, timeout=%u", param->update_conn_params.status,
+        param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout
+      );
+      break;
+    }
     default:
     {
       break;
     }
   }  // switch
+
+  if (BLEDevice::m_pServer != nullptr) {
+    BLEDevice::m_pServer->handleGAPEvent(event, param);
+  }
 
   if (BLEDevice::m_pClient != nullptr) {
     BLEDevice::m_pClient->handleGAPEvent(event, param);
@@ -1400,14 +1567,6 @@ void BLEDevice::setDeviceCallbacks(BLEDeviceCallbacks *cb) {
 }
 
 /**
- * @brief Get the device name.
- * @return The device name.
- */
-String BLEDevice::getDeviceName() {
-  return m_deviceName;
-}
-
-/**
  * @brief Sets the address type to use.
  * @param [in] type Bluetooth Device address type.
  * The available types are defined as:
@@ -1423,7 +1582,7 @@ bool BLEDevice::setOwnAddrType(uint8_t type) {
   }
   int rc = ble_hs_id_copy_addr(type & 1, NULL, NULL);  // Odd values are random
   if (rc != 0) {
-    log_e("Unable to set address type %d, rc=%d", type, rc);
+    log_e("Unable to set address type %u, rc=%d", type, rc);
     return false;
   }
 

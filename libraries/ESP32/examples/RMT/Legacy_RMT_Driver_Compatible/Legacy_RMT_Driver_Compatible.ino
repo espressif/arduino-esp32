@@ -7,6 +7,8 @@
  *
  */
 
+#include <Arduino.h>
+
 #ifndef ESP32_ARDUINO_NO_RGB_BUILTIN
 
 // add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver

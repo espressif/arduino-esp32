@@ -205,8 +205,13 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);
 
 // Use float-compatible stl abs() and round(), we don't use Arduino macros to avoid issues with the C++ libraries
 using std::abs;
+// picolibc declares isinf/isnan as C functions (int isinf(double)) in math.h
+// which conflicts with C++ std:: versions. picolibc also provides them as
+// __builtin_* macros, so the using declarations are not needed.
+#if !defined(__PICOLIBC__)
 using std::isinf;
 using std::isnan;
+#endif
 using std::max;
 using std::min;
 using std::round;

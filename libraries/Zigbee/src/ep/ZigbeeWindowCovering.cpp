@@ -112,7 +112,7 @@ bool ZigbeeWindowCovering::setConfigStatus(
                           | (lift_encoder_controlled ? ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_LIFT_ENCODER_CONTROLLED : 0)
                           | (tilt_encoder_controlled ? ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_TILT_ENCODER_CONTROLLED : 0);
 
-  log_v("Updating window covering config status to %d", config_status);
+  log_v("Updating window covering config status to %u", config_status);
 
   esp_zb_attribute_list_t *window_covering_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
@@ -130,7 +130,7 @@ bool ZigbeeWindowCovering::setMode(bool motor_reversed, bool calibration_mode, b
                  | (maintenance_mode ? ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_MOTOR_IS_RUNNING_IN_MAINTENANCE_MODE : 0)
                  | (leds_on ? ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_LEDS_WILL_DISPLAY_FEEDBACK : 0);
 
-  log_v("Updating window covering mode to %d", mode);
+  log_v("Updating window covering mode to %u", mode);
 
   esp_zb_attribute_list_t *window_covering_cluster =
     esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
@@ -195,7 +195,7 @@ bool ZigbeeWindowCovering::setLimits(
 void ZigbeeWindowCovering::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING) {
-    log_v("Received attribute id: 0x%x / data.type: 0x%x", message->attribute.id, message->attribute.data.type);
+    log_v("Received attribute id: 0x%u / data.type: 0x%u", message->attribute.id, message->attribute.data.type);
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_8BITMAP) {
       uint8_t mode = *(uint8_t *)message->attribute.data.value;
       bool motor_reversed = mode & ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_REVERSED_MOTOR_DIRECTION;
@@ -203,7 +203,7 @@ void ZigbeeWindowCovering::zbAttributeSet(const esp_zb_zcl_set_attr_value_messag
       bool maintenance_mode = mode & ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_MOTOR_IS_RUNNING_IN_MAINTENANCE_MODE;
       bool leds_on = mode & ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_LEDS_WILL_DISPLAY_FEEDBACK;
       log_v(
-        "Updating window covering mode to motor reversed: %d, calibration mode: %d, maintenance mode: %d, leds on: %d", motor_reversed, calibration_mode,
+        "Updating window covering mode to motor reversed: %u, calibration mode: %u, maintenance mode: %u, leds on: %u", motor_reversed, calibration_mode,
         maintenance_mode, leds_on
       );
       setMode(motor_reversed, calibration_mode, maintenance_mode, leds_on);
@@ -215,7 +215,7 @@ void ZigbeeWindowCovering::zbAttributeSet(const esp_zb_zcl_set_attr_value_messag
                           ->data_p);
       config_status = motor_reversed ? config_status | ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_REVERSE_COMMANDS
                                      : config_status & ~ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_REVERSE_COMMANDS;
-      log_v("Updating window covering config status to %d", config_status);
+      log_v("Updating window covering config status to %u", config_status);
       esp_zb_lock_acquire(portMAX_DELAY);
       esp_zb_zcl_set_attribute_val(
         _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, &config_status,
@@ -225,7 +225,7 @@ void ZigbeeWindowCovering::zbAttributeSet(const esp_zb_zcl_set_attr_value_messag
       return;
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Window Covering", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Window Covering", message->info.cluster);
   }
 }
 
@@ -254,10 +254,10 @@ void ZigbeeWindowCovering::zbWindowCoveringMovementCmd(const esp_zb_zcl_window_c
         return;
       }
     } else {
-      log_w("Received message ignored. Command: %d not supported for Window Covering", message->command);
+      log_w("Received message ignored. Command: %u not supported for Window Covering", message->command);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Window Covering", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Window Covering", message->info.cluster);
   }
 }
 
@@ -297,7 +297,7 @@ bool ZigbeeWindowCovering::setLiftPosition(uint16_t lift_position) {
   // Update both lift attributes
   _current_lift_position = lift_position;
   _current_lift_percentage = ((lift_position - _installed_open_limit_lift) * 100) / (_installed_closed_limit_lift - _installed_open_limit_lift);
-  log_v("Updating window covering lift position to %d (%d%)", _current_lift_position, _current_lift_percentage);
+  log_v("Updating window covering lift position to %u (%u%)", _current_lift_position, _current_lift_percentage);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
@@ -326,7 +326,7 @@ bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
   // Update both lift attributes
   _current_lift_percentage = lift_percentage;
   _current_lift_position = _installed_open_limit_lift + ((_installed_closed_limit_lift - _installed_open_limit_lift) * lift_percentage) / 100;
-  log_v("Updating window covering lift percentage to %d%% (%d)", _current_lift_percentage, _current_lift_position);
+  log_v("Updating window covering lift percentage to %u%% (%u)", _current_lift_percentage, _current_lift_position);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
@@ -356,7 +356,7 @@ bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
   _current_tilt_position = tilt_position;
   _current_tilt_percentage = ((tilt_position - _installed_open_limit_tilt) * 100) / (_installed_closed_limit_tilt - _installed_open_limit_tilt);
 
-  log_v("Updating window covering tilt position to %d (%d%)", _current_tilt_position, _current_tilt_percentage);
+  log_v("Updating window covering tilt position to %u (%u%)", _current_tilt_position, _current_tilt_percentage);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
@@ -386,7 +386,7 @@ bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
   _current_tilt_percentage = tilt_percentage;
   _current_tilt_position = _installed_open_limit_tilt + ((_installed_closed_limit_tilt - _installed_open_limit_tilt) * tilt_percentage) / 100;
 
-  log_v("Updating window covering tilt percentage to %d%% (%d)", _current_tilt_percentage, _current_tilt_position);
+  log_v("Updating window covering tilt percentage to %u%% (%u)", _current_tilt_percentage, _current_tilt_position);
 
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(

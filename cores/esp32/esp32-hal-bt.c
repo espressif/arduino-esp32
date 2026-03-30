@@ -17,9 +17,14 @@
 #if SOC_BT_SUPPORTED
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h")
 
-// default: keep BTDM memory; users can override
+// Flag set by constructors in esp32-hal-bt-mem.h when BT libraries are linked
+bool _btLibraryInUse = false;
+
+// Default behavior: release BTDM memory (~36KB) unless a BT library is used or user overrides.
+// BT libraries include esp32-hal-bt-mem.h which sets _btLibraryInUse = true via constructor.
+// Users can also provide their own strong btInUse() implementation.
 __attribute__((weak)) bool btInUse(void) {
-  return true;
+  return _btLibraryInUse;
 }
 
 #include "esp_bt.h"

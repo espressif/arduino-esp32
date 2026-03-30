@@ -6,6 +6,8 @@
 */
 // Please read file README.md in the folder containing this example./*
 
+#include <Arduino.h>
+
 #define MAX_LINE_LENGTH (64)
 
 // Define two tasks for reading and writing from and to the serial port.
@@ -86,7 +88,7 @@ void TaskWriteToSerial(void *pvParameters) {  // This is a task.
       int ret = xQueueReceive(QueueHandle, &message, portMAX_DELAY);
       if (ret == pdPASS) {
         // The message was successfully received - send it back to Serial port and "Echo: "
-        Serial.printf("Echo line of size %d: \"%s\"\n", message.line_length, message.line);
+        Serial.printf("Echo line of size %u: \"%s\"\n", message.line_length, message.line);
         // The item is queued by copy, not by reference, so lets free the buffer after use.
       } else if (ret == pdFALSE) {
         Serial.println("The `TaskWriteToSerial` was unable to receive data from the Queue");

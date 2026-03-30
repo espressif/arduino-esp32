@@ -16,6 +16,7 @@
   - SHA3Builder(size_t hash_size): Generic class that can be used to create any SHA3 variant implemented
 */
 
+#include <Arduino.h>
 #include <SHA3Builder.h>
 #include <Stream.h>
 

@@ -118,7 +118,7 @@ bool ZigbeeDoorWindowHandle::report() {
 
 void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
   if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE) {
-    log_v("IAS Zone Enroll Response: zone id(%d), status(%d)", message->zone_id, message->response_code);
+    log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->zone_id, message->response_code);
     if (message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
       esp_zb_lock_acquire(portMAX_DELAY);
@@ -134,7 +134,7 @@ void ZigbeeDoorWindowHandle::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_e
       _enrolled = true;
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Light", message->info.cluster);
   }
 }
 
@@ -173,7 +173,7 @@ bool ZigbeeDoorWindowHandle::restoreIASZoneEnroll() {
   _zone_id = (*(uint8_t *)zone_id_attr->data_p);
 
   log_d(
-    "Restored IAS Zone enroll: zone id(%d), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1],
+    "Restored IAS Zone enroll: zone id(%u), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1],
     _ias_cie_addr[2], _ias_cie_addr[3], _ias_cie_addr[4], _ias_cie_addr[5], _ias_cie_addr[6], _ias_cie_addr[7]
   );
 

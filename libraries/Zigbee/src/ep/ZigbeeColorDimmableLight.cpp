@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "Arduino.h"
 #include <algorithm>
 #include "ZigbeeColorDimmableLight.h"
 #if CONFIG_ZB_ENABLED
@@ -105,7 +106,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->attribute.id);
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
@@ -119,24 +120,24 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Level Control", message->attribute.id);
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_COLOR_CONTROL_COLOR_MODE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_8BIT_ENUM) {
       uint8_t new_color_mode = (*(uint8_t *)message->attribute.data.value);
       if (new_color_mode > ZIGBEE_COLOR_MODE_TEMPERATURE) {
-        log_w("Invalid color mode received: %d", new_color_mode);
+        log_w("Invalid color mode received: %u", new_color_mode);
         return;
       }
 
       // Validate that the requested color mode is supported by capabilities
       if (!isColorModeSupported(new_color_mode)) {
-        log_w("Color mode %d not supported by current capabilities: 0x%04x", new_color_mode, _color_capabilities);
+        log_w("Color mode %u not supported by current capabilities: 0x%x", new_color_mode, _color_capabilities);
         return;
       }
 
       _current_color_mode = new_color_mode;
-      log_v("Color mode changed to: %d", _current_color_mode);
+      log_v("Color mode changed to: %u", _current_color_mode);
       // Don't call setLightColorMode() here - the attribute was already set externally
       // Just update our internal state
       return;
@@ -224,10 +225,10 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Color Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Color Control", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Color dimmable Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Color dimmable Light", message->info.cluster);
   }
 }
 
@@ -255,7 +256,7 @@ void ZigbeeColorDimmableLight::lightChangedByMode() {
     case ZIGBEE_COLOR_MODE_CURRENT_X_Y:    lightChangedRgb(); break;
     case ZIGBEE_COLOR_MODE_HUE_SATURATION: lightChangedHsv(); break;
     case ZIGBEE_COLOR_MODE_TEMPERATURE:    lightChangedTemp(); break;
-    default:                               log_e("Unknown color mode: %d", _current_color_mode); break;
+    default:                               log_e("Unknown color mode: %u", _current_color_mode); break;
   }
 }
 
@@ -284,7 +285,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   // Update HSV state
   _current_hsv = hsv_color;
 
-  log_v("Updating light state: %d, level: %d, color: %d, %d, %d", state, level, red, green, blue);
+  log_v("Updating light state: %d, level: %u, color: %u, %u, %u", state, level, red, green, blue);
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
   //set on/off state
@@ -418,7 +419,7 @@ bool ZigbeeColorDimmableLight::setLightColor(espHsvColor_t hsv_color) {
   uint8_t hue = std::clamp((uint8_t)hsv_color.h, (uint8_t)0, (uint8_t)254);
   uint8_t saturation = std::clamp((uint8_t)hsv_color.s, (uint8_t)0, (uint8_t)254);
 
-  log_v("Updating light HSV: H=%d, S=%d, V=%d (level=%d)", hue, saturation, hsv_color.v, _current_level);
+  log_v("Updating light HSV: H=%u, S=%u, V=%u (level=%u)", hue, saturation, hsv_color.v, _current_level);
   /* Update light clusters */
   esp_zb_lock_acquire(portMAX_DELAY);
   //set level (brightness from HSV value component)
@@ -464,7 +465,7 @@ bool ZigbeeColorDimmableLight::setLightColorTemperature(uint16_t color_temperatu
   _current_color_temperature = color_temperature;
   lightChangedTemp();
 
-  log_v("Updating light color temperature: %d", color_temperature);
+  log_v("Updating light color temperature: %u", color_temperature);
 
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   /* Update light clusters */
@@ -493,18 +494,18 @@ bool ZigbeeColorDimmableLight::isColorModeSupported(uint8_t color_mode) {
 
 bool ZigbeeColorDimmableLight::setLightColorMode(uint8_t color_mode) {
   if (color_mode > ZIGBEE_COLOR_MODE_TEMPERATURE) {
-    log_e("Invalid color mode: %d", color_mode);
+    log_e("Invalid color mode: %u", color_mode);
     return false;
   }
 
   // Check if the requested color mode is supported by capabilities
   if (!isColorModeSupported(color_mode)) {
-    log_e("Color mode %d not supported by current capabilities: 0x%04x", color_mode, _color_capabilities);
+    log_e("Color mode %u not supported by current capabilities: 0x%04x", color_mode, _color_capabilities);
     return false;
   }
 
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  log_v("Setting color mode: %d", color_mode);
+  log_v("Setting color mode: %u", color_mode);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_COLOR_MODE_ID, &color_mode, false

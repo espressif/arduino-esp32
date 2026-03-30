@@ -6,6 +6,8 @@
 */
 // Please read file README.md in the folder containing this example.
 
+#include <Arduino.h>
+
 #define USE_MUTEX
 int shared_variable = 0;
 SemaphoreHandle_t shared_var_mutex = NULL;

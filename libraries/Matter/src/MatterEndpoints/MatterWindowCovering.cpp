@@ -15,6 +15,7 @@
 #include <sdkconfig.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
+#include "Arduino.h"
 #include <Matter.h>
 #include <MatterEndpoints/MatterWindowCovering.h>
 
@@ -36,7 +37,7 @@ bool MatterWindowCovering::begin(uint8_t liftPercent, uint8_t tiltPercent, Windo
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
-    log_e("Matter Window Covering with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Window Covering with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
 
@@ -59,7 +60,7 @@ bool MatterWindowCovering::begin(uint8_t liftPercent, uint8_t tiltPercent, Windo
   }
 
   setEndPointId(endpoint::get_id(endpoint));
-  log_i("Window Covering created with endpoint_id %d", getEndPointId());
+  log_i("Window Covering created with endpoint_id %u", getEndPointId());
 
   // Get the Window Covering cluster and add features and commands
   cluster_t *window_covering_cluster = cluster::get(endpoint, WindowCovering::Id);
@@ -148,7 +149,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
     return false;
   }
 
-  log_d("Window Covering Attr update callback: endpoint: %u, cluster: %u, attribute: %u", endpoint_id, cluster_id, attribute_id);
+  log_d("Window Covering Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32, endpoint_id, cluster_id, attribute_id);
 
   if (endpoint_id == getEndPointId() && cluster_id == WindowCovering::Id) {
     switch (attribute_id) {
@@ -157,7 +158,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       {
         uint16_t liftPercent100ths = val->val.u16;
         uint8_t liftPercent = (uint8_t)(liftPercent100ths / 100);
-        log_d("Window Covering Lift Percentage changed to %d%%", liftPercent);
+        log_d("Window Covering Lift Percentage changed to %u%%", liftPercent);
         if (currentLiftPercent != liftPercent) {
           if (_onChangeCB != NULL) {
             ret &= _onChangeCB(liftPercent, currentTiltPercent);
@@ -172,7 +173,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       {
         uint16_t tiltPercent100ths = val->val.u16;
         uint8_t tiltPercent = (uint8_t)(tiltPercent100ths / 100);
-        log_d("Window Covering Tilt Percentage changed to %d%%", tiltPercent);
+        log_d("Window Covering Tilt Percentage changed to %u%%", tiltPercent);
         if (currentTiltPercent != tiltPercent) {
           if (_onChangeCB != NULL) {
             ret &= _onChangeCB(currentLiftPercent, tiltPercent);
@@ -184,15 +185,15 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         break;
       }
       case WindowCovering::Attributes::CurrentPositionLift::Id:
-        log_d("Window Covering Lift Position changed to %d", val->val.u16);
+        log_d("Window Covering Lift Position changed to %u", val->val.u16);
         currentLiftPosition = val->val.u16;
         break;
       case WindowCovering::Attributes::CurrentPositionTilt::Id:
-        log_d("Window Covering Tilt Position changed to %d", val->val.u16);
+        log_d("Window Covering Tilt Position changed to %u", val->val.u16);
         currentTiltPosition = val->val.u16;
         break;
-      case WindowCovering::Attributes::CurrentPositionLiftPercentage::Id: log_d("Window Covering Lift Percentage (legacy) changed to %d%%", val->val.u8); break;
-      case WindowCovering::Attributes::CurrentPositionTiltPercentage::Id: log_d("Window Covering Tilt Percentage (legacy) changed to %d%%", val->val.u8); break;
+      case WindowCovering::Attributes::CurrentPositionLiftPercentage::Id: log_d("Window Covering Lift Percentage (legacy) changed to %u%%", val->val.u8); break;
+      case WindowCovering::Attributes::CurrentPositionTiltPercentage::Id: log_d("Window Covering Tilt Percentage (legacy) changed to %u%%", val->val.u8); break;
 
       // Target position attributes (writable, trigger movement)
       // Note: TargetPosition is where the device SHOULD go, not where it is.
@@ -202,7 +203,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
           uint16_t targetLiftPercent100ths = val->val.u16;
           uint8_t targetLiftPercent = (uint8_t)(targetLiftPercent100ths / 100);
-          log_d("Window Covering Target Lift Percentage changed to %d%%", targetLiftPercent);
+          log_d("Window Covering Target Lift Percentage changed to %u%%", targetLiftPercent);
           // Call callback to trigger movement - do NOT update currentLiftPercent here
           // `CurrentPosition` will be updated by the application when the device actually moves
           // Get current position to detect StopMotion command
@@ -211,7 +212,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
           if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal)) {
             if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(currentVal.val.u16)) {
               currentLiftPercent100ths = currentVal.val.u16;
-              log_d("Window Covering Current Lift Percentage is %d%%", (uint8_t)(currentLiftPercent100ths / 100));
+              log_d("Window Covering Current Lift Percentage is %u%%", (uint8_t)(currentLiftPercent100ths / 100));
             }
           }
 
@@ -260,7 +261,7 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val->val.u16)) {
           uint16_t targetTiltPercent100ths = val->val.u16;
           uint8_t targetTiltPercent = (uint8_t)(targetTiltPercent100ths / 100);
-          log_d("Window Covering Target Tilt Percentage changed to %d%%", targetTiltPercent);
+          log_d("Window Covering Target Tilt Percentage changed to %u%%", targetTiltPercent);
           // Call callback to trigger movement - do NOT update currentTiltPercent here
           // CurrentPosition will be updated by the application when the device actually moves
           if (_onGoToTiltPercentageCB != NULL) {
@@ -274,10 +275,10 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
 
       // Configuration attributes
       case WindowCovering::Attributes::Type::Id:
-        log_d("Window Covering Type changed to %d", val->val.u8);
+        log_d("Window Covering Type changed to %u", val->val.u8);
         coveringType = (WindowCoveringType_t)val->val.u8;
         break;
-      case WindowCovering::Attributes::EndProductType::Id: log_d("Window Covering End Product Type changed to %d", val->val.u8); break;
+      case WindowCovering::Attributes::EndProductType::Id: log_d("Window Covering End Product Type changed to %u", val->val.u8); break;
       case WindowCovering::Attributes::ConfigStatus::Id:   log_d("Window Covering Config Status changed to 0x%02X", val->val.u8); break;
       case WindowCovering::Attributes::Mode::Id:           log_d("Window Covering Mode changed to 0x%02X", val->val.u8); break;
 
@@ -286,18 +287,18 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
       case WindowCovering::Attributes::SafetyStatus::Id:      log_d("Window Covering Safety Status changed to 0x%04X", val->val.u16); break;
 
       // Limit attributes
-      case WindowCovering::Attributes::PhysicalClosedLimitLift::Id:  log_d("Window Covering Physical Closed Limit Lift changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::PhysicalClosedLimitTilt::Id:  log_d("Window Covering Physical Closed Limit Tilt changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::InstalledOpenLimitLift::Id:   log_d("Window Covering Installed Open Limit Lift changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::InstalledClosedLimitLift::Id: log_d("Window Covering Installed Closed Limit Lift changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::InstalledOpenLimitTilt::Id:   log_d("Window Covering Installed Open Limit Tilt changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::InstalledClosedLimitTilt::Id: log_d("Window Covering Installed Closed Limit Tilt changed to %d", val->val.u16); break;
+      case WindowCovering::Attributes::PhysicalClosedLimitLift::Id:  log_d("Window Covering Physical Closed Limit Lift changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::PhysicalClosedLimitTilt::Id:  log_d("Window Covering Physical Closed Limit Tilt changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::InstalledOpenLimitLift::Id:   log_d("Window Covering Installed Open Limit Lift changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::InstalledClosedLimitLift::Id: log_d("Window Covering Installed Closed Limit Lift changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::InstalledOpenLimitTilt::Id:   log_d("Window Covering Installed Open Limit Tilt changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::InstalledClosedLimitTilt::Id: log_d("Window Covering Installed Closed Limit Tilt changed to %u", val->val.u16); break;
 
       // Actuation count attributes
-      case WindowCovering::Attributes::NumberOfActuationsLift::Id: log_d("Window Covering Number of Actuations Lift changed to %d", val->val.u16); break;
-      case WindowCovering::Attributes::NumberOfActuationsTilt::Id: log_d("Window Covering Number of Actuations Tilt changed to %d", val->val.u16); break;
+      case WindowCovering::Attributes::NumberOfActuationsLift::Id: log_d("Window Covering Number of Actuations Lift changed to %u", val->val.u16); break;
+      case WindowCovering::Attributes::NumberOfActuationsTilt::Id: log_d("Window Covering Number of Actuations Tilt changed to %u", val->val.u16); break;
 
-      default: log_d("Window Covering Unknown attribute %u changed", attribute_id); break;
+      default: log_d("Window Covering Unknown attribute %" PRIu32 " changed", attribute_id); break;
     }
   }
   return ret;

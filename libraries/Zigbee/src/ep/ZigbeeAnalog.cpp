@@ -177,10 +177,10 @@ void ZigbeeAnalog::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mes
       _output_state = *(float *)message->attribute.data.value;
       analogOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Analog Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Analog Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Analog endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Analog endpoint", message->info.cluster);
   }
 }
 
@@ -239,7 +239,8 @@ bool ZigbeeAnalog::reportAnalogInput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
@@ -260,7 +261,8 @@ bool ZigbeeAnalog::reportAnalogOutput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);

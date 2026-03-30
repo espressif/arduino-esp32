@@ -16,6 +16,7 @@
 // Useful if you want to advertise some sort of message
 // Button is attached between GPIO 0 and GND, and the device name changes each time the button is pressed
 
+#include <Arduino.h>
 #include "SimpleBLE.h"
 
 SimpleBLE ble;

@@ -356,10 +356,10 @@ void ZigbeeMultistate::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t 
       _output_state = *(uint16_t *)message->attribute.data.value;
       multistateOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Multistate Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Multistate Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Multistate endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Multistate endpoint", message->info.cluster);
   }
 }
 
@@ -377,7 +377,7 @@ bool ZigbeeMultistate::setMultistateInput(uint16_t state) {
     log_e("Multistate Input cluster not added");
     return false;
   }
-  log_d("Setting multistate input to %d", state);
+  log_d("Setting multistate input to %u", state);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
     _endpoint, ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false
@@ -395,7 +395,7 @@ bool ZigbeeMultistate::setMultistateOutput(uint16_t state) {
   _output_state = state;
   multistateOutputChanged();
 
-  log_v("Updating multistate output to %d", state);
+  log_v("Updating multistate output to %u", state);
   /* Update multistate output */
   esp_zb_lock_acquire(portMAX_DELAY);
   ret = esp_zb_zcl_set_attribute_val(
@@ -418,7 +418,8 @@ bool ZigbeeMultistate::reportMultistateInput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
@@ -439,7 +440,8 @@ bool ZigbeeMultistate::reportMultistateOutput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
   esp_zb_lock_acquire(portMAX_DELAY);
   esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);

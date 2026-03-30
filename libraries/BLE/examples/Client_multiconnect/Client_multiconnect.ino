@@ -14,6 +14,7 @@
  * Based on the original Client example by Neil Kolban and chegewara
  */
 
+#include <Arduino.h>
 #include "BLEDevice.h"
 
 // The remote service we wish to connect to.

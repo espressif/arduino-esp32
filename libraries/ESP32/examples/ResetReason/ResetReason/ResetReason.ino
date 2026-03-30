@@ -12,6 +12,8 @@
 *  Evandro Luis Copercini - 2017
 */
 
+#include <Arduino.h>
+
 #if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2

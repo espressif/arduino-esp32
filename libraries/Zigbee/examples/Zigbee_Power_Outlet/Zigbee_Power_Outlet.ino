@@ -26,6 +26,7 @@
  * Created by Ludovic Boué (https://github.com/lboue)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ZCZR
 #error "Zigbee router mode is not selected in Tools->Zigbee mode"
 #endif

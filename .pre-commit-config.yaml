@@ -16,19 +16,28 @@ repos:
     hooks:
       # Generic checks
       - id: check-case-conflict
+        name: Check for Case Conflicts
       - id: check-symlinks
+        name: Check for Broken Symlinks
       - id: debug-statements
+        name: Check for Debug Statements
       - id: destroyed-symlinks
+        name: Check for Destroyed Symlinks
       - id: detect-private-key
+        name: Check for Private Keys
       - id: end-of-file-fixer
+        name: Fix End of File Formatting
         exclude: ^.*\.(bin|BIN)$
       - id: mixed-line-ending
+        name: Fix Mixed Line Endings
         args: [--fix=lf]
       - id: trailing-whitespace
+        name: Fix Trailing Whitespace
         args: [--markdown-linebreak-ext=md]
 
       # JSON formatting
       - id: pretty-format-json
+        name: Fix JSON Formatting
         stages: [manual]
         args: [--autofix]
         types_or: [json]
@@ -44,6 +53,7 @@ repos:
     hooks:
       # C/C++ formatting
       - id: clang-format
+        name: Format C/C++ code using Clang Format
         types_or: [c, c++]
         exclude: ^.*\/build_opt\.h$
 
@@ -52,6 +62,7 @@ repos:
     hooks:
       # Python formatting
       - id: black
+        name: Format Python code using Black
         types_or: [python]
         args: [--line-length=120] #From the arduino code style. Add as argument rather than creating a new config file.
 
@@ -60,6 +71,7 @@ repos:
     hooks:
       # Python linting
       - id: flake8
+        name: Lint Python code using Flake8
         types_or: [python]
         additional_dependencies:
           - flake8-bugbear
@@ -71,6 +83,7 @@ repos:
     hooks:
       # YAML formatting
       - id: prettier
+        name: Format YAML code using Prettier
         types_or: [yaml]
 
   - repo: https://github.com/codespell-project/codespell
@@ -78,6 +91,7 @@ repos:
     hooks:
       # Spell checking
       - id: codespell
+        name: Check spelling in code using Codespell
         exclude: ^.*\.(svd|SVD)$
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
@@ -85,6 +99,7 @@ repos:
     hooks:
       # Bash linting
       - id: shellcheck
+        name: Lint Bash code using Shellcheck
         types: [shell]
 
   - repo: https://github.com/openstack/bashate
@@ -92,20 +107,30 @@ repos:
     hooks:
       # Bash formatting
       - id: bashate
+        name: Lint Bash code using Bashate
         types: [shell]
         args: ["-i", "E006"] # Ignore E006: Line too long
+
+  - repo: local
+    hooks:
+      - id: arduino-include-checker
+        name: Check for Arduino.h include
+        entry: .github/scripts/include_checker.py
+        language: python
+        files: ^.*\.ino$
 
   - repo: https://github.com/errata-ai/vale
     rev: "dc4c47923788a413fb5677de6e3370d514aecb78" # v3.11.2
     hooks:
       # Sync vale styles and lint markdown and reStructuredText
       - id: vale
-        name: vale-sync
+        name: Sync Vale styles
         language_version: "1.23.2"
         pass_filenames: false
         args: [sync]
         types_or: [markdown, rst]
       - id: vale
+        name: Lint markdown and reStructuredText using Vale
         language_version: "1.23.2"
         types_or: [markdown, rst]
 
@@ -113,7 +138,7 @@ repos:
   - repo: local
     hooks:
       - id: git-diff
-        name: git diff
+        name: Check if changes were made by the pre-commit hooks
         entry: |
           bash -c '
             if [ "$CI" = "true" ]; then

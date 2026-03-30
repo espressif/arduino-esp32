@@ -10,6 +10,7 @@ For best results, it is recommended to add an extra offset resistor between VCC 
 
 View this sketch in action on YouTube: https://youtu.be/Y9TLXs_3w1M
 */
+#include <Arduino.h>
 #if ARDUINO_USB_MODE
 #warning This sketch should be used when USB is in OTG mode
 void setup() {}

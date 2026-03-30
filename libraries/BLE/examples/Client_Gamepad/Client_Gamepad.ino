@@ -7,6 +7,7 @@
  * Features:
  * - Scans for BLE HID gamepad devices
  * - Connects to the first gamepad found
+ * - Secure pairing with bonding
  * - Subscribes to input report notifications
  * - Parses and displays gamepad input (buttons and axes)
  * - Automatic reconnection on disconnect
@@ -16,12 +17,17 @@
  * 2. Turn on your BLE gamepad (or run the Server_Gamepad example on another ESP32)
  * 3. The ESP32 will scan, connect, and display gamepad input in the serial monitor
  *
+ * Note: This example uses "Just Works" pairing for automatic connection without
+ * PIN entry or confirmation. The bond is saved for future connections.
+ *
  * Compatible with gamepads using the standard HID Report Descriptor format
  *
  * Created by lucasssvaz
  */
 
+#include <Arduino.h>
 #include <BLEDevice.h>
+#include <BLESecurity.h>
 
 // HID Service UUID (standard UUID for HID over GATT)
 static BLEUUID hidServiceUUID((uint16_t)0x1812);
@@ -48,13 +54,13 @@ struct GamepadReport {
 
 // Callback function to handle gamepad input notifications
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {
-  Serial.printf("Received %d bytes: ", length);
+  Serial.printf("Received %lu bytes: ", (unsigned long)length);
 
   // Check if data length matches our expected gamepad report
   if (length == sizeof(GamepadReport)) {
     GamepadReport *report = (GamepadReport *)pData;
 
-    Serial.printf("ID=%d, X=%4d, Y=%4d, Buttons=0x%02X [", report->reportId, report->x, report->y, report->buttons);
+    Serial.printf("ID=%u, X=%4d, Y=%4d, Buttons=0x%02X [", report->reportId, report->x, report->y, report->buttons);
 
     // Display which buttons are pressed
     for (int i = 0; i < 8; i++) {
@@ -128,7 +134,7 @@ bool connectToServer() {
           if (refValue.length() >= 2) {
             uint8_t reportId = refValue[0];
             uint8_t reportType = refValue[1];
-            Serial.printf("   Report ID: %d, Type: %d (1=Input, 2=Output, 3=Feature)\n", reportId, reportType);
+            Serial.printf("   Report ID: %u, Type: %u (1=Input, 2=Output, 3=Feature)\n", reportId, reportType);
 
             // We want input reports (type = 1)
             if (reportType == 1) {
@@ -155,6 +161,10 @@ bool connectToServer() {
 
   connected = true;
   Serial.println("Successfully connected and subscribed to gamepad!");
+
+  // Note: Security/encryption will be automatically handled by the BLE stack
+  // when the HID device requires it (using "Just Works" pairing).
+
   return true;
 }
 
@@ -195,6 +205,23 @@ void setup() {
   Serial.println("Scanning for BLE HID gamepads...\n");
 
   BLEDevice::init("ESP32-Gamepad-Client");
+
+  // Configure BLE Security for pairing with HID devices
+  BLESecurity *pSecurity = new BLESecurity();
+
+  // Set security capabilities and authentication mode
+  // HID devices typically use "Just Works" pairing (no MITM) with bonding
+
+  // Set IO capability to NONE for "Just Works" pairing
+  pSecurity->setCapability(ESP_IO_CAP_NONE);
+
+  // Bonding, no MITM, secure connections (for "Just Works" pairing)
+  pSecurity->setAuthenticationMode(true, false, true);
+
+  // Set security callbacks (using default implementation)
+  BLEDevice::setSecurityCallbacks(new BLESecurityCallbacks());
+
+  Serial.println("Security configured: Bonding + Secure Connections\n");
 
   // Create scanner and set callbacks
   BLEScan *pBLEScan = BLEDevice::getScan();

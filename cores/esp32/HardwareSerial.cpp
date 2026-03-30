@@ -11,6 +11,26 @@
 #include "driver/uart.h"
 #include "freertos/queue.h"
 
+// Array of pointers to active HardwareSerial objects used by HAL to call end() when pins are detached
+static HardwareSerial *uart_instances[SOC_UART_NUM] = {nullptr};
+
+// Register the last HardwareSerial object started with begin
+static void uart_register(uint8_t uart_num, HardwareSerial *serial) {
+  // only register it once
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] == nullptr) {
+    uart_instances[uart_num] = serial;
+  }
+}
+
+extern "C" {
+// Strong implementation of weak hardware_serial_end() - called by HAL when pins are detached
+void hardware_serial_end(uint8_t uart_num) {
+  if (uart_num < SOC_UART_NUM && uart_instances[uart_num] != nullptr) {
+    uart_instances[uart_num]->end();
+  }
+}
+}  // extern "C"
+
 #if (SOC_UART_LP_NUM >= 1)
 #define UART_HW_FIFO_LEN(uart_num) ((uart_num < SOC_UART_HP_NUM) ? SOC_UART_FIFO_LEN : SOC_LP_UART_FIFO_LEN)
 #else
@@ -60,31 +80,6 @@ HardwareSerial Serial5(5);
 #if HWCDC_SERIAL_IS_DEFINED == 1  // Hardware JTAG CDC Event
 extern void HWCDCSerialEvent(void) __attribute__((weak));
 #endif
-
-// C-callable helper used by HAL when pins are detached and the high-level
-// HardwareSerial instance must be finalized.
-extern "C" void hal_uart_notify_pins_detached(int uart_num) {
-  log_d("hal_uart_notify_pins_detached: Notifying HardwareSerial for UART%d", uart_num);
-  switch (uart_num) {
-    case 0: Serial0.end(); break;
-#if SOC_UART_NUM > 1
-    case 1: Serial1.end(); break;
-#endif
-#if SOC_UART_NUM > 2
-    case 2: Serial2.end(); break;
-#endif
-#if SOC_UART_NUM > 3
-    case 3: Serial3.end(); break;
-#endif
-#if SOC_UART_NUM > 4
-    case 4: Serial4.end(); break;
-#endif
-#if SOC_UART_NUM > 5
-    case 5: Serial5.end(); break;
-#endif
-    default: log_e("hal_uart_notify_pins_detached: UART%d not handled!", uart_num); break;
-  }
-}
 
 #if USB_SERIAL_IS_DEFINED == 1  // Native USB CDC Event
 // Used by Hardware Serial for USB CDC events
@@ -179,7 +174,7 @@ void HardwareSerial::_createEventTask(void *args) {
     ARDUINO_SERIAL_EVENT_TASK_RUNNING_CORE
   );
   if (_eventTask == NULL) {
-    log_e(" -- UART%d Event Task not Created!", _uart_nr);
+    log_e(" -- UART%u Event Task not Created!", _uart_nr);
   }
 }
 
@@ -295,26 +290,26 @@ void HardwareSerial::_uartEventTask(void *args) {
             }
             break;
           case UART_FIFO_OVF:
-            log_w("UART%d FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
+            log_w("UART%u FIFO Overflow. Consider adding Hardware Flow Control to your Application.", uart->_uart_nr);
             currentErr = UART_FIFO_OVF_ERROR;
             break;
           case UART_BUFFER_FULL:
-            log_w("UART%d Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
+            log_w("UART%u Buffer Full. Consider increasing your buffer size of your Application.", uart->_uart_nr);
             currentErr = UART_BUFFER_FULL_ERROR;
             break;
           case UART_BREAK:
-            log_v("UART%d RX break.", uart->_uart_nr);
+            log_v("UART%u RX break.", uart->_uart_nr);
             currentErr = UART_BREAK_ERROR;
             break;
           case UART_PARITY_ERR:
-            log_v("UART%d parity error.", uart->_uart_nr);
+            log_v("UART%u parity error.", uart->_uart_nr);
             currentErr = UART_PARITY_ERROR;
             break;
           case UART_FRAME_ERR:
-            log_v("UART%d frame error.", uart->_uart_nr);
+            log_v("UART%u frame error.", uart->_uart_nr);
             currentErr = UART_FRAME_ERROR;
             break;
-          default: log_v("UART%d unknown event type %d.", uart->_uart_nr, event.type); break;
+          default: log_v("UART%u unknown event type %u", uart->_uart_nr, event.type); break;
         }
         if (currentErr != UART_NO_ERROR) {
           if (uart->_onReceiveErrorCB) {
@@ -495,7 +490,8 @@ void HardwareSerial::begin(unsigned long baud, uint32_t config, int8_t rxPin, in
     uartSetRxFIFOFull(_uart, fifoFull);
     _rxFIFOFull = fifoFull;
   }
-
+  // register the last HardwareSerial object started with begin
+  uart_register(_uart_nr, this);
   HSERIAL_MUTEX_UNLOCK();
 }
 
@@ -652,7 +648,7 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
 bool HardwareSerial::setClockSource(SerialClkSrc clkSrc) {
   if (_uart) {
-    log_e("No Clock Source change was done. This function must be called before beginning UART%d.", _uart_nr);
+    log_e("No Clock Source change was done. This function must be called before beginning UART%u", _uart_nr);
     return false;
   }
   return uartSetClockSource(_uart_nr, (uart_sclk_t)clkSrc);
@@ -669,7 +665,7 @@ size_t HardwareSerial::setRxBufferSize(size_t new_size) {
   // Valid value is higher than the FIFO length
   if (new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
-    log_w("RX Buffer set to minimum value: %d.", new_size);
+    log_w("RX Buffer set to minimum value: %lu.", (unsigned long)new_size);
   }
 
   _rxBufferSize = new_size;
@@ -688,7 +684,7 @@ size_t HardwareSerial::setTxBufferSize(size_t new_size) {
   // Valid values are zero or higher than the FIFO length
   if (new_size > 0 && new_size <= FIFOLen) {
     new_size = FIFOLen + 1;
-    log_w("TX Buffer set to minimum value: %d.", new_size);
+    log_w("TX Buffer set to minimum value: %lu.", (unsigned long)new_size);
   }
   // if new_size is higher than SOC_UART_FIFO_LEN, TX Ringbuffer will be active and it will be used to report back "availableToWrite()"
   _txBufferSize = new_size;
