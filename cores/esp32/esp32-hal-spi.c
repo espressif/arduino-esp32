@@ -35,7 +35,7 @@
 #include "esp_system.h"
 #include "esp_intr_alloc.h"
 
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
 #include "sd_pwr_ctrl_by_on_chip_ldo.h"
 #include "soc/sdmmc_pins.h"
 #endif
@@ -271,28 +271,24 @@ static bool spiDetachBus_SS(void *bus) {
   return true;
 }
 
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
 static void setLDOPower(int8_t pin) {
-  if (pin<0) {
-     return;
+  if (pin < 0) {
+    return;
   }
 
 #ifdef BOARD_SDMMC_POWER_PIN
   if (perimanPinIsValid(BOARD_SDMMC_POWER_PIN) && perimanGetPinBusType(BOARD_SDMMC_POWER_PIN)) {
     if (strcmp(perimanGetPinBusExtraType(BOARD_SDMMC_POWER_PIN), "SDMMC POWER") == 0) {
-       return;
+      return;
     }
   }
 #endif
 
-  int8_t ldo_ctrld[] = {
-           SDMMC_SLOT0_IOMUX_PIN_NUM_CLK, SDMMC_SLOT0_IOMUX_PIN_NUM_CMD,
-           SDMMC_SLOT0_IOMUX_PIN_NUM_D0,  SDMMC_SLOT0_IOMUX_PIN_NUM_D1,
-           SDMMC_SLOT0_IOMUX_PIN_NUM_D2,  SDMMC_SLOT0_IOMUX_PIN_NUM_D3,
-           SDMMC_SLOT0_IOMUX_PIN_NUM_D4,  SDMMC_SLOT0_IOMUX_PIN_NUM_D5,
-           SDMMC_SLOT0_IOMUX_PIN_NUM_D6,  SDMMC_SLOT0_IOMUX_PIN_NUM_D7
-  };
-  for (int j=0; j<10; j++) {
+  int8_t ldo_ctrld[] = {SDMMC_SLOT0_IOMUX_PIN_NUM_CLK, SDMMC_SLOT0_IOMUX_PIN_NUM_CMD, SDMMC_SLOT0_IOMUX_PIN_NUM_D0, SDMMC_SLOT0_IOMUX_PIN_NUM_D1,
+                        SDMMC_SLOT0_IOMUX_PIN_NUM_D2,  SDMMC_SLOT0_IOMUX_PIN_NUM_D3,  SDMMC_SLOT0_IOMUX_PIN_NUM_D4, SDMMC_SLOT0_IOMUX_PIN_NUM_D5,
+                        SDMMC_SLOT0_IOMUX_PIN_NUM_D6,  SDMMC_SLOT0_IOMUX_PIN_NUM_D7};
+  for (int j = 0; j < 10; j++) {
     if (pin == ldo_ctrld[j]) {
 #ifdef BOARD_SDMMC_POWER_PIN
       pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
@@ -321,7 +317,7 @@ bool spiAttachSCK(spi_t *spi, int8_t sck) {
   if (bus != NULL && !perimanClearPinBus(sck)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
   setLDOPower(sck);
 #endif
   pinMode(sck, OUTPUT);
@@ -343,7 +339,7 @@ bool spiAttachMISO(spi_t *spi, int8_t miso) {
   if (bus != NULL && !perimanClearPinBus(miso)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
   setLDOPower(miso);
 #endif
   pinMode(miso, INPUT);
@@ -365,7 +361,7 @@ bool spiAttachMOSI(spi_t *spi, int8_t mosi) {
   if (bus != NULL && !perimanClearPinBus(mosi)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
   setLDOPower(mosi);
 #endif
   pinMode(mosi, OUTPUT);
@@ -426,7 +422,7 @@ bool spiAttachSS(spi_t *spi, uint8_t ss_num, int8_t ss) {
   if (bus != NULL && !perimanClearPinBus(ss)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL //ESP32-P4
+#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
   setLDOPower(ss);
 #endif
   pinMode(ss, OUTPUT);
