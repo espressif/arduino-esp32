@@ -60,16 +60,16 @@ The internal pull-up is enabled in software; no external resistor is needed.
 
 ## Build requirements
 
-This example requires two sdkconfig options that enable SCO audio over HCI
-(added to arduino-esp32 alongside this example):
-
+This example requires two sdkconfig options that enable SCO audio over HCI:
 ```
 CONFIG_BT_HFP_AUDIO_DATA_PATH_HCI=y
 CONFIG_BTDM_CTRL_BR_EDR_SCO_DATA_PATH_HCI=y
 ```
 
-These are set automatically when building for ESP32 with the arduino-esp32
-board package that includes this example.
+These options are enabled in the precompiled ESP32 Bluetooth libraries via
+[espressif/esp32-arduino-lib-builder#360](https://github.com/espressif/esp32-arduino-lib-builder/pull/360),
+which has been accepted and merged. They are set automatically when building
+with an arduino-esp32 board package that includes the updated libraries.
 
 ## Usage
 
