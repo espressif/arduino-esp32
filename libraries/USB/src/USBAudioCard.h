@@ -33,11 +33,11 @@ ESP_EVENT_DECLARE_BASE(ARDUINO_USB_AUDIO_CARD_EVENTS);
 /** @brief Event identifiers posted on @ref ARDUINO_USB_AUDIO_CARD_EVENTS. */
 typedef enum {
   ARDUINO_USB_AUDIO_CARD_ANY_EVENT = ESP_EVENT_ANY_ID, /**< Wildcard: register for all audio card events. */
-  ARDUINO_USB_AUDIO_CARD_VOLUME_EVENT,                /**< Host or device changed a channel volume. */
-  ARDUINO_USB_AUDIO_CARD_MUTE_EVENT,                  /**< Host or device changed a channel mute state. */
-  ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT,           /**< Sample rate changed. */
-  ARDUINO_USB_AUDIO_CARD_INTERFACE_ENABLE_EVENT,      /**< Speaker or microphone streaming interface alt setting changed. */
-  ARDUINO_USB_AUDIO_CARD_MAX_EVENT,                   /**< Upper bound for valid event IDs (exclusive). */
+  ARDUINO_USB_AUDIO_CARD_VOLUME_EVENT,                 /**< Host or device changed a channel volume. */
+  ARDUINO_USB_AUDIO_CARD_MUTE_EVENT,                   /**< Host or device changed a channel mute state. */
+  ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT,            /**< Sample rate changed. */
+  ARDUINO_USB_AUDIO_CARD_INTERFACE_ENABLE_EVENT,       /**< Speaker or microphone streaming interface alt setting changed. */
+  ARDUINO_USB_AUDIO_CARD_MAX_EVENT,                    /**< Upper bound for valid event IDs (exclusive). */
 } arduino_usb_audio_card_event_t;
 
 /** @brief Logical audio channel for volume and mute (USB feature unit indices). */
@@ -50,7 +50,7 @@ typedef enum {
 /** @brief Speaker or microphone side of the composite device. */
 typedef enum {
   UAC_INTERFACE_SPK, /**< Speaker (playback) interface. */
-  UAC_INTERFACE_MIC    /**< Microphone (capture) interface. */
+  UAC_INTERFACE_MIC  /**< Microphone (capture) interface. */
 } UAC_Interface;
 
 /** @brief Payload for @ref ARDUINO_USB_AUDIO_CARD_EVENTS; only one branch is valid per event type. */
@@ -58,32 +58,32 @@ typedef union {
   struct {
     UAC_Channel channel; /**< Affected channel. */
     int8_t db;           /**< Volume in dB. */
-  } volume; /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_VOLUME_EVENT. */
+  } volume;              /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_VOLUME_EVENT. */
   struct {
     UAC_Channel channel; /**< Affected channel. */
     bool muted;          /**< New mute state. */
-  } mute; /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_MUTE_EVENT. */
+  } mute;                /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_MUTE_EVENT. */
   struct {
     uint32_t rate; /**< Sample rate in Hz. */
-  } sample_rate; /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT. */
+  } sample_rate;   /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_SAMPLE_RATE_EVENT. */
   struct {
     UAC_Interface interface; /**< Speaker or microphone. */
     bool enable;             /**< @c true if the non-zero alternate setting is active (streaming). */
-  } interface_enable; /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_INTERFACE_ENABLE_EVENT. */
+  } interface_enable;        /**< Valid for @ref ARDUINO_USB_AUDIO_CARD_INTERFACE_ENABLE_EVENT. */
 } arduino_usb_audio_card_event_data_t;
 
 /** @brief Number of speaker (playback) channels exposed in the USB descriptor. */
 typedef enum {
-  UAC_SPK_NONE,   /**< No speaker path (microphone-only device). */
-  UAC_SPK_MONO,   /**< Mono speaker. */
-  UAC_SPK_STEREO  /**< Stereo speaker. */
+  UAC_SPK_NONE,  /**< No speaker path (microphone-only device). */
+  UAC_SPK_MONO,  /**< Mono speaker. */
+  UAC_SPK_STEREO /**< Stereo speaker. */
 } UAC_SPK_Channels;
 
 /** @brief Number of microphone (capture) channels exposed in the USB descriptor. */
 typedef enum {
-  UAC_MIC_NONE,   /**< No microphone path (speaker-only device). */
-  UAC_MIC_MONO,   /**< Mono microphone. */
-  UAC_MIC_STEREO  /**< Stereo microphone. */
+  UAC_MIC_NONE,  /**< No microphone path (speaker-only device). */
+  UAC_MIC_MONO,  /**< Mono microphone. */
+  UAC_MIC_STEREO /**< Stereo microphone. */
 } UAC_MIC_Channels;
 
 /** @brief PCM bit depth used for USB audio streams. */
@@ -144,7 +144,7 @@ public:
    *  @param muted   New mute state.
    *  @return @c true if the interrupt notification was sent, @c false if unavailable or invalid channel.
    */
-  bool mute(UAC_Channel channel, bool muted); // UAC2 Only
+  bool mute(UAC_Channel channel, bool muted);  // UAC2 Only
   /** @brief Reads volume for a speaker channel in dB.
    *  @param channel Logical channel (@ref UAC_Channel).
    *  @return Volume in dB, or undefined if the channel is invalid (check logs).
@@ -155,7 +155,7 @@ public:
    *  @param volume_db Volume in dB.
    *  @return @c true if the interrupt notification was sent, @c false if unavailable or invalid channel.
    */
-  bool volume(UAC_Channel channel, int8_t volume_db); // UAC2 Only
+  bool volume(UAC_Channel channel, int8_t volume_db);  // UAC2 Only
 
   /** @brief Scales speaker PCM in @a data by the current volume and mute (software path).
    *
@@ -186,7 +186,6 @@ public:
   void onEvent(arduino_usb_audio_card_event_t event, esp_event_handler_t callback);
 
 private:
-
 };
 
 #endif /* CONFIG_TINYUSB_AUDIO_ENABLED */
