@@ -53,7 +53,6 @@
 #include "soc/dport_reg.h"
 #include "esp32s3/rom/ets_sys.h"
 #include "esp32s3/rom/gpio.h"
-#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C2
 #include "esp32c2/rom/ets_sys.h"
 #include "esp32c2/rom/gpio.h"
