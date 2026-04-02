@@ -586,8 +586,6 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     tx_cfg.trans_queue_depth = 10;  // maximum allowed
     tx_cfg.flags.invert_out = 0;
     tx_cfg.flags.with_dma = 0;
-    tx_cfg.flags.io_loop_back = 0;
-    tx_cfg.flags.io_od_mode = 0;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
     tx_cfg.intr_priority = 0;
 #endif
@@ -615,7 +613,6 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     rx_cfg.flags.invert_in = 0;
     rx_cfg.flags.with_dma = 0;
-    rx_cfg.flags.io_loop_back = 0;
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
     rx_cfg.intr_priority = 0;
 #endif

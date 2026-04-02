@@ -30,7 +30,7 @@
 #include "esp_wpa2.h"
 #endif
 
-esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
+esp_netif_t *get_esp_interface_netif(wifi_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {
   if (!dst || !src || !dst_len) {
@@ -66,10 +66,10 @@ static bool _is_staReconnectableReason(uint8_t reason) {
     case WIFI_REASON_HANDSHAKE_TIMEOUT:
     //Transient error (reconnect)
     case WIFI_REASON_AUTH_LEAVE:
-    case WIFI_REASON_ASSOC_EXPIRE:
+    case WIFI_REASON_DISASSOC_DUE_TO_INACTIVITY:
     case WIFI_REASON_ASSOC_TOOMANY:
-    case WIFI_REASON_NOT_AUTHED:
-    case WIFI_REASON_NOT_ASSOCED:
+    case WIFI_REASON_CLASS2_FRAME_FROM_NONAUTH_STA:
+    case WIFI_REASON_CLASS3_FRAME_FROM_NONASSOC_STA:
     case WIFI_REASON_ASSOC_NOT_AUTHED:
     case WIFI_REASON_MIC_FAILURE:
     case WIFI_REASON_IE_IN_4WAY_DIFFERS:
@@ -271,7 +271,7 @@ bool STAClass::onEnable() {
     return false;
   }
   if (_esp_netif == NULL) {
-    _esp_netif = get_esp_interface_netif(ESP_IF_WIFI_STA);
+    _esp_netif = get_esp_interface_netif(WIFI_IF_STA);
     if (_esp_netif == NULL) {
       log_e("STA was enabled, but netif is NULL???");
       return false;
@@ -624,7 +624,7 @@ String STAClass::psk() const {
     return String();
   }
   wifi_config_t conf;
-  esp_wifi_get_config((wifi_interface_t)ESP_IF_WIFI_STA, &conf);
+  esp_wifi_get_config(WIFI_IF_STA, &conf);
   return String(reinterpret_cast<char *>(conf.sta.password));
 }
 
@@ -740,10 +740,10 @@ const char *STAClass::disconnectReasonName(wifi_err_reason_t reason) {
     case WIFI_REASON_UNSPECIFIED:                        return "UNSPECIFIED";
     case WIFI_REASON_AUTH_EXPIRE:                        return "AUTH_EXPIRE";
     case WIFI_REASON_AUTH_LEAVE:                         return "AUTH_LEAVE";
-    case WIFI_REASON_ASSOC_EXPIRE:                       return "ASSOC_EXPIRE";
+    case WIFI_REASON_DISASSOC_DUE_TO_INACTIVITY:         return "DISASSOC_DUE_TO_INACTIVITY";
     case WIFI_REASON_ASSOC_TOOMANY:                      return "ASSOC_TOOMANY";
-    case WIFI_REASON_NOT_AUTHED:                         return "NOT_AUTHED";
-    case WIFI_REASON_NOT_ASSOCED:                        return "NOT_ASSOCED";
+    case WIFI_REASON_CLASS2_FRAME_FROM_NONAUTH_STA:      return "CLASS2_FRAME_FROM_NONAUTH_STA";
+    case WIFI_REASON_CLASS3_FRAME_FROM_NONASSOC_STA:     return "CLASS3_FRAME_FROM_NONASSOC_STA";
     case WIFI_REASON_ASSOC_LEAVE:                        return "ASSOC_LEAVE";
     case WIFI_REASON_ASSOC_NOT_AUTHED:                   return "ASSOC_NOT_AUTHED";
     case WIFI_REASON_DISASSOC_PWRCAP_BAD:                return "DISASSOC_PWRCAP_BAD";

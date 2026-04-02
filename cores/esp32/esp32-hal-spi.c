@@ -29,6 +29,7 @@
 #if !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C61)
 #include "hal/clk_gate_ll.h"
 #endif
+#include "hal/spi_ll.h"
 #include "esp32-hal-periman.h"
 #include "esp_private/periph_ctrl.h"
 
@@ -52,6 +53,7 @@
 #include "soc/dport_reg.h"
 #include "esp32s3/rom/ets_sys.h"
 #include "esp32s3/rom/gpio.h"
+#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C2
 #include "esp32c2/rom/ets_sys.h"
 #include "esp32c2/rom/gpio.h"
@@ -67,7 +69,6 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
-#include "hal/spi_ll.h"
 #include "hal/clk_tree_ll.h"
 
 // ESP32P4 SPI clock source frequencies
@@ -634,7 +635,7 @@ static void _spiSetClockDivInternal(spi_t *spi, uint32_t clockDiv) {
 
     PERIPH_RCC_ATOMIC() {
       spi_ll_enable_clock(host, false);
-      spi_ll_set_clk_source(spi->dev, new_clk_src ? SPI_CLK_SRC_SPLL : SPI_CLK_SRC_XTAL);
+      spi_ll_set_clk_source((spi_dev_t *)spi->dev, new_clk_src ? SPI_CLK_SRC_SPLL : SPI_CLK_SRC_XTAL);
       spi_ll_enable_clock(host, true);
     }
     spi->clk_src = new_clk_src;
@@ -819,21 +820,17 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32S2
+#if CONFIG_IDF_TARGET_ESP32S2 ||CONFIG_IDF_TARGET_ESP32S3
   if (spi_num == FSPI) {
-    DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
-    DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+    }
   } else if (spi_num == HSPI) {
-    DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI3_CLK_EN);
-    DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI3_RST);
-  }
-#elif CONFIG_IDF_TARGET_ESP32S3
-  if (spi_num == FSPI) {
-    periph_ll_reset(PERIPH_SPI2_MODULE);
-    periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
-  } else if (spi_num == HSPI) {
-    periph_ll_reset(PERIPH_SPI3_MODULE);
-    periph_ll_enable_clk_clear_rst(PERIPH_SPI3_MODULE);
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+    }
   }
 #elif CONFIG_IDF_TARGET_ESP32
   if (spi_num == HSPI) {
@@ -847,33 +844,24 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI01_RST);
   }
 #elif CONFIG_IDF_TARGET_ESP32P4
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-variable"
   if (spi_num == FSPI) {
-    PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI2_MODULE, ref_count) {
-      if (ref_count == 0) {
-        PERIPH_RCC_ATOMIC() {
-          spi_ll_enable_bus_clock(SPI2_HOST, true);
-          spi_ll_reset_register(SPI2_HOST);
-          spi_ll_enable_clock(SPI2_HOST, true);
-        }
-      }
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
     }
   } else if (spi_num == HSPI) {
-    PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI3_MODULE, ref_count) {
-      if (ref_count == 0) {
-        PERIPH_RCC_ATOMIC() {
-          spi_ll_enable_bus_clock(SPI3_HOST, true);
-          spi_ll_reset_register(SPI3_HOST);
-          spi_ll_enable_clock(SPI3_HOST, true);
-        }
-      }
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
     }
   }
-#pragma GCC diagnostic pop
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
-  periph_ll_reset(PERIPH_SPI2_MODULE);
-  periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+  PERIPH_RCC_ATOMIC() {
+    spi_ll_enable_bus_clock(SPI2_HOST, true);
+    spi_ll_reset_register(SPI2_HOST);
+  }
 #endif
 
   SPI_MUTEX_LOCK();

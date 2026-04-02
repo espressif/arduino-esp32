@@ -173,7 +173,7 @@ void ETHClass::setTaskStackSize(size_t size) {
     .clock_config = {                                                              \
       .rmii = {                                                                    \
         .clock_mode = EMAC_CLK_EXT_IN,                                             \
-        .clock_gpio = (emac_rmii_clock_gpio_t)ETH_RMII_CLK                         \
+        .clock_gpio = (int)ETH_RMII_CLK                         \
       }                                                                            \
     },                                                                             \
     .dma_burst_len = ETH_DMA_BURST_LEN_32,                                         \
@@ -191,7 +191,7 @@ void ETHClass::setTaskStackSize(size_t size) {
     .clock_config_out_in = {                                                       \
       .rmii = {                                                                    \
         .clock_mode = EMAC_CLK_EXT_IN,                                             \
-        .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
+        .clock_gpio = (int)-1                                 \
       }                                                                            \
     },                                                                             \
   }
@@ -223,16 +223,16 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
 #if CONFIG_IDF_TARGET_ESP32
 #undef DEFAULT_RMII_CLK_GPIO
-#define DEFAULT_RMII_CLK_GPIO (emac_rmii_clock_gpio_t)(0)
+#define DEFAULT_RMII_CLK_GPIO (int)(0)
 #endif
 
   eth_esp32_emac_config_t mac_config = ETH_EMAC_DEFAULT_CONFIG();
 #if CONFIG_IDF_TARGET_ESP32
   mac_config.clock_config.rmii.clock_mode = (clock_mode) ? EMAC_CLK_OUT : EMAC_CLK_EXT_IN;
-  mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? EMAC_APPL_CLK_OUT_GPIO
-                                            : (2 == clock_mode) ? EMAC_CLK_OUT_GPIO
-                                            : (3 == clock_mode) ? EMAC_CLK_OUT_180_GPIO
-                                                                : EMAC_CLK_IN_GPIO;
+  mac_config.clock_config.rmii.clock_gpio = (1 == clock_mode)   ? 0   // APLL clock out on GPIO0
+                                            : (2 == clock_mode) ? 16  // CLK_OUT on GPIO16
+                                            : (3 == clock_mode) ? 17  // CLK_OUT_180 on GPIO17
+                                                                : 0;  // CLK_IN on GPIO0
 #elif CONFIG_IDF_TARGET_ESP32P4
   mac_config.clock_config.rmii.clock_mode = (emac_rmii_clock_mode_t)clock_mode;
 #endif
@@ -292,15 +292,14 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   phy_config.reset_gpio_num = _pin_power;
 
   switch (type) {
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
-    case ETH_PHY_GENERIC: _phy = esp_eth_phy_new_generic(&phy_config); break;
-#endif
-    case ETH_PHY_LAN8720: _phy = esp_eth_phy_new_lan87xx(&phy_config); break;
-    case ETH_PHY_TLK110:  _phy = esp_eth_phy_new_ip101(&phy_config); break;
-    case ETH_PHY_RTL8201: _phy = esp_eth_phy_new_rtl8201(&phy_config); break;
-    case ETH_PHY_DP83848: _phy = esp_eth_phy_new_dp83848(&phy_config); break;
-    case ETH_PHY_KSZ8041: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
-    case ETH_PHY_KSZ8081: _phy = esp_eth_phy_new_ksz80xx(&phy_config); break;
+    case ETH_PHY_GENERIC:
+    case ETH_PHY_LAN8720:
+    case ETH_PHY_TLK110:
+    case ETH_PHY_RTL8201:
+    case ETH_PHY_DP83848:
+    case ETH_PHY_KSZ8041:
+    case ETH_PHY_KSZ8081:
+      _phy = esp_eth_phy_new_generic(&phy_config); break;
 #if ETH_PHY_LAN867X_SUPPORTED
     case ETH_PHY_LAN867X: _phy = esp_eth_phy_new_lan867x(&phy_config); break;
 #endif
@@ -702,7 +701,7 @@ bool ETHClass::beginSPI(
     }
 #endif
     _mac = esp_eth_mac_new_w5500(&mac_config, &eth_mac_config);
-    _phy = esp_eth_phy_new_w5500(&phy_config);
+    _phy = esp_eth_phy_new_generic(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_DM9051
@@ -719,7 +718,7 @@ bool ETHClass::beginSPI(
     }
 #endif
     _mac = esp_eth_mac_new_dm9051(&mac_config, &eth_mac_config);
-    _phy = esp_eth_phy_new_dm9051(&phy_config);
+    _phy = esp_eth_phy_new_generic(&phy_config);
   } else
 #endif
 #if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
@@ -736,7 +735,7 @@ bool ETHClass::beginSPI(
     }
 #endif
     _mac = esp_eth_mac_new_ksz8851snl(&mac_config, &eth_mac_config);
-    _phy = esp_eth_phy_new_ksz8851snl(&phy_config);
+    _phy = esp_eth_phy_new_generic(&phy_config);
   } else
 #endif
   {

@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.3.0")
-set(max_supported_idf_version "5.5.99")
+set(max_supported_idf_version "6.0.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -91,9 +91,7 @@ set(ARDUINO_ALL_LIBRARIES
   Console
   DNSServer
   EEPROM
-  ESP_I2S
   ESP_NOW
-  ESP_SR
   ESP_HostedOTA
   ESPmDNS
   Ethernet
@@ -102,15 +100,12 @@ set(ARDUINO_ALL_LIBRARIES
   Hash
   HTTPClient
   HTTPUpdate
-  Insights
   LittleFS
-  Matter
   NetBIOS
   Network
   OpenThread
   PPP
   Preferences
-  RainMaker
   SD_MMC
   SD
   SimpleBLE
@@ -144,15 +139,9 @@ set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
 
 set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
 
-set(ARDUINO_LIBRARY_ESP_I2S_SRCS libraries/ESP_I2S/src/ESP_I2S.cpp)
-
 set(ARDUINO_LIBRARY_ESP_NOW_SRCS
   libraries/ESP_NOW/src/ESP32_NOW.cpp
   libraries/ESP_NOW/src/ESP32_NOW_Serial.cpp)
-
-set(ARDUINO_LIBRARY_ESP_SR_SRCS
-  libraries/ESP_SR/src/ESP_SR.cpp
-  libraries/ESP_SR/src/esp32-hal-sr.c)
 
 set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
   libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
@@ -178,8 +167,6 @@ set(ARDUINO_LIBRARY_HTTPClient_SRCS libraries/HTTPClient/src/HTTPClient.cpp)
 
 set(ARDUINO_LIBRARY_HTTPUpdate_SRCS libraries/HTTPUpdate/src/HTTPUpdate.cpp)
 
-set(ARDUINO_LIBRARY_Insights_SRCS libraries/Insights/src/Insights.cpp)
-
 set(ARDUINO_LIBRARY_LittleFS_SRCS libraries/LittleFS/src/LittleFS.cpp)
 
 set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
@@ -189,43 +176,9 @@ set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThreadCLI.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
-set(ARDUINO_LIBRARY_Matter_SRCS
-  libraries/Matter/src/MatterEndpoints/MatterGenericSwitch.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmableLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorTemperatureLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
-  libraries/Matter/src/MatterEndpoints/MatterFan.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterTemperatureControlledCabinet.cpp
-  libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterLeakDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWaterFreezeDetector.cpp
-  libraries/Matter/src/MatterEndpoints/MatterRainSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
-  libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
-  libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
-  libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
-  libraries/Matter/src/Matter.cpp
-  libraries/Matter/src/MatterEndPoint.cpp)
-
 set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
-
-set(ARDUINO_LIBRARY_RainMaker_SRCS
-  libraries/RainMaker/src/RMaker.cpp
-  libraries/RainMaker/src/RMakerNode.cpp
-  libraries/RainMaker/src/RMakerParam.cpp
-  libraries/RainMaker/src/RMakerDevice.cpp
-  libraries/RainMaker/src/RMakerType.cpp
-  libraries/RainMaker/src/RMakerQR.cpp
-  libraries/RainMaker/src/RMakerUtils.cpp
-  libraries/RainMaker/src/AppInsights.cpp)
 
 set(ARDUINO_LIBRARY_SD_MMC_SRCS libraries/SD_MMC/src/SD_MMC.cpp)
 
@@ -391,7 +344,8 @@ set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRA
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
 set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+list(APPEND requires esp_hal_uart esp_hal_ledc esp_hal_ana_conv esp_hal_gpio esp_hal_i2c esp_hal_gpspi esp_hal_timg esp_driver_i2c esp_driver_ledc esp_driver_dac esp_driver_sdm esp_driver_uart esp_driver_rmt esp_driver_tsens)
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
@@ -496,15 +450,6 @@ endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ArduinoOTA)
     maybe_add_component(esp_https_ota)
 endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_SR)
-    maybe_add_component(espressif__esp_sr)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_Matter)
-    maybe_add_component(espressif__esp_matter)
-endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LittleFS)
     maybe_add_component(joltwallet__littlefs)
-endif()
-if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
-    maybe_add_component(espressif__network_provisioning)
 endif()

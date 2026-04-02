@@ -58,10 +58,10 @@ extern "C" {
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
-static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
+static esp_netif_t *esp_netifs[WIFI_IF_MAX] = {NULL, NULL};
 
-esp_netif_t *get_esp_interface_netif(esp_interface_t interface) {
-  if (interface < ESP_IF_MAX) {
+esp_netif_t *get_esp_interface_netif(wifi_interface_t interface) {
+  if (interface < WIFI_IF_MAX) {
     return esp_netifs[interface];
   }
   return NULL;
@@ -294,11 +294,11 @@ bool wifiLowLevelInit(bool persistent) {
     }
     if (lowLevelInitDone) {
       initWiFiEvents();
-      if (esp_netifs[ESP_IF_WIFI_AP] == NULL) {
-        esp_netifs[ESP_IF_WIFI_AP] = esp_netif_create_default_wifi_ap();
+      if (esp_netifs[WIFI_IF_AP] == NULL) {
+        esp_netifs[WIFI_IF_AP] = esp_netif_create_default_wifi_ap();
       }
-      if (esp_netifs[ESP_IF_WIFI_STA] == NULL) {
-        esp_netifs[ESP_IF_WIFI_STA] = esp_netif_create_default_wifi_sta();
+      if (esp_netifs[WIFI_IF_STA] == NULL) {
+        esp_netifs[WIFI_IF_STA] = esp_netif_create_default_wifi_sta();
       }
 
       arduino_event_t arduino_event;
@@ -313,13 +313,13 @@ static bool wifiLowLevelDeinit() {
   if (lowLevelInitDone) {
     lowLevelInitDone = false;
     deinitWiFiEvents();
-    if (esp_netifs[ESP_IF_WIFI_AP] != NULL) {
-      esp_netif_destroy_default_wifi(esp_netifs[ESP_IF_WIFI_AP]);
-      esp_netifs[ESP_IF_WIFI_AP] = NULL;
+    if (esp_netifs[WIFI_IF_AP] != NULL) {
+      esp_netif_destroy_default_wifi(esp_netifs[WIFI_IF_AP]);
+      esp_netifs[WIFI_IF_AP] = NULL;
     }
-    if (esp_netifs[ESP_IF_WIFI_STA] != NULL) {
-      esp_netif_destroy_default_wifi(esp_netifs[ESP_IF_WIFI_STA]);
-      esp_netifs[ESP_IF_WIFI_STA] = NULL;
+    if (esp_netifs[WIFI_IF_STA] != NULL) {
+      esp_netif_destroy_default_wifi(esp_netifs[WIFI_IF_STA]);
+      esp_netifs[WIFI_IF_STA] = NULL;
     }
     lowLevelInitDone = !(esp_wifi_deinit() == ESP_OK);
     if (!lowLevelInitDone) {
@@ -633,7 +633,7 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
 
   esp_err_t err;
   if (((m & WIFI_MODE_STA) != 0) && ((cm & WIFI_MODE_STA) == 0)) {
-    err = esp_netif_set_hostname(esp_netifs[ESP_IF_WIFI_STA], NetworkManager::getHostname());
+    err = esp_netif_set_hostname(esp_netifs[WIFI_IF_STA], NetworkManager::getHostname());
     if (err) {
       log_e("Could not set hostname! 0x%x: %s", err, esp_err_to_name(err));
       return false;
@@ -924,7 +924,7 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period, .use_get_report_api = true
+    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period
   };
   if (mac != NULL) {
     memcpy(ftmi_cfg.resp_mac, mac, 6);
