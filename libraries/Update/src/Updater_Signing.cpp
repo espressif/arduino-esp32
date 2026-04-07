@@ -72,9 +72,9 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
     return false;
   }
 
-  size_t key_len = mbedtls_rsa_get_len(rsa_ctx);
+  int key_len = (int)mbedtls_rsa_get_len(rsa_ctx);
   // PSS.MAX_LENGTH salt = key_len - hash_size - 2
-  int expected_salt_len = (int)(key_len - hash_size - 2);
+  int expected_salt_len = key_len - (int)hash_size - 2;
   if (expected_salt_len < 0) {
     log_e("RSA key too small for hash algorithm");
     return false;
