@@ -62,8 +62,31 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
   // Get hash bytes from the builder
   uint8_t hashBytes[64];  // Max hash size (SHA-512)
   hash->getBytes(hashBytes);
+  size_t hash_size = hash->getHashSize();
 
-  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), (const unsigned char *)signature, signatureLen);
+  // Use RSA-PSS verification to match bin_signing.py which signs with PSS padding
+  // and salt_length=PSS.MAX_LENGTH (which equals key_len - hash_size - 2)
+  mbedtls_rsa_context *rsa_ctx = mbedtls_pk_rsa(*(mbedtls_pk_context *)_ctx);
+  if (!rsa_ctx) {
+    log_e("Failed to get RSA context");
+    return false;
+  }
+
+  size_t key_len = mbedtls_rsa_get_len(rsa_ctx);
+  // PSS.MAX_LENGTH salt = key_len - hash_size - 2
+  int expected_salt_len = (int)(key_len - hash_size - 2);
+  if (expected_salt_len < 0) {
+    log_e("RSA key too small for hash algorithm");
+    return false;
+  }
+
+  mbedtls_pk_rsassa_pss_options pss_opts;
+  pss_opts.mgf1_hash_id = md_type;
+  pss_opts.expected_salt_len = expected_salt_len;
+
+  int ret = mbedtls_pk_verify_ext(
+    MBEDTLS_PK_RSASSA_PSS, &pss_opts, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, signatureLen
+  );
 
   if (ret == 0) {
     log_i("RSA signature verified successfully");
