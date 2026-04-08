@@ -12,6 +12,7 @@
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/ecp.h"
 #include "mbedtls/md.h"
+#include "mbedtls/asn1.h"
 #include "esp32-hal-log.h"
 
 // ==================== UpdaterRSAVerifier (using mbedtls) ====================
@@ -156,16 +157,14 @@ bool UpdaterECDSAVerifier::verify(SHA2Builder *hash, const void *signature, size
   // MBEDTLS_ERR_PK_SIG_LEN_MISMATCH.
   const uint8_t *sig = (const uint8_t *)signature;
   size_t actualSigLen = signatureLen;
-  if (signatureLen >= 2 && sig[0] == 0x30) {
-    if (sig[1] < 0x80) {
-      // Short form length: total = tag (1) + length byte (1) + content length
-      actualSigLen = 2 + sig[1];
-    } else if (sig[1] == 0x81 && signatureLen >= 3) {
-      // Long form length (1 extra byte): total = tag (1) + 0x81 (1) + length byte (1) + content length
-      actualSigLen = 3 + sig[2];
-    }
-    if (actualSigLen > signatureLen) {
-      actualSigLen = signatureLen;
+  unsigned char *p = (unsigned char *)sig;
+  const unsigned char *end = p + signatureLen;
+  size_t seq_len = 0;
+  if (mbedtls_asn1_get_tag(&p, end, &seq_len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0) {
+    // actualSigLen = header bytes (p advanced past them) + content length
+    size_t parsed = (size_t)(p - sig) + seq_len;
+    if (parsed <= signatureLen) {
+      actualSigLen = parsed;
     }
   }
 
