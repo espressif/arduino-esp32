@@ -84,8 +84,11 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
   pss_opts.mgf1_hash_id = md_type;
   pss_opts.expected_salt_len = expected_salt_len;
 
+  // RSA signatures are always exactly key_len bytes. The buffer may be
+  // zero-padded to a larger size (e.g. 512), so use key_len as the actual
+  // signature length to avoid MBEDTLS_ERR_PK_SIG_LEN_MISMATCH.
   int ret = mbedtls_pk_verify_ext(
-    MBEDTLS_PK_RSASSA_PSS, &pss_opts, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, signatureLen
+    MBEDTLS_PK_RSASSA_PSS, &pss_opts, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, key_len
   );
 
   if (ret == 0) {
@@ -147,7 +150,26 @@ bool UpdaterECDSAVerifier::verify(SHA2Builder *hash, const void *signature, size
   uint8_t hashBytes[64];  // Max hash size (SHA-512)
   hash->getBytes(hashBytes);
 
-  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), (const unsigned char *)signature, signatureLen);
+  // ECDSA signatures are DER-encoded (SEQUENCE { INTEGER r, INTEGER s }).
+  // The buffer may be zero-padded to a larger size (e.g. 512), so determine
+  // the actual DER-encoded signature length from the ASN.1 header to avoid
+  // MBEDTLS_ERR_PK_SIG_LEN_MISMATCH.
+  const uint8_t *sig = (const uint8_t *)signature;
+  size_t actualSigLen = signatureLen;
+  if (signatureLen >= 2 && sig[0] == 0x30) {
+    if (sig[1] < 0x80) {
+      // Short form length: total = tag (1) + length byte (1) + content length
+      actualSigLen = 2 + sig[1];
+    } else if (sig[1] == 0x81 && signatureLen >= 3) {
+      // Long form length (1 extra byte): total = tag (1) + 0x81 (1) + length byte (1) + content length
+      actualSigLen = 3 + sig[2];
+    }
+    if (actualSigLen > signatureLen) {
+      actualSigLen = signatureLen;
+    }
+  }
+
+  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), sig, actualSigLen);
 
   if (ret == 0) {
     log_i("ECDSA signature verified successfully");
