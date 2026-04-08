@@ -16,13 +16,12 @@
  * @brief This example demonstrates Zigbee privilege command handling.
  *
  * The example shows how to use addPrivilegeCommand() and onPrivilegeCommand()
- * to intercept standard ZCL cluster commands (like On/Off) before the stack
- * processes them. This allows endpoint implementations to observe or react to
- * cluster-specific commands that are normally handled internally by the stack.
+ * for specific ZCL command IDs: those commands are delivered to your callback and
+ * are not handled by the stack. Any command you do not register is still handled
+ * by the stack as usual.
  *
- * This is useful when controllers (e.g. Philips Hue) send cluster-specific
- * commands like "Off with effect" (0x40) that the stack processes silently
- * without notifying the application.
+ * This is useful when controllers (e.g. Philips Hue) send commands like
+ * "Off with effect" (0x40) that you want to handle or log in application code.
  *
  * The example creates a dimmable light that registers privilege commands on the
  * On/Off cluster. When a command is registered as a privilege command, the stack
