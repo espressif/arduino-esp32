@@ -676,7 +676,9 @@ void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
   esp_err_t ret = esp_zb_zcl_add_privilege_command(_endpoint, cluster_id, command_id);
   esp_zb_lock_release();
   if (ret != ESP_OK) {
-    log_e("Failed to add privilege command: 0x%x: %s", ret, esp_err_to_name(ret));
+    log_e(
+      "Failed to add privilege command for endpoint %u, cluster 0x%04x, command 0x%04x: 0x%x: %s", _endpoint, cluster_id, command_id, ret, esp_err_to_name(ret)
+    );
   }
 }
 
