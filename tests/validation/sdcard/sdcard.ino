@@ -35,6 +35,11 @@ public:
   SPITestConfig(std::string name, const char *mountpoint, uint8_t spi_num, int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     : name(name), mountpoint(mountpoint), spi_num(spi_num), sck(sck), miso(miso), mosi(mosi), ss(ss) {
     Serial.printf("Creating SPITestConfig [%s] on SPI bus %u: SCK=%d, MISO=%d, MOSI=%d, SS=%d\n", name.c_str(), spi_num, sck, miso, mosi, ss);
+    // Flush after each constructor printf to drain the UART FIFO before the next constructor runs.
+    // Without this, consecutive constructor calls accumulate bytes faster than the FIFO drains,
+    // causing the Wokwi simulator to deadlock (it only advances UART simulation when the CPU
+    // yields via RTOS, but uart_write_bytes with no TX ring buffer spins waiting for FIFO space).
+    Serial.flush();
   }
 
   void begin(uint8_t max_files = MAX_FILES, bool format_if_empty = false) {

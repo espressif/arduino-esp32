@@ -238,9 +238,9 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
     return false;
   }
 #endif
-  
+
   bool allPinsAreGood = true;
-  
+
   // Validate RX pin (input, any valid GPIO)
   if (rxPin >= 0) {
     if (!GPIO_IS_VALID_GPIO(rxPin)) {
@@ -248,7 +248,7 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
       allPinsAreGood = false;
     }
   }
-  
+
   // Validate TX pin (output capable)
   if (txPin >= 0) {
     if (!GPIO_IS_VALID_OUTPUT_GPIO(txPin)) {
@@ -256,7 +256,7 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
       allPinsAreGood = false;
     }
   }
-  
+
   // Validate CTS pin (input, any valid GPIO)
   if (ctsPin >= 0) {
     if (!GPIO_IS_VALID_GPIO(ctsPin)) {
@@ -264,7 +264,7 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
       allPinsAreGood = false;
     }
   }
-  
+
   // Validate RTS pin (output capable)
   if (rtsPin >= 0) {
     if (!GPIO_IS_VALID_OUTPUT_GPIO(rtsPin)) {
@@ -272,7 +272,7 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
       allPinsAreGood = false;
     }
   }
-  
+
   return allPinsAreGood;
 }
 
@@ -499,10 +499,10 @@ static bool _uartInternalSetPin(uart_port_t uart_num, int tx_io_num, int rx_io_n
     if (uart_num < SOC_UART_HP_NUM) {
       retCode &= ESP_OK == gpio_func_sel(rts_io_num, PIN_FUNC_GPIO);
       esp_rom_gpio_connect_out_signal(rts_io_num, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RTS_PIN_IDX), 0, 0);
-      } else {
-        // LP UART couldn't attach pin, therefore it has failed
-        retCode = false;
-      }
+    } else {
+      // LP UART couldn't attach pin, therefore it has failed
+      retCode = false;
+    }
   }
 
   if (cts_io_num >= 0 && !_uartTrySetIomuxPin(uart_num, cts_io_num, SOC_UART_CTS_PIN_IDX)) {
@@ -800,7 +800,7 @@ uart_t *uartBegin(
 ) {
   log_v("UART%u baud(%" PRIu32 ") Mode(0x%" PRIx32 ") rxPin(%d) txPin(%d)", uart_nr, baudrate, config, rxPin, txPin);
 
-  // check uart_nr, rx and tx pins, if necessary log error message and return a valid value 
+  // check uart_nr, rx and tx pins, if necessary log error message and return a valid value
   if (!_uartValidatePins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)) {
     if (uart_nr < SOC_UART_NUM && uart_is_driver_installed(uart_nr)) {
       return &_uart_bus_array[uart_nr];  // keep the same installed driver
@@ -808,7 +808,7 @@ uart_t *uartBegin(
       return NULL;  // no new driver was installed
     }
   }
-  
+
   // get the uart internal information
   uart_t *uart = &_uart_bus_array[uart_nr];
 

@@ -248,6 +248,7 @@ set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/Updater_Signing.cpp)
 
 set(ARDUINO_LIBRARY_USB_SRCS
+  libraries/USB/src/USBAudioCard.cpp
   libraries/USB/src/USBHID.cpp
   libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp

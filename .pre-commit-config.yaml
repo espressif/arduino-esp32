@@ -3,6 +3,7 @@ exclude: |
       ^\.github\/|
       ^tests\/performance\/coremark\/.*\.[ch]$|
       ^tests\/performance\/superpi\/.*\.(cpp|h)$|
+      ^libraries\/USB\/src\/USBAudioCardDescriptors\.h|
       LICENSE\.md$
   )
 
