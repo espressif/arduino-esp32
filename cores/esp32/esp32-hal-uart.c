@@ -1337,7 +1337,7 @@ uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
 
   if (uart == NULL) {
-    return (uint32_t)-1;  // return value when failed;
+    return 0; // TBD in Arduino Core 4.x (uint32_t)-1;  // return value when failed;
   }
 
   soc_module_clk_t src_clk;
