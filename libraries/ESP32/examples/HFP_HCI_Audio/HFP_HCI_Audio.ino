@@ -123,7 +123,7 @@ bool audio_connected = false;   // SCO audio channel open and ready
 bool audio_connecting = false;  // SCO connection attempt in progress
 bool call_active = false;       // phone reports a call in progress (CIND call status)
 bool have_remote_bda = false;   // we know the address of the phone to connect to
-bool hf_ready = false;          // HFP profile stack initialised successfully
+bool hf_ready = false;          // HFP profile stack initialized successfully
 bool is_msbc = false;           // true = mSBC 16 kHz codec; false = CVSD 8 kHz
 
 esp_bd_addr_t remote_bda = {0};  // Bluetooth address of the remote phone
@@ -344,7 +344,7 @@ const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
 // 0 on underrun — returning 0 tells the stack to stop pulling for this cycle
 // and skip the SCO slot cleanly (no silence, no crash).
 //
-// Expected normal behaviour: underrun ≈ cb_count / 2.
+// Expected normal behavior: underrun ≈ cb_count / 2.
 //   Each trigger cycle: first call drains one frame (success), second call
 //   finds the buffer empty (underrun) and stops the loop.  Underrun
 //   significantly above cb_count/2 means the producer is falling behind.
@@ -551,11 +551,11 @@ void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
 // hfClientEventCb
 //
 // HFP client profile event callback.  Handles the full lifecycle of an HFP
-// connection: profile initialisation, SLC connect/disconnect, SCO audio
+// connection: profile initialization, SLC connect/disconnect, SCO audio
 // channel open/close, and call status changes.
 //
-// PROF_STATE_EVT: the HFP stack has finished initialising (or was already
-//   initialised).  Safe to start using the HFP API from this point.
+// PROF_STATE_EVT: the HFP stack has finished initializing (or was already
+//   initialized).  Safe to start using the HFP API from this point.
 //
 // CONNECTION_STATE_EVT: SLC connection state changed.  SLC_CONNECTED means
 //   the HFP control channel is fully established and call control commands
@@ -578,7 +578,7 @@ void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
 void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param) {
   switch (event) {
     case ESP_HF_CLIENT_PROF_STATE_EVT:
-      // Stack is ready (or was already initialised); safe to use HFP API now.
+      // Stack is ready (or was already initialized); safe to use HFP API now.
       hf_ready = (param->prof_stat.state == ESP_HF_INIT_SUCCESS || param->prof_stat.state == ESP_HF_INIT_ALREADY);
       Serial.printf("HFP profile state: %d\n", param->prof_stat.state);
       if (hf_ready) {
@@ -691,13 +691,13 @@ void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *p
 // -----------------------------------------------------------------------------
 // setup
 //
-// One-time initialisation: starts the Bluetooth controller and Bluedroid stack,
+// One-time initialization: starts the Bluetooth controller and Bluedroid stack,
 // registers GAP and HFP callbacks, configures pairing, device identity and
-// Class of Device, then initialises the HFP client profile.
+// Class of Device, then initializes the HFP client profile.
 //
 // Critical ordering: esp_bredr_sco_datapath_set() and
 // esp_hf_client_register_data_callback() MUST be called before
-// esp_hf_client_init() — the stack reads these settings during initialisation.
+// esp_hf_client_init() — the stack reads these settings during initialization.
 // -----------------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
@@ -722,7 +722,7 @@ void setup() {
     Serial.println("BT controller already enabled");
   }
 
-  // Initialise and enable the Bluedroid host stack (two-step: init allocates
+  // Initialize and enable the Bluedroid host stack (two-step: init allocates
   // memory, enable starts the stack tasks).
   esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
   Serial.printf("Bluedroid status before init: %d\n", bt_state);

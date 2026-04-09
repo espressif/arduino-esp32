@@ -390,7 +390,7 @@ void stopAudioPath() {
 //   number of bytes written.  If we are not ready we return 0 and the stack
 //   will call us again shortly.  adcCaptureTask() calls
 //   esp_hf_client_outgoing_data_ready() to nudge the stack as soon as a new
-//   frame lands in adc_ring, minimising the round-trip latency.
+//   frame lands in adc_ring, minimizing the round-trip latency.
 // =============================================================================
 
 // Pull callback: drain one SCO frame from adc_ring into buf.
@@ -706,10 +706,10 @@ void setup() {
     }
   }
 
-  // Initialise the Bluedroid host stack (manages profiles, L2CAP, RFCOMM, …).
+  // Initialize the Bluedroid host stack (manages profiles, L2CAP, RFCOMM, …).
   // Bluedroid requires two calls: esp_bluedroid_init() allocates structures,
   // esp_bluedroid_enable() starts the stack tasks.  The status check prevents
-  // double-initialisation if the sketch is re-uploaded without a power cycle.
+  // double-initialization if the sketch is re-uploaded without a power cycle.
   esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
   if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
     logEspCall("esp_bluedroid_init", esp_bluedroid_init());
@@ -737,7 +737,7 @@ void setup() {
   logEspCall("esp_bt_gap_set_pin", esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_VARIABLE, 0, unused_pin_code));
 
   // Advertise a friendly name so the phone's Bluetooth menu shows something
-  // recognisable rather than a raw MAC address.
+  // recognizable rather than a raw MAC address.
   logEspCall("esp_bt_dev_set_device_name", esp_bt_dev_set_device_name("ESP32_HFP_BRIDGE"));
 
   // Set the Class of Device (CoD) to Audio/Video + Hands-free subclass.
@@ -760,12 +760,12 @@ void setup() {
   // be configured while the HFP profile is not yet active.
   logEspCall("esp_bredr_sco_datapath_set", esp_bredr_sco_datapath_set(ESP_SCO_DATA_PATH_HCI));
 
-  // Register the audio data callbacks before initialising the HFP profile so
+  // Register the audio data callbacks before initializing the HFP profile so
   // the stack can find them as soon as the first SCO frame arrives.
   logEspCall("esp_hf_client_register_data_callback", esp_hf_client_register_data_callback(hfIncomingDataCb, hfOutgoingDataCb));
 
-  // Register the HFP event callback, then initialise the profile.
-  // Initialisation is asynchronous; PROF_STATE_EVT fires when complete.
+  // Register the HFP event callback, then initialize the profile.
+  // Initialization is asynchronous; PROF_STATE_EVT fires when complete.
   logEspCall("esp_hf_client_register_callback", esp_hf_client_register_callback(hfClientEventCb));
   logEspCall("esp_hf_client_init", esp_hf_client_init());
 
