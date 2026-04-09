@@ -38,6 +38,7 @@
 #include "driver/lp_io.h"
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
+#include "esp_private/esp_clk_tree_common.h"
 
 // Weak function that is overridden by Arduino layer when HardwareSerial.cpp is linked
 // This removes the upward dependency from HAL to Arduino (HAL calls weak, Arduino provides strong implementation)
@@ -1336,13 +1337,33 @@ uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
 
   if (uart == NULL) {
-    return 0;
+    return (uint32_t)-1;  // return value when failed;
   }
 
+  soc_module_clk_t src_clk;
+  uint32_t sclk_freq;
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
   UART_MUTEX_LOCK();
-  if (uart_get_baudrate(uart->num, &baud_rate) != ESP_OK) {
-    log_e("Getting UART%u baud rate has failed.", uart->num);
+  uart_ll_get_sclk(hw, &src_clk);
+  if(esp_clk_tree_src_get_freq_hz(src_clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &sclk_freq) != ESP_OK) {
+    log_e("Getting UART%u source clock frequency has failed.", uart->num);
     baud_rate = (uint32_t)-1;  // return value when failed
+  } else {
+    log_v("UART%u source clock frequency is %u Hz", uart->num, sclk_freq);
+#if CONFIG_IDF_TARGET_ESP32S3
+    if (hw->clkdiv.val == 0) {
+#elif CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
+    if (hw->clk_div.val == 0) {
+#else // C5, C6, C61, H2, H21, H4, P4 and future SoCs
+    if (hw->clkdiv_sync.val == 0) {
+#endif
+      log_e("Getting UART%u baud rate has failed. UART Clock not set or invalid.", uart->num);
+      baud_rate = (uint32_t)-1;  // return value when failed
+    } else {
+      baud_rate = uart_ll_get_baudrate(hw, sclk_freq);
+      log_v("UART%u baud rate is %" PRIu32, uart->num, baud_rate);
+    }
   }
   UART_MUTEX_UNLOCK();
   return baud_rate;
