@@ -31,6 +31,8 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _on_identify = nullptr;
   _on_ota_state_change = nullptr;
   _on_default_response = nullptr;
+  _on_privilege_command = nullptr;
+  _on_custom_cluster_command = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -666,6 +668,29 @@ void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *me
   log_v("Response to command: %u", message->resp_to_cmd);
   if (_on_default_response) {
     _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
+  }
+}
+
+void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_err_t ret = esp_zb_zcl_add_privilege_command(_endpoint, cluster_id, command_id);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e(
+      "Failed to add privilege command for endpoint %u, cluster 0x%04x, command 0x%04x: 0x%x: %s", _endpoint, cluster_id, command_id, ret, esp_err_to_name(ret)
+    );
+  }
+}
+
+void ZigbeeEP::zbPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message) {
+  if (_on_privilege_command) {
+    _on_privilege_command(message);
+  }
+}
+
+void ZigbeeEP::zbCustomClusterCommand(const esp_zb_zcl_custom_cluster_command_message_t *message) {
+  if (_on_custom_cluster_command) {
+    _on_custom_cluster_command(message);
   }
 }
 
