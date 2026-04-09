@@ -1337,7 +1337,7 @@ uint32_t uartGetBaudRate(uart_t *uart) {
   uint32_t baud_rate = 0;
 
   if (uart == NULL) {
-    return 0; // TBD in Arduino Core 4.x (uint32_t)-1;  // return value when failed;
+    return 0;  // TBD in Arduino Core 4.x (uint32_t)-1;  // return value when failed;
   }
 
   soc_module_clk_t src_clk;
@@ -1346,7 +1346,7 @@ uint32_t uartGetBaudRate(uart_t *uart) {
 
   UART_MUTEX_LOCK();
   uart_ll_get_sclk(hw, &src_clk);
-  if(esp_clk_tree_src_get_freq_hz(src_clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &sclk_freq) != ESP_OK) {
+  if (esp_clk_tree_src_get_freq_hz(src_clk, ESP_CLK_TREE_SRC_FREQ_PRECISION_CACHED, &sclk_freq) != ESP_OK) {
     log_e("Getting UART%u source clock frequency has failed.", uart->num);
     baud_rate = (uint32_t)-1;  // return value when failed
   } else {
@@ -1355,7 +1355,7 @@ uint32_t uartGetBaudRate(uart_t *uart) {
     if (hw->clkdiv.val == 0) {
 #elif CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32
     if (hw->clk_div.val == 0) {
-#else // C5, C6, C61, H2, H21, H4, P4 and future SoCs
+#else  // C5, C6, C61, H2, H21, H4, P4 and future SoCs
     if (hw->clkdiv_sync.val == 0) {
 #endif
       log_e("Getting UART%u baud rate has failed. UART Clock not set or invalid.", uart->num);
