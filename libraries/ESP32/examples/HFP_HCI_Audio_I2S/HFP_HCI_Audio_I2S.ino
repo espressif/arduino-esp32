@@ -64,21 +64,22 @@
 // -----------------------------------------------------------------------------
 // Includes
 // -----------------------------------------------------------------------------
-#include "esp32-hal-bt-mem.h"           // btStartMode(), BT_MODE_CLASSIC_BT
-#include "esp32-hal-bt.h"               // btStarted()
-#include "esp_bt.h"                     // esp_bt_controller_*
-#include "esp_bt_device.h"              // esp_bt_dev_set_device_name()
-#include "esp_bt_main.h"                // esp_bluedroid_*
-#include "esp_gap_bt_api.h"             // GAP events and pairing API
-#include "esp_hf_client_api.h"          // HFP client (hands-free) API
-#include "esp_hf_client_legacy_api.h"   // esp_hf_client_outgoing_data_ready()
+#include <Arduino.h>
+#include "esp32-hal-bt-mem.h"          // btStartMode(), BT_MODE_CLASSIC_BT
+#include "esp32-hal-bt.h"              // btStarted()
+#include "esp_bt.h"                    // esp_bt_controller_*
+#include "esp_bt_device.h"             // esp_bt_dev_set_device_name()
+#include "esp_bt_main.h"               // esp_bluedroid_*
+#include "esp_gap_bt_api.h"            // GAP events and pairing API
+#include "esp_hf_client_api.h"         // HFP client (hands-free) API
+#include "esp_hf_client_legacy_api.h"  // esp_hf_client_outgoing_data_ready()
 #include "freertos/FreeRTOS.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
-#include "ESP_I2S.h"                    // Arduino I2S library
+#include "ESP_I2S.h"  // Arduino I2S library
 
-#include <inttypes.h>   // PRIu32, PRIX32, … — required by coding guidelines
-#include <string.h>     // memcpy(), memset()
+#include <inttypes.h>  // PRIu32, PRIX32, … — required by coding guidelines
+#include <string.h>    // memcpy(), memset()
 
 // -----------------------------------------------------------------------------
 // PIN DEFINITIONS — I2S BUS
@@ -88,13 +89,15 @@
 #define PIN_I2S_LRCK 26  // I2S word select — shared between PCM5102A and PCM1808
 #define PIN_I2S_DOUT 27  // I2S data out   — ESP32 → PCM5102A (DAC, playback)
 #define PIN_I2S_DIN  32  // I2S data in    — PCM1808 → ESP32  (ADC, capture)
-#define PIN_I2S_SCKI  0  // Master clock output → PCM1808 SCKI.
-                         // GPIO 0 is the only pin that supports MCLK output
-                         // without conflicting with UART0 (TX=GPIO1, RX=GPIO3).
+#define PIN_I2S_SCKI                                     \
+  0  // Master clock output → PCM1808 SCKI.            \
+     // GPIO 0 is the only pin that supports MCLK output \
+     // without conflicting with UART0 (TX=GPIO1, RX=GPIO3).
 
-#define PIN_ANSWER_HANGUP  16  // Call control button — active-low with internal pull-up.
-                               // Press while the phone is ringing  → answers the call.
-                               // Press while a call is in progress → hangs up.
+#define PIN_ANSWER_HANGUP                                          \
+  16  // Call control button — active-low with internal pull-up. \
+      // Press while the phone is ringing  → answers the call.   \
+      // Press while a call is in progress → hangs up.
 
 // Codec sample rates negotiated by Bluedroid with the phone.
 // CVSD = legacy narrowband (8 kHz); mSBC = wideband (16 kHz, HFP 1.6).
@@ -111,7 +114,7 @@ constexpr size_t kMsbcFrameSamples = 120;  // 120 × 2 bytes = 240 bytes
 // of slack (at 8 kHz CVSD) before a frame must be dropped, which is enough
 // to absorb normal FreeRTOS scheduling jitter without adding noticeable
 // latency.
-constexpr size_t kAdcRingFrames  = 3;
+constexpr size_t kAdcRingFrames = 3;
 
 // Global I2S instance (ESP_I2S Arduino library).
 static I2SClass i2s;
@@ -128,9 +131,9 @@ constexpr uint32_t kRxLogIntervalMs = 1000;
 // Conversion buffers — kept as static globals because BT callbacks have
 // limited stack space.  Sized for the largest SCO frame (mSBC, 120 samples).
 constexpr size_t kStereoFrames = 256;
-static int32_t   tx_stereo[kStereoFrames * 2]; // stereo 32-bit frames → PCM5102A DAC
-static int32_t   rx_stereo[kStereoFrames * 2]; // stereo 32-bit frames ← PCM1808 ADC
-static int16_t   rx_mono[kStereoFrames];        // mono PCM queued to HFP SCO TX
+static int32_t tx_stereo[kStereoFrames * 2];  // stereo 32-bit frames → PCM5102A DAC
+static int32_t rx_stereo[kStereoFrames * 2];  // stereo 32-bit frames ← PCM1808 ADC
+static int16_t rx_mono[kStereoFrames];        // mono PCM queued to HFP SCO TX
 
 // -----------------------------------------------------------------------------
 // State
@@ -141,21 +144,21 @@ static int16_t   rx_mono[kStereoFrames];        // mono PCM queued to HFP SCO TX
 // volatile is sufficient here because each flag has a single writer and each
 // write is a single word-sized store, which is atomic on the Xtensa LX6 core.
 // If a flag were written from multiple contexts a mutex would be needed instead.
-volatile bool slc_connected    = false;
-volatile bool audio_connected  = false;
+volatile bool slc_connected = false;
+volatile bool audio_connected = false;
 volatile bool audio_connecting = false;
-volatile bool call_active      = false;
-volatile bool call_incoming    = false;
-volatile bool have_remote_bda  = false;
-volatile bool hf_ready         = false;
-volatile bool is_msbc          = false;
-volatile bool i2s_running      = false;
+volatile bool call_active = false;
+volatile bool call_incoming = false;
+volatile bool have_remote_bda = false;
+volatile bool hf_ready = false;
+volatile bool is_msbc = false;
+volatile bool i2s_running = false;
 
 // Peer Bluetooth device address, populated on pairing or first reconnect.
 esp_bd_addr_t remote_bda = {0};
 
 // Rate-limiting timestamps for HFP and SCO connection retries.
-uint32_t last_hf_connect_attempt_ms    = 0;
+uint32_t last_hf_connect_attempt_ms = 0;
 uint32_t last_audio_connect_attempt_ms = 0;
 
 // ADC capture task and ring buffer (outgoing SCO TX path).
@@ -165,13 +168,13 @@ uint32_t last_audio_connect_attempt_ms = 0;
 // frame (see xStreamBufferCreate call in startAudioPath) so the BT stack is
 // only woken when a complete frame is available — partial frames would break
 // codec framing and cause audio corruption.
-StreamBufferHandle_t adc_ring        = nullptr;
-TaskHandle_t         adc_task        = nullptr;
-volatile bool        adc_task_running = false;
+StreamBufferHandle_t adc_ring = nullptr;
+TaskHandle_t adc_task = nullptr;
+volatile bool adc_task_running = false;
 
 // ADC monitoring: peak sample level and drop count, logged every second.
-int16_t  rx_peak_adc    = 0;   // peak absolute ADC sample in the current window
-uint32_t rx_drop_count  = 0;   // frames dropped because the ring buffer was full
+int16_t rx_peak_adc = 0;     // peak absolute ADC sample in the current window
+uint32_t rx_drop_count = 0;  // frames dropped because the ring buffer was full
 uint32_t rx_last_log_ms = 0;
 
 // =============================================================================
@@ -179,27 +182,23 @@ uint32_t rx_last_log_ms = 0;
 // =============================================================================
 
 // Log ESP-IDF API errors.  Silent on ESP_OK; prints name + code on failure.
-void logEspCall(const char *what, esp_err_t err)
-{
-  if (err != ESP_OK)
-    Serial.printf("%s: %s (0x%04" PRIX32 ")\n", what, esp_err_to_name(err),
-                  static_cast<uint32_t>(err));
+void logEspCall(const char *what, esp_err_t err) {
+  if (err != ESP_OK) {
+    Serial.printf("%s: %s (0x%04" PRIX32 ")\n", what, esp_err_to_name(err), static_cast<uint32_t>(err));
+  }
 }
 
-size_t scoFrameSamples(bool msbc)
-{
+size_t scoFrameSamples(bool msbc) {
   return msbc ? kMsbcFrameSamples : kCvsdFrameSamples;
 }
 
-size_t scoFrameBytes(bool msbc)
-{
+size_t scoFrameBytes(bool msbc) {
   return scoFrameSamples(msbc) * sizeof(int16_t);
 }
 
-void resetRxStats()
-{
-  rx_peak_adc    = 0;
-  rx_drop_count  = 0;
+void resetRxStats() {
+  rx_peak_adc = 0;
+  rx_drop_count = 0;
   rx_last_log_ms = millis();
 }
 
@@ -211,15 +210,15 @@ void resetRxStats()
 // TX → PCM5102A DAC (phone audio to speaker); RX ← PCM1808 ADC (mic to phone).
 // 32-bit slots are required: PCM1808 needs BCK = 64×fs; 16-bit slots give
 // BCK = 32×fs which is too slow and produces silence on the capture path.
-void startI2s(bool msbc)
-{
-  if (i2s_running) return;  // already configured; nothing to do
+void startI2s(bool msbc) {
+  if (i2s_running) {
+    return;  // already configured; nothing to do
+  }
 
   const uint32_t fs = msbc ? kMsbcRateHz : kCvsdRateHz;
 
   i2s.setPins(PIN_I2S_BCK, PIN_I2S_LRCK, PIN_I2S_DOUT, PIN_I2S_DIN, PIN_I2S_SCKI);
-  if (!i2s.begin(I2S_MODE_STD, fs, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO))
-  {
+  if (!i2s.begin(I2S_MODE_STD, fs, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO)) {
     Serial.println("I2S begin failed");
     return;
   }
@@ -230,9 +229,10 @@ void startI2s(bool msbc)
 
 // Stop I2S.  Flag is cleared first so the ADC task stops issuing reads;
 // a 20 ms delay lets any in-flight read finish before teardown.
-void stopI2s()
-{
-  if (!i2s_running) return;
+void stopI2s() {
+  if (!i2s_running) {
+    return;
+  }
   i2s_running = false;
   delay(20);  // let any in-flight readBytes() call return before end()
   i2s.end();
@@ -244,63 +244,56 @@ void stopI2s()
 // =============================================================================
 
 // Print a Bluetooth device address as "AA:BB:CC:DD:EE:FF" (no newline).
-void printBda(const esp_bd_addr_t bda)
-{
-  Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X",
-                bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+void printBda(const esp_bd_addr_t bda) {
+  Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
 }
 
 // Save the peer address so reconnect helpers always have a valid target.
-void rememberBda(const esp_bd_addr_t bda)
-{
+void rememberBda(const esp_bd_addr_t bda) {
   memcpy(remote_bda, bda, ESP_BD_ADDR_LEN);
   have_remote_bda = true;
 }
 
 // Return a printable label for an HFP connection state (Serial diagnostics only).
-const char *hfConnStateName(esp_hf_client_connection_state_t s)
-{
-  switch (s)
-  {
-  case ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTED:  return "DISCONNECTED";
-  case ESP_HF_CLIENT_CONNECTION_STATE_CONNECTING:    return "CONNECTING";
-  case ESP_HF_CLIENT_CONNECTION_STATE_CONNECTED:     return "RFCOMM_CONNECTED";
-  case ESP_HF_CLIENT_CONNECTION_STATE_SLC_CONNECTED: return "SLC_CONNECTED";
-  case ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTING: return "DISCONNECTING";
+const char *hfConnStateName(esp_hf_client_connection_state_t s) {
+  switch (s) {
+    case ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTED:  return "DISCONNECTED";
+    case ESP_HF_CLIENT_CONNECTION_STATE_CONNECTING:    return "CONNECTING";
+    case ESP_HF_CLIENT_CONNECTION_STATE_CONNECTED:     return "RFCOMM_CONNECTED";
+    case ESP_HF_CLIENT_CONNECTION_STATE_SLC_CONNECTED: return "SLC_CONNECTED";
+    case ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTING: return "DISCONNECTING";
   }
   return "UNKNOWN";
 }
 
 // Return a printable label for an HFP audio/SCO state (Serial diagnostics only).
-const char *hfAudioStateName(esp_hf_client_audio_state_t s)
-{
-  switch (s)
-  {
-  case ESP_HF_CLIENT_AUDIO_STATE_DISCONNECTED:   return "DISCONNECTED";
-  case ESP_HF_CLIENT_AUDIO_STATE_CONNECTING:     return "CONNECTING";
-  case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
-  case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
+const char *hfAudioStateName(esp_hf_client_audio_state_t s) {
+  switch (s) {
+    case ESP_HF_CLIENT_AUDIO_STATE_DISCONNECTED:   return "DISCONNECTED";
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTING:     return "CONNECTING";
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED:      return "CONNECTED_CVSD";
+    case ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC: return "CONNECTED_MSBC";
   }
   return "UNKNOWN";
 }
 
 // Reads I2S ADC frames, converts stereo→mono, and pushes them into adc_ring.
 // Runs as a FreeRTOS task so blocking I2S reads don't stall the BT callbacks.
-void adcCaptureTask(void *)
-{
-  const size_t n_mono       = scoFrameSamples(is_msbc);
+void adcCaptureTask(void *) {
+  const size_t n_mono = scoFrameSamples(is_msbc);
   const size_t stereo_bytes = n_mono * 2 * sizeof(int32_t);
 
-  while (adc_task_running)
-  {
+  while (adc_task_running) {
     // readBytes() blocks internally until all bytes are read or the channel fails.
-    const size_t bytes_read = i2s.readBytes(reinterpret_cast<char *>(rx_stereo),
-                                            stereo_bytes);
-    if (!adc_task_running) break;
-    if (bytes_read < stereo_bytes) continue;
+    const size_t bytes_read = i2s.readBytes(reinterpret_cast<char *>(rx_stereo), stereo_bytes);
+    if (!adc_task_running) {
+      break;
+    }
+    if (bytes_read < stereo_bytes) {
+      continue;
+    }
 
-    for (size_t i = 0; i < n_mono; ++i)
-    {
+    for (size_t i = 0; i < n_mono; ++i) {
       // PCM1808 packs 24-bit audio MSB-first starting at bit 30 (bit 31 is the
       // I2S delay bit).  Shift left by 1 to align the sign bit, then take the
       // top 16 bits.
@@ -309,24 +302,26 @@ void adcCaptureTask(void *)
 
       // Use int32_t for abs() to avoid overflow when s == -32768.
       const int32_t p = (s < 0) ? -(int32_t)s : (int32_t)s;
-      if (p > rx_peak_adc) rx_peak_adc = (p > 32767) ? 32767 : (int16_t)p;
+      if (p > rx_peak_adc) {
+        rx_peak_adc = (p > 32767) ? 32767 : (int16_t)p;
+      }
     }
 
     const size_t frame_bytes = n_mono * sizeof(int16_t);
-    if (!adc_ring || xStreamBufferSpacesAvailable(adc_ring) < frame_bytes)
-    {
+    if (!adc_ring || xStreamBufferSpacesAvailable(adc_ring) < frame_bytes) {
       ++rx_drop_count;
       continue;
     }
 
     const size_t sent = xStreamBufferSend(adc_ring, rx_mono, frame_bytes, 0);
-    if (sent == frame_bytes)
+    if (sent == frame_bytes) {
       // Notify the BT stack that a new frame is ready to be pulled via
       // hfOutgoingDataCb().  Without this call the stack might not poll
       // for outgoing data until its next internal timer tick, adding latency.
       esp_hf_client_outgoing_data_ready();
-    else
+    } else {
       ++rx_drop_count;
+    }
   }
 
   adc_task = nullptr;
@@ -334,10 +329,10 @@ void adcCaptureTask(void *)
 }
 
 // Start I2S, create the ADC ring buffer, and launch the ADC capture task.
-void startAudioPath(bool msbc)
-{
-  if (adc_task || adc_ring)
+void startAudioPath(bool msbc) {
+  if (adc_task || adc_ring) {
     return;
+  }
 
   startI2s(msbc);
 
@@ -346,8 +341,7 @@ void startAudioPath(bool msbc)
   // unblock a waiting task until at least frame_bytes are available, ensuring
   // hfOutgoingDataCb() always gets a complete SCO frame in one call.
   adc_ring = xStreamBufferCreate(frame_bytes * kAdcRingFrames, frame_bytes);
-  if (!adc_ring)
-  {
+  if (!adc_ring) {
     Serial.println("xStreamBufferCreate(adc_ring) failed");
     stopI2s();
     return;
@@ -356,10 +350,8 @@ void startAudioPath(bool msbc)
   resetRxStats();
 
   adc_task_running = true;
-  BaseType_t task_ok = xTaskCreate(adcCaptureTask, "adc_cap", 4096, nullptr, 3,
-                                   &adc_task);
-  if (task_ok != pdPASS)
-  {
+  BaseType_t task_ok = xTaskCreate(adcCaptureTask, "adc_cap", 4096, nullptr, 3, &adc_task);
+  if (task_ok != pdPASS) {
     Serial.println("xTaskCreate(adcCaptureTask) failed");
     adc_task_running = false;
     vStreamBufferDelete(adc_ring);
@@ -369,15 +361,14 @@ void startAudioPath(bool msbc)
 }
 
 // Stop the ADC capture task, free the ring buffer, and tear down I2S.
-void stopAudioPath()
-{
+void stopAudioPath() {
   adc_task_running = false;
 
-  while (adc_task)
+  while (adc_task) {
     delay(1);
+  }
 
-  if (adc_ring)
-  {
+  if (adc_ring) {
     vStreamBufferDelete(adc_ring);
     adc_ring = nullptr;
   }
@@ -404,21 +395,21 @@ void stopAudioPath()
 
 // Pull callback: drain one SCO frame from adc_ring into buf.
 // Returns len on success, 0 if a complete frame is not yet available.
-uint32_t hfOutgoingDataCb(uint8_t *buf, uint32_t len)
-{
-  if (!buf || len == 0 || !adc_ring)
+uint32_t hfOutgoingDataCb(uint8_t *buf, uint32_t len) {
+  if (!buf || len == 0 || !adc_ring) {
     return 0;
+  }
 
   // Only receive if a complete frame is available; avoids partial reads that
   // would break frame alignment and cause audible artifacts.
-  if (xStreamBufferBytesAvailable(adc_ring) < len)
+  if (xStreamBufferBytesAvailable(adc_ring) < len) {
     return 0;
+  }
 
   const size_t got = xStreamBufferReceive(adc_ring, buf, len, 0);
 
   const uint32_t now_ms = millis();
-  if (now_ms - rx_last_log_ms >= kRxLogIntervalMs)
-  {
+  if (now_ms - rx_last_log_ms >= kRxLogIntervalMs) {
     Serial.printf("ADC peak: %d  drop: %" PRIu32 "\n", rx_peak_adc, rx_drop_count);
     resetRxStats();
   }
@@ -428,29 +419,30 @@ uint32_t hfOutgoingDataCb(uint8_t *buf, uint32_t len)
 
 // BT SCO RX → I2S TX → PCM5102A DAC.
 // Expands mono SCO samples to stereo 32-bit for the I2S bus.
-void hfIncomingDataCb(const uint8_t *buf, uint32_t len)
-{
-  if (!buf || len == 0 || !i2s_running) return;
+void hfIncomingDataCb(const uint8_t *buf, uint32_t len) {
+  if (!buf || len == 0 || !i2s_running) {
+    return;
+  }
 
   const int16_t *samples = reinterpret_cast<const int16_t *>(buf);
-  const size_t   n_mono  = len / sizeof(int16_t);
+  const size_t n_mono = len / sizeof(int16_t);
 
   // Safety check against tx_stereo overflow (see hfOutgoingDataCb for details).
-  if (n_mono > kStereoFrames) return;
+  if (n_mono > kStereoFrames) {
+    return;
+  }
 
   // Expand mono → stereo 32-bit: left-align the 16-bit SCO sample in a
   // 32-bit slot (shift left by 16) and duplicate to both L and R channels.
   // The PCM5102A uses the MSBs, so left-alignment preserves full amplitude.
-  for (size_t i = 0; i < n_mono; ++i)
-  {
+  for (size_t i = 0; i < n_mono; ++i) {
     const int32_t s32 = (int32_t)samples[i] << 16;
-    tx_stereo[i * 2]     = s32; // left  channel
-    tx_stereo[i * 2 + 1] = s32; // right channel (identical)
+    tx_stereo[i * 2] = s32;      // left  channel
+    tx_stereo[i * 2 + 1] = s32;  // right channel (identical)
   }
 
   // Write the stereo frame to the I2S TX buffer.
-  i2s.write(reinterpret_cast<const uint8_t *>(tx_stereo),
-            n_mono * 2 * sizeof(int32_t));
+  i2s.write(reinterpret_cast<const uint8_t *>(tx_stereo), n_mono * 2 * sizeof(int32_t));
 }
 
 // =============================================================================
@@ -459,14 +451,15 @@ void hfIncomingDataCb(const uint8_t *buf, uint32_t len)
 
 // Attempt to open the HFP Service Level Connection (RFCOMM control channel).
 // Rate-limited and guarded; safe to call from loop() every iteration.
-void tryConnectHfp(const char *reason)
-{
-  if (!hf_ready || !have_remote_bda || slc_connected)
+void tryConnectHfp(const char *reason) {
+  if (!hf_ready || !have_remote_bda || slc_connected) {
     return;
+  }
 
   const uint32_t now_ms = millis();
-  if (now_ms - last_hf_connect_attempt_ms < kReconnectIntervalMs)
+  if (now_ms - last_hf_connect_attempt_ms < kReconnectIntervalMs) {
     return;  // too soon; wait for the interval to elapse
+  }
 
   last_hf_connect_attempt_ms = now_ms;
   Serial.printf("Connecting HFP (%s) to ", reason);
@@ -477,41 +470,40 @@ void tryConnectHfp(const char *reason)
 
 // Attempt to open the SCO audio channel.  Some phones open it automatically;
 // others require the HF side to request it.  Rate-limited; safe to call from loop().
-void tryConnectAudio(const char *reason)
-{
-  if (!have_remote_bda || !slc_connected || !call_active || audio_connected)
+void tryConnectAudio(const char *reason) {
+  if (!have_remote_bda || !slc_connected || !call_active || audio_connected) {
     return;
+  }
 
   const uint32_t now_ms = millis();
-  if ((now_ms - last_audio_connect_attempt_ms) < kAudioConnectRetryMs)
+  if ((now_ms - last_audio_connect_attempt_ms) < kAudioConnectRetryMs) {
     return;  // too soon after last attempt; wait before retrying
+  }
 
   last_audio_connect_attempt_ms = now_ms;
   audio_connecting = true;
   Serial.printf("Opening SCO audio (%s)\n", reason);
-  logEspCall("esp_hf_client_connect_audio",
-             esp_hf_client_connect_audio(remote_bda));
+  logEspCall("esp_hf_client_connect_audio", esp_hf_client_connect_audio(remote_bda));
 }
 
 // On startup, connect to the most recently bonded phone automatically.
-void connectFirstBondedDevice()
-{
+void connectFirstBondedDevice() {
   // Query the number of bonded peers in the stack's NVS-backed bond store.
   int bonded_count = esp_bt_gap_get_bond_device_num();
-  if (bonded_count <= 0)
-  {
+  if (bonded_count <= 0) {
     Serial.println("No bonded phone yet. Pair from the phone's Bluetooth menu.");
     return;
   }
 
   // Clamp to our stack-allocated array size.
-  if (bonded_count > kMaxBondedDevices) bonded_count = kMaxBondedDevices;
+  if (bonded_count > kMaxBondedDevices) {
+    bonded_count = kMaxBondedDevices;
+  }
 
   esp_bd_addr_t bonded_devices[kMaxBondedDevices];
   int device_count = bonded_count;
   esp_err_t err = esp_bt_gap_get_bond_device_list(&device_count, bonded_devices);
-  if (err != ESP_OK || device_count <= 0)
-  {
+  if (err != ESP_OK || device_count <= 0) {
     logEspCall("esp_bt_gap_get_bond_device_list", err);
     return;
   }
@@ -530,191 +522,173 @@ void connectFirstBondedDevice()
 
 // GAP callback: handles pairing completion, SSP numeric comparison (auto-accept
 // for headless device), and legacy PIN fallback ("0000").
-void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
-{
-  switch (event)
-  {
-  case ESP_BT_GAP_AUTH_CMPL_EVT:
-    if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS)
+void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
+  switch (event) {
+    case ESP_BT_GAP_AUTH_CMPL_EVT:
+      if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
+        rememberBda(param->auth_cmpl.bda);
+        Serial.print("Pairing complete with ");
+        printBda(param->auth_cmpl.bda);
+        Serial.printf(" (%s)\n", param->auth_cmpl.device_name);
+        tryConnectHfp("pairing complete");
+      } else {
+        Serial.printf("Pairing failed: status=%d\n", param->auth_cmpl.stat);
+      }
+      break;
+
+    case ESP_BT_GAP_CFM_REQ_EVT:
+      // SSP numeric comparison — auto-accept.
+      rememberBda(param->cfm_req.bda);
+      Serial.printf("SSP confirm %06" PRIu32 " for ", param->cfm_req.num_val);
+      printBda(param->cfm_req.bda);
+      Serial.println();
+      logEspCall("esp_bt_gap_ssp_confirm_reply", esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true));
+      break;
+
+    case ESP_BT_GAP_PIN_REQ_EVT:
     {
-      rememberBda(param->auth_cmpl.bda);
-      Serial.print("Pairing complete with ");
-      printBda(param->auth_cmpl.bda);
-      Serial.printf(" (%s)\n", param->auth_cmpl.device_name);
-      tryConnectHfp("pairing complete");
+      // Legacy PIN pairing — respond with "0000".
+      esp_bt_pin_code_t pin_code = {'0', '0', '0', '0'};
+      rememberBda(param->pin_req.bda);
+      Serial.print("Legacy PIN requested for ");
+      printBda(param->pin_req.bda);
+      Serial.println();
+      logEspCall("esp_bt_gap_pin_reply", esp_bt_gap_pin_reply(param->pin_req.bda, true, 4, pin_code));
+      break;
     }
-    else
-    {
-      Serial.printf("Pairing failed: status=%d\n", param->auth_cmpl.stat);
-    }
-    break;
 
-  case ESP_BT_GAP_CFM_REQ_EVT:
-    // SSP numeric comparison — auto-accept.
-    rememberBda(param->cfm_req.bda);
-    Serial.printf("SSP confirm %06" PRIu32 " for ", param->cfm_req.num_val);
-    printBda(param->cfm_req.bda);
-    Serial.println();
-    logEspCall("esp_bt_gap_ssp_confirm_reply",
-               esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true));
-    break;
-
-  case ESP_BT_GAP_PIN_REQ_EVT:
-  {
-    // Legacy PIN pairing — respond with "0000".
-    esp_bt_pin_code_t pin_code = {'0', '0', '0', '0'};
-    rememberBda(param->pin_req.bda);
-    Serial.print("Legacy PIN requested for ");
-    printBda(param->pin_req.bda);
-    Serial.println();
-    logEspCall("esp_bt_gap_pin_reply",
-               esp_bt_gap_pin_reply(param->pin_req.bda, true, 4, pin_code));
-    break;
-  }
-
-  default: break;
+    default: break;
   }
 }
 
 // HFP client event handler: tracks SLC, call state, and SCO audio state.
 // Starts/stops the I2S bridge on SCO open/close.  Button answer/hangup is
 // handled in loop() to avoid calling HFP APIs from within BT callback context.
-void hfClientEventCb(esp_hf_client_cb_event_t event,
-                     esp_hf_client_cb_param_t *param)
-{
-  switch (event)
-  {
+void hfClientEventCb(esp_hf_client_cb_event_t event, esp_hf_client_cb_param_t *param) {
+  switch (event) {
 
-  // -------------------------------------------------------------------------
-  // PROF_STATE_EVT — HFP stack ready.
-  // Fired once after esp_hf_client_init() completes asynchronously.
-  // We may not use any HFP API before this event reports success.
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_PROF_STATE_EVT:
-    hf_ready = (param->prof_stat.state == ESP_HF_INIT_SUCCESS ||
-                param->prof_stat.state == ESP_HF_INIT_ALREADY);
-    Serial.printf("HFP profile ready: %s\n", hf_ready ? "yes" : "no");
-    if (hf_ready) connectFirstBondedDevice();
-    break;
+    // -------------------------------------------------------------------------
+    // PROF_STATE_EVT — HFP stack ready.
+    // Fired once after esp_hf_client_init() completes asynchronously.
+    // We may not use any HFP API before this event reports success.
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_PROF_STATE_EVT:
+      hf_ready = (param->prof_stat.state == ESP_HF_INIT_SUCCESS || param->prof_stat.state == ESP_HF_INIT_ALREADY);
+      Serial.printf("HFP profile ready: %s\n", hf_ready ? "yes" : "no");
+      if (hf_ready) {
+        connectFirstBondedDevice();
+      }
+      break;
 
-  // -------------------------------------------------------------------------
-  // CONNECTION_STATE_EVT — HFP RFCOMM / SLC connection state changed.
-  // The SLC (Service Level Connection) is the control channel; audio cannot
-  // be started until it reaches SLC_CONNECTED.
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_CONNECTION_STATE_EVT:
-    rememberBda(param->conn_stat.remote_bda);
-    slc_connected = (param->conn_stat.state ==
-                     ESP_HF_CLIENT_CONNECTION_STATE_SLC_CONNECTED);
+    // -------------------------------------------------------------------------
+    // CONNECTION_STATE_EVT — HFP RFCOMM / SLC connection state changed.
+    // The SLC (Service Level Connection) is the control channel; audio cannot
+    // be started until it reaches SLC_CONNECTED.
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_CONNECTION_STATE_EVT:
+      rememberBda(param->conn_stat.remote_bda);
+      slc_connected = (param->conn_stat.state == ESP_HF_CLIENT_CONNECTION_STATE_SLC_CONNECTED);
 
-    // On full disconnect, reset all derived state so a fresh reconnect starts
-    // from a clean baseline.
-    if (param->conn_stat.state == ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTED)
+      // On full disconnect, reset all derived state so a fresh reconnect starts
+      // from a clean baseline.
+      if (param->conn_stat.state == ESP_HF_CLIENT_CONNECTION_STATE_DISCONNECTED) {
+        audio_connected = false;
+        audio_connecting = false;
+        call_active = false;
+        call_incoming = false;
+        is_msbc = false;
+        stopAudioPath();
+      }
+
+      Serial.printf("HFP connection: %s ", hfConnStateName(param->conn_stat.state));
+      printBda(param->conn_stat.remote_bda);
+      Serial.println();
+
+      if (slc_connected) {
+        // Ask the phone to disable its own echo cancellation and noise reduction.
+        // The ESP32 side handles audio processing locally (or passes through raw).
+        logEspCall("esp_hf_client_send_nrec", esp_hf_client_send_nrec());
+
+        // Set microphone gain to maximum (15 = 100%) so the phone receives a
+        // strong signal.  Adjust this value if the far-end reports low volume.
+        logEspCall("esp_hf_client_volume_update(mic)", esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
+      }
+      break;
+
+    // -------------------------------------------------------------------------
+    // AUDIO_STATE_EVT — SCO audio channel state changed.  This is where the
+    // sketch starts or stops the I2S + ADC-capture audio path.
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_AUDIO_STATE_EVT:
     {
-      audio_connected  = false;
-      audio_connecting = false;
-      call_active      = false;
-      call_incoming    = false;
-      is_msbc          = false;
-      stopAudioPath();
+      const auto state = param->audio_stat.state;
+
+      // Update connection flags based on the new state.
+      audio_connecting = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTING);
+      audio_connected = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED || state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
+      is_msbc = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
+
+      if (audio_connected) {
+        // SCO is open — clear the connecting flag, boost mic, and start the
+        // I2S + ADC capture chain.
+        audio_connecting = false;
+        logEspCall("esp_hf_client_volume_update(mic)", esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
+        Serial.printf("Audio connected: %s\n", is_msbc ? "mSBC (16 kHz)" : "CVSD (8 kHz)");
+        startAudioPath(is_msbc);  // starts I2S, ring buffer, and ADC capture task
+      } else if (!audio_connecting) {
+        // SCO is closed (not merely mid-connect) — tear down the audio path.
+        is_msbc = false;
+        stopAudioPath();
+      }
+
+      Serial.printf("Audio state: %s\n", hfAudioStateName(state));
+      break;
     }
 
-    Serial.printf("HFP connection: %s ", hfConnStateName(param->conn_stat.state));
-    printBda(param->conn_stat.remote_bda);
-    Serial.println();
+    // -------------------------------------------------------------------------
+    // CIND_CALL_SETUP_EVT — call setup status from the AG (phone).
+    // Status INCOMING means the phone is ringing with an inbound call.
+    // Status NONE means the setup phase is over (call answered or aborted).
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_CIND_CALL_SETUP_EVT:
+      if (param->call_setup.status == ESP_HF_CALL_SETUP_STATUS_INCOMING) {
+        call_incoming = true;  // answered by loop() to avoid calling HFP API from callback
+      } else {
+        call_incoming = false;  // resolved (answered or caller hung up)
+      }
+      break;
 
-    if (slc_connected)
-    {
-      // Ask the phone to disable its own echo cancellation and noise reduction.
-      // The ESP32 side handles audio processing locally (or passes through raw).
-      logEspCall("esp_hf_client_send_nrec", esp_hf_client_send_nrec());
+    // -------------------------------------------------------------------------
+    // CIND_CALL_EVT — call active status from the AG.
+    // CALL_IN_PROGRESS means a call is now established (answered).
+    // NO_CALL means the call has ended.
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_CIND_CALL_EVT:
+      call_active = (param->call.status == ESP_HF_CALL_STATUS_CALL_IN_PROGRESS);
+      Serial.printf("Call active: %s\n", call_active ? "yes" : "no");
+      if (call_active) {
+        tryConnectAudio("call became active");  // open SCO if not already open
+      } else {
+        audio_connecting = false;  // call ended; cancel any pending SCO connect
+      }
+      break;
 
-      // Set microphone gain to maximum (15 = 100%) so the phone receives a
-      // strong signal.  Adjust this value if the far-end reports low volume.
-      logEspCall("esp_hf_client_volume_update(mic)",
-                 esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
-    }
-    break;
+    // -------------------------------------------------------------------------
+    // RING_IND_EVT — periodic ring indication from the AG while a call is
+    // incoming.  Fired once per ring burst; useful for driving an LED or buzzer.
+    // -------------------------------------------------------------------------
+    case ESP_HF_CLIENT_RING_IND_EVT:
+      call_incoming = true;  // ensure auto-answer even if CIND_CALL_SETUP_EVT did not fire
+      break;
 
-  // -------------------------------------------------------------------------
-  // AUDIO_STATE_EVT — SCO audio channel state changed.  This is where the
-  // sketch starts or stops the I2S + ADC-capture audio path.
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_AUDIO_STATE_EVT:
-  {
-    const auto state = param->audio_stat.state;
-
-    // Update connection flags based on the new state.
-    audio_connecting = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTING);
-    audio_connected  = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED ||
-                        state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
-    is_msbc          = (state == ESP_HF_CLIENT_AUDIO_STATE_CONNECTED_MSBC);
-
-    if (audio_connected)
-    {
-      // SCO is open — clear the connecting flag, boost mic, and start the
-      // I2S + ADC capture chain.
-      audio_connecting = false;
-      logEspCall("esp_hf_client_volume_update(mic)",
-                 esp_hf_client_volume_update(ESP_HF_VOLUME_CONTROL_TARGET_MIC, 15));
-      Serial.printf("Audio connected: %s\n",
-                    is_msbc ? "mSBC (16 kHz)" : "CVSD (8 kHz)");
-      startAudioPath(is_msbc);  // starts I2S, ring buffer, and ADC capture task
-    }
-    else if (!audio_connecting)
-    {
-      // SCO is closed (not merely mid-connect) — tear down the audio path.
-      is_msbc = false;
-      stopAudioPath();
-    }
-
-    Serial.printf("Audio state: %s\n", hfAudioStateName(state));
-    break;
-  }
-
-  // -------------------------------------------------------------------------
-  // CIND_CALL_SETUP_EVT — call setup status from the AG (phone).
-  // Status INCOMING means the phone is ringing with an inbound call.
-  // Status NONE means the setup phase is over (call answered or aborted).
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_CIND_CALL_SETUP_EVT:
-    if (param->call_setup.status == ESP_HF_CALL_SETUP_STATUS_INCOMING)
-      call_incoming = true;   // answered by loop() to avoid calling HFP API from callback
-    else
-      call_incoming = false;  // resolved (answered or caller hung up)
-    break;
-
-  // -------------------------------------------------------------------------
-  // CIND_CALL_EVT — call active status from the AG.
-  // CALL_IN_PROGRESS means a call is now established (answered).
-  // NO_CALL means the call has ended.
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_CIND_CALL_EVT:
-    call_active = (param->call.status == ESP_HF_CALL_STATUS_CALL_IN_PROGRESS);
-    Serial.printf("Call active: %s\n", call_active ? "yes" : "no");
-    if (call_active)
-      tryConnectAudio("call became active");  // open SCO if not already open
-    else
-      audio_connecting = false;  // call ended; cancel any pending SCO connect
-    break;
-
-  // -------------------------------------------------------------------------
-  // RING_IND_EVT — periodic ring indication from the AG while a call is
-  // incoming.  Fired once per ring burst; useful for driving an LED or buzzer.
-  // -------------------------------------------------------------------------
-  case ESP_HF_CLIENT_RING_IND_EVT:
-    call_incoming = true;  // ensure auto-answer even if CIND_CALL_SETUP_EVT did not fire
-    break;
-
-  default: break;
+    default: break;
   }
 }
 
 // =============================================================================
 // ARDUINO ENTRY POINTS
 // =============================================================================
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   delay(1000);  // allow the USB-serial adapter to enumerate before printing
   Serial.println();
@@ -725,11 +699,11 @@ void setup()
   // Start the Classic BT controller.  btStartMode() disables BLE, which frees
   // ~50 kB of IRAM and DRAM that the BT+WiFi coexistence layer would otherwise
   // occupy — important on a device that only needs Classic BT for HFP.
-  if (!btStarted())
-  {
+  if (!btStarted()) {
     Serial.println("Starting Classic BT controller");
-    if (!btStartMode(BT_MODE_CLASSIC_BT))
+    if (!btStartMode(BT_MODE_CLASSIC_BT)) {
       Serial.println("btStartMode failed");
+    }
   }
 
   // Initialise the Bluedroid host stack (manages profiles, L2CAP, RFCOMM, …).
@@ -737,79 +711,69 @@ void setup()
   // esp_bluedroid_enable() starts the stack tasks.  The status check prevents
   // double-initialisation if the sketch is re-uploaded without a power cycle.
   esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
-  if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED)
+  if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
     logEspCall("esp_bluedroid_init", esp_bluedroid_init());
+  }
 
   bt_state = esp_bluedroid_get_status();
-  if (bt_state != ESP_BLUEDROID_STATUS_ENABLED)
+  if (bt_state != ESP_BLUEDROID_STATUS_ENABLED) {
     logEspCall("esp_bluedroid_enable", esp_bluedroid_enable());
+  }
 
   // Register the GAP callback before configuring security so that any
   // immediate pairing events are not missed.
-  logEspCall("esp_bt_gap_register_callback",
-             esp_bt_gap_register_callback(gapCallback));
+  logEspCall("esp_bt_gap_register_callback", esp_bt_gap_register_callback(gapCallback));
 
   // IO capability NONE → "Just Works" SSP pairing.  No passkey or PIN entry
   // is required on either side; the connection is authenticated by proximity.
   // Suitable for a headless embedded device where no display or keyboard is
   // available.
   esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_NONE;
-  logEspCall("esp_bt_gap_set_security_param",
-             esp_bt_gap_set_security_param(ESP_BT_SP_IOCAP_MODE, &iocap,
-                                           sizeof(iocap)));
+  logEspCall("esp_bt_gap_set_security_param", esp_bt_gap_set_security_param(ESP_BT_SP_IOCAP_MODE, &iocap, sizeof(iocap)));
 
   // Set PIN type to variable (required even when SSP is used, as a fallback
   // for legacy Bluetooth 2.0 phones that do not support SSP).
   esp_bt_pin_code_t unused_pin_code = {0};
-  logEspCall("esp_bt_gap_set_pin",
-             esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_VARIABLE, 0, unused_pin_code));
+  logEspCall("esp_bt_gap_set_pin", esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_VARIABLE, 0, unused_pin_code));
 
   // Advertise a friendly name so the phone's Bluetooth menu shows something
   // recognisable rather than a raw MAC address.
-  logEspCall("esp_bt_dev_set_device_name",
-             esp_bt_dev_set_device_name("ESP32_HFP_BRIDGE"));
+  logEspCall("esp_bt_dev_set_device_name", esp_bt_dev_set_device_name("ESP32_HFP_BRIDGE"));
 
   // Set the Class of Device (CoD) to Audio/Video + Hands-free subclass.
   // This tells the phone the device is a hands-free unit so it offers HFP
   // in its connection dialog rather than trying to use A2DP or another profile.
   esp_bt_cod_t cod = {};
-  cod.major   = ESP_BT_COD_MAJOR_DEV_AV;           // Audio/Video major class
-  cod.minor   = 0x08;                               // Hands-free minor class
-  cod.service = ESP_BT_COD_SRVC_AUDIO |             // audio service bit
-                ESP_BT_COD_SRVC_TELEPHONY;          // telephony service bit
+  cod.major = ESP_BT_COD_MAJOR_DEV_AV;      // Audio/Video major class
+  cod.minor = 0x08;                         // Hands-free minor class
+  cod.service = ESP_BT_COD_SRVC_AUDIO |     // audio service bit
+                ESP_BT_COD_SRVC_TELEPHONY;  // telephony service bit
   logEspCall("esp_bt_gap_set_cod", esp_bt_gap_set_cod(cod, ESP_BT_SET_COD_ALL));
 
   // Make the device both connectable (accepts incoming BT connections) and
   // discoverable (responds to inquiry scans from phones in pairing mode).
-  logEspCall("esp_bt_gap_set_scan_mode",
-             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE,
-                                      ESP_BT_GENERAL_DISCOVERABLE));
+  logEspCall("esp_bt_gap_set_scan_mode", esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE));
 
   // Route SCO audio through the HCI layer so it arrives in hfIncomingDataCb
   // as raw PCM rather than being consumed by the internal hardware codec.
   // This call MUST come before esp_hf_client_init() — the data path can only
   // be configured while the HFP profile is not yet active.
-  logEspCall("esp_bredr_sco_datapath_set",
-             esp_bredr_sco_datapath_set(ESP_SCO_DATA_PATH_HCI));
+  logEspCall("esp_bredr_sco_datapath_set", esp_bredr_sco_datapath_set(ESP_SCO_DATA_PATH_HCI));
 
   // Register the audio data callbacks before initialising the HFP profile so
   // the stack can find them as soon as the first SCO frame arrives.
-  logEspCall("esp_hf_client_register_data_callback",
-             esp_hf_client_register_data_callback(hfIncomingDataCb,
-                                                   hfOutgoingDataCb));
+  logEspCall("esp_hf_client_register_data_callback", esp_hf_client_register_data_callback(hfIncomingDataCb, hfOutgoingDataCb));
 
   // Register the HFP event callback, then initialise the profile.
   // Initialisation is asynchronous; PROF_STATE_EVT fires when complete.
-  logEspCall("esp_hf_client_register_callback",
-             esp_hf_client_register_callback(hfClientEventCb));
+  logEspCall("esp_hf_client_register_callback", esp_hf_client_register_callback(hfClientEventCb));
   logEspCall("esp_hf_client_init", esp_hf_client_init());
 
   Serial.println("Ready. Pair the phone, then place or receive a call.");
 }
 
 // Handles HFP/SCO reconnection and the answer/hangup button.
-void loop()
-{
+void loop() {
   tryConnectHfp("background retry");
   tryConnectAudio("background retry");
 
@@ -819,17 +783,13 @@ void loop()
   // Edge detection ensures a single press triggers one action even if the
   // button is held down.
   static bool btn_prev = HIGH;
-  const bool  btn_now  = digitalRead(PIN_ANSWER_HANGUP);
-  if (btn_prev == HIGH && btn_now == LOW)
-  {
-    if (call_incoming && !call_active)
-    {
+  const bool btn_now = digitalRead(PIN_ANSWER_HANGUP);
+  if (btn_prev == HIGH && btn_now == LOW) {
+    if (call_incoming && !call_active) {
       call_incoming = false;
       Serial.println("Button: answering incoming call");
       logEspCall("esp_hf_client_answer_call", esp_hf_client_answer_call());
-    }
-    else if (call_active)
-    {
+    } else if (call_active) {
       Serial.println("Button: hanging up");
       logEspCall("esp_hf_client_reject_call", esp_hf_client_reject_call());
     }
