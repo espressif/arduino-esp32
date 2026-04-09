@@ -89,12 +89,12 @@
 #define PIN_I2S_LRCK 26  // I2S word select — shared between PCM5102A and PCM1808
 #define PIN_I2S_DOUT 27  // I2S data out   — ESP32 → PCM5102A (DAC, playback)
 #define PIN_I2S_DIN  32  // I2S data in    — PCM1808 → ESP32  (ADC, capture)
-#define PIN_I2S_SCKI                                     \
+#define PIN_I2S_SCKI \
   0  // Master clock output → PCM1808 SCKI.            \
      // GPIO 0 is the only pin that supports MCLK output \
      // without conflicting with UART0 (TX=GPIO1, RX=GPIO3).
 
-#define PIN_ANSWER_HANGUP                                          \
+#define PIN_ANSWER_HANGUP \
   16  // Call control button — active-low with internal pull-up. \
       // Press while the phone is ringing  → answers the call.   \
       // Press while a call is in progress → hangs up.
