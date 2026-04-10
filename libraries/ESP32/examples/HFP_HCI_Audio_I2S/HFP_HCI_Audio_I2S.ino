@@ -89,15 +89,11 @@
 #define PIN_I2S_LRCK 26  // I2S word select — shared between PCM5102A and PCM1808
 #define PIN_I2S_DOUT 27  // I2S data out   — ESP32 → PCM5102A (DAC, playback)
 #define PIN_I2S_DIN  32  // I2S data in    — PCM1808 → ESP32  (ADC, capture)
-#define PIN_I2S_SCKI \
-  0  // Master clock output → PCM1808 SCKI.            \
-     // GPIO 0 is the only pin that supports MCLK output \
-     // without conflicting with UART0 (TX=GPIO1, RX=GPIO3).
+// GPIO 0 is the only pin that supports MCLK output without conflicting with UART0 (TX=1, RX=3).
+#define PIN_I2S_SCKI 0  // Master clock output → PCM1808 SCKI
 
-#define PIN_ANSWER_HANGUP \
-  16  // Call control button — active-low with internal pull-up. \
-      // Press while the phone is ringing  → answers the call.   \
-      // Press while a call is in progress → hangs up.
+// Active-low with internal pull-up: press while ringing → answer; press during call → hang up.
+#define PIN_ANSWER_HANGUP 16  // Call control button
 
 // Codec sample rates negotiated by Bluedroid with the phone.
 // CVSD = legacy narrowband (8 kHz); mSBC = wideband (16 kHz, HFP 1.6).
