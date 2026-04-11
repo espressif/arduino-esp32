@@ -202,6 +202,17 @@ bool WebServer::authenticate(THandlerFunctionAuthCheck fn) {
     if (!_username.length()) {
       goto exf;
     }
+    // The digest "uri" parameter may include a query string, while _currentUri
+    // is parsed without it. Normalize by comparing only the path portion.
+    String _uriPath = _uri;
+    int qmarkIndex = _uriPath.indexOf('?');
+    if (qmarkIndex >= 0) {
+      _uriPath = _uriPath.substring(0, qmarkIndex);
+    }
+    if (_uriPath != _currentUri) {
+      log_e("Authentication Failed: URI mismatch");
+      goto exf;
+    }
 
     String params[] = {_realm, _uri};
     String *password = fn(DIGEST_AUTH, _username, params);

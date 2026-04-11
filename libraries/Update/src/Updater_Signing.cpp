@@ -12,6 +12,7 @@
 #include "mbedtls/ecdsa.h"
 #include "mbedtls/ecp.h"
 #include "mbedtls/md.h"
+#include "mbedtls/asn1.h"
 #include "esp32-hal-log.h"
 
 // ==================== UpdaterRSAVerifier (using mbedtls) ====================
@@ -62,8 +63,34 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
   // Get hash bytes from the builder
   uint8_t hashBytes[64];  // Max hash size (SHA-512)
   hash->getBytes(hashBytes);
+  size_t hash_size = hash->getHashSize();
 
-  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), (const unsigned char *)signature, signatureLen);
+  // Use RSA-PSS verification to match bin_signing.py which signs with PSS padding
+  // and salt_length=PSS.MAX_LENGTH (which equals key_len - hash_size - 2)
+  mbedtls_rsa_context *rsa_ctx = mbedtls_pk_rsa(*(mbedtls_pk_context *)_ctx);
+  if (!rsa_ctx) {
+    log_e("Failed to get RSA context");
+    return false;
+  }
+
+  int key_len = (int)mbedtls_rsa_get_len(rsa_ctx);
+  // PSS.MAX_LENGTH salt = key_len - hash_size - 2
+  int expected_salt_len = key_len - (int)hash_size - 2;
+  if (expected_salt_len < 0) {
+    log_e("RSA key too small for hash algorithm");
+    return false;
+  }
+
+  mbedtls_pk_rsassa_pss_options pss_opts;
+  pss_opts.mgf1_hash_id = md_type;
+  pss_opts.expected_salt_len = expected_salt_len;
+
+  // RSA signatures are always exactly key_len bytes. The buffer may be
+  // zero-padded to a larger size (e.g. 512), so use key_len as the actual
+  // signature length to avoid MBEDTLS_ERR_PK_SIG_LEN_MISMATCH.
+  int ret = mbedtls_pk_verify_ext(
+    MBEDTLS_PK_RSASSA_PSS, &pss_opts, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, key_len
+  );
 
   if (ret == 0) {
     log_i("RSA signature verified successfully");
@@ -124,7 +151,24 @@ bool UpdaterECDSAVerifier::verify(SHA2Builder *hash, const void *signature, size
   uint8_t hashBytes[64];  // Max hash size (SHA-512)
   hash->getBytes(hashBytes);
 
-  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), (const unsigned char *)signature, signatureLen);
+  // ECDSA signatures are DER-encoded (SEQUENCE { INTEGER r, INTEGER s }).
+  // The buffer may be zero-padded to a larger size (e.g. 512), so determine
+  // the actual DER-encoded signature length from the ASN.1 header to avoid
+  // MBEDTLS_ERR_PK_SIG_LEN_MISMATCH.
+  const uint8_t *sig = (const uint8_t *)signature;
+  size_t actualSigLen = signatureLen;
+  unsigned char *p = (unsigned char *)sig;
+  const unsigned char *end = p + signatureLen;
+  size_t seq_len = 0;
+  if (mbedtls_asn1_get_tag(&p, end, &seq_len, MBEDTLS_ASN1_CONSTRUCTED | MBEDTLS_ASN1_SEQUENCE) == 0) {
+    // actualSigLen = header bytes (p advanced past them) + content length
+    size_t parsed = (size_t)(p - sig) + seq_len;
+    if (parsed <= signatureLen) {
+      actualSigLen = parsed;
+    }
+  }
+
+  int ret = mbedtls_pk_verify((mbedtls_pk_context *)_ctx, md_type, hashBytes, hash->getHashSize(), sig, actualSigLen);
 
   if (ret == 0) {
     log_i("ECDSA signature verified successfully");
