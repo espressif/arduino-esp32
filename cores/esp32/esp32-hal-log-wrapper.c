@@ -18,9 +18,10 @@
  * ESP-IDF logging functions, ensuring compatibility without requiring esp_diagnostics.
  */
 
+#include <stdarg.h>
+
 #ifndef CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP
 
-#include <stdarg.h>
 #include "esp_log.h"
 
 // Declare the real functions that will be wrapped by the linker
@@ -43,12 +44,11 @@ void __wrap_esp_log_writev(esp_log_level_t level, const char *tag, const char *f
 
 /*
  * Wrapper for log_printf (Arduino logging function).
- * The --wrap=log_printf linker flag renames log_printf to __real_log_printf,
- * so we need __wrap_log_printf to call through to it.
+ * The --wrap=log_printf linker flag redirects calls to __wrap_log_printf.
+ * This wrapper builds a va_list and forwards the call to log_printfv().
  * This must be outside the CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP guard since
  * neither esp_diagnostics nor any other component provides this wrapper.
  */
-#include <stdarg.h>
 
 extern int log_printfv(const char *format, va_list arg);
 
