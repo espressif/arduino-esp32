@@ -40,3 +40,22 @@ void __wrap_esp_log_writev(esp_log_level_t level, const char *tag, const char *f
 }
 
 #endif  // !CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP
+
+/*
+ * Wrapper for log_printf (Arduino logging function).
+ * The --wrap=log_printf linker flag renames log_printf to __real_log_printf,
+ * so we need __wrap_log_printf to call through to it.
+ * This must be outside the CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP guard since
+ * neither esp_diagnostics nor any other component provides this wrapper.
+ */
+#include <stdarg.h>
+
+extern int log_printfv(const char *format, va_list arg);
+
+int __wrap_log_printf(const char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  int len = log_printfv(format, args);
+  va_end(args);
+  return len;
+}
