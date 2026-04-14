@@ -40,10 +40,6 @@
 #include <MatterEndpoints/MatterThermostat.h>
 #include <MatterEndpoints/MatterWindowCovering.h>
 
-#if CONFIG_ENABLE_CHIPOBLE
-#include "esp32-hal-bt-mem.h"
-#endif
-
 // Matter Event types used when there is a user callback for Matter Events
 enum matterEvent_t {
   // Starting from 0x8000, these events are public and can be used by applications.
