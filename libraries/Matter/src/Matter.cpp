@@ -22,6 +22,14 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
+// Strong function that is overridden by Arduino layer when Matter.cpp is linked
+// This doesn't allow initArduino() to release BLE memory before Matter stack can use it 
+#if CONFIG_ENABLE_CHIPOBLE
+bool btInUse(void) {
+  return true;
+}
+#endif
+
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
