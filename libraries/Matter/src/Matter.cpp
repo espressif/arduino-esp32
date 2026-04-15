@@ -25,7 +25,7 @@
 // Strong function that is overridden by Arduino layer when Matter.cpp is linked
 // This doesn't allow initArduino() to release BLE memory before Matter stack can use it 
 #if CONFIG_ENABLE_CHIPOBLE
-bool btInUse(void) {
+extern "C" bool btInUse(void) {
   return true;
 }
 #endif
