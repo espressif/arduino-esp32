@@ -170,7 +170,7 @@ void change_baudrate_test(void) {
 
     //Baudrate error should be within 2% of the target baudrate
     config.serial.updateBaudRate(57600);
-    TEST_ASSERT_UINT_WITHIN(192, 60000, config.serial.baudRate());
+    TEST_ASSERT_UINT_WITHIN(1200, 57600, config.serial.baudRate());
 
     log_d("Sending string on UART%d using 57600 baudrate", config.uart_num);
     config.transmit_and_check_msg("using 57600 baudrate");
