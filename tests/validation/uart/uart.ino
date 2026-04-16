@@ -710,6 +710,10 @@ void setup() {
 
   UNITY_BEGIN();
   RUN_TEST(begin_when_running_test);
+  RUN_TEST(inter_uart_pin_move_test);
+  RUN_TEST(same_uart_pin_swap_test);
+  RUN_TEST(move_rx_tx_to_cts_rts_test);
+  RUN_TEST(cross_uart_cts_rts_test);
   RUN_TEST(basic_transmission_test);
   RUN_TEST(resize_buffers_test);
   RUN_TEST(change_baudrate_test);
@@ -722,10 +726,6 @@ void setup() {
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
   RUN_TEST(hardware_flow_control_test);
-  RUN_TEST(inter_uart_pin_move_test);
-  RUN_TEST(same_uart_pin_swap_test);
-  RUN_TEST(move_rx_tx_to_cts_rts_test);
-  RUN_TEST(cross_uart_cts_rts_test);
   RUN_TEST(end_when_stopped_test);
   UNITY_END();
 }
