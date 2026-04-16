@@ -176,7 +176,7 @@ void change_baudrate_test(void) {
     config.transmit_and_check_msg("using 57600 baudrate");
 
     config.serial.begin(115200);
-    TEST_ASSERT_UINT_WITHIN(2304, 116000, config.serial.baudRate());
+    TEST_ASSERT_UINT_WITHIN(2304, 115200, config.serial.baudRate());
 
     log_d("Sending string on UART%d using 115200 baudrate", config.uart_num);
     config.transmit_and_check_msg("using 115200 baudrate");
