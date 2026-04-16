@@ -166,14 +166,14 @@ void basic_transmission_test(void) {
 void change_baudrate_test(void) {
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    log_d("Changing baudrate of UART%d to 9600", config.uart_num);
+    log_d("Changing baudrate of UART%d to 57600", config.uart_num);
 
     //Baudrate error should be within 2% of the target baudrate
-    config.serial.updateBaudRate(9600);
-    TEST_ASSERT_UINT_WITHIN(192, 9600, config.serial.baudRate());
+    config.serial.updateBaudRate(57600);
+    TEST_ASSERT_UINT_WITHIN(1200, 57600, config.serial.baudRate());
 
-    log_d("Sending string on UART%d using 9600 baudrate", config.uart_num);
-    config.transmit_and_check_msg("using 9600 baudrate");
+    log_d("Sending string on UART%d using 57600 baudrate", config.uart_num);
+    config.transmit_and_check_msg("using 57600 baudrate");
 
     config.serial.begin(115200);
     TEST_ASSERT_UINT_WITHIN(2304, 115200, config.serial.baudRate());
@@ -610,6 +610,7 @@ void same_uart_pin_swap_test(void) {
 
   // Confirm transmission still works with swapped pins (re-set loopback for swapped RX)
   uart_internal_loopback(config.uart_num, orig_tx);
+  config.recv_msg = "";
   config.transmit_and_check_msg("after pin swap");
 
   Serial.println("Same UART pin swap test successful");
