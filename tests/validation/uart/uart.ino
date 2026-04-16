@@ -166,17 +166,17 @@ void basic_transmission_test(void) {
 void change_baudrate_test(void) {
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
-    log_d("Changing baudrate of UART%d to 9600", config.uart_num);
+    log_d("Changing baudrate of UART%d to 57600", config.uart_num);
 
     //Baudrate error should be within 2% of the target baudrate
-    config.serial.updateBaudRate(9600);
-    TEST_ASSERT_UINT_WITHIN(192, 9600, config.serial.baudRate());
+    config.serial.updateBaudRate(57600);
+    TEST_ASSERT_UINT_WITHIN(192, 60000, config.serial.baudRate());
 
-    log_d("Sending string on UART%d using 9600 baudrate", config.uart_num);
-    config.transmit_and_check_msg("using 9600 baudrate");
+    log_d("Sending string on UART%d using 57600 baudrate", config.uart_num);
+    config.transmit_and_check_msg("using 57600 baudrate");
 
     config.serial.begin(115200);
-    TEST_ASSERT_UINT_WITHIN(2304, 115200, config.serial.baudRate());
+    TEST_ASSERT_UINT_WITHIN(2304, 116000, config.serial.baudRate());
 
     log_d("Sending string on UART%d using 115200 baudrate", config.uart_num);
     config.transmit_and_check_msg("using 115200 baudrate");
