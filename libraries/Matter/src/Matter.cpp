@@ -22,8 +22,9 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
-// Strong function that is overridden by Arduino layer when Matter.cpp is linked
-// This doesn't allow initArduino() to release BLE memory before Matter stack can use it 
+// Strong definition that overrides the core's weak btInUse() implementation.
+// This prevents initArduino() from releasing BTDM controller memory before the
+// Matter stack can use Bluetooth transport.
 #if CONFIG_ENABLE_CHIPOBLE
 extern "C" bool btInUse(void) {
   return true;
