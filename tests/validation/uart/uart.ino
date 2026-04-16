@@ -697,6 +697,7 @@ void setup() {
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
     config.begin(115200);
+    config.setRxFIFOFull(1); // flushes the onReceive right away
     log_d("Setup internal loop-back from and back to UART%d TX >> UART%d RX", config.uart_num, config.uart_num);
     config.serial.onReceive([&config]() {
       config.onReceive();
