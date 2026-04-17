@@ -48,8 +48,7 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.3,<5.6"
-  # mdns 1.2.1 is necessary to build H2 with no WiFi
+  idf: ">=5.3,<6.1"
   espressif/mdns:
     version: "^1.2.3"
     require: public
@@ -71,43 +70,56 @@ dependencies:
       - if: "target not in [esp32c2, esp32c61]"
   # RainMaker Start (Fixed versions, because Matter supports only Insights 1.0.1)
   espressif/network_provisioning:
-    version: "1.0.2"
     rules:
       - if: "target != esp32c2"
+    matches:
+      # New Provisioning for IDF6
+      - if: idf_version >= 6.0
+        version: "1.2.4"
+      - if: idf_version < 6.0
+        version: "1.0.2"
   espressif/esp_rainmaker:
     version: "1.5.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   espressif/rmaker_common:
     version: "1.4.6"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   espressif/esp_insights:
     version: "1.2.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   # New version breaks esp_insights 1.0.1
   espressif/esp_diag_data_store:
     version: "1.0.2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   espressif/esp_diagnostics:
     version: "1.2.1"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   espressif/cbor:
     version: "0.6.1~4"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   espressif/qrcode:
     version: "0.1.0~2"
     rules:
       - if: "target not in [esp32c2, esp32p4]"
+      - if: idf_version < 6.0
   # RainMaker End
   espressif/esp-sr:
     version: "^2.1.5"
     rules:
       - if: "target in [esp32s3, esp32p4]"
+      - if: idf_version < 6.0
   espressif/esp_hosted:
     version: "^2.9.2"
     rules:
@@ -117,10 +129,12 @@ dependencies:
     rules:
       - if: "target == esp32p4"
   espressif/libsodium:
-    version: "^1.0.20~1"
+    version: "^1.0.21"
     require: public
+    rules:
+      - if: idf_version < 6.0
   espressif/esp-modbus:
-    version: "^1.0.15"
+    version: "^2.1.2"
     require: public
   joltwallet/littlefs:
     version: "^1.10.2"
@@ -131,6 +145,10 @@ dependencies:
     version: "^2.0.0"
     rules:
       - if: "target in [esp32, esp32p4]"
+  espressif/cjson:
+    version: "^1.7.19~2"
+    rules:
+      - if: idf_version >= 6.0
 examples:
   - path: ./idf_component_examples/Arduino_ESP_Matter_over_OpenThread
   - path: ./idf_component_examples/hello_world

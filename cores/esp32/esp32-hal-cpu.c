@@ -29,6 +29,9 @@
 #include <inttypes.h>
 #include "hal/timer_ll.h"
 #include "esp_private/systimer.h"
+#if __has_include("hal/lact_ll.h")
+#include "hal/lact_ll.h"
+#endif
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -295,7 +298,11 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     // ESP32-specific: Update esp_timer divisor
 #if CONFIG_IDF_TARGET_ESP32
 #if defined(LACT_MODULE) && defined(LACT_TICKS_PER_US)
+#if __has_include("hal/lact_ll.h")
+    lact_ll_set_clock_prescale(LACT_LL_GET_HW(LACT_MODULE), apb / MHZ / LACT_TICKS_PER_US);
+#else
     timer_ll_set_lact_clock_prescale(TIMER_LL_GET_HW(LACT_MODULE), apb / MHZ / LACT_TICKS_PER_US);
+#endif
 #else
     esp_timer_impl_update_apb_freq(apb / MHZ);
 #endif

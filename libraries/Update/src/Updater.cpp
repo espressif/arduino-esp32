@@ -10,7 +10,12 @@
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 #ifndef UPDATE_NOCRYPT
+#include "mbedtls/build_info.h"
+#if MBEDTLS_VERSION_MAJOR >= 4
+#include "psa/crypto.h"
+#else
 #include "mbedtls/aes.h"
+#endif
 #endif /* UPDATE_NOCRYPT */
 
 static const char *_err2str(uint8_t _error) {
@@ -509,6 +514,64 @@ bool UpdateClass::_decryptBuffer() {
   uint8_t tweaked_key[ENCRYPTED_KEY_SIZE];
   int done = 0;
 
+#if MBEDTLS_VERSION_MAJOR >= 4
+  /* mbedtls 4.x removed the legacy AES API; use PSA cipher instead */
+  psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+  psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT);
+  psa_set_key_algorithm(&key_attr, PSA_ALG_ECB_NO_PADDING);
+  psa_set_key_type(&key_attr, PSA_KEY_TYPE_AES);
+  psa_set_key_bits(&key_attr, 256);
+
+  psa_key_id_t key_id = PSA_KEY_ID_NULL;
+  size_t last_key_address = (size_t)-1;
+  uint8_t ecb_out[ENCRYPTED_BLOCK_SIZE];
+
+  while ((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE) {
+    // Step 1: Reverse byte order of the 16-byte block
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];
+    }
+
+    // Update tweaked key every ENCRYPTED_TWEAK_BLOCK_SIZE (32) bytes or at start
+    size_t cur_address = _cryptAddress + _progress + done;
+    size_t tweak_base = cur_address - (cur_address % ENCRYPTED_TWEAK_BLOCK_SIZE);
+    if (tweak_base != last_key_address) {
+      last_key_address = tweak_base;
+      _cryptKeyTweak(cur_address, tweaked_key);
+      if (key_id != PSA_KEY_ID_NULL) {
+        psa_destroy_key(key_id);
+        key_id = PSA_KEY_ID_NULL;
+      }
+      if (psa_import_key(&key_attr, tweaked_key, ENCRYPTED_KEY_SIZE, &key_id) != PSA_SUCCESS) {
+        return false;
+      }
+    }
+
+    // Step 2: Apply AES-ECB encryption (this decrypts due to the involutory scheme)
+    // Use multipart API to avoid aliasing and IV-prepend issues with the one-shot API
+    psa_cipher_operation_t op = PSA_CIPHER_OPERATION_INIT;
+    size_t out_len = 0, finish_len = 0;
+    if (psa_cipher_encrypt_setup(&op, key_id, PSA_ALG_ECB_NO_PADDING) != PSA_SUCCESS
+        || psa_cipher_update(&op, _cryptBuffer, ENCRYPTED_BLOCK_SIZE, ecb_out, sizeof(ecb_out), &out_len) != PSA_SUCCESS
+        || psa_cipher_finish(&op, ecb_out + out_len, sizeof(ecb_out) - out_len, &finish_len) != PSA_SUCCESS) {
+      psa_cipher_abort(&op);
+      psa_destroy_key(key_id);
+      return false;
+    }
+    memcpy(_cryptBuffer, ecb_out, ENCRYPTED_BLOCK_SIZE);
+
+    // Step 3: Reverse byte order back to get the decrypted plaintext
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];
+    }
+
+    done += ENCRYPTED_BLOCK_SIZE;
+  }
+
+  if (key_id != PSA_KEY_ID_NULL) {
+    psa_destroy_key(key_id);
+  }
+#else
   mbedtls_aes_context ctx;
   mbedtls_aes_init(&ctx);
 
@@ -539,6 +602,7 @@ bool UpdateClass::_decryptBuffer() {
 
     done += ENCRYPTED_BLOCK_SIZE;
   }
+#endif /* MBEDTLS_VERSION_MAJOR >= 4 */
 
   return true;
 }

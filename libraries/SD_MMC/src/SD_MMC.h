@@ -16,11 +16,7 @@
 
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
-#ifndef SOC_SDMMC_HOST_SUPPORTED
-#ifdef ARDUINO
-#warning The SDMMC library requires a device with an SDIO Host
-#endif
-#else
+#ifdef SOC_SDMMC_HOST_SUPPORTED
 
 #include "FS.h"
 #include "driver/sdmmc_types.h"

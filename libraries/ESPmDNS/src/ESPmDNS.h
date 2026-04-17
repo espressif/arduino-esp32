@@ -46,7 +46,11 @@ License (MIT license):
 
 #include "Arduino.h"
 #include "mdns.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
 #include "esp_interface.h"
+#else
+#include "esp_wifi_types.h"
+#endif
 
 //this should be defined at build time
 #ifndef ARDUINO_VARIANT
@@ -90,7 +94,11 @@ public:
   void enableArduino(uint16_t port = 3232, bool auth = false);
   void disableArduino();
 
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   void enableWorkstation(esp_interface_t interface = ESP_IF_WIFI_STA);
+#else
+  void enableWorkstation(wifi_interface_t interface = WIFI_IF_STA);
+#endif
   void disableWorkstation();
 
   IPAddress queryHost(char *host, uint32_t timeout = 2000);
