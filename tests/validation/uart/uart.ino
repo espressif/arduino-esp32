@@ -91,11 +91,13 @@ public:
     }
     while (available--) {
       c = (char)serial.read();
-      if (c >= 32 && c <= 128) {
+      if (c > 31 && c < 128) {
         recv_msg += c;
-        //      } else {
-        //        Serial.printf("UART%d onReceive() got a non readable character 0x%x='%c'\r\n", uart_num, c, c);
-        //        Serial.flush();
+#if 0
+      } else {
+        Serial.printf("UART%d onReceive() got a non readable character 0x%x='%c'\r\n", uart_num, c, c);
+        Serial.flush();
+#endif
       }
     }
   }
@@ -103,10 +105,8 @@ public:
 
 /* Utility global variables */
 
-[[maybe_unused]]
-static const int NEW_RX1 = 9;
-[[maybe_unused]]
-static const int NEW_TX1 = 10;
+static const int NEW_RX1 = SDA;
+static const int NEW_TX1 = SCL;
 std::vector<UARTTestConfig *> uart_test_configs;
 
 /* Utility functions */
@@ -421,8 +421,7 @@ void auto_baudrate_test(void) {
 
   if (TEST_UART_NUM == 1) {
     selected_serial = &Serial1;
-    // UART1 pins were swapped because of ESP32-P4
-    uart_internal_loopback(0, /*RX1*/ TX1);
+    uart_internal_loopback(0, RX1);
   } else {
 #ifdef RX2
     selected_serial = &Serial2;
@@ -599,7 +598,7 @@ void same_uart_pin_swap_test(void) {
   int8_t orig_tx = config.default_tx_pin;
 
   // Swap RX and TX on the same UART
-  log_d("Swapping RX(%d) and TX(%d) on UART%d", orig_rx, orig_tx, config.uart_num);
+  log_i("Swapping RX(%d) and TX(%d) on UART%d", orig_rx, orig_tx, config.uart_num);
   bool ret = config.serial.setPins(orig_tx, orig_rx);
   TEST_ASSERT_TRUE(ret);
 
@@ -673,8 +672,13 @@ void setup() {
 
   uart_test_configs = {
 #if SOC_UART_HP_NUM >= 2 && defined(RX1) && defined(TX1)
-    // inverting RX1<->TX1 because ESP32-P4 has a problem with loopback on RX1 :: GPIO11 <-- UART_TX SGINAL
-    new UARTTestConfig(1, Serial1, TX1, RX1),
+#if CONFIG_IDF_TARGET_ESP32P4
+    // Using real ESP32-P4 board demands using brokenout pins of the EV board 
+    new UARTTestConfig(1, Serial1, 2, 3),    // RX1= 2 TX1 = 3 ESP32-P4 only TAB5 (ECO-2)=OK || EV BOard (ECO5)=OK
+#else
+    // Other SoC than ESP32-P4 shall use regular UART1 pins
+    new UARTTestConfig(1, Serial1, RX1, TX1),
+#endif
 #endif
 #if SOC_UART_HP_NUM >= 3 && defined(RX2) && defined(TX2)
     new UARTTestConfig(2, Serial2, RX2, TX2),
