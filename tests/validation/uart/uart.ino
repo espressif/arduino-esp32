@@ -600,7 +600,7 @@ void same_uart_pin_swap_test(void) {
   int8_t orig_tx = config.default_tx_pin;
 
   // Swap RX and TX on the same UART
-  log_i("Swapping RX(%d) and TX(%d) on UART%d", orig_rx, orig_tx, config.uart_num);
+  log_d("Swapping RX(%d) and TX(%d) on UART%d", orig_rx, orig_tx, config.uart_num);
   bool ret = config.serial.setPins(orig_tx, orig_rx);
   TEST_ASSERT_TRUE(ret);
 
