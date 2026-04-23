@@ -678,7 +678,7 @@ void setup() {
     // Using a real ESP32-P4 board requires the broken-out pins of the EV board
     new UARTTestConfig(1, Serial1, 2, 3),    // RX1 = 2, TX1 = 3; ESP32-P4 only: TAB5 (ECO-2) = OK || EV board (ECO5) = OK
 #else
-    // Other SoC than ESP32-P4 shall use regular UART1 pins
+    // Non-ESP32-P4 targets should use the regular UART1 pins
     new UARTTestConfig(1, Serial1, RX1, TX1),
 #endif
 #endif
