@@ -105,8 +105,10 @@ public:
 
 /* Utility global variables */
 
- [[maybe_unused]] static const int NEW_RX1 = SDA;
- [[maybe_unused]] static const int NEW_TX1 = SCL;
+ [[maybe_unused]]
+ static const int NEW_RX1 = 9;
+ [[maybe_unused]]
+ static const int NEW_TX1 = 10;
 std::vector<UARTTestConfig *> uart_test_configs;
 
 /* Utility functions */
