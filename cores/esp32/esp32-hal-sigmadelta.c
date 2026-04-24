@@ -34,11 +34,17 @@ bool sigmaDeltaAttach(uint8_t pin, uint32_t freq)  //freq 1220-312500
     log_e("Pin %u could not be detached.", pin);
     return false;
   }
-  sdm_config_t config = {.gpio_num = (int)pin, .clk_src = SDM_CLK_SRC_DEFAULT, .sample_rate_hz = freq, .flags = {.invert_out = 0
+  sdm_config_t config =
+    {.gpio_num = (int)pin,
+     .clk_src = SDM_CLK_SRC_DEFAULT,
+     .sample_rate_hz = freq,
+     .flags = {
+       .invert_out = 0
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
-  , .io_loop_back = 0
+       ,
+       .io_loop_back = 0
 #endif
-  }};
+     }};
   esp_err_t err = sdm_new_channel(&config, &bus);
   if (err != ESP_OK) {
     log_e("sdm_new_channel failed with error: %d", err);

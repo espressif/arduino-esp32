@@ -58,9 +58,9 @@ extern "C" {
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #define esp_interface_t wifi_interface_t
-#define ESP_IF_WIFI_AP WIFI_IF_AP
+#define ESP_IF_WIFI_AP  WIFI_IF_AP
 #define ESP_IF_WIFI_STA WIFI_IF_STA
-#define ESP_IF_MAX 3
+#define ESP_IF_MAX      3
 #endif
 
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
@@ -931,9 +931,13 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period
+    .resp_mac = {0, 0, 0, 0, 0, 0},
+    .channel = channel,
+    .frm_count = frm_count,
+    .burst_period = burst_period
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
-    , .use_get_report_api = true
+    ,
+    .use_get_report_api = true
 #endif
   };
   if (mac != NULL) {

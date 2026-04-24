@@ -98,7 +98,7 @@ typedef enum {
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #define ip_event_ap_staipassigned_t ip_event_assigned_ip_to_client_t
-#define IP_EVENT_AP_STAIPASSIGNED IP_EVENT_ASSIGNED_IP_TO_CLIENT
+#define IP_EVENT_AP_STAIPASSIGNED   IP_EVENT_ASSIGNED_IP_TO_CLIENT
 #endif
 
 typedef union {

@@ -150,7 +150,7 @@ void MDNSResponder::enableWorkstation(wifi_interface_t interface) {
     case WIFI_IF_STA: mtype = ESP_MAC_WIFI_STA; break;
     case WIFI_IF_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
 #endif
-    default:              break;
+    default: break;
   }
 #endif
   if (esp_read_mac(mac, mtype) != ESP_OK) {

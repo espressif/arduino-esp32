@@ -800,11 +800,7 @@ bool sdcard_mount(uint8_t pdrv, const char *path, uint8_t max_files, bool format
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   esp_err_t err = esp_vfs_fat_register(path, drv, max_files, &fs);
 #else
-  esp_vfs_fat_conf_t conf = {
-    .base_path = path,
-    .fat_drive = drv,
-    .max_files = max_files
-  };
+  esp_vfs_fat_conf_t conf = {.base_path = path, .fat_drive = drv, .max_files = max_files};
   esp_err_t err = esp_vfs_fat_register(&conf, &fs);
 #endif
 

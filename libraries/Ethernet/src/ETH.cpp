@@ -57,10 +57,10 @@
 #define esp_eth_phy_new_dp83848 esp_eth_phy_new_generic
 #define esp_eth_phy_new_ksz80xx esp_eth_phy_new_generic
 #if CONFIG_IDF_TARGET_ESP32
-#define EMAC_APPL_CLK_OUT_GPIO  0
+#define EMAC_APPL_CLK_OUT_GPIO 0
 #define EMAC_CLK_OUT_GPIO      16
 #define EMAC_CLK_OUT_180_GPIO  17
-#define EMAC_CLK_IN_GPIO        0
+#define EMAC_CLK_IN_GPIO       0
 #endif
 #endif
 

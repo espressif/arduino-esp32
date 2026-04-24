@@ -50,7 +50,7 @@
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #include "esp_rom_gpio.h"
 #define gpio_matrix_out esp_rom_gpio_connect_out_signal
-#define gpio_matrix_in esp_rom_gpio_connect_in_signal
+#define gpio_matrix_in  esp_rom_gpio_connect_in_signal
 #endif
 
 void ARDUINO_ISR_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable) {

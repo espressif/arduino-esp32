@@ -58,8 +58,8 @@
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
 #define SOC_I2C_FIFO_LEN I2C_LL_FIFO_LEN
-#define gpio_matrix_out esp_rom_gpio_connect_out_signal
-#define gpio_matrix_in esp_rom_gpio_connect_in_signal
+#define gpio_matrix_out  esp_rom_gpio_connect_out_signal
+#define gpio_matrix_in   esp_rom_gpio_connect_in_signal
 #endif
 
 #if SOC_PERIPH_CLK_CTRL_SHARED
