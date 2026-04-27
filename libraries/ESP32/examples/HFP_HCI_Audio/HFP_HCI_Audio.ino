@@ -748,7 +748,11 @@ void setup() {
   logEspCall("esp_bt_gap_set_pin", esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_VARIABLE, 0, unused_pin_code));
 
   // Set the device name shown to the user during pairing.
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  logEspCall("esp_bt_gap_set_device_name", esp_bt_gap_set_device_name("ESP32_HFP_AUDIO"));
+#else
   logEspCall("esp_bt_dev_set_device_name", esp_bt_dev_set_device_name("ESP32_HFP_AUDIO"));
+#endif
 
   // Set the Class of Device so the phone identifies us as a hands-free audio device.
   esp_bt_cod_t cod = {};

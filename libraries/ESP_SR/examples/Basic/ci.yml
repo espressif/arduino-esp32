@@ -5,7 +5,7 @@ fqbn:
     - espressif:esp32:esp32p4:USBMode=default,ChipVariant=postv3,PartitionScheme=esp_sr_16,FlashSize=16M,FlashMode=qio
 
 requires:
-  - CONFIG_SOC_I2S_SUPPORTED=y
+  - CONFIG_MODEL_IN_FLASH=y
 
 targets:
   esp32: false
