@@ -2,6 +2,9 @@
 #include <unity.h>
 #include "soc/soc_caps.h"
 #include "hal/touch_sensor_ll.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/touch_sensor_legacy_types.h"
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
 
