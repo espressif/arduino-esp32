@@ -116,9 +116,8 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
   // In mbedtls 4.x, MBEDTLS_PK_SIGALG_RSA_PSS maps to PSA_ALG_RSA_PSS_ANY_SALT,
   // which accepts any salt length used during signing. This matches the
   // PSS.MAX_LENGTH salt produced by bin_signing.py.
-  int ret = mbedtls_pk_verify_ext(
-    MBEDTLS_PK_SIGALG_RSA_PSS, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, key_len
-  );
+  int ret =
+    mbedtls_pk_verify_ext(MBEDTLS_PK_SIGALG_RSA_PSS, (mbedtls_pk_context *)_ctx, md_type, hashBytes, hash_size, (const unsigned char *)signature, key_len);
 #else
   // PSS.MAX_LENGTH salt = key_len - hash_size - 2
   int expected_salt_len = (int)key_len - (int)hash_size - 2;
