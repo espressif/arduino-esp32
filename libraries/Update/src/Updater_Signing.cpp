@@ -24,7 +24,7 @@
 
 UpdaterRSAVerifier::UpdaterRSAVerifier(const uint8_t *pubkey, size_t pubkeyLen, int hashType) : _hashType(hashType), _valid(false) {
 #if MBEDTLS_VERSION_MAJOR >= 4
-  // mbedtls 4.x routes PK operations through PSA; PSA must be initialised before
+  // mbedtls 4.x routes PK operations through PSA; PSA must be initialized before
   // any cryptographic operation, including parsing a public key.
   psa_status_t psa_ret = psa_crypto_init();
   if (psa_ret != PSA_SUCCESS) {
@@ -148,7 +148,7 @@ bool UpdaterRSAVerifier::verify(SHA2Builder *hash, const void *signature, size_t
 
 UpdaterECDSAVerifier::UpdaterECDSAVerifier(const uint8_t *pubkey, size_t pubkeyLen, int hashType) : _hashType(hashType), _valid(false) {
 #if MBEDTLS_VERSION_MAJOR >= 4
-  // mbedtls 4.x routes PK operations through PSA; PSA must be initialised before
+  // mbedtls 4.x routes PK operations through PSA; PSA must be initialized before
   // any cryptographic operation, including parsing a public key.
   psa_status_t psa_ret = psa_crypto_init();
   if (psa_ret != PSA_SUCCESS) {
