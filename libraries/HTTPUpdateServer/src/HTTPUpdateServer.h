@@ -29,6 +29,7 @@ R"(<!DOCTYPE html>
      </html>)";
 static const char successResponse[] PROGMEM =
 "<META http-equiv=\"refresh\" content=\"15;URL=/\">Update Success! Rebooting...";
+static const char *csrfHeaders[2] = {"Origin", "Host"};
 
 class HTTPUpdateServer
 {
@@ -63,6 +64,9 @@ public:
         _username = username;
         _password = password;
 
+        // collect headers for CSRF verification
+        _server->collectHeaders(csrfHeaders, 2);
+
         // handler for the /update form page
         _server->on(path.c_str(), HTTP_GET, [&]() {
             if (_username != emptyString && _password != emptyString && !_server->authenticate(_username.c_str(), _password.c_str()))
@@ -72,8 +76,13 @@ public:
 
         // handler for the /update form POST (once file upload finishes)
         _server->on(path.c_str(), HTTP_POST, [&]() {
-            if (!_authenticated)
+            if (!_authenticated) {
+                if (_username == emptyString || _password == emptyString) {
+                    _server->send(200, F("text/html"), String(F("Update error: Wrong origin received!")));
+                    return;
+                }
                 return _server->requestAuthentication();
+            }
             if (Update.hasError()) {
                 _server->send(200, F("text/html"), String(F("Update error: ")) + _updaterError);
             }
@@ -98,6 +107,16 @@ public:
                     if (!_authenticated) {
                         if (_serial_output)
                             Serial.printf("Unauthenticated Update\n");
+                        return;
+                    }
+
+                    String origin = _server->header(String(csrfHeaders[0]));
+                    String host = _server->header(String(csrfHeaders[1]));
+                    String expectedOrigin = String("http://") + host;
+                    if (origin != expectedOrigin) {
+                        if (_serial_output)
+                            Serial.printf("Wrong origin received! Expected: %s, Received: %s\n", expectedOrigin.c_str(), origin.c_str());
+                        _authenticated = false;
                         return;
                     }
 
