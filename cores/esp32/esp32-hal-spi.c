@@ -31,9 +31,6 @@
 #endif
 #include "esp32-hal-periman.h"
 #include "esp_private/periph_ctrl.h"
-#if !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
-#include "hal/spi_ll.h"
-#endif
 
 #include "esp_system.h"
 #include "esp_intr_alloc.h"
@@ -55,12 +52,15 @@
 #include "soc/dport_reg.h"
 #include "esp32s3/rom/ets_sys.h"
 #include "esp32s3/rom/gpio.h"
+#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C2
 #include "esp32c2/rom/ets_sys.h"
 #include "esp32c2/rom/gpio.h"
+#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C3
 #include "esp32c3/rom/ets_sys.h"
 #include "esp32c3/rom/gpio.h"
+#include "hal/spi_ll.h"
 #elif CONFIG_IDF_TARGET_ESP32C6
 #include "esp32c6/rom/ets_sys.h"
 #include "esp32c6/rom/gpio.h"
@@ -70,6 +70,7 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
+#include "hal/spi_ll.h"
 #include "hal/clk_tree_ll.h"
 
 // ESP32P4 SPI clock source frequencies
@@ -908,16 +909,17 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #endif
 #pragma GCC diagnostic pop
-#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_SPI2_MODULE);
-  periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
-#else
-  /* No legacy periph_ll SPI module (e.g. C5/C61); use HAL regardless of IDF major. */
+#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0) && (CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3)
   PERIPH_RCC_ATOMIC() {
     spi_ll_enable_bus_clock(SPI2_HOST, true);
     spi_ll_reset_register(SPI2_HOST);
     spi_ll_enable_clock(SPI2_HOST, true);
   }
+#else
+  periph_ll_reset(PERIPH_SPI2_MODULE);
+  periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+#endif
 #endif
 
   SPI_MUTEX_LOCK();
