@@ -910,15 +910,15 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
 #endif
 #pragma GCC diagnostic pop
 #elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0) && (CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3)
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+    periph_ll_reset(PERIPH_SPI2_MODULE);
+    periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 // for C2 and C3, use IDF 6+ SPI_LL
   PERIPH_RCC_ATOMIC() {
     spi_ll_enable_bus_clock(SPI2_HOST, true);
     spi_ll_reset_register(SPI2_HOST);
     spi_ll_enable_clock(SPI2_HOST, true);
   }
-#else
-  periph_ll_reset(PERIPH_SPI2_MODULE);
-  periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
 #endif
 #endif
 
