@@ -160,6 +160,7 @@ component_mode = False
 build_files = [
     "package.json",
     "tools/get.py",
+    "tools/arduino_cmake.py",
     "tools/get.exe",
     "platform.txt",
     "programmers.txt",
