@@ -86,10 +86,11 @@ Notes on accuracy and limitations
 
 Usage
 -----
-python get_affected.py <changed_file1> [changed_file2] ... [--component] [--debug]
+python get_affected.py <changed_file1> [changed_file2] ... [--component] [--all] [--debug]
 
 Options:
   --component            Analyze IDF component examples instead of Arduino sketches
+  --all                  Force recompile all sketches/examples, skipping dependency analysis entirely
   --debug                Enable debug messages and save debug artifacts to disk
 
 Output:
@@ -149,6 +150,7 @@ is_ci = os.environ.get("CI", "false").lower() == "true"
 is_pr = os.environ.get("IS_PR", "true").lower() == "true"
 max_chunks = int(os.environ.get("MAX_CHUNKS", "15"))
 chunk_count = 0
+force_recompile_all = False
 
 # Whether to analyze component examples instead of sketches.
 component_mode = False
@@ -866,17 +868,21 @@ def find_affected_sketches(changed_files: list[str]) -> None:
     Find the sketches that are affected by the changes.
     """
 
+    global is_pr, force_recompile_all
+
     # If not a PR, recompile everything
     if not is_pr:
         if component_mode:
-            print("Not a PR - recompiling all IDF component examples", file=sys.stderr)
+            if not force_recompile_all:
+                print("Not a PR - recompiling all IDF component examples", file=sys.stderr)
             all_examples = list_idf_component_examples()
             for example in all_examples:
                 if example not in affected_sketches:
                     affected_sketches.append(example)
             print(f"Total affected IDF component examples: {len(affected_sketches)}", file=sys.stderr)
         else:
-            print("Not a PR - recompiling all sketches", file=sys.stderr)
+            if not force_recompile_all:
+                print("Not a PR - recompiling all sketches", file=sys.stderr)
             all_sketches = list_ino_files()
             for sketch in all_sketches:
                 if sketch not in affected_sketches:
@@ -1019,10 +1025,10 @@ def check_preset_files_affected():
     Check if any of the preset sketch files are in the affected sketches list.
     If so, set recompile_preset to True.
     """
-    global recompile_preset
+    global recompile_preset, force_recompile_all, is_pr
 
     # If not a PR, always recompile preset sketches
-    if not is_pr:
+    if not is_pr and not force_recompile_all:
         if not component_mode:  # Only check preset files in sketch mode
             print("Not a PR - setting recompile_preset=1 for all preset sketches", file=sys.stderr)
             recompile_preset = 1
@@ -1069,7 +1075,7 @@ def set_ci_output(print_vars: bool=True):
                 chunks_needed = (sketch_count + chunk_size - 1) // chunk_size  # ceiling division
                 chunk_count = min(chunks_needed, max_chunks)
                 print(f"More sketches ({sketch_count}) than max chunks ({max_chunks}). Using {chunk_count} chunks with ~{chunk_size} sketches each.", file=sys.stderr)
-            
+
             chunks='["0"'
             for i in range(1, chunk_count):
                 chunks+=f",\"{i}\""
@@ -1086,10 +1092,14 @@ def set_ci_output(print_vars: bool=True):
 
 def main():
     parser = argparse.ArgumentParser(description="Affected Sketches Scanner")
-    parser.add_argument("changed_files", nargs="+", help="List of changed files (e.g., file1.cpp file2.h file3.cpp)")
+    parser.add_argument("changed_files", nargs="*", help="List of changed files (e.g., file1.cpp file2.h file3.cpp)")
     parser.add_argument("--component", action="store_true", help="Get affected component examples instead of sketches")
+    parser.add_argument("--all", action="store_true", help="Force recompile all sketches/examples, skipping dependency analysis entirely")
     parser.add_argument("--debug", action="store_true", help="Enable debug messages and save debug artifacts to disk")
     args = parser.parse_args()
+
+    global component_mode, is_pr, force_recompile_all
+    force_recompile_all = args.all
 
     seen: set[str] = set()
     changed_files: list[str] = []
@@ -1101,13 +1111,17 @@ def main():
         changed_files.append(rel)
     if args.debug and len(args.changed_files) != len(changed_files):
         print(f"Changed files after path normalization: {changed_files!r}", file=sys.stderr)
-    global component_mode
     component_mode = args.component
     if component_mode:
         print(f"Analyzing IDF component examples...", file=sys.stderr)
         source_folders.append("idf_component_examples")
     else:
         print(f"Analyzing sketches...", file=sys.stderr)
+
+    # --all: reuse the existing is_pr=False path, which already recompiles everything
+    if force_recompile_all:
+        print("\"--all\" flag set - forcing recompilation of all sketches/examples", file=sys.stderr)
+        is_pr = False
 
     print(f"Finding include folders...", file=sys.stderr)
     find_library_folders()
@@ -1144,7 +1158,7 @@ def main():
         save_dependencies_as_json()
 
     print(f"Finding affected sketches...", file=sys.stderr)
-    if not is_pr:
+    if not is_pr and not force_recompile_all:
         print("Not a PR - will recompile everything", file=sys.stderr)
     find_affected_sketches(changed_files)
 

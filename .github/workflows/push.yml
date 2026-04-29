@@ -3,6 +3,11 @@ name: Compilation Tests
 on:
   workflow_dispatch:
     inputs:
+      force_recompile_all:
+        description: "Force recompilation of all sketches/examples"
+        default: false
+        type: "boolean"
+        required: false
       log_level:
         description: "Log level"
         default: "none"
@@ -100,9 +105,14 @@ jobs:
         env:
           IS_PR: ${{ github.event_name == 'pull_request' }}
           MAX_CHUNKS: ${{ env.MAX_CHUNKS }}
+          FORCE_RECOMPILE_ALL: ${{ contains(github.event.pull_request.labels.*.name, 'Force Full Compilation') || github.event.inputs.force_recompile_all }}
         run: |
+          extra_flags="--debug"
+          if [ "$FORCE_RECOMPILE_ALL" = "true" ]; then
+            extra_flags+=" --all"
+          fi
           (which ctags-universal || which ctags) || (echo "Error: Neither ctags-universal nor ctags found in PATH" && exit 1)
-          python3 ./.github/scripts/get_affected.py --debug ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
+          python3 ./.github/scripts/get_affected.py $extra_flags ${{ steps.changed-files.outputs.all_changed_files }} > affected_sketches.txt
 
       - name: Upload affected sketches
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
