@@ -25,16 +25,18 @@
 
 #define I2S_READ_CHUNK_SIZE 1920
 
+typedef decltype(((i2s_chan_config_t *)nullptr)->id) i2s_chan_id_t;
+
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-#define I2S_DEFAULT_CFG()                                                                                                                                   \
+#define I2S_DEFAULT_CFG(_port)                                                                                                                              \
   {                                                                                                                                                         \
-    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, .allow_pd = 0, \
+    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, .allow_pd = 0, \
     .intr_priority = 0                                                                                                                                      \
   }
 #else
-#define I2S_DEFAULT_CFG()                                                                                                                    \
+#define I2S_DEFAULT_CFG(_port)                                                                                                               \
   {                                                                                                                                          \
-    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
     .intr_priority = 0                                                                                                                       \
   }
 #endif
@@ -153,6 +155,10 @@
   } while (0)
 #define I2S_ERROR_CHECK_RETURN_FALSE(x) I2S_ERROR_CHECK_RETURN(x, false)
 
+static bool isValidI2SPort(i2s_port_t port) {
+  return port == I2S_NUM_AUTO || (port >= I2S_NUM_0 && port < I2S_NUM_AUTO);
+}
+
 // Default read, no resmpling and temp buffer necessary
 static esp_err_t i2s_channel_read_default(i2s_chan_handle_t handle, char *tmp_buf, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read(handle, (char *)dst, len, bytes_read, timeout_ms);
@@ -204,9 +210,10 @@ static esp_err_t i2s_channel_read_16_stereo_to_mono(i2s_chan_handle_t handle, ch
   return ESP_OK;
 }
 
-I2SClass::I2SClass() {
+I2SClass::I2SClass(i2s_port_t port) {
   last_error = ESP_OK;
   _mode = I2S_MODE_MAX;  // Initialize to invalid mode to indicate I2S not started
+  _port = port;
 
   tx_chan = NULL;
   tx_sample_rate = 0;
@@ -260,6 +267,30 @@ bool I2SClass::i2sDetachBus(void *bus_pointer) {
     bus->end();
   }
   return true;
+}
+
+bool I2SClass::setPort(i2s_port_t port) {
+  if (_mode < I2S_MODE_MAX) {
+    log_e("I2S port must be set before begin()");
+    return false;
+  }
+  if (!isValidI2SPort(port)) {
+    log_e("Invalid I2S port selected.");
+    return false;
+  }
+  _port = port;
+  return true;
+}
+
+i2s_port_t I2SClass::getPort() {
+  i2s_chan_handle_t chan = tx_chan != NULL ? tx_chan : rx_chan;
+  if (chan != NULL) {
+    i2s_chan_info_t info;
+    if (i2s_channel_get_info(chan, &info) == ESP_OK) {
+      return info.id;
+    }
+  }
+  return _port;
 }
 
 // Set pins for STD and TDM mode
@@ -358,7 +389,7 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
   if (_dout >= 0 && _din >= 0) {
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
   } else if (_dout >= 0) {
@@ -467,7 +498,7 @@ bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
   if (_dout >= 0 && _din >= 0) {
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
   } else if (_dout >= 0) {
@@ -558,7 +589,7 @@ bool I2SClass::initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
   I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
 
   i2s_pdm_tx_config_t i2s_pdm_tx_config = I2S_PDM_TX_CHAN_CFG(rate, bits_cfg, ch);
@@ -642,7 +673,7 @@ bool I2SClass::initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
   I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
 
   i2s_pdm_rx_config_t i2s_pdf_rx_config = I2S_PDM_RX_CHAN_CFG(rate, bits_cfg, ch);
@@ -693,6 +724,10 @@ bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_c
   /* Setup I2S peripheral */
   if (mode >= I2S_MODE_MAX) {
     log_e("Invalid I2S mode selected.");
+    return false;
+  }
+  if (!isValidI2SPort(_port)) {
+    log_e("Invalid I2S port selected.");
     return false;
   }
   _mode = mode;
