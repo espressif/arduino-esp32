@@ -26,22 +26,27 @@
 
 /* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
 static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
+static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
 
 static uint32_t zb_utctime_from_unix(time_t unix_ts) {
   if (unix_ts == (time_t)-1) {
-    return 0;
+    return ZIGBEE_UTCTIME_INVALID;
   }
   int64_t sec = (int64_t)unix_ts - ZIGBEE_UTCTIME_UNIX_OFFSET_SEC;
   if (sec < 0) {
-    return 0;
+    return ZIGBEE_UTCTIME_INVALID;
   }
   if (sec > (int64_t)UINT32_MAX) {
-    return UINT32_MAX;
+    return ZIGBEE_UTCTIME_INVALID;
   }
   return (uint32_t)sec;
 }
 
 static time_t unix_time_from_zb_utctime(uint32_t zb_sec) {
+  /* 0xFFFFFFFF is a reserved/invalid Zigbee UTCTime sentinel. */
+  if (zb_sec == UINT32_MAX) {
+    return (time_t)-1;
+  }
   return (time_t)(ZIGBEE_UTCTIME_UNIX_OFFSET_SEC + (int64_t)zb_sec);
 }
 
