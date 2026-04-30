@@ -436,8 +436,7 @@ bool ZigbeeEP::setTime(tm time) {
   uint32_t zb_utctime = zb_utctime_from_unix(unix_ts);
   log_d("Setting ZCL UTCTime to %" PRIu32 " s since 2000-01-01 UTC", zb_utctime);
   esp_zb_lock_acquire(portMAX_DELAY);
-  ret =
-    esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &zb_utctime, false);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &zb_utctime, false);
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
