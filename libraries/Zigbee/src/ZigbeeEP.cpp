@@ -43,8 +43,7 @@ static uint32_t zb_utctime_from_unix(time_t unix_ts) {
 }
 
 static time_t unix_time_from_zb_utctime(uint32_t zb_sec) {
-  /* 0xFFFFFFFF is a reserved/invalid Zigbee UTCTime sentinel. */
-  if (zb_sec == UINT32_MAX) {
+  if (zb_sec == ZIGBEE_UTCTIME_INVALID) {
     return (time_t)-1;
   }
   return (time_t)(ZIGBEE_UTCTIME_UNIX_OFFSET_SEC + (int64_t)zb_sec);
@@ -387,6 +386,10 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
   // Check if time is set
   if (time.tm_year > 0) {
     time_t unix_ts = mktime(&time);
+    if (unix_ts == (time_t)-1) {
+      log_e("Invalid calendar time");
+      return false;
+    }
     zb_utctime = zb_utctime_from_unix(unix_ts);
   }
 
