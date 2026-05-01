@@ -127,7 +127,14 @@ module.exports = async ({ github, context, dryRun }) => {
         'Status: Blocked upstream 🛑', 
         'Status: Blocked by ESP-IDF 🛑'
     ];
-    const closeLabels = ['Status: Awaiting Response'];
+    const closeLabels = [
+        'Status: Awaiting Response',
+        'Resolution: Unable to reproduce',
+        'Resolution: More info needed',
+        'Resolution: Duplicate',
+        'Resolution: Wontfix',
+        'Status: Solved'
+    ];
     const questionLabel = 'Type: Question';
     const { owner, repo } = context.repo;
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;

@@ -96,6 +96,11 @@ typedef enum {
   ARDUINO_EVENT_MAX
 } arduino_event_id_t;
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define ip_event_ap_staipassigned_t ip_event_assigned_ip_to_client_t
+#define IP_EVENT_AP_STAIPASSIGNED   IP_EVENT_ASSIGNED_IP_TO_CLIENT
+#endif
+
 typedef union {
   ip_event_ap_staipassigned_t wifi_ap_staipassigned;
   ip_event_got_ip_t got_ip;

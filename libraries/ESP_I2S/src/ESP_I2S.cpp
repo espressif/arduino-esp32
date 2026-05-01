@@ -14,17 +14,30 @@
 
 #if SOC_I2S_HW_VERSION_2
 #undef I2S_STD_CLK_DEFAULT_CONFIG
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 #define I2S_STD_CLK_DEFAULT_CONFIG(rate) \
-  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256, }
+  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256, .bclk_div = 0 }
+#else
+#define I2S_STD_CLK_DEFAULT_CONFIG(rate) \
+  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256 }
+#endif
 #endif
 
 #define I2S_READ_CHUNK_SIZE 1920
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+#define I2S_DEFAULT_CFG()                                                                                                                                   \
+  {                                                                                                                                                         \
+    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, .allow_pd = 0, \
+    .intr_priority = 0                                                                                                                                      \
+  }
+#else
 #define I2S_DEFAULT_CFG()                                                                                                                    \
   {                                                                                                                                          \
     .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
     .intr_priority = 0                                                                                                                       \
   }
+#endif
 
 #define I2S_STD_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)                                                                   \
   {                                                                                                                                   \

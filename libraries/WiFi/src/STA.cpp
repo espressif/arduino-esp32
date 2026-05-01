@@ -30,6 +30,14 @@
 #include "esp_wpa2.h"
 #endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t          wifi_interface_t
+#define ESP_IF_WIFI_STA          WIFI_IF_STA
+#define WIFI_REASON_ASSOC_EXPIRE WIFI_REASON_DISASSOC_DUE_TO_INACTIVITY
+#define WIFI_REASON_NOT_AUTHED   WIFI_REASON_CLASS2_FRAME_FROM_NONAUTH_STA
+#define WIFI_REASON_NOT_ASSOCED  WIFI_REASON_CLASS3_FRAME_FROM_NONASSOC_STA
+#endif
+
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {

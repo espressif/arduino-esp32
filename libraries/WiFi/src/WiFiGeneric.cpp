@@ -56,6 +56,13 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t wifi_interface_t
+#define ESP_IF_WIFI_AP  WIFI_IF_AP
+#define ESP_IF_WIFI_STA WIFI_IF_STA
+#define ESP_IF_MAX      3
+#endif
+
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
@@ -924,7 +931,14 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period, .use_get_report_api = true
+    .resp_mac = {0, 0, 0, 0, 0, 0},
+    .channel = channel,
+    .frm_count = frm_count,
+    .burst_period = burst_period
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+    ,
+    .use_get_report_api = true
+#endif
   };
   if (mac != NULL) {
     memcpy(ftmi_cfg.resp_mac, mac, 6);

@@ -34,6 +34,10 @@ typedef struct {
   bool lastStatusIsPressed;
 } TouchInterruptHandle_t;
 
+#ifndef SOC_TOUCH_SENSOR_NUM
+#define SOC_TOUCH_SENSOR_NUM (SOC_TOUCH_MAX_CHAN_ID + 1)
+#endif
+
 static TouchInterruptHandle_t __touchInterruptHandlers[SOC_TOUCH_SENSOR_NUM] = {
   0,
 };

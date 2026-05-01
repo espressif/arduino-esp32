@@ -397,6 +397,18 @@ else
   ESPPORT2="/dev/ttyUSB1"
 fi
 
+if [ -n "${WIFI_SSID}" ]; then
+  wifi_ssid="${WIFI_SSID}"
+elif [ -n "${RUNNER_WIFI_SSID}" ]; then
+  wifi_ssid="${RUNNER_WIFI_SSID}"
+fi
+
+if [ -n "${WIFI_PASSWORD}" ]; then
+  wifi_password="${WIFI_PASSWORD}"
+elif [ -n "${RUNNER_WIFI_PASSWORD}" ]; then
+  wifi_password="${RUNNER_WIFI_PASSWORD}"
+fi
+
 while [ -n "$1" ]; do
     case $1 in
     -c )

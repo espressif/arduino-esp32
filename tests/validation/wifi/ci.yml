@@ -14,7 +14,6 @@ fqbn:
     - espressif:esp32:esp32s3:PSRAM=enabled,USBMode=default,PartitionScheme=huge_app,FlashMode=qio
 
 platforms:
-  hardware: false
   qemu: false
 
 requires_any:

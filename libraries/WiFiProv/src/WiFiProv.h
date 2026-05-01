@@ -45,6 +45,16 @@ typedef enum {
   NETWORK_PROV_SCHEME_HANDLER_MAX
 } scheme_handler_t;
 
+#if defined(CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_0)
+#define NETWORK_PROV_SECURITY NETWORK_PROV_SECURITY_0
+#elif defined(CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_1)
+#define NETWORK_PROV_SECURITY NETWORK_PROV_SECURITY_1
+#elif defined(CONFIG_ESP_PROTOCOMM_SUPPORT_SECURITY_VERSION_2)
+#define NETWORK_PROV_SECURITY NETWORK_PROV_SECURITY_2
+#else
+#define NETWORK_PROV_SECURITY 0
+#endif
+
 //Provisioning class
 class WiFiProvClass {
 private:
@@ -57,7 +67,7 @@ public:
   );
   void beginProvision(
     prov_scheme_t prov_scheme = NETWORK_PROV_SCHEME_SOFTAP, scheme_handler_t scheme_handler = NETWORK_PROV_SCHEME_HANDLER_NONE,
-    network_prov_security_t security = NETWORK_PROV_SECURITY_1, const char *pop = "abcd1234", const char *service_name = NULL, const char *service_key = NULL,
+    network_prov_security_t security = NETWORK_PROV_SECURITY, const char *pop = "abcd1234", const char *service_name = NULL, const char *service_key = NULL,
     uint8_t *uuid = NULL, bool reset_provisioned = false
   );
   void endProvision();

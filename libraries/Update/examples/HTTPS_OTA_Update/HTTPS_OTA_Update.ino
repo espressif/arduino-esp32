@@ -50,6 +50,11 @@ void HttpEvent(HttpEvent_t *event) {
     case HTTP_EVENT_ON_FINISH:    Serial.println("Http Event On Finish"); break;
     case HTTP_EVENT_DISCONNECTED: Serial.println("Http Event Disconnected"); break;
     case HTTP_EVENT_REDIRECT:     Serial.println("Http Event Redirect"); break;
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+    case HTTP_EVENT_ON_HEADERS_COMPLETE: Serial.println("Http Event On Headers Complete"); break;
+    case HTTP_EVENT_ON_STATUS_CODE:      Serial.println("Http Event On Status Code"); break;
+#endif
+    default: break;
   }
 }
 

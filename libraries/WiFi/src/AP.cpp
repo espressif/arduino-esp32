@@ -22,6 +22,11 @@
 #include "dhcpserver/dhcpserver_options.h"
 #include "esp_netif.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t wifi_interface_t
+#define ESP_IF_WIFI_AP  WIFI_IF_AP
+#endif
+
 esp_netif_t *get_esp_interface_netif(esp_interface_t interface);
 
 static size_t _wifi_strncpy(char *dst, const char *src, size_t dst_len) {

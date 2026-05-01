@@ -25,7 +25,6 @@
 #include "hal/uart_ll.h"
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
-#include "soc/uart_periph.h"
 #include "rom/ets_sys.h"
 #include "rom/gpio.h"
 
@@ -39,6 +38,16 @@
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 #include "esp_private/esp_clk_tree_common.h"
+
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "soc/uart_periph.h"
+#else
+#include "hal/uart_periph.h"
+#define SOC_UART_RX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_RX
+#define SOC_UART_TX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_TX
+#define SOC_UART_CTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_CTS
+#define SOC_UART_RTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_RTS
+#endif
 
 // Weak function that is overridden by Arduino layer when HardwareSerial.cpp is linked
 // This removes the upward dependency from HAL to Arduino (HAL calls weak, Arduino provides strong implementation)

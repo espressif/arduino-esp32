@@ -734,7 +734,11 @@ void setup() {
 
   // Advertise a friendly name so the phone's Bluetooth menu shows something
   // recognizable rather than a raw MAC address.
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  logEspCall("esp_bt_gap_set_device_name", esp_bt_gap_set_device_name("ESP32_HFP_BRIDGE"));
+#else
   logEspCall("esp_bt_dev_set_device_name", esp_bt_dev_set_device_name("ESP32_HFP_BRIDGE"));
+#endif
 
   // Set the Class of Device (CoD) to Audio/Video + Hands-free subclass.
   // This tells the phone the device is a hands-free unit so it offers HFP

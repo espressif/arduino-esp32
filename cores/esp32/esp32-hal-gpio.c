@@ -53,7 +53,11 @@ int8_t digitalPinToTouchChannel(uint8_t pin) {
 #endif
 
 #ifdef SOC_ADC_SUPPORTED
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/adc_periph.h"
+#else
 #include "soc/adc_periph.h"
+#endif
 
 int8_t digitalPinToAnalogChannel(uint8_t pin) {
   uint8_t channel = 0;

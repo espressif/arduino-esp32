@@ -129,6 +129,18 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 
 #define ETH_PHY_ADDR_AUTO ESP_ETH_PHY_ADDR_AUTO
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#if defined __has_include && __has_include("esp_eth_phy_dm9051.h")
+#define CONFIG_ETH_SPI_ETHERNET_DM9051 1
+#endif
+#if defined __has_include && __has_include("esp_eth_phy_w5500.h")
+#define CONFIG_ETH_SPI_ETHERNET_W5500 1
+#endif
+#if defined __has_include && __has_include("esp_eth_phy_ksz8851snl.h")
+#define CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL 1
+#endif
+#endif
+
 typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
