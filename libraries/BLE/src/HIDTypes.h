@@ -1,4 +1,5 @@
-/* Copyright (c) 2010-2011 mbed.org, MIT License
+/* Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright (c) 2010-2011 mbed.org, MIT License
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
@@ -19,15 +20,32 @@
 #ifndef USBCLASS_HID_TYPES
 #define USBCLASS_HID_TYPES
 
+/**
+ * @file HIDTypes.h
+ * @brief HID Report Descriptor constants and macros.
+ *
+ * Provides the standard HID class constants, report types, and short-item
+ * macros needed to build HID Report Descriptors for BLE HID devices.
+ * Macro names follow the HID specification (Device Class Definition for
+ * HID 1.11, Section 6.2.2).
+ */
+
 #include <stdint.h>
 
-/* */
+/**
+ * @brief BCD value for HID specification version 1.11.
+ */
 #define HID_VERSION_1_11 (0x0111)
 
 /* HID Class */
 #define BLE_HID_CLASS         (3)
 #define BLE_HID_SUBCLASS_NONE (0)
 #define BLE_HID_PROTOCOL_NONE (0)
+
+/* HID Report Types (Report Reference descriptor) */
+#define HID_REPORT_TYPE_INPUT   (0x01)
+#define HID_REPORT_TYPE_OUTPUT  (0x02)
+#define HID_REPORT_TYPE_FEATURE (0x03)
 
 /* Descriptors */
 #define HID_DESCRIPTOR        (33)
@@ -82,15 +100,35 @@
 #define STRING_MAXIMUM(size)     (0x98 | size)
 #define DELIMITER(size)          (0xa8 | size)
 
+/* BLE Appearance values — HID category (Bluetooth Assigned Numbers §2.6) */
+#define BLE_APPEARANCE_HID_GENERIC         0x03C0
+#define BLE_APPEARANCE_HID_KEYBOARD        0x03C1
+#define BLE_APPEARANCE_HID_MOUSE           0x03C2
+#define BLE_APPEARANCE_HID_JOYSTICK        0x03C3
+#define BLE_APPEARANCE_HID_GAMEPAD         0x03C4
+#define BLE_APPEARANCE_HID_DIGITIZER       0x03C5
+#define BLE_APPEARANCE_HID_CARD_READER     0x03C6
+#define BLE_APPEARANCE_HID_DIGITAL_PEN     0x03C7
+#define BLE_APPEARANCE_HID_BARCODE_SCANNER 0x03C8
+
 /* HID Report */
 /* Where report IDs are used the first byte of 'data' will be the */
 /* report ID and 'length' will include this report ID byte. */
 
+/**
+ * @brief Max bytes in one HID report buffer (including Report ID if used).
+ */
 #define MAX_HID_REPORT_SIZE (64)
 
+/**
+ * @brief Fixed-size buffer for a single HID report.
+ *
+ * When Report IDs are in use, the first byte of @c data is the report ID
+ * and @c length includes that byte.
+ */
 typedef struct {
-  uint32_t length;
-  uint8_t data[MAX_HID_REPORT_SIZE];
+  uint32_t length;                    ///< Number of valid bytes in @c data.
+  uint8_t data[MAX_HID_REPORT_SIZE];  ///< Report payload (including report ID if used).
 } HID_REPORT;
 
 #endif

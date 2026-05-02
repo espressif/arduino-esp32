@@ -1,12 +1,14 @@
 /*
  * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
- * Copyright 2017 Neil Kolban
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 chegewara
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,232 +17,316 @@
  * limitations under the License.
  */
 
-/*
- * BLESecurity.h
- *
- *  Created on: Dec 17, 2017
- *      Author: chegewara
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on chegewara's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLESECURITY_H_
-#define COMPONENTS_CPP_UTILS_BLESECURITY_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                            Common includes                              *
- ***************************************************************************/
-
-#include "WString.h"
-#include "BLEDevice.h"
-#include "BLEClient.h"
-#include "BLEServer.h"
-#include "RTOS.h"
-
-/***************************************************************************
- *                           Bluedroid includes                            *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gap_ble_api.h>
-#endif
-
-/***************************************************************************
- *                             NimBLE includes                             *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_gap.h>
-#endif
-
-/***************************************************************************
- *                          Common definitions                             *
- ***************************************************************************/
-
-#define BLE_SM_DEFAULT_PASSKEY 123456
-
-/***************************************************************************
- *                          NimBLE definitions                             *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-// Compatibility with Bluedroid definitions
-
-#define ESP_IO_CAP_OUT    BLE_HS_IO_DISPLAY_ONLY
-#define ESP_IO_CAP_IO     BLE_HS_IO_DISPLAY_YESNO
-#define ESP_IO_CAP_IN     BLE_HS_IO_KEYBOARD_ONLY
-#define ESP_IO_CAP_NONE   BLE_HS_IO_NO_INPUT_OUTPUT
-#define ESP_IO_CAP_KBDISP BLE_HS_IO_KEYBOARD_DISPLAY
-
-#define ESP_LE_AUTH_NO_BOND          0x00
-#define ESP_LE_AUTH_BOND             BLE_SM_PAIR_AUTHREQ_BOND
-#define ESP_LE_AUTH_REQ_MITM         BLE_SM_PAIR_AUTHREQ_MITM
-#define ESP_LE_AUTH_REQ_SC_ONLY      BLE_SM_PAIR_AUTHREQ_SC
-#define ESP_LE_AUTH_REQ_BOND_MITM    (BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_MITM)
-#define ESP_LE_AUTH_REQ_SC_BOND      (BLE_SM_PAIR_AUTHREQ_BOND | BLE_SM_PAIR_AUTHREQ_SC)
-#define ESP_LE_AUTH_REQ_SC_MITM      (BLE_SM_PAIR_AUTHREQ_MITM | BLE_SM_PAIR_AUTHREQ_SC)
-#define ESP_LE_AUTH_REQ_SC_MITM_BOND (BLE_SM_PAIR_AUTHREQ_MITM | BLE_SM_PAIR_AUTHREQ_SC | BLE_SM_PAIR_AUTHREQ_BOND)
-
-#define ESP_BLE_ENC_KEY_MASK BLE_HS_KEY_DIST_ENC_KEY
-#define ESP_BLE_ID_KEY_MASK  BLE_HS_KEY_DIST_ID_KEY
-#endif
-
-/***************************************************************************
- *                          Forward declarations                           *
- ***************************************************************************/
-
-class BLEDevice;
-class BLEServer;
-class BLEClient;
+#include <vector>
+#include "BTStatus.h"
+#include "BTAddress.h"
+#include "BLEConnInfo.h"
+#include <memory>
+#include <functional>
 
 /**
- * @brief Security management class
+ * @brief BLE Security configuration and bond management.
+ *
+ * Lightweight shared handle. Access via BLE.getSecurity().
+ * Configures IO capability, authentication mode, passkey behavior,
+ * and provides event handlers for the pairing flow.
  */
 class BLESecurity {
 public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
   BLESecurity();
-  virtual ~BLESecurity() = default;
-  static void setAuthenticationMode(uint8_t auth_req);
-  static void setCapability(uint8_t iocap);
-  static void setInitEncryptionKey(uint8_t init_key = (ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK));
-  static void setRespEncryptionKey(uint8_t resp_key = (ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK));
-  static void setKeySize(uint8_t key_size = 16);
-  static uint32_t setPassKey(bool staticPasskey = false, uint32_t passkey = BLE_SM_DEFAULT_PASSKEY);
-  static void setAuthenticationMode(bool bonding, bool mitm, bool sc);
-  static uint32_t getPassKey();
+  ~BLESecurity() = default;
+  BLESecurity(const BLESecurity &) = default;
+  BLESecurity &operator=(const BLESecurity &) = default;
+  BLESecurity(BLESecurity &&) = default;
+  BLESecurity &operator=(BLESecurity &&) = default;
+
+  /**
+   * @brief Check whether this handle references a valid security instance.
+   * @return true if the handle is backed by an initialized implementation, false otherwise.
+   */
+  explicit operator bool() const;
+
+  // --- IO Capability ---
+
+  /**
+   * @brief SMP I/O capability values (pairing user interface model).
+   */
+  enum IOCapability : uint8_t {
+    DisplayOnly = 0,      ///< Device can display a passkey but has no input.
+    DisplayYesNo = 1,     ///< Device can display a passkey and accept yes/no confirmation.
+    KeyboardOnly = 2,     ///< Device can accept keyboard input but has no display.
+    NoInputNoOutput = 3,  ///< Device has no I/O capability (Just Works pairing).
+    KeyboardDisplay = 4,  ///< Device has both keyboard input and a display.
+  };
+
+  /**
+   * @brief Set the I/O capability used for pairing negotiation.
+   * @param cap I/O capability value.
+   */
+  void setIOCapability(IOCapability cap);
+
+  /**
+   * @brief Set the authentication requirements for pairing.
+   * @param bonding If true, enable bonding (persist keys across connections).
+   * @param mitm If true, require MITM protection (passkey or numeric comparison).
+   * @param secureConnection If true, require LE Secure Connections (LESC).
+   */
+  void setAuthenticationMode(bool bonding, bool mitm, bool secureConnection);
+
+  // --- Passkey ---
+
+  /**
+   * @brief Configure static or random passkey mode.
+   * @param isStatic If true, use a fixed passkey; if false, generate a random one each pairing.
+   * @param passkey The fixed passkey value (0–999999). Ignored when isStatic is false.
+   */
+  void setPassKey(bool isStatic, uint32_t passkey = 0);
+
+  /**
+   * @brief Set a fixed static passkey for all future pairings.
+   * @param passkey The passkey value (0–999999).
+   */
+  void setStaticPassKey(uint32_t passkey);
+
+  /**
+   * @brief Switch to random passkey generation mode.
+   */
+  void setRandomPassKey();
+
+  /**
+   * @brief Get the currently configured passkey.
+   * @return The passkey value.
+   */
+  uint32_t getPassKey() const;
+
+  /**
+   * @brief Generate a cryptographically random 6-digit passkey.
+   * @return A random value in the range 0–999999.
+   */
   static uint32_t generateRandomPassKey();
-  static void regenPassKeyOnConnect(bool enable = false);
-  static void resetSecurity();
-  static void setForceAuthentication(bool force);
-  static bool getForceAuthentication();
-  static void waitForAuthenticationComplete(uint32_t timeoutMs = 10000);
-  static void signalAuthenticationComplete();
 
-  /***************************************************************************
-   *                       Bluedroid public declarations                     *
-   ***************************************************************************/
+  /**
+   * @brief Enable or disable automatic passkey regeneration on each new connection.
+   * @param enable If true, a new random passkey is generated before every pairing.
+   * @note Only effective when random passkey mode is active.
+   */
+  void regenPassKeyOnConnect(bool enable);
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  static char *esp_key_type_to_str(esp_ble_key_type_t key_type);
-  static void setEncryptionLevel(esp_ble_sec_act_t level);
-  static bool startSecurity(esp_bd_addr_t bd_addr, int *rcPtr = nullptr);
-#endif
+  // --- Security Callbacks ---
 
-  /***************************************************************************
-   *                       NimBLE public declarations                        *
-   ***************************************************************************/
+  /**
+   * @brief Callback requesting the application to supply a passkey for keyboard-entry pairing.
+   * @param conn Connection info for the peer requesting pairing.
+   * @return The passkey (0–999999) to use for this pairing.
+   */
+  using PassKeyRequestHandler = std::function<uint32_t(const BLEConnInfo &conn)>;
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  static bool startSecurity(uint16_t connHandle, int *rcPtr = nullptr);
-#endif
+  /**
+   * @brief Callback requesting the application to display a passkey to the user.
+   * @param conn Connection info for the peer requesting pairing.
+   * @param passKey The passkey value to display.
+   */
+  using PassKeyDisplayHandler = std::function<void(const BLEConnInfo &conn, uint32_t passKey)>;
+
+  /**
+   * @brief Callback requesting the user to confirm a numeric comparison value.
+   * @param conn Connection info for the peer requesting pairing.
+   * @param passKey The numeric comparison value shown on both devices.
+   * @return true if the user confirms the values match, false to reject.
+   */
+  using ConfirmPassKeyHandler = std::function<bool(const BLEConnInfo &conn, uint32_t passKey)>;
+
+  /**
+   * @brief Callback invoked when a peer initiates a security request.
+   * @param conn Connection info for the requesting peer.
+   * @return true to accept and begin pairing, false to reject.
+   */
+  using SecurityRequestHandler = std::function<bool(const BLEConnInfo &conn)>;
+
+  /**
+   * @brief Callback for runtime ATT-level authorization of reads/writes on protected attributes.
+   * @param conn Connection info for the requesting peer.
+   * @param attrHandle The attribute handle being accessed.
+   * @param isRead true for a read operation, false for a write.
+   * @return true to allow the access, false to reject with an ATT error.
+   */
+  using AuthorizationHandler = std::function<bool(const BLEConnInfo &conn, uint16_t attrHandle, bool isRead)>;
+
+  /**
+   * @brief Callback invoked when authentication (pairing) completes.
+   * @param conn Connection info for the peer.
+   * @param success true if pairing succeeded, false on failure.
+   */
+  using AuthCompleteHandler = std::function<void(const BLEConnInfo &conn, bool success)>;
+
+  /**
+   * @brief Register a handler invoked when the stack needs a passkey from the application.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onPassKeyRequest(PassKeyRequestHandler handler);
+
+  /**
+   * @brief Register a handler invoked when the stack needs the application to display a passkey.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onPassKeyDisplay(PassKeyDisplayHandler handler);
+
+  /**
+   * @brief Register a handler for numeric comparison confirmation.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onConfirmPassKey(ConfirmPassKeyHandler handler);
+
+  /**
+   * @brief Register a handler for incoming security requests from a peer.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onSecurityRequest(SecurityRequestHandler handler);
+
+  /**
+   * @brief Register a handler for runtime ATT authorization decisions.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onAuthorization(AuthorizationHandler handler);
+
+  /**
+   * @brief Register a handler called when authentication completes.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onAuthenticationComplete(AuthCompleteHandler handler);
+
+  /**
+   * @brief Remove all registered security callbacks.
+   */
+  void resetCallbacks();
+
+  // --- Key Distribution ---
+
+  /**
+   * @brief Bitmask of SMP key types to distribute during pairing.
+   */
+  enum class KeyDist : uint8_t {
+    EncKey = 0x01,   ///< Long Term Key (LTK) / encryption key.
+    IdKey = 0x02,    ///< Identity Resolving Key (IRK).
+    SignKey = 0x04,  ///< Connection Signature Resolving Key (CSRK).
+    LinkKey = 0x08,  ///< BR/EDR Link Key derived from LE pairing.
+  };
+  friend inline constexpr KeyDist operator|(KeyDist a, KeyDist b) {
+    return static_cast<KeyDist>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+  }
+
+  /**
+   * @brief Set which key types the initiator distributes during pairing.
+   * @param keys Bitmask of KeyDist values combined with operator|.
+   */
+  void setInitiatorKeys(KeyDist keys);
+
+  /**
+   * @brief Set which key types the responder distributes during pairing.
+   * @param keys Bitmask of KeyDist values combined with operator|.
+   */
+  void setResponderKeys(KeyDist keys);
+
+  /**
+   * @brief Set the maximum encryption key size.
+   * @param size Key size in bytes (7–16).
+   */
+  void setKeySize(uint8_t size);
+
+  // --- Authentication ---
+
+  /**
+   * @brief Require authenticated pairing for all GATT access on encrypted characteristics.
+   * @param force If true, unauthenticated encrypted links are rejected.
+   * @note When this path is used together with an active GATT client, the
+   *       relative ordering of "authentication complete" and "first secure
+   *       read/write" is stack-dependent; when in doubt, wait for
+   *       @ref onAuthenticationComplete or @ref waitForAuthenticationComplete
+   *       before relying on protected attributes.
+   */
+  void setForceAuthentication(bool force);
+
+  /**
+   * @brief Get whether forced authentication is enabled.
+   * @return true if forced authentication is active, false otherwise.
+   */
+  bool getForceAuthentication() const;
+
+  // --- Bond Management ---
+
+  /**
+   * @brief Retrieve the list of bonded device addresses.
+   * @return Vector of addresses for all currently bonded peers.
+   */
+  std::vector<BTAddress> getBondedDevices() const;
+
+  /**
+   * @brief Delete the bond for a specific device.
+   * @param address Address of the bonded device to remove.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus deleteBond(const BTAddress &address);
+
+  /**
+   * @brief Delete all stored bonds.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus deleteAllBonds();
+
+  /**
+   * @brief Callback invoked when the bond store is full and a new bond must be saved.
+   * @param oldestBond Address of the oldest bonded device that would be evicted.
+   */
+  using BondStoreOverflowHandler = std::function<void(const BTAddress &oldestBond)>;
+
+  /**
+   * @brief Register a handler for bond store overflow events.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onBondStoreOverflow(BondStoreOverflowHandler handler);
+
+  // --- Security Procedures ---
+
+  /**
+   * @brief Initiate the security/pairing procedure on an existing connection.
+   * @param connHandle Connection handle to secure.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus startSecurity(uint16_t connHandle);
+
+  /**
+   * @brief Block until authentication completes or the timeout elapses.
+   * @param timeoutMs Maximum time to wait in milliseconds.
+   * @return true if authentication completed (check the AuthCompleteHandler for success/failure),
+   *         false if the timeout expired.
+   */
+  bool waitForAuthenticationComplete(uint32_t timeoutMs = 10000);
+
+  /**
+   * @brief Reset internal security state.
+   */
+  void resetSecurity();
+
+  struct Impl;
 
 private:
-  friend class BLEDevice;
-  friend class BLEServer;
-  friend class BLEClient;
-  friend class BLERemoteCharacteristic;
-  friend class BLERemoteDescriptor;
+  explicit BLESecurity(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
 
-  /***************************************************************************
-   *                       Common private properties                         *
-   ***************************************************************************/
+  void notifyAuthComplete(const BLEConnInfo &conn, bool success);
+  bool notifyAuthorization(const BLEConnInfo &conn, uint16_t attrHandle, bool isRead);
+  uint32_t resolvePasskeyForDisplay(const BLEConnInfo &conn);
+  uint32_t resolvePasskeyForInput(const BLEConnInfo &conn);
+  bool resolveNumericComparison(const BLEConnInfo &conn, uint32_t numcmp);
+  bool notifyBondOverflow(const BTAddress &oldest);
 
-  static bool m_securityEnabled;
-  static bool m_securityStarted;
-  static bool m_forceSecurity;
-  static bool m_passkeySet;
-  static bool m_staticPasskey;
-  static bool m_regenOnConnect;
-  static bool m_authenticationComplete;
-  static uint8_t m_iocap;
-  static uint8_t m_authReq;
-  static uint8_t m_initKey;
-  static uint8_t m_respKey;
-  static uint32_t m_passkey;
+  friend class BLEClass;
+  friend class BLESecurityBackend;
+};
 
-  /***************************************************************************
-   *                       Bluedroid private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  static uint8_t m_keySize;
-  static esp_ble_sec_act_t m_securityLevel;
-  static class FreeRTOS::Semaphore *m_authCompleteSemaphore;
-#endif
-
-};  // BLESecurity
-
-/**
- * @brief Callbacks to handle GAP events related to authorization
- */
-class BLESecurityCallbacks {
-public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
-  BLESecurityCallbacks() = default;
-  virtual ~BLESecurityCallbacks() = default;
-
-  // This callback is called by the device that has Input capability when the peer device has Output capability
-  // and the passkey is not set.
-  // It should return the passkey that the peer device is showing on its output.
-  // This MUST be replaced with a custom implementation when being used.
-  virtual uint32_t onPassKeyRequest();
-
-  // This callback is called by the device that has Output capability when the peer device has Input capability
-  // It should display the passkey that will need to be entered on the peer device
-  virtual void onPassKeyNotify(uint32_t pass_key);
-
-  // This callback is called when the peer device requests a secure connection.
-  // Usually the client accepts the server's security request.
-  // It should return true if the connection is accepted, false otherwise.
-  virtual bool onSecurityRequest();
-
-  // This callback is called by both devices when both have the DisplayYesNo capability.
-  // It should return true if both devices display the same passkey.
-  // This MUST be replaced with a custom implementation when being used.
-  virtual bool onConfirmPIN(uint32_t pin);
-
-  // This callback is called when the peer device requests authorization to read or write a characteristic.
-  // It should return true if the authorization is granted, false otherwise.
-  // This MUST be replaced with a custom implementation when being used.
-  virtual bool onAuthorizationRequest(uint16_t connHandle, uint16_t attrHandle, bool isRead);
-
-  /***************************************************************************
-   *                       Bluedroid public declarations                     *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  // This callback is called when the authentication is complete.
-  // Status can be checked in the desc parameter.
-  virtual void onAuthenticationComplete(esp_ble_auth_cmpl_t desc);
-#endif
-
-  /***************************************************************************
-   *                       NimBLE public declarations                        *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  // This callback is called when the authentication is complete.
-  // Status can be checked in the desc parameter.
-  virtual void onAuthenticationComplete(ble_gap_conn_desc *desc);
-#endif
-
-};  // BLESecurityCallbacks
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif  // COMPONENTS_CPP_UTILS_BLESECURITY_H_
+#endif /* BLE_ENABLED */

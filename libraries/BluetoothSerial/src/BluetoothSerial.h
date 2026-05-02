@@ -1,9 +1,10 @@
+// Copyright 2018-2026 Espressif Systems (Shanghai) PTE LTD
 // Copyright 2018 Evandro Luis Copercini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
@@ -22,99 +23,86 @@
 
 #include "Arduino.h"
 #include "Stream.h"
-#include <esp_gap_bt_api.h>
-#include <esp_spp_api.h>
+#include "BTAddress.h"
+#include "BTStatus.h"
 #include <functional>
-#include <map>
-#include "BTScan.h"
-#include "BTAdvertisedDevice.h"
-
-typedef std::function<void(const uint8_t *buffer, size_t size)> BluetoothSerialDataCb;
-typedef std::function<void(uint32_t num_val)> ConfirmRequestCb;
-typedef std::function<void()> KeyRequestCb;
-typedef std::function<void(boolean success)> AuthCompleteCb;
-typedef std::function<void(BTAdvertisedDevice *pAdvertisedDevice)> BTAdvertisedDeviceCb;
+#include <memory>
+#include <vector>
 
 class [[deprecated("BluetoothSerial won't be supported in version 4.0.0 by default")]] BluetoothSerial : public Stream {
 public:
-  BluetoothSerial(void);
-  ~BluetoothSerial(void);
+  BluetoothSerial();
+  ~BluetoothSerial();
 
-  bool begin(String localName = String(), bool isMaster = false, bool disableBLE = false);
-  bool begin(unsigned long baud) {  //compatibility
-    return begin();
-  }
-  int available(void);
-  int peek(void);
-  bool hasClient(void);
-  int read(void);
-  size_t write(uint8_t c);
-  size_t write(const uint8_t *buffer, size_t size);
-  void flush();
-  void end(void);
-  void memrelease();
-  void setTimeout(int timeoutMS);
-  void onData(BluetoothSerialDataCb cb);
-  esp_err_t register_callback(esp_spp_cb_t callback);
+  BluetoothSerial(const BluetoothSerial &) = delete;
+  BluetoothSerial &operator=(const BluetoothSerial &) = delete;
+  BluetoothSerial(BluetoothSerial &&) = default;
+  BluetoothSerial &operator=(BluetoothSerial &&) = default;
 
-  void onConfirmRequest(ConfirmRequestCb cb);
-  void onKeyRequest(KeyRequestCb cb);
-  void respondPasskey(uint32_t passkey);
-  void onAuthComplete(AuthCompleteCb cb);
-  void confirmReply(boolean confirm);
-
-  void enableSSP();
-  void enableSSP(bool inputCapability, bool outputCapability);
-  void disableSSP();
-  bool setPin(const char *pin, uint8_t pin_code_len);
-  bool connect(String remoteName);
-  bool connect(
-    uint8_t remoteAddress[], int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE),
-    esp_spp_role_t role = ESP_SPP_ROLE_MASTER
-  );
-  bool connect(
-    const BTAddress &remoteAddress, int channel = 0, esp_spp_sec_t sec_mask = (ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE),
-    esp_spp_role_t role = ESP_SPP_ROLE_MASTER
-  ) {
-    return connect(*remoteAddress.getNative(), channel, sec_mask);
+  struct DiscoveryResult {
+    BTAddress address;
+    String name;
+    uint32_t cod = 0;
+    int8_t rssi = -128;
   };
-  bool connect();
-  bool connected(int timeout = 0);
-  bool isClosed();
-  bool isReady(bool checkMaster = false, int timeout = 0);
-  bool disconnect();
-  bool unpairDevice(uint8_t remoteAddress[]);
 
-  BTScanResults *discover(int timeout = 0x30 * 1280);
-  bool discoverAsync(BTAdvertisedDeviceCb cb, int timeout = 0x30 * 1280);
-  void discoverAsyncStop();
-  void discoverClear();
-  BTScanResults *getScanResults();
+  using DiscoveryHandler = std::function<void(const DiscoveryResult &)>;
+  using ConfirmRequestHandler = std::function<bool(uint32_t)>;
+  using AuthCompleteHandler = std::function<void(bool)>;
+  using DataHandler = std::function<void(const uint8_t *, size_t)>;
 
-  std::map<int, std::string> getChannels(const BTAddress &remoteAddress);
+  BTStatus begin(const String &localName = "ESP32", bool isInitiator = false);
+  void end(bool releaseMemory = false);
 
-  const int INQ_TIME = 1280;  // Inquire Time unit 1280 ms
-  const int MIN_INQ_TIME = (ESP_BT_GAP_MIN_INQ_LEN * INQ_TIME);
-  const int MAX_INQ_TIME = (ESP_BT_GAP_MAX_INQ_LEN * INQ_TIME);
+  // Stream interface
+  int available() override;
+  int peek() override;
+  int read() override;
+  size_t write(uint8_t c) override;
+  size_t write(const uint8_t *buf, size_t len) override;
+  /**
+   * @brief Waits until the TX queue drains. Does NOT wait for data to be
+   *        acknowledged on the wire — bytes may still be in-flight when
+   *        flush() returns.
+   */
+  void flush() override;
 
-  operator bool() const;
-  void getBtAddress(uint8_t *mac);
-  BTAddress getBtAddressObject();
-  String getBtAddressString();
-  //void dropCache(); // To be replaced
-  void requestRemoteName(uint8_t *remoteAddress);
-  bool readRemoteName(char rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]);
-  void invalidateRemoteName();
-  int getNumberOfBondedDevices();
-  int getBondedDevices(uint dev_num, esp_bd_addr_t *dev_list);
-  bool deleteBondedDevice(uint8_t *remoteAddress);
-  void deleteAllBondedDevices();
+  // Connection
+  BTStatus connect(const String &remoteName, uint32_t timeoutMs = 10000);
+  BTStatus connect(const BTAddress &address, uint8_t channel = 0);
+  BTStatus disconnect();
+  bool connected() const;
+  bool hasClient() const;
+
+  // Discovery
+  std::vector<DiscoveryResult> discover(uint32_t timeoutMs = 10000);
+  BTStatus discoverAsync(DiscoveryHandler callback, uint32_t timeoutMs = 10000);
+  BTStatus discoverStop();
+
+  // Security
+  void enableSSP(bool input = false, bool output = false);
+  void disableSSP();
+  void setPin(const char *pin);
+  BTStatus onConfirmRequest(ConfirmRequestHandler callback);
+  BTStatus onAuthComplete(AuthCompleteHandler callback);
+
+  // Bond management
+  std::vector<BTAddress> getBondedDevices();
+  BTStatus deleteBond(const BTAddress &address);
+  BTStatus deleteAllBonds();
+
+  // Data callback
+  BTStatus onData(DataHandler callback);
+
+  // Info
+  BTAddress getAddress() const;
+  explicit operator bool() const;
 
 private:
-  String local_name;
-  int timeoutTicks = 0;
+  struct Impl;
+  std::unique_ptr<Impl> _impl;
 };
 
-#endif
+#endif /* SOC_BT_SUPPORTED && CONFIG_BT_ENABLED && CONFIG_BLUEDROID_ENABLED */
 
-#endif
+#endif /* _BLUETOOTH_SERIAL_H_ */

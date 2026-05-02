@@ -12,6 +12,5 @@ platforms:
 fqbn_append: PartitionScheme=huge_app
 
 requires:
-  - CONFIG_BT_ENABLED=y
-  - CONFIG_BLUEDROID_ENABLED=y
+  - CONFIG_BT_CLASSIC_ENABLED=y
   - CONFIG_BT_SPP_ENABLED=y

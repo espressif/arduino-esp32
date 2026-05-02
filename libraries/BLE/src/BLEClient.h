@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,236 +17,384 @@
  * limitations under the License.
  */
 
-/*
- * BLEClient.h
- *
- *  Created on: Mar 22, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef MAIN_BLECLIENT_H_
-#define MAIN_BLECLIENT_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
+#include <vector>
+#include "WString.h"
+#include "BTStatus.h"
+#include "BTAddress.h"
+#include "BLEUUID.h"
+#include "BLEAdvTypes.h"
+#include "BLEConnInfo.h"
+#include <memory>
+#include <functional>
 
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <string.h>
-#include <map>
-#include <string>
-#include "BLERemoteService.h"
-#include "BLEService.h"
-#include "BLEAddress.h"
-#include "BLEAdvertisedDevice.h"
-#include "BLEUtils.h"
-
-/***************************************************************************
- *                           Bluedroid includes                            *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gattc_api.h>
-#ifndef BLE_ERR_REM_USER_CONN_TERM
-#define BLE_ERR_REM_USER_CONN_TERM 0x13
-#endif
-#endif
-
-/***************************************************************************
- *                     NimBLE includes and definitions                     *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <nimble/ble.h>
-#include <host/ble_hs.h>
-#include <nimble/nimble_port.h>
-#define ESP_GATT_IF_NONE BLE_HS_CONN_HANDLE_NONE
-#endif
-
-/***************************************************************************
- *                              NimBLE types                               *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-typedef uint16_t esp_gatt_if_t;
-#endif
-
-/***************************************************************************
- *                           Forward declarations                          *
- ***************************************************************************/
-
-class BLERemoteService;
-class BLEClientCallbacks;
 class BLEAdvertisedDevice;
-struct BLETaskData;
+class BLERemoteService;
+class BLERemoteCharacteristic;
+class BLERemoteDescriptor;
 
 /**
- * @brief A model of a %BLE client.
+ * @brief GATT client -- multi-instance, connect to remote peripherals.
+ *
+ * Create via BLE.createClient(). Each instance manages one connection.
+ * Multiple BLEClient instances can coexist for multi-connection use cases.
+ *
+ * Callback threading: client callbacks (onConnect, onDisconnect, notify
+ * callbacks, etc.) execute on the BLE stack task. They are invoked
+ * outside the client mutex and must not block for extended periods.
+ *
+ * GATT operation limitation: only one read or write can be in-flight per
+ * client at a time (Bluedroid delivers completions without a per-operation
+ * token). Concurrent reads/writes from multiple tasks will collide.
  */
 class BLEClient {
 public:
-  /***************************************************************************
-   *                            Common public properties                     *
-   ***************************************************************************/
-
-  /** GATT application id passed to esp_ble_gattc_app_register / used as peer map key. */
-  uint16_t m_gattAppId;
-
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
-
   BLEClient();
-  ~BLEClient();
-  bool connect(BLEAdvertisedDevice *device);
-  bool connectTimeout(BLEAdvertisedDevice *device, uint32_t timeoutMS = portMAX_DELAY);
-  bool connect(BLEAddress address, uint8_t type = 0xFF, uint32_t timeoutMS = portMAX_DELAY);
-  bool secureConnection();
-  int disconnect(uint8_t reason = BLE_ERR_REM_USER_CONN_TERM);
-  BLEAddress getPeerAddress();
-  int getRssi();
-  std::map<std::string, BLERemoteService *> *getServices();
-  BLERemoteService *getService(const char *uuid);
-  BLERemoteService *getService(BLEUUID uuid);
-  String getValue(BLEUUID serviceUUID, BLEUUID characteristicUUID);
-  bool isConnected();
-  void setClientCallbacks(BLEClientCallbacks *pClientCallbacks);
-  void setValue(BLEUUID serviceUUID, BLEUUID characteristicUUID, String value);
-  String toString();
-  uint16_t getConnId();
-  esp_gatt_if_t getGattcIf();
-  uint16_t getMTU();
-  bool setMTU(uint16_t mtu);
-  bool updateConnParams(uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout);
+  ~BLEClient() = default;
+  BLEClient(const BLEClient &) = default;
+  BLEClient &operator=(const BLEClient &) = default;
+  BLEClient(BLEClient &&) = default;
+  BLEClient &operator=(BLEClient &&) = default;
 
-  /***************************************************************************
-   *                           Bluedroid public declarations                 *
-   ***************************************************************************/
+  /**
+   * @brief Boolean conversion — true if this handle references a valid client.
+   *
+   * @return true if the underlying implementation exists.
+   */
+  explicit operator bool() const;
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-#endif
+  /**
+   * @brief Callback invoked when a connection is established.
+   *
+   * @param client  The BLEClient that connected.
+   * @param conn    Connection information for the new link.
+   */
+  using ConnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
 
-  /***************************************************************************
-   *                           NimBLE public declarations                    *
-   ***************************************************************************/
+  /**
+   * @brief Callback invoked when a connection is terminated.
+   *
+   * @param client  The BLEClient that was disconnected.
+   * @param conn    Connection information for the terminated link.
+   * @param reason  BLE HCI disconnect reason code.
+   */
+  using DisconnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint8_t reason)>;
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  static int handleGAPEvent(struct ble_gap_event *event, void *arg);
-  static int serviceDiscoveredCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
-#endif
+  /**
+   * @brief Callback invoked when a connection attempt fails.
+   *
+   * @param client  The BLEClient whose connection attempt failed.
+   * @param reason  Backend-specific error code.
+   */
+  using ConnectFailHandler = std::function<void(BLEClient client, int reason)>;
+
+  /**
+   * @brief Callback invoked when the ATT MTU changes after negotiation.
+   *
+   * @param client  The BLEClient whose MTU changed.
+   * @param conn    Connection information for the link.
+   * @param mtu     The new effective MTU size.
+   */
+  using MtuChangedHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint16_t mtu)>;
+
+  /**
+   * @brief Callback invoked when the remote peer requests a connection parameter update.
+   *
+   * @param client  The BLEClient receiving the request.
+   * @param params  The requested connection parameters.
+   * @return true to accept the parameters; false to reject.
+   */
+  using ConnParamsReqHandler = std::function<bool(BLEClient client, const BLEConnParams &params)>;
+
+  /**
+   * @brief Callback invoked when the peer's identity is resolved (after bonding/pairing).
+   *
+   * @param client  The BLEClient whose peer identity was resolved.
+   * @param conn    Updated connection information including the resolved address.
+   */
+  using IdentityHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
+
+  /**
+   * @brief Connect to a peripheral by address (blocking).
+   *
+   * Blocks the calling task until the connection completes or the timeout
+   * expires. Uses the default 1M PHY.
+   *
+   * @param address    Address of the remote peripheral.
+   * @param timeoutMs  Maximum time to wait for the connection (ms).
+   * @return BTStatus indicating success or the connection error.
+   */
+  BTStatus connect(const BTAddress &address, uint32_t timeoutMs = 5000);
+
+  /**
+   * @brief Connect to a previously scanned device (blocking).
+   *
+   * @param device     An advertised device obtained from a BLEScan.
+   * @param timeoutMs  Maximum time to wait for the connection (ms).
+   * @return BTStatus indicating success or the connection error.
+   */
+  BTStatus connect(const BLEAdvertisedDevice &device, uint32_t timeoutMs = 5000);
+
+  /**
+   * @brief Connect to a peripheral by address on a specific PHY (blocking).
+   *
+   * @param address    Address of the remote peripheral.
+   * @param phy        PHY to use for the connection (1M, 2M, or Coded).
+   * @param timeoutMs  Maximum time to wait for the connection (ms).
+   * @return BTStatus indicating success or the connection error.
+   */
+  BTStatus connect(const BTAddress &address, BLEPhy phy, uint32_t timeoutMs = 5000);
+
+  /**
+   * @brief Connect to a previously scanned device on a specific PHY (blocking).
+   *
+   * @param device     An advertised device obtained from a BLEScan.
+   * @param phy        PHY to use for the connection (1M, 2M, or Coded).
+   * @param timeoutMs  Maximum time to wait for the connection (ms).
+   * @return BTStatus indicating success or the connection error.
+   */
+  BTStatus connect(const BLEAdvertisedDevice &device, BLEPhy phy, uint32_t timeoutMs = 5000);
+
+  /**
+   * @brief Initiate connection by address without blocking.
+   *
+   * The result is delivered via the ConnectHandler or ConnectFailHandler
+   * callbacks.
+   *
+   * @param address  Address of the remote peripheral.
+   * @param phy      PHY to use for the connection (default 1M).
+   * @return BTStatus indicating whether the connect request was accepted.
+   */
+  BTStatus connectAsync(const BTAddress &address, BLEPhy phy = BLEPhy::PHY_1M);
+
+  /**
+   * @brief Initiate connection to a scanned device without blocking.
+   *
+   * @param device  An advertised device obtained from a BLEScan.
+   * @param phy     PHY to use for the connection (default 1M).
+   * @return BTStatus indicating whether the connect request was accepted.
+   */
+  BTStatus connectAsync(const BLEAdvertisedDevice &device, BLEPhy phy = BLEPhy::PHY_1M);
+
+  /**
+   * @brief Cancel a pending connection attempt.
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus cancelConnect();
+
+  /**
+   * @brief Disconnect from the remote peripheral.
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus disconnect();
+
+  /**
+   * @brief Check whether this client is currently connected.
+   *
+   * @return true if connected.
+   */
+  bool isConnected() const;
+
+  /**
+   * @brief Initiate or upgrade security on the current connection (pairing/bonding).
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus secureConnection();
+
+  /**
+   * @brief Get a remote service by UUID from the discovered service cache.
+   *
+   * @note Call discoverServices() first, or this may return an invalid handle.
+   *
+   * @param uuid  UUID of the service to look up.
+   * @return A BLERemoteService handle. Check with `operator bool()` for validity.
+   */
+  BLERemoteService getService(const BLEUUID &uuid);
+
+  /**
+   * @brief Get all discovered remote services.
+   *
+   * @return A vector of BLERemoteService handles (empty if none discovered).
+   */
+  std::vector<BLERemoteService> getServices() const;
+
+  /**
+   * @brief Perform GATT service discovery on the connected peripheral.
+   *
+   * Populates the internal service cache used by getService() and getServices().
+   *
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus discoverServices();
+
+  /**
+   * @brief Read a characteristic value by service and characteristic UUID.
+   *
+   * Convenience wrapper that locates the service and characteristic, then reads.
+   *
+   * @param serviceUUID  UUID of the containing service.
+   * @param charUUID     UUID of the characteristic to read.
+   * @return The characteristic value as a String, or an empty String on failure.
+   */
+  String getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID);
+
+  /**
+   * @brief Write a characteristic value by service and characteristic UUID.
+   *
+   * @param serviceUUID  UUID of the containing service.
+   * @param charUUID     UUID of the characteristic to write.
+   * @param value        The value to write.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID, const String &value);
+
+  /**
+   * @brief Set the callback invoked when a connection is established.
+   *
+   * @param handler  ConnectHandler callback, or nullptr to clear.
+   */
+  void onConnect(ConnectHandler handler);
+
+  /**
+   * @brief Set the callback invoked when a connection is terminated.
+   *
+   * @param handler  DisconnectHandler callback, or nullptr to clear.
+   */
+  void onDisconnect(DisconnectHandler handler);
+
+  /**
+   * @brief Set the callback invoked when a connection attempt fails.
+   *
+   * @param handler  ConnectFailHandler callback, or nullptr to clear.
+   */
+  void onConnectFail(ConnectFailHandler handler);
+
+  /**
+   * @brief Set the callback invoked when the ATT MTU changes.
+   *
+   * @param handler  MtuChangedHandler callback, or nullptr to clear.
+   */
+  void onMtuChanged(MtuChangedHandler handler);
+
+  /**
+   * @brief Set the callback for remote connection-parameter update requests.
+   *
+   * @param handler  ConnParamsReqHandler callback, or nullptr to clear.
+   */
+  void onConnParamsUpdateRequest(ConnParamsReqHandler handler);
+
+  /**
+   * @brief Set the callback invoked when the peer's identity is resolved.
+   *
+   * @param handler  IdentityHandler callback, or nullptr to clear.
+   */
+  void onIdentity(IdentityHandler handler);
+
+  /**
+   * @brief Remove all registered callbacks.
+   */
+  void resetCallbacks();
+
+  /**
+   * @brief Set the preferred ATT MTU to request during MTU exchange.
+   *
+   * @param mtu  Preferred MTU size.
+   */
+  void setMTU(uint16_t mtu);
+
+  /**
+   * @brief Get the current effective ATT MTU for this connection.
+   *
+   * @return The negotiated MTU, or the default (23) if not yet exchanged.
+   */
+  uint16_t getMTU() const;
+
+  /**
+   * @brief Read the RSSI of the current connection.
+   *
+   * @return RSSI in dBm, or 0 if not connected.
+   */
+  int8_t getRSSI() const;
+
+  /**
+   * @brief Get the address of the connected peer.
+   *
+   * @return The peer's BTAddress.
+   */
+  BTAddress getPeerAddress() const;
+
+  /**
+   * @brief Get the BLE connection handle for this link.
+   *
+   * @return The connection handle, or 0 if not connected.
+   */
+  uint16_t getHandle() const;
+
+  /**
+   * @brief Get detailed connection information.
+   *
+   * @return A BLEConnInfo snapshot of the current connection state.
+   */
+  BLEConnInfo getConnection() const;
+
+  /**
+   * @brief Request a connection parameter update.
+   *
+   * @param params  The desired connection parameters.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus updateConnParams(const BLEConnParams &params);
+
+  /**
+   * @brief Set the preferred PHY for this connection.
+   *
+   * @param txPhy  Preferred transmit PHY (1M, 2M, or Coded).
+   * @param rxPhy  Preferred receive PHY (1M, 2M, or Coded).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setPhy(BLEPhy txPhy, BLEPhy rxPhy);
+
+  /**
+   * @brief Get the active PHY for this connection.
+   *
+   * @param txPhy  Output: current transmit PHY.
+   * @param rxPhy  Output: current receive PHY.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus getPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const;
+
+  /**
+   * @brief Set the Data Length Extension parameters for this connection.
+   *
+   * @param txOctets  Maximum number of payload octets per TX PDU (27–251).
+   * @param txTime    Maximum TX time per PDU in microseconds (328–17040).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setDataLen(uint16_t txOctets, uint16_t txTime);
+
+  /**
+   * @brief Get a human-readable description of this client.
+   *
+   * @return A String with the peer address and connection state.
+   */
+  String toString() const;
+
+  struct Impl;
 
 private:
-  friend class BLEDevice;
+  explicit BLEClient(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
+  friend class BLEClass;
   friend class BLERemoteService;
   friend class BLERemoteCharacteristic;
   friend class BLERemoteDescriptor;
-
-  /***************************************************************************
-   *                           Common private properties                     *
-   ***************************************************************************/
-
-  BLEAddress m_peerAddress = BLEAddress((uint8_t *)"\0\0\0\0\0\0");
-  uint16_t m_conn_id;
-  bool m_haveServices = false;
-  bool m_isConnected = false;
-  BLEClientCallbacks *m_pClientCallbacks;
-  FreeRTOS::Semaphore m_semaphoreRegEvt = FreeRTOS::Semaphore("RegEvt");
-  FreeRTOS::Semaphore m_semaphoreOpenEvt = FreeRTOS::Semaphore("OpenEvt");
-  FreeRTOS::Semaphore m_semaphoreSearchCmplEvt = FreeRTOS::Semaphore("SearchCmplEvt");
-  FreeRTOS::Semaphore m_semaphoreRssiCmplEvt = FreeRTOS::Semaphore("RssiCmplEvt");
-  std::map<std::string, BLERemoteService *> m_servicesMap;
-  std::map<BLERemoteService *, uint16_t> m_servicesMapByInstID;
-  uint16_t m_mtu = 23;
-
-  /***************************************************************************
-   *                           Bluedroid private properties                  *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  esp_gatt_if_t m_gattc_if;
-#endif
-
-  /***************************************************************************
-   *                           NimBLE private properties                     *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  int m_lastErr;
-  int32_t m_connectTimeout;
-  uint8_t m_terminateFailCount;
-  ble_gap_conn_params m_pConnParams;
-  mutable BLETaskData *m_pTaskData;
-#endif
-
-  /***************************************************************************
-   *                           Common private declarations                   *
-   ***************************************************************************/
-
-  void clearServices();
-
-  /***************************************************************************
-   *                          Bluedroid private declarations                 *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                           NimBLE private declarations                   *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  static void dcTimerCb(ble_npl_event *event);
-#endif
-};  // class BLEClient
-
-/**
- * @brief Callbacks associated with a %BLE client.
- */
-class BLEClientCallbacks {
-public:
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
-
-  virtual ~BLEClientCallbacks(){};
-  virtual void onConnect(BLEClient *pClient);
-  virtual void onDisconnect(BLEClient *pClient);
-
-  /***************************************************************************
-   *                           NimBLE public declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  /**
-   * @brief Callback when the server requests connection parameter updates.
-   *
-   * This callback is invoked when the peripheral (server) requests to update
-   * connection parameters. The central (client) can accept or reject the request.
-   *
-   * NOTE: This callback is NimBLE-only. Bluedroid handles parameter update
-   * requests automatically within the Bluetooth stack without application-level
-   * intervention.
-   *
-   * @param [in] pClient Pointer to the BLEClient instance.
-   * @param [in] params Pointer to the requested connection parameters.
-   * @return true to accept the request, false to reject it.
-   */
-  virtual bool onConnParamsUpdateRequest(BLEClient *pClient, const ble_gap_upd_params *params);
-#endif
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* MAIN_BLECLIENT_H_ */
+#endif /* BLE_ENABLED */

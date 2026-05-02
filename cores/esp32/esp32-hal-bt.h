@@ -61,6 +61,12 @@ bool btMemReleased(bt_mode mode);
 // the true state and btMemRelease() does not attempt a double-release.
 void btMarkMemReleased(bt_mode mode);
 
+/**
+ * @brief Query the current BT controller mode.
+ * @return The active bt_mode, or BT_MODE_DEFAULT if the controller is idle/uninitialized.
+ */
+bt_mode btGetMode(void);
+
 #ifdef __cplusplus
 }
 #endif

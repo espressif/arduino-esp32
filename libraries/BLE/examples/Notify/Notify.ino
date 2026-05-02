@@ -1,114 +1,108 @@
 /*
-    Video: https://www.youtube.com/watch?v=oCMOYS71NIU
-    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleNotify.cpp
-    Ported to Arduino ESP32 by Evandro Copercini
-    updated by chegewara
-
-   Create a BLE server that, once we receive a connection, will send periodic notifications.
-   The service advertises itself as: 4fafc201-1fb5-459e-8fcc-c5c9c331914b
-   And has a characteristic of: beb5483e-36e1-4688-b7f5-ea07361b26a8
-
-   The design of creating the BLE server is:
-   1. Create a BLE Server
-   2. Create a BLE Service
-   3. Create a BLE Characteristic on the Service
-   4. Create a BLE Descriptor on the characteristic
-   5. Start the service.
-   6. Start advertising.
-
-   A connect handler associated with the server starts a background task that performs notification
-   every couple of seconds.
-*/
+ * BLE Notify Example -- New API
+ *
+ * Creates a GATT server with a notify characteristic.
+ * Sends an incrementing counter as notifications every 2 seconds
+ * to any subscribed client.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
 
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
-#include <BLE2901.h>
-
-BLEServer *pServer = NULL;
-BLECharacteristic *pCharacteristic = NULL;
-BLE2901 *descriptor_2901 = NULL;
-
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-uint32_t value = 0;
-
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
+#include <BLE.h>
 
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer *pServer) {
-    deviceConnected = true;
-  };
-
-  void onDisconnect(BLEServer *pServer) {
-    deviceConnected = false;
-  }
-};
+BLECharacteristic notifyChr;
+uint32_t counter = 0;
+bool clientConnected = false;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println();
+  Serial.println("=== BLE Notify Example ===");
 
-  // Create the BLE Device
-  BLEDevice::init("ESP32");
+  Serial.print("Initializing BLE... ");
+  if (!BLE.begin("ESP32-Notify")) {
+    Serial.println("FAILED!");
+    return;
+  }
+  Serial.println("OK");
 
-  // Create the BLE Server
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
+  Serial.print("Creating server... ");
+  BLEServer server = BLE.createServer();
+  if (!server) {
+    Serial.println("FAILED!");
+    return;
+  }
+  Serial.println("OK");
 
-  // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
+  server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
+    clientConnected = true;
+    Serial.printf("Client connected: %s (MTU %d)\n", conn.getAddress().toString().c_str(), conn.getMTU());
+  });
+  server.onDisconnect([](BLEServer s, const BLEConnInfo &conn, uint8_t reason) {
+    clientConnected = false;
+    Serial.printf("Client disconnected (reason 0x%02X), restarting advertising...\n", reason);
+    BLE.startAdvertising();
+    Serial.println("Advertising restarted");
+  });
 
-  // Create a BLE Characteristic
-  pCharacteristic = pService->createCharacteristic(
-    CHARACTERISTIC_UUID,
-    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_INDICATE
-  );
+  Serial.print("Creating service... ");
+  BLEService svc = server.createService(BLEUUID(SERVICE_UUID));
+  if (!svc) {
+    Serial.println("FAILED!");
+    return;
+  }
+  Serial.println("OK");
 
-  // Creates BLE Descriptor 0x2902: Client Characteristic Configuration Descriptor (CCCD)
-  // Descriptor 2902 is not required when using NimBLE as it is automatically added based on the characteristic properties
-  pCharacteristic->addDescriptor(new BLE2902());
-  // Adds also the Characteristic User Description - 0x2901 descriptor
-  descriptor_2901 = new BLE2901();
-  descriptor_2901->setDescription("My own description for this characteristic.");
-  descriptor_2901->setAccessPermissions(ESP_GATT_PERM_READ);  // enforce read only - default is Read|Write
-  pCharacteristic->addDescriptor(descriptor_2901);
+  Serial.print("Creating notify characteristic... ");
+  notifyChr = svc.createCharacteristic(BLEUUID(CHARACTERISTIC_UUID), BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  if (!notifyChr) {
+    Serial.println("FAILED!");
+    return;
+  }
+  Serial.println("OK");
+  notifyChr.setValue(counter);
 
-  // Start the service
-  pService->start();
+  Serial.print("Starting server... ");
+  BTStatus status = server.start();
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    return;
+  }
+  Serial.println("OK");
 
-  // Start advertising
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(false);
-  pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
-  BLEDevice::startAdvertising();
-  Serial.println("Waiting a client connection to notify...");
+  Serial.print("Starting advertising... ");
+  BLEAdvertising adv = BLE.getAdvertising();
+  adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+  status = adv.start();
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    return;
+  }
+  Serial.println("OK");
+
+  Serial.println();
+  Serial.println("Server ready! Waiting for connections...");
+  Serial.printf("Device: %s\n", BLE.getDeviceName().c_str());
+  Serial.println("Notifications will be sent every 2 seconds once subscribed.");
+  Serial.println();
 }
 
 void loop() {
-  // notify changed value
-  if (deviceConnected) {
-    pCharacteristic->setValue((uint8_t *)&value, 4);
-    pCharacteristic->notify();
-    value++;
-    delay(500);
+  if (notifyChr.getSubscribedCount() > 0) {
+    counter++;
+    notifyChr.setValue(counter);
+    notifyChr.notify();
+    Serial.printf("[%lu] Notified: %lu (subscribers: %d)\n", millis() / 1000, (unsigned long)counter, notifyChr.getSubscribedCount());
+  } else if (clientConnected) {
+    static uint32_t lastHint = 0;
+    if (millis() - lastHint > 10000) {
+      Serial.println("Client connected but not subscribed to notifications yet.");
+      lastHint = millis();
+    }
   }
-  // disconnecting
-  if (!deviceConnected && oldDeviceConnected) {
-    delay(500);                   // give the bluetooth stack the chance to get things ready
-    pServer->startAdvertising();  // restart advertising
-    Serial.println("start advertising");
-    oldDeviceConnected = deviceConnected;
-  }
-  // connecting
-  if (deviceConnected && !oldDeviceConnected) {
-    // do stuff here on connecting
-    oldDeviceConnected = deviceConnected;
-  }
+  delay(2000);
 }

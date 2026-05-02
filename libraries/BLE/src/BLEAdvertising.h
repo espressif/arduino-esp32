@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,266 +17,301 @@
  * limitations under the License.
  */
 
-/*
- * BLEAdvertising.h
- *
- *  Created on: Jun 21, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
-#define COMPONENTS_CPP_UTILS_BLEADVERTISING_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include "BLEUUID.h"
-#include <vector>
-#include "BLEUtils.h"
-
-/***************************************************************************
- *                           Bluedroid includes                            *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gap_ble_api.h>
-#endif
-
-/***************************************************************************
- *                      NimBLE includes and definitions                    *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_gap.h>
-#include <services/gap/ble_svc_gap.h>
-#include <host/ble_hs_adv.h>
-
-#define ESP_BLE_ADV_DATA_LEN_MAX            BLE_HS_ADV_MAX_SZ
-#define ESP_BLE_ADV_FLAG_LIMIT_DISC         (0x01 << 0)
-#define ESP_BLE_ADV_FLAG_GEN_DISC           (0x01 << 1)
-#define ESP_BLE_ADV_FLAG_BREDR_NOT_SPT      (0x01 << 2)
-#define ESP_BLE_ADV_FLAG_DMT_CONTROLLER_SPT (0x01 << 3)
-#define ESP_BLE_ADV_FLAG_DMT_HOST_SPT       (0x01 << 4)
-#define ESP_BLE_ADV_FLAG_NON_LIMIT_DISC     (0x00)
-#endif /* CONFIG_NIMBLE_ENABLED */
-
-/***************************************************************************
- *                             NimBLE types                                *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-typedef enum {
-  ESP_BLE_AD_TYPE_FLAG = 0x01,
-  ESP_BLE_AD_TYPE_16SRV_PART = 0x02,
-  ESP_BLE_AD_TYPE_16SRV_CMPL = 0x03,
-  ESP_BLE_AD_TYPE_32SRV_PART = 0x04,
-  ESP_BLE_AD_TYPE_32SRV_CMPL = 0x05,
-  ESP_BLE_AD_TYPE_128SRV_PART = 0x06,
-  ESP_BLE_AD_TYPE_128SRV_CMPL = 0x07,
-  ESP_BLE_AD_TYPE_NAME_SHORT = 0x08,
-  ESP_BLE_AD_TYPE_NAME_CMPL = 0x09,
-  ESP_BLE_AD_TYPE_TX_PWR = 0x0A,
-  ESP_BLE_AD_TYPE_DEV_CLASS = 0x0D,
-  ESP_BLE_AD_TYPE_SM_TK = 0x10,
-  ESP_BLE_AD_TYPE_SM_OOB_FLAG = 0x11,
-  ESP_BLE_AD_TYPE_INT_RANGE = 0x12,
-  ESP_BLE_AD_TYPE_SOL_SRV_UUID = 0x14,
-  ESP_BLE_AD_TYPE_128SOL_SRV_UUID = 0x15,
-  ESP_BLE_AD_TYPE_SERVICE_DATA = 0x16,
-  ESP_BLE_AD_TYPE_PUBLIC_TARGET = 0x17,
-  ESP_BLE_AD_TYPE_RANDOM_TARGET = 0x18,
-  ESP_BLE_AD_TYPE_APPEARANCE = 0x19,
-  ESP_BLE_AD_TYPE_ADV_INT = 0x1A,
-  ESP_BLE_AD_TYPE_LE_DEV_ADDR = 0x1b,
-  ESP_BLE_AD_TYPE_LE_ROLE = 0x1c,
-  ESP_BLE_AD_TYPE_SPAIR_C256 = 0x1d,
-  ESP_BLE_AD_TYPE_SPAIR_R256 = 0x1e,
-  ESP_BLE_AD_TYPE_32SOL_SRV_UUID = 0x1f,
-  ESP_BLE_AD_TYPE_32SERVICE_DATA = 0x20,
-  ESP_BLE_AD_TYPE_128SERVICE_DATA = 0x21,
-  ESP_BLE_AD_TYPE_LE_SECURE_CONFIRM = 0x22,
-  ESP_BLE_AD_TYPE_LE_SECURE_RANDOM = 0x23,
-  ESP_BLE_AD_TYPE_URI = 0x24,
-  ESP_BLE_AD_TYPE_INDOOR_POSITION = 0x25,
-  ESP_BLE_AD_TYPE_TRANS_DISC_DATA = 0x26,
-  ESP_BLE_AD_TYPE_LE_SUPPORT_FEATURE = 0x27,
-  ESP_BLE_AD_TYPE_CHAN_MAP_UPDATE = 0x28,
-  ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE = 0xFF,
-} esp_ble_adv_data_type;
-#endif
+#include "BTStatus.h"
+#include "BTAddress.h"
+#include "BLEAdvTypes.h"
+#include "BLEAdvertisementData.h"
+#include <memory>
+#include <functional>
 
 /**
- * @brief Advertisement data set by the programmer to be published by the %BLE server.
- */
-class BLEAdvertisementData {
-public:
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
-
-  void setAppearance(uint16_t appearance);
-  void setCompleteServices(BLEUUID uuid);
-  void setFlags(uint8_t);
-  void setManufacturerData(String data);
-  void setName(String name);
-  void setPartialServices(BLEUUID uuid);
-  void setServiceData(BLEUUID uuid, String data);
-  void setShortName(String name);
-  void setPreferredParams(uint16_t min, uint16_t max);
-  void addTxPower();
-  void addData(String data);
-  void addData(char *data, size_t length);
-  String getPayload();
-
-private:
-  friend class BLEAdvertising;
-
-  /***************************************************************************
-   *                           Common private declarations                   *
-   ***************************************************************************/
-
-  String m_payload;
-};
-
-/**
- * @brief Perform and manage %BLE advertising.
+ * @brief Unified BLE advertising class covering legacy, extended, and periodic advertising.
+ *
+ * Legacy advertising is the simple default. BLE5 extended/periodic features
+ * are available with explicit opt-in and guarded by BLE5_SUPPORTED.
  */
 class BLEAdvertising {
 public:
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
-
   BLEAdvertising();
-  void addServiceUUID(BLEUUID serviceUUID);
-  void addServiceUUID(const char *serviceUUID);
-  bool removeServiceUUID(int index);
-  bool removeServiceUUID(BLEUUID serviceUUID);
-  bool removeServiceUUID(const char *serviceUUID);
-  bool stop();
-  void reset();
+  ~BLEAdvertising() = default;
+  BLEAdvertising(const BLEAdvertising &) = default;
+  BLEAdvertising &operator=(const BLEAdvertising &) = default;
+  BLEAdvertising(BLEAdvertising &&) = default;
+  BLEAdvertising &operator=(BLEAdvertising &&) = default;
+
+  /**
+   * @brief Check whether this handle references a valid advertising instance.
+   * @return true if the handle is backed by an initialized implementation, false otherwise.
+   */
+  explicit operator bool() const;
+
+  // --- Legacy Advertising ---
+
+  /**
+   * @brief Append a service UUID to the advertisement payload.
+   * @param uuid Service UUID to advertise.
+   */
+  void addServiceUUID(const BLEUUID &uuid);
+
+  /**
+   * @brief Remove a service UUID from the advertisement payload.
+   * @param uuid Service UUID to remove.
+   */
+  void removeServiceUUID(const BLEUUID &uuid);
+
+  /**
+   * @brief Remove all service UUIDs from the advertisement payload.
+   */
+  void clearServiceUUIDs();
+
+  /**
+   * @brief Set the local name included in the advertisement.
+   * @param name Device name string. May be truncated to fit the payload.
+   * @note The host stack keeps its own GAP name; the backend may copy this
+   *       string for the AD data rather than querying the GAP name API at
+   *       broadcast time, so do not assume other getters always match the
+   *       on-air name byte-for-byte on every target.
+   */
+  void setName(const String &name);
+
+  /**
+   * @brief Enable or disable sending a scan-response payload.
+   * @param enable If true, the stack will transmit scan-response data when queried.
+   */
+  void setScanResponse(bool enable);
+
+  /**
+   * @brief Set the advertising PDU type.
+   * @param type Advertising type (connectable, scannable, etc.).
+   */
+  void setType(BLEAdvType type);
+
+  /**
+   * @brief Set the advertising interval range.
+   * @param minMs Minimum advertising interval in milliseconds.
+   * @param maxMs Maximum advertising interval in milliseconds.
+   */
+  void setInterval(uint16_t minMs, uint16_t maxMs);
+
+  /**
+   * @brief Set the minimum preferred connection interval advertised to centrals.
+   * @param minPreferred Minimum preferred interval value (in 1.25 ms units).
+   */
+  void setMinPreferred(uint16_t minPreferred);
+
+  /**
+   * @brief Set the maximum preferred connection interval advertised to centrals.
+   * @param maxPreferred Maximum preferred interval value (in 1.25 ms units).
+   */
+  void setMaxPreferred(uint16_t maxPreferred);
+
+  /**
+   * @brief Include or exclude the TX power level in the advertisement.
+   * @param include If true, the TX power level is added to the payload.
+   */
+  void setTxPower(bool include);
+
+  /**
+   * @brief Set the GAP appearance value in the advertisement.
+   * @param appearance 16-bit appearance value as defined by the Bluetooth SIG.
+   */
   void setAppearance(uint16_t appearance);
-  void setAdvertisementType(uint8_t adv_type);
-  void setMaxInterval(uint16_t maxinterval);
-  void setMinInterval(uint16_t mininterval);
-  bool setAdvertisementData(BLEAdvertisementData &advertisementData);
+
+  /**
+   * @brief Configure the scan-request and connect whitelist filters.
+   * @param scanRequestWhitelistOnly If true, only accept scan requests from whitelisted devices.
+   * @param connectWhitelistOnly If true, only accept connections from whitelisted devices.
+   */
   void setScanFilter(bool scanRequestWhitelistOnly, bool connectWhitelistOnly);
-  bool setScanResponseData(BLEAdvertisementData &advertisementData);
-  void setMinPreferred(uint16_t);
-  void setMaxPreferred(uint16_t);
-  void setScanResponse(bool);
 
-  /***************************************************************************
-   *                           Bluedroid public declarations                 *
-   ***************************************************************************/
+  /**
+   * @brief Reset all legacy advertising parameters to defaults.
+   */
+  void reset();
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void setPrivateAddress(esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
-  bool setDeviceAddress(esp_bd_addr_t addr, esp_ble_addr_type_t type = BLE_ADDR_TYPE_RANDOM);
-  void setAdvertisementChannelMap(esp_ble_adv_channel_t channel_map);
-  void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-  bool start();
-#endif
+  /**
+   * @brief Replace the advertisement payload with custom data.
+   * @param data Pre-built advertisement data to use.
+   */
+  void setAdvertisementData(const BLEAdvertisementData &data);
 
-  /***************************************************************************
-   *                           NimBLE public declarations                    *
-   ***************************************************************************/
+  /**
+   * @brief Replace the scan-response payload with custom data.
+   * @param data Pre-built scan-response data to use.
+   */
+  void setScanResponseData(const BLEAdvertisementData &data);
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void setName(String name);
-  void addTxPower();
-  void advCompleteCB();
-  bool isAdvertising();
-  void onHostSync();
-  bool start(uint32_t duration = 0, void (*advCompleteCB)(BLEAdvertising *pAdv) = nullptr);
-  static int handleGAPEvent(ble_gap_event *event, void *arg);
-#endif
+  /**
+   * @brief Start legacy advertising.
+   * @param durationMs Duration in milliseconds. 0 = advertise indefinitely.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus start(uint32_t durationMs = 0);
+
+  /**
+   * @brief Stop legacy advertising.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stop();
+
+  /**
+   * @brief Check whether legacy advertising is currently active.
+   * @return true if advertising is running, false otherwise.
+   */
+  bool isAdvertising() const;
+
+  // --- Extended Advertising (BLE5) ---
+
+  /**
+   * @brief Parameters for a BLE 5 extended advertising set (one instance).
+   */
+  struct ExtAdvConfig {
+    uint8_t instance = 0;                                ///< Advertising instance index.
+    BLEAdvType type = BLEAdvType::ConnectableScannable;  ///< PDU type for this instance.
+    BLEPhy primaryPhy = BLEPhy::PHY_1M;                  ///< Primary advertising PHY.
+    BLEPhy secondaryPhy = BLEPhy::PHY_1M;                ///< Secondary (aux) advertising PHY.
+    int8_t txPower = 127;                                ///< TX power in dBm (127 = no preference).
+    uint16_t intervalMin = 0x30;                         ///< Minimum advertising interval (controller units).
+    uint16_t intervalMax = 0x30;                         ///< Maximum advertising interval (controller units).
+    uint8_t channelMap = 0x07;                           ///< Bitmask of advertising channels (37/38/39).
+    uint8_t sid = 0;                                     ///< Advertising Set Identifier.
+    bool anonymous = false;                              ///< If true, omit the advertiser address.
+    bool includeTxPower = false;                         ///< If true, include TX power in the header.
+    bool scanReqNotify = false;                          ///< If true, notify on scan requests.
+  };
+
+  /**
+   * @brief Configure an extended advertising instance.
+   * @param config Configuration parameters for the instance.
+   * @return BTStatus indicating success or error.
+   * @note Requires BLE5_SUPPORTED.
+   */
+  BTStatus configureExtended(const ExtAdvConfig &config);
+
+  /**
+   * @brief Set the advertisement data for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param data Advertisement payload.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus setExtAdvertisementData(uint8_t instance, const BLEAdvertisementData &data);
+
+  /**
+   * @brief Set the scan-response data for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param data Scan-response payload.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus setExtScanResponseData(uint8_t instance, const BLEAdvertisementData &data);
+
+  /**
+   * @brief Set a random address for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param addr Address to assign to the instance.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus setExtInstanceAddress(uint8_t instance, const BTAddress &addr);
+
+  /**
+   * @brief Start an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param durationMs Duration in milliseconds. 0 = advertise indefinitely.
+   * @param maxEvents Maximum number of advertising events. 0 = no limit.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus startExtended(uint8_t instance, uint32_t durationMs = 0, uint8_t maxEvents = 0);
+
+  /**
+   * @brief Stop an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stopExtended(uint8_t instance);
+
+  /**
+   * @brief Remove an extended advertising instance and free its resources.
+   * @param instance Advertising instance index to remove.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus removeExtended(uint8_t instance);
+
+  /**
+   * @brief Remove all extended advertising instances.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus clearExtended();
+
+  // --- Periodic Advertising (BLE5) ---
+
+  /**
+   * @brief Parameters for BLE 5 periodic advertising on an extended set.
+   */
+  struct PeriodicAdvConfig {
+    uint8_t instance = 0;         ///< Extended advertising instance to attach to.
+    uint16_t intervalMin = 0;     ///< Minimum periodic interval (1.25 ms units).
+    uint16_t intervalMax = 0;     ///< Maximum periodic interval (1.25 ms units).
+    bool includeTxPower = false;  ///< If true, include TX power in periodic PDUs.
+  };
+
+  /**
+   * @brief Configure periodic advertising on an extended instance.
+   * @param config Periodic advertising parameters.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus configurePeriodicAdv(const PeriodicAdvConfig &config);
+
+  /**
+   * @brief Set the payload for periodic advertising.
+   * @param instance Extended advertising instance index.
+   * @param data Periodic advertising payload.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus setPeriodicAdvData(uint8_t instance, const BLEAdvertisementData &data);
+
+  /**
+   * @brief Start periodic advertising on an extended instance.
+   * @param instance Extended advertising instance index.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus startPeriodicAdv(uint8_t instance);
+
+  /**
+   * @brief Stop periodic advertising on an extended instance.
+   * @param instance Extended advertising instance index.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stopPeriodicAdv(uint8_t instance);
+
+  // --- Event Handlers ---
+
+  /**
+   * @brief Callback invoked when an advertising instance completes (duration or maxEvents reached).
+   * @param instance The advertising instance index that completed.
+   */
+  using CompleteHandler = std::function<void(uint8_t instance)>;
+
+  /**
+   * @brief Register a handler for advertising completion events.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onComplete(CompleteHandler handler);
+
+  /**
+   * @brief Remove all registered advertising callbacks.
+   */
+  void resetCallbacks();
+
+  struct Impl;
 
 private:
-  /***************************************************************************
-   *                          Common private properties                      *
-   ***************************************************************************/
-
-  std::vector<BLEUUID> m_serviceUUIDs;
-  bool m_customAdvData = false;
-  bool m_customScanResponseData = false;
-  bool m_advDataSet = false;
-  bool m_advConfiguring = false;
-  bool m_scanResp = true;
-
-  /***************************************************************************
-   *                          Bluedroid private properties                   *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  esp_ble_adv_data_t m_advData;
-  esp_ble_adv_data_t m_scanRespData;
-  esp_ble_adv_params_t m_advParams;
-  bool m_nameInScanResp = false;      // true when device name overflows adv packet -> goes in scan response
-  bool m_advertisingPending = false;  // true when start_advertising was issued but start complete event not yet received
-  bool configureScanResponseData();
-  void freeServiceUUIDs();
-  uint16_t buildRawAdvData(uint8_t *buf, uint16_t bufLen, bool includeName = true);
-  uint16_t buildRawScanRespData(uint8_t *buf, uint16_t bufLen);
-#endif
-
-  /***************************************************************************
-   *                          NimBLE private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  ble_hs_adv_fields m_advData;
-  ble_hs_adv_fields m_scanData;
-  ble_gap_adv_params m_advParams;
-  void (*m_advCompCB)(BLEAdvertising *pAdv);
-  uint8_t m_slaveItvl[4];
-  uint32_t m_duration;
-  String m_name;
-#endif
+  explicit BLEAdvertising(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
+  friend class BLEClass;
 };
 
-/***************************************************************************
- *                          Bluedroid 5.0 specific classes                 *
- ***************************************************************************/
-
-#if defined(SOC_BLE_50_SUPPORTED) && defined(CONFIG_BLUEDROID_ENABLED)
-class BLEMultiAdvertising {
-public:
-  BLEMultiAdvertising(uint8_t num = 1);
-  ~BLEMultiAdvertising() {}
-
-  bool setAdvertisingData(uint8_t instance, uint16_t length, const uint8_t *data);
-  bool setScanRspData(uint8_t instance, uint16_t length, const uint8_t *data);
-  bool start();
-  bool start(uint8_t num, uint8_t from);
-  void setDuration(uint8_t instance, int duration = 0, int max_events = 0);
-  bool setInstanceAddress(uint8_t instance, uint8_t *rand_addr);
-  bool stop(uint8_t num_adv, const uint8_t *ext_adv_inst);
-  bool remove(uint8_t instance);
-  bool clear();
-  bool setPeriodicAdvertisingData(uint8_t instance, uint16_t length, const uint8_t *data);
-  bool startPeriodicAdvertising(uint8_t instance);
-  bool setAdvertisingParams(uint8_t instance, const esp_ble_gap_ext_adv_params_t *params);
-  bool setPeriodicAdvertisingParams(uint8_t instance, const esp_ble_gap_periodic_adv_params_t *params);
-
-private:
-  esp_ble_gap_ext_adv_params_t *params_arrays;
-  esp_ble_gap_ext_adv_t *ext_adv;
-  uint8_t count;
-};
-#endif
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLEADVERTISING_H_ */
+#endif /* BLE_ENABLED */

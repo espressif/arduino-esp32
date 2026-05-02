@@ -16,96 +16,146 @@
  * limitations under the License.
  */
 
-#ifndef BLECONNINFO_H_
-#define BLECONNINFO_H_
+#pragma once
 
-#if defined(CONFIG_NIMBLE_ENABLED)
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include <host/ble_gap.h>
-#include "BLEAddress.h"
+#include <stdint.h>
+#include "BTAddress.h"
+
+enum class BLEPhy : uint8_t;
 
 /**
- * @brief Connection information.
+ * @brief Stack-agnostic connection descriptor.
+ *
+ * Replaces all backend-specific parameter types (esp_ble_gatts_cb_param_t,
+ * ble_gap_conn_desc, etc.) in callback signatures. This is a pure value type
+ * with no heap allocation -- connection data is stored inline.
+ *
+ * Backend code creates instances via the friend struct BLEConnInfoImpl.
  */
 class BLEConnInfo {
 public:
-  /** @brief Gets the over-the-air address of the connected peer */
-  BLEAddress getAddress() const {
-    return BLEAddress(m_desc.peer_ota_addr);
-  }
+  /**
+   * @brief Construct an empty (invalid) connection info object.
+   */
+  BLEConnInfo();
 
-  /** @brief Gets the ID address of the connected peer */
-  BLEAddress getIdAddress() const {
-    return BLEAddress(m_desc.peer_id_addr);
-  }
+  /**
+   * @brief Connection handle assigned by the controller.
+   * @return The connection handle.
+   */
+  uint16_t getHandle() const;
 
-  /** @brief Gets the connection handle (also known as the connection id) of the connected peer */
-  uint16_t getConnHandle() const {
-    return m_desc.conn_handle;
-  }
+  /**
+   * @brief Over-the-air (OTA) peer address.
+   * @return The peer's advertised address.
+   */
+  BTAddress getAddress() const;
 
-  /** @brief Gets the connection interval for this connection (in 1.25ms units) */
-  uint16_t getConnInterval() const {
-    return m_desc.conn_itvl;
-  }
+  /**
+   * @brief Identity address (after IRK resolution).
+   * @return The resolved identity address, or the OTA address if no IRK is available.
+   */
+  BTAddress getIdAddress() const;
 
-  /** @brief Gets the supervision timeout for this connection (in 10ms units) */
-  uint16_t getConnTimeout() const {
-    return m_desc.supervision_timeout;
-  }
+  /**
+   * @brief Negotiated ATT MTU for this connection.
+   * @return The current MTU in bytes.
+   */
+  uint16_t getMTU() const;
 
-  /** @brief Gets the allowable latency for this connection (unit = number of intervals) */
-  uint16_t getConnLatency() const {
-    return m_desc.conn_latency;
-  }
+  /**
+   * @brief Check if the link is encrypted.
+   * @return True if the link is encrypted.
+   */
+  bool isEncrypted() const;
 
-  /** @brief Gets the maximum transmission unit size for this connection (in bytes) */
-  uint16_t getMTU() const {
-    return ble_att_mtu(m_desc.conn_handle);
-  }
+  /**
+   * @brief Check if authenticated pairing was used.
+   * @return True if the connection was authenticated.
+   */
+  bool isAuthenticated() const;
 
-  /** @brief Check if we are in the master role in this connection */
-  bool isMaster() const {
-    return (m_desc.role == BLE_GAP_ROLE_MASTER);
-  }
+  /**
+   * @brief Check if a bond (LTK) exists for this peer.
+   * @return True if the peer is bonded.
+   */
+  bool isBonded() const;
 
-  /** @brief Check if we are in the slave role in this connection */
-  bool isSlave() const {
-    return (m_desc.role == BLE_GAP_ROLE_SLAVE);
-  }
+  /**
+   * @brief Encryption key size.
+   * @return Key size in bytes (7-16).
+   */
+  uint8_t getSecurityKeySize() const;
 
-  /** @brief Check if we are connected to a bonded peer */
-  bool isBonded() const {
-    return (m_desc.sec_state.bonded == 1);
-  }
+  /**
+   * @brief Connection interval in units of 1.25 ms.
+   * @return The connection interval.
+   */
+  uint16_t getInterval() const;
 
-  /** @brief Check if the connection in encrypted */
-  bool isEncrypted() const {
-    return (m_desc.sec_state.encrypted == 1);
-  }
+  /**
+   * @brief Peripheral latency (number of connection events the peripheral may skip).
+   * @return The latency value.
+   */
+  uint16_t getLatency() const;
 
-  /** @brief Check if the the connection has been authenticated */
-  bool isAuthenticated() const {
-    return (m_desc.sec_state.authenticated == 1);
-  }
+  /**
+   * @brief Supervision timeout in units of 10 ms.
+   * @return The supervision timeout.
+   */
+  uint16_t getSupervisionTimeout() const;
 
-  /** @brief Gets the key size used to encrypt the connection */
-  uint8_t getSecKeySize() const {
-    return m_desc.sec_state.key_size;
-  }
+  /**
+   * @brief TX PHY in use.
+   * @return The transmit PHY.
+   * @note Returns PHY_1M on non-BLE5 chips.
+   */
+  BLEPhy getTxPhy() const;
+
+  /**
+   * @brief RX PHY in use.
+   * @return The receive PHY.
+   * @note Returns PHY_1M on non-BLE5 chips.
+   */
+  BLEPhy getRxPhy() const;
+
+  /**
+   * @brief Check if this device is the central (initiator) of the connection.
+   * @return True if this device is the central.
+   */
+  bool isCentral() const;
+
+  /**
+   * @brief Check if this device is the peripheral (advertiser) of the connection.
+   * @return True if this device is the peripheral.
+   */
+  bool isPeripheral() const;
+
+  /**
+   * @brief Last known RSSI for this connection.
+   * @return RSSI in dBm (-127 to +20), or 0 if unavailable.
+   */
+  int8_t getRSSI() const;
+
+  /**
+   * @brief Check if this object holds valid connection data.
+   * @return True if the connection info is valid, false otherwise.
+   */
+  explicit operator bool() const;
+
+  static constexpr size_t kStorageSize = 56;
 
 private:
-  friend class BLEServer;
-  friend class BLEClient;
-  friend class BLECharacteristic;
-  friend class BLEDescriptor;
+  friend struct BLEConnInfoImpl;
+  struct Data;
+  alignas(8) uint8_t _storage[kStorageSize]{};
+  bool _valid = false;
 
-  ble_gap_conn_desc m_desc{};
-  BLEConnInfo(){};
-  BLEConnInfo(ble_gap_conn_desc desc) {
-    m_desc = desc;
-  }
+  Data *data();
+  const Data *data() const;
 };
-#endif
 
-#endif  // BLECONNINFO_H_
+#endif /* BLE_ENABLED */

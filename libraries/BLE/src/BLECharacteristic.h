@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,340 +17,336 @@
  * limitations under the License.
  */
 
-/*
- * BLECharacteristic.h
- *
- *  Created on: Jun 22, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
-#define COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <string>
-#include <map>
-#include "BLEUUID.h"
-#include "BLEDescriptor.h"
-#include "BLEValue.h"
-#include "RTOS.h"
-#include "BLEUtils.h"
-
-/***************************************************************************
- *                          Bluedroid includes                             *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gatts_api.h>
-#include <esp_gap_ble_api.h>
-#endif
-
-/***************************************************************************
- *                     NimBLE includes and definitions                     *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
 #include <vector>
-#include <host/ble_gatt.h>
-#include <host/ble_att.h>
+#include "BTStatus.h"
+#include "BLEUUID.h"
+#include "BLEProperty.h"
 #include "BLEConnInfo.h"
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#define ESP_GATT_MAX_ATTR_LEN            BLE_ATT_ATTR_MAX_LEN
-#define ESP_GATT_CHAR_PROP_BIT_READ      BLE_GATT_CHR_PROP_READ
-#define ESP_GATT_CHAR_PROP_BIT_WRITE     BLE_GATT_CHR_PROP_WRITE
-#define ESP_GATT_CHAR_PROP_BIT_WRITE_NR  BLE_GATT_CHR_PROP_WRITE_NO_RSP
-#define ESP_GATT_CHAR_PROP_BIT_BROADCAST BLE_GATT_CHR_PROP_BROADCAST
-#define ESP_GATT_CHAR_PROP_BIT_NOTIFY    BLE_GATT_CHR_PROP_NOTIFY
-#define ESP_GATT_CHAR_PROP_BIT_INDICATE  BLE_GATT_CHR_PROP_INDICATE
-#endif
-
-/***************************************************************************
- *                              NimBLE types                               *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-typedef uint16_t esp_gatt_char_prop_t;
-typedef uint16_t esp_gatt_perm_t;
-#endif
-
-/***************************************************************************
- *                           Forward declarations                          *
- ***************************************************************************/
+#include <memory>
+#include <functional>
 
 class BLEService;
 class BLEDescriptor;
-class BLECharacteristicCallbacks;
 
 /**
- * @brief A management structure for %BLE descriptors.
- */
-class BLEDescriptorMap {
-public:
-  /***************************************************************************
-   *                        Common public declarations                       *
-   ***************************************************************************/
-
-  void setByUUID(const char *uuid, BLEDescriptor *pDescriptor);
-  void setByUUID(BLEUUID uuid, BLEDescriptor *pDescriptor);
-  void setByHandle(uint16_t handle, BLEDescriptor *pDescriptor);
-  BLEDescriptor *getByUUID(const char *uuid) const;
-  BLEDescriptor *getByUUID(BLEUUID uuid) const;
-  BLEDescriptor *getByHandle(uint16_t handle) const;
-  String toString() const;
-  BLEDescriptor *getFirst();
-  BLEDescriptor *getNext();
-  int getRegisteredDescriptorCount() const;
-  void removeDescriptor(BLEDescriptor *pDescriptor);
-
-  /***************************************************************************
-   *                        Bluedroid public declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                        NimBLE public declarations                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, ble_gatt_access_ctxt *ctxt, void *arg);
-#endif
-
-private:
-  /***************************************************************************
-   *                        Common private properties                        *
-   ***************************************************************************/
-
-  std::map<BLEDescriptor *, String> m_uuidMap;
-  std::map<uint16_t, BLEDescriptor *> m_handleMap;
-  std::map<BLEDescriptor *, String>::iterator m_iterator;
-};
-
-/**
- * @brief The model of a %BLE Characteristic.
+ * @brief GATT Characteristic handle.
  *
- * A BLE Characteristic is an identified value container that manages a value. It is exposed by a BLE server and
- * can be read and written to by a %BLE client.
+ * Lightweight shared handle wrapping a BLECharacteristic::Impl.
+ * Create via service.createCharacteristic(uuid, properties).
+ *
  */
 class BLECharacteristic {
 public:
-  /***************************************************************************
-   *                        Common properties                                *
-   ***************************************************************************/
+  BLECharacteristic();
+  ~BLECharacteristic() = default;
+  BLECharacteristic(const BLECharacteristic &) = default;
+  BLECharacteristic &operator=(const BLECharacteristic &) = default;
+  BLECharacteristic(BLECharacteristic &&) = default;
+  BLECharacteristic &operator=(BLECharacteristic &&) = default;
 
-  static const uint32_t indicationTimeout = 1000;
+  /**
+   * @brief Check whether this handle refers to a valid characteristic.
+   * @return true if the handle is backed by a live Impl, false otherwise.
+   */
+  explicit operator bool() const;
 
-  /***************************************************************************
-   *                    Bluedroid public properties                        *
-   ***************************************************************************/
+  /**
+   * @brief Status codes for @c onStatus() after @c notify() or @c indicate().
+   */
+  enum NotifyStatus {
+    SUCCESS_INDICATE,         ///< Indication sent and confirmed.
+    SUCCESS_NOTIFY,           ///< Notification sent.
+    ERROR_INDICATE_DISABLED,  ///< Client has not enabled indications.
+    ERROR_NOTIFY_DISABLED,    ///< Client has not enabled notifications.
+    ERROR_GATT,               ///< Low-level GATT error.
+    ERROR_NO_CLIENT,          ///< Target connection handle is invalid.
+    ERROR_NO_SUBSCRIBER,      ///< No clients are subscribed.
+    ERROR_INDICATE_TIMEOUT,   ///< Indication confirmation timed out.
+    ERROR_INDICATE_FAILURE,   ///< Indication confirmation failed.
+  };
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  static const uint32_t PROPERTY_READ = 1 << 0;
-  static const uint32_t PROPERTY_READ_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_READ_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_READ_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_WRITE = 1 << 1;
-  static const uint32_t PROPERTY_WRITE_NR = 1 << 5;
-  static const uint32_t PROPERTY_WRITE_ENC = 0;     // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_WRITE_AUTHEN = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_WRITE_AUTHOR = 0;  // Not supported by Bluedroid. Use setAccessPermissions() instead.
-  static const uint32_t PROPERTY_NOTIFY = 1 << 2;
-  static const uint32_t PROPERTY_BROADCAST = 1 << 3;
-  static const uint32_t PROPERTY_INDICATE = 1 << 4;
-#endif
+  // Handler types
 
-  /***************************************************************************
-   *                     NimBLE public properties                            *
-   ***************************************************************************/
+  /**
+   * @brief Callback invoked when a client reads this characteristic.
+   * @param chr The characteristic being read.
+   * @param conn Information about the connected client.
+   */
+  using ReadHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  static const uint32_t PROPERTY_READ = BLE_GATT_CHR_F_READ;
-  static const uint32_t PROPERTY_READ_ENC = BLE_GATT_CHR_F_READ_ENC;
-  static const uint32_t PROPERTY_READ_AUTHEN = BLE_GATT_CHR_F_READ_AUTHEN;
-  static const uint32_t PROPERTY_READ_AUTHOR = BLE_GATT_CHR_F_READ_AUTHOR;
-  static const uint32_t PROPERTY_WRITE = BLE_GATT_CHR_F_WRITE;
-  static const uint32_t PROPERTY_WRITE_NR = BLE_GATT_CHR_F_WRITE_NO_RSP;
-  static const uint32_t PROPERTY_WRITE_ENC = BLE_GATT_CHR_F_WRITE_ENC;
-  static const uint32_t PROPERTY_WRITE_AUTHEN = BLE_GATT_CHR_F_WRITE_AUTHEN;
-  static const uint32_t PROPERTY_WRITE_AUTHOR = BLE_GATT_CHR_F_WRITE_AUTHOR;
-  static const uint32_t PROPERTY_NOTIFY = BLE_GATT_CHR_F_NOTIFY;
-  static const uint32_t PROPERTY_BROADCAST = BLE_GATT_CHR_F_BROADCAST;
-  static const uint32_t PROPERTY_INDICATE = BLE_GATT_CHR_F_INDICATE;
-#endif
+  /**
+   * @brief Callback invoked when a client writes to this characteristic.
+   * @param chr The characteristic being written (value already updated).
+   * @param conn Information about the connected client.
+   */
+  using WriteHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
 
-  /***************************************************************************
-   *                        Common public declarations                       *
-   ***************************************************************************/
+  /**
+   * @brief Callback invoked after a notification is queued.
+   * @param chr The characteristic whose notification was queued.
+   */
+  using NotifyHandler = std::function<void(BLECharacteristic chr)>;
 
-  BLECharacteristic(const char *uuid, uint32_t properties = 0);
-  BLECharacteristic(BLEUUID uuid, uint32_t properties = 0);
-  virtual ~BLECharacteristic();
+  /**
+   * @brief Callback invoked when a client subscribes to or unsubscribes from
+   *        notifications/indications (CCCD write).
+   * @param chr The characteristic whose subscription state changed.
+   * @param conn Information about the connected client.
+   * @param subValue Bitmask: bit 0 = notifications, bit 1 = indications.
+   *                 0 means the client unsubscribed.
+   */
+  using SubscribeHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue)>;
 
-  void addDescriptor(BLEDescriptor *pDescriptor);
-  BLEDescriptor *getDescriptorByUUID(const char *descriptorUUID) const;
-  BLEDescriptor *getDescriptorByUUID(BLEUUID descriptorUUID) const;
-  BLEUUID getUUID() const;
-  String getValue() const;
-  uint8_t *getData();
-  size_t getLength() const;
-  void indicate();
-  void notify(bool is_notification = true);
-  void setCallbacks(BLECharacteristicCallbacks *pCallbacks);
-  void setValue(const uint8_t *data, size_t size);
+  /**
+   * @brief Callback invoked with the delivery status of a notification or indication.
+   * @param chr The characteristic that sent the notification/indication.
+   * @param status Outcome of the operation.
+   * @param code Backend-specific error code (0 on success).
+   */
+  using StatusHandler = std::function<void(BLECharacteristic chr, NotifyStatus status, uint32_t code)>;
+
+  /**
+   * @brief Register a callback invoked when a client reads this characteristic.
+   * @param handler The read callback, or nullptr to clear.
+   */
+  void onRead(ReadHandler handler);
+
+  /**
+   * @brief Register a callback invoked when a client writes to this characteristic.
+   * @param handler The write callback, or nullptr to clear.
+   * @note On NimBLE, the stack typically sends the ATT write response after this
+   *       handler returns; keep the callback short so peers are not stalled.
+   */
+  void onWrite(WriteHandler handler);
+
+  /**
+   * @brief Register a callback invoked after a notification is queued.
+   * @param handler The notify callback, or nullptr to clear.
+   */
+  void onNotify(NotifyHandler handler);
+
+  /**
+   * @brief Register a callback invoked when a client subscribes or unsubscribes.
+   * @param handler The subscribe callback, or nullptr to clear.
+   */
+  void onSubscribe(SubscribeHandler handler);
+
+  /**
+   * @brief Register a callback invoked with notification/indication delivery status.
+   * @param handler The status callback, or nullptr to clear.
+   */
+  void onStatus(StatusHandler handler);
+
+  /**
+   * @brief Remove all previously registered callbacks from this characteristic.
+   */
+  void resetCallbacks();
+
+  // Value access
+
+  /**
+   * @brief Set the characteristic value from a raw byte buffer.
+   * @param data Pointer to the data bytes.
+   * @param length Number of bytes to copy.
+   */
+  void setValue(const uint8_t *data, size_t length);
   void setValue(const String &value);
-  void setValue(uint16_t data16);
-  void setValue(uint32_t data32);
-  void setValue(int data32);
-  void setValue(float data32);
-  void setValue(double data64);
-  String toString() const;
+  void setValue(uint16_t value);
+  void setValue(uint32_t value);
+  void setValue(int value);
+  void setValue(float value);
+  void setValue(double value);
+
+  /**
+   * @brief Set the characteristic value from an arbitrary trivially-copyable type.
+   * @tparam T A trivially-copyable type.
+   * @param value The value to store (copied byte-for-byte).
+   */
+  template<typename T> void setValue(const T &value) {
+    setValue(reinterpret_cast<const uint8_t *>(&value), sizeof(T));
+  }
+
+  /**
+   * @brief Get a pointer to the raw characteristic value.
+   * @param length If non-null, receives the length of the value in bytes.
+   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid.
+   */
+  const uint8_t *getValue(size_t *length = nullptr) const;
+
+  /**
+   * @brief Get the characteristic value as an Arduino String.
+   * @return The value interpreted as a UTF-8 string.
+   */
+  String getStringValue() const;
+
+  /**
+   * @brief Get the characteristic value reinterpreted as type T.
+   * @tparam T A trivially-copyable type to reinterpret the value as.
+   * @return The value, or a value-initialized T if the stored data is shorter than sizeof(T).
+   */
+  template<typename T> T getValue() const {
+    size_t len = 0;
+    const uint8_t *data = getValue(&len);
+    T result{};
+    if (data && len >= sizeof(T)) {
+      memcpy(&result, data, sizeof(T));
+    }
+    return result;
+  }
+
+  // Notifications / Indications
+
+  /**
+   * @brief Send a notification to all subscribed clients.
+   * @param data Optional payload. If nullptr, the current stored value is sent.
+   * @param length Number of bytes in @p data (ignored when @p data is nullptr).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus notify(const uint8_t *data = nullptr, size_t length = 0);
+
+  /**
+   * @brief Send a notification to a specific client.
+   * @param connHandle Connection handle of the target client.
+   * @param data Optional payload. If nullptr, the current stored value is sent.
+   * @param length Number of bytes in @p data (ignored when @p data is nullptr).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus notify(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
+
+  /**
+   * @brief Send an indication to all subscribed clients.
+   * @param data Optional payload. If nullptr, the current stored value is sent.
+   * @param length Number of bytes in @p data (ignored when @p data is nullptr).
+   * @return BTStatus indicating success or failure.
+   * @note Indications require confirmation from each client; this call may block
+   *       until all confirmations are received or timeout.
+   */
+  BTStatus indicate(const uint8_t *data = nullptr, size_t length = 0);
+
+  /**
+   * @brief Send an indication to a specific client.
+   * @param connHandle Connection handle of the target client.
+   * @param data Optional payload. If nullptr, the current stored value is sent.
+   * @param length Number of bytes in @p data (ignored when @p data is nullptr).
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus indicate(uint16_t connHandle, const uint8_t *data = nullptr, size_t length = 0);
+
+  // Properties and permissions
+
+  /**
+   * @brief Get the GATT properties of this characteristic.
+   * @return Bitmask of BLEProperty flags (Read, Write, Notify, etc.).
+   */
+  BLEProperty getProperties() const;
+
+  /**
+   * @brief Set the ATT permissions for this characteristic value.
+   * @param permissions Bitmask of BLEPermission flags.
+   */
+  void setPermissions(BLEPermission permissions);
+
+  /**
+   * @brief Get the ATT permissions for this characteristic value.
+   * @return Bitmask of BLEPermission flags.
+   */
+  BLEPermission getPermissions() const;
+
+  // Descriptor management
+
+  /**
+   * @brief Create and add a new descriptor to this characteristic.
+   * @param uuid UUID of the descriptor.
+   * @param perms ATT permissions for the descriptor.
+   * @param maxLen Maximum value length in bytes.
+   * @return Handle to the newly created descriptor.
+   */
+  BLEDescriptor createDescriptor(const BLEUUID &uuid, BLEPermission perms = BLEPermission::Read, size_t maxLen = 100);
+
+  /**
+   * @brief Find a descriptor by UUID.
+   * @param uuid UUID to search for.
+   * @return Handle to the descriptor, or an invalid handle if not found.
+   */
+  BLEDescriptor getDescriptor(const BLEUUID &uuid);
+
+  /**
+   * @brief Get all descriptors attached to this characteristic.
+   * @return Vector of descriptor handles.
+   */
+  std::vector<BLEDescriptor> getDescriptors() const;
+
+  /**
+   * @brief Remove a descriptor from this characteristic.
+   * @param desc Handle to the descriptor to remove.
+   */
+  void removeDescriptor(const BLEDescriptor &desc);
+
+  // Subscription state
+
+  /**
+   * @brief Get the number of clients currently subscribed (notify or indicate).
+   * @return Subscriber count.
+   */
+  size_t getSubscribedCount() const;
+
+  /**
+   * @brief Get the connection handles of all subscribed clients.
+   * @return Vector of connection handles.
+   */
+  std::vector<uint16_t> getSubscribedConnections() const;
+
+  /**
+   * @brief Check whether a specific client is subscribed.
+   * @param connHandle Connection handle to query.
+   * @return true if the client is subscribed for notifications or indications.
+   */
+  bool isSubscribed(uint16_t connHandle) const;
+
+  /**
+   * @brief Get the UUID of this characteristic.
+   * @return The characteristic UUID.
+   */
+  BLEUUID getUUID() const;
+
+  /**
+   * @brief Get the ATT attribute handle of this characteristic.
+   * @return The 16-bit attribute handle.
+   */
   uint16_t getHandle() const;
-  void setAccessPermissions(uint16_t perm);
-  esp_gatt_char_prop_t getProperties() const;
-  void setReadProperty(bool value);
-  void setWriteProperty(bool value);
-  void setNotifyProperty(bool value);
-  void setBroadcastProperty(bool value);
-  void setIndicateProperty(bool value);
-  void setWriteNoResponseProperty(bool value);
+
+  /**
+   * @brief Get the parent service that owns this characteristic.
+   * @return Handle to the parent BLEService.
+   */
+  BLEService getService() const;
+
+  /**
+   * @brief Set the Characteristic User Description (0x2901 descriptor).
+   * @param desc Human-readable description string.
+   * @note Creates or updates the 0x2901 descriptor automatically.
+   */
+  void setDescription(const String &desc);
+
+  /**
+   * @brief Get a human-readable string representation of this characteristic.
+   * @return String containing UUID, handle, and properties.
+   */
+  String toString() const;
+
+  struct Impl;
 
 private:
+  explicit BLECharacteristic(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
   friend class BLEServer;
   friend class BLEService;
   friend class BLEDescriptor;
-  friend class BLECharacteristicMap;
-
-  /***************************************************************************
-   *                        Common private properties                        *
-   ***************************************************************************/
-
-  BLEUUID m_bleUUID;
-  BLEDescriptorMap m_descriptorMap;
-  uint16_t m_handle;
-  esp_gatt_char_prop_t m_properties;
-  BLECharacteristicCallbacks *m_pCallbacks;
-  BLEService *m_pService;
-  BLEValue m_value;
-  bool m_writeEvt = false;
-  FreeRTOS::Semaphore m_semaphoreConfEvt = FreeRTOS::Semaphore("ConfEvt");
-  FreeRTOS::Semaphore m_semaphoreSetValue = FreeRTOS::Semaphore("SetValue");
-
-  /***************************************************************************
-   *                        Bluedroid private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
-  esp_gatt_perm_t m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
-#endif
-
-  /***************************************************************************
-   *                        NimBLE private properties                        *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  portMUX_TYPE m_readMux;
-  uint8_t m_removed;
-  std::vector<std::pair<uint16_t, uint16_t>> m_subscribedVec;
-#endif
-
-  /***************************************************************************
-   *                        Common private declarations                      *
-   ***************************************************************************/
-
-  void executeCreate(BLEService *pService);
-  BLEService *getService() const;
-  void setHandle(uint16_t handle);
-
-  /***************************************************************************
-   *                        Bluedroid private declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                        NimBLE private declarations                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void setSubscribe(struct ble_gap_event *event);
-  static int handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
-#endif
-};  // BLECharacteristic
-
-/**
- * @brief Callbacks that can be associated with a %BLE characteristic to inform of events.
- *
- * When a server application creates a %BLE characteristic, we may wish to be informed when there is either
- * a read or write request to the characteristic's value. An application can register a
- * sub-classed instance of this class and will be notified when such an event happens.
- */
-class BLECharacteristicCallbacks {
-public:
-  /***************************************************************************
-   *                        Common public types                              *
-   ***************************************************************************/
-
-  typedef enum {
-    SUCCESS_INDICATE,
-    SUCCESS_NOTIFY,
-    ERROR_INDICATE_DISABLED,
-    ERROR_NOTIFY_DISABLED,
-    ERROR_GATT,
-    ERROR_NO_CLIENT,
-    ERROR_NO_SUBSCRIBER,
-    ERROR_INDICATE_TIMEOUT,
-    ERROR_INDICATE_FAILURE
-  } Status;
-
-  /***************************************************************************
-   *                        Common public declarations                       *
-   ***************************************************************************/
-
-  virtual ~BLECharacteristicCallbacks();
-  virtual void onRead(BLECharacteristic *pCharacteristic);
-  virtual void onWrite(BLECharacteristic *pCharacteristic);
-  virtual void onNotify(BLECharacteristic *pCharacteristic);
-  virtual void onStatus(BLECharacteristic *pCharacteristic, Status s, uint32_t code);
-
-  /***************************************************************************
-   *                        Bluedroid public declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  virtual void onRead(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param);
-  virtual void onWrite(BLECharacteristic *pCharacteristic, esp_ble_gatts_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                        NimBLE public declarations                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  virtual void onRead(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc);
-  virtual void onWrite(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc);
-  virtual void onSubscribe(BLECharacteristic *pCharacteristic, ble_gap_conn_desc *desc, uint16_t subValue);
-#endif
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLECHARACTERISTIC_H_ */
+#endif /* BLE_ENABLED */

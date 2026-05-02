@@ -1,125 +1,71 @@
 /*
-    Video: https://www.youtube.com/watch?v=oCMOYS71NIU
-    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleNotify.cpp
-    Ported to Arduino ESP32 by Evandro Copercini
-
-   Create a BLE server that, once we receive a connection, will send periodic notifications.
-   The service advertises itself as: 6E400001-B5A3-F393-E0A9-E50E24DCCA9E
-   Has a characteristic of: 6E400002-B5A3-F393-E0A9-E50E24DCCA9E - used for receiving data with "WRITE"
-   Has a characteristic of: 6E400003-B5A3-F393-E0A9-E50E24DCCA9E - used to send data with  "NOTIFY"
-
-   The design of creating the BLE server is:
-   1. Create a BLE Server
-   2. Create a BLE Service
-   3. Create a BLE Characteristic on the Service
-   4. Create a BLE Descriptor on the characteristic
-   5. Start the service.
-   6. Start advertising.
-
-   In this example rxValue is the data received (only accessible inside that function).
-   And txValue is the data to be sent, in this example just a byte incremented every second.
-*/
+ * BLE UART Service Example -- BLEStream API
+ *
+ * Exposes the Nordic UART Service (NUS) using BLEStream and bridges data
+ * between USB Serial and BLE using the Arduino Stream interface.
+ *
+ * Compatible with nRF Connect, nRF Toolbox UART, and BLE serial terminal apps.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
 
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
+#include <BLE.h>
 
-BLEServer *pServer = NULL;
-BLECharacteristic *pTxCharacteristic;
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
-uint8_t txValue = 0;
-
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
-
-#define SERVICE_UUID           "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"  // UART service UUID
-#define CHARACTERISTIC_UUID_RX "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID_TX "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer *pServer) {
-    deviceConnected = true;
-    Serial.println("Device connected");
-  };
-
-  void onDisconnect(BLEServer *pServer) {
-    deviceConnected = false;
-    Serial.println("Device disconnected");
-  }
-};
-
-class MyCallbacks : public BLECharacteristicCallbacks {
-  void onWrite(BLECharacteristic *pCharacteristic) {
-    String rxValue = pCharacteristic->getValue();
-
-    if (rxValue.length() > 0) {
-      Serial.println("*********");
-      Serial.print("Received Value: ");
-      for (int i = 0; i < rxValue.length(); i++) {
-        Serial.print(rxValue[i]);
-      }
-
-      Serial.println();
-      Serial.println("*********");
-    }
-  }
-};
+BLEStream bleSerial;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println();
+  Serial.println("=== BLE UART Service Example (BLEStream) ===");
 
-  // Create the BLE Device
-  BLEDevice::init("UART Service");
+  bleSerial.onConnect([](const BLEConnInfo &connInfo) {
+    Serial.println("UART client connected.");
+    Serial.println("Type in Serial Monitor to send data over BLE.");
+  });
 
-  // Create the BLE Server
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
+  bleSerial.onDisconnect([](const BLEConnInfo &connInfo, uint8_t reason) {
+    Serial.println("UART client disconnected.");
+    Serial.println("Waiting for a new connection...");
+  });
 
-  // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
+  Serial.print("Starting BLEStream... ");
+  BTStatus status = bleSerial.begin("UART Service");
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    return;
+  }
+  Serial.println("OK");
 
-  // Create a BLE Characteristic
-  pTxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_NOTIFY);
-
-  // Descriptor 2902 is not required when using NimBLE as it is automatically added based on the characteristic properties
-  pTxCharacteristic->addDescriptor(new BLE2902());
-
-  BLECharacteristic *pRxCharacteristic = pService->createCharacteristic(CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_WRITE);
-
-  pRxCharacteristic->setCallbacks(new MyCallbacks());
-
-  // Start the service
-  pService->start();
-
-  // Start advertising
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting a client connection to notify...");
+  Serial.println();
+  Serial.println("UART service ready! Waiting for connections...");
+  Serial.printf("Device: %s\n", BLE.getDeviceName().c_str());
+  Serial.println("Connect with nRF Connect or nRF Toolbox UART app.");
+  Serial.println();
 }
 
 void loop() {
-
-  if (deviceConnected) {
-    Serial.print("Notifying Value: ");
-    Serial.println(txValue);
-    pTxCharacteristic->setValue(&txValue, 1);
-    pTxCharacteristic->notify();
-    txValue++;
-    delay(1000);  // Notifying every 1 second
+  // BLE -> USB Serial
+  while (bleSerial.available()) {
+    int c = bleSerial.read();
+    if (c >= 0) {
+      Serial.write(static_cast<uint8_t>(c));
+    }
   }
 
-  // disconnecting
-  if (!deviceConnected && oldDeviceConnected) {
-    delay(500);                   // give the bluetooth stack the chance to get things ready
-    pServer->startAdvertising();  // restart advertising
-    Serial.println("Started advertising again...");
-    oldDeviceConnected = false;
+  // USB Serial -> BLE
+  if (Serial.available()) {
+    uint8_t buffer[128];
+    int bytesToRead = Serial.available();
+    if (bytesToRead > static_cast<int>(sizeof(buffer))) {
+      bytesToRead = sizeof(buffer);
+    }
+
+    size_t bytesRead = Serial.readBytes(reinterpret_cast<char *>(buffer), bytesToRead);
+    if (bytesRead > 0) {
+      bleSerial.write(buffer, bytesRead);
+    }
   }
-  // connecting
-  if (deviceConnected && !oldDeviceConnected) {
-    // do stuff here on connecting
-    oldDeviceConnected = true;
-  }
+
+  delay(5);
 }

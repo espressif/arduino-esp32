@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,205 +17,122 @@
  * limitations under the License.
  */
 
-/*
- * BLEService.h
- *
- *  Created on: Mar 25, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLESERVICE_H_
-#define COMPONENTS_CPP_UTILS_BLESERVICE_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/*****************************************************************************
- *                             Common includes                               *
- *****************************************************************************/
-
-#include "BLECharacteristic.h"
-#include "BLEServer.h"
+#include <vector>
 #include "BLEUUID.h"
-#include "BLEUtils.h"
-#include "RTOS.h"
-
-/*****************************************************************************
- *                          Bluedroid includes                               *
- *****************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gatts_api.h>
-#endif
-
-/*****************************************************************************
- *                            NimBLE includes                                *
- *****************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_gatt.h>
-#endif
-
-/*****************************************************************************
- *                          Forward declarations                             *
- *****************************************************************************/
+#include "BLEProperty.h"
+#include <memory>
 
 class BLEServer;
+class BLECharacteristic;
 
 /**
- * @brief A data mapping used to manage the set of %BLE characteristics known to the server.
- */
-class BLECharacteristicMap {
-public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
-  void setByUUID(BLECharacteristic *pCharacteristic, const char *uuid);
-  void setByUUID(BLECharacteristic *pCharacteristic, BLEUUID uuid);
-  void setByHandle(uint16_t handle, BLECharacteristic *pCharacteristic);
-  BLECharacteristic *getByUUID(const char *uuid) const;
-  BLECharacteristic *getByUUID(BLEUUID uuid) const;
-  BLECharacteristic *getByHandle(uint16_t handle) const;
-  BLECharacteristic *getFirst();
-  BLECharacteristic *getNext();
-  String toString() const;
-  int getRegisteredCharacteristicCount() const;
-  void removeCharacteristic(BLECharacteristic *characteristic);
-
-  /***************************************************************************
-   *                      Bluedroid public declarations                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                        NimBLE public declarations                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, ble_gatt_access_ctxt *ctxt, void *arg);
-#endif
-
-private:
-  /***************************************************************************
-   *                        Common private properties                        *
-   ***************************************************************************/
-
-  std::map<BLECharacteristic *, String> m_uuidMap;
-  std::map<uint16_t, BLECharacteristic *> m_handleMap;
-  std::map<BLECharacteristic *, String>::iterator m_iterator;
-};
-
-/**
- * @brief The model of a %BLE service.
+ * @brief GATT Service handle.
+ *
+ * Lightweight shared handle wrapping a BLEService::Impl.
+ * Create via server.createService(uuid).
  */
 class BLEService {
 public:
-  /***************************************************************************
-   *                            Common properties                            *
-   ***************************************************************************/
+  BLEService();
+  ~BLEService() = default;
+  BLEService(const BLEService &) = default;
+  BLEService &operator=(const BLEService &) = default;
+  BLEService(BLEService &&) = default;
+  BLEService &operator=(BLEService &&) = default;
 
-  uint8_t m_instId = 0;
+  /**
+   * @brief Check whether this handle references a valid service implementation.
+   * @return true if backed by a live Impl; false if default-constructed or moved-from.
+   */
+  explicit operator bool() const;
 
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
+  /**
+   * @brief Add a characteristic to this service.
+   *
+   * Properties and permissions are declared separately (Bluetooth Core Spec
+   * Vol 3 §3.3.1.1 and §3.2.5). Permissions are required — the mapping is
+   * fail-closed: a read or write property is only exposed if the matching
+   * permission direction is declared. Use a preset from the
+   * `BLEPermissions::` namespace for the common cases, e.g.
+   * `BLEPermissions::OpenReadWrite` or `BLEPermissions::EncryptedRead`.
+   *
+   * For notify- or indicate-only characteristics (which don't involve a GATT
+   * read/write) pass `BLEPermission::None`.
+   *
+   * @param uuid        UUID of the characteristic to create.
+   * @param properties  Characteristic properties (read, write, notify, etc.).
+   * @param permissions ATT permission flags controlling access security.
+   * @return A BLECharacteristic handle for the new characteristic.
+   */
+  BLECharacteristic createCharacteristic(const BLEUUID &uuid, BLEProperty properties, BLEPermission permissions);
 
-  void addCharacteristic(BLECharacteristic *pCharacteristic);
-  BLECharacteristic *createCharacteristic(const char *uuid, uint32_t properties);
-  BLECharacteristic *createCharacteristic(BLEUUID uuid, uint32_t properties);
-  void dump();
-  void executeCreate(BLEServer *pServer);
-  void executeDelete();
-  BLECharacteristic *getCharacteristic(const char *uuid);
-  BLECharacteristic *getCharacteristic(BLEUUID uuid);
-  BLEUUID getUUID();
-  BLEServer *getServer();
-  bool start();
-  void stop();
-  String toString();
-  uint16_t getHandle();
+  /**
+   * @brief Declare another service as included by this service.
+   *
+   * An Include Declaration (Core Spec Vol 3, Part G, §3.2) creates a GATT
+   * attribute that tells clients the included service is logically part of
+   * this service. HIDS requires this for the Battery Service.
+   *
+   * @param service The service to include.
+   */
+  void addIncludedService(const BLEService &service);
 
-  /***************************************************************************
-   *                       NimBLE public declarations                        *
-   ***************************************************************************/
+  /**
+   * @brief Look up a characteristic in this service by UUID.
+   * @param uuid UUID of the characteristic to find.
+   * @return The matching BLECharacteristic handle, or an invalid handle if not found.
+   */
+  BLECharacteristic getCharacteristic(const BLEUUID &uuid);
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void removeCharacteristic(BLECharacteristic *pCharacteristic, bool deleteChr = false);
-#endif
+  /**
+   * @brief Get all characteristics belonging to this service.
+   * @return A vector of BLECharacteristic handles.
+   */
+  std::vector<BLECharacteristic> getCharacteristics() const;
+
+  /**
+   * @brief Remove a characteristic from this service.
+   * @param chr The characteristic to remove.
+   */
+  void removeCharacteristic(const BLECharacteristic &chr);
+
+  /**
+   * @brief Check whether this service has been started.
+   * @return true after the service is registered in the GATT database
+   *         (via @ref BLEServer::start()); false otherwise.
+   */
+  bool isStarted() const;
+
+  /**
+   * @brief Get the UUID of this service.
+   * @return The service UUID.
+   */
+  BLEUUID getUUID() const;
+
+  /**
+   * @brief Get the attribute handle assigned to this service.
+   * @return The GATT attribute handle.
+   */
+  uint16_t getHandle() const;
+
+  /**
+   * @brief Get the server that owns this service.
+   * @return A BLEServer handle for the parent server.
+   */
+  BLEServer getServer() const;
+
+  struct Impl;
 
 private:
+  explicit BLEService(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
   friend class BLEServer;
-  friend class BLEServiceMap;
-  friend class BLEDescriptor;
   friend class BLECharacteristic;
-  friend class BLEDevice;
+};
 
-  /***************************************************************************
-   *                         Common private properties                       *
-   ***************************************************************************/
-
-  BLECharacteristicMap m_characteristicMap;
-  uint16_t m_handle;
-  BLECharacteristic *m_lastCreatedCharacteristic = nullptr;
-  BLEServer *m_pServer = nullptr;
-  BLEUUID m_uuid;
-  FreeRTOS::Semaphore m_semaphoreStartEvt = FreeRTOS::Semaphore("StartEvt");
-  uint16_t m_numHandles;
-
-  /***************************************************************************
-   *                       Bluedroid private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
-  FreeRTOS::Semaphore m_semaphoreDeleteEvt = FreeRTOS::Semaphore("DeleteEvt");
-  FreeRTOS::Semaphore m_semaphoreStopEvt = FreeRTOS::Semaphore("StopEvt");
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private properties                         *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  uint8_t m_removed;
-  ble_gatt_svc_def *m_pSvcDef;
-#endif
-
-  /***************************************************************************
-   *                       Common private declarations                       *
-   ***************************************************************************/
-
-  BLEService(const char *uuid, uint16_t numHandles);
-  BLEService(BLEUUID uuid, uint16_t numHandles);
-  ~BLEService();
-
-  /***************************************************************************
-   *                       Common private declarations                       *
-   ***************************************************************************/
-
-  void setHandle(uint16_t handle);
-
-  /***************************************************************************
-   *                     Bluedroid private declarations                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  BLECharacteristic *getLastCreatedCharacteristic();
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
-};  // BLEService
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLESERVICE_H_ */
+#endif /* BLE_ENABLED */

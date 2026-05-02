@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,201 +17,217 @@
  * limitations under the License.
  */
 
-/*
- * BLERemoteCharacteristic.h
- *
- *  Created on: Jul 8, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
-#define COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
+#include <vector>
 #include <functional>
-#include "BLERemoteService.h"
-#include "BLERemoteDescriptor.h"
+#include "WString.h"
+#include "BTStatus.h"
 #include "BLEUUID.h"
-#include "RTOS.h"
-#include "BLEUtils.h"
-
-/***************************************************************************
- *                           Bluedroid includes                            *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gattc_api.h>
-#endif
-
-/***************************************************************************
- *                     NimBLE includes and definitions                     *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_sm.h>
-#include <host/ble_gatt.h>
-#include <host/ble_att.h>
-
-// Bluedroid Compatibility
-#define ESP_GATT_MAX_ATTR_LEN            BLE_ATT_ATTR_MAX_LEN
-#define ESP_GATT_CHAR_PROP_BIT_READ      BLE_GATT_CHR_PROP_READ
-#define ESP_GATT_CHAR_PROP_BIT_WRITE     BLE_GATT_CHR_PROP_WRITE
-#define ESP_GATT_CHAR_PROP_BIT_WRITE_NR  BLE_GATT_CHR_PROP_WRITE_NO_RSP
-#define ESP_GATT_CHAR_PROP_BIT_BROADCAST BLE_GATT_CHR_PROP_BROADCAST
-#define ESP_GATT_CHAR_PROP_BIT_NOTIFY    BLE_GATT_CHR_PROP_NOTIFY
-#define ESP_GATT_CHAR_PROP_BIT_INDICATE  BLE_GATT_CHR_PROP_INDICATE
-
-#define ESP_GATT_AUTH_REQ_NONE           0
-#define ESP_GATT_AUTH_REQ_NO_MITM        1
-#define ESP_GATT_AUTH_REQ_MITM           2
-#define ESP_GATT_AUTH_REQ_SIGNED_NO_MITM 3
-#define ESP_GATT_AUTH_REQ_SIGNED_MITM    4
-
-#endif
-
-/***************************************************************************
- *                             Common types                                *
- ***************************************************************************/
-
-typedef std::function<void(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)> notify_callback;
-
-/***************************************************************************
- *                             NimBLE types                                *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-typedef struct {
-  const BLEUUID *uuid;
-  void *task_data;
-} desc_filter_t;
-#endif
-
-/***************************************************************************
- *                           Forward declarations                          *
- ***************************************************************************/
+#include <memory>
 
 class BLERemoteService;
 class BLERemoteDescriptor;
 
 /**
- * @brief A model of a remote %BLE characteristic.
+ * @brief Remote GATT characteristic discovered on a peer device.
+ *
+ * Shared handle. Obtained via BLERemoteService::getCharacteristic().
  */
 class BLERemoteCharacteristic {
 public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
+  BLERemoteCharacteristic();
+  ~BLERemoteCharacteristic() = default;
+  BLERemoteCharacteristic(const BLERemoteCharacteristic &) = default;
+  BLERemoteCharacteristic &operator=(const BLERemoteCharacteristic &) = default;
+  BLERemoteCharacteristic(BLERemoteCharacteristic &&) = default;
+  BLERemoteCharacteristic &operator=(BLERemoteCharacteristic &&) = default;
 
-  ~BLERemoteCharacteristic();
-  bool canBroadcast();
-  bool canIndicate();
-  bool canNotify();
-  bool canRead();
-  bool canWrite();
-  bool canWriteNoResponse();
-  BLERemoteDescriptor *getDescriptor(BLEUUID uuid);
-  std::map<std::string, BLERemoteDescriptor *> *getDescriptors();
-  BLERemoteService *getRemoteService();
-  uint16_t getHandle();
-  BLEUUID getUUID();
-  String readValue();
-  uint8_t readUInt8();
-  uint16_t readUInt16();
-  uint32_t readUInt32();
-  float readFloat();
-  void registerForNotify(notify_callback _callback, bool notifications = true, bool descriptorRequiresRegistration = true);
-  bool writeValue(uint8_t *data, size_t length, bool response = false);
-  bool writeValue(String newValue, bool response = false);
-  bool writeValue(uint8_t newValue, bool response = false);
-  String toString();
-  uint8_t *readRawData();
-  void setAuth(uint8_t auth);
+  /**
+   * @brief Check whether this handle refers to a valid remote characteristic.
+   * @return True if the underlying characteristic data is present, false otherwise.
+   */
+  explicit operator bool() const;
 
-  /***************************************************************************
-   *                       NimBLE public declarations                        *
-   ***************************************************************************/
+  /**
+   * @brief Read the characteristic value from the remote device.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return The value as a String, or an empty String on failure/timeout.
+   * @note The call blocks the current task until the GATT read completes or
+   *       @p timeoutMs elapses. If encryption is being negotiated, the
+   *       implementation may wait for the security procedure before the read.
+   */
+  String readValue(uint32_t timeoutMs = 3000);
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  bool subscribe(bool notifications = true, notify_callback notifyCallback = nullptr, bool response = true);
-  bool unsubscribe(bool response = true);
-#endif
+  /**
+   * @brief Read the characteristic value and interpret the first byte as uint8_t.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return The first byte of the value, or 0 on failure.
+   */
+  uint8_t readUInt8(uint32_t timeoutMs = 3000);
+
+  /**
+   * @brief Read the characteristic value and interpret the first two bytes as uint16_t.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return The little-endian 16-bit value, or 0 on failure.
+   */
+  uint16_t readUInt16(uint32_t timeoutMs = 3000);
+
+  /**
+   * @brief Read the characteristic value and interpret the first four bytes as uint32_t.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return The little-endian 32-bit value, or 0 on failure.
+   */
+  uint32_t readUInt32(uint32_t timeoutMs = 3000);
+
+  /**
+   * @brief Read the characteristic value and interpret the first four bytes as a float.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return The float value, or 0.0f on failure.
+   */
+  float readFloat(uint32_t timeoutMs = 3000);
+
+  /**
+   * @brief Read the characteristic value into a caller-supplied buffer.
+   * @param buf       Destination buffer.
+   * @param bufLen    Size of @p buf in bytes.
+   * @param timeoutMs Maximum time in milliseconds to wait for a response.
+   * @return Number of bytes copied into @p buf (may be less than the full value if @p bufLen is too small).
+   */
+  size_t readValue(uint8_t *buf, size_t bufLen, uint32_t timeoutMs = 3000);
+
+  /**
+   * @brief Get a pointer to the most recently read raw value without issuing a new read.
+   * @param len If non-null, receives the length of the data in bytes.
+   * @return Pointer to the internal buffer, or nullptr if no value has been read yet.
+   * @note The pointer is invalidated by any subsequent read or write on this characteristic.
+   */
+  const uint8_t *readRawData(size_t *len = nullptr);
+
+  /**
+   * @brief Write a value to the remote characteristic.
+   * @param data         Pointer to the data to write.
+   * @param len          Number of bytes to write.
+   * @param withResponse If true, use Write Request (ATT); if false, use Write Command (no ACK).
+   * @return BTStatus indicating success or failure.
+   * @note For ATT payloads that exceed one connection event or require prepared
+   *       writes, the stack selects long-write semantics; @p withResponse
+   *       should be true. Blocking behavior matches @ref readValue.
+   */
+  BTStatus writeValue(const uint8_t *data, size_t len, bool withResponse = true);
+  BTStatus writeValue(const String &value, bool withResponse = true);
+  BTStatus writeValue(uint8_t value, bool withResponse = true);
+
+  /**
+   * @brief Check if the characteristic supports reads.
+   * @return True if the Read property is set.
+   */
+  bool canRead() const;
+
+  /**
+   * @brief Check if the characteristic supports writes with response.
+   * @return True if the Write property is set.
+   */
+  bool canWrite() const;
+
+  /**
+   * @brief Check if the characteristic supports writes without response.
+   * @return True if the Write Without Response property is set.
+   */
+  bool canWriteNoResponse() const;
+
+  /**
+   * @brief Check if the characteristic supports notifications.
+   * @return True if the Notify property is set.
+   */
+  bool canNotify() const;
+
+  /**
+   * @brief Check if the characteristic supports indications.
+   * @return True if the Indicate property is set.
+   */
+  bool canIndicate() const;
+
+  /**
+   * @brief Check if the characteristic supports broadcast.
+   * @return True if the Broadcast property is set.
+   */
+  bool canBroadcast() const;
+
+  /**
+   * @brief Callback type for characteristic notifications and indications.
+   * @param chr          The characteristic that received the notification.
+   * @param data         Pointer to the notification payload.
+   * @param length       Length of the payload in bytes.
+   * @param isNotification True for a notification, false for an indication.
+   */
+  using NotifyCallback = std::function<void(BLERemoteCharacteristic chr, const uint8_t *, size_t, bool)>;
+
+  /**
+   * @brief Subscribe to notifications or indications from this characteristic.
+   * @param notifications If true, subscribe to notifications; if false, subscribe to indications.
+   * @param callback      Optional callback invoked on each notification/indication.
+   * @return BTStatus indicating success or failure.
+   * @note Writes to the Client Characteristic Configuration Descriptor (CCCD).
+   */
+  BTStatus subscribe(bool notifications = true, NotifyCallback callback = nullptr);
+
+  /**
+   * @brief Unsubscribe from notifications and indications.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus unsubscribe();
+
+  /**
+   * @brief Discover and return a descriptor by UUID.
+   * @param uuid UUID of the descriptor to find.
+   * @return The matching descriptor, or an invalid handle if not found.
+   * @note Triggers GATT descriptor discovery on first call.
+   */
+  BLERemoteDescriptor getDescriptor(const BLEUUID &uuid);
+
+  /**
+   * @brief Return all discovered descriptors of this characteristic.
+   * @return Vector of descriptor handles (may be empty).
+   * @note Triggers GATT descriptor discovery on first call.
+   */
+  std::vector<BLERemoteDescriptor> getDescriptors() const;
+
+  /**
+   * @brief Get the parent service of this characteristic.
+   * @return The parent BLERemoteService handle.
+   */
+  BLERemoteService getRemoteService() const;
+
+  /**
+   * @brief Get the UUID of this characteristic.
+   * @return The characteristic UUID.
+   */
+  BLEUUID getUUID() const;
+
+  /**
+   * @brief Get the attribute handle of this characteristic.
+   * @return The GATT attribute handle.
+   */
+  uint16_t getHandle() const;
+
+  /**
+   * @brief Get a human-readable representation of this characteristic.
+   * @return A String describing the characteristic UUID, handle, and properties.
+   */
+  String toString() const;
+
+  struct Impl;
 
 private:
+  explicit BLERemoteCharacteristic(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
   friend class BLEClient;
   friend class BLERemoteService;
   friend class BLERemoteDescriptor;
+};
 
-  /***************************************************************************
-   *                       Common private properties                        *
-   ***************************************************************************/
-
-  BLEUUID m_uuid;
-  uint8_t m_charProp;
-  uint8_t m_auth;
-  uint16_t m_handle;
-  BLERemoteService *m_pRemoteService;
-  FreeRTOS::Semaphore m_semaphoreReadCharEvt = FreeRTOS::Semaphore("ReadCharEvt");
-  FreeRTOS::Semaphore m_semaphoreRegForNotifyEvt = FreeRTOS::Semaphore("RegForNotifyEvt");
-  FreeRTOS::Semaphore m_semaphoreWriteCharEvt = FreeRTOS::Semaphore("WriteCharEvt");
-  String m_value;
-  uint8_t *m_rawData;
-  notify_callback m_notifyCallback;
-
-  // We maintain a map of descriptors owned by this characteristic keyed by a string representation of the UUID.
-  std::map<std::string, BLERemoteDescriptor *> m_descriptorMap;
-  bool m_descriptorsRetrieved;  // Flag to track if descriptor retrieval has been attempted
-
-  /***************************************************************************
-   *                       NimBLE private properties                        *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  uint16_t m_defHandle;
-#endif
-
-  /***************************************************************************
-   *                       Common private declarations                       *
-   ***************************************************************************/
-
-  void removeDescriptors();
-
-  /***************************************************************************
-   *                       Bluedroid private declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  BLERemoteCharacteristic(uint16_t handle, BLEUUID uuid, uint8_t charProp, BLERemoteService *pRemoteService);
-  void retrieveDescriptors();
-  void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *evtParam);
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private declarations                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  BLERemoteCharacteristic(BLERemoteService *pRemoteservice, const struct ble_gatt_chr *chr);
-  bool setNotify(uint16_t val, notify_callback notifyCallback = nullptr, bool response = true);
-  bool retrieveDescriptors(const BLEUUID *uuid_filter = nullptr);
-  static int onReadCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
-  static int onWriteCB(uint16_t conn_handle, const struct ble_gatt_error *error, struct ble_gatt_attr *attr, void *arg);
-  static int descriptorDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error, uint16_t chr_val_handle, const struct ble_gatt_dsc *dsc, void *arg);
-#endif
-};  // BLERemoteCharacteristic
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLEREMOTECHARACTERISTIC_H_ */
+#endif /* BLE_ENABLED */

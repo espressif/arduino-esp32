@@ -1,14 +1,12 @@
 /*
  * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
- * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
- * esp-nimble-cpp, NimBLE-Arduino contributors.
- * Copyright 2017 Neil Kolban
+ * Copyright 2018 chegewara
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,88 +15,171 @@
  * limitations under the License.
  */
 
-/*
- * BLEHIDDevice.h
- *
- *  Created on: Jan 03, 2018
- *      Author: chegewara
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef _BLEHIDDEVICE_H_
-#define _BLEHIDDEVICE_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
+#include "BLEServer.h"
 #include "BLECharacteristic.h"
-#include "BLEService.h"
 #include "BLEDescriptor.h"
-#include "BLE2902.h"
 #include "HIDTypes.h"
 
-#define GENERIC_HID         0x03C0
-#define HID_KEYBOARD        0x03C1
-#define HID_MOUSE           0x03C2
-#define HID_JOYSTICK        0x03C3
-#define HID_GAMEPAD         0x03C4
-#define HID_TABLET          0x03C5
-#define HID_CARD_READER     0x03C6
-#define HID_DIGITAL_PEN     0x03C7
-#define HID_BARCODE         0x03C8
-#define HID_BRAILLE_DISPLAY 0x03C9
-
+/**
+ * @brief HID-over-GATT (HOGP) device helper.
+ *
+ * Creates and manages the standard GATT services for a BLE HID device:
+ *   - Device Information Service (0x180A)
+ *   - HID Service (0x1812)
+ *   - Battery Service (0x180F)
+ *
+ * Usage:
+ * @code
+ * BLEServer server = BLE.createServer();
+ * BLEHIDDevice hid(server);
+ * hid.manufacturer("MyCompany");
+ * hid.pnp(0x02, 0x1234, 0x5678, 0x0100);
+ * hid.hidInfo(0x00, 0x01);
+ * hid.reportMap(myDescriptor, sizeof(myDescriptor));
+ * server.start();
+ * @endcode
+ */
 class BLEHIDDevice {
 public:
-  BLEHIDDevice(BLEServer *);
-  virtual ~BLEHIDDevice();
+  /**
+   * @brief Construct a HID device and create all required GATT services.
+   * @param server The BLE server to host the HID, Device Information, and Battery services on.
+   */
+  explicit BLEHIDDevice(BLEServer server);
+  ~BLEHIDDevice() = default;
 
-  void reportMap(uint8_t *map, uint16_t);
-  void startServices();
+  /**
+   * @brief Check whether this HID device was constructed with a valid server.
+   * @return true if the underlying server handle is valid.
+   */
+  explicit operator bool() const {
+    return static_cast<bool>(_server);
+  }
 
-  BLEService *deviceInfo();
-  BLEService *hidService();
-  BLEService *batteryService();
+  /**
+   * @brief Set the HID Report Map (report descriptor).
+   * @param map Pointer to the HID report descriptor byte array.
+   * @param size Length of the report descriptor in bytes.
+   */
+  void reportMap(const uint8_t *map, uint16_t size);
 
-  BLECharacteristic *manufacturer();
-  void manufacturer(String name);
-  //BLECharacteristic* 	pnp();
-  void pnp(uint8_t sig, uint16_t vid, uint16_t pid, uint16_t version);
-  //BLECharacteristic*	hidInfo();
+  /**
+   * @brief Get the Device Information Service (UUID 0x180A).
+   * @return Handle to the Device Information Service.
+   */
+  BLEService deviceInfoService();
+
+  /**
+   * @brief Get the HID Service (UUID 0x1812).
+   * @return Handle to the HID Service.
+   */
+  BLEService hidService();
+
+  /**
+   * @brief Get the Battery Service (UUID 0x180F).
+   * @return Handle to the Battery Service.
+   */
+  BLEService batteryService();
+
+  /**
+   * @brief Get the Manufacturer Name characteristic.
+   * @return Handle to the Manufacturer Name String characteristic.
+   */
+  BLECharacteristic manufacturer();
+
+  /**
+   * @brief Set the Manufacturer Name String value.
+   * @param name Manufacturer name to write into the Device Information Service.
+   */
+  void manufacturer(const String &name);
+
+  /**
+   * @brief Set the PnP ID characteristic of the Device Information Service.
+   * @param sig Vendor ID source (0x01 = Bluetooth SIG, 0x02 = USB Implementers Forum).
+   * @param vendorId Vendor ID assigned by the source indicated by @p sig.
+   * @param productId Product ID assigned by the vendor.
+   * @param version Product version (BCD, e.g. 0x0100 = 1.0.0).
+   */
+  void pnp(uint8_t sig, uint16_t vendorId, uint16_t productId, uint16_t version);
+
+  /**
+   * @brief Set the HID Information characteristic.
+   * @param country HID country code (0x00 = not localized).
+   * @param flags HID information flags (bit 0: RemoteWake, bit 1: NormallyConnectable).
+   */
   void hidInfo(uint8_t country, uint8_t flags);
-  //BLECharacteristic* 	batteryLevel();
+
+  /**
+   * @brief Update the battery level characteristic and notify subscribed clients.
+   * @param level Battery percentage (0–100).
+   */
   void setBatteryLevel(uint8_t level);
 
-  //BLECharacteristic* 	reportMap();
-  BLECharacteristic *hidControl();
-  BLECharacteristic *inputReport(uint8_t reportID);
-  BLECharacteristic *outputReport(uint8_t reportID);
-  BLECharacteristic *featureReport(uint8_t reportID);
-  BLECharacteristic *protocolMode();
-  BLECharacteristic *bootInput();
-  BLECharacteristic *bootOutput();
+  /**
+   * @brief Get the HID Control Point characteristic.
+   * @return Handle to the HID Control Point characteristic (Suspend / Exit Suspend).
+   */
+  BLECharacteristic hidControl();
+
+  /**
+   * @brief Get the Protocol Mode characteristic.
+   * @return Handle to the Protocol Mode characteristic (Boot / Report protocol).
+   */
+  BLECharacteristic protocolMode();
+
+  /**
+   * @brief Create and return an Input Report characteristic.
+   * @param reportId HID Report ID to assign via the Report Reference descriptor.
+   * @return Handle to the new Input Report characteristic.
+   */
+  BLECharacteristic inputReport(uint8_t reportId);
+
+  /**
+   * @brief Create and return an Output Report characteristic.
+   * @param reportId HID Report ID to assign via the Report Reference descriptor.
+   * @return Handle to the new Output Report characteristic.
+   */
+  BLECharacteristic outputReport(uint8_t reportId);
+
+  /**
+   * @brief Create and return a Feature Report characteristic.
+   * @param reportId HID Report ID to assign via the Report Reference descriptor.
+   * @return Handle to the new Feature Report characteristic.
+   */
+  BLECharacteristic featureReport(uint8_t reportId);
+
+  /**
+   * @brief Get the Boot Keyboard Input Report characteristic.
+   * @return Handle to the Boot Keyboard Input Report characteristic.
+   */
+  BLECharacteristic bootInput();
+
+  /**
+   * @brief Get the Boot Keyboard Output Report characteristic.
+   * @return Handle to the Boot Keyboard Output Report characteristic.
+   */
+  BLECharacteristic bootOutput();
 
 private:
-  BLEServer *m_server;
-  BLEService *m_deviceInfoService;   //0x180a
-  BLEService *m_hidService;          //0x1812
-  BLEService *m_batteryService = 0;  //0x180f
+  BLEServer _server;
+  BLEService _devInfoSvc;
+  BLEService _hidSvc;
+  BLEService _batterySvc;
 
-  BLECharacteristic *m_manufacturerCharacteristic;  //0x2a29
-  BLECharacteristic *m_pnpCharacteristic;           //0x2a50
-  BLECharacteristic *m_hidInfoCharacteristic;       //0x2a4a
-  BLECharacteristic *m_reportMapCharacteristic;     //0x2a4b
-  BLECharacteristic *m_hidControlCharacteristic;    //0x2a4c
-  BLECharacteristic *m_protocolModeCharacteristic;  //0x2a4e
-  BLECharacteristic *m_batteryLevelCharacteristic;  //0x2a19
+  BLECharacteristic _mfgChar;
+  BLECharacteristic _pnpChar;
+  BLECharacteristic _hidInfoChar;
+  BLECharacteristic _reportMapChar;
+  BLECharacteristic _hidControlChar;
+  BLECharacteristic _protocolModeChar;
+  BLECharacteristic _batteryLevelChar;
+  BLECharacteristic _bootInputChar;
+  BLECharacteristic _bootOutputChar;
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* _BLEHIDDEVICE_H_ */
+#endif /* BLE_ENABLED */

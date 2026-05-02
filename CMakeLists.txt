@@ -24,6 +24,8 @@ endif()
 
 set(CORE_SRCS
   cores/esp32/base64.cpp
+  cores/esp32/BTAddress.cpp
+  cores/esp32/BTStatus.cpp
   cores/esp32/cbuf.cpp
   cores/esp32/ColorFormat.c
   cores/esp32/chip-debug-report.cpp
@@ -133,11 +135,60 @@ set(ARDUINO_LIBRARY_ArduinoOTA_SRCS libraries/ArduinoOTA/src/ArduinoOTA.cpp)
 
 set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 
+set(ARDUINO_LIBRARY_BLE_SRCS
+  libraries/BLE/src/BLE.cpp
+  libraries/BLE/src/BLEAdvertisedDevice.cpp
+  libraries/BLE/src/BLEAdvertisementData.cpp
+  libraries/BLE/src/BLEAdvertising.cpp
+  libraries/BLE/src/BLEAdvTypes.cpp
+  libraries/BLE/src/BLEBeacon.cpp
+  libraries/BLE/src/BLECharacteristic.cpp
+  libraries/BLE/src/BLEClient.cpp
+  libraries/BLE/src/BLEConnInfo.cpp
+  libraries/BLE/src/BLEDescriptor.cpp
+  libraries/BLE/src/BLEEddystone.cpp
+  libraries/BLE/src/BLEHIDDevice.cpp
+  libraries/BLE/src/BLEL2CAP.cpp
+  libraries/BLE/src/BLERemoteCharacteristic.cpp
+  libraries/BLE/src/BLERemoteDescriptor.cpp
+  libraries/BLE/src/BLERemoteService.cpp
+  libraries/BLE/src/BLEScan.cpp
+  libraries/BLE/src/BLESecurity.cpp
+  libraries/BLE/src/BLEServer.cpp
+  libraries/BLE/src/BLEService.cpp
+  libraries/BLE/src/BLEStream.cpp
+  libraries/BLE/src/BLEUUID.cpp
+  libraries/BLE/src/impl/BLECharacteristicValidation.cpp
+  libraries/BLE/src/impl/BLESync.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidAdvertising.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidCharacteristic.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidClient.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidCore.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidDescriptor.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidRemoteCharacteristic.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidRemoteDescriptor.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidRemoteService.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidScan.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidSecurity.cpp
+  libraries/BLE/src/impl/bluedroid/BluedroidServer.cpp
+  libraries/BLE/src/impl/nimble/NimBLEAdvertisedDevice.cpp
+  libraries/BLE/src/impl/nimble/NimBLEAdvertisementData.cpp
+  libraries/BLE/src/impl/nimble/NimBLEAdvertising.cpp
+  libraries/BLE/src/impl/nimble/NimBLECharacteristic.cpp
+  libraries/BLE/src/impl/nimble/NimBLEClient.cpp
+  libraries/BLE/src/impl/nimble/NimBLECore.cpp
+  libraries/BLE/src/impl/nimble/NimBLEDescriptor.cpp
+  libraries/BLE/src/impl/nimble/NimBLEL2CAP.cpp
+  libraries/BLE/src/impl/nimble/NimBLERemoteCharacteristic.cpp
+  libraries/BLE/src/impl/nimble/NimBLERemoteDescriptor.cpp
+  libraries/BLE/src/impl/nimble/NimBLERemoteService.cpp
+  libraries/BLE/src/impl/nimble/NimBLEScan.cpp
+  libraries/BLE/src/impl/nimble/NimBLESecurity.cpp
+  libraries/BLE/src/impl/nimble/NimBLEServer.cpp
+)
+
 set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
-  libraries/BluetoothSerial/src/BluetoothSerial.cpp
-  libraries/BluetoothSerial/src/BTAddress.cpp
-  libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
-  libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
+  libraries/BluetoothSerial/src/BluetoothSerial.cpp)
 
 set(ARDUINO_LIBRARY_Console_SRCS libraries/Console/src/Console.cpp)
 set(ARDUINO_LIBRARY_Console_REQUIRES console)
@@ -343,39 +394,6 @@ set(ARDUINO_LIBRARY_Zigbee_SRCS
   libraries/Zigbee/src/ep/ZigbeePowerOutlet.cpp
   libraries/Zigbee/src/ep/ZigbeeFanControl.cpp
   libraries/Zigbee/src/ep/ZigbeeMultistate.cpp
-  )
-
-set(ARDUINO_LIBRARY_BLE_SRCS
-  libraries/BLE/src/BLE2901.cpp
-  libraries/BLE/src/BLE2902.cpp
-  libraries/BLE/src/BLE2904.cpp
-  libraries/BLE/src/BLEAddress.cpp
-  libraries/BLE/src/BLEAdvertisedDevice.cpp
-  libraries/BLE/src/BLEAdvertising.cpp
-  libraries/BLE/src/BLEBeacon.cpp
-  libraries/BLE/src/BLECharacteristic.cpp
-  libraries/BLE/src/BLECharacteristicMap.cpp
-  libraries/BLE/src/BLEClient.cpp
-  libraries/BLE/src/BLEDescriptor.cpp
-  libraries/BLE/src/BLEDescriptorMap.cpp
-  libraries/BLE/src/BLEDevice.cpp
-  libraries/BLE/src/BLEEddystoneTLM.cpp
-  libraries/BLE/src/BLEEddystoneURL.cpp
-  libraries/BLE/src/BLEExceptions.cpp
-  libraries/BLE/src/BLEHIDDevice.cpp
-  libraries/BLE/src/BLERemoteCharacteristic.cpp
-  libraries/BLE/src/BLERemoteDescriptor.cpp
-  libraries/BLE/src/BLERemoteService.cpp
-  libraries/BLE/src/BLEScan.cpp
-  libraries/BLE/src/BLESecurity.cpp
-  libraries/BLE/src/BLEServer.cpp
-  libraries/BLE/src/BLEService.cpp
-  libraries/BLE/src/BLEServiceMap.cpp
-  libraries/BLE/src/BLEUtils.cpp
-  libraries/BLE/src/BLEUUID.cpp
-  libraries/BLE/src/BLEValue.cpp
-  libraries/BLE/src/FreeRTOS.cpp
-  libraries/BLE/src/GeneralUtils.cpp
   )
 
 set(ARDUINO_LIBRARIES_SRCS)

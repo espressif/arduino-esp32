@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,136 +17,101 @@
  * limitations under the License.
  */
 
-/*
- * BLERemoteService.h
- *
- *  Created on: Jul 8, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_
-#define COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <map>
-
-#include "BLEClient.h"
-#include "BLERemoteCharacteristic.h"
+#include <vector>
+#include "WString.h"
+#include "BTStatus.h"
 #include "BLEUUID.h"
-#include "RTOS.h"
-#include "BLEUtils.h"
-
-/***************************************************************************
- *                           NimBLE includes                               *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_gatt.h>
-#endif
-
-/***************************************************************************
- *                         Forward declarations                            *
- ***************************************************************************/
+#include <memory>
 
 class BLEClient;
 class BLERemoteCharacteristic;
 
 /**
- * @brief A model of a remote %BLE service.
+ * @brief Remote GATT service discovered on a peer device.
+ *
+ * Shared handle. Obtained via BLEClient::getService() or BLEClient::getServices().
  */
 class BLERemoteService {
 public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
+  BLERemoteService();
+  ~BLERemoteService() = default;
+  BLERemoteService(const BLERemoteService &) = default;
+  BLERemoteService &operator=(const BLERemoteService &) = default;
+  BLERemoteService(BLERemoteService &&) = default;
+  BLERemoteService &operator=(BLERemoteService &&) = default;
 
-  virtual ~BLERemoteService();
-  BLERemoteCharacteristic *getCharacteristic(const char *uuid);  // Get the specified characteristic reference.
-  BLERemoteCharacteristic *getCharacteristic(BLEUUID uuid);      // Get the specified characteristic reference.
-  BLERemoteCharacteristic *getCharacteristic(uint16_t uuid);     // Get the specified characteristic reference.
-  std::map<std::string, BLERemoteCharacteristic *> *getCharacteristics();
-  std::map<uint16_t, BLERemoteCharacteristic *> *getCharacteristicsByHandle();  // Get the characteristics map.
-  void getCharacteristics(std::map<uint16_t, BLERemoteCharacteristic *> **pCharacteristicMap);
-  void retrieveCharacteristics();
+  /**
+   * @brief Check whether this handle refers to a valid remote service.
+   * @return True if the underlying service data is present, false otherwise.
+   */
+  explicit operator bool() const;
 
-  BLEClient *getClient(void);                               // Get a reference to the client associated with this service.
-  uint16_t getHandle();                                     // Get the handle of this service.
-  BLEUUID getUUID(void);                                    // Get the UUID of this service.
-  String getValue(BLEUUID characteristicUuid);              // Get the value of a characteristic.
-  void setValue(BLEUUID characteristicUuid, String value);  // Set the value of a characteristic.
-  String toString(void);
+  /**
+   * @brief Discover and return a characteristic by UUID.
+   * @param uuid UUID of the characteristic to find.
+   * @return The matching characteristic, or an invalid handle if not found.
+   * @note Triggers GATT characteristic discovery on first call.
+   */
+  BLERemoteCharacteristic getCharacteristic(const BLEUUID &uuid);
+
+  /**
+   * @brief Return all discovered characteristics of this service.
+   * @return Vector of characteristic handles (may be empty).
+   * @note Triggers GATT characteristic discovery on first call.
+   */
+  std::vector<BLERemoteCharacteristic> getCharacteristics() const;
+
+  /**
+   * @brief Get the client that owns this service.
+   * @return The parent BLEClient handle.
+   */
+  BLEClient getClient() const;
+
+  /**
+   * @brief Get the UUID of this service.
+   * @return The service UUID.
+   */
+  BLEUUID getUUID() const;
+
+  /**
+   * @brief Get the attribute handle of this service.
+   * @return The GATT attribute handle.
+   */
+  uint16_t getHandle() const;
+
+  /**
+   * @brief Shorthand: read a characteristic value by UUID.
+   * @param charUUID UUID of the characteristic to read.
+   * @return The characteristic value as a String, or an empty String on failure.
+   */
+  String getValue(const BLEUUID &charUUID);
+
+  /**
+   * @brief Shorthand: write a characteristic value by UUID.
+   * @param charUUID UUID of the characteristic to write.
+   * @param value    The value to write.
+   * @return BTStatus indicating success or failure.
+   */
+  BTStatus setValue(const BLEUUID &charUUID, const String &value);
+
+  /**
+   * @brief Get a human-readable representation of this service.
+   * @return A String describing the service UUID and handle.
+   */
+  String toString() const;
+
+  struct Impl;
 
 private:
+  explicit BLERemoteService(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
   friend class BLEClient;
   friend class BLERemoteCharacteristic;
+};
 
-  /***************************************************************************
-   *                       Common private properties                         *
-   ***************************************************************************/
-
-  // We maintain a map of characteristics owned by this service keyed by a string representation of the UUID.
-  std::map<std::string, BLERemoteCharacteristic *> m_characteristicMap;
-
-  // We maintain a map of characteristics owned by this service keyed by a handle.
-  std::map<uint16_t, BLERemoteCharacteristic *> m_characteristicMapByHandle;
-
-  bool m_haveCharacteristics;  // Have we previously obtained the characteristics.
-  BLEClient *m_pClient;
-  FreeRTOS::Semaphore m_semaphoreGetCharEvt = FreeRTOS::Semaphore("GetCharEvt");
-  BLEUUID m_uuid;          // The UUID of this service.
-  uint16_t m_startHandle;  // The starting handle of this service.
-  uint16_t m_endHandle;    // The ending handle of this service.
-
-  /***************************************************************************
-   *                       Bluedroid private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  esp_gatt_id_t m_srvcId;
-#endif
-
-  /***************************************************************************
-   *                       Common private declarations                       *
-   ***************************************************************************/
-
-  uint16_t getStartHandle();  // Get the start handle for this service.
-  uint16_t getEndHandle();    // Get the end handle for this service.
-  void removeCharacteristics();
-
-  /***************************************************************************
-   *                       Bluedroid private declarations                    *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  // Private constructor ... never meant to be created by a user application.
-  BLERemoteService(esp_gatt_id_t srvcId, BLEClient *pClient, uint16_t startHandle, uint16_t endHandle);
-  esp_gatt_id_t *getSrvcId();
-  void gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *evtParam);
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private declarations                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  BLERemoteService(BLEClient *pClient, const struct ble_gatt_svc *service);
-  static int characteristicDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg);
-#endif
-};  // BLERemoteService
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLEREMOTESERVICE_H_ */
+#endif /* BLE_ENABLED */

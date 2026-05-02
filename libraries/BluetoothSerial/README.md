@@ -1,12 +1,14 @@
 ## Bluetooth Serial Library
 
-A simple Serial compatible library using ESP32 classical Bluetooth Serial Port Profile (SPP)
+A simple Serial-compatible library using ESP32 Classic Bluetooth Serial Port Profile (SPP).
 
-Note: Since version 3.0.0 this library does not support legacy pairing (using fixed PIN consisting of 4 digits).
+> **Note:** The `BluetoothSerial` class is marked `[[deprecated]]` and will not be supported by default in version 4.0.0.
+>
+> Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
 
 ### How to use it?
 
-There are 3 basic use cases: phone, other ESP32 or any MCU with a Bluetooth serial module
+There are 3 basic use cases: phone, other ESP32, or any MCU with a Bluetooth serial module.
 
 #### Phone
 
@@ -15,64 +17,69 @@ There are 3 basic use cases: phone, other ESP32 or any MCU with a Bluetooth seri
     - For [Android](https://play.google.com/store/apps/details?id=de.kai_morich.serial_bluetooth_terminal)
     - For [iOS](https://itunes.apple.com/us/app/hm10-bluetooth-serial-lite/id1030454675)
 
-- Flash an example sketch to your ESP32
+- Flash the [SerialBridge](examples/SerialBridge/SerialBridge.ino) example to your ESP32
 
-- Scan and pair the device to your smartphone
+- Scan and pair the device from your smartphone's Bluetooth settings
 
 - Open the Bluetooth terminal app and connect
 
 - Enjoy
 
-#### ESP32
+#### ESP32 to ESP32
 
-You can flash one of the ESP32 with the example [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) (the Master) and another ESP32 with [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino) (the Slave).
-Those examples are preset to work out-of-the-box but they should be scalable to connect multiple Slaves to the Master.
+Flash one ESP32 with [SerialBridge](examples/SerialBridge/SerialBridge.ino) (the acceptor/slave) and
+another ESP32 with [MasterConnect](examples/MasterConnect/MasterConnect.ino) (the initiator/master).
+Those examples are preset to work out-of-the-box.
 
 #### 3rd party Serial Bluetooth module
 
-Using a 3rd party Serial Bluetooth module will require to study the documentation of the particular module in order to make it work, however, one side can utilize the mentioned [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) (the Master) or [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino) (the Slave).
+Using a 3rd party Serial Bluetooth module requires studying the module's documentation.
+One side can use [SerialBridge](examples/SerialBridge/SerialBridge.ino) (acceptor) or
+[MasterConnect](examples/MasterConnect/MasterConnect.ino) (initiator) as a starting point.
 
 ### Pairing options
 
-There are two easy options and one difficult.
-
-The easy options can be used as usual. These offer pairing with and without Secure Simple Pairing (SSP).
-
-The difficult option offers legacy pairing (using fixed PIN) however this must be compiled with Arduino as an IDF component with disabled sdkconfig option `CONFIG_BT_SSP_ENABLED`.
-
 #### Without SSP
 
-This method will authenticate automatically any attempt to pair and should not be used if security is a concern! This option is used for the examples [`SerialToSerialBTM`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBTM/SerialToSerialBTM.ino) and [`SerialToSerialBT`](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT/SerialToSerialBT.ino).
+SSP is disabled by default. The device will accept any pairing attempt automatically.
+This method should not be used if security is a concern.
+See the [SerialBridge](examples/SerialBridge/SerialBridge.ino) example.
 
 ### With SSP
 
-The usage of SSP provides a secure connection. This option is demonstrated in the example `SerialToSerialBT_SSP``](https://github.com/espressif/arduino-esp32/blob/master/libraries/BluetoothSerial/examples/SerialToSerialBT_SSP/SerialToSerialBT_SSP.ino)
+Secure Simple Pairing (SSP) provides a secure connection. Enable it before calling `begin()`:
 
-The Secure Simple Pairing is enabled by calling method `enableSSP` which has two variants - one is backward compatible without parameter `enableSSP()` and second with parameters `enableSSP(bool inputCapability, bool outputCapability)`. Similarly, the SSP can be disabled by calling `disableSSP()`.
+```cpp
+SerialBT.enableSSP(bool inputCapability, bool outputCapability);
+```
 
-Both options must be called before `begin()` or if it is called after `begin()` the driver needs to be restarted (call `end()` followed by `begin()`) in order to take in effect enabling or disabling the SSP.
+Call `disableSSP()` to turn it off. If called after `begin()`, restart the driver
+(`end()` followed by `begin()`) for the change to take effect.
+See the [SSPPairing](examples/SSPPairing/SSPPairing.ino) example.
 
 #### The parameters define the method of authentication:
 
-**inputCapability** - Defines if ESP32 device has input method (Serial terminal, keyboard or similar)
+**inputCapability** - Whether the ESP32 has an input method (Serial terminal, keyboard, or similar)
 
-**outputCapability** - Defines if ESP32 device has output method (Serial terminal, display or similar)
+**outputCapability** - Whether the ESP32 has an output method (Serial terminal, display, or similar)
 
 * **inputCapability=true and outputCapability=true**
-    * Both devices display randomly generated code and if they match the user will authenticate pairing on both devices.
-    * This must be implemented by registering a callback via `onConfirmRequest()` and in this callback the user will input the response and call `confirmReply(true)` if the authenticated, otherwise call `confirmReply(false)` to reject the pairing.
+    * Both devices display a randomly generated code. If they match, the user confirms pairing on both devices.
+    * Register a callback via `onConfirmRequest()` that receives the passkey and **returns `true`** to accept or **`false`** to reject.
 * **inputCapability=false and outputCapability=false**
-    * Only the other device authenticates pairing without any pin.
+    * Only the other device authenticates pairing without any PIN.
 * **inputCapability=false and outputCapability=true**
-    * Only the other device authenticates pairing without any pin.
+    * Only the other device authenticates pairing without any PIN.
 * **inputCapability=true and outputCapability=false**
-    * The user will be required to input the passkey to the ESP32 device to authenticate.
-    * This must be implemented by registering a callback via `onKeyRequest`()` and in this callback the entered passkey will be responded via `respondPasskey(passkey)`
+    * The remote device displays a passkey; the user must confirm it matches on the ESP32 side.
+    * Register a callback via `onConfirmRequest()` that returns `true` to accept or `false` to reject.
 
 ### Legacy Pairing (IDF component)
 
-To use Legacy pairing you will have to use [Arduino as an IDF component](https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/esp-idf_component.html) and disable option `CONFIG_BT_SSP_ENABLED`.
-Please refer to the documentation on how to setup Arduino as an IDF component and when you are done, run `idf.py menuconfig` navigate to `Component Config -> Bluetooth -> Bluedroid -> [ ] Secure Simple Pairing` and disable it.
-While in the menuconfig you will also need to change the partition scheme `Partition Table -> Partition Table -> (X) Single Factory app (large), no OTA`.
-After these changes save & quit menuconfig and you are ready to go: `idf.py  monitor flash`.
-Please note that to use the PIN in smartphones and computers you need to use characters `SerialBT.setPin("1234", 4);` not a number `SerialBT.setPin(1234, 4);` . Numbers CAN be used if the other side uses them too, but phones and computers use characters.
+To use legacy PIN pairing, use [Arduino as an IDF component](https://espressif-docs.readthedocs-hosted.com/projects/arduino-esp32/en/latest/esp-idf_component.html) and disable `CONFIG_BT_SSP_ENABLED`.
+Run `idf.py menuconfig`, navigate to `Component Config -> Bluetooth -> Bluedroid -> [ ] Secure Simple Pairing`, and disable it.
+Also change the partition scheme: `Partition Table -> Partition Table -> (X) Single Factory app (large), no OTA`.
+Save & quit menuconfig then run `idf.py monitor flash`.
+
+> **Note:** When using PIN pairing with smartphones and computers, pass the PIN as a string:
+> `SerialBT.setPin("1234");` — not as a number.

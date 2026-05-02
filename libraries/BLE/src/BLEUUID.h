@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,131 +17,154 @@
  * limitations under the License.
  */
 
-/*
- * BLEUUID.h
- *
- *  Created on: Jun 21, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLEUUID_H_
-#define COMPONENTS_CPP_UTILS_BLEUUID_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/*****************************************************************************
- *                             Common includes                               *
- *****************************************************************************/
-
+#include <stdint.h>
 #include "WString.h"
 
-/*****************************************************************************
- *                     Bluedroid includes and definitions                    *
- *****************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gatt_defs.h>
-#define BLE_UUID_16_BITS  ESP_UUID_LEN_16
-#define BLE_UUID_32_BITS  ESP_UUID_LEN_32
-#define BLE_UUID_128_BITS ESP_UUID_LEN_128
-#define UUID_LEN(s)       s.len
-#define UUID_VAL_16(s)    s.uuid.uuid16
-#define UUID_VAL_32(s)    s.uuid.uuid32
-#define UUID_VAL_128(s)   s.uuid.uuid128
-#endif
-
-/*****************************************************************************
- *                       NimBLE includes and definitions                     *
- *****************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_uuid.h>
-#define BLE_UUID_16_BITS  BLE_UUID_TYPE_16
-#define BLE_UUID_32_BITS  BLE_UUID_TYPE_32
-#define BLE_UUID_128_BITS BLE_UUID_TYPE_128
-#define UUID_LEN(s)       s.u.type
-#define UUID_VAL_16(s)    s.u16.value
-#define UUID_VAL_32(s)    s.u32.value
-#define UUID_VAL_128(s)   s.u128.value
-#endif
-
 /**
- * @brief A model of a %BLE UUID.
+ * @brief Stack-agnostic BLE UUID type supporting 16-bit, 32-bit, and 128-bit UUIDs.
+ *
+ * Stores internally as uint8_t[16] in big-endian (display) order.
+ * A bitSize of 0 indicates an invalid/unset UUID.
+ *
+ * String parsing accepts:
+ *   - "180D" (16-bit)
+ *   - "0000180D" (32-bit)
+ *   - "0000180d-0000-1000-8000-00805f9b34fb" (128-bit with dashes)
+ *   - "0000180d00001000800000805f9b34fb" (128-bit without dashes)
+ *
+ * @note Backend conversion to NimBLE/Bluedroid native formats happens in Impl files.
  */
 class BLEUUID {
 public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
-  BLEUUID(String uuid);
-  BLEUUID(uint16_t uuid);
-  BLEUUID(uint32_t uuid);
-  BLEUUID(uint8_t *pData, size_t size, bool msbFirst);
-  BLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth);
+  /**
+   * @brief Construct an invalid (empty) UUID.
+   */
   BLEUUID();
-  uint8_t bitSize();  // Get the number of bits in this uuid.
-  bool equals(const BLEUUID &uuid) const;
-  BLEUUID to128();
-  BLEUUID to16();
+
+  /**
+   * @brief Construct from a string representation.
+   * @param uuid String in any of the accepted formats (case-insensitive).
+   */
+  BLEUUID(const char *uuid);
+
+  /**
+   * @brief Construct a 16-bit UUID.
+   * @param uuid16 The 16-bit UUID value.
+   */
+  BLEUUID(uint16_t uuid16);
+
+  /**
+   * @brief Construct a 32-bit UUID.
+   * @param uuid32 The 32-bit UUID value.
+   */
+  BLEUUID(uint32_t uuid32);
+
+  /**
+   * @brief Construct a 128-bit UUID from raw bytes in big-endian order.
+   * @param uuid128 16-byte array where uuid128[0] is the most significant byte.
+   */
+  BLEUUID(const uint8_t uuid128[16]);
+
+  /**
+   * @brief Construct a 128-bit UUID from raw bytes with explicit byte order.
+   * @param data    Pointer to 16 bytes of UUID data.
+   * @param len     Must be 16 (validated at runtime).
+   * @param reverse If true, bytes are in little-endian order and will be reversed.
+   */
+  BLEUUID(const uint8_t *data, size_t len, bool reverse);
+
+  /**
+   * @brief Test equality against another UUID.
+   * @param other The UUID to compare with.
+   * @return True if both UUIDs represent the same value (compared at 128-bit width).
+   */
+  bool operator==(const BLEUUID &other) const;
+
+  /**
+   * @brief Test inequality against another UUID.
+   * @param other The UUID to compare with.
+   * @return True if the UUIDs differ.
+   */
+  bool operator!=(const BLEUUID &other) const;
+
+  /**
+   * @brief Lexicographic less-than comparison (for use in ordered containers).
+   * @param other The UUID to compare with.
+   * @return True if this UUID is lexicographically less than @p other.
+   */
+  bool operator<(const BLEUUID &other) const;
+
+  /**
+   * @brief Convert to human-readable string.
+   *
+   * Format depends on bit size:
+   * - 16-bit: "180d"
+   * - 32-bit: "0000180d"
+   * - 128-bit: "0000180d-0000-1000-8000-00805f9b34fb"
+   *
+   * @return The UUID as a lowercase hex String, or an empty String if invalid.
+   */
   String toString() const;
-  static BLEUUID fromString(String uuid);  // Create a BLEUUID from a string
 
-  bool operator==(const BLEUUID &rhs) const;
-  bool operator!=(const BLEUUID &rhs) const;
+  /**
+   * @brief Get the native bit size (16, 32, or 128).
+   * @return The bit size, or 0 if the UUID is invalid/unset.
+   */
+  uint8_t bitSize() const;
 
-  /***************************************************************************
-   *                      Bluedroid public declarations                      *
-   ***************************************************************************/
+  /**
+   * @brief Convert to full 128-bit form using the Bluetooth Base UUID.
+   * @return A new BLEUUID with bitSize() == 128.
+   */
+  BLEUUID to128() const;
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  BLEUUID(esp_bt_uuid_t uuid);
-  BLEUUID(esp_gatt_id_t gattId);
-  esp_bt_uuid_t *getNative();
-#endif
+  /**
+   * @brief Check if the UUID has been set to a valid value.
+   * @return True if the UUID is valid (bitSize() != 0).
+   */
+  bool isValid() const;
 
-  /***************************************************************************
-   *                        NimBLE public declarations                       *
-   ***************************************************************************/
+  /**
+   * @brief Equivalent to isValid().
+   * @return True if the UUID is valid.
+   */
+  explicit operator bool() const {
+    return isValid();
+  }
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  BLEUUID(ble_uuid_any_t uuid);
-  BLEUUID(const ble_uuid128_t *uuid);
-  const ble_uuid_any_t *getNative() const;
-#endif
+  /**
+   * @brief Access the internal 128-bit representation (big-endian).
+   * @return Pointer to the 16-byte internal array.
+   * @note Only meaningful for 128-bit UUIDs or after calling to128().
+   */
+  const uint8_t *data() const {
+    return _uuid;
+  }
+
+  /**
+   * @brief Get the 16-bit UUID value.
+   * @return The 16-bit value.
+   * @note Only valid when bitSize() == 16.
+   */
+  uint16_t toUint16() const;
+
+  /**
+   * @brief Get the 32-bit UUID value.
+   * @return The 32-bit value.
+   * @note Only valid when bitSize() == 32.
+   */
+  uint32_t toUint32() const;
 
 private:
-  /***************************************************************************
-   *                        Common private properties                        *
-   ***************************************************************************/
+  uint8_t _uuid[16]{};
+  uint8_t _bitSize = 0;
 
-  bool m_valueSet = false;  // Is there a value set for this instance.
+  void parseString(const char *str, size_t len);
+};
 
-  /***************************************************************************
-   *                       Bluedroid private properties                      *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  esp_bt_uuid_t m_uuid;  // The underlying UUID structure that this class wraps.
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private properties                         *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  ble_uuid_any_t m_uuid;  // The underlying UUID structure that this class wraps.
-#endif
-};  // BLEUUID
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLEUUID_H_ */
+#endif /* BLE_ENABLED */

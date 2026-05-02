@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,339 +17,313 @@
  * limitations under the License.
  */
 
-/*
- * BLEUUID.cpp
- *
- *  Created on: Jun 21, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/*****************************************************************************
- *                             Common includes                               *
- *****************************************************************************/
-
-#include "Arduino.h"
-#include <string.h>
-#include <sstream>
-#include <iomanip>
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
 #include "BLEUUID.h"
+#include <string.h>
+#include <stdio.h>
+#include <ctype.h>
 #include "esp32-hal-log.h"
 
-/*****************************************************************************
- *                             Common functions                              *
- *****************************************************************************/
+// Bluetooth Base UUID: 00000000-0000-1000-8000-00805F9B34FB (big-endian)
+// This is the well-known Bluetooth Base UUID defined in BT Core Spec v5.x,
+// Vol 3, Part B, §2.5.1.  All SIG-assigned 16-bit and 32-bit UUIDs are derived
+// from it by substituting the first 4 bytes: UUID128 = value32 × 2^96 + BaseUUID.
+// Stored in big-endian byte order to match the BLEUUID internal representation.
+static constexpr uint8_t kBaseUUID[16] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};
 
-static void memrcpy(uint8_t *target, uint8_t *source, uint32_t size) {
-  assert(size > 0);
-  target += (size - 1);  // Point target to the last byte of the target data
-  while (size > 0) {
-    *target = *source;
-    target--;
-    source++;
-    size--;
+/**
+ * @brief Convert a single hex character to its 4-bit numeric value.
+ * @param c ASCII hex character ('0'-'9', 'a'-'f', 'A'-'F').
+ * @return The nibble value (0-15), or 0xFF if the character is not valid hex.
+ */
+static uint8_t hexCharToNibble(char c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
   }
-}  // memrcpy
-
-BLEUUID::BLEUUID() {
-  m_valueSet = false;
-}  // BLEUUID
-
-BLEUUID::BLEUUID(String value) {
-  m_valueSet = true;
-  if (value.length() == 4) {
-    UUID_LEN(m_uuid) = BLE_UUID_16_BITS;
-    UUID_VAL_16(m_uuid) = 0;
-    for (int i = 0; i < value.length();) {
-      uint8_t MSB = value.c_str()[i];
-      uint8_t LSB = value.c_str()[i + 1];
-
-      if (MSB > '9') {
-        MSB -= 7;
-      }
-      if (LSB > '9') {
-        LSB -= 7;
-      }
-      UUID_VAL_16(m_uuid) += (((MSB & 0x0F) << 4) | (LSB & 0x0F)) << (2 - i) * 4;
-      i += 2;
-    }
-  } else if (value.length() == 8) {
-    UUID_LEN(m_uuid) = BLE_UUID_32_BITS;
-    UUID_VAL_32(m_uuid) = 0;
-    for (int i = 0; i < value.length();) {
-      uint8_t MSB = value.c_str()[i];
-      uint8_t LSB = value.c_str()[i + 1];
-
-      if (MSB > '9') {
-        MSB -= 7;
-      }
-      if (LSB > '9') {
-        LSB -= 7;
-      }
-      UUID_VAL_32(m_uuid) += (((MSB & 0x0F) << 4) | (LSB & 0x0F)) << (6 - i) * 4;
-      i += 2;
-    }
-  } else if (value.length() == 16) {
-    UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-    memrcpy(UUID_VAL_128(m_uuid), (uint8_t *)value.c_str(), 16);
-  } else if (value.length() == 36) {
-    UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-    int n = 0;
-    for (int i = 0; i < value.length();) {
-      if (value.c_str()[i] == '-') {
-        i++;
-      }
-      uint8_t MSB = value.c_str()[i];
-      uint8_t LSB = value.c_str()[i + 1];
-
-      if (MSB > '9') {
-        MSB -= 7;
-      }
-      if (LSB > '9') {
-        LSB -= 7;
-      }
-      UUID_VAL_128(m_uuid)[15 - n++] = ((MSB & 0x0F) << 4) | (LSB & 0x0F);
-      i += 2;
-    }
-  } else {
-    log_e("ERROR: UUID value not 2, 4, 16 or 36 bytes");
-    m_valueSet = false;
+  if (c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
   }
-}  //BLEUUID(String)
-
-BLEUUID::BLEUUID(uint8_t *pData, size_t size, bool msbFirst) {
-  if (size != 16) {
-    log_e("ERROR: UUID length not 16 bytes");
-    return;
+  if (c >= 'A' && c <= 'F') {
+    return c - 'A' + 10;
   }
-  UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-  if (msbFirst) {
-    memrcpy(UUID_VAL_128(m_uuid), pData, 16);
-  } else {
-    memcpy(UUID_VAL_128(m_uuid), pData, 16);
-  }
-  m_valueSet = true;
-}  // BLEUUID
-
-BLEUUID::BLEUUID(uint16_t uuid) {
-  UUID_LEN(m_uuid) = BLE_UUID_16_BITS;
-  UUID_VAL_16(m_uuid) = uuid;
-  m_valueSet = true;
-}  // BLEUUID
-
-BLEUUID::BLEUUID(uint32_t uuid) {
-  UUID_LEN(m_uuid) = BLE_UUID_32_BITS;
-  UUID_VAL_32(m_uuid) = uuid;
-  m_valueSet = true;
-}  // BLEUUID
-
-BLEUUID::BLEUUID(uint32_t first, uint16_t second, uint16_t third, uint64_t fourth) {
-  UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-  memcpy(UUID_VAL_128(m_uuid) + 12, &first, 4);
-  memcpy(UUID_VAL_128(m_uuid) + 10, &second, 2);
-  memcpy(UUID_VAL_128(m_uuid) + 8, &third, 2);
-  memcpy(UUID_VAL_128(m_uuid), &fourth, 8);
-  m_valueSet = true;
+  return 0xFF;
 }
 
-uint8_t BLEUUID::bitSize() {
-  if (!m_valueSet) {
-    return 0;
-  }
-  switch (UUID_LEN(m_uuid)) {
-    case BLE_UUID_16_BITS:  return 16;
-    case BLE_UUID_32_BITS:  return 32;
-    case BLE_UUID_128_BITS: return 128;
-    default:                log_e("Unknown UUID length: %u", UUID_LEN(m_uuid)); return 0;
-  }  // End of switch
-}  // bitSize
-
-bool BLEUUID::equals(const BLEUUID &uuid) const {
-  if (!m_valueSet || !uuid.m_valueSet) {
+/**
+ * @brief Parse two consecutive hex characters into a single byte.
+ * @param hex Pointer to at least 2 hex ASCII characters.
+ * @param out Receives the decoded byte value on success.
+ * @return True if both characters are valid hex, false otherwise.
+ */
+static bool hexToByte(const char *hex, uint8_t &out) {
+  uint8_t hi = hexCharToNibble(hex[0]);
+  uint8_t lo = hexCharToNibble(hex[1]);
+  if (hi == 0xFF || lo == 0xFF) {
     return false;
   }
+  out = (hi << 4) | lo;
+  return true;
+}
 
-  if (UUID_LEN(uuid.m_uuid) != UUID_LEN(m_uuid)) {
-    return uuid.toString() == toString();
+/**
+ * @brief Construct an invalid (empty) UUID with bitSize 0.
+ */
+BLEUUID::BLEUUID() {}
+
+/**
+ * @brief Construct a UUID from a C-string representation.
+ * @param uuid Null-terminated string; accepts an optional "0x"/"0X" prefix.
+ * @note A null pointer leaves the UUID in the invalid state.
+ */
+BLEUUID::BLEUUID(const char *uuid) {
+  if (uuid == nullptr) {
+    return;
   }
-
-  if (UUID_LEN(uuid.m_uuid) == BLE_UUID_16_BITS) {
-    return UUID_VAL_16(uuid.m_uuid) == UUID_VAL_16(m_uuid);
+  size_t len = strlen(uuid);
+  if (len >= 2 && uuid[0] == '0' && (uuid[1] == 'x' || uuid[1] == 'X')) {
+    uuid += 2;
+    len -= 2;
   }
+  parseString(uuid, len);
+}
 
-  if (UUID_LEN(uuid.m_uuid) == BLE_UUID_32_BITS) {
-    return UUID_VAL_32(uuid.m_uuid) == UUID_VAL_32(m_uuid);
+/**
+ * @brief Construct a 16-bit UUID, pre-filling the Bluetooth Base UUID template.
+ * @param uuid16 The 16-bit UUID value, placed at bytes [2..3] of the base UUID.
+ */
+BLEUUID::BLEUUID(uint16_t uuid16) {
+  memcpy(_uuid, kBaseUUID, 16);
+  _uuid[2] = (uuid16 >> 8) & 0xFF;
+  _uuid[3] = uuid16 & 0xFF;
+  _bitSize = 16;
+}
+
+/**
+ * @brief Construct a 32-bit UUID, pre-filling the Bluetooth Base UUID template.
+ * @param uuid32 The 32-bit UUID value, placed at bytes [0..3] of the base UUID.
+ */
+BLEUUID::BLEUUID(uint32_t uuid32) {
+  memcpy(_uuid, kBaseUUID, 16);
+  _uuid[0] = (uuid32 >> 24) & 0xFF;
+  _uuid[1] = (uuid32 >> 16) & 0xFF;
+  _uuid[2] = (uuid32 >> 8) & 0xFF;
+  _uuid[3] = uuid32 & 0xFF;
+  _bitSize = 32;
+}
+
+/**
+ * @brief Construct a 128-bit UUID from a big-endian 16-byte array.
+ * @param uuid128 Pointer to 16 bytes in big-endian (display) order.
+ */
+BLEUUID::BLEUUID(const uint8_t uuid128[16]) {
+  memcpy(_uuid, uuid128, 16);
+  _bitSize = 128;
+}
+
+/**
+ * @brief Construct a 128-bit UUID from raw bytes with optional byte-order reversal.
+ * @param data Pointer to 16 bytes of UUID data.
+ * @param len Must be exactly 16; any other value leaves the UUID invalid.
+ * @param reverse If true, bytes are reversed from little-endian to big-endian storage.
+ */
+BLEUUID::BLEUUID(const uint8_t *data, size_t len, bool reverse) {
+  if (data == nullptr || len != 16) {
+    return;
   }
-
-  return memcmp(UUID_VAL_128(uuid.m_uuid), UUID_VAL_128(m_uuid), 16) == 0;
-}  // equals
-
-BLEUUID BLEUUID::fromString(String _uuid) {
-  uint8_t start = 0;
-  if (strstr(_uuid.c_str(), "0x") != nullptr) {  // If the string starts with 0x, skip those characters.
-    start = 2;
-  }
-  uint8_t len = _uuid.length() - start;  // Calculate the length of the string we are going to use.
-
-  if (len == 4) {
-    uint16_t x = strtoul(_uuid.substring(start, start + len).c_str(), NULL, 16);
-    return BLEUUID(x);
-  } else if (len == 8) {
-    uint32_t x = strtoul(_uuid.substring(start, start + len).c_str(), NULL, 16);
-    return BLEUUID(x);
-  } else if (len == 36) {
-    return BLEUUID(_uuid);
-  }
-  return BLEUUID();
-}  // fromString
-
-BLEUUID BLEUUID::to128() {
-  if (!m_valueSet || UUID_LEN(m_uuid) == BLE_UUID_128_BITS) {
-    return *this;
-  }
-
-  if (UUID_LEN(m_uuid) == BLE_UUID_16_BITS) {
-    uint16_t temp = UUID_VAL_16(m_uuid);
-    UUID_VAL_128(m_uuid)[15] = 0;
-    UUID_VAL_128(m_uuid)[14] = 0;
-    UUID_VAL_128(m_uuid)[13] = (temp >> 8) & 0xff;
-    UUID_VAL_128(m_uuid)[12] = temp & 0xff;
-  } else if (UUID_LEN(m_uuid) == BLE_UUID_32_BITS) {
-    uint16_t temp = UUID_VAL_32(m_uuid);
-    UUID_VAL_128(m_uuid)[15] = (temp >> 24) & 0xff;
-    UUID_VAL_128(m_uuid)[14] = (temp >> 16) & 0xff;
-    UUID_VAL_128(m_uuid)[13] = (temp >> 8) & 0xff;
-    UUID_VAL_128(m_uuid)[12] = temp & 0xff;
-  }
-
-  UUID_VAL_128(m_uuid)[11] = 0x00;
-  UUID_VAL_128(m_uuid)[10] = 0x00;
-  UUID_VAL_128(m_uuid)[9] = 0x10;
-  UUID_VAL_128(m_uuid)[8] = 0x00;
-  UUID_VAL_128(m_uuid)[7] = 0x80;
-  UUID_VAL_128(m_uuid)[6] = 0x00;
-  UUID_VAL_128(m_uuid)[5] = 0x00;
-  UUID_VAL_128(m_uuid)[4] = 0x80;
-  UUID_VAL_128(m_uuid)[3] = 0x5f;
-  UUID_VAL_128(m_uuid)[2] = 0x9b;
-  UUID_VAL_128(m_uuid)[1] = 0x34;
-  UUID_VAL_128(m_uuid)[0] = 0xfb;
-
-  UUID_LEN(m_uuid) = BLE_UUID_128_BITS;
-  return *this;
-}  // to128
-
-BLEUUID BLEUUID::to16() {
-  if (!m_valueSet || UUID_LEN(m_uuid) == BLE_UUID_16_BITS) {
-    return *this;
-  }
-
-  if (UUID_LEN(m_uuid) == BLE_UUID_128_BITS) {
-    uint8_t base128[] = {0xfb, 0x34, 0x9b, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00};
-    if (memcmp(UUID_VAL_128(m_uuid), base128, sizeof(base128)) == 0) {
-      *this = BLEUUID(*(uint16_t *)(UUID_VAL_128(m_uuid) + 12));
+  if (reverse) {
+    for (int i = 0; i < 16; i++) {
+      _uuid[i] = data[15 - i];
     }
+  } else {
+    memcpy(_uuid, data, 16);
   }
-
-  return *this;
+  _bitSize = 128;
 }
 
+/**
+ * @brief Parse a hex string (without "0x" prefix) into the internal UUID buffer.
+ * @param str Pointer to the hex characters.
+ * @param len Length of the string: 4 (16-bit), 8 (32-bit), 32 or 36 (128-bit).
+ * @note Invalid lengths or malformed hex characters are logged via log_e and
+ *       leave the UUID in its prior (typically invalid) state.
+ */
+void BLEUUID::parseString(const char *str, size_t len) {
+  if (len == 4) {
+    // 16-bit: "180D"
+    uint8_t hi, lo;
+    if (!hexToByte(str, hi) || !hexToByte(str + 2, lo)) {
+      log_e("Invalid 16-bit UUID string");
+      return;
+    }
+    uint16_t val = (static_cast<uint16_t>(hi) << 8) | lo;
+    *this = BLEUUID(val);
+  } else if (len == 8) {
+    // 32-bit: "0000180D"
+    uint8_t b[4];
+    for (int i = 0; i < 4; i++) {
+      if (!hexToByte(str + i * 2, b[i])) {
+        log_e("Invalid 32-bit UUID string");
+        return;
+      }
+    }
+    uint32_t val = (static_cast<uint32_t>(b[0]) << 24) | (static_cast<uint32_t>(b[1]) << 16) | (static_cast<uint32_t>(b[2]) << 8) | b[3];
+    *this = BLEUUID(val);
+  } else if (len == 36) {
+    // 128-bit with dashes: "0000180d-0000-1000-8000-00805f9b34fb"
+    uint8_t buf[16];
+    int byteIdx = 0;
+    for (size_t i = 0; i < len && byteIdx < 16;) {
+      if (str[i] == '-') {
+        i++;
+        continue;
+      }
+      if (i + 1 >= len || !hexToByte(str + i, buf[byteIdx])) {
+        log_e("Invalid 128-bit UUID string");
+        return;
+      }
+      byteIdx++;
+      i += 2;
+    }
+    if (byteIdx != 16) {
+      log_e("Invalid 128-bit UUID string (wrong byte count)");
+      return;
+    }
+    memcpy(_uuid, buf, 16);
+    _bitSize = 128;
+  } else if (len == 32) {
+    // 128-bit without dashes: "0000180d00001000800000805f9b34fb"
+    uint8_t buf[16];
+    for (int i = 0; i < 16; i++) {
+      if (!hexToByte(str + i * 2, buf[i])) {
+        log_e("Invalid 128-bit UUID string (no dashes)");
+        return;
+      }
+    }
+    memcpy(_uuid, buf, 16);
+    _bitSize = 128;
+  } else {
+    log_e("UUID string must be 4, 8, 32, or 36 characters (got %u)", (unsigned)len);
+  }
+}
+
+/**
+ * @brief Test equality by comparing the full 16-byte internal arrays.
+ * @param other The UUID to compare with.
+ * @return True if both are valid and represent the same 128-bit value.
+ * @note Two invalid UUIDs are not considered equal.
+ */
+bool BLEUUID::operator==(const BLEUUID &other) const {
+  if (!isValid() || !other.isValid()) {
+    return false;
+  }
+  return memcmp(_uuid, other._uuid, sizeof(_uuid)) == 0;
+}
+
+/**
+ * @brief Test inequality against another UUID.
+ * @param other The UUID to compare with.
+ * @return True if the UUIDs differ or either is invalid.
+ */
+bool BLEUUID::operator!=(const BLEUUID &other) const {
+  return !(*this == other);
+}
+
+/**
+ * @brief Lexicographic less-than for use in ordered containers (std::map, std::set).
+ * @param other The UUID to compare with.
+ * @return True if this UUID is lexicographically less than @p other.
+ * @note Returns false if either UUID is invalid.
+ */
+bool BLEUUID::operator<(const BLEUUID &other) const {
+  if (!isValid() || !other.isValid()) {
+    return false;
+  }
+  return memcmp(_uuid, other._uuid, sizeof(_uuid)) < 0;
+}
+
+/**
+ * @brief Convert to a lowercase hex string whose format reflects the native bit size.
+ * @return "180d" (16-bit), "0000180d" (32-bit),
+ *         "0000180d-0000-1000-8000-00805f9b34fb" (128-bit), or "<invalid>".
+ */
 String BLEUUID::toString() const {
-  if (!m_valueSet) {
-    return "<NULL>";  // If we have no value, nothing to format.
+  if (!isValid()) {
+    return "<invalid>";
   }
 
-  if (UUID_LEN(m_uuid) == BLE_UUID_16_BITS) {  // If the UUID is 16bit, pad correctly.
-    char hex[9];
-    snprintf(hex, sizeof(hex), "%08x", UUID_VAL_16(m_uuid));
-    return String(hex) + "-0000-1000-8000-00805f9b34fb";
-  }  // End 16bit UUID
+  if (_bitSize == 16) {
+    char buf[5];
+    snprintf(buf, sizeof(buf), "%02x%02x", _uuid[2], _uuid[3]);
+    return String(buf);
+  }
 
-  if (UUID_LEN(m_uuid) == BLE_UUID_32_BITS) {  // If the UUID is 32bit, pad correctly.
-    char hex[9];
-    snprintf(hex, sizeof(hex), "%08" PRIx32, UUID_VAL_32(m_uuid));
-    return String(hex) + "-0000-1000-8000-00805f9b34fb";
-  }  // End 32bit UUID
+  if (_bitSize == 32) {
+    char buf[9];
+    snprintf(buf, sizeof(buf), "%02x%02x%02x%02x", _uuid[0], _uuid[1], _uuid[2], _uuid[3]);
+    return String(buf);
+  }
 
-  // The UUID is not 16bit or 32bit which means that it is 128bit.
-  auto size = 37;  // 32 for UUID data, 4 for '-' delimiters and one for a terminator == 37 chars
-  char *hex = (char *)malloc(size);
+  // 128-bit: "0000180d-0000-1000-8000-00805f9b34fb"
+  char buf[37];
   snprintf(
-    hex, size, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", UUID_VAL_128(m_uuid)[15], UUID_VAL_128(m_uuid)[14],
-    UUID_VAL_128(m_uuid)[13], UUID_VAL_128(m_uuid)[12], UUID_VAL_128(m_uuid)[11], UUID_VAL_128(m_uuid)[10], UUID_VAL_128(m_uuid)[9], UUID_VAL_128(m_uuid)[8],
-    UUID_VAL_128(m_uuid)[7], UUID_VAL_128(m_uuid)[6], UUID_VAL_128(m_uuid)[5], UUID_VAL_128(m_uuid)[4], UUID_VAL_128(m_uuid)[3], UUID_VAL_128(m_uuid)[2],
-    UUID_VAL_128(m_uuid)[1], UUID_VAL_128(m_uuid)[0]
+    buf, sizeof(buf), "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", _uuid[0], _uuid[1], _uuid[2], _uuid[3], _uuid[4], _uuid[5],
+    _uuid[6], _uuid[7], _uuid[8], _uuid[9], _uuid[10], _uuid[11], _uuid[12], _uuid[13], _uuid[14], _uuid[15]
   );
-
-  String res(hex);
-  free(hex);
-  return res;
-}  // toString
-
-bool BLEUUID::operator==(const BLEUUID &rhs) const {
-  return equals(rhs);
+  return String(buf);
 }
 
-bool BLEUUID::operator!=(const BLEUUID &rhs) const {
-  return !equals(rhs);
+/**
+ * @brief Get the native bit size (16, 32, or 128).
+ * @return The bit size, or 0 if the UUID is invalid/unset.
+ */
+uint8_t BLEUUID::bitSize() const {
+  return _bitSize;
 }
 
-/*****************************************************************************
- *                            Bluedroid functions                            *
- *****************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-BLEUUID::BLEUUID(esp_bt_uuid_t uuid) {
-  m_uuid = uuid;
-  m_valueSet = true;
-}  // BLEUUID
-
-BLEUUID::BLEUUID(esp_gatt_id_t gattId) : BLEUUID(gattId.uuid) {}  // BLEUUID
-
-esp_bt_uuid_t *BLEUUID::getNative() {
-  if (m_valueSet == false) {
-    log_v("<< Return of un-initialized UUID!");
-    return nullptr;
+/**
+ * @brief Return a 128-bit version of this UUID.
+ * @return A copy with bitSize() == 128. Returns *this unchanged if already 128-bit
+ *         or invalid.
+ * @note 16/32-bit constructors already embed the Bluetooth Base UUID, so this
+ *       only flips the bitSize field without modifying the stored bytes.
+ */
+BLEUUID BLEUUID::to128() const {
+  if (!isValid() || _bitSize == 128) {
+    return *this;
   }
-  return &m_uuid;
-}  // getNative
-#endif
+  // For 16-bit and 32-bit, the full 128-bit UUID is already stored in _uuid
+  // (constructors fill the base UUID template), so just change the bitSize.
+  BLEUUID result = *this;
+  result._bitSize = 128;
+  return result;
+}
 
-/*****************************************************************************
- *                             NimBLE functions                              *
- *****************************************************************************/
+/**
+ * @brief Check if the UUID has been set to a valid value.
+ * @return True if bitSize is non-zero.
+ */
+bool BLEUUID::isValid() const {
+  return _bitSize != 0;
+}
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-BLEUUID::BLEUUID(ble_uuid_any_t uuid) {
-  m_uuid = uuid;
-  m_valueSet = true;
-}  // BLEUUID
+/**
+ * @brief Extract the 16-bit UUID value from the internal big-endian buffer.
+ * @return The 16-bit value from bytes [2..3].
+ * @note Only meaningful when bitSize() == 16; otherwise returns an arbitrary value.
+ */
+uint16_t BLEUUID::toUint16() const {
+  return (static_cast<uint16_t>(_uuid[2]) << 8) | _uuid[3];
+}
 
-BLEUUID::BLEUUID(const ble_uuid128_t *uuid) {
-  m_uuid.u.type = BLE_UUID_TYPE_128;
-  memcpy(m_uuid.u128.value, uuid->value, 16);
-  m_valueSet = true;
-}  // BLEUUID
+/**
+ * @brief Extract the 32-bit UUID value from the internal big-endian buffer.
+ * @return The 32-bit value from bytes [0..3].
+ * @note Only meaningful when bitSize() == 32; otherwise returns an arbitrary value.
+ */
+uint32_t BLEUUID::toUint32() const {
+  return (static_cast<uint32_t>(_uuid[0]) << 24) | (static_cast<uint32_t>(_uuid[1]) << 16) | (static_cast<uint32_t>(_uuid[2]) << 8) | _uuid[3];
+}
 
-const ble_uuid_any_t *BLEUUID::getNative() const {
-  if (m_valueSet == false) {
-    log_v("<< Return of un-initialized UUID!");
-    return nullptr;
-  }
-  return &m_uuid;
-}  // getNative
-#endif
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+#endif /* BLE_ENABLED */

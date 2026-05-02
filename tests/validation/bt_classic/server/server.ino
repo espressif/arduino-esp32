@@ -1,103 +1,180 @@
-/*
- * Copyright 2026 Espressif Systems (Shanghai) PTE LTD
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// BT Classic validation test — SERVER (SPP acceptor)
+// Phases:
+//   1. basic_lifecycle  — begin / deinit / reinit
+//   2. spp_connect_data — accept connection, bidirectional data exchange
+//   3. bond_management  — list bonds, delete all, verify empty
+//   4. memory_release   — end(true)
 
-/*
- * BT Classic SPP slave for multi-DUT validation (pairs with client/).
- */
-
-#include <Arduino.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"
+#pragma GCC diagnostic pop
 
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled
-#endif
+BluetoothSerial SerialBT;
 
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error BT Classic SPP is only available on ESP32
-#endif
+String serverName;
+volatile int currentPhase = 0;
 
-static BluetoothSerial SerialBT;
-static String serverName;
+// ---------------------------------------------------------------------------
+// Phase coordination (same pattern as BLE validation tests)
+// ---------------------------------------------------------------------------
 
-static bool readNameFromHost() {
-  Serial.println("[SERVER] Ready for name");
-  Serial.println("[SERVER] Send name:");
-  while (serverName.length() == 0) {
-    if (Serial.available()) {
-      serverName = Serial.readStringUntil('\n');
-      serverName.trim();
+void checkSerial() {
+  static String buf;
+  while (Serial.available()) {
+    char c = (char)Serial.read();
+    if (c == '\n') {
+      buf.trim();
+      if (buf.startsWith("START_PHASE_")) {
+        int phase = buf.substring(12).toInt();
+        if (phase > currentPhase) {
+          currentPhase = phase;
+          Serial.printf("[SERVER] Phase %d started\n", phase);
+        }
+      }
+      buf = "";
+    } else if (c != '\r') {
+      buf += c;
     }
-    delay(50);
   }
-  Serial.printf("[SERVER] Name: %s\n", serverName.c_str());
-  return true;
 }
+
+void waitForPhase(int n) {
+  while (currentPhase < n) {
+    checkSerial();
+    delay(10);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Setup: run all phases sequentially
+// ---------------------------------------------------------------------------
 
 void setup() {
   Serial.begin(115200);
   while (!Serial) {
-    delay(10);
-  }
-
-  if (!readNameFromHost()) {
-    return;
-  }
-
-  if (!SerialBT.begin(serverName)) {
-    Serial.println("[SERVER] ERROR: begin failed");
-    return;
-  }
-
-  Serial.println("[SERVER] SPP listening");
-
-  const unsigned long connectTimeoutMs = 90000;
-  unsigned long start = millis();
-  while (!SerialBT.hasClient() && (millis() - start) < connectTimeoutMs) {
     delay(100);
   }
 
-  if (!SerialBT.hasClient()) {
-    Serial.println("[SERVER] ERROR: client timeout");
-    return;
-  }
-
-  Serial.println("[SERVER] Client connected");
-
-  start = millis();
-  while (!SerialBT.available() && (millis() - start) < 30000) {
+  // Receive server name from test script
+  Serial.println("[SERVER] Send name:");
+  String input;
+  while (input.length() == 0) {
+    if (Serial.available()) {
+      input = Serial.readStringUntil('\n');
+      input.trim();
+    }
     delay(50);
   }
+  serverName = input;
+  Serial.printf("[SERVER] Name: %s\n", serverName.c_str());
 
-  if (!SerialBT.available()) {
-    Serial.println("[SERVER] ERROR: no data from client");
-    return;
+  // -------------------------------------------------------------------------
+  // Phase 1: basic lifecycle
+  // -------------------------------------------------------------------------
+  waitForPhase(1);
+
+  BTStatus status = SerialBT.begin(serverName, false);
+  if (!status) {
+    Serial.println("[SERVER] Init FAILED");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.printf("[SERVER] Init OK, addr: %s\n", SerialBT.getAddress().toString().c_str());
+
+  SerialBT.end(false);
+  Serial.println("[SERVER] Deinit OK");
+
+  status = SerialBT.begin(serverName, false);
+  if (!status) {
+    Serial.println("[SERVER] Reinit FAILED");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("[SERVER] Reinit OK");
+  // Stay initialized; the SPP server is now accepting connections.
+
+  // -------------------------------------------------------------------------
+  // Phase 2: SPP connect + bidirectional data exchange
+  // -------------------------------------------------------------------------
+  waitForPhase(2);
+
+  Serial.println("[SERVER] Waiting for client...");
+
+  uint32_t deadline = millis() + 60000;
+  while (!SerialBT.connected() && millis() < deadline) {
+    checkSerial();
+    delay(20);
+  }
+  if (!SerialBT.connected()) {
+    Serial.println("[SERVER] Connect timeout");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("[SERVER] Client connected");
+
+  // Receive data from client
+  String rx;
+  deadline = millis() + 15000;
+  while (millis() < deadline) {
+    while (SerialBT.available()) {
+      rx += (char)SerialBT.read();
+    }
+    if (rx.indexOf("HELLO_FROM_CLIENT") >= 0) {
+      break;
+    }
+    checkSerial();
+    delay(10);
+  }
+  if (rx.indexOf("HELLO_FROM_CLIENT") >= 0) {
+    Serial.println("[SERVER] Received: HELLO_FROM_CLIENT");
+  } else {
+    Serial.println("[SERVER] Receive timeout");
   }
 
-  String msg = SerialBT.readStringUntil('\n');
-  msg.trim();
-  Serial.printf("[SERVER] Received: %s\n", msg.c_str());
+  // Send response
+  SerialBT.print("HELLO_FROM_SERVER");
+  Serial.println("[SERVER] Sent: HELLO_FROM_SERVER");
 
-  if (msg != "BT_CLASSIC_PING") {
-    Serial.println("[SERVER] ERROR: unexpected payload");
-    return;
+  // Wait for client to disconnect
+  deadline = millis() + 15000;
+  while (SerialBT.connected() && millis() < deadline) {
+    checkSerial();
+    delay(20);
   }
+  Serial.println("[SERVER] Client disconnected");
 
-  SerialBT.println("BT_CLASSIC_PONG");
-  Serial.println("[SERVER] Sent response");
-  Serial.println("[SERVER] Test complete");
+  // -------------------------------------------------------------------------
+  // Phase 3: bond management
+  // -------------------------------------------------------------------------
+  waitForPhase(3);
+
+  auto bonds = SerialBT.getBondedDevices();
+  Serial.printf("[SERVER] Bonds: %d\n", (int)bonds.size());
+
+  BTStatus deleteStatus = SerialBT.deleteAllBonds();
+  Serial.printf("[SERVER] DeleteAllBonds: %s\n", deleteStatus ? "OK" : "FAILED");
+
+  bonds = SerialBT.getBondedDevices();
+  Serial.printf("[SERVER] Bonds after delete: %d\n", (int)bonds.size());
+
+  // -------------------------------------------------------------------------
+  // Phase 4: memory release
+  // -------------------------------------------------------------------------
+  waitForPhase(4);
+
+  SerialBT.end(true);
+  Serial.println("[SERVER] Memory released");
+
+  while (true) {
+    delay(1000);
+  }
 }
 
-void loop() {}
+void loop() {
+  checkSerial();
+  delay(10);
+}

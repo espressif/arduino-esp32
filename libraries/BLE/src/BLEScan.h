@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,241 +17,252 @@
  * limitations under the License.
  */
 
-/*
- * BLEScan.h
- *
- *  Created on: Jul 1, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLESCAN_H_
-#define COMPONENTS_CPP_UTILS_BLESCAN_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                         Common includes                                 *
- ***************************************************************************/
-
-#include <string>
+#include "BTStatus.h"
+#include "BTAddress.h"
+#include "BLEAdvTypes.h"
 #include "BLEAdvertisedDevice.h"
-#include "BLEClient.h"
-#include "BLEUtils.h"
-#include "RTOS.h"
-
-/***************************************************************************
- *                         Bluedroid includes                              *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gap_ble_api.h>
-#endif
-
-/***************************************************************************
- *                           NimBLE includes                               *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_gap.h>
-#endif
-
-/***************************************************************************
- *                         Forward declarations                            *
- ***************************************************************************/
-
-class BLEAdvertisedDevice;
-class BLEAdvertisedDeviceCallbacks;
-class BLEExtAdvertisingCallbacks;
-class BLEClient;
-class BLEScan;
-class BLEPeriodicScanCallbacks;
-struct BLETaskData;
-
-/***************************************************************************
- *                       Bluedroid type definitions                        *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-struct esp_ble_periodic_adv_sync_estab_param_t {
-  uint8_t status;                    /*!< periodic advertising sync status */
-  uint16_t sync_handle;              /*!< periodic advertising sync handle */
-  uint8_t sid;                       /*!< periodic advertising sid */
-  esp_ble_addr_type_t adv_addr_type; /*!< periodic advertising address type */
-  esp_bd_addr_t adv_addr;            /*!< periodic advertising address */
-  esp_ble_gap_phy_t adv_phy;         /*!< periodic advertising phy type */
-  uint16_t period_adv_interval;      /*!< periodic advertising interval */
-  uint8_t adv_clk_accuracy;          /*!< periodic advertising clock accuracy */
-};
-#endif
+#include <memory>
+#include <functional>
 
 /**
- * @brief The result of having performed a scan.
- * When a scan completes, we have a set of found devices.  Each device is described
- * by a BLEAdvertisedDevice object.  The number of items in the set is given by
- * getCount().  We can retrieve a device by calling getDevice() passing in the
- * index (starting at 0) of the desired device.
- */
-class BLEScanResults {
-public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
-  void dump();
-  int getCount();
-  BLEAdvertisedDevice getDevice(uint32_t i);
-
-private:
-  friend BLEScan;
-
-  /***************************************************************************
-   *                       Common private properties                         *
-   ***************************************************************************/
-
-  std::map<std::string, BLEAdvertisedDevice *> m_vectorAdvertisedDevices;
-};
-
-/**
- * @brief Perform and manage %BLE scans.
+ * @brief BLE scanner -- legacy and BLE5 extended/periodic scanning.
  *
- * Scanning is associated with a %BLE client that is attempting to locate BLE servers.
+ * Singleton shared handle. Access via BLE.getScan().
  */
 class BLEScan {
 public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
+  BLEScan();
+  ~BLEScan() = default;
+  BLEScan(const BLEScan &) = default;
+  BLEScan &operator=(const BLEScan &) = default;
+  BLEScan(BLEScan &&) = default;
+  BLEScan &operator=(BLEScan &&) = default;
 
-  ~BLEScan();
+  /**
+   * @brief Check whether this handle references a valid scanner instance.
+   * @return true if the handle is backed by an initialized implementation, false otherwise.
+   */
+  explicit operator bool() const;
+
+  // --- Scan Parameters ---
+
+  /**
+   * @brief Set the scan interval.
+   * @param intervalMs Interval between scan windows, in milliseconds.
+   */
+  void setInterval(uint16_t intervalMs);
+
+  /**
+   * @brief Set the scan window duration.
+   * @param windowMs Duration of each scan window, in milliseconds. Must be <= interval.
+   */
+  void setWindow(uint16_t windowMs);
+
+  /**
+   * @brief Enable or disable active scanning.
+   * @param active If true, the scanner sends scan-request PDUs to obtain scan-response data.
+   */
   void setActiveScan(bool active);
-  void setAdvertisedDeviceCallbacks(BLEAdvertisedDeviceCallbacks *pAdvertisedDeviceCallbacks, bool wantDuplicates = false, bool shouldParse = true);
-  void setInterval(uint16_t intervalMSecs);
-  void setWindow(uint16_t windowMSecs);
-  bool start(uint32_t duration, void (*scanCompleteCB)(BLEScanResults), bool is_continue = false);
-  BLEScanResults *start(uint32_t duration, bool is_continue = false);
-  bool stop();
-  void erase(BLEAddress address);
-  BLEScanResults *getResults();
-  void clearResults();
-  bool isScanning();
 
-  /***************************************************************************
-   *                       Bluedroid public declarations                     *
-   ***************************************************************************/
+  /**
+   * @brief Enable or disable duplicate filtering.
+   * @param filter If true, the stack suppresses repeated advertisements from the same device.
+   */
+  void setFilterDuplicates(bool filter);
 
-#if defined(SOC_BLE_50_SUPPORTED) && defined(CONFIG_BLUEDROID_ENABLED)
-  void setExtendedScanCallback(BLEExtAdvertisingCallbacks *cb);
-  void setPeriodicScanCallback(BLEPeriodicScanCallbacks *cb);
-  esp_err_t stopExtScan();
-  esp_err_t setExtScanParams();
-  esp_err_t startExtScan(uint32_t duration, uint16_t period);
-  esp_err_t setExtScanParams(esp_ble_ext_scan_params_t *ext_scan_params);
-#endif  // SOC_BLE_50_SUPPORTED
-
-  /***************************************************************************
-   *                       NimBLE public declarations                        *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void setDuplicateFilter(bool enabled);
+  /**
+   * @brief Flush the controller's duplicate-address cache.
+   *
+   * @note Only meaningful when duplicate filtering is enabled.
+   */
   void clearDuplicateCache();
-#endif
+
+  // --- Start / Stop ---
+
+  /**
+   * @brief Start scanning asynchronously.
+   * @param durationMs How long to scan, in milliseconds. 0 = scan indefinitely.
+   * @param continueExisting If true, append to the existing result set rather than clearing it.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus start(uint32_t durationMs, bool continueExisting = false);
+
+  /**
+   * @brief Start scanning and block until the duration expires.
+   * @param durationMs How long to scan, in milliseconds.
+   * @return Snapshot of all discovered devices.
+   */
+  BLEScanResults startBlocking(uint32_t durationMs);
+
+  /**
+   * @brief Stop an in-progress scan.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stop();
+
+  /**
+   * @brief Check whether a scan is currently running.
+   * @return true if scanning is active, false otherwise.
+   */
+  bool isScanning() const;
+
+  // --- Callbacks ---
+
+  /**
+   * @brief Callback invoked for each advertisement received during a scan.
+   * @param device The advertised device that was discovered.
+   */
+  using ResultHandler = std::function<void(BLEAdvertisedDevice)>;
+
+  /**
+   * @brief Callback invoked when a scan completes (duration expires or manually stopped).
+   * @param results Reference to the accumulated scan results.
+   */
+  using CompleteHandler = std::function<void(BLEScanResults &)>;
+
+  /**
+   * @brief Register a handler called for every advertisement received.
+   * @param callback The handler to invoke, or nullptr to clear.
+   */
+  void onResult(ResultHandler callback);
+
+  /**
+   * @brief Register a handler called when the scan completes.
+   * @param callback The handler to invoke, or nullptr to clear.
+   */
+  void onComplete(CompleteHandler callback);
+
+  /**
+   * @brief Remove all registered scan callbacks.
+   */
+  void resetCallbacks();
+
+  // --- Result Management ---
+
+  /**
+   * @brief Retrieve a snapshot of the current scan results.
+   * @return Copy of the accumulated scan results.
+   */
+  BLEScanResults getResults();
+
+  /**
+   * @brief Discard all accumulated scan results.
+   */
+  void clearResults();
+
+  /**
+   * @brief Remove a specific device from the result set.
+   * @param address BLE address of the device to erase.
+   */
+  void erase(const BTAddress &address);
+
+  // --- Extended Scanning (BLE5) ---
+
+  /**
+   * @brief Scan timing and PHY choice for @ref startExtended.
+   */
+  struct ExtScanConfig {
+    BLEPhy phy = BLEPhy::PHY_1M;  ///< PHY to scan on.
+    uint16_t interval = 0;        ///< Scan interval (controller units).
+    uint16_t window = 0;          ///< Scan window (controller units).
+  };
+
+  /**
+   * @brief Start a BLE5 extended scan.
+   * @param durationMs Scan duration in milliseconds. 0 = indefinite.
+   * @param codedConfig Optional scan parameters for the Coded PHY. nullptr to skip.
+   * @param uncodedConfig Optional scan parameters for the 1M / 2M PHY. nullptr to skip.
+   * @return BTStatus indicating success or error.
+   * @note Requires BLE5_SUPPORTED.
+   */
+  BTStatus startExtended(uint32_t durationMs, const ExtScanConfig *codedConfig = nullptr, const ExtScanConfig *uncodedConfig = nullptr);
+
+  /**
+   * @brief Stop a running BLE5 extended scan.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus stopExtended();
+
+  // --- Periodic Sync (BLE5) ---
+
+  /**
+   * @brief Create a synchronization with a periodic advertiser.
+   * @param addr Address of the periodic advertiser.
+   * @param sid Advertising SID to synchronize with.
+   * @param skipCount Max number of periodic events the receiver may skip. 0 = none.
+   * @param timeoutMs Synchronization supervision timeout in milliseconds.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus createPeriodicSync(const BTAddress &addr, uint8_t sid, uint16_t skipCount = 0, uint16_t timeoutMs = 10000);
+
+  /**
+   * @brief Cancel a pending periodic sync creation.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus cancelPeriodicSync();
+
+  /**
+   * @brief Terminate an established periodic sync.
+   * @param syncHandle Handle returned by the stack when sync was established.
+   * @return BTStatus indicating success or error.
+   */
+  BTStatus terminatePeriodicSync(uint16_t syncHandle);
+
+  /**
+   * @brief Callback invoked when periodic sync is established.
+   * @param syncHandle Stack-assigned sync handle.
+   * @param sid Advertising SID.
+   * @param addr Advertiser address.
+   * @param phy PHY used for the periodic train.
+   * @param interval Periodic advertising interval.
+   */
+  using PeriodicSyncHandler = std::function<void(uint16_t syncHandle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval)>;
+
+  /**
+   * @brief Callback invoked for each periodic advertising report.
+   * @param syncHandle Sync handle identifying the periodic train.
+   * @param rssi Received signal strength indicator.
+   * @param txPower Transmit power level reported by the advertiser.
+   * @param data Pointer to the periodic advertising payload.
+   * @param len Length of the payload in bytes.
+   */
+  using PeriodicReportHandler = std::function<void(uint16_t syncHandle, int8_t rssi, int8_t txPower, const uint8_t *data, size_t len)>;
+
+  /**
+   * @brief Callback invoked when a periodic sync is lost (supervision timeout).
+   * @param syncHandle Sync handle that was lost.
+   */
+  using PeriodicLostHandler = std::function<void(uint16_t syncHandle)>;
+
+  /**
+   * @brief Register a handler for periodic sync establishment events.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onPeriodicSync(PeriodicSyncHandler handler);
+
+  /**
+   * @brief Register a handler for periodic advertising report events.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onPeriodicReport(PeriodicReportHandler handler);
+
+  /**
+   * @brief Register a handler for periodic sync lost events.
+   * @param handler The handler to invoke, or nullptr to clear.
+   */
+  void onPeriodicLost(PeriodicLostHandler handler);
+
+  struct Impl;
 
 private:
-  friend class BLEDevice;
-
-  /***************************************************************************
-   *                       Common private properties                         *
-   ***************************************************************************/
-
-  BLEAdvertisedDeviceCallbacks *m_pAdvertisedDeviceCallbacks = nullptr;
-  bool m_stopped = true;
-  bool m_shouldParse = true;
-  FreeRTOS::Semaphore m_semaphoreScanEnd = FreeRTOS::Semaphore("ScanEnd");
-  BLEScanResults m_scanResults;
-  bool m_wantDuplicates;
-  void (*m_scanCompleteCB)(BLEScanResults scanResults);
-
-  /***************************************************************************
-   *                       Bluedroid private properties                       *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  esp_ble_scan_params_t m_scan_params;
-#if defined(SOC_BLE_50_SUPPORTED)
-  BLEExtAdvertisingCallbacks *m_pExtendedScanCb = nullptr;
-  BLEPeriodicScanCallbacks *m_pPeriodicScanCb = nullptr;
-#endif  // SOC_BLE_50_SUPPORTED
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private properties                         *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  uint32_t m_duration;
-  ble_gap_disc_params m_scan_params;
-  bool m_ignoreResults;
-  BLETaskData *m_pTaskData;
-  uint8_t m_maxResults;
-#endif
-
-  /***************************************************************************
-   *                       Common private definitions                        *
-   ***************************************************************************/
-
-  BLEScan();  // One doesn't create a new instance instead one asks the BLEDevice for the singleton.
-
-  /***************************************************************************
-   *                       Bluedroid private definitions                     *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-#endif
-
-  /***************************************************************************
-   *                       NimBLE private definitions                        *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  void onHostReset();
-  void onHostSync();
-  static int handleGAPEvent(ble_gap_event *event, void *arg);
-#endif
-};  // BLEScan
-
-class BLEPeriodicScanCallbacks {
-public:
-  /***************************************************************************
-   *                       Common public declarations                        *
-   ***************************************************************************/
-
-  virtual ~BLEPeriodicScanCallbacks() {}
-  virtual void onLostSync(uint16_t sync_handle) {}
-
-  /***************************************************************************
-   *                       Bluedroid public declarations                     *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  virtual void onCreateSync(esp_bt_status_t status) {}
-  virtual void onCancelSync(esp_bt_status_t status) {}
-  virtual void onTerminateSync(esp_bt_status_t status) {}
-  virtual void onSync(esp_ble_periodic_adv_sync_estab_param_t) {}
-  virtual void onReport(esp_ble_gap_periodic_adv_report_t params) {}
-  virtual void onStop(esp_bt_status_t status) {}
-#endif
+  explicit BLEScan(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
+  friend class BLEClass;
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLESCAN_H_ */
+#endif /* BLE_ENABLED */

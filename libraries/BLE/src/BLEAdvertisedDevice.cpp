@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,334 +17,293 @@
  * limitations under the License.
  */
 
-/*
- * BLEAdvertisedDevice.cpp
- *
- * During the scanning procedure, we will be finding advertised BLE devices.  This class
- * models a found device.
- *
- * See also:
- * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
- *
- *  Created on: Jul 3, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <sstream>
-#include "BLEAdvertisedDevice.h"
-#include "BLEUtils.h"
+#include "impl/BLEAdvertisedDeviceImpl.h"
+#include "impl/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
-#include <inttypes.h>
 
-/***************************************************************************
- *                           Common functions                              *
- ***************************************************************************/
+// --------------------------------------------------------------------------
+// BLEAdvertisedDevice::Impl::parsePayload (shared payload parsing logic)
+// --------------------------------------------------------------------------
 
-BLEAdvertisedDevice::BLEAdvertisedDevice() {
-  m_adFlag = 0;
-  m_appearance = 0;
-  m_deviceType = 0;
-  m_manufacturerData = "";
-  m_name = "";
-  m_rssi = -9999;
-  m_serviceUUIDs = {};
-  m_serviceData = {};
-  m_serviceDataUUIDs = {};
-  m_txPower = 0;
-  m_pScan = nullptr;
-  m_advType = 0;
-  m_payload = nullptr;
-  m_payloadLength = 0;
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  m_callbackSent = false;
-#endif
-
-  m_haveAppearance = false;
-  m_haveManufacturerData = false;
-  m_haveName = false;
-  m_haveRSSI = false;
-  m_haveTXPower = false;
-  m_isLegacyAdv = true;
-}  // BLEAdvertisedDevice
-
-BLEAdvertisedDevice::~BLEAdvertisedDevice() {
-  if (m_payload != nullptr) {
-    free(m_payload);
-    m_payload = nullptr;
-    m_payloadLength = 0;
-  }
-}  // ~BLEAdvertisedDevice
-
-BLEAdvertisedDevice::BLEAdvertisedDevice(const BLEAdvertisedDevice &other) {
-  m_adFlag = other.m_adFlag;
-  m_appearance = other.m_appearance;
-  m_deviceType = other.m_deviceType;
-  m_manufacturerData = other.m_manufacturerData;
-  m_name = other.m_name;
-  m_rssi = other.m_rssi;
-  m_serviceUUIDs = other.m_serviceUUIDs;
-  m_serviceData = other.m_serviceData;
-  m_serviceDataUUIDs = other.m_serviceDataUUIDs;
-  m_txPower = other.m_txPower;
-  m_pScan = other.m_pScan;
-  m_advType = other.m_advType;
-  m_address = other.m_address;
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  m_callbackSent = other.m_callbackSent;
-#endif
-
-  m_haveAppearance = other.m_haveAppearance;
-  m_haveManufacturerData = other.m_haveManufacturerData;
-  m_haveName = other.m_haveName;
-  m_haveRSSI = other.m_haveRSSI;
-  m_haveTXPower = other.m_haveTXPower;
-  m_isLegacyAdv = other.m_isLegacyAdv;
-
-  // Deep copy the payload
-  m_payloadLength = other.m_payloadLength;
-  if (other.m_payload != nullptr && other.m_payloadLength > 0) {
-    m_payload = (uint8_t *)malloc(m_payloadLength);
-    if (m_payload != nullptr) {
-      memcpy(m_payload, other.m_payload, m_payloadLength);
-    } else {
-      log_e("Failed to allocate %lu bytes for payload in copy constructor", (unsigned long)m_payloadLength);
-      m_payloadLength = 0;
+/**
+ * @brief Parse a raw BLE advertisement payload into structured fields.
+ * @param data Pointer to the raw AD structure bytes.
+ * @param len Total length of the payload in bytes.
+ * @note Iterates AD structures (length-type-value) and populates name, UUIDs,
+ *       service data, manufacturer data, TX power, and appearance fields.
+ *       128-bit UUIDs are byte-reversed from the over-the-air little-endian
+ *       format to the BLEUUID big-endian internal representation.
+ */
+void BLEAdvertisedDevice::Impl::parsePayload(const uint8_t *data, size_t len) {
+  payload.assign(data, data + len);
+  size_t pos = 0;
+  while (pos < len) {
+    uint8_t adLen = data[pos];
+    if (adLen == 0 || pos + 1 + adLen > len) {
+      break;
     }
-  } else {
-    m_payload = nullptr;
-    m_payloadLength = 0;
-  }
-}  // BLEAdvertisedDevice copy constructor
+    uint8_t adType = data[pos + 1];
+    const uint8_t *adData = data + pos + 2;
+    uint8_t dataLen = adLen - 1;
 
-BLEAdvertisedDevice &BLEAdvertisedDevice::operator=(const BLEAdvertisedDevice &other) {
-  if (this == &other) {
-    return *this;
-  }
-
-  m_adFlag = other.m_adFlag;
-  m_appearance = other.m_appearance;
-  m_deviceType = other.m_deviceType;
-  m_manufacturerData = other.m_manufacturerData;
-  m_name = other.m_name;
-  m_rssi = other.m_rssi;
-  m_serviceUUIDs = other.m_serviceUUIDs;
-  m_serviceData = other.m_serviceData;
-  m_serviceDataUUIDs = other.m_serviceDataUUIDs;
-  m_txPower = other.m_txPower;
-  m_pScan = other.m_pScan;
-  m_advType = other.m_advType;
-  m_address = other.m_address;
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  m_callbackSent = other.m_callbackSent;
-#endif
-
-  m_haveAppearance = other.m_haveAppearance;
-  m_haveManufacturerData = other.m_haveManufacturerData;
-  m_haveName = other.m_haveName;
-  m_haveRSSI = other.m_haveRSSI;
-  m_haveTXPower = other.m_haveTXPower;
-  m_isLegacyAdv = other.m_isLegacyAdv;
-
-  // Free existing payload and deep copy the new one
-  if (m_payload != nullptr) {
-    free(m_payload);
-  }
-
-  m_payloadLength = other.m_payloadLength;
-  if (other.m_payload != nullptr && other.m_payloadLength > 0) {
-    m_payload = (uint8_t *)malloc(m_payloadLength);
-    if (m_payload != nullptr) {
-      memcpy(m_payload, other.m_payload, m_payloadLength);
-    } else {
-      log_e("Failed to allocate %lu bytes for payload in assignment operator", (unsigned long)m_payloadLength);
-      m_payloadLength = 0;
+    switch (adType) {
+      case 0x01:  // Flags
+        break;
+      case 0x02:  // Incomplete 16-bit UUIDs
+      case 0x03:  // Complete 16-bit UUIDs
+        for (size_t i = 0; i + 1 < dataLen; i += 2) {
+          uint16_t uuid16 = adData[i] | (adData[i + 1] << 8);
+          serviceUUIDs.push_back(BLEUUID(uuid16));
+        }
+        break;
+      case 0x04:  // Incomplete 32-bit UUIDs
+      case 0x05:  // Complete 32-bit UUIDs
+        for (size_t i = 0; i + 3 < dataLen; i += 4) {
+          uint32_t uuid32 = adData[i] | (adData[i + 1] << 8) | (adData[i + 2] << 16) | (adData[i + 3] << 24);
+          serviceUUIDs.push_back(BLEUUID(uuid32));
+        }
+        break;
+      case 0x06:  // Incomplete 128-bit UUIDs
+      case 0x07:  // Complete 128-bit UUIDs
+        for (size_t i = 0; i + 15 < dataLen; i += 16) {
+          serviceUUIDs.push_back(BLEUUID(adData + i, 16, true));
+        }
+        break;
+      case 0x08:  // Shortened Local Name
+      case 0x09:  // Complete Local Name
+        name = String(reinterpret_cast<const char *>(adData), dataLen);
+        hasName = true;
+        break;
+      case 0x0A:  // TX Power Level
+        if (dataLen >= 1) {
+          txPower = static_cast<int8_t>(adData[0]);
+          hasTXPower = true;
+        }
+        break;
+      case 0x19:  // Appearance
+        if (dataLen >= 2) {
+          appearance = adData[0] | (adData[1] << 8);
+          hasAppearance = true;
+        }
+        break;
+      case 0x14:  // 16-bit Service Solicitation UUIDs
+      case 0x15:  // 128-bit Service Solicitation UUIDs
+        break;
+      case 0x16:  // Service Data - 16-bit UUID
+        if (dataLen >= 2) {
+          ServiceDataEntry entry;
+          entry.uuid = BLEUUID(static_cast<uint16_t>(adData[0] | (adData[1] << 8)));
+          if (dataLen > 2) {
+            entry.data.assign(adData + 2, adData + dataLen);
+          }
+          serviceData.push_back(std::move(entry));
+        }
+        break;
+      case 0x20:  // Service Data - 32-bit UUID
+        if (dataLen >= 4) {
+          ServiceDataEntry entry;
+          entry.uuid = BLEUUID(static_cast<uint32_t>(adData[0] | (adData[1] << 8) | (adData[2] << 16) | (adData[3] << 24)));
+          if (dataLen > 4) {
+            entry.data.assign(adData + 4, adData + dataLen);
+          }
+          serviceData.push_back(std::move(entry));
+        }
+        break;
+      case 0x21:  // Service Data - 128-bit UUID
+        if (dataLen >= 16) {
+          ServiceDataEntry entry;
+          entry.uuid = BLEUUID(adData, 16, true);
+          if (dataLen > 16) {
+            entry.data.assign(adData + 16, adData + dataLen);
+          }
+          serviceData.push_back(std::move(entry));
+        }
+        break;
+      case 0xFF:  // Manufacturer Specific Data
+        mfgData.assign(adData, adData + dataLen);
+        hasMfgData = true;
+        break;
+      default: break;
     }
-  } else {
-    m_payload = nullptr;
-    m_payloadLength = 0;
+    pos += 1 + adLen;
   }
-
-  return *this;
-}  // BLEAdvertisedDevice assignment operator
-
-bool BLEAdvertisedDevice::isLegacyAdvertisement() {
-  return m_isLegacyAdv;
 }
 
-bool BLEAdvertisedDevice::isScannable() {
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  return isLegacyAdvertisement() && (m_advType == ESP_BLE_EVT_CONN_ADV || m_advType == ESP_BLE_EVT_DISC_ADV);
-#endif
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  return isLegacyAdvertisement() && (m_advType == BLE_HCI_ADV_TYPE_ADV_IND || m_advType == BLE_HCI_ADV_TYPE_ADV_SCAN_IND);
-#endif
+/**
+ * @brief Reset all parsed advertisement fields to their default (empty) state.
+ * @note Called before re-parsing when merging scan response data.
+ */
+void BLEAdvertisedDevice::Impl::clearParsedFields() {
+  name = "";
+  txPower = -128;
+  appearance = 0;
+  mfgData.clear();
+  serviceUUIDs.clear();
+  serviceData.clear();
+  hasName = false;
+  hasTXPower = false;
+  hasAppearance = false;
+  hasMfgData = false;
 }
 
-bool BLEAdvertisedDevice::isConnectable() {
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  return m_advType == ESP_BLE_EVT_CONN_ADV || m_advType == ESP_BLE_EVT_CONN_DIR_ADV;
-#endif
+// --------------------------------------------------------------------------
+// BLEAdvertisedDevice public API
+// --------------------------------------------------------------------------
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  if (m_isLegacyAdv) {
-    return m_advType == BLE_HCI_ADV_RPT_EVTYPE_ADV_IND || m_advType == BLE_HCI_ADV_RPT_EVTYPE_DIR_IND;
+/**
+ * @brief Construct an empty (invalid) advertised device with no backing data.
+ */
+BLEAdvertisedDevice::BLEAdvertisedDevice() : _impl(nullptr) {}
+
+/**
+ * @brief Check whether this handle refers to a valid advertised device.
+ * @return True if the underlying Impl data is present.
+ */
+BLEAdvertisedDevice::operator bool() const {
+  return _impl != nullptr;
+}
+
+/**
+ * @brief Get the advertiser's BLE address.
+ * @return The device address, or a default @c BTAddress if invalid.
+ */
+BTAddress BLEAdvertisedDevice::getAddress() const {
+  return _impl ? _impl->address : BTAddress();
+}
+
+/**
+ * @brief Get the address type (public, random, etc.).
+ * @return The address type, or @c Public if invalid.
+ */
+BTAddress::Type BLEAdvertisedDevice::getAddressType() const {
+  return _impl ? _impl->addrType : BTAddress::Type::Public;
+}
+
+/**
+ * @brief Get the advertised local name.
+ * @return The name, or an empty @c String if not present or invalid.
+ */
+String BLEAdvertisedDevice::getName() const {
+  return _impl ? _impl->name : "";
+}
+
+/**
+ * @brief Get the received signal strength.
+ * @return RSSI in dBm, or -128 if unavailable.
+ */
+int8_t BLEAdvertisedDevice::getRSSI() const {
+  return _impl ? _impl->rssi : -128;
+}
+
+/**
+ * @brief Get the advertised TX power level.
+ * @return TX power in dBm, or -128 if not present.
+ */
+int8_t BLEAdvertisedDevice::getTXPower() const {
+  return _impl ? _impl->txPower : -128;
+}
+
+/**
+ * @brief Get the advertised appearance value.
+ * @return GAP appearance code, or 0 if not present.
+ */
+uint16_t BLEAdvertisedDevice::getAppearance() const {
+  return _impl ? _impl->appearance : 0;
+}
+
+/**
+ * @brief Get the advertisement PDU type.
+ * @return The advertisement type, or @c ConnectableScannable if invalid.
+ */
+BLEAdvType BLEAdvertisedDevice::getAdvType() const {
+  return _impl ? _impl->advType : BLEAdvType::ConnectableScannable;
+}
+
+/**
+ * @brief Get the raw manufacturer-specific data.
+ * @param len If non-null, receives the data length in bytes (including company ID).
+ * @return Pointer to the data, or nullptr if not present.
+ */
+const uint8_t *BLEAdvertisedDevice::getManufacturerData(size_t *len) const {
+  if (!_impl || _impl->mfgData.empty()) {
+    if (len) {
+      *len = 0;
+    }
+    return nullptr;
   }
-  return (m_advType & BLE_HCI_ADV_CONN_MASK) || (m_advType & BLE_HCI_ADV_DIRECT_MASK);
-#endif
+  if (len) {
+    *len = _impl->mfgData.size();
+  }
+  return _impl->mfgData.data();
 }
 
 /**
- * @brief Get the address.
- *
- * Every %BLE device exposes an address that is used to identify it and subsequently connect to it.
- * Call this function to obtain the address of the advertised device.
- *
- * @return The address of the advertised device.
+ * @brief Get the manufacturer-specific data as a lowercase hex-encoded String.
+ * @return Hex string, or an empty String if not present.
  */
-BLEAddress BLEAdvertisedDevice::getAddress() {
-  return m_address;
-}  // getAddress
+String BLEAdvertisedDevice::getManufacturerDataString() const {
+  BLE_CHECK_IMPL("");
+  String s;
+  for (uint8_t b : impl.mfgData) {
+    char hex[3];
+    snprintf(hex, sizeof(hex), "%02x", b);
+    s += hex;
+  }
+  return s;
+}
 
 /**
- * @brief Get the appearance.
- *
- * A %BLE device can declare its own appearance.  The appearance is how it would like to be shown to an end user
- * typically in the form of an icon.
- *
- * @return The appearance of the advertised device.
+ * @brief Extract the 16-bit company identifier from manufacturer data.
+ * @return The company ID (little-endian in the payload), or 0 if fewer than 2 bytes.
  */
-uint16_t BLEAdvertisedDevice::getAppearance() {
-  return m_appearance;
-}  // getAppearance
+uint16_t BLEAdvertisedDevice::getManufacturerCompanyId() const {
+  if (!_impl || _impl->mfgData.size() < 2) {
+    return 0;
+  }
+  return _impl->mfgData[0] | (_impl->mfgData[1] << 8);
+}
 
 /**
- * @brief Get the manufacturer data.
- * @return The manufacturer data of the advertised device.
+ * @brief Get the number of service UUIDs in the advertisement.
+ * @return The count, or 0 if invalid.
  */
-String BLEAdvertisedDevice::getManufacturerData() {
-  return m_manufacturerData;
-}  // getManufacturerData
+size_t BLEAdvertisedDevice::getServiceUUIDCount() const {
+  return _impl ? _impl->serviceUUIDs.size() : 0;
+}
 
 /**
- * @brief Get the name.
- * @return The name of the advertised device.
+ * @brief Get a service UUID by index.
+ * @param index Zero-based index into the advertised service UUID list.
+ * @return The service UUID, or an invalid BLEUUID if index is out of range.
  */
-String BLEAdvertisedDevice::getName() {
-  return m_name;
-}  // getName
+BLEUUID BLEAdvertisedDevice::getServiceUUID(size_t index) const {
+  if (!_impl || index >= _impl->serviceUUIDs.size()) {
+    return BLEUUID();
+  }
+  return _impl->serviceUUIDs[index];
+}
 
 /**
- * @brief Get the RSSI.
- * @return The RSSI of the advertised device.
+ * @brief Check if the advertisement contains any service UUIDs.
+ * @return True if at least one UUID is present.
  */
-int BLEAdvertisedDevice::getRSSI() {
-  return m_rssi;
-}  // getRSSI
+bool BLEAdvertisedDevice::haveServiceUUID() const {
+  return _impl && !_impl->serviceUUIDs.empty();
+}
 
 /**
- * @brief Get the scan object that created this advertisement.
- * @return The scan object.
+ * @brief Check if a specific service UUID is advertised.
+ * @param uuid The service UUID to search for.
+ * @return True if found (compared at 128-bit width via to128()).
  */
-BLEScan *BLEAdvertisedDevice::getScan() {
-  return m_pScan;
-}  // getScan
-
-/**
- * @brief Get the number of service data.
- * @return Number of service data discovered.
- */
-int BLEAdvertisedDevice::getServiceDataCount() {
-  return m_serviceData.size();
-}  //getServiceDataCount
-
-/**
- * @brief Get the service data.
- * @return The ServiceData of the advertised device.
- */
-String BLEAdvertisedDevice::getServiceData() {
-  return m_serviceData.empty() ? String() : m_serviceData.front();
-}  //getServiceData
-
-/**
- * @brief Get the service data.
- * @return The ServiceData of the advertised device.
- */
-String BLEAdvertisedDevice::getServiceData(int i) {
-  return m_serviceData[i];
-}  //getServiceData
-
-/**
- * @brief Get the number of service data UUIDs.
- * @return Number of service data UUIDs discovered.
- */
-int BLEAdvertisedDevice::getServiceDataUUIDCount() {
-  return m_serviceDataUUIDs.size();
-}  //getServiceDataUUIDCount
-
-/**
- * @brief Get the service data UUID.
- * @return The service data UUID.
- */
-BLEUUID BLEAdvertisedDevice::getServiceDataUUID() {
-  return m_serviceDataUUIDs.empty() ? BLEUUID() : m_serviceDataUUIDs.front();
-}  // getServiceDataUUID
-
-/**
- * @brief Get the service data UUID.
- * @return The service data UUID.
- */
-BLEUUID BLEAdvertisedDevice::getServiceDataUUID(int i) {
-  return m_serviceDataUUIDs[i];
-}  // getServiceDataUUID
-
-/**
- * @brief Get the number of service UUIDs.
- * @return Number of service UUIDs discovered.
- */
-int BLEAdvertisedDevice::getServiceUUIDCount() {
-  return m_serviceUUIDs.size();
-}  //getServiceUUIDCount
-
-/**
- * @brief Get the Service UUID.
- * @return The Service UUID of the advertised device.
- */
-BLEUUID BLEAdvertisedDevice::getServiceUUID() {
-  return m_serviceUUIDs.empty() ? BLEUUID() : m_serviceUUIDs.front();
-}  // getServiceUUID
-
-/**
- * @brief Get the Service UUID.
- * @return The Service UUID of the advertised device.
- */
-BLEUUID BLEAdvertisedDevice::getServiceUUID(int i) {
-  return m_serviceUUIDs[i];
-}  // getServiceUUID
-
-/**
- * @brief Check advertised serviced for existence required UUID
- * @return Return true if service is advertised
- */
-bool BLEAdvertisedDevice::isAdvertisingService(BLEUUID uuid) {
-  for (int i = 0; i < getServiceUUIDCount(); i++) {
-    if (m_serviceUUIDs[i].equals(uuid)) {
+bool BLEAdvertisedDevice::isAdvertisingService(const BLEUUID &uuid) const {
+  BLE_CHECK_IMPL(false);
+  BLEUUID target = uuid.to128();
+  for (const auto &u : impl.serviceUUIDs) {
+    if (u.to128() == target) {
       return true;
     }
   }
@@ -352,474 +311,351 @@ bool BLEAdvertisedDevice::isAdvertisingService(BLEUUID uuid) {
 }
 
 /**
- * @brief Get the TX Power.
- * @return The TX Power of the advertised device.
+ * @brief Get the number of service data entries.
+ * @return The count, or 0 if invalid.
  */
-int8_t BLEAdvertisedDevice::getTXPower() {
-  return m_txPower;
-}  // getTXPower
+size_t BLEAdvertisedDevice::getServiceDataCount() const {
+  return _impl ? _impl->serviceData.size() : 0;
+}
 
 /**
- * @brief Does this advertisement have an appearance value?
- * @return True if there is an appearance value present.
+ * @brief Get raw service data by index.
+ * @param index Zero-based index into the service data list.
+ * @param len If non-null, receives the data length in bytes.
+ * @return Pointer to the data, or nullptr if index is out of range.
  */
-bool BLEAdvertisedDevice::haveAppearance() {
-  return m_haveAppearance;
-}  // haveAppearance
-
-/**
- * @brief Does this advertisement have manufacturer data?
- * @return True if there is manufacturer data present.
- */
-bool BLEAdvertisedDevice::haveManufacturerData() {
-  return m_haveManufacturerData;
-}  // haveManufacturerData
-
-/**
- * @brief Does this advertisement have a name value?
- * @return True if there is a name value present.
- */
-bool BLEAdvertisedDevice::haveName() {
-  return m_haveName;
-}  // haveName
-
-/**
- * @brief Does this advertisement have a signal strength value?
- * @return True if there is a signal strength value present.
- */
-bool BLEAdvertisedDevice::haveRSSI() {
-  return m_haveRSSI;
-}  // haveRSSI
-
-/**
- * @brief Does this advertisement have a service data value?
- * @return True if there is a service data value present.
- */
-bool BLEAdvertisedDevice::haveServiceData() {
-  return !m_serviceData.empty();
-}  // haveServiceData
-
-/**
- * @brief Does this advertisement have a service UUID value?
- * @return True if there is a service UUID value present.
- */
-bool BLEAdvertisedDevice::haveServiceUUID() {
-  return !m_serviceUUIDs.empty();
-}  // haveServiceUUID
-
-/**
- * @brief Does this advertisement have a transmission power value?
- * @return True if there is a transmission power value present.
- */
-bool BLEAdvertisedDevice::haveTXPower() {
-  return m_haveTXPower;
-}  // haveTXPower
-
-/**
- * @brief Parse the advertising pay load.
- *
- * The pay load is a buffer of bytes that is either 31 bytes long or terminated by
- * a 0 length value.  Each entry in the buffer has the format:
- * [length][type][data...]
- *
- * The length does not include itself but does include everything after it until the next record.  A record
- * with a length value of 0 indicates a terminator.
- *
- * https://www.bluetooth.com/specifications/assigned-numbers/generic-access-profile
- */
-void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len) {
-  uint8_t length;
-  uint8_t ad_type;
-  uint8_t sizeConsumed = 0;
-  bool finished = false;
-
-  // Store/append raw payload data for later retrieval
-  // This handles both ADV and Scan Response packets by merging them
-  if (m_payload != nullptr && m_payloadLength > 0) {
-    // Append new payload data (scan response) to existing (advertisement)
-    uint8_t *new_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
-    if (new_payload != nullptr) {
-      memcpy(new_payload + m_payloadLength, payload, total_len);
-      m_payload = new_payload;
-      m_payloadLength += total_len;
-    } else {
-      log_e("Failed to reallocate %lu bytes for payload (append)", (unsigned long)m_payloadLength + total_len);
+const uint8_t *BLEAdvertisedDevice::getServiceData(size_t index, size_t *len) const {
+  if (!_impl || index >= _impl->serviceData.size()) {
+    if (len) {
+      *len = 0;
     }
-  } else {
-    // First payload - make a copy since the original buffer may be reused
-    m_payload = (uint8_t *)malloc(total_len);
-    if (m_payload != nullptr) {
-      memcpy(m_payload, payload, total_len);
-      m_payloadLength = total_len;
-    } else {
-      log_e("Failed to allocate %lu bytes for payload", (unsigned long)total_len);
-      m_payloadLength = 0;
+    return nullptr;
+  }
+  if (len) {
+    *len = _impl->serviceData[index].data.size();
+  }
+  return _impl->serviceData[index].data.data();
+}
+
+/**
+ * @brief Get service data as a lowercase hex-encoded String.
+ * @param index Zero-based index into the service data list.
+ * @return Hex string, or an empty String if index is out of range.
+ */
+String BLEAdvertisedDevice::getServiceDataString(size_t index) const {
+  if (!_impl || index >= _impl->serviceData.size()) {
+    return "";
+  }
+  String s;
+  for (uint8_t b : _impl->serviceData[index].data) {
+    char hex[3];
+    snprintf(hex, sizeof(hex), "%02x", b);
+    s += hex;
+  }
+  return s;
+}
+
+/**
+ * @brief Get the UUID associated with a service data entry.
+ * @param index Zero-based index into the service data list.
+ * @return The UUID, or an invalid BLEUUID if index is out of range.
+ */
+BLEUUID BLEAdvertisedDevice::getServiceDataUUID(size_t index) const {
+  if (!_impl || index >= _impl->serviceData.size()) {
+    return BLEUUID();
+  }
+  return _impl->serviceData[index].uuid;
+}
+
+/**
+ * @brief Check if the advertisement contains any service data.
+ * @return True if at least one entry is present.
+ */
+bool BLEAdvertisedDevice::haveServiceData() const {
+  return _impl && !_impl->serviceData.empty();
+}
+
+/**
+ * @brief Get a pointer to the raw advertisement payload.
+ * @return Pointer to the raw AD structure bytes, or nullptr if empty.
+ */
+const uint8_t *BLEAdvertisedDevice::getPayload() const {
+  if (!_impl || _impl->payload.empty()) {
+    return nullptr;
+  }
+  return _impl->payload.data();
+}
+
+/**
+ * @brief Get the total length of the raw advertisement payload.
+ * @return Payload length in bytes.
+ */
+size_t BLEAdvertisedDevice::getPayloadLength() const {
+  return _impl ? _impl->payload.size() : 0;
+}
+
+/**
+ * @brief Whether a GAP local name was present in the AD data.
+ * @return True if a name field was parsed.
+ */
+bool BLEAdvertisedDevice::haveName() const {
+  return _impl && _impl->hasName;
+}
+
+/**
+ * @brief Whether a valid RSSI sample is stored.
+ * @return True if RSSI was recorded for this event.
+ */
+bool BLEAdvertisedDevice::haveRSSI() const {
+  return _impl && _impl->hasRSSI;
+}
+
+/**
+ * @brief Whether a TX power AD field was present.
+ * @return True if a TX power field exists.
+ */
+bool BLEAdvertisedDevice::haveTXPower() const {
+  return _impl && _impl->hasTXPower;
+}
+
+/**
+ * @brief Whether an appearance AD field was present.
+ * @return True if the appearance field exists.
+ */
+bool BLEAdvertisedDevice::haveAppearance() const {
+  return _impl && _impl->hasAppearance;
+}
+
+/**
+ * @brief Whether manufacturer specific data is present.
+ * @return True if MFG data was parsed.
+ */
+bool BLEAdvertisedDevice::haveManufacturerData() const {
+  return _impl && _impl->hasMfgData;
+}
+
+/**
+ * @brief Whether the event indicates a connectable advertiser.
+ * @return True if connectable.
+ */
+bool BLEAdvertisedDevice::isConnectable() const {
+  return _impl && _impl->connectable;
+}
+
+/**
+ * @brief Whether the event indicates a scannable advertiser.
+ * @return True if scannable.
+ */
+bool BLEAdvertisedDevice::isScannable() const {
+  return _impl && _impl->scannable;
+}
+
+/**
+ * @brief Whether this is a directed advertisement.
+ * @return True if directed.
+ */
+bool BLEAdvertisedDevice::isDirected() const {
+  return _impl && _impl->directed;
+}
+
+/**
+ * @brief Whether the PDU is legacy (not extended advertising).
+ * @return True for legacy PDUs; defaults to true if the handle is invalid.
+ */
+bool BLEAdvertisedDevice::isLegacyAdvertisement() const {
+  return _impl ? _impl->legacy : true;
+}
+
+/**
+ * @brief Primary advertising PHY for extended advertising events.
+ * @return The primary @c BLEPhy, or @c PHY_1M.
+ */
+BLEPhy BLEAdvertisedDevice::getPrimaryPhy() const {
+  return _impl ? _impl->primaryPhy : BLEPhy::PHY_1M;
+}
+
+/**
+ * @brief Secondary (aux) advertising PHY.
+ * @return The secondary @c BLEPhy, or @c PHY_1M.
+ */
+BLEPhy BLEAdvertisedDevice::getSecondaryPhy() const {
+  return _impl ? _impl->secondaryPhy : BLEPhy::PHY_1M;
+}
+
+/**
+ * @brief Advertising set identifier (BLE 5).
+ * @return SID (0–15), or 0xFF if unknown.
+ */
+uint8_t BLEAdvertisedDevice::getAdvSID() const {
+  return _impl ? _impl->sid : 0xFF;
+}
+
+/**
+ * @brief Periodic advertising interval if present.
+ * @return Interval in 1.25 ms units, or 0.
+ */
+uint16_t BLEAdvertisedDevice::getPeriodicInterval() const {
+  return _impl ? _impl->periodicInterval : 0;
+}
+
+/**
+ * @brief Detect the beacon frame type by inspecting manufacturer and service data.
+ * @return IBeacon if Apple 0x004C + subtype 0x0215 is found; EddystoneUUID/URL/TLM
+ *         if service data UUID 0xFEAA matches; Unknown otherwise.
+ */
+BLEAdvertisedDevice::FrameType BLEAdvertisedDevice::getFrameType() const {
+  BLE_CHECK_IMPL(Unknown);
+
+  // iBeacon: Apple company ID (0x004C) + subtype 0x02 0x15 + 21-byte body
+  if (impl.hasMfgData && impl.mfgData.size() >= 25 && impl.mfgData[0] == 0x4C && impl.mfgData[1] == 0x00 && impl.mfgData[2] == 0x02
+      && impl.mfgData[3] == 0x15) {
+    return IBeacon;
+  }
+
+  // Eddystone: service data with UUID 0xFEAA, first byte = frame type
+  const BLEUUID eddy((uint16_t)0xFEAA);
+  for (const auto &sd : impl.serviceData) {
+    if (!(sd.uuid == eddy) || sd.data.empty()) {
+      continue;
+    }
+    switch (sd.data[0]) {
+      case 0x00: return EddystoneUUID;
+      case 0x10: return EddystoneURL;
+      case 0x20: return EddystoneTLM;
+      default:   break;
     }
   }
 
-  while (!finished) {
-    length = *payload;           // Retrieve the length of the record.
-    payload++;                   // Skip to type
-    sizeConsumed += 1 + length;  // increase the size consumed.
-
-    if (length != 0) {  // A length of 0 indicates that we have reached the end.
-      ad_type = *payload;
-      payload++;
-      length--;
-
-      char *pHex = BLEUtils::buildHexData(nullptr, payload, length);
-      log_d("Type: 0x%.2x (%s), length: %u, data: %s", ad_type, BLEUtils::advDataTypeToString(ad_type), length, pHex);
-      free(pHex);
-
-      switch (ad_type) {
-        case ESP_BLE_AD_TYPE_NAME_CMPL:  // 0x09
-        {                                // Adv Data Type: ESP_BLE_AD_TYPE_NAME_CMPL
-          setName(String(reinterpret_cast<char *>(payload), length));
-          break;
-        }  // 0x09
-
-        case ESP_BLE_AD_TYPE_TX_PWR:  // 0x0A
-        {                             // Adv Data Type: ESP_BLE_AD_TYPE_TX_PWR
-          setTXPower(*payload);
-          break;
-        }  // 0x0A
-
-        case ESP_BLE_AD_TYPE_APPEARANCE:  // 0x19
-        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_APPEARANCE
-          setAppearance(*reinterpret_cast<uint16_t *>(payload));
-          break;
-        }  // 0x19
-
-        case ESP_BLE_AD_TYPE_FLAG:  // 0x01
-        {                           // Adv Data Type: ESP_BLE_AD_TYPE_FLAG
-          setAdFlag(*payload);
-          break;
-        }  // 0x01
-
-        case ESP_BLE_AD_TYPE_16SRV_PART:  // 0x02
-        case ESP_BLE_AD_TYPE_16SRV_CMPL:  // 0x03
-        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_16SRV_PART/CMPL
-          for (int var = 0; var < length / 2; ++var) {
-            setServiceUUID(BLEUUID(*reinterpret_cast<uint16_t *>(payload + var * 2)));
-          }
-          break;
-        }  // 0x02, 0x03
-
-        case ESP_BLE_AD_TYPE_32SRV_PART:  // 0x04
-        case ESP_BLE_AD_TYPE_32SRV_CMPL:  // 0x05
-        {                                 // Adv Data Type: ESP_BLE_AD_TYPE_32SRV_PART/CMPL
-          for (int var = 0; var < length / 4; ++var) {
-            setServiceUUID(BLEUUID(*reinterpret_cast<uint32_t *>(payload + var * 4)));
-          }
-          break;
-        }  // 0x04, 0x05
-
-        case ESP_BLE_AD_TYPE_128SRV_CMPL:  // 0x07
-        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_CMPL
-          setServiceUUID(BLEUUID(payload, 16, false));
-          break;
-        }  // 0x07
-
-        case ESP_BLE_AD_TYPE_128SRV_PART:  // 0x06
-        {                                  // Adv Data Type: ESP_BLE_AD_TYPE_128SRV_PART
-          setServiceUUID(BLEUUID(payload, 16, false));
-          break;
-        }  // 0x06
-
-        // See CSS Part A 1.4 Manufacturer Specific Data
-        case ESP_BLE_AD_MANUFACTURER_SPECIFIC_TYPE:  // 0xFF
-        {
-          setManufacturerData(String(reinterpret_cast<char *>(payload), length));
-          break;
-        }  // 0xFF
-
-        case ESP_BLE_AD_TYPE_SERVICE_DATA:  // 0x16
-        {                                   // Adv Data Type: ESP_BLE_AD_TYPE_SERVICE_DATA - 2 byte UUID
-          if (length < 2) {
-            log_e("Length too small for SERVICE_DATA");
-            break;
-          }
-          uint16_t uuid = *(uint16_t *)payload;
-          setServiceDataUUID(BLEUUID(uuid));
-          if (length > 2) {
-            setServiceData(String(reinterpret_cast<char *>(payload + 2), length - 2));
-          }
-          break;
-        }  // 0x16
-
-        case ESP_BLE_AD_TYPE_32SERVICE_DATA:  // 0x20
-        {                                     // Adv Data Type: ESP_BLE_AD_TYPE_32SERVICE_DATA - 4 byte UUID
-          if (length < 4) {
-            log_e("Length too small for 32SERVICE_DATA");
-            break;
-          }
-          uint32_t uuid = *(uint32_t *)payload;
-          setServiceDataUUID(BLEUUID(uuid));
-          if (length > 4) {
-            setServiceData(String(reinterpret_cast<char *>(payload + 4), length - 4));
-          }
-          break;
-        }  // 0x20
-
-        case ESP_BLE_AD_TYPE_128SERVICE_DATA:  // 0x21
-        {                                      // Adv Data Type: ESP_BLE_AD_TYPE_128SERVICE_DATA - 16 byte UUID
-          if (length < 16) {
-            log_e("Length too small for 128SERVICE_DATA");
-            break;
-          }
-
-          setServiceDataUUID(BLEUUID(payload, (size_t)16, false));
-          if (length > 16) {
-            setServiceData(String(reinterpret_cast<char *>(payload + 16), length - 16));
-          }
-          break;
-        }  // 0x21
-
-        default:
-        {
-          log_d("Unhandled type: adType: %u - 0x%02x", ad_type, ad_type);
-          break;
-        }  // default
-      }  // switch
-      payload += length;
-    }  // Length <> 0
-
-    if (sizeConsumed >= total_len) {
-      finished = true;
-    }
-
-  }  // !finished
-}  // parseAdvertisement
+  return Unknown;
+}
 
 /**
- * @brief Set the advertising payload.
- * @param [in] payload The payload of the advertised device.
- * @param [in] total_len The length of payload
- * @param [in] append If true, append to existing payload (for scan response merging)
+ * @brief Get a human-readable summary including name, address, and RSSI.
+ * @return Formatted String, or "BLEAdvertisedDevice(empty)" if invalid.
  */
-void BLEAdvertisedDevice::setPayload(uint8_t *payload, size_t total_len, bool append) {
-  if (total_len == 0 || payload == nullptr) {
-    return;
-  }
+String BLEAdvertisedDevice::toString() const {
+  BLE_CHECK_IMPL("BLEAdvertisedDevice(empty)");
+  String s = "Name: " + impl.name + ", Addr: " + impl.address.toString();
+  s += ", RSSI: " + String(impl.rssi);
+  return s;
+}
 
-  if (append && m_payload != nullptr && m_payloadLength > 0) {
-    // Append scan response data to existing advertisement data
-    uint8_t *new_payload = (uint8_t *)realloc(m_payload, m_payloadLength + total_len);
-    if (new_payload == nullptr) {
-      log_e("Failed to reallocate %lu bytes for payload buffer", (unsigned long)m_payloadLength + total_len);
+// --------------------------------------------------------------------------
+// BLEScanResults
+// --------------------------------------------------------------------------
+
+/**
+ * @brief Merge a SCAN_RSP payload into this device's existing ADV_IND data.
+ * @param data Pointer to the scan response payload bytes.
+ * @param len Length of the scan response data in bytes.
+ * @param rssi RSSI of the scan response.
+ * @note Concatenates the ADV_IND and SCAN_RSP payloads, clears and re-parses
+ *       all AD structures, then deduplicates service UUIDs and service data
+ *       entries (keeping the SCAN_RSP value for duplicate service data UUIDs).
+ */
+void BLEAdvertisedDevice::mergeScanResponse(const uint8_t *data, size_t len, int8_t rssi) {
+  BLE_CHECK_IMPL();
+  if (data && len > 0) {
+    std::vector<uint8_t> combined(std::move(impl.payload));
+    combined.insert(combined.end(), data, data + len);
+    impl.clearParsedFields();
+    impl.parsePayload(combined.data(), combined.size());
+
+    // Deduplicate UUIDs that may appear in both ADV_IND and SCAN_RSP.
+    auto &uuids = impl.serviceUUIDs;
+    for (size_t i = 0; i < uuids.size(); ++i) {
+      for (size_t j = i + 1; j < uuids.size();) {
+        if (uuids[j] == uuids[i]) {
+          uuids.erase(uuids.begin() + j);
+        } else {
+          ++j;
+        }
+      }
+    }
+
+    // Deduplicate service data entries; keep the last (SCAN_RSP) value.
+    auto &sd = impl.serviceData;
+    for (size_t i = 0; i < sd.size(); ++i) {
+      for (size_t j = i + 1; j < sd.size();) {
+        if (sd[j].uuid == sd[i].uuid) {
+          sd[i].data = std::move(sd[j].data);
+          sd.erase(sd.begin() + j);
+        } else {
+          ++j;
+        }
+      }
+    }
+  }
+  impl.rssi = rssi;
+  impl.hasRSSI = true;
+  impl.scannable = true;
+}
+
+/**
+ * @brief Add a device to the results, replacing any existing entry with the same address.
+ * @param device The advertised device to insert or update.
+ * @note When the existing entry already has a device name (merged from a prior
+ *       scan response) and the incoming device has no name (a duplicate primary
+ *       ADV packet received when filterDuplicates is off), the existing entry is
+ *       preserved to avoid losing the scan-response data.
+ */
+void BLEScanResults::appendOrReplace(const BLEAdvertisedDevice &device) {
+  for (auto &existing : _devices) {
+    if (existing.getAddress() == device.getAddress()) {
+      // Preserve an existing entry that has a name from a merged scan response
+      // when the incoming duplicate primary ADV carries no name.  Overwriting
+      // would silently erase the name, causing getName() to return "" even
+      // though the device is still advertising.
+      if (existing.haveName() && !device.haveName()) {
+        return;
+      }
+      existing = device;
       return;
     }
-    memcpy(new_payload + m_payloadLength, payload, total_len);
-    m_payload = new_payload;
-    m_payloadLength += total_len;
-  } else {
-    // First payload or replacing existing - make a copy
-    if (m_payload != nullptr && m_payloadLength > 0) {
-      free(m_payload);
-    }
-    m_payload = (uint8_t *)malloc(total_len);
-    if (m_payload == nullptr) {
-      log_e("Failed to allocate %lu bytes for payload buffer", (unsigned long)total_len);
-      m_payloadLength = 0;
-      return;
-    }
-    memcpy(m_payload, payload, total_len);
-    m_payloadLength = total_len;
   }
-}  // setPayload
-
-/**
- * @brief Set the address of the advertised device.
- * @param [in] address The address of the advertised device.
- */
-void BLEAdvertisedDevice::setAddress(BLEAddress address) {
-  m_address = address;
-}  // setAddress
-
-/**
- * @brief Set the adFlag for this device.
- * @param [in] The discovered adFlag.
- */
-void BLEAdvertisedDevice::setAdFlag(uint8_t adFlag) {
-  m_adFlag = adFlag;
-}  // setAdFlag
-
-/**
- * @brief Set the appearance for this device.
- * @param [in] The discovered appearance.
- */
-void BLEAdvertisedDevice::setAppearance(uint16_t appearance) {
-  m_appearance = appearance;
-  m_haveAppearance = true;
-  log_d("- appearance: %u", m_appearance);
-}  // setAppearance
-
-/**
- * @brief Set the manufacturer data for this device.
- * @param [in] The discovered manufacturer data.
- */
-void BLEAdvertisedDevice::setManufacturerData(String manufacturerData) {
-  m_manufacturerData = manufacturerData;
-  m_haveManufacturerData = true;
-  char *pHex = BLEUtils::buildHexData(nullptr, (uint8_t *)m_manufacturerData.c_str(), (uint8_t)m_manufacturerData.length());
-  log_d("- manufacturer data: %s", pHex);
-  free(pHex);
-}  // setManufacturerData
-
-/**
- * @brief Set the name for this device.
- * @param [in] name The discovered name.
- */
-void BLEAdvertisedDevice::setName(String name) {
-  m_name = name;
-  m_haveName = true;
-  log_d("- setName(): name: %s", m_name.c_str());
-}  // setName
-
-/**
- * @brief Set the RSSI for this device.
- * @param [in] rssi The discovered RSSI.
- */
-void BLEAdvertisedDevice::setRSSI(int rssi) {
-  m_rssi = rssi;
-  m_haveRSSI = true;
-  log_d("- setRSSI(): rssi: %d", m_rssi);
-}  // setRSSI
-
-/**
- * @brief Set the Scan that created this advertised device.
- * @param pScan The Scan that created this advertised device.
- */
-void BLEAdvertisedDevice::setScan(BLEScan *pScan) {
-  m_pScan = pScan;
-}  // setScan
-
-/**
- * @brief Set the Service UUID for this device.
- * @param [in] serviceUUID The discovered serviceUUID
- */
-void BLEAdvertisedDevice::setServiceUUID(const char *serviceUUID) {
-  return setServiceUUID(BLEUUID(serviceUUID));
-}  // setServiceUUID
-
-/**
- * @brief Set the Service UUID for this device.
- * @param [in] serviceUUID The discovered serviceUUID
- */
-void BLEAdvertisedDevice::setServiceUUID(BLEUUID serviceUUID) {
-  m_serviceUUIDs.push_back(serviceUUID);
-  log_d("- addServiceUUID(): serviceUUID: %s", serviceUUID.toString().c_str());
-}  // setServiceUUID
-
-/**
- * @brief Set the ServiceData value.
- * @param [in] data ServiceData value.
- */
-void BLEAdvertisedDevice::setServiceData(String serviceData) {
-  m_serviceData.push_back(serviceData);  // Save the service data that we received.
-}  //setServiceData
-
-/**
- * @brief Set the ServiceDataUUID value.
- * @param [in] data ServiceDataUUID value.
- */
-void BLEAdvertisedDevice::setServiceDataUUID(BLEUUID uuid) {
-  m_serviceDataUUIDs.push_back(uuid);
-  log_d("- addServiceDataUUID(): serviceDataUUID: %s", uuid.toString().c_str());
-}  // setServiceDataUUID
-
-/**
- * @brief Set the power level for this device.
- * @param [in] txPower The discovered power level.
- */
-void BLEAdvertisedDevice::setTXPower(int8_t txPower) {
-  m_txPower = txPower;
-  m_haveTXPower = true;
-  log_d("- txPower: %d", m_txPower);
-}  // setTXPower
-
-/**
- * @brief Create a string representation of this device.
- * @return A string representation of this device.
- */
-String BLEAdvertisedDevice::toString() {
-  String res = "Name: " + getName() + ", Address: " + getAddress().toString();
-  if (haveAppearance()) {
-    char val[6];
-    snprintf(val, sizeof(val), "%u", getAppearance());
-    res += ", appearance: ";
-    res += val;
-  }
-  if (haveManufacturerData()) {
-    char *pHex = BLEUtils::buildHexData(nullptr, (uint8_t *)getManufacturerData().c_str(), getManufacturerData().length());
-    res += ", manufacturer data: ";
-    res += pHex;
-    free(pHex);
-  }
-  if (haveServiceUUID()) {
-    for (int i = 0; i < getServiceUUIDCount(); i++) {
-      res += ", serviceUUID: " + getServiceUUID(i).toString();
-    }
-  }
-  if (haveTXPower()) {
-    char val[6];
-    snprintf(val, sizeof(val), "%d", getTXPower());
-    res += ", txPower: ";
-    res += val;
-  }
-  if (haveRSSI()) {
-    char val[6];
-    snprintf(val, sizeof(val), "%d", getRSSI());
-    res += ", rssi: ";
-    res += val;
-  }
-  if (haveServiceData()) {
-    for (int i = 0; i < getServiceDataCount(); i++) {
-      res += ", serviceData: " + getServiceData(i);
-    }
-  }
-  return res;
-}  // toString
-
-uint8_t *BLEAdvertisedDevice::getPayload() {
-  return m_payload;
+  _devices.push_back(device);
 }
 
-uint8_t BLEAdvertisedDevice::getAddressType() {
-  return m_address.getType();
+/**
+ * @brief Get the number of devices in the scan result set.
+ * @return Number of @c BLEAdvertisedDevice entries.
+ */
+size_t BLEScanResults::getCount() const {
+  return _devices.size();
 }
 
-ble_frame_type_t BLEAdvertisedDevice::getFrameType() {
-  for (int i = 0; i < m_payloadLength; ++i) {
-    log_d("check [%d]=0x%02X", i, m_payload[i]);
-    if (m_payload[i] == 0x16 && m_payloadLength >= i + 3 && m_payload[i + 1] == 0xAA && m_payload[i + 2] == 0xFE && m_payload[i + 3] == 0x00) {
-      return BLE_EDDYSTONE_UUID_FRAME;
-    }
-    if (m_payload[i] == 0x16 && m_payloadLength >= i + 3 && m_payload[i + 1] == 0xAA && m_payload[i + 2] == 0xFE && m_payload[i + 3] == 0x10) {
-      return BLE_EDDYSTONE_URL_FRAME;
-    }
-    if (m_payload[i] == 0x16 && m_payloadLength >= i + 3 && m_payload[i + 1] == 0xAA && m_payload[i + 2] == 0xFE && m_payload[i + 3] == 0x20) {
-      return BLE_EDDYSTONE_TLM_FRAME;
-    }
+/**
+ * @brief Get an advertised device by index.
+ * @param index Zero-based index.
+ * @return The device, or a default-constructed (invalid) BLEAdvertisedDevice if out of range.
+ */
+BLEAdvertisedDevice BLEScanResults::getDevice(size_t index) const {
+  return (index < _devices.size()) ? _devices[index] : BLEAdvertisedDevice();
+}
+
+/**
+ * @brief Log all scan results via log_i for debugging.
+ */
+void BLEScanResults::dump() const {
+  for (size_t i = 0; i < _devices.size(); i++) {
+    log_i("[%d] %s", i, _devices[i].toString().c_str());
   }
-  return BLE_UNKNOWN_FRAME;
 }
 
-void BLEAdvertisedDevice::setAddressType(uint8_t type) {
-  m_address.setType(type);
+/**
+ * @brief Iterator to the first scan result (range-based @c for support).
+ * @return Pointer to the first element, or a non-dereferenceable pointer if empty.
+ */
+const BLEAdvertisedDevice *BLEScanResults::begin() const {
+  return _devices.data();
 }
 
-size_t BLEAdvertisedDevice::getPayloadLength() {
-  return m_payloadLength;
+/**
+ * @brief Past-the-end iterator.
+ * @return One past the last element.
+ */
+const BLEAdvertisedDevice *BLEScanResults::end() const {
+  return _devices.data() + _devices.size();
 }
 
-void BLEAdvertisedDevice::setAdvType(uint8_t type) {
-  m_advType = type;
-}
-
-uint8_t BLEAdvertisedDevice::getAdvType() {
-  return m_advType;
-}
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+#endif /* BLE_ENABLED */

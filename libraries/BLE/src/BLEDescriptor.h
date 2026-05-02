@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,190 +17,273 @@
  * limitations under the License.
  */
 
-/*
- * BLEDescriptor.h
- *
- *  Created on: Jun 22, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#pragma once
 
-#ifndef COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_
-#define COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_
+#include "impl/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <string>
+#include "BTStatus.h"
 #include "BLEUUID.h"
-#include "BLECharacteristic.h"
-#include "RTOS.h"
-
-/***************************************************************************
- *                           Bluedroid includes                            *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_gatts_api.h>
-#endif
-
-/***************************************************************************
- *                           NimBLE includes                               *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <host/ble_att.h>
+#include "BLEProperty.h"
 #include "BLEConnInfo.h"
+#include <memory>
+#include <functional>
 
-// Bluedroid compatibility
-// NimBLE does not support signed reads and writes
-
-#define ESP_GATT_PERM_READ                BLE_ATT_F_READ
-#define ESP_GATT_PERM_WRITE               BLE_ATT_F_WRITE
-#define ESP_GATT_PERM_READ_ENCRYPTED      BLE_ATT_F_READ_ENC
-#define ESP_GATT_PERM_WRITE_ENCRYPTED     BLE_ATT_F_WRITE_ENC
-#define ESP_GATT_PERM_READ_AUTHORIZATION  BLE_ATT_F_READ_AUTHOR
-#define ESP_GATT_PERM_WRITE_AUTHORIZATION BLE_ATT_F_WRITE_AUTHOR
-#define ESP_GATT_PERM_READ_ENC_MITM       BLE_ATT_F_READ_AUTHEN
-#define ESP_GATT_PERM_WRITE_ENC_MITM      BLE_ATT_F_WRITE_AUTHEN
-
-#endif
-
-/***************************************************************************
- *                            NimBLE types                                 *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-typedef struct {
-  uint16_t attr_max_len; /*!<  attribute max value length */
-  uint16_t attr_len;     /*!<  attribute current value length */
-  uint8_t *attr_value;   /*!<  the pointer to attribute value */
-} esp_attr_value_t;
-#endif
-
-/***************************************************************************
- *                           Forward declarations                          *
- ***************************************************************************/
-
-class BLEService;
 class BLECharacteristic;
-class BLEDescriptorCallbacks;
 
 /**
- * @brief A model of a %BLE descriptor.
+ * @brief GATT Descriptor handle.
+ *
+ * Lightweight shared handle wrapping a BLEDescriptor::Impl.
+ * Create via characteristic.createDescriptor(uuid, permissions).
+ *
+ * Standard descriptor factories:
+ *   - CCCD (0x2902) is auto-created for Notify/Indicate characteristics
+ *   - createUserDescription(text) creates 0x2901
+ *   - createPresentationFormat() creates 0x2904
+ *
  */
 class BLEDescriptor {
 public:
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
+  BLEDescriptor();
 
-  BLEDescriptor(const char *uuid, uint16_t max_len = 100);
-  BLEDescriptor(BLEUUID uuid, uint16_t max_len = 100);
-  virtual ~BLEDescriptor();
+  /**
+   * @brief Construct a standalone descriptor with a given UUID and max value length.
+   * @param uuid UUID for the descriptor.
+   * @param maxLength Maximum value length in bytes.
+   * @note Prefer BLECharacteristic::createDescriptor() to add a descriptor to a
+   *       characteristic directly.
+   */
+  BLEDescriptor(const BLEUUID &uuid, uint16_t maxLength = 100);
+  ~BLEDescriptor() = default;
+  BLEDescriptor(const BLEDescriptor &) = default;
+  BLEDescriptor &operator=(const BLEDescriptor &) = default;
+  BLEDescriptor(BLEDescriptor &&) = default;
+  BLEDescriptor &operator=(BLEDescriptor &&) = default;
 
-  uint16_t getHandle() const;                    // Get the handle of the descriptor.
-  size_t getLength() const;                      // Get the length of the value of the descriptor.
-  BLEUUID getUUID() const;                       // Get the UUID of the descriptor.
-  uint8_t *getValue() const;                     // Get a pointer to the value of the descriptor.
-  BLECharacteristic *getCharacteristic() const;  // Get the characteristic that this descriptor belongs to.
+  /**
+   * @brief Check whether this handle refers to a valid descriptor.
+   * @return true if the handle is backed by a live Impl, false otherwise.
+   */
+  explicit operator bool() const;
 
-  void setAccessPermissions(uint16_t perm);               // Set the permissions of the descriptor.
-  void setCallbacks(BLEDescriptorCallbacks *pCallbacks);  // Set callbacks to be invoked for the descriptor.
-  void setValue(const uint8_t *data, size_t size);        // Set the value of the descriptor as a pointer to data.
-  void setValue(const String &value);                     // Set the value of the descriptor as a data buffer.
+  /**
+   * @brief Callback invoked when a client reads this descriptor.
+   * @param desc The descriptor being read.
+   * @param conn Information about the connected client.
+   */
+  using ReadHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
 
-  String toString() const;  // Convert the descriptor to a string representation.
+  /**
+   * @brief Callback invoked when a client writes to this descriptor.
+   * @param desc The descriptor being written (value already updated).
+   * @param conn Information about the connected client.
+   */
+  using WriteHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
 
-  /***************************************************************************
-   *                           Bluedroid public declarations                 *
-   ***************************************************************************/
+  /**
+   * @brief Register a callback invoked when a client reads this descriptor.
+   * @param handler The read callback, or nullptr to clear.
+   */
+  void onRead(ReadHandler handler);
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  void handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
+  /**
+   * @brief Register a callback invoked when a client writes to this descriptor.
+   * @param handler The write callback, or nullptr to clear.
+   */
+  void onWrite(WriteHandler handler);
 
-  /***************************************************************************
-   *                           NimBLE public declarations                    *
-   ***************************************************************************/
+  /**
+   * @brief Remove all previously registered callbacks from this descriptor.
+   */
+  void resetCallbacks();
 
-#if defined(CONFIG_NIMBLE_ENABLED)
-  static int handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg);
-#endif
+  /**
+   * @brief Set the descriptor value from a raw byte buffer.
+   * @param data Pointer to the data bytes.
+   * @param length Number of bytes to copy.
+   */
+  void setValue(const uint8_t *data, size_t length);
+  void setValue(const String &value);
+
+  /**
+   * @brief Get a pointer to the raw descriptor value.
+   * @param length If non-null, receives the length of the value in bytes.
+   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid.
+   */
+  const uint8_t *getValue(size_t *length = nullptr) const;
+
+  /**
+   * @brief Get the current value length.
+   * @return Number of bytes stored in the descriptor value.
+   */
+  size_t getLength() const;
+
+  /**
+   * @brief Set the ATT permissions for this descriptor.
+   * @param perms Bitmask of BLEPermission flags.
+   */
+  void setPermissions(BLEPermission perms);
+
+  /**
+   * @brief Get the UUID of this descriptor.
+   * @return The descriptor UUID.
+   */
+  BLEUUID getUUID() const;
+
+  /**
+   * @brief Get the ATT attribute handle of this descriptor.
+   * @return The 16-bit attribute handle.
+   */
+  uint16_t getHandle() const;
+
+  /**
+   * @brief Get the parent characteristic that owns this descriptor.
+   * @return Handle to the parent BLECharacteristic.
+   */
+  BLECharacteristic getCharacteristic() const;
+
+  /**
+   * @brief Get a human-readable string representation of this descriptor.
+   * @return String containing UUID, handle, and value summary.
+   */
+  String toString() const;
+
+  // Standard descriptor factories
+
+  /**
+   * @brief Create a Characteristic User Description descriptor (UUID 0x2901).
+   * @param description Human-readable description text.
+   * @return A new BLEDescriptor configured as a User Description.
+   */
+  static BLEDescriptor createUserDescription(const String &description);
+
+  /**
+   * @brief Create a Client Characteristic Configuration Descriptor (UUID 0x2902).
+   * @return A new BLEDescriptor configured as a CCCD.
+   * @note A CCCD is auto-created for characteristics with Notify or Indicate properties;
+   *       use this factory only when manual control is needed.
+   */
+  static BLEDescriptor createCCCD();
+
+  /**
+   * @brief Create a Characteristic Presentation Format descriptor (UUID 0x2904).
+   * @return A new BLEDescriptor configured as a Presentation Format.
+   */
+  static BLEDescriptor createPresentationFormat();
+
+  // 0x2901 User Description convenience
+
+  /**
+   * @brief Set the User Description string (0x2901).
+   * @param description Human-readable description text.
+   */
+  void setUserDescription(const String &description);
+
+  /**
+   * @brief Get the User Description string (0x2901).
+   * @return The stored description text.
+   */
+  String getUserDescription() const;
+
+  // 0x2902 CCCD convenience (auto-created for Notify/Indicate characteristics)
+
+  /**
+   * @brief Check whether notifications are enabled in this CCCD.
+   * @return true if the notifications bit is set.
+   */
+  bool getNotifications() const;
+
+  /**
+   * @brief Check whether indications are enabled in this CCCD.
+   * @return true if the indications bit is set.
+   */
+  bool getIndications() const;
+
+  /**
+   * @brief Enable or disable notifications in this CCCD.
+   * @param enable true to set the notifications bit, false to clear it.
+   */
+  void setNotifications(bool enable);
+
+  /**
+   * @brief Enable or disable indications in this CCCD.
+   * @param enable true to set the indications bit, false to clear it.
+   */
+  void setIndications(bool enable);
+
+  // 0x2904 Presentation Format convenience
+
+  /**
+   * @brief Set the format field of a Presentation Format descriptor.
+   * @param format One of the FORMAT_* constants.
+   */
+  void setFormat(uint8_t format);
+
+  /**
+   * @brief Set the exponent field of a Presentation Format descriptor.
+   * @param exponent Signed exponent applied to the characteristic value.
+   */
+  void setExponent(int8_t exponent);
+
+  /**
+   * @brief Set the unit field of a Presentation Format descriptor.
+   * @param unit Bluetooth Assigned Number for the unit (e.g., 0x2700 for unitless).
+   */
+  void setUnit(uint16_t unit);
+
+  /**
+   * @brief Set the namespace field of a Presentation Format descriptor.
+   * @param ns Bluetooth namespace (typically 0x01 for Bluetooth SIG).
+   */
+  void setNamespace(uint8_t ns);
+
+  /**
+   * @brief Set the description field of a Presentation Format descriptor.
+   * @param description Bluetooth SIG-defined description enumeration value.
+   */
+  void setFormatDescription(uint16_t description);
+
+  // Format constants (Bluetooth Assigned Numbers, Format Types)
+  static constexpr uint8_t FORMAT_BOOLEAN = 1;   ///< Boolean.
+  static constexpr uint8_t FORMAT_UINT8 = 4;     ///< Unsigned 8-bit integer.
+  static constexpr uint8_t FORMAT_UINT16 = 6;    ///< Unsigned 16-bit integer.
+  static constexpr uint8_t FORMAT_UINT32 = 8;    ///< Unsigned 32-bit integer.
+  static constexpr uint8_t FORMAT_SINT8 = 12;    ///< Signed 8-bit integer.
+  static constexpr uint8_t FORMAT_SINT16 = 14;   ///< Signed 16-bit integer.
+  static constexpr uint8_t FORMAT_SINT32 = 16;   ///< Signed 32-bit integer.
+  static constexpr uint8_t FORMAT_FLOAT32 = 20;  ///< IEEE-754 32-bit float.
+  static constexpr uint8_t FORMAT_FLOAT64 = 21;  ///< IEEE-754 64-bit float.
+  static constexpr uint8_t FORMAT_UTF8 = 25;     ///< UTF-8 string.
+  static constexpr uint8_t FORMAT_UTF16 = 26;    ///< UTF-16 string.
+
+  // Type queries
+
+  /**
+   * @brief Check whether this descriptor is a User Description (UUID 0x2901).
+   * @return true if UUID matches 0x2901.
+   */
+  bool isUserDescription() const;
+
+  /**
+   * @brief Check whether this descriptor is a CCCD (UUID 0x2902).
+   * @return true if UUID matches 0x2902.
+   */
+  bool isCCCD() const;
+
+  /**
+   * @brief Check whether this descriptor is a Presentation Format (UUID 0x2904).
+   * @return true if UUID matches 0x2904.
+   */
+  bool isPresentationFormat() const;
+
+  struct Impl;
 
 private:
-  friend class BLEDescriptorMap;
+  explicit BLEDescriptor(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+  std::shared_ptr<Impl> _impl;
   friend class BLECharacteristic;
-  friend class BLEService;
-  friend class BLE2901;
-  friend class BLE2902;
-  friend class BLE2904;
-
-  /***************************************************************************
-   *                           Common private properties                     *
-   ***************************************************************************/
-
-  BLEUUID m_bleUUID;
-  uint16_t m_handle;
-  esp_attr_value_t m_value;
-  BLEDescriptorCallbacks *m_pCallback;
-  BLECharacteristic *m_pCharacteristic;
-  FreeRTOS::Semaphore m_semaphoreSetValue = FreeRTOS::Semaphore("SetValue");
-
-  /***************************************************************************
-   *                           Bluedroid private properties                  *
-   ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
-  uint16_t m_permissions = ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE;
-#endif
-
-  /***************************************************************************
-   *                           NimBLE private properties                     *
-   ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  uint8_t m_permissions = HA_FLAG_PERM_RW;
-  uint8_t m_removed = 0;
-#endif
-
-  /***************************************************************************
-   *                           Common private declarations                   *
-   ***************************************************************************/
-
-  void executeCreate(BLECharacteristic *pCharacteristic);
-  void setHandle(uint16_t handle);
-};  // BLEDescriptor
-
-/**
- * @brief Callbacks that can be associated with a %BLE descriptors to inform of events.
- *
- * When a server application creates a %BLE descriptor, we may wish to be informed when there is either
- * a read or write request to the descriptors value.  An application can register a
- * sub-classed instance of this class and will be notified when such an event happens.
- */
-class BLEDescriptorCallbacks {
-public:
-  /***************************************************************************
-   *                           Common public declarations                    *
-   ***************************************************************************/
-
-  virtual ~BLEDescriptorCallbacks();
-  virtual void onRead(BLEDescriptor *pDescriptor);
-  virtual void onWrite(BLEDescriptor *pDescriptor);
+  friend class BLEServer;
 };
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
-
-#endif /* COMPONENTS_CPP_UTILS_BLEDESCRIPTOR_H_ */
+#endif /* BLE_ENABLED */
