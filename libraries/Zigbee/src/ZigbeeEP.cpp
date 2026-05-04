@@ -22,6 +22,33 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
+#include <stdint.h>
+
+/* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
+static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
+static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
+
+static uint32_t zb_utctime_from_unix(time_t unix_ts) {
+  if (unix_ts == (time_t)-1) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  int64_t sec = (int64_t)unix_ts - ZIGBEE_UTCTIME_UNIX_OFFSET_SEC;
+  if (sec < 0) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  if (sec > (int64_t)UINT32_MAX) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  return (uint32_t)sec;
+}
+
+static time_t unix_time_from_zb_utctime(uint32_t zb_sec) {
+  if (zb_sec == ZIGBEE_UTCTIME_INVALID) {
+    return (time_t)-1;
+  }
+  return (time_t)(ZIGBEE_UTCTIME_UNIX_OFFSET_SEC + (int64_t)zb_sec);
+}
+
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
@@ -355,11 +382,15 @@ void ZigbeeEP::zbOTAState(bool otaActive) {
 }
 
 bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
-  time_t utc_time = 0;
+  uint32_t zb_utctime = 0;
   // Check if time is set
   if (time.tm_year > 0) {
-    // Convert time to UTC
-    utc_time = mktime(&time);
+    time_t unix_ts = mktime(&time);
+    if (unix_ts == (time_t)-1) {
+      log_e("Invalid calendar time");
+      return false;
+    }
+    zb_utctime = zb_utctime_from_unix(unix_ts);
   }
 
   // Create time cluster server attributes
@@ -369,7 +400,7 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
     log_e("Failed to add time zone attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&zb_utctime);
   if (ret != ESP_OK) {
     log_e("Failed to add time attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -397,11 +428,15 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
 bool ZigbeeEP::setTime(tm time) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  time_t utc_time = mktime(&time);
-  // Cast to uint32_t is safe until year 2106.
-  log_d("Setting time to %" PRIu32, (uint32_t)utc_time);
+  time_t unix_ts = mktime(&time);
+  if (unix_ts == (time_t)-1) {
+    log_e("Invalid calendar time");
+    return false;
+  }
+  uint32_t zb_utctime = zb_utctime_from_unix(unix_ts);
+  log_d("Setting ZCL UTCTime to %" PRIu32 " s since 2000-01-01 UTC", zb_utctime);
   esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &zb_utctime, false);
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
@@ -458,7 +493,8 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
     return tm();
   }
 
-  struct tm *timeinfo = localtime(&_read_time);
+  time_t unix_ts = unix_time_from_zb_utctime((uint32_t)_read_time);
+  struct tm *timeinfo = localtime(&unix_ts);
   if (timeinfo) {
     // Update time
     setTime(*timeinfo);

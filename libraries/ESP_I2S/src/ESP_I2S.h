@@ -17,6 +17,10 @@
 #include "driver/i2s_pdm.h"
 #endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define i2s_port_t int
+#endif
+
 typedef esp_err_t (*i2s_channel_read_fn)(i2s_chan_handle_t handle, char *tmp_buf, void *dest, size_t size, size_t *bytes_read, uint32_t timeout_ms);
 
 typedef enum {
@@ -42,8 +46,11 @@ typedef enum {
 
 class I2SClass : public Stream {
 public:
-  I2SClass();
+  explicit I2SClass(i2s_port_t port = I2S_NUM_AUTO);
   ~I2SClass();
+
+  bool setPort(i2s_port_t port);
+  i2s_port_t getPort();
 
   //STD + TDM mode
   void setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din = -1, int8_t mclk = -1);
@@ -97,6 +104,7 @@ public:
 private:
   esp_err_t last_error;
   i2s_mode_t _mode;
+  i2s_port_t _port;
 
   i2s_chan_handle_t tx_chan;
   uint32_t tx_sample_rate;
