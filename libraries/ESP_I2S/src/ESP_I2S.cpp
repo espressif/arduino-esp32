@@ -28,16 +28,16 @@
 typedef decltype(((i2s_chan_config_t *)nullptr)->id) i2s_chan_id_t;
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-#define I2S_DEFAULT_CFG(_port)                                                                                                                              \
-  {                                                                                                                                                         \
-    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, .allow_pd = 0, \
-    .intr_priority = 0                                                                                                                                      \
+#define I2S_DEFAULT_CFG(_port)                                                                                                                       \
+  {                                                                                                                                                  \
+    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .allow_pd = 0, .intr_priority = 0                                                                                                                \
   }
 #else
-#define I2S_DEFAULT_CFG(_port)                                                                                                               \
-  {                                                                                                                                          \
+#define I2S_DEFAULT_CFG(_port)                                                                                                                       \
+  {                                                                                                                                                  \
     .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
-    .intr_priority = 0                                                                                                                       \
+    .intr_priority = 0                                                                                                                               \
   }
 #endif
 
