@@ -787,11 +787,23 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // get UART information
   uart_t *uart = &_uart_bus_array[uart_num];
 
+  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
+  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
   bool retCode = true;
   UART_MUTEX_LOCK();
 
-  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
-  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+  // If driver is not yet installed, just store the pin configuration
+  // The pins will be properly attached when the driver is installed in uartBegin()
+  if (!uartIsDriverInstalled(uart)) {
+    log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
+    if (rxPin >= 0) uart->_rxPin = rxPin;
+    if (txPin >= 0) uart->_txPin = txPin;
+    if (ctsPin >= 0) uart->_ctsPin = ctsPin;
+    if (rtsPin >= 0) uart->_rtsPin = rtsPin;
+    UART_MUTEX_UNLOCK();
+    return true;
+  }
 
   // mute bus detaching callbacks to avoid terminating the UART driver when both RX and TX pins are detached
   peripheral_bus_deinit_cb_t rxDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX);
