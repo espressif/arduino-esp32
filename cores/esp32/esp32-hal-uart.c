@@ -665,6 +665,14 @@ int8_t uart_get_TxPin(uint8_t uart_num) {
   return _uart_bus_array[uart_num]._txPin;
 }
 
+int8_t uart_get_CtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._ctsPin;
+}
+
+int8_t uart_get_RtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._rtsPin;
+}
+
 // Routines that take care of UART events will be in the HardwareSerial Class code
 void uartGetEventQueue(uart_t *uart, QueueHandle_t *q) {
   // passing back NULL for the Queue pointer when UART is not initialized yet
@@ -1184,8 +1192,12 @@ uart_t *uartBegin(
   UART_MUTEX_UNLOCK();
 
   // uartSetPins detaches previous pins if new ones are used over a previous begin()
+  // If CTS/RTS pins were pre-configured via setPins() before begin(), use those instead of UART_PIN_NO_CHANGE
   if (retCode) {
-    retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    int8_t ctsPin_to_set = uart->_ctsPin >= 0 ? uart->_ctsPin : UART_PIN_NO_CHANGE;
+    int8_t rtsPin_to_set = uart->_rtsPin >= 0 ? uart->_rtsPin : UART_PIN_NO_CHANGE;
+    log_v("UART%u calling uartSetPins with pre-configured CTS/RTS: ctsPin=%d, rtsPin=%d", uart_nr, ctsPin_to_set, rtsPin_to_set);
+    retCode &= uartSetPins(uart_nr, rxPin, txPin, ctsPin_to_set, rtsPin_to_set);
   }
   if (!retCode) {
     log_e("UART%u initialization error.", uart->num);
