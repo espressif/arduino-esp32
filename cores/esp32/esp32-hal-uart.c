@@ -1194,12 +1194,8 @@ uart_t *uartBegin(
   // uartSetPins detaches previous pins if new ones are used over a previous begin()
   // If any pins were pre-configured via setPins() before begin(), use those instead of UART_PIN_NO_CHANGE
   if (retCode) {
-    int8_t rxPin_to_set = (rxPin >= 0) ? rxPin : (uart->_rxPin >= 0 ? uart->_rxPin : UART_PIN_NO_CHANGE);
-    int8_t txPin_to_set = (txPin >= 0) ? txPin : (uart->_txPin >= 0 ? uart->_txPin : UART_PIN_NO_CHANGE);
-    int8_t ctsPin_to_set = uart->_ctsPin >= 0 ? uart->_ctsPin : UART_PIN_NO_CHANGE;
-    int8_t rtsPin_to_set = uart->_rtsPin >= 0 ? uart->_rtsPin : UART_PIN_NO_CHANGE;
-    log_v("UART%u calling uartSetPins: RX=%d, TX=%d, CTS=%d, RTS=%d", uart_nr, rxPin_to_set, txPin_to_set, ctsPin_to_set, rtsPin_to_set);
-    retCode &= uartSetPins(uart_nr, rxPin_to_set, txPin_to_set, ctsPin_to_set, rtsPin_to_set);
+    log_v("UART%u calling uartSetPins: RX=%d, TX=%d, CTS=%d, RTS=%d", uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
+    retCode &= uartSetPins(uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
   }
   if (!retCode) {
     log_e("UART%u initialization error.", uart->num);
