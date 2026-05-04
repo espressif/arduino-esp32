@@ -155,8 +155,23 @@ typedef decltype(((i2s_chan_config_t *)nullptr)->id) i2s_chan_id_t;
   } while (0)
 #define I2S_ERROR_CHECK_RETURN_FALSE(x) I2S_ERROR_CHECK_RETURN(x, false)
 
+// I2S_NUM_AUTO == -1 in IDF v6, so it cannot serve as the upper bound for valid ports.
+// SOC_I2S_NUM (from soc/soc_caps.h) is hardware-derived in IDF <=5 but was removed in
+// IDF v6, so fall back to the chip's physical I2S controller count there.
+#ifndef I2S_NUM_MAX
+#ifdef SOC_I2S_NUM
+#define I2S_NUM_MAX SOC_I2S_NUM
+#elif defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#define I2S_NUM_MAX 2
+#elif defined(CONFIG_IDF_TARGET_ESP32P4)
+#define I2S_NUM_MAX 3
+#else
+#define I2S_NUM_MAX 1
+#endif
+#endif
+
 static bool isValidI2SPort(i2s_port_t port) {
-  return port == I2S_NUM_AUTO || (port >= I2S_NUM_0 && port < I2S_NUM_AUTO);
+  return port == I2S_NUM_AUTO || (port >= I2S_NUM_0 && port < (i2s_port_t)I2S_NUM_MAX);
 }
 
 // Default read, no resmpling and temp buffer necessary
