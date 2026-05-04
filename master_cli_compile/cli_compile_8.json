@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterDimmableLight",
+                    "sizes": [{
+                            "flash_bytes": 1762566,
+                            "flash_percentage": 56,
+                            "ram_bytes": 108528,
+                            "ram_percentage": 33
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterDimmablePlugin",
                     "sizes": [{
                             "flash_bytes": 1762626,
@@ -108,7 +116,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterRainSensor",
                     "sizes": [{
-                            "flash_bytes": 1738975,
+                            "flash_bytes": 1738991,
                             "flash_percentage": 55,
                             "ram_bytes": 108272,
                             "ram_percentage": 33
@@ -137,20 +145,20 @@
                             "ram_bytes": 108288,
                             "ram_percentage": 33
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterTemperatureControlledCabinet",
-                    "sizes": [{
-                            "flash_bytes": 1740583,
-                            "flash_percentage": 55,
-                            "ram_bytes": 108328,
-                            "ram_percentage": 33
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterOnIdentify",
+                    "sizes": [{
+                            "flash_bytes": 1869391,
+                            "flash_percentage": 59,
+                            "ram_bytes": 91108,
+                            "ram_percentage": 27
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterOnOffLight",
                     "sizes": [{
                             "flash_bytes": 1869955,
@@ -278,20 +286,20 @@
                             "ram_bytes": 34968,
                             "ram_percentage": 10
                             }]
-                    },
-{"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
-                    "sizes": [{
-                            "flash_bytes": 1039265,
-                            "flash_percentage": 79,
-                            "ram_bytes": 36752,
-                            "ram_percentage": 11
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
+                    "sizes": [{
+                            "flash_bytes": 1105601,
+                            "flash_percentage": 84,
+                            "ram_bytes": 49396,
+                            "ram_percentage": 15
+                            }]
+                    },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
                     "sizes": [{
                             "flash_bytes": 1105635,
@@ -435,20 +443,20 @@
                             "ram_bytes": 22448,
                             "ram_percentage": 6
                             }]
-                    },
-{"name": "libraries/PPP/examples/PPP_WIFI_BRIDGE",
-                    "sizes": [{
-                            "flash_bytes": 1092595,
-                            "flash_percentage": 83,
-                            "ram_bytes": 47944,
-                            "ram_percentage": 14
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterWindowCovering",
+                    "sizes": [{
+                            "flash_bytes": 2618228,
+                            "flash_percentage": 83,
+                            "ram_bytes": 139956,
+                            "ram_percentage": 42
+                            }]
+                    },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                     "sizes": [{
                             "flash_bytes": 950266,
@@ -592,20 +600,20 @@
                             "ram_bytes": 49852,
                             "ram_percentage": 15
                             }]
-                    },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
-                    "sizes": [{
-                            "flash_bytes": 992418,
-                            "flash_percentage": 75,
-                            "ram_bytes": 49852,
-                            "ram_percentage": 15
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterDimmableLight",
+                    "sizes": [{
+                            "flash_bytes": 2198599,
+                            "flash_percentage": 69,
+                            "ram_bytes": 106704,
+                            "ram_percentage": 32
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterDimmablePlugin",
                     "sizes": [{
                             "flash_bytes": 2198703,
@@ -693,20 +701,20 @@
                             "ram_bytes": 106680,
                             "ram_percentage": 32
                             }]
-                    },
-{"name": "libraries/Matter/examples/MatterOnOffPlugin",
-                    "sizes": [{
-                            "flash_bytes": 2190699,
-                            "flash_percentage": 69,
-                            "ram_bytes": 106680,
-                            "ram_percentage": 32
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
+{"name": "libraries/Hash/examples/SHA3Stream",
+                    "sizes": [{
+                            "flash_bytes": 324742,
+                            "flash_percentage": 24,
+                            "ram_bytes": 23428,
+                            "ram_percentage": 7
+                            }]
+                    },
 {"name": "libraries/LittleFS/examples/LITTLEFS_test",
                     "sizes": [{
                             "flash_bytes": 369780,
@@ -818,20 +826,20 @@
                             "ram_bytes": 24196,
                             "ram_percentage": 7
                             }]
-                    },
-{"name": "libraries/SD/examples/SD_time",
-                    "sizes": [{
-                            "flash_bytes": 867218,
-                            "flash_percentage": 66,
-                            "ram_bytes": 31332,
-                            "ram_percentage": 9
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterWaterFreezeDetector",
+                    "sizes": [{
+                            "flash_bytes": 1654620,
+                            "flash_percentage": 52,
+                            "ram_bytes": 94452,
+                            "ram_percentage": 28
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterWaterLeakDetector",
                     "sizes": [{
                             "flash_bytes": 1654620,
@@ -842,7 +850,7 @@
                     },
 {"name": "libraries/Matter/examples/MatterWindowCovering",
                     "sizes": [{
-                            "flash_bytes": 1670056,
+                            "flash_bytes": 1670064,
                             "flash_percentage": 53,
                             "ram_bytes": 94620,
                             "ram_percentage": 28
@@ -959,20 +967,20 @@
                             "ram_bytes": 44628,
                             "ram_percentage": 13
                             }]
-                    },
-{"name": "libraries/RainMaker/examples/RMakerSonoffDualR3",
-                    "sizes": [{
-                            "flash_bytes": 1301804,
-                            "flash_percentage": 32,
-                            "ram_bytes": 45052,
-                            "ram_percentage": 13
-                            }]
                     }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/Matter/examples/MatterTemperatureControlledCabinet",
+                    "sizes": [{
+                            "flash_bytes": 1842998,
+                            "flash_percentage": 58,
+                            "ram_bytes": 108748,
+                            "ram_percentage": 33
+                            }]
+                    },
 {"name": "libraries/Matter/examples/MatterTemperatureControlledCabinetLevels",
                     "sizes": [{
                             "flash_bytes": 1842582,
@@ -1114,14 +1122,6 @@
                             "flash_bytes": 298513,
                             "flash_percentage": 22,
                             "ram_bytes": 21932,
-                            "ram_percentage": 6
-                            }]
-                    },
-{"name": "libraries/Preferences/examples/StartCounter",
-                    "sizes": [{
-                            "flash_bytes": 298245,
-                            "flash_percentage": 22,
-                            "ram_bytes": 21940,
                             "ram_percentage": 6
                             }]
                     }
