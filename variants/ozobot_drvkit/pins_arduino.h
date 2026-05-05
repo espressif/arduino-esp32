@@ -6,7 +6,7 @@
 #define USB_VID          0x2D81
 #define USB_PID          0x1901
 #define USB_MANUFACTURER "OZOEDU"
-#define USB_PRODUCT      "Ozobot circuit kit"
+#define USB_PRODUCT      "Ozobot DRVKit"
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 #ifndef __cplusplus
