@@ -22,13 +22,10 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
-// Strong definition that overrides the core's weak btInUse() implementation.
 // This prevents initArduino() from releasing BTDM controller memory before the
 // Matter stack can use Bluetooth transport.
 #if CONFIG_ENABLE_CHIPOBLE
-extern "C" bool btInUse(void) {
-  return true;
-}
+#include "esp32-hal-bt-mem.h"
 #endif
 
 using namespace esp_matter;
