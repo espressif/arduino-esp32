@@ -22,6 +22,12 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
+// This prevents initArduino() from releasing BTDM controller memory before the
+// Matter stack can use Bluetooth transport.
+#if CONFIG_ENABLE_CHIPOBLE
+#include "esp32-hal-bt-mem.h"
+#endif
+
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
