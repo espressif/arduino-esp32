@@ -327,8 +327,11 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
                 mkdir -p "$COMPILE_COMMANDS_DIR"
+                # Use a path-based unique name to avoid collisions when multiple sketches share the same basename
+                local sketch_relpath="${sketchdir#*/libraries/}"
+                local sketch_safe="${sketch_relpath//\//_}"
                 jq --arg t "$target" '[.[] | . + {_target: $t}]' \
-                    "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketchname}.json"
+                    "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketch_safe}.json"
             fi
 
             if [ -n "$log_compilation" ]; then
