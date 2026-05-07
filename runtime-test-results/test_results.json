@@ -1,5 +1,5 @@
 {
-  "commit_sha": "2b43e5bb74e571c43c8a7bcbd24c4f05989b186b",
+  "commit_sha": "975fc7b119010ff2d005c60c3e82a3b8818bc474",
   "tests_failed": true,
   "test_data": {
     "hardware": {
@@ -22,7 +22,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
@@ -49,7 +49,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
@@ -59,7 +59,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         }
       },
       "fs": {
@@ -80,13 +80,13 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 51,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 51,
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -100,8 +100,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 51,
+          "errors": 0
         }
       },
       "hash": {
@@ -122,13 +122,13 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 72,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 72,
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -142,8 +142,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 72,
+          "errors": 0
         }
       },
       "hello_world": {
@@ -165,12 +165,12 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -185,7 +185,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         }
       },
       "nvs": {
@@ -207,12 +207,12 @@
         "esp32c6": {
           "failures": 0,
           "total": 4,
-          "errors": 0
+          "errors": 4
         },
         "esp32h2": {
           "failures": 0,
           "total": 4,
-          "errors": 4
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -227,7 +227,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 3,
-          "errors": 3
+          "errors": 0
         }
       },
       "periman": {
@@ -249,12 +249,12 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -269,7 +269,7 @@
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 1
+          "errors": 0
         }
       },
       "psram": {
@@ -308,12 +308,12 @@
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -328,12 +328,12 @@
         "esp32s2": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         }
       },
       "timer": {
@@ -354,13 +354,13 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 4,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 4,
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -374,8 +374,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 4,
+          "errors": 0
         }
       },
       "touch": {
@@ -396,8 +396,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 3,
+          "errors": 0
         }
       },
       "uart": {
@@ -418,13 +418,13 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 15,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 15,
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -438,8 +438,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 15,
+          "errors": 0
         }
       },
       "unity": {
@@ -460,13 +460,13 @@
         },
         "esp32c6": {
           "failures": 0,
-          "total": 2,
-          "errors": 0
+          "total": 1,
+          "errors": 1
         },
         "esp32h2": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 2,
+          "errors": 0
         },
         "esp32p4": {
           "failures": 0,
@@ -480,8 +480,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 2,
+          "errors": 0
         }
       },
       "webserver": {
@@ -503,7 +503,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
@@ -525,12 +525,12 @@
         "esp32c3": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32c5": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32c6": {
           "failures": 0,
@@ -545,12 +545,12 @@
         "esp32s2": {
           "failures": 0,
           "total": 2,
-          "errors": 0
+          "errors": 2
         },
         "esp32s3": {
           "failures": 0,
           "total": 3,
-          "errors": 0
+          "errors": 3
         }
       },
       "wifi_ap": {
@@ -572,7 +572,7 @@
         "esp32c6": {
           "failures": 0,
           "total": 1,
-          "errors": 0
+          "errors": 1
         },
         "esp32s2": {
           "failures": 0,
@@ -598,8 +598,8 @@
         },
         "esp32s3": {
           "failures": 0,
-          "total": 1,
-          "errors": 1
+          "total": 10,
+          "errors": 0
         }
       }
     },
@@ -1084,19 +1084,8 @@
       }
     }
   },
-  "generated_at": "2026-05-06T01:35:20.711540",
+  "generated_at": "2026-05-07T01:31:57.251288",
   "performance_data": {
-    "esp32c6_fibonacci": {
-      "status": "success",
-      "runs": 3,
-      "settings": "fib_n=40",
-      "metrics": {
-        "avg_time": {
-          "avg": 44.81,
-          "unit": "s"
-        }
-      }
-    },
     "esp32s3_fibonacci": {
       "status": "success",
       "runs": 3,
@@ -1115,17 +1104,6 @@
       "metrics": {
         "avg_time": {
           "avg": 15.92,
-          "unit": "s"
-        }
-      }
-    },
-    "esp32_fibonacci": {
-      "status": "success",
-      "runs": 3,
-      "settings": "fib_n=40",
-      "metrics": {
-        "avg_time": {
-          "avg": 26.56,
           "unit": "s"
         }
       }
@@ -1174,16 +1152,11 @@
         }
       }
     },
-    "esp32c6_superpi": {
-      "status": "success",
-      "runs": 3,
-      "settings": "digits=16384",
-      "metrics": {
-        "avg_time": {
-          "avg": 26.92,
-          "unit": "s"
-        }
-      }
+    "esp32_fibonacci": {
+      "status": "error"
+    },
+    "esp32c6_fibonacci": {
+      "status": "error"
     },
     "esp32s3_superpi": {
       "status": "success",
@@ -1203,17 +1176,6 @@
       "metrics": {
         "avg_time": {
           "avg": 8.95,
-          "unit": "s"
-        }
-      }
-    },
-    "esp32_superpi": {
-      "status": "success",
-      "runs": 3,
-      "settings": "digits=16384",
-      "metrics": {
-        "avg_time": {
-          "avg": 12.35,
           "unit": "s"
         }
       }
@@ -1262,16 +1224,11 @@
         }
       }
     },
-    "esp32c6_coremark": {
-      "status": "success",
-      "runs": 3,
-      "settings": "cores=1",
-      "metrics": {
-        "avg_score": {
-          "avg": 318.27,
-          "unit": ""
-        }
-      }
+    "esp32_superpi": {
+      "status": "error"
+    },
+    "esp32c6_superpi": {
+      "status": "error"
     },
     "esp32s3_coremark": {
       "status": "success",
@@ -1290,18 +1247,7 @@
       "settings": "cores=2",
       "metrics": {
         "avg_score": {
-          "avg": 1801.85,
-          "unit": ""
-        }
-      }
-    },
-    "esp32_coremark": {
-      "status": "success",
-      "runs": 3,
-      "settings": "cores=2",
-      "metrics": {
-        "avg_score": {
-          "avg": 746.95,
+          "avg": 1801.65,
           "unit": ""
         }
       }
@@ -1345,10 +1291,16 @@
       "settings": "cores=1",
       "metrics": {
         "avg_score": {
-          "avg": 545.03,
+          "avg": 545.02,
           "unit": ""
         }
       }
+    },
+    "esp32_coremark": {
+      "status": "error"
+    },
+    "esp32c6_coremark": {
+      "status": "error"
     },
     "esp32s3_psramspeed": {
       "status": "success",
@@ -1360,7 +1312,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 832215.67,
+          "avg": 832215.33,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -1376,7 +1328,7 @@
           "unit": "KiB/s"
         },
         "memcpy_131072_mock_avg_time": {
-          "avg": 1664732.67,
+          "avg": 1664732.33,
           "unit": "us"
         },
         "memcpy_131072_system_avg_rate": {
@@ -1384,7 +1336,7 @@
           "unit": "KiB/s"
         },
         "memcpy_131072_system_avg_time": {
-          "avg": 1664734.67,
+          "avg": 1664734.33,
           "unit": "us"
         },
         "memcpy_262144_mock_avg_rate": {
@@ -1392,7 +1344,7 @@
           "unit": "KiB/s"
         },
         "memcpy_262144_mock_avg_time": {
-          "avg": 3329772.67,
+          "avg": 3329773.0,
           "unit": "us"
         },
         "memcpy_262144_system_avg_rate": {
@@ -1400,7 +1352,7 @@
           "unit": "KiB/s"
         },
         "memcpy_262144_system_avg_time": {
-          "avg": 3329776.67,
+          "avg": 3329777.0,
           "unit": "us"
         },
         "memcpy_524288_mock_avg_rate": {
@@ -1420,11 +1372,11 @@
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
-          "avg": 433342.0,
+          "avg": 433339.67,
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 59075.67,
+          "avg": 59076.0,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
@@ -1440,7 +1392,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_mock_avg_time": {
-          "avg": 1078414.67,
+          "avg": 1078414.33,
           "unit": "us"
         },
         "memset_131072_system_avg_rate": {
@@ -1448,7 +1400,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_system_avg_time": {
-          "avg": 1078376.67,
+          "avg": 1078377.0,
           "unit": "us"
         },
         "memset_262144_mock_avg_rate": {
@@ -1464,7 +1416,7 @@
           "unit": "KiB/s"
         },
         "memset_262144_system_avg_time": {
-          "avg": 2157380.0,
+          "avg": 2157379.67,
           "unit": "us"
         },
         "memset_524288_mock_avg_rate": {
@@ -1472,7 +1424,7 @@
           "unit": "KiB/s"
         },
         "memset_524288_mock_avg_time": {
-          "avg": 4315507.33,
+          "avg": 4315507.67,
           "unit": "us"
         },
         "memset_524288_system_avg_rate": {
@@ -1499,123 +1451,123 @@
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
-          "avg": 409843.0,
+          "avg": 409906.0,
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 62463.0,
+          "avg": 62453.33,
           "unit": "us"
         },
         "memcpy_131072_mock_avg_rate": {
-          "avg": 398960.67,
+          "avg": 398951.0,
           "unit": "KiB/s"
         },
         "memcpy_131072_mock_avg_time": {
-          "avg": 128333.33,
+          "avg": 128336.33,
           "unit": "us"
         },
         "memcpy_131072_system_avg_rate": {
-          "avg": 410080.67,
+          "avg": 410069.67,
           "unit": "KiB/s"
         },
         "memcpy_131072_system_avg_time": {
-          "avg": 124853.33,
+          "avg": 124856.67,
           "unit": "us"
         },
         "memcpy_262144_mock_avg_rate": {
-          "avg": 93780.33,
+          "avg": 93797.67,
           "unit": "KiB/s"
         },
         "memcpy_262144_mock_avg_time": {
-          "avg": 1091906.33,
+          "avg": 1091707.33,
           "unit": "us"
         },
         "memcpy_262144_system_avg_rate": {
-          "avg": 92126.0,
+          "avg": 92160.33,
           "unit": "KiB/s"
         },
         "memcpy_262144_system_avg_time": {
-          "avg": 1111515.33,
+          "avg": 1111103.67,
           "unit": "us"
         },
         "memcpy_524288_mock_avg_rate": {
-          "avg": 93769.0,
+          "avg": 93786.33,
           "unit": "KiB/s"
         },
         "memcpy_524288_mock_avg_time": {
-          "avg": 2184076.67,
+          "avg": 2183671.67,
           "unit": "us"
         },
         "memcpy_524288_system_avg_rate": {
-          "avg": 92092.67,
+          "avg": 92129.33,
           "unit": "KiB/s"
         },
         "memcpy_524288_system_avg_time": {
-          "avg": 2223831.67,
+          "avg": 2222945.67,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
-          "avg": 1021887.67,
+          "avg": 1021819.67,
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 25051.67,
+          "avg": 25053.33,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
-          "avg": 1022513.33,
+          "avg": 1022636.0,
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 25036.33,
+          "avg": 25033.33,
           "unit": "us"
         },
         "memset_131072_mock_avg_rate": {
-          "avg": 687374.0,
+          "avg": 687367.67,
           "unit": "KiB/s"
         },
         "memset_131072_mock_avg_time": {
-          "avg": 74486.33,
+          "avg": 74487.0,
           "unit": "us"
         },
         "memset_131072_system_avg_rate": {
-          "avg": 727534.33,
+          "avg": 727572.0,
           "unit": "KiB/s"
         },
         "memset_131072_system_avg_time": {
-          "avg": 70374.67,
+          "avg": 70371.0,
           "unit": "us"
         },
         "memset_262144_mock_avg_rate": {
-          "avg": 687666.33,
+          "avg": 687688.0,
           "unit": "KiB/s"
         },
         "memset_262144_mock_avg_time": {
-          "avg": 148909.33,
+          "avg": 148904.67,
           "unit": "us"
         },
         "memset_262144_system_avg_rate": {
-          "avg": 727558.0,
+          "avg": 727661.67,
           "unit": "KiB/s"
         },
         "memset_262144_system_avg_time": {
-          "avg": 140744.67,
+          "avg": 140724.67,
           "unit": "us"
         },
         "memset_524288_mock_avg_rate": {
-          "avg": 200741.67,
+          "avg": 200743.0,
           "unit": "KiB/s"
         },
         "memset_524288_mock_avg_time": {
-          "avg": 1020213.0,
+          "avg": 1020207.67,
           "unit": "us"
         },
         "memset_524288_system_avg_rate": {
-          "avg": 200795.67,
+          "avg": 200820.33,
           "unit": "KiB/s"
         },
         "memset_524288_system_avg_time": {
-          "avg": 1019938.67,
+          "avg": 1019814.67,
           "unit": "us"
         }
       }
@@ -1630,7 +1582,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 2773319.33,
+          "avg": 2773337.0,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -1638,39 +1590,39 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 2844512.67,
+          "avg": 2844531.33,
           "unit": "us"
         },
         "memcpy_131072_mock_avg_rate": {
-          "avg": 9232.0,
+          "avg": 9230.33,
           "unit": "KiB/s"
         },
         "memcpy_131072_mock_avg_time": {
-          "avg": 5545502.0,
+          "avg": 5546599.0,
           "unit": "us"
         },
         "memcpy_131072_system_avg_rate": {
-          "avg": 9003.33,
+          "avg": 9004.67,
           "unit": "KiB/s"
         },
         "memcpy_131072_system_avg_time": {
-          "avg": 5686732.0,
+          "avg": 5685728.0,
           "unit": "us"
         },
         "memcpy_262144_mock_avg_rate": {
-          "avg": 9233.0,
+          "avg": 9232.0,
           "unit": "KiB/s"
         },
         "memcpy_262144_mock_avg_time": {
-          "avg": 11089735.0,
+          "avg": 11091052.0,
           "unit": "us"
         },
         "memcpy_262144_system_avg_rate": {
-          "avg": 9005.0,
+          "avg": 9008.0,
           "unit": "KiB/s"
         },
         "memcpy_262144_system_avg_time": {
-          "avg": 11371411.33,
+          "avg": 11367519.67,
           "unit": "us"
         },
         "memcpy_524288_mock_avg_rate": {
@@ -1678,7 +1630,7 @@
           "unit": "KiB/s"
         },
         "memcpy_524288_mock_avg_time": {
-          "avg": 22177770.67,
+          "avg": 22177963.33,
           "unit": "us"
         },
         "memcpy_524288_system_avg_rate": {
@@ -1686,7 +1638,7 @@
           "unit": "KiB/s"
         },
         "memcpy_524288_system_avg_time": {
-          "avg": 22727292.33,
+          "avg": 22727288.67,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -1694,7 +1646,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 1813416.33,
+          "avg": 1813416.67,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
@@ -1702,7 +1654,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 1812734.33,
+          "avg": 1812735.33,
           "unit": "us"
         },
         "memset_131072_mock_avg_rate": {
@@ -1710,7 +1662,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_mock_avg_time": {
-          "avg": 3625907.67,
+          "avg": 3625913.67,
           "unit": "us"
         },
         "memset_131072_system_avg_rate": {
@@ -1718,7 +1670,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_system_avg_time": {
-          "avg": 3625709.0,
+          "avg": 3625699.0,
           "unit": "us"
         },
         "memset_262144_mock_avg_rate": {
@@ -1726,7 +1678,7 @@
           "unit": "KiB/s"
         },
         "memset_262144_mock_avg_time": {
-          "avg": 7250737.67,
+          "avg": 7250762.0,
           "unit": "us"
         },
         "memset_262144_system_avg_rate": {
@@ -1734,11 +1686,11 @@
           "unit": "KiB/s"
         },
         "memset_262144_system_avg_time": {
-          "avg": 7250485.33,
+          "avg": 7250453.33,
           "unit": "us"
         },
         "memset_524288_mock_avg_rate": {
-          "avg": 14123.33,
+          "avg": 14123.0,
           "unit": "KiB/s"
         },
         "memset_524288_mock_avg_time": {
@@ -1750,7 +1702,7 @@
           "unit": "KiB/s"
         },
         "memset_524288_system_avg_time": {
-          "avg": 14499990.67,
+          "avg": 14499993.33,
           "unit": "us"
         }
       }
@@ -1773,7 +1725,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 2625997.33,
+          "avg": 2625998.67,
           "unit": "us"
         },
         "memcpy_131072_mock_avg_rate": {
@@ -1805,7 +1757,7 @@
           "unit": "KiB/s"
         },
         "memcpy_262144_system_avg_time": {
-          "avg": 10503386.0,
+          "avg": 10503386.33,
           "unit": "us"
         },
         "memcpy_524288_mock_avg_rate": {
@@ -1821,7 +1773,7 @@
           "unit": "KiB/s"
         },
         "memcpy_524288_system_avg_time": {
-          "avg": 21005326.67,
+          "avg": 21005326.33,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -1829,7 +1781,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 1723167.0,
+          "avg": 1723166.67,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
@@ -1853,7 +1805,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_system_avg_time": {
-          "avg": 3446593.33,
+          "avg": 3446593.0,
           "unit": "us"
         },
         "memset_262144_mock_avg_rate": {
@@ -1885,7 +1837,7 @@
           "unit": "KiB/s"
         },
         "memset_524288_system_avg_time": {
-          "avg": 13787125.33,
+          "avg": 13787125.0,
           "unit": "us"
         }
       }
@@ -1900,7 +1852,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 2934043.67,
+          "avg": 2934045.0,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -1908,7 +1860,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 2931679.67,
+          "avg": 2931679.33,
           "unit": "us"
         },
         "memcpy_131072_mock_avg_rate": {
@@ -1916,7 +1868,7 @@
           "unit": "KiB/s"
         },
         "memcpy_131072_mock_avg_time": {
-          "avg": 5866104.33,
+          "avg": 5866103.67,
           "unit": "us"
         },
         "memcpy_131072_system_avg_rate": {
@@ -1924,7 +1876,7 @@
           "unit": "KiB/s"
         },
         "memcpy_131072_system_avg_time": {
-          "avg": 5861324.33,
+          "avg": 5861323.67,
           "unit": "us"
         },
         "memcpy_262144_mock_avg_rate": {
@@ -1932,7 +1884,7 @@
           "unit": "KiB/s"
         },
         "memcpy_262144_mock_avg_time": {
-          "avg": 11730075.33,
+          "avg": 11730082.33,
           "unit": "us"
         },
         "memcpy_262144_system_avg_rate": {
@@ -1948,7 +1900,7 @@
           "unit": "KiB/s"
         },
         "memcpy_524288_mock_avg_time": {
-          "avg": 23457934.33,
+          "avg": 23457936.33,
           "unit": "us"
         },
         "memcpy_524288_system_avg_rate": {
@@ -1956,7 +1908,7 @@
           "unit": "KiB/s"
         },
         "memcpy_524288_system_avg_time": {
-          "avg": 23443208.33,
+          "avg": 23443211.33,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -1964,7 +1916,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 1904064.33,
+          "avg": 1904065.0,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
@@ -1972,7 +1924,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 1901073.67,
+          "avg": 1901072.33,
           "unit": "us"
         },
         "memset_131072_mock_avg_rate": {
@@ -1980,7 +1932,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_mock_avg_time": {
-          "avg": 3808135.67,
+          "avg": 3808137.33,
           "unit": "us"
         },
         "memset_131072_system_avg_rate": {
@@ -1988,7 +1940,7 @@
           "unit": "KiB/s"
         },
         "memset_131072_system_avg_time": {
-          "avg": 3801244.0,
+          "avg": 3801243.67,
           "unit": "us"
         },
         "memset_262144_mock_avg_rate": {
@@ -1996,7 +1948,7 @@
           "unit": "KiB/s"
         },
         "memset_262144_mock_avg_time": {
-          "avg": 7616255.67,
+          "avg": 7616256.67,
           "unit": "us"
         },
         "memset_262144_system_avg_rate": {
@@ -2004,7 +1956,7 @@
           "unit": "KiB/s"
         },
         "memset_262144_system_avg_time": {
-          "avg": 7602639.67,
+          "avg": 7602639.0,
           "unit": "us"
         },
         "memset_524288_mock_avg_rate": {
@@ -2012,7 +1964,7 @@
           "unit": "KiB/s"
         },
         "memset_524288_mock_avg_time": {
-          "avg": 15232360.67,
+          "avg": 15232362.0,
           "unit": "us"
         },
         "memset_524288_system_avg_rate": {
@@ -2020,398 +1972,7 @@
           "unit": "KiB/s"
         },
         "memset_524288_system_avg_time": {
-          "avg": 15205423.67,
-          "unit": "us"
-        }
-      }
-    },
-    "esp32c6_ramspeed": {
-      "status": "success",
-      "runs": 3,
-      "settings": "copies=50000,max_test_size=65536",
-      "metrics": {
-        "memcpy_32_mock_avg_rate": {
-          "avg": 42362.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32_mock_avg_time": {
-          "avg": 36872.33,
-          "unit": "us"
-        },
-        "memcpy_32_system_avg_rate": {
-          "avg": 70570.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_32_system_avg_time": {
-          "avg": 22133.67,
-          "unit": "us"
-        },
-        "memcpy_64_mock_avg_rate": {
-          "avg": 66917.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_64_mock_avg_time": {
-          "avg": 46699.33,
-          "unit": "us"
-        },
-        "memcpy_64_system_avg_rate": {
-          "avg": 104516.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_64_system_avg_time": {
-          "avg": 29899.67,
-          "unit": "us"
-        },
-        "memcpy_128_mock_avg_rate": {
-          "avg": 94305.33,
-          "unit": "KiB/s"
-        },
-        "memcpy_128_mock_avg_time": {
-          "avg": 66273.67,
-          "unit": "us"
-        },
-        "memcpy_128_system_avg_rate": {
-          "avg": 153958.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_128_system_avg_time": {
-          "avg": 40595.33,
-          "unit": "us"
-        },
-        "memcpy_256_mock_avg_rate": {
-          "avg": 118911.33,
-          "unit": "KiB/s"
-        },
-        "memcpy_256_mock_avg_time": {
-          "avg": 105120.0,
-          "unit": "us"
-        },
-        "memcpy_256_system_avg_rate": {
-          "avg": 197606.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_256_system_avg_time": {
-          "avg": 63257.0,
-          "unit": "us"
-        },
-        "memcpy_512_mock_avg_rate": {
-          "avg": 136338.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_512_mock_avg_time": {
-          "avg": 183366.33,
-          "unit": "us"
-        },
-        "memcpy_512_system_avg_rate": {
-          "avg": 215664.33,
-          "unit": "KiB/s"
-        },
-        "memcpy_512_system_avg_time": {
-          "avg": 115920.67,
-          "unit": "us"
-        },
-        "memcpy_1024_mock_avg_rate": {
-          "avg": 147201.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_1024_mock_avg_time": {
-          "avg": 339668.67,
-          "unit": "us"
-        },
-        "memcpy_1024_system_avg_rate": {
-          "avg": 227278.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_1024_system_avg_time": {
-          "avg": 219994.0,
-          "unit": "us"
-        },
-        "memcpy_2048_mock_avg_rate": {
-          "avg": 153427.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_2048_mock_avg_time": {
-          "avg": 651773.0,
-          "unit": "us"
-        },
-        "memcpy_2048_system_avg_rate": {
-          "avg": 233112.33,
-          "unit": "KiB/s"
-        },
-        "memcpy_2048_system_avg_time": {
-          "avg": 428976.67,
-          "unit": "us"
-        },
-        "memcpy_4096_mock_avg_rate": {
-          "avg": 156715.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_4096_mock_avg_time": {
-          "avg": 1276195.0,
-          "unit": "us"
-        },
-        "memcpy_4096_system_avg_rate": {
-          "avg": 237921.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_4096_system_avg_time": {
-          "avg": 840612.33,
-          "unit": "us"
-        },
-        "memcpy_8192_mock_avg_rate": {
-          "avg": 158412.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_8192_mock_avg_time": {
-          "avg": 2525050.33,
-          "unit": "us"
-        },
-        "memcpy_8192_system_avg_rate": {
-          "avg": 240672.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_8192_system_avg_time": {
-          "avg": 1662011.0,
-          "unit": "us"
-        },
-        "memcpy_16384_mock_avg_rate": {
-          "avg": 159282.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_16384_mock_avg_time": {
-          "avg": 5022529.67,
-          "unit": "us"
-        },
-        "memcpy_16384_system_avg_rate": {
-          "avg": 241979.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_16384_system_avg_time": {
-          "avg": 3306065.0,
-          "unit": "us"
-        },
-        "memcpy_32768_mock_avg_rate": {
-          "avg": 159717.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32768_mock_avg_time": {
-          "avg": 10017689.67,
-          "unit": "us"
-        },
-        "memcpy_32768_system_avg_rate": {
-          "avg": 242368.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32768_system_avg_time": {
-          "avg": 6601510.67,
-          "unit": "us"
-        },
-        "memcpy_65536_mock_avg_rate": {
-          "avg": 159937.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_65536_mock_avg_time": {
-          "avg": 20007810.33,
-          "unit": "us"
-        },
-        "memcpy_65536_system_avg_rate": {
-          "avg": 246320.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_65536_system_avg_time": {
-          "avg": 12991219.33,
-          "unit": "us"
-        },
-        "memset_32_mock_avg_rate": {
-          "avg": 51160.67,
-          "unit": "KiB/s"
-        },
-        "memset_32_mock_avg_time": {
-          "avg": 30531.0,
-          "unit": "us"
-        },
-        "memset_32_system_avg_rate": {
-          "avg": 62826.33,
-          "unit": "KiB/s"
-        },
-        "memset_32_system_avg_time": {
-          "avg": 24862.0,
-          "unit": "us"
-        },
-        "memset_64_mock_avg_rate": {
-          "avg": 88657.0,
-          "unit": "KiB/s"
-        },
-        "memset_64_mock_avg_time": {
-          "avg": 35248.0,
-          "unit": "us"
-        },
-        "memset_64_system_avg_rate": {
-          "avg": 109101.0,
-          "unit": "KiB/s"
-        },
-        "memset_64_system_avg_time": {
-          "avg": 28643.0,
-          "unit": "us"
-        },
-        "memset_128_mock_avg_rate": {
-          "avg": 139441.33,
-          "unit": "KiB/s"
-        },
-        "memset_128_mock_avg_time": {
-          "avg": 44821.67,
-          "unit": "us"
-        },
-        "memset_128_system_avg_rate": {
-          "avg": 172690.0,
-          "unit": "KiB/s"
-        },
-        "memset_128_system_avg_time": {
-          "avg": 36192.0,
-          "unit": "us"
-        },
-        "memset_256_mock_avg_rate": {
-          "avg": 196626.67,
-          "unit": "KiB/s"
-        },
-        "memset_256_mock_avg_time": {
-          "avg": 63572.0,
-          "unit": "us"
-        },
-        "memset_256_system_avg_rate": {
-          "avg": 243653.0,
-          "unit": "KiB/s"
-        },
-        "memset_256_system_avg_time": {
-          "avg": 51302.33,
-          "unit": "us"
-        },
-        "memset_512_mock_avg_rate": {
-          "avg": 246077.0,
-          "unit": "KiB/s"
-        },
-        "memset_512_mock_avg_time": {
-          "avg": 101594.0,
-          "unit": "us"
-        },
-        "memset_512_system_avg_rate": {
-          "avg": 306688.0,
-          "unit": "KiB/s"
-        },
-        "memset_512_system_avg_time": {
-          "avg": 81516.0,
-          "unit": "us"
-        },
-        "memset_1024_mock_avg_rate": {
-          "avg": 282319.0,
-          "unit": "KiB/s"
-        },
-        "memset_1024_mock_avg_time": {
-          "avg": 177104.33,
-          "unit": "us"
-        },
-        "memset_1024_system_avg_rate": {
-          "avg": 352265.33,
-          "unit": "KiB/s"
-        },
-        "memset_1024_system_avg_time": {
-          "avg": 141938.33,
-          "unit": "us"
-        },
-        "memset_2048_mock_avg_rate": {
-          "avg": 304835.0,
-          "unit": "KiB/s"
-        },
-        "memset_2048_mock_avg_time": {
-          "avg": 328045.67,
-          "unit": "us"
-        },
-        "memset_2048_system_avg_rate": {
-          "avg": 380538.0,
-          "unit": "KiB/s"
-        },
-        "memset_2048_system_avg_time": {
-          "avg": 262785.67,
-          "unit": "us"
-        },
-        "memset_4096_mock_avg_rate": {
-          "avg": 317333.0,
-          "unit": "KiB/s"
-        },
-        "memset_4096_mock_avg_time": {
-          "avg": 630251.33,
-          "unit": "us"
-        },
-        "memset_4096_system_avg_rate": {
-          "avg": 396440.33,
-          "unit": "KiB/s"
-        },
-        "memset_4096_system_avg_time": {
-          "avg": 504489.0,
-          "unit": "us"
-        },
-        "memset_8192_mock_avg_rate": {
-          "avg": 323997.0,
-          "unit": "KiB/s"
-        },
-        "memset_8192_mock_avg_time": {
-          "avg": 1234576.67,
-          "unit": "us"
-        },
-        "memset_8192_system_avg_rate": {
-          "avg": 404902.0,
-          "unit": "KiB/s"
-        },
-        "memset_8192_system_avg_time": {
-          "avg": 987892.67,
-          "unit": "us"
-        },
-        "memset_16384_mock_avg_rate": {
-          "avg": 327414.0,
-          "unit": "KiB/s"
-        },
-        "memset_16384_mock_avg_time": {
-          "avg": 2443383.0,
-          "unit": "us"
-        },
-        "memset_16384_system_avg_rate": {
-          "avg": 409269.0,
-          "unit": "KiB/s"
-        },
-        "memset_16384_system_avg_time": {
-          "avg": 1954703.67,
-          "unit": "us"
-        },
-        "memset_32768_mock_avg_rate": {
-          "avg": 329196.0,
-          "unit": "KiB/s"
-        },
-        "memset_32768_mock_avg_time": {
-          "avg": 4860320.33,
-          "unit": "us"
-        },
-        "memset_32768_system_avg_rate": {
-          "avg": 411489.0,
-          "unit": "KiB/s"
-        },
-        "memset_32768_system_avg_time": {
-          "avg": 3888313.67,
-          "unit": "us"
-        },
-        "memset_65536_mock_avg_rate": {
-          "avg": 330095.0,
-          "unit": "KiB/s"
-        },
-        "memset_65536_mock_avg_time": {
-          "avg": 9694168.33,
-          "unit": "us"
-        },
-        "memset_65536_system_avg_rate": {
-          "avg": 412608.0,
-          "unit": "KiB/s"
-        },
-        "memset_65536_system_avg_time": {
-          "avg": 7755541.0,
+          "avg": 15205423.0,
           "unit": "us"
         }
       }
@@ -2422,11 +1983,11 @@
       "settings": "copies=50000,max_test_size=65536",
       "metrics": {
         "memcpy_32_mock_avg_rate": {
-          "avg": 44686.33,
+          "avg": 44687.0,
           "unit": "KiB/s"
         },
         "memcpy_32_mock_avg_time": {
-          "avg": 34954.33,
+          "avg": 34953.67,
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
@@ -2438,11 +1999,11 @@
           "unit": "us"
         },
         "memcpy_64_mock_avg_rate": {
-          "avg": 77367.33,
+          "avg": 77366.0,
           "unit": "KiB/s"
         },
         "memcpy_64_mock_avg_time": {
-          "avg": 40391.33,
+          "avg": 40392.0,
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
@@ -2454,51 +2015,51 @@
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 121885.67,
+          "avg": 121888.33,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 51277.33,
+          "avg": 51276.33,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
-          "avg": 248875.0,
+          "avg": 248871.67,
           "unit": "KiB/s"
         },
         "memcpy_128_system_avg_time": {
-          "avg": 25113.0,
+          "avg": 25113.33,
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 171135.67,
+          "avg": 171137.0,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 73041.33,
+          "avg": 73040.67,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
-          "avg": 298680.33,
+          "avg": 298663.67,
           "unit": "KiB/s"
         },
         "memcpy_256_system_avg_time": {
-          "avg": 41850.67,
+          "avg": 41853.0,
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 214468.33,
+          "avg": 214463.33,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 116567.0,
+          "avg": 116569.67,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
-          "avg": 331834.33,
+          "avg": 331833.0,
           "unit": "KiB/s"
         },
         "memcpy_512_system_avg_time": {
-          "avg": 75338.67,
+          "avg": 75339.0,
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
@@ -2518,43 +2079,43 @@
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
-          "avg": 264728.67,
+          "avg": 264730.0,
           "unit": "KiB/s"
         },
         "memcpy_2048_mock_avg_time": {
-          "avg": 377744.33,
+          "avg": 377743.0,
           "unit": "us"
         },
         "memcpy_2048_system_avg_rate": {
-          "avg": 362000.67,
+          "avg": 362001.0,
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 276242.33,
+          "avg": 276242.0,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
-          "avg": 275492.0,
+          "avg": 275491.0,
           "unit": "KiB/s"
         },
         "memcpy_4096_mock_avg_time": {
-          "avg": 725973.33,
+          "avg": 725974.33,
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
-          "avg": 367571.0,
+          "avg": 367570.33,
           "unit": "KiB/s"
         },
         "memcpy_4096_system_avg_time": {
-          "avg": 544112.0,
+          "avg": 544112.67,
           "unit": "us"
         },
         "memcpy_8192_mock_avg_rate": {
-          "avg": 281207.67,
+          "avg": 281208.67,
           "unit": "KiB/s"
         },
         "memcpy_8192_mock_avg_time": {
-          "avg": 1422433.0,
+          "avg": 1422427.67,
           "unit": "us"
         },
         "memcpy_8192_system_avg_rate": {
@@ -2566,27 +2127,27 @@
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
-          "avg": 284159.67,
+          "avg": 284160.0,
           "unit": "KiB/s"
         },
         "memcpy_16384_mock_avg_time": {
-          "avg": 2815315.33,
+          "avg": 2815314.33,
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
-          "avg": 371862.0,
+          "avg": 371861.0,
           "unit": "KiB/s"
         },
         "memcpy_16384_system_avg_time": {
-          "avg": 2151335.0,
+          "avg": 2151338.33,
           "unit": "us"
         },
         "memcpy_32768_mock_avg_rate": {
-          "avg": 285655.33,
+          "avg": 285655.0,
           "unit": "KiB/s"
         },
         "memcpy_32768_mock_avg_time": {
-          "avg": 5601143.67,
+          "avg": 5601155.0,
           "unit": "us"
         },
         "memcpy_32768_system_avg_rate": {
@@ -2594,15 +2155,15 @@
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 4294289.0,
+          "avg": 4294288.33,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
-          "avg": 286407.0,
+          "avg": 286408.0,
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 11172890.0,
+          "avg": 11172840.33,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -2610,7 +2171,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 8580207.0,
+          "avg": 8580206.0,
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
@@ -2630,11 +2191,11 @@
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
-          "avg": 96952.0,
+          "avg": 96950.0,
           "unit": "KiB/s"
         },
         "memset_64_mock_avg_time": {
-          "avg": 32232.33,
+          "avg": 32233.0,
           "unit": "us"
         },
         "memset_64_system_avg_rate": {
@@ -2646,31 +2207,31 @@
           "unit": "us"
         },
         "memset_128_mock_avg_rate": {
-          "avg": 158841.67,
+          "avg": 158833.0,
           "unit": "KiB/s"
         },
         "memset_128_mock_avg_time": {
-          "avg": 39347.33,
+          "avg": 39349.33,
           "unit": "us"
         },
         "memset_128_system_avg_rate": {
-          "avg": 335522.0,
+          "avg": 335546.0,
           "unit": "KiB/s"
         },
         "memset_128_system_avg_time": {
-          "avg": 18627.67,
+          "avg": 18626.33,
           "unit": "us"
         },
         "memset_256_mock_avg_rate": {
-          "avg": 233294.0,
+          "avg": 233301.67,
           "unit": "KiB/s"
         },
         "memset_256_mock_avg_time": {
-          "avg": 53580.33,
+          "avg": 53578.67,
           "unit": "us"
         },
         "memset_256_system_avg_rate": {
-          "avg": 462979.67,
+          "avg": 462980.0,
           "unit": "KiB/s"
         },
         "memset_256_system_avg_time": {
@@ -2678,11 +2239,11 @@
           "unit": "us"
         },
         "memset_512_mock_avg_rate": {
-          "avg": 304718.0,
+          "avg": 304721.0,
           "unit": "KiB/s"
         },
         "memset_512_mock_avg_time": {
-          "avg": 82043.0,
+          "avg": 82042.0,
           "unit": "us"
         },
         "memset_512_system_avg_rate": {
@@ -2694,27 +2255,27 @@
           "unit": "us"
         },
         "memset_1024_mock_avg_rate": {
-          "avg": 359787.67,
+          "avg": 359790.0,
           "unit": "KiB/s"
         },
         "memset_1024_mock_avg_time": {
-          "avg": 138970.67,
+          "avg": 138969.67,
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 647374.67,
+          "avg": 647377.33,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 77235.0,
+          "avg": 77234.67,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
-          "avg": 395527.0,
+          "avg": 395526.0,
           "unit": "KiB/s"
         },
         "memset_2048_mock_avg_time": {
-          "avg": 252827.0,
+          "avg": 252827.33,
           "unit": "us"
         },
         "memset_2048_system_avg_rate": {
@@ -2726,35 +2287,35 @@
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
-          "avg": 416202.0,
+          "avg": 416201.67,
           "unit": "KiB/s"
         },
         "memset_4096_mock_avg_time": {
-          "avg": 480535.0,
+          "avg": 480535.33,
           "unit": "us"
         },
         "memset_4096_system_avg_rate": {
-          "avg": 719011.0,
+          "avg": 719012.0,
           "unit": "KiB/s"
         },
         "memset_4096_system_avg_time": {
-          "avg": 278159.67,
+          "avg": 278159.33,
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
-          "avg": 427373.0,
+          "avg": 427372.0,
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 935950.0,
+          "avg": 935951.0,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
-          "avg": 732520.33,
+          "avg": 732519.0,
           "unit": "KiB/s"
         },
         "memset_8192_system_avg_time": {
-          "avg": 546059.67,
+          "avg": 546060.67,
           "unit": "us"
         },
         "memset_16384_mock_avg_rate": {
@@ -2762,7 +2323,7 @@
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
-          "avg": 1846784.0,
+          "avg": 1846784.67,
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
@@ -2774,11 +2335,11 @@
           "unit": "us"
         },
         "memset_32768_mock_avg_rate": {
-          "avg": 436154.0,
+          "avg": 436147.33,
           "unit": "KiB/s"
         },
         "memset_32768_mock_avg_time": {
-          "avg": 3668425.67,
+          "avg": 3668479.33,
           "unit": "us"
         },
         "memset_32768_system_avg_rate": {
@@ -2786,7 +2347,7 @@
           "unit": "KiB/s"
         },
         "memset_32768_system_avg_time": {
-          "avg": 2153483.67,
+          "avg": 2153483.33,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -2802,7 +2363,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 4296667.0,
+          "avg": 4296666.33,
           "unit": "us"
         }
       }
@@ -2813,778 +2374,387 @@
       "settings": "copies=50000,max_test_size=65536",
       "metrics": {
         "memcpy_32_mock_avg_rate": {
-          "avg": 127084.33,
+          "avg": 127074.0,
           "unit": "KiB/s"
         },
         "memcpy_32_mock_avg_time": {
-          "avg": 12291.0,
+          "avg": 12292.0,
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
-          "avg": 169971.67,
+          "avg": 167272.33,
           "unit": "KiB/s"
         },
         "memcpy_32_system_avg_time": {
-          "avg": 9209.33,
+          "avg": 9344.33,
           "unit": "us"
         },
         "memcpy_64_mock_avg_rate": {
-          "avg": 207769.33,
+          "avg": 207732.67,
           "unit": "KiB/s"
         },
         "memcpy_64_mock_avg_time": {
-          "avg": 15040.67,
+          "avg": 15043.33,
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
-          "avg": 279493.0,
+          "avg": 277573.33,
           "unit": "KiB/s"
         },
         "memcpy_64_system_avg_time": {
-          "avg": 11181.0,
+          "avg": 11258.67,
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 306467.33,
+          "avg": 306748.67,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 20393.67,
+          "avg": 20375.0,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
-          "avg": 383900.0,
+          "avg": 378850.0,
           "unit": "KiB/s"
         },
         "memcpy_128_system_avg_time": {
-          "avg": 16281.33,
+          "avg": 16497.33,
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 404272.67,
+          "avg": 403933.33,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 30919.67,
+          "avg": 30945.67,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
-          "avg": 486919.0,
+          "avg": 487174.33,
           "unit": "KiB/s"
         },
         "memcpy_256_system_avg_time": {
-          "avg": 25677.67,
+          "avg": 25658.67,
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 473610.0,
+          "avg": 473604.0,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 52786.0,
+          "avg": 52786.67,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
-          "avg": 530668.33,
+          "avg": 531983.33,
           "unit": "KiB/s"
         },
         "memcpy_512_system_avg_time": {
-          "avg": 47112.33,
+          "avg": 46994.33,
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
-          "avg": 530990.0,
+          "avg": 530995.67,
           "unit": "KiB/s"
         },
         "memcpy_1024_mock_avg_time": {
-          "avg": 94163.67,
+          "avg": 94162.67,
           "unit": "us"
         },
         "memcpy_1024_system_avg_rate": {
-          "avg": 564076.0,
+          "avg": 565436.67,
           "unit": "KiB/s"
         },
         "memcpy_1024_system_avg_time": {
-          "avg": 88640.67,
+          "avg": 88427.33,
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
-          "avg": 560491.67,
+          "avg": 560495.0,
           "unit": "KiB/s"
         },
         "memcpy_2048_mock_avg_time": {
-          "avg": 178414.67,
+          "avg": 178413.67,
           "unit": "us"
         },
         "memcpy_2048_system_avg_rate": {
-          "avg": 583936.67,
+          "avg": 583970.67,
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 171251.33,
+          "avg": 171241.33,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
-          "avg": 576414.0,
+          "avg": 576413.33,
           "unit": "KiB/s"
         },
         "memcpy_4096_mock_avg_time": {
-          "avg": 346972.67,
+          "avg": 346973.0,
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
-          "avg": 596113.0,
+          "avg": 596234.67,
           "unit": "KiB/s"
         },
         "memcpy_4096_system_avg_time": {
-          "avg": 335506.67,
+          "avg": 335438.0,
           "unit": "us"
         },
         "memcpy_8192_mock_avg_rate": {
-          "avg": 584469.0,
+          "avg": 584466.33,
           "unit": "KiB/s"
         },
         "memcpy_8192_mock_avg_time": {
-          "avg": 684381.33,
+          "avg": 684384.33,
           "unit": "us"
         },
         "memcpy_8192_system_avg_rate": {
-          "avg": 603474.67,
+          "avg": 602999.67,
           "unit": "KiB/s"
         },
         "memcpy_8192_system_avg_time": {
-          "avg": 662827.33,
+          "avg": 663349.67,
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
-          "avg": 587831.33,
+          "avg": 587833.67,
           "unit": "KiB/s"
         },
         "memcpy_16384_mock_avg_time": {
-          "avg": 1360933.33,
+          "avg": 1360927.67,
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
-          "avg": 604314.67,
+          "avg": 604204.0,
           "unit": "KiB/s"
         },
         "memcpy_16384_system_avg_time": {
-          "avg": 1323812.33,
+          "avg": 1324055.33,
           "unit": "us"
         },
         "memcpy_32768_mock_avg_rate": {
-          "avg": 589170.67,
+          "avg": 589162.67,
           "unit": "KiB/s"
         },
         "memcpy_32768_mock_avg_time": {
-          "avg": 2715678.0,
+          "avg": 2715717.33,
           "unit": "us"
         },
         "memcpy_32768_system_avg_rate": {
-          "avg": 605725.67,
+          "avg": 605706.67,
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 2641459.0,
+          "avg": 2641539.67,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
-          "avg": 401099.67,
+          "avg": 401096.33,
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 7978059.67,
+          "avg": 7978128.67,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
-          "avg": 413132.33,
+          "avg": 413167.0,
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 7745689.67,
+          "avg": 7745044.67,
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
-          "avg": 170234.33,
+          "avg": 170616.67,
           "unit": "KiB/s"
         },
         "memset_32_mock_avg_time": {
-          "avg": 9175.67,
+          "avg": 9155.0,
           "unit": "us"
         },
         "memset_32_system_avg_rate": {
-          "avg": 327692.0,
+          "avg": 327760.67,
           "unit": "KiB/s"
         },
         "memset_32_system_avg_time": {
-          "avg": 4766.67,
+          "avg": 4765.67,
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
-          "avg": 283854.0,
+          "avg": 286451.33,
           "unit": "KiB/s"
         },
         "memset_64_mock_avg_time": {
-          "avg": 11009.33,
+          "avg": 10909.33,
           "unit": "us"
         },
         "memset_64_system_avg_rate": {
-          "avg": 470183.33,
+          "avg": 470160.33,
           "unit": "KiB/s"
         },
         "memset_64_system_avg_time": {
-          "avg": 6646.33,
+          "avg": 6646.67,
           "unit": "us"
         },
         "memset_128_mock_avg_rate": {
-          "avg": 457487.0,
+          "avg": 458896.33,
           "unit": "KiB/s"
         },
         "memset_128_mock_avg_time": {
-          "avg": 13661.67,
+          "avg": 13619.67,
           "unit": "us"
         },
         "memset_128_system_avg_rate": {
-          "avg": 636627.67,
+          "avg": 626021.0,
           "unit": "KiB/s"
         },
         "memset_128_system_avg_time": {
-          "avg": 9823.0,
+          "avg": 9989.33,
           "unit": "us"
         },
         "memset_256_mock_avg_rate": {
-          "avg": 630824.33,
+          "avg": 631404.33,
           "unit": "KiB/s"
         },
         "memset_256_mock_avg_time": {
-          "avg": 19815.33,
+          "avg": 19797.33,
           "unit": "us"
         },
         "memset_256_system_avg_rate": {
-          "avg": 765822.0,
+          "avg": 766432.67,
           "unit": "KiB/s"
         },
         "memset_256_system_avg_time": {
-          "avg": 16322.33,
+          "avg": 16309.33,
           "unit": "us"
         },
         "memset_512_mock_avg_rate": {
-          "avg": 763964.33,
+          "avg": 763995.67,
           "unit": "KiB/s"
         },
         "memset_512_mock_avg_time": {
-          "avg": 32724.0,
+          "avg": 32722.67,
           "unit": "us"
         },
         "memset_512_system_avg_rate": {
-          "avg": 898181.33,
+          "avg": 898138.67,
           "unit": "KiB/s"
         },
         "memset_512_system_avg_time": {
-          "avg": 27834.0,
+          "avg": 27835.33,
           "unit": "us"
         },
         "memset_1024_mock_avg_rate": {
-          "avg": 883959.67,
+          "avg": 884230.0,
           "unit": "KiB/s"
         },
         "memset_1024_mock_avg_time": {
-          "avg": 56563.67,
+          "avg": 56546.33,
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 963267.0,
+          "avg": 963236.33,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 51906.67,
+          "avg": 51908.33,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
-          "avg": 954398.33,
+          "avg": 954347.0,
           "unit": "KiB/s"
         },
         "memset_2048_mock_avg_time": {
-          "avg": 104778.0,
+          "avg": 104783.67,
           "unit": "us"
         },
         "memset_2048_system_avg_rate": {
-          "avg": 999503.33,
+          "avg": 999476.67,
           "unit": "KiB/s"
         },
         "memset_2048_system_avg_time": {
-          "avg": 100049.67,
+          "avg": 100052.33,
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
-          "avg": 994638.67,
+          "avg": 994618.67,
           "unit": "KiB/s"
         },
         "memset_4096_mock_avg_time": {
-          "avg": 201078.0,
+          "avg": 201082.0,
           "unit": "us"
         },
         "memset_4096_system_avg_rate": {
-          "avg": 1018654.67,
+          "avg": 1018652.67,
           "unit": "KiB/s"
         },
         "memset_4096_system_avg_time": {
-          "avg": 196337.33,
+          "avg": 196337.67,
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
-          "avg": 1016086.67,
+          "avg": 1016072.33,
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 393667.0,
+          "avg": 393672.67,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
-          "avg": 1028513.33,
+          "avg": 1028480.67,
           "unit": "KiB/s"
         },
         "memset_8192_system_avg_time": {
-          "avg": 388910.67,
+          "avg": 388923.0,
           "unit": "us"
         },
         "memset_16384_mock_avg_rate": {
-          "avg": 1027185.33,
+          "avg": 1027188.33,
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
-          "avg": 778827.0,
+          "avg": 778824.67,
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
-          "avg": 1033512.33,
+          "avg": 1033488.67,
           "unit": "KiB/s"
         },
         "memset_16384_system_avg_time": {
-          "avg": 774059.0,
+          "avg": 774076.67,
           "unit": "us"
         },
         "memset_32768_mock_avg_rate": {
-          "avg": 1032835.33,
+          "avg": 1032836.0,
           "unit": "KiB/s"
         },
         "memset_32768_mock_avg_time": {
-          "avg": 1549132.67,
+          "avg": 1549132.0,
           "unit": "us"
         },
         "memset_32768_system_avg_rate": {
-          "avg": 1036031.33,
+          "avg": 1035989.67,
           "unit": "KiB/s"
         },
         "memset_32768_system_avg_time": {
-          "avg": 1544354.0,
+          "avg": 1544416.0,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
-          "avg": 1031852.33,
+          "avg": 1031786.67,
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 3101217.33,
+          "avg": 3101416.0,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
-          "avg": 1032637.0,
+          "avg": 1032642.67,
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 3098861.0,
-          "unit": "us"
-        }
-      }
-    },
-    "esp32_ramspeed": {
-      "status": "success",
-      "runs": 3,
-      "settings": "copies=50000,max_test_size=65536",
-      "metrics": {
-        "memcpy_32_mock_avg_rate": {
-          "avg": 34577.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32_mock_avg_time": {
-          "avg": 45174.0,
-          "unit": "us"
-        },
-        "memcpy_32_system_avg_rate": {
-          "avg": 96884.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32_system_avg_time": {
-          "avg": 16122.33,
-          "unit": "us"
-        },
-        "memcpy_64_mock_avg_rate": {
-          "avg": 61244.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_64_mock_avg_time": {
-          "avg": 51025.0,
-          "unit": "us"
-        },
-        "memcpy_64_system_avg_rate": {
-          "avg": 127634.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_64_system_avg_time": {
-          "avg": 24484.0,
-          "unit": "us"
-        },
-        "memcpy_128_mock_avg_rate": {
-          "avg": 99626.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_128_mock_avg_time": {
-          "avg": 62734.0,
-          "unit": "us"
-        },
-        "memcpy_128_system_avg_rate": {
-          "avg": 151616.33,
-          "unit": "KiB/s"
-        },
-        "memcpy_128_system_avg_time": {
-          "avg": 41222.33,
-          "unit": "us"
-        },
-        "memcpy_256_mock_avg_rate": {
-          "avg": 145085.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_256_mock_avg_time": {
-          "avg": 86155.67,
-          "unit": "us"
-        },
-        "memcpy_256_system_avg_rate": {
-          "avg": 167369.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_256_system_avg_time": {
-          "avg": 74684.67,
-          "unit": "us"
-        },
-        "memcpy_512_mock_avg_rate": {
-          "avg": 187972.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_512_mock_avg_time": {
-          "avg": 132998.0,
-          "unit": "us"
-        },
-        "memcpy_512_system_avg_rate": {
-          "avg": 176523.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_512_system_avg_time": {
-          "avg": 141624.0,
-          "unit": "us"
-        },
-        "memcpy_1024_mock_avg_rate": {
-          "avg": 220575.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_1024_mock_avg_time": {
-          "avg": 226679.33,
-          "unit": "us"
-        },
-        "memcpy_1024_system_avg_rate": {
-          "avg": 181497.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_1024_system_avg_time": {
-          "avg": 275485.0,
-          "unit": "us"
-        },
-        "memcpy_2048_mock_avg_rate": {
-          "avg": 241516.67,
-          "unit": "KiB/s"
-        },
-        "memcpy_2048_mock_avg_time": {
-          "avg": 414049.33,
-          "unit": "us"
-        },
-        "memcpy_2048_system_avg_rate": {
-          "avg": 184080.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_2048_system_avg_time": {
-          "avg": 543240.33,
-          "unit": "us"
-        },
-        "memcpy_4096_mock_avg_rate": {
-          "avg": 253553.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_4096_mock_avg_time": {
-          "avg": 788787.0,
-          "unit": "us"
-        },
-        "memcpy_4096_system_avg_rate": {
-          "avg": 185407.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_4096_system_avg_time": {
-          "avg": 1078703.67,
-          "unit": "us"
-        },
-        "memcpy_8192_mock_avg_rate": {
-          "avg": 260034.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_8192_mock_avg_time": {
-          "avg": 1538259.0,
-          "unit": "us"
-        },
-        "memcpy_8192_system_avg_rate": {
-          "avg": 186073.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_8192_system_avg_time": {
-          "avg": 2149683.33,
-          "unit": "us"
-        },
-        "memcpy_16384_mock_avg_rate": {
-          "avg": 263400.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_16384_mock_avg_time": {
-          "avg": 3037198.0,
-          "unit": "us"
-        },
-        "memcpy_16384_system_avg_rate": {
-          "avg": 186418.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_16384_system_avg_time": {
-          "avg": 4291420.67,
-          "unit": "us"
-        },
-        "memcpy_32768_mock_avg_rate": {
-          "avg": 265116.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32768_mock_avg_time": {
-          "avg": 6035075.33,
-          "unit": "us"
-        },
-        "memcpy_32768_system_avg_rate": {
-          "avg": 186592.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_32768_system_avg_time": {
-          "avg": 8574839.33,
-          "unit": "us"
-        },
-        "memcpy_65536_mock_avg_rate": {
-          "avg": 265983.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_65536_mock_avg_time": {
-          "avg": 12030803.0,
-          "unit": "us"
-        },
-        "memcpy_65536_system_avg_rate": {
-          "avg": 186679.0,
-          "unit": "KiB/s"
-        },
-        "memcpy_65536_system_avg_time": {
-          "avg": 17141678.67,
-          "unit": "us"
-        },
-        "memset_32_mock_avg_rate": {
-          "avg": 41264.33,
-          "unit": "KiB/s"
-        },
-        "memset_32_mock_avg_time": {
-          "avg": 37853.0,
-          "unit": "us"
-        },
-        "memset_32_system_avg_rate": {
-          "avg": 122250.0,
-          "unit": "KiB/s"
-        },
-        "memset_32_system_avg_time": {
-          "avg": 12777.0,
-          "unit": "us"
-        },
-        "memset_64_mock_avg_rate": {
-          "avg": 74723.67,
-          "unit": "KiB/s"
-        },
-        "memset_64_mock_avg_time": {
-          "avg": 41820.67,
-          "unit": "us"
-        },
-        "memset_64_system_avg_rate": {
-          "avg": 210234.33,
-          "unit": "KiB/s"
-        },
-        "memset_64_system_avg_time": {
-          "avg": 14864.33,
-          "unit": "us"
-        },
-        "memset_128_mock_avg_rate": {
-          "avg": 125585.0,
-          "unit": "KiB/s"
-        },
-        "memset_128_mock_avg_time": {
-          "avg": 49767.0,
-          "unit": "us"
-        },
-        "memset_128_system_avg_rate": {
-          "avg": 328118.0,
-          "unit": "KiB/s"
-        },
-        "memset_128_system_avg_time": {
-          "avg": 19048.0,
-          "unit": "us"
-        },
-        "memset_256_mock_avg_rate": {
-          "avg": 190360.0,
-          "unit": "KiB/s"
-        },
-        "memset_256_mock_avg_time": {
-          "avg": 65665.0,
-          "unit": "us"
-        },
-        "memset_256_system_avg_rate": {
-          "avg": 455976.33,
-          "unit": "KiB/s"
-        },
-        "memset_256_system_avg_time": {
-          "avg": 27413.67,
-          "unit": "us"
-        },
-        "memset_512_mock_avg_rate": {
-          "avg": 256547.0,
-          "unit": "KiB/s"
-        },
-        "memset_512_mock_avg_time": {
-          "avg": 97448.0,
-          "unit": "us"
-        },
-        "memset_512_system_avg_rate": {
-          "avg": 566306.67,
-          "unit": "KiB/s"
-        },
-        "memset_512_system_avg_time": {
-          "avg": 44145.67,
-          "unit": "us"
-        },
-        "memset_1024_mock_avg_rate": {
-          "avg": 310519.33,
-          "unit": "KiB/s"
-        },
-        "memset_1024_mock_avg_time": {
-          "avg": 161020.33,
-          "unit": "us"
-        },
-        "memset_1024_system_avg_rate": {
-          "avg": 644213.0,
-          "unit": "KiB/s"
-        },
-        "memset_1024_system_avg_time": {
-          "avg": 77614.0,
-          "unit": "us"
-        },
-        "memset_2048_mock_avg_rate": {
-          "avg": 347023.0,
-          "unit": "KiB/s"
-        },
-        "memset_2048_mock_avg_time": {
-          "avg": 288165.0,
-          "unit": "us"
-        },
-        "memset_2048_system_avg_rate": {
-          "avg": 691845.0,
-          "unit": "KiB/s"
-        },
-        "memset_2048_system_avg_time": {
-          "avg": 144541.0,
-          "unit": "us"
-        },
-        "memset_4096_mock_avg_rate": {
-          "avg": 368696.0,
-          "unit": "KiB/s"
-        },
-        "memset_4096_mock_avg_time": {
-          "avg": 542451.67,
-          "unit": "us"
-        },
-        "memset_4096_system_avg_rate": {
-          "avg": 718402.33,
-          "unit": "KiB/s"
-        },
-        "memset_4096_system_avg_time": {
-          "avg": 278395.33,
-          "unit": "us"
-        },
-        "memset_8192_mock_avg_rate": {
-          "avg": 380580.0,
-          "unit": "KiB/s"
-        },
-        "memset_8192_mock_avg_time": {
-          "avg": 1051025.67,
-          "unit": "us"
-        },
-        "memset_8192_system_avg_rate": {
-          "avg": 732443.0,
-          "unit": "KiB/s"
-        },
-        "memset_8192_system_avg_time": {
-          "avg": 546117.0,
-          "unit": "us"
-        },
-        "memset_16384_mock_avg_rate": {
-          "avg": 386816.0,
-          "unit": "KiB/s"
-        },
-        "memset_16384_mock_avg_time": {
-          "avg": 2068162.0,
-          "unit": "us"
-        },
-        "memset_16384_system_avg_rate": {
-          "avg": 739674.0,
-          "unit": "KiB/s"
-        },
-        "memset_16384_system_avg_time": {
-          "avg": 1081557.0,
-          "unit": "us"
-        },
-        "memset_32768_mock_avg_rate": {
-          "avg": 390012.0,
-          "unit": "KiB/s"
-        },
-        "memset_32768_mock_avg_time": {
-          "avg": 4102434.0,
-          "unit": "us"
-        },
-        "memset_32768_system_avg_rate": {
-          "avg": 743348.0,
-          "unit": "KiB/s"
-        },
-        "memset_32768_system_avg_time": {
-          "avg": 2152422.0,
-          "unit": "us"
-        },
-        "memset_65536_mock_avg_rate": {
-          "avg": 391631.0,
-          "unit": "KiB/s"
-        },
-        "memset_65536_mock_avg_time": {
-          "avg": 8170948.67,
-          "unit": "us"
-        },
-        "memset_65536_system_avg_rate": {
-          "avg": 745199.33,
-          "unit": "KiB/s"
-        },
-        "memset_65536_system_avg_time": {
-          "avg": 4294149.67,
+          "avg": 3098844.67,
           "unit": "us"
         }
       }
@@ -3603,35 +2773,35 @@
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
-          "avg": 59123.0,
+          "avg": 59122.33,
           "unit": "KiB/s"
         },
         "memcpy_32_system_avg_time": {
-          "avg": 26419.33,
+          "avg": 26419.67,
           "unit": "us"
         },
         "memcpy_64_mock_avg_rate": {
-          "avg": 63702.67,
+          "avg": 63702.33,
           "unit": "KiB/s"
         },
         "memcpy_64_mock_avg_time": {
-          "avg": 49055.67,
+          "avg": 49056.0,
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
-          "avg": 96468.0,
+          "avg": 96469.0,
           "unit": "KiB/s"
         },
         "memcpy_64_system_avg_time": {
-          "avg": 32394.0,
+          "avg": 32393.67,
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 93753.67,
+          "avg": 93753.33,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 66663.67,
+          "avg": 66664.0,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
@@ -3643,27 +2813,27 @@
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 122691.0,
+          "avg": 122688.67,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 101881.67,
+          "avg": 101883.67,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
-          "avg": 189289.0,
+          "avg": 189288.0,
           "unit": "KiB/s"
         },
         "memcpy_256_system_avg_time": {
-          "avg": 66036.33,
+          "avg": 66036.67,
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 145077.67,
+          "avg": 145078.0,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 172321.33,
+          "avg": 172321.0,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
@@ -3675,19 +2845,19 @@
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
-          "avg": 159642.33,
+          "avg": 159643.0,
           "unit": "KiB/s"
         },
         "memcpy_1024_mock_avg_time": {
-          "avg": 313198.67,
+          "avg": 313198.0,
           "unit": "us"
         },
         "memcpy_1024_system_avg_rate": {
-          "avg": 211723.0,
+          "avg": 211722.67,
           "unit": "KiB/s"
         },
         "memcpy_1024_system_avg_time": {
-          "avg": 236157.0,
+          "avg": 236157.33,
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
@@ -3695,7 +2865,7 @@
           "unit": "KiB/s"
         },
         "memcpy_2048_mock_avg_time": {
-          "avg": 594954.0,
+          "avg": 594953.33,
           "unit": "us"
         },
         "memcpy_2048_system_avg_rate": {
@@ -3703,7 +2873,7 @@
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 463197.0,
+          "avg": 463197.33,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
@@ -3711,7 +2881,7 @@
           "unit": "KiB/s"
         },
         "memcpy_4096_mock_avg_time": {
-          "avg": 1158457.67,
+          "avg": 1158457.0,
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
@@ -3727,7 +2897,7 @@
           "unit": "KiB/s"
         },
         "memcpy_8192_mock_avg_time": {
-          "avg": 2285471.33,
+          "avg": 2285470.0,
           "unit": "us"
         },
         "memcpy_8192_system_avg_rate": {
@@ -3735,7 +2905,7 @@
           "unit": "KiB/s"
         },
         "memcpy_8192_system_avg_time": {
-          "avg": 1787378.0,
+          "avg": 1787380.33,
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
@@ -3743,7 +2913,7 @@
           "unit": "KiB/s"
         },
         "memcpy_16384_mock_avg_time": {
-          "avg": 4539502.0,
+          "avg": 4539499.67,
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
@@ -3759,7 +2929,7 @@
           "unit": "KiB/s"
         },
         "memcpy_32768_mock_avg_time": {
-          "avg": 9047559.67,
+          "avg": 9047552.67,
           "unit": "us"
         },
         "memcpy_32768_system_avg_rate": {
@@ -3767,15 +2937,15 @@
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 7079376.33,
+          "avg": 7079377.33,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
-          "avg": 177150.33,
+          "avg": 177150.0,
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 18063686.67,
+          "avg": 18063699.0,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -3783,47 +2953,47 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 13951525.33,
+          "avg": 13951524.0,
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
-          "avg": 43191.33,
+          "avg": 43191.67,
           "unit": "KiB/s"
         },
         "memset_32_mock_avg_time": {
-          "avg": 36164.33,
+          "avg": 36164.0,
           "unit": "us"
         },
         "memset_32_system_avg_rate": {
-          "avg": 115518.0,
+          "avg": 115520.67,
           "unit": "KiB/s"
         },
         "memset_32_system_avg_time": {
-          "avg": 13521.67,
+          "avg": 13521.33,
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
-          "avg": 77037.67,
+          "avg": 77041.33,
           "unit": "KiB/s"
         },
         "memset_64_mock_avg_time": {
-          "avg": 40564.33,
+          "avg": 40562.33,
           "unit": "us"
         },
         "memset_64_system_avg_rate": {
-          "avg": 168403.0,
+          "avg": 168400.0,
           "unit": "KiB/s"
         },
         "memset_64_system_avg_time": {
-          "avg": 18556.67,
+          "avg": 18557.0,
           "unit": "us"
         },
         "memset_128_mock_avg_rate": {
-          "avg": 126589.33,
+          "avg": 126583.33,
           "unit": "KiB/s"
         },
         "memset_128_mock_avg_time": {
-          "avg": 49372.0,
+          "avg": 49374.33,
           "unit": "us"
         },
         "memset_128_system_avg_rate": {
@@ -3875,11 +3045,11 @@
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 295002.0,
+          "avg": 295003.33,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 169490.0,
+          "avg": 169489.33,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
@@ -3899,11 +3069,11 @@
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
-          "avg": 335981.33,
+          "avg": 335981.0,
           "unit": "KiB/s"
         },
         "memset_4096_mock_avg_time": {
-          "avg": 595269.67,
+          "avg": 595270.0,
           "unit": "us"
         },
         "memset_4096_system_avg_rate": {
@@ -3911,7 +3081,7 @@
           "unit": "KiB/s"
         },
         "memset_4096_system_avg_time": {
-          "avg": 652503.0,
+          "avg": 652502.0,
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
@@ -3919,7 +3089,7 @@
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 1158777.33,
+          "avg": 1158776.67,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
@@ -3935,7 +3105,7 @@
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
-          "avg": 2285804.0,
+          "avg": 2285804.67,
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
@@ -3943,7 +3113,7 @@
           "unit": "KiB/s"
         },
         "memset_16384_system_avg_time": {
-          "avg": 2584524.0,
+          "avg": 2584522.0,
           "unit": "us"
         },
         "memset_32768_mock_avg_rate": {
@@ -3959,7 +3129,7 @@
           "unit": "KiB/s"
         },
         "memset_32768_system_avg_time": {
-          "avg": 5160561.0,
+          "avg": 5160560.0,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -3975,7 +3145,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 10312620.33,
+          "avg": 10312612.33,
           "unit": "us"
         }
       }
@@ -3986,63 +3156,63 @@
       "settings": "copies=50000,max_test_size=65536",
       "metrics": {
         "memcpy_32_mock_avg_rate": {
-          "avg": 26433.67,
+          "avg": 26434.0,
           "unit": "KiB/s"
         },
         "memcpy_32_mock_avg_time": {
-          "avg": 59090.33,
+          "avg": 59089.67,
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
-          "avg": 41798.67,
+          "avg": 41820.0,
           "unit": "KiB/s"
         },
         "memcpy_32_system_avg_time": {
-          "avg": 37369.33,
+          "avg": 37350.33,
           "unit": "us"
         },
         "memcpy_64_mock_avg_rate": {
-          "avg": 41638.0,
+          "avg": 41633.33,
           "unit": "KiB/s"
         },
         "memcpy_64_mock_avg_time": {
-          "avg": 75051.0,
+          "avg": 75058.67,
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
-          "avg": 64379.67,
+          "avg": 64386.33,
           "unit": "KiB/s"
         },
         "memcpy_64_system_avg_time": {
-          "avg": 48539.67,
+          "avg": 48535.0,
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 58443.33,
+          "avg": 58443.0,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 106940.33,
+          "avg": 106941.0,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
-          "avg": 94028.67,
+          "avg": 94023.0,
           "unit": "KiB/s"
         },
         "memcpy_128_system_avg_time": {
-          "avg": 66468.67,
+          "avg": 66472.67,
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 73494.33,
+          "avg": 73528.0,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 170079.33,
+          "avg": 170002.0,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
-          "avg": 122140.33,
+          "avg": 122140.0,
           "unit": "KiB/s"
         },
         "memcpy_256_system_avg_time": {
@@ -4050,35 +3220,35 @@
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 84234.33,
+          "avg": 84234.67,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 296790.67,
+          "avg": 296788.67,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
-          "avg": 134249.0,
+          "avg": 134246.33,
           "unit": "KiB/s"
         },
         "memcpy_512_system_avg_time": {
-          "avg": 186220.67,
+          "avg": 186224.33,
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
-          "avg": 90875.33,
+          "avg": 90876.67,
           "unit": "KiB/s"
         },
         "memcpy_1024_mock_avg_time": {
-          "avg": 550201.33,
+          "avg": 550193.0,
           "unit": "us"
         },
         "memcpy_1024_system_avg_rate": {
-          "avg": 141248.33,
+          "avg": 141248.0,
           "unit": "KiB/s"
         },
         "memcpy_1024_system_avg_time": {
-          "avg": 353984.67,
+          "avg": 353986.0,
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
@@ -4094,7 +3264,7 @@
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 689513.67,
+          "avg": 689513.33,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
@@ -4102,7 +3272,7 @@
           "unit": "KiB/s"
         },
         "memcpy_4096_mock_avg_time": {
-          "avg": 2069588.33,
+          "avg": 2069588.0,
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
@@ -4110,7 +3280,7 @@
           "unit": "KiB/s"
         },
         "memcpy_4096_system_avg_time": {
-          "avg": 1348365.67,
+          "avg": 1348366.0,
           "unit": "us"
         },
         "memcpy_8192_mock_avg_rate": {
@@ -4118,15 +3288,15 @@
           "unit": "KiB/s"
         },
         "memcpy_8192_mock_avg_time": {
-          "avg": 4095241.33,
+          "avg": 4095241.0,
           "unit": "us"
         },
         "memcpy_8192_system_avg_rate": {
-          "avg": 150029.33,
+          "avg": 150029.67,
           "unit": "KiB/s"
         },
         "memcpy_8192_system_avg_time": {
-          "avg": 2666137.67,
+          "avg": 2666133.33,
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
@@ -4134,7 +3304,7 @@
           "unit": "KiB/s"
         },
         "memcpy_16384_mock_avg_time": {
-          "avg": 8146501.67,
+          "avg": 8146502.0,
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
@@ -4142,7 +3312,7 @@
           "unit": "KiB/s"
         },
         "memcpy_16384_system_avg_time": {
-          "avg": 5301609.33,
+          "avg": 5301613.67,
           "unit": "us"
         },
         "memcpy_32768_mock_avg_rate": {
@@ -4154,11 +3324,11 @@
           "unit": "us"
         },
         "memcpy_32768_system_avg_rate": {
-          "avg": 151157.0,
+          "avg": 151157.33,
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 10584961.0,
+          "avg": 10584957.0,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
@@ -4166,7 +3336,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 32454310.0,
+          "avg": 32454310.33,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
@@ -4174,7 +3344,7 @@
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 21151496.0,
+          "avg": 21151497.0,
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
@@ -4182,7 +3352,7 @@
           "unit": "KiB/s"
         },
         "memset_32_mock_avg_time": {
-          "avg": 52232.67,
+          "avg": 52232.33,
           "unit": "us"
         },
         "memset_32_system_avg_rate": {
@@ -4194,11 +3364,11 @@
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
-          "avg": 51007.0,
+          "avg": 50998.0,
           "unit": "KiB/s"
         },
         "memset_64_mock_avg_time": {
-          "avg": 61265.67,
+          "avg": 61276.67,
           "unit": "us"
         },
         "memset_64_system_avg_rate": {
@@ -4210,11 +3380,11 @@
           "unit": "us"
         },
         "memset_128_mock_avg_rate": {
-          "avg": 78764.33,
+          "avg": 78775.0,
           "unit": "KiB/s"
         },
         "memset_128_mock_avg_time": {
-          "avg": 79350.0,
+          "avg": 79339.0,
           "unit": "us"
         },
         "memset_128_system_avg_rate": {
@@ -4226,11 +3396,11 @@
           "unit": "us"
         },
         "memset_256_mock_avg_rate": {
-          "avg": 108210.67,
+          "avg": 108196.33,
           "unit": "KiB/s"
         },
         "memset_256_mock_avg_time": {
-          "avg": 115514.67,
+          "avg": 115530.0,
           "unit": "us"
         },
         "memset_256_system_avg_rate": {
@@ -4242,59 +3412,59 @@
           "unit": "us"
         },
         "memset_512_mock_avg_rate": {
-          "avg": 133635.33,
+          "avg": 133635.67,
           "unit": "KiB/s"
         },
         "memset_512_mock_avg_time": {
-          "avg": 187075.33,
+          "avg": 187075.0,
           "unit": "us"
         },
         "memset_512_system_avg_rate": {
-          "avg": 182966.67,
+          "avg": 182972.67,
           "unit": "KiB/s"
         },
         "memset_512_system_avg_time": {
-          "avg": 136636.33,
+          "avg": 136632.0,
           "unit": "us"
         },
         "memset_1024_mock_avg_rate": {
-          "avg": 151165.0,
+          "avg": 151169.0,
           "unit": "KiB/s"
         },
         "memset_1024_mock_avg_time": {
-          "avg": 330763.0,
+          "avg": 330754.33,
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 210154.67,
+          "avg": 210158.67,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 237919.33,
+          "avg": 237915.0,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
-          "avg": 161924.0,
+          "avg": 161926.0,
           "unit": "KiB/s"
         },
         "memset_2048_mock_avg_time": {
-          "avg": 617572.33,
+          "avg": 617564.33,
           "unit": "us"
         },
         "memset_2048_system_avg_rate": {
-          "avg": 227021.33,
+          "avg": 227018.67,
           "unit": "KiB/s"
         },
         "memset_2048_system_avg_time": {
-          "avg": 440486.67,
+          "avg": 440491.33,
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
-          "avg": 167772.0,
+          "avg": 167772.67,
           "unit": "KiB/s"
         },
         "memset_4096_mock_avg_time": {
-          "avg": 1192087.33,
+          "avg": 1192086.67,
           "unit": "us"
         },
         "memset_4096_system_avg_rate": {
@@ -4306,19 +3476,19 @@
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
-          "avg": 170970.33,
+          "avg": 170970.67,
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 2339576.33,
+          "avg": 2339573.67,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
-          "avg": 241556.33,
+          "avg": 241557.0,
           "unit": "KiB/s"
         },
         "memset_8192_system_avg_time": {
-          "avg": 1655923.67,
+          "avg": 1655923.0,
           "unit": "us"
         },
         "memset_16384_mock_avg_rate": {
@@ -4326,7 +3496,7 @@
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
-          "avg": 4635288.0,
+          "avg": 4635288.33,
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
@@ -4342,7 +3512,7 @@
           "unit": "KiB/s"
         },
         "memset_32768_mock_avg_time": {
-          "avg": 9227096.33,
+          "avg": 9227095.67,
           "unit": "us"
         },
         "memset_32768_system_avg_rate": {
@@ -4358,7 +3528,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 18410315.67,
+          "avg": 18410320.0,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
@@ -4366,7 +3536,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 12999922.67,
+          "avg": 12999922.0,
           "unit": "us"
         }
       }
@@ -4377,11 +3547,11 @@
       "settings": "copies=50000,max_test_size=65536",
       "metrics": {
         "memcpy_32_mock_avg_rate": {
-          "avg": 38125.33,
+          "avg": 38125.67,
           "unit": "KiB/s"
         },
         "memcpy_32_mock_avg_time": {
-          "avg": 40969.67,
+          "avg": 40969.33,
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
@@ -4401,35 +3571,35 @@
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
-          "avg": 159021.67,
+          "avg": 159024.33,
           "unit": "KiB/s"
         },
         "memcpy_64_system_avg_time": {
-          "avg": 19651.33,
+          "avg": 19651.0,
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 106791.67,
+          "avg": 106791.0,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 58525.0,
+          "avg": 58525.33,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
-          "avg": 199314.67,
+          "avg": 199319.0,
           "unit": "KiB/s"
         },
         "memcpy_128_system_avg_time": {
-          "avg": 31357.33,
+          "avg": 31356.67,
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 152563.67,
+          "avg": 152565.0,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 81932.67,
+          "avg": 81932.0,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
@@ -4441,11 +3611,11 @@
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 194171.0,
+          "avg": 194170.67,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 128752.0,
+          "avg": 128752.33,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
@@ -4457,11 +3627,11 @@
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
-          "avg": 224833.33,
+          "avg": 224833.0,
           "unit": "KiB/s"
         },
         "memcpy_1024_mock_avg_time": {
-          "avg": 222386.67,
+          "avg": 222387.0,
           "unit": "us"
         },
         "memcpy_1024_system_avg_rate": {
@@ -4473,19 +3643,19 @@
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
-          "avg": 244104.67,
+          "avg": 244105.0,
           "unit": "KiB/s"
         },
         "memcpy_2048_mock_avg_time": {
-          "avg": 409659.0,
+          "avg": 409658.67,
           "unit": "us"
         },
         "memcpy_2048_system_avg_rate": {
-          "avg": 261400.67,
+          "avg": 261401.0,
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 382554.0,
+          "avg": 382553.67,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
@@ -4493,7 +3663,7 @@
           "unit": "KiB/s"
         },
         "memcpy_4096_mock_avg_time": {
-          "avg": 784200.33,
+          "avg": 784200.67,
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
@@ -4501,7 +3671,7 @@
           "unit": "KiB/s"
         },
         "memcpy_4096_system_avg_time": {
-          "avg": 757162.0,
+          "avg": 757162.33,
           "unit": "us"
         },
         "memcpy_8192_mock_avg_rate": {
@@ -4517,7 +3687,7 @@
           "unit": "KiB/s"
         },
         "memcpy_8192_system_avg_time": {
-          "avg": 1506375.33,
+          "avg": 1506374.33,
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
@@ -4529,11 +3699,11 @@
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
-          "avg": 266239.0,
+          "avg": 266239.33,
           "unit": "KiB/s"
         },
         "memcpy_16384_system_avg_time": {
-          "avg": 3004810.67,
+          "avg": 3004810.0,
           "unit": "us"
         },
         "memcpy_32768_mock_avg_rate": {
@@ -4549,7 +3719,7 @@
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 6001692.67,
+          "avg": 6001693.67,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
@@ -4569,19 +3739,19 @@
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
-          "avg": 45567.0,
+          "avg": 45567.33,
           "unit": "KiB/s"
         },
         "memset_32_mock_avg_time": {
-          "avg": 34278.67,
+          "avg": 34278.33,
           "unit": "us"
         },
         "memset_32_system_avg_rate": {
-          "avg": 109886.0,
+          "avg": 109888.67,
           "unit": "KiB/s"
         },
         "memset_32_system_avg_time": {
-          "avg": 14214.67,
+          "avg": 14214.33,
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
@@ -4625,11 +3795,11 @@
           "unit": "us"
         },
         "memset_256_system_avg_rate": {
-          "avg": 308235.67,
+          "avg": 308238.33,
           "unit": "KiB/s"
         },
         "memset_256_system_avg_time": {
-          "avg": 40553.33,
+          "avg": 40553.0,
           "unit": "us"
         },
         "memset_512_mock_avg_rate": {
@@ -4641,43 +3811,43 @@
           "unit": "us"
         },
         "memset_512_system_avg_rate": {
-          "avg": 353826.33,
+          "avg": 353828.0,
           "unit": "KiB/s"
         },
         "memset_512_system_avg_time": {
-          "avg": 70656.0,
+          "avg": 70655.67,
           "unit": "us"
         },
         "memset_1024_mock_avg_rate": {
-          "avg": 317694.0,
+          "avg": 317694.67,
           "unit": "KiB/s"
         },
         "memset_1024_mock_avg_time": {
-          "avg": 157384.0,
+          "avg": 157383.67,
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 382081.0,
+          "avg": 382080.0,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 130862.0,
+          "avg": 130862.33,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
-          "avg": 351543.0,
+          "avg": 351542.67,
           "unit": "KiB/s"
         },
         "memset_2048_mock_avg_time": {
-          "avg": 284459.67,
+          "avg": 284460.0,
           "unit": "us"
         },
         "memset_2048_system_avg_rate": {
-          "avg": 397994.0,
+          "avg": 397992.33,
           "unit": "KiB/s"
         },
         "memset_2048_system_avg_time": {
-          "avg": 251260.0,
+          "avg": 251260.67,
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
@@ -4697,23 +3867,23 @@
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
-          "avg": 382072.67,
+          "avg": 382072.0,
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 1046920.33,
+          "avg": 1046921.0,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
-          "avg": 410789.67,
+          "avg": 410790.33,
           "unit": "KiB/s"
         },
         "memset_8192_system_avg_time": {
-          "avg": 973733.0,
+          "avg": 973732.0,
           "unit": "us"
         },
         "memset_16384_mock_avg_rate": {
-          "avg": 387683.67,
+          "avg": 387683.33,
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
@@ -4721,11 +3891,11 @@
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
-          "avg": 413007.33,
+          "avg": 413007.0,
           "unit": "KiB/s"
         },
         "memset_16384_system_avg_time": {
-          "avg": 1937008.67,
+          "avg": 1937009.0,
           "unit": "us"
         },
         "memset_32768_mock_avg_rate": {
@@ -4741,7 +3911,7 @@
           "unit": "KiB/s"
         },
         "memset_32768_system_avg_time": {
-          "avg": 3863569.0,
+          "avg": 3863568.67,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
@@ -4757,7 +3927,7 @@
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 7716694.0,
+          "avg": 7716694.33,
           "unit": "us"
         }
       }
@@ -4768,115 +3938,115 @@
       "settings": "copies=50000,max_test_size=65536",
       "metrics": {
         "memcpy_32_mock_avg_rate": {
-          "avg": 76108.0,
+          "avg": 76100.67,
           "unit": "KiB/s"
         },
         "memcpy_32_mock_avg_time": {
-          "avg": 20523.33,
+          "avg": 20525.33,
           "unit": "us"
         },
         "memcpy_32_system_avg_rate": {
-          "avg": 100122.33,
+          "avg": 101746.67,
           "unit": "KiB/s"
         },
         "memcpy_32_system_avg_time": {
-          "avg": 15619.67,
+          "avg": 15359.0,
           "unit": "us"
         },
         "memcpy_64_mock_avg_rate": {
-          "avg": 124452.0,
+          "avg": 124462.0,
           "unit": "KiB/s"
         },
         "memcpy_64_mock_avg_time": {
-          "avg": 25110.0,
+          "avg": 25108.0,
           "unit": "us"
         },
         "memcpy_64_system_avg_rate": {
-          "avg": 158556.33,
+          "avg": 154575.33,
           "unit": "KiB/s"
         },
         "memcpy_64_system_avg_time": {
-          "avg": 19731.67,
+          "avg": 20219.33,
           "unit": "us"
         },
         "memcpy_128_mock_avg_rate": {
-          "avg": 183314.33,
+          "avg": 183402.0,
           "unit": "KiB/s"
         },
         "memcpy_128_mock_avg_time": {
-          "avg": 34094.33,
+          "avg": 34078.0,
           "unit": "us"
         },
         "memcpy_128_system_avg_rate": {
-          "avg": 225997.33,
+          "avg": 223372.67,
           "unit": "KiB/s"
         },
         "memcpy_128_system_avg_time": {
-          "avg": 27655.33,
+          "avg": 27981.0,
           "unit": "us"
         },
         "memcpy_256_mock_avg_rate": {
-          "avg": 241966.33,
+          "avg": 242045.67,
           "unit": "KiB/s"
         },
         "memcpy_256_mock_avg_time": {
-          "avg": 51660.0,
+          "avg": 51643.0,
           "unit": "us"
         },
         "memcpy_256_system_avg_rate": {
-          "avg": 283410.0,
+          "avg": 283762.67,
           "unit": "KiB/s"
         },
         "memcpy_256_system_avg_time": {
-          "avg": 44105.67,
+          "avg": 44051.0,
           "unit": "us"
         },
         "memcpy_512_mock_avg_rate": {
-          "avg": 283636.0,
+          "avg": 283633.0,
           "unit": "KiB/s"
         },
         "memcpy_512_mock_avg_time": {
-          "avg": 88141.0,
+          "avg": 88142.0,
           "unit": "us"
         },
         "memcpy_512_system_avg_rate": {
-          "avg": 305817.67,
+          "avg": 306309.0,
           "unit": "KiB/s"
         },
         "memcpy_512_system_avg_time": {
-          "avg": 81748.0,
+          "avg": 81617.0,
           "unit": "us"
         },
         "memcpy_1024_mock_avg_rate": {
-          "avg": 318001.67,
+          "avg": 318001.0,
           "unit": "KiB/s"
         },
         "memcpy_1024_mock_avg_time": {
-          "avg": 157231.67,
+          "avg": 157232.0,
           "unit": "us"
         },
         "memcpy_1024_system_avg_rate": {
-          "avg": 329462.67,
+          "avg": 330250.33,
           "unit": "KiB/s"
         },
         "memcpy_1024_system_avg_time": {
-          "avg": 151763.33,
+          "avg": 151400.67,
           "unit": "us"
         },
         "memcpy_2048_mock_avg_rate": {
-          "avg": 335669.0,
+          "avg": 335669.33,
           "unit": "KiB/s"
         },
         "memcpy_2048_mock_avg_time": {
-          "avg": 297912.0,
+          "avg": 297911.67,
           "unit": "us"
         },
         "memcpy_2048_system_avg_rate": {
-          "avg": 338383.67,
+          "avg": 338232.33,
           "unit": "KiB/s"
         },
         "memcpy_2048_system_avg_time": {
-          "avg": 295522.0,
+          "avg": 295654.67,
           "unit": "us"
         },
         "memcpy_4096_mock_avg_rate": {
@@ -4888,293 +4058,276 @@
           "unit": "us"
         },
         "memcpy_4096_system_avg_rate": {
-          "avg": 346233.0,
+          "avg": 346190.33,
           "unit": "KiB/s"
         },
         "memcpy_4096_system_avg_time": {
-          "avg": 577645.33,
+          "avg": 577716.0,
           "unit": "us"
         },
         "memcpy_8192_mock_avg_rate": {
-          "avg": 350255.0,
+          "avg": 350253.33,
           "unit": "KiB/s"
         },
         "memcpy_8192_mock_avg_time": {
-          "avg": 1142023.33,
+          "avg": 1142029.33,
           "unit": "us"
         },
         "memcpy_8192_system_avg_rate": {
-          "avg": 350361.67,
+          "avg": 350253.0,
           "unit": "KiB/s"
         },
         "memcpy_8192_system_avg_time": {
-          "avg": 1141676.0,
+          "avg": 1142029.67,
           "unit": "us"
         },
         "memcpy_16384_mock_avg_rate": {
-          "avg": 352805.67,
+          "avg": 352805.0,
           "unit": "KiB/s"
         },
         "memcpy_16384_mock_avg_time": {
-          "avg": 2267534.67,
+          "avg": 2267537.67,
           "unit": "us"
         },
         "memcpy_16384_system_avg_rate": {
-          "avg": 351975.67,
+          "avg": 351952.67,
           "unit": "KiB/s"
         },
         "memcpy_16384_system_avg_time": {
-          "avg": 2272880.33,
+          "avg": 2273028.67,
           "unit": "us"
         },
         "memcpy_32768_mock_avg_rate": {
-          "avg": 354098.67,
+          "avg": 354097.0,
           "unit": "KiB/s"
         },
         "memcpy_32768_mock_avg_time": {
-          "avg": 4518508.33,
+          "avg": 4518526.0,
           "unit": "us"
         },
         "memcpy_32768_system_avg_rate": {
-          "avg": 352743.0,
+          "avg": 352748.33,
           "unit": "KiB/s"
         },
         "memcpy_32768_system_avg_time": {
-          "avg": 4535870.33,
+          "avg": 4535801.67,
           "unit": "us"
         },
         "memcpy_65536_mock_avg_rate": {
-          "avg": 354745.0,
+          "avg": 354744.0,
           "unit": "KiB/s"
         },
         "memcpy_65536_mock_avg_time": {
-          "avg": 9020543.67,
+          "avg": 9020575.33,
           "unit": "us"
         },
         "memcpy_65536_system_avg_rate": {
-          "avg": 358141.0,
+          "avg": 358151.67,
           "unit": "KiB/s"
         },
         "memcpy_65536_system_avg_time": {
-          "avg": 8935019.33,
+          "avg": 8934752.67,
           "unit": "us"
         },
         "memset_32_mock_avg_rate": {
-          "avg": 102173.33,
+          "avg": 102171.33,
           "unit": "KiB/s"
         },
         "memset_32_mock_avg_time": {
-          "avg": 15287.67,
+          "avg": 15288.0,
           "unit": "us"
         },
         "memset_32_system_avg_rate": {
-          "avg": 102166.67,
+          "avg": 101937.0,
           "unit": "KiB/s"
         },
         "memset_32_system_avg_time": {
-          "avg": 15288.67,
+          "avg": 15323.33,
           "unit": "us"
         },
         "memset_64_mock_avg_rate": {
-          "avg": 169580.67,
+          "avg": 169647.33,
           "unit": "KiB/s"
         },
         "memset_64_mock_avg_time": {
-          "avg": 18428.33,
+          "avg": 18420.67,
           "unit": "us"
         },
         "memset_64_system_avg_rate": {
-          "avg": 175571.0,
+          "avg": 175554.33,
           "unit": "KiB/s"
         },
         "memset_64_system_avg_time": {
-          "avg": 17799.0,
+          "avg": 17800.67,
           "unit": "us"
         },
         "memset_128_mock_avg_rate": {
-          "avg": 274435.0,
+          "avg": 274797.67,
           "unit": "KiB/s"
         },
         "memset_128_mock_avg_time": {
-          "avg": 22774.33,
+          "avg": 22744.0,
           "unit": "us"
         },
         "memset_128_system_avg_rate": {
-          "avg": 273818.0,
+          "avg": 273822.0,
           "unit": "KiB/s"
         },
         "memset_128_system_avg_time": {
-          "avg": 22825.33,
+          "avg": 22825.0,
           "unit": "us"
         },
         "memset_256_mock_avg_rate": {
-          "avg": 378527.0,
+          "avg": 379301.67,
           "unit": "KiB/s"
         },
         "memset_256_mock_avg_time": {
-          "avg": 33023.0,
+          "avg": 32955.33,
           "unit": "us"
         },
         "memset_256_system_avg_rate": {
-          "avg": 373126.67,
+          "avg": 373108.0,
           "unit": "KiB/s"
         },
         "memset_256_system_avg_time": {
-          "avg": 33500.67,
+          "avg": 33502.33,
           "unit": "us"
         },
         "memset_512_mock_avg_rate": {
-          "avg": 457506.33,
+          "avg": 457517.67,
           "unit": "KiB/s"
         },
         "memset_512_mock_avg_time": {
-          "avg": 54644.0,
+          "avg": 54642.67,
           "unit": "us"
         },
         "memset_512_system_avg_rate": {
-          "avg": 460987.33,
+          "avg": 460970.33,
           "unit": "KiB/s"
         },
         "memset_512_system_avg_time": {
-          "avg": 54231.33,
+          "avg": 54233.33,
           "unit": "us"
         },
         "memset_1024_mock_avg_rate": {
-          "avg": 529588.0,
+          "avg": 529617.67,
           "unit": "KiB/s"
         },
         "memset_1024_mock_avg_time": {
-          "avg": 94413.0,
+          "avg": 94407.67,
           "unit": "us"
         },
         "memset_1024_system_avg_rate": {
-          "avg": 529473.33,
+          "avg": 529486.33,
           "unit": "KiB/s"
         },
         "memset_1024_system_avg_time": {
-          "avg": 94433.33,
+          "avg": 94431.0,
           "unit": "us"
         },
         "memset_2048_mock_avg_rate": {
-          "avg": 571707.67,
+          "avg": 571665.67,
           "unit": "KiB/s"
         },
         "memset_2048_mock_avg_time": {
-          "avg": 174914.33,
+          "avg": 174927.33,
           "unit": "us"
         },
         "memset_2048_system_avg_rate": {
-          "avg": 571987.33,
+          "avg": 571989.33,
           "unit": "KiB/s"
         },
         "memset_2048_system_avg_time": {
-          "avg": 174829.0,
+          "avg": 174828.33,
           "unit": "us"
         },
         "memset_4096_mock_avg_rate": {
-          "avg": 595656.67,
+          "avg": 595698.67,
           "unit": "KiB/s"
         },
         "memset_4096_mock_avg_time": {
-          "avg": 335763.67,
+          "avg": 335740.0,
           "unit": "us"
         },
         "memset_4096_system_avg_rate": {
-          "avg": 595890.33,
+          "avg": 595893.33,
           "unit": "KiB/s"
         },
         "memset_4096_system_avg_time": {
-          "avg": 335632.0,
+          "avg": 335630.33,
           "unit": "us"
         },
         "memset_8192_mock_avg_rate": {
-          "avg": 608518.67,
+          "avg": 608497.33,
           "unit": "KiB/s"
         },
         "memset_8192_mock_avg_time": {
-          "avg": 657333.33,
+          "avg": 657356.67,
           "unit": "us"
         },
         "memset_8192_system_avg_rate": {
-          "avg": 608608.33,
+          "avg": 608612.33,
           "unit": "KiB/s"
         },
         "memset_8192_system_avg_time": {
-          "avg": 657236.67,
+          "avg": 657232.33,
           "unit": "us"
         },
         "memset_16384_mock_avg_rate": {
-          "avg": 615150.0,
+          "avg": 615141.0,
           "unit": "KiB/s"
         },
         "memset_16384_mock_avg_time": {
-          "avg": 1300495.0,
+          "avg": 1300513.33,
           "unit": "us"
         },
         "memset_16384_system_avg_rate": {
-          "avg": 615177.0,
+          "avg": 615185.67,
           "unit": "KiB/s"
         },
         "memset_16384_system_avg_time": {
-          "avg": 1300437.33,
+          "avg": 1300418.67,
           "unit": "us"
         },
         "memset_32768_mock_avg_rate": {
-          "avg": 618531.0,
+          "avg": 618526.67,
           "unit": "KiB/s"
         },
         "memset_32768_mock_avg_time": {
-          "avg": 2586770.67,
+          "avg": 2586789.0,
           "unit": "us"
         },
         "memset_32768_system_avg_rate": {
-          "avg": 618515.33,
+          "avg": 618520.0,
           "unit": "KiB/s"
         },
         "memset_32768_system_avg_time": {
-          "avg": 2586838.0,
+          "avg": 2586817.67,
           "unit": "us"
         },
         "memset_65536_mock_avg_rate": {
-          "avg": 620239.0,
+          "avg": 620232.0,
           "unit": "KiB/s"
         },
         "memset_65536_mock_avg_time": {
-          "avg": 5159299.33,
+          "avg": 5159356.67,
           "unit": "us"
         },
         "memset_65536_system_avg_rate": {
-          "avg": 620193.0,
+          "avg": 620203.0,
           "unit": "KiB/s"
         },
         "memset_65536_system_avg_time": {
-          "avg": 5159680.33,
+          "avg": 5159597.33,
           "unit": "us"
         }
       }
     },
-    "esp32c6_linpack_double": {
-      "status": "success",
-      "runs": 1000,
-      "settings": "data_type=double",
-      "metrics": {
-        "avg_score": {
-          "avg": 1.3,
-          "unit": "MFLOPS"
-        },
-        "min_score": {
-          "avg": 1.11,
-          "unit": "MFLOPS"
-        },
-        "max_score": {
-          "avg": 1.31,
-          "unit": "MFLOPS"
-        },
-        "median_score": {
-          "avg": 1.3,
-          "unit": "MFLOPS"
-        }
-      }
+    "esp32_ramspeed": {
+      "status": "error"
+    },
+    "esp32c6_ramspeed": {
+      "status": "error"
     },
     "esp32s3_linpack_double": {
       "status": "success",
@@ -5194,7 +4347,7 @@
           "unit": "MFLOPS"
         },
         "median_score": {
-          "avg": 2.01,
+          "avg": 2.02,
           "unit": "MFLOPS"
         }
       }
@@ -5209,7 +4362,7 @@
           "unit": "MFLOPS"
         },
         "min_score": {
-          "avg": 2.2,
+          "avg": 2.19,
           "unit": "MFLOPS"
         },
         "max_score": {
@@ -5218,29 +4371,6 @@
         },
         "median_score": {
           "avg": 3.15,
-          "unit": "MFLOPS"
-        }
-      }
-    },
-    "esp32_linpack_double": {
-      "status": "success",
-      "runs": 1000,
-      "settings": "data_type=double",
-      "metrics": {
-        "avg_score": {
-          "avg": 1.9,
-          "unit": "MFLOPS"
-        },
-        "min_score": {
-          "avg": 1.56,
-          "unit": "MFLOPS"
-        },
-        "max_score": {
-          "avg": 1.92,
-          "unit": "MFLOPS"
-        },
-        "median_score": {
-          "avg": 1.9,
           "unit": "MFLOPS"
         }
       }
@@ -5337,28 +4467,11 @@
         }
       }
     },
-    "esp32c6_linpack_float": {
-      "status": "success",
-      "runs": 1000,
-      "settings": "data_type=float",
-      "metrics": {
-        "avg_score": {
-          "avg": 2.17,
-          "unit": "MFLOPS"
-        },
-        "min_score": {
-          "avg": 1.72,
-          "unit": "MFLOPS"
-        },
-        "max_score": {
-          "avg": 2.19,
-          "unit": "MFLOPS"
-        },
-        "median_score": {
-          "avg": 2.18,
-          "unit": "MFLOPS"
-        }
-      }
+    "esp32_linpack_double": {
+      "status": "error"
+    },
+    "esp32c6_linpack_double": {
+      "status": "error"
     },
     "esp32s3_linpack_float": {
       "status": "success",
@@ -5389,11 +4502,11 @@
       "settings": "data_type=float",
       "metrics": {
         "avg_score": {
-          "avg": 31.18,
+          "avg": 31.07,
           "unit": "MFLOPS"
         },
         "min_score": {
-          "avg": 8.53,
+          "avg": 8.69,
           "unit": "MFLOPS"
         },
         "max_score": {
@@ -5402,29 +4515,6 @@
         },
         "median_score": {
           "avg": 31.29,
-          "unit": "MFLOPS"
-        }
-      }
-    },
-    "esp32_linpack_float": {
-      "status": "success",
-      "runs": 1000,
-      "settings": "data_type=float",
-      "metrics": {
-        "avg_score": {
-          "avg": 13.01,
-          "unit": "MFLOPS"
-        },
-        "min_score": {
-          "avg": 5.87,
-          "unit": "MFLOPS"
-        },
-        "max_score": {
-          "avg": 13.44,
-          "unit": "MFLOPS"
-        },
-        "median_score": {
-          "avg": 13.04,
           "unit": "MFLOPS"
         }
       }
@@ -5508,7 +4598,7 @@
           "unit": "MFLOPS"
         },
         "min_score": {
-          "avg": 2.15,
+          "avg": 2.14,
           "unit": "MFLOPS"
         },
         "max_score": {
@@ -5520,6 +4610,12 @@
           "unit": "MFLOPS"
         }
       }
+    },
+    "esp32_linpack_float": {
+      "status": "error"
+    },
+    "esp32c6_linpack_float": {
+      "status": "error"
     }
   }
 }
