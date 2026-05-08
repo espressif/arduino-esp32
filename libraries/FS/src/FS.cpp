@@ -273,6 +273,12 @@ const char *FS::mountpoint() {
 
 void FSImpl::mountpoint(const char *mp) {
   _mountpoint = mp;
+  if (mp && !_mtx) {
+    _mtx = xSemaphoreCreateRecursiveMutex();
+    if (!_mtx) {
+      log_w("Failed to create recursive mutex. Time-of-check to time-of-use race condition may occur.");
+    }
+  }
 }
 
 const char *FSImpl::mountpoint() {
