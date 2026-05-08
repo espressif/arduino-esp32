@@ -128,7 +128,7 @@ void setup() {
     delay(10);
   }
 
-  /* ---------- Startup synchronisation ----------
+  /* ---------- Startup synchronization ----------
    * Block until the test script is ready so that both DUTs start together
    * even when one device finishes flashing significantly before the other. */
   waitForStart(0);

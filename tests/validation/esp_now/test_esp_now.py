@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def start_phase(master, slave, phase, timeout=60):
-    """Synchronise both DUTs into a phase.
+    """Synchronize both DUTs into a phase.
 
     Slave receives START before master to avoid race conditions where the
     master starts sending before the slave has set up its receive state.
@@ -46,11 +46,11 @@ def test_esp_now(dut):
     slave = dut[1]
 
     # ------------------------------------------------------------------ #
-    # Phase 0 – Startup synchronisation                                   #
+    # Phase 0 – Startup synchronization                                   #
     # Block until both DUTs have booted and are waiting, then release     #
     # them together regardless of flash-time differences.                 #
     # ------------------------------------------------------------------ #
-    LOGGER.info("=== Phase 0: Startup synchronisation ===")
+    LOGGER.info("=== Phase 0: Startup synchronization ===")
     start_phase(master, slave, 0, timeout=120)
 
     # ------------------------------------------------------------------ #
