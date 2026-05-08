@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import logging
 import yaml
 import os
 import sys
@@ -17,6 +18,8 @@ import urllib.error
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
 TESTS_ROOT = REPO_ROOT / "tests"
+
+logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s', stream=sys.stderr)
 
 # Ensure we run from repo root so relative paths work consistently
 try:
@@ -342,8 +345,8 @@ def any_runner_matches(required_tags: Iterable[str], runners: list[dict]) -> boo
         except Exception as e:
             # Be robust to unexpected runner payloads
             runner_id = r.get("id", "unknown")
-            sys.stderr.write(f"[WARN] Error checking runner #{runner_id} against required tags: {e}\n")
-            sys.stderr.write(traceback.format_exc() + "\n")
+            logging.warning("Error checking runner #%s against required tags: %s", runner_id, e)
+            logging.debug(traceback.format_exc())
             continue
     return False
 

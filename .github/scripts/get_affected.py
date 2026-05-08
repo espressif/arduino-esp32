@@ -108,10 +108,12 @@ import json
 import subprocess
 import shutil
 import fnmatch
+import logging
 
 script_dir = Path(__file__).resolve().parent
 project_root = (script_dir / "../../").resolve()
 
+logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s', stream=sys.stderr)
 
 def resolve_changed_path_to_project_relative(path: str) -> str:
     """
@@ -129,13 +131,13 @@ def resolve_changed_path_to_project_relative(path: str) -> str:
     if p.is_absolute():
         try:
             return str(p.resolve().relative_to(project_root))
-        except ValueError:
-            pass
+        except ValueError as e:
+            logging.warning("Absolute path %s is outside project root: %s", raw, e)
     else:
         try:
             return str((Path.cwd() / p).resolve().relative_to(project_root))
-        except ValueError:
-            pass
+        except ValueError as e:
+            logging.warning("Relative path %s is outside project root: %s", raw, e)
         if (project_root / p).is_file():
             return p.as_posix()
 
@@ -551,7 +553,8 @@ def run_ctags_and_index(paths: list[str]) -> tuple[dict[str, set[str]], dict[str
             continue
         try:
             tag = json.loads(line)
-        except Exception:
+        except Exception as e:
+            logging.warning("Failed to parse ctags JSON line %r: %s", line, e)
             continue
 
         path = tag.get("path")
@@ -707,7 +710,7 @@ def build_dependencies_graph() -> None:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 content = f.read()
         except Exception as e:
-            print(f"Warning: Could not read file {file}: {e}", file=sys.stderr)
+            logging.warning("Could not read file %s: %s", file, e)
             continue
 
         for match in include_regex.finditer(content):
