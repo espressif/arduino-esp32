@@ -13,22 +13,21 @@
 #include <esp_mac.h>
 
 #define ESPNOW_WIFI_CHANNEL 1
-#define ESPNOW_PMK          "pmk1234567890123"  /* exactly 16 bytes */
-#define ESPNOW_LMK          "lmk1234567890123"  /* exactly 16 bytes */
+#define ESPNOW_PMK          "pmk1234567890123" /* exactly 16 bytes */
+#define ESPNOW_LMK          "lmk1234567890123" /* exactly 16 bytes */
 
 /* ---------- Inheritable peer with callbacks and helpers ---------- */
 
 class TestPeer : public ESP_NOW_Peer {
 public:
-  volatile bool sent_cb    = false;
-  volatile bool sent_ok    = false;
-  volatile bool recv_cb    = false;
+  volatile bool sent_cb = false;
+  volatile bool sent_ok = false;
+  volatile bool recv_cb = false;
   volatile bool recv_bcast = false;
   volatile size_t recv_len = 0;
-  uint8_t recv_buf[1470]   = {};
+  uint8_t recv_buf[1470] = {};
 
-  TestPeer(const uint8_t *mac, uint8_t ch, wifi_interface_t ifc, const uint8_t *lmk = nullptr)
-    : ESP_NOW_Peer(mac, ch, ifc, lmk) {}
+  TestPeer(const uint8_t *mac, uint8_t ch, wifi_interface_t ifc, const uint8_t *lmk = nullptr) : ESP_NOW_Peer(mac, ch, ifc, lmk) {}
   ~TestPeer() {
     remove();
   }
@@ -50,10 +49,10 @@ public:
 
   void onReceive(const uint8_t *data, size_t len, bool broadcast) override {
     recv_bcast = broadcast;
-    size_t n   = len < sizeof(recv_buf) ? len : sizeof(recv_buf);
+    size_t n = len < sizeof(recv_buf) ? len : sizeof(recv_buf);
     memcpy(recv_buf, data, n);
     recv_len = n;
-    recv_cb  = true;
+    recv_cb = true;
   }
 
   bool waitSent(uint32_t ms = 5000) {
@@ -81,10 +80,10 @@ public:
 
 /* ---------- Globals ---------- */
 
-static uint8_t peer_mac[6] = {};         /* master's MAC (from serial exchange) */
-static TestPeer *master_peer = nullptr;  /* created inside onNewPeer callback    */
-static TestPeer *bcast_peer  = nullptr;  /* broadcast peer for phase 2           */
-static volatile bool bcast_received  = false;
+static uint8_t peer_mac[6] = {};        /* master's MAC (from serial exchange) */
+static TestPeer *master_peer = nullptr; /* created inside onNewPeer callback    */
+static TestPeer *bcast_peer = nullptr;  /* broadcast peer for phase 2           */
+static volatile bool bcast_received = false;
 static char bcast_msg[32] = {};
 
 /* ---------- onNewPeer callback (fires for unknown senders) ---------- */
@@ -108,7 +107,7 @@ static void onNewPeer(const esp_now_recv_info_t *info, const uint8_t *data, int 
   }
   size_t n = (size_t)len < sizeof(bcast_msg) - 1 ? (size_t)len : sizeof(bcast_msg) - 1;
   memcpy(bcast_msg, data, n);
-  bcast_msg[n]   = '\0';
+  bcast_msg[n] = '\0';
   bcast_received = true;
 }
 
