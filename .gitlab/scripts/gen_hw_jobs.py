@@ -19,7 +19,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
 TESTS_ROOT = REPO_ROOT / "tests"
 
-logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s', stream=sys.stderr)
+logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s", stream=sys.stderr)
 
 # Ensure we run from repo root so relative paths work consistently
 try:
