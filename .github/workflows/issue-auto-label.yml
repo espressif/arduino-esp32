@@ -6,7 +6,9 @@
 #   2. Template: Feature request → Type: Feature request
 #   3. keywordLabelPairs: multi-word keywords = substring match; single-token = whole-word
 #      (so BLE does not match inside "problem"/"table"/"cable")
-#   4. Area labels → assignees: BLE→lucasssvaz, Matter/OpenThread→SuGlider, USB/WiFi→me-no-dev, Zigbee→P-R-O-C-H-Y
+#   4. Area labels → assignees: resolved from .github/CODEOWNERS using the paths below
+#      (same last-match-wins rules as GitHub). Organization teams (@org/team) are skipped
+#      because issue assignees must be user logins.
 #
 # Full label list: .github/ISSUE_TEMPLATE/LABELS.md
 # =============================================================================
@@ -18,6 +20,7 @@ on:
     types: [opened, edited]
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
@@ -25,10 +28,15 @@ jobs:
     name: Apply labels from template
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
       - name: Apply labels based on template and form fields
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
+            const fs = require('fs');
+            const pathMod = require('path');
+
             const issue = context.payload.issue;
             const body = issue.body || '';
             const title = issue.title || '';
@@ -101,32 +109,112 @@ jobs:
             const newLabels = [...labelsToAdd].filter(name => !existingLabels.includes(name));
             if (newLabels.length === 0) {
               core.info('No new labels to add.');
-              return;
+            }
+            if (newLabels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: newLabels
+              });
+              core.info('Added labels: ' + newLabels.join(', '));
             }
 
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue.number,
-              labels: newLabels
-            });
-            core.info('Added labels: ' + newLabels.join(', '));
-
-            // Area → assignee: when issue has one of these area labels, add the assignee(s)
-            const areaToAssignees = {
-              'Area: BLE': ['lucasssvaz'],
-              'Area: Matter': ['SuGlider'],
-              'Area: OpenThread': ['SuGlider'],
-              'Area: UART': ['SuGlider'],
-              'Area: USB': ['me-no-dev'],
-              'Area: WiFi': ['me-no-dev'],
-              'Area: Zigbee': ['P-R-O-C-H-Y']
+            // Representative repo paths for each Area label (CODEOWNERS is path-based).
+            // Use paths that exist under a matching rule; generic areas without a dedicated
+            // rule resolve to default owners only (often a team → skipped for assignees).
+            const areaLabelToPath = {
+              'Area: Arduino as ESP-IDF component': '/idf_component_examples/',
+              'Area: BLE': '/libraries/BLE/',
+              'Area: BT classic': '/libraries/BluetoothSerial/',
+              'Area: ESP-IDF related': '/CMakeLists.txt',
+              'Area: Lib Builder': '/tools/',
+              'Area: Libraries': '/libraries/__nocodeowners__/x',
+              'Area: Matter': '/libraries/Matter/',
+              'Area: OpenThread': '/libraries/OpenThread/',
+              'Area: Performance': '/CMakeLists.txt',
+              'Area: Peripherals API': '/variants/',
+              'Area: Tools & Build System': '/tools/',
+              'Area: UART': '/libraries/Console/',
+              'Area: USB': '/libraries/USB/',
+              'Area: WiFi': '/libraries/WiFi/',
+              'Area: Zigbee': '/libraries/Zigbee/'
             };
+
+            function parseCodeowners(content) {
+              const rules = [];
+              for (const line of content.split(/\r?\n/)) {
+                const head = line.split('#')[0].trim();
+                if (!head) continue;
+                const tokens = head.split(/\s+/);
+                const pattern = tokens[0];
+                const owners = tokens
+                  .slice(1)
+                  .filter(t => t.startsWith('@'))
+                  .map(t => t.slice(1));
+                rules.push({ pattern, owners });
+              }
+              return rules;
+            }
+
+            function normalizeTarget(p) {
+              let s = String(p).replace(/\\/g, '/');
+              if (!s.startsWith('/')) s = '/' + s;
+              return s.replace(/\/+/g, '/');
+            }
+
+            function matchesPattern(targetPath, pattern) {
+              const path = normalizeTarget(targetPath);
+              if (pattern === '*') return true;
+              if (pattern === '**/ci.yml') {
+                return /(^|\/)ci\.yml$/.test(path);
+              }
+              if (pattern === '/.*') {
+                const parts = path.split('/').filter(Boolean);
+                return parts.length === 1 && parts[0].startsWith('.');
+              }
+              if (pattern === '/*.md') {
+                const parts = path.split('/').filter(Boolean);
+                return parts.length === 1 && /\.md$/i.test(parts[0]);
+              }
+              const pat = pattern.startsWith('/') ? pattern : '/' + pattern;
+              if (pat.endsWith('/')) {
+                return path === pat.slice(0, -1) || path.startsWith(pat);
+              }
+              return path === pat || path.startsWith(pat + '/');
+            }
+
+            function ownersForPath(rules, targetPath) {
+              let owners = [];
+              const tp = normalizeTarget(targetPath);
+              for (const rule of rules) {
+                if (matchesPattern(tp, rule.pattern)) {
+                  owners = rule.owners;
+                }
+              }
+              return owners;
+            }
+
+            function isAssignableLogin(owner) {
+              return owner && !owner.includes('/');
+            }
+
+            let codeownersRules = [];
+            try {
+              const cp = pathMod.join(process.env.GITHUB_WORKSPACE, '.github', 'CODEOWNERS');
+              codeownersRules = parseCodeowners(fs.readFileSync(cp, 'utf8'));
+            } catch (e) {
+              core.warning('Could not read .github/CODEOWNERS: ' + e.message);
+            }
+
             const allLabels = [...new Set([...existingLabels, ...newLabels])];
             const assigneesToAdd = new Set();
             for (const label of allLabels) {
-              const assignees = areaToAssignees[label];
-              if (assignees) assignees.forEach(a => assigneesToAdd.add(a));
+              const relPath = areaLabelToPath[label];
+              if (!relPath || codeownersRules.length === 0) continue;
+              for (const o of ownersForPath(codeownersRules, relPath)) {
+                if (isAssignableLogin(o)) assigneesToAdd.add(o);
+              }
             }
             const existingAssignees = (issue.assignees || []).map(a => a.login);
             const newAssignees = [...assigneesToAdd].filter(login => !existingAssignees.includes(login));
