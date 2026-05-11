@@ -1649,7 +1649,7 @@ bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
 
   uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 
   bool isIrdaModeEnabled = hw->conf0.irda_en == 1;
 #else
   bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
@@ -1660,7 +1660,7 @@ bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
   }
 
   UART_MUTEX_LOCK();
-#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 
   // enables IRDA TX
   hw->conf0.irda_tx_en = irdaTx ? 1 : 0;
 #else
