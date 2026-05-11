@@ -519,6 +519,47 @@ Sets the UART operating mode.
 
 **Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver.
 
+setIrdaMode
+***********
+
+Sets the IRDA transmission direction (TX or RX mode). Can only be used after ``setMode(UART_MODE_IRDA)`` is called.
+
+.. code-block:: arduino
+
+    bool setIrdaMode(uart_irda_mode_t irdaMode);
+
+* ``irdaMode`` - Direction mode:
+
+  * ``ESP32_UART_IRDA_TX`` - IRDA TX mode (transmit only). The UART will transmit data in IRDA format. RX is disabled.
+  * ``ESP32_UART_IRDA_RX`` - IRDA RX mode (receive only). The UART will receive data in IRDA format. TX is disabled.
+
+**Returns:** ``true`` if IRDA mode direction is set successfully, ``false`` otherwise.
+
+**Note:**
+* IRDA mode works in exclusive directions - the UART can either transmit or receive, but not both simultaneously
+* The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``
+* Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters
+* IRDA requires appropriate hardware: an IR transmitter (LED) for TX mode and an IR receiver module for RX mode
+* Common carrier frequencies are 38 kHz (TVs, air conditioners) and 56 kHz (some devices)
+
+**Example:**
+
+.. code-block:: arduino
+
+    Serial1.begin(9600, SERIAL_8N1, RX1, TX1);
+    Serial1.setMode(UART_MODE_IRDA);                    // Enable IRDA mode
+    
+    // Switch to TX mode
+    Serial1.setIrdaMode(ESP32_UART_IRDA_TX);
+    Serial1.println("Transmit data");
+    
+    // Switch to RX mode
+    Serial1.setIrdaMode(ESP32_UART_IRDA_RX);
+    while (Serial1.available()) {
+        char c = Serial1.read();
+        Serial.print(c);
+    }
+
 setClockSource
 **************
 
@@ -724,6 +765,11 @@ OnReceive Callback Example:
 RS485 Communication Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
+    :language: arduino
+
+IRDA Mode Example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_Demo/IrdaMode_Demo.ino
     :language: arduino
 
 Hardware Flow Control Example:
