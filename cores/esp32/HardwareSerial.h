@@ -271,6 +271,12 @@ typedef enum {
 #endif
 #endif /* SOC_UART_LP_NUM >= 1 */
 
+// IrDA Direction Modes:
+enum {
+  ESP32_UART_IRDA_RX = 0,
+  ESP32_UART_IRDA_TX = 1
+};
+
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
 
