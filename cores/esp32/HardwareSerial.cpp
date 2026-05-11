@@ -635,6 +635,16 @@ bool HardwareSerial::setMode(SerialMode mode) {
   return uartSetMode(_uart, mode);
 }
 
+// Sets the UART IRDA mode to TX or RX.
+// It works in exclusive directions, meaning that if set to TX,
+// the UART will only transmit data and won't receive any data,
+// and vice versa for RX.
+// It can only be used if setMode(UART_MODE_IRDA) is set.
+// When set to true, it will set the IRDA mode to TX, otherwise it will be set to RX.
+bool HardwareSerial::setIrdaMode(bool irdaTx) {
+  return uartSetIrdaMode(_uart, irdaTx);
+}
+
 // Sets the UART Clock Source based on the compatible SoC options
 // This method must be called before starting UART using begin(), otherwise it won't have any effect.
 // Clock Source Options are:

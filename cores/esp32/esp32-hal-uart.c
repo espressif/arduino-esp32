@@ -1637,6 +1637,43 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   return retCode;
 }
 
+// Routines that take care of IrDA mode in the HardwareSerial Class code
+// used to set UART_MODE_IRDA for ESP32 chips only when the selected mode is already UART_MODE_IRDA
+// irdaTx = true to set IrDA mode for TX pin, false to set it for RX pin.
+// IrDA mode can't run for both pins (RX/TX) at the same time.
+// It can tranmit or receive at a time, but not both together.
+bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM) {
+    return false;
+  }
+
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  bool isIrdaModeEnabled = hw->conf0.irda_en == 1;
+#else
+  bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
+#endif
+  if(!isIrdaModeEnabled) {
+    log_w("IrDA mode is not enabled for UART%u. Please set UART mode to UART_MODE_IRDA first before configuring IrDA mode for RX or TX pin.", uart->num);
+    return false;
+  }
+
+  UART_MUTEX_LOCK();
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+  // enables IRDA TX
+  hw->conf0.irda_tx_en = irdaTx ? 1 : 0;
+#else
+  // enables IRDA TX
+  hw->conf0_sync.irda_tx_en = irdaTx ? 1 : 0;
+  // it needs UART Update
+  hw->reg_update.reg_update = 1;
+  while (hw->reg_update.reg_update);
+#endif  
+  UART_MUTEX_UNLOCK();
+  return true;
+}
+
 // this function will set the uart clock source
 // it must be called before uartBegin(), otherwise it won't change any thing.
 bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {

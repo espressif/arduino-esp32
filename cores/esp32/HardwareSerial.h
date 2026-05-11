@@ -378,6 +378,7 @@ public:
   //    UART_HW_FLOWCTRL_RTS     = 0x1   enable RX hardware flow control (rts)
   //    UART_HW_FLOWCTRL_CTS     = 0x2   enable TX hardware flow control (cts)
   //    UART_HW_FLOWCTRL_CTS_RTS = 0x3   enable hardware flow control
+
   bool setHwFlowCtrlMode(SerialHwFlowCtrl mode = UART_HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);  // 64 is half FIFO Length
   // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
   //    UART_MODE_UART                   = 0x00    mode: regular UART mode
@@ -386,6 +387,15 @@ public:
   //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
   //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
   bool setMode(SerialMode mode);
+
+  // Functions to set the UART IRDA mode: TX or RX.
+  // It works in exclusive directions, meaning that if set to TX,
+  // the UART will only transmit data and won't receive any data,
+  // and vice versa for RX.
+  // It can only be used if setMode(UART_MODE_IRDA) is set.
+  // When set to true, it will set the IRDA mode to TX, otherwise it will be set to RX.
+  bool setIrdaMode(bool irdaTx);
+
   // Used to set the UART clock source mode. It must be set before calling begin(), otherwise it won't have any effect.
   // Not all clock source are available to every SoC. The compatible option are listed here:
   // UART_CLK_SRC_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source
