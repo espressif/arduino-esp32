@@ -557,6 +557,46 @@ void hardware_flow_control_test(void) {
   Serial.println("Hardware flow control test successful");
 }
 
+// This test checks if IRDA mode (setMode and setIrdaMode) works correctly
+void irda_mode_test(void) {
+  log_d("Starting IRDA mode test");
+
+  for (auto *ref : uart_test_configs) {
+    UARTTestConfig &config = *ref;
+
+    // Test 1: Enable IRDA mode
+    log_d("Setting UART%d to IRDA mode", config.uart_num);
+    bool mode_set = config.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+
+    // Test 2: Set IRDA TX mode (transmit)
+    log_d("Setting UART%d to IRDA TX mode (transmit)", config.uart_num);
+    bool irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    delay(50);
+
+    // Test 3: Set IRDA RX mode (receive)
+    log_d("Setting UART%d to IRDA RX mode (receive)", config.uart_num);
+    bool irda_rx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_RX);
+    TEST_ASSERT_TRUE(irda_rx_set);
+
+    delay(50);
+
+    // Test 4: Switch back to TX mode
+    log_d("Switching UART%d back to IRDA TX mode", config.uart_num);
+    irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    // Test 5: Return to regular UART mode for next tests
+    log_d("Setting UART%d back to regular UART mode", config.uart_num);
+    mode_set = config.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+  }
+
+  Serial.println("IRDA mode test successful");
+}
+
 // This test checks that moving both UART RX and TX pins to another UART terminates the source UART
 void inter_uart_pin_move_test(void) {
   if (TEST_UART_NUM < 2) {
@@ -726,6 +766,7 @@ void setup() {
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
   RUN_TEST(hardware_flow_control_test);
+  RUN_TEST(irda_mode_test);
   RUN_TEST(inter_uart_pin_move_test);
   RUN_TEST(same_uart_pin_swap_test);
   RUN_TEST(move_rx_tx_to_cts_rts_test);
