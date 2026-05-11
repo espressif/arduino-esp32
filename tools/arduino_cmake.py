@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Portable single-file Arduino CMake builder (bundled acmake package).
+"""
+Portable single-file Arduino CMake builder (bundled acmake package).
+Generated from https://github.com/me-no-dev/ArduinoCmake
 
 Copy ``arduino_cmake.py`` anywhere and run:
   python3 arduino_cmake.py compile --fqbn ... --sketch ...
   chmod +x arduino_cmake.py && ./arduino_cmake.py board
 
 The embedded bundle is extracted once under ``~/.cache/arduino_cmake_portable/<id>/``.
-Regenerate this file from the repository with:
+Regenerate this file from the ArduinoCmake repository with:
   python3 tools/gen_arduino_cmake_portable.py
 """
 from __future__ import annotations
