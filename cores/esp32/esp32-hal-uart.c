@@ -1638,10 +1638,10 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
 }
 
 // Routines that take care of IrDA mode in the HardwareSerial Class code
-// used to set UART_MODE_IRDA for ESP32 chips only when the selected mode is already UART_MODE_IRDA
-// irdaTx = true to set IrDA mode for TX pin, false to set it for RX pin.
+// Sets UART_MODE_IRDA direction: TX or RX (exclusive)
+// irdaTx = true for TX mode (ESP32_UART_IRDA_TX), false for RX mode (ESP32_UART_IRDA_RX)
 // IrDA mode can't run for both pins (RX/TX) at the same time.
-// It can tranmit or receive at a time, but not both together.
+// The UART can either transmit or receive at a time, but not both simultaneously.
 bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
   if (uart == NULL || uart->num >= SOC_UART_NUM) {
     return false;
@@ -1654,7 +1654,7 @@ bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
 #else
   bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
 #endif
-  if(!isIrdaModeEnabled) {
+  if (!isIrdaModeEnabled) {
     log_w("IrDA mode is not enabled for UART%u. Please set UART mode to UART_MODE_IRDA first before configuring IrDA mode for RX or TX pin.", uart->num);
     return false;
   }

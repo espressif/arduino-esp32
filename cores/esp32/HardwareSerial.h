@@ -272,10 +272,10 @@ typedef enum {
 #endif /* SOC_UART_LP_NUM >= 1 */
 
 // IrDA Direction Modes:
-enum {
+typedef enum {
   ESP32_UART_IRDA_RX = 0,
   ESP32_UART_IRDA_TX = 1
-};
+} uart_irda_mode_t;
 
 typedef std::function<void(void)> OnReceiveCb;
 typedef std::function<void(hardwareSerial_error_t)> OnReceiveErrorCb;
@@ -395,12 +395,12 @@ public:
   bool setMode(SerialMode mode);
 
   // Functions to set the UART IRDA mode: TX or RX.
-  // It works in exclusive directions, meaning that if set to TX,
+  // It works in exclusive directions, meaning that if set to TX (ESP32_UART_IRDA_TX),
   // the UART will only transmit data and won't receive any data,
-  // and vice versa for RX.
-  // It can only be used if setMode(UART_MODE_IRDA) is set.
-  // When set to true, it will set the IRDA mode to TX, otherwise it will be set to RX.
-  bool setIrdaMode(bool irdaTx);
+  // and vice versa for RX (ESP32_UART_IRDA_RX).
+  // It can only be used after setMode(UART_MODE_IRDA) is called.
+  // Parameters: ESP32_UART_IRDA_TX (transmit mode) or ESP32_UART_IRDA_RX (receive mode)
+  bool setIrdaMode(uart_irda_mode_t irdaMode);
 
   // Used to set the UART clock source mode. It must be set before calling begin(), otherwise it won't have any effect.
   // Not all clock source are available to every SoC. The compatible option are listed here:

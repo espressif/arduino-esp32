@@ -106,8 +106,10 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
 bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
-// Used to select the UART IrDA direction mode (TX or RX). 
-// It can only be used if uartSetMode(UART_MODE_IRDA) is set.
+// Used to select the UART IrDA direction mode (TX or RX).
+// Parameters:
+//   irdaTx = true for IRDA TX mode (ESP32_UART_IRDA_TX), false for IRDA RX mode (ESP32_UART_IRDA_RX)
+// It can only be used after uartSetMode(UART_MODE_IRDA) is called.
 bool uartSetIrdaMode(uart_t *uart, bool irdaTx);
 
 // Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
