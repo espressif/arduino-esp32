@@ -131,8 +131,8 @@ void testIrdaRxMode() {
      - The ESP32 UART handles modulation/demodulation automatically in IRDA mode
 
   3. Switching Modes:
-     - Call setIrdaMode(true) to switch to TX mode
-     - Call setIrdaMode(false) to switch to RX mode
+     - Call setIrdaMode(ESP32_UART_IRDA_TX) to switch to TX mode
+     - Call setIrdaMode(ESP32_UART_IRDA_RX) to switch to RX mode
      - Switching modes does not require calling begin() again
 
   4. Common IRDA Frequencies:

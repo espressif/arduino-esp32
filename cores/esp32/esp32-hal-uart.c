@@ -1657,6 +1657,7 @@ bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
 #endif
   if (!isIrdaModeEnabled) {
     log_w("IrDA mode is not enabled for UART%u. Please set UART mode to UART_MODE_IRDA first before configuring IrDA mode for RX or TX pin.", uart->num);
+    UART_MUTEX_UNLOCK();
     return false;
   }
 
