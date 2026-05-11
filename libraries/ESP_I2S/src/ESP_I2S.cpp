@@ -1082,6 +1082,10 @@ uint8_t *I2SClass::recordWAV(size_t rec_seconds, size_t *out_size) {
 }
 
 void I2SClass::playWAV(const uint8_t *data, size_t len) {
+  if (data == NULL || len < WAVE_HEADER_SIZE) {
+    log_e("Invalid WAV data or length");
+    return;
+  }
   const pcm_wav_header_t *header = (const pcm_wav_header_t *)data;
   if (header->fmt_chunk.audio_format != 1) {
     log_e("Audio format is not PCM!");
