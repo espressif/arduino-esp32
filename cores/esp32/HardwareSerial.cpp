@@ -640,9 +640,9 @@ bool HardwareSerial::setMode(SerialMode mode) {
 // the UART will only transmit data and won't receive any data,
 // and vice versa for ESP32_UART_IRDA_RX.
 // It can only be used after setMode(UART_MODE_IRDA) is called.
-// Parameters: ESP32_UART_IRDA_TX (transmit mode) or ESP32_UART_IRDA_RX (receive mode)
+// Parameters: ESP32_UART_IRDA_TX (value 1, transmit mode) or ESP32_UART_IRDA_RX (value 0, receive mode)
 bool HardwareSerial::setIrdaMode(uart_irda_mode_t irdaMode) {
-  return uartSetIrdaMode(_uart, irdaMode == ESP32_UART_IRDA_TX ? true : false);
+  return uartSetIrdaMode(_uart, (uint8_t)irdaMode);
 }
 
 // Sets the UART Clock Source based on the compatible SoC options

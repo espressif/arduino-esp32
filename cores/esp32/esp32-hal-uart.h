@@ -108,9 +108,10 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
 // Used to select the UART IrDA direction mode (TX or RX).
 // Parameters:
-//   irdaTx = true for IRDA TX mode (ESP32_UART_IRDA_TX), false for IRDA RX mode (ESP32_UART_IRDA_RX)
+//   irdaTx: 1 (or ESP32_UART_IRDA_TX) for IRDA TX mode, 0 (or ESP32_UART_IRDA_RX) for IRDA RX mode
 // It can only be used after uartSetMode(UART_MODE_IRDA) is called.
-bool uartSetIrdaMode(uart_t *uart, bool irdaTx);
+// Returns: true if mode was set successfully, false otherwise.
+bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx);
 
 // Used to set the UART clock source mode. It must be set before calling uartBegin(), otherwise it won't have any effect.
 // Not all clock source are available to every SoC. The compatible option are listed here:

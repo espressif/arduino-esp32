@@ -1639,14 +1639,15 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
 
 // Routines that take care of IrDA mode in the HardwareSerial Class code
 // Sets UART_MODE_IRDA direction: TX or RX (exclusive)
-// irdaTx = true for TX mode (ESP32_UART_IRDA_TX), false for RX mode (ESP32_UART_IRDA_RX)
-// IrDA mode can't run for both pins (RX/TX) at the same time.
-// The UART can either transmit or receive at a time, but not both simultaneously.
-bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
-  if (uart == NULL || uart->num >= SOC_UART_NUM) {
+// irdaTx: 1 (or ESP32_UART_IRDA_TX) for TX mode, 0 (or ESP32_UART_IRDA_RX) for RX mode
+// IrDA mode operates in exclusive directions - can't run both TX and RX at the same time.
+// The UART can either transmit or receive at any given time, but not both simultaneously.
+bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM || irdaTx > 1) {
     return false;
   }
 
+  UART_MUTEX_LOCK();
   uart_dev_t *hw = UART_LL_GET_HW(uart->num);
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
@@ -1659,13 +1660,12 @@ bool uartSetIrdaMode(uart_t *uart, bool irdaTx) {
     return false;
   }
 
-  UART_MUTEX_LOCK();
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
   // enables IRDA TX
-  hw->conf0.irda_tx_en = irdaTx ? 1 : 0;
+  hw->conf0.irda_tx_en = irdaTx;
 #else
   // enables IRDA TX
-  hw->conf0_sync.irda_tx_en = irdaTx ? 1 : 0;
+  hw->conf0_sync.irda_tx_en = irdaTx;
   // it needs UART Update
   hw->reg_update.reg_update = 1;
   while (hw->reg_update.reg_update);
