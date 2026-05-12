@@ -570,7 +570,6 @@ void hardware_flow_control_test(void) {
 // This test checks if IRDA mode (setMode and setIrdaMode) works correctly
 void irda_mode_test(void) {
   log_d("Starting IRDA mode test");
-  String received_msg = "";
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
