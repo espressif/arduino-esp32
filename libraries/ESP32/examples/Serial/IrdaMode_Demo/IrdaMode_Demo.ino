@@ -42,8 +42,8 @@ void setup() {
   }
 
   Serial.println("IrDA mode enabled. Loop will:");
-  Serial.println("1) Switch to TX GPIO" + String(IRDA_TX_PIN) + " and send a frame");
-  Serial.println("2) Switch to RX GPIO" + String(IRDA_RX_PIN) + "  and wait for peer response");
+  Serial.println("1) Switch to IrDA TX mode (using TX GPIO " + String(IRDA_TX_PIN) + ") and send a frame");
+  Serial.println("2) Switch to IrDA RX mode (using RX GPIO " + String(IRDA_RX_PIN) + ") and wait for peer response");
 }
 
 void loop() {
