@@ -270,7 +270,7 @@ jobs:
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
           touch $REPORT_FILE
           wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/runtime_table_generator.py -O ./runtime-test-results/runtime_table_generator.py
-          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts >> $REPORT_FILE
+          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts --previous-results ./runtime-test-results/test_results.json >> $REPORT_FILE
           mv -f ./test_results.json ./runtime-test-results/test_results.json
           rm -rf artifacts
 

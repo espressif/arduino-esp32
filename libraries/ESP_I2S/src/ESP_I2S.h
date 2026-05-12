@@ -95,10 +95,10 @@ public:
   // Record short PCM WAV to memory with current RX settings. Returns buffer that must be freed by the user.
   uint8_t *recordWAV(size_t rec_seconds, size_t *out_size);
   // Play short PCM WAV from memory
-  void playWAV(uint8_t *data, size_t len);
+  void playWAV(const uint8_t *data, size_t len);
 #if ARDUINO_HAS_MP3_DECODER
   // Play short MP3 from memory
-  bool playMP3(uint8_t *src, size_t src_len);
+  bool playMP3(const uint8_t *src, size_t src_len);
 #endif
 
 private:
