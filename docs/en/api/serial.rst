@@ -511,7 +511,7 @@ Sets the UART operating mode.
 
   * ``UART_MODE_UART`` (0x00) - Regular UART mode (default)
   * ``UART_MODE_RS485_HALF_DUPLEX`` (0x01) - Half-duplex RS485 mode (RTS pin controls transceiver)
-  * ``UART_MODE_IRDA`` (0x02) - IRDA UART mode
+  * ``UART_MODE_IRDA`` (0x02) - IrDA UART mode
   * ``UART_MODE_RS485_COLLISION_DETECT`` (0x03) - RS485 collision detection mode (for testing)
   * ``UART_MODE_RS485_APP_CTRL`` (0x04) - Application-controlled RS485 mode (for testing)
 
@@ -522,7 +522,7 @@ Sets the UART operating mode.
 setIrdaMode
 ***********
 
-Sets the IRDA transmission direction (TX or RX mode). Can only be used after ``setMode(UART_MODE_IRDA)`` is called.
+Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``setMode(UART_MODE_IRDA)`` is called.
 
 .. code-block:: arduino
 
@@ -530,16 +530,16 @@ Sets the IRDA transmission direction (TX or RX mode). Can only be used after ``s
 
 * ``irdaMode`` - Direction mode:
 
-  * ``ESP32_UART_IRDA_TX`` - IRDA TX mode (transmit only). The UART will transmit data in IRDA format. RX is disabled.
-  * ``ESP32_UART_IRDA_RX`` - IRDA RX mode (receive only). The UART will receive data in IRDA format. TX is disabled.
+  * ``ESP32_UART_IRDA_TX`` - IrDA TX mode (transmit only). The UART will transmit data in IrDA format. RX is disabled.
+  * ``ESP32_UART_IRDA_RX`` - IrDA RX mode (receive only). The UART will receive data in IrDA format. TX is disabled.
 
-**Returns:** ``true`` if IRDA mode direction is set successfully, ``false`` otherwise.
+**Returns:** ``true`` if IrDA mode direction is set successfully, ``false`` otherwise.
 
 **Note:**
-* IRDA mode works in exclusive directions - the UART can either transmit or receive, but not both simultaneously
+* IrDA mode works in exclusive directions - the UART can either transmit or receive, but not both simultaneously
 * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``
 * Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters
-* IRDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode
+* IrDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode
 * Common 38 kHz / 56 kHz demodulating IR remote-control receiver modules are not suitable for UART IrDA mode
 
 **Example:**
@@ -547,7 +547,7 @@ Sets the IRDA transmission direction (TX or RX mode). Can only be used after ``s
 .. code-block:: arduino
 
     Serial1.begin(9600, SERIAL_8N1, RX1, TX1);
-    Serial1.setMode(UART_MODE_IRDA);                    // Enable IRDA mode
+    Serial1.setMode(UART_MODE_IRDA);                    // Enable IrDA mode
     
     // Switch to TX mode
     Serial1.setIrdaMode(ESP32_UART_IRDA_TX);
@@ -767,7 +767,7 @@ RS485 Communication Example:
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
     :language: arduino
 
-IRDA Mode Example:
+IrDA Mode Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_Demo/IrdaMode_Demo.ino
     :language: arduino
