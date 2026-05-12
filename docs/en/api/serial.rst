@@ -539,8 +539,8 @@ Sets the IRDA transmission direction (TX or RX mode). Can only be used after ``s
 * IRDA mode works in exclusive directions - the UART can either transmit or receive, but not both simultaneously
 * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``
 * Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters
-* IRDA requires appropriate hardware: an IR transmitter (LED) for TX mode and an IR receiver module for RX mode
-* Common carrier frequencies are 38 kHz (TVs, air conditioners) and 56 kHz (some devices)
+* IRDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode
+* Common 38 kHz / 56 kHz demodulating IR remote-control receiver modules are not suitable for UART IrDA mode
 
 **Example:**
 
