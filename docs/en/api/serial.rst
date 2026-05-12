@@ -774,9 +774,16 @@ RS485 Communication Example:
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
     :language: arduino
 
-IrDA Mode Example:
+IrDA Mode Examples:
 
-.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_Demo/IrdaMode_Demo.ino
+Dual-UART Example (Single Board with 3+ UARTs):
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo/IrdaMode_DualUART_Demo.ino
+    :language: arduino
+
+Two-Board Example (Peer-to-Peer Communication):
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo/IrdaMode_TwoBoard_Demo.ino
     :language: arduino
 
 Hardware Flow Control Example:
