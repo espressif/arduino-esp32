@@ -107,6 +107,8 @@ bool uartSetHwFlowCtrlMode(uart_t *uart, uart_hw_flowcontrol_t mode, uint8_t thr
 bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
 // Used to select the UART IrDA direction mode (TX or RX).
+// IrDA is exclusive: TX mode disables RX and vice versa.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
 // Parameters:
 //   irdaTx: 1 to select IRDA TX mode, 0 to select IRDA RX mode
 // It can only be used after uartSetMode(UART_MODE_IRDA) is called.

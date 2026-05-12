@@ -1637,11 +1637,12 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   return retCode;
 }
 
-// Routines that take care of IrDA mode in the HardwareSerial Class code
-// Sets UART_MODE_IRDA direction: TX or RX (exclusive)
+// Routines that configure IrDA mode in the UART peripheral
+// Sets UART_MODE_IRDA direction: TX or RX (exclusive, not both)
 // irdaTx: 1 (or ESP32_UART_IRDA_TX) for TX mode, 0 (or ESP32_UART_IRDA_RX) for RX mode
-// IrDA mode operates in exclusive directions - can't run both TX and RX at the same time.
-// The UART can either transmit or receive at any given time, but not both simultaneously.
+// IrDA mode is exclusive: the UART can transmit OR receive, but not both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+// Simple hardware required: IR LED + resistor for TX, IR photodiode + amplifier for RX.
 bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
   if (uart == NULL || uart->num >= SOC_UART_NUM || irdaTx > 1) {
     return false;
@@ -1670,7 +1671,7 @@ bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
   // it needs UART Update
   hw->reg_update.reg_update = 1;
   while (hw->reg_update.reg_update);
-#endif  
+#endif
   UART_MUTEX_UNLOCK();
   return true;
 }
