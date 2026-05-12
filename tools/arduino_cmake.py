@@ -22,6 +22,7 @@ import sys
 import zipfile
 from pathlib import Path
 
+# codespell:ignore-begin
 _BUNDLE_CHUNKS = (
     "UEsDBBQAAAAIADtjnVxqqcXBWAAAAFcAAAASAAAAYWNtYWtlL19faW5pdF9fLnB5U1JScixKKc3M",
     "y1dw9k3MTlVIKs3MSUktUnjUMEXBLdDJTzelKLMsNU+hODu1JDlDITk/tyAzJ7EkMz9PT0lJiYsr",
@@ -994,6 +995,7 @@ _BUNDLE_CHUNKS = (
     "SwECFAMUAAAACAArg51c2Jlk/SIEAAAuDAAAEAAAAAAAAAAAAAAApIGhzQAAYWNtYWtlL3VwbG9h",
     "ZC5weVBLBQYAAAAAFwAXANQFAADx0QAAAAA=",
 )
+# codespell:ignore-end
 
 
 def _bundle_bytes() -> bytes:
