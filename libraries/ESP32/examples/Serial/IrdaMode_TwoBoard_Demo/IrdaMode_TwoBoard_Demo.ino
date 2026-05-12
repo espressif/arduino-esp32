@@ -31,7 +31,6 @@
 #define UART1_RX_PIN  RX1  // RX UART1 pin
 #define UART1_TX_PIN  TX1  // TX UART1 pin
 #define BAUD_RATE     9600
-#define RX_TIMEOUT    500
 
 // IrDA mode selection
 #define MODE_NOT_SET  0
