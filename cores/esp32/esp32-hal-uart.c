@@ -805,10 +805,18 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // The pins will be properly attached when the driver is installed in uartBegin()
   if (!uartIsDriverInstalled(uart)) {
     log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
-    if (rxPin >= 0) uart->_rxPin = rxPin;
-    if (txPin >= 0) uart->_txPin = txPin;
-    if (ctsPin >= 0) uart->_ctsPin = ctsPin;
-    if (rtsPin >= 0) uart->_rtsPin = rtsPin;
+    if (rxPin >= 0) {
+      uart->_rxPin = rxPin;
+    }
+    if (txPin >= 0) {
+      uart->_txPin = txPin;
+    }
+    if (ctsPin >= 0) {
+      uart->_ctsPin = ctsPin;
+    }
+    if (rtsPin >= 0) {
+      uart->_rtsPin = rtsPin;
+    }
     UART_MUTEX_UNLOCK();
     return true;
   }
