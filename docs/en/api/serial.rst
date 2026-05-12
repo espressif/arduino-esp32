@@ -539,8 +539,9 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 * IrDA mode works in exclusive directions: the UART can either transmit or receive, but not both simultaneously.
 * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``.
 * Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters.
-* IrDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode.
-* Common 38 kHz / 56 kHz demodulating IR remote-control receiver modules are not suitable for UART IrDA mode.
+* The ESP32 UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+* Hardware requirements: IR LED (950nm) + resistor for TX, IR photodiode + amplifier for RX. No external SIR transceiver module needed.
+* Standard 38 kHz demodulating remote-control receiver modules are not suitable for UART IrDA mode.
 
 **Example:**
 
@@ -559,6 +560,12 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
         char c = Serial1.read();
         Serial.print(c);
     }
+
+**Related Examples:**
+
+* **IrdaMode_DualUART_Demo** - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4). No external hardware needed. Ideal for testing IrDA mode functionality.
+
+* **IrdaMode_TwoBoard_Demo** - Two-board peer-to-peer IrDA communication with user-selectable TX/RX modes via Serial Monitor. Works on any ESP32 variant. Requires IR LED (TX side) and IR receiver (RX side) connected between two boards. Demonstrates real infrared communication.
 
 setClockSource
 **************
