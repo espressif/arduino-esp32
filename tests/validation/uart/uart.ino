@@ -576,14 +576,14 @@ void irda_mode_test(void) {
     mode_set = config.serial.setMode(UART_MODE_IRDA);
     TEST_ASSERT_TRUE(mode_set);
 
-    // Test 3: Set IRDA TX mode (transmit)
+    // Test 3: Set IRDA TX mode
     log_d("Setting UART%d to IRDA TX mode (transmit)", config.uart_num);
     irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
 
     delay(50);
 
-    // Test 4: Set IRDA RX mode (receive)
+    // Test 4: Set IRDA RX mode
     log_d("Setting UART%d to IRDA RX mode (receive)", config.uart_num);
     bool irda_rx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_RX);
     TEST_ASSERT_TRUE(irda_rx_set);
@@ -599,6 +599,57 @@ void irda_mode_test(void) {
     log_d("Setting UART%d back to regular UART mode", config.uart_num);
     mode_set = config.serial.setMode(UART_MODE_UART);
     TEST_ASSERT_TRUE(mode_set);
+  }
+
+  // Functional behavior test with two UARTs:
+  // UART A in IRDA RX mode should receive UART B data when UART B is in IRDA TX mode.
+  // After switching UART A to IRDA TX mode, it should no longer receive UART B data.
+  if (TEST_UART_NUM >= 2) {
+    UARTTestConfig &uartA = *uart_test_configs[0];
+    UARTTestConfig &uartB = *uart_test_configs[1];
+
+    bool mode_set = uartA.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+
+    bool irda_rx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_RX);
+    TEST_ASSERT_TRUE(irda_rx_set);
+    bool irda_tx_set = uartB.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    uart_internal_loopback(uartB.uart_num, uartA.default_rx_pin);
+
+    const char *msg_rx_enabled = "IRDA_RX_ENABLED";
+    uartA.reset_buffers();
+    while (uartA.serial.available()) {
+      uartA.serial.read();
+    }
+    uartB.serial.print(msg_rx_enabled);
+    uartB.serial.flush();
+    delay(100);
+    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, uartA.recv_msg.c_str());
+
+    irda_tx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    const char *msg_rx_disabled = "IRDA_RX_DISABLED";
+    uartA.reset_buffers();
+    while (uartA.serial.available()) {
+      uartA.serial.read();
+    }
+    uartB.serial.print(msg_rx_disabled);
+    uartB.serial.flush();
+    delay(100);
+    TEST_ASSERT_EQUAL(0, uartA.recv_msg.length());
+
+    mode_set = uartA.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    uart_internal_loopback(uartB.uart_num, uartB.default_rx_pin);
+  } else {
+    log_d("Skipping functional IRDA direction behavior check: requires at least 2 UARTs");
   }
 
   Serial.println("IRDA mode test successful");
