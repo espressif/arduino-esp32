@@ -613,8 +613,6 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         run: |
           curl -L https://wokwi.com/ci/install.sh | sh
-          source ~/.bashrc
-          wokwi-cli --version
 
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
