@@ -108,7 +108,7 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode);
 
 // Used to select the UART IrDA direction mode (TX or RX).
 // Parameters:
-//   irdaTx: 1 (or ESP32_UART_IRDA_TX) for IRDA TX mode, 0 (or ESP32_UART_IRDA_RX) for IRDA RX mode
+//   irdaTx: 1 to select IRDA TX mode, 0 to select IRDA RX mode
 // It can only be used after uartSetMode(UART_MODE_IRDA) is called.
 // Returns: true if mode was set successfully, false otherwise.
 bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx);
