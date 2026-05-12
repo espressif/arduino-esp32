@@ -633,7 +633,8 @@ void irda_mode_test(void) {
     uartB.serial.print(msg_rx_enabled);
     uartB.serial.flush();
     delay(100);
-    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, uartA.recv_msg.c_str());
+    received_msg = read_printable(uartA.serial, 100);
+    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, received_msg.c_str());
 
     irda_tx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
