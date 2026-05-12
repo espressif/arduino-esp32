@@ -286,6 +286,7 @@ void enabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled while running");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
+  Serial.setDebugOutput(true); // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted while running");
   Serial1.setRxInvert(true);
@@ -365,6 +366,7 @@ void disabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled when stopped");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
+  Serial.setDebugOutput(true); // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted when stopped");
   Serial1.setRxInvert(true);
@@ -452,6 +454,7 @@ void auto_baudrate_test(void) {
   if (TEST_UART_NUM == 1) {
     Serial.end();
     Serial.begin(115200);
+    Serial.setDebugOutput(true);
   }
 
   TEST_ASSERT_UINT_WITHIN(2304, 115200, baudrate);
@@ -567,6 +570,7 @@ void hardware_flow_control_test(void) {
 // This test checks if IRDA mode (setMode and setIrdaMode) works correctly
 void irda_mode_test(void) {
   log_d("Starting IRDA mode test");
+  String received_msg = "";
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
@@ -606,6 +610,67 @@ void irda_mode_test(void) {
     log_d("Setting UART%d back to regular UART mode", config.uart_num);
     mode_set = config.serial.setMode(UART_MODE_UART);
     TEST_ASSERT_TRUE(mode_set);
+  }
+
+  // Functional behavior test with two UARTs:
+  // UART A in IRDA RX mode should receive UART B data when UART B is in IRDA TX mode.
+  // After switching UART A to IRDA TX mode, it should no longer receive UART B data.
+  if (TEST_UART_NUM >= 2) {
+    UARTTestConfig &uartA = *uart_test_configs[0];
+    UARTTestConfig &uartB = *uart_test_configs[1];
+
+    // Set both UARTs to IRDA mode
+    bool mode_set = uartA.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_IRDA);
+    TEST_ASSERT_TRUE(mode_set);
+
+    // Configure: UART A in RX mode, UART B in TX mode
+    bool irda_rx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_RX);
+    TEST_ASSERT_TRUE(irda_rx_set);
+    bool irda_tx_set = uartB.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+
+    // Set up internal loopback: UART B TX -> UART A RX
+    uart_internal_loopback(uartB.uart_num, uartA.default_rx_pin);
+    delay(50);
+
+    // Test 1: UART A should receive when in RX mode
+    log_d("Testing UART%d reception in IRDA RX mode", uartA.uart_num);
+    const char *msg_rx_enabled = "IRDA_RX_ENABLED";
+    uartA.reset_buffers();
+    uartA.clear_rx_buffer();
+    delay(50);
+    uartB.serial.print(msg_rx_enabled);
+    uartB.serial.flush();
+    delay(200);  // Give more time for IRDA hardware to process and callback to fire
+    log_d("UART%d received: '%s'", uartA.uart_num, uartA.recv_msg.c_str());
+    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, uartA.recv_msg.c_str());
+
+    // Test 2: Switch UART A to TX mode - should NOT receive
+    log_d("Switching UART%d to IRDA TX mode - should no longer receive", uartA.uart_num);
+    irda_tx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    TEST_ASSERT_TRUE(irda_tx_set);
+    delay(50);
+
+    const char *msg_rx_disabled = "IRDA_RX_DISABLED";
+    uartA.reset_buffers();
+    uartA.clear_rx_buffer();
+    delay(50);
+    uartB.serial.print(msg_rx_disabled);
+    uartB.serial.flush();
+    delay(200);  // Give time for any data to arrive (should be none)
+    log_d("UART%d received after TX mode switch: '%s' (should be empty)", uartA.uart_num, uartA.recv_msg.c_str());
+    TEST_ASSERT_EQUAL(0, uartA.recv_msg.length());
+
+    // Return both UARTs to regular UART mode
+    mode_set = uartA.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    mode_set = uartB.serial.setMode(UART_MODE_UART);
+    TEST_ASSERT_TRUE(mode_set);
+    uart_internal_loopback(uartB.uart_num, uartB.default_rx_pin);
+  } else {
+    log_d("Skipping functional IRDA direction behavior check: requires at least 2 UARTs");
   }
 
   Serial.println("IRDA mode test successful");
@@ -722,6 +787,7 @@ void cross_uart_cts_rts_test(void) {
 
 void setup() {
   Serial.begin(115200);
+  Serial.setDebugOutput(true);
   while (!Serial) {
     delay(10);
   }
