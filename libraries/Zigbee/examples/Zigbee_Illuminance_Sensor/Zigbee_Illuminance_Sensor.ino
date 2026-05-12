@@ -108,7 +108,7 @@ void setup() {
   Serial.println();
 
   // Start illuminance sensor reading task
-  xTaskCreate(illuminance_sensor_value_update, "illuminance_sensor_update", 2048, NULL, 10, NULL);
+  xTaskCreate(illuminance_sensor_value_update, "illuminance_sensor_update", 3072, NULL, 10, NULL);
 
   // Set reporting schedule for illuminance value measurement in seconds, must be called after Zigbee.begin()
   // min_interval and max_interval in seconds, delta

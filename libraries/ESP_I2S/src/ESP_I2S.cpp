@@ -1081,13 +1081,17 @@ uint8_t *I2SClass::recordWAV(size_t rec_seconds, size_t *out_size) {
   return NULL;
 }
 
-void I2SClass::playWAV(uint8_t *data, size_t len) {
-  pcm_wav_header_t *header = (pcm_wav_header_t *)data;
+void I2SClass::playWAV(const uint8_t *data, size_t len) {
+  if (data == NULL || len < WAVE_HEADER_SIZE) {
+    log_e("Invalid WAV data or length");
+    return;
+  }
+  const pcm_wav_header_t *header = (const pcm_wav_header_t *)data;
   if (header->fmt_chunk.audio_format != 1) {
     log_e("Audio format is not PCM!");
     return;
   }
-  wav_data_chunk_t *data_chunk = &header->data_chunk;
+  const wav_data_chunk_t *data_chunk = &header->data_chunk;
   size_t data_offset = 0;
   while (memcmp(data_chunk->subchunk_id, "data", 4) != 0) {
     log_d(
@@ -1095,7 +1099,7 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
       data_chunk->subchunk_size + 8
     );
     data_offset += data_chunk->subchunk_size + 8;
-    data_chunk = (wav_data_chunk_t *)(data + WAVE_HEADER_SIZE + data_offset - 8);
+    data_chunk = (const wav_data_chunk_t *)(data + WAVE_HEADER_SIZE + data_offset - 8);
   }
   log_d(
     "Play WAV: rate:%" PRIu32 ", bits:%u, channels:%u, size:%" PRIu32, header->fmt_chunk.sample_rate, header->fmt_chunk.bits_per_sample,
@@ -1106,15 +1110,15 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
 }
 
 #if ARDUINO_HAS_MP3_DECODER
-bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
+bool I2SClass::playMP3(const uint8_t *src, size_t src_len) {
   int16_t outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-  uint8_t *readPtr = NULL;
+  const uint8_t *readPtr = NULL;
   int bytesAvailable = 0, err = 0, offset = 0;
   MP3FrameInfo frameInfo;
   HMP3Decoder decoder = NULL;
 
   bytesAvailable = src_len;
-  readPtr = src;
+  readPtr = (const uint8_t *)src;
 
   decoder = MP3InitDecoder();
   if (decoder == NULL) {
@@ -1123,13 +1127,13 @@ bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   }
 
   do {
-    offset = MP3FindSyncWord(readPtr, bytesAvailable);
+    offset = MP3FindSyncWord((unsigned char *)readPtr, bytesAvailable);
     if (offset < 0) {
       break;
     }
     readPtr += offset;
     bytesAvailable -= offset;
-    err = MP3Decode(decoder, &readPtr, &bytesAvailable, outBuf, 0);
+    err = MP3Decode(decoder, (unsigned char **)&readPtr, &bytesAvailable, outBuf, 0);
     if (err) {
       log_e("Decode ERROR: %d", err);
       MP3FreeDecoder(decoder);
