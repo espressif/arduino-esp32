@@ -69,10 +69,15 @@ void loop() {
   bool gotReply = false;
 
   while ((millis() - start) < RX_TIMEOUT) {
+    bool readAny = false;
     while (irda.available()) {
       char c = (char)irda.read();
       Serial.print(c);
       gotReply = true;
+      readAny = true;
+    }
+    if (!readAny) {
+      delay(1);
     }
   }
 
