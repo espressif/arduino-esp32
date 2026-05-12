@@ -124,20 +124,8 @@ void loopTXMode() {
   irda_uart.print("\n");  // Add newline as delimiter
   irda_uart.flush();
   
-  Serial.println("   (Waiting for response from peer RX mode)");
-  
-  // Wait for response (optional - peer could send back acknowledgment)
-  uint32_t start = millis();
-  while ((millis() - start) < RX_TIMEOUT) {
-    if (irda_uart.available()) {
-      char c = (char)irda_uart.read();
-      Serial.print(c);
-    }
-    delay(1);
-  }
-  
   counter++;
-  delay(1000);
+  delay(1000);  // Send new frame every 1 second
 }
 
 void loopRXMode() {

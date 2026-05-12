@@ -20,7 +20,6 @@
 */
 
 #include <Arduino.h>
-#include "esp_rom_gpio.h"
 
 #ifdef SOC_UART_HP_NUM
   #if SOC_UART_HP_NUM >= 3
