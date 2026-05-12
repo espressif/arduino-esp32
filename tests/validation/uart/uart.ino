@@ -629,6 +629,7 @@ void irda_mode_test(void) {
 
     auto read_printable = [](HardwareSerial &serial, uint32_t timeout_ms) {
       String msg = "";
+      msg.reserve(64);
       uint32_t start = millis();
       while ((millis() - start) < timeout_ms) {
         while (serial.available()) {
