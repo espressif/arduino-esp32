@@ -536,11 +536,11 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 **Returns:** ``true`` if IrDA mode direction is set successfully, ``false`` otherwise.
 
 **Note:**
-* IrDA mode works in exclusive directions - the UART can either transmit or receive, but not both simultaneously
-* The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``
-* Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters
-* IrDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode
-* Common 38 kHz / 56 kHz demodulating IR remote-control receiver modules are not suitable for UART IrDA mode
+* IrDA mode works in exclusive directions: the UART can either transmit or receive, but not both simultaneously.
+* The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``.
+* Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters.
+* IrDA requires appropriate IrDA transceiver hardware for TX and RX, with pulse shaping matched to the UART IrDA mode.
+* Common 38 kHz / 56 kHz demodulating IR remote-control receiver modules are not suitable for UART IrDA mode.
 
 **Example:**
 
