@@ -18,8 +18,8 @@
 
 #include <Arduino.h>
 
-#define IRDA_RX_PIN  4
-#define IRDA_TX_PIN  5
+#define IRDA_RX_PIN  RX1  // RX UART1 pin
+#define IRDA_TX_PIN  TX1  // TX UART1 pin
 #define BAUD_RATE    9600
 #define RX_TIMEOUT   300
 
