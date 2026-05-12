@@ -292,9 +292,11 @@ irda_uart.printf("TS=%lu,DATA=test_%lu\n", millis(), counter);
 **TX Side (IR LED):**
 - Wavelength: 950nm (standard for IrDA)
 - Forward voltage: ~1.5V typical
-- Forward current: 50-100mA typical
-- Resistor: Ohm's law R = (3.3V - 1.5V) / I = ~23Ω for 100mA
-- Practical: Use 100-220Ω for safer operation
+- Do **not** assume an ESP32 GPIO can directly drive a high-current IR LED. Check the current limits in the datasheet for your specific ESP32 SoC/module/board.
+- For simple, short-range experiments, use a resistor sized for **low GPIO current only** if driving the LED directly.
+- For stronger output or longer range, drive the IR LED through a **transistor or logic-level MOSFET** (and use an external LED supply if needed, with a shared ground).
+- Size the series resistor for your actual LED forward voltage and target current in the chosen drive circuit; avoid treating ~100mA as a typical direct-drive GPIO target.
+- Practical: 100-220Ω can be a conservative starting point for low-current testing, but verify the actual current for your LED and supply voltage.
 
 **RX Side (IR Receiver):**
 - Photodiode: Detects 940-960nm IR light
