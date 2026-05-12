@@ -627,29 +627,13 @@ void irda_mode_test(void) {
 
     uart_internal_loopback(uartB.uart_num, uartA.default_rx_pin);
 
-    auto read_printable = [](HardwareSerial &serial, uint32_t timeout_ms) {
-      String msg = "";
-      msg.reserve(64);
-      uint32_t start = millis();
-      while ((millis() - start) < timeout_ms) {
-        while (serial.available()) {
-          char c = (char)serial.read();
-          if (c > 31 && c < 128) {
-            msg += c;
-          }
-        }
-        delay(1);
-      }
-      return msg;
-    };
-
     const char *msg_rx_enabled = "IRDA_RX_ENABLED";
     uartA.reset_buffers();
     uartA.clear_rx_buffer();
     uartB.serial.print(msg_rx_enabled);
     uartB.serial.flush();
-    String received_msg = read_printable(uartA.serial, 100);
-    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, received_msg.c_str());
+    delay(100);
+    TEST_ASSERT_EQUAL_STRING(msg_rx_enabled, uartA.recv_msg.c_str());
 
     irda_tx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
