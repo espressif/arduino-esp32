@@ -20,7 +20,7 @@
 
 #define IRDA_RX_PIN  4
 #define IRDA_TX_PIN  5
-#define BAUD_RATE    115200
+#define BAUD_RATE    9600
 #define RX_TIMEOUT   300
 
 HardwareSerial &irda = Serial1;
