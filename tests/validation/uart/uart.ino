@@ -71,6 +71,12 @@ public:
     peeked_char = -1;
   }
 
+  void clear_rx_buffer() {
+    while (serial.available()) {
+      serial.read();
+    }
+  }
+
   void transmit_and_check_msg(const String &msg_append, bool perform_assert = true) {
     reset_buffers();
     delay(50);
@@ -622,9 +628,7 @@ void irda_mode_test(void) {
 
     const char *msg_rx_enabled = "IRDA_RX_ENABLED";
     uartA.reset_buffers();
-    while (uartA.serial.available()) {
-      uartA.serial.read();
-    }
+    uartA.clear_rx_buffer();
     uartB.serial.print(msg_rx_enabled);
     uartB.serial.flush();
     delay(100);
@@ -635,9 +639,7 @@ void irda_mode_test(void) {
 
     const char *msg_rx_disabled = "IRDA_RX_DISABLED";
     uartA.reset_buffers();
-    while (uartA.serial.available()) {
-      uartA.serial.read();
-    }
+    uartA.clear_rx_buffer();
     uartB.serial.print(msg_rx_disabled);
     uartB.serial.flush();
     delay(100);
