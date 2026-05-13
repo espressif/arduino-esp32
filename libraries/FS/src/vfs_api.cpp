@@ -275,7 +275,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
       // fopen() succeeded — but on POSIX-style VFS layers (including ESP-IDF's
       // LittleFS VFS), open(2) can succeed on a directory with O_RDONLY.  Use
       // stat to confirm the path is a regular file before treating it as one.
-      if (stat(temp, &_stat) == 0 && S_ISDIR(_stat.st_mode)) {
+      if (fstat(fileno(_f), &_stat) == 0 && S_ISDIR(_stat.st_mode)) {
         // Path is a directory; close the file handle and open as a directory.
         fclose(_f);
         _f = NULL;

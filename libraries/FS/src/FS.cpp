@@ -276,7 +276,8 @@ void FSImpl::mountpoint(const char *mp) {
   if (mp && !_mtx) {
     _mtx = xSemaphoreCreateRecursiveMutex();
     if (!_mtx) {
-      log_w("Failed to create recursive mutex. Time-of-check to time-of-use race condition may occur.");
+      log_w("Failed to create recursive mutex for filesystem in mountpoint %s", mp ? mp : "NULL");
+      log_w("Some filesystem operations on this mountpoint will continue without synchronization and will not be serialized.");
     }
   }
 }
