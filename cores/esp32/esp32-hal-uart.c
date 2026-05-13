@@ -1678,8 +1678,7 @@ bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirectio
   // enables IRDA TX
   hw->conf0_sync.irda_tx_en = irdaDirection;
   // it needs UART Update
-  hw->reg_update.reg_update = 1;
-  while (hw->reg_update.reg_update);
+  uart_ll_update(hw);
 #endif
   UART_MUTEX_UNLOCK();
   return true;
