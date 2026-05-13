@@ -209,7 +209,7 @@ void loopRXMode() {
     char c = (char)irda_uart.read();
     if (c == '\n') {
       // Complete frame received
-      Serial.printf("RX <- Received: %s\n", received);
+      Serial.printf("RX <- Received: %s\n", received.c_str());
     }
   }
 }
