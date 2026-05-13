@@ -300,15 +300,23 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         if [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
 
-            curroptions=$(echo "$currfqbn" | cut -d':' -f4)
-            currfqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
-            "$ide_path"/arduino-cli compile \
+            # curroptions=$(echo "$currfqbn" | cut -d':' -f4)
+            # currfqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
+            # "$ide_path"/arduino-cli compile \
+            #     --fqbn "$currfqbn" \
+            #     --board-options "$curroptions" \
+            #     --warnings "all" \
+            #     --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
+            #     --build-path "$build_dir" \
+            #     "${xtra_opts[@]}" "${sketchdir}" \
+            #     2>&1 | tee "$output_file"
+
+            python3 "$GITHUB_WORKSPACE/tools/arduino_cmake.py" compile \
                 --fqbn "$currfqbn" \
-                --board-options "$curroptions" \
                 --warnings "all" \
                 --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-path "$build_dir" \
-                "${xtra_opts[@]}" "${sketchdir}" \
+                "${xtra_opts[@]}" --sketch "${sketchdir}" \
                 2>&1 | tee "$output_file"
 
             exit_status=${PIPESTATUS[0]}
