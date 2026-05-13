@@ -1650,7 +1650,10 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
 // IrDA mode direction is exclusive: the UART can transmit OR receive, but not both simultaneously.
 // The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
 bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection) {
-  if (uart == NULL || uart->num >= SOC_UART_NUM || irdaDirection > ESP32_UART_IRDA_TX) {
+  if (
+    uart == NULL || uart->num >= SOC_UART_NUM
+    || (irdaDirection != ESP32_UART_IRDA_RX && irdaDirection != ESP32_UART_IRDA_TX)
+  ) {
     return false;
   }
 
