@@ -251,13 +251,13 @@ Modify code to allow TX board to receive responses:
 
 ```cpp
 // In loopTXMode(), after transmitting
-irda_uart.setIrdaMode(ESP32_UART_IRDA_RX);  // Switch to RX
+irda_uart.setIrdaDirection(ESP32_UART_IRDA_RX);  // Switch to RX
 delay(100);
 
 // Wait for acknowledgment
 // ...
 
-irda_uart.setIrdaMode(ESP32_UART_IRDA_TX);  // Switch back to TX
+irda_uart.setIrdaDirection(ESP32_UART_IRDA_TX);  // Switch back to TX
 ```
 
 **Note:** Only one direction at a time. This requires switching modes.

@@ -1637,14 +1637,12 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   return retCode;
 }
 
-// Routines that configure IrDA mode in the UART peripheral
-// Sets UART_MODE_IRDA direction: TX or RX (exclusive, not both)
-// irdaTx: 1 (or ESP32_UART_IRDA_TX) for TX mode, 0 (or ESP32_UART_IRDA_RX) for RX mode
-// IrDA mode is exclusive: the UART can transmit OR receive, but not both simultaneously.
+// Routine that sets UART_MODE_IRDA direction: TX or RX
+// irdaDirection: ESP32_UART_IRDA_TX (1) for TX mode, ESP32_UART_IRDA_RX (0) for RX mode
+// IrDA mode direction is exclusive: the UART can transmit OR receive, but not both simultaneously.
 // The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
-// Simple hardware required: IR LED + resistor for TX, IR photodiode + amplifier for RX.
-bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
-  if (uart == NULL || uart->num >= SOC_UART_NUM || irdaTx > 1) {
+bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM || irdaDirection > ESP32_UART_IRDA_TX) {
     return false;
   }
 
@@ -1664,10 +1662,10 @@ bool uartSetIrdaMode(uart_t *uart, uint8_t irdaTx) {
 
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
   // enables IRDA TX
-  hw->conf0.irda_tx_en = irdaTx;
+  hw->conf0.irda_tx_en = irdaDirection;
 #else
   // enables IRDA TX
-  hw->conf0_sync.irda_tx_en = irdaTx;
+  hw->conf0_sync.irda_tx_en = irdaDirection;
   // it needs UART Update
   hw->reg_update.reg_update = 1;
   while (hw->reg_update.reg_update);

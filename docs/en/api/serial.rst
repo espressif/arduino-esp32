@@ -519,16 +519,16 @@ Sets the UART operating mode.
 
 **Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver.
 
-setIrdaMode
-***********
+setIrdaDirection
+****************
 
 Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``setMode(UART_MODE_IRDA)`` is called.
 
 .. code-block:: arduino
 
-    bool setIrdaMode(uart_irda_mode_t irdaMode);
+    bool setIrdaDirection(esp32_uart_irda_direction_t irdaDirection);
 
-* ``irdaMode`` - Direction mode:
+* ``irdaDirection`` - Direction for IrDA mode:
 
   * ``ESP32_UART_IRDA_TX`` - IrDA TX mode (transmit only). The UART will transmit data in IrDA format. RX is disabled.
   * ``ESP32_UART_IRDA_RX`` - IrDA RX mode (receive only). The UART will receive data in IrDA format. TX is disabled.
@@ -538,11 +538,10 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 .. note::
 
    * IrDA mode works in exclusive directions: the UART can either transmit or receive, but not both simultaneously.
-   * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaMode()``.
-   * Switching between TX and RX modes can be done by calling ``setIrdaMode()`` with different parameters.
+   * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaDirection()``.
+   * Switching between TX and RX modes can be done by calling ``setIrdaDirection()`` with different parameters.
    * The ESP32 UART hardware automatically handles IrDA pulse timing and encoding/decoding.
    * Hardware requirements: IR LED (950nm) + resistor for TX, IR photodiode + amplifier for RX. No external SIR transceiver module needed.
-   * Standard 38 kHz demodulating remote-control receiver modules are not suitable for UART IrDA mode.
 
 **Example:**
 
@@ -552,11 +551,11 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
     Serial1.setMode(UART_MODE_IRDA);                    // Enable IrDA mode
     
     // Switch to TX mode
-    Serial1.setIrdaMode(ESP32_UART_IRDA_TX);
+    Serial1.setIrdaDirection(ESP32_UART_IRDA_TX);
     Serial1.println("Transmit data");
     
     // Switch to RX mode
-    Serial1.setIrdaMode(ESP32_UART_IRDA_RX);
+    Serial1.setIrdaDirection(ESP32_UART_IRDA_RX);
     while (Serial1.available()) {
         char c = Serial1.read();
         Serial.print(c);

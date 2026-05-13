@@ -118,13 +118,13 @@ Automatically detects if board has 3+ UARTs and RX2 pin defined.
 ### Dual-UART Setup
 
 ```cpp
-// UART1: TX mode
+// UART1: IrDA TX mode
 uart_tx.setMode(UART_MODE_IRDA);
-uart_tx.setIrdaMode(ESP32_UART_IRDA_TX);
+uart_tx.setIrdaDirection(ESP32_UART_IRDA_TX);
 
-// UART2: RX mode
+// UART2: IrDA RX mode
 uart_rx.setMode(UART_MODE_IRDA);
-uart_rx.setIrdaMode(ESP32_UART_IRDA_RX);
+uart_rx.setIrdaDirection(ESP32_UART_IRDA_RX);
 
 // Connect them internally
 uart_internal_loopback(1, UART2_RX_PIN);

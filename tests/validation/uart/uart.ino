@@ -567,18 +567,18 @@ void hardware_flow_control_test(void) {
   Serial.println("Hardware flow control test successful");
 }
 
-// This test checks if IRDA mode (setMode and setIrdaMode) works correctly
+// This test checks if IRDA mode (setMode and setIrdaDirection) works correctly
 void irda_mode_test(void) {
   log_d("Starting IRDA mode test");
 
   for (auto *ref : uart_test_configs) {
     UARTTestConfig &config = *ref;
 
-    // Test 1: Verify setIrdaMode fails when IRDA mode is not enabled
+    // Test 1: Verify setIrdaDirection fails when IRDA mode is not enabled
     log_d("Verifying UART%d rejects IRDA TX mode while in regular UART mode", config.uart_num);
     bool mode_set = config.serial.setMode(UART_MODE_UART);
     TEST_ASSERT_TRUE(mode_set);
-    bool irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    bool irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
     TEST_ASSERT_FALSE(irda_tx_set);
 
     // Test 2: Enable IRDA mode
@@ -588,21 +588,21 @@ void irda_mode_test(void) {
 
     // Test 3: Set IRDA TX mode
     log_d("Setting UART%d to IRDA TX mode (transmit)", config.uart_num);
-    irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
 
     delay(50);
 
     // Test 4: Set IRDA RX mode
     log_d("Setting UART%d to IRDA RX mode (receive)", config.uart_num);
-    bool irda_rx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_RX);
+    bool irda_rx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_RX);
     TEST_ASSERT_TRUE(irda_rx_set);
 
     delay(50);
 
     // Test 5: Switch back to TX mode
     log_d("Switching UART%d back to IRDA TX mode", config.uart_num);
-    irda_tx_set = config.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    irda_tx_set = config.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
 
     // Test 6: Return to regular UART mode for next tests
@@ -625,9 +625,9 @@ void irda_mode_test(void) {
     TEST_ASSERT_TRUE(mode_set);
 
     // Configure: UART A in RX mode, UART B in TX mode
-    bool irda_rx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_RX);
+    bool irda_rx_set = uartA.serial.setIrdaDirection(ESP32_UART_IRDA_RX);
     TEST_ASSERT_TRUE(irda_rx_set);
-    bool irda_tx_set = uartB.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    bool irda_tx_set = uartB.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
 
     // Set up internal loopback: UART B TX -> UART A RX
@@ -648,7 +648,7 @@ void irda_mode_test(void) {
 
     // Test 2: Switch UART A to TX mode - should NOT receive
     log_d("Switching UART%d to IRDA TX mode - should no longer receive", uartA.uart_num);
-    irda_tx_set = uartA.serial.setIrdaMode(ESP32_UART_IRDA_TX);
+    irda_tx_set = uartA.serial.setIrdaDirection(ESP32_UART_IRDA_TX);
     TEST_ASSERT_TRUE(irda_tx_set);
     delay(50);
 

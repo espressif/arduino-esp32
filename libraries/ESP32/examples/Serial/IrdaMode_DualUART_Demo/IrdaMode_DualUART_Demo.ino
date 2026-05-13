@@ -11,7 +11,7 @@
 
   Functions used:
   - setMode(UART_MODE_IRDA) - Enable IrDA mode
-  - setIrdaMode(ESP32_UART_IRDA_TX / ESP32_UART_IRDA_RX) - Set direction
+  - setIrdaDirection(ESP32_UART_IRDA_TX / ESP32_UART_IRDA_RX) - Set direction
 
   Hardware notes:
   - Single ESP32 board with 3+ UARTs required
@@ -75,7 +75,7 @@ void setupDualUART() {
     Serial.println("ERROR: Failed to set UART1 to IRDA mode");
     while (1) delay(100);
   }
-  if (!uart_tx.setIrdaMode(ESP32_UART_IRDA_TX)) {
+  if (!uart_tx.setIrdaDirection(ESP32_UART_IRDA_TX)) {
     Serial.println("ERROR: Failed to set UART1 to IRDA TX mode");
     while (1) delay(100);
   }
@@ -87,7 +87,7 @@ void setupDualUART() {
     Serial.println("ERROR: Failed to set UART2 to IRDA mode");
     while (1) delay(100);
   }
-  if (!uart_rx.setIrdaMode(ESP32_UART_IRDA_RX)) {
+  if (!uart_rx.setIrdaDirection(ESP32_UART_IRDA_RX)) {
     Serial.println("ERROR: Failed to set UART2 to IRDA RX mode");
     while (1) delay(100);
   }

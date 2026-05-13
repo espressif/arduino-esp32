@@ -83,7 +83,7 @@ void setupTXMode() {
     Serial.println("ERROR: Failed to set IRDA mode");
     while (1) delay(100);
   }
-  if (!irda_uart.setIrdaMode(ESP32_UART_IRDA_TX)) {
+  if (!irda_uart.setIrdaDirection(ESP32_UART_IRDA_TX)) {
     Serial.println("ERROR: Failed to set IRDA TX mode");
     while (1) delay(100);
   }
@@ -98,7 +98,7 @@ void setupRXMode() {
     Serial.println("ERROR: Failed to set IRDA mode");
     while (1) delay(100);
   }
-  if (!irda_uart.setIrdaMode(ESP32_UART_IRDA_RX)) {
+  if (!irda_uart.setIrdaDirection(ESP32_UART_IRDA_RX)) {
     Serial.println("ERROR: Failed to set IRDA RX mode");
     while (1) delay(100);
   }
