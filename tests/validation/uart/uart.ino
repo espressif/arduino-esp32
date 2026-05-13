@@ -667,6 +667,7 @@ void irda_mode_test(void) {
     TEST_ASSERT_TRUE(mode_set);
     mode_set = uartB.serial.setMode(UART_MODE_UART);
     TEST_ASSERT_TRUE(mode_set);
+    uart_internal_loopback(uartA.uart_num, uartA.default_rx_pin);
     uart_internal_loopback(uartB.uart_num, uartB.default_rx_pin);
   } else {
     log_d("Skipping functional IRDA direction behavior check: requires at least 2 UARTs");
