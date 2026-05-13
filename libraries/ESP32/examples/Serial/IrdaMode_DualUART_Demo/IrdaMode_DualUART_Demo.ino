@@ -147,6 +147,7 @@ void loopDualUART(uint32_t counter) {
   if (gotReply) {
     Serial.print("RX (UART2) <- ");
     Serial.println(received);
+    received = ""; // Clear buffer for new message
   } else {
     Serial.println("RX (UART2) <- (no data received)");
   }

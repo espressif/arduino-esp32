@@ -151,7 +151,9 @@ void loopRXMode() {
         if (received.length() < MAX_MSG_SIZE) {
           received += c;
         } else {
+          Serial.printf("So far RX <- Received: %s%c\n", received.c_str(), c);
           Serial.printf("WARNING: Received message truncated (exceeds max size = %u)\r\n", MAX_MSG_SIZE);
+          received = ""; // Clear buffer for new message
         }
       }
     }
