@@ -180,10 +180,10 @@ bool VFSImpl::mkdir(const char *fpath) {
 
   // Note: the stat() → opendir() → ::mkdir() sequence below contains a
   // TOCTOU (time-of-check / time-of-use) window between individual syscalls.
-  // The per-filesystem mutex (_mtx) held by the caller (VFSImpl::mkdir) ensures
-  // that no other Arduino FS API call on the same filesystem can interleave
-  // here.  Code that bypasses the Arduino FS layer (direct fopen/stat/mkdir
-  // calls) is not covered by this mutex.
+  // The per-filesystem mutex (_mtx) held by this function ensures that no
+  // other Arduino FS API call on the same filesystem can interleave here.
+  // Code that bypasses the Arduino FS layer (direct fopen/stat/mkdir calls)
+  // is not covered by this mutex.
 
   // stat() reports the path type without consuming a file descriptor.
   struct stat st;
