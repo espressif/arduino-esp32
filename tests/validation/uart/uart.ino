@@ -845,13 +845,13 @@ void setup() {
 #endif
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
-  RUN_TEST(hardware_flow_control_test);
   RUN_TEST(irda_mode_test);
   RUN_TEST(inter_uart_pin_move_test);
   RUN_TEST(same_uart_pin_swap_test);
   RUN_TEST(move_rx_tx_to_cts_rts_test);
   RUN_TEST(cross_uart_cts_rts_test);
   RUN_TEST(end_when_stopped_test);
+  RUN_TEST(hardware_flow_control_test);
   UNITY_END();
 }
 
