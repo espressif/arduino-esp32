@@ -48,6 +48,8 @@
 HardwareSerial &uart_tx = Serial1;
 #if HAS_UART2
 HardwareSerial &uart_rx = Serial2;
+String received = ""; // Buffer for received message
+const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
 #endif
 
 void setup() {
@@ -59,6 +61,7 @@ void setup() {
 #if HAS_UART2
   Serial.println("✓ Board has 3+ UARTs: Using internal cross-UART loopback");
   setupDualUART();
+  received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
 #else
   Serial.println("✗ ERROR: This example requires 3+ UARTs (UART0, UART1, UART2)");
   Serial.println("  Your board only has 2 UARTs.");
@@ -117,7 +120,6 @@ void loop() {
 
 #if HAS_UART2
 void loopDualUART(uint32_t counter) {
-  const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
 
   // UART1 TX mode: transmit
   Serial.printf("TX (UART1) -> PING %lu\n", (unsigned long)counter);
@@ -128,8 +130,6 @@ void loopDualUART(uint32_t counter) {
   // UART2 RX mode: receive
   uint32_t start = millis();
   bool gotReply = false;
-  String received = "";
-  received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
 
   while ((millis() - start) < RX_TIMEOUT) {
     while (uart_rx.available()) {

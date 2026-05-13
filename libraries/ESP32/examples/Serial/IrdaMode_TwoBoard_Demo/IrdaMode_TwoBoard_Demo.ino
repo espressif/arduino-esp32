@@ -40,6 +40,9 @@
 HardwareSerial &irda_uart = Serial1;
 uint8_t irda_mode = MODE_NOT_SET;
 
+String received = ""; // Buffer for received message
+const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
+
 void setup() {
   Serial.begin(115200);
   delay(100);
@@ -67,6 +70,7 @@ void selectMode() {
         break;
       } else if (cmd == 'R' || cmd == 'r') {
         irda_mode = MODE_RX;
+        received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
         Serial.println("\n✓ Mode selected: RECEIVE (RX)");
         setupRXMode();
         break;
@@ -127,12 +131,8 @@ void loopTXMode() {
   delay(1000);  // Send new frame every 1 second
 }
 
+// Receive IrDA data
 void loopRXMode() {
-  // Receive IrDA data
-  const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
-  String received = "";
-  received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
-
   uint32_t start = millis();
   bool gotData = false;
 

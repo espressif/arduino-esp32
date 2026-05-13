@@ -49,7 +49,7 @@ Board 1 (TX)  --[IR LED]--→ [IR Space] --[IR Receiver]--  Board 2 (RX)
 
 - **Two ESP32 boards** (any variant with UART0 and UART1)
 - **Infrared LED** (950nm wavelength) with current-limiting resistor (~100-330Ω)
-- **Infrared receiver** (photodiode + amplification circuit)
+- **Infrared receiver** (raw IR photodiode/phototransistor, do not use a demodulating remote-control receiver)
 - **USB connections** for each board (for Serial Monitor + programming)
 - **Optional**: External power supply for more reliable IR transmission
 
