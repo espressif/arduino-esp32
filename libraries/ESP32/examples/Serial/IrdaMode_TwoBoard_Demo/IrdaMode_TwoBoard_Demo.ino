@@ -129,7 +129,10 @@ void loopTXMode() {
 
 void loopRXMode() {
   // Receive IrDA data
+  const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
   String received = "";
+  received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
+
   uint32_t start = millis();
   bool gotData = false;
 
@@ -145,7 +148,11 @@ void loopRXMode() {
         received = "";
       } else if (c > 31 && c < 127) {
         // Printable character
-        received += c;
+        if (received.length() < MAX_MSG_SIZE) {
+          received += c;
+        } else {
+          Serial.printf("WARNING: Received message truncated (exceeds max size = %u)\r\n", MAX_MSG_SIZE);
+        }
       }
     }
     

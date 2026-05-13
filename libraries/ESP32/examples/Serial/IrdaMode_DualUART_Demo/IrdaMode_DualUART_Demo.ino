@@ -117,6 +117,8 @@ void loop() {
 
 #if HAS_UART2
 void loopDualUART(uint32_t counter) {
+  const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
+
   // UART1 TX mode: transmit
   Serial.printf("TX (UART1) -> PING %lu\n", (unsigned long)counter);
   uart_tx.printf("PING %lu\n", (unsigned long)counter);
@@ -127,11 +129,16 @@ void loopDualUART(uint32_t counter) {
   uint32_t start = millis();
   bool gotReply = false;
   String received = "";
+  received.reserve(MAX_MSG_SIZE);  // Pre-allocate for efficiency
 
   while ((millis() - start) < RX_TIMEOUT) {
     while (uart_rx.available()) {
       char c = (char)uart_rx.read();
-      received += c;
+      if (received.length() < MAX_MSG_SIZE) {
+        received += c;
+      } else {
+        Serial.printf("WARNING: Received message truncated (exceeds max size = %u)\r\n", MAX_MSG_SIZE);
+      }
       gotReply = true;
     }
     delay(1);
