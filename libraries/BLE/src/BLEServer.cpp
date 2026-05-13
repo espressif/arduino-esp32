@@ -331,11 +331,13 @@ std::map<uint16_t, conn_status_t> BLEServer::getPeerDevices(bool _client) {
 
 uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  uint16_t mtu = 0;
+  uint16_t mtu = 23;
   m_semaphoreMapAccess.take("getPeerMTU");
   auto it = m_connectedServersMap.find(conn_id);
   if (it != m_connectedServersMap.end()) {
     mtu = it->second.mtu;
+  } else {
+    log_w("getPeerMTU: conn_id %u not found, using default MTU %u", conn_id, mtu);
   }
   m_semaphoreMapAccess.give();
   return mtu;
