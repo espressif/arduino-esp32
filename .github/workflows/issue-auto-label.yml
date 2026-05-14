@@ -17,7 +17,7 @@ name: Issue auto-label
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened, edited, labeled]
 
 permissions:
   contents: read
