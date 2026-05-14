@@ -261,6 +261,7 @@ set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_ja_JP.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp
