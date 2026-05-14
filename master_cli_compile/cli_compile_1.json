@@ -3,1136 +3,1136 @@
                 "target": "esp32",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 1111479,
-                            "flash_percentage": 35,
-                            "ram_bytes": 41280,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1111479,
+                        "flash_percentage": 35,
+                        "ram_bytes": 41280,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 1108655,
-                            "flash_percentage": 35,
-                            "ram_bytes": 41272,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1108655,
+                        "flash_percentage": 35,
+                        "ram_bytes": 41272,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 1104599,
-                            "flash_percentage": 35,
-                            "ram_bytes": 41264,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1104599,
+                        "flash_percentage": 35,
+                        "ram_bytes": 41264,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 1110347,
-                            "flash_percentage": 35,
-                            "ram_bytes": 41272,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1110347,
+                        "flash_percentage": 35,
+                        "ram_bytes": 41272,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/DiscoverConnect",
-                    "sizes": [{
-                            "flash_bytes": 1070644,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41880,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1070644,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41880,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/GetLocalMAC",
-                    "sizes": [{
-                            "flash_bytes": 1068836,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41880,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1068836,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41880,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/SerialToSerialBT",
-                    "sizes": [{
-                            "flash_bytes": 1067552,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41880,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1067552,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41880,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/SerialToSerialBTM",
-                    "sizes": [{
-                            "flash_bytes": 1068708,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41896,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1068708,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41896,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/SerialToSerialBT_Legacy",
-                    "sizes": [{
-                            "flash_bytes": 1068372,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41864,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1068372,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41864,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/SerialToSerialBT_SSP",
-                    "sizes": [{
-                            "flash_bytes": 1070448,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41864,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1070448,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41864,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/bt_classic_device_discovery",
-                    "sizes": [{
-                            "flash_bytes": 1068916,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41864,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1068916,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41864,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/BluetoothSerial/examples/bt_remove_paired_devices",
-                    "sizes": [{
-                            "flash_bytes": 1068848,
-                            "flash_percentage": 34,
-                            "ram_bytes": 41864,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1068848,
+                        "flash_percentage": 34,
+                        "ram_bytes": 41864,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 337864,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22340,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 337864,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22340,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 332208,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22324,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 332208,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22324,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 371112,
-                            "flash_percentage": 12,
-                            "ram_bytes": 22732,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 371112,
+                        "flash_percentage": 12,
+                        "ram_bytes": 22732,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 337196,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22356,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 337196,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22356,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 370672,
-                            "flash_percentage": 12,
-                            "ram_bytes": 22484,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 370672,
+                        "flash_percentage": 12,
+                        "ram_bytes": 22484,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 308220,
-                            "flash_percentage": 10,
-                            "ram_bytes": 22324,
-                            "ram_percentage": 7
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 308220,
+                        "flash_percentage": 10,
+                        "ram_bytes": 22324,
+                        "ram_percentage": 7
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_multiconnect",
-                    "sizes": [{
-                            "flash_bytes": 589569,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17536,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 589569,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17536,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_secure_authorization",
-                    "sizes": [{
-                            "flash_bytes": 593947,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17848,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 593947,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17848,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 593467,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17520,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 593467,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17520,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 589639,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17528,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 589639,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17528,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 585601,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17520,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 585601,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17520,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 591829,
-                            "flash_percentage": 19,
-                            "ram_bytes": 17528,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 591829,
+                        "flash_percentage": 19,
+                        "ram_bytes": 17528,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 340318,
-                            "flash_percentage": 11,
-                            "ram_bytes": 14452,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 340318,
+                        "flash_percentage": 11,
+                        "ram_bytes": 14452,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 314222,
-                            "flash_percentage": 10,
-                            "ram_bytes": 13336,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 314222,
+                        "flash_percentage": 10,
+                        "ram_bytes": 13336,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 361520,
-                            "flash_percentage": 11,
-                            "ram_bytes": 13728,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 361520,
+                        "flash_percentage": 11,
+                        "ram_bytes": 13728,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 340216,
-                            "flash_percentage": 11,
-                            "ram_bytes": 14452,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 340216,
+                        "flash_percentage": 11,
+                        "ram_bytes": 14452,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 360874,
-                            "flash_percentage": 11,
-                            "ram_bytes": 13464,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 360874,
+                        "flash_percentage": 11,
+                        "ram_bytes": 13464,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 288038,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13320,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 288038,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13320,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
-                    "sizes": [{
-                            "flash_bytes": 316192,
-                            "flash_percentage": 10,
-                            "ram_bytes": 13336,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 316192,
+                        "flash_percentage": 10,
+                        "ram_bytes": 13336,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleWiFi",
-                    "sizes": [{
-                            "flash_bytes": 980771,
-                            "flash_percentage": 75,
-                            "ram_bytes": 36400,
-                            "ram_percentage": 11
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 980771,
+                        "flash_percentage": 75,
+                        "ram_bytes": 36400,
+                        "ram_percentage": 11
+                        }]
+                },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
-                    "sizes": [{
-                            "flash_bytes": 979959,
-                            "flash_percentage": 75,
-                            "ram_bytes": 36704,
-                            "ram_percentage": 11
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 979959,
+                        "flash_percentage": 75,
+                        "ram_bytes": 36704,
+                        "ram_percentage": 11
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 286308,
-                            "flash_percentage": 22,
-                            "ram_bytes": 13252,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 286308,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13252,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
-                    "sizes": [{
-                            "flash_bytes": 289320,
-                            "flash_percentage": 22,
-                            "ram_bytes": 13204,
-                            "ram_percentage": 4
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 289320,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13204,
+                        "ram_percentage": 4
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 756667,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22652,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 756667,
+                        "flash_percentage": 24,
+                        "ram_bytes": 22652,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 752825,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22668,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 752825,
+                        "flash_percentage": 24,
+                        "ram_bytes": 22668,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 748795,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22652,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 748795,
+                        "flash_percentage": 24,
+                        "ram_bytes": 22652,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 755015,
-                            "flash_percentage": 24,
-                            "ram_bytes": 22668,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 755015,
+                        "flash_percentage": 24,
+                        "ram_bytes": 22668,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 355382,
-                            "flash_percentage": 11,
-                            "ram_bytes": 17948,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 355382,
+                        "flash_percentage": 11,
+                        "ram_bytes": 17948,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 330744,
-                            "flash_percentage": 11,
-                            "ram_bytes": 17424,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 330744,
+                        "flash_percentage": 11,
+                        "ram_bytes": 17424,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 378204,
-                            "flash_percentage": 12,
-                            "ram_bytes": 17832,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 378204,
+                        "flash_percentage": 12,
+                        "ram_bytes": 17832,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 355276,
-                            "flash_percentage": 11,
-                            "ram_bytes": 17972,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 355276,
+                        "flash_percentage": 11,
+                        "ram_bytes": 17972,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 377556,
-                            "flash_percentage": 12,
-                            "ram_bytes": 17576,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 377556,
+                        "flash_percentage": 12,
+                        "ram_bytes": 17576,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 304742,
-                            "flash_percentage": 10,
-                            "ram_bytes": 17416,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 304742,
+                        "flash_percentage": 10,
+                        "ram_bytes": 17416,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
-                    "sizes": [{
-                            "flash_bytes": 332720,
-                            "flash_percentage": 11,
-                            "ram_bytes": 17424,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 332720,
+                        "flash_percentage": 11,
+                        "ram_bytes": 17424,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleWiFi",
-                    "sizes": [{
-                            "flash_bytes": 1046405,
-                            "flash_percentage": 80,
-                            "ram_bytes": 49044,
-                            "ram_percentage": 15
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1046405,
+                        "flash_percentage": 80,
+                        "ram_bytes": 49044,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
-                    "sizes": [{
-                            "flash_bytes": 1046279,
-                            "flash_percentage": 80,
-                            "ram_bytes": 49332,
-                            "ram_percentage": 15
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1046279,
+                        "flash_percentage": 80,
+                        "ram_bytes": 49332,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 303128,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17364,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 303128,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17364,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
-                    "sizes": [{
-                            "flash_bytes": 306138,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17300,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 306138,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17300,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_write",
-                    "sizes": [{
-                            "flash_bytes": 301742,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17308,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 301742,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17308,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
-                    "sizes": [{
-                            "flash_bytes": 305560,
-                            "flash_percentage": 23,
-                            "ram_bytes": 17432,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 305560,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17432,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                    "sizes": [{
-                            "flash_bytes": 313448,
-                            "flash_percentage": 24,
-                            "ram_bytes": 17448,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 313448,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17448,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
-                    "sizes": [{
-                            "flash_bytes": 283970,
-                            "flash_percentage": 22,
-                            "ram_bytes": 17424,
-                            "ram_percentage": 5
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 283970,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17424,
+                        "ram_percentage": 5
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 692936,
-                            "flash_percentage": 22,
-                            "ram_bytes": 17984,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 692936,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17984,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 689084,
-                            "flash_percentage": 22,
-                            "ram_bytes": 18000,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 689084,
+                        "flash_percentage": 22,
+                        "ram_bytes": 18000,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 685056,
-                            "flash_percentage": 22,
-                            "ram_bytes": 17984,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 685056,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17984,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 691284,
-                            "flash_percentage": 22,
-                            "ram_bytes": 18000,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 691284,
+                        "flash_percentage": 22,
+                        "ram_bytes": 18000,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 297140,
-                            "flash_percentage": 9,
-                            "ram_bytes": 15028,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 297140,
+                        "flash_percentage": 9,
+                        "ram_bytes": 15028,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 271430,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13904,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 271430,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13904,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 318960,
-                            "flash_percentage": 10,
-                            "ram_bytes": 14312,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 318960,
+                        "flash_percentage": 10,
+                        "ram_bytes": 14312,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 297028,
-                            "flash_percentage": 9,
-                            "ram_bytes": 15052,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 297028,
+                        "flash_percentage": 9,
+                        "ram_bytes": 15052,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 318290,
-                            "flash_percentage": 10,
-                            "ram_bytes": 14056,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 318290,
+                        "flash_percentage": 10,
+                        "ram_bytes": 14056,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 264010,
-                            "flash_percentage": 8,
-                            "ram_bytes": 13896,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 264010,
+                        "flash_percentage": 8,
+                        "ram_bytes": 13896,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
-                    "sizes": [{
-                            "flash_bytes": 273438,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13904,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 273438,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13904,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleWiFi",
-                    "sizes": [{
-                            "flash_bytes": 984220,
-                            "flash_percentage": 75,
-                            "ram_bytes": 42268,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 984220,
+                        "flash_percentage": 75,
+                        "ram_bytes": 42268,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
-                    "sizes": [{
-                            "flash_bytes": 1002484,
-                            "flash_percentage": 76,
-                            "ram_bytes": 42548,
-                            "ram_percentage": 13
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 1002484,
+                        "flash_percentage": 76,
+                        "ram_bytes": 42548,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 262322,
-                            "flash_percentage": 20,
-                            "ram_bytes": 13844,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 262322,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13844,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
-                    "sizes": [{
-                            "flash_bytes": 265334,
-                            "flash_percentage": 20,
-                            "ram_bytes": 13780,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 265334,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13780,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_write",
-                    "sizes": [{
-                            "flash_bytes": 260894,
-                            "flash_percentage": 20,
-                            "ram_bytes": 13788,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 260894,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13788,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
-                    "sizes": [{
-                            "flash_bytes": 264340,
-                            "flash_percentage": 20,
-                            "ram_bytes": 13940,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 264340,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13940,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCGammaFade",
-                    "sizes": [{
-                            "flash_bytes": 272210,
-                            "flash_percentage": 21,
-                            "ram_bytes": 13956,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 272210,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13956,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
-                    "sizes": [{
-                            "flash_bytes": 242710,
-                            "flash_percentage": 19,
-                            "ram_bytes": 13932,
-                            "ram_percentage": 4
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 242710,
+                        "flash_percentage": 19,
+                        "ram_bytes": 13932,
+                        "ram_percentage": 4
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_multiconnect",
-                    "sizes": [{
-                            "flash_bytes": 705131,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16612,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 705131,
+                        "flash_percentage": 22,
+                        "ram_bytes": 16612,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_secure_authorization",
-                    "sizes": [{
-                            "flash_bytes": 710165,
-                            "flash_percentage": 23,
-                            "ram_bytes": 16940,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 710165,
+                        "flash_percentage": 23,
+                        "ram_bytes": 16940,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 709049,
-                            "flash_percentage": 23,
-                            "ram_bytes": 16588,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 709049,
+                        "flash_percentage": 23,
+                        "ram_bytes": 16588,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 705205,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16604,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 705205,
+                        "flash_percentage": 22,
+                        "ram_bytes": 16604,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 701175,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16596,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 701175,
+                        "flash_percentage": 22,
+                        "ram_bytes": 16596,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 707395,
-                            "flash_percentage": 22,
-                            "ram_bytes": 16604,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 707395,
+                        "flash_percentage": 22,
+                        "ram_bytes": 16604,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 341654,
-                            "flash_percentage": 11,
-                            "ram_bytes": 14980,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 341654,
+                        "flash_percentage": 11,
+                        "ram_bytes": 14980,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 315306,
-                            "flash_percentage": 10,
-                            "ram_bytes": 13848,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 315306,
+                        "flash_percentage": 10,
+                        "ram_bytes": 13848,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 362798,
-                            "flash_percentage": 12,
-                            "ram_bytes": 14240,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 362798,
+                        "flash_percentage": 12,
+                        "ram_bytes": 14240,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 341530,
-                            "flash_percentage": 11,
-                            "ram_bytes": 14980,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 341530,
+                        "flash_percentage": 11,
+                        "ram_bytes": 14980,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 362150,
-                            "flash_percentage": 12,
-                            "ram_bytes": 13992,
-                            "ram_percentage": 4
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 362150,
+                        "flash_percentage": 12,
+                        "ram_bytes": 13992,
+                        "ram_percentage": 4
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 289470,
-                            "flash_percentage": 9,
-                            "ram_bytes": 13848,
-                            "ram_percentage": 4
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 289470,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13848,
+                        "ram_percentage": 4
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server",
-                    "sizes": [{
-                            "flash_bytes": 769972,
-                            "flash_percentage": 24,
-                            "ram_bytes": 27676,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 769972,
+                        "flash_percentage": 24,
+                        "ram_bytes": 27676,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_Gamepad",
-                    "sizes": [{
-                            "flash_bytes": 783086,
-                            "flash_percentage": 25,
-                            "ram_bytes": 27708,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 783086,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27708,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_multiconnect",
-                    "sizes": [{
-                            "flash_bytes": 774368,
-                            "flash_percentage": 25,
-                            "ram_bytes": 27700,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 774368,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27700,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 778278,
-                            "flash_percentage": 25,
-                            "ram_bytes": 27684,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 778278,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27684,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 774440,
-                            "flash_percentage": 25,
-                            "ram_bytes": 27692,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 774440,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27692,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 770398,
-                            "flash_percentage": 24,
-                            "ram_bytes": 27676,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 770398,
+                        "flash_percentage": 24,
+                        "ram_bytes": 27676,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 776626,
-                            "flash_percentage": 25,
-                            "ram_bytes": 27692,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 776626,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27692,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 364228,
-                            "flash_percentage": 12,
-                            "ram_bytes": 23588,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 364228,
+                        "flash_percentage": 12,
+                        "ram_bytes": 23588,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 359058,
-                            "flash_percentage": 11,
-                            "ram_bytes": 23564,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 359058,
+                        "flash_percentage": 11,
+                        "ram_bytes": 23564,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 406562,
-                            "flash_percentage": 13,
-                            "ram_bytes": 23976,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 406562,
+                        "flash_percentage": 13,
+                        "ram_bytes": 23976,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 363304,
-                            "flash_percentage": 12,
-                            "ram_bytes": 23604,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 363304,
+                        "flash_percentage": 12,
+                        "ram_bytes": 23604,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 405914,
-                            "flash_percentage": 13,
-                            "ram_bytes": 23720,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 405914,
+                        "flash_percentage": 13,
+                        "ram_bytes": 23720,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 332304,
-                            "flash_percentage": 11,
-                            "ram_bytes": 23552,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 332304,
+                        "flash_percentage": 11,
+                        "ram_bytes": 23552,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
-                    "sizes": [{
-                            "flash_bytes": 361074,
-                            "flash_percentage": 11,
-                            "ram_bytes": 23556,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 361074,
+                        "flash_percentage": 11,
+                        "ram_bytes": 23556,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleWiFi",
-                    "sizes": [{
-                            "flash_bytes": 849128,
-                            "flash_percentage": 65,
-                            "ram_bytes": 31264,
-                            "ram_percentage": 10
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 849128,
+                        "flash_percentage": 65,
+                        "ram_bytes": 31264,
+                        "ram_percentage": 10
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
-                    "sizes": [{
-                            "flash_bytes": 265963,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16664,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 265963,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16664,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
-                    "sizes": [{
-                            "flash_bytes": 247867,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16656,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 247867,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16656,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
-                    "sizes": [{
-                            "flash_bytes": 247935,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16656,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 247935,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16656,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/SigmaDelta",
-                    "sizes": [{
-                            "flash_bytes": 243200,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16512,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 243200,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16512,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/ledcFrequency",
-                    "sizes": [{
-                            "flash_bytes": 249851,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16648,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 249851,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16648,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/ledcWrite_RGB",
-                    "sizes": [{
-                            "flash_bytes": 262687,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16672,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 262687,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16672,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogRead",
-                    "sizes": [{
-                            "flash_bytes": 266608,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16664,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 266608,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16664,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogReadContinuous",
-                    "sizes": [{
-                            "flash_bytes": 273352,
-                            "flash_percentage": 21,
-                            "ram_bytes": 16712,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 273352,
+                        "flash_percentage": 21,
+                        "ram_bytes": 16712,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/ArduinoStackSize",
-                    "sizes": [{
-                            "flash_bytes": 254024,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16504,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 254024,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16504,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
-                    "sizes": [{
-                            "flash_bytes": 253788,
-                            "flash_percentage": 19,
-                            "ram_bytes": 16504,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 253788,
+                        "flash_percentage": 19,
+                        "ram_bytes": 16504,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/CI/CIBoardsTest",
-                    "sizes": [{
-                            "flash_bytes": 302093,
-                            "flash_percentage": 23,
-                            "ram_bytes": 18492,
-                            "ram_percentage": 6
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 302093,
+                        "flash_percentage": 23,
+                        "ram_bytes": 18492,
+                        "ram_percentage": 6
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                    "sizes": [{
-                            "flash_bytes": 988270,
-                            "flash_percentage": 6,
-                            "ram_bytes": 63772,
-                            "ram_percentage": 19
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 988270,
+                        "flash_percentage": 6,
+                        "ram_bytes": 63772,
+                        "ram_percentage": 19
+                        }]
+                },
 {"name": "libraries/ESP32/examples/Camera/CameraWebServer",
-                    "sizes": [{
-                            "flash_bytes": 991974,
-                            "flash_percentage": 6,
-                            "ram_bytes": 63772,
-                            "ram_percentage": 19
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 991974,
+                        "flash_percentage": 6,
+                        "ram_bytes": 63772,
+                        "ram_percentage": 19
+                        }]
+                },
 {"name": "libraries/ESP32/examples/ChipID/GetChipID",
-                    "sizes": [{
-                            "flash_bytes": 255892,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16552,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 255892,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16552,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/DeepSleep/ExternalWakeUp",
-                    "sizes": [{
-                            "flash_bytes": 262020,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16608,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 262020,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16608,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/DeepSleep/TimerWakeUp",
-                    "sizes": [{
-                            "flash_bytes": 261992,
-                            "flash_percentage": 20,
-                            "ram_bytes": 16608,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 261992,
+                        "flash_percentage": 20,
+                        "ram_bytes": 16608,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/DeepSleep/TouchWakeUp",
-                    "sizes": [{
-                            "flash_bytes": 279492,
-                            "flash_percentage": 21,
-                            "ram_bytes": 17320,
-                            "ram_percentage": 5
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 279492,
+                        "flash_percentage": 21,
+                        "ram_bytes": 17320,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/ESP32/examples/FreeRTOS/BasicMultiThreading",
-                    "sizes": [{
-                            "flash_bytes": 286477,
-                            "flash_percentage": 22,
-                            "ram_bytes": 17172,
-                            "ram_percentage": 5
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 286477,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17172,
+                        "ram_percentage": 5
+                        }]
+                }
 ]
 },
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
-                    "sizes": [{
-                            "flash_bytes": 577922,
-                            "flash_percentage": 18,
-                            "ram_bytes": 27540,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 577922,
+                        "flash_percentage": 18,
+                        "ram_bytes": 27540,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/UART",
-                    "sizes": [{
-                            "flash_bytes": 574422,
-                            "flash_percentage": 18,
-                            "ram_bytes": 27556,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 574422,
+                        "flash_percentage": 18,
+                        "ram_bytes": 27556,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Write",
-                    "sizes": [{
-                            "flash_bytes": 571558,
-                            "flash_percentage": 18,
-                            "ram_bytes": 27548,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 571558,
+                        "flash_percentage": 18,
+                        "ram_bytes": 27548,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/iBeacon",
-                    "sizes": [{
-                            "flash_bytes": 575942,
-                            "flash_percentage": 18,
-                            "ram_bytes": 27556,
-                            "ram_percentage": 8
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 575942,
+                        "flash_percentage": 18,
+                        "ram_bytes": 27556,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
-                    "sizes": [{
-                            "flash_bytes": 358402,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22644,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 358402,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22644,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleBasic",
-                    "sizes": [{
-                            "flash_bytes": 329081,
-                            "flash_percentage": 10,
-                            "ram_bytes": 22084,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 329081,
+                        "flash_percentage": 10,
+                        "ram_bytes": 22084,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleFS",
-                    "sizes": [{
-                            "flash_bytes": 367085,
-                            "flash_percentage": 12,
-                            "ram_bytes": 22500,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 367085,
+                        "flash_percentage": 12,
+                        "ram_bytes": 22500,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleGPIO",
-                    "sizes": [{
-                            "flash_bytes": 358414,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22644,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 358414,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22644,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleHistory",
-                    "sizes": [{
-                            "flash_bytes": 366637,
-                            "flash_percentage": 12,
-                            "ram_bytes": 22244,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 366637,
+                        "flash_percentage": 12,
+                        "ram_bytes": 22244,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleManual",
-                    "sizes": [{
-                            "flash_bytes": 304373,
-                            "flash_percentage": 10,
-                            "ram_bytes": 22068,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 304373,
+                        "flash_percentage": 10,
+                        "ram_bytes": 22068,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
-                    "sizes": [{
-                            "flash_bytes": 330757,
-                            "flash_percentage": 11,
-                            "ram_bytes": 22092,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 330757,
+                        "flash_percentage": 11,
+                        "ram_bytes": 22092,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Console/examples/ConsoleWiFi",
-                    "sizes": [{
-                            "flash_bytes": 909722,
-                            "flash_percentage": 69,
-                            "ram_bytes": 45896,
-                            "ram_percentage": 14
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 909722,
+                        "flash_percentage": 69,
+                        "ram_bytes": 45896,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/DNSServer/examples/CaptivePortal",
-                    "sizes": [{
-                            "flash_bytes": 909630,
-                            "flash_percentage": 69,
-                            "ram_bytes": 46152,
-                            "ram_percentage": 14
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 909630,
+                        "flash_percentage": 69,
+                        "ram_bytes": 46152,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_class",
-                    "sizes": [{
-                            "flash_bytes": 299013,
-                            "flash_percentage": 23,
-                            "ram_bytes": 22012,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 299013,
+                        "flash_percentage": 23,
+                        "ram_bytes": 22012,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
-                    "sizes": [{
-                            "flash_bytes": 301065,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21948,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 301065,
+                        "flash_percentage": 23,
+                        "ram_bytes": 21948,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/EEPROM/examples/eeprom_write",
-                    "sizes": [{
-                            "flash_bytes": 298261,
-                            "flash_percentage": 23,
-                            "ram_bytes": 21948,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 298261,
+                        "flash_percentage": 23,
+                        "ram_bytes": 21948,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCFade",
-                    "sizes": [{
-                            "flash_bytes": 302120,
-                            "flash_percentage": 23,
-                            "ram_bytes": 22060,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 302120,
+                        "flash_percentage": 23,
+                        "ram_bytes": 22060,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSingleChannel",
-                    "sizes": [{
-                            "flash_bytes": 284704,
-                            "flash_percentage": 22,
-                            "ram_bytes": 22052,
-                            "ram_percentage": 7
-                            }]
-                    },
+                "sizes": [{
+                        "flash_bytes": 284704,
+                        "flash_percentage": 22,
+                        "ram_bytes": 22052,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/ESP32/examples/AnalogOut/LEDCSoftwareFade",
-                    "sizes": [{
-                            "flash_bytes": 284772,
-                            "flash_percentage": 22,
-                            "ram_bytes": 22052,
-                            "ram_percentage": 7
-                            }]
-                    }
+                "sizes": [{
+                        "flash_bytes": 284772,
+                        "flash_percentage": 22,
+                        "ram_bytes": 22052,
+                        "ram_percentage": 7
+                        }]
+                }
 ]
 }
 ]}
