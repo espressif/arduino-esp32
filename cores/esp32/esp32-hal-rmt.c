@@ -412,9 +412,13 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
     rmt_enable(bus->rmt_channel_h);
   }
 
-  rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
+  size_t req_size = *num_rmt_symbols * sizeof(rmt_data_t);
+  if (rmt_receive(bus->rmt_channel_h, data, req_size, &receive_config) != ESP_OK) {
+    log_e("GPIO %d - rmt_receive failed.", pin);
+    retCode = false;
+  }
   // wait for data if requested
-  if (waitForData) {
+  if (retCode && waitForData) {
     retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */, pdFALSE /* wait for all bits */, timeout_ms)
                & RMT_FLAG_RX_DONE)
               != 0;

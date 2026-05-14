@@ -37,6 +37,33 @@
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
 
+/**
+ * DMA buffer alignment requirement for the current target.
+ *
+ * When a chip has an L2 cache, GDMA routes through it and the L2 cache-line
+ * size is the binding alignment constraint for DMA buffers (both address and
+ * size must be a multiple of this value). On chips with only an L1 cache the
+ * L1 cache-line size applies. On chips without any DMA-relevant cache,
+ * the DMA engine itself still requires 4-byte (word) alignment.
+ */
+#if defined(CONFIG_CACHE_L2_CACHE_LINE_SIZE)
+#define ESP_ARDUINO_DMA_BUF_ALIGN CONFIG_CACHE_L2_CACHE_LINE_SIZE
+#elif defined(CONFIG_CACHE_L1_CACHE_LINE_SIZE)
+#define ESP_ARDUINO_DMA_BUF_ALIGN CONFIG_CACHE_L1_CACHE_LINE_SIZE
+#else
+#define ESP_ARDUINO_DMA_BUF_ALIGN 4
+#endif
+
+/** True when a pointer address is aligned to the DMA requirement. */
+#define ESP_ARDUINO_DMA_IS_PTR_ALIGNED(ptr) (((uintptr_t)(ptr) & ((ESP_ARDUINO_DMA_BUF_ALIGN) - 1)) == 0)
+
+/** True when a byte count is a multiple of the DMA alignment requirement. */
+#define ESP_ARDUINO_DMA_IS_SIZE_ALIGNED(sz) (((sz) & ((ESP_ARDUINO_DMA_BUF_ALIGN) - 1)) == 0)
+
+/* Compile-time check: the alignment value must be a power of two. */
+_Static_assert(((ESP_ARDUINO_DMA_BUF_ALIGN) & ((ESP_ARDUINO_DMA_BUF_ALIGN) - 1)) == 0,
+               "ESP_ARDUINO_DMA_BUF_ALIGN must be a power of two");
+
 #ifdef __cplusplus
 extern "C" {
 #endif
