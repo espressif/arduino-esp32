@@ -242,7 +242,8 @@ bool VFSImpl::rmdir(const char *fpath) {
   return rc == 0;
 }
 
-VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _stat{}, _written(false) {
+VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode)
+  : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _stat{}, _written(false) {
   if (!mode) {
     log_w("mode is NULL, using default read mode");
     mode = "r";
@@ -299,7 +300,8 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
       // SPIFFS virtual directories which have no named entry of their own) we
       // still try opendir() because SPIFFS virtual directories are only
       // reachable that way.
-      [[maybe_unused]] int fopen_errno = errno;
+      [[maybe_unused]]
+      int fopen_errno = errno;
       struct stat dir_stat;
       int stat_rc = stat(temp, &dir_stat);
       bool statIsFile = (stat_rc == 0 && !S_ISDIR(dir_stat.st_mode));
