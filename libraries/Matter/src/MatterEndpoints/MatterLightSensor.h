@@ -23,7 +23,7 @@ class MatterLightSensor : public MatterEndPoint {
 public:
   MatterLightSensor();
   ~MatterLightSensor();
-  // begin Matter Light Sensor endpoint with initial float humidity percent
+  // begin Matter Light Sensor endpoint with initial float illuminance value
   bool begin(double illuminance = 1.00) {
     if (illuminance < 1.0 || illuminance > 3576000.0) {
       log_e("Light illuminance value out of range [1..3576000].");
@@ -31,7 +31,7 @@ public:
     }
     return begin(static_cast<uint16_t>(10000.0 * log10(illuminance) + 1));
   }
-  // this will just stop processing Humidity Sensor Matter events
+  // this will just stop processing Light Sensor Matter events
   void end();
 
   // set the illuminance
@@ -60,7 +60,7 @@ public:
 
 protected:
   bool started = false;
-  // implementation keeps illuminance in 1/100th Lux x 100 (int16_t) normalized value
+  // implementation stores illuminance as a Matter-style logarithmic value
   uint16_t rawIlluminance = 0;
   // internal function to set the raw illuminance value (Matter Cluster)
   bool begin(uint16_t _rawIlluminance);

@@ -82,9 +82,9 @@ bool MatterLightSensor::setRawIlluminance(uint16_t _rawIlluminance) {
     log_e("Matter Light Sensor device has not begun.");
     return false;
   }
-  // is it a valid percentage value?
-  if (_rawIlluminance > 357600) {
-    log_e("Light illuminance value out of range [1..3576].");
+  // is it a valid illuminance value?
+  if (_rawIlluminance > 65534) {
+    log_e("Light illuminance value out of range [1..3576000].");
     return false;
   }
 
@@ -109,7 +109,7 @@ bool MatterLightSensor::setRawIlluminance(uint16_t _rawIlluminance) {
     }
     rawIlluminance = _rawIlluminance;
   }
-  log_v("Light Sensor set to %.02f Lux", (float)_rawIlluminance / 100.00);
+  log_v("Light Sensor set to %.02f Lux", (float)pow(10, (rawIlluminance-1) / 10000.0));
 
   return true;
 }

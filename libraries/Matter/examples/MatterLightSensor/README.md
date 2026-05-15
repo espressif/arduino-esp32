@@ -70,7 +70,7 @@ Before uploading the sketch, configure the following:
    ```
 
 3. **Real sensor integration** (optional):
-   To use a real illuminance sensor, replace the `getSimulatedIlluminance()` function with your sensor reading code. The function should return a float value representing illuminance lux value (1lx-3.576Mlx)).
+   To use a real illuminance sensor, replace the `getSimulatedIlluminance()` function with your sensor reading code. The function should return a float value representing the illuminance in lux (1lx-3.576Mlx).
 
 ## Building and Flashing
 
@@ -129,7 +129,7 @@ The example includes a simulated illuminance sensor that:
 - Updates every 5 seconds
 - Resets to 100lx when reaching 300lx
 
-To use a real illuminance sensor, replace the `getSimulatedIlluminancey()` function with your sensor library code. For example, with a VEML7700:
+To use a real illuminance sensor, replace the `getSimulatedIlluminance()` function with your sensor library code. For example, with a VEML7700:
 
 ```cpp
 #include <Wire.h>
@@ -156,8 +156,8 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 3. Scan the QR code displayed in the Serial Monitor, or
 4. Tap "I Don't Have a Code or Cannot Scan" and enter the manual pairing code
 5. Follow the prompts to complete setup
-6. The device will appear as a humidity sensor in your Home app
-7. You can monitor the humidity readings and set up automations based on humidity levels
+6. The device will appear as an illuminance sensor in your Home app
+7. You can monitor the illuminance readings and set up automations based on illuminance levels
 
 #### Amazon Alexa
 
@@ -165,8 +165,8 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 2. Tap More > Add Device > Matter
 3. Select "Scan QR code" or "Enter code manually"
 4. Complete the setup process
-5. The humidity sensor will appear in your Alexa app
-6. You can monitor humidity readings and create routines based on humidity levels
+5. The illuminance sensor will appear in your Alexa app
+6. You can monitor illuminance readings and create routines based on illuminance levels
 
 #### Google Home
 
@@ -175,23 +175,21 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 3. Choose "Matter device"
 4. Scan the QR code or enter the manual pairing code
 5. Follow the prompts to complete setup
-6. You can monitor humidity readings and create automations based on humidity levels
+6. You can monitor illuminance readings and create automations based on illuminance levels
 
 ## Code Structure
 
 The MatterLightSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Humidity Sensor endpoint with initial value (95%), and waits for Matter commissioning.
-2. **`loop()`**: Displays the current humidity value every 5 seconds, updates the sensor reading from the simulated hardware sensor, handles button input for factory reset, and allows the Matter stack to process events.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Light Sensor endpoint with initial value (100 lx), and waits for Matter commissioning.
+2. **`loop()`**: Displays the current illuminance value every 5 seconds, updates the sensor reading from the simulated hardware sensor, handles button input for factory reset, and allows the Matter stack to process events.
 3. **`getSimulatedIlluminance()`**: Simulates a hardware illuminance sensor by cycling through values from 100lx to 300lx in 10lx steps. Replace this function with your actual sensor reading code.
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
-- **Humidity readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
-<!-- vale Microsoft.Percentages = NO -->
-- **illuminance values out of range**: Ensure humidity values are between 1lx-3.576Mlx.
-<!-- vale Microsoft.Percentages = YES -->
+- **Illuminance readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
+- **illuminance values out of range**: Ensure illuminance values are between 1lx-3.576Mlx.
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 

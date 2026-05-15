@@ -49,8 +49,8 @@ const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s
 // Simulate an illuminance sensor - add your preferred illuminance sensor library code here
 float getSimulatedIlluminance() {
   // The Endpoint implementation keeps an uint16_t as internal value information,
-  // which stores data in 1/100th of humidity percent
-  static float simulatedIlluminanceHWSensor = 10.0;
+  // which stores data as a Matter-style logarithmic value.
+  static float simulatedIlluminanceHWSensor = 100.0;
 
   // it will increase from 100lx to 300lx in 10lx steps to simulate an illuminance sensor
   simulatedIlluminanceHWSensor = simulatedIlluminanceHWSensor + 10.0;
@@ -94,7 +94,7 @@ void setup() {
     Serial.println("Commission it to your Matter hub with the manual pairing code or QR code");
     Serial.printf("Manual pairing code: %s\r\n", Matter.getManualPairingCode().c_str());
     Serial.printf("QR code URL: %s\r\n", Matter.getOnboardingQRCodeUrl().c_str());
-    // waits for Matter Humidity Sensor Commissioning.
+    // waits for Matter Illuminance Sensor Commissioning.
     uint32_t timeCount = 0;
     while (!Matter.isDeviceCommissioned()) {
       delay(100);

@@ -72,7 +72,7 @@ Sets the reported illuminance value.
 
     bool setIlluminance(double illuminance);
 
-* ``illuminance`` - Initial illuminance value (1lx-3.576Mlx, default: 1.00)
+* ``illuminance`` - Illuminance value to report (1lx-3.576Mlx)
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
