@@ -265,7 +265,7 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode)
   }
 
   // For read mode, detect whether the path is a directory or a regular file.
-  // The per-filesystem mutex held by VFSImpl::open serialises this constructor
+  // The per-filesystem mutex held by VFSImpl::open serializes this constructor
   // against other VFSImpl entry points (open/exists/rename/remove/mkdir/rmdir)
   // on the same filesystem. VFSFileImpl I/O operations (read/write/close) and
   // code that bypasses the Arduino FS layer (direct fopen/stat calls) are NOT
