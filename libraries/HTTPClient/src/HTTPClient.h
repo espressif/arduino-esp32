@@ -263,9 +263,15 @@ public:
 
 protected:
   struct RequestArgument {
-    String key;
-    String value;
-  };
+  String key;
+  String value;
+
+  RequestArgument() = default;
+
+  RequestArgument(const String &k, const String &v)
+      : key(k), value(v) {}
+};
+
 
   bool beginInternal(String url, const char *expectedProtocol);
   void disconnect(bool preserveClient = false);
