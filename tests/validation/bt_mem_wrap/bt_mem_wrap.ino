@@ -32,7 +32,7 @@
 //     intercept).  All subsequent wrap calls must be no-ops.
 //
 //   Phase 7 — btStart() fails after btMemRelease()
-//     Verifies that once BT memory has been freed, attempting to initialise
+//     Verifies that once BT memory has been freed, attempting to initialize
 //     the BT controller fails gracefully (ESP-IDF rejects the init request).
 //
 //   Phase 8 — full lifecycle: start, release-while-running (rejected), stop, release
@@ -160,7 +160,7 @@ static void phase_4() {
 
 // Phase 5: cross-API double-free (reversed order) — release via direct
 // esp_bt_mem_release() first, then call btMemRelease().  The Arduino API must
-// recognise that the tracking flag is already set and return true without
+// recognize that the tracking flag is already set and return true without
 // attempting a second real release.
 static void phase_5() {
   Serial.println("[BT_MEM_WRAP] Phase 5: cross-API double-free (esp_bt_mem_release then btMemRelease)");
@@ -215,7 +215,7 @@ static void phase_7() {
   check(btMemRelease(BT_MODE_BLE), "btMemRelease(BLE) succeeds");
   check(btMemReleased(BT_MODE_BLE), "tracking updated");
 
-  // BT memory is gone — the controller cannot be initialised.
+  // BT memory is gone — the controller cannot be initialized.
   check(!btStart(), "btStart() returns false after btMemRelease");
   check(!btStarted(), "btStarted() false after failed btStart");
 }
