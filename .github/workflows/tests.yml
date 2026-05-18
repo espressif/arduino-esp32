@@ -84,6 +84,7 @@ jobs:
     uses: ./.github/workflows/tests_build.yml
     needs: gen-matrix
     strategy:
+      fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
         chip: ${{ fromJson(needs.gen-matrix.outputs.build-targets) }}
