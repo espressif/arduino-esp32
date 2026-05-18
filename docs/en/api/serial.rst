@@ -511,13 +511,61 @@ Sets the UART operating mode.
 
   * ``UART_MODE_UART`` (0x00) - Regular UART mode (default)
   * ``UART_MODE_RS485_HALF_DUPLEX`` (0x01) - Half-duplex RS485 mode (RTS pin controls transceiver)
-  * ``UART_MODE_IRDA`` (0x02) - IRDA UART mode
+  * ``UART_MODE_IRDA`` (0x02) - IrDA UART mode
   * ``UART_MODE_RS485_COLLISION_DETECT`` (0x03) - RS485 collision detection mode (for testing)
   * ``UART_MODE_RS485_APP_CTRL`` (0x04) - Application-controlled RS485 mode (for testing)
 
 **Returns:** ``true`` if mode is set successfully, ``false`` otherwise.
 
 **Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver.
+
+setIrdaDirection
+****************
+
+Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``setMode(UART_MODE_IRDA)`` is called.
+
+.. code-block:: arduino
+
+    bool setIrdaDirection(esp32_uart_irda_direction_t irdaDirection);
+
+* ``irdaDirection`` - Direction for IrDA mode:
+
+  * ``ESP32_UART_IRDA_TX`` - IrDA TX mode (transmit only). The UART will transmit data in IrDA format. RX is disabled.
+  * ``ESP32_UART_IRDA_RX`` - IrDA RX mode (receive only). The UART will receive data in IrDA format. TX is disabled.
+
+**Returns:** ``true`` if IrDA mode direction is set successfully, ``false`` otherwise.
+
+.. note::
+
+   * IrDA mode works in exclusive directions: the UART can either transmit or receive, but not both simultaneously.
+   * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaDirection()``.
+   * Switching between TX and RX modes can be done by calling ``setIrdaDirection()`` with different parameters.
+   * The ESP32 UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+   * Hardware requirements: IR LED (950 nm) + resistor for TX, IR photodiode + amplifier for RX. No external SIR transceiver module needed.
+
+**Example:**
+
+.. code-block:: arduino
+
+    Serial1.begin(9600, SERIAL_8N1, RX1, TX1);
+    Serial1.setMode(UART_MODE_IRDA);                    // Enable IrDA mode
+
+    // Switch to TX mode
+    Serial1.setIrdaDirection(ESP32_UART_IRDA_TX);
+    Serial1.println("Transmit data");
+
+    // Switch to RX mode
+    Serial1.setIrdaDirection(ESP32_UART_IRDA_RX);
+    while (Serial1.available()) {
+        char c = Serial1.read();
+        Serial.print(c);
+    }
+
+**Related Examples:**
+
+* **IrdaMode_DualUART_Demo** - Single-board demonstration using two UARTs with internal loopback. Requires ESP32 with 3+ UARTs (ESP32, ESP32-S3, ESP32-P4). No external hardware needed. Ideal for testing IrDA mode functionality.
+
+* **IrdaMode_TwoBoard_Demo** - Two-board peer-to-peer IrDA communication with user-selectable TX/RX modes via Serial Monitor. Works on any ESP32 variant. Requires IR LED (TX side) and IR receiver (RX side) connected between two boards. Demonstrates real infrared communication.
 
 setClockSource
 **************
@@ -724,6 +772,18 @@ OnReceive Callback Example:
 RS485 Communication Example:
 
 .. literalinclude:: ../../../libraries/ESP32/examples/Serial/RS485_Echo_Demo/RS485_Echo_Demo.ino
+    :language: arduino
+
+IrDA Mode Examples:
+
+Dual-UART Example (Single Board with 3+ UARTs):
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_DualUART_Demo/IrdaMode_DualUART_Demo.ino
+    :language: arduino
+
+Two-Board Example (Peer-to-Peer Communication):
+
+.. literalinclude:: ../../../libraries/ESP32/examples/Serial/IrdaMode_TwoBoard_Demo/IrdaMode_TwoBoard_Demo.ino
     :language: arduino
 
 Hardware Flow Control Example:

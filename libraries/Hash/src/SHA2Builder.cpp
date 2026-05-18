@@ -323,18 +323,19 @@ bool SHA2Builder::addStream(Stream &stream, const size_t maxLen) {
 
 // Pad the input according to SHA2 specification
 void SHA2Builder::pad() {
-  // Calculate the number of bytes we have
   uint64_t bit_length = total_length * 8;
 
-  // Add the bit '1' to the message
+  // SHA-256 uses an 8-byte (64-bit) length field;
+  // SHA-384/512 uses a 16-byte (128-bit) length field.
+  size_t len_field_size = is_sha512 ? 16 : 8;
+
   buffer[buffer_size++] = 0x80;
 
-  // Pad with zeros until we have enough space for the length
-  while (buffer_size + 8 > block_size) {
+  // If there isn't enough room for the length field, pad + process this block
+  while (buffer_size + len_field_size > block_size) {
     if (buffer_size < block_size) {
       buffer[buffer_size++] = 0x00;
     } else {
-      // Process the block
       if (is_sha512) {
         process_block_sha512(buffer);
       } else {
@@ -344,28 +345,27 @@ void SHA2Builder::pad() {
     }
   }
 
-  // Pad with zeros to make room for the length
-  while (buffer_size + 8 < block_size) {
+  // Zero-pad up to the length field
+  while (buffer_size + len_field_size < block_size) {
     buffer[buffer_size++] = 0x00;
   }
 
-  // Add the length in bits
   if (is_sha512) {
-    // For SHA-512, length is 128 bits (16 bytes)
-    // We only use the lower 64 bits for now
-    for (int i = 0; i < 8; i++) {
-      buffer[block_size - 8 + i] = (uint8_t)(bit_length >> (56 - i * 8));
-    }
-    // Set the upper 64 bits to 0 (for SHA-384/512, length is limited to 2^128-1)
+    // Upper 64 bits (zero for messages < 2^64 bits)
     for (int i = 0; i < 8; i++) {
       buffer[block_size - 16 + i] = 0x00;
     }
+    // Lower 64 bits
+    for (int i = 0; i < 8; i++) {
+      buffer[block_size - 8 + i] = (uint8_t)(bit_length >> (56 - i * 8));
+    }
   } else {
-    // For SHA-256, length is 64 bits (8 bytes)
     for (int i = 0; i < 8; i++) {
       buffer[block_size - 8 + i] = (uint8_t)(bit_length >> (56 - i * 8));
     }
   }
+
+  buffer_size = block_size;
 }
 
 // Finalize the hash computation

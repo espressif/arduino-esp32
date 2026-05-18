@@ -46,7 +46,11 @@ void wpsStart() {
     return;
   }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  err = esp_wifi_wps_start();
+#else
   err = esp_wifi_wps_start(0);
+#endif
   if (err != ESP_OK) {
     Serial.printf("WPS Start Failed: 0x%x: %s\n", err, esp_err_to_name(err));
   }

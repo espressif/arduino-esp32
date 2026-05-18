@@ -412,9 +412,13 @@ static bool _rmtRead(int pin, rmt_data_t *data, size_t *num_rmt_symbols, bool wa
     rmt_enable(bus->rmt_channel_h);
   }
 
-  rmt_receive(bus->rmt_channel_h, data, *num_rmt_symbols * sizeof(rmt_data_t), &receive_config);
+  size_t req_size = *num_rmt_symbols * sizeof(rmt_data_t);
+  if (rmt_receive(bus->rmt_channel_h, data, req_size, &receive_config) != ESP_OK) {
+    log_e("GPIO %d - rmt_receive failed.", pin);
+    retCode = false;
+  }
   // wait for data if requested
-  if (waitForData) {
+  if (retCode && waitForData) {
     retCode = (xEventGroupWaitBits(bus->rmt_events, RMT_FLAG_RX_DONE, pdFALSE /* do not clear on exit */, pdFALSE /* wait for all bits */, timeout_ms)
                & RMT_FLAG_RX_DONE)
               != 0;
@@ -586,8 +590,10 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     tx_cfg.trans_queue_depth = 10;  // maximum allowed
     tx_cfg.flags.invert_out = 0;
     tx_cfg.flags.with_dma = 0;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
     tx_cfg.flags.io_loop_back = 0;
     tx_cfg.flags.io_od_mode = 0;
+#endif
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
     tx_cfg.intr_priority = 0;
 #endif
@@ -615,7 +621,9 @@ bool rmtInit(int pin, rmt_ch_dir_t channel_direction, rmt_reserve_memsize_t mem_
     rx_cfg.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL * mem_size;
     rx_cfg.flags.invert_in = 0;
     rx_cfg.flags.with_dma = 0;
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
     rx_cfg.flags.io_loop_back = 0;
+#endif
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 2)
     rx_cfg.intr_priority = 0;
 #endif

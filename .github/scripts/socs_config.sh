@@ -128,8 +128,22 @@ IDF_V5_5_TARGETS=(
     "esp32s3"
 )
 
+# IDF v6.0 supported targets
+IDF_V6_0_TARGETS=(
+    "esp32"
+    "esp32c2"
+    "esp32c3"
+    "esp32c5"
+    "esp32c6"
+    "esp32c61"
+    "esp32h2"
+    "esp32p4"
+    "esp32s2"
+    "esp32s3"
+)
+
 # Default IDF component targets (latest version)
-IDF_COMPONENT_TARGETS=("${IDF_V5_5_TARGETS[@]}")
+IDF_COMPONENT_TARGETS=("${IDF_V6_0_TARGETS[@]}")
 
 # ==============================================================================
 # Helper Functions for Array to String Conversion
@@ -209,6 +223,9 @@ get_targets_for_idf_version() {
             ;;
         release-v5.5)
             array_to_csv "${IDF_V5_5_TARGETS[@]}"
+            ;;
+        release-v6.0)
+            array_to_csv "${IDF_V6_0_TARGETS[@]}"
             ;;
         *)
             echo ""

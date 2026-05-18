@@ -161,7 +161,7 @@ jobs:
           source .github/scripts/socs_config.sh
 
           # Default versions if not provided via inputs
-          DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5"
+          DEFAULT_VERSIONS="release-v5.3,release-v5.4,release-v5.5,release-v6.0"
 
           # Use inputs if provided, otherwise use defaults
           if [[ -n "${{ inputs.idf_ver }}" ]]; then

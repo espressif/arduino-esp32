@@ -547,13 +547,19 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   }
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32P4
-  // Align conversion frame size to cache line size (required for DMA on targets with cache)
-  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % CONFIG_CACHE_L1_CACHE_LINE_SIZE;
+  // Align the conversion frame size to the DMA alignment boundary so that
+  // cache-coherency is maintained (e.g. L2 cache on ESP32-P4 = CONFIG_CACHE_L2_CACHE_LINE_SIZE).
+  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % ESP_ARDUINO_DMA_BUF_ALIGN;
   if (alignment_remainder != 0) {
-    adc_handle[adc_unit].conversion_frame_size += (CONFIG_CACHE_L1_CACHE_LINE_SIZE - alignment_remainder);
+    uint32_t original_size = adc_handle[adc_unit].conversion_frame_size;
+    adc_handle[adc_unit].conversion_frame_size += (ESP_ARDUINO_DMA_BUF_ALIGN - alignment_remainder);
+    log_w(
+      "ADC conversion frame size rounded up from %" PRIu32 " to %" PRIu32 " bytes to meet DMA alignment (%u bytes). "
+      "Effective conversions per frame may differ from requested. "
+      "Consider using a frame size that is a multiple of %u bytes to avoid automatic rounding.",
+      original_size, adc_handle[adc_unit].conversion_frame_size, ESP_ARDUINO_DMA_BUF_ALIGN, ESP_ARDUINO_DMA_BUF_ALIGN
+    );
   }
-#endif
 
   adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
 
@@ -633,13 +639,8 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
     uint32_t read_raw[used_adc_channels];
     uint32_t read_count[used_adc_channels];
 
-    // Allocate DMA buffer with cache line alignment (required for ESP32-P4 and other targets with cache)
     size_t buffer_size = adc_handle[ADC_UNIT_1].conversion_frame_size;
-#if CONFIG_IDF_TARGET_ESP32P4
-    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(CONFIG_CACHE_L1_CACHE_LINE_SIZE, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#else
-    uint8_t *adc_read = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#endif
+    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(ESP_ARDUINO_DMA_BUF_ALIGN, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     if (adc_read == NULL) {
       log_e("Failed to allocate DMA buffer");
       *buffer = NULL;

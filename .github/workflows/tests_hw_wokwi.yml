@@ -609,6 +609,11 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: wokwi/wokwi-ci-server-action@a6fabb5a49e080158c7a1d121ea5b789536a82c3 # v1
 
+      - name: Install Wokwi CLI
+        if: ${{ steps.check-tests.outputs.enabled == 'true' }}
+        run: |
+          curl -L https://wokwi.com/ci/install.sh | sh
+
       - name: Get binaries
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1

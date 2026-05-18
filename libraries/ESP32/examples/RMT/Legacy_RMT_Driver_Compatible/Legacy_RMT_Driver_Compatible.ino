@@ -15,7 +15,7 @@
 #error "ESP32_ARDUINO_NO_RGB_BUILTIN is not defined, this example is intended to demonstrate the RMT Legacy driver."
 #error "Please add the file 'build_opt.h' with '-DESP32_ARDUINO_NO_RGB_BUILTIN' to your Arduino project folder."
 
-#else
+#elif ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
 
 // add the file "build_opt.h" to your Arduino project folder with "-DESP32_ARDUINO_NO_RGB_BUILTIN" to use the RMT Legacy driver
 // rgbLedWrite() is a function that writes to the RGB LED and it won't be available here
@@ -36,4 +36,12 @@ void loop() {
   delay(5000);
 }
 
-#endif  // ESP32_ARDUINO_NO_RGB_BUILTIN
+#else
+
+// Legacy RMT driver is not available from ESP-IDF v6.0
+
+void setup() {}
+
+void loop() {}
+
+#endif  // ESP32_ARDUINO_NO_RGB_BUILTIN || pre IDF6

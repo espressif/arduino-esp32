@@ -47,6 +47,34 @@
 #include "esp_netif_types.h"
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
+#include "esp_idf_version.h"
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define emac_rmii_clock_gpio_t  int
+#define esp_eth_phy_new_lan87xx esp_eth_phy_new_generic
+#define esp_eth_phy_new_ip101   esp_eth_phy_new_generic
+#define esp_eth_phy_new_rtl8201 esp_eth_phy_new_generic
+#define esp_eth_phy_new_dp83848 esp_eth_phy_new_generic
+#define esp_eth_phy_new_ksz80xx esp_eth_phy_new_generic
+#if CONFIG_IDF_TARGET_ESP32
+#define EMAC_APPL_CLK_OUT_GPIO 0
+#define EMAC_CLK_OUT_GPIO      16
+#define EMAC_CLK_OUT_180_GPIO  17
+#define EMAC_CLK_IN_GPIO       0
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+#include "esp_eth_phy_dm9051.h"
+#include "esp_eth_mac_dm9051.h"
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_W5500
+#include "esp_eth_phy_w5500.h"
+#include "esp_eth_mac_w5500.h"
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+#include "esp_eth_phy_ksz8851snl.h"
+#include "esp_eth_mac_ksz8851snl.h"
+#endif
+#endif
 
 #define NUM_SUPPORTED_ETH_PORTS 3
 static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};

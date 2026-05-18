@@ -1,0 +1,13 @@
+tags:
+  - wifi_router
+
+# OTA requires two app slots (ota_0 + ota_1)
+fqbn_append: PartitionScheme=default
+
+platforms:
+  wokwi: false
+  qemu: false
+
+requires_any:
+  - CONFIG_SOC_WIFI_SUPPORTED=y
+  - CONFIG_ESP_WIFI_REMOTE_ENABLED=y
