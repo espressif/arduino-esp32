@@ -1645,6 +1645,43 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   return retCode;
 }
 
+// Routine that sets UART_MODE_IRDA direction: TX or RX
+// irdaDirection: ESP32_UART_IRDA_TX (1) for TX mode, ESP32_UART_IRDA_RX (0) for RX mode
+// IrDA mode direction is exclusive: the UART can transmit OR receive, but not both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM || (irdaDirection != ESP32_UART_IRDA_RX && irdaDirection != ESP32_UART_IRDA_TX)) {
+    return false;
+  }
+
+  UART_MUTEX_LOCK();
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  bool isIrdaModeEnabled = hw->conf0.irda_en == 1;
+#else
+  bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
+#endif
+  if (!isIrdaModeEnabled) {
+    uint8_t uart_num = uart->num;
+    UART_MUTEX_UNLOCK();
+    log_e("UART%u is not in IrDA mode; set UART_MODE_IRDA before setting IrDA TX/RX direction.", uart_num);
+    return false;
+  }
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  // enables IRDA TX
+  hw->conf0.irda_tx_en = irdaDirection;
+#else
+  // enables IRDA TX
+  hw->conf0_sync.irda_tx_en = irdaDirection;
+  // it needs UART Update
+  uart_ll_update(hw);
+#endif
+  UART_MUTEX_UNLOCK();
+  return true;
+}
+
 // this function will set the uart clock source
 // it must be called before uartBegin(), otherwise it won't change any thing.
 bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc) {
