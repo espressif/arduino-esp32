@@ -22,10 +22,11 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
-// This prevents initArduino() from releasing BTDM controller memory before the
+// This prevents initArduino() from releasing BLE memory before the
 // Matter stack can use Bluetooth transport.
 #if CONFIG_ENABLE_CHIPOBLE
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-ble-mem.h"
+#include "esp32-hal-bt.h"
 #endif
 
 using namespace esp_matter;
@@ -163,6 +164,13 @@ void ArduinoMatter::begin() {
     log_e("No Matter endpoint has been created. Please create an endpoint first.");
     return;
   }
+
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (isBLECommissioningEnabled() && btMemReleased(BT_MODE_BLE)) {
+    log_e("BLE memory has been released. BLE commissioning is not available.");
+    return;
+  }
+#endif
 
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
   // Set OpenThread platform config

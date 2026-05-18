@@ -65,7 +65,7 @@
 // Includes
 // -----------------------------------------------------------------------------
 #include <Arduino.h>
-#include "esp32-hal-bt-mem.h"          // btStartMode(), BT_MODE_CLASSIC_BT
+#include "esp32-hal-alloc-bt-classic-mem.h"
 #include "esp32-hal-bt.h"              // btStarted()
 #include "esp_bt.h"                    // esp_bt_controller_*
 #include "esp_bt_device.h"             // esp_bt_dev_set_device_name()

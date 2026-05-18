@@ -22,8 +22,30 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 namespace fs {
+
+// RAII lock guard for the per-filesystem recursive mutex.
+class FSLockGuard {
+public:
+  explicit FSLockGuard(SemaphoreHandle_t mtx) : _mtx(mtx) {
+    if (_mtx) {
+      xSemaphoreTakeRecursive(_mtx, portMAX_DELAY);
+    }
+  }
+  ~FSLockGuard() {
+    if (_mtx) {
+      xSemaphoreGiveRecursive(_mtx);
+    }
+  }
+  FSLockGuard(const FSLockGuard &) = delete;
+  FSLockGuard &operator=(const FSLockGuard &) = delete;
+
+private:
+  SemaphoreHandle_t _mtx;
+};
 
 class FileImpl {
 public:
@@ -51,10 +73,16 @@ public:
 class FSImpl {
 protected:
   const char *_mountpoint;
+  SemaphoreHandle_t _mtx;
 
 public:
-  FSImpl() : _mountpoint(NULL) {}
-  virtual ~FSImpl() {}
+  FSImpl() : _mountpoint(NULL), _mtx(NULL) {}
+  virtual ~FSImpl() {
+    if (_mtx) {
+      vSemaphoreDelete(_mtx);
+    }
+  }
+
   virtual FileImplPtr open(const char *path, const char *mode, const bool create) = 0;
   virtual bool exists(const char *path) = 0;
   virtual bool rename(const char *pathFrom, const char *pathTo) = 0;

@@ -18,6 +18,7 @@ on:
       - ".github/scripts/install*.sh"
       - ".github/workflows/tests*"
       - ".github/scripts/sketch_utils.sh"
+      - "tools/arduino_cmake.py"
       - "tests/**"
       - "cores/**"
       - "libraries/*/src/**.cpp"
@@ -83,6 +84,7 @@ jobs:
     uses: ./.github/workflows/tests_build.yml
     needs: gen-matrix
     strategy:
+      fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
         chip: ${{ fromJson(needs.gen-matrix.outputs.build-targets) }}
