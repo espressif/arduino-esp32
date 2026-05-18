@@ -845,7 +845,7 @@ void setup() {
 #endif
   RUN_TEST(periman_test);
   RUN_TEST(change_pins_test);
-  //RUN_TEST(irda_mode_test);
+  RUN_TEST(irda_mode_test);
   RUN_TEST(inter_uart_pin_move_test);
   RUN_TEST(same_uart_pin_swap_test);
   RUN_TEST(move_rx_tx_to_cts_rts_test);
