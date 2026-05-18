@@ -17,6 +17,9 @@ USAGE:
     ${0} -clean
         Remove build and test generated files
 
+    Options:
+        --arduino-cli   Use arduino-cli for compilation instead of arduino_cmake.py
+
     If no -t target is specified, builds for all BUILD_TEST_TARGETS
     If no -s sketch is specified, builds all sketches (chunk mode)
 "
@@ -162,6 +165,9 @@ while [ -n "$1" ]; do
         clean
         exit 0
         ;;
+    --arduino-cli )
+        use_arduino_cli=1
+        ;;
     * )
         break
         ;;
@@ -176,6 +182,9 @@ source "${SCRIPTS_DIR}/tests_utils.sh"
 set +e
 
 args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH")
+if [ "${use_arduino_cli:-0}" -eq 1 ]; then
+    args+=("--arduino-cli")
+fi
 
 # Parse comma-separated targets
 if [ -n "$target" ]; then

@@ -37,6 +37,7 @@ on:
       - "libraries/**/ci.yml"
       - "package/**"
       - "tools/get.*"
+      - "tools/arduino_cmake.py"
       - "package.json"
       - ".github/workflows/push.yml"
       - ".github/scripts/install-*"

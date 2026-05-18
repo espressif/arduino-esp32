@@ -23,6 +23,7 @@ using namespace fs;
 #define DEFAULT_FILE_BUFFER_SIZE 4096
 
 FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return FileImplPtr();
@@ -33,15 +34,6 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
     return FileImplPtr();
   }
 
-  size_t tempLen = strlen(_mountpoint) + strlen(fpath) + 1;
-  char *temp = (char *)malloc(tempLen);
-  if (!temp) {
-    log_e("malloc failed");
-    return FileImplPtr();
-  }
-
-  snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
-
   // Try to open as file first - let the file operation handle errors
   if (mode && mode[0] != 'r') {
     // For write modes, attempt to create directories if needed
@@ -49,11 +41,18 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
       char *token;
       char *folder = (char *)malloc(strlen(fpath) + 1);
 
+      if (!folder) {
+        log_e("Folder name malloc failed");
+        return FileImplPtr();
+      }
+
       int start_index = 0;
       int end_index = 0;
 
       token = strchr(fpath + 1, '/');
-      end_index = (token - fpath);
+      if (token != NULL) {
+        end_index = (token - fpath);
+      }
 
       while (token != NULL) {
         memcpy(folder, fpath + start_index, end_index - start_index);
@@ -62,7 +61,6 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
         if (!VFSImpl::mkdir(folder)) {
           log_e("Creating folder: %s failed!", folder);
           free(folder);
-          free(temp);
           return FileImplPtr();
         }
 
@@ -77,17 +75,16 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
     }
 
     // Try to open the file directly - let fopen handle errors
-    free(temp);
     return std::make_shared<VFSFileImpl>(this, fpath, mode);
   }
 
   // For read mode, let the VFSFileImpl constructor handle the file opening
   // This avoids the TOCTOU race condition while maintaining proper functionality
-  free(temp);
   return std::make_shared<VFSFileImpl>(this, fpath, mode);
 }
 
 bool VFSImpl::exists(const char *fpath) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -102,6 +99,7 @@ bool VFSImpl::exists(const char *fpath) {
 }
 
 bool VFSImpl::rename(const char *pathFrom, const char *pathTo) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -138,6 +136,7 @@ bool VFSImpl::rename(const char *pathFrom, const char *pathTo) {
 }
 
 bool VFSImpl::remove(const char *fpath) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -164,19 +163,9 @@ bool VFSImpl::remove(const char *fpath) {
 }
 
 bool VFSImpl::mkdir(const char *fpath) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
-    return false;
-  }
-
-  VFSFileImpl f(this, fpath, "r");
-  if (f && f.isDirectory()) {
-    f.close();
-    //log_w("%s already exists", fpath);
-    return true;
-  } else if (f) {
-    f.close();
-    log_e("%s is a file", fpath);
     return false;
   }
 
@@ -189,12 +178,45 @@ bool VFSImpl::mkdir(const char *fpath) {
 
   snprintf(temp, tempLen, "%s%s", _mountpoint, fpath);
 
+  // Note: the stat() → opendir() → ::mkdir() sequence below contains a
+  // TOCTOU (time-of-check / time-of-use) window between individual syscalls.
+  // The per-filesystem mutex (_mtx) held by this function ensures that no
+  // other Arduino FS API call on the same filesystem can interleave here.
+  // Code that bypasses the Arduino FS layer (direct fopen/stat/mkdir calls)
+  // is not covered by this mutex.
+
+  // stat() reports the path type without consuming a file descriptor.
+  struct stat st;
+  if (stat(temp, &st) == 0) {
+    free(temp);
+    if (S_ISDIR(st.st_mode)) {
+      //log_w("%s already exists", fpath);
+      return true;
+    }
+    log_e("%s is a file", fpath);
+    return false;
+  }
+
+  // stat() failed (path does not exist).  On SPIFFS the filesystem is flat and
+  // virtual directories are always reachable via opendir() regardless of
+  // whether any files with that path prefix exist yet.  A successful opendir()
+  // here means the path is an accessible virtual directory – treat it as
+  // already present so we avoid calling ::mkdir() (which SPIFFS does not
+  // support and would return an error).
+  DIR *d = opendir(temp);
+  if (d) {
+    closedir(d);
+    free(temp);
+    return true;
+  }
+
   auto rc = ::mkdir(temp, ACCESSPERMS);
   free(temp);
   return rc == 0;
 }
 
 bool VFSImpl::rmdir(const char *fpath) {
+  FSLockGuard lock(_mtx);
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -220,7 +242,13 @@ bool VFSImpl::rmdir(const char *fpath) {
   return rc == 0;
 }
 
-VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _written(false) {
+VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode)
+  : _fs(fs), _f(NULL), _d(NULL), _path(NULL), _isDirectory(false), _stat{}, _written(false) {
+  if (!mode) {
+    log_w("mode is NULL, using default read mode");
+    mode = "r";
+  }
+
   size_t tempLen = strlen(_fs->_mountpoint) + strlen(fpath) + 1;
   char *temp = (char *)malloc(tempLen);
   if (!temp) {
@@ -236,37 +264,52 @@ VFSFileImpl::VFSFileImpl(VFSImpl *fs, const char *fpath, const char *mode) : _fs
     return;
   }
 
-  // For read mode, check if file exists first to determine type
-  if (!mode || mode[0] == 'r') {
-    if (!stat(temp, &_stat)) {
-      //file found
-      if (S_ISREG(_stat.st_mode)) {
-        _isDirectory = false;
-        _f = fopen(temp, mode);
-        if (!_f) {
-          log_e("fopen(%s) failed", temp);
-        }
-        if (_f && (_stat.st_blksize == 0)) {
-          setvbuf(_f, NULL, _IOFBF, DEFAULT_FILE_BUFFER_SIZE);
-        }
-      } else if (S_ISDIR(_stat.st_mode)) {
-        _isDirectory = true;
+  // For read mode, detect whether the path is a directory or a regular file.
+  // The per-filesystem mutex held by VFSImpl::open serializes this constructor
+  // against other VFSImpl entry points (open/exists/rename/remove/mkdir/rmdir)
+  // on the same filesystem. VFSFileImpl I/O operations (read/write/close) and
+  // code that bypasses the Arduino FS layer (direct fopen/stat calls) are NOT
+  // covered by the mutex.
+  if (mode[0] == 'r') {
+    _f = fopen(temp, mode);
+    if (_f) {
+      // fopen() succeeded — but on POSIX-style VFS layers (including ESP-IDF's
+      // LittleFS VFS), open(2) can succeed on a directory with O_RDONLY.  Use
+      // stat to confirm the path is a regular file before treating it as one.
+      if (fstat(fileno(_f), &_stat) == 0 && S_ISDIR(_stat.st_mode)) {
+        // Path is a directory; close the file handle and open as a directory.
+        fclose(_f);
+        _f = NULL;
         _d = opendir(temp);
+        _isDirectory = (_d != NULL);
         if (!_d) {
           log_e("opendir(%s) failed", temp);
         }
       } else {
-        log_e("Unknown type 0x%08" PRIX32 " for file %s", (uint32_t)((_stat.st_mode) & _IFMT), temp);
+        _isDirectory = false;
+        if (_stat.st_blksize == 0) {
+          setvbuf(_f, NULL, _IOFBF, DEFAULT_FILE_BUFFER_SIZE);
+        }
       }
     } else {
-      //file not found
-      //try to open as directory
-      _d = opendir(temp);
-      if (_d) {
-        _isDirectory = true;
+      // fopen failed — check via stat whether this is a directory.
+      // stat() does not consume a file descriptor, so it can succeed even when
+      // the filesystem's open-file limit has been reached.  If stat reports a
+      // regular file we skip opendir() so an exhausted fd pool is not
+      // misidentified as a directory.  If stat itself fails (as it does for
+      // SPIFFS virtual directories which have no named entry of their own) we
+      // still try opendir() because SPIFFS virtual directories are only
+      // reachable that way.
+      [[maybe_unused]]
+      int fopen_errno = errno;
+      struct stat dir_stat;
+      int stat_rc = stat(temp, &dir_stat);
+      bool statIsFile = (stat_rc == 0 && !S_ISDIR(dir_stat.st_mode));
+      if (!statIsFile) {
+        _d = opendir(temp);
+        _isDirectory = (_d != NULL);
       } else {
-        _isDirectory = false;
-        //log_w("stat(%s) failed", temp);
+        log_e("fopen(%s, %s) failed: %d (%s)", temp, mode, fopen_errno, strerror(fopen_errno));
       }
     }
   } else {

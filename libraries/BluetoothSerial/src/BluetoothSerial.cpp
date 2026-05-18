@@ -27,7 +27,7 @@
 
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-bt-classic-mem.h"
 #endif
 
 #include "BluetoothSerial.h"
@@ -882,10 +882,12 @@ void BluetoothSerial::end() {
 }
 
 /**
- * free additional ~30kB ram, reset is required to enable BT again
+ * free additional ~30kB ram, reset is required to enable BT Classic again
  */
 void BluetoothSerial::memrelease() {
-  esp_bt_mem_release(ESP_BT_MODE_BTDM);
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  btMemRelease(BT_MODE_CLASSIC_BT);
+#endif
 }
 
 void BluetoothSerial::onConfirmRequest(ConfirmRequestCb cb) {

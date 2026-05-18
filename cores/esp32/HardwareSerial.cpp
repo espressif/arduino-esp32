@@ -635,6 +635,15 @@ bool HardwareSerial::setMode(SerialMode mode) {
   return uartSetMode(_uart, mode);
 }
 
+// Sets the UART IrDA direction to TX or RX.
+// IrDA works in exclusive directions: TX OR RX, never both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+// It can only be used after setMode(UART_MODE_IRDA) is called.
+// Parameters: ESP32_UART_IRDA_TX (value 1, transmit mode) or ESP32_UART_IRDA_RX (value 0, receive mode)
+bool HardwareSerial::setIrdaDirection(esp32_uart_irda_direction_t irdaDirection) {
+  return uartSetIrdaDirection(_uart, irdaDirection);
+}
+
 // Sets the UART Clock Source based on the compatible SoC options
 // This method must be called before starting UART using begin(), otherwise it won't have any effect.
 // Clock Source Options are:
