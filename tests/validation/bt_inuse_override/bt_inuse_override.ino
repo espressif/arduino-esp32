@@ -11,7 +11,8 @@
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
 
-#if SOC_BT_SUPPORTED && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h") && defined(CONFIG_BT_CONTROLLER_ENABLED)
+#if SOC_BT_SUPPORTED && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) \
+  && __has_include("esp_bt.h") && defined(CONFIG_BT_CONTROLLER_ENABLED)
 
 // Strong override — simulates legacy user code keeping all BT memory.
 // bleInUse() and btClassicInUse() are both false (no alloc headers included),
@@ -35,7 +36,9 @@ static void check(bool ok, const char *desc) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
 
   Serial.println("[BT_INUSE_OVERRIDE] Ready");
 
@@ -71,7 +74,9 @@ void loop() {}
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  while (!Serial) {
+    delay(10);
+  }
   Serial.println("[BT_INUSE_OVERRIDE] SKIP: BT controller not available");
 }
 

@@ -346,7 +346,7 @@ void initArduino() {
     log_e("Failed to initialize NVS! Error: %d", err);
   }
 #if (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && CONFIG_BT_CONTROLLER_ENABLED && SOC_BT_SUPPORTED && __has_include("esp_bt.h")
-  bool userOverriddenBtInUse = ((void*)btInUse != (void*)_btInUse_default);
+  bool userOverriddenBtInUse = ((void *)btInUse != (void *)_btInUse_default);
   if (!btClassicInUse() && !(userOverriddenBtInUse && btInUse())) {
     btMemRelease(BT_MODE_CLASSIC_BT);
   }

@@ -66,7 +66,8 @@
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
 
-#if SOC_BT_SUPPORTED && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) && __has_include("esp_bt.h") && defined(CONFIG_BT_CONTROLLER_ENABLED)
+#if SOC_BT_SUPPORTED && (defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) \
+  && __has_include("esp_bt.h") && defined(CONFIG_BT_CONTROLLER_ENABLED)
 
 #include "esp_bt.h"
 
@@ -324,19 +325,17 @@ static void run_phase(int phase) {
   fail_count = 0;
 
   switch (phase) {
-    case 1: phase_1(); break;
-    case 2: phase_2(); break;
-    case 3: phase_3(); break;
-    case 4: phase_4(); break;
-    case 5: phase_5(); break;
-    case 6: phase_6(); break;
-    case 7: phase_7(); break;
-    case 8: phase_8(); break;
-    case 9: phase_9(); break;
+    case 1:  phase_1(); break;
+    case 2:  phase_2(); break;
+    case 3:  phase_3(); break;
+    case 4:  phase_4(); break;
+    case 5:  phase_5(); break;
+    case 6:  phase_6(); break;
+    case 7:  phase_7(); break;
+    case 8:  phase_8(); break;
+    case 9:  phase_9(); break;
     case 10: phase_10(); break;
-    default:
-      Serial.printf("[BT_MEM_WRAP] ERROR: unknown phase %d\n", phase);
-      return;
+    default: Serial.printf("[BT_MEM_WRAP] ERROR: unknown phase %d\n", phase); return;
   }
 
   Serial.printf("[BT_MEM_WRAP] Phase %d: %d passed, %d failed\n", phase, pass_count, fail_count);
