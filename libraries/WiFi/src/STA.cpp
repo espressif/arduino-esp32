@@ -242,7 +242,9 @@ STAClass::STAClass()
 }
 
 STAClass::~STAClass() {
-  end();
+  // Calling end() here causes a lot of WiFi code to be linked to the final executable by just including "WiFi.h"
+  // If globals are disabled, then the user should call WiFi.STA.end() before destroying the WiFi object
+  // end();
   _sta_network_if = NULL;
 }
 

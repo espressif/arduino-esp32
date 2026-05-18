@@ -31,6 +31,9 @@
 #endif
 #include "esp32-hal-periman.h"
 #include "esp_private/periph_ctrl.h"
+#if !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
+#include "hal/spi_ll.h"
+#endif
 
 #include "esp_system.h"
 #include "esp_intr_alloc.h"
@@ -67,7 +70,6 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
-#include "hal/spi_ll.h"
 #include "hal/clk_tree_ll.h"
 
 // ESP32P4 SPI clock source frequencies
@@ -832,8 +834,19 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #elif CONFIG_IDF_TARGET_ESP32S3
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
+    }
+  }
 #else
   if (spi_num == FSPI) {
     periph_ll_reset(PERIPH_SPI2_MODULE);
@@ -895,14 +908,15 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
   }
 #endif
 #pragma GCC diagnostic pop
-#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  periph_ll_reset(PERIPH_MODULE_MAX);
-  periph_ll_enable_clk_clear_rst(PERIPH_MODULE_MAX);
-#else
+#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
-#endif
+#else
+  PERIPH_RCC_ATOMIC() {
+    spi_ll_enable_bus_clock(SPI2_HOST, true);
+    spi_ll_reset_register(SPI2_HOST);
+    spi_ll_enable_clock(SPI2_HOST, true);
+  }
 #endif
 
   SPI_MUTEX_LOCK();

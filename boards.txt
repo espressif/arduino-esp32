@@ -53449,6 +53449,9 @@ yb_esp32s3_dac.menu.PSRAM.opi.build.psram_type=opi
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
 yb_esp32s3_dac.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 yb_esp32s3_dac.menu.PartitionScheme.default.build.partitions=default
 yb_esp32s3_dac.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -53476,6 +53479,18 @@ yb_esp32s3_dac.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+yb_esp32s3_dac.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.fatflash.build.partitions=ffat
+yb_esp32s3_dac.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+yb_esp32s3_dac.menu.PartitionScheme.custom=Custom
+yb_esp32s3_dac.menu.PartitionScheme.custom.build.partitions=
+yb_esp32s3_dac.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 yb_esp32s3_dac.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_dac.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -57930,149 +57945,149 @@ xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
-# Ozobot Circuit kit
+# Ozobot DRVKit
 
-ozobot_circuit_kit.name=Ozobot circuit kit
-ozobot_circuit_kit.vid.0=0x2D81
-ozobot_circuit_kit.pid.0=0x1901
-ozobot_circuit_kit.upload_port.0.vid=0x303A
-ozobot_circuit_kit.upload_port.0.pid=0x1001
+ozobot_drvkit.name=Ozobot DRVKit
+ozobot_drvkit.vid.0=0x2D81
+ozobot_drvkit.pid.0=0x1901
+ozobot_drvkit.upload_port.0.vid=0x303A
+ozobot_drvkit.upload_port.0.pid=0x1001
 
-ozobot_circuit_kit.bootloader.tool=esptool_py
-ozobot_circuit_kit.bootloader.tool.default=esptool_py
+ozobot_drvkit.bootloader.tool=esptool_py
+ozobot_drvkit.bootloader.tool.default=esptool_py
 
-ozobot_circuit_kit.upload.tool=esptool_py
-ozobot_circuit_kit.upload.tool.default=esptool_py
-ozobot_circuit_kit.upload.tool.network=esp_ota
+ozobot_drvkit.upload.tool=esptool_py
+ozobot_drvkit.upload.tool.default=esptool_py
+ozobot_drvkit.upload.tool.network=esp_ota
 
-ozobot_circuit_kit.upload.maximum_size=1310720
-ozobot_circuit_kit.upload.maximum_data_size=327680
-ozobot_circuit_kit.upload.flags=
-ozobot_circuit_kit.upload.extra_flags=
-ozobot_circuit_kit.upload.use_1200bps_touch=false
-ozobot_circuit_kit.upload.wait_for_upload_port=false
-ozobot_circuit_kit.upload.speed=921600
+ozobot_drvkit.upload.maximum_size=1310720
+ozobot_drvkit.upload.maximum_data_size=327680
+ozobot_drvkit.upload.flags=
+ozobot_drvkit.upload.extra_flags=
+ozobot_drvkit.upload.use_1200bps_touch=false
+ozobot_drvkit.upload.wait_for_upload_port=false
+ozobot_drvkit.upload.speed=921600
 
-ozobot_circuit_kit.serial.disableDTR=false
-ozobot_circuit_kit.serial.disableRTS=false
+ozobot_drvkit.serial.disableDTR=false
+ozobot_drvkit.serial.disableRTS=false
 
-ozobot_circuit_kit.build.tarch=xtensa
-ozobot_circuit_kit.build.bootloader_addr=0x0
-ozobot_circuit_kit.build.target=esp32s3
-ozobot_circuit_kit.build.mcu=esp32s3
-ozobot_circuit_kit.build.core=esp32
-ozobot_circuit_kit.build.variant=ozobot_circuit_kit
-ozobot_circuit_kit.build.board=OZOBOT_CIRCUIT_KIT
-ozobot_circuit_kit.build.code_debug=0
+ozobot_drvkit.build.tarch=xtensa
+ozobot_drvkit.build.bootloader_addr=0x0
+ozobot_drvkit.build.target=esp32s3
+ozobot_drvkit.build.mcu=esp32s3
+ozobot_drvkit.build.core=esp32
+ozobot_drvkit.build.variant=ozobot_drvkit
+ozobot_drvkit.build.board=OZOBOT_DRVKIT
+ozobot_drvkit.build.code_debug=0
 
-ozobot_circuit_kit.build.usb_mode=1
-ozobot_circuit_kit.build.cdc_on_boot=1
-ozobot_circuit_kit.build.msc_on_boot=0
-ozobot_circuit_kit.build.dfu_on_boot=0
-ozobot_circuit_kit.build.f_cpu=240000000L
-ozobot_circuit_kit.build.flash_size=4MB
-ozobot_circuit_kit.build.flash_freq=80m
-ozobot_circuit_kit.build.flash_mode=dio
-ozobot_circuit_kit.build.boot=qio
-ozobot_circuit_kit.build.boot_freq=80m
-ozobot_circuit_kit.build.defines=-DBOARD_HAS_PIN_REMAP {build.disable_pin_remap} -DBOARD_HAS_PSRAM
-ozobot_circuit_kit.build.loop_core=
-ozobot_circuit_kit.build.event_core=
-ozobot_circuit_kit.build.psram_type=qspi
-ozobot_circuit_kit.build.memory_type={build.boot}_{build.psram_type}
-ozobot_circuit_kit.build.disable_pin_remap=
+ozobot_drvkit.build.usb_mode=1
+ozobot_drvkit.build.cdc_on_boot=1
+ozobot_drvkit.build.msc_on_boot=0
+ozobot_drvkit.build.dfu_on_boot=0
+ozobot_drvkit.build.f_cpu=240000000L
+ozobot_drvkit.build.flash_size=4MB
+ozobot_drvkit.build.flash_freq=80m
+ozobot_drvkit.build.flash_mode=dio
+ozobot_drvkit.build.boot=qio
+ozobot_drvkit.build.boot_freq=80m
+ozobot_drvkit.build.defines=-DBOARD_HAS_PIN_REMAP {build.disable_pin_remap} -DBOARD_HAS_PSRAM
+ozobot_drvkit.build.loop_core=
+ozobot_drvkit.build.event_core=
+ozobot_drvkit.build.psram_type=qspi
+ozobot_drvkit.build.memory_type={build.boot}_{build.psram_type}
+ozobot_drvkit.build.disable_pin_remap=
 
 ## IDE 2.0 Seems to not update the value
-ozobot_circuit_kit.menu.JTAGAdapter.bridge=ESP USB Bridge
-ozobot_circuit_kit.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
-ozobot_circuit_kit.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
-ozobot_circuit_kit.menu.JTAGAdapter.external=FTDI Adapter
-ozobot_circuit_kit.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
-ozobot_circuit_kit.menu.JTAGAdapter.external.build.copy_jtag_files=1
+ozobot_drvkit.menu.JTAGAdapter.bridge=ESP USB Bridge
+ozobot_drvkit.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+ozobot_drvkit.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+ozobot_drvkit.menu.JTAGAdapter.external=FTDI Adapter
+ozobot_drvkit.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+ozobot_drvkit.menu.JTAGAdapter.external.build.copy_jtag_files=1
 
-ozobot_circuit_kit.menu.LoopCore.1=Core 1
-ozobot_circuit_kit.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-ozobot_circuit_kit.menu.LoopCore.0=Core 0
-ozobot_circuit_kit.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+ozobot_drvkit.menu.LoopCore.1=Core 1
+ozobot_drvkit.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+ozobot_drvkit.menu.LoopCore.0=Core 0
+ozobot_drvkit.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
 
-ozobot_circuit_kit.menu.EventsCore.1=Core 1
-ozobot_circuit_kit.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-ozobot_circuit_kit.menu.EventsCore.0=Core 0
-ozobot_circuit_kit.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+ozobot_drvkit.menu.EventsCore.1=Core 1
+ozobot_drvkit.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+ozobot_drvkit.menu.EventsCore.0=Core 0
+ozobot_drvkit.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
-ozobot_circuit_kit.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.huge_app.build.partitions=huge_app
-ozobot_circuit_kit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
-ozobot_circuit_kit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.default.build.partitions=default
-ozobot_circuit_kit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-ozobot_circuit_kit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
-ozobot_circuit_kit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.minimal.build.partitions=minimal
-ozobot_circuit_kit.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
-ozobot_circuit_kit.menu.PartitionScheme.no_fs.build.partitions=no_fs
-ozobot_circuit_kit.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
-ozobot_circuit_kit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.no_ota.build.partitions=no_ota
-ozobot_circuit_kit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
-ozobot_circuit_kit.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
-ozobot_circuit_kit.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
-ozobot_circuit_kit.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
-ozobot_circuit_kit.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
-ozobot_circuit_kit.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
-ozobot_circuit_kit.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
-ozobot_circuit_kit.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
-ozobot_circuit_kit.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
-ozobot_circuit_kit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
-ozobot_circuit_kit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
-ozobot_circuit_kit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker=RainMaker 4MB
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
-ozobot_circuit_kit.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
-ozobot_circuit_kit.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
-ozobot_circuit_kit.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
-ozobot_circuit_kit.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
-ozobot_circuit_kit.menu.PartitionScheme.custom=Custom
-ozobot_circuit_kit.menu.PartitionScheme.custom.build.partitions=
-ozobot_circuit_kit.menu.PartitionScheme.custom.upload.maximum_size=4194304
+ozobot_drvkit.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ozobot_drvkit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ozobot_drvkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.default.build.partitions=default
+ozobot_drvkit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ozobot_drvkit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.minimal.build.partitions=minimal
+ozobot_drvkit.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+ozobot_drvkit.menu.PartitionScheme.no_fs.build.partitions=no_fs
+ozobot_drvkit.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+ozobot_drvkit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ozobot_drvkit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ozobot_drvkit.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ozobot_drvkit.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ozobot_drvkit.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ozobot_drvkit.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ozobot_drvkit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ozobot_drvkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+ozobot_drvkit.menu.PartitionScheme.rainmaker=RainMaker 4MB
+ozobot_drvkit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+ozobot_drvkit.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+ozobot_drvkit.menu.PartitionScheme.custom=Custom
+ozobot_drvkit.menu.PartitionScheme.custom.build.partitions=
+ozobot_drvkit.menu.PartitionScheme.custom.upload.maximum_size=4194304
 
-ozobot_circuit_kit.menu.PinNumbers.default=By Arduino pin (default)
-ozobot_circuit_kit.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
-ozobot_circuit_kit.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
+ozobot_drvkit.menu.PinNumbers.default=By Arduino pin (default)
+ozobot_drvkit.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
+ozobot_drvkit.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
 
-ozobot_circuit_kit.menu.USBMode.hwcdc=Hardware CDC and JTAG
-ozobot_circuit_kit.menu.USBMode.hwcdc.build.usb_mode=1
-ozobot_circuit_kit.menu.USBMode.default=USB-OTG (TinyUSB)
-ozobot_circuit_kit.menu.USBMode.default.build.usb_mode=0
-ozobot_circuit_kit.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
+ozobot_drvkit.menu.USBMode.hwcdc=Hardware CDC and JTAG
+ozobot_drvkit.menu.USBMode.hwcdc.build.usb_mode=1
+ozobot_drvkit.menu.USBMode.default=USB-OTG (TinyUSB)
+ozobot_drvkit.menu.USBMode.default.build.usb_mode=0
+ozobot_drvkit.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
 
-ozobot_circuit_kit.menu.DebugLevel.none=None
-ozobot_circuit_kit.menu.DebugLevel.none.build.code_debug=0
-ozobot_circuit_kit.menu.DebugLevel.error=Error
-ozobot_circuit_kit.menu.DebugLevel.error.build.code_debug=1
-ozobot_circuit_kit.menu.DebugLevel.warn=Warn
-ozobot_circuit_kit.menu.DebugLevel.warn.build.code_debug=2
-ozobot_circuit_kit.menu.DebugLevel.info=Info
-ozobot_circuit_kit.menu.DebugLevel.info.build.code_debug=3
-ozobot_circuit_kit.menu.DebugLevel.debug=Debug
-ozobot_circuit_kit.menu.DebugLevel.debug.build.code_debug=4
-ozobot_circuit_kit.menu.DebugLevel.verbose=Verbose
-ozobot_circuit_kit.menu.DebugLevel.verbose.build.code_debug=5
+ozobot_drvkit.menu.DebugLevel.none=None
+ozobot_drvkit.menu.DebugLevel.none.build.code_debug=0
+ozobot_drvkit.menu.DebugLevel.error=Error
+ozobot_drvkit.menu.DebugLevel.error.build.code_debug=1
+ozobot_drvkit.menu.DebugLevel.warn=Warn
+ozobot_drvkit.menu.DebugLevel.warn.build.code_debug=2
+ozobot_drvkit.menu.DebugLevel.info=Info
+ozobot_drvkit.menu.DebugLevel.info.build.code_debug=3
+ozobot_drvkit.menu.DebugLevel.debug=Debug
+ozobot_drvkit.menu.DebugLevel.debug.build.code_debug=4
+ozobot_drvkit.menu.DebugLevel.verbose=Verbose
+ozobot_drvkit.menu.DebugLevel.verbose.build.code_debug=5
 
-ozobot_circuit_kit.menu.EraseFlash.none=Disabled
-ozobot_circuit_kit.menu.EraseFlash.none.upload.erase_cmd=
-ozobot_circuit_kit.menu.EraseFlash.all=Enabled
-ozobot_circuit_kit.menu.EraseFlash.all.upload.erase_cmd=-e
+ozobot_drvkit.menu.EraseFlash.none=Disabled
+ozobot_drvkit.menu.EraseFlash.none.upload.erase_cmd=
+ozobot_drvkit.menu.EraseFlash.all=Enabled
+ozobot_drvkit.menu.EraseFlash.all.upload.erase_cmd=-e
 
-ozobot_circuit_kit.menu.ZigbeeMode.default=Disabled
-ozobot_circuit_kit.menu.ZigbeeMode.default.build.zigbee_mode=
-ozobot_circuit_kit.menu.ZigbeeMode.default.build.zigbee_libs=
-ozobot_circuit_kit.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
-ozobot_circuit_kit.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-ozobot_circuit_kit.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+ozobot_drvkit.menu.ZigbeeMode.default=Disabled
+ozobot_drvkit.menu.ZigbeeMode.default.build.zigbee_mode=
+ozobot_drvkit.menu.ZigbeeMode.default.build.zigbee_libs=
+ozobot_drvkit.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+ozobot_drvkit.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+ozobot_drvkit.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################

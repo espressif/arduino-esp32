@@ -111,7 +111,7 @@ void setup() {
   Serial.println(localTime, "%A, %B %d %Y %H:%M:%S");
 
   // Start Temperature sensor reading task
-  xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 2048, NULL, 10, NULL);
+  xTaskCreate(temp_sensor_value_update, "temp_sensor_update", 3072, NULL, 10, NULL);
 
   // Set reporting interval for temperature measurement in seconds, must be called after Zigbee.begin()
   // min_interval and max_interval in seconds, delta (temp change in 0,1 °C)

@@ -88,7 +88,7 @@ repos:
         types_or: [yaml]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "63c8f8312b7559622c0d82815639671ae42132ac" # v2.4.1
+    rev: "2ccb47ff45ad361a21071a7eedda4c37e6ae8c5a" # v2.4.2
     hooks:
       # Spell checking
       - id: codespell

@@ -665,6 +665,14 @@ int8_t uart_get_TxPin(uint8_t uart_num) {
   return _uart_bus_array[uart_num]._txPin;
 }
 
+int8_t uart_get_CtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._ctsPin;
+}
+
+int8_t uart_get_RtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._rtsPin;
+}
+
 // Routines that take care of UART events will be in the HardwareSerial Class code
 void uartGetEventQueue(uart_t *uart, QueueHandle_t *q) {
   // passing back NULL for the Queue pointer when UART is not initialized yet
@@ -787,11 +795,31 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // get UART information
   uart_t *uart = &_uart_bus_array[uart_num];
 
+  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
+  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
   bool retCode = true;
   UART_MUTEX_LOCK();
 
-  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
-  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+  // If driver is not yet installed, just store the pin configuration
+  // The pins will be properly attached when the driver is installed in uartBegin()
+  if (!uartIsDriverInstalled(uart)) {
+    log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
+    if (rxPin >= 0) {
+      uart->_rxPin = rxPin;
+    }
+    if (txPin >= 0) {
+      uart->_txPin = txPin;
+    }
+    if (ctsPin >= 0) {
+      uart->_ctsPin = ctsPin;
+    }
+    if (rtsPin >= 0) {
+      uart->_rtsPin = rtsPin;
+    }
+    UART_MUTEX_UNLOCK();
+    return true;
+  }
 
   // mute bus detaching callbacks to avoid terminating the UART driver when both RX and TX pins are detached
   peripheral_bus_deinit_cb_t rxDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX);
@@ -1172,8 +1200,10 @@ uart_t *uartBegin(
   UART_MUTEX_UNLOCK();
 
   // uartSetPins detaches previous pins if new ones are used over a previous begin()
+  // If any pins were pre-configured via setPins() before begin(), use those instead of UART_PIN_NO_CHANGE
   if (retCode) {
-    retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    log_v("UART%u calling uartSetPins: RX=%d, TX=%d, CTS=%d, RTS=%d", uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
+    retCode &= uartSetPins(uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
   }
   if (!retCode) {
     log_e("UART%u initialization error.", uart->num);
@@ -1613,6 +1643,43 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
   UART_MUTEX_UNLOCK();
   return retCode;
+}
+
+// Routine that sets UART_MODE_IRDA direction: TX or RX
+// irdaDirection: ESP32_UART_IRDA_TX (1) for TX mode, ESP32_UART_IRDA_RX (0) for RX mode
+// IrDA mode direction is exclusive: the UART can transmit OR receive, but not both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM || (irdaDirection != ESP32_UART_IRDA_RX && irdaDirection != ESP32_UART_IRDA_TX)) {
+    return false;
+  }
+
+  UART_MUTEX_LOCK();
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  bool isIrdaModeEnabled = hw->conf0.irda_en == 1;
+#else
+  bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
+#endif
+  if (!isIrdaModeEnabled) {
+    uint8_t uart_num = uart->num;
+    UART_MUTEX_UNLOCK();
+    log_e("UART%u is not in IrDA mode; set UART_MODE_IRDA before setting IrDA TX/RX direction.", uart_num);
+    return false;
+  }
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  // enables IRDA TX
+  hw->conf0.irda_tx_en = irdaDirection;
+#else
+  // enables IRDA TX
+  hw->conf0_sync.irda_tx_en = irdaDirection;
+  // it needs UART Update
+  uart_ll_update(hw);
+#endif
+  UART_MUTEX_UNLOCK();
+  return true;
 }
 
 // this function will set the uart clock source
