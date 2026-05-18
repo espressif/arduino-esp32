@@ -541,7 +541,7 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
    * The ``setMode(UART_MODE_IRDA)`` function must be called before using ``setIrdaDirection()``.
    * Switching between TX and RX modes can be done by calling ``setIrdaDirection()`` with different parameters.
    * The ESP32 UART hardware automatically handles IrDA pulse timing and encoding/decoding.
-   * Hardware requirements: IR LED (950nm) + resistor for TX, IR photodiode + amplifier for RX. No external SIR transceiver module needed.
+   * Hardware requirements: IR LED (950&nbsp;nm) + resistor for TX, IR photodiode + amplifier for RX. No external SIR transceiver module needed.
 
 **Example:**
 
