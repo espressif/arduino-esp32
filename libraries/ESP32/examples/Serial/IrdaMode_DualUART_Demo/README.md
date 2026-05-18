@@ -193,7 +193,7 @@ This example demonstrates IrDA **mode and protocol** handling. For actual infrar
 
 1. Use `IrdaMode_TwoBoard_Demo.ino`
 2. Add external hardware:
-   - **TX side**: IR LED (950&nbsp;nm) + 100-330Ω resistor on TX pin
+   - **TX side**: IR LED (950 nm) + 100-330Ω resistor on TX pin
    - **RX side**: IR photodiode + amplifier circuit on RX pin
 3. Align optical components for line-of-sight
 4. The UART hardware automatically handles pulse timing and encoding

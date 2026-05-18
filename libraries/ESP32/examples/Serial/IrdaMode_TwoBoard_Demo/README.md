@@ -48,7 +48,7 @@ Board 1 (TX)  --[IR LED]--→ [IR Space] --[IR Receiver]--  Board 2 (RX)
 ### Requirements
 
 - **Two ESP32 boards** (any variant with UART0 and UART1)
-- **Infrared LED** (950&nbsp;nm wavelength) with current-limiting resistor (~100-330Ω)
+- **Infrared LED** (950 nm wavelength) with current-limiting resistor (~100-330Ω)
 - **Infrared receiver** (raw IR photodiode/phototransistor, do not use a demodulating remote-control receiver)
 - **USB connections** for each board (for Serial Monitor + programming)
 - **Optional**: External power supply for more reliable IR transmission
@@ -113,7 +113,7 @@ Board 1 (TX)                    Board 2 (RX)
 1. **TX Board**: Connect IR LED with resistor to UART1 TX pin
 2. **RX Board**: Connect IR receiver with amplifier to UART1 RX pin
 3. **Align** IR optical components for line-of-sight (facing each other)
-4. **Separation**: Start with boards 10-20&nbsp;cm apart
+4. **Separation**: Start with boards 10-20 cm apart
 
 ### Step 3: Monitor Communication
 
@@ -229,7 +229,7 @@ void loopRXMode() {
 **No data received on RX board:**
 - Check IR LED is lighting up on TX board (should glow faintly)
 - Align IR receiver to face IR LED (line-of-sight)
-- Reduce distance between boards (start with 5-10&nbsp;cm)
+- Reduce distance between boards (start with 5-10 cm)
 - Verify RX board is in RX mode (check Serial Monitor)
 - Check baud rates match (both set to 9600)
 
@@ -290,16 +290,16 @@ irda_uart.printf("TS=%lu,DATA=test_%lu\n", millis(), counter);
 ### IR Optical Components
 
 **TX Side (IR LED):**
-- Wavelength: 950&nbsp;nm (standard for IrDA)
-- Forward voltage: ~1.5&nbsp;V typical
+- Wavelength: 950 nm (standard for IrDA)
+- Forward voltage: ~1.5 V typical
 - Do **not** assume an ESP32 GPIO can directly drive a high-current IR LED. Check the current limits in the datasheet for your specific ESP32 SoC/module/board.
 - For simple, short-range experiments, use a resistor sized for **low GPIO current only** if driving the LED directly.
 - For stronger output or longer range, drive the IR LED through a **transistor or logic-level MOSFET** (and use an external LED supply if needed, with a shared ground).
-- Size the series resistor for your actual LED forward voltage and target current in the chosen drive circuit; avoid treating ~100&nbsp;mA as a typical direct-drive GPIO target.
+- Size the series resistor for your actual LED forward voltage and target current in the chosen drive circuit; avoid treating ~100 mA as a typical direct-drive GPIO target.
 - Practical: 100-220Ω can be a conservative starting point for low-current testing, but verify the actual current for your LED and supply voltage.
 
 **RX Side (IR Receiver):**
-- Photodiode: Detects 940-960&nbsp;nm IR light
+- Photodiode: Detects 940-960 nm IR light
 - Requires amplification (op-amp TL072, LM358, etc.)
 - Gain: ~1000x typical
 - Output: TTL-compatible signal to UART RX pin
