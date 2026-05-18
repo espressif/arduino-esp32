@@ -655,6 +655,72 @@ void test_write_read_patterns() {
   V.remove(path);
 }
 
+// Regression test for the TOCTOU fix in VFSFileImpl::VFSFileImpl (libraries/FS/src/vfs_api.cpp).
+//
+// The original code used stat() to determine the file type and then called fopen() or opendir()
+// based on the result, creating a race window between the check and the open.  The fix removes
+// that window by attempting fopen() first and falling back to opendir() on failure.
+//
+// We cannot reproduce the race deterministically on embedded hardware, but we can verify that
+// the fixed code path correctly identifies both files and directories when opened in read mode,
+// which would catch any regression in the type-detection logic.
+void test_open_read_mode_type_detection() {
+  auto &V = gFS->vfs();
+
+  // --- regular file opened in read mode ---
+  const char *filePath = "/toctou_file.txt";
+  {
+    File w = V.open(filePath, FILE_WRITE);
+    TEST_ASSERT_TRUE_MESSAGE(w, "setup: could not create file");
+    w.print("toctou");
+    w.close();
+  }
+
+  {
+    // Open the same path in read mode: must be detected as a file, not a directory
+    File f = V.open(filePath, FILE_READ);
+    TEST_ASSERT_TRUE_MESSAGE(f, "open(file, FILE_READ) failed");
+    TEST_ASSERT_FALSE_MESSAGE(f.isDirectory(), "regular file incorrectly detected as directory");
+    String content = f.readString();
+    TEST_ASSERT_EQUAL_STRING("toctou", content.c_str());
+    f.close();
+  }
+
+  V.remove(filePath);
+
+  // --- directory opened with default (read) mode ---
+  if (strcmp(gFS->name(), "spiffs") == 0) {
+    // SPIFFS does not have real directories; skip directory portion
+    TEST_MESSAGE("Skipping directory portion for SPIFFS");
+    return;
+  }
+
+  const char *dirPath = "/toctou_dir";
+  const char *childPath = "/toctou_dir/child.txt";
+  {
+    TEST_ASSERT_TRUE_MESSAGE(V.mkdir(dirPath), "setup: could not create directory");
+    File w = V.open(childPath, FILE_WRITE);
+    TEST_ASSERT_TRUE_MESSAGE(w, "setup: could not create child file");
+    w.print("child");
+    w.close();
+  }
+
+  {
+    // Open the directory path without an explicit mode (defaults to read).
+    // Must be detected as a directory so that openNextFile() works.
+    File d = V.open(dirPath);
+    TEST_ASSERT_TRUE_MESSAGE(d, "open(dir) failed");
+    TEST_ASSERT_TRUE_MESSAGE(d.isDirectory(), "directory incorrectly detected as file");
+    File child = d.openNextFile();
+    TEST_ASSERT_TRUE_MESSAGE(child, "openNextFile() returned no entry in non-empty directory");
+    child.close();
+    d.close();
+  }
+
+  V.remove(childPath);
+  V.rmdir(dirPath);
+}
+
 void test_directory_operations_edge_cases() {
   auto &V = gFS->vfs();
   TEST_ASSERT_TRUE(V.mkdir("/test_dir"));
@@ -757,6 +823,7 @@ static void run_suite_for(IFileSystem &fs) {
   RUN_TEST(test_write_read_patterns);
   RUN_TEST(test_directory_operations_edge_cases);
   RUN_TEST(test_max_open_files_limit);
+  RUN_TEST(test_open_read_mode_type_detection);
   gFS = nullptr;
 }
 
