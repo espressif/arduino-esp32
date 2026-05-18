@@ -146,7 +146,7 @@ jobs:
           ls -la ./build_artifacts
           pip3 install pyyaml
           wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/generate_missing_junits.py -O ./generate_missing_junits.py
-          python3 ./generate_missing_junits.py ./build_artifacts ./artifacts ./test_errors
+          python3 ./generate_missing_junits.py ./build_artifacts ./artifacts ./test_errors --previous-results ./runtime-test-results/test_results.json
 
       - name: Publish Unit Test Results
         id: publish-test-results
@@ -269,8 +269,12 @@ jobs:
           rm -rf $REPORT_FILE
           mv -f ./unity_results.json ./runtime-test-results/unity_results.json
           touch $REPORT_FILE
+          BUILD_FAILURE_CELLS=""
+          if [ -f ./test_errors/build_failure_cells.json ]; then
+            BUILD_FAILURE_CELLS="--build-failure-cells ./test_errors/build_failure_cells.json"
+          fi
           wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/runtime_table_generator.py -O ./runtime-test-results/runtime_table_generator.py
-          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts --previous-results ./runtime-test-results/test_results.json >> $REPORT_FILE
+          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts --previous-results ./runtime-test-results/test_results.json $BUILD_FAILURE_CELLS >> $REPORT_FILE
           mv -f ./test_results.json ./runtime-test-results/test_results.json
           rm -rf artifacts
 

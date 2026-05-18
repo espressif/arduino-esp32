@@ -284,10 +284,21 @@ jobs:
           merge-multiple: true
           path: compile_commands
 
+      - name: Check for compile commands
+        id: check-files
+        run: |
+          if compgen -G "compile_commands/*.json" > /dev/null; then
+            echo "has_files=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Merge compile commands
+        if: steps.check-files.outputs.has_files == 'true'
         run: jq -s 'add | unique_by(.file + "_" + ._target) | [.[] | del(._target)]' compile_commands/*.json > compile_commands.json
 
       - name: Upload merged compile commands
+        if: steps.check-files.outputs.has_files == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: compile_commands
