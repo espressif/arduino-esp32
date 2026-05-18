@@ -286,7 +286,7 @@ void enabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled while running");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
-  Serial.setDebugOutput(true); // restore the Console log output
+  Serial.setDebugOutput(true);  // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted while running");
   Serial1.setRxInvert(true);
@@ -366,7 +366,7 @@ void disabled_uart_calls_test(void) {
   log_d("Checking if Serial 1 debug output can be enabled when stopped");
   Serial1.setDebugOutput(true);
   Serial1.setDebugOutput(false);
-  Serial.setDebugOutput(true); // restore the Console log output
+  Serial.setDebugOutput(true);  // restore the Console log output
 
   log_d("Checking if Serial 1 RX can be inverted when stopped");
   Serial1.setRxInvert(true);

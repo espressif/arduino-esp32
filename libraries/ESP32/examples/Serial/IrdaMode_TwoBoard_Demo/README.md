@@ -165,7 +165,7 @@ RX <- Received: FRAME_2
 ```cpp
 void selectMode() {
   Serial.println("Select IrDA mode: T or R");
-  
+
   while (irda_mode == MODE_NOT_SET) {
     if (Serial.available()) {
       char cmd = Serial.read();
@@ -191,10 +191,10 @@ void loopTXMode() {
   // Transmit IrDA frame
   irda_uart.printf("FRAME_%lu\n", counter);
   irda_uart.flush();
-  
+
   // Wait for optional response
   // (could receive acknowledgment from peer)
-  
+
   counter++;
   delay(1000);  // Send new frame every 1 second
 }

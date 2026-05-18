@@ -162,13 +162,13 @@ If you want to test **two separate ESP32 boards** communicating via infrared:
 
 **Cause:** Your ESP32 board only has UART0 and UART1
 
-**Solution:** 
+**Solution:**
 - Use a different board (ESP32, ESP32-S3, or ESP32-P4)
 - Or use `IrdaMode_TwoBoard_Demo.ino` with 2 boards
 
 ### No data received on UART2
 
-**Cause:** 
+**Cause:**
 - Internal loopback not configured
 - UART2 not in RX mode
 - Baud rate mismatch
@@ -191,7 +191,7 @@ If you want to test **two separate ESP32 boards** communicating via infrared:
 
 This example demonstrates IrDA **mode and protocol** handling. For actual infrared transmission:
 
-1. Use `IrdaMode_TwoBoard_Demo.ino` 
+1. Use `IrdaMode_TwoBoard_Demo.ino`
 2. Add external hardware:
    - **TX side**: IR LED (950nm) + 100-330Ω resistor on TX pin
    - **RX side**: IR photodiode + amplifier circuit on RX pin

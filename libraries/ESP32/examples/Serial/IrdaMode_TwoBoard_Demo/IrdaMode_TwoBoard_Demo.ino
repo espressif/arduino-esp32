@@ -28,19 +28,19 @@
 #include <Arduino.h>
 
 // UART1 pin definitions
-#define UART1_RX_PIN  RX1  // RX UART1 pin
-#define UART1_TX_PIN  TX1  // TX UART1 pin
-#define BAUD_RATE     9600
+#define UART1_RX_PIN RX1  // RX UART1 pin
+#define UART1_TX_PIN TX1  // TX UART1 pin
+#define BAUD_RATE    9600
 
 // IrDA mode selection
-#define MODE_NOT_SET  0
-#define MODE_TX       1
-#define MODE_RX       2
+#define MODE_NOT_SET 0
+#define MODE_TX      1
+#define MODE_RX      2
 
 HardwareSerial &irda_uart = Serial1;
 uint8_t irda_mode = MODE_NOT_SET;
 
-String received = ""; // Buffer for received message
+String received = "";              // Buffer for received message
 const uint16_t MAX_MSG_SIZE = 64;  // Limit message size
 
 void setup() {
@@ -49,7 +49,7 @@ void setup() {
 
   Serial.println("\n=== UART IrDA Two-Board Demo ===");
   Serial.println("This example requires 2 ESP32 boards connected via infrared\n");
-  
+
   selectMode();
 }
 
@@ -58,7 +58,7 @@ void selectMode() {
   Serial.println("  T - Transmit mode (this board sends IrDA data)");
   Serial.println("  R - Receive mode (this board receives IrDA data)");
   Serial.println("\nWait for mode selection from Serial Monitor...");
-  
+
   // Wait for user input from Serial Monitor
   while (irda_mode == MODE_NOT_SET) {
     if (Serial.available()) {
@@ -85,11 +85,15 @@ void setupTXMode() {
   irda_uart.begin(BAUD_RATE, SERIAL_8N1, UART1_RX_PIN, UART1_TX_PIN);
   if (!irda_uart.setMode(UART_MODE_IRDA)) {
     Serial.println("ERROR: Failed to set IRDA mode");
-    while (1) delay(100);
+    while (1) {
+      delay(100);
+    }
   }
   if (!irda_uart.setIrdaDirection(ESP32_UART_IRDA_TX)) {
     Serial.println("ERROR: Failed to set IRDA TX mode");
-    while (1) delay(100);
+    while (1) {
+      delay(100);
+    }
   }
   Serial.println("UART1 configured in IRDA TX mode");
   Serial.println("Transmitting IrDA frames...\n");
@@ -100,11 +104,15 @@ void setupRXMode() {
   irda_uart.begin(BAUD_RATE, SERIAL_8N1, UART1_RX_PIN, UART1_TX_PIN);
   if (!irda_uart.setMode(UART_MODE_IRDA)) {
     Serial.println("ERROR: Failed to set IRDA mode");
-    while (1) delay(100);
+    while (1) {
+      delay(100);
+    }
   }
   if (!irda_uart.setIrdaDirection(ESP32_UART_IRDA_RX)) {
     Serial.println("ERROR: Failed to set IRDA RX mode");
-    while (1) delay(100);
+    while (1) {
+      delay(100);
+    }
   }
   Serial.println("UART1 configured in IRDA RX mode");
   Serial.println("Waiting for IrDA frames...\n");
@@ -120,13 +128,13 @@ void loop() {
 
 void loopTXMode() {
   static uint32_t counter = 0;
-  
+
   // Send IrDA data
   Serial.printf("TX -> Sending frame %lu\n", (unsigned long)counter);
   irda_uart.printf("FRAME_%lu", (unsigned long)counter);
   irda_uart.print("\n");  // Add newline as delimiter
   irda_uart.flush();
-  
+
   counter++;
   delay(1000);  // Send new frame every 1 second
 }
@@ -153,11 +161,11 @@ void loopRXMode() {
         } else {
           Serial.printf("So far RX <- Received: %s%c\n", received.c_str(), c);
           Serial.printf("WARNING: Received message truncated (exceeds max size = %u)\r\n", MAX_MSG_SIZE);
-          received = ""; // Clear buffer for new message
+          received = "";  // Clear buffer for new message
         }
       }
     }
-    
+
     if (gotData) {
       // Optional: Send acknowledgment back
       // irda_uart.println("ACK");
@@ -171,6 +179,6 @@ void loopRXMode() {
   if (!gotData) {
     Serial.println("RX <- (waiting for IrDA frames from peer TX mode)");
   }
-  
+
   delay(500);
 }

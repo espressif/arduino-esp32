@@ -549,11 +549,11 @@ Sets the IrDA transmission direction (TX or RX mode). Can only be used after ``s
 
     Serial1.begin(9600, SERIAL_8N1, RX1, TX1);
     Serial1.setMode(UART_MODE_IRDA);                    // Enable IrDA mode
-    
+
     // Switch to TX mode
     Serial1.setIrdaDirection(ESP32_UART_IRDA_TX);
     Serial1.println("Transmit data");
-    
+
     // Switch to RX mode
     Serial1.setIrdaDirection(ESP32_UART_IRDA_RX);
     while (Serial1.available()) {
