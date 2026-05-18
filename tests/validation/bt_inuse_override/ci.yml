@@ -4,3 +4,4 @@ requires:
 
 platforms:
   qemu: false
+  wokwi: false # For some reason this test crashes in Wokwi

@@ -53,6 +53,30 @@ def _load_previous_results(path):
         return {}
 
 
+def _load_build_failure_cells(path):
+    """Load per-cell build failures: set of (platform, test_name, target)."""
+    if not path or not os.path.isfile(path):
+        return set()
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            return set()
+        cells = set()
+        for item in data:
+            if not isinstance(item, dict):
+                continue
+            platform = item.get("platform")
+            target = item.get("target")
+            sketch = item.get("sketch")
+            if platform and target and sketch:
+                cells.add((platform, sketch, target))
+        return cells
+    except (OSError, json.JSONDecodeError) as e:
+        logging.debug(f"Could not read build failure cells from {path}: {e}")
+        return set()
+
+
 def _is_cache_fresh(entry):
     """Return True if the cache entry timestamp is within CACHE_STALE_DAYS."""
     if not entry or "timestamp" not in entry:
@@ -197,6 +221,11 @@ parser.add_argument("--results", required=True, help="Path to the unity_results.
 parser.add_argument("--sha", default=None, help="Commit SHA (falls back to GITHUB_SHA env var)")
 parser.add_argument("--perf-dir", default=None, help="Path to directory containing performance result_*.json files")
 parser.add_argument("--previous-results", default=None, help="Path to previous test_results.json (used to seed the result cache)")
+parser.add_argument(
+    "--build-failure-cells",
+    default=None,
+    help="Path to build_failure_cells.json (cells with no build artifact; show errors, not cache)",
+)
 args = parser.parse_args()
 
 with open(args.results, "r") as f:
@@ -214,6 +243,7 @@ raw_result_cache = previous_results.get("cache", {})
 result_cache = raw_result_cache if isinstance(raw_result_cache, dict) else {}        # platform -> test_name -> target -> entry
 raw_perf_cache = previous_results.get("perf_cache", {})
 perf_cache = raw_perf_cache if isinstance(raw_perf_cache, dict) else {}     # test_name -> target -> entry
+build_failure_cells = _load_build_failure_cells(args.build_failure_cells)
 
 # Generate the table
 
@@ -319,9 +349,10 @@ for platform in proc_test_data:
             executed_cell = platform_executed.get(test_name, {}).get(target)
             if executed_cell:
                 if executed_cell["errors"] > 0:
-                    # Test did not run — try to fall back to cache
+                    # Test did not run — cache only when runner unavailable, not when build failed
                     cached = test_cache.get(target)
-                    if cached and _is_cache_fresh(cached):
+                    build_failed_cell = (platform, test_name, target) in build_failure_cells
+                    if not build_failed_cell and cached and _is_cache_fresh(cached):
                         print(_render_cached_cell(cached), end="")
                         any_cached_cell = True
                     else:
@@ -369,10 +400,11 @@ if tests_with_targets:
             entry = tests_with_targets[test_name][target]
             junit = perf_junit_status.get((target, test_name))
             if junit and junit["errors"] > 0:
-                # Test did not run — try cache
+                # Test did not run — cache only when runner unavailable, not when build failed
                 cached = test_perf_cache.get(target)
                 cached_status = cached.get("status") if cached else None
-                if cached and _is_cache_fresh(cached) and cached_status:
+                build_failed_cell = ("hardware", test_name, target) in build_failure_cells
+                if not build_failed_cell and cached and _is_cache_fresh(cached) and cached_status:
                     status_label = cached_status.capitalize()
                     status_symbol = SUCCESS_SYMBOL if cached_status == "success" else FAILURE_SYMBOL
                     print(f"  - {_display_target(target)} - {status_label} - {status_symbol}\\*")
