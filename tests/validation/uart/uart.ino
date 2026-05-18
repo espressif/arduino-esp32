@@ -449,6 +449,14 @@ void auto_baudrate_test(void) {
 
   TEST_ASSERT_UINT_WITHIN(2304, 115200, baudrate);
 
+  // Drain and assert the message that was used for baudrate detection
+  // This validates that the data was received correctly AND prevents the
+  // bytes from leaking into subsequent tests.
+  String received = selected_serial->readStringUntil('\n');
+  received.trim();
+  TEST_ASSERT_EQUAL_STRING("Hello to detect baudrate", received.c_str());
+  log_d("UART%d received message: %s\n", uart_num, recv_msg.c_str());
+  
   Serial.println("Auto baudrate test successful");
 }
 #endif
