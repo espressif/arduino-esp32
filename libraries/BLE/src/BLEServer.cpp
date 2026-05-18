@@ -314,20 +314,33 @@ void BLEServer::startAdvertising() {
 /* TODO do some more tweaks */
 void BLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {
   // set mtu in conn_status_t
+  m_semaphoreMapAccess.take("updatePeerMTU");
   const std::map<uint16_t, conn_status_t>::iterator it = m_connectedServersMap.find(conn_id);
   if (it != m_connectedServersMap.end()) {
     it->second.mtu = mtu;
-    std::swap(m_connectedServersMap[conn_id], it->second);
   }
+  m_semaphoreMapAccess.give();
 }
 
 std::map<uint16_t, conn_status_t> BLEServer::getPeerDevices(bool _client) {
-  return m_connectedServersMap;
+  m_semaphoreMapAccess.take("getPeerDevices");
+  auto copy = m_connectedServersMap;
+  m_semaphoreMapAccess.give();
+  return copy;
 }
 
 uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  return m_connectedServersMap.find(conn_id)->second.mtu;
+  uint16_t mtu = 23;
+  m_semaphoreMapAccess.take("getPeerMTU");
+  auto it = m_connectedServersMap.find(conn_id);
+  if (it != m_connectedServersMap.end()) {
+    mtu = it->second.mtu;
+  } else {
+    log_w("getPeerMTU: conn_id %u not found, using default MTU %u", conn_id, mtu);
+  }
+  m_semaphoreMapAccess.give();
+  return mtu;
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -338,11 +351,16 @@ uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
 void BLEServer::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
   conn_status_t status = {.peer_device = peer, .connected = true, .mtu = 23};
 
+  m_semaphoreMapAccess.take("addPeerDevice");
   m_connectedServersMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
+  m_semaphoreMapAccess.give();
 }
 
 bool BLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
-  return m_connectedServersMap.erase(conn_id) > 0;
+  m_semaphoreMapAccess.take("removePeerDevice");
+  bool result = m_connectedServersMap.erase(conn_id) > 0;
+  m_semaphoreMapAccess.give();
+  return result;
 }
 
 #if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
