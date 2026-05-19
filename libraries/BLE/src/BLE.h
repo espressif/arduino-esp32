@@ -467,7 +467,6 @@ private:
   Impl *_impl;
 
   bool _initialized = false;
-  bool _memoryReleased = false;
   BTAddress::Type _ownAddressType = BTAddress::Type::Public;
   String _deviceName;
   std::vector<BTAddress> _whiteList;

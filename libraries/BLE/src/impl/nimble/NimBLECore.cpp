@@ -187,10 +187,12 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::OK;
   }
 
-  if (_memoryReleased) {
-    log_e("Cannot reinitialize BLE: memory was permanently released by end(true)");
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("Cannot reinitialize BLE: memory has been released");
     return BTStatus::InvalidState;
   }
+#endif
 
   log_i("Initializing BLE stack: NimBLE");
 
@@ -246,10 +248,10 @@ BTStatus BLEClass::begin(const String &deviceName) {
 }
 
 /**
- * @brief Stops advertising, scanning, the NimBLE port, and optionally the controller, releasing heap when requested.
- * @param releaseMemory When true, call `esp_bt_controller_mem_release` and set `_memoryReleased` so `begin()` cannot be used again.
+ * @brief Stops advertising, scanning, the NimBLE port, and optionally the controller, releasing BLE memory.
+ * @param releaseMemory When true, BLE memory is freed via `btMemRelease()` and cannot be reclaimed without a reset.
  * @note `hostedDeinitBLE()` runs when `CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE` is set, after the NimBLE port is torn down.
- * @note Permanent memory release via `releaseMemory` is irreversible for a later in-process `begin()`.
+ * @note Irreversible: after `end(true)` you cannot call `begin()` again without a hardware reset.
  */
 void BLEClass::end(bool releaseMemory) {
   if (!_impl || !_initialized) {
@@ -289,7 +291,6 @@ void BLEClass::end(bool releaseMemory) {
 #if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
     esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
 #endif
-    _memoryReleased = true;
   }
 
   _impl->synced = false;

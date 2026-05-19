@@ -36,8 +36,6 @@ typedef enum {
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
 // Users may also provide their own strong *InUse() to override.
-bool _btInUse_default(void);
-bool btInUse(void);
 bool btClassicInUse(void);
 bool bleInUse(void);
 

@@ -191,10 +191,12 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::OK;
   }
 
-  if (_memoryReleased) {
-    log_e("Cannot reinitialize BLE: memory was permanently released by end(true)");
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("Cannot reinitialize BLE: memory has been released");
     return BTStatus::InvalidState;
   }
+#endif
 
   log_i("Initializing BLE stack: Bluedroid");
 
@@ -253,9 +255,9 @@ BTStatus BLEClass::begin(const String &deviceName) {
 }
 
 /**
- * @brief Disables Bluedroid and the controller, optionally calling `esp_bt_controller_mem_release` to free heap.
- * @param releaseMemory When true, memory is not reclaimable for a new `begin()` in the same process; `_memoryReleased` is set.
- * @note Irreversible controller memory release: after `end(true)` you cannot call `begin()` again without a reset that restores heap mode.
+ * @brief Disables Bluedroid and the controller, optionally releasing BLE memory.
+ * @param releaseMemory When true, BLE memory is freed via `btMemRelease()` and cannot be reclaimed without a reset.
+ * @note Irreversible: after `end(true)` you cannot call `begin()` again without a hardware reset.
  */
 void BLEClass::end(bool releaseMemory) {
   if (!_initialized) {
@@ -281,8 +283,7 @@ void BLEClass::end(bool releaseMemory) {
   esp_bt_controller_deinit();
 
   if (releaseMemory) {
-    esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
-    _memoryReleased = true;
+    btMemRelease(BT_MODE_BLE);
   }
 
   _initialized = false;

@@ -31,16 +31,6 @@ static bool _classicMemReleased = false;
 static bool _classicMemReleased = true;  // No Classic BT on this chip
 #endif
 
-// DEPRECATED: Remove this function in v4.0. Use btClassicInUse() and bleInUse() instead.
-// Only for backwards compatibility with existing code.
-bool _btInUse_default(void) {
-  return false;
-}
-
-// DEPRECATED: Remove this function in v4.0. Use btClassicInUse() and bleInUse() instead.
-// Only for backwards compatibility with existing code.
-__attribute__((weak, alias("_btInUse_default"))) bool btInUse(void);
-
 // Default behavior: release BTDM memory (~36KB) unless a BT library is used or user overrides.
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
