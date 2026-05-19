@@ -1663,7 +1663,7 @@ bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirectio
   bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
 #endif
   if (!isIrdaModeEnabled) {
-    uint8_t uart_num = uart->num;
+    __attribute__((unused)) uint8_t uart_num = uart->num;
     UART_MUTEX_UNLOCK();
     log_e("UART%u is not in IrDA mode; set UART_MODE_IRDA before setting IrDA TX/RX direction.", uart_num);
     return false;
