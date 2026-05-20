@@ -73,6 +73,7 @@ set(CORE_SRCS
   cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
+  cores/esp32/USBHost.cpp
   cores/esp32/USBCDC.cpp
   cores/esp32/USBMSC.cpp
   cores/esp32/FirmwareMSC.cpp
@@ -252,6 +253,12 @@ set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/USBHID.cpp
   libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
+  libraries/USB/src/USBHostHID.cpp
+  libraries/USB/src/USBHostHIDMouse.cpp
+  libraries/USB/src/USBHostHIDGamepad.cpp
+  libraries/USB/src/USBHostHIDKeyboard.cpp
+  libraries/USB/src/USBHostMSC.cpp
+  libraries/USB/src/USBHostSerial.cpp
   libraries/USB/src/USBHIDKeyboard.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_da_DK.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
