@@ -26,6 +26,7 @@
 #include "soc/periph_defs.h"
 #include "soc/io_mux_reg.h"
 #include "soc/usb_serial_jtag_struct.h"
+#include <string.h>
 #pragma GCC diagnostic ignored "-Wvolatile"
 #include "hal/usb_serial_jtag_ll.h"
 #pragma GCC diagnostic warning "-Wvolatile"
@@ -36,9 +37,36 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 static RingbufHandle_t tx_ring_buf = NULL;
 static QueueHandle_t rx_queue = NULL;
 static uint8_t rx_data_buf[64] = {0};
+static uint8_t tx_stash_buf[64] = {0};
+static size_t tx_stash_len = 0;
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
+
+// Protects read-modify-write of the USB_SERIAL_JTAG INT_ENA register against
+// concurrent access from the producer task and the ISR (which may run on the
+// other core on dual-core SoCs). Without this, a producer's "enable IN_EMPTY"
+// can race with the ISR's "disable IN_EMPTY" in the empty-ring branch and get
+// silently dropped, leaving the link permanently stalled.
+static portMUX_TYPE hw_cdc_int_ena_mux = portMUX_INITIALIZER_UNLOCKED;
+
+static inline void hw_cdc_enable_tx_intr(void) {
+  portENTER_CRITICAL(&hw_cdc_int_ena_mux);
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+  portEXIT_CRITICAL(&hw_cdc_int_ena_mux);
+}
+
+static inline void hw_cdc_enable_tx_intr_from_isr(void) {
+  portENTER_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+  portEXIT_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+}
+
+static inline void hw_cdc_disable_tx_intr_from_isr(void) {
+  portENTER_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+  portEXIT_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+}
 
 // SOF in ISR causes problems for uploading firmware
 //static volatile unsigned long lastSOF_ms;
@@ -84,34 +112,65 @@ static void hw_cdc_isr_handler(void *arg) {
   usbjtag_intr_status = usb_serial_jtag_ll_get_intsts_mask();
 
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY) {
-    // Interrupt tells us the host picked up the data we sent.
-    if (!HWCDC::isPlugged()) {
-      connected = false;
-      usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      // USB is unplugged, nothing to be done here
-      return;
-    } else {
-      connected = true;
-    }
+    // IN_EMPTY firing means the host just picked up our last IN packet, so the
+    // CDC link is healthy regardless of any transient isPlugged() glitches
+    // (isPlugged() is driven by a tick-hook SOF watchdog with several ms of
+    // tolerance and can briefly flap to false even while USB is fine).
+    connected = true;
     if (tx_ring_buf != NULL && usb_serial_jtag_ll_txfifo_writable() == 1) {
-      // We disable the interrupt here so that the interrupt won't be triggered if there is no data to send.
-      usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
       size_t queued_size = 0;
-      uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
+      uint8_t *queued_buff = NULL;
+      bool from_stash = false;
+
+      // Clear interrupt so we won't be called again until this transfer finishes.
+      usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+
+      if (tx_stash_len) {
+        queued_buff = tx_stash_buf;
+        queued_size = tx_stash_len;
+        from_stash = true;
+      } else {
+        queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
+      }
       // If the hardware fifo is available, write in it. Otherwise, do nothing.
-      if (queued_buff != NULL) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
+      if (queued_buff != NULL && queued_size > 0) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
         //Copy the queued buffer into the TX FIFO
-        usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-        usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
+        uint32_t sent_size = usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
         usb_serial_jtag_ll_txfifo_flush();
-        vRingbufferReturnItemFromISR(tx_ring_buf, queued_buff, &xTaskWoken);
-        if (connected) {
-          usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+
+        if (sent_size < queued_size) {
+          tx_stash_len = queued_size - sent_size;
+          memmove(tx_stash_buf, queued_buff + sent_size, tx_stash_len);
+        } else {
+          tx_stash_len = 0;
         }
+        if (!from_stash) {
+          vRingbufferReturnItemFromISR(tx_ring_buf, queued_buff, &xTaskWoken);
+        }
+        // Always re-arm IN_EMPTY so that the next host pickup brings us back to
+        // drain whatever remains (stash + ring). Don't gate on `connected`: the
+        // SOF-watchdog can lag the real state and we'd rather get one spurious
+        // ISR than permanently lose the wakeup.
+        hw_cdc_enable_tx_intr_from_isr();
         //send event?
-        //ets_printf("TX:%lu\n", (unsigned long)queued_size);
-        event.tx.len = queued_size;
+        //ets_printf("TX:%lu\n", (unsigned long)sent_size);
+        event.tx.len = sent_size;
         arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
+      } else {
+        // A full 64-byte packet needs an extra flush to send the terminating zero-length packet.
+        usb_serial_jtag_ll_txfifo_flush();
+        hw_cdc_disable_tx_intr_from_isr();
+
+        // Re-check the ring AFTER disabling the interrupt. If a producer
+        // queued data between our ReceiveUpToFromISR() above and the disable,
+        // its hw_cdc_enable_tx_intr() may have raced with our disable and got
+        // overwritten. Re-arming here under the same spinlock guarantees we
+        // don't lose that wakeup.
+        UBaseType_t bytes_waiting = 0;
+        vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &bytes_waiting);
+        if (bytes_waiting || tx_stash_len) {
+          hw_cdc_enable_tx_intr_from_isr();
+        }
       }
     } else {
       usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -137,6 +196,7 @@ static void hw_cdc_isr_handler(void *arg) {
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
     arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
+    tx_stash_len = 0;
     connected = false;
   }
 
@@ -157,34 +217,28 @@ static void hw_cdc_isr_handler(void *arg) {
 // Timer test for SOF seems to work when uploading firmware
 //  return usb_serial_jtag_is_connected();//(lastSOF_ms + SOF_TIMEOUT) >= millis();
 //}
-
 bool HWCDC::isCDC_Connected() {
-  static bool running = false;
-
-  // USB may be unplugged
+  // USB may be unplugged. Do NOT touch tx_stash_len here: a single transient
+  // !isPlugged() reading (the SOF watchdog has a few-ms tolerance and is
+  // known to flap even on a healthy link) would otherwise silently drop bytes
+  // we already pulled out of the ring buffer into the stash.
   if (!isPlugged()) {
     connected = false;
-    running = false;
-    // SOF in ISR causes problems for uploading firmware
-    //SOF_TIMEOUT = 5;  // SOF timeout when unplugged
     return false;
   }
-  //else {
-  //  SOF_TIMEOUT = 50;  // SOF timeout when plugged
-  //}
 
   if (connected) {
-    running = false;
     return true;
   }
 
-  if (running == false && !connected) {  // enables it only once!
-    usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  }
-
-  // this will feed CDC TX FIFO to trigger IN_EMPTY
+  // Not yet (re)connected. Make sure the IN_EMPTY interrupt is armed and that
+  // there is something for the host to clock out so the next IN token will
+  // generate the interrupt that flips us back to connected = true. We arm on
+  // every call (not just once) so that a stalled int_ena -- whether from a
+  // producer/ISR race or from the ISR's empty-branch disable -- always gets
+  // re-enabled, breaking what would otherwise be a permanent TX deadlock.
+  hw_cdc_enable_tx_intr();
   usb_serial_jtag_ll_txfifo_flush();
-  running = true;
   return false;
 }
 
@@ -199,6 +253,7 @@ static void flushTXBuffer(const uint8_t *buffer, size_t size) {
 
   if (buffer == NULL) {
     // just flush the whole ring buffer and exit - used by HWCDC::flush()
+    tx_stash_len = 0;
     size_t queued_size = 0;
     uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ringbufferLength);
     if (queued_size && queued_buff != NULL) {
@@ -250,11 +305,12 @@ static void ARDUINO_ISR_ATTR cdc0_write_char(char c) {
   }
   if (xPortInIsrContext()) {
     xRingbufferSendFromISR(tx_ring_buf, (void *)(&c), 1, NULL);
+    hw_cdc_enable_tx_intr_from_isr();
   } else {
     xRingbufferSend(tx_ring_buf, (void *)(&c), 1, tx_timeout_ms / portTICK_PERIOD_MS);
+    hw_cdc_enable_tx_intr();
   }
   usb_serial_jtag_ll_txfifo_flush();
-  usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
 }
 
 HWCDC::HWCDC() {
@@ -397,6 +453,7 @@ void HWCDC::setTxTimeoutMs(uint32_t timeout) {
 */
 
 size_t HWCDC::setTxBufferSize(size_t tx_queue_len) {
+  tx_stash_len = 0;
   if (tx_ring_buf) {
     vRingbufferDelete(tx_ring_buf);
     tx_ring_buf = NULL;
@@ -433,62 +490,56 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
   if (!isCDC_Connected()) {
     // just pop/push RingBuffer and apply FIFO policy
     flushTXBuffer(buffer, size);
+    // Kick the ISR after queuing: the not-connected path doesn't otherwise
+    // re-arm IN_EMPTY, which means a transient isPlugged() glitch that flipped
+    // `connected` to false would leave new data sitting in the ring with no
+    // wakeup pending -- a permanent hang. Re-arming here lets the ISR drain
+    // the ring and flip `connected` back to true on the next host pickup.
+    hw_cdc_enable_tx_intr();
   } else {
-    size_t space = xRingbufferGetCurFreeSize(tx_ring_buf);
     size_t to_send = size, so_far = 0;
-
-    if (space > size) {
-      space = size;
+    size_t ring_max = xRingbufferGetMaxItemSize(tx_ring_buf);
+    if (ring_max == 0) {
+      ring_max = size;
     }
-    // Non-Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-    if (space > 0 && xRingbufferSend(tx_ring_buf, (void *)(buffer), space, 0) != pdTRUE) {
-      size = 0;
-    } else {
-      to_send -= space;
-      so_far += space;
-      // Now trigger the ISR to read data from the ring buffer.
-      usb_serial_jtag_ll_txfifo_flush();
-      if (connected) {
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      }
-      // tracks CDC transmission progress to avoid hanging if CDC is unplugged while still sending data
-      size_t last_toSend = to_send;
-      uint32_t tries = tx_timeout_ms;  // waits 1ms per sending data attempt, in case CDC is unplugged
-      while (connected && to_send) {
-        space = xRingbufferGetCurFreeSize(tx_ring_buf);
-        if (space > to_send) {
-          space = to_send;
-        }
-        // Blocking method, Sending data to ringbuffer, and handle the data in ISR.
-        if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), space, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
+
+    // isPlugged() is based on a FreeRTOS tick hook watching SOF packets and may
+    // flap to false for a few ms even while USB is fine. We therefore only treat
+    // sustained failures (many consecutive ring-buffer send timeouts AND
+    // isPlugged() reporting disconnected over that period) as a real disconnect.
+    uint32_t consec_timeouts = 0;
+    const uint32_t max_consec_timeouts = 20;  // ~ max_consec_timeouts * tx_timeout_ms total wait
+    bool gave_up = false;
+
+    while (to_send) {
+      size_t chunk = to_send > ring_max ? ring_max : to_send;
+
+      // Blocking send into the TX ring buffer. The ISR drains the buffer into
+      // the USB Serial/JTAG FIFO whenever the host picks up data.
+      if (xRingbufferSend(tx_ring_buf, (void *)(buffer + so_far), chunk, tx_timeout_ms / portTICK_PERIOD_MS) != pdTRUE) {
+        // Kick the ISR in case it stopped draining the ring.
+        hw_cdc_enable_tx_intr();
+        consec_timeouts++;
+        if (consec_timeouts >= max_consec_timeouts && !isPlugged()) {
+          // Sustained failure to make progress and USB really seems gone.
           size = so_far;
-          log_w("write failed due to ring buffer full - timeout");
+          connected = false;
+          gave_up = true;
           break;
         }
-        so_far += space;
-        to_send -= space;
-        // Now trigger the ISR to read data from the ring buffer.
-        usb_serial_jtag_ll_txfifo_flush();
-        if (connected) {
-          usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-        }
-        if (last_toSend == to_send) {
-          // no progress in sending data... USB CDC is probably unplugged
-          tries--;
-          delay(1);
-        } else {
-          last_toSend = to_send;
-          tries = tx_timeout_ms;  // reset the timeout
-        }
-        if (tries == 0) {  // CDC isn't connected anymore...
-          size = so_far;
-          log_w("write failed due to waiting USB Host - timeout");
-          connected = false;
-        }
+        continue;
       }
+
+      consec_timeouts = 0;
+      so_far += chunk;
+      to_send -= chunk;
+      // Notify the ISR that new data is ready to be moved into the TX FIFO.
+      hw_cdc_enable_tx_intr();
     }
-    // CDC was disconnected while sending data ==> flush the TX buffer keeping the last data
-    if (to_send && !usb_serial_jtag_ll_txfifo_writable()) {
+
+    // Only treat as a true disconnection (and dump pending bytes through the
+    // not-connected FIFO policy) if we actually gave up because USB is gone.
+    if (gave_up && to_send && !isPlugged()) {
       connected = false;
       flushTXBuffer(buffer + so_far, to_send);
     }
@@ -516,9 +567,7 @@ void HWCDC::flush(void) {
     if (uxItemsWaiting) {
       // Now trigger the ISR to read data from the ring buffer.
       usb_serial_jtag_ll_txfifo_flush();
-      if (connected) {
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      }
+      hw_cdc_enable_tx_intr();
     }
     uint32_t tries = tx_timeout_ms;  // waits 1ms per ISR sending data attempt, in case CDC is unplugged
     while (connected && tries && uxItemsWaiting) {
@@ -528,9 +577,7 @@ void HWCDC::flush(void) {
       if (lastUxItemsWaiting == uxItemsWaiting) {
         tries--;
       }
-      if (connected) {
-        usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-      }
+      hw_cdc_enable_tx_intr();
     }
     if (tries == 0) {  // CDC isn't connected anymore...
       connected = false;
