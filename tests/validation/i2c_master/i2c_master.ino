@@ -328,6 +328,9 @@ void setup() {
   RUN_TEST(swap_pins);
   RUN_TEST(test_api);
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {

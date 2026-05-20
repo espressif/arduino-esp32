@@ -96,6 +96,7 @@ jobs:
     with:
       type: ${{ matrix.type }}
       chip: ${{ matrix.chip }}
+      coverage: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
   call-qemu-tests:
     name: QEMU

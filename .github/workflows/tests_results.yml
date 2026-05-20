@@ -269,6 +269,70 @@ jobs:
             echo "should_publish=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Restore libs cache for gcov tool
+        id: restore-libs
+        if: ${{ !cancelled() && steps.check-publish.outputs.should_publish == 'true' }}
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: libs-${{ runner.os }}-${{ runner.arch }}-
+          restore-keys: libs-${{ runner.os }}-${{ runner.arch }}-
+          path: |
+            ./tools/dist
+            ./tools/esp32-arduino-libs
+            ./tools/esptool
+            ./tools/mk*
+            ./tools/openocd-esp32
+            ./tools/riscv32-*
+            ./tools/xtensa-*
+
+      - name: Process coverage data
+        id: coverage
+        if: ${{ !cancelled() && steps.check-publish.outputs.should_publish == 'true' }}
+        continue-on-error: true
+        run: |
+          sudo apt-get update && sudo apt-get install -y lcov
+
+          # Collect coverage logs from test results artifacts (Wokwi + HW)
+          COVERAGE_LOGS=""
+          for log_file in $(find ./artifacts -name "*_coverage.log" -type f 2>/dev/null); do
+            COVERAGE_LOGS="$COVERAGE_LOGS --log $log_file"
+          done
+
+          if [ -z "$COVERAGE_LOGS" ]; then
+            echo "No coverage logs found"
+            echo "coverage_pct=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Collect build directories with .gcno files
+          BUILD_DIRS=""
+          for bin_dir in ./build_artifacts/test-bin-*/; do
+            if [ -d "$bin_dir" ]; then
+              BUILD_DIRS="$BUILD_DIRS --build-dir $bin_dir"
+            fi
+          done
+
+          # Find gcov tool from the trusted libs cache (not from artifacts, to prevent tampering)
+          GCOV_TOOL_FLAG=""
+          GCOV_TOOL=$(find ./tools -name "*-gcov" -type f 2>/dev/null | head -1)
+          if [ -n "$GCOV_TOOL" ]; then
+            chmod +x "$GCOV_TOOL"
+            GCOV_TOOL_FLAG="--gcov-tool $(realpath $GCOV_TOOL)"
+          fi
+
+          wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/coverage_collector.py -O ./coverage_collector.py
+          python3 ./coverage_collector.py $COVERAGE_LOGS $BUILD_DIRS $GCOV_TOOL_FLAG \
+            --output ./coverage.json \
+            --tracefile ./coverage.info \
+            --uncovered-report ./runtime-test-results/UNCOVERED_FUNCTIONS.md || true
+
+          if [ -f ./coverage.json ]; then
+            COVERAGE_PCT=$(python3 -c "import json; d=json.load(open('./coverage.json')); print(d.get('coverage_pct', ''))")
+            echo "coverage_pct=$COVERAGE_PCT" >> $GITHUB_OUTPUT
+          else
+            echo "coverage_pct=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate report
         if: ${{ !cancelled() && steps.check-publish.outputs.should_publish == 'true' }}
         env:
@@ -287,6 +351,7 @@ jobs:
           RESULTS_RUN_ID: ${{ github.run_id }}
           REPORT_FILE: ./runtime-test-results/RUNTIME_TEST_RESULTS.md
           ORIGINAL_SHA: ${{ needs.get-artifacts.outputs.original_sha }}
+          COVERAGE_PCT: ${{ steps.coverage.outputs.coverage_pct }}
           IS_FAILING: >-
             ${{
               needs.get-artifacts.outputs.original_conclusion == 'failure' ||
@@ -305,8 +370,12 @@ jobs:
           if [ -f ./test_errors/build_failure_cells.json ]; then
             BUILD_FAILURE_CELLS="--build-failure-cells ./test_errors/build_failure_cells.json"
           fi
+          COVERAGE_ARG=""
+          if [ -n "$COVERAGE_PCT" ]; then
+            COVERAGE_ARG="--coverage $COVERAGE_PCT"
+          fi
           wget https://raw.githubusercontent.com/${{ github.repository }}/master/.github/scripts/runtime_table_generator.py -O ./runtime-test-results/runtime_table_generator.py
-          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts --previous-results ./runtime-test-results/test_results.json $BUILD_FAILURE_CELLS >> $REPORT_FILE
+          python3 ./runtime-test-results/runtime_table_generator.py --results ./runtime-test-results/unity_results.json --sha $ORIGINAL_SHA --perf-dir ./artifacts --previous-results ./runtime-test-results/test_results.json $BUILD_FAILURE_CELLS $COVERAGE_ARG >> $REPORT_FILE
           mv -f ./test_results.json ./runtime-test-results/test_results.json
           rm -rf artifacts
 
@@ -327,6 +396,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [[ `git status --porcelain` ]]; then
             git add runtime-test-results/RUNTIME_TEST_RESULTS.md runtime-test-results/badge.svg runtime-test-results/test_results.json runtime-test-results/unity_results.json
+            # Add uncovered functions report if it was generated
+            if [ -f runtime-test-results/UNCOVERED_FUNCTIONS.md ]; then
+              git add runtime-test-results/UNCOVERED_FUNCTIONS.md
+            fi
             git commit -m "Updated runtime test results"
             git push origin HEAD:gh-pages
           fi

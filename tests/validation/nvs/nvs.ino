@@ -140,9 +140,12 @@ void setup() {
   // Validate the types of the keys
   validate_types();
 
-  // Close the Preferences, wait and restart
+  // Close the Preferences, dump coverage data, wait and restart
   preferences.end();
   Serial.flush();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
   delay(1000);
   ESP.restart();
 }

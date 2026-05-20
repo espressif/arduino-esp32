@@ -853,6 +853,9 @@ void setup() {
   RUN_TEST(end_when_stopped_test);
   RUN_TEST(hardware_flow_control_test);
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}

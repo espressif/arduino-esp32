@@ -12,6 +12,7 @@
 #include <Console.h>
 #include <LittleFS.h>
 #include <unity.h>
+
 #include "linenoise/linenoise.h"
 #include "argtable3/argtable3.h"
 
@@ -474,6 +475,9 @@ void loop() {
     RUN_TEST(test_history_load_from_file);
     RUN_TEST(test_attach_to_serial);
     UNITY_END();
+#ifdef COVERAGE_ENABLED
+    gcov_dump_serial();
+#endif
 
     vTaskDelete(NULL);
   }

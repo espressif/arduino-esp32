@@ -488,6 +488,7 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
+            tests/**/*_coverage.log
 
       - name: Upload hardware results as artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -498,6 +499,7 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
+            tests/**/*_coverage.log
 
       - name: Report conclusion
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -651,6 +653,7 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
+            tests/**/*_coverage.log
 
       - name: Upload ${{ matrix.chip }} ${{ matrix.type }} Wokwi results as artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -661,6 +664,7 @@ jobs:
           path: |
             tests/**/*.xml
             tests/**/result_*.json
+            tests/**/*_coverage.log
 
       - name: Report conclusion
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1

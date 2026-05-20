@@ -1,11 +1,9 @@
-import json
 import logging
-import os
 
 from collections import defaultdict
 
 
-def test_ramspeed(dut, request):
+def test_ramspeed(dut, save_perf_result):
     LOGGER = logging.getLogger(__name__)
 
     runs_results = []
@@ -113,16 +111,4 @@ def test_ramspeed(dut, request):
         "metrics": metrics,
     }
 
-    current_folder = os.path.dirname(request.path)
-    os.makedirs(os.path.join(current_folder, dut.app.target), exist_ok=True)
-    file_index = 0
-    report_file = os.path.join(current_folder, dut.app.target, "result_ramspeed" + str(file_index) + ".json")
-    while os.path.exists(report_file):
-        report_file = report_file.replace(str(file_index) + ".json", str(file_index + 1) + ".json")
-        file_index += 1
-
-    with open(report_file, "w+") as f:
-        try:
-            f.write(json.dumps(results))
-        except Exception as e:
-            LOGGER.warning("Failed to write results to file: {}".format(e))
+    save_perf_result(results)
