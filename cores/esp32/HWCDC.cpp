@@ -59,12 +59,22 @@ static volatile bool connected = false;
 //     dereference an inconsistent stash).
 static portMUX_TYPE hw_cdc_tx_mux = portMUX_INITIALIZER_UNLOCKED;
 
+// Context-safe variants: use portENTER_CRITICAL_SAFE which picks the ISR or
+// task critical-section macro at runtime based on xPortInIsrContext(). These
+// are reachable from ISR context via, e.g., cdc0_write_char() (installed as
+// ets_putc2 for the debug log path) -> HWCDC::isConnected() ->
+// isCDC_Connected() -> hw_cdc_enable_tx_intr(). Calling the plain task
+// portENTER_CRITICAL() from ISR asserts on ESP-IDF, so the helpers must
+// auto-select.
 static inline void hw_cdc_enable_tx_intr(void) {
-  portENTER_CRITICAL(&hw_cdc_tx_mux);
+  portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
   usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  portEXIT_CRITICAL(&hw_cdc_tx_mux);
+  portEXIT_CRITICAL_SAFE(&hw_cdc_tx_mux);
 }
 
+// ISR-only fast paths: skip the runtime context check when we know statically
+// that we're already inside the hw_cdc_isr_handler. Functionally identical to
+// the _SAFE variants but a touch leaner in the interrupt hot path.
 static inline void hw_cdc_enable_tx_intr_from_isr(void) {
   portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
   usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -77,13 +87,14 @@ static inline void hw_cdc_disable_tx_intr_from_isr(void) {
   portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
 }
 
-// Task-side helper to atomically drop any partial FIFO bytes the ISR may have
-// stashed. Without the lock, the clear could be lost if the ISR is mid-drain
-// and writes a fresh tx_stash_len after the task's store.
+// Atomically drops any partial FIFO bytes the ISR may have stashed. Without
+// the lock, the clear could be lost if the ISR is mid-drain and writes a
+// fresh tx_stash_len after the task's store. Also _SAFE because callers like
+// flushTXBuffer() are reachable from cdc0_write_char() in ISR context.
 static inline void hw_cdc_clear_tx_stash(void) {
-  portENTER_CRITICAL(&hw_cdc_tx_mux);
+  portENTER_CRITICAL_SAFE(&hw_cdc_tx_mux);
   tx_stash_len = 0;
-  portEXIT_CRITICAL(&hw_cdc_tx_mux);
+  portEXIT_CRITICAL_SAFE(&hw_cdc_tx_mux);
 }
 
 // SOF in ISR causes problems for uploading firmware
