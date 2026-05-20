@@ -37,35 +37,53 @@ ESP_EVENT_DEFINE_BASE(ARDUINO_HW_CDC_EVENTS);
 static RingbufHandle_t tx_ring_buf = NULL;
 static QueueHandle_t rx_queue = NULL;
 static uint8_t rx_data_buf[64] = {0};
+// tx_stash_buf / tx_stash_len hold the tail of a FIFO write the hardware
+// couldn't accept in one shot. They are written by the ISR (drain path and
+// BUS_RESET) and cleared by task-side reset paths (flushTXBuffer(NULL,...) and
+// setTxBufferSize()), so every access must go through hw_cdc_tx_mux below.
 static uint8_t tx_stash_buf[64] = {0};
-static size_t tx_stash_len = 0;
+static volatile size_t tx_stash_len = 0;
 static intr_handle_t intr_handle = NULL;
 static SemaphoreHandle_t tx_lock = NULL;
 static volatile bool connected = false;
 
-// Protects read-modify-write of the USB_SERIAL_JTAG INT_ENA register against
-// concurrent access from the producer task and the ISR (which may run on the
-// other core on dual-core SoCs). Without this, a producer's "enable IN_EMPTY"
-// can race with the ISR's "disable IN_EMPTY" in the empty-ring branch and get
-// silently dropped, leaving the link permanently stalled.
-static portMUX_TYPE hw_cdc_int_ena_mux = portMUX_INITIALIZER_UNLOCKED;
+// Protects TX state shared between the producer task and the ISR (which may
+// run on the other core on dual-core SoCs). It covers:
+//   - read-modify-write of the USB_SERIAL_JTAG INT_ENA register (without this
+//     a producer's "enable IN_EMPTY" can race with the ISR's "disable
+//     IN_EMPTY" in the empty-ring branch and get silently dropped, leaving
+//     the link permanently stalled),
+//   - all accesses to tx_stash_buf / tx_stash_len (without this a task-side
+//     "clear stash" can be lost when the ISR's later write-back resurrects
+//     stale state, and a torn tx_stash_len read could make the ISR
+//     dereference an inconsistent stash).
+static portMUX_TYPE hw_cdc_tx_mux = portMUX_INITIALIZER_UNLOCKED;
 
 static inline void hw_cdc_enable_tx_intr(void) {
-  portENTER_CRITICAL(&hw_cdc_int_ena_mux);
+  portENTER_CRITICAL(&hw_cdc_tx_mux);
   usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  portEXIT_CRITICAL(&hw_cdc_int_ena_mux);
+  portEXIT_CRITICAL(&hw_cdc_tx_mux);
 }
 
 static inline void hw_cdc_enable_tx_intr_from_isr(void) {
-  portENTER_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
   usb_serial_jtag_ll_ena_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  portEXIT_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
 }
 
 static inline void hw_cdc_disable_tx_intr_from_isr(void) {
-  portENTER_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
   usb_serial_jtag_ll_disable_intr_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
-  portEXIT_CRITICAL_ISR(&hw_cdc_int_ena_mux);
+  portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
+}
+
+// Task-side helper to atomically drop any partial FIFO bytes the ISR may have
+// stashed. Without the lock, the clear could be lost if the ISR is mid-drain
+// and writes a fresh tx_stash_len after the task's store.
+static inline void hw_cdc_clear_tx_stash(void) {
+  portENTER_CRITICAL(&hw_cdc_tx_mux);
+  tx_stash_len = 0;
+  portEXIT_CRITICAL(&hw_cdc_tx_mux);
 }
 
 // SOF in ISR causes problems for uploading firmware
@@ -121,9 +139,20 @@ static void hw_cdc_isr_handler(void *arg) {
       size_t queued_size = 0;
       uint8_t *queued_buff = NULL;
       bool from_stash = false;
+      uint32_t sent_size = 0;
+      bool wrote_anything = false;
 
       // Clear interrupt so we won't be called again until this transfer finishes.
       usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
+
+      // Hold hw_cdc_tx_mux across the entire stash read/write region so that a
+      // task-side hw_cdc_clear_tx_stash() (from flushTXBuffer(NULL,...) or
+      // setTxBufferSize()) cannot interleave with us deciding to drain the
+      // stash, writing to the FIFO, and writing back the new tx_stash_len.
+      // The lock is per-core re-entrant, so the nested calls in
+      // hw_cdc_enable_tx_intr_from_isr() / hw_cdc_disable_tx_intr_from_isr()
+      // are safe.
+      portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
 
       if (tx_stash_len) {
         queued_buff = tx_stash_buf;
@@ -132,11 +161,11 @@ static void hw_cdc_isr_handler(void *arg) {
       } else {
         queued_buff = (uint8_t *)xRingbufferReceiveUpToFromISR(tx_ring_buf, &queued_size, 64);
       }
-      // If the hardware fifo is available, write in it. Otherwise, do nothing.
-      if (queued_buff != NULL && queued_size > 0) {  //Although tx_queued_bytes may be larger than 0. We may have interrupt before xRingbufferSend() was called.
-        //Copy the queued buffer into the TX FIFO
-        uint32_t sent_size = usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
+
+      if (queued_buff != NULL && queued_size > 0) {
+        sent_size = usb_serial_jtag_ll_write_txfifo(queued_buff, queued_size);
         usb_serial_jtag_ll_txfifo_flush();
+        wrote_anything = true;
 
         if (sent_size < queued_size) {
           tx_stash_len = queued_size - sent_size;
@@ -152,10 +181,6 @@ static void hw_cdc_isr_handler(void *arg) {
         // SOF-watchdog can lag the real state and we'd rather get one spurious
         // ISR than permanently lose the wakeup.
         hw_cdc_enable_tx_intr_from_isr();
-        //send event?
-        //ets_printf("TX:%lu\n", (unsigned long)sent_size);
-        event.tx.len = sent_size;
-        arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
       } else {
         // A full 64-byte packet needs an extra flush to send the terminating zero-length packet.
         usb_serial_jtag_ll_txfifo_flush();
@@ -165,12 +190,22 @@ static void hw_cdc_isr_handler(void *arg) {
         // queued data between our ReceiveUpToFromISR() above and the disable,
         // its hw_cdc_enable_tx_intr() may have raced with our disable and got
         // overwritten. Re-arming here under the same spinlock guarantees we
-        // don't lose that wakeup.
+        // don't lose that wakeup. tx_stash_len is also re-checked because the
+        // task could have cleared it (e.g. via flushTXBuffer(NULL,...)) right
+        // before we took the lock, while a previous ISR pass had left
+        // residual data we no longer need to chase.
         UBaseType_t bytes_waiting = 0;
         vRingbufferGetInfo(tx_ring_buf, NULL, NULL, NULL, NULL, &bytes_waiting);
         if (bytes_waiting || tx_stash_len) {
           hw_cdc_enable_tx_intr_from_isr();
         }
+      }
+
+      portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
+
+      if (wrote_anything) {
+        event.tx.len = sent_size;
+        arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_TX_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
       }
     } else {
       usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_SERIAL_IN_EMPTY);
@@ -196,7 +231,9 @@ static void hw_cdc_isr_handler(void *arg) {
   if (usbjtag_intr_status & USB_SERIAL_JTAG_INTR_BUS_RESET) {
     usb_serial_jtag_ll_clr_intsts_mask(USB_SERIAL_JTAG_INTR_BUS_RESET);
     arduino_hw_cdc_event_post(ARDUINO_HW_CDC_EVENTS, ARDUINO_HW_CDC_BUS_RESET_EVENT, &event, sizeof(arduino_hw_cdc_event_data_t), &xTaskWoken);
+    portENTER_CRITICAL_ISR(&hw_cdc_tx_mux);
     tx_stash_len = 0;
+    portEXIT_CRITICAL_ISR(&hw_cdc_tx_mux);
     connected = false;
   }
 
@@ -253,7 +290,7 @@ static void flushTXBuffer(const uint8_t *buffer, size_t size) {
 
   if (buffer == NULL) {
     // just flush the whole ring buffer and exit - used by HWCDC::flush()
-    tx_stash_len = 0;
+    hw_cdc_clear_tx_stash();
     size_t queued_size = 0;
     uint8_t *queued_buff = (uint8_t *)xRingbufferReceiveUpTo(tx_ring_buf, &queued_size, 0, ringbufferLength);
     if (queued_size && queued_buff != NULL) {
@@ -453,7 +490,7 @@ void HWCDC::setTxTimeoutMs(uint32_t timeout) {
 */
 
 size_t HWCDC::setTxBufferSize(size_t tx_queue_len) {
-  tx_stash_len = 0;
+  hw_cdc_clear_tx_stash();
   if (tx_ring_buf) {
     vRingbufferDelete(tx_ring_buf);
     tx_ring_buf = NULL;
