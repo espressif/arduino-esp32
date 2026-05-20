@@ -540,13 +540,27 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       ring_max = size;
     }
 
-    // isPlugged() is based on a FreeRTOS tick hook watching SOF packets and may
-    // flap to false for a few ms even while USB is fine. We therefore only treat
-    // sustained failures (many consecutive ring-buffer send timeouts AND
-    // isPlugged() reporting disconnected over that period) as a real disconnect.
+    // Two independent progress caps share the same per-iteration timeout so
+    // the total bounded wait is roughly max_consec_timeouts * tx_timeout_ms:
+    //
+    //   - "real disconnect"  -> consec_timeouts >= cap AND !isPlugged().
+    //     Mark connected = false and route the remainder through the
+    //     not-connected FIFO-replacement policy.
+    //
+    //   - "host backpressure" -> consec_timeouts >= cap, but isPlugged() is
+    //     still true (e.g. the OS read buffer filled because the host app
+    //     stopped reading). USB is still alive, so we do NOT touch
+    //     `connected`; we just return what we managed to enqueue. Anything
+    //     already in the ring stays queued for whenever the host resumes,
+    //     and the caller sees a short write (Arduino's Stream::write
+    //     contract) so it can decide whether to retry or drop.
+    //
+    // Without this second cap the loop could block forever whenever the
+    // host stops consuming -- isPlugged() (SOF watchdog) keeps reporting
+    // true, so the original `&& !isPlugged()` guard never fires.
     uint32_t consec_timeouts = 0;
     const uint32_t max_consec_timeouts = 20;  // ~ max_consec_timeouts * tx_timeout_ms total wait
-    bool gave_up = false;
+    bool gave_up_disconnect = false;
 
     while (to_send) {
       size_t chunk = to_send > ring_max ? ring_max : to_send;
@@ -557,11 +571,13 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
         // Kick the ISR in case it stopped draining the ring.
         hw_cdc_enable_tx_intr();
         consec_timeouts++;
-        if (consec_timeouts >= max_consec_timeouts && !isPlugged()) {
-          // Sustained failure to make progress and USB really seems gone.
+        if (consec_timeouts >= max_consec_timeouts) {
+          // Bounded-progress deadline reached. Decide why and bail out.
+          if (!isPlugged()) {
+            connected = false;
+            gave_up_disconnect = true;
+          }
           size = so_far;
-          connected = false;
-          gave_up = true;
           break;
         }
         continue;
@@ -574,10 +590,11 @@ size_t HWCDC::write(const uint8_t *buffer, size_t size) {
       hw_cdc_enable_tx_intr();
     }
 
-    // Only treat as a true disconnection (and dump pending bytes through the
-    // not-connected FIFO policy) if we actually gave up because USB is gone.
-    if (gave_up && to_send && !isPlugged()) {
-      connected = false;
+    // Only dump pending bytes through the not-connected FIFO policy if we
+    // actually decided this is a real disconnection. On plain host
+    // backpressure we leave already-queued bytes alone and just report the
+    // short write.
+    if (gave_up_disconnect && to_send) {
       flushTXBuffer(buffer + so_far, to_send);
     }
   }
