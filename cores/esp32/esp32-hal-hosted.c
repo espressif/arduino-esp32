@@ -69,7 +69,7 @@ void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *patch = slave_version_struct.patch1;
 }
 
-const char * hostedGetSlaveTargetName() {
+const char *hostedGetSlaveTargetName() {
 #if ESP_HOSTED_VERSION_VAL(ESP_HOSTED_VERSION_MAJOR_1, ESP_HOSTED_VERSION_MINOR_1, ESP_HOSTED_VERSION_PATCH_1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)
   return CONFIG_IDF_SLAVE_TARGET;
 #else
@@ -125,8 +125,8 @@ const char *hostedGetUpdateURL() {
   static char url[92] = {0};
   const char *target_name = hostedGetSlaveTargetName();
   snprintf(
-    url, sizeof(url), "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name,
-    host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
+    url, sizeof(url), "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name, host_version_struct.major1,
+    host_version_struct.minor1, host_version_struct.patch1
   );
   return url;
 }

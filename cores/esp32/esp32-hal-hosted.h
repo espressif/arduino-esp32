@@ -46,7 +46,7 @@ bool hostedSetPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8
 void hostedGetPins(int8_t *clk, int8_t *cmd, int8_t *d0, int8_t *d1, int8_t *d2, int8_t *d3, int8_t *rst);
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch);
 void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch);
-const char * hostedGetSlaveTargetName();
+const char *hostedGetSlaveTargetName();
 bool hostedHasUpdate();
 const char *hostedGetUpdateURL();
 bool hostedBeginUpdate();
