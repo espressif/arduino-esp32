@@ -74,7 +74,7 @@ const char * hostedGetSlaveTargetName() {
   return CONFIG_IDF_SLAVE_TARGET;
 #else
   uint32_t chip_id = 0;
-  char target_name[20] = {0};
+  static char target_name[20] = {0};
   size_t target_name_len = sizeof(target_name);
   esp_err_t ret = esp_hosted_get_cp_info(&chip_id, target_name, target_name_len);
   if (ret != ESP_OK) {
@@ -125,7 +125,7 @@ const char *hostedGetUpdateURL() {
   static char url[92] = {0};
   const char *target_name = hostedGetSlaveTargetName();
   snprintf(
-    url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name,
+    url, sizeof(url), "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name,
     host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
   );
   return url;
