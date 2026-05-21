@@ -54,7 +54,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v6.0-de7baafb-v2"
+              "version": "idf-release_v6.0-6ca4c34d-v1"
             },
             {
               "packager": "esp32",
@@ -79,7 +79,7 @@
             {
               "packager": "esp32",
               "name": "openocd-esp32",
-              "version": "v0.12.0-esp32-20260304"
+              "version": "v0.12.0-esp32-20260424"
             },
             {
               "packager": "esp32",
@@ -107,63 +107,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v6.0-de7baafb-v2",
+          "version": "idf-release_v6.0-6ca4c34d-v1",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-de7baafb-v2.zip",
-              "checksum": "SHA-256:d59dbc5d2e354df444c45b6286d920ebee88b1c3abb0a0515485363364cecab7",
-              "size": "416149235"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v6.0/esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v6.0-6ca4c34d-v1.zip",
+              "checksum": "SHA-256:a3453c02a2563a3cb0af9ec0f5877d7c308818f6a83a7b6cb8d06ffb2dd1a617",
+              "size": "415130898"
             }
           ]
         },
@@ -417,56 +417,56 @@
         },
         {
           "name": "openocd-esp32",
-          "version": "v0.12.0-esp32-20260304",
+          "version": "v0.12.0-esp32-20260424",
           "systems": [
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-linux-amd64-0.12.0-esp32-20260304.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-amd64-0.12.0-esp32-20260304.tar.gz",
-              "checksum": "SHA-256:dbd7ecf751431c70628176fbf1ce404c3ff28027e91b66bda7f834a2d5ff5b81",
-              "size": "2603774"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-linux-amd64-0.12.0-esp32-20260424.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-amd64-0.12.0-esp32-20260424.tar.gz",
+              "checksum": "SHA-256:0c875beb0e8d89cee4335968e8a27c7d151f05b91f636263c81ab01e098d390d",
+              "size": "2630575"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-linux-arm64-0.12.0-esp32-20260304.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-arm64-0.12.0-esp32-20260304.tar.gz",
-              "checksum": "SHA-256:7fbe82e36f8e34a7a3118045fd7888754afbfe4c60cfaee0ac70663fd5965f63",
-              "size": "2518511"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-linux-arm64-0.12.0-esp32-20260424.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-arm64-0.12.0-esp32-20260424.tar.gz",
+              "checksum": "SHA-256:f1b87d408adf6f2eb08a2b067ff7de38310829cc952c0f5d1d09920b0200a6e4",
+              "size": "2554716"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-linux-armel-0.12.0-esp32-20260304.tar.gz",
-              "archiveFileName": "openocd-esp32-linux-armel-0.12.0-esp32-20260304.tar.gz",
-              "checksum": "SHA-256:c717a6ff87b07be729850fd7662fda3f1d4d7125d44dd15b0694e3021bed2bfb",
-              "size": "2702211"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-linux-armel-0.12.0-esp32-20260424.tar.gz",
+              "archiveFileName": "openocd-esp32-linux-armel-0.12.0-esp32-20260424.tar.gz",
+              "checksum": "SHA-256:6d8d3aa1a4d77610e03cbba48e359c14e7e96f5b3e9d4dfc0b7d1a2846421ca4",
+              "size": "2718565"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-macos-0.12.0-esp32-20260304.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-0.12.0-esp32-20260304.tar.gz",
-              "checksum": "SHA-256:be6951d9766f88fad11060314f6c3469c56715a60f2715aaeb7d806afc935c0d",
-              "size": "2768050"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-macos-0.12.0-esp32-20260424.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-0.12.0-esp32-20260424.tar.gz",
+              "checksum": "SHA-256:f3e3008e6a85e4dfea0177b9ea3fd769447e19a0f132e7754e4a7db164727f8e",
+              "size": "2790443"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-macos-arm64-0.12.0-esp32-20260304.tar.gz",
-              "archiveFileName": "openocd-esp32-macos-arm64-0.12.0-esp32-20260304.tar.gz",
-              "checksum": "SHA-256:a36099d3a47241e816693d9bd719198e4667ad67f0a027404d90584d44b6842d",
-              "size": "2592946"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-macos-arm64-0.12.0-esp32-20260424.tar.gz",
+              "archiveFileName": "openocd-esp32-macos-arm64-0.12.0-esp32-20260424.tar.gz",
+              "checksum": "SHA-256:c7bffa205ca92a69ae7bc74e6e428824084e404355cbb9df2238fe30f5f435bb",
+              "size": "2613579"
             },
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-win32-0.12.0-esp32-20260304.zip",
-              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20260304.zip",
-              "checksum": "SHA-256:a9db16887fb0df26d1c3e495203c9edcd86d9262b2be7b7d929f8017194add31",
-              "size": "3176748"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-win32-0.12.0-esp32-20260424.zip",
+              "archiveFileName": "openocd-esp32-win32-0.12.0-esp32-20260424.zip",
+              "checksum": "SHA-256:51682616fb443819ba5b3d982d991917576ea24ab4b8b0c4ac7b6427c57d4d67",
+              "size": "3203101"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260304/openocd-esp32-win64-0.12.0-esp32-20260304.zip",
-              "archiveFileName": "openocd-esp32-win64-0.12.0-esp32-20260304.zip",
-              "checksum": "SHA-256:ad29bd55f2b7ad39669fbeeec32012954359dcfc0ecfa5a03068589b4d0e8613",
-              "size": "3176747"
+              "url": "https://github.com/espressif/openocd-esp32/releases/download/v0.12.0-esp32-20260424/openocd-esp32-win64-0.12.0-esp32-20260424.zip",
+              "archiveFileName": "openocd-esp32-win64-0.12.0-esp32-20260424.zip",
+              "checksum": "SHA-256:d0005eea5b916df047afca7b777792050f8c6a6a502407180c8d839e9a841f75",
+              "size": "3203098"
             }
           ]
         },
