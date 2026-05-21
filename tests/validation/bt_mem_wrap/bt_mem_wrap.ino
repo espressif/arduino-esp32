@@ -31,9 +31,10 @@
 //     real release (simulating a ROM or pre-wrap call that bypassed the
 //     intercept).  All subsequent wrap calls must be no-ops.
 //
-//   Phase 7 — btStart() fails after btMemRelease()
-//     Verifies that once BT memory has been freed, attempting to initialize
-//     the BT controller fails gracefully (ESP-IDF rejects the init request).
+//   Phase 7 — btStartMode(BLE) fails after btMemRelease(BLE)
+//     Verifies that once BLE memory has been freed, attempting to start BLE
+//     fails gracefully.  On BTDM-capable chips btStart() may still succeed by
+//     downgrading to Classic-only mode (see phase 9 for the mirror case).
 //
 //   Phase 8 — full lifecycle: start, release-while-running (rejected), stop, release
 //     Starts BT to confirm the memory is intact, then attempts btMemRelease()
@@ -202,12 +203,12 @@ static void phase_6() {
   check(btMemReleased(BT_MODE_BLE), "tracking still true after all no-op calls");
 }
 
-// Phase 7: btStart() must fail after btMemRelease().
-// Once the BT controller memory has been freed it cannot be reclaimed.
-// esp_bt_controller_init() will reject the request, so btStart() must return
-// false and btStarted() must remain false.
+// Phase 7: btStartMode(BLE) must fail after btMemRelease(BLE).
+// Once BLE controller memory has been freed it cannot be reclaimed for BLE.
+// btStart() uses the default BT_MODE (often BTDM on ESP32) and may downgrade
+// to Classic-only when only BLE memory was released — test the specific mode.
 static void phase_7() {
-  Serial.println("[BT_MEM_WRAP] Phase 7: btStart fails after btMemRelease");
+  Serial.println("[BT_MEM_WRAP] Phase 7: btStartMode(BLE) fails after btMemRelease(BLE)");
 
   check(!btMemReleased(BT_MODE_BLE), "BLE mem not released at boot");
   check(!btStarted(), "BT not started at boot");
@@ -215,9 +216,9 @@ static void phase_7() {
   check(btMemRelease(BT_MODE_BLE), "btMemRelease(BLE) succeeds");
   check(btMemReleased(BT_MODE_BLE), "tracking updated");
 
-  // BT memory is gone — the controller cannot be initialized.
-  check(!btStart(), "btStart() returns false after btMemRelease");
-  check(!btStarted(), "btStarted() false after failed btStart");
+  // BLE memory is gone — BLE mode cannot be initialized.
+  check(!btStartMode(BT_MODE_BLE), "btStartMode(BLE) returns false after btMemRelease(BLE)");
+  check(!btStarted(), "btStarted() false after failed btStartMode(BLE)");
 }
 
 // Phase 8: full lifecycle — start BT, attempt release while running (must be
