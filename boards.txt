@@ -56195,7 +56195,7 @@ soldered_nula_dual_esp32c5.build.target=esp
 soldered_nula_dual_esp32c5.build.mcu=esp32c5
 soldered_nula_dual_esp32c5.build.core=esp32
 soldered_nula_dual_esp32c5.build.variant=soldered_nula_dual_esp32c5
-soldered_nula_dual_esp32c5.build.board=ESP32C5_DEV
+soldered_nula_dual_esp32c5.build.board=SOLDERED_NULA_DUAL_ESP32C5
 soldered_nula_dual_esp32c5.build.bootloader_addr=0x2000
 
 soldered_nula_dual_esp32c5.build.cdc_on_boot=0
@@ -56319,14 +56319,8 @@ soldered_nula_dual_esp32c5.menu.FlashFreq.80.build.flash_freq=80m
 soldered_nula_dual_esp32c5.menu.FlashFreq.40=40MHz
 soldered_nula_dual_esp32c5.menu.FlashFreq.40.build.flash_freq=40m
 
-soldered_nula_dual_esp32c5.menu.FlashSize.4M=4MB (32Mb)
-soldered_nula_dual_esp32c5.menu.FlashSize.4M.build.flash_size=4MB
 soldered_nula_dual_esp32c5.menu.FlashSize.8M=8MB (64Mb)
 soldered_nula_dual_esp32c5.menu.FlashSize.8M.build.flash_size=8MB
-soldered_nula_dual_esp32c5.menu.FlashSize.2M=2MB (16Mb)
-soldered_nula_dual_esp32c5.menu.FlashSize.2M.build.flash_size=2MB
-soldered_nula_dual_esp32c5.menu.FlashSize.16M=16MB (128Mb)
-soldered_nula_dual_esp32c5.menu.FlashSize.16M.build.flash_size=16MB
 
 soldered_nula_dual_esp32c5.menu.UploadSpeed.921600=921600
 soldered_nula_dual_esp32c5.menu.UploadSpeed.921600.upload.speed=921600
