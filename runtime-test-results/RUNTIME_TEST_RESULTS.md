@@ -33,20 +33,20 @@ wifi_ap|2/2 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:
 
 Test|ESP32|ESP32-C3|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-console|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*|Error :fire:|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*|17/17 :white_check_mark:\*
-fs|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*|Error :fire:|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*|54/54 :white_check_mark:\*
-gpio|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
-hash|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|Error :fire:|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*|72/72 :white_check_mark:\*
-hello_world|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|Error :fire:|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*|1/1 :white_check_mark:\*
-i2c_master|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*|Error :fire:|6/6 :white_check_mark:\*|6/6 :white_check_mark:\*|7/7 :white_check_mark:\*|7/7 :white_check_mark:\*
-keyboard_layout|-|-|-|-|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*
-nvs|2/2 :white_check_mark:\*|2/2 :white_check_mark:\*|Error :fire:|4/4 :white_check_mark:\*|4/4 :white_check_mark:\*|2/2 :white_check_mark:\*|3/3 :white_check_mark:\*
-psram|10/10 :white_check_mark:\*|-|-|-|8/8 :white_check_mark:\*|10/10 :white_check_mark:\*|10/10 :white_check_mark:\*
-sdcard|11/11 :white_check_mark:\*|11/11 :white_check_mark:\*|Error :fire:|11/11 :white_check_mark:\*|11/11 :white_check_mark:\*|11/11 :white_check_mark:\*|11/11 :white_check_mark:\*
-timer|3/3 :white_check_mark:\*|4/4 :white_check_mark:\*|Error :fire:|4/4 :white_check_mark:\*|4/4 :white_check_mark:\*|4/4 :white_check_mark:\*|4/4 :white_check_mark:\*
-uart|17/17 :white_check_mark:\*|16/16 :white_check_mark:\*|Error :fire:|16/16 :white_check_mark:\*|16/16 :white_check_mark:\*|17/17 :white_check_mark:\*|16/16 :white_check_mark:\*
-unity|2/2 :white_check_mark:\*|2/2 :white_check_mark:\*|Error :fire:|2/2 :white_check_mark:\*|2/2 :white_check_mark:\*|2/2 :white_check_mark:\*|2/2 :white_check_mark:\*
-wifi|2/2 :white_check_mark:\*|1/1 :white_check_mark:\*|Error :fire:|-|1/1 :white_check_mark:\*|2/2 :white_check_mark:\*|3/3 :white_check_mark:\*
+console|17/17 :white_check_mark:|17/17 :white_check_mark:|Error :fire:|17/17 :white_check_mark:|0/1 :x:|17/17 :white_check_mark:|17/17 :white_check_mark:
+fs|54/54 :white_check_mark:|54/54 :white_check_mark:|Error :fire:|54/54 :white_check_mark:|0/1 :x:|54/54 :white_check_mark:|54/54 :white_check_mark:
+gpio|1/1 :white_check_mark:|1/1 :white_check_mark:|Error :fire:|1/1 :white_check_mark:|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:
+hash|72/72 :white_check_mark:|72/72 :white_check_mark:|Error :fire:|72/72 :white_check_mark:|0/1 :x:|72/72 :white_check_mark:|72/72 :white_check_mark:
+hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|Error :fire:|1/1 :white_check_mark:|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:
+i2c_master|7/7 :white_check_mark:|7/7 :white_check_mark:|Error :fire:|6/6 :white_check_mark:|0/1 :x:|7/7 :white_check_mark:|7/7 :white_check_mark:
+keyboard_layout|-|-|-|-|0/1 :x:|10/10 :white_check_mark:|10/10 :white_check_mark:
+nvs|2/2 :white_check_mark:|2/2 :white_check_mark:|Error :fire:|4/4 :white_check_mark:|0/4 :x:|2/2 :white_check_mark:|3/3 :white_check_mark:
+psram|10/10 :white_check_mark:|-|-|-|0/1 :x:|10/10 :white_check_mark:|10/10 :white_check_mark:
+sdcard|11/11 :white_check_mark:|11/11 :white_check_mark:|Error :fire:|11/11 :white_check_mark:|0/1 :x:|11/11 :white_check_mark:|11/11 :white_check_mark:
+timer|3/3 :white_check_mark:|4/4 :white_check_mark:|Error :fire:|4/4 :white_check_mark:|0/1 :x:|4/4 :white_check_mark:|4/4 :white_check_mark:
+uart|17/17 :white_check_mark:|16/16 :white_check_mark:|Error :fire:|16/16 :white_check_mark:|0/1 :x:|17/17 :white_check_mark:|16/16 :white_check_mark:
+unity|2/2 :white_check_mark:|2/2 :white_check_mark:|Error :fire:|2/2 :white_check_mark:|0/1 :x:|2/2 :white_check_mark:|2/2 :white_check_mark:
+wifi|2/2 :white_check_mark:|1/1 :white_check_mark:|Error :fire:|-|0/1 :x:|2/2 :white_check_mark:|3/3 :white_check_mark:
 
 ### Performance Tests
 
@@ -1190,8 +1190,8 @@ wifi|2/2 :white_check_mark:\*|1/1 :white_check_mark:\*|Error :fire:|-|1/1 :white
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/05/23 15:12:17 UTC
+Generated on: 2026/05/23 16:37:48 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/5f7fc09d79e2a1fbe6dde660d676063653e45a0e) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/26335973433) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/26336194251) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/26336198805)
+[Commit](https://github.com/espressif/arduino-esp32/commit/bc119c0908e9dd54a5677deb96adafa2a6a74bdf) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/26336379083) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/26336525741) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/26337975387)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/77530267257)
+[Test results](https://github.com/espressif/arduino-esp32/runs/77534940094)
