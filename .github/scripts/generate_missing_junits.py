@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import json
 import logging
 import os
@@ -100,26 +101,29 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
         test_type = m.group(2)
         print(f"[DEBUG] Artifact group target={target} type={test_type} dir={artifact_dir}", file=sys.stderr)
 
-        # Group build*.tmp directories by sketch
-        # Structure: test-bin-<target>-<type>/<sketch>/build*.tmp/
-        sketches_processed = set()
+        # Find all build*.tmp directories and determine test names.
+        # Directory layout:
+        #   Single-device: test-bin-<target>-<type>/<test>/build*.tmp/
+        #   Multi-device:  test-bin-<target>-<type>/<test>/<device>/build*.tmp/
+        # The test name is always the first path component after the artifact group.
+        tests_processed = set()
 
-        # Find all build*.tmp directories and process each sketch once
         for build_tmp in artifact_dir.rglob("build*.tmp"):
             if not build_tmp.is_dir():
                 continue
             if not re.search(r"build\d*\.tmp$", build_tmp.name):
                 continue
 
-            # Path structure is: test-bin-<target>-<type>/<sketch>/build*.tmp/
-            sketch = build_tmp.parent.name
+            # Test name is always the first directory component after the artifact group
+            rel = build_tmp.relative_to(artifact_dir)
+            effective_sketch = rel.parts[0]
 
-            # Skip if we already processed this sketch
-            if sketch in sketches_processed:
+            # Skip if we already processed this test
+            if effective_sketch in tests_processed:
                 continue
-            sketches_processed.add(sketch)
+            tests_processed.add(effective_sketch)
 
-            print(f"[DEBUG]  Processing sketch={sketch} from artifact {artifact_dir.name}", file=sys.stderr)
+            print(f"[DEBUG]  Processing test={effective_sketch} from artifact {artifact_dir.name}", file=sys.stderr)
 
             ci_path = build_tmp / "ci.yml"
             sdk_path = build_tmp / "sdkconfig"
@@ -164,7 +168,7 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
                 "requires_any": ci.get("requires_any") or [],
             }
             if not _sdkconfig_meets(minimal, sdk_text):
-                print(f"[DEBUG]   Skip (requirements not met): target={target} type={test_type} sketch={sketch}", file=sys.stderr)
+                print(f"[DEBUG]   Skip (requirements not met): target={target} type={test_type} sketch={effective_sketch}", file=sys.stderr)
                 continue
 
             # Expected runs = number from fqbn_counts in ci.yml (how many FQBNs for this target)
@@ -172,10 +176,10 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
             print(f"[DEBUG]   ci.yml specifies {exp_runs} FQBN(s) for target={target}", file=sys.stderr)
 
             for plat in allowed_platforms:
-                expected[(plat, target, test_type, sketch)] = exp_runs
-                print(f"[DEBUG]   Expected: plat={plat} target={target} type={test_type} sketch={sketch} runs={exp_runs}", file=sys.stderr)
+                expected[(plat, target, test_type, effective_sketch)] = exp_runs
+                print(f"[DEBUG]   Expected: plat={plat} target={target} type={test_type} sketch={effective_sketch} runs={exp_runs}", file=sys.stderr)
 
-        if len(sketches_processed) == 0:
+        if len(tests_processed) == 0:
             print(f"[DEBUG]  No sketches found in this artifact group", file=sys.stderr)
     return expected
 
@@ -217,6 +221,20 @@ def scan_executed_xml(xml_root: Path, valid_types: set[str]) -> dict[tuple[str, 
     return counts
 
 
+def _write_build_failure_cells(out_root: Path, cells):
+    """Record tests whose expected run came from cache (no build artifact), not runner outage."""
+    if not cells:
+        return
+    payload = [
+        {"platform": plat, "target": target, "type": test_type, "sketch": sketch}
+        for plat, target, test_type, sketch in sorted(cells)
+    ]
+    path = out_root / "build_failure_cells.json"
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+    print(f"[DEBUG] Wrote {len(payload)} build-failure cell(s) to {path}", file=sys.stderr)
+
+
 def write_missing_xml(out_root: Path, platform: str, target: str, test_type: str, sketch: str, missing_count: int):
     out_tests_dir = out_root / f"test-results-{platform}" / "tests" / test_type / sketch / target
     out_tests_dir.mkdir(parents=True, exist_ok=True)
@@ -232,15 +250,77 @@ def write_missing_xml(out_root: Path, platform: str, target: str, test_type: str
         tree.write(out_file, encoding="utf-8", xml_declaration=True)
 
 
-def main():
-    # Args: <build_artifacts_dir> <test_results_dir> <output_junit_dir>
-    if len(sys.argv) != 4:
-        print(f"Usage: {sys.argv[0]} <build_artifacts_dir> <test_results_dir> <output_junit_dir>", file=sys.stderr)
-        return 2
+def expected_from_previous_results(path, enabled_plats, plat_targets, plat_types):
+    """Compute expected runs from a previous test_results.json cache.
 
-    build_root = Path(sys.argv[1]).resolve()
-    results_root = Path(sys.argv[2]).resolve()
-    out_root = Path(sys.argv[3]).resolve()
+    Used as a fallback when build artifacts are empty (e.g. build failed).
+    Returns mapping (platform, target, type, sketch) -> expected_count
+    """
+    expected: dict[tuple[str, str, str, str], int] = {}
+    if not path or not Path(path).exists():
+        return expected
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            return expected
+    except (OSError, json.JSONDecodeError) as e:
+        logging.warning(f"Could not read previous results from {path}: {e}")
+        return expected
+
+    cache = data.get("cache", {})
+    if isinstance(cache, dict):
+        for platform, tests in cache.items():
+            if platform not in enabled_plats:
+                continue
+            if not isinstance(tests, dict):
+                continue
+            non_perf_types = [t for t in plat_types.get(platform, set()) if t != "performance"]
+            if not non_perf_types:
+                continue
+            test_type = non_perf_types[0]
+            for test_name, targets in tests.items():
+                if not isinstance(targets, dict):
+                    continue
+                for target, entry in targets.items():
+                    if target not in plat_targets.get(platform, set()):
+                        continue
+                    total = entry.get("total", 1) if isinstance(entry, dict) else 1
+                    key = (platform, target, test_type, test_name)
+                    expected[key] = max(expected.get(key, 0), total)
+                    logging.debug(f"Expected from cache: plat={platform} target={target} type={test_type} sketch={test_name} runs={total}")
+
+    perf_cache = data.get("perf_cache", {})
+    if isinstance(perf_cache, dict):
+        for test_name, targets in perf_cache.items():
+            if not isinstance(targets, dict):
+                continue
+            for target, entry in targets.items():
+                if "hardware" not in enabled_plats:
+                    continue
+                if target not in plat_targets.get("hardware", set()):
+                    continue
+                if "performance" not in plat_types.get("hardware", set()):
+                    continue
+                key = ("hardware", target, "performance", test_name)
+                expected[key] = max(expected.get(key, 0), 1)
+                logging.debug(f"Expected from perf cache: target={target} type=performance sketch={test_name}")
+
+    return expected
+
+
+def main():
+    # Args: <build_artifacts_dir> <test_results_dir> <output_junit_dir> [--previous-results <path>]
+    parser = argparse.ArgumentParser(description="Generate JUnit XML files for expected-but-missing test runs.")
+    parser.add_argument("build_artifacts_dir", help="Path to build artifacts directory")
+    parser.add_argument("test_results_dir", help="Path to test results directory")
+    parser.add_argument("output_junit_dir", help="Path to output directory for generated JUnit files")
+    parser.add_argument("--previous-results", default=None, help="Path to previous test_results.json (fallback for expected tests when build artifacts are empty)")
+    args = parser.parse_args()
+
+    build_root = Path(args.build_artifacts_dir).resolve()
+    results_root = Path(args.test_results_dir).resolve()
+    out_root = Path(args.output_junit_dir).resolve()
 
     # Validate inputs
     if not build_root.is_dir():
@@ -269,11 +349,6 @@ def main():
     wokwi_types = parse_array(os.environ.get("WOKWI_TYPES", "[]"))
     qemu_types = parse_array(os.environ.get("QEMU_TYPES", "[]"))
 
-    expected = expected_from_artifacts(build_root)  # (platform, target, type, sketch) -> expected_count
-    executed_types = set(hw_types + wokwi_types + qemu_types)
-    executed = scan_executed_xml(results_root, executed_types)      # (platform, target, type, sketch) -> count
-    print(f"[DEBUG] Expected entries computed: {len(expected)}", file=sys.stderr)
-
     # Filter expected by enabled platforms and target/type matrices
     enabled_plats = set()
     if hw_enabled:
@@ -294,6 +369,30 @@ def main():
         "wokwi": set(wokwi_types),
         "qemu": set(qemu_types),
     }
+
+    expected_from_build = expected_from_artifacts(build_root)  # (platform, target, type, sketch) -> expected_count
+    executed_types = set(hw_types + wokwi_types + qemu_types)
+    executed = scan_executed_xml(results_root, executed_types)      # (platform, target, type, sketch) -> count
+    print(f"[DEBUG] Expected entries from build artifacts: {len(expected_from_build)}", file=sys.stderr)
+
+    expected = dict(expected_from_build)
+    build_failure_cells = set()
+
+    if args.previous_results:
+        expected_from_cache = expected_from_previous_results(
+            args.previous_results, enabled_plats, plat_targets, plat_types
+        )
+        print(f"[DEBUG] Expected entries from previous results cache: {len(expected_from_cache)}", file=sys.stderr)
+        for key, count in expected_from_cache.items():
+            if key not in expected_from_build:
+                build_failure_cells.add(key)
+                expected[key] = max(expected.get(key, 0), count)
+                logging.debug(
+                    f"Build failure (no artifact): plat={key[0]} target={key[1]} "
+                    f"type={key[2]} sketch={key[3]} runs={count}"
+                )
+
+    _write_build_failure_cells(out_root, build_failure_cells)
 
     missing_total = 0
     extra_total = 0

@@ -60,6 +60,21 @@ Sets the minimum and maximum temperature values for the sensor.
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
+setDefaultValue
+^^^^^^^^^^^^^^^
+
+Sets the default (initial) value for the temperature sensor in 0.01°C resolution. This value will be used as the initial measured value when the device is in factory reset mode and before the sensor provides actual readings.
+
+.. code-block:: arduino
+
+    bool setDefaultValue(float defaultValue);
+
+* ``defaultValue`` - Default temperature value in degrees Celsius
+
+**Important:** Must be called before adding the EP to Zigbee class. Only effective when the device is in factory reset mode (before commissioning/joining a network).
+
+This function will return ``true`` if successful, ``false`` otherwise.
+
 setTolerance
 ^^^^^^^^^^^^
 

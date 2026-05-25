@@ -23,6 +23,7 @@
   Created by lucasssvaz.
 */
 
+#include <Arduino.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -140,13 +141,13 @@ void setup() {
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x06);  // helps with iPhone connections
-  pAdvertising->setMinPreferred(0x12);
+  pAdvertising->setMaxPreferred(0x12);
 
   BLEDevice::startAdvertising();
 
   Serial.println("BLE Server is running!");
   Serial.println("Authorization is required to access the characteristic.");
-  Serial.printf("Use passkey: %d when prompted\n", AUTH_PASSKEY);
+  Serial.printf("Use passkey: %06u when prompted\n", AUTH_PASSKEY);
 }
 
 void loop() {

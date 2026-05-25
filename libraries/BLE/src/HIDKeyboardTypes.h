@@ -21,14 +21,28 @@
 #ifndef KEYBOARD_DEFS_H
 #define KEYBOARD_DEFS_H
 
+#include "esp_bit_defs.h"
+
 #define REPORT_ID_KEYBOARD 1
 #define REPORT_ID_VOLUME   3
 
 /* Modifiers */
 enum MODIFIER_KEY {
-  KEY_CTRL = 1,
-  KEY_SHIFT = 2,
-  KEY_ALT = 4,
+  /* Aliases for the left modifiers */
+  KEY_CTRL = BIT(0),
+  KEY_SHIFT = BIT(1),
+  KEY_ALT = BIT(2),
+  KEY_GUI = BIT(3), /*!< GUI key (Command on macOS, Windows key on Windows) */
+  /* Left modifiers */
+  KEY_LEFT_CTRL = BIT(0),
+  KEY_LEFT_SHIFT = BIT(1),
+  KEY_LEFT_ALT = BIT(2),
+  KEY_LEFT_GUI = BIT(3),
+  /* Right modifiers */
+  KEY_RIGHT_CTRL = BIT(4),
+  KEY_RIGHT_SHIFT = BIT(5),
+  KEY_RIGHT_ALT = BIT(6),
+  KEY_RIGHT_GUI = BIT(7),
 };
 
 enum MEDIA_KEY {

@@ -18,6 +18,7 @@ on:
       - ".github/scripts/install*.sh"
       - ".github/workflows/tests*"
       - ".github/scripts/sketch_utils.sh"
+      - "tools/arduino_cmake.py"
       - "tests/**"
       - "cores/**"
       - "libraries/*/src/**.cpp"
@@ -64,7 +65,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          sparse-checkout: .github/scripts/tests_matrix.sh
+          sparse-checkout: |
+            .github/scripts/tests_matrix.sh
+            .github/scripts/socs_config.sh
 
       - name: Set matrix
         id: set-matrix
@@ -81,6 +84,7 @@ jobs:
     uses: ./.github/workflows/tests_build.yml
     needs: gen-matrix
     strategy:
+      fail-fast: false
       matrix:
         type: ${{ fromJson(needs.gen-matrix.outputs.build-types) }}
         chip: ${{ fromJson(needs.gen-matrix.outputs.build-targets) }}

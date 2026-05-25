@@ -47,6 +47,34 @@
 #include "esp_netif_types.h"
 #include "esp_netif_defaults.h"
 #include "esp_eth_phy.h"
+#include "esp_idf_version.h"
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define emac_rmii_clock_gpio_t  int
+#define esp_eth_phy_new_lan87xx esp_eth_phy_new_generic
+#define esp_eth_phy_new_ip101   esp_eth_phy_new_generic
+#define esp_eth_phy_new_rtl8201 esp_eth_phy_new_generic
+#define esp_eth_phy_new_dp83848 esp_eth_phy_new_generic
+#define esp_eth_phy_new_ksz80xx esp_eth_phy_new_generic
+#if CONFIG_IDF_TARGET_ESP32
+#define EMAC_APPL_CLK_OUT_GPIO 0
+#define EMAC_CLK_OUT_GPIO      16
+#define EMAC_CLK_OUT_180_GPIO  17
+#define EMAC_CLK_IN_GPIO       0
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_DM9051
+#include "esp_eth_phy_dm9051.h"
+#include "esp_eth_mac_dm9051.h"
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_W5500
+#include "esp_eth_phy_w5500.h"
+#include "esp_eth_mac_w5500.h"
+#endif
+#if CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL
+#include "esp_eth_phy_ksz8851snl.h"
+#include "esp_eth_mac_ksz8851snl.h"
+#endif
+#endif
 
 #define NUM_SUPPORTED_ETH_PORTS 3
 static ETHClass *_ethernets[NUM_SUPPORTED_ETH_PORTS] = {NULL, NULL, NULL};
@@ -107,14 +135,17 @@ void ETHClass::_onEthEvent(int32_t event_id, void *event_data) {
   } else if (event_id == ETHERNET_EVENT_DISCONNECTED) {
     log_v("%s Disconnected", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_DISCONNECTED;
+    arduino_event.event_info.eth_disconnected = handle();
     clearStatusBits(ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT);
   } else if (event_id == ETHERNET_EVENT_START) {
     log_v("%s Started", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_START;
+    arduino_event.event_info.eth_started = handle();
     setStatusBits(ESP_NETIF_STARTED_BIT);
   } else if (event_id == ETHERNET_EVENT_STOP) {
     log_v("%s Stopped", desc());
     arduino_event.event_id = ARDUINO_EVENT_ETH_STOP;
+    arduino_event.event_info.eth_stopped = handle();
     clearStatusBits(
       ESP_NETIF_STARTED_BIT | ESP_NETIF_CONNECTED_BIT | ESP_NETIF_HAS_IP_BIT | ESP_NETIF_HAS_LOCAL_IP6_BIT | ESP_NETIF_HAS_GLOBAL_IP6_BIT
       | ESP_NETIF_HAS_STATIC_IP_BIT
@@ -204,7 +235,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
     return true;
   }
   if (phy_addr < ETH_PHY_ADDR_AUTO) {
-    log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+    log_e("Invalid PHY address: %" PRIi32 ", set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
     return false;
   }
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, ETHClass::ethDetachBus);
@@ -305,6 +336,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   }
   if (_phy == NULL) {
     log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
     return false;
   }
 
@@ -329,11 +361,11 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   char num_str[3];
   itoa(_eth_index, num_str, 10);
   if (_eth_index == 0) {
-    strcpy(if_key_str, "ETH_DEF");
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_DEF");
   } else {
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_%s", num_str);
   }
-  strcat(strcpy(if_desc_str, "eth"), num_str);
+  snprintf(if_desc_str, sizeof(if_desc_str), "eth%s", num_str);
 
   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
   esp_netif_config.if_key = if_key_str;
@@ -431,6 +463,9 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   // FIX ME -- addresses issue https://github.com/espressif/arduino-esp32/issues/5733
   delay(50);
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  receiveAllMulticast(true);
+#endif
   return true;
 
 err:
@@ -461,7 +496,7 @@ esp_err_t ETHClass::eth_spi_read(uint32_t cmd, uint32_t addr, void *data, uint32
   if (_spi == NULL) {
     return ESP_FAIL;
   }
-  // log_i(" 0x%04lx 0x%04lx %lu", cmd, addr, data_len);
+  // log_i(" 0x%04" PRIx32 " 0x%04" PRIx32 " %" PRIu32, cmd, addr, data_len);
   _spi->beginTransaction(SPISettings(_spi_freq_mhz * 1000 * 1000, MSBFIRST, SPI_MODE0));
   digitalWrite(_pin_cs, LOW);
 
@@ -502,7 +537,7 @@ esp_err_t ETHClass::eth_spi_write(uint32_t cmd, uint32_t addr, const void *data,
   if (_spi == NULL) {
     return ESP_FAIL;
   }
-  // log_i("0x%04lx 0x%04lx %lu", cmd, addr, data_len);
+  // log_i("0x%04" PRIx32 " 0x%04" PRIx32 " %" PRIu32, cmd, addr, data_len);
   _spi->beginTransaction(SPISettings(_spi_freq_mhz * 1000 * 1000, MSBFIRST, SPI_MODE0));
   digitalWrite(_pin_cs, LOW);
 
@@ -563,7 +598,7 @@ bool ETHClass::beginSPI(
     return false;
   }
   if (phy_addr < ETH_PHY_ADDR_AUTO) {
-    log_e("Invalid PHY address: %d, set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
+    log_e("Invalid PHY address: %" PRIi32 ", set to ETH_PHY_ADDR_AUTO for auto detection", phy_addr);
     return false;
   }
 
@@ -620,8 +655,7 @@ bool ETHClass::beginSPI(
     digitalWrite(_pin_cs, HIGH);
     char cs_num_str[3];
     itoa(_eth_index, cs_num_str, 10);
-    strcat(strcpy(_cs_str, "ETH_CS["), cs_num_str);
-    strcat(_cs_str, "]");
+    snprintf(_cs_str, sizeof(_cs_str), "ETH_CS[%s]", cs_num_str);
     perimanSetPinBusExtraType(_pin_cs, _cs_str);
   }
 #endif
@@ -738,15 +772,29 @@ bool ETHClass::beginSPI(
     return false;
   }
 
+  if (_mac == NULL) {
+    log_e("esp_eth_mac_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
+  if (_phy == NULL) {
+    log_e("esp_eth_phy_new failed");
+    _delMacAndPhy();
+    return false;
+  }
+
   // Init Ethernet driver to default and install it
   esp_eth_config_t eth_config = ETH_DEFAULT_CONFIG(_mac, _phy);
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("SPI Ethernet driver install failed: %d", ret);
+    _delMacAndPhy();
     return false;
   }
   if (_eth_handle == NULL) {
     log_e("esp_eth_driver_install failed! eth_handle is NULL");
+    _delMacAndPhy();
     return false;
   }
 
@@ -756,9 +804,9 @@ bool ETHClass::beginSPI(
   } else {
     // Derive a new MAC address for this interface
     uint8_t base_mac_addr[ETH_ADDR_LEN];
-    ret = esp_efuse_mac_get_default(base_mac_addr);
+    ret = esp_read_mac(base_mac_addr, ESP_MAC_ETH);
     if (ret != ESP_OK) {
-      log_e("Get EFUSE MAC failed: %d", ret);
+      log_e("Get ETH MAC failed: %d", ret);
       return false;
     }
     base_mac_addr[ETH_ADDR_LEN - 1] += _eth_index;  //Increment by the ETH number
@@ -782,11 +830,11 @@ bool ETHClass::beginSPI(
   char num_str[3];
   itoa(_eth_index, num_str, 10);
   if (_eth_index == 0) {
-    strcpy(if_key_str, "ETH_DEF");
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_DEF");
   } else {
-    strcat(strcpy(if_key_str, "ETH_"), num_str);
+    snprintf(if_key_str, sizeof(if_key_str), "ETH_%s", num_str);
   }
-  strcat(strcpy(if_desc_str, "eth"), num_str);
+  snprintf(if_desc_str, sizeof(if_desc_str), "eth%s", num_str);
 
   esp_netif_inherent_config_t esp_netif_config = ESP_NETIF_INHERENT_DEFAULT_ETH();
   esp_netif_config.if_key = if_key_str;
@@ -891,6 +939,9 @@ bool ETHClass::beginSPI(
 
   _eth_connected_event_handle = Network.onSysEvent(onEthConnected, ARDUINO_EVENT_ETH_CONNECTED);
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  receiveAllMulticast(true);
+#endif
   return true;
 
 err:
@@ -921,6 +972,18 @@ bool ETHClass::begin(
 
 static bool empty_ethDetachBus(void *bus_pointer) {
   return true;
+}
+
+void ETHClass::_delMacAndPhy() {
+  if (_mac != NULL) {
+    _mac->del(_mac);
+    _mac = NULL;
+  }
+
+  if (_phy != NULL) {
+    _phy->del(_phy);
+    _phy = NULL;
+  }
 }
 
 void ETHClass::end(void) {
@@ -954,17 +1017,9 @@ void ETHClass::end(void) {
       return;
     }
     _eth_handle = NULL;
-    //delete mac
-    if (_mac != NULL) {
-      _mac->del(_mac);
-      _mac = NULL;
-    }
-    //delete phy
-    if (_phy != NULL) {
-      _phy->del(_phy);
-      _phy = NULL;
-    }
   }
+
+  _delMacAndPhy();
 
   if (_eth_ev_instance != NULL) {
     bool do_not_unreg_ev_handler = false;
@@ -1152,6 +1207,68 @@ bool ETHClass::setLinkSpeed(uint16_t speed) {
   return true;
 }
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+bool ETHClass::addMacFilter(uint8_t *mac_addr) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_ADD_MAC_FILTER, (void *)mac_addr);
+  if (err != ESP_OK) {
+    log_e("Failed to add MAC filter: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+bool ETHClass::removeMacFilter(uint8_t *mac_addr) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_DEL_MAC_FILTER, (void *)mac_addr);
+  if (err != ESP_OK) {
+    log_e("Failed to delete MAC filter: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+
+bool ETHClass::addMulticastFilter(IPAddress address) {
+  if (address[0] < 224 || address[0] > 239) {
+    log_e("Invalid multicast address");
+    return false;
+  }
+  uint8_t mac_addr[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
+  mac_addr[3] = address[1] & 0x7F;
+  mac_addr[4] = address[2];
+  mac_addr[5] = address[3];
+  return addMacFilter(mac_addr);
+}
+
+bool ETHClass::removeMulticastFilter(IPAddress address) {
+  if (address[0] < 224 || address[0] > 239) {
+    log_e("Invalid multicast address");
+    return false;
+  }
+  uint8_t mac_addr[6] = {0x01, 0x00, 0x5E, 0x00, 0x00, 0x00};
+  mac_addr[3] = address[1] & 0x7F;
+  mac_addr[4] = address[2];
+  mac_addr[5] = address[3];
+  return removeMacFilter(mac_addr);
+}
+
+bool ETHClass::receiveAllMulticast(bool on) {
+  if (_eth_handle == NULL) {
+    return false;
+  }
+  esp_err_t err = esp_eth_ioctl(_eth_handle, ETH_CMD_S_ALL_MULTICAST, &on);
+  if (err != ESP_OK) {
+    log_e("Failed to set receive all multicast: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
+#endif
+
 // void ETHClass::getMac(uint8_t* mac)
 // {
 //     if(_eth_handle != NULL && mac != NULL){
@@ -1170,7 +1287,7 @@ size_t ETHClass::printDriverInfo(Print &out) const {
   if (autoNegotiation()) {
     bytes += out.print(",AUTO");
   }
-  bytes += out.printf(",ADDR:0x%lX", phyAddr());
+  bytes += out.printf(",ADDR:0x%" PRIX32, phyAddr());
   return bytes;
 }
 

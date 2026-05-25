@@ -16,6 +16,7 @@
 #define LWIP_OPEN_SRC
 #endif
 #include <functional>
+#include <inttypes.h>
 #include "ArduinoOTA.h"
 #include "NetworkClient.h"
 #include "ESPmDNS.h"
@@ -26,9 +27,15 @@
 
 // #define OTA_DEBUG Serial
 
-ArduinoOTAClass::ArduinoOTAClass()
-  : _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0), _ota_timeout(1000),
-    _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL) {}
+ArduinoOTAClass::ArduinoOTAClass(UpdateClass *updater)
+  : _updater(updater), _port(0), _initialized(false), _rebootOnSuccess(true), _mdnsEnabled(true), _state(OTA_IDLE), _size(0), _cmd(0), _ota_port(0),
+    _ota_timeout(1000), _start_callback(NULL), _end_callback(NULL), _error_callback(NULL), _progress_callback(NULL)
+#ifdef UPDATE_SIGN
+    ,
+    _sign(NULL)
+#endif /* UPDATE_SIGN */
+{
+}
 
 ArduinoOTAClass::~ArduinoOTAClass() {
   end();
@@ -136,6 +143,21 @@ ArduinoOTAClass &ArduinoOTAClass::setMdnsEnabled(bool enabled) {
   return *this;
 }
 
+#ifdef UPDATE_SIGN
+ArduinoOTAClass &ArduinoOTAClass::setSignature(UpdaterVerifyClass *sign) {
+  if (_state == OTA_IDLE && sign) {
+    _sign = sign;
+    int hashType = sign->getHashType();
+    [[maybe_unused]]
+    const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                           : (hashType == HASH_SHA384) ? "SHA-384"
+                                                       : "SHA-512";
+    log_i("Signature verification enabled for ArduinoOTA (hash: %s)", hashName);
+  }
+  return *this;
+}
+#endif /* UPDATE_SIGN */
+
 void ArduinoOTAClass::begin() {
   if (_initialized) {
     log_w("already initialized");
@@ -155,7 +177,7 @@ void ArduinoOTAClass::begin() {
     char tmp[20];
     uint8_t mac[6];
     Network.macAddress(mac);
-    sprintf(tmp, "esp32-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    snprintf(tmp, sizeof(tmp), "esp32-%02x%02x%02x%02x%02x%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     _hostname = tmp;
   }
 #ifdef CONFIG_MDNS_MAX_INTERFACES
@@ -166,7 +188,7 @@ void ArduinoOTAClass::begin() {
 #endif
   _initialized = true;
   _state = OTA_IDLE;
-  log_i("OTA server at: %s.local:%u", _hostname.c_str(), _port);
+  log_i("OTA server at: %s.local:%d", _hostname.c_str(), _port);
 }
 
 int ArduinoOTAClass::parseInt() {
@@ -297,10 +319,30 @@ void ArduinoOTAClass::_onRx() {
 }
 
 void ArduinoOTAClass::_runUpdate() {
-  const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
-  if (!Update.begin(_size, _cmd, -1, LOW, partition_label)) {
+  if (!_updater) {
+    log_e("UpdateClass is NULL!");
+    return;
+  }
 
-    log_e("Begin ERROR: %s", Update.errorString());
+#ifdef UPDATE_SIGN
+  // Install signature verification if enabled
+  if (_sign) {
+    if (!_updater->installSignature(_sign)) {
+      log_e("Failed to install signature verification");
+      if (_error_callback) {
+        _error_callback(OTA_BEGIN_ERROR);
+      }
+      _state = OTA_IDLE;
+      return;
+    }
+    log_i("Signature verification installed for OTA update");
+  }
+#endif /* UPDATE_SIGN */
+
+  const char *partition_label = _partition_label.length() ? _partition_label.c_str() : NULL;
+  if (!_updater->begin(_size, _cmd, -1, LOW, partition_label)) {
+
+    log_e("Begin ERROR: %s", _updater->errorString());
 
     if (_error_callback) {
       _error_callback(OTA_BEGIN_ERROR);
@@ -309,7 +351,7 @@ void ArduinoOTAClass::_runUpdate() {
     return;
   }
 
-  Update.setMD5(_md5.c_str());  // Note: Update library still uses MD5 for firmware integrity, this is separate from authentication
+  _updater->setMD5(_md5.c_str());  // Note: Update library still uses MD5 for firmware integrity, this is separate from authentication
 
   if (_start_callback) {
     _start_callback();
@@ -328,7 +370,7 @@ void ArduinoOTAClass::_runUpdate() {
 
   uint32_t written = 0, total = 0, tried = 0;
 
-  while (!Update.isFinished() && client.connected()) {
+  while (!_updater->isFinished() && client.connected()) {
     size_t waited = _ota_timeout;
     size_t available = client.available();
     while (!available && waited) {
@@ -338,8 +380,8 @@ void ArduinoOTAClass::_runUpdate() {
     }
     if (!waited) {
       if (written && tried++ < 3) {
-        log_i("Try[%u]: %u", tried, written);
-        if (!client.printf("%lu", written)) {
+        log_i("Try[%" PRIu32 "]: %" PRIu32, tried, written);
+        if (!client.printf("%" PRIu32, written)) {
           log_e("failed to respond");
           _state = OTA_IDLE;
           break;
@@ -351,11 +393,11 @@ void ArduinoOTAClass::_runUpdate() {
         _error_callback(OTA_RECEIVE_ERROR);
       }
       _state = OTA_IDLE;
-      Update.abort();
+      _updater->abort();
       return;
     }
     if (!available) {
-      log_e("No Data: %u", waited);
+      log_e("No Data: %lu", (unsigned long)waited);
       _state = OTA_IDLE;
       break;
     }
@@ -366,19 +408,19 @@ void ArduinoOTAClass::_runUpdate() {
     }
     size_t r = client.read(buf, available);
     if (r != available) {
-      log_w("didn't read enough! %u != %u", r, available);
+      log_w("didn't read enough! %lu != %lu", (unsigned long)r, (unsigned long)available);
       if ((int32_t)r < 0) {
         delay(1);
         continue;  //let's not try to write 4 gigabytes when client.read returns -1
       }
     }
 
-    written = Update.write(buf, r);
+    written = _updater->write(buf, r);
     if (written > 0) {
       if (written != r) {
-        log_w("didn't write enough! %u != %u", written, r);
+        log_w("didn't write enough! %" PRIu32 " != %lu", (unsigned long)written, r);
       }
-      if (!client.printf("%lu", written)) {
+      if (!client.printf("%" PRIu32, written)) {
         log_w("failed to respond");
       }
       total += written;
@@ -386,11 +428,11 @@ void ArduinoOTAClass::_runUpdate() {
         _progress_callback(total, _size);
       }
     } else {
-      log_e("Write ERROR: %s", Update.errorString());
+      log_e("Write ERROR: %s", _updater->errorString());
     }
   }
 
-  if (Update.end()) {
+  if (_updater->end()) {
     client.print("OK");
     client.stop();
     delay(10);
@@ -406,10 +448,10 @@ void ArduinoOTAClass::_runUpdate() {
     if (_error_callback) {
       _error_callback(OTA_END_ERROR);
     }
-    Update.printError(client);
+    _updater->printError(client);
     client.stop();
     delay(10);
-    log_e("Update ERROR: %s", Update.errorString());
+    log_e("Update ERROR: %s", _updater->errorString());
     _state = OTA_IDLE;
   }
 }
@@ -446,6 +488,11 @@ int ArduinoOTAClass::getCommand() {
 
 void ArduinoOTAClass::setTimeout(int timeoutInMillis) {
   _ota_timeout = timeoutInMillis;
+}
+
+ArduinoOTAClass &ArduinoOTAClass::setUpdaterInstance(UpdateClass *updater) {
+  _updater = updater;
+  return *this;
 }
 
 #if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_ARDUINOOTA)

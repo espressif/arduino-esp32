@@ -58,6 +58,10 @@ public:
   // Set the flow value in 0,1 m3/h
   bool setFlow(float value);
 
+  // Set the default (initial) value for the flow sensor in 0,1 m3/h
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(float defaultValue);
+
   // Set the min and max value for the flow sensor in 0,1 m3/h
   bool setMinMaxValue(float min, float max);
 

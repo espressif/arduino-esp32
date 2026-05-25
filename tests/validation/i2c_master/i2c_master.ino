@@ -108,7 +108,7 @@ void ds1307_get_time(uint8_t *sec, uint8_t *min, uint8_t *hour, uint8_t *day, ui
 void ds1307_set_time(uint8_t sec, uint8_t min, uint8_t hour, uint8_t day, uint8_t month, uint16_t year) {
   Wire.beginTransmission(DS1307_ADDR);
   Wire.write(0x00);
-  Wire.write(DEC2BCD(sec));
+  Wire.write(DEC2BCD(sec) | 0x80);  //Set halt bit to stop clock
   Wire.write(DEC2BCD(min));
   Wire.write(DEC2BCD(hour));
   Wire.write(DEC2BCD(0));  //Ignore day of week
@@ -212,6 +212,22 @@ void change_clock() {
   TEST_ASSERT_EQUAL(start_day, read_day);
   TEST_ASSERT_EQUAL(start_month, read_month);
   TEST_ASSERT_EQUAL(start_year, read_year);
+
+  //Run clock for 5 seconds to check that we can write
+  ds1307_start();
+  delay(5000);
+  ds1307_stop();
+
+  //Get time
+  ds1307_get_time(&read_sec, &read_min, &read_hour, &read_day, &read_month, &read_year);
+
+  //Check time
+  TEST_ASSERT_NOT_EQUAL(start_sec, read_sec);  //Seconds should have changed
+  TEST_ASSERT_EQUAL(start_min, read_min);
+  TEST_ASSERT_EQUAL(start_hour, read_hour);
+  TEST_ASSERT_EQUAL(start_day, read_day);
+  TEST_ASSERT_EQUAL(start_month, read_month);
+  TEST_ASSERT_EQUAL(start_year, read_year);
 }
 
 void swap_pins() {
@@ -259,7 +275,7 @@ bool device_found() {
   for (uint8_t address = 1; address < 127; ++address) {
     Wire.beginTransmission(address);
     err = Wire.endTransmission();
-    log_d("Address: 0x%02X, Error: %d", address, err);
+    log_d("Address: 0x%02X, Error: %u", address, err);
     if (err == 0) {
       log_i("Found device at address: 0x%02X", address);
     } else if (address == DS1307_ADDR) {

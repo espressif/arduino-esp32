@@ -10,7 +10,12 @@
 #include "esp_ota_ops.h"
 #include "esp_image_format.h"
 #ifndef UPDATE_NOCRYPT
+#include "mbedtls/build_info.h"
+#if MBEDTLS_VERSION_MAJOR >= 4
+#include "psa/crypto.h"
+#else
 #include "mbedtls/aes.h"
+#endif
 #endif /* UPDATE_NOCRYPT */
 
 static const char *_err2str(uint8_t _error) {
@@ -44,6 +49,10 @@ static const char *_err2str(uint8_t _error) {
   } else if (_error == UPDATE_ERROR_DECRYPT) {
     return ("Decryption error");
 #endif /* UPDATE_NOCRYPT */
+#ifdef UPDATE_SIGN
+  } else if (_error == UPDATE_ERROR_SIGN) {
+    return ("Signature Verification Failed");
+#endif /* UPDATE_SIGN */
   }
   return ("UNKNOWN");
 }
@@ -80,6 +89,10 @@ UpdateClass::UpdateClass()
     ,
     _cryptMode(U_AES_DECRYPT_AUTO), _cryptAddress(0), _cryptCfg(0xf)
 #endif /* UPDATE_NOCRYPT */
+#ifdef UPDATE_SIGN
+    ,
+    _hash(NULL), _sign(NULL), _signatureBuffer(NULL), _signatureSize(0), _hashType(-1)
+#endif /* UPDATE_SIGN */
 {
 }
 
@@ -95,6 +108,17 @@ void UpdateClass::_reset() {
   if (_skipBuffer) {
     delete[] _skipBuffer;
   }
+#ifdef UPDATE_SIGN
+  if (_signatureBuffer) {
+    delete[] _signatureBuffer;
+    _signatureBuffer = nullptr;
+  }
+  if (_hash && _hashType >= 0) {
+    // Clean up internally-created hash object
+    delete _hash;
+    _hash = nullptr;
+  }
+#endif /* UPDATE_SIGN */
 
 #ifndef UPDATE_NOCRYPT
   _cryptBuffer = nullptr;
@@ -127,6 +151,36 @@ bool UpdateClass::rollBack() {
   return _partitionIsBootable(partition) && !esp_ota_set_boot_partition(partition);
 }
 
+#ifdef UPDATE_SIGN
+bool UpdateClass::installSignature(UpdaterVerifyClass *sign) {
+  if (_size > 0) {
+    log_w("Update already running");
+    return false;
+  }
+  if (!sign) {
+    log_e("Invalid verifier");
+    return false;
+  }
+
+  int hashType = sign->getHashType();
+  if (hashType != HASH_SHA256 && hashType != HASH_SHA384 && hashType != HASH_SHA512) {
+    log_e("Invalid hash type: %d", hashType);
+    return false;
+  }
+
+  _sign = sign;
+  _hashType = hashType;
+  _signatureSize = 512;  // Fixed signature size (padded to 512 bytes)
+
+  [[maybe_unused]]
+  const char *hashName = (hashType == HASH_SHA256)   ? "SHA-256"
+                         : (hashType == HASH_SHA384) ? "SHA-384"
+                                                     : "SHA-512";
+  log_i("Signature verification installed (hash: %s, signature size: %lu bytes)", hashName, (unsigned long)_signatureSize);
+  return true;
+}
+#endif /* UPDATE_SIGN */
+
 bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, const char *label) {
   (void)label;
 
@@ -143,14 +197,44 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
   _target_md5 = emptyString;
   _md5 = MD5Builder();
 
+#ifdef UPDATE_SIGN
+  // Create and initialize signature hash if signature verification is enabled
+  if (_sign && _hashType >= 0) {
+    // Create the appropriate hash builder based on hashType
+    switch (_hashType) {
+      case HASH_SHA256: _hash = new SHA256Builder(); break;
+      case HASH_SHA384: _hash = new SHA384Builder(); break;
+      case HASH_SHA512: _hash = new SHA512Builder(); break;
+      default:          log_e("Invalid hash type"); return false;
+    }
+
+    if (_hash) {
+      _hash->begin();
+      log_i("Signature hash initialized");
+    } else {
+      log_e("Failed to create hash builder");
+      return false;
+    }
+  }
+#endif /* UPDATE_SIGN */
+
   if (size == 0) {
     _error = UPDATE_ERROR_SIZE;
     return false;
   }
 
+#ifdef UPDATE_SIGN
+  // Validate size is large enough to contain firmware + signature
+  if (_signatureSize > 0 && size < _signatureSize) {
+    _error = UPDATE_ERROR_SIZE;
+    log_e("Size too small for signature: %lu < %lu", (unsigned long)size, (unsigned long)_signatureSize);
+    return false;
+  }
+#endif /* UPDATE_SIGN */
+
   if (command == U_FLASH) {
     _partition = esp_ota_get_next_update_partition(NULL);
-    if (!_partition) {
+    if (!_partition || _partition == esp_ota_get_running_partition()) {
       _error = UPDATE_ERROR_NO_PARTITION;
       return false;
     }
@@ -191,7 +275,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     log_d("FS Partition: %s", _partition->label);
   } else {
     _error = UPDATE_ERROR_BAD_ARGUMENT;
-    log_e("bad command %u", command);
+    log_e("bad command %d", command);
     return false;
   }
 
@@ -199,7 +283,7 @@ bool UpdateClass::begin(size_t size, int command, int ledPin, uint8_t ledOn, con
     size = _partition->size;
   } else if (size > _partition->size) {
     _error = UPDATE_ERROR_SIZE;
-    log_e("too large %u > %u", size, _partition->size);
+    log_e("too large %lu > %" PRIu32, (unsigned long)size, _partition->size);
     return false;
   }
 
@@ -269,56 +353,96 @@ void UpdateClass::abort() {
 }
 
 #ifndef UPDATE_NOCRYPT
+/*
+ * Generates an address-tweaked encryption key for ESP32 flash encryption.
+ *
+ * Key Tweaking Overview:
+ * ----------------------
+ * ESP32 flash encryption uses "key tweaking" to derive a unique effective key
+ * for each 32-byte region of flash. This prevents attackers from:
+ *   - Swapping encrypted blocks between different flash addresses
+ *   - Using known-plaintext from one region to attack another
+ *
+ * The tweak is computed by XORing address bits into the base key according
+ * to a specific pattern that matches ESP32's hardware flash encryption.
+ *
+ * Parameters:
+ *   cryptAddress - Flash address used to derive the tweak (aligned to 32 bytes)
+ *   tweaked_key  - Output buffer for the 32-byte tweaked key
+ *
+ * Configuration (_cryptCfg):
+ * --------------------------
+ * The _cryptCfg value (0x0 to 0xF) controls how much address information
+ * is mixed into the key:
+ *   - 0x0: No tweaking, use base key as-is (lowest security)
+ *   - 0xF: Full tweaking, maximum address mixing (highest security, default)
+ *   - Other values: Partial tweaking for compatibility
+ *
+ * This matches the --flash_crypt_conf parameter in espsecure.py
+ */
 void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   memcpy(tweaked_key, _cryptKey, ENCRYPTED_KEY_SIZE);
   if (_cryptCfg == 0) {
-    return;  //no tweaking needed, use crypt key as-is
+    return;  // No tweaking needed, use base key as-is
   }
 
+  // Pattern defines which address bits to mix into each key region
+  // Values represent bit positions (23, 14, 12, 10, 8) used for tweaking
   const uint8_t pattern[] = {23, 23, 23, 14, 23, 23, 23, 12, 23, 23, 23, 10, 23, 23, 23, 8};
   int pattern_idx = 0;
   int key_idx = 0;
   int bit_len = 0;
   uint32_t tweak = 0;
-  cryptAddress &= 0x00ffffe0;  //bit 23-5
-  cryptAddress <<= 8;          //bit23 shifted to bit31(MSB)
+
+  // Extract address bits 23-5 (aligned to 32-byte boundary)
+  cryptAddress &= 0x00ffffe0;
+  cryptAddress <<= 8;  // Shift bit 23 to MSB position for easier manipulation
+
+  // XOR address-derived bits into the key
   while (pattern_idx < sizeof(pattern)) {
-    tweak = cryptAddress << (23 - pattern[pattern_idx]);  //bit shift for small patterns
-    // alternative to: tweak = rotl32(tweak,8 - bit_len);
-    tweak = (tweak << (8 - bit_len)) | (tweak >> (24 + bit_len));  //rotate to line up with end of previous tweak bits
-    bit_len += pattern[pattern_idx++] - 4;                         //add number of bits in next pattern(23-4 = 19bits = 23bit to 5bit)
+    tweak = cryptAddress << (23 - pattern[pattern_idx]);
+    // Rotate to align with previous tweak bits
+    tweak = (tweak << (8 - bit_len)) | (tweak >> (24 + bit_len));
+    bit_len += pattern[pattern_idx++] - 4;
+
+    // XOR full bytes
     while (bit_len > 7) {
-      tweaked_key[key_idx++] ^= tweak;  //XOR byte
-      // alternative to: tweak = rotl32(tweak, 8);
-      tweak = (tweak << 8) | (tweak >> 24);  //compiler should optimize to use rotate(fast)
+      tweaked_key[key_idx++] ^= tweak;
+      tweak = (tweak << 8) | (tweak >> 24);  // Rotate left 8 bits
       bit_len -= 8;
     }
-    tweaked_key[key_idx] ^= tweak;  //XOR remaining bits, will XOR zeros if no remaining bits
-  }
-  if (_cryptCfg == 0xf) {
-    return;  //return with fully tweaked key
+    tweaked_key[key_idx] ^= tweak;  // XOR remaining bits
   }
 
-  //some of tweaked key bits need to be restore back to crypt key bits
+  if (_cryptCfg == 0xf) {
+    return;  // Full tweaking complete
+  }
+
+  // Partial tweaking: restore some key bits based on _cryptCfg
+  // Each bit in _cryptCfg controls whether a key region stays tweaked or reverts
   const uint8_t cfg_bits[] = {67, 65, 63, 61};
   key_idx = 0;
   pattern_idx = 0;
   while (key_idx < ENCRYPTED_KEY_SIZE) {
     bit_len += cfg_bits[pattern_idx];
-    if ((_cryptCfg & (1 << pattern_idx)) == 0) {  //restore crypt key bits
+    if ((_cryptCfg & (1 << pattern_idx)) == 0) {
+      // Restore original key bits for this region
       while (bit_len > 0) {
-        if (bit_len > 7 || ((_cryptCfg & (2 << pattern_idx)) == 0)) {  //restore a crypt key byte
+        if (bit_len > 7 || ((_cryptCfg & (2 << pattern_idx)) == 0)) {
           tweaked_key[key_idx] = _cryptKey[key_idx];
-        } else {  //MSBits restore crypt key bits, LSBits keep as tweaked bits
+        } else {
+          // Partial byte: MSBits from original, LSBits stay tweaked
           tweaked_key[key_idx] &= (0xff >> bit_len);
           tweaked_key[key_idx] |= (_cryptKey[key_idx] & (~(0xff >> bit_len)));
         }
         key_idx++;
         bit_len -= 8;
       }
-    } else {  //keep tweaked key bits
+    } else {
+      // Keep tweaked bits for this region
       while (bit_len > 0) {
-        if (bit_len < 8 && ((_cryptCfg & (2 << pattern_idx)) == 0)) {  //MSBits keep as tweaked bits, LSBits restore crypt key bits
+        if (bit_len < 8 && ((_cryptCfg & (2 << pattern_idx)) == 0)) {
+          // Partial byte: MSBits stay tweaked, LSBits from original
           tweaked_key[key_idx] &= (~(0xff >> bit_len));
           tweaked_key[key_idx] |= (_cryptKey[key_idx] & (0xff >> bit_len));
         }
@@ -330,6 +454,46 @@ void UpdateClass::_cryptKeyTweak(size_t cryptAddress, uint8_t *tweaked_key) {
   }
 }
 
+/*
+ * Decrypts the OTA update buffer using ESP32 flash encryption compatible algorithm.
+ *
+ * ESP32 Flash Encryption Scheme:
+ * ------------------------------
+ * This function implements a decryption algorithm compatible with ESP32's flash
+ * encryption, which uses a symmetric (involutory) construction:
+ *
+ *   Transform(data) = ByteReverse(AES_Encrypt(ByteReverse(data)))
+ *
+ * This transform is its own inverse: Transform(Transform(data)) = data
+ * Therefore, the SAME operation is used for both encryption and decryption.
+ *
+ * Algorithm steps for each 16-byte block:
+ *   1. Reverse the byte order of the block
+ *   2. Apply AES-256 encryption (NOT decryption!) with address-tweaked key
+ *   3. Reverse the byte order of the result
+ *
+ * Why AES_ENCRYPT for decryption?
+ * -------------------------------
+ * The byte reversal combined with the key tweaking creates a mathematical
+ * structure where AES encryption serves as its own inverse. This design:
+ *   - Matches ESP32 hardware flash encryption controller behavior
+ *   - Simplifies bootloader (only needs encrypt logic)
+ *   - Allows same code path for encrypt/decrypt operations
+ *
+ * Key Tweaking:
+ * -------------
+ * The encryption key is "tweaked" based on the flash address every 32 bytes
+ * (ENCRYPTED_TWEAK_BLOCK_SIZE). This provides:
+ *   - Different effective keys for different flash regions
+ *   - Protection against block-swapping attacks
+ *
+ * Note: Since we use MBEDTLS_AES_ENCRYPT mode, we must call mbedtls_aes_setkey_enc()
+ * to set up the correct round keys. The encryption key schedule is required even
+ * though this function performs decryption.
+ *
+ * Reference: ESP-IDF flash encryption documentation
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/flash-encryption.html
+ */
 bool UpdateClass::_decryptBuffer() {
   if (!_cryptKey) {
     log_w("AES key not set");
@@ -346,39 +510,100 @@ bool UpdateClass::_decryptBuffer() {
     log_e("new failed");
     return false;
   }
-  uint8_t tweaked_key[ENCRYPTED_KEY_SIZE];  //tweaked crypt key
+
+  uint8_t tweaked_key[ENCRYPTED_KEY_SIZE];
   int done = 0;
 
-  /*
-        Mbedtls functions will be replaced with esp_aes functions when hardware acceleration is available
+#if MBEDTLS_VERSION_MAJOR >= 4
+  /* mbedtls 4.x removed the legacy AES API; use PSA cipher instead */
+  psa_key_attributes_t key_attr = PSA_KEY_ATTRIBUTES_INIT;
+  psa_set_key_usage_flags(&key_attr, PSA_KEY_USAGE_ENCRYPT);
+  psa_set_key_algorithm(&key_attr, PSA_ALG_ECB_NO_PADDING);
+  psa_set_key_type(&key_attr, PSA_KEY_TYPE_AES);
+  psa_set_key_bits(&key_attr, 256);
 
-        To Do:
-        Replace mbedtls for the cases where there's no hardware acceleration
-     */
+  psa_key_id_t key_id = PSA_KEY_ID_NULL;
+  size_t last_key_address = (size_t)-1;
+  uint8_t ecb_out[ENCRYPTED_BLOCK_SIZE];
 
-  mbedtls_aes_context ctx;  //initialize AES
-  mbedtls_aes_init(&ctx);
   while ((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE) {
+    // Step 1: Reverse byte order of the 16-byte block
     for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
-      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];  //reverse order 16 bytes to decrypt
+      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];
     }
+
+    // Update tweaked key every ENCRYPTED_TWEAK_BLOCK_SIZE (32) bytes or at start
+    size_t cur_address = _cryptAddress + _progress + done;
+    size_t tweak_base = cur_address - (cur_address % ENCRYPTED_TWEAK_BLOCK_SIZE);
+    if (tweak_base != last_key_address) {
+      last_key_address = tweak_base;
+      _cryptKeyTweak(cur_address, tweaked_key);
+      if (key_id != PSA_KEY_ID_NULL) {
+        psa_destroy_key(key_id);
+        key_id = PSA_KEY_ID_NULL;
+      }
+      if (psa_import_key(&key_attr, tweaked_key, ENCRYPTED_KEY_SIZE, &key_id) != PSA_SUCCESS) {
+        return false;
+      }
+    }
+
+    // Step 2: Apply AES-ECB encryption (this decrypts due to the involutory scheme)
+    // Use multipart API to avoid aliasing and IV-prepend issues with the one-shot API
+    psa_cipher_operation_t op = PSA_CIPHER_OPERATION_INIT;
+    size_t out_len = 0, finish_len = 0;
+    if (psa_cipher_encrypt_setup(&op, key_id, PSA_ALG_ECB_NO_PADDING) != PSA_SUCCESS
+        || psa_cipher_update(&op, _cryptBuffer, ENCRYPTED_BLOCK_SIZE, ecb_out, sizeof(ecb_out), &out_len) != PSA_SUCCESS
+        || psa_cipher_finish(&op, ecb_out + out_len, sizeof(ecb_out) - out_len, &finish_len) != PSA_SUCCESS) {
+      psa_cipher_abort(&op);
+      psa_destroy_key(key_id);
+      return false;
+    }
+    memcpy(_cryptBuffer, ecb_out, ENCRYPTED_BLOCK_SIZE);
+
+    // Step 3: Reverse byte order back to get the decrypted plaintext
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];
+    }
+
+    done += ENCRYPTED_BLOCK_SIZE;
+  }
+
+  if (key_id != PSA_KEY_ID_NULL) {
+    psa_destroy_key(key_id);
+  }
+#else
+  mbedtls_aes_context ctx;
+  mbedtls_aes_init(&ctx);
+
+  while ((_bufferLen - done) >= ENCRYPTED_BLOCK_SIZE) {
+    // Step 1: Reverse byte order of the 16-byte block
+    for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
+      _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i] = _buffer[i + done];
+    }
+
+    // Update tweaked key every ENCRYPTED_TWEAK_BLOCK_SIZE (32) bytes or at start
     if (((_cryptAddress + _progress + done) % ENCRYPTED_TWEAK_BLOCK_SIZE) == 0 || done == 0) {
-      _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key);  //update tweaked crypt key
+      _cryptKeyTweak(_cryptAddress + _progress + done, tweaked_key);
+      // Use setkey_enc because we perform AES_ENCRYPT operation below
       if (mbedtls_aes_setkey_enc(&ctx, tweaked_key, 256)) {
         return false;
       }
-      if (mbedtls_aes_setkey_dec(&ctx, tweaked_key, 256)) {
-        return false;
-      }
     }
-    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {  //use MBEDTLS_AES_ENCRYPT to decrypt flash code
+
+    // Step 2: Apply AES encryption (this decrypts due to the involutory scheme)
+    if (mbedtls_aes_crypt_ecb(&ctx, MBEDTLS_AES_ENCRYPT, _cryptBuffer, _cryptBuffer)) {
       return false;
     }
+
+    // Step 3: Reverse byte order back to get the decrypted plaintext
     for (int i = 0; i < ENCRYPTED_BLOCK_SIZE; i++) {
-      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];  //reverse order 16 bytes from decrypt
+      _buffer[i + done] = _cryptBuffer[(ENCRYPTED_BLOCK_SIZE - 1) - i];
     }
+
     done += ENCRYPTED_BLOCK_SIZE;
   }
+#endif /* MBEDTLS_VERSION_MAJOR >= 4 */
+
   return true;
 }
 #endif /* UPDATE_NOCRYPT */
@@ -462,6 +687,23 @@ bool UpdateClass::_writeBuffer() {
 #ifndef UPDATE_NOCRYPT
   }
 #endif /* UPDATE_NOCRYPT */
+
+#ifdef UPDATE_SIGN
+  // Add data to signature hash if signature verification is enabled
+  // Only hash firmware bytes, not the signature bytes at the end
+  if (_hash && _signatureSize > 0) {
+    size_t firmwareSize = _size - _signatureSize;
+    if (_progress < firmwareSize) {
+      // Calculate how many bytes of this buffer are firmware (not signature)
+      size_t bytesToHash = _bufferLen;
+      if (_progress + _bufferLen > firmwareSize) {
+        bytesToHash = firmwareSize - _progress;
+      }
+      _hash->add(_buffer, bytesToHash);
+    }
+  }
+#endif /* UPDATE_SIGN */
+
   _progress += _bufferLen;
   _bufferLen = 0;
   if (_progress_callback) {
@@ -527,7 +769,7 @@ bool UpdateClass::end(bool evenIfRemaining) {
   }
 
   if (!isFinished() && !evenIfRemaining) {
-    log_e("premature end: res:%u, pos:%u/%u\n", getError(), progress(), _size);
+    log_e("premature end: res:%u, pos:%lu/%lu\n", getError(), (unsigned long)progress(), (unsigned long)_size);
     _abort(UPDATE_ERROR_ABORT);
     return false;
   }
@@ -546,6 +788,43 @@ bool UpdateClass::end(bool evenIfRemaining) {
       return false;
     }
   }
+
+#ifdef UPDATE_SIGN
+  // Verify signature if signature verification is enabled
+  if (_hash && _sign && _signatureSize > 0) {
+    log_i("Verifying signature...");
+    _hash->calculate();
+
+    // Allocate buffer for signature (max 512 bytes for RSA-4096)
+    const size_t maxSigSize = 512;
+    _signatureBuffer = new (std::nothrow) uint8_t[maxSigSize];
+    if (!_signatureBuffer) {
+      log_e("Failed to allocate signature buffer");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    // Read signature from partition (last 512 bytes of what was written)
+    size_t firmwareSize = _size - _signatureSize;
+    log_d(
+      "Reading signature from offset %lu (firmware size: %lu, total size: %lu)", (unsigned long)firmwareSize, (unsigned long)firmwareSize, (unsigned long)_size
+    );
+    if (!ESP.partitionRead(_partition, firmwareSize, (uint32_t *)_signatureBuffer, maxSigSize)) {
+      log_e("Failed to read signature from partition");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    // Verify the signature
+    if (!_sign->verify(_hash, _signatureBuffer, maxSigSize)) {
+      log_e("Signature verification failed");
+      _abort(UPDATE_ERROR_SIGN);
+      return false;
+    }
+
+    log_i("Signature verified successfully");
+  }
+#endif /* UPDATE_SIGN */
 
   return _verifyEnd();
 }

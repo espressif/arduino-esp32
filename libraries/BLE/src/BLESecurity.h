@@ -1,4 +1,21 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLESecurity.h
  *
  *  Created on: Dec 17, 2017
@@ -25,6 +42,7 @@
 #include "BLEDevice.h"
 #include "BLEClient.h"
 #include "BLEServer.h"
+#include "RTOS.h"
 
 /***************************************************************************
  *                           Bluedroid includes                            *
@@ -104,6 +122,10 @@ public:
   static uint32_t generateRandomPassKey();
   static void regenPassKeyOnConnect(bool enable = false);
   static void resetSecurity();
+  static void setForceAuthentication(bool force);
+  static bool getForceAuthentication();
+  static void waitForAuthenticationComplete(uint32_t timeoutMs = 10000);
+  static void signalAuthenticationComplete();
 
   /***************************************************************************
    *                       Bluedroid public declarations                     *
@@ -140,6 +162,7 @@ private:
   static bool m_passkeySet;
   static bool m_staticPasskey;
   static bool m_regenOnConnect;
+  static bool m_authenticationComplete;
   static uint8_t m_iocap;
   static uint8_t m_authReq;
   static uint8_t m_initKey;
@@ -153,6 +176,7 @@ private:
 #if defined(CONFIG_BLUEDROID_ENABLED)
   static uint8_t m_keySize;
   static esp_ble_sec_act_t m_securityLevel;
+  static class FreeRTOS::Semaphore *m_authCompleteSemaphore;
 #endif
 
 };  // BLESecurity

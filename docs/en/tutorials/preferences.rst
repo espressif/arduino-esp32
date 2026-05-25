@@ -379,7 +379,7 @@ To send to the serial monitor the number of available entries the following coul
 
    mySketchPrefs.begin("myPrefs", true);
    size_t whatsLeft = freeEntries();    // this method works regardless of the mode in which the namespace is opened.
-   Serial.printf("There are: %u entries available in the namespace table.\n, whatsLeft);
+   Serial.printf("There are: %lu entries available in the namespace table.\n", (unsigned long)whatsLeft);
    mySketchPrefs.end();
 
 ..

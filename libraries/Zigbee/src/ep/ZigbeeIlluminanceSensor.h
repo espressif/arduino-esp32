@@ -49,6 +49,10 @@ public:
   // Set the illuminance value
   bool setIlluminance(uint16_t value);
 
+  // Set the default (initial) value for the illuminance sensor
+  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
+  bool setDefaultValue(uint16_t defaultValue);
+
   // Set the min and max value for the illuminance sensor
   bool setMinMaxValue(uint16_t min, uint16_t max);
 

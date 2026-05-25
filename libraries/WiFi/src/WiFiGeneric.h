@@ -149,7 +149,6 @@ public:
 protected:
   static bool _persistent;
   static bool _long_range;
-  static wifi_mode_t _forceSleepLastMode;
   static wifi_ps_type_t _sleepEnabled;
   static bool _wifiUseStaticBuffers;
 

@@ -1,0 +1,4 @@
+platforms:
+  qemu: false
+  # For some reason console is not interacting properly with pytest-embedded
+  hardware: false

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Matter Manager
+#include <Arduino.h>
 #include <Matter.h>
 #if !CONFIG_ENABLE_CHIPOBLE
 // if the device can be commissioned using BLE, WiFi is not used - save flash space
@@ -77,5 +78,5 @@ void loop() {
   Serial.println("====> Decommissioning in 30 seconds. <====");
   delay(30000);
   Matter.decommission();
-  Serial.println("Matter Node is decommissioned. Commsssioning widget shall start over.");
+  Serial.println("Matter Node is decommissioned. Commissioning widget shall start over.");
 }

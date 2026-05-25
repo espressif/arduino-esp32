@@ -5,6 +5,7 @@
 // Legacy pairing TODO
 // Must be run as idf component ... todo
 
+#include <Arduino.h>
 #include "BluetoothSerial.h"
 
 // Check if Bluetooth is available

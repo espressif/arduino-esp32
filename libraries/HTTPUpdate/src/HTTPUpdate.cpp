@@ -35,15 +35,8 @@
 // To do extern "C" uint32_t _SPIFFS_start;
 // To do extern "C" uint32_t _SPIFFS_end;
 
-HTTPUpdate::HTTPUpdate(void) : HTTPUpdate(8000) {}
-
-HTTPUpdate::HTTPUpdate(int httpClientTimeout) : _httpClientTimeout(httpClientTimeout), _ledPin(-1) {
-  _followRedirects = HTTPC_DISABLE_FOLLOW_REDIRECTS;
-  _md5Sum = String();
-  _user = String();
-  _password = String();
-  _auth = String();
-}
+HTTPUpdate::HTTPUpdate(int httpClientTimeout, UpdateClass *updater)
+  : _httpClientTimeout(httpClientTimeout), _updater(updater), _followRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS) {}
 
 HTTPUpdate::~HTTPUpdate(void) {}
 
@@ -129,6 +122,9 @@ int HTTPUpdate::getLastError(void) {
  * @return String error
  */
 String HTTPUpdate::getLastErrorString(void) {
+  if (!_updater) {
+    return {};
+  }
 
   if (_lastError == 0) {
     return String();  // no error
@@ -137,7 +133,7 @@ String HTTPUpdate::getLastErrorString(void) {
   // error from Update class
   if (_lastError > 0) {
     StreamString error;
-    Update.printError(error);
+    _updater->printError(error);
     error.trim();  // remove line ending
     return String("Update error: ") + error;
   }
@@ -282,8 +278,8 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
   }
 
   log_d("ESP32 info:\n");
-  log_d(" - free Space: %d\n", ESP.getFreeSketchSpace());
-  log_d(" - current Sketch Size: %d\n", ESP.getSketchSize());
+  log_d(" - free Space: %" PRIu32 "\n", ESP.getFreeSketchSpace());
+  log_d(" - current Sketch Size: %" PRIu32 "\n", ESP.getSketchSize());
 
   if (currentVersion && currentVersion[0] != 0x00) {
     log_d(" - current version: %s\n", currentVersion.c_str());
@@ -317,7 +313,7 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
           }
 
           if (len > _partition->size) {
-            log_e("spiffsSize to low (%d) needed: %d\n", _partition->size, len);
+            log_e("spiffsSize to low (%" PRIu32 ") needed: %" PRIu32 "\n", _partition->size, len);
             startUpdate = false;
           }
         } else {
@@ -444,16 +440,19 @@ HTTPUpdateResult HTTPUpdate::handleUpdate(HTTPClient &http, const String &curren
  * @return true if Update ok
  */
 bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
+  if (!_updater) {
+    return false;
+  }
 
   StreamString error;
 
   if (_cbProgress) {
-    Update.onProgress(_cbProgress);
+    _updater->onProgress(_cbProgress);
   }
 
-  if (!Update.begin(size, command, _ledPin, _ledOn)) {
-    _lastError = Update.getError();
-    Update.printError(error);
+  if (!_updater->begin(size, command, _ledPin, _ledOn)) {
+    _lastError = _updater->getError();
+    _updater->printError(error);
     error.trim();  // remove line ending
     log_e("Update.begin failed! (%s)\n", error.c_str());
     return false;
@@ -464,7 +463,7 @@ bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
   }
 
   if (md5.length()) {
-    if (!Update.setMD5(md5.c_str())) {
+    if (!_updater->setMD5(md5.c_str())) {
       _lastError = HTTP_UE_SERVER_FAULTY_MD5;
       log_e("Update.setMD5 failed! (%s)\n", md5.c_str());
       return false;
@@ -473,9 +472,9 @@ bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
 
   // To do: the SHA256 could be checked if the server sends it
 
-  if (Update.writeStream(in) != size) {
-    _lastError = Update.getError();
-    Update.printError(error);
+  if (_updater->writeStream(in) != size) {
+    _lastError = _updater->getError();
+    _updater->printError(error);
     error.trim();  // remove line ending
     log_e("Update.writeStream failed! (%s)\n", error.c_str());
     return false;
@@ -485,9 +484,9 @@ bool HTTPUpdate::runUpdate(Stream &in, uint32_t size, String md5, int command) {
     _cbProgress(size, size);
   }
 
-  if (!Update.end()) {
-    _lastError = Update.getError();
-    Update.printError(error);
+  if (!_updater->end()) {
+    _lastError = _updater->getError();
+    _updater->printError(error);
     error.trim();  // remove line ending
     log_e("Update.end failed! (%s)\n", error.c_str());
     return false;

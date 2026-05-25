@@ -56,6 +56,13 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t wifi_interface_t
+#define ESP_IF_WIFI_AP  WIFI_IF_AP
+#define ESP_IF_WIFI_STA WIFI_IF_STA
+#define ESP_IF_MAX      3
+#endif
+
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
@@ -78,7 +85,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
-    log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+    log_v("SCAN Done: ID: %u, Status: %" PRIu32 ", Results: %u", event->scan_id, event->status, event->number);
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
     memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
@@ -264,6 +271,12 @@ bool wifiLowLevelInit(bool persistent) {
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
+#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+    // required for proper work when esp-hosted is used.
+    cfg.nvs_enable = false;
+    persistent = false;
+#endif
+
     if (!WiFiGenericClass::useStaticBuffers()) {
       cfg.static_tx_buf_num = 0;
       cfg.dynamic_tx_buf_num = 32;
@@ -369,7 +382,6 @@ static bool espWiFiStop() {
 
 bool WiFiGenericClass::_persistent = true;
 bool WiFiGenericClass::_long_range = false;
-wifi_mode_t WiFiGenericClass::_forceSleepLastMode = WIFI_MODE_NULL;
 #if CONFIG_IDF_TARGET_ESP32S2
 wifi_ps_type_t WiFiGenericClass::_sleepEnabled = WIFI_PS_NONE;
 #else
@@ -453,7 +465,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary) 
   uint8_t max_chan = min_chan + country.nchan - 1;
 
   if (primary < min_chan || primary > max_chan) {
-    log_e("Invalid primary channel: %d. Valid range is %d-%d for country %s", primary, min_chan, max_chan, country.cc);
+    log_e("Invalid primary channel: %u. Valid range is %u-%u for country %s", primary, min_chan, max_chan, country.cc);
     return ESP_ERR_INVALID_ARG;
   }
 
@@ -480,6 +492,107 @@ void WiFiGenericClass::persistent(bool persistent) {
  */
 void WiFiGenericClass::enableLongRange(bool enable) {
   _long_range = enable;
+}
+
+#if CONFIG_SOC_WIFI_HE_SUPPORT
+#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AX)
+#else
+#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N)
+#endif
+
+#if SOC_WIFI_SUPPORT_5G
+#if CONFIG_SOC_WIFI_HE_SUPPORT
+#define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC | WIFI_PROTOCOL_11AX)
+#else
+#define WIFI_PROTOCOL_DEFAULT_5G (WIFI_PROTOCOL_11A | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AC)
+#endif
+#endif
+
+static bool _wifi_is_lr_enabled(wifi_interface_t ifx) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && SOC_WIFI_SUPPORT_5G
+  wifi_band_mode_t band_mode = WIFI_BAND_MODE_AUTO;
+  esp_err_t err = esp_wifi_get_band_mode(&band_mode);
+  if (err != ESP_OK) {
+    log_e("Failed to get Current Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  if (band_mode == WIFI_BAND_MODE_AUTO) {
+    wifi_protocols_t protocols = {.ghz_2g = 0, .ghz_5g = 0};
+    err = esp_wifi_get_protocols(ifx, &protocols);
+    if (err != ESP_OK) {
+      log_e("Failed to get Current Protocols: 0x%x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+    return protocols.ghz_2g == WIFI_PROTOCOL_LR;
+  } else if (band_mode == WIFI_BAND_MODE_5G_ONLY) {
+    return false;
+  }
+#endif
+  uint16_t protocol_bitmap = 0;
+  esp_err_t err2 = esp_wifi_get_protocol(ifx, (uint8_t *)&protocol_bitmap);
+  if (err2 != ESP_OK) {
+    log_e("Failed to get Current Protocols: 0x%x: %s", err2, esp_err_to_name(err2));
+    return false;
+  }
+  return protocol_bitmap == WIFI_PROTOCOL_LR;
+}
+
+static bool _wifi_enable_lr(wifi_interface_t ifx) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && SOC_WIFI_SUPPORT_5G
+  wifi_band_mode_t band_mode = WIFI_BAND_MODE_AUTO;
+  esp_err_t err = esp_wifi_get_band_mode(&band_mode);
+  if (err != ESP_OK) {
+    log_e("Failed to get Current Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  if (band_mode == WIFI_BAND_MODE_AUTO) {
+    wifi_protocols_t protocols = {.ghz_2g = WIFI_PROTOCOL_LR, .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G};
+    err = esp_wifi_set_protocols(ifx, &protocols);
+    if (err != ESP_OK) {
+      log_e("Failed to set LR Protocol: 0x%x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+    return true;
+  } else if (band_mode == WIFI_BAND_MODE_5G_ONLY) {
+    log_e("LR Protocol can only be enabled on 2.4GHz WiFi");
+    return false;
+  }
+#endif
+  esp_err_t err2 = esp_wifi_set_protocol(ifx, WIFI_PROTOCOL_LR);
+  if (err2 != ESP_OK) {
+    log_e("Failed to set LR Protocol: 0x%x: %s", err2, esp_err_to_name(err2));
+    return false;
+  }
+  return true;
+}
+
+static bool _wifi_disable_lr(wifi_interface_t ifx) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && SOC_WIFI_SUPPORT_5G
+  wifi_band_mode_t band_mode = WIFI_BAND_MODE_AUTO;
+  esp_err_t err = esp_wifi_get_band_mode(&band_mode);
+  if (err != ESP_OK) {
+    log_e("Failed to get Current Band Mode: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+  if (band_mode == WIFI_BAND_MODE_AUTO) {
+    wifi_protocols_t protocols = {.ghz_2g = WIFI_PROTOCOL_DEFAULT, .ghz_5g = WIFI_PROTOCOL_DEFAULT_5G};
+    err = esp_wifi_set_protocols(ifx, &protocols);
+    if (err != ESP_OK) {
+      log_e("Failed to set Default Protocol: 0x%x: %s", err, esp_err_to_name(err));
+      return false;
+    }
+    return true;
+  } else if (band_mode == WIFI_BAND_MODE_5G_ONLY) {
+    log_e("LR Protocol can only be disabled on 2.4GHz WiFi");
+    return false;
+  }
+#endif
+  esp_err_t err2 = esp_wifi_set_protocol(ifx, WIFI_PROTOCOL_DEFAULT);
+  if (err2 != ESP_OK) {
+    log_e("Failed to set Default Protocol: 0x%x: %s", err2, esp_err_to_name(err2));
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -550,43 +663,33 @@ bool WiFiGenericClass::mode(wifi_mode_t m) {
 
   if (_long_range) {
     if (m & WIFI_MODE_STA) {
-      err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR);
-      if (err != ESP_OK) {
-        log_e("Could not enable long range on STA! 0x%x: %s", err, esp_err_to_name(err));
+      if (!_wifi_enable_lr(WIFI_IF_STA)) {
+        log_e("Could not enable long range on STA!");
         return false;
       }
     }
     if (m & WIFI_MODE_AP) {
-      err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_LR);
-      if (err != ESP_OK) {
-        log_e("Could not enable long range on AP! 0x%x: %s", err, esp_err_to_name(err));
+      if (!_wifi_enable_lr(WIFI_IF_AP)) {
+        log_e("Could not enable long range on AP!");
         return false;
       }
     }
   } else {
-#if CONFIG_SOC_WIFI_HE_SUPPORT
-#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N | WIFI_PROTOCOL_11AX)
-#else
-#define WIFI_PROTOCOL_DEFAULT (WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N)
-#endif
-    uint32_t current_protocol = 0;
     if (m & WIFI_MODE_STA) {
-      err = esp_wifi_get_protocol(WIFI_IF_STA, (uint8_t *)&current_protocol);
-      if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
+      if (_wifi_is_lr_enabled(WIFI_IF_STA)) {
         log_v("Disabling long range on STA");
-        err = esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_DEFAULT);
-        if (err != ESP_OK) {
-          log_e("Could not disable long range on STA! 0x%x: %s", err, esp_err_to_name(err));
+        if (!_wifi_disable_lr(WIFI_IF_STA)) {
+          log_e("Could not disable long range on STA!");
+          return false;
         }
       }
     }
     if (m & WIFI_MODE_AP) {
-      err = esp_wifi_get_protocol(WIFI_IF_AP, (uint8_t *)&current_protocol);
-      if (err == ESP_OK && current_protocol == WIFI_PROTOCOL_LR) {
+      if (_wifi_is_lr_enabled(WIFI_IF_AP)) {
         log_v("Disabling long range on AP");
-        err = esp_wifi_set_protocol(WIFI_IF_AP, WIFI_PROTOCOL_DEFAULT);
-        if (err != ESP_OK) {
-          log_e("Could not disable long range on AP! 0x%x: %s", err, esp_err_to_name(err));
+        if (!_wifi_disable_lr(WIFI_IF_AP)) {
+          log_e("Could not disable long range on AP!");
+          return false;
         }
       }
     }
@@ -660,7 +763,7 @@ bool WiFiGenericClass::enableAP(bool enable) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Enable or disable WiFi modem power save mode
  * @param enable bool
  * @return ok
  */
@@ -669,28 +772,33 @@ bool WiFiGenericClass::setSleep(bool enabled) {
 }
 
 /**
- * control modem sleep when only in STA mode
+ * Set WiFi modem power save mode
  * @param mode wifi_ps_type_t
  * @return ok
  */
 bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
-  if (sleepType != _sleepEnabled) {
+  if (sleepType > WIFI_PS_MAX_MODEM) {
+    return false;
+  }
+
+  if (!WiFi.STA.started()) {
     _sleepEnabled = sleepType;
-    if (WiFi.STA.started()) {
-      esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
-      if (err != ESP_OK) {
-        log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
-        return false;
-      }
-    }
     return true;
   }
-  return false;
+
+  esp_err_t err = esp_wifi_set_ps(sleepType);
+  if (err != ESP_OK) {
+    log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
+    return false;
+  }
+
+  _sleepEnabled = sleepType;
+  return true;
 }
 
 /**
- * get modem sleep enabled
- * @return true if modem sleep is enabled
+ * Get WiFi modem power save mode
+ * @return wifi_ps_type_t
  */
 wifi_ps_type_t WiFiGenericClass::getSleep() {
   return _sleepEnabled;
@@ -823,7 +931,14 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period, .use_get_report_api = true
+    .resp_mac = {0, 0, 0, 0, 0, 0},
+    .channel = channel,
+    .frm_count = frm_count,
+    .burst_period = burst_period
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+    ,
+    .use_get_report_api = true
+#endif
   };
   if (mac != NULL) {
     memcpy(ftmi_cfg.resp_mac, mac, 6);

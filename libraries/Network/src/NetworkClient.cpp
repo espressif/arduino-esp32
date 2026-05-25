@@ -468,6 +468,25 @@ size_t NetworkClient::write(Stream &stream) {
   return written;
 }
 
+size_t NetworkClient::write(Stream &stream, size_t length) {
+  uint8_t *buf = (uint8_t *)malloc(1360);
+  if (!buf) {
+    return 0;
+  }
+  size_t toRead = 0, toWrite = 0, written = 0;
+  while (length) {
+    toRead = (length > 1360) ? 1360 : length;
+    toWrite = stream.readBytes(buf, toRead);
+    if (!toWrite) {
+      break;
+    }
+    written += write(buf, toWrite);
+    length -= toWrite;
+  }
+  free(buf);
+  return written;
+}
+
 int NetworkClient::read(uint8_t *buf, size_t size) {
   if (_lastReadTimeout != _timeout) {
     if (fd() >= 0) {

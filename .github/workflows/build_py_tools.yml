@@ -8,6 +8,7 @@ on:
       - "tools/espota.py"
       - "tools/gen_esp32part.py"
       - "tools/gen_insights_package.py"
+      - "tools/bin_signing.py"
 
 permissions:
   contents: write
@@ -44,6 +45,7 @@ jobs:
             tools/espota.py
             tools/gen_esp32part.py
             tools/gen_insights_package.py
+            tools/bin_signing.py
 
       - name: List all changed files
         shell: bash
@@ -108,7 +110,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller requests
+          pip install pyinstaller requests cryptography
 
       - name: Build with PyInstaller
         shell: bash
@@ -119,16 +121,14 @@ jobs:
 
       - name: Sign binaries
         if: matrix.os == 'windows-latest'
-        env:
-          CERTIFICATE: ${{ secrets.CERTIFICATE }}
-          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
-        shell: pwsh
-        run: |
-          $data = Write-Output ${{ env.CHANGED_TOOLS }}
-          foreach ( $node in $data )
-          {
-            ./.github/pytools/Sign-File.ps1 -Path ./${{ env.DISTPATH }}/$node.exe
-          }
+        uses: espressif/release-sign@33f3684091168d78b2cf6c8265bd9968c376254c # master
+        with:
+          path: ./${{ env.DISTPATH }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-keyvault-uri: ${{ secrets.AZURE_KEYVAULT_URI }}
+          azure-keyvault-cert-name: ${{ secrets.AZURE_KEYVAULT_CERT_NAME }}
 
       - name: Test binaries
         shell: bash

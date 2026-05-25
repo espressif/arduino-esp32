@@ -164,6 +164,8 @@ typedef enum {
 #define SOC_RX0 (gpio_num_t)38
 #elif CONFIG_IDF_TARGET_ESP32C5
 #define SOC_RX0 (gpio_num_t)12
+#elif CONFIG_IDF_TARGET_ESP32C61
+#define SOC_RX0 (gpio_num_t)10
 #endif
 #endif
 
@@ -182,7 +184,7 @@ typedef enum {
 #define SOC_TX0 (gpio_num_t)24
 #elif CONFIG_IDF_TARGET_ESP32P4
 #define SOC_TX0 (gpio_num_t)37
-#elif CONFIG_IDF_TARGET_ESP32C5
+#elif CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C61
 #define SOC_TX0 (gpio_num_t)11
 #endif
 #endif
@@ -209,6 +211,8 @@ typedef enum {
 #define RX1 (gpio_num_t)11
 #elif CONFIG_IDF_TARGET_ESP32C5
 #define RX1 (gpio_num_t)4
+#elif CONFIG_IDF_TARGET_ESP32C61
+#define RX1 (gpio_num_t)8
 #endif
 #endif
 
@@ -231,6 +235,8 @@ typedef enum {
 #define TX1 (gpio_num_t)10
 #elif CONFIG_IDF_TARGET_ESP32C5
 #define TX1 (gpio_num_t)5
+#elif CONFIG_IDF_TARGET_ESP32C61
+#define TX1 (gpio_num_t)29
 #endif
 #endif
 #endif /* SOC_UART_HP_NUM > 1 */
@@ -356,7 +362,12 @@ public:
 
   void setDebugOutput(bool);
 
-  void setRxInvert(bool);
+  // functions used to enable or disable UART pins signal inversion
+  // returns the requested operation success status
+  bool setRxInvert(bool);
+  bool setTxInvert(bool);
+  bool setCtsInvert(bool);
+  bool setRtsInvert(bool);
 
   // Negative Pin Number will keep it unmodified, thus this function can set individual pins
   // setPins() can be called after or before begin()
@@ -367,6 +378,7 @@ public:
   //    UART_HW_FLOWCTRL_RTS     = 0x1   enable RX hardware flow control (rts)
   //    UART_HW_FLOWCTRL_CTS     = 0x2   enable TX hardware flow control (cts)
   //    UART_HW_FLOWCTRL_CTS_RTS = 0x3   enable hardware flow control
+
   bool setHwFlowCtrlMode(SerialHwFlowCtrl mode = UART_HW_FLOWCTRL_CTS_RTS, uint8_t threshold = 64);  // 64 is half FIFO Length
   // Used to set RS485 modes such as UART_MODE_RS485_HALF_DUPLEX for Auto RTS function on ESP32
   //    UART_MODE_UART                   = 0x00    mode: regular UART mode
@@ -375,6 +387,15 @@ public:
   //    UART_MODE_RS485_COLLISION_DETECT = 0x03    mode: RS485 collision detection UART mode (used for test purposes)
   //    UART_MODE_RS485_APP_CTRL         = 0x04    mode: application control RS485 UART mode (used for test purposes)
   bool setMode(SerialMode mode);
+
+  // Functions to set the UART IRDA direction: TX or RX.
+  // It works in exclusive directions, meaning that if set to TX (ESP32_UART_IRDA_TX),
+  // the UART will only transmit data and won't receive any data,
+  // and vice versa for RX (ESP32_UART_IRDA_RX).
+  // It can only be used after setMode(UART_MODE_IRDA) is called.
+  // Parameters: ESP32_UART_IRDA_TX (transmit mode) or ESP32_UART_IRDA_RX (receive mode)
+  bool setIrdaDirection(esp32_uart_irda_direction_t irdaDirection);
+
   // Used to set the UART clock source mode. It must be set before calling begin(), otherwise it won't have any effect.
   // Not all clock source are available to every SoC. The compatible option are listed here:
   // UART_CLK_SRC_DEFAULT      :: any SoC - it will set whatever IDF defines as the default UART Clock Source

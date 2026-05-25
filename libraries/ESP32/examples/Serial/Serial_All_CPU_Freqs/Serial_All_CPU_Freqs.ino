@@ -9,6 +9,8 @@
 
 */
 
+#include <Arduino.h>
+
 int cpufreqs[6] = {240, 160, 80, 40, 20, 10};
 #define NUM_CPU_FREQS (sizeof(cpufreqs) / sizeof(int))
 

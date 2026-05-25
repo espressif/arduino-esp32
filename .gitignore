@@ -23,7 +23,7 @@ tools/openocd-esp32
 # Ignore build folder
 /build
 
-# Ignore files built by Visual Studio/Visual Micro
+# Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
 [Rr]elease/
 .vs/
@@ -32,6 +32,8 @@ __vm/
 .vscode/
 platform.sloeber.txt
 boards.sloeber.txt
+/.idea/
+.github/copilot-instructions.md
 
 # Ignore docs build (Sphinx)
 docs/build
@@ -45,6 +47,7 @@ debug.cfg
 debug.svd
 debug_custom.json
 libraries/Insights/examples/*/*.ino.zip
+test_results.json
 
 # Vale Style
 .vale/styles/*

@@ -20,6 +20,36 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_continuous.h"
 #include "esp_adc/adc_cali_scheme.h"
+#include "esp_heap_caps.h"
+
+#if CONFIG_IDF_TARGET_ESP32P4 && CONFIG_ESP32P4_REV_MIN_FULL >= 300
+// NOTE: These weak definitions allow successful linkage if the real efuse calibration functions are missing.
+// This is a workaround for the ESP32P4 rev 3.0+, which is missing efuse calibration functions in the IDF.
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_ver(void) {
+  return 0;
+}
+
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_init_code(uint32_t atten, uint32_t *code) {
+  if (code) {
+    *code = 0;
+  }
+  return 0;  // 0 means success in ESP-IDF conventions
+}
+
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_chan_compens(uint32_t atten, uint32_t *comp) {
+  if (comp) {
+    *comp = 0;
+  }
+  return 0;
+}
+
+__attribute__((weak)) uint32_t esp_efuse_rtc_calib_get_cal_voltage(uint32_t atten, uint32_t *voltage) {
+  if (voltage) {
+    *voltage = 0;
+  }
+  return 0;
+}
+#endif
 
 // ESP32-C2 does not define those two for some reason
 #ifndef SOC_ADC_DIGI_RESULT_BYTES
@@ -75,11 +105,14 @@ static bool adcDetachBus(void *pin) {
       if (err != ESP_OK) {
         return false;
       }
-#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
       err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
       if (err != ESP_OK) {
         return false;
       }
+#else
+      log_e("ADC Calibration scheme is not supported!");
+      return false;
 #endif
     }
     adc_handle[adc_unit].adc_cali_handle = NULL;
@@ -127,7 +160,7 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
             log_e("adc_cali_create_scheme_curve_fitting failed with error: %d", err);
             return err;
           }
-#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
           log_d("Deleting ADC_UNIT_%d line cali handle", adc_unit);
           err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
           if (err != ESP_OK) {
@@ -145,6 +178,9 @@ esp_err_t __analogChannelConfig(adc_bitwidth_t width, adc_attenuation_t atten, i
             log_e("adc_cali_create_scheme_line_fitting failed with error: %d", err);
             return err;
           }
+#else
+          log_e("ADC Calibration scheme is not supported!");
+          return ESP_ERR_NOT_SUPPORTED;
 #endif
         }
       }
@@ -269,7 +305,7 @@ uint16_t __analogRead(uint8_t pin) {
   }
 
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
-    log_d("Calling __analogInit! pin = %d", pin);
+    log_d("Calling __analogInit! pin = %u", pin);
     err = __analogInit(pin, channel, adc_unit);
     if (err != ESP_OK) {
       log_e("Analog initialization failed!");
@@ -310,13 +346,16 @@ uint32_t __analogReadMilliVolts(uint8_t pin) {
       .bitwidth = __analogWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __analogWidth,
       .atten = __analogAttenuation,
     };
     err = adc_cali_create_scheme_line_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return value;
 #endif
     if (err != ESP_OK) {
       log_e("adc_cali_create_scheme_x failed!");
@@ -360,45 +399,45 @@ static uint8_t __adcContinuousAtten = ADC_11db;
 static uint8_t __adcContinuousWidth = SOC_ADC_DIGI_MAX_BITWIDTH;
 
 static uint8_t used_adc_channels = 0;
-adc_continuous_data_t *adc_result = NULL;
+adc_continuous_result_t *adc_result = NULL;
 
 static bool adcContinuousDetachBus(void *adc_unit_number) {
   adc_unit_t adc_unit = (adc_unit_t)adc_unit_number - 1;
 
+  // Guard against double-cleanup: check if already cleaned up
   if (adc_handle[adc_unit].adc_continuous_handle == NULL) {
     return true;
-  } else {
-    esp_err_t err = adc_continuous_deinit(adc_handle[adc_unit].adc_continuous_handle);
+  }
+
+  // Clean up ADC driver
+  esp_err_t err = adc_continuous_deinit(adc_handle[adc_unit].adc_continuous_handle);
+  if (err != ESP_OK) {
+    return false;
+  }
+  adc_handle[adc_unit].adc_continuous_handle = NULL;
+
+  // Clean up calibration handle if exists
+  if (adc_handle[adc_unit].adc_cali_handle != NULL) {
+#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
+    err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
     if (err != ESP_OK) {
       return false;
     }
-    adc_handle[adc_unit].adc_continuous_handle = NULL;
-    if (adc_handle[adc_unit].adc_cali_handle != NULL) {
-#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
-      err = adc_cali_delete_scheme_curve_fitting(adc_handle[adc_unit].adc_cali_handle);
-      if (err != ESP_OK) {
-        return false;
-      }
-#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))
-      err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
-      if (err != ESP_OK) {
-        return false;
-      }
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+    err = adc_cali_delete_scheme_line_fitting(adc_handle[adc_unit].adc_cali_handle);
+    if (err != ESP_OK) {
+      return false;
+    }
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return false;
 #endif
-    }
     adc_handle[adc_unit].adc_cali_handle = NULL;
-
-    //set all used pins to INIT state
-    for (uint8_t channel = 0; channel < SOC_ADC_CHANNEL_NUM(adc_unit); channel++) {
-      int io_pin;
-      adc_oneshot_channel_to_io(adc_unit, channel, &io_pin);
-      if (perimanGetPinBusType(io_pin) == ESP32_BUS_TYPE_ADC_CONT) {
-        if (!perimanClearPinBus(io_pin)) {
-          return false;
-        }
-      }
-    }
   }
+
+  // Don't call perimanClearPinBus() here - the peripheral manager already handles it.
+  // This callback is only responsible for cleaning up the IDF's ADC driver and calibration handles.
+  // It does NOT free the adc_result buffer. The caller is responsible for freeing adc_result.
   return true;
 }
 
@@ -508,6 +547,20 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   }
 #endif
 
+  // Align the conversion frame size to the DMA alignment boundary so that
+  // cache-coherency is maintained (e.g. L2 cache on ESP32-P4 = CONFIG_CACHE_L2_CACHE_LINE_SIZE).
+  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % ESP_ARDUINO_DMA_BUF_ALIGN;
+  if (alignment_remainder != 0) {
+    __attribute__((unused)) uint32_t original_size = adc_handle[adc_unit].conversion_frame_size;
+    adc_handle[adc_unit].conversion_frame_size += (ESP_ARDUINO_DMA_BUF_ALIGN - alignment_remainder);
+    log_w(
+      "ADC conversion frame size rounded up from %" PRIu32 " to %" PRIu32 " bytes to meet DMA alignment (%u bytes). "
+      "Effective conversions per frame may differ from requested. "
+      "Consider using a frame size that is a multiple of %u bytes to avoid automatic rounding.",
+      original_size, adc_handle[adc_unit].conversion_frame_size, ESP_ARDUINO_DMA_BUF_ALIGN, ESP_ARDUINO_DMA_BUF_ALIGN
+    );
+  }
+
   adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
 
   //Conversion frame size buffer cant be bigger than 4092 bytes
@@ -536,7 +589,7 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   }
 
   //Allocate and prepare result structure for adc readings
-  adc_result = malloc(pins_count * sizeof(adc_continuous_data_t));
+  adc_result = malloc(pins_count * sizeof(adc_continuous_result_t));
   for (int k = 0; k < pins_count; k++) {
     adc_result[k].pin = pins[k];
     adc_result[k].channel = channel[k];
@@ -552,13 +605,16 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
       .bitwidth = __adcContinuousWidth,
     };
     err = adc_cali_create_scheme_curve_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
-#elif (!defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4))  //ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
     adc_cali_line_fitting_config_t cali_config = {
       .unit_id = adc_unit,
       .bitwidth = __adcContinuousWidth,
       .atten = __adcContinuousAtten,
     };
     err = adc_cali_create_scheme_line_fitting(&cali_config, &adc_handle[adc_unit].adc_cali_handle);
+#else
+    log_e("ADC Calibration scheme is not supported!");
+    return false;
 #endif
     if (err != ESP_OK) {
       log_e("adc_cali_create_scheme_x failed!");
@@ -577,13 +633,21 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   return true;
 }
 
-bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
+bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms) {
   if (adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL) {
     uint32_t bytes_read = 0;
     uint32_t read_raw[used_adc_channels];
     uint32_t read_count[used_adc_channels];
-    uint8_t adc_read[adc_handle[ADC_UNIT_1].conversion_frame_size];
-    memset(adc_read, 0xcc, sizeof(adc_read));
+
+    size_t buffer_size = adc_handle[ADC_UNIT_1].conversion_frame_size;
+    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(ESP_ARDUINO_DMA_BUF_ALIGN, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    if (adc_read == NULL) {
+      log_e("Failed to allocate DMA buffer");
+      *buffer = NULL;
+      return false;
+    }
+
+    memset(adc_read, 0xcc, buffer_size);
     memset(read_raw, 0, sizeof(read_raw));
     memset(read_count, 0, sizeof(read_count));
 
@@ -594,6 +658,8 @@ bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
       } else {
         log_e("Reading data failed with error: %X", err);
       }
+      free(adc_read);
+      adc_read = NULL;
       *buffer = NULL;
       return false;
     }
@@ -605,7 +671,7 @@ bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
 
       /* Check the channel number validation, the data is invalid if the channel num exceed the maximum channel */
       if (chan_num >= SOC_ADC_CHANNEL_NUM(0)) {
-        log_e("Invalid data [%d_%d]", chan_num, data);
+        log_e("Invalid data [%" PRIu32 "_%" PRIu32 "]", chan_num, data);
         *buffer = NULL;
         return false;
       }
@@ -628,10 +694,12 @@ bool analogContinuousRead(adc_continuous_data_t **buffer, uint32_t timeout_ms) {
         adc_result[j].avg_read_raw = read_raw[j] / read_count[j];
         adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
       } else {
-        log_w("No data read for pin %d", adc_result[j].pin);
+        log_w("No data read for pin %u", adc_result[j].pin);
       }
     }
 
+    free(adc_read);
+    adc_read = NULL;
     *buffer = adc_result;
     return true;
 
@@ -664,16 +732,29 @@ bool analogContinuousStop() {
 }
 
 bool analogContinuousDeinit() {
-  if (adc_handle[ADC_UNIT_1].adc_continuous_handle != NULL) {
-    esp_err_t err = adc_continuous_deinit(adc_handle[ADC_UNIT_1].adc_continuous_handle);
-    if (err != ESP_OK) {
-      return false;
-    }
-    free(adc_result);
-    adc_handle[ADC_UNIT_1].adc_continuous_handle = NULL;
-  } else {
+  if (adc_handle[ADC_UNIT_1].adc_continuous_handle == NULL) {
     log_i("ADC Continuous was not initialized");
+    return true;
   }
+
+  // Clear all used pins from peripheral manager
+  // This will trigger adcContinuousDetachBus() callback which cleans up the ADC driver
+  for (uint8_t channel = 0; channel < SOC_ADC_CHANNEL_NUM(ADC_UNIT_1); channel++) {
+    int io_pin;
+    adc_oneshot_channel_to_io(ADC_UNIT_1, channel, &io_pin);
+    if (perimanGetPinBusType(io_pin) == ESP32_BUS_TYPE_ADC_CONT) {
+      if (!perimanClearPinBus(io_pin)) {
+        return false;
+      }
+    }
+  }
+
+  // Free the result buffer (callback doesn't do this)
+  if (adc_result != NULL) {
+    free(adc_result);
+    adc_result = NULL;
+  }
+
   return true;
 }
 
@@ -683,7 +764,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 
 void analogContinuousSetWidth(uint8_t bits) {
   if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
-    log_e("Selected width cannot be set. Range is from %d to %d", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
+    log_e("Selected width cannot be set. Range is from %u to %u", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;
   }
   __adcContinuousWidth = bits;

@@ -26,6 +26,7 @@
  * Created by Jan Procházka (https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ED
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
@@ -103,7 +104,7 @@ void loop() {
     uint16_t pressure_value = (uint16_t)temperatureRead() * 100;  //*100 for demonstration so the value is in 1000-3000hPa
     Serial.printf("Updating flow sensor value to %.2f m3/h\r\n", flow_value);
     zbFlowSensor.setFlow(flow_value);
-    Serial.printf("Updating pressure sensor value to %d hPa\r\n", pressure_value);
+    Serial.printf("Updating pressure sensor value to %u hPa\r\n", pressure_value);
     zbPressureSensor.setPressure(pressure_value);
   }
 

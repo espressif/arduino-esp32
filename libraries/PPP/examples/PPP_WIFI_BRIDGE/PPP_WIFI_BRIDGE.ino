@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <PPP.h>
 #include <WiFi.h>
 

@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "esp_system.h"
 #include "rom/ets_sys.h"
 

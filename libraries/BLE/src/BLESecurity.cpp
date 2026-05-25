@@ -1,4 +1,21 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLESecurity.cpp
  *
  *  Created on: Dec 17, 2017
@@ -37,8 +54,16 @@
  *                         Common properties                               *
  ***************************************************************************/
 
-// If true, the security will be enforced on connection even if no security is needed
-// TODO: Make this configurable without breaking Bluedroid/NimBLE compatibility
+// Controls when authentication is initiated:
+// - true (default): authentication starts immediately upon connection, running concurrently
+//   with service discovery. Because Bluedroid and NimBLE handle this concurrency differently,
+//   the relative order of events (e.g. "Authentication complete" vs "Service discovered")
+//   is not guaranteed to be the same across stacks.
+// - false: authentication is deferred until a protected characteristic is accessed. This
+//   serializes the flow (connect -> discover -> read -> auth -> retry), producing a
+//   consistent and predictable event order on both stacks.
+// Can be changed at runtime via setForceAuthentication().
+// To Do: Change default to false in v4.0.0
 bool BLESecurity::m_forceSecurity = true;
 
 bool BLESecurity::m_securityEnabled = false;
@@ -46,6 +71,7 @@ bool BLESecurity::m_securityStarted = false;
 bool BLESecurity::m_passkeySet = false;
 bool BLESecurity::m_staticPasskey = true;
 bool BLESecurity::m_regenOnConnect = false;
+bool BLESecurity::m_authenticationComplete = false;
 uint8_t BLESecurity::m_iocap = ESP_IO_CAP_NONE;
 uint8_t BLESecurity::m_authReq = 0;
 uint8_t BLESecurity::m_initKey = 0;
@@ -59,6 +85,7 @@ uint32_t BLESecurity::m_passkey = BLE_SM_DEFAULT_PASSKEY;
 #if defined(CONFIG_BLUEDROID_ENABLED)
 uint8_t BLESecurity::m_keySize = 16;
 esp_ble_sec_act_t BLESecurity::m_securityLevel;
+FreeRTOS::Semaphore *BLESecurity::m_authCompleteSemaphore = nullptr;
 #endif
 
 /***************************************************************************
@@ -76,7 +103,7 @@ BLESecurity::BLESecurity() {
 
 // This function sets the authentication mode for the BLE security.
 void BLESecurity::setAuthenticationMode(uint8_t auth_req) {
-  log_d("setAuthenticationMode: auth_req=%d", auth_req);
+  log_d("setAuthenticationMode: auth_req=%u", auth_req);
   m_authReq = auth_req;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &m_authReq, sizeof(uint8_t));
@@ -89,7 +116,7 @@ void BLESecurity::setAuthenticationMode(uint8_t auth_req) {
 
 // This function sets the Input/Output capability for the BLE security.
 void BLESecurity::setCapability(uint8_t iocap) {
-  log_d("setCapability: iocap=%d", iocap);
+  log_d("setCapability: iocap=%u", iocap);
   m_iocap = iocap;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
@@ -103,7 +130,7 @@ void BLESecurity::setCapability(uint8_t iocap) {
 // ESP_BLE_ID_KEY_MASK indicates that the device should distribute the Identity Key to the peer device.
 // Both are set by default.
 void BLESecurity::setInitEncryptionKey(uint8_t init_key) {
-  log_d("setInitEncryptionKey: init_key=%d", init_key);
+  log_d("setInitEncryptionKey: init_key=%u", init_key);
   m_initKey = init_key;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &m_initKey, sizeof(uint8_t));
@@ -117,7 +144,7 @@ void BLESecurity::setInitEncryptionKey(uint8_t init_key) {
 // ESP_BLE_ID_KEY_MASK indicates that the device should distribute the Identity Key to the peer device.
 // Both are set by default.
 void BLESecurity::setRespEncryptionKey(uint8_t resp_key) {
-  log_d("setRespEncryptionKey: resp_key=%d", resp_key);
+  log_d("setRespEncryptionKey: resp_key=%u", resp_key);
   m_respKey = resp_key;
 #if defined(CONFIG_BLUEDROID_ENABLED)
   esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &m_respKey, sizeof(uint8_t));
@@ -129,7 +156,7 @@ void BLESecurity::setRespEncryptionKey(uint8_t resp_key) {
 // This function sets the key size for the BLE security.
 void BLESecurity::setKeySize(uint8_t key_size) {
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  log_d("setKeySize: key_size=%d", key_size);
+  log_d("setKeySize: key_size=%u", key_size);
   m_keySize = key_size;
   esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &m_keySize, sizeof(uint8_t));
 #endif
@@ -145,13 +172,13 @@ uint32_t BLESecurity::generateRandomPassKey() {
 // The second argument is the passkey (ignored when using a random passkey).
 // The function returns the passkey that was set.
 uint32_t BLESecurity::setPassKey(bool staticPasskey, uint32_t passkey) {
-  log_d("setPassKey: staticPasskey=%d, passkey=%d", staticPasskey, passkey);
+  log_d("setPassKey: staticPasskey=%d, passkey=%06" PRIu32, staticPasskey, passkey);
   m_staticPasskey = staticPasskey;
 
   if (m_staticPasskey) {
     m_passkey = passkey;
     if (m_passkey == BLE_SM_DEFAULT_PASSKEY) {
-      log_w("*WARNING* Using default passkey: %06d", BLE_SM_DEFAULT_PASSKEY);
+      log_w("*WARNING* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
       log_w("*WARNING* Please use a random passkey or set a different static passkey");
     }
   } else {
@@ -187,10 +214,25 @@ void BLESecurity::regenPassKeyOnConnect(bool enable) {
   m_regenOnConnect = enable;
 }
 
+// This function sets whether authentication should be forced immediately on connection.
+// When true, security is initiated as soon as the connection is established.
+// When false, security is triggered on-demand when accessing a protected characteristic.
+// Default: true for backward compatibility
+// To Do: Change default to false in v4.0.0
+void BLESecurity::setForceAuthentication(bool force) {
+  m_forceSecurity = force;
+}
+
+// This function returns whether authentication is forced on connection.
+bool BLESecurity::getForceAuthentication() {
+  return m_forceSecurity;
+}
+
 // This function resets the security state on disconnect.
 void BLESecurity::resetSecurity() {
   log_d("resetSecurity: Resetting security state");
   m_securityStarted = false;
+  m_authenticationComplete = false;
 }
 
 // This function sets the authentication mode with bonding, MITM, and secure connection options.
@@ -223,14 +265,14 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool sc) {
 uint32_t BLESecurityCallbacks::onPassKeyRequest() {
   Serial.println("BLESecurityCallbacks: *ATTENTION* Using insecure onPassKeyRequest.");
   Serial.println("BLESecurityCallbacks: *ATTENTION* Please implement onPassKeyRequest with a suitable passkey in your BLESecurityCallbacks class");
-  Serial.printf("BLESecurityCallbacks: Default passkey: %06d\n", BLE_SM_DEFAULT_PASSKEY);
+  Serial.printf("BLESecurityCallbacks: Default passkey: %06u\n", BLE_SM_DEFAULT_PASSKEY);
   return BLE_SM_DEFAULT_PASSKEY;
 }
 
 // This callback is called by the device that has Output capability when the peer device has Input capability
 // It should display the passkey that will need to be entered on the peer device
 void BLESecurityCallbacks::onPassKeyNotify(uint32_t passkey) {
-  Serial.printf("BLESecurityCallbacks: Using default onPassKeyNotify. Passkey: %06lu\n", passkey);
+  Serial.printf("BLESecurityCallbacks: Using default onPassKeyNotify. Passkey: %06" PRIu32 "\n", passkey);
 }
 
 // This callback is called when the peer device requests a secure connection.
@@ -263,6 +305,48 @@ bool BLESecurityCallbacks::onAuthorizationRequest(uint16_t connHandle, uint16_t 
   return true;
 }
 
+// This function waits for authentication to complete when bonding is enabled
+// It prevents GATT operations from proceeding before pairing completes
+void BLESecurity::waitForAuthenticationComplete(uint32_t timeoutMs) {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  // Only wait if bonding is enabled
+  if ((m_authReq & ESP_LE_AUTH_BOND) == 0) {
+    return;
+  }
+
+  // If already authenticated, no need to wait
+  if (m_authenticationComplete) {
+    return;
+  }
+
+  // Semaphore should have been created in startSecurity()
+  if (m_authCompleteSemaphore == nullptr) {
+    log_e("Authentication semaphore not initialized");
+    return;
+  }
+
+  // Wait for authentication with timeout
+  bool success = m_authCompleteSemaphore->timedWait("waitForAuthenticationComplete", timeoutMs / portTICK_PERIOD_MS);
+
+  if (!success) {
+    log_w("Timeout waiting for authentication to complete");
+  }
+#endif
+}
+
+// This function signals that authentication has completed
+// Called from ESP_GAP_BLE_AUTH_CMPL_EVT handler
+void BLESecurity::signalAuthenticationComplete() {
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  m_authenticationComplete = true;
+
+  // Signal waiting threads if semaphore exists
+  if (m_authCompleteSemaphore != nullptr) {
+    m_authCompleteSemaphore->give();
+  }
+#endif
+}
+
 /***************************************************************************
  *                          Bluedroid functions                            *
  ***************************************************************************/
@@ -285,6 +369,18 @@ bool BLESecurity::startSecurity(esp_bd_addr_t bd_addr, int *rcPtr) {
   }
 
   if (m_securityEnabled) {
+    // Initialize semaphore before starting security to avoid race condition
+    if (m_authCompleteSemaphore == nullptr) {
+      m_authCompleteSemaphore = new FreeRTOS::Semaphore("AuthComplete");
+    }
+
+    // Reset authentication complete flag when starting new security negotiation
+    m_authenticationComplete = false;
+
+    // Consume any pending semaphore signals from previous operations
+    // This ensures the next wait will block until the new auth completes
+    m_authCompleteSemaphore->take("startSecurity-reset");
+
     int rc = esp_ble_set_encryption(bd_addr, m_securityLevel);
     if (rc != ESP_OK) {
       log_e("esp_ble_set_encryption: rc=%d %s", rc, GeneralUtils::errorToString(rc));
@@ -339,9 +435,9 @@ void BLESecurityCallbacks::onAuthenticationComplete(esp_ble_auth_cmpl_t param) {
 #if defined(CONFIG_NIMBLE_ENABLED)
 // This function initiates security for a given connection handle.
 bool BLESecurity::startSecurity(uint16_t connHandle, int *rcPtr) {
-  log_d("startSecurity: connHandle=%d", connHandle);
+  log_d("startSecurity: connHandle=%u", connHandle);
   if (m_securityStarted) {
-    log_w("Security already started for connHandle=%d", connHandle);
+    log_w("Security already started for connHandle=%u", connHandle);
     if (rcPtr) {
       *rcPtr = 0;
     }

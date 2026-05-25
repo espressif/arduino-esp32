@@ -14,6 +14,7 @@
 
 /* Common Class for Zigbee End Point */
 
+#include "Arduino.h"
 #include "ZigbeeEP.h"
 
 #if CONFIG_ZB_ENABLED
@@ -21,14 +22,44 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
+#include <stdint.h>
+
+/* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
+static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
+static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
+
+static uint32_t zb_utctime_from_unix(time_t unix_ts) {
+  if (unix_ts == (time_t)-1) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  int64_t sec = (int64_t)unix_ts - ZIGBEE_UTCTIME_UNIX_OFFSET_SEC;
+  if (sec < 0) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  if (sec > (int64_t)UINT32_MAX) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  return (uint32_t)sec;
+}
+
+static time_t unix_time_from_zb_utctime(uint32_t zb_sec) {
+  if (zb_sec == ZIGBEE_UTCTIME_INVALID) {
+    return (time_t)-1;
+  }
+  return (time_t)(ZIGBEE_UTCTIME_UNIX_OFFSET_SEC + (int64_t)zb_sec);
+}
+
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
-  log_v("Endpoint: %d", _endpoint);
+  log_v("Endpoint: %u", _endpoint);
   _ep_config.endpoint = 0;
   _cluster_list = nullptr;
   _on_identify = nullptr;
   _on_ota_state_change = nullptr;
+  _on_default_response = nullptr;
+  _on_privilege_command = nullptr;
+  _on_custom_cluster_command = nullptr;
   _read_model = NULL;
   _read_manufacturer = NULL;
   _time_status = 0;
@@ -45,6 +76,28 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
 
 void ZigbeeEP::setVersion(uint8_t version) {
   _ep_config.app_device_version = version;
+
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (basic_cluster == nullptr) {
+    log_e("Failed to get basic cluster for application version");
+    return;
+  }
+  esp_err_t ret = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_APPLICATION_VERSION_ID, (void *)&version);
+  if (ret != ESP_OK) {
+    log_e("Failed to add application version to basic cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  }
+}
+
+void ZigbeeEP::setHardwareVersion(uint8_t version) {
+  esp_zb_attribute_list_t *basic_cluster = esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BASIC, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
+  if (basic_cluster == nullptr) {
+    log_e("Failed to get basic cluster for hardware version");
+    return;
+  }
+  esp_err_t ret = esp_zb_basic_cluster_add_attr(basic_cluster, ESP_ZB_ZCL_ATTR_BASIC_HW_VERSION_ID, (void *)&version);
+  if (ret != ESP_OK) {
+    log_e("Failed to add hardware version to basic cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  }
 }
 
 bool ZigbeeEP::setManufacturerAndModel(const char *name, const char *model) {
@@ -263,7 +316,7 @@ void ZigbeeEP::printBoundDevices() {
   for ([[maybe_unused]]
        const auto &device : _bound_devices) {
     log_i(
-      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr,
+      "Device on endpoint %u, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint, device->short_addr,
       device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
       device->ieee_addr[0]
     );
@@ -275,7 +328,7 @@ void ZigbeeEP::printBoundDevices(Print &print) {
   for ([[maybe_unused]]
        const auto &device : _bound_devices) {
     print.printf(
-      "Device on endpoint %d, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr,
+      "Device on endpoint %u, short address: 0x%x, ieee address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\r\n", device->endpoint, device->short_addr,
       device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2], device->ieee_addr[1],
       device->ieee_addr[0]
     );
@@ -329,11 +382,15 @@ void ZigbeeEP::zbOTAState(bool otaActive) {
 }
 
 bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
-  time_t utc_time = 0;
+  uint32_t zb_utctime = 0;
   // Check if time is set
   if (time.tm_year > 0) {
-    // Convert time to UTC
-    utc_time = mktime(&time);
+    time_t unix_ts = mktime(&time);
+    if (unix_ts == (time_t)-1) {
+      log_e("Invalid calendar time");
+      return false;
+    }
+    zb_utctime = zb_utctime_from_unix(unix_ts);
   }
 
   // Create time cluster server attributes
@@ -343,7 +400,7 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
     log_e("Failed to add time zone attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&zb_utctime);
   if (ret != ESP_OK) {
     log_e("Failed to add time attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -371,10 +428,15 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
 bool ZigbeeEP::setTime(tm time) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  time_t utc_time = mktime(&time);
-  log_d("Setting time to %lld", utc_time);
+  time_t unix_ts = mktime(&time);
+  if (unix_ts == (time_t)-1) {
+    log_e("Invalid calendar time");
+    return false;
+  }
+  uint32_t zb_utctime = zb_utctime_from_unix(unix_ts);
+  log_d("Setting ZCL UTCTime to %" PRIu32 " s since 2000-01-01 UTC", zb_utctime);
   esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
+  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &zb_utctime, false);
   esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
@@ -385,7 +447,7 @@ bool ZigbeeEP::setTime(tm time) {
 
 bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  log_d("Setting timezone to %d", gmt_offset);
+  log_d("Setting timezone to %" PRId32, gmt_offset);
   esp_zb_lock_acquire(portMAX_DELAY);
   ret =
     esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
@@ -422,8 +484,10 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
   // clear read time
   _read_time = 0;
 
-  log_v("Reading time from endpoint %d", endpoint);
+  log_v("Reading time from endpoint %u", endpoint);
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -431,7 +495,8 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
     return tm();
   }
 
-  struct tm *timeinfo = localtime(&_read_time);
+  time_t unix_ts = unix_time_from_zb_utctime((uint32_t)_read_time);
+  struct tm *timeinfo = localtime(&unix_ts);
   if (timeinfo) {
     // Update time
     setTime(*timeinfo);
@@ -475,8 +540,10 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   // clear read timezone
   _read_timezone = 0;
 
-  log_v("Reading timezone from endpoint %d", endpoint);
+  log_v("Reading timezone from endpoint %u", endpoint);
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -491,12 +558,12 @@ void ZigbeeEP::zbReadTimeCluster(const esp_zb_zcl_attribute_t *attribute) {
   /* Time cluster attributes */
   if (attribute->id == ESP_ZB_ZCL_ATTR_TIME_TIME_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_UTC_TIME) {
     log_v("Time attribute received");
-    log_v("Time: %lld", *(uint32_t *)attribute->data.value);
+    log_v("Time: %" PRIu32, *(uint32_t *)attribute->data.value);
     _read_time = *(uint32_t *)attribute->data.value;
     xSemaphoreGive(lock);
   } else if (attribute->id == ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID && attribute->data.type == ESP_ZB_ZCL_ATTR_TYPE_S32) {
     log_v("Timezone attribute received");
-    log_v("Timezone: %d", *(int32_t *)attribute->data.value);
+    log_v("Timezone: %" PRId32, *(int32_t *)attribute->data.value);
     _read_timezone = *(int32_t *)attribute->data.value;
     xSemaphoreGive(lock);
   }
@@ -562,7 +629,7 @@ static void findOTAServer(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t
   if (zdo_status == ESP_ZB_ZDP_STATUS_SUCCESS) {
     esp_zb_ota_upgrade_client_query_interval_set(*((uint8_t *)user_ctx), OTA_UPGRADE_QUERY_INTERVAL);
     esp_zb_ota_upgrade_client_query_image_req(addr, endpoint);
-    log_i("Query OTA upgrade from server endpoint: %d after %d seconds", endpoint, OTA_UPGRADE_QUERY_INTERVAL);
+    log_i("Query OTA upgrade from server endpoint: %u after %u seconds", endpoint, OTA_UPGRADE_QUERY_INTERVAL);
   } else {
     log_w("No OTA Server found");
   }
@@ -589,7 +656,7 @@ void ZigbeeEP::requestOTAUpdate() {
 
 void ZigbeeEP::removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
   log_d(
-    "Attempting to remove device with endpoint %d and IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
+    "Attempting to remove device with endpoint %u and IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
     ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
   );
 
@@ -613,7 +680,7 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
   }
 
   log_d(
-    "Attempting to remove device with endpoint %d, short address 0x%04x, IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint,
+    "Attempting to remove device with endpoint %u, short address 0x%x, IEEE address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", device->endpoint,
     device->short_addr, device->ieee_addr[7], device->ieee_addr[6], device->ieee_addr[5], device->ieee_addr[4], device->ieee_addr[3], device->ieee_addr[2],
     device->ieee_addr[1], device->ieee_addr[0]
   );
@@ -636,11 +703,34 @@ void ZigbeeEP::removeBoundDevice(zb_device_params_t *device) {
 }
 
 void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message) {
-  log_v("Default response received for endpoint %d", _endpoint);
+  log_v("Default response received for endpoint %u", _endpoint);
   log_v("Status code: %s", esp_zb_zcl_status_to_name(message->status_code));
-  log_v("Response to command: %d", message->resp_to_cmd);
+  log_v("Response to command: %u", message->resp_to_cmd);
   if (_on_default_response) {
     _on_default_response((zb_cmd_type_t)message->resp_to_cmd, message->status_code);
+  }
+}
+
+void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_err_t ret = esp_zb_zcl_add_privilege_command(_endpoint, cluster_id, command_id);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e(
+      "Failed to add privilege command for endpoint %u, cluster 0x%04x, command 0x%04x: 0x%x: %s", _endpoint, cluster_id, command_id, ret, esp_err_to_name(ret)
+    );
+  }
+}
+
+void ZigbeeEP::zbPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message) {
+  if (_on_privilege_command) {
+    _on_privilege_command(message);
+  }
+}
+
+void ZigbeeEP::zbCustomClusterCommand(const esp_zb_zcl_custom_cluster_command_message_t *message) {
+  if (_on_custom_cluster_command) {
+    _on_custom_cluster_command(message);
   }
 }
 

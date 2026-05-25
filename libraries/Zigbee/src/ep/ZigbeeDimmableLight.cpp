@@ -19,6 +19,7 @@
 
 ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID;
+  _on_light_change = nullptr;
 
   zigbee_dimmable_light_cfg_t light_cfg = ZIGBEE_DEFAULT_DIMMABLE_LIGHT_CONFIG();
   _cluster_list = zigbee_dimmable_light_clusters_create(&light_cfg);
@@ -41,7 +42,7 @@ void ZigbeeDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->attribute.id);
     }
   } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
@@ -51,11 +52,11 @@ void ZigbeeDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Level Control", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Level Control", message->attribute.id);
       // TODO: implement more attributes -> includes/zcl/esp_zigbee_zcl_level.h
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for dimmable Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for dimmable Light", message->info.cluster);
   }
 }
 

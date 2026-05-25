@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.3.0")
-set(max_supported_idf_version "5.5.99")
+set(max_supported_idf_version "6.0.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -37,6 +37,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-i2c-ng.c
   cores/esp32/esp32-hal-i2c-slave.c
   cores/esp32/esp32-hal-ledc.c
+  cores/esp32/esp32-hal-log-wrapper.c
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
   cores/esp32/esp32-hal-periman.c
@@ -57,6 +58,7 @@ set(CORE_SRCS
   cores/esp32/HardwareSerial.cpp
   cores/esp32/HashBuilder.cpp
   cores/esp32/HEXBuilder.cpp
+  cores/esp32/idf_openthread_mpool_wrapper.c
   cores/esp32/IPAddress.cpp
   cores/esp32/libb64/cdecode.c
   cores/esp32/libb64/cencode.c
@@ -67,6 +69,7 @@ set(CORE_SRCS
   cores/esp32/stdlib_noniso.c
   cores/esp32/Stream.cpp
   cores/esp32/StreamString.cpp
+  cores/esp32/StringUtils.cpp
   cores/esp32/Tone.cpp
   cores/esp32/HWCDC.cpp
   cores/esp32/USB.cpp
@@ -85,11 +88,13 @@ set(ARDUINO_ALL_LIBRARIES
   AsyncUDP
   BLE
   BluetoothSerial
+  Console
   DNSServer
   EEPROM
   ESP_I2S
   ESP_NOW
   ESP_SR
+  ESP_HostedOTA
   ESPmDNS
   Ethernet
   FFat
@@ -132,6 +137,9 @@ set(ARDUINO_LIBRARY_BluetoothSerial_SRCS
   libraries/BluetoothSerial/src/BTAdvertisedDeviceSet.cpp
   libraries/BluetoothSerial/src/BTScanResultsSet.cpp)
 
+set(ARDUINO_LIBRARY_Console_SRCS libraries/Console/src/Console.cpp)
+set(ARDUINO_LIBRARY_Console_REQUIRES console)
+
 set(ARDUINO_LIBRARY_DNSServer_SRCS libraries/DNSServer/src/DNSServer.cpp)
 
 set(ARDUINO_LIBRARY_EEPROM_SRCS libraries/EEPROM/src/EEPROM.cpp)
@@ -145,6 +153,9 @@ set(ARDUINO_LIBRARY_ESP_NOW_SRCS
 set(ARDUINO_LIBRARY_ESP_SR_SRCS
   libraries/ESP_SR/src/ESP_SR.cpp
   libraries/ESP_SR/src/esp32-hal-sr.c)
+
+set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
+  libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
@@ -187,18 +198,22 @@ set(ARDUINO_LIBRARY_Matter_SRCS
   libraries/Matter/src/MatterEndpoints/MatterEnhancedColorLight.cpp
   libraries/Matter/src/MatterEndpoints/MatterFan.cpp
   libraries/Matter/src/MatterEndpoints/MatterTemperatureSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterTemperatureControlledCabinet.cpp
   libraries/Matter/src/MatterEndpoints/MatterHumiditySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterContactSensor.cpp
+  libraries/Matter/src/MatterEndpoints/MatterWaterLeakDetector.cpp
+  libraries/Matter/src/MatterEndpoints/MatterWaterFreezeDetector.cpp
+  libraries/Matter/src/MatterEndpoints/MatterRainSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterPressureSensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOccupancySensor.cpp
   libraries/Matter/src/MatterEndpoints/MatterOnOffPlugin.cpp
+  libraries/Matter/src/MatterEndpoints/MatterDimmablePlugin.cpp
   libraries/Matter/src/MatterEndpoints/MatterThermostat.cpp
+  libraries/Matter/src/MatterEndpoints/MatterWindowCovering.cpp
   libraries/Matter/src/Matter.cpp
   libraries/Matter/src/MatterEndPoint.cpp)
 
-set(ARDUINO_LIBRARY_PPP_SRCS
-  libraries/PPP/src/PPP.cpp
-  libraries/PPP/src/ppp.c)
+set(ARDUINO_LIBRARY_PPP_SRCS libraries/PPP/src/PPP.cpp)
 
 set(ARDUINO_LIBRARY_Preferences_SRCS libraries/Preferences/src/Preferences.cpp)
 
@@ -229,9 +244,11 @@ set(ARDUINO_LIBRARY_Ticker_SRCS libraries/Ticker/src/Ticker.cpp)
 
 set(ARDUINO_LIBRARY_Update_SRCS
   libraries/Update/src/Updater.cpp
-  libraries/Update/src/HttpsOTAUpdate.cpp)
+  libraries/Update/src/HttpsOTAUpdate.cpp
+  libraries/Update/src/Updater_Signing.cpp)
 
 set(ARDUINO_LIBRARY_USB_SRCS
+  libraries/USB/src/USBAudioCard.cpp
   libraries/USB/src/USBHID.cpp
   libraries/USB/src/USBMIDI.cpp
   libraries/USB/src/USBHIDMouse.cpp
@@ -240,9 +257,11 @@ set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/keyboardLayout/KeyboardLayout_de_DE.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_en_US.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_es_ES.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_fr_CH.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_ja_JP.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp
@@ -372,8 +391,15 @@ endforeach()
 set(includedirs variants/${CONFIG_ARDUINO_VARIANT}/ cores/esp32/ ${ARDUINO_LIBRARIES_INCLUDEDIRS})
 set(srcs ${CORE_SRCS} ${ARDUINO_LIBRARIES_SRCS})
 set(priv_includes cores/esp32/libb64)
-set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota)
-set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid usb esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+set(requires spi_flash esp_partition mbedtls wpa_supplicant esp_adc esp_eth http_parser esp_ringbuf esp_driver_gptimer esp_driver_usb_serial_jtag driver esp_http_client esp_https_ota esp_timer)
+set(priv_requires fatfs nvs_flash app_update spiffs bootloader_support bt esp_hid esp_psram ${ARDUINO_LIBRARIES_REQUIRES})
+
+set(min_v6_idf_version "6.0.0")
+if (idf_version VERSION_LESS min_v6_idf_version)
+  list(APPEND priv_requires usb)
+else()
+  list(APPEND requires esp_hal_uart esp_hal_ledc esp_hal_ana_conv esp_hal_gpio esp_hal_i2c esp_hal_gpspi esp_hal_timg esp_driver_i2c esp_driver_ledc esp_driver_sdm esp_driver_tsens esp_driver_rmt esp_driver_i2s esp_driver_uart esp_driver_dac)
+endif()
 
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_OpenThread)
   #if(CONFIG_SOC_IEEE802154_SUPPORTED) # Does not work!
@@ -415,6 +441,52 @@ if(CONFIG_AUTOSTART_ARDUINO)
     #
     # (As they are C++ symbol, we need to add the C++ mangled names.)
     target_link_libraries(${COMPONENT_LIB} INTERFACE "-u _Z5setupv -u _Z4loopv")
+endif()
+
+# Fix for WiFi/Bluetooth linker errors when CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP is not enabled
+#
+# Problem:
+#   WiFi and Bluetooth binary libraries reference __wrap_esp_log_write functions.
+#   When CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP=y, esp_diagnostics provides these wrappers.
+#   When not set, no component provides them, causing "undefined reference" linker errors.
+#
+# Solution:
+#   cores/esp32/esp32-hal-log-wrapper.c provides simple pass-through wrapper implementations
+#   that forward calls to the real ESP-IDF logging functions without additional processing.
+#
+# Two linker flags are required:
+#
+# 1. --wrap=symbol: Sets up the wrapping/redirection mechanism
+#    Effect: esp_log_write() calls → redirected to → __wrap_esp_log_write()
+#            __real_esp_log_write() → created as alias → original esp_log_write()
+#    Note: Applied at build level (idf_build_set_property) so it works when Arduino is a component
+#
+# 2. -u symbol: Forces inclusion of wrapper symbols from static library
+#    Why needed: Static library linking is "lazy" - only pulls objects with referenced symbols.
+#                Without -u, linker sees wrapper as unreferenced and drops it from the library.
+#                The -u flag marks symbols as "undefined", forcing linker to search and include them.
+#    Analogy: Same technique used for setup()/loop() symbols (see above)
+if(NOT CONFIG_DIAG_USE_EXTERNAL_LOG_WRAP)
+    idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_write" APPEND)
+    idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_log_writev" APPEND)
+    target_link_libraries(${COMPONENT_LIB} INTERFACE "-u __wrap_esp_log_write" "-u __wrap_esp_log_writev")
+endif()
+
+# OpenThread message pool: redirect to Arduino wrapper (BOARD_HAS_PSRAM / PSRAM-aware allocation).
+# Same pattern as esp_log wrap: --wrap so calls use __wrap_* ; -u so linker keeps our wrapper .o.
+# Applied on OpenThread-capable targets (same targets that may add openthread to requires).
+if(CONFIG_OPENTHREAD_ENABLED AND CONFIG_SOC_IEEE802154_SUPPORTED)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolInit" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNew" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolFree" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolNumFreeBuffers" APPEND)
+  idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=otPlatMessagePoolDeinit" APPEND)
+  target_link_libraries(${COMPONENT_LIB} INTERFACE
+    "-u __wrap_otPlatMessagePoolInit"
+    "-u __wrap_otPlatMessagePoolNew"
+    "-u __wrap_otPlatMessagePoolFree"
+    "-u __wrap_otPlatMessagePoolNumFreeBuffers"
+    "-u __wrap_otPlatMessagePoolDeinit")
 endif()
 
 # This function adds a dependency on the given component if the component is included into the build.

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <NetworkUdp.h>
@@ -37,9 +38,6 @@ void setup() {
 
   // Hostname defaults to esp3232-[MAC]
   // ArduinoOTA.setHostname("myesp32");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
 
   // Password can be set with plain text (will be hashed internally)
   // The authentication uses PBKDF2-HMAC-SHA256 with 10,000 iterations

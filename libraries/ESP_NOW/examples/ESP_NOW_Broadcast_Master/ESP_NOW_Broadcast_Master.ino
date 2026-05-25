@@ -11,6 +11,7 @@
     The slave devices will receive the broadcasted messages and print them to the Serial Monitor.
 */
 
+#include <Arduino.h>
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 
@@ -76,7 +77,7 @@ void setup() {
   Serial.println("Wi-Fi parameters:");
   Serial.println("  Mode: STA");
   Serial.println("  MAC Address: " + WiFi.macAddress());
-  Serial.printf("  Channel: %d\n", ESPNOW_WIFI_CHANNEL);
+  Serial.printf("  Channel: %u\n", ESPNOW_WIFI_CHANNEL);
 
   // Register the broadcast peer
   if (!broadcast_peer.begin()) {
@@ -94,7 +95,7 @@ void setup() {
 void loop() {
   // Broadcast a message to all devices within the network
   char data[32];
-  snprintf(data, sizeof(data), "Hello, World! #%lu", msg_count++);
+  snprintf(data, sizeof(data), "Hello, World! #%" PRIu32, msg_count++);
 
   Serial.printf("Broadcasting message: %s\n", data);
 

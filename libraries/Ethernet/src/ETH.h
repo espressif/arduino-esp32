@@ -129,6 +129,18 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 
 #define ETH_PHY_ADDR_AUTO ESP_ETH_PHY_ADDR_AUTO
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#if defined __has_include && __has_include("esp_eth_phy_dm9051.h")
+#define CONFIG_ETH_SPI_ETHERNET_DM9051 1
+#endif
+#if defined __has_include && __has_include("esp_eth_phy_w5500.h")
+#define CONFIG_ETH_SPI_ETHERNET_W5500 1
+#endif
+#if defined __has_include && __has_include("esp_eth_phy_ksz8851snl.h")
+#define CONFIG_ETH_SPI_ETHERNET_KSZ8851SNL 1
+#endif
+#endif
+
 typedef enum {
 #if CONFIG_ETH_USE_ESP32_EMAC
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
@@ -210,6 +222,15 @@ public:
 
   esp_eth_handle_t handle() const;
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+  bool addMacFilter(uint8_t *mac_addr);
+  bool removeMacFilter(uint8_t *mac_addr);
+  bool addMulticastFilter(IPAddress address);
+  bool removeMulticastFilter(IPAddress address);
+  // ON by default
+  bool receiveAllMulticast(bool on);
+#endif
+
 #if ETH_SPI_SUPPORTS_CUSTOM
   static esp_err_t _eth_spi_read(void *ctx, uint32_t cmd, uint32_t addr, void *data, uint32_t data_len);
   static esp_err_t _eth_spi_write(void *ctx, uint32_t cmd, uint32_t addr, const void *data, uint32_t data_len);
@@ -241,7 +262,7 @@ private:
   bool _auto_negotiation;
 #if ETH_SPI_SUPPORTS_CUSTOM
   SPIClass *_spi;
-  char _cs_str[10];
+  char _cs_str[12];
 #endif
   uint8_t _spi_freq_mhz;
   int8_t _pin_cs;
@@ -270,6 +291,8 @@ private:
   bool _setFullDuplex(bool on);
   bool _setLinkSpeed(uint16_t speed);
   bool _setAutoNegotiation(bool on);
+
+  void _delMacAndPhy();
 
   friend class EthernetClass;  // to access beginSPI
 };

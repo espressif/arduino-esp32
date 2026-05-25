@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <WString.h>
 #include <Printable.h>
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#include <initializer_list>
+#endif
 
 enum MACType {
   MAC6,
@@ -55,6 +58,12 @@ public:
 
   MacAddress(const char *macstr);
   MacAddress(const String &macstr);
+
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+  // Initializer list constructor for {0xAA, 0xBB, ...} syntax
+  // This has higher priority than String conversion, preventing ambiguity
+  MacAddress(std::initializer_list<uint8_t> list);
+#endif
 
   virtual ~MacAddress() {}
 

@@ -12,6 +12,8 @@
 *  Evandro Luis Copercini - 2017
 */
 
+#include <Arduino.h>
+
 #if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
 #include "esp32/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32S2
@@ -30,6 +32,8 @@
 #include "esp32p4/rom/rtc.h"
 #elif CONFIG_IDF_TARGET_ESP32C5
 #include "esp32c5/rom/rtc.h"
+#elif CONFIG_IDF_TARGET_ESP32C61
+#include "esp32c61/rom/rtc.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif

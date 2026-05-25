@@ -22,6 +22,13 @@
 #include "platform/ESP32/OpenthreadLauncher.h"
 #endif
 
+// This prevents initArduino() from releasing BLE memory before the
+// Matter stack can use Bluetooth transport.
+#if CONFIG_ENABLE_CHIPOBLE
+#include "esp32-hal-alloc-ble-mem.h"
+#include "esp32-hal-bt.h"
+#endif
+
 using namespace esp_matter;
 using namespace esp_matter::attribute;
 using namespace esp_matter::endpoint;
@@ -41,7 +48,10 @@ ArduinoMatter::matterEventCB ArduinoMatter::_matterEventCB = nullptr;
 static esp_err_t app_attribute_update_cb(
   attribute::callback_type_t type, uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val, void *priv_data
 ) {
-  log_d("Attribute update callback: type: %u, endpoint: %u, cluster: %u, attribute: %u, val: %u", type, endpoint_id, cluster_id, attribute_id, val->val.u32);
+  log_d(
+    "Attribute update callback: type: %u, endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32 ", val: %u", type, endpoint_id, cluster_id, attribute_id,
+    val->val.u32
+  );
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
   switch (type) {
@@ -68,7 +78,7 @@ static esp_err_t app_attribute_update_cb(
 // This callback is invoked when clients interact with the Identify Cluster.
 // In the callback implementation, an endpoint can identify itself. (e.g., by flashing an LED or light).
 static esp_err_t app_identification_cb(identification::callback_type_t type, uint16_t endpoint_id, uint8_t effect_id, uint8_t effect_variant, void *priv_data) {
-  log_d("Identification callback to endpoint %d: type: %u, effect: %u, variant: %u", endpoint_id, type, effect_id, effect_variant);
+  log_d("Identification callback to endpoint %u: type: %u, effect: %u, variant: %u", endpoint_id, type, effect_id, effect_variant);
   esp_err_t err = ESP_OK;
   MatterEndPoint *ep = (MatterEndPoint *)priv_data;  // endpoint pointer to base class
   // Identify the endpoint sending a counter to the application
@@ -155,6 +165,13 @@ void ArduinoMatter::begin() {
     return;
   }
 
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (isBLECommissioningEnabled() && btMemReleased(BT_MODE_BLE)) {
+    log_e("BLE memory has been released. BLE commissioning is not available.");
+    return;
+  }
+#endif
+
 #if CONFIG_ENABLE_MATTER_OVER_THREAD
   // Set OpenThread platform config
   esp_openthread_platform_config_t config;
@@ -175,31 +192,70 @@ void ArduinoMatter::begin() {
   }
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-bool ArduinoMatter::isThreadConnected() {
-  return false;  // Thread Network TBD
-}
+// Network and Commissioning Capability Queries
+bool ArduinoMatter::isWiFiStationEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
+  return true;
+#else
+  return false;
 #endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isWiFiAccessPointEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter configuration
+#ifdef SOC_WIFI_SUPPORTED
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_AP
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isThreadEnabled() {
+  // Check Matter configuration only
+#if CONFIG_ENABLE_MATTER_OVER_THREAD || CHIP_DEVICE_CONFIG_ENABLE_THREAD
+  return true;
+#else
+  return false;
+#endif
+}
+
+bool ArduinoMatter::isBLECommissioningEnabled() {
+  // Check hardware support (SOC capabilities) AND Matter/ESP configuration
+  // BLE commissioning requires: SOC BLE support AND (CHIPoBLE or NimBLE enabled)
+#ifdef SOC_BLE_SUPPORTED
+#if CONFIG_ENABLE_CHIPOBLE
+  return true;
+#else
+  return false;
+#endif
+#else
+  return false;
+#endif
+}
 
 bool ArduinoMatter::isDeviceCommissioned() {
   return chip::Server::GetInstance().GetFabricTable().FabricCount() > 0;
 }
 
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
 bool ArduinoMatter::isWiFiConnected() {
   return chip::DeviceLayer::ConnectivityMgr().IsWiFiStationConnected();
 }
-#endif
+
+bool ArduinoMatter::isThreadConnected() {
+  return chip::DeviceLayer::ConnectivityMgr().IsThreadAttached();
+}
 
 bool ArduinoMatter::isDeviceConnected() {
-  bool retCode = false;
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
-  retCode |= ArduinoMatter::isThreadConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
-  retCode |= ArduinoMatter::isWiFiConnected();
-#endif
-  return retCode;
+  return ArduinoMatter::isWiFiConnected() || ArduinoMatter::isThreadConnected();
 }
 
 void ArduinoMatter::decommission() {

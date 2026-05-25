@@ -1,4 +1,21 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLE2902.h
  *
  *  Created on: Jun 25, 2017
@@ -22,6 +39,10 @@
  ***************************************************************************/
 
 #include "BLEDescriptor.h"
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "BLEAddress.h"
+#endif
 
 /**
  * @brief Descriptor for Client Characteristic Configuration.
@@ -55,6 +76,45 @@ This class will be removed in a future version.")]] BLE2902 : public BLEDescript
     bool getIndications();
     void setNotifications(bool flag);
     void setIndications(bool flag);
+
+#if defined(CONFIG_BLUEDROID_ENABLED)
+    /***************************************************************************
+     *                       Bluedroid CCCD persistence                        *
+     ***************************************************************************/
+
+    /**
+     * @brief Persist CCCD value to NVS for a bonded device.
+     * @param [in] peerAddress The address of the bonded peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully persisted, false otherwise.
+     */
+    bool persistValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Restore CCCD value from NVS for a bonded device.
+     * @param [in] peerAddress The address of the bonded peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully restored, false otherwise.
+     */
+    bool restoreValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Delete persisted CCCD value from NVS for a device.
+     * @param [in] peerAddress The address of the peer device.
+     * @param [in] charHandle The handle of the characteristic this CCCD belongs to.
+     * @return true if the value was successfully deleted, false otherwise.
+     */
+    static bool deletePersistedValue(const BLEAddress &peerAddress, uint16_t charHandle);
+
+    /**
+     * @brief Delete all persisted CCCD values from NVS.
+     * @return true if all values were successfully deleted, false otherwise.
+     */
+    static bool deleteAllPersistedValues();
+
+  private:
+    static String getNvsKey(const BLEAddress &peerAddress, uint16_t charHandle);
+#endif
   };  // BLE2902
 
 #endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */

@@ -8,6 +8,7 @@ Note: This sketch takes up a lot of space for the app and may not be able to fla
    - for example "No OTA (2MB APP/2MB SPIFFS)"
 */
 
+#include <Arduino.h>
 #include "sdkconfig.h"
 #if CONFIG_ESP_WIFI_REMOTE_ENABLED
 #error "WiFiProv is only supported in SoCs with native Wi-Fi support"
@@ -67,13 +68,13 @@ void setup() {
   // Sample uuid that user can pass during provisioning using BLE
   uint8_t uuid[16] = {0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf, 0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02};
   WiFiProv.beginProvision(
-    NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BLE, NETWORK_PROV_SECURITY_1, pop, service_name, service_key, uuid, reset_provisioned
+    NETWORK_PROV_SCHEME_BLE, NETWORK_PROV_SCHEME_HANDLER_FREE_BLE, NETWORK_PROV_SECURITY, pop, service_name, service_key, uuid, reset_provisioned
   );
   log_d("ble qr");
   WiFiProv.printQR(service_name, pop, "ble");
 #else
   Serial.println("Begin Provisioning using Soft AP");
-  WiFiProv.beginProvision(NETWORK_PROV_SCHEME_SOFTAP, NETWORK_PROV_SCHEME_HANDLER_NONE, NETWORK_PROV_SECURITY_1, pop, service_name, service_key);
+  WiFiProv.beginProvision(NETWORK_PROV_SCHEME_SOFTAP, NETWORK_PROV_SCHEME_HANDLER_NONE, NETWORK_PROV_SECURITY, pop, service_name, service_key);
   log_d("wifi qr");
   WiFiProv.printQR(service_name, pop, "softap");
 #endif

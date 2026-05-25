@@ -69,7 +69,7 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
   }
 
   if (!_div) {
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(NULL, _freq);
   }
 
   _spi = spiStartBus(_spi_num, _div, SPI_MODE0, SPI_MSBFIRST);
@@ -78,23 +78,35 @@ bool SPIClass::begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss) {
     return false;
   }
 
+#if defined(CONFIG_IDF_TARGET_ESP32P4)
+  // ESP32P4: Ensure the divider and clock source info are recalculated and stored correctly.
+  uint32_t recalculated_div = spiFrequencyToClockDiv(_spi, _freq);
+  if (recalculated_div != _div) {
+    // Update divider and clock source info if changed
+    _div = recalculated_div;
+    spiSetClockDiv(_spi, _div);
+  } else {
+    // Store correct clock source info
+    _div = recalculated_div;
+  }
+#endif
+
   if (sck == -1 && miso == -1 && mosi == -1 && ss == -1) {
-#if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-    _sck = (_spi_num == FSPI) ? SCK : -1;
-    _miso = (_spi_num == FSPI) ? MISO : -1;
-    _mosi = (_spi_num == FSPI) ? MOSI : -1;
-    _ss = (_spi_num == FSPI) ? SS : -1;
-#elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4 \
-  || CONFIG_IDF_TARGET_ESP32C5
-    _sck = SCK;
-    _miso = MISO;
-    _mosi = MOSI;
-    _ss = SS;
-#else
+#if CONFIG_IDF_TARGET_ESP32
     _sck = (_spi_num == VSPI) ? SCK : 14;
     _miso = (_spi_num == VSPI) ? MISO : 12;
     _mosi = (_spi_num == VSPI) ? MOSI : 13;
     _ss = (_spi_num == VSPI) ? SS : 15;
+#elif CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+    _sck = (_spi_num == FSPI) ? SCK : -1;
+    _miso = (_spi_num == FSPI) ? MISO : -1;
+    _mosi = (_spi_num == FSPI) ? MOSI : -1;
+    _ss = (_spi_num == FSPI) ? SS : -1;
+#else
+    _sck = SCK;
+    _miso = MISO;
+    _mosi = MOSI;
+    _ss = SS;
 #endif
   } else {
     _sck = sck;
@@ -159,7 +171,7 @@ void SPIClass::setFrequency(uint32_t freq) {
   uint32_t cdiv = spiGetClockDiv(_spi);
   if (_freq != freq || _div != cdiv) {
     _freq = freq;
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(_spi, _freq);
     spiSetClockDiv(_spi, _div);
   }
   SPI_PARAM_UNLOCK();
@@ -190,7 +202,7 @@ void SPIClass::beginTransaction(SPISettings settings) {
   uint32_t cdiv = spiGetClockDiv(_spi);
   if (_freq != settings._clock || _div != cdiv) {
     _freq = settings._clock;
-    _div = spiFrequencyToClockDiv(_freq);
+    _div = spiFrequencyToClockDiv(_spi, _freq);
   }
   spiTransaction(_spi, _div, settings._dataMode, settings._bitOrder);
   _inTransaction = true;

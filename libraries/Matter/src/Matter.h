@@ -27,12 +27,18 @@
 #include <MatterEndpoints/MatterEnhancedColorLight.h>
 #include <MatterEndpoints/MatterFan.h>
 #include <MatterEndpoints/MatterTemperatureSensor.h>
+#include <MatterEndpoints/MatterTemperatureControlledCabinet.h>
 #include <MatterEndpoints/MatterHumiditySensor.h>
 #include <MatterEndpoints/MatterContactSensor.h>
+#include <MatterEndpoints/MatterWaterLeakDetector.h>
+#include <MatterEndpoints/MatterWaterFreezeDetector.h>
+#include <MatterEndpoints/MatterRainSensor.h>
 #include <MatterEndpoints/MatterPressureSensor.h>
 #include <MatterEndpoints/MatterOccupancySensor.h>
 #include <MatterEndpoints/MatterOnOffPlugin.h>
+#include <MatterEndpoints/MatterDimmablePlugin.h>
 #include <MatterEndpoints/MatterThermostat.h>
+#include <MatterEndpoints/MatterWindowCovering.h>
 
 // Matter Event types used when there is a user callback for Matter Events
 enum matterEvent_t {
@@ -173,13 +179,17 @@ public:
     return String("https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT:Y.K9042C00KA0648G00");
   }
   static void begin();
+
+  // Network and Commissioning Capability Queries
+  // These methods check both hardware support (SOC capabilities) and Matter configuration
+  static bool isWiFiStationEnabled();       // Check if WiFi Station mode is supported and enabled
+  static bool isWiFiAccessPointEnabled();   // Check if WiFi AP mode is supported and enabled
+  static bool isThreadEnabled();            // Check if Thread network is supported and enabled
+  static bool isBLECommissioningEnabled();  // Check if BLE commissioning is supported and enabled
+
   static bool isDeviceCommissioned();
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFI_STATION
   static bool isWiFiConnected();
-#endif
-#if CHIP_DEVICE_CONFIG_ENABLE_THREAD
   static bool isThreadConnected();
-#endif
   static bool isDeviceConnected();
   static void decommission();
 
@@ -187,17 +197,23 @@ public:
   friend class MatterGenericSwitch;
   friend class MatterOnOffLight;
   friend class MatterDimmableLight;
+  friend class MatterDimmablePlugin;
   friend class MatterColorTemperatureLight;
   friend class MatterColorLight;
   friend class MatterEnhancedColorLight;
   friend class MatterFan;
   friend class MatterTemperatureSensor;
+  friend class MatterTemperatureControlledCabinet;
   friend class MatterHumiditySensor;
   friend class MatterContactSensor;
+  friend class MatterWaterLeakDetector;
+  friend class MatterWaterFreezeDetector;
+  friend class MatterRainSensor;
   friend class MatterPressureSensor;
   friend class MatterOccupancySensor;
   friend class MatterOnOffPlugin;
   friend class MatterThermostat;
+  friend class MatterWindowCovering;
 
 protected:
   static void _init();

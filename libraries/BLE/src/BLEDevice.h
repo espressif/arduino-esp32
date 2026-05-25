@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEDevice.h
  *
  *  Created on: Mar 16, 2017
@@ -181,7 +200,7 @@ public:
   static BLEServer *getServer();
   static BLEScan *getScan();
   static String getValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID);
-  static void init(String deviceName);
+  static bool init(String deviceName = "");
   static void setPower(esp_power_level_t powerLevel, esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
   static int getPower(esp_ble_power_type_t powerType = ESP_BLE_PWR_TYPE_DEFAULT);
   static void setValue(BLEAddress bdAddress, BLEUUID serviceUUID, BLEUUID characteristicUUID, String value);
@@ -192,6 +211,14 @@ public:
   static esp_err_t setMTU(uint16_t mtu);
   static uint16_t getMTU();
   static bool getInitialized();
+  static bool getPeerIRK(BLEAddress peerAddress, uint8_t *irk);
+  static String getPeerIRKString(BLEAddress peerAddress);
+  static String getPeerIRKBase64(BLEAddress peerAddress);
+  static String getPeerIRKReverse(BLEAddress peerAddress);
+  static bool getLocalIRK(uint8_t *irk);
+  static String getLocalIRKString();
+  static String getLocalIRKBase64();
+  static String getLocalIRKReverse();
   static BLEAdvertising *getAdvertising();
   static void startAdvertising();
   static void stopAdvertising();
@@ -207,6 +234,7 @@ public:
   static BLEStack getBLEStack();
   static String getBLEStackString();
   static bool isHostedBLE();
+  static String getDeviceName();
 
   /***************************************************************************
    *                       Bluedroid public declarations                    *
@@ -230,6 +258,10 @@ public:
   static bool setOwnAddr(uint8_t *addr);
   static void setDeviceCallbacks(BLEDeviceCallbacks *cb);
   static bool onWhiteList(BLEAddress &address);
+#if CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE
+  // Set SDIO pins for connection to external ESP MCU
+  static bool setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
+#endif
 #endif
 
 private:
@@ -250,6 +282,7 @@ private:
   static BLEAdvertising *m_bleAdvertising;
   static std::map<uint16_t, conn_status_t> m_connectedClientsMap;
   static portMUX_TYPE mux;
+  static String m_deviceName;
 
   /***************************************************************************
    *                        NimBLE private properties                        *

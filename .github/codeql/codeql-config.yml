@@ -23,6 +23,8 @@ query-filters:
       id: tob/cpp/use-of-legacy-algorithm # We use legacy algorithms in many places for integrity checks
   - exclude:
       id: cpp/dead-code-goto # Too many false positives in no-build mode
+  - exclude:
+      id: cpp/wrong-type-format-argument # Too many false positives in no-build mode
 
 paths-ignore:
   - tests/**

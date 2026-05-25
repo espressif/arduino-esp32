@@ -54,6 +54,12 @@ In **Master mode** (default) the device is generating clock signal ``sck`` and w
 In **Slave mode** the device listens on attached pins for the clock signal and word select - i.e. unless externally driven the pins will remain LOW.
 This mode is not supported yet.
 
+I2S Port
+********
+
+By default, the I2S driver automatically selects an available I2S controller.
+Applications that need a specific controller, such as dual-I2S audio designs, can select it before initialization using ``setPort()`` or the ``I2SClass`` constructor.
+
 Operation Modes
 ***************
 
@@ -127,6 +133,42 @@ Initialization and deinitialization
 ***********************************
 
 Before initialization, set which pins you want to use.
+
+I2SClass
+^^^^^^^^
+
+Create an I2S object. The optional ``port`` parameter selects the I2S controller.
+If it is not specified, the driver uses ``I2S_NUM_AUTO``.
+
+.. code-block:: arduino
+
+  I2SClass I2S(i2s_port_t port=I2S_NUM_AUTO)
+
+setPort
+^^^^^^^
+
+Set the I2S controller to use. This function must be called before ``begin()``.
+
+.. code-block:: arduino
+
+  bool setPort(i2s_port_t port)
+
+Parameters:
+
+* [in] ``port`` is the I2S controller, for example ``I2S_NUM_0``, another SoC-specific port such as ``I2S_NUM_1``, or ``I2S_NUM_AUTO``.
+
+This function will return ``true`` on success or ``false`` in case of failure.
+
+getPort
+^^^^^^^
+
+Get the configured I2S controller.
+After ``begin()``, this returns the controller allocated by the driver.
+Before ``begin()``, this returns the configured controller value, such as ``I2S_NUM_AUTO``.
+
+.. code-block:: arduino
+
+  i2s_port_t getPort()
 
 begin (Master Mode)
 ^^^^^^^^^^^^^^^^^^^

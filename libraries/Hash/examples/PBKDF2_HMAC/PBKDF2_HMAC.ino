@@ -11,6 +11,7 @@
   - The number of iterations (default: 1000)
 */
 
+#include <Arduino.h>
 #include <SHA1Builder.h>
 #include <SHA2Builder.h>
 #include <PBKDF2_HMACBuilder.h>

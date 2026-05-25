@@ -147,6 +147,12 @@ config ARDUINO_UDP_TASK_PRIORITY
     help
         Select at what priority you want the UDP task to run.
 
+config ARDUINO_UDP_TASK_STACK_SIZE
+    int "UDP task stack size"
+    default 4096
+    help
+        Amount of stack available for the UDP task.
+
 config ARDUINO_ISR_IRAM
     bool "Run interrupts in IRAM"
     default "n"
