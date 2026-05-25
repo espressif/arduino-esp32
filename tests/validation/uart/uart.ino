@@ -127,7 +127,7 @@ extern "C" int8_t uart_get_TxPin(uint8_t uart_num);
 
 // This task is used to send a message after a delay to test the auto baudrate detection
 void task_delayed_msg(void *pvParameters) {
-  HardwareSerial &selected_serial = uart_test_configs.size() == 1 ? Serial : Serial1;
+  HardwareSerial &selected_serial = uart_test_configs.size() == 1 ? Serial0 : Serial1;
   delay(1500);
   selected_serial.println("Hello to detect baudrate");
   selected_serial.flush();
@@ -795,8 +795,8 @@ void setup() {
   uart_test_configs = {
 #if SOC_UART_HP_NUM >= 2 && defined(RX1) && defined(TX1)
 #if CONFIG_IDF_TARGET_ESP32P4
-    // Using a real ESP32-P4 board requires the broken-out pins of the EV board
-    new UARTTestConfig(1, Serial1, 2, 3),  // RX1 = 2, TX1 = 3; ESP32-P4 only: TAB5 (ECO-2) = OK || EV board (ECO5) = OK
+    // Using an ESP32-P4X-Function-EV-Board requires the broken-out pins on J1
+    new UARTTestConfig(1, Serial1, 2, 3),  // RX1 = 2, TX1 = 3; ESP32-P4 only: TAB5 (ECO-2) = OK || P4X EV board = OK
 #else
     // Non-ESP32-P4 targets should use the regular UART1 pins
     new UARTTestConfig(1, Serial1, RX1, TX1),

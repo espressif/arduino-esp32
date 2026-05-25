@@ -1326,6 +1326,29 @@ bash .github/scripts/check_official_variants.sh \
 - `check_requirements` - Validate sketch requirements
 - `install_libs` - Install library dependencies
 
+**Default FQBNs:**
+
+When no explicit FQBN is provided via `ci.yml`, the following per-SoC defaults are used:
+
+| SoC | Default FQBN |
+|-----|-------------|
+| ESP32 | `espressif:esp32:esp32:PSRAM=enabled` |
+| ESP32-S2 | `espressif:esp32:esp32s2:PSRAM=enabled` |
+| ESP32-S3 | `espressif:esp32:esp32s3:PSRAM=opi,USBMode=default` |
+| ESP32-C3 | `espressif:esp32:esp32c3` |
+| ESP32-C6 | `espressif:esp32:esp32c6` |
+| ESP32-H2 | `espressif:esp32:esp32h2` |
+| ESP32-P4 | `espressif:esp32:esp32p4:PSRAM=enabled` |
+| ESP32-C5 | `espressif:esp32:esp32c5:PSRAM=enabled` |
+
+> **Note:** On CI (`CI=true`), ESP32-P4 builds also get `CDCOnBoot=disabled` appended automatically.
+> This is because the CI hardware test runners are connected via UART pins, so `Serial` must map
+> to `Serial0` (UART0) for test output to be visible. Locally, the board defaults route `Serial`
+> to `HWCDCSerial` (USB Serial/JTAG), which is the correct behavior for end users.
+>
+> Tests with explicit FQBNs in their `ci.yml` must add `CDCOnBoot=disabled` manually for ESP32-P4
+> entries if they need `Serial` output visible on the UART connection.
+
 ### Test Scripts
 
 #### `tests_matrix.sh`

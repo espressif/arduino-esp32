@@ -305,6 +305,9 @@ function run_test {
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
+            if [[ "$target" == "esp32p4" ]] && [[ "${CI:-false}" != "true" ]]; then
+                extra_args+=("--wokwi-usb-serial-jtag" "true")
+            fi
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args=("--embedded-services" "qemu" "--qemu-image-path" "$build_dir/$sketchname.ino.merged.bin")
