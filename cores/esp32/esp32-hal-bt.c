@@ -88,7 +88,7 @@ bool btStart() {
 bool btStartMode(bt_mode mode) {
   esp_bt_mode_t esp_bt_mode;
   esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-#if CONFIG_IDF_TARGET_ESP32
+#if CONFIG_SOC_BT_CLASSIC_SUPPORTED
   switch (mode) {
     case BT_MODE_BLE:        esp_bt_mode = ESP_BT_MODE_BLE; break;
     case BT_MODE_CLASSIC_BT: esp_bt_mode = ESP_BT_MODE_CLASSIC_BT; break;
@@ -107,8 +107,19 @@ bool btStartMode(bt_mode mode) {
 
   // If any memory required for this mode has already been released,
   // esp_bt_controller_init() will crash — refuse the request gracefully.
-  if (_btAvailableMemForMode(esp_bt_mode) != esp_bt_mode) {
-    return false;
+  // For BTDM mode, gracefully downgrade to whichever sub-mode still has
+  // memory (e.g. BLE-only when Classic memory was released by initArduino).
+  esp_bt_mode_t available = _btAvailableMemForMode(esp_bt_mode);
+  if (available != esp_bt_mode) {
+#if CONFIG_SOC_BT_CLASSIC_SUPPORTED
+    if (esp_bt_mode == ESP_BT_MODE_BTDM && available != ESP_BT_MODE_IDLE) {
+      esp_bt_mode = available;
+      cfg.mode = esp_bt_mode;
+    } else
+#endif
+    {
+      return false;
+    }
   }
 
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) {

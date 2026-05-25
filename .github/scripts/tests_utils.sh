@@ -26,11 +26,12 @@ function detect_test_type_and_folder {
         tmp_sketch_path=$(find tests -name "$sketch".ino | head -1)
         if [ -z "$tmp_sketch_path" ]; then
             echo "ERROR: Sketch $sketch not found"
-            exit 1
+            return 1
         fi
         test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
         test_folder="$PWD/tests/$test_type"
     fi
     echo "Sketch $sketch test type: $test_type"
+    return 0
 }
 

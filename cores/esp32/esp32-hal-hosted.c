@@ -69,6 +69,22 @@ void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *patch = slave_version_struct.patch1;
 }
 
+const char *hostedGetSlaveTargetName() {
+#if ESP_HOSTED_VERSION_VAL(ESP_HOSTED_VERSION_MAJOR_1, ESP_HOSTED_VERSION_MINOR_1, ESP_HOSTED_VERSION_PATCH_1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)
+  return CONFIG_IDF_SLAVE_TARGET;
+#else
+  uint32_t chip_id = 0;
+  static char target_name[20] = {0};
+  size_t target_name_len = sizeof(target_name);
+  esp_err_t ret = esp_hosted_get_cp_info(&chip_id, target_name, target_name_len);
+  if (ret != ESP_OK) {
+    log_e("Could not get slave target name: %s", esp_err_to_name(ret));
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
+  return target_name;
+#endif
+}
+
 bool hostedHasUpdate() {
   if (!hosted_initialized) {
     log_e("ESP-Hosted is not initialized");
@@ -104,12 +120,13 @@ bool hostedHasUpdate() {
   return false;
 }
 
-char *hostedGetUpdateURL() {
+const char *hostedGetUpdateURL() {
   // https://espressif.github.io/arduino-esp32/hosted/esp32c6-v1.2.3.bin
   static char url[92] = {0};
+  const char *target_name = hostedGetSlaveTargetName();
   snprintf(
-    url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET,
-    host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
+    url, sizeof(url), "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name, host_version_struct.major1,
+    host_version_struct.minor1, host_version_struct.patch1
   );
   return url;
 }

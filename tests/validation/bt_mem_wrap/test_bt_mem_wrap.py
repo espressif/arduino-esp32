@@ -35,9 +35,10 @@ def test_bt_mem_wrap(dut):
     # a real ESP-IDF call; all subsequent wrap calls must be no-ops.
     run_phase(6, "btMarkMemReleased sentinel")
 
-    # Phase 7: btStart() must fail after btMemRelease() — the freed memory
-    # cannot be reclaimed, so the controller init must be rejected.
-    run_phase(7, "btStart fails after btMemRelease")
+    # Phase 7: btStartMode(BLE) must fail after btMemRelease(BLE) — the freed
+    # BLE memory cannot be reclaimed.  (btStart() may still succeed on BTDM
+    # chips by downgrading to Classic-only; see phase 9.)
+    run_phase(7, "btStartMode(BLE) fails after btMemRelease(BLE)")
 
     # Phase 8: full lifecycle — btStart() succeeds, btMemRelease() while running
     # is rejected without corrupting tracking state, btStop() cleans up, then
