@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -103,9 +103,8 @@ public:
   }
   operator bool() const;
   void setDebugOutput(bool);
-  uint32_t baudRate() {
-    return 115200;
-  }
+  void updateBaudRate(unsigned long baud);
+  uint32_t baudRate();
 };
 #if ARDUINO_USB_MODE && ARDUINO_USB_CDC_ON_BOOT  // Hardware JTAG CDC selected
 #ifndef HWCDC_SERIAL_IS_DEFINED

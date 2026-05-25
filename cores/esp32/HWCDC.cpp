@@ -1,4 +1,4 @@
-// Copyright 2015-2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -469,6 +469,15 @@ void HWCDC::begin(unsigned long baud) {
 err:
   log_e("Serial JTAG Pin %u can't be set into Peripheral Manager.", pin);
   end();
+}
+
+void HWCDC::updateBaudRate(unsigned long baud) {
+  log_w("USB Serial/JTAG baud rate is set by the USB standard; updateBaudRate(%lu) has no effect", baud);
+}
+
+uint32_t HWCDC::baudRate() {
+  log_w("USB Serial/JTAG does not have a configurable baud rate");
+  return 115200;
 }
 
 void HWCDC::end() {
