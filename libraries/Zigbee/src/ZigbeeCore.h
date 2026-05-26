@@ -110,6 +110,7 @@ private:
 
   esp_zb_ep_list_t *_zb_ep_list;
   zigbee_role_t _role;
+  bool _initialized;
   bool _started;
   bool _connected;
 
@@ -148,6 +149,9 @@ public:
   bool connected() {
     return _connected;
   }
+
+  // Configure ZCL attribute reporting (requires a running Zigbee stack).
+  bool updateReportingInfo(esp_zb_zcl_reporting_info_t *reporting_info);
   zigbee_role_t getRole() {
     return _role;
   }

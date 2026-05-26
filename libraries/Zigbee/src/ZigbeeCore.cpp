@@ -41,6 +41,7 @@ ZigbeeCore::ZigbeeCore() {
   _open_network = 0;
   _scan_status = ZB_SCAN_FAILED;
   _begin_timeout = ZB_BEGIN_TIMEOUT_DEFAULT;
+  _initialized = false;
   _started = false;
   _connected = false;
   _scan_duration = 3;  // default scan duration
@@ -61,11 +62,16 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
 bool zb_apsde_data_indication_handler(esp_zb_apsde_data_ind_t ind);
 
 bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
+  if (_initialized) {
+    log_w("Zigbee already initialized; begin() ignored (use start()/stop() to pause/resume)");
+    return false;
+  }
+
+  _role = (zigbee_role_t)role_cfg->esp_zb_role;
   if (!zigbeeInit(role_cfg, erase_nvs)) {
     log_e("ZigbeeCore begin failed");
     return false;
   }
-  _role = (zigbee_role_t)role_cfg->esp_zb_role;
   if (xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
     log_e("ZigbeeCore begin failed or timeout");
     if (_role != ZIGBEE_COORDINATOR) {  // Only End Device and Router can rejoin
@@ -76,6 +82,11 @@ bool ZigbeeCore::begin(esp_zb_cfg_t *role_cfg, bool erase_nvs) {
 }
 
 bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
+  if (_initialized) {
+    log_w("Zigbee already initialized; begin() ignored (use start()/stop() to pause/resume)");
+    return false;
+  }
+
   bool status = true;
   switch (role) {
     case ZIGBEE_COORDINATOR:
@@ -201,8 +212,12 @@ bool ZigbeeCore::zigbeeInit(esp_zb_cfg_t *zb_cfg, bool erase_nvs) {
   }
 
   // Create Zigbee task and start Zigbee stack
-  xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL);
+  if (xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL) != pdPASS) {
+    log_e("Failed to create Zigbee task");
+    return false;
+  }
 
+  _initialized = true;
   return true;
 }
 
@@ -791,6 +806,25 @@ void ZigbeeCore::start() {
     _started = true;
   }
   return;
+}
+
+bool ZigbeeCore::updateReportingInfo(esp_zb_zcl_reporting_info_t *reporting_info) {
+  if (reporting_info == nullptr) {
+    log_e("Reporting info is null");
+    return false;
+  }
+  if (!started()) {
+    log_w("Cannot configure reporting: Zigbee stack not started");
+    return false;
+  }
+  esp_zb_lock_acquire(portMAX_DELAY);
+  esp_err_t ret = esp_zb_zcl_update_reporting_info(reporting_info);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to update reporting info: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
 }
 
 // Function to convert enum value to string

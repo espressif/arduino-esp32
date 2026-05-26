@@ -351,7 +351,13 @@ bool ZigbeeMultistate::setMultistateOutputStates(const char * const states[], ui
 
 //set attribute method -> method overridden in child class
 void ZigbeeMultistate::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT) {
+  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT) {
+    if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
+      _input_state = *(uint16_t *)message->attribute.data.value;
+    } else {
+      log_w("Received message ignored. Attribute ID: %u not supported for Multistate Input", message->attribute.id);
+    }
+  } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT) {
     if (message->attribute.id == ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
       _output_state = *(uint16_t *)message->attribute.data.value;
       multistateOutputChanged();
@@ -387,6 +393,7 @@ bool ZigbeeMultistate::setMultistateInput(uint16_t state) {
     log_e("Failed to set multistate input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
+  _input_state = state;
   return true;
 }
 

@@ -100,14 +100,7 @@ bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max
   float delta_f = delta / 1000000.0f;
   memcpy(&reporting_info.u.send_info.delta.s32, &delta_f, sizeof(float));
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return Zigbee.updateReportingInfo(&reporting_info);
 }
 
 bool ZigbeeCarbonDioxideSensor::setCarbonDioxide(float carbon_dioxide) {
