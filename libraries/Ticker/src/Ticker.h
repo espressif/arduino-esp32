@@ -61,19 +61,25 @@ public:
   // restriction applies, but keep TArg small to avoid a std::function heap allocation.
   template<typename TArg> void attach(float seconds, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(1000000ULL * seconds, true, _static_callback, this);
   }
 
   template<typename TArg> void attach_ms(uint64_t milliseconds, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(1000ULL * milliseconds, true, _static_callback, this);
   }
 
   template<typename TArg> void attach_us(uint64_t micros, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(micros, true, _static_callback, this);
   }
 
@@ -98,19 +104,25 @@ public:
   // Same as attach typed-argument overloads above, but one-shot.
   template<typename TArg> void once(float seconds, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(1000000ULL * seconds, false, _static_callback, this);
   }
 
   template<typename TArg> void once_ms(uint64_t milliseconds, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(1000ULL * milliseconds, false, _static_callback, this);
   }
 
   template<typename TArg> void once_us(uint64_t micros, void (*callback)(TArg), TArg arg) {
     detach();
-    _callback_function = [callback, arg]() { callback(arg); };
+    _callback_function = [callback, arg]() {
+      callback(arg);
+    };
     _attach_us(micros, false, _static_callback, this);
   }
 
