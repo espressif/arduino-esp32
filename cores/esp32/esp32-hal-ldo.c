@@ -129,8 +129,8 @@ void ldoPerimanPinBusSet(uint8_t pin, int old_type_as_int, int new_type_as_int) 
   if (!io_ldo_pin_in_range(pin)) {
     return;
   }
-  const bool old_active = (old_type_as_int != 0);
-  const bool new_active = (new_type_as_int != 0);
+  const bool old_active = (old_type_as_int != (int)ESP32_BUS_TYPE_INIT);
+  const bool new_active = (new_type_as_int != (int)ESP32_BUS_TYPE_INIT);
 
   if (!old_active && new_active) {
     s_io_ldo_slot.refcount++;

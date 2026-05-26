@@ -27,7 +27,9 @@ typedef esp_ldo_channel_handle_t ldo_channel_handle_t;
  * Manual LDO control (any board with SOC_GP_LDO_SUPPORTED).
  *
  * @param chan_id    Datasheet channel ID (e.g. ESP32-P4 LDO_VO4 -> 4).
+ * @param voltage_mv Requested output voltage in millivolts.
  * @param adjustable false = fixed voltage, shareable; true = exclusive (example: SDMMC variable voltage: 1.8V / 3.3V).
+ * @param out_handle Output pointer that receives the acquired LDO channel handle.
  */
 esp_err_t ldoAcquireChannel(uint8_t chan_id, int voltage_mv, bool adjustable, ldo_channel_handle_t *out_handle);
 esp_err_t ldoReleaseChannel(ldo_channel_handle_t handle);
