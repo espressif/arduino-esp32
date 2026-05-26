@@ -364,8 +364,10 @@ bool MatterTemperatureControlledCabinet::setRawTemperatureSetpoint(int16_t _rawT
   }
   if (tempVal.val.i16 != _rawTemperature) {
     tempVal.val.i16 = _rawTemperature;
-    bool ret;
-    ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::TemperatureSetpoint::Id, &tempVal);
+    bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::TemperatureSetpoint::Id, &tempVal);
+    if (!ret) {
+      ret = setAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::TemperatureSetpoint::Id, &tempVal);
+    }
     if (!ret) {
       log_e("Failed to update Temperature Controlled Cabinet Temperature Setpoint Attribute.");
       return false;
@@ -388,10 +390,6 @@ double MatterTemperatureControlledCabinet::getTemperatureSetpoint() {
     return 0.0;
   }
 
-  esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::TemperatureSetpoint::Id, &tempVal)) {
-    rawTempSetpoint = tempVal.val.i16;
-  }
   return (double)rawTempSetpoint / 100.0;
 }
 
@@ -417,8 +415,10 @@ bool MatterTemperatureControlledCabinet::setRawMinTemperature(int16_t _rawTemper
   }
   if (tempVal.val.i16 != _rawTemperature) {
     tempVal.val.i16 = _rawTemperature;
-    bool ret;
-    ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal);
+    bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal);
+    if (!ret) {
+      ret = setAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal);
+    }
     if (!ret) {
       log_e("Failed to update Temperature Controlled Cabinet Min Temperature Attribute.");
       return false;
@@ -441,10 +441,6 @@ double MatterTemperatureControlledCabinet::getMinTemperature() {
     return 0.0;
   }
 
-  esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MinTemperature::Id, &tempVal)) {
-    rawMinTemperature = tempVal.val.i16;
-  }
   return (double)rawMinTemperature / 100.0;
 }
 
@@ -470,8 +466,10 @@ bool MatterTemperatureControlledCabinet::setRawMaxTemperature(int16_t _rawTemper
   }
   if (tempVal.val.i16 != _rawTemperature) {
     tempVal.val.i16 = _rawTemperature;
-    bool ret;
-    ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MaxTemperature::Id, &tempVal);
+    bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MaxTemperature::Id, &tempVal);
+    if (!ret) {
+      ret = setAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MaxTemperature::Id, &tempVal);
+    }
     if (!ret) {
       log_e("Failed to update Temperature Controlled Cabinet Max Temperature Attribute.");
       return false;
@@ -494,10 +492,6 @@ double MatterTemperatureControlledCabinet::getMaxTemperature() {
     return 0.0;
   }
 
-  esp_matter_attr_val_t tempVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::MaxTemperature::Id, &tempVal)) {
-    rawMaxTemperature = tempVal.val.i16;
-  }
   return (double)rawMaxTemperature / 100.0;
 }
 
@@ -523,8 +517,10 @@ bool MatterTemperatureControlledCabinet::setRawStep(int16_t _rawStep) {
   }
   if (stepVal.val.i16 != _rawStep) {
     stepVal.val.i16 = _rawStep;
-    bool ret;
-    ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal);
+    bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal);
+    if (!ret) {
+      ret = setAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal);
+    }
     if (!ret) {
       log_e("Failed to update Temperature Controlled Cabinet Step Attribute.");
       return false;
@@ -547,12 +543,6 @@ double MatterTemperatureControlledCabinet::getStep() {
     return 0.0;
   }
 
-  // Read from attribute (should always exist after begin() due to workaround)
-  // If read fails, use stored rawStep value from begin()
-  esp_matter_attr_val_t stepVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::Step::Id, &stepVal)) {
-    rawStep = stepVal.val.i16;
-  }
   return (double)rawStep / 100.0;
 }
 
@@ -590,8 +580,10 @@ bool MatterTemperatureControlledCabinet::setSelectedTemperatureLevel(uint8_t lev
   }
   if (levelVal.val.u8 != level) {
     levelVal.val.u8 = level;
-    bool ret;
-    ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SelectedTemperatureLevel::Id, &levelVal);
+    bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SelectedTemperatureLevel::Id, &levelVal);
+    if (!ret) {
+      ret = setAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SelectedTemperatureLevel::Id, &levelVal);
+    }
     if (!ret) {
       log_e("Failed to update Temperature Controlled Cabinet Selected Temperature Level Attribute.");
       return false;
@@ -609,10 +601,6 @@ uint8_t MatterTemperatureControlledCabinet::getSelectedTemperatureLevel() {
     return 0;
   }
 
-  esp_matter_attr_val_t levelVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SelectedTemperatureLevel::Id, &levelVal)) {
-    selectedTempLevel = levelVal.val.u8;
-  }
   return selectedTempLevel;
 }
 
@@ -638,19 +626,21 @@ bool MatterTemperatureControlledCabinet::setSupportedTemperatureLevels(uint8_t *
     return false;
   }
 
-  // Copy the array into internal buffer
-  memcpy(supportedLevelsArray, levels, count * sizeof(uint8_t));
-  supportedLevelsCount = count;
-
-  // Use internal copy for Matter attribute update
-  // Use esp_matter_array helper function which properly initializes the structure
-  esp_matter_attr_val_t levelsVal = esp_matter_array(supportedLevelsArray, sizeof(uint8_t), count);
+  // Use caller's buffer directly for the attribute update — the pointer is read
+  // synchronously by updateAttributeVal, so the caller's buffer is safe to use here.
+  // Use esp_matter_array helper function which properly initializes the structure.
+  esp_matter_attr_val_t levelsVal = esp_matter_array(levels, sizeof(uint8_t), count);
 
   bool ret = updateAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SupportedTemperatureLevels::Id, &levelsVal);
   if (!ret) {
     log_e("Failed to update Temperature Controlled Cabinet Supported Temperature Levels Attribute.");
     return false;
   }
+
+  // Copy into internal buffer only after the attribute store update succeeds,
+  // so that on failure the internal state remains unchanged (Ember pattern).
+  memcpy(supportedLevelsArray, levels, count * sizeof(uint8_t));
+  supportedLevelsCount = count;
   log_v("Temperature Controlled Cabinet supported temperature levels updated, count: %u", count);
 
   return true;
@@ -662,11 +652,7 @@ uint16_t MatterTemperatureControlledCabinet::getSupportedTemperatureLevelsCount(
     return 0;
   }
 
-  esp_matter_attr_val_t levelsVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(TemperatureControl::Id, TemperatureControl::Attributes::SupportedTemperatureLevels::Id, &levelsVal)) {
-    return levelsVal.val.a.n;  // a.n is the count (number of elements)
-  }
-  return 0;
+  return supportedLevelsCount;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
