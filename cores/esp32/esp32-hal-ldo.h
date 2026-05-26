@@ -20,6 +20,7 @@ extern "C" {
 #if SOC_GP_LDO_SUPPORTED
 
 #include "esp_ldo_regulator.h"
+#include "esp32-hal-periman.h"
 
 typedef esp_ldo_channel_handle_t ldo_channel_handle_t;
 
@@ -41,7 +42,7 @@ esp_err_t ldoReleaseChannel(ldo_channel_handle_t handle);
  *   BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV (default 3300 in .c if omitted)
  */
 
-void ldoPerimanPinBusSet(uint8_t pin, int old_type_as_int, int new_type_as_int);
+void ldoPerimanPinBusSet(uint8_t pin, peripheral_bus_type_t old_type, peripheral_bus_type_t new_type);
 void ldoSdmmcPrepareAcquire(uint8_t chan_id);
 void ldoSdmmcDriverAttached(uint8_t chan_id);
 void ldoSdmmcDriverDetached(uint8_t chan_id);

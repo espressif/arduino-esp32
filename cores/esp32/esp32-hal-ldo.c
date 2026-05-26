@@ -124,13 +124,13 @@ static bool io_ldo_channel_matches(uint8_t chan_id) {
 
 #endif /* BOARD_PERIMAN_IO_LDO_AUTO */
 
-void ldoPerimanPinBusSet(uint8_t pin, int old_type_as_int, int new_type_as_int) {
+void ldoPerimanPinBusSet(uint8_t pin, peripheral_bus_type_t old_type, peripheral_bus_type_t new_type) {
 #if BOARD_PERIMAN_IO_LDO_AUTO
   if (!io_ldo_pin_in_range(pin)) {
     return;
   }
-  const bool old_active = (old_type_as_int != (int)ESP32_BUS_TYPE_INIT);
-  const bool new_active = (new_type_as_int != (int)ESP32_BUS_TYPE_INIT);
+  const bool old_active = (old_type != ESP32_BUS_TYPE_INIT);
+  const bool new_active = (new_type != ESP32_BUS_TYPE_INIT);
 
   if (!old_active && new_active) {
     s_io_ldo_slot.refcount++;
@@ -143,8 +143,8 @@ void ldoPerimanPinBusSet(uint8_t pin, int old_type_as_int, int new_type_as_int) 
   }
 #else
   (void)pin;
-  (void)old_type_as_int;
-  (void)new_type_as_int;
+  (void)old_type;
+  (void)new_type;
 #endif
 }
 

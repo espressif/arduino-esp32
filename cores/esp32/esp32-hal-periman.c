@@ -159,7 +159,7 @@ bool perimanSetPinBus(uint8_t pin, peripheral_bus_type_t type, void *bus, int8_t
   pins[pin].bus_channel = bus_channel;
   pins[pin].extra_type = NULL;
 #if defined(SOC_GP_LDO_SUPPORTED) && SOC_GP_LDO_SUPPORTED
-  ldoPerimanPinBusSet(pin, (int)otype, (int)type);
+  ldoPerimanPinBusSet(pin, otype, type);
 #endif
   log_v("Pin %u successfully set to type %s (%u) with bus %p", pin, perimanGetTypeName(type), (unsigned int)type, bus);
   return true;
