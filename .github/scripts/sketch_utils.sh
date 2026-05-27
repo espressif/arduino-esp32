@@ -1,14 +1,7 @@
 #!/bin/bash
 
-if [ -d "$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs" ]; then
-    REPO_ROOT="$ARDUINO_ESP32_PATH"
-elif [ -d "$GITHUB_WORKSPACE/tools/esp32-arduino-libs" ]; then
-    REPO_ROOT="$GITHUB_WORKSPACE"
-else
-    REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-fi
-
-SDKCONFIG_DIR="$REPO_ROOT/tools/esp32-arduino-libs"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR}/env.sh"
 
 function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local sketchdir=$1
@@ -641,7 +634,7 @@ print_err_warnings() {
     fi
 }
 
-function install_libs { # install_libs <ide_path> <sketchdir> [-v]
+function install_libs { # install_libs [-ai <cli_path>] -s <sketchdir> [-v]
     local ide_path=""
     local sketchdir=""
     local verbose=false
@@ -653,25 +646,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         -v  ) verbose=true ;;
         * )
             echo "ERROR: Unknown argument: $1" >&2
-            echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+            echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
             return 1
             ;;
         esac
         shift
     done
 
-    if [ -z "$ide_path" ]; then
-        echo "ERROR: IDE path not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
     if [ -z "$sketchdir" ]; then
         echo "ERROR: Sketch directory not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
-    if [ ! -f "$ide_path/arduino-cli" ]; then
-        echo "ERROR: arduino-cli not found at $ide_path/arduino-cli" >&2
+        echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
         return 1
     fi
 
@@ -699,6 +683,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     if [ "$libs_count" -eq 0 ]; then
         [ "$verbose" = true ] && echo "libs array is empty in ci.yml, skipping library installation"
         return 0
+    fi
+
+    if [ -z "$ide_path" ] || [ ! -f "$ide_path/arduino-cli" ]; then
+        echo "arduino-cli not found, installing for library support..."
+        source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+        ide_path="$ARDUINO_IDE_PATH"
+        if [ ! -f "$ide_path/arduino-cli" ]; then
+            echo "ERROR: Failed to install arduino-cli" >&2
+            return 1
+        fi
     fi
 
     echo "Installing $libs_count libraries from $sketchdir/ci.yml"
