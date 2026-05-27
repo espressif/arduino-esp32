@@ -28,7 +28,7 @@ esp_err_t ldoAcquireChannel(uint8_t chan_id, int voltage_mv, bool adjustable, ld
   };
   esp_err_t err = esp_ldo_acquire_channel(&cfg, out_handle);
   if (err != ESP_OK) {
-    log_w("ldoAcquireChannel: chan=%u %dmV adj=%d failed: %s", (unsigned)chan_id, voltage_mv, adjustable, esp_err_to_name(err));
+    log_e("ldoAcquireChannel: chan=%u %dmV adj=%d failed: %s", (unsigned)chan_id, voltage_mv, adjustable, esp_err_to_name(err));
   }
   return err;
 }
