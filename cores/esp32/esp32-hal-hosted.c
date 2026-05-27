@@ -73,6 +73,10 @@ const char *hostedGetSlaveTargetName() {
 #if ESP_HOSTED_VERSION_VAL(ESP_HOSTED_VERSION_MAJOR_1, ESP_HOSTED_VERSION_MINOR_1, ESP_HOSTED_VERSION_PATCH_1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)
   return CONFIG_IDF_SLAVE_TARGET;
 #else
+  // hostedHasUpdate() needs to be called first to get the slave version
+  if (ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)) {
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
   uint32_t chip_id = 0;
   static char target_name[20] = {0};
   size_t target_name_len = sizeof(target_name);
