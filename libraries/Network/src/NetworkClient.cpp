@@ -380,7 +380,7 @@ int NetworkClient::read() {
 }
 
 void NetworkClient::flush() {
-  clear();
+  // NetworkClient has no TX buffer; clear() is the explicit RX discard API.
 }
 
 size_t NetworkClient::write(const uint8_t *buf, size_t size) {

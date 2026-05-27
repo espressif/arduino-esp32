@@ -58,7 +58,6 @@ public:
   size_t write_P(PGM_P buf, size_t size);
   size_t write(Stream &stream);
   size_t write(Stream &stream, size_t length);
-  [[deprecated("Use clear() instead.")]]
   void flush();  // Print::flush tx
   int available();
   int read();
