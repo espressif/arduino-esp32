@@ -400,8 +400,8 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
 #endif
 
   // save only interesting fields
-  int handshake_timeout = ssl_client->handshake_timeout;
-  int socket_timeout = ssl_client->socket_timeout;
+  unsigned long handshake_timeout = ssl_client->handshake_timeout;
+  unsigned long socket_timeout = ssl_client->socket_timeout;
   int last_err = ssl_client->last_error;
   crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
 
