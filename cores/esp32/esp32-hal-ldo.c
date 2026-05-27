@@ -21,10 +21,11 @@ esp_err_t ldoAcquireChannel(uint8_t chan_id, int voltage_mv, bool adjustable, ld
   esp_ldo_channel_config_t cfg = {
     .chan_id = (int)chan_id,
     .voltage_mv = voltage_mv,
-    .flags = {
-      .adjustable = adjustable ? 1u : 0u,
-      .owned_by_hw = 0u,
-    },
+    .flags =
+      {
+        .adjustable = adjustable ? 1u : 0u,
+        .owned_by_hw = 0u,
+      },
   };
   esp_err_t err = esp_ldo_acquire_channel(&cfg, out_handle);
   if (err != ESP_OK) {

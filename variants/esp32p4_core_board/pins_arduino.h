@@ -64,11 +64,11 @@ static const uint8_t T13 = 15;
 
 // On-chip GP LDO: periman enables VO4 when a GPIO in the range is used (see esp32-hal-ldo.c).
 // No on-board SDMMC slot on this board (no BOARD_HAS_SDMMC / BOARD_SDMMC_POWER_*).
-#define BOARD_PERIMAN_IO_LDO_AUTO           1
-#define BOARD_PERIMAN_IO_LDO0_CHANNEL       4   // LDO_VO4 on ESP32-P4
-#define BOARD_PERIMAN_IO_LDO0_GPIO_MIN      39
-#define BOARD_PERIMAN_IO_LDO0_GPIO_MAX      48
-#define BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV    3300
+#define BOARD_PERIMAN_IO_LDO_AUTO        1
+#define BOARD_PERIMAN_IO_LDO0_CHANNEL    4  // LDO_VO4 on ESP32-P4
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MIN   39
+#define BOARD_PERIMAN_IO_LDO0_GPIO_MAX   48
+#define BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV 3300
 
 //WIFI - ESP32C6
 #define BOARD_HAS_SDIO_ESP_HOSTED
