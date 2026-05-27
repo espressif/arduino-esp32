@@ -49,13 +49,13 @@ private:
     if (_fd < 0) {
       return 0;
     }
-    int count;
+    int count = -1;
 #ifdef ESP_IDF_VERSION_MAJOR
     int res = lwip_ioctl(_fd, FIONREAD, &count);
 #else
     int res = lwip_ioctl_r(_fd, FIONREAD, &count);
 #endif
-    if (res < 0) {
+    if (res < 0 || count < 0) {
       _failed = true;
       return 0;
     }
