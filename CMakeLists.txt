@@ -41,6 +41,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
   cores/esp32/esp32-hal-periman.c
+  cores/esp32/esp32-hal-ldo.c
   cores/esp32/esp32-hal-psram.c
   cores/esp32/esp32-hal-rgb-led.c
   cores/esp32/esp32-hal-sigmadelta.c

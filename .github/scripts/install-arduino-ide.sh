@@ -4,45 +4,23 @@
 #OSTYPE: 'msys', ARCH: 'x86_64' => win32
 #OSTYPE: 'darwin18', ARCH: 'i386' => macos
 
-OSBITS=$(uname -m)
-if [[ "$OSTYPE" == "linux"* ]]; then
-    export OS_IS_LINUX="1"
+SCRIPTS_DIR_IDE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR_IDE}/env.sh"
+
+if [ "$OS_IS_LINUX" == "1" ]; then
     ARCHIVE_FORMAT="tar.xz"
-    if [[ "$OSBITS" == "i686" ]]; then
-        OS_NAME="linux32"
-    elif [[ "$OSBITS" == "x86_64" ]]; then
-        OS_NAME="linux64"
-    elif [[ "$OSBITS" == "armv7l" || "$OSBITS" == "aarch64" ]]; then
-        OS_NAME="linuxarm"
-    else
-        OS_NAME="$OSTYPE-$OSBITS"
-        echo "Unknown OS '$OS_NAME'"
-        exit 1
-    fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    export OS_IS_MACOS="1"
+elif [ "$OS_IS_WINDOWS" == "1" ]; then
     ARCHIVE_FORMAT="zip"
-    OS_NAME="macosx"
-elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
-    export OS_IS_WINDOWS="1"
-    ARCHIVE_FORMAT="zip"
-    OS_NAME="windows"
 else
-    OS_NAME="$OSTYPE-$OSBITS"
-    echo "Unknown OS '$OS_NAME'"
-    exit 1
+    ARCHIVE_FORMAT="zip"
 fi
-export OS_NAME
 
 if [ "$OS_IS_MACOS" == "1" ]; then
     export ARDUINO_IDE_PATH="/Applications/Arduino.app/Contents/Java"
-    export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
 elif [ "$OS_IS_WINDOWS" == "1" ]; then
     export ARDUINO_IDE_PATH="$HOME/arduino_ide"
-    export ARDUINO_USR_PATH="$HOME/Documents/Arduino"
 else
     export ARDUINO_IDE_PATH="$HOME/arduino_ide"
-    export ARDUINO_USR_PATH="$HOME/Arduino"
 fi
 
 # Updated as of Nov 3rd 2020
