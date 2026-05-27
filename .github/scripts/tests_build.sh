@@ -176,14 +176,17 @@ while [ -n "$1" ]; do
 done
 
 set -e
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+source "${SCRIPTS_DIR}/env.sh"
+if [ "${use_arduino_cli:-0}" -eq 1 ]; then
+    source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+fi
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 source "${SCRIPTS_DIR}/tests_utils.sh"
 set +e
 
-args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH")
+args=("-au" "$ARDUINO_USR_PATH")
 if [ "${use_arduino_cli:-0}" -eq 1 ]; then
-    args+=("--arduino-cli")
+    args+=("-ai" "$ARDUINO_IDE_PATH" "--arduino-cli")
 fi
 
 # Parse comma-separated targets
