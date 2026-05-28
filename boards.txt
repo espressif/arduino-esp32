@@ -44459,8 +44459,8 @@ waveshare_p4_poe_eth.build.tarch=riscv32
 waveshare_p4_poe_eth.build.target=esp
 waveshare_p4_poe_eth.build.mcu=esp32p4
 waveshare_p4_poe_eth.build.core=esp32
-waveshare_p4_poe_eth.build.variant=esp32p4
-waveshare_p4_poe_eth.build.chip_variant=waveshare_p4_poe_eth
+waveshare_p4_poe_eth.build.variant=waveshare_p4_poe_eth
+waveshare_p4_poe_eth.build.chip_variant=esp32p4_es
 waveshare_p4_poe_eth.build.board=WAVESHARE_ESP32P4_POE_ETH
 waveshare_p4_poe_eth.build.bootloader_addr=0x2000
 
