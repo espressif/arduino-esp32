@@ -400,9 +400,10 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
 #endif
 
   // save only interesting fields
-  int handshake_timeout = ssl_client->handshake_timeout;
-  int socket_timeout = ssl_client->socket_timeout;
+  unsigned long handshake_timeout = ssl_client->handshake_timeout;
+  unsigned long socket_timeout = ssl_client->socket_timeout;
   int last_err = ssl_client->last_error;
+  crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
 
   // reset embedded pointers to zero
   memset(ssl_client, 0, sizeof(sslclient_context));
@@ -410,6 +411,7 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
   ssl_client->last_error = last_err;
+  ssl_client->bundle_attach_cb = bundle_attach_cb;
   ssl_client->peek_buf = -1;
 }
 
