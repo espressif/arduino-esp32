@@ -435,6 +435,7 @@ uint32_t ledcWriteTone(uint8_t pin, uint32_t freq) {
     }
     bus->channel_resolution = 10;
 
+    bus->freq_hz = freq;
     uint32_t res_freq = ledc_get_freq(group, bus->timer_num);
     ledcWrite(pin, 0x1FF);
     return res_freq;
@@ -491,6 +492,7 @@ uint32_t ledcChangeFrequency(uint8_t pin, uint32_t freq, uint8_t resolution) {
       return 0;
     }
     bus->channel_resolution = resolution;
+    bus->freq_hz = freq;
     return ledc_get_freq(group, bus->timer_num);
   }
   return 0;
@@ -583,22 +585,31 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     ledc_fade_stop(group, channel);
 #endif
 
-    if (ledc_set_duty_and_update(group, channel, start_duty, 0) != ESP_OK) {
+    bool success = (ledc_set_duty_and_update(group, channel, start_duty, 0) == ESP_OK);
+    if (!success) {
       log_e("ledc_set_duty_and_update failed");
-      return false;
+    } else {
+      // The new duty takes effect on the next PWM cycle (TRM §35.3.3).
+      // Wait one full period so the start duty is applied before fading.
+      delay(1000 / bus->freq_hz + 1);
+      success = (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) == ESP_OK);
+      if (!success) {
+        log_e("ledc_set_fade_time_and_start failed");
+      }
     }
-    // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
-    while (ledc_get_duty(group, channel) != start_duty);
 
-    if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
-      log_e("ledc_set_fade_time_and_start failed");
-      return false;
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+    if (!success && bus->lock != NULL) {
+      xSemaphoreGive(bus->lock);
     }
-  } else {
-    log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
-    return false;
+#endif
+#endif
+    return success;
   }
-  return true;
+
+  log_e("Pin %u is not attached to LEDC. Call ledcAttach first!", pin);
+  return false;
 }
 
 bool ledcFade(uint8_t pin, uint32_t start_duty, uint32_t target_duty, int max_fade_time_ms) {
