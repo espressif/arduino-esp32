@@ -191,6 +191,7 @@ bool MatterEnhancedColorLight::begin(bool initialState, espHsvColor_t _colorHSV,
 
   light_config.level_control.current_level = brightness;
   light_config.level_control.lighting.start_up_current_level = nullptr;
+  brightnessLevel = brightness;
 
   light_config.color_control.enhanced_color_mode = (uint8_t)ColorControl::ColorMode::kColorTemperature;
   light_config.color_control.color_temperature.color_temperature_mireds = ColorTemperature;
