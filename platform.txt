@@ -24,6 +24,9 @@ tools.gen_esp32part.cmd.windows="{runtime.platform.path}\tools\gen_esp32part.exe
 tools.gen_insights_pkg.cmd=python3 "{runtime.platform.path}"/tools/gen_insights_package.py
 tools.gen_insights_pkg.cmd.windows="{runtime.platform.path}\tools\gen_insights_package.exe"
 
+tools.flasher.cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+tools.flasher.cmd.windows="{runtime.platform.path}\tools\flasher.exe"
+
 compiler.path={tools.{build.tarch}-esp-elf-gcc.path}/bin/
 compiler.prefix={build.tarch}-{build.target}-elf-
 
@@ -337,14 +340,14 @@ tools.esptool_py.upload.protocol=serial
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
 tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash {upload.erase_cmd} -z --flash-mode keep --flash-freq keep --flash-size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
-tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
+tools.esptool_py.upload.pattern={tools.flasher.cmd} --esptool "{path}/{cmd}" --build-dir "{build.path}" {upload.pattern_args}
 
 ## Program Application
 ## -------------------
 tools.esptool_py.program.params.verbose=
 tools.esptool_py.program.params.quiet=
 tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash -z --flash-mode keep --flash-freq keep --flash-size keep 0x10000 "{build.path}/{build.project_name}.bin"
-tools.esptool_py.program.pattern="{path}/{cmd}" {program.pattern_args}
+tools.esptool_py.program.pattern={tools.flasher.cmd} --esptool "{path}/{cmd}" --build-dir "{build.path}" {program.pattern_args}
 
 ## Erase Chip (before burning the bootloader)
 ## ------------------------------------------
@@ -396,4 +399,4 @@ tools.esptool_py_app_only.upload.params.quiet=
 
 tools.esptool_py_app_only.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash --flash-mode {build.flash_mode} --flash-freq {build.flash_freq} --flash-size {build.flash_size} {build.flash_offset} "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 
-tools.esptool_py_app_only.upload.pattern="{path}/{cmd}" {tools.esptool_py_app_only.upload.pattern_args}
+tools.esptool_py_app_only.upload.pattern={tools.flasher.cmd} --esptool "{path}/{cmd}" --build-dir "{build.path}" {tools.esptool_py_app_only.upload.pattern_args}
