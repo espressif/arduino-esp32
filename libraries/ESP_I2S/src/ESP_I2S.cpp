@@ -208,8 +208,9 @@ static esp_err_t i2s_channel_read_32_to_16(i2s_chan_handle_t handle, char *read_
 // unpacks the high byte for 8-bit mode.
 // 16-bit: DMA reads 2× user bytes;  output is int16_t per sample.
 //  8-bit: DMA reads 4× user bytes;  output is  int8_t per sample (high byte of uint16_t).
-static esp_err_t i2s_channel_read_stereo_to_mono(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read,
-                                                 uint32_t timeout_ms, size_t slot_offset, bool unpack_8bit) {
+static esp_err_t i2s_channel_read_stereo_to_mono(
+  i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms, size_t slot_offset, bool unpack_8bit
+) {
   size_t out_len = 0;
   size_t read_buff_len = len * (unpack_8bit ? 4 : 2);
   if (read_buff == NULL) {
@@ -256,15 +257,18 @@ static esp_err_t i2s_channel_read_stereo_to_mono(i2s_chan_handle_t handle, char 
 }
 
 // 16-bit wrappers (all targets — used by I2S_RX_TRANSFORM_16_STEREO_TO_MONO)
-static esp_err_t i2s_channel_read_16_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 0, false);
 }
 
-static esp_err_t i2s_channel_read_16_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 1, false);
 }
 
-static esp_err_t i2s_channel_read_16_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 2, false);
 }
 
@@ -293,18 +297,18 @@ static esp_err_t i2s_channel_read_8_unpack(i2s_chan_handle_t handle, char *read_
 }
 
 // 8-bit mono wrappers (ESP32 HW v1 only — mono workaround + uint16_t packing)
-static esp_err_t i2s_channel_read_8_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read,
-                                                        uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 0, true);
 }
 
-static esp_err_t i2s_channel_read_8_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read,
-                                                         uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 1, true);
 }
 
-static esp_err_t i2s_channel_read_8_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read,
-                                                        uint32_t timeout_ms) {
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 2, true);
 }
 #endif  // SOC_I2S_HW_VERSION_1
