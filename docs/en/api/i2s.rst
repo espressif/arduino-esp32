@@ -49,10 +49,10 @@ I2S Configuration
 Master / Slave Mode
 *******************
 
-In **Master mode** (default) the device is generating clock signal ``sck`` and word select signal on ``ws``.
+In **Master mode** (default), the device generates the clock signal ``sck`` and word select signal on ``ws``.
 
-In **Slave mode** the device listens on attached pins for the clock signal and word select - i.e. unless externally driven the pins will remain LOW.
-This mode is not supported yet.
+In **Slave mode**, the device listens on attached pins for the clock signal and word select driven by an external master.
+The role is selected via the ``role`` parameter of ``begin()`` (default ``I2S_ROLE_MASTER``).
 
 I2S Port
 ********
@@ -103,10 +103,21 @@ Data Bit Width
 This is the number of bits in a channel sample. The data bit width is set by function parameter ``bits_cfg``.
 The current supported values are:
 
-* ``I2S_DATA_BIT_WIDTH_8BIT``
+* ``I2S_DATA_BIT_WIDTH_8BIT`` (see note below)
 * ``I2S_DATA_BIT_WIDTH_16BIT``
 * ``I2S_DATA_BIT_WIDTH_24BIT``, requires the MCLK multiplier to be manually set to 384
 * ``I2S_DATA_BIT_WIDTH_32BIT``
+
+.. note::
+    **8-bit data width on ESP32 (HW v1):** The original ESP32's I2S peripheral uses
+    ``uint16_t``-aligned DMA words for 8-bit data, with only the high 8 bits valid.
+    The Arduino library handles this transparently: ``write()`` packs each ``int8_t``
+    sample into the high byte of a ``uint16_t``, and ``readBytes()`` unpacks it back.
+    For mono 8-bit, the existing stereo workaround is also applied (hardware runs in
+    stereo mode, software converts). This is fully automatic and requires no special
+    handling in application code. See the
+    `ESP-IDF I2S STD TX Mode documentation <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/i2s.html#std-tx-mode>`_
+    for background on the hardware behavior.
 
 Sample Rate
 ***********
@@ -120,11 +131,67 @@ The slot mode is set by function parameter ``ch``. The current supported values 
 
 * ``I2S_SLOT_MODE_MONO``
     I2S channel slot format mono. Transmit the same data in all slots for TX mode.
-    Only receive the data in the first slots for RX mode.
+    Only receive the data in the first slot for RX mode.
 
 * ``I2S_SLOT_MODE_STEREO``
     I2S channel slot format stereo. Transmit different data in different slots for TX mode.
     Receive the data in all slots for RX mode.
+
+.. note::
+    On the original ESP32 (I2S hardware version 1), 8-bit and 16-bit mono modes have a
+    known hardware limitation: the FIFO packing logic scrambles data during transmission
+    and reception. The library works around this automatically by configuring the hardware
+    in stereo mode and converting between mono and stereo in software. ``write()`` duplicates
+    each mono sample into both left and right slots, and ``readBytes()`` extracts the selected
+    channel to produce mono output. For 8-bit, the library also handles the ``uint16_t``
+    high-byte packing required by the hardware. This is fully transparent to application code.
+
+Slot Mask
+*********
+
+The ``slot_mask`` parameter selects which channel slot(s) to use. It is available in
+``begin()``, ``configureTX()``, and ``configureRX()``. When set to ``-1`` (default),
+the library chooses a sensible default based on the slot mode.
+
+The supported values are:
+
+* ``I2S_STD_SLOT_LEFT`` (1) -- Use the left slot only.
+* ``I2S_STD_SLOT_RIGHT`` (2) -- Use the right slot only.
+* ``I2S_STD_SLOT_BOTH`` (3) -- Use both left and right slots.
+
+**TX behavior (mono mode):**
+
+* ``LEFT`` -- Transmit mono data on the left wire slot; right is silent.
+* ``RIGHT`` -- Transmit mono data on the right wire slot; left is silent.
+* ``BOTH`` -- Transmit mono data on both wire slots. Useful for driving a stereo DAC
+  from a single-channel source.
+
+**TX behavior (stereo mode):**
+
+* ``LEFT`` -- Transmit only the left-channel data from the buffer on the left wire slot; right is silent.
+* ``RIGHT`` -- Transmit only the right-channel data from the buffer on the right wire slot; left is silent.
+* ``BOTH`` -- Transmit interleaved stereo data normally.
+
+**RX behavior (mono mode):**
+
+* ``LEFT`` -- Receive the left channel only.
+* ``RIGHT`` -- Receive the right channel only.
+* ``BOTH`` -- On the original ESP32 (HW v1), averages the left and right channels.
+  On other targets, causes sample duplication in the DMA buffer (not recommended).
+
+**RX behavior (stereo mode):**
+
+The library always forces ``slot_mask`` to ``BOTH`` for stereo RX, regardless of the
+value passed by the user. This is because the ESP-IDF does not reliably ignore
+``slot_mask`` in stereo RX mode on all targets — some hardware duplicates the selected
+channel instead of delivering normal interleaved data. The library overrides the mask
+to guarantee correct interleaved ``[L, R, L, R, ...]`` output.
+
+.. note::
+    On the original ESP32 (HW v1) with mono 8-bit or 16-bit mode, ``slot_mask`` controls
+    which channel the software workaround extracts: ``LEFT`` extracts the left channel,
+    ``RIGHT`` extracts the right channel, and ``BOTH`` averages the two channels.
+    This can be changed at runtime via ``configureRX()``.
 
 Arduino-ESP32 I2S API
 ---------------------
@@ -170,14 +237,14 @@ Before ``begin()``, this returns the configured controller value, such as ``I2S_
 
   i2s_port_t getPort()
 
-begin (Master Mode)
-^^^^^^^^^^^^^^^^^^^
+begin
+^^^^^
 
-Before usage choose which pins you want to use.
+Initialize the I2S driver. Before calling ``begin()``, choose which pins you want to use with ``setPins()`` or the PDM pin-setup functions.
 
 .. code-block:: arduino
 
-    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1)
+    bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask=-1, i2s_role_t role=I2S_ROLE_MASTER)
 
 Parameters:
 
@@ -189,9 +256,13 @@ Parameters:
 
 * [in] ``ch`` is the slot mode, for example ``I2S_SLOT_MODE_STEREO``.
 
-* [in] ``slot_mask`` is the slot mask, for example ``0b11``. This parameter is optional and defaults to ``-1`` (not used).
+* [in] ``slot_mask`` selects which slot(s) to use (see `Slot Mask`_ section).
+         This parameter is optional and defaults to ``-1`` (library default: LEFT for mono TX/RX, BOTH for stereo).
+         For stereo RX, the library always forces BOTH regardless of this value.
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+* [in] ``role`` is the I2S role. Use ``I2S_ROLE_MASTER`` (default) to generate clock and word-select signals, or ``I2S_ROLE_SLAVE`` to receive them from an external master.
+
+This function will return ``true`` on success or ``false`` in case of failure.
 
 When failed, an error message will be printed if the correct log level is set.
 
@@ -320,20 +391,24 @@ Parameters:
 
 * [in] ``ch`` is the slot mode, for example ``I2S_SLOT_MODE_STEREO``.
 
-* [in] ``slot_mask`` is the slot mask, for example ``0b11``. This parameter is optional and defaults to ``-1`` (not used).
+* [in] ``slot_mask`` selects which slot(s) to use for TX (see `Slot Mask`_ section).
+         This parameter is optional and defaults to ``-1`` (library default).
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+This function will return ``true`` on success or ``false`` in case of failure.
 
 When failed, an error message will be printed if the correct log level is set.
 
 configureRX
 ^^^^^^^^^^^
 
-Configure the I2S RX channel.
+Configure the I2S RX channel. This function can change the sample rate, bit width,
+slot mode, RX transform, and slot mask at runtime without calling ``end()``/``begin()``.
+If only the ``slot_mask`` changes (rate, bits, and channel mode remain the same), the
+library performs a lightweight slot-only reconfiguration.
 
 .. code-block:: arduino
 
-  bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform=I2S_RX_TRANSFORM_NONE)
+  bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform=I2S_RX_TRANSFORM_NONE, int8_t slot_mask=-1)
 
 Parameters:
 
@@ -348,8 +423,16 @@ Parameters:
          The supported values are: ``I2S_RX_TRANSFORM_NONE`` (no transformation),
          ``I2S_RX_TRANSFORM_32_TO_16`` (convert from 32 bits of data width to 16 bits) and
          ``I2S_RX_TRANSFORM_16_STEREO_TO_MONO`` (convert from stereo to mono when using 16 bits of data width).
+         When using ``I2S_RX_TRANSFORM_16_STEREO_TO_MONO``, the channel extracted depends on the configured
+         ``slot_mask``: ``LEFT`` extracts the left channel, ``RIGHT`` extracts the right channel, and ``BOTH``
+         averages both channels.
 
-This function will return ``true`` on success or ``fail`` in case of failure.
+* [in] ``slot_mask`` is the slot mask for RX channel selection (see `Slot Mask`_ section).
+         This parameter is optional and defaults to ``-1`` (use current setting).
+         In mono mode, this selects which channel to receive (LEFT, RIGHT, or BOTH).
+         In stereo mode, this parameter is ignored — the library always uses BOTH.
+
+This function will return ``true`` on success or ``false`` in case of failure.
 
 When failed, an error message will be printed if the correct log level is set.
 
@@ -573,6 +656,9 @@ When failed, an error message will be printed if the correct log level is set.
 Sample code
 -----------
 
+Master mode (default)
+*********************
+
 .. code-block:: arduino
 
   #include <ESP_I2S.h>
@@ -593,6 +679,27 @@ Sample code
       read_bytes = I2S.readBytes(buffer, buff_size);
     }
     I2S.write(buffer, read_bytes);
+    I2S.end();
+  }
+
+  void loop() {}
+
+Slave mode
+**********
+
+.. code-block:: arduino
+
+  #include <ESP_I2S.h>
+
+  const int buff_size = 128;
+  uint8_t buffer[buff_size];
+  I2SClass I2S;
+
+  void setup() {
+    I2S.setPins(5, 25, -1, 35); //SCK, WS, SDOUT (not used), SDIN
+    I2S.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, -1, I2S_ROLE_SLAVE);
+    size_t read_bytes = I2S.readBytes((char *)buffer, buff_size);
+    // process received data...
     I2S.end();
   }
 
