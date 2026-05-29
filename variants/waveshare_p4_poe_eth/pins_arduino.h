@@ -70,11 +70,11 @@ static const uint8_t T13 = 15;
 
 // I2S
 #define BOARD_HAS_ES8311
-#define I2S_MCLK 13
-#define I2S_BCLK 12
+#define I2S_MCLK  13
+#define I2S_BCLK  12
 #define I2S_LRCLK 10
-#define I2S_DOUT 11
-#define I2S_DIN 9
-#define PA_POWER 53
+#define I2S_DOUT  11
+#define I2S_DIN   9
+#define PA_POWER  53
 
 #endif /* Pins_Arduino_h */
