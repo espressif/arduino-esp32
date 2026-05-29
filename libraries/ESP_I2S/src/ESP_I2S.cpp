@@ -1068,17 +1068,17 @@ bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
       if (ch == I2S_SLOT_MODE_STEREO) {
         i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
         _rx_slot_mask = I2S_STD_SLOT_BOTH;
+      } else if (slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH) {
+        i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
+        _rx_slot_mask = (i2s_std_slot_mask_t)slot_mask;
       } else {
-        if (slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH) {
-          i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
-        }
-        if (slot_mask == I2S_STD_SLOT_RIGHT) {
-          _rx_slot_mask = I2S_STD_SLOT_RIGHT;
-        } else if (slot_mask == I2S_STD_SLOT_BOTH) {
-          _rx_slot_mask = I2S_STD_SLOT_BOTH;
-        } else {
+        // slot_mask = -1 (default) in mono: preserve current _rx_slot_mask,
+        // but reset to LEFT if transitioning from stereo (where BOTH was forced).
+        if (rx_slot_mode != I2S_SLOT_MODE_MONO && _rx_slot_mask != I2S_STD_SLOT_LEFT) {
+          log_w("configureRX: switching from stereo to mono with no explicit slot_mask; defaulting to LEFT");
           _rx_slot_mask = I2S_STD_SLOT_LEFT;
         }
+        i2s_config.slot_cfg.slot_mask = _rx_slot_mask;
       }
 #if SOC_I2S_HW_VERSION_1
       _8bit_hw_packing = (bits_cfg == I2S_DATA_BIT_WIDTH_8BIT);
@@ -1089,10 +1089,6 @@ bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
         i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
       } else {
         _mono_hw_workaround = false;
-      }
-#else
-      if (ch == I2S_SLOT_MODE_MONO && slot_mask < 0) {
-        i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
       }
 #endif
       I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(rx_chan));
@@ -1412,6 +1408,10 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform) {
       break;
 
     case I2S_RX_TRANSFORM_16_STEREO_TO_MONO:
+      if (rx_data_bit_width != I2S_DATA_BIT_WIDTH_16BIT) {
+        log_e("I2S_RX_TRANSFORM_16_STEREO_TO_MONO requires 16-bit data width");
+        return false;
+      }
       if (rx_slot_mode != I2S_SLOT_MODE_STEREO) {
         log_e("Wrong slot mode. Should be Stereo");
         return false;
@@ -1431,6 +1431,10 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform) {
 
     case I2S_RX_TRANSFORM_8_UNPACK:
 #if SOC_I2S_HW_VERSION_1
+      if (rx_data_bit_width != I2S_DATA_BIT_WIDTH_8BIT) {
+        log_e("I2S_RX_TRANSFORM_8_UNPACK requires 8-bit data width");
+        return false;
+      }
       if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
         return false;
       }
@@ -1438,7 +1442,7 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform) {
       break;
 #else
       log_w("I2S_RX_TRANSFORM_8_UNPACK is only needed on ESP32 HW v1; ignoring on this target");
-      break;
+      return true;
 #endif
 
     default: log_e("Unknown RX Transform %d", transform); return false;
