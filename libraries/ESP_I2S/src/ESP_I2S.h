@@ -68,7 +68,6 @@ public:
   void setInvertedPdm(bool clk);
 #endif
 
-  // TODO: swap slot_mask and role so that slave mode doesn't require an explicit slot_mask placeholder (API-breaking change)
   bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1, i2s_role_t role = I2S_ROLE_MASTER);
   bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1);
   bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform = I2S_RX_TRANSFORM_NONE, int8_t slot_mask = -1);
