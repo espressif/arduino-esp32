@@ -247,12 +247,9 @@ bool BLESecurity::notifyAuthorization(const BLEConnInfo &conn, uint16_t attrHand
   if (!impl.authorizationCb) {
     // The developer declared ReadAuthorized/WriteAuthorized on this attribute
     // but never installed a handler. That is a misconfiguration; deny access
-    // so the security declaration is honoured and the bug surfaces immediately
+    // so the security declaration is honored and the bug surfaces immediately
     // (the peer gets ATT_ERR_INSUFFICIENT_AUTHOR rather than silent pass-through).
-    log_w(
-      "BLESecurity: attribute 0x%04x requires authorization but no handler is installed — denying %s",
-      attrHandle, isRead ? "read" : "write"
-    );
+    log_w("BLESecurity: attribute 0x%04x requires authorization but no handler is installed — denying %s", attrHandle, isRead ? "read" : "write");
     return false;
   }
   return impl.authorizationCb(conn, attrHandle, isRead);

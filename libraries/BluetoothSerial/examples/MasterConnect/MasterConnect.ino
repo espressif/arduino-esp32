@@ -26,7 +26,7 @@ void setup() {
 
   BTStatus status = SerialBT.begin("ESP32-Master", true);
   if (!status) {
-    Serial.println("Bluetooth init failed!");
+    Serial.printf("Bluetooth init failed! (%s)\n", status.toString());
     while (true) {
       delay(1000);
     }
@@ -43,7 +43,7 @@ void setup() {
   if (status) {
     Serial.println("Connected!");
   } else {
-    Serial.println("Connection failed.");
+    Serial.printf("Connection failed! (%s)\n", status.toString());
   }
 }
 

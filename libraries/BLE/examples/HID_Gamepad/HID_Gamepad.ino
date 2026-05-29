@@ -25,33 +25,39 @@
 #include <BLE.h>
 #include <HIDTypes.h>
 
+// HID Report Descriptor for a gamepad with 2 axes (X, Y) and 8 buttons.
+// The macros (USAGE_PAGE, COLLECTION, etc.) are defined in HIDTypes.h.
+// Each macro produces the HID short-item prefix byte; the parameter is the
+// number of data bytes that follow (usually 1). See HIDTypes.h for details.
+// clang-format off
 static const uint8_t kReportMap[] = {
-  0x05, 0x01,  // Usage Page (Generic Desktop)
-  0x09, 0x05,  // Usage (Gamepad)
-  0xA1, 0x01,  // Collection (Application)
-  0x85, 0x01,  //   Report ID (1)
+  USAGE_PAGE(1),      0x01,  // Generic Desktop
+  USAGE(1),           0x05,  // Gamepad
+  COLLECTION(1),      0x01,  // Application
+  REPORT_ID(1),       0x01,
   // 2 axes: X and Y
-  0x09, 0x01,  //   Usage (Pointer)
-  0xA1, 0x00,  //   Collection (Physical)
-  0x09, 0x30,  //     Usage (X)
-  0x09, 0x31,  //     Usage (Y)
-  0x15, 0x81,  //     Logical Minimum (-127)
-  0x25, 0x7F,  //     Logical Maximum (127)
-  0x75, 0x08,  //     Report Size (8)
-  0x95, 0x02,  //     Report Count (2)
-  0x81, 0x02,  //     Input (Data, Variable, Absolute)
-  0xC0,        //   End Collection
+  USAGE(1),           0x01,  //   Pointer
+  COLLECTION(1),      0x00,  //   Physical
+  USAGE(1),           0x30,  //     X axis
+  USAGE(1),           0x31,  //     Y axis
+  LOGICAL_MINIMUM(1), 0x81,  //     -127
+  LOGICAL_MAXIMUM(1), 0x7F,  //     127
+  REPORT_SIZE(1),     0x08,  //     8 bits per axis
+  REPORT_COUNT(1),    0x02,  //     2 axes
+  HIDINPUT(1),        0x02,  //     Data, Variable, Absolute
+  END_COLLECTION(0),         //   End Physical
   // 8 buttons
-  0x05, 0x09,  //   Usage Page (Button)
-  0x19, 0x01,  //   Usage Minimum (Button 1)
-  0x29, 0x08,  //   Usage Maximum (Button 8)
-  0x15, 0x00,  //   Logical Minimum (0)
-  0x25, 0x01,  //   Logical Maximum (1)
-  0x75, 0x01,  //   Report Size (1)
-  0x95, 0x08,  //   Report Count (8)
-  0x81, 0x02,  //   Input (Data, Variable, Absolute)
-  0xC0         // End Collection
+  USAGE_PAGE(1),      0x09,  //   Button
+  USAGE_MINIMUM(1),   0x01,  //   Button 1
+  USAGE_MAXIMUM(1),   0x08,  //   Button 8
+  LOGICAL_MINIMUM(1), 0x00,
+  LOGICAL_MAXIMUM(1), 0x01,
+  REPORT_SIZE(1),     0x01,  //   1 bit per button
+  REPORT_COUNT(1),    0x08,  //   8 buttons
+  HIDINPUT(1),        0x02,  //   Data, Variable, Absolute
+  END_COLLECTION(0)          // End Application
 };
+// clang-format on
 
 struct __attribute__((packed)) GamepadReport {
   uint8_t reportId;
@@ -77,10 +83,15 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE HID Gamepad");
 
-  BLE.begin("ESP32-Gamepad");
+  BTStatus status = BLE.begin("ESP32-Gamepad");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
+    return;
+  }
 
   BLESecurity sec = BLE.getSecurity();
   sec.setIOCapability(BLESecurity::NoInputNoOutput);
+  // bonding = true, MITM protection = false, Secure Connections = true
   sec.setAuthenticationMode(true, false, true);
 
   BLEServer server = BLE.createServer();
@@ -96,7 +107,9 @@ void setup() {
 
   BLEHIDDevice hid(server);
   hid.manufacturer("Espressif");
+  // PnP: vendor source (0x02 = USB-IF), vendor ID, product ID, product version
   hid.pnp(0x02, 0x05AC, 0x820A, 0x0110);
+  // HID Info: country code (0x00 = not localized), flags (0x01 = normally connectable)
   hid.hidInfo(0x00, 0x01);
   hid.reportMap(kReportMap, sizeof(kReportMap));
   hid.setBatteryLevel(100);

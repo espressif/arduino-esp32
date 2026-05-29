@@ -5,6 +5,7 @@
 //   3. bond_management  — list bonds, delete all, verify empty
 //   4. memory_release   — end(true)
 
+#include <Arduino.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "BluetoothSerial.h"

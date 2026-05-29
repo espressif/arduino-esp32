@@ -37,7 +37,6 @@
  */
 class BLELockGuard {
 public:
-
   /**
    * @brief Acquire the mutex, blocking indefinitely until available.
    *

@@ -24,9 +24,9 @@
 #include <Arduino.h>
 #include <BLE.h>
 
-static BLEUUID hidServiceUUID((uint16_t)0x1812);
-static BLEUUID reportCharUUID((uint16_t)0x2A4D);
-static BLEUUID reportRefDescUUID((uint16_t)0x2908);
+static BLEUUID hidServiceUUID((uint16_t)0x1812);     // HID Service (Bluetooth SIG assigned)
+static BLEUUID reportCharUUID((uint16_t)0x2A4D);     // HID Report characteristic
+static BLEUUID reportRefDescUUID((uint16_t)0x2908);  // Report Reference descriptor
 
 struct __attribute__((packed)) GamepadReport {
   uint8_t reportId;
@@ -120,13 +120,15 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE HID Client");
 
-  if (!BLE.begin("ESP32-HID-Client")) {
-    Serial.println("BLE init failed!");
+  BTStatus initStatus = BLE.begin("ESP32-HID-Client");
+  if (!initStatus) {
+    Serial.printf("BLE init failed! (%s)\n", initStatus.toString());
     return;
   }
 
   BLESecurity sec = BLE.getSecurity();
   sec.setIOCapability(BLESecurity::NoInputNoOutput);
+  // bonding = true, MITM protection = false, Secure Connections = true
   sec.setAuthenticationMode(true, false, true);
 
   client = BLE.createClient();

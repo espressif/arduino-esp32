@@ -65,8 +65,7 @@ uint16_t BLERemoteDescriptor::getHandle() const {
  *       by the BLERemoteService that discovered it.
  */
 BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
-  return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this())
-                               : BLERemoteCharacteristic();
+  return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
 }
 
 /**

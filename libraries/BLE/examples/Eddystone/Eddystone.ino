@@ -5,7 +5,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE Eddystone Example");
 
-  BLE.begin("ESP32-Eddystone");
+  BTStatus status = BLE.begin("ESP32-Eddystone");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
+    return;
+  }
 
   // Eddystone URL
   BLEEddystoneURL eddystoneUrl;
@@ -14,7 +18,7 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = eddystoneUrl.getAdvertisementData();
-  advData.setFlags(0x06);
+  advData.setFlags(0x06);  // General Discoverable + BR/EDR Not Supported
   advData.setCompleteServices(BLEEddystoneURL::serviceUUID());
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);

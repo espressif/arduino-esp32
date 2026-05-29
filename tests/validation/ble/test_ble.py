@@ -621,28 +621,20 @@ def _phase_hid_smoke(server, client):
     # order follows the GATT table: Report Map (extRefDesc) is registered
     # before Boot Input / Boot Output.
     m_ext = client.expect(r"\[CLIENT\] Phase25 extRefDesc=([01])", timeout=10)
-    assert int(m_ext.group(1)) == 1, (
-        "Report Map must have an External Report Reference descriptor (0x2907)"
-    )
+    assert int(m_ext.group(1)) == 1, "Report Map must have an External Report Reference descriptor (0x2907)"
 
     client.expect(r"\[CLIENT\] Phase25 bootIn canRead=[01] canNotify=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase25 bootOut canRead=[01] canWrite=[01] canWriteNR=[01]", timeout=10)
 
     m_rpt = client.expect(r"\[CLIENT\] Phase25 reportCount=(\d+)", timeout=10)
-    assert int(m_rpt.group(1)) >= 2, (
-        "Must have at least 2 Report characteristics (input + output)"
-    )
+    assert int(m_rpt.group(1)) >= 2, "Must have at least 2 Report characteristics (input + output)"
 
     m_boot = client.expect(
         r"\[CLIENT\] Phase25 bootInOk=([01]) bootOutOk=([01])",
         timeout=10,
     )
-    assert int(m_boot.group(1)) == 1, (
-        "Boot Keyboard Input must have Read + Notify properties"
-    )
-    assert int(m_boot.group(2)) == 1, (
-        "Boot Keyboard Output must have Read + Write + WriteNR properties"
-    )
+    assert int(m_boot.group(1)) == 1, "Boot Keyboard Input must have Read + Notify properties"
+    assert int(m_boot.group(2)) == 1, "Boot Keyboard Output must have Read + Write + WriteNR properties"
 
     client.expect_exact("[CLIENT] Phase25 done", timeout=30)
     server.expect_exact("[SERVER] Phase25 done", timeout=30)

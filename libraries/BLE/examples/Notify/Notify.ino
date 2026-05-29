@@ -11,6 +11,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
@@ -24,8 +25,9 @@ void setup() {
   Serial.println("=== BLE Notify Example ===");
 
   Serial.print("Initializing BLE... ");
-  if (!BLE.begin("ESP32-Notify")) {
-    Serial.println("FAILED!");
+  BTStatus initStatus = BLE.begin("ESP32-Notify");
+  if (!initStatus) {
+    Serial.printf("FAILED! (%s)\n", initStatus.toString());
     return;
   }
   Serial.println("OK");

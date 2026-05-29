@@ -58,9 +58,34 @@
 #define SET_REPORT (0x9)
 #define SET_IDLE   (0xa)
 
-/* HID Class Report Descriptor */
-/* Short items: size is 0, 1, 2 or 3 specifying 0, 1, 2 or 4 (four) bytes */
-/* of data as per HID Class standard */
+/**
+ * @name HID Report Descriptor short-item macros
+ *
+ * A HID Report Descriptor is a byte array that tells the host how to
+ * interpret the data a HID device sends. It is built from "short items",
+ * each consisting of a 1-byte prefix followed by 0, 1, 2, or 4 data bytes.
+ *
+ * The prefix byte encodes three things:
+ *   - bits [7:4] = tag  (what the item means, e.g. Usage Page, Report Size)
+ *   - bits [3:2] = type (0 = Main, 1 = Global, 2 = Local)
+ *   - bits [1:0] = size (number of data bytes: 0, 1, 2, or 3 meaning 4)
+ *
+ * These macros produce the prefix byte. The `size` parameter is the number
+ * of data bytes that follow (almost always 1). The data bytes are written
+ * as the next element(s) in the array.
+ *
+ * Example usage in a report descriptor array:
+ * @code
+ *   USAGE_PAGE(1),      0x01,   // Generic Desktop (1 data byte = 0x01)
+ *   USAGE(1),           0x06,   // Keyboard
+ *   COLLECTION(1),      0x01,   // Application
+ *   ...
+ *   END_COLLECTION(0)           // No data bytes
+ * @endcode
+ *
+ * Reference: Device Class Definition for HID 1.11, Section 6.2.2
+ * @{
+ */
 
 /* Main items */
 #ifdef ARDUINO_ARCH_ESP32
@@ -71,27 +96,27 @@
 #define OUTPUT(size) (0x90 | size)
 #endif
 #define FEATURE(size)        (0xb0 | size)
-#define COLLECTION(size)     (0xa0 | size)
-#define END_COLLECTION(size) (0xc0 | size)
+#define COLLECTION(size)     (0xa0 | size)  ///< Start a collection (0x01=Application, 0x00=Physical)
+#define END_COLLECTION(size) (0xc0 | size)  ///< Close the most recent Collection
 
-/* Global items */
-#define USAGE_PAGE(size)       (0x04 | size)
-#define LOGICAL_MINIMUM(size)  (0x14 | size)
-#define LOGICAL_MAXIMUM(size)  (0x24 | size)
-#define PHYSICAL_MINIMUM(size) (0x34 | size)
-#define PHYSICAL_MAXIMUM(size) (0x44 | size)
+/* Global items -- state persists until changed */
+#define USAGE_PAGE(size)       (0x04 | size)  ///< Category of usages (Generic Desktop, Keyboard, Button, Consumer, ...)
+#define LOGICAL_MINIMUM(size)  (0x14 | size)  ///< Minimum value the device reports
+#define LOGICAL_MAXIMUM(size)  (0x24 | size)  ///< Maximum value the device reports
+#define PHYSICAL_MINIMUM(size) (0x34 | size)  ///< Physical minimum (units-aware)
+#define PHYSICAL_MAXIMUM(size) (0x44 | size)  ///< Physical maximum (units-aware)
 #define UNIT_EXPONENT(size)    (0x54 | size)
 #define UNIT(size)             (0x64 | size)
-#define REPORT_SIZE(size)      (0x74 | size)  //bits
-#define REPORT_ID(size)        (0x84 | size)
-#define REPORT_COUNT(size)     (0x94 | size)  //bytes
+#define REPORT_SIZE(size)      (0x74 | size)  ///< Width of each field in bits
+#define REPORT_ID(size)        (0x84 | size)  ///< Tags subsequent fields with this ID for demultiplexing
+#define REPORT_COUNT(size)     (0x94 | size)  ///< Number of fields of REPORT_SIZE width
 #define PUSH(size)             (0xa4 | size)
 #define POP(size)              (0xb4 | size)
 
-/* Local items */
-#define USAGE(size)              (0x08 | size)
-#define USAGE_MINIMUM(size)      (0x18 | size)
-#define USAGE_MAXIMUM(size)      (0x28 | size)
+/* Local items -- apply only to the next Main item */
+#define USAGE(size)              (0x08 | size)  ///< Specific function (Keyboard, Mouse, X axis, Button 1, ...)
+#define USAGE_MINIMUM(size)      (0x18 | size)  ///< Start of a usage range
+#define USAGE_MAXIMUM(size)      (0x28 | size)  ///< End of a usage range
 #define DESIGNATOR_INDEX(size)   (0x38 | size)
 #define DESIGNATOR_MINIMUM(size) (0x48 | size)
 #define DESIGNATOR_MAXIMUM(size) (0x58 | size)
@@ -99,6 +124,8 @@
 #define STRING_MINIMUM(size)     (0x88 | size)
 #define STRING_MAXIMUM(size)     (0x98 | size)
 #define DELIMITER(size)          (0xa8 | size)
+
+/** @} */
 
 /* BLE Appearance values — HID category (Bluetooth Assigned Numbers §2.6) */
 #define BLE_APPEARANCE_HID_GENERIC         0x03C0

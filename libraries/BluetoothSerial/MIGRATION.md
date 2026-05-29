@@ -86,7 +86,7 @@ if (!s) { /* handle failure */ }
 SerialBT.end();
 
 // v4.0
-SerialBT.end();           // same behaviour
+SerialBT.end();           // same behavior
 SerialBT.end(true);       // also frees additional internal allocations
 ```
 

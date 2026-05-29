@@ -17,6 +17,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
 static const char *SVC_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
 static const char *CHR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 BLECharacteristic notifyChr;
@@ -37,8 +38,9 @@ void setup() {
   Serial.println("=== BLE Server Example ===");
 
   Serial.print("Initializing BLE... ");
-  if (!BLE.begin("MyServer")) {
-    Serial.println("FAILED!");
+  BTStatus initStatus = BLE.begin("MyServer");
+  if (!initStatus) {
+    Serial.printf("FAILED! (%s)\n", initStatus.toString());
     return;
   }
   Serial.println("OK");

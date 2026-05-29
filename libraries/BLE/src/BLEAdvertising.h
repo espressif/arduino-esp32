@@ -266,6 +266,21 @@ public:
   BTStatus configurePeriodicAdv(const PeriodicAdvConfig &config);
 
   /**
+   * @brief Configure periodic advertising with individual parameters (convenience overload).
+   * @param instance Extended advertising instance to attach to.
+   * @param intervalMin Minimum periodic interval (1.25 ms units).
+   * @param intervalMax Maximum periodic interval (1.25 ms units).
+   * @return BTStatus indicating success or error.
+   */
+  inline BTStatus configurePeriodicAdv(uint8_t instance, uint16_t intervalMin, uint16_t intervalMax) {
+    PeriodicAdvConfig cfg;
+    cfg.instance = instance;
+    cfg.intervalMin = intervalMin;
+    cfg.intervalMax = intervalMax;
+    return configurePeriodicAdv(cfg);
+  }
+
+  /**
    * @brief Set the payload for periodic advertising.
    * @param instance Extended advertising instance index.
    * @param data Periodic advertising payload.

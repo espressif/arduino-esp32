@@ -546,11 +546,11 @@ void loop() {
   // Phase 13: BLEStream (server side)
   if (currentPhase >= 13 && !bleStreamInitDone) {
     bleStreamInitDone = true;
-    bleStream.onConnect([](const BLEConnInfo& connInfo) {
+    bleStream.onConnect([](const BLEConnInfo &connInfo) {
       syncPhaseFromHost();
       bleStreamConnectCb = true;
     });
-    bleStream.onDisconnect([](const BLEConnInfo& connInfo, uint8_t reason) {
+    bleStream.onDisconnect([](const BLEConnInfo &connInfo, uint8_t reason) {
       syncPhaseFromHost();
       bleStreamDisconnectCb = true;
     });
@@ -1288,12 +1288,8 @@ void loop() {
       hid.manufacturer("Espressif");
       hid.pnp(0x02, 0x303A, 0x1001, 0x0100);
       hid.hidInfo(0x00, 0x01);
-      static const uint8_t kbdReportMap[] = {
-        0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x01,
-        0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
-        0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
-        0x75, 0x08, 0x95, 0x01, 0x81, 0x03, 0xC0
-      };
+      static const uint8_t kbdReportMap[] = {0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x01, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
+                                             0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x75, 0x08, 0x95, 0x01, 0x81, 0x03, 0xC0};
       hid.reportMap(kbdReportMap, sizeof(kbdReportMap));
 
       BLECharacteristic inRpt = hid.inputReport(1);

@@ -23,30 +23,30 @@
 
 void setup() {
   Serial.begin(115200);
-  if (!BLE.begin("Periodic-ADV")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("Periodic-ADV");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 
   BLEAdvertising adv = BLE.getAdvertising();
 
+  // Extended advertising parameters (non-connectable for periodic use)
   BLEAdvertising::ExtAdvConfig extConfig;
-  extConfig.instance = 0;
-  extConfig.type = BLEAdvType::NonConnectable;
-  extConfig.primaryPhy = BLEPhy::PHY_1M;
-  extConfig.secondaryPhy = BLEPhy::PHY_1M;
-  extConfig.sid = 1;
+  extConfig.instance = 0;                       // Advertising set index
+  extConfig.type = BLEAdvType::NonConnectable;  // Periodic advertising requires non-connectable
+  extConfig.primaryPhy = BLEPhy::PHY_1M;        // Primary PHY
+  extConfig.secondaryPhy = BLEPhy::PHY_1M;      // Secondary PHY
+  extConfig.sid = 1;                            // Advertising Set Identifier (scanner uses this to sync)
   adv.configureExtended(extConfig);
 
   BLEAdvertisementData extData;
   extData.setName("ESP32-Periodic");
   adv.setExtAdvertisementData(0, extData);
 
-  BLEAdvertising::PeriodicAdvConfig periodicConfig;
-  periodicConfig.instance = 0;
-  periodicConfig.intervalMin = 24;  // 30ms (24 * 1.25ms)
-  periodicConfig.intervalMax = 24;
-  adv.configurePeriodicAdv(periodicConfig);
+  // Periodic advertising: broadcasts data at fixed intervals without connections.
+  // Interval is in 1.25 ms units: 24 * 1.25 ms = 30 ms
+  adv.configurePeriodicAdv(0, 24, 24);
 
   adv.startExtended(0);
   adv.startPeriodicAdv(0);

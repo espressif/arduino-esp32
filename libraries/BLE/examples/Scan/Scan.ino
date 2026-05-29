@@ -16,8 +16,9 @@ void setup() {
   Serial.println("=== BLE Scan Example ===");
 
   Serial.print("Initializing BLE... ");
-  if (!BLE.begin("Scanner")) {
-    Serial.println("FAILED!");
+  BTStatus status = BLE.begin("Scanner");
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
     return;
   }
   Serial.println("OK");
@@ -28,9 +29,9 @@ void setup() {
     return;
   }
 
-  scan.setActiveScan(true);
-  scan.setInterval(100);
-  scan.setWindow(99);
+  scan.setActiveScan(true);  // Request scan response data from advertisers
+  scan.setInterval(100);     // Scan interval in 0.625 ms units (100 = 62.5 ms)
+  scan.setWindow(99);        // Scan window in 0.625 ms units (nearly continuous scanning)
   scan.setFilterDuplicates(true);
 
   Serial.println("Starting scan for 5 seconds...");

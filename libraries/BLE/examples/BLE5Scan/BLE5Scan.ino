@@ -31,8 +31,9 @@ void onSyncLost(uint16_t syncHandle) {
 
 void setup() {
   Serial.begin(115200);
-  if (!BLE.begin("Periodic-Sync")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("Periodic-Sync");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 

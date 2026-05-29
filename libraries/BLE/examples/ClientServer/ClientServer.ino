@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
 #define SERVICE_UUID "91bad492-b950-4226-aa2b-4ede9fa42f59"
 #define CHAR_UUID    "0d563a58-196a-48ce-ace2-dfec78acc814"
 
@@ -12,7 +13,11 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE Client + Server Coexistence Example");
 
-  BLE.begin("ESP32-DualRole");
+  BTStatus status = BLE.begin("ESP32-DualRole");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
+    return;
+  }
 
   // --- Server side ---
   BLEServer server = BLE.createServer();

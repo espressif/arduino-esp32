@@ -5,18 +5,23 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE iBeacon Example");
 
-  BLE.begin("ESP32-iBeacon");
+  BTStatus status = BLE.begin("ESP32-iBeacon");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
+    return;
+  }
 
   BLEBeacon beacon;
-  beacon.setManufacturerId(0x004C);
+  beacon.setManufacturerId(0x004C);  // Apple's company ID (required for iBeacon format)
+  // Proximity UUID: unique identifier for your beacon deployment (generate your own)
   beacon.setProximityUUID(BLEUUID("8ec76ea3-6668-48da-9f9a-e2c2b3a46cae"));
-  beacon.setMajor(1);
-  beacon.setMinor(1);
-  beacon.setSignalPower(-59);
+  beacon.setMajor(1);          // Group identifier (e.g., building or floor)
+  beacon.setMinor(1);          // Individual beacon within the group
+  beacon.setSignalPower(-59);  // Calibrated TX power at 1 meter (dBm), used for distance estimation
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = beacon.getAdvertisementData();
-  advData.setFlags(0x06);
+  advData.setFlags(0x06);  // General Discoverable + BR/EDR Not Supported
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);
   adv.start();

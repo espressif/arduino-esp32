@@ -1495,11 +1495,14 @@ void setup() {
         bool haveHid = false;
         bool haveBat = false;
         for (auto &rs : svcs) {
-          if (rs.getUUID() == hidSvcUUID) haveHid = true;
-          if (rs.getUUID() == batSvcUUID) haveBat = true;
+          if (rs.getUUID() == hidSvcUUID) {
+            haveHid = true;
+          }
+          if (rs.getUUID() == batSvcUUID) {
+            haveBat = true;
+          }
         }
-        Serial.printf("[CLIENT] Phase25 services=%u haveHid=%d haveBat=%d\n",
-                       (unsigned)svcs.size(), (int)haveHid, (int)haveBat);
+        Serial.printf("[CLIENT] Phase25 services=%u haveHid=%d haveBat=%d\n", (unsigned)svcs.size(), (int)haveHid, (int)haveBat);
 
         BLERemoteService hidSvc = hc.getService(hidSvcUUID);
         if (hidSvc) {
@@ -1523,13 +1526,13 @@ void setup() {
             }
             if (u == bootInUUID) {
               bootInOk = ch.canRead() && ch.canNotify();
-              Serial.printf("[CLIENT] Phase25 bootIn canRead=%d canNotify=%d\n",
-                             (int)ch.canRead(), (int)ch.canNotify());
+              Serial.printf("[CLIENT] Phase25 bootIn canRead=%d canNotify=%d\n", (int)ch.canRead(), (int)ch.canNotify());
             }
             if (u == bootOutUUID) {
               bootOutOk = ch.canRead() && ch.canWrite() && ch.canWriteNoResponse();
-              Serial.printf("[CLIENT] Phase25 bootOut canRead=%d canWrite=%d canWriteNR=%d\n",
-                             (int)ch.canRead(), (int)ch.canWrite(), (int)ch.canWriteNoResponse());
+              Serial.printf(
+                "[CLIENT] Phase25 bootOut canRead=%d canWrite=%d canWriteNR=%d\n", (int)ch.canRead(), (int)ch.canWrite(), (int)ch.canWriteNoResponse()
+              );
             }
             if (u == reportMapUUID) {
               BLEUUID extRefUUID((uint16_t)0x2907);
@@ -1540,8 +1543,7 @@ void setup() {
           }
 
           Serial.printf("[CLIENT] Phase25 reportCount=%d\n", reportCount);
-          Serial.printf("[CLIENT] Phase25 bootInOk=%d bootOutOk=%d\n",
-                         (int)bootInOk, (int)bootOutOk);
+          Serial.printf("[CLIENT] Phase25 bootInOk=%d bootOutOk=%d\n", (int)bootInOk, (int)bootOutOk);
         }
         hc.disconnect();
       }

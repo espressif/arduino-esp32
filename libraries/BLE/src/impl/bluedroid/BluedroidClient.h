@@ -44,8 +44,8 @@ struct BLEClient::Impl : std::enable_shared_from_this<BLEClient::Impl> {
   // Bluedroid delivers completions without a per-characteristic token.
   BLESync readSync;
   BLESync writeSync;
-  BLESync mtuSync;       // For MTU exchange
-  BLESync rssiSync;      // For RSSI read
+  BLESync mtuSync;   // For MTU exchange
+  BLESync rssiSync;  // For RSSI read
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   ~Impl();

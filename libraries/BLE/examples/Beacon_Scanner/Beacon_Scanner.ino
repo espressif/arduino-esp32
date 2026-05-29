@@ -106,8 +106,9 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE Beacon Scanner");
 
-  if (!BLE.begin("BeaconScanner")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("BeaconScanner");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 

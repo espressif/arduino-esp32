@@ -290,7 +290,8 @@ BLECharacteristic BLEHIDDevice::bootInput() {
  */
 BLECharacteristic BLEHIDDevice::bootOutput() {
   if (!_bootOutputChar) {
-    _bootOutputChar = _hidSvc.createCharacteristic(kBootOutputUUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
+    _bootOutputChar =
+      _hidSvc.createCharacteristic(kBootOutputUUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
   }
   return _bootOutputChar;
 }

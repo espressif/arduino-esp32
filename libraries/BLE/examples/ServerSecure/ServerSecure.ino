@@ -33,14 +33,16 @@ void onAuthDone(const BLEConnInfo &conn, bool success) {
 
 void setup() {
   Serial.begin(115200);
-  if (!BLE.begin("Secure Server")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("Secure Server");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 
   BLESecurity sec = BLE.getSecurity();
   sec.setStaticPassKey(123456);
   sec.setIOCapability(BLESecurity::DisplayOnly);
+  // bonding = true, MITM protection = true, Secure Connections = true
   sec.setAuthenticationMode(true, true, true);
   sec.onAuthenticationComplete(onAuthDone);
   sec.onPassKeyDisplay([](const BLEConnInfo &conn, uint32_t passKey) {
@@ -48,12 +50,15 @@ void setup() {
   });
 
   BLEServer server = BLE.createServer();
+  // Custom UUID for the service (use https://www.uuidgenerator.net/ to create your own)
   BLEService svc = server.createService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 
+  // Secure characteristic: requires authentication (passkey pairing) for read/write
   BLECharacteristic secureChar =
     svc.createCharacteristic("ff1d2614-e2d6-4c87-9154-6625d39ca7f8", BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthenticatedReadWrite);
   secureChar.setValue("Secret Data");
 
+  // Open characteristic: accessible without pairing
   BLECharacteristic openChar =
     svc.createCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8", BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
   openChar.setValue("Public Data");

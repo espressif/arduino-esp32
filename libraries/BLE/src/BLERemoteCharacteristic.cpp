@@ -160,8 +160,7 @@ BTStatus BLERemoteCharacteristic::writeValue(uint8_t value, bool withResponse) {
  *       by the BLEClient that discovered it.
  */
 BLERemoteService BLERemoteCharacteristic::getRemoteService() const {
-  return (_impl && _impl->service) ? BLERemoteService(_impl->service->shared_from_this())
-                                   : BLERemoteService();
+  return (_impl && _impl->service) ? BLERemoteService(_impl->service->shared_from_this()) : BLERemoteService();
 }
 
 /**

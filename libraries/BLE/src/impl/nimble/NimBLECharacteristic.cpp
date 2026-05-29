@@ -248,7 +248,7 @@ int BLECharacteristic::Impl::descAccessCallback(uint16_t conn_handle, uint16_t a
  * @param length Number of bytes at @a data, or 0 to use the stored value.
  * @return @c OK when the fan-out completes, or a prior error if the attribute is not registered; individual connections may log failures.
  * @note Notifications are enabled when CCCD bit 0 is set by the client (0x0001).
- *       GATT §4.10: notifications have no ATT-layer acknowledgement from the client.
+ *       GATT §4.10: notifications have no ATT-layer acknowledgment from the client.
  *       Delivers through NimBLE @c ble_gatts_notify_custom; stack limits and MTU apply.
  */
 BTStatus BLECharacteristic::notify(const uint8_t *data, size_t length) {

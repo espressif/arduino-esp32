@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs -- must match the ServerSecure example
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID charUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
@@ -11,10 +12,15 @@ void setup() {
   Serial.begin(115200);
   Serial.println("BLE Secure Client Example");
 
-  BLE.begin("ESP32-SecureClient");
+  BTStatus initStatus = BLE.begin("ESP32-SecureClient");
+  if (!initStatus) {
+    Serial.printf("BLE init failed! (%s)\n", initStatus.toString());
+    return;
+  }
 
   BLESecurity sec = BLE.getSecurity();
   sec.setIOCapability(BLESecurity::DisplayYesNo);
+  // bonding = true, MITM protection = true, Secure Connections = true
   sec.setAuthenticationMode(true, true, true);
   sec.onConfirmPassKey([](const BLEConnInfo &conn, uint32_t passkey) -> bool {
     Serial.printf("Confirm passkey: %06lu (y/n)? Auto-accepting.\n", (unsigned long)passkey);

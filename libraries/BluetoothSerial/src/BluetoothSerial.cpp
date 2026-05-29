@@ -453,9 +453,7 @@ void BluetoothSerial::Impl::gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_
       }
       break;
 
-    case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:
-      xEventGroupSetBits(s_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED);
-      break;
+    case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT: xEventGroupSetBits(s_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED); break;
 
     default: break;
   }

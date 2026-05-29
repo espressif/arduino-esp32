@@ -23,7 +23,7 @@ void setup() {
 
   BTStatus status = SerialBT.begin("ESP32-Bonds");
   if (!status) {
-    Serial.println("Bluetooth init failed!");
+    Serial.printf("Bluetooth init failed! (%s)\n", status.toString());
     while (true) {
       delay(1000);
     }
@@ -47,7 +47,7 @@ void loop() {
       case 'D':
       {
         BTStatus s = SerialBT.deleteAllBonds();
-        Serial.printf("Delete all bonds: %s\n", s ? "OK" : "Failed");
+        Serial.printf("Delete all bonds: %s\n", s.toString());
         printBondedDevices();
         break;
       }

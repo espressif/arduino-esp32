@@ -25,12 +25,14 @@ void onAdvComplete(uint8_t instance) {
 
 void setup() {
   Serial.begin(115200);
-  if (!BLE.begin("BLE5-Server")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("BLE5-Server");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 
   BLEServer server = BLE.createServer();
+  // Short 16-bit UUIDs (custom, for demo purposes only -- use 128-bit UUIDs in production)
   BLEService svc = server.createService("ABCD");
   svc.createCharacteristic("1234", BLEProperty::Read, BLEPermissions::OpenRead).setValue("Hello BLE5");
 
@@ -42,12 +44,13 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
 
+  // Extended advertising parameters for instance 0
   BLEAdvertising::ExtAdvConfig config;
-  config.instance = 0;
-  config.type = BLEAdvType::ConnectableScannable;
-  config.primaryPhy = BLEPhy::PHY_1M;
-  config.secondaryPhy = BLEPhy::PHY_2M;
-  config.sid = 1;
+  config.instance = 0;                             // Advertising set index
+  config.type = BLEAdvType::ConnectableScannable;  // Allow connections and scan requests
+  config.primaryPhy = BLEPhy::PHY_1M;              // 1M PHY for initial advertisement
+  config.secondaryPhy = BLEPhy::PHY_2M;            // 2M PHY for auxiliary data (faster)
+  config.sid = 1;                                  // Advertising Set Identifier (for filtering)
   adv.configureExtended(config);
 
   BLEAdvertisementData data;

@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs -- must match the Server example
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID charUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
@@ -102,8 +103,9 @@ void setup() {
   Serial.println("=== BLE Client Example ===");
 
   Serial.print("Initializing BLE... ");
-  if (!BLE.begin("MyClient")) {
-    Serial.println("FAILED!");
+  BTStatus initStatus = BLE.begin("MyClient");
+  if (!initStatus) {
+    Serial.printf("FAILED! (%s)\n", initStatus.toString());
     return;
   }
   Serial.println("OK");

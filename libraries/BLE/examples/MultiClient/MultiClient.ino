@@ -12,7 +12,7 @@
 #include <BLE.h>
 #include <algorithm>
 
-static BLEUUID svcUUID("180D");
+static BLEUUID svcUUID("180D");  // Heart Rate Service (Bluetooth SIG assigned UUID)
 
 void onClientDisconnected(BLEClient client, const BLEConnInfo &conn, uint8_t reason) {
   Serial.printf("Client disconnected from %s (reason 0x%02X)\n", conn.getAddress().toString().c_str(), reason);
@@ -20,8 +20,9 @@ void onClientDisconnected(BLEClient client, const BLEConnInfo &conn, uint8_t rea
 
 void setup() {
   Serial.begin(115200);
-  if (!BLE.begin("MultiClient")) {
-    Serial.println("BLE init failed!");
+  BTStatus status = BLE.begin("MultiClient");
+  if (!status) {
+    Serial.printf("BLE init failed! (%s)\n", status.toString());
     return;
   }
 
