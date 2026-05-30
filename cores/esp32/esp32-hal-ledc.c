@@ -591,7 +591,13 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     } else {
       // The new duty takes effect on the next PWM cycle (TRM §35.3.3).
       // Wait one full period so the start duty is applied before fading.
-      delay(1000 / bus->freq_hz + 1);
+      // Use the actual hardware frequency (not the cached field) to handle
+      // clock-division rounding, shared timers, and already-used channels.
+      uint32_t actual_freq = ledc_get_freq(group, bus->timer_num);
+      if (actual_freq == 0) {
+        actual_freq = 1;  // guard against division by zero; should not happen
+      }
+      delay((1000 + actual_freq - 1) / actual_freq);
       success = (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) == ESP_OK);
       if (!success) {
         log_e("ledc_set_fade_time_and_start failed");
