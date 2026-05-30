@@ -20,6 +20,11 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// Custom UUIDs for this example (use https://www.uuidgenerator.net/ to create your own)
+static const char *SVC_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+static const char *SECURE_CHR_UUID = "ff1d2614-e2d6-4c87-9154-6625d39ca7f8";
+static const char *OPEN_CHR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+
 void onAuthDone(const BLEConnInfo &conn, bool success) {
   Serial.printf("Auth %s with %s\n", success ? "OK" : "FAILED", conn.getAddress().toString().c_str());
   if (success) {
@@ -50,22 +55,21 @@ void setup() {
   });
 
   BLEServer server = BLE.createServer();
-  // Custom UUID for the service (use https://www.uuidgenerator.net/ to create your own)
-  BLEService svc = server.createService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+  BLEService svc = server.createService(SVC_UUID);
 
   // Secure characteristic: requires authentication (passkey pairing) for read/write
   BLECharacteristic secureChar =
-    svc.createCharacteristic("ff1d2614-e2d6-4c87-9154-6625d39ca7f8", BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthenticatedReadWrite);
+    svc.createCharacteristic(SECURE_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthenticatedReadWrite);
   secureChar.setValue("Secret Data");
 
   // Open characteristic: accessible without pairing
   BLECharacteristic openChar =
-    svc.createCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8", BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
+    svc.createCharacteristic(OPEN_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
   openChar.setValue("Public Data");
 
   server.start();
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.addServiceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+  adv.addServiceUUID(SVC_UUID);
   adv.start();
 }
 

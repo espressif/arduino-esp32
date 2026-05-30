@@ -12,8 +12,8 @@
 #include <BLE.h>
 
 // Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+static const char *SVC_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
+static const char *CHR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
 
 BLECharacteristic notifyChr;
 uint32_t counter = 0;
@@ -52,7 +52,7 @@ void setup() {
   });
 
   Serial.print("Creating service... ");
-  BLEService svc = server.createService(BLEUUID(SERVICE_UUID));
+  BLEService svc = server.createService(BLEUUID(SVC_UUID));
   if (!svc) {
     Serial.println("FAILED!");
     return;
@@ -60,7 +60,7 @@ void setup() {
   Serial.println("OK");
 
   Serial.print("Creating notify characteristic... ");
-  notifyChr = svc.createCharacteristic(BLEUUID(CHARACTERISTIC_UUID), BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  notifyChr = svc.createCharacteristic(BLEUUID(CHR_UUID), BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
   if (!notifyChr) {
     Serial.println("FAILED!");
     return;
@@ -78,7 +78,7 @@ void setup() {
 
   Serial.print("Starting advertising... ");
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+  adv.addServiceUUID(BLEUUID(SVC_UUID));
   status = adv.start();
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());

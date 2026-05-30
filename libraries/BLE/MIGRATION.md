@@ -594,12 +594,14 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pAdv->reset()` | `adv.reset()` | |
 | N/A | `adv.clearServiceUUIDs()` | New |
 | N/A | `adv.setName("name")` | New |
-| N/A | `adv.configureExtended(config)` | New: BLE5 |
+| N/A | `adv.setExtType(inst, type)` | New: BLE5 |
+| N/A | `adv.setExtPhy(inst, pri, sec)` | New: BLE5 |
+| N/A | `adv.setExtSID(inst, sid)` | New: BLE5 |
 | N/A | `adv.startExtended(instance, dur)` | New: BLE5 |
 | N/A | `adv.stopExtended(instance)` | New: BLE5 |
 | N/A | `adv.removeExtended(instance)` | New: BLE5 |
 | N/A | `adv.clearExtended()` | New: BLE5 |
-| N/A | `adv.configurePeriodicAdv(config)` | New: BLE5 |
+| N/A | `adv.setPeriodicAdvInterval(inst, min, max)` | New: BLE5 |
 | N/A | `adv.setPeriodicAdvData(instance, data)` | New: BLE5 |
 | N/A | `adv.startPeriodicAdv(instance)` | New: BLE5 |
 | N/A | `adv.stopPeriodicAdv(instance)` | New: BLE5 |
@@ -1119,8 +1121,8 @@ These features are new and were not available in v3.x:
 | Connection parameter updates | `server.updateConnParams(h, params)`, `client.updateConnParams(params)` |
 | BLE5 PHY selection (server/client) | `setPhy(h, tx, rx)`, `getPhy(h, tx, rx)` |
 | BLE5 Data Length Extension | `setDataLen(h, octets, time)` |
-| BLE5 extended advertising | `adv.configureExtended(config)`, `adv.startExtended(...)`, `adv.stopExtended(...)`, `adv.removeExtended(...)`, `adv.clearExtended()` |
-| BLE5 periodic advertising | `adv.configurePeriodicAdv(config)`, `adv.setPeriodicAdvData(...)`, `adv.startPeriodicAdv(...)`, `adv.stopPeriodicAdv(...)` |
+| BLE5 extended advertising | `adv.setExtType(...)`, `adv.setExtPhy(...)`, `adv.setExtSID(...)`, `adv.startExtended(...)`, `adv.stopExtended(...)`, `adv.removeExtended(...)`, `adv.clearExtended()` |
+| BLE5 periodic advertising | `adv.setPeriodicAdvInterval(...)`, `adv.setPeriodicAdvData(...)`, `adv.startPeriodicAdv(...)`, `adv.stopPeriodicAdv(...)` |
 | BLE5 extended scanning | `scan.startExtended(dur, coded, uncoded)`, `scan.stopExtended()` |
 | BLE5 periodic sync | `scan.createPeriodicSync(addr, sid)` |
 | Async (non-blocking) connect | `client.connectAsync(addr, phy)` |

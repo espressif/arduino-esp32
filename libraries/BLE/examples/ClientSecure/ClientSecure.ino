@@ -1,3 +1,16 @@
+/*
+ * Secure BLE Client Example -- New API
+ *
+ * Scans for a secure BLE server, connects with authenticated pairing,
+ * and reads a protected characteristic. Demonstrates BLESecurity
+ * configuration on the client side: IO capability, passkey confirmation,
+ * and authentication callbacks.
+ *
+ * Pair with the ServerSecure example on another ESP32.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+
 #include <Arduino.h>
 #include <BLE.h>
 

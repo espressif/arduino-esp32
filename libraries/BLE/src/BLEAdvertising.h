@@ -168,30 +168,69 @@ public:
   // --- Extended Advertising (BLE5) ---
 
   /**
-   * @brief Parameters for a BLE 5 extended advertising set (one instance).
+   * @brief Set the PDU type for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param type Advertising type (connectable, scannable, etc.).
    */
-  struct ExtAdvConfig {
-    uint8_t instance = 0;                                ///< Advertising instance index.
-    BLEAdvType type = BLEAdvType::ConnectableScannable;  ///< PDU type for this instance.
-    BLEPhy primaryPhy = BLEPhy::PHY_1M;                  ///< Primary advertising PHY.
-    BLEPhy secondaryPhy = BLEPhy::PHY_1M;                ///< Secondary (aux) advertising PHY.
-    int8_t txPower = 127;                                ///< TX power in dBm (127 = no preference).
-    uint16_t intervalMin = 0x30;                         ///< Minimum advertising interval (controller units).
-    uint16_t intervalMax = 0x30;                         ///< Maximum advertising interval (controller units).
-    uint8_t channelMap = 0x07;                           ///< Bitmask of advertising channels (37/38/39).
-    uint8_t sid = 0;                                     ///< Advertising Set Identifier.
-    bool anonymous = false;                              ///< If true, omit the advertiser address.
-    bool includeTxPower = false;                         ///< If true, include TX power in the header.
-    bool scanReqNotify = false;                          ///< If true, notify on scan requests.
-  };
+  void setExtType(uint8_t instance, BLEAdvType type);
 
   /**
-   * @brief Configure an extended advertising instance.
-   * @param config Configuration parameters for the instance.
-   * @return BTStatus indicating success or error.
-   * @note Requires BLE5_SUPPORTED.
+   * @brief Set the primary and secondary PHY for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param primaryPhy Primary advertising PHY (used for initial advertisement).
+   * @param secondaryPhy Secondary (aux) advertising PHY.
    */
-  BTStatus configureExtended(const ExtAdvConfig &config);
+  void setExtPhy(uint8_t instance, BLEPhy primaryPhy, BLEPhy secondaryPhy);
+
+  /**
+   * @brief Set the TX power for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param txPower Transmit power in dBm (127 = no preference, use controller default).
+   */
+  void setExtTxPower(uint8_t instance, int8_t txPower);
+
+  /**
+   * @brief Set the advertising interval range for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param minInterval Minimum advertising interval (controller units, 0.625 ms each).
+   * @param maxInterval Maximum advertising interval (controller units, 0.625 ms each).
+   */
+  void setExtInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval);
+
+  /**
+   * @brief Set the channel map for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param channelMap Bitmask of advertising channels: bit 0 = ch 37, bit 1 = ch 38, bit 2 = ch 39.
+   */
+  void setExtChannelMap(uint8_t instance, uint8_t channelMap);
+
+  /**
+   * @brief Set the Advertising Set Identifier (SID) for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param sid SID value (used by scanners for filtering and periodic sync).
+   */
+  void setExtSID(uint8_t instance, uint8_t sid);
+
+  /**
+   * @brief Enable or disable anonymous advertising (omit advertiser address).
+   * @param instance Advertising instance index.
+   * @param anonymous If true, the advertiser address is omitted from PDUs.
+   */
+  void setExtAnonymous(uint8_t instance, bool anonymous);
+
+  /**
+   * @brief Include or exclude TX power level in the extended advertising header.
+   * @param instance Advertising instance index.
+   * @param include If true, TX power is included in the extended header.
+   */
+  void setExtIncludeTxPower(uint8_t instance, bool include);
+
+  /**
+   * @brief Enable or disable scan request notifications for an extended advertising instance.
+   * @param instance Advertising instance index.
+   * @param enable If true, the stack notifies on incoming scan requests.
+   */
+  void setExtScanReqNotify(uint8_t instance, bool enable);
 
   /**
    * @brief Set the advertisement data for an extended advertising instance.
@@ -249,36 +288,19 @@ public:
   // --- Periodic Advertising (BLE5) ---
 
   /**
-   * @brief Parameters for BLE 5 periodic advertising on an extended set.
-   */
-  struct PeriodicAdvConfig {
-    uint8_t instance = 0;         ///< Extended advertising instance to attach to.
-    uint16_t intervalMin = 0;     ///< Minimum periodic interval (1.25 ms units).
-    uint16_t intervalMax = 0;     ///< Maximum periodic interval (1.25 ms units).
-    bool includeTxPower = false;  ///< If true, include TX power in periodic PDUs.
-  };
-
-  /**
-   * @brief Configure periodic advertising on an extended instance.
-   * @param config Periodic advertising parameters.
-   * @return BTStatus indicating success or error.
-   */
-  BTStatus configurePeriodicAdv(const PeriodicAdvConfig &config);
-
-  /**
-   * @brief Configure periodic advertising with individual parameters (convenience overload).
+   * @brief Set the periodic advertising interval for an extended instance.
    * @param instance Extended advertising instance to attach to.
-   * @param intervalMin Minimum periodic interval (1.25 ms units).
-   * @param intervalMax Maximum periodic interval (1.25 ms units).
-   * @return BTStatus indicating success or error.
+   * @param minInterval Minimum periodic interval (1.25 ms units).
+   * @param maxInterval Maximum periodic interval (1.25 ms units).
    */
-  inline BTStatus configurePeriodicAdv(uint8_t instance, uint16_t intervalMin, uint16_t intervalMax) {
-    PeriodicAdvConfig cfg;
-    cfg.instance = instance;
-    cfg.intervalMin = intervalMin;
-    cfg.intervalMax = intervalMax;
-    return configurePeriodicAdv(cfg);
-  }
+  void setPeriodicAdvInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval);
+
+  /**
+   * @brief Include or exclude TX power in periodic advertising PDUs.
+   * @param instance Extended advertising instance to attach to.
+   * @param include If true, TX power is included in periodic PDUs.
+   */
+  void setPeriodicAdvTxPower(uint8_t instance, bool include);
 
   /**
    * @brief Set the payload for periodic advertising.

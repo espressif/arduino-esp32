@@ -64,8 +64,9 @@ void BLEAdvertisementData::addField(uint8_t type, const uint8_t *data, size_t le
  *       LE-only devices should set bits 1 and 2
  *       (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP).
  */
-void BLEAdvertisementData::setFlags(uint8_t flags) {
-  addField(0x01, &flags, 1);
+void BLEAdvertisementData::setFlags(BLEAdvFlag flags) {
+  uint8_t raw = static_cast<uint8_t>(flags);
+  addField(0x01, &raw, 1);
 }
 
 /**

@@ -19,6 +19,11 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// BLE 5 supports multiple simultaneous advertising sets. Each set is
+// identified by an instance index (0, 1, 2, ...). This example uses
+// a single set; change the value to run several sets in parallel.
+static const uint8_t ADV_INSTANCE = 0;
+
 void onAdvComplete(uint8_t instance) {
   Serial.printf("Extended advertising instance %d completed\n", instance);
 }
@@ -44,23 +49,19 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
 
-  // Extended advertising parameters for instance 0
-  BLEAdvertising::ExtAdvConfig config;
-  config.instance = 0;                             // Advertising set index
-  config.type = BLEAdvType::ConnectableScannable;  // Allow connections and scan requests
-  config.primaryPhy = BLEPhy::PHY_1M;              // 1M PHY for initial advertisement
-  config.secondaryPhy = BLEPhy::PHY_2M;            // 2M PHY for auxiliary data (faster)
-  config.sid = 1;                                  // Advertising Set Identifier (for filtering)
-  adv.configureExtended(config);
+  // Extended advertising configuration
+  adv.setExtType(ADV_INSTANCE, BLEAdvType::ConnectableScannable);  // Allow connections and scan requests
+  adv.setExtPhy(ADV_INSTANCE, BLEPhy::PHY_1M, BLEPhy::PHY_2M);    // 1M primary, 2M secondary (faster)
+  adv.setExtSID(ADV_INSTANCE, 1);                                  // Advertising Set Identifier
 
   BLEAdvertisementData data;
   data.setName("ESP32-BLE5-Extended");
   data.addServiceUUID(BLEUUID("ABCD"));
-  adv.setExtAdvertisementData(0, data);
+  adv.setExtAdvertisementData(ADV_INSTANCE, data);
 
   adv.onComplete(onAdvComplete);
 
-  adv.startExtended(0);
+  adv.startExtended(ADV_INSTANCE);
   Serial.println("Extended advertising started on 2M PHY");
 }
 

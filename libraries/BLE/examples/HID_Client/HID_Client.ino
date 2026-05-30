@@ -132,6 +132,7 @@ void setup() {
   sec.setAuthenticationMode(true, false, true);
 
   client = BLE.createClient();
+  // MTU 185 = 3 bytes ATT header + 182 bytes payload; large enough for typical HID report maps
   client.setMTU(185);
   client.onDisconnect([](BLEClient, const BLEConnInfo &, uint8_t reason) {
     Serial.printf("Disconnected (reason 0x%02X)\n", reason);
@@ -140,8 +141,8 @@ void setup() {
 
   BLEScan scan = BLE.getScan();
   scan.setActiveScan(true);
-  scan.setInterval(100);
-  scan.setWindow(99);
+  scan.setInterval(100);  // Scan interval in 0.625 ms units (100 = 62.5 ms)
+  scan.setWindow(99);     // Scan window in 0.625 ms units (nearly continuous scanning)
 
   scan.onResult([](BLEAdvertisedDevice dev) {
     if (dev.isAdvertisingService(hidServiceUUID)) {

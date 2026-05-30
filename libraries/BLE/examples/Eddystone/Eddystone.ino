@@ -1,3 +1,15 @@
+/*
+ * BLE Eddystone Example -- New API
+ *
+ * Broadcasts an Eddystone-URL beacon and demonstrates Eddystone-TLM
+ * (telemetry) data construction. Eddystone is Google's open beacon
+ * format -- any BLE scanner can read the URL without an app.
+ *
+ * Use the Beacon_Scanner example on another device to receive the data.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+
 #include <Arduino.h>
 #include <BLE.h>
 
@@ -18,7 +30,8 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = eddystoneUrl.getAdvertisementData();
-  advData.setFlags(0x06);  // General Discoverable + BR/EDR Not Supported
+  // GeneralDisc: device is always discoverable; BrEdrNotSupported: BLE-only, no Classic Bluetooth
+  advData.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
   advData.setCompleteServices(BLEEddystoneURL::serviceUUID());
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);

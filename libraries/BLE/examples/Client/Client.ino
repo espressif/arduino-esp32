@@ -113,8 +113,8 @@ void setup() {
   Serial.println("Starting scan...");
   BLEScan scan = BLE.getScan();
   scan.setActiveScan(true);
-  scan.setInterval(100);
-  scan.setWindow(99);
+  scan.setInterval(100);  // Scan interval in 0.625 ms units (100 = 62.5 ms)
+  scan.setWindow(99);     // Scan window in 0.625 ms units (nearly continuous scanning)
   scan.onResult(onDeviceFound);
   scan.start(0);
   Serial.println("Scanning for target service UUID...");

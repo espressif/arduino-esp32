@@ -107,129 +107,102 @@ bool BLEAdvertising::isAdvertising() const {
 }
 
 // --------------------------------------------------------------------------
-// Extended / Periodic advertising stubs (BLE5 -- not yet supported)
+// Extended advertising setters (BLE5 -- not yet supported)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Configure an extended advertising instance (BLE5 stub).
- * @param config Configuration parameters (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
-BTStatus BLEAdvertising::configureExtended(const ExtAdvConfig &) {
+void BLEAdvertising::setExtType(uint8_t, BLEAdvType) {
   log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
 }
 
-/**
- * @brief Set advertisement data for an extended instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @param data Advertisement payload (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
+void BLEAdvertising::setExtPhy(uint8_t, BLEPhy, BLEPhy) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtTxPower(uint8_t, int8_t) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtInterval(uint8_t, uint16_t, uint16_t) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtChannelMap(uint8_t, uint8_t) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtSID(uint8_t, uint8_t) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtAnonymous(uint8_t, bool) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtIncludeTxPower(uint8_t, bool) {
+  log_w("%s not supported", __func__);
+}
+
+void BLEAdvertising::setExtScanReqNotify(uint8_t, bool) {
+  log_w("%s not supported", __func__);
+}
+
 BTStatus BLEAdvertising::setExtAdvertisementData(uint8_t, const BLEAdvertisementData &) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Set scan-response data for an extended instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @param data Scan-response payload (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::setExtScanResponseData(uint8_t, const BLEAdvertisementData &) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Set a random address for an extended advertising instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @param addr Address to assign (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t, const BTAddress &) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Start an extended advertising instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @param durationMs Duration in milliseconds (ignored).
- * @param maxEvents Maximum advertising events (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::startExtended(uint8_t, uint32_t, uint8_t) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Stop an extended advertising instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::stopExtended(uint8_t) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Remove an extended advertising instance (BLE5 stub).
- * @param instance Advertising instance index (ignored).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::removeExtended(uint8_t) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Remove all extended advertising instances (BLE5 stub).
- * @return BTStatus::NotSupported always; BLE5 extended advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::clearExtended() {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Configure periodic advertising on an extended instance (BLE5 stub).
- * @param config Periodic advertising parameters (ignored).
- * @return BTStatus::NotSupported always; BLE5 periodic advertising is not yet implemented.
- */
-BTStatus BLEAdvertising::configurePeriodicAdv(const PeriodicAdvConfig &) {
+// --------------------------------------------------------------------------
+// Periodic advertising setters (BLE5 -- not yet supported)
+// --------------------------------------------------------------------------
+
+void BLEAdvertising::setPeriodicAdvInterval(uint8_t, uint16_t, uint16_t) {
   log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
 }
 
-/**
- * @brief Set the payload for periodic advertising (BLE5 stub).
- * @param instance Extended advertising instance index (ignored).
- * @param data Periodic advertising payload (ignored).
- * @return BTStatus::NotSupported always; BLE5 periodic advertising is not yet implemented.
- */
+void BLEAdvertising::setPeriodicAdvTxPower(uint8_t, bool) {
+  log_w("%s not supported", __func__);
+}
+
 BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t, const BLEAdvertisementData &) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Start periodic advertising on an extended instance (BLE5 stub).
- * @param instance Extended advertising instance index (ignored).
- * @return BTStatus::NotSupported always; BLE5 periodic advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::startPeriodicAdv(uint8_t) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;
 }
 
-/**
- * @brief Stop periodic advertising on an extended instance (BLE5 stub).
- * @param instance Extended advertising instance index (ignored).
- * @return BTStatus::NotSupported always; BLE5 periodic advertising is not yet implemented.
- */
 BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t) {
   log_w("%s not supported", __func__);
   return BTStatus::NotSupported;

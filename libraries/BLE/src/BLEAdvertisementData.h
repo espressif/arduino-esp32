@@ -28,6 +28,21 @@
 #include "BLEUUID.h"
 
 /**
+ * @brief AD Flags -- Core Spec Vol 3, Part C, Section 11.1.3.
+ *
+ * Combine with bitwise OR: `BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported`.
+ */
+enum class BLEAdvFlag : uint8_t {
+  LimitedDisc = 0x01,       ///< LE Limited Discoverable Mode
+  GeneralDisc = 0x02,       ///< LE General Discoverable Mode
+  BrEdrNotSupported = 0x04  ///< BR/EDR Not Supported (BLE-only device)
+};
+
+inline constexpr BLEAdvFlag operator|(BLEAdvFlag a, BLEAdvFlag b) {
+  return static_cast<BLEAdvFlag>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+}
+
+/**
  * @brief Builder for raw BLE advertisement data payloads.
  *
  * Constructs AD structures per Core Spec Vol 3, Part C, Section 11.
@@ -35,10 +50,10 @@
 class BLEAdvertisementData {
 public:
   /**
-   * @brief Set the AD Flags field (typically LE General Discoverable + BR/EDR Not Supported).
-   * @param flags Bitmask of AD flag values.
+   * @brief Set the AD Flags field (typically GeneralDisc | BrEdrNotSupported).
+   * @param flags Bitmask of BLEAdvFlag values.
    */
-  void setFlags(uint8_t flags);
+  void setFlags(BLEAdvFlag flags);
 
   /**
    * @brief Set a Complete List of Service UUIDs field.

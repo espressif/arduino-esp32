@@ -1,3 +1,15 @@
+/*
+ * BLE iBeacon Example -- New API
+ *
+ * Broadcasts an Apple iBeacon advertisement. iBeacons are used for
+ * indoor positioning and proximity detection. Any BLE scanner can
+ * detect the beacon and estimate distance from the calibrated TX power.
+ *
+ * Use the Beacon_Scanner example on another device to receive the data.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+
 #include <Arduino.h>
 #include <BLE.h>
 
@@ -21,7 +33,8 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
   BLEAdvertisementData advData = beacon.getAdvertisementData();
-  advData.setFlags(0x06);  // General Discoverable + BR/EDR Not Supported
+  // GeneralDisc: device is always discoverable; BrEdrNotSupported: BLE-only, no Classic Bluetooth
+  advData.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);
   adv.start();

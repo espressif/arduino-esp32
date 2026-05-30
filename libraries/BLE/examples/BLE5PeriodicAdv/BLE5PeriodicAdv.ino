@@ -21,6 +21,11 @@
 #include <Arduino.h>
 #include <BLE.h>
 
+// BLE 5 supports multiple simultaneous advertising sets. Each set is
+// identified by an instance index (0, 1, 2, ...). This example uses
+// a single set; change the value to run several sets in parallel.
+static const uint8_t ADV_INSTANCE = 0;
+
 void setup() {
   Serial.begin(115200);
   BTStatus status = BLE.begin("Periodic-ADV");
@@ -31,25 +36,21 @@ void setup() {
 
   BLEAdvertising adv = BLE.getAdvertising();
 
-  // Extended advertising parameters (non-connectable for periodic use)
-  BLEAdvertising::ExtAdvConfig extConfig;
-  extConfig.instance = 0;                       // Advertising set index
-  extConfig.type = BLEAdvType::NonConnectable;  // Periodic advertising requires non-connectable
-  extConfig.primaryPhy = BLEPhy::PHY_1M;        // Primary PHY
-  extConfig.secondaryPhy = BLEPhy::PHY_1M;      // Secondary PHY
-  extConfig.sid = 1;                            // Advertising Set Identifier (scanner uses this to sync)
-  adv.configureExtended(extConfig);
+  // Extended advertising (non-connectable is required for periodic)
+  adv.setExtType(ADV_INSTANCE, BLEAdvType::NonConnectable);
+  adv.setExtPhy(ADV_INSTANCE, BLEPhy::PHY_1M, BLEPhy::PHY_1M);
+  adv.setExtSID(ADV_INSTANCE, 1);  // Scanner uses SID to sync with periodic advertising
 
   BLEAdvertisementData extData;
   extData.setName("ESP32-Periodic");
-  adv.setExtAdvertisementData(0, extData);
+  adv.setExtAdvertisementData(ADV_INSTANCE, extData);
 
   // Periodic advertising: broadcasts data at fixed intervals without connections.
   // Interval is in 1.25 ms units: 24 * 1.25 ms = 30 ms
-  adv.configurePeriodicAdv(0, 24, 24);
+  adv.setPeriodicAdvInterval(ADV_INSTANCE, 24, 24);
 
-  adv.startExtended(0);
-  adv.startPeriodicAdv(0);
+  adv.startExtended(ADV_INSTANCE);
+  adv.startPeriodicAdv(ADV_INSTANCE);
   Serial.println("Periodic advertising started");
 }
 
@@ -58,6 +59,6 @@ void loop() {
   BLEAdvertisementData data;
   String payload = "Count:" + String(counter++);
   data.addRaw((const uint8_t *)payload.c_str(), payload.length());
-  BLE.getAdvertising().setPeriodicAdvData(0, data);
+  BLE.getAdvertising().setPeriodicAdvData(ADV_INSTANCE, data);
   delay(1000);
 }
