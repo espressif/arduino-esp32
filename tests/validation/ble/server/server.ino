@@ -1010,7 +1010,7 @@ void loop() {
     //   scan rsp -> manufacturer data (7) + svc data (6) + 16-bit svc UUID (4)
     String advName = String("ADV_") + serverName;
     BLEAdvertisementData d;
-    d.setFlags(0x06);
+    d.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
     d.setName(advName);
     d.setAppearance(0x0340);
     d.setTxPower(-4);
