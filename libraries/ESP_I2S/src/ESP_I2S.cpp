@@ -14,17 +14,32 @@
 
 #if SOC_I2S_HW_VERSION_2
 #undef I2S_STD_CLK_DEFAULT_CONFIG
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 #define I2S_STD_CLK_DEFAULT_CONFIG(rate) \
-  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256, }
+  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256, .bclk_div = 0 }
+#else
+#define I2S_STD_CLK_DEFAULT_CONFIG(rate) \
+  { .sample_rate_hz = rate, .clk_src = I2S_CLK_SRC_DEFAULT, .ext_clk_freq_hz = 0, .mclk_multiple = I2S_MCLK_MULTIPLE_256 }
+#endif
 #endif
 
 #define I2S_READ_CHUNK_SIZE 1920
 
-#define I2S_DEFAULT_CFG()                                                                                                                    \
-  {                                                                                                                                          \
-    .id = I2S_NUM_AUTO, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
-    .intr_priority = 0                                                                                                                       \
+typedef decltype(((i2s_chan_config_t *)nullptr)->id) i2s_chan_id_t;
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+#define I2S_DEFAULT_CFG(_port)                                                                                                                       \
+  {                                                                                                                                                  \
+    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .allow_pd = 0, .intr_priority = 0                                                                                                                \
   }
+#else
+#define I2S_DEFAULT_CFG(_port)                                                                                                                       \
+  {                                                                                                                                                  \
+    .id = (i2s_chan_id_t)_port, .role = I2S_ROLE_MASTER, .dma_desc_num = 6, .dma_frame_num = 240, .auto_clear = true, .auto_clear_before_cb = false, \
+    .intr_priority = 0                                                                                                                               \
+  }
+#endif
 
 #define I2S_STD_CHAN_CFG(_sample_rate, _data_bit_width, _slot_mode)                                                                   \
   {                                                                                                                                   \
@@ -140,6 +155,25 @@
   } while (0)
 #define I2S_ERROR_CHECK_RETURN_FALSE(x) I2S_ERROR_CHECK_RETURN(x, false)
 
+// I2S_NUM_AUTO == -1 in IDF v6, so it cannot serve as the upper bound for valid ports.
+// SOC_I2S_NUM (from soc/soc_caps.h) is hardware-derived in IDF <=5 but was removed in
+// IDF v6, so fall back to the chip's physical I2S controller count there.
+#ifndef I2S_NUM_MAX
+#ifdef SOC_I2S_NUM
+#define I2S_NUM_MAX SOC_I2S_NUM
+#elif defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#define I2S_NUM_MAX 2
+#elif defined(CONFIG_IDF_TARGET_ESP32P4)
+#define I2S_NUM_MAX 3
+#else
+#define I2S_NUM_MAX 1
+#endif
+#endif
+
+static bool isValidI2SPort(i2s_port_t port) {
+  return port == I2S_NUM_AUTO || (port >= I2S_NUM_0 && port < (i2s_port_t)I2S_NUM_MAX);
+}
+
 // Default read, no resmpling and temp buffer necessary
 static esp_err_t i2s_channel_read_default(i2s_chan_handle_t handle, char *tmp_buf, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   return i2s_channel_read(handle, (char *)dst, len, bytes_read, timeout_ms);
@@ -168,8 +202,79 @@ static esp_err_t i2s_channel_read_32_to_16(i2s_chan_handle_t handle, char *read_
   return ESP_OK;
 }
 
-// Resample the 16bit stereo microphone data into 16bit mono.
-static esp_err_t i2s_channel_read_16_stereo_to_mono(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+// Unified stereo-to-mono extraction for the HW v1 mono workaround.
+// DMA always delivers interleaved uint16_t pairs (stereo). This function
+// de-interleaves by slot_offset (0=left, 1=right, 2=average) and optionally
+// unpacks the high byte for 8-bit mode.
+// 16-bit: DMA reads 2× user bytes;  output is int16_t per sample.
+//  8-bit: DMA reads 4× user bytes;  output is  int8_t per sample (high byte of uint16_t).
+static esp_err_t i2s_channel_read_stereo_to_mono(
+  i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms, size_t slot_offset, bool unpack_8bit
+) {
+  size_t out_len = 0;
+  size_t read_buff_len = len * (unpack_8bit ? 4 : 2);
+  if (read_buff == NULL) {
+    log_e("Temp buffer is NULL!");
+    return ESP_FAIL;
+  }
+  esp_err_t err = i2s_channel_read(handle, read_buff, read_buff_len, &out_len, timeout_ms);
+  if (err != ESP_OK) {
+    *bytes_read = 0;
+    return err;
+  }
+  size_t stereo_samples = out_len / 2;
+  int16_t *src = (int16_t *)read_buff;
+  size_t written = 0;
+
+  if (unpack_8bit) {
+    uint8_t *ds = (uint8_t *)dst;
+    if (slot_offset < 2) {
+      for (size_t i = slot_offset; i < stereo_samples; i += 2) {
+        ds[written++] = (uint8_t)((uint16_t)src[i] >> 8);
+      }
+    } else {
+      for (size_t i = 0; i < stereo_samples; i += 2) {
+        int16_t l = (int8_t)((uint16_t)src[i] >> 8);
+        int16_t r = (int8_t)((uint16_t)src[i + 1] >> 8);
+        ds[written++] = (int8_t)((l + r) / 2);
+      }
+    }
+    *bytes_read = written;
+  } else {
+    int16_t *ds = (int16_t *)dst;
+    if (slot_offset < 2) {
+      for (size_t i = slot_offset; i < stereo_samples; i += 2) {
+        ds[written++] = src[i];
+      }
+    } else {
+      for (size_t i = 0; i < stereo_samples; i += 2) {
+        ds[written++] = (int16_t)(((int32_t)src[i] + (int32_t)src[i + 1]) / 2);
+      }
+    }
+    *bytes_read = written * 2;
+  }
+  return ESP_OK;
+}
+
+// 16-bit wrappers (all targets — used by I2S_RX_TRANSFORM_16_STEREO_TO_MONO)
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 0, false);
+}
+
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 1, false);
+}
+
+static esp_err_t
+  i2s_channel_read_16_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 2, false);
+}
+
+#if SOC_I2S_HW_VERSION_1
+// Unpack stereo 8-bit: each DMA uint16_t → one int8_t (high byte)
+static esp_err_t i2s_channel_read_8_unpack(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
   size_t out_len = 0;
   size_t read_buff_len = len * 2;
   if (read_buff == NULL) {
@@ -181,19 +286,37 @@ static esp_err_t i2s_channel_read_16_stereo_to_mono(i2s_chan_handle_t handle, ch
     *bytes_read = 0;
     return err;
   }
-  out_len /= 2;
-  uint16_t *ds = (uint16_t *)dst;
+  size_t n_samples = out_len / 2;
+  uint8_t *ds = (uint8_t *)dst;
   uint16_t *src = (uint16_t *)read_buff;
-  for (size_t i = 0; i < out_len; i += 2) {
-    *ds++ = src[i];
+  for (size_t i = 0; i < n_samples; i++) {
+    ds[i] = (uint8_t)(src[i] >> 8);
   }
-  *bytes_read = out_len;
+  *bytes_read = n_samples;
   return ESP_OK;
 }
 
-I2SClass::I2SClass() {
+// 8-bit mono wrappers (ESP32 HW v1 only — mono workaround + uint16_t packing)
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_left(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 0, true);
+}
+
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_right(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 1, true);
+}
+
+static esp_err_t
+  i2s_channel_read_8_stereo_to_mono_both(i2s_chan_handle_t handle, char *read_buff, void *dst, size_t len, size_t *bytes_read, uint32_t timeout_ms) {
+  return i2s_channel_read_stereo_to_mono(handle, read_buff, dst, len, bytes_read, timeout_ms, 2, true);
+}
+#endif  // SOC_I2S_HW_VERSION_1
+
+I2SClass::I2SClass(i2s_port_t port) {
   last_error = ESP_OK;
   _mode = I2S_MODE_MAX;  // Initialize to invalid mode to indicate I2S not started
+  _port = port;
 
   tx_chan = NULL;
   tx_sample_rate = 0;
@@ -209,6 +332,13 @@ I2SClass::I2SClass() {
   rx_sample_rate = 0;
   rx_data_bit_width = I2S_DATA_BIT_WIDTH_16BIT;
   rx_slot_mode = I2S_SLOT_MODE_STEREO;
+
+  _role = I2S_ROLE_MASTER;
+  _rx_slot_mask = I2S_STD_SLOT_LEFT;
+#if SOC_I2S_HW_VERSION_1
+  _mono_hw_workaround = false;
+  _8bit_hw_packing = false;
+#endif
 
   _mclk = -1;
   _bclk = -1;
@@ -247,6 +377,30 @@ bool I2SClass::i2sDetachBus(void *bus_pointer) {
     bus->end();
   }
   return true;
+}
+
+bool I2SClass::setPort(i2s_port_t port) {
+  if (_mode < I2S_MODE_MAX) {
+    log_e("I2S port must be set before begin()");
+    return false;
+  }
+  if (!isValidI2SPort(port)) {
+    log_e("Invalid I2S port selected.");
+    return false;
+  }
+  _port = port;
+  return true;
+}
+
+i2s_port_t I2SClass::getPort() {
+  i2s_chan_handle_t chan = tx_chan != NULL ? tx_chan : rx_chan;
+  if (chan != NULL) {
+    i2s_chan_info_t info;
+    if (i2s_channel_get_info(chan, &info) == ESP_OK) {
+      return info.id;
+    }
+  }
+  return _port;
 }
 
 // Set pins for STD and TDM mode
@@ -345,7 +499,8 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
+  chan_cfg.role = _role;
   if (_dout >= 0 && _din >= 0) {
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
   } else if (_dout >= 0) {
@@ -358,6 +513,33 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
   if (slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH) {
     i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
   }
+  if (slot_mask == I2S_STD_SLOT_RIGHT) {
+    _rx_slot_mask = I2S_STD_SLOT_RIGHT;
+  } else if (slot_mask == I2S_STD_SLOT_BOTH || (ch == I2S_SLOT_MODE_STEREO && slot_mask < 0)) {
+    _rx_slot_mask = I2S_STD_SLOT_BOTH;
+  } else {
+    _rx_slot_mask = I2S_STD_SLOT_LEFT;
+  }
+#if SOC_I2S_HW_VERSION_1
+  // ESP32 HW v1: DMA uses 2 bytes per sample for 8-bit data (high byte valid).
+  // Mono FIFO packing is also broken for 8/16-bit.  Work around both issues by
+  // packing 8-bit in software and forcing stereo for mono.
+  _8bit_hw_packing = (bits_cfg == I2S_DATA_BIT_WIDTH_8BIT);
+  if (ch == I2S_SLOT_MODE_MONO && (bits_cfg == I2S_DATA_BIT_WIDTH_16BIT || bits_cfg == I2S_DATA_BIT_WIDTH_8BIT)) {
+    _mono_hw_workaround = true;
+    i2s_config.slot_cfg.slot_mode = I2S_SLOT_MODE_STEREO;
+    i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+  } else {
+    _mono_hw_workaround = false;
+  }
+#else
+  // Newer targets default to SLOT_BOTH even in mono, which doubles each
+  // sample in the DMA buffer.  Force SLOT_LEFT for true mono unless the
+  // caller explicitly overrode slot_mask.
+  if (ch == I2S_SLOT_MODE_MONO && slot_mask < 0) {
+    i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
+  }
+#endif
   if (tx_chan != NULL) {
     tx_sample_rate = rate;
     tx_data_bit_width = bits_cfg;
@@ -366,11 +548,51 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(tx_chan));
   }
   if (rx_chan != NULL) {
+    if (ch == I2S_SLOT_MODE_STEREO) {
+      i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+      _rx_slot_mask = I2S_STD_SLOT_BOTH;
+    }
     rx_sample_rate = rate;
     rx_data_bit_width = bits_cfg;
     rx_slot_mode = ch;
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_init_std_mode(rx_chan, &i2s_config));
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+#if SOC_I2S_HW_VERSION_1
+    if (_mono_hw_workaround) {
+      if (_8bit_hw_packing) {
+        // 8-bit mono: DMA produces stereo uint16_t (4 bytes per mono sample)
+        if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 4)) {
+          goto err;
+        }
+        if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+          rx_fn = i2s_channel_read_8_stereo_to_mono_right;
+        } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+          rx_fn = i2s_channel_read_8_stereo_to_mono_both;
+        } else {
+          rx_fn = i2s_channel_read_8_stereo_to_mono_left;
+        }
+      } else {
+        if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+          goto err;
+        }
+        if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+          rx_fn = i2s_channel_read_16_stereo_to_mono_right;
+        } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+          rx_fn = i2s_channel_read_16_stereo_to_mono_both;
+        } else {
+          rx_fn = i2s_channel_read_16_stereo_to_mono_left;
+        }
+      }
+      rx_transform = I2S_RX_TRANSFORM_16_STEREO_TO_MONO;
+    } else if (_8bit_hw_packing) {
+      // 8-bit stereo: DMA produces uint16_t per sample (2× user bytes)
+      if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+        goto err;
+      }
+      rx_fn = i2s_channel_read_8_unpack;
+      rx_transform = I2S_RX_TRANSFORM_8_UNPACK;
+    }
+#endif
   }
 
   // Peripheral manager set bus type to I2S
@@ -402,7 +624,7 @@ bool I2SClass::initSTD(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
 
   return true;
 err:
-  log_e("Failed to set all pins bus to I2S_STD");
+  log_e("I2S_STD initialization failed");
   I2SClass::i2sDetachBus((void *)(this));
   return false;
 }
@@ -454,7 +676,8 @@ bool I2SClass::initTDM(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mo
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
+  chan_cfg.role = _role;
   if (_dout >= 0 && _din >= 0) {
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, &rx_chan));
   } else if (_dout >= 0) {
@@ -545,7 +768,8 @@ bool I2SClass::initPDMtx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
+  chan_cfg.role = _role;
   I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, &tx_chan, NULL));
 
   i2s_pdm_tx_config_t i2s_pdm_tx_config = I2S_PDM_TX_CHAN_CFG(rate, bits_cfg, ch);
@@ -629,7 +853,8 @@ bool I2SClass::initPDMrx(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_
   }
 
   // I2S configuration
-  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG();
+  i2s_chan_config_t chan_cfg = I2S_DEFAULT_CFG(_port);
+  chan_cfg.role = _role;
   I2S_ERROR_CHECK_RETURN_FALSE(i2s_new_channel(&chan_cfg, NULL, &rx_chan));
 
   i2s_pdm_rx_config_t i2s_pdf_rx_config = I2S_PDM_RX_CHAN_CFG(rate, bits_cfg, ch);
@@ -676,13 +901,18 @@ err:
 }
 #endif
 
-bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask) {
+bool I2SClass::begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask, i2s_role_t role) {
   /* Setup I2S peripheral */
   if (mode >= I2S_MODE_MAX) {
     log_e("Invalid I2S mode selected.");
     return false;
   }
+  if (!isValidI2SPort(_port)) {
+    log_e("Invalid I2S port selected.");
+    return false;
+  }
   _mode = mode;
+  _role = role;
 
   bool init = false;
   switch (_mode) {
@@ -732,6 +962,12 @@ bool I2SClass::end() {
     rx_transform_buf = NULL;
     rx_transform_buf_len = 0;
   }
+  rx_fn = i2s_channel_read_default;
+  rx_transform = I2S_RX_TRANSFORM_NONE;
+#if SOC_I2S_HW_VERSION_1
+  _mono_hw_workaround = false;
+  _8bit_hw_packing = false;
+#endif
 
   //Peripheral manager deinit used pins
   switch (mode) {
@@ -798,6 +1034,20 @@ bool I2SClass::configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
     if (slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH) {
       i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
     }
+#if SOC_I2S_HW_VERSION_1
+    _8bit_hw_packing = (bits_cfg == I2S_DATA_BIT_WIDTH_8BIT);
+    if (ch == I2S_SLOT_MODE_MONO && (bits_cfg == I2S_DATA_BIT_WIDTH_16BIT || bits_cfg == I2S_DATA_BIT_WIDTH_8BIT)) {
+      _mono_hw_workaround = true;
+      i2s_config.slot_cfg.slot_mode = I2S_SLOT_MODE_STEREO;
+      i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+    } else {
+      _mono_hw_workaround = false;
+    }
+#else
+    if (ch == I2S_SLOT_MODE_MONO && slot_mask < 0) {
+      i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_LEFT;
+    }
+#endif
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(tx_chan));
     I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_reconfig_std_clock(tx_chan, &i2s_config.clk_cfg));
     tx_sample_rate = rate;
@@ -810,11 +1060,37 @@ bool I2SClass::configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
   return false;
 }
 
-bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform) {
+bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform, int8_t slot_mask) {
   /* Setup I2S channels */
   if (rx_chan != NULL) {
     if (rx_sample_rate != rate || rx_data_bit_width != bits_cfg || rx_slot_mode != ch) {
       i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+      if (ch == I2S_SLOT_MODE_STEREO) {
+        i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+        _rx_slot_mask = I2S_STD_SLOT_BOTH;
+      } else if (slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask <= I2S_STD_SLOT_BOTH) {
+        i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
+        _rx_slot_mask = (i2s_std_slot_mask_t)slot_mask;
+      } else {
+        // slot_mask = -1 (default) in mono: preserve current _rx_slot_mask,
+        // but reset to LEFT if transitioning from stereo (where BOTH was forced).
+        if (rx_slot_mode != I2S_SLOT_MODE_MONO && _rx_slot_mask != I2S_STD_SLOT_LEFT) {
+          log_w("configureRX: switching from stereo to mono with no explicit slot_mask; defaulting to LEFT");
+          _rx_slot_mask = I2S_STD_SLOT_LEFT;
+        }
+        i2s_config.slot_cfg.slot_mask = _rx_slot_mask;
+      }
+#if SOC_I2S_HW_VERSION_1
+      _8bit_hw_packing = (bits_cfg == I2S_DATA_BIT_WIDTH_8BIT);
+      bool new_workaround = (ch == I2S_SLOT_MODE_MONO && (bits_cfg == I2S_DATA_BIT_WIDTH_16BIT || bits_cfg == I2S_DATA_BIT_WIDTH_8BIT));
+      if (new_workaround) {
+        _mono_hw_workaround = true;
+        i2s_config.slot_cfg.slot_mode = I2S_SLOT_MODE_STEREO;
+        i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+      } else {
+        _mono_hw_workaround = false;
+      }
+#endif
       I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(rx_chan));
       I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_reconfig_std_clock(rx_chan, &i2s_config.clk_cfg));
       rx_sample_rate = rate;
@@ -822,7 +1098,95 @@ bool I2SClass::configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slo
       rx_data_bit_width = bits_cfg;
       rx_slot_mode = ch;
       I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+#if SOC_I2S_HW_VERSION_1
+      if (_mono_hw_workaround) {
+        if (_8bit_hw_packing) {
+          if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 4)) {
+            return false;
+          }
+          if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_right;
+          } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_both;
+          } else {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_left;
+          }
+        } else {
+          if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+            return false;
+          }
+          if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_right;
+          } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_both;
+          } else {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_left;
+          }
+        }
+        rx_transform = I2S_RX_TRANSFORM_16_STEREO_TO_MONO;
+        return true;
+      } else if (_8bit_hw_packing) {
+        if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+          return false;
+        }
+        rx_fn = i2s_channel_read_8_unpack;
+        rx_transform = I2S_RX_TRANSFORM_8_UNPACK;
+        return true;
+      }
+#endif
       return transformRX(transform);
+    }
+    // Slot-only change: rate/bits/ch unchanged but slot_mask or transform changed.
+    // Stereo RX always uses BOTH — the IDF does not reliably ignore slot_mask
+    // in stereo mode, so slot changes are only meaningful for mono.
+    if (ch != I2S_SLOT_MODE_STEREO && slot_mask >= 0 && (i2s_std_slot_mask_t)slot_mask != _rx_slot_mask) {
+      i2s_std_config_t i2s_config = I2S_STD_CHAN_CFG(rate, bits_cfg, ch);
+      i2s_config.slot_cfg.slot_mask = (i2s_std_slot_mask_t)slot_mask;
+      if (slot_mask == I2S_STD_SLOT_RIGHT) {
+        _rx_slot_mask = I2S_STD_SLOT_RIGHT;
+      } else if (slot_mask == I2S_STD_SLOT_BOTH) {
+        _rx_slot_mask = I2S_STD_SLOT_BOTH;
+      } else {
+        _rx_slot_mask = I2S_STD_SLOT_LEFT;
+      }
+#if SOC_I2S_HW_VERSION_1
+      if (_mono_hw_workaround) {
+        i2s_config.slot_cfg.slot_mode = I2S_SLOT_MODE_STEREO;
+        i2s_config.slot_cfg.slot_mask = I2S_STD_SLOT_BOTH;
+      }
+#endif
+      I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_disable(rx_chan));
+      I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_reconfig_std_slot(rx_chan, &i2s_config.slot_cfg));
+      I2S_ERROR_CHECK_RETURN_FALSE(i2s_channel_enable(rx_chan));
+#if SOC_I2S_HW_VERSION_1
+      if (_mono_hw_workaround) {
+        if (_8bit_hw_packing) {
+          if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 4)) {
+            return false;
+          }
+          if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_right;
+          } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_both;
+          } else {
+            rx_fn = i2s_channel_read_8_stereo_to_mono_left;
+          }
+        } else {
+          if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+            return false;
+          }
+          if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_right;
+          } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_both;
+          } else {
+            rx_fn = i2s_channel_read_16_stereo_to_mono_left;
+          }
+        }
+        rx_transform = I2S_RX_TRANSFORM_16_STEREO_TO_MONO;
+        return true;
+      }
+#endif
     }
     if (rx_transform != transform) {
       return transformRX(transform);
@@ -860,6 +1224,106 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   if (tx_chan == NULL) {
     return written;
   }
+  size_t min_size = (tx_data_bit_width == I2S_DATA_BIT_WIDTH_8BIT) ? 1 : (tx_data_bit_width / 8);
+  if (size < min_size) {
+    last_error = ESP_OK;
+    return 0;
+  }
+#if SOC_I2S_HW_VERSION_1
+  if (_8bit_hw_packing && _mono_hw_workaround) {
+    // 8-bit mono on HW v1: pack each int8_t sample into the high byte of
+    // a uint16_t, then duplicate into L+R stereo for DMA.
+    const int8_t *src = (const int8_t *)buffer;
+    size_t mono_samples = size;
+    size_t mono_written = 0;
+    while (mono_written < mono_samples) {
+      const size_t MAX_CHUNK = 128;
+      uint16_t stereo_buf[MAX_CHUNK * 2];
+      size_t chunk = mono_samples - mono_written;
+      if (chunk > MAX_CHUNK) {
+        chunk = MAX_CHUNK;
+      }
+      for (size_t i = 0; i < chunk; i++) {
+        uint16_t packed = (uint16_t)((uint8_t)src[mono_written + i]) << 8;
+        stereo_buf[i * 2] = packed;
+        stereo_buf[i * 2 + 1] = packed;
+      }
+      size_t stereo_bytes = chunk * 2 * sizeof(uint16_t);
+      bytes_sent = 0;
+      esp_err_t err = i2s_channel_write(tx_chan, (char *)stereo_buf, stereo_bytes, &bytes_sent, _timeout);
+      setWriteError(err);
+      if (err != ESP_OK) {
+        last_error = err;
+        break;
+      }
+      mono_written += bytes_sent / (2 * sizeof(uint16_t));
+    }
+    if (mono_written == mono_samples) {
+      last_error = ESP_OK;
+    }
+    return mono_written;
+  }
+  if (_8bit_hw_packing && !_mono_hw_workaround) {
+    // 8-bit stereo on HW v1: pack each int8_t into the high byte of a uint16_t.
+    const int8_t *src = (const int8_t *)buffer;
+    size_t n_samples = size;
+    size_t samples_written = 0;
+    while (samples_written < n_samples) {
+      const size_t MAX_CHUNK = 256;
+      uint16_t pack_buf[MAX_CHUNK];
+      size_t chunk = n_samples - samples_written;
+      if (chunk > MAX_CHUNK) {
+        chunk = MAX_CHUNK;
+      }
+      for (size_t i = 0; i < chunk; i++) {
+        pack_buf[i] = (uint16_t)((uint8_t)src[samples_written + i]) << 8;
+      }
+      size_t pack_bytes = chunk * sizeof(uint16_t);
+      bytes_sent = 0;
+      esp_err_t err = i2s_channel_write(tx_chan, (char *)pack_buf, pack_bytes, &bytes_sent, _timeout);
+      setWriteError(err);
+      if (err != ESP_OK) {
+        last_error = err;
+        break;
+      }
+      samples_written += bytes_sent / sizeof(uint16_t);
+    }
+    if (samples_written == n_samples) {
+      last_error = ESP_OK;
+    }
+    return samples_written;
+  }
+  if (_mono_hw_workaround) {
+    const int16_t *src = (const int16_t *)buffer;
+    size_t mono_samples = size / sizeof(int16_t);
+    size_t mono_written = 0;
+    while (mono_written < mono_samples) {
+      const size_t MAX_CHUNK = 128;
+      int16_t stereo_buf[MAX_CHUNK * 2];
+      size_t chunk = mono_samples - mono_written;
+      if (chunk > MAX_CHUNK) {
+        chunk = MAX_CHUNK;
+      }
+      for (size_t i = 0; i < chunk; i++) {
+        stereo_buf[i * 2] = src[mono_written + i];
+        stereo_buf[i * 2 + 1] = src[mono_written + i];
+      }
+      size_t stereo_bytes = chunk * 2 * sizeof(int16_t);
+      bytes_sent = 0;
+      esp_err_t err = i2s_channel_write(tx_chan, (char *)stereo_buf, stereo_bytes, &bytes_sent, _timeout);
+      setWriteError(err);
+      if (err != ESP_OK) {
+        last_error = err;
+        break;
+      }
+      mono_written += bytes_sent / (2 * sizeof(int16_t));
+    }
+    if (mono_written == mono_samples) {
+      last_error = ESP_OK;
+    }
+    return mono_written * sizeof(int16_t);
+  }
+#endif
   while (written < size) {
     bytes_sent = 0;
     bytes_to_send = size - written;
@@ -944,6 +1408,10 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform) {
       break;
 
     case I2S_RX_TRANSFORM_16_STEREO_TO_MONO:
+      if (rx_data_bit_width != I2S_DATA_BIT_WIDTH_16BIT) {
+        log_e("I2S_RX_TRANSFORM_16_STEREO_TO_MONO requires 16-bit data width");
+        return false;
+      }
       if (rx_slot_mode != I2S_SLOT_MODE_STEREO) {
         log_e("Wrong slot mode. Should be Stereo");
         return false;
@@ -951,9 +1419,31 @@ bool I2SClass::transformRX(i2s_rx_transform_t transform) {
       if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
         return false;
       }
-      rx_fn = i2s_channel_read_16_stereo_to_mono;
+      if (_rx_slot_mask == I2S_STD_SLOT_RIGHT) {
+        rx_fn = i2s_channel_read_16_stereo_to_mono_right;
+      } else if (_rx_slot_mask == I2S_STD_SLOT_BOTH) {
+        rx_fn = i2s_channel_read_16_stereo_to_mono_both;
+      } else {
+        rx_fn = i2s_channel_read_16_stereo_to_mono_left;
+      }
       rx_slot_mode = I2S_SLOT_MODE_MONO;
       break;
+
+    case I2S_RX_TRANSFORM_8_UNPACK:
+#if SOC_I2S_HW_VERSION_1
+      if (rx_data_bit_width != I2S_DATA_BIT_WIDTH_8BIT) {
+        log_e("I2S_RX_TRANSFORM_8_UNPACK requires 8-bit data width");
+        return false;
+      }
+      if (!allocTranformRX(I2S_READ_CHUNK_SIZE * 2)) {
+        return false;
+      }
+      rx_fn = i2s_channel_read_8_unpack;
+      break;
+#else
+      log_w("I2S_RX_TRANSFORM_8_UNPACK is only needed on ESP32 HW v1; ignoring on this target");
+      return true;
+#endif
 
     default: log_e("Unknown RX Transform %d", transform); return false;
   }
@@ -1018,13 +1508,17 @@ uint8_t *I2SClass::recordWAV(size_t rec_seconds, size_t *out_size) {
   return NULL;
 }
 
-void I2SClass::playWAV(uint8_t *data, size_t len) {
-  pcm_wav_header_t *header = (pcm_wav_header_t *)data;
+void I2SClass::playWAV(const uint8_t *data, size_t len) {
+  if (data == NULL || len < WAVE_HEADER_SIZE) {
+    log_e("Invalid WAV data or length");
+    return;
+  }
+  const pcm_wav_header_t *header = (const pcm_wav_header_t *)data;
   if (header->fmt_chunk.audio_format != 1) {
     log_e("Audio format is not PCM!");
     return;
   }
-  wav_data_chunk_t *data_chunk = &header->data_chunk;
+  const wav_data_chunk_t *data_chunk = &header->data_chunk;
   size_t data_offset = 0;
   while (memcmp(data_chunk->subchunk_id, "data", 4) != 0) {
     log_d(
@@ -1032,7 +1526,7 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
       data_chunk->subchunk_size + 8
     );
     data_offset += data_chunk->subchunk_size + 8;
-    data_chunk = (wav_data_chunk_t *)(data + WAVE_HEADER_SIZE + data_offset - 8);
+    data_chunk = (const wav_data_chunk_t *)(data + WAVE_HEADER_SIZE + data_offset - 8);
   }
   log_d(
     "Play WAV: rate:%" PRIu32 ", bits:%u, channels:%u, size:%" PRIu32, header->fmt_chunk.sample_rate, header->fmt_chunk.bits_per_sample,
@@ -1043,15 +1537,15 @@ void I2SClass::playWAV(uint8_t *data, size_t len) {
 }
 
 #if ARDUINO_HAS_MP3_DECODER
-bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
+bool I2SClass::playMP3(const uint8_t *src, size_t src_len) {
   int16_t outBuf[MAX_NCHAN * MAX_NGRAN * MAX_NSAMP];
-  uint8_t *readPtr = NULL;
+  const uint8_t *readPtr = NULL;
   int bytesAvailable = 0, err = 0, offset = 0;
   MP3FrameInfo frameInfo;
   HMP3Decoder decoder = NULL;
 
   bytesAvailable = src_len;
-  readPtr = src;
+  readPtr = (const uint8_t *)src;
 
   decoder = MP3InitDecoder();
   if (decoder == NULL) {
@@ -1060,13 +1554,13 @@ bool I2SClass::playMP3(uint8_t *src, size_t src_len) {
   }
 
   do {
-    offset = MP3FindSyncWord(readPtr, bytesAvailable);
+    offset = MP3FindSyncWord((unsigned char *)readPtr, bytesAvailable);
     if (offset < 0) {
       break;
     }
     readPtr += offset;
     bytesAvailable -= offset;
-    err = MP3Decode(decoder, &readPtr, &bytesAvailable, outBuf, 0);
+    err = MP3Decode(decoder, (unsigned char **)&readPtr, &bytesAvailable, outBuf, 0);
     if (err) {
       log_e("Decode ERROR: %d", err);
       MP3FreeDecoder(decoder);

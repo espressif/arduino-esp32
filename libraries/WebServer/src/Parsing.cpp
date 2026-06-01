@@ -170,6 +170,10 @@ bool WebServer::_parseRequest(NetworkClient &client) {
         } else if (headerValue.startsWith(F("multipart/"))) {
           boundaryStr = headerValue.substring(headerValue.indexOf('=') + 1);
           boundaryStr.replace("\"", "");
+          if (boundaryStr.length() > 70) {  // RFC 2046: max boundary length is 70
+            log_e("Invalid boundary length: %s", boundaryStr.c_str());
+            return false;
+          }
           isForm = true;
         }
       } else if (headerName.equalsIgnoreCase(F("Content-Length"))) {

@@ -24,7 +24,7 @@ esp_err_t arduino_usb_event_handler_register_with(esp_event_base_t event_base, i
 
 static USBVendor *_Vendor = NULL;
 static QueueHandle_t rx_queue = NULL;
-static uint16_t USB_VENDOR_ENDPOINT_SIZE = CFG_TUD_ENDOINT_SIZE;
+static uint16_t USB_VENDOR_ENDPOINT_SIZE = CFG_TUD_ENDPOINT_SIZE;
 
 uint16_t tusb_vendor_load_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB Vendor");
@@ -72,9 +72,9 @@ USBVendor::USBVendor(uint16_t endpoint_size) : itf(0), cb(NULL) {
   if (!_Vendor) {
     _Vendor = this;
     if (endpoint_size == 0) {
-      endpoint_size = CFG_TUD_ENDOINT_SIZE;
+      endpoint_size = CFG_TUD_ENDPOINT_SIZE;
     }
-    if (endpoint_size <= CFG_TUD_ENDOINT_SIZE) {
+    if (endpoint_size <= CFG_TUD_ENDPOINT_SIZE) {
       USB_VENDOR_ENDPOINT_SIZE = endpoint_size;
     }
     tinyusb_enable_interface(USB_INTERFACE_VENDOR, TUD_VENDOR_DESC_LEN, tusb_vendor_load_descriptor);

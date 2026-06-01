@@ -14,6 +14,16 @@ for automatic formatting. The configuration is stored in ``.clang-format`` at th
 A pre-commit hook enforces formatting before every commit, so contributors can also run
 ``clang-format`` manually or rely on CI to flag violations.
 
+If you need to ensure that some part of the code is formatted in a specific way, you can use the ``// clang-format off`` and ``// clang-format on`` comments to disable and enable formatting for the specific part of the code. For example:
+
+.. code-block:: c
+
+   // clang-format off
+   int x     = 1;
+   // clang-format on
+
+   int y = 2;
+
 The style is based on the LLVM preset with the following key rules:
 
 Indentation and Spacing

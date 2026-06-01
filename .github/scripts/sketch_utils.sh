@@ -1,12 +1,7 @@
 #!/bin/bash
 
-if [ -d "$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs" ]; then
-    SDKCONFIG_DIR="$ARDUINO_ESP32_PATH/tools/esp32-arduino-libs"
-elif [ -d "$GITHUB_WORKSPACE/tools/esp32-arduino-libs" ]; then
-    SDKCONFIG_DIR="$GITHUB_WORKSPACE/tools/esp32-arduino-libs"
-else
-    SDKCONFIG_DIR="tools/esp32-arduino-libs"
-fi
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR}/env.sh"
 
 function check_requirements { # check_requirements <sketchdir> <sdkconfig_path>
     local sketchdir=$1
@@ -105,6 +100,9 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         -bn )
             shift
             build_name=$1
+            ;;
+        --arduino-cli )
+            use_arduino_cli=1
             ;;
         * )
             break
@@ -297,102 +295,78 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
         currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')
 
-        if [ -f "$ide_path/arduino-cli" ]; then
+        if [ "${use_arduino_cli:-0}" -eq 1 ] && [ -f "$ide_path/arduino-cli" ]; then
             echo "Building $sketchname with arduino-cli and FQBN=$currfqbn"
-
+            local curroptions
+            local currcli_fqbn
             curroptions=$(echo "$currfqbn" | cut -d':' -f4)
-            currfqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
+            currcli_fqbn=$(echo "$currfqbn" | cut -d':' -f1-3)
             "$ide_path"/arduino-cli compile \
-                --fqbn "$currfqbn" \
+                --fqbn "$currcli_fqbn" \
                 --board-options "$curroptions" \
                 --warnings "all" \
                 --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
                 --build-path "$build_dir" \
                 "${xtra_opts[@]}" "${sketchdir}" \
                 2>&1 | tee "$output_file"
+        elif [ "${use_arduino_cmake:-0}" -eq 0 ] && [ -f "$REPO_ROOT/tools/arduino_cmake.py" ]; then
+            echo "Building $sketchname with arduino_cmake.py and FQBN=$currfqbn"
+            python3 "$REPO_ROOT/tools/arduino_cmake.py" compile \
+                --fqbn "$currfqbn" \
+                --warnings "all" \
+                --build-property "compiler.warning_flags.all=-Wall -Werror=all -Wextra" \
+                --build-path "$build_dir" \
+                "${xtra_opts[@]}" --sketch "${sketchdir}" \
+                2>&1 | tee "$output_file"
+        else
+            echo "ERROR: Requested build tool not found (arduino-cli or arduino_cmake.py)"
+            exit 1
+        fi
 
-            exit_status=${PIPESTATUS[0]}
-            if [ "$exit_status" -ne 0 ]; then
-                echo "ERROR: Compilation failed with error code $exit_status"
-                exit "$exit_status"
-            fi
+        exit_status=${PIPESTATUS[0]}
+        if [ "$exit_status" -ne 0 ]; then
+            echo "ERROR: Compilation failed with error code $exit_status"
+            exit "$exit_status"
+        fi
 
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
-            # For multi-device tests, ci.yml lives in the parent test directory (-td),
-            # not in individual sketch directories.
-            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
-            if [ -f "$ci_yml_source/ci.yml" ]; then
-                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
-            fi
+        # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
+        # For multi-device tests, ci.yml lives in the parent test directory (-td),
+        # not in individual sketch directories.
+        local ci_yml_source="${ci_yml_dir:-$sketchdir}"
+        if [ -f "$ci_yml_source/ci.yml" ]; then
+            cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
+        fi
 
-            if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
-                mkdir -p "$COMPILE_COMMANDS_DIR"
-                jq --arg t "$target" '[.[] | . + {_target: $t}]' \
-                    "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketchname}.json"
-            fi
+        if [ -n "$COMPILE_COMMANDS_DIR" ] && [ -f "$build_dir/compile_commands.json" ]; then
+            mkdir -p "$COMPILE_COMMANDS_DIR"
+            # Use a path-based unique name to avoid collisions when multiple sketches share
+            # the same basename (e.g. two sketches both named LeaderNode in different subdirs).
+            # Strip the prefix up to and including the first occurrence of "/libraries/" so
+            # the result is relative and readable; fall back to the full path if not found.
+            local sketch_relpath="${sketchdir#*/libraries/}"
+            local sketch_safe="${sketch_relpath//\//_}"  # replace all '/' with '_'
+            sketch_safe="${sketch_safe#_}"               # strip any leading underscore
+            jq --arg t "$target" '[.[] | . + {_target: $t}]' \
+                "$build_dir/compile_commands.json" > "$COMPILE_COMMANDS_DIR/${target}_${sketch_safe}.json"
+        fi
 
-            if [ -n "$log_compilation" ]; then
-                #Extract the program storage space and dynamic memory usage in bytes and percentage in separate variables from the output, just the value without the string
-                flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
-                flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $5}' | tr -d '(%)')
-                ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
-                ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
+        if [ -n "$log_compilation" ]; then
+            flash_bytes=$(grep -oE 'Sketch uses ([0-9]+) bytes' "$output_file" | awk '{print $3}')
+            flash_percentage=$(grep -oE 'Sketch uses ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $5}' | tr -d '(%)')
+            ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
+            ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
 
-                # Extract the directory path excluding the filename
-                directory_path=$(dirname "$sketch")
-                # Define the constant part
-                constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
-                # Extract the desired substring
-                lib_sketch_name="${directory_path#"$constant_part"}"
-                #append json file where key is fqbn, sketch name, sizes -> extracted values
-                echo "{\"name\": \"$lib_sketch_name\",
-                    \"sizes\": [{
-                            \"flash_bytes\": $flash_bytes,
-                            \"flash_percentage\": $flash_percentage,
-                            \"ram_bytes\": $ram_bytes,
-                            \"ram_percentage\": $ram_percentage
-                            }]
-                    }," >> "$sizes_file"
-            fi
-
-        elif [ -f "$ide_path/arduino-builder" ]; then
-            echo "Building $sketchname with arduino-builder and FQBN=$currfqbn"
-            echo "Build path = $build_dir"
-
-            "$ide_path"/arduino-builder -compile -logger=human -core-api-version=10810 \
-                -fqbn=\""$currfqbn"\" \
-                -warnings="all" \
-                -tools "$ide_path/tools-builder" \
-                -hardware "$user_path/hardware" \
-                -libraries "$user_path/libraries" \
-                -build-cache "$ARDUINO_CACHE_DIR" \
-                -build-path "$build_dir" \
-                "${xtra_opts[@]}" "${sketchdir}/${sketchname}.ino"
-
-            exit_status=$?
-            if [ $exit_status -ne 0 ]; then
-                echo "ERROR: Compilation failed with error code $exit_status"
-                exit $exit_status
-            fi
-            # Copy ci.yml alongside compiled binaries for later consumption by reporting tools.
-            # For multi-device tests, ci.yml lives in the parent test directory (-td),
-            # not in individual sketch directories.
-            local ci_yml_source="${ci_yml_dir:-$sketchdir}"
-            if [ -f "$ci_yml_source/ci.yml" ]; then
-                cp -f "$ci_yml_source/ci.yml" "$build_dir/ci.yml" 2>/dev/null || true
-            fi
-            # $ide_path/arduino-builder -compile -logger=human -core-api-version=10810 \
-            #     -fqbn=\"$currfqbn\" \
-            #     -warnings="all" \
-            #     -tools "$ide_path/tools-builder" \
-            #     -tools "$ide_path/tools" \
-            #     -built-in-libraries "$ide_path/libraries" \
-            #     -hardware "$ide_path/hardware" \
-            #     -hardware "$user_path/hardware" \
-            #     -libraries "$user_path/libraries" \
-            #     -build-cache "$ARDUINO_CACHE_DIR" \
-            #     -build-path "$build_dir" \
-            #     $xtra_opts "${sketchdir}/${sketchname}.ino"
+            directory_path=$(dirname "$sketch")
+            constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
+            lib_sketch_name="${directory_path#"$constant_part"}"
+            echo "{\"name\": \"$lib_sketch_name\",
+                \"sizes\": [{
+                        \"flash_bytes\": $flash_bytes,
+                        \"flash_percentage\": $flash_percentage,
+                        \"ram_bytes\": $ram_bytes,
+                        \"ram_percentage\": $ram_percentage
+                        }]
+                }," >> "$sizes_file"
         fi
     done
 
@@ -516,6 +490,9 @@ function build_sketches { # build_sketches <ide_path> <user_path> <target> <path
             shift
             debug_level="$1"
             args+=("-d" "$debug_level")
+            ;;
+        --arduino-cli )
+            args+=("--arduino-cli")
             ;;
         * )
             break
@@ -657,7 +634,7 @@ print_err_warnings() {
     fi
 }
 
-function install_libs { # install_libs <ide_path> <sketchdir> [-v]
+function install_libs { # install_libs [-ai <cli_path>] -s <sketchdir> [-v]
     local ide_path=""
     local sketchdir=""
     local verbose=false
@@ -669,25 +646,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
         -v  ) verbose=true ;;
         * )
             echo "ERROR: Unknown argument: $1" >&2
-            echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
+            echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
             return 1
             ;;
         esac
         shift
     done
 
-    if [ -z "$ide_path" ]; then
-        echo "ERROR: IDE path not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
     if [ -z "$sketchdir" ]; then
         echo "ERROR: Sketch directory not provided" >&2
-        echo "USAGE: install_libs -ai <ide_path> -s <sketchdir> [-v]" >&2
-        return 1
-    fi
-    if [ ! -f "$ide_path/arduino-cli" ]; then
-        echo "ERROR: arduino-cli not found at $ide_path/arduino-cli" >&2
+        echo "USAGE: install_libs [-ai <cli_path>] -s <sketchdir> [-v]" >&2
         return 1
     fi
 
@@ -715,6 +683,16 @@ function install_libs { # install_libs <ide_path> <sketchdir> [-v]
     if [ "$libs_count" -eq 0 ]; then
         [ "$verbose" = true ] && echo "libs array is empty in ci.yml, skipping library installation"
         return 0
+    fi
+
+    if [ -z "$ide_path" ] || [ ! -f "$ide_path/arduino-cli" ]; then
+        echo "arduino-cli not found, installing for library support..."
+        source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+        ide_path="$ARDUINO_IDE_PATH"
+        if [ ! -f "$ide_path/arduino-cli" ]; then
+            echo "ERROR: Failed to install arduino-cli" >&2
+            return 1
+        fi
     fi
 
     echo "Installing $libs_count libraries from $sketchdir/ci.yml"

@@ -444,10 +444,10 @@ def serve(  # noqa: C901
                         logging.warning("Unexpected response from device: '%s'", data)
 
                 except socket.timeout:
-                    logging.debug("Timeout waiting for result (attempt %d/10)", count)
+                    logging.warning("Timeout waiting for result (attempt %d/10)", count)
                     continue
                 except Exception as e:
-                    logging.debug("Error receiving result (attempt %d/10): %s", count, str(e))
+                    logging.warning("Error receiving result (attempt %d/10): %s", count, str(e))
                     # Don't return error here, continue trying
                     continue
 

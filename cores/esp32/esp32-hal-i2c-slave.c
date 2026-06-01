@@ -25,12 +25,16 @@
 #include <math.h>
 
 #include "sdkconfig.h"
+#include "esp_idf_version.h"
 #include "esp_attr.h"
 #include "rom/gpio.h"
 #include "soc/gpio_sig_map.h"
 #include "hal/gpio_types.h"
 #include "driver/gpio.h"
 #include "esp_err.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "esp_rom_gpio.h"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -51,6 +55,12 @@
 #include "esp32-hal-i2c-slave.h"
 #include "esp32-hal-periman.h"
 #include "esp_private/periph_ctrl.h"
+
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define SOC_I2C_FIFO_LEN I2C_LL_FIFO_LEN
+#define gpio_matrix_out  esp_rom_gpio_connect_out_signal
+#define gpio_matrix_in   esp_rom_gpio_connect_in_signal
+#endif
 
 #if SOC_PERIPH_CLK_CTRL_SHARED
 #define I2C_CLOCK_SRC_ATOMIC() PERIPH_RCC_ATOMIC()
@@ -330,6 +340,12 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
   frequency = (frequency * 5) / 4;
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 \
   || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  I2C_RCC_ATOMIC() {
+    i2c_ll_enable_bus_clock(i2c->num, true);
+    i2c_ll_reset_register(i2c->num);
+  }
+#else
   if (i2c->num == 0) {
     periph_ll_enable_clk_clear_rst(PERIPH_I2C0_MODULE);
 #if SOC_HP_I2C_NUM > 1
@@ -337,6 +353,7 @@ esp_err_t i2cSlaveInit(uint8_t num, int sda, int scl, uint16_t slaveID, uint32_t
     periph_ll_enable_clk_clear_rst(PERIPH_I2C1_MODULE);
 #endif
   }
+#endif
 #endif  // !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 #if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 5, 0)) \

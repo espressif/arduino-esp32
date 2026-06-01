@@ -27,6 +27,8 @@ menu.LORAWAN_REGION=LoRaWan Region
 menu.LoRaWanDebugLevel=LoRaWan Debug Level
 menu.LORAWAN_DEVEUI=LoRaWan DevEUI
 menu.LORAWAN_PREAMBLE_LENGTH=LoRaWan Preamble Length
+menu.LORA_FEM_TYPE=LoRa FEM Type
+menu.LORA_RX_LNA=LoRa External FEM Receive Gain
 menu.SLOW_CLK_TPYE=Slow Clk Type(only for LoRaWAN)
 menu.einksize=E-Ink Display Size
 menu.NetworkLogLevel=Network Log Level
@@ -27268,6 +27270,292 @@ heltec_wifi_lora_32_V3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+heltec_wifi_lora_32_V4.name=Heltec WiFi LoRa 32(V4)
+
+heltec_wifi_lora_32_V4.bootloader.tool=esptool_py
+heltec_wifi_lora_32_V4.bootloader.tool.default=esptool_py
+
+heltec_wifi_lora_32_V4.upload.tool=esptool_py
+heltec_wifi_lora_32_V4.upload.tool.default=esptool_py
+heltec_wifi_lora_32_V4.upload.tool.network=esp_ota
+
+heltec_wifi_lora_32_V4.upload.maximum_size=1310720
+heltec_wifi_lora_32_V4.upload.maximum_data_size=327680
+heltec_wifi_lora_32_V4.upload.flags=
+heltec_wifi_lora_32_V4.upload.extra_flags=
+heltec_wifi_lora_32_V4.upload.use_1200bps_touch=false
+heltec_wifi_lora_32_V4.upload.wait_for_upload_port=false
+
+heltec_wifi_lora_32_V4.serial.disableDTR=false
+heltec_wifi_lora_32_V4.serial.disableRTS=false
+
+heltec_wifi_lora_32_V4.build.tarch=xtensa
+heltec_wifi_lora_32_V4.build.bootloader_addr=0x0
+heltec_wifi_lora_32_V4.build.target=esp32s3
+heltec_wifi_lora_32_V4.build.mcu=esp32s3
+heltec_wifi_lora_32_V4.build.core=esp32
+heltec_wifi_lora_32_V4.build.variant=heltec_wifi_lora_32_V4
+heltec_wifi_lora_32_V4.build.board=HELTEC_WIFI_LORA_32_V4
+
+heltec_wifi_lora_32_V4.build.usb_mode=1
+heltec_wifi_lora_32_V4.build.cdc_on_boot=0
+heltec_wifi_lora_32_V4.build.msc_on_boot=0
+heltec_wifi_lora_32_V4.build.dfu_on_boot=0
+heltec_wifi_lora_32_V4.build.f_cpu=240000000L
+heltec_wifi_lora_32_V4.build.flash_size=4MB
+heltec_wifi_lora_32_V4.build.flash_freq=80m
+heltec_wifi_lora_32_V4.build.flash_mode=dio
+heltec_wifi_lora_32_V4.build.boot=qio
+heltec_wifi_lora_32_V4.build.boot_freq=80m
+heltec_wifi_lora_32_V4.build.partitions=default
+heltec_wifi_lora_32_V4.build.defines=-D{build.band} -DMCU_ESP32_S3 -DHELTEC_BOARD=30 -DSLOW_CLK_TPYE=0 -DWIFI_LORA_32_V4 -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -DLORA_RX_LNA={build.LORA_RX_LNA} -D{build.LORA_FEM_TYPE} -D{build.board} {build.psram_val}
+heltec_wifi_lora_32_V4.build.loop_core=
+heltec_wifi_lora_32_V4.build.event_core=
+heltec_wifi_lora_32_V4.build.psram_type=qspi
+heltec_wifi_lora_32_V4.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.default=Disabled
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.default.build.copy_jtag_files=0
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.builtin=Integrated USB JTAG
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.external=FTDI Adapter
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.external.build.copy_jtag_files=1
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.bridge=ESP USB Bridge
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+heltec_wifi_lora_32_V4.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+heltec_wifi_lora_32_V4.menu.PSRAM.disabled=Disabled
+heltec_wifi_lora_32_V4.menu.PSRAM.disabled.build.psram_val=
+heltec_wifi_lora_32_V4.menu.PSRAM.disabled.build.psram_type=qspi
+heltec_wifi_lora_32_V4.menu.PSRAM.enabled=QSPI PSRAM
+heltec_wifi_lora_32_V4.menu.PSRAM.enabled.build.psram_val=-DBOARD_HAS_PSRAM
+heltec_wifi_lora_32_V4.menu.PSRAM.enabled.build.psram_type=qspi
+
+heltec_wifi_lora_32_V4.menu.FlashMode.qio=QIO 80MHz
+heltec_wifi_lora_32_V4.menu.FlashMode.qio.build.flash_mode=dio
+heltec_wifi_lora_32_V4.menu.FlashMode.qio.build.boot=qio
+heltec_wifi_lora_32_V4.menu.FlashMode.qio.build.boot_freq=80m
+heltec_wifi_lora_32_V4.menu.FlashMode.qio.build.flash_freq=80m
+heltec_wifi_lora_32_V4.menu.FlashMode.qio120=QIO 120MHz
+heltec_wifi_lora_32_V4.menu.FlashMode.qio120.build.flash_mode=dio
+heltec_wifi_lora_32_V4.menu.FlashMode.qio120.build.boot=qio
+heltec_wifi_lora_32_V4.menu.FlashMode.qio120.build.boot_freq=120m
+heltec_wifi_lora_32_V4.menu.FlashMode.qio120.build.flash_freq=80m
+heltec_wifi_lora_32_V4.menu.FlashMode.dio=DIO 80MHz
+heltec_wifi_lora_32_V4.menu.FlashMode.dio.build.flash_mode=dio
+heltec_wifi_lora_32_V4.menu.FlashMode.dio.build.boot=dio
+heltec_wifi_lora_32_V4.menu.FlashMode.dio.build.boot_freq=80m
+heltec_wifi_lora_32_V4.menu.FlashMode.dio.build.flash_freq=80m
+
+heltec_wifi_lora_32_V4.menu.FlashSize.16M=16MB (128Mb)
+heltec_wifi_lora_32_V4.menu.FlashSize.16M.build.flash_size=16MB
+
+heltec_wifi_lora_32_V4.menu.LoopCore.1=Core 1
+heltec_wifi_lora_32_V4.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_wifi_lora_32_V4.menu.LoopCore.0=Core 0
+heltec_wifi_lora_32_V4.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_wifi_lora_32_V4.menu.EventsCore.1=Core 1
+heltec_wifi_lora_32_V4.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_wifi_lora_32_V4.menu.EventsCore.0=Core 0
+heltec_wifi_lora_32_V4.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_wifi_lora_32_V4.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_wifi_lora_32_V4.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_wifi_lora_32_V4.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_wifi_lora_32_V4.menu.USBMode.default.build.usb_mode=0
+
+heltec_wifi_lora_32_V4.menu.CDCOnBoot.default=Disabled
+heltec_wifi_lora_32_V4.menu.CDCOnBoot.default.build.cdc_on_boot=0
+heltec_wifi_lora_32_V4.menu.CDCOnBoot.cdc=Enabled
+heltec_wifi_lora_32_V4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+heltec_wifi_lora_32_V4.menu.MSCOnBoot.default=Disabled
+heltec_wifi_lora_32_V4.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_wifi_lora_32_V4.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_wifi_lora_32_V4.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_wifi_lora_32_V4.menu.DFUOnBoot.default=Disabled
+heltec_wifi_lora_32_V4.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_wifi_lora_32_V4.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_wifi_lora_32_V4.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_wifi_lora_32_V4.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_wifi_lora_32_V4.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_wifi_lora_32_V4.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_wifi_lora_32_V4.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_wifi_lora_32_V4.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_wifi_lora_32_V4.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_wifi_lora_32_V4.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.default.build.partitions=default
+heltec_wifi_lora_32_V4.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+heltec_wifi_lora_32_V4.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+heltec_wifi_lora_32_V4.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.minimal.build.partitions=minimal
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_fs.build.partitions=no_fs
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wifi_lora_32_V4.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wifi_lora_32_V4.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wifi_lora_32_V4.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wifi_lora_32_V4.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+heltec_wifi_lora_32_V4.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+heltec_wifi_lora_32_V4.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+heltec_wifi_lora_32_V4.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.fatflash.build.partitions=ffat
+heltec_wifi_lora_32_V4.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+heltec_wifi_lora_32_V4.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker=RainMaker 4MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+heltec_wifi_lora_32_V4.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+heltec_wifi_lora_32_V4.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+heltec_wifi_lora_32_V4.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+heltec_wifi_lora_32_V4.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+heltec_wifi_lora_32_V4.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+heltec_wifi_lora_32_V4.menu.PartitionScheme.custom=Custom
+heltec_wifi_lora_32_V4.menu.PartitionScheme.custom.build.partitions=
+heltec_wifi_lora_32_V4.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+heltec_wifi_lora_32_V4.menu.CPUFreq.240=240MHz (WiFi)
+heltec_wifi_lora_32_V4.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_wifi_lora_32_V4.menu.CPUFreq.160=160MHz (WiFi)
+heltec_wifi_lora_32_V4.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_wifi_lora_32_V4.menu.CPUFreq.80=80MHz (WiFi)
+heltec_wifi_lora_32_V4.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_wifi_lora_32_V4.menu.CPUFreq.40=40MHz
+heltec_wifi_lora_32_V4.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_wifi_lora_32_V4.menu.CPUFreq.20=20MHz
+heltec_wifi_lora_32_V4.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_wifi_lora_32_V4.menu.CPUFreq.10=10MHz
+heltec_wifi_lora_32_V4.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_wifi_lora_32_V4.menu.UploadSpeed.921600=921600
+heltec_wifi_lora_32_V4.menu.UploadSpeed.921600.upload.speed=921600
+heltec_wifi_lora_32_V4.menu.UploadSpeed.115200=115200
+heltec_wifi_lora_32_V4.menu.UploadSpeed.115200.upload.speed=115200
+heltec_wifi_lora_32_V4.menu.UploadSpeed.256000.windows=256000
+heltec_wifi_lora_32_V4.menu.UploadSpeed.256000.upload.speed=256000
+heltec_wifi_lora_32_V4.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_wifi_lora_32_V4.menu.UploadSpeed.230400=230400
+heltec_wifi_lora_32_V4.menu.UploadSpeed.230400.upload.speed=230400
+heltec_wifi_lora_32_V4.menu.UploadSpeed.460800.linux=460800
+heltec_wifi_lora_32_V4.menu.UploadSpeed.460800.macosx=460800
+heltec_wifi_lora_32_V4.menu.UploadSpeed.460800.upload.speed=460800
+heltec_wifi_lora_32_V4.menu.UploadSpeed.512000.windows=512000
+heltec_wifi_lora_32_V4.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_wifi_lora_32_V4.menu.DebugLevel.none=None
+heltec_wifi_lora_32_V4.menu.DebugLevel.none.build.code_debug=0
+heltec_wifi_lora_32_V4.menu.DebugLevel.error=Error
+heltec_wifi_lora_32_V4.menu.DebugLevel.error.build.code_debug=1
+heltec_wifi_lora_32_V4.menu.DebugLevel.warn=Warn
+heltec_wifi_lora_32_V4.menu.DebugLevel.warn.build.code_debug=2
+heltec_wifi_lora_32_V4.menu.DebugLevel.info=Info
+heltec_wifi_lora_32_V4.menu.DebugLevel.info.build.code_debug=3
+heltec_wifi_lora_32_V4.menu.DebugLevel.debug=Debug
+heltec_wifi_lora_32_V4.menu.DebugLevel.debug.build.code_debug=4
+heltec_wifi_lora_32_V4.menu.DebugLevel.verbose=Verbose
+heltec_wifi_lora_32_V4.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.3=REGION_US915
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_wifi_lora_32_V4.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.0=None
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.1=Freq
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_wifi_lora_32_V4.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_wifi_lora_32_V4.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_wifi_lora_32_V4.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_wifi_lora_32_V4.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_wifi_lora_32_V4.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_wifi_lora_32_V4.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_wifi_lora_32_V4.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_wifi_lora_32_V4.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_wifi_lora_32_V4.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.0=USE_NONE_PA (default)
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.0.build.LORA_FEM_TYPE=USE_NONE_PA
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.1=USE_KCT8103L_PA
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.1.build.LORA_FEM_TYPE=USE_KCT8103L_PA
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.2=USE_GC1109_PA
+heltec_wifi_lora_32_V4.menu.LORA_FEM_TYPE.2.build.LORA_FEM_TYPE=USE_GC1109_PA
+
+heltec_wifi_lora_32_V4.menu.LORA_RX_LNA.0=Disabled (default)
+heltec_wifi_lora_32_V4.menu.LORA_RX_LNA.0.build.LORA_RX_LNA=1
+heltec_wifi_lora_32_V4.menu.LORA_RX_LNA.1=Enabled
+heltec_wifi_lora_32_V4.menu.LORA_RX_LNA.1.build.LORA_RX_LNA=0
+
+heltec_wifi_lora_32_V4.menu.EraseFlash.none=Disabled
+heltec_wifi_lora_32_V4.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wifi_lora_32_V4.menu.EraseFlash.all=Enabled
+heltec_wifi_lora_32_V4.menu.EraseFlash.all.upload.erase_cmd=-e
+
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.default=Disabled
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.default.build.zigbee_mode=
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.default.build.zigbee_libs=
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+heltec_wifi_lora_32_V4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+
 heltec_wireless_stick_V3.name=Heltec Wireless Stick(V3)
 
 heltec_wireless_stick_V3.bootloader.tool=esptool_py
@@ -28190,6 +28478,271 @@ heltec_wireless_tracker.menu.EraseFlash.none=Disabled
 heltec_wireless_tracker.menu.EraseFlash.none.upload.erase_cmd=
 heltec_wireless_tracker.menu.EraseFlash.all=Enabled
 heltec_wireless_tracker.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+heltec_wireless_tracker_v2.name=Heltec Wireless Tracker(V2)
+
+heltec_wireless_tracker_v2.bootloader.tool=esptool_py
+heltec_wireless_tracker_v2.bootloader.tool.default=esptool_py
+
+heltec_wireless_tracker_v2.upload.tool=esptool_py
+heltec_wireless_tracker_v2.upload.tool.default=esptool_py
+heltec_wireless_tracker_v2.upload.tool.network=esp_ota
+
+heltec_wireless_tracker_v2.upload.maximum_size=3342336
+heltec_wireless_tracker_v2.upload.maximum_data_size=327680
+heltec_wireless_tracker_v2.upload.flags=
+heltec_wireless_tracker_v2.upload.extra_flags=
+heltec_wireless_tracker_v2.upload.use_1200bps_touch=false
+heltec_wireless_tracker_v2.upload.wait_for_upload_port=false
+
+heltec_wireless_tracker_v2.serial.disableDTR=false
+heltec_wireless_tracker_v2.serial.disableRTS=false
+
+heltec_wireless_tracker_v2.build.tarch=xtensa
+heltec_wireless_tracker_v2.build.bootloader_addr=0x0
+heltec_wireless_tracker_v2.build.target=esp32s3
+heltec_wireless_tracker_v2.build.mcu=esp32s3
+heltec_wireless_tracker_v2.build.core=esp32
+heltec_wireless_tracker_v2.build.variant=heltec_wireless_tracker_v2
+heltec_wireless_tracker_v2.build.board=HELTEC_WIRELESS_TRACKER_V2
+
+heltec_wireless_tracker_v2.build.usb_mode=1
+heltec_wireless_tracker_v2.build.cdc_on_boot=0
+heltec_wireless_tracker_v2.build.msc_on_boot=0
+heltec_wireless_tracker_v2.build.dfu_on_boot=0
+heltec_wireless_tracker_v2.build.f_cpu=240000000L
+heltec_wireless_tracker_v2.build.flash_size=8MB
+heltec_wireless_tracker_v2.build.flash_freq=80m
+heltec_wireless_tracker_v2.build.flash_mode=dio
+heltec_wireless_tracker_v2.build.boot=qio
+heltec_wireless_tracker_v2.build.boot_freq=80m
+heltec_wireless_tracker_v2.build.partitions=default_8MB
+heltec_wireless_tracker_v2.build.defines=-D{build.band}  -DMCU_ESP32_S3 -DHELTEC_BOARD=34 -DWIRELESS_TRACKER_V2 -DSLOW_CLK_TPYE={build.SLOW_CLK_TPYE} -DRADIO_CHIP_SX1262  -DLoRaWAN_DEBUG_LEVEL={build.LoRaWanDebugLevel} -DACTIVE_REGION=LORAMAC_{build.band} -DLORAWAN_PREAMBLE_LENGTH={build.LORAWAN_PREAMBLE_LENGTH} -DLORAWAN_DEVEUI_AUTO={build.LORAWAN_DEVEUI_AUTO} -DLORA_RX_LNA={build.LORA_RX_LNA} -D{build.LORA_FEM_TYPE} -D{build.board}
+heltec_wireless_tracker_v2.build.loop_core=
+heltec_wireless_tracker_v2.build.event_core=
+heltec_wireless_tracker_v2.build.psram_type=qspi
+heltec_wireless_tracker_v2.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+heltec_wireless_tracker_v2.menu.JTAGAdapter.default=Disabled
+heltec_wireless_tracker_v2.menu.JTAGAdapter.default.build.copy_jtag_files=0
+heltec_wireless_tracker_v2.menu.JTAGAdapter.builtin=Integrated USB JTAG
+heltec_wireless_tracker_v2.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+heltec_wireless_tracker_v2.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+heltec_wireless_tracker_v2.menu.JTAGAdapter.external=FTDI Adapter
+heltec_wireless_tracker_v2.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+heltec_wireless_tracker_v2.menu.JTAGAdapter.external.build.copy_jtag_files=1
+heltec_wireless_tracker_v2.menu.JTAGAdapter.bridge=ESP USB Bridge
+heltec_wireless_tracker_v2.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+heltec_wireless_tracker_v2.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+heltec_wireless_tracker_v2.menu.FlashMode.qio=QIO 80MHz
+heltec_wireless_tracker_v2.menu.FlashMode.qio.build.flash_mode=dio
+heltec_wireless_tracker_v2.menu.FlashMode.qio.build.boot=qio
+heltec_wireless_tracker_v2.menu.FlashMode.qio.build.boot_freq=80m
+heltec_wireless_tracker_v2.menu.FlashMode.qio.build.flash_freq=80m
+heltec_wireless_tracker_v2.menu.FlashMode.qio120=QIO 120MHz
+heltec_wireless_tracker_v2.menu.FlashMode.qio120.build.flash_mode=dio
+heltec_wireless_tracker_v2.menu.FlashMode.qio120.build.boot=qio
+heltec_wireless_tracker_v2.menu.FlashMode.qio120.build.boot_freq=120m
+heltec_wireless_tracker_v2.menu.FlashMode.qio120.build.flash_freq=80m
+heltec_wireless_tracker_v2.menu.FlashMode.dio=DIO 80MHz
+heltec_wireless_tracker_v2.menu.FlashMode.dio.build.flash_mode=dio
+heltec_wireless_tracker_v2.menu.FlashMode.dio.build.boot=dio
+heltec_wireless_tracker_v2.menu.FlashMode.dio.build.boot_freq=80m
+heltec_wireless_tracker_v2.menu.FlashMode.dio.build.flash_freq=80m
+
+heltec_wireless_tracker_v2.menu.FlashSize.8M=8MB (64Mb)
+heltec_wireless_tracker_v2.menu.FlashSize.8M.build.flash_size=8MB
+
+heltec_wireless_tracker_v2.menu.LoopCore.1=Core 1
+heltec_wireless_tracker_v2.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+heltec_wireless_tracker_v2.menu.LoopCore.0=Core 0
+heltec_wireless_tracker_v2.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+heltec_wireless_tracker_v2.menu.EventsCore.1=Core 1
+heltec_wireless_tracker_v2.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+heltec_wireless_tracker_v2.menu.EventsCore.0=Core 0
+heltec_wireless_tracker_v2.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+heltec_wireless_tracker_v2.menu.USBMode.hwcdc=Hardware CDC and JTAG
+heltec_wireless_tracker_v2.menu.USBMode.hwcdc.build.usb_mode=1
+heltec_wireless_tracker_v2.menu.USBMode.default=USB-OTG (TinyUSB)
+heltec_wireless_tracker_v2.menu.USBMode.default.build.usb_mode=0
+
+heltec_wireless_tracker_v2.menu.CDCOnBoot.default=Disabled
+heltec_wireless_tracker_v2.menu.CDCOnBoot.default.build.cdc_on_boot=0
+heltec_wireless_tracker_v2.menu.CDCOnBoot.cdc=Enabled
+heltec_wireless_tracker_v2.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+heltec_wireless_tracker_v2.menu.MSCOnBoot.default=Disabled
+heltec_wireless_tracker_v2.menu.MSCOnBoot.default.build.msc_on_boot=0
+heltec_wireless_tracker_v2.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+heltec_wireless_tracker_v2.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+heltec_wireless_tracker_v2.menu.DFUOnBoot.default=Disabled
+heltec_wireless_tracker_v2.menu.DFUOnBoot.default.build.dfu_on_boot=0
+heltec_wireless_tracker_v2.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+heltec_wireless_tracker_v2.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+heltec_wireless_tracker_v2.menu.UploadMode.default=UART0 / Hardware CDC
+heltec_wireless_tracker_v2.menu.UploadMode.default.upload.use_1200bps_touch=false
+heltec_wireless_tracker_v2.menu.UploadMode.default.upload.wait_for_upload_port=false
+heltec_wireless_tracker_v2.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+heltec_wireless_tracker_v2.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+heltec_wireless_tracker_v2.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+heltec_wireless_tracker_v2.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+heltec_wireless_tracker_v2.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+heltec_wireless_tracker_v2.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.minimal.build.partitions=minimal
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_fs.build.partitions=no_fs
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_ota.build.partitions=no_ota
+heltec_wireless_tracker_v2.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+heltec_wireless_tracker_v2.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+heltec_wireless_tracker_v2.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.huge_app.build.partitions=huge_app
+heltec_wireless_tracker_v2.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+heltec_wireless_tracker_v2.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+heltec_wireless_tracker_v2.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+heltec_wireless_tracker_v2.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker=RainMaker 4MB
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+heltec_wireless_tracker_v2.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+heltec_wireless_tracker_v2.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+heltec_wireless_tracker_v2.menu.PartitionScheme.custom=Custom
+heltec_wireless_tracker_v2.menu.PartitionScheme.custom.build.partitions=
+heltec_wireless_tracker_v2.menu.PartitionScheme.custom.upload.maximum_size=8388608
+
+heltec_wireless_tracker_v2.menu.CPUFreq.240=240MHz (WiFi)
+heltec_wireless_tracker_v2.menu.CPUFreq.240.build.f_cpu=240000000L
+heltec_wireless_tracker_v2.menu.CPUFreq.160=160MHz (WiFi)
+heltec_wireless_tracker_v2.menu.CPUFreq.160.build.f_cpu=160000000L
+heltec_wireless_tracker_v2.menu.CPUFreq.80=80MHz (WiFi)
+heltec_wireless_tracker_v2.menu.CPUFreq.80.build.f_cpu=80000000L
+heltec_wireless_tracker_v2.menu.CPUFreq.40=40MHz
+heltec_wireless_tracker_v2.menu.CPUFreq.40.build.f_cpu=40000000L
+heltec_wireless_tracker_v2.menu.CPUFreq.20=20MHz
+heltec_wireless_tracker_v2.menu.CPUFreq.20.build.f_cpu=20000000L
+heltec_wireless_tracker_v2.menu.CPUFreq.10=10MHz
+heltec_wireless_tracker_v2.menu.CPUFreq.10.build.f_cpu=10000000L
+
+heltec_wireless_tracker_v2.menu.UploadSpeed.921600=921600
+heltec_wireless_tracker_v2.menu.UploadSpeed.921600.upload.speed=921600
+heltec_wireless_tracker_v2.menu.UploadSpeed.115200=115200
+heltec_wireless_tracker_v2.menu.UploadSpeed.115200.upload.speed=115200
+heltec_wireless_tracker_v2.menu.UploadSpeed.256000.windows=256000
+heltec_wireless_tracker_v2.menu.UploadSpeed.256000.upload.speed=256000
+heltec_wireless_tracker_v2.menu.UploadSpeed.230400.windows.upload.speed=256000
+heltec_wireless_tracker_v2.menu.UploadSpeed.230400=230400
+heltec_wireless_tracker_v2.menu.UploadSpeed.230400.upload.speed=230400
+heltec_wireless_tracker_v2.menu.UploadSpeed.460800.linux=460800
+heltec_wireless_tracker_v2.menu.UploadSpeed.460800.macosx=460800
+heltec_wireless_tracker_v2.menu.UploadSpeed.460800.upload.speed=460800
+heltec_wireless_tracker_v2.menu.UploadSpeed.512000.windows=512000
+heltec_wireless_tracker_v2.menu.UploadSpeed.512000.upload.speed=512000
+
+heltec_wireless_tracker_v2.menu.DebugLevel.none=None
+heltec_wireless_tracker_v2.menu.DebugLevel.none.build.code_debug=0
+heltec_wireless_tracker_v2.menu.DebugLevel.error=Error
+heltec_wireless_tracker_v2.menu.DebugLevel.error.build.code_debug=1
+heltec_wireless_tracker_v2.menu.DebugLevel.warn=Warn
+heltec_wireless_tracker_v2.menu.DebugLevel.warn.build.code_debug=2
+heltec_wireless_tracker_v2.menu.DebugLevel.info=Info
+heltec_wireless_tracker_v2.menu.DebugLevel.info.build.code_debug=3
+heltec_wireless_tracker_v2.menu.DebugLevel.debug=Debug
+heltec_wireless_tracker_v2.menu.DebugLevel.debug.build.code_debug=4
+heltec_wireless_tracker_v2.menu.DebugLevel.verbose=Verbose
+heltec_wireless_tracker_v2.menu.DebugLevel.verbose.build.code_debug=5
+
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.0=REGION_EU868
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.0.build.band=REGION_EU868
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.1=REGION_EU433
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.1.build.band=REGION_EU433
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.2=REGION_CN470
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.2.build.band=REGION_CN470
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.3=REGION_US915
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.3.build.band=REGION_US915
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.4=REGION_AU915
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.4.build.band=REGION_AU915
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.5=REGION_CN779
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.5.build.band=REGION_CN779
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.6=REGION_AS923
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.6.build.band=REGION_AS923
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.7=REGION_KR920
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.7.build.band=REGION_KR920
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.8=REGION_IN865
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.8.build.band=REGION_IN865
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.9=REGION_US915_HYBRID
+heltec_wireless_tracker_v2.menu.LORAWAN_REGION.9.build.band=REGION_US915_HYBRID
+
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.0=None
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.0.build.LoRaWanDebugLevel=0
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.1=Freq
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.1.build.LoRaWanDebugLevel=1
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.2=Freq && DIO
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.2.build.LoRaWanDebugLevel=2
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.3=Freq && DIO && PW
+heltec_wireless_tracker_v2.menu.LoRaWanDebugLevel.3.build.LoRaWanDebugLevel=3
+
+heltec_wireless_tracker_v2.menu.LORAWAN_DEVEUI.0=CUSTOM
+heltec_wireless_tracker_v2.menu.LORAWAN_DEVEUI.0.build.LORAWAN_DEVEUI_AUTO=0
+heltec_wireless_tracker_v2.menu.LORAWAN_DEVEUI.1=Generate By ChipID
+heltec_wireless_tracker_v2.menu.LORAWAN_DEVEUI.1.build.LORAWAN_DEVEUI_AUTO=1
+
+heltec_wireless_tracker_v2.menu.LORAWAN_PREAMBLE_LENGTH.0=8(default)
+heltec_wireless_tracker_v2.menu.LORAWAN_PREAMBLE_LENGTH.0.build.LORAWAN_PREAMBLE_LENGTH=8
+heltec_wireless_tracker_v2.menu.LORAWAN_PREAMBLE_LENGTH.1=16(For M00 and M00L)
+heltec_wireless_tracker_v2.menu.LORAWAN_PREAMBLE_LENGTH.1.build.LORAWAN_PREAMBLE_LENGTH=16
+
+heltec_wireless_tracker_v2.menu.LORA_FEM_TYPE.0=USE_KCT8103L_PA (default)
+heltec_wireless_tracker_v2.menu.LORA_FEM_TYPE.0.build.LORA_FEM_TYPE=USE_KCT8103L_PA
+
+heltec_wireless_tracker_v2.menu.LORA_RX_LNA.0=Disabled (default)
+heltec_wireless_tracker_v2.menu.LORA_RX_LNA.0.build.LORA_RX_LNA=1
+heltec_wireless_tracker_v2.menu.LORA_RX_LNA.1=Enabled
+heltec_wireless_tracker_v2.menu.LORA_RX_LNA.1.build.LORA_RX_LNA=0
+
+heltec_wireless_tracker_v2.menu.SLOW_CLK_TPYE.0=Internal (default)
+heltec_wireless_tracker_v2.menu.SLOW_CLK_TPYE.0.build.SLOW_CLK_TPYE=0
+heltec_wireless_tracker_v2.menu.SLOW_CLK_TPYE.1=External 32K
+heltec_wireless_tracker_v2.menu.SLOW_CLK_TPYE.1.build.SLOW_CLK_TPYE=1
+
+heltec_wireless_tracker_v2.menu.EraseFlash.none=Disabled
+heltec_wireless_tracker_v2.menu.EraseFlash.none.upload.erase_cmd=
+heltec_wireless_tracker_v2.menu.EraseFlash.all=Enabled
+heltec_wireless_tracker_v2.menu.EraseFlash.all.upload.erase_cmd=-e
+
+heltec_wireless_tracker_v2.menu.ZigbeeMode.default=Disabled
+heltec_wireless_tracker_v2.menu.ZigbeeMode.default.build.zigbee_mode=
+heltec_wireless_tracker_v2.menu.ZigbeeMode.default.build.zigbee_libs=
+heltec_wireless_tracker_v2.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+heltec_wireless_tracker_v2.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+heltec_wireless_tracker_v2.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################
 
@@ -43883,6 +44436,182 @@ Geekble_Nano_ESP32S3.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+waveshare_p4_poe_eth.name=Waveshare ESP32-P4-POE-ETH
+
+waveshare_p4_poe_eth.bootloader.tool=esptool_py
+waveshare_p4_poe_eth.bootloader.tool.default=esptool_py
+
+waveshare_p4_poe_eth.upload.tool=esptool_py
+waveshare_p4_poe_eth.upload.tool.default=esptool_py
+waveshare_p4_poe_eth.upload.tool.network=esp_ota
+
+waveshare_p4_poe_eth.upload.maximum_size=1310720
+waveshare_p4_poe_eth.upload.maximum_data_size=327680
+waveshare_p4_poe_eth.upload.flags=
+waveshare_p4_poe_eth.upload.extra_flags=
+waveshare_p4_poe_eth.upload.use_1200bps_touch=false
+waveshare_p4_poe_eth.upload.wait_for_upload_port=false
+
+waveshare_p4_poe_eth.serial.disableDTR=false
+waveshare_p4_poe_eth.serial.disableRTS=false
+
+waveshare_p4_poe_eth.build.tarch=riscv32
+waveshare_p4_poe_eth.build.target=esp
+waveshare_p4_poe_eth.build.mcu=esp32p4
+waveshare_p4_poe_eth.build.core=esp32
+waveshare_p4_poe_eth.build.variant=waveshare_p4_poe_eth
+waveshare_p4_poe_eth.build.chip_variant=esp32p4_es
+waveshare_p4_poe_eth.build.board=WAVESHARE_ESP32P4_POE_ETH
+waveshare_p4_poe_eth.build.bootloader_addr=0x2000
+
+waveshare_p4_poe_eth.build.usb_mode=0
+waveshare_p4_poe_eth.build.cdc_on_boot=0
+waveshare_p4_poe_eth.build.msc_on_boot=0
+waveshare_p4_poe_eth.build.dfu_on_boot=0
+waveshare_p4_poe_eth.build.f_cpu=360000000L
+waveshare_p4_poe_eth.build.flash_size=32MB
+waveshare_p4_poe_eth.build.flash_freq=80m
+waveshare_p4_poe_eth.build.img_freq=80m
+waveshare_p4_poe_eth.build.flash_mode=dio
+waveshare_p4_poe_eth.build.boot=qio
+waveshare_p4_poe_eth.build.partitions=default
+waveshare_p4_poe_eth.build.defines=-DBOARD_HAS_PSRAM
+
+waveshare_p4_poe_eth.menu.ChipVariant.prev3=Before v3.00
+waveshare_p4_poe_eth.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
+waveshare_p4_poe_eth.menu.ChipVariant.prev3.build.f_cpu=360000000L
+waveshare_p4_poe_eth.menu.ChipVariant.postv3=v3.00 or newer
+waveshare_p4_poe_eth.menu.ChipVariant.postv3.build.chip_variant=esp32p4
+waveshare_p4_poe_eth.menu.ChipVariant.postv3.build.f_cpu=400000000L
+
+## IDE 2.0 Seems to not update the value
+waveshare_p4_poe_eth.menu.JTAGAdapter.default=Disabled
+waveshare_p4_poe_eth.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_p4_poe_eth.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_p4_poe_eth.menu.JTAGAdapter.builtin.build.openocdscript=esp32p4-builtin.cfg
+waveshare_p4_poe_eth.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_p4_poe_eth.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_p4_poe_eth.menu.JTAGAdapter.external.build.openocdscript=esp32p4-ftdi.cfg
+waveshare_p4_poe_eth.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_p4_poe_eth.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_p4_poe_eth.menu.JTAGAdapter.bridge.build.openocdscript=esp32p4-bridge.cfg
+waveshare_p4_poe_eth.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_p4_poe_eth.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_p4_poe_eth.menu.USBMode.default.build.usb_mode=0
+waveshare_p4_poe_eth.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_p4_poe_eth.menu.USBMode.hwcdc.build.usb_mode=1
+
+waveshare_p4_poe_eth.menu.CDCOnBoot.default=Disabled
+waveshare_p4_poe_eth.menu.CDCOnBoot.default.build.cdc_on_boot=0
+waveshare_p4_poe_eth.menu.CDCOnBoot.cdc=Enabled
+waveshare_p4_poe_eth.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+waveshare_p4_poe_eth.menu.MSCOnBoot.default=Disabled
+waveshare_p4_poe_eth.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_p4_poe_eth.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_p4_poe_eth.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_p4_poe_eth.menu.DFUOnBoot.default=Disabled
+waveshare_p4_poe_eth.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_p4_poe_eth.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_p4_poe_eth.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_p4_poe_eth.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_p4_poe_eth.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_p4_poe_eth.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_p4_poe_eth.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_p4_poe_eth.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_p4_poe_eth.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_p4_poe_eth.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.default.build.partitions=default
+waveshare_p4_poe_eth.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+waveshare_p4_poe_eth.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+waveshare_p4_poe_eth.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+waveshare_p4_poe_eth.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.minimal.build.partitions=minimal
+waveshare_p4_poe_eth.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+waveshare_p4_poe_eth.menu.PartitionScheme.no_fs.build.partitions=no_fs
+waveshare_p4_poe_eth.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+waveshare_p4_poe_eth.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.no_ota.build.partitions=no_ota
+waveshare_p4_poe_eth.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+waveshare_p4_poe_eth.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+waveshare_p4_poe_eth.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.huge_app.build.partitions=huge_app
+waveshare_p4_poe_eth.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+waveshare_p4_poe_eth.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+waveshare_p4_poe_eth.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+waveshare_p4_poe_eth.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.fatflash.build.partitions=ffat
+waveshare_p4_poe_eth.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+waveshare_p4_poe_eth.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+waveshare_p4_poe_eth.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+waveshare_p4_poe_eth.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+waveshare_p4_poe_eth.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+waveshare_p4_poe_eth.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+waveshare_p4_poe_eth.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MODEL)
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
+waveshare_p4_poe_eth.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+waveshare_p4_poe_eth.menu.PartitionScheme.custom=Custom
+waveshare_p4_poe_eth.menu.PartitionScheme.custom.build.partitions=
+waveshare_p4_poe_eth.menu.PartitionScheme.custom.upload.maximum_size=33554432
+
+waveshare_p4_poe_eth.menu.UploadSpeed.921600=921600
+waveshare_p4_poe_eth.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_p4_poe_eth.menu.UploadSpeed.115200=115200
+waveshare_p4_poe_eth.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_p4_poe_eth.menu.UploadSpeed.256000.windows=256000
+waveshare_p4_poe_eth.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_p4_poe_eth.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_p4_poe_eth.menu.UploadSpeed.230400=230400
+waveshare_p4_poe_eth.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_p4_poe_eth.menu.UploadSpeed.460800.linux=460800
+waveshare_p4_poe_eth.menu.UploadSpeed.460800.macosx=460800
+waveshare_p4_poe_eth.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_p4_poe_eth.menu.UploadSpeed.512000.windows=512000
+waveshare_p4_poe_eth.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_p4_poe_eth.menu.DebugLevel.none=None
+waveshare_p4_poe_eth.menu.DebugLevel.none.build.code_debug=0
+waveshare_p4_poe_eth.menu.DebugLevel.error=Error
+waveshare_p4_poe_eth.menu.DebugLevel.error.build.code_debug=1
+waveshare_p4_poe_eth.menu.DebugLevel.warn=Warn
+waveshare_p4_poe_eth.menu.DebugLevel.warn.build.code_debug=2
+waveshare_p4_poe_eth.menu.DebugLevel.info=Info
+waveshare_p4_poe_eth.menu.DebugLevel.info.build.code_debug=3
+waveshare_p4_poe_eth.menu.DebugLevel.debug=Debug
+waveshare_p4_poe_eth.menu.DebugLevel.debug.build.code_debug=4
+waveshare_p4_poe_eth.menu.DebugLevel.verbose=Verbose
+waveshare_p4_poe_eth.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_p4_poe_eth.menu.EraseFlash.none=Disabled
+waveshare_p4_poe_eth.menu.EraseFlash.none.upload.erase_cmd=
+waveshare_p4_poe_eth.menu.EraseFlash.all=Enabled
+waveshare_p4_poe_eth.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 waveshare_esp32_s3_zero.name=Waveshare ESP32-S3-Zero
 waveshare_esp32_s3_zero.vid.0=0x303a
 waveshare_esp32_s3_zero.pid.0=0x822B
@@ -46567,9 +47296,9 @@ codecell.menu.JTAGAdapter.bridge.build.openocdscript=esp32c3-bridge.cfg
 codecell.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
 
 codecell.menu.CDCOnBoot.default=Enabled
-codecell.menu.CDCOnBoot.default.build.cdc_on_boot=0
-codecell.menu.CDCOnBoot.cdc=Enabled
-codecell.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+codecell.menu.CDCOnBoot.default.build.cdc_on_boot=1
+codecell.menu.CDCOnBoot.cdc=Disabled
+codecell.menu.CDCOnBoot.cdc.build.cdc_on_boot=0
 
 codecell.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 codecell.menu.PartitionScheme.default.build.partitions=default
@@ -52896,6 +53625,9 @@ yb_esp32s3_dac.menu.PSRAM.opi.build.psram_type=opi
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 yb_esp32s3_dac.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB=16M with spiffs (6.25MB APP/3.43MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB.build.partitions=default_16MB
+yb_esp32s3_dac.menu.PartitionScheme.default_16MB.upload.maximum_size=6553600
 yb_esp32s3_dac.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
 yb_esp32s3_dac.menu.PartitionScheme.default.build.partitions=default
 yb_esp32s3_dac.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
@@ -52923,6 +53655,18 @@ yb_esp32s3_dac.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB=Maximum APP (7.9MB APP No OTA/No FS)
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
 yb_esp32s3_dac.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs=Large SPIFFS (4.5MB APP/6.93MB SPIFFS)
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs.build.partitions=large_spiffs_16MB
+yb_esp32s3_dac.menu.PartitionScheme.large_spiffs.upload.maximum_size=4718592
+yb_esp32s3_dac.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.fatflash.build.partitions=ffat
+yb_esp32s3_dac.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+yb_esp32s3_dac.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+yb_esp32s3_dac.menu.PartitionScheme.custom=Custom
+yb_esp32s3_dac.menu.PartitionScheme.custom.build.partitions=
+yb_esp32s3_dac.menu.PartitionScheme.custom.upload.maximum_size=16777216
 
 yb_esp32s3_dac.menu.CPUFreq.240=240MHz (WiFi)
 yb_esp32s3_dac.menu.CPUFreq.240.build.f_cpu=240000000L
@@ -55603,6 +56347,205 @@ soldered_nula_deepsleep_esp32s3.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_
 
 ##############################################################
 
+soldered_nula_dual_esp32c5.name=Soldered NULA Dual ESP32C5
+
+soldered_nula_dual_esp32c5.bootloader.tool=esptool_py
+soldered_nula_dual_esp32c5.bootloader.tool.default=esptool_py
+
+soldered_nula_dual_esp32c5.upload.tool=esptool_py
+soldered_nula_dual_esp32c5.upload.tool.default=esptool_py
+soldered_nula_dual_esp32c5.upload.tool.network=esp_ota
+
+soldered_nula_dual_esp32c5.upload.maximum_size=1310720
+soldered_nula_dual_esp32c5.upload.maximum_data_size=327680
+soldered_nula_dual_esp32c5.upload.flags=
+soldered_nula_dual_esp32c5.upload.extra_flags=
+soldered_nula_dual_esp32c5.upload.use_1200bps_touch=false
+soldered_nula_dual_esp32c5.upload.wait_for_upload_port=false
+
+soldered_nula_dual_esp32c5.serial.disableDTR=false
+soldered_nula_dual_esp32c5.serial.disableRTS=false
+
+soldered_nula_dual_esp32c5.build.tarch=riscv32
+soldered_nula_dual_esp32c5.build.target=esp
+soldered_nula_dual_esp32c5.build.mcu=esp32c5
+soldered_nula_dual_esp32c5.build.core=esp32
+soldered_nula_dual_esp32c5.build.variant=soldered_nula_dual_esp32c5
+soldered_nula_dual_esp32c5.build.board=SOLDERED_NULA_DUAL_ESP32C5
+soldered_nula_dual_esp32c5.build.bootloader_addr=0x2000
+
+soldered_nula_dual_esp32c5.build.cdc_on_boot=0
+soldered_nula_dual_esp32c5.build.f_cpu=240000000L
+soldered_nula_dual_esp32c5.build.flash_size=8MB
+soldered_nula_dual_esp32c5.build.flash_freq=80m
+soldered_nula_dual_esp32c5.build.flash_mode=qio
+soldered_nula_dual_esp32c5.build.boot=qio
+soldered_nula_dual_esp32c5.build.partitions=default
+soldered_nula_dual_esp32c5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.default=Disabled
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.external=FTDI Adapter
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.bridge=ESP USB Bridge
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+soldered_nula_dual_esp32c5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+soldered_nula_dual_esp32c5.menu.PSRAM.disabled=Disabled
+soldered_nula_dual_esp32c5.menu.PSRAM.disabled.build.defines=
+soldered_nula_dual_esp32c5.menu.PSRAM.enabled=Enabled
+soldered_nula_dual_esp32c5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+soldered_nula_dual_esp32c5.menu.CDCOnBoot.default=Disabled
+soldered_nula_dual_esp32c5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+soldered_nula_dual_esp32c5.menu.CDCOnBoot.cdc=Enabled
+soldered_nula_dual_esp32c5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+soldered_nula_dual_esp32c5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.default.build.partitions=default
+soldered_nula_dual_esp32c5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+soldered_nula_dual_esp32c5.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+soldered_nula_dual_esp32c5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.minimal.build.partitions=minimal
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_fs.build.partitions=no_fs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+soldered_nula_dual_esp32c5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+soldered_nula_dual_esp32c5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+soldered_nula_dual_esp32c5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+soldered_nula_dual_esp32c5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+soldered_nula_dual_esp32c5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+soldered_nula_dual_esp32c5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker=RainMaker 4MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4116480
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_2MB=Zigbee 2MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_2MB.build.partitions=zigbee_2MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_2MB.upload.maximum_size=1310720
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee.build.partitions=zigbee
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_2MB=Zigbee ZCZR 2MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_2MB.build.partitions=zigbee_zczr_2MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_2MB.upload.maximum_size=1310720
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_8MB=Zigbee ZCZR 8MB with spiffs
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_8MB.build.partitions=zigbee_zczr_8MB
+soldered_nula_dual_esp32c5.menu.PartitionScheme.zigbee_zczr_8MB.upload.maximum_size=3407872
+soldered_nula_dual_esp32c5.menu.PartitionScheme.custom=Custom
+soldered_nula_dual_esp32c5.menu.PartitionScheme.custom.build.partitions=
+soldered_nula_dual_esp32c5.menu.PartitionScheme.custom.upload.maximum_size=8388608
+
+soldered_nula_dual_esp32c5.menu.CPUFreq.240=240MHz (WiFi)
+soldered_nula_dual_esp32c5.menu.CPUFreq.240.build.f_cpu=240000000L
+soldered_nula_dual_esp32c5.menu.CPUFreq.120=120MHz (WiFi)
+soldered_nula_dual_esp32c5.menu.CPUFreq.120.build.f_cpu=120000000L
+soldered_nula_dual_esp32c5.menu.CPUFreq.80=80MHz (WiFi)
+soldered_nula_dual_esp32c5.menu.CPUFreq.80.build.f_cpu=80000000L
+soldered_nula_dual_esp32c5.menu.CPUFreq.40=40MHz
+soldered_nula_dual_esp32c5.menu.CPUFreq.40.build.f_cpu=40000000L
+soldered_nula_dual_esp32c5.menu.CPUFreq.20=20MHz
+soldered_nula_dual_esp32c5.menu.CPUFreq.20.build.f_cpu=20000000L
+soldered_nula_dual_esp32c5.menu.CPUFreq.10=10MHz
+soldered_nula_dual_esp32c5.menu.CPUFreq.10.build.f_cpu=10000000L
+
+soldered_nula_dual_esp32c5.menu.FlashMode.qio=QIO
+soldered_nula_dual_esp32c5.menu.FlashMode.qio.build.flash_mode=dio
+soldered_nula_dual_esp32c5.menu.FlashMode.qio.build.boot=qio
+soldered_nula_dual_esp32c5.menu.FlashMode.dio=DIO
+soldered_nula_dual_esp32c5.menu.FlashMode.dio.build.flash_mode=dio
+soldered_nula_dual_esp32c5.menu.FlashMode.dio.build.boot=dio
+
+soldered_nula_dual_esp32c5.menu.FlashFreq.80=80MHz
+soldered_nula_dual_esp32c5.menu.FlashFreq.80.build.flash_freq=80m
+soldered_nula_dual_esp32c5.menu.FlashFreq.40=40MHz
+soldered_nula_dual_esp32c5.menu.FlashFreq.40.build.flash_freq=40m
+
+soldered_nula_dual_esp32c5.menu.FlashSize.8M=8MB (64Mb)
+soldered_nula_dual_esp32c5.menu.FlashSize.8M.build.flash_size=8MB
+
+soldered_nula_dual_esp32c5.menu.UploadSpeed.921600=921600
+soldered_nula_dual_esp32c5.menu.UploadSpeed.921600.upload.speed=921600
+soldered_nula_dual_esp32c5.menu.UploadSpeed.115200=115200
+soldered_nula_dual_esp32c5.menu.UploadSpeed.115200.upload.speed=115200
+soldered_nula_dual_esp32c5.menu.UploadSpeed.256000.windows=256000
+soldered_nula_dual_esp32c5.menu.UploadSpeed.256000.upload.speed=256000
+soldered_nula_dual_esp32c5.menu.UploadSpeed.230400.windows.upload.speed=256000
+soldered_nula_dual_esp32c5.menu.UploadSpeed.230400=230400
+soldered_nula_dual_esp32c5.menu.UploadSpeed.230400.upload.speed=230400
+soldered_nula_dual_esp32c5.menu.UploadSpeed.460800.linux=460800
+soldered_nula_dual_esp32c5.menu.UploadSpeed.460800.macosx=460800
+soldered_nula_dual_esp32c5.menu.UploadSpeed.460800.upload.speed=460800
+soldered_nula_dual_esp32c5.menu.UploadSpeed.512000.windows=512000
+soldered_nula_dual_esp32c5.menu.UploadSpeed.512000.upload.speed=512000
+
+soldered_nula_dual_esp32c5.menu.DebugLevel.none=None
+soldered_nula_dual_esp32c5.menu.DebugLevel.none.build.code_debug=0
+soldered_nula_dual_esp32c5.menu.DebugLevel.error=Error
+soldered_nula_dual_esp32c5.menu.DebugLevel.error.build.code_debug=1
+soldered_nula_dual_esp32c5.menu.DebugLevel.warn=Warn
+soldered_nula_dual_esp32c5.menu.DebugLevel.warn.build.code_debug=2
+soldered_nula_dual_esp32c5.menu.DebugLevel.info=Info
+soldered_nula_dual_esp32c5.menu.DebugLevel.info.build.code_debug=3
+soldered_nula_dual_esp32c5.menu.DebugLevel.debug=Debug
+soldered_nula_dual_esp32c5.menu.DebugLevel.debug.build.code_debug=4
+soldered_nula_dual_esp32c5.menu.DebugLevel.verbose=Verbose
+soldered_nula_dual_esp32c5.menu.DebugLevel.verbose.build.code_debug=5
+
+soldered_nula_dual_esp32c5.menu.EraseFlash.none=Disabled
+soldered_nula_dual_esp32c5.menu.EraseFlash.none.upload.erase_cmd=
+soldered_nula_dual_esp32c5.menu.EraseFlash.all=Enabled
+soldered_nula_dual_esp32c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.default=Disabled
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.default.build.zigbee_mode=
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.default.build.zigbee_libs=
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed=Zigbee ED (end device)
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+soldered_nula_dual_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+
 soldered_nula_mini_esp32c6.name=Soldered NULA Mini ESP32C6
 
 soldered_nula_mini_esp32c6.bootloader.tool=esptool_py
@@ -57375,5 +58318,151 @@ xteink_x4.menu.ZigbeeMode.default.build.zigbee_libs=
 xteink_x4.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
 xteink_x4.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+
+##############################################################
+# Ozobot DRVKit
+
+ozobot_drvkit.name=Ozobot DRVKit
+ozobot_drvkit.vid.0=0x2D81
+ozobot_drvkit.pid.0=0x1901
+ozobot_drvkit.upload_port.0.vid=0x303A
+ozobot_drvkit.upload_port.0.pid=0x1001
+
+ozobot_drvkit.bootloader.tool=esptool_py
+ozobot_drvkit.bootloader.tool.default=esptool_py
+
+ozobot_drvkit.upload.tool=esptool_py
+ozobot_drvkit.upload.tool.default=esptool_py
+ozobot_drvkit.upload.tool.network=esp_ota
+
+ozobot_drvkit.upload.maximum_size=1310720
+ozobot_drvkit.upload.maximum_data_size=327680
+ozobot_drvkit.upload.flags=
+ozobot_drvkit.upload.extra_flags=
+ozobot_drvkit.upload.use_1200bps_touch=false
+ozobot_drvkit.upload.wait_for_upload_port=false
+ozobot_drvkit.upload.speed=921600
+
+ozobot_drvkit.serial.disableDTR=false
+ozobot_drvkit.serial.disableRTS=false
+
+ozobot_drvkit.build.tarch=xtensa
+ozobot_drvkit.build.bootloader_addr=0x0
+ozobot_drvkit.build.target=esp32s3
+ozobot_drvkit.build.mcu=esp32s3
+ozobot_drvkit.build.core=esp32
+ozobot_drvkit.build.variant=ozobot_drvkit
+ozobot_drvkit.build.board=OZOBOT_DRVKIT
+ozobot_drvkit.build.code_debug=0
+
+ozobot_drvkit.build.usb_mode=1
+ozobot_drvkit.build.cdc_on_boot=1
+ozobot_drvkit.build.msc_on_boot=0
+ozobot_drvkit.build.dfu_on_boot=0
+ozobot_drvkit.build.f_cpu=240000000L
+ozobot_drvkit.build.flash_size=4MB
+ozobot_drvkit.build.flash_freq=80m
+ozobot_drvkit.build.flash_mode=dio
+ozobot_drvkit.build.boot=qio
+ozobot_drvkit.build.boot_freq=80m
+ozobot_drvkit.build.defines=-DBOARD_HAS_PIN_REMAP {build.disable_pin_remap} -DBOARD_HAS_PSRAM
+ozobot_drvkit.build.loop_core=
+ozobot_drvkit.build.event_core=
+ozobot_drvkit.build.psram_type=qspi
+ozobot_drvkit.build.memory_type={build.boot}_{build.psram_type}
+ozobot_drvkit.build.disable_pin_remap=
+
+## IDE 2.0 Seems to not update the value
+ozobot_drvkit.menu.JTAGAdapter.bridge=ESP USB Bridge
+ozobot_drvkit.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+ozobot_drvkit.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+ozobot_drvkit.menu.JTAGAdapter.external=FTDI Adapter
+ozobot_drvkit.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+ozobot_drvkit.menu.JTAGAdapter.external.build.copy_jtag_files=1
+
+ozobot_drvkit.menu.LoopCore.1=Core 1
+ozobot_drvkit.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+ozobot_drvkit.menu.LoopCore.0=Core 0
+ozobot_drvkit.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+ozobot_drvkit.menu.EventsCore.1=Core 1
+ozobot_drvkit.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+ozobot_drvkit.menu.EventsCore.0=Core 0
+ozobot_drvkit.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+ozobot_drvkit.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.huge_app.build.partitions=huge_app
+ozobot_drvkit.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+ozobot_drvkit.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.default.build.partitions=default
+ozobot_drvkit.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+ozobot_drvkit.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.minimal.build.partitions=minimal
+ozobot_drvkit.menu.PartitionScheme.no_fs=No FS 4MB (2MB APP x2)
+ozobot_drvkit.menu.PartitionScheme.no_fs.build.partitions=no_fs
+ozobot_drvkit.menu.PartitionScheme.no_fs.upload.maximum_size=2031616
+ozobot_drvkit.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.no_ota.build.partitions=no_ota
+ozobot_drvkit.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+ozobot_drvkit.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+ozobot_drvkit.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+ozobot_drvkit.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+ozobot_drvkit.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+ozobot_drvkit.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+ozobot_drvkit.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+ozobot_drvkit.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+ozobot_drvkit.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+ozobot_drvkit.menu.PartitionScheme.rainmaker=RainMaker 4MB
+ozobot_drvkit.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+ozobot_drvkit.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+ozobot_drvkit.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+ozobot_drvkit.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+ozobot_drvkit.menu.PartitionScheme.custom=Custom
+ozobot_drvkit.menu.PartitionScheme.custom.build.partitions=
+ozobot_drvkit.menu.PartitionScheme.custom.upload.maximum_size=4194304
+
+ozobot_drvkit.menu.PinNumbers.default=By Arduino pin (default)
+ozobot_drvkit.menu.PinNumbers.byGPIONumber=By GPIO number (legacy)
+ozobot_drvkit.menu.PinNumbers.byGPIONumber.build.disable_pin_remap=-DBOARD_USES_HW_GPIO_NUMBERS
+
+ozobot_drvkit.menu.USBMode.hwcdc=Hardware CDC and JTAG
+ozobot_drvkit.menu.USBMode.hwcdc.build.usb_mode=1
+ozobot_drvkit.menu.USBMode.default=USB-OTG (TinyUSB)
+ozobot_drvkit.menu.USBMode.default.build.usb_mode=0
+ozobot_drvkit.menu.USBMode.hwcdc.debug.executable={build.path}/{build.project_name}.elf
+
+ozobot_drvkit.menu.DebugLevel.none=None
+ozobot_drvkit.menu.DebugLevel.none.build.code_debug=0
+ozobot_drvkit.menu.DebugLevel.error=Error
+ozobot_drvkit.menu.DebugLevel.error.build.code_debug=1
+ozobot_drvkit.menu.DebugLevel.warn=Warn
+ozobot_drvkit.menu.DebugLevel.warn.build.code_debug=2
+ozobot_drvkit.menu.DebugLevel.info=Info
+ozobot_drvkit.menu.DebugLevel.info.build.code_debug=3
+ozobot_drvkit.menu.DebugLevel.debug=Debug
+ozobot_drvkit.menu.DebugLevel.debug.build.code_debug=4
+ozobot_drvkit.menu.DebugLevel.verbose=Verbose
+ozobot_drvkit.menu.DebugLevel.verbose.build.code_debug=5
+
+ozobot_drvkit.menu.EraseFlash.none=Disabled
+ozobot_drvkit.menu.EraseFlash.none.upload.erase_cmd=
+ozobot_drvkit.menu.EraseFlash.all=Enabled
+ozobot_drvkit.menu.EraseFlash.all.upload.erase_cmd=-e
+
+ozobot_drvkit.menu.ZigbeeMode.default=Disabled
+ozobot_drvkit.menu.ZigbeeMode.default.build.zigbee_mode=
+ozobot_drvkit.menu.ZigbeeMode.default.build.zigbee_libs=
+ozobot_drvkit.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+ozobot_drvkit.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+ozobot_drvkit.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
 
 ##############################################################

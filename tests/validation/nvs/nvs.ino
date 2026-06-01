@@ -76,15 +76,23 @@ void setup() {
     test_data.value = 100;
   }
 
-  Serial.printf("Values from Preferences: ");
+  // Output is split into multiple lines. Call Serial.flush() after each printf so the UART FIFO does not
+  // retain bytes across back-to-back writes. Without that, Wokwi runs can stall (see validation/sdcard) and
+  // pytest expect_exact on full lines may time out with truncated serial.
   Serial.printf(
-    "char: %c | uchar: %u | short: %d | ushort: %u | int: %" PRIi32 " | uint: %" PRIu32 " | ", val_char, val_uchar, val_short, val_ushort, val_int, val_uint
+    "Values from Preferences: char: %c | uchar: %u | short: %d | ushort: %u | int: %" PRIi32 " | uint: %" PRIu32 "\n", val_char, val_uchar, val_short,
+    val_ushort, val_int, val_uint
   );
-  Serial.printf("long: %" PRIi32 " | ulong: %" PRIu32 " | long64: %" PRIi64 " | ulong64: %" PRIu64 " | ", val_long, val_ulong, val_long64, val_ulong64);
+  Serial.flush();
   Serial.printf(
-    "float: %.2f | double: %.2f | bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n", val_float, val_double, val_bool ? "true" : "false",
-    val_string.c_str(), val_string_buf, test_data.id, test_data.value
+    "long: %" PRIi32 " | ulong: %" PRIu32 " | long64: %" PRIi64 " | ulong64: %" PRIu64 " | float: %.2f | double: %.2f\n", val_long, val_ulong, val_long64,
+    val_ulong64, val_float, val_double
   );
+  Serial.flush();
+  Serial.printf(
+    "bool: %s | str: %s | strLen: %s | struct: {id:%u,val:%u}\n", val_bool ? "true" : "false", val_string.c_str(), val_string_buf, test_data.id, test_data.value
+  );
+  Serial.flush();  // Drain the UART FIFO before flash writes occupy the CPU
 
   // Increment the values
   val_char += 1;  // Increment char A -> B

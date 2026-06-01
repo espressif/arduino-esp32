@@ -397,6 +397,18 @@ else
   ESPPORT2="/dev/ttyUSB1"
 fi
 
+if [ -n "${WIFI_SSID}" ]; then
+  wifi_ssid="${WIFI_SSID}"
+elif [ -n "${RUNNER_WIFI_SSID}" ]; then
+  wifi_ssid="${RUNNER_WIFI_SSID}"
+fi
+
+if [ -n "${WIFI_PASSWORD}" ]; then
+  wifi_password="${WIFI_PASSWORD}"
+elif [ -n "${RUNNER_WIFI_PASSWORD}" ]; then
+  wifi_password="${RUNNER_WIFI_PASSWORD}"
+fi
+
 while [ -n "$1" ]; do
     case $1 in
     -c )
@@ -512,7 +524,7 @@ source "${SCRIPTS_DIR}/tests_utils.sh"
 # If sketch is provided and test type is not, test type is inferred from the sketch path
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ ${#sketches_to_run[@]} -eq 1 ]; then
-        detect_test_type_and_folder "$sketch"
+        detect_test_type_and_folder "$sketch" || exit 1
     else
         test_folder="$PWD/tests"
     fi
@@ -532,13 +544,10 @@ for current_target in "${targets_to_run[@]}"; do
 
             # Find test folder for this sketch if needed
             if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
-                tmp_sketch_path=$(find tests -name "$current_sketch".ino)
-                if [ -z "$tmp_sketch_path" ]; then
-                    echo "ERROR: Sketch $current_sketch not found"
+                if ! detect_test_type_and_folder "$current_sketch"; then
                     continue
                 fi
-                sketch_test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
-                sketch_test_folder="$PWD/tests/$sketch_test_type"
+                sketch_test_folder="$test_folder"
             else
                 sketch_test_folder="$test_folder"
             fi

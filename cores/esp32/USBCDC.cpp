@@ -30,7 +30,7 @@ USBCDC *devices[CFG_TUD_CDC];
 static uint16_t load_cdc_descriptor(uint8_t *dst, uint8_t *itf) {
   uint8_t str_index = tinyusb_add_string_descriptor("TinyUSB CDC");
   uint8_t descriptor[TUD_CDC_DESC_LEN] = {// Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, CFG_TUD_ENDOINT_SIZE, 0x03, 0x84, CFG_TUD_ENDOINT_SIZE)
+                                          TUD_CDC_DESCRIPTOR(*itf, str_index, 0x85, CFG_TUD_ENDPOINT_SIZE, 0x03, 0x84, CFG_TUD_ENDPOINT_SIZE)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);
@@ -47,7 +47,7 @@ static uint16_t load_cdc_descriptor2(uint8_t *dst, uint8_t *itf) {
   TU_VERIFY(ep_out != 0);
   uint8_t descriptor[TUD_CDC_DESC_LEN] = {
     // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
-    TUD_CDC_DESCRIPTOR(*itf, str_index, (uint8_t)(0x80 | ep_ntfy), CFG_TUD_ENDOINT_SIZE, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDOINT_SIZE)
+    TUD_CDC_DESCRIPTOR(*itf, str_index, (uint8_t)(0x80 | ep_ntfy), CFG_TUD_ENDPOINT_SIZE, ep_out, (uint8_t)(0x80 | ep_in), CFG_TUD_ENDPOINT_SIZE)
   };
   *itf += 2;
   memcpy(dst, descriptor, TUD_CDC_DESC_LEN);

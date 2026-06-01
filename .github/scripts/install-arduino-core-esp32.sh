@@ -1,6 +1,8 @@
 #!/bin/bash
 
-export ARDUINO_ESP32_PATH="$ARDUINO_USR_PATH/hardware/espressif/esp32"
+SCRIPTS_DIR_CORE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPTS_DIR_CORE}/env.sh"
+
 if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     echo "Installing ESP32 Arduino Core ..."
     script_init_path="$PWD"
