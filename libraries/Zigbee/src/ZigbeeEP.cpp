@@ -485,7 +485,9 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
   _read_time = 0;
 
   log_v("Reading time from endpoint %u", endpoint);
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -539,7 +541,9 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   _read_timezone = 0;
 
   log_v("Reading timezone from endpoint %u", endpoint);
+  esp_zb_lock_acquire(portMAX_DELAY);
   esp_zb_zcl_read_attr_cmd_req(&read_req);
+  esp_zb_lock_release();
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {

@@ -41,6 +41,7 @@ set(CORE_SRCS
   cores/esp32/esp32-hal-matrix.c
   cores/esp32/esp32-hal-misc.c
   cores/esp32/esp32-hal-periman.c
+  cores/esp32/esp32-hal-ldo.c
   cores/esp32/esp32-hal-psram.c
   cores/esp32/esp32-hal-rgb-led.c
   cores/esp32/esp32-hal-sigmadelta.c
@@ -261,6 +262,7 @@ set(ARDUINO_LIBRARY_USB_SRCS
   libraries/USB/src/keyboardLayout/KeyboardLayout_fr_FR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_hu_HU.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_it_IT.cpp
+  libraries/USB/src/keyboardLayout/KeyboardLayout_ja_JP.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_BR.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_pt_PT.cpp
   libraries/USB/src/keyboardLayout/KeyboardLayout_sv_SE.cpp

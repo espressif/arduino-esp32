@@ -221,6 +221,10 @@ private:
   FreeRTOS::Semaphore m_semaphoreRegisterAppEvt = FreeRTOS::Semaphore("RegisterAppEvt");
   FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
   FreeRTOS::Semaphore m_semaphoreOpenEvt = FreeRTOS::Semaphore("OpenEvt");
+  // IMPORTANT:
+  // m_semaphoreMapAccess must never be held while invoking callbacks
+  // or calling into external code. This prevents re-entrant deadlocks.
+  FreeRTOS::Semaphore m_semaphoreMapAccess = FreeRTOS::Semaphore("MapAccess");
   BLEServiceMap m_serviceMap;
   BLEServerCallbacks *m_pServerCallbacks = nullptr;
 

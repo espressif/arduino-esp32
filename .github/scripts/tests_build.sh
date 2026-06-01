@@ -176,14 +176,17 @@ while [ -n "$1" ]; do
 done
 
 set -e
-source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+source "${SCRIPTS_DIR}/env.sh"
+if [ "${use_arduino_cli:-0}" -eq 1 ]; then
+    source "${SCRIPTS_DIR}/install-arduino-cli.sh"
+fi
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
 source "${SCRIPTS_DIR}/tests_utils.sh"
 set +e
 
-args=("-ai" "$ARDUINO_IDE_PATH" "-au" "$ARDUINO_USR_PATH")
+args=("-au" "$ARDUINO_USR_PATH")
 if [ "${use_arduino_cli:-0}" -eq 1 ]; then
-    args+=("--arduino-cli")
+    args+=("-ai" "$ARDUINO_IDE_PATH" "--arduino-cli")
 fi
 
 # Parse comma-separated targets
@@ -216,7 +219,7 @@ fi
 
 if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
     if [ ${#sketches_to_build[@]} -eq 1 ]; then
-        detect_test_type_and_folder "$sketch"
+        detect_test_type_and_folder "$sketch" || exit 1
     else
         test_folder="$PWD/tests"
     fi
@@ -267,13 +270,10 @@ for current_target in "${targets_to_build[@]}"; do
 
             # Find test folder for this sketch if needed
             if [[ $test_type == "all" ]] || [[ -z $test_type ]]; then
-                tmp_sketch_path=$(find tests -name "$current_sketch".ino)
-                if [ -z "$tmp_sketch_path" ]; then
-                    echo "ERROR: Sketch $current_sketch not found"
+                if ! detect_test_type_and_folder "$current_sketch"; then
                     continue
                 fi
-                sketch_test_type=$(basename "$(dirname "$(dirname "$tmp_sketch_path")")")
-                sketch_test_folder="$PWD/tests/$sketch_test_type"
+                sketch_test_folder="$test_folder"
             else
                 sketch_test_folder="$test_folder"
             fi
