@@ -263,8 +263,8 @@ public:
 
 protected:
   struct RequestArgument {
-   String key;
-   String value;
+    String key;
+    String value;
   };
 
   bool beginInternal(String url, const char *expectedProtocol);
