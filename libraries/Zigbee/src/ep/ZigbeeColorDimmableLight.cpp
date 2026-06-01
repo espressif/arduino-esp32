@@ -100,6 +100,45 @@ uint16_t ZigbeeColorDimmableLight::getCurrentColorTemperature() {
   return value;
 }
 
+uint16_t ZigbeeColorDimmableLight::readColorAttributeU16(uint16_t attr_id) {
+  esp_zb_zcl_attr_t *attr =
+    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, attr_id);
+  if (attr == nullptr || attr->data_p == nullptr) {
+    log_w("Cannot read color attribute 0x%04x", attr_id);
+    return 0;
+  }
+  return *(uint16_t *)attr->data_p;
+}
+
+uint8_t ZigbeeColorDimmableLight::readColorAttributeU8(uint16_t attr_id) {
+  esp_zb_zcl_attr_t *attr =
+    esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, attr_id);
+  if (attr == nullptr || attr->data_p == nullptr) {
+    log_w("Cannot read color attribute 0x%04x", attr_id);
+    return 0;
+  }
+  return *(uint8_t *)attr->data_p;
+}
+
+void ZigbeeColorDimmableLight::syncColorModeFromCallback(uint8_t color_mode) {
+  if (_current_color_mode == color_mode) {
+    return;
+  }
+  if (!isColorModeSupported(color_mode)) {
+    log_w("Color mode %u not supported by current capabilities: 0x%04x", color_mode, _color_capabilities);
+    return;
+  }
+  esp_zb_zcl_status_t ret = esp_zb_zcl_set_attribute_val(
+    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_COLOR_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_COLOR_CONTROL_COLOR_MODE_ID, &color_mode, false
+  );
+  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to set light color mode: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+    return;
+  }
+  _current_color_mode = color_mode;
+  log_v("Color mode changed to: %u", _current_color_mode);
+}
+
 //set attribute method -> method overridden in child class
 void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
@@ -153,11 +192,8 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
         return;
       }
       uint16_t light_color_x = (*(uint16_t *)message->attribute.data.value);
-      uint16_t light_color_y = getCurrentColorY();
-      // Update color mode to XY if not already
-      if (_current_color_mode != ZIGBEE_COLOR_MODE_CURRENT_X_Y) {
-        setLightColorMode(ZIGBEE_COLOR_MODE_CURRENT_X_Y);
-      }
+      uint16_t light_color_y = readColorAttributeU16(ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_Y_ID);
+      syncColorModeFromCallback(ZIGBEE_COLOR_MODE_CURRENT_X_Y);
       //calculate RGB from XY and call RGB callback
       _current_color = espXYToRgbColor(255, light_color_x, light_color_y, false);
       lightChangedRgb();
@@ -169,12 +205,9 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
         log_w("XY color capability not enabled, but XY attribute received. Current capabilities: 0x%04x", _color_capabilities);
         return;
       }
-      uint16_t light_color_x = getCurrentColorX();
+      uint16_t light_color_x = readColorAttributeU16(ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_X_ID);
       uint16_t light_color_y = (*(uint16_t *)message->attribute.data.value);
-      // Update color mode to XY if not already
-      if (_current_color_mode != ZIGBEE_COLOR_MODE_CURRENT_X_Y) {
-        setLightColorMode(ZIGBEE_COLOR_MODE_CURRENT_X_Y);
-      }
+      syncColorModeFromCallback(ZIGBEE_COLOR_MODE_CURRENT_X_Y);
       //calculate RGB from XY and call RGB callback
       _current_color = espXYToRgbColor(255, light_color_x, light_color_y, false);
       lightChangedRgb();
@@ -186,13 +219,10 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
         return;
       }
       uint8_t light_color_hue = (*(uint8_t *)message->attribute.data.value);
-      // Update color mode to HS if not already
-      if (_current_color_mode != ZIGBEE_COLOR_MODE_HUE_SATURATION) {
-        setLightColorMode(ZIGBEE_COLOR_MODE_HUE_SATURATION);
-      }
+      syncColorModeFromCallback(ZIGBEE_COLOR_MODE_HUE_SATURATION);
       // Store HSV values and call HSV callback (don't convert to RGB)
       _current_hsv.h = light_color_hue;
-      _current_hsv.s = getCurrentColorSaturation();
+      _current_hsv.s = readColorAttributeU8(ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID);
       _current_hsv.v = _current_level;  // Use level as value
       lightChangedHsv();
       return;
@@ -203,12 +233,9 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
         return;
       }
       uint8_t light_color_saturation = (*(uint8_t *)message->attribute.data.value);
-      // Update color mode to HS if not already
-      if (_current_color_mode != ZIGBEE_COLOR_MODE_HUE_SATURATION) {
-        setLightColorMode(ZIGBEE_COLOR_MODE_HUE_SATURATION);
-      }
+      syncColorModeFromCallback(ZIGBEE_COLOR_MODE_HUE_SATURATION);
       // Store HSV values and call HSV callback (don't convert to RGB)
-      _current_hsv.h = getCurrentColorHue();
+      _current_hsv.h = readColorAttributeU8(ESP_ZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID);
       _current_hsv.s = light_color_saturation;
       _current_hsv.v = _current_level;  // Use level as value
       lightChangedHsv();
@@ -220,10 +247,7 @@ void ZigbeeColorDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_me
         return;
       }
       uint16_t light_color_temp = (*(uint16_t *)message->attribute.data.value);
-      // Update color mode to TEMP if not already
-      if (_current_color_mode != ZIGBEE_COLOR_MODE_TEMPERATURE) {
-        setLightColorMode(ZIGBEE_COLOR_MODE_TEMPERATURE);
-      }
+      syncColorModeFromCallback(ZIGBEE_COLOR_MODE_TEMPERATURE);
       if (_current_color_temperature != light_color_temp) {
         _current_color_temperature = light_color_temp;
         lightChangedTemp();

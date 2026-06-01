@@ -216,7 +216,12 @@ void ZigbeeWindowCovering::zbAttributeSet(const esp_zb_zcl_set_attr_value_messag
       config_status = motor_reversed ? config_status | ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_REVERSE_COMMANDS
                                      : config_status & ~ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_REVERSE_COMMANDS;
       log_v("Updating window covering config status to %u", config_status);
-      esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, &config_status, false);
+      esp_zb_zcl_status_t ret = esp_zb_zcl_set_attribute_val(
+        _endpoint, ESP_ZB_ZCL_CLUSTER_ID_WINDOW_COVERING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, &config_status, false
+      );
+      if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+        log_e("Failed to set window covering config status: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+      }
       return;
     }
   } else {
