@@ -54,16 +54,34 @@ def _flashed_path(binary: Path, build_dir: Path | None) -> Path:
     return dest_dir / (binary.stem + '_flashed' + binary.suffix)
 
 
+_ALWAYS_FLASH = {'boot_app0.bin'}
+"""Binaries that are always fully flashed regardless of reference availability.
+
+boot_app0.bin selects the active OTA partition slot.  If the user has
+performed an OTA update since the last flash, the on-chip copy will differ
+from the reference even though our local copy has not changed.  Passing
+'skip' forces esptool to write it unconditionally, avoiding any dependency
+on the MD5 fallback path.
+"""
+
+
 def _build_diff_with(binaries: list[Path], build_dir: Path | None) -> tuple[list[str], bool]:
     """Build the --diff-with argument list from available _flashed.bin files.
 
     Returns (diff_list, have_any) where diff_list contains absolute paths or
     the literal 'skip' for files without a reference, and have_any is True
-    when at least one reference file was found.
+    when at least one reference file was found (excluding always-flash files).
+
+    Binaries whose name appears in ``_ALWAYS_FLASH`` always receive 'skip' so
+    that they are unconditionally written, regardless of whether a reference
+    exists.
     """
     diff_list: list[str] = []
     have_any = False
     for binary in binaries:
+        if binary.name in _ALWAYS_FLASH:
+            diff_list.append('skip')
+            continue
         ref = _flashed_path(binary, build_dir)
         if ref.exists():
             diff_list.append(str(ref))
@@ -118,19 +136,30 @@ def _parse_flasher_args() -> tuple[str, Path | None, list[str]]:
             'installation tree (default: each binary\'s own parent directory)'
         ),
     )
+    parser.add_argument(
+        '--no-fast-flash',
+        action='store_true',
+        default=False,
+        help=(
+            'disable fast reflashing; esptool is invoked directly without any '
+            '--diff-with argument and no reference files are saved or read '
+            '(useful when the flash state is unknown, e.g. after OTA updates '
+            'or erase-before-flash)'
+        ),
+    )
 
     args, esptool_args = parser.parse_known_args()
     build_dir = Path(args.build_dir) if args.build_dir else None
-    return args.esptool, build_dir, esptool_args
+    return args.esptool, build_dir, args.no_fast_flash, esptool_args
 
 
 def main() -> None:
-    esptool, build_dir, esptool_args = _parse_flasher_args()
+    esptool, build_dir, no_fast_flash, esptool_args = _parse_flasher_args()
     binaries: list[Path] = []
 
-    # Only attempt fast reflash for write-flash commands that do not already
-    # carry a --diff-with argument (avoids double application).
-    if '--diff-with' not in esptool_args:
+    # Only attempt fast reflash when not explicitly disabled, for write-flash
+    # commands that do not already carry a --diff-with argument.
+    if not no_fast_flash and '--diff-with' not in esptool_args:
         try:
             detected = _parse_flash_binaries(esptool_args)
             if detected:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: 2025 Espressif Systems (Shanghai) CO LTD
+# SPDX-FileCopyrightText: 2026 Espressif Systems (Shanghai) CO LTD
 # SPDX-License-Identifier: Apache-2.0
+
 """
 Local test script for tools/flasher.py
 
@@ -243,9 +244,12 @@ def test_02_upload_second_flash():
         refs = got[dw_idx + 1:]
         assert_test('4 diff entries (one per binary)', len(refs) == 4,
                     f'got {len(refs)}: {refs}')
-        assert_test('all refs point into build_dir',
-                    all(str(bd) in r for r in refs),
+        assert_test('bootloader, partitions, app refs point into build_dir',
+                    all(str(bd) in refs[i] for i in (0, 1, 3)),
                     str(refs))
+        assert_test('boot_app0 is always skip (OTA-safety)',
+                    refs[2] == 'skip',
+                    f'got: {refs[2]}')
         assert_test('--esptool and --build-dir not forwarded to esptool',
                     '--esptool' not in got and '--build-dir' not in got)
 
@@ -568,7 +572,7 @@ def test_16_flasher_flags_not_forwarded():
 
 
 def test_17_help_flag():
-    section('Test 17 – --help / -h exits 0 and documents both flags')
+    section('Test 17 – --help / -h exits 0 and documents all flags')
     for flag in ('--help', '-h'):
         r = subprocess.run(
             [sys.executable, str(FLASHER), flag],
@@ -578,6 +582,81 @@ def test_17_help_flag():
         assert_test(f'{flag} exits 0', r.returncode == 0)
         assert_test(f'{flag} documents --esptool', '--esptool' in r.stdout)
         assert_test(f'{flag} documents --build-dir', '--build-dir' in r.stdout)
+        assert_test(f'{flag} documents --no-fast-flash', '--no-fast-flash' in r.stdout)
+
+
+def test_18_boot_app0_always_skipped():
+    section('Test 18 – boot_app0.bin always uses skip even when reference exists')
+    with tempfile.TemporaryDirectory() as tmp:
+        bd = Path(tmp) / 'build'
+        pd = Path(tmp) / 'platform' / 'tools' / 'partitions'
+        bd.mkdir(); pd.mkdir(parents=True)
+        mock = make_mock_esptool(Path(tmp))
+
+        for f in ('sketch.bootloader.bin', 'sketch.partitions.bin', 'sketch.bin'):
+            fake_binary(bd / f)
+        fake_binary(pd / 'boot_app0.bin')
+
+        # First flash to create references (including boot_app0_flashed.bin)
+        run_flasher(mock, bd, *_upload_args(bd, pd))
+        assert_test('boot_app0_flashed.bin exists after first flash',
+                    (bd / 'boot_app0_flashed.bin').exists())
+
+        # Second flash: boot_app0 must still be 'skip' despite reference existing
+        got, rc = run_flasher(mock, bd, *_upload_args(bd, pd))
+
+        assert_test('exit code 0', rc == 0)
+        dw_idx = got.index('--diff-with')
+        refs = got[dw_idx + 1:]
+        assert_test('4 diff entries', len(refs) == 4, str(refs))
+        assert_test('boot_app0 is always skip (index 2)',
+                    refs[2] == 'skip',
+                    f'got: {refs[2]}')
+        assert_test('other binaries still use references (not skip)',
+                    all(refs[i] != 'skip' for i in (0, 1, 3)),
+                    str(refs))
+
+
+def test_19_no_fast_flash_flag():
+    section('Test 19 – --no-fast-flash disables fast reflash entirely')
+    with tempfile.TemporaryDirectory() as tmp:
+        bd = Path(tmp) / 'build'
+        pd = Path(tmp) / 'platform' / 'tools' / 'partitions'
+        bd.mkdir(); pd.mkdir(parents=True)
+        mock = make_mock_esptool(Path(tmp))
+
+        for f in ('sketch.bootloader.bin', 'sketch.partitions.bin', 'sketch.bin'):
+            fake_binary(bd / f)
+        fake_binary(pd / 'boot_app0.bin')
+
+        # First flash to create references
+        run_flasher(mock, bd, *_upload_args(bd, pd))
+
+        # Second flash with --no-fast-flash: must not inject --diff-with
+        got, rc = run_flasher(mock, bd, *_upload_args(bd, pd),
+                              extra_flasher_args=('--no-fast-flash',))
+
+        assert_test('exit code 0', rc == 0)
+        assert_test('--diff-with absent when --no-fast-flash set',
+                    '--diff-with' not in got)
+        assert_test('--no-fast-flash not forwarded to esptool',
+                    '--no-fast-flash' not in got)
+
+        # First flash with --no-fast-flash: references must NOT be saved
+        with tempfile.TemporaryDirectory() as tmp2:
+            bd2 = Path(tmp2) / 'build'
+            pd2 = Path(tmp2) / 'platform' / 'tools' / 'partitions'
+            bd2.mkdir(); pd2.mkdir(parents=True)
+            mock2 = make_mock_esptool(Path(tmp2))
+            for f in ('sketch.bootloader.bin', 'sketch.partitions.bin', 'sketch.bin'):
+                fake_binary(bd2 / f)
+            fake_binary(pd2 / 'boot_app0.bin')
+
+            run_flasher(mock2, bd2, *_upload_args(bd2, pd2),
+                        extra_flasher_args=('--no-fast-flash',))
+
+            assert_test('no _flashed.bin files saved when --no-fast-flash set',
+                        not any(bd2.glob('*_flashed.bin')))
 
 
 # ---------------------------------------------------------------------------
@@ -602,6 +681,8 @@ _ALL_TESTS = [
     test_15_option_order_flexibility,
     test_16_flasher_flags_not_forwarded,
     test_17_help_flag,
+    test_18_boot_app0_always_skipped,
+    test_19_no_fast_flash_flag,
 ]
 
 if __name__ == '__main__':
