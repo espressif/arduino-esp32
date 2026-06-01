@@ -7,6 +7,9 @@ static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID insecureCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
 
+static const int RECONNECT_CYCLES = 10;
+static const uint16_t APPID_PRESEED_GATT_IF_NONE = 250;  // crosses ESP_GATT_IF_NONE (0xFF on Bluedroid)
+
 String targetServerName = "";
 static boolean doConnect = false;
 static boolean connected = false;
@@ -162,6 +165,43 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   }
 };
 
+bool runReconnectPhase(uint16_t preseed, const char *label) {
+  Serial.printf("[CLIENT] Reconnect phase: crossing %s (preseed=%u)\n", label, preseed);
+  BLEDevice::m_appId = preseed;
+
+  for (int i = 0; i < RECONNECT_CYCLES; i++) {
+    Serial.printf("[CLIENT] Reconnect cycle %d/%d starting\n", i + 1, RECONNECT_CYCLES);
+
+    BLEClient *pReconnectClient = BLEDevice::createClient();
+    if (pReconnectClient == nullptr) {
+      Serial.printf("[CLIENT] Reconnect cycle %d/%d FAILED: createClient returned null\n", i + 1, RECONNECT_CYCLES);
+      return false;
+    }
+
+    if (!pReconnectClient->connect(myDevice->getAddress(), myDevice->getAddressType(), 10000)) {
+      Serial.printf("[CLIENT] Reconnect cycle %d/%d FAILED: connect failed\n", i + 1, RECONNECT_CYCLES);
+      delete pReconnectClient;
+      return false;
+    }
+
+    BLERemoteService *pSvc = pReconnectClient->getService(serviceUUID);
+    if (pSvc != nullptr) {
+      BLERemoteCharacteristic *pChr = pSvc->getCharacteristic(insecureCharUUID);
+      if (pChr != nullptr && pChr->canRead()) {
+        String val = pChr->readValue();
+        Serial.printf("[CLIENT] Reconnect cycle %d/%d read: %s\n", i + 1, RECONNECT_CYCLES, val.c_str());
+      }
+    }
+
+    pReconnectClient->disconnect();
+    delete pReconnectClient;
+    Serial.printf("[CLIENT] Reconnect cycle %d/%d OK\n", i + 1, RECONNECT_CYCLES);
+  }
+
+  Serial.printf("[CLIENT] Reconnect phase %s PASSED\n", label);
+  return true;
+}
+
 void readServerName() {
   Serial.println("[CLIENT] Waiting for server name...");
   Serial.println("[CLIENT] Send server name:");
@@ -262,6 +302,23 @@ void loop() {
     }
 
     Serial.println("[CLIENT] Test operations completed");
+
+    // --- Reconnection stress test (app_id collision regression) ---
+    // Disconnect from the current connection first
+    Serial.println("[CLIENT] Starting reconnection stress test");
+    pClient->disconnect();
+    delay(1000);
+
+    // Cross ESP_GATT_IF_NONE boundary (0xFF on Bluedroid, 0xFFFF on NimBLE).
+    // Each new BLEClient gets its ID from the global counter, so pre-seeding the
+    // counter to 250 forces the first few clients to cross the 0xFF boundary.
+    bool passed = runReconnectPhase(APPID_PRESEED_GATT_IF_NONE, "ESP_GATT_IF_NONE");
+
+    if (passed) {
+      Serial.println("[CLIENT] Reconnection stress test PASSED");
+    } else {
+      Serial.println("[CLIENT] Reconnection stress test FAILED");
+    }
   }
 
   delay(1000);

@@ -133,7 +133,8 @@ public:
    *                        Common public properties                         *
    ***************************************************************************/
 
-  uint16_t m_appId;
+  /** GATT application id passed to esp_ble_gatts_app_register. */
+  uint16_t m_gattAppId;
 
   /***************************************************************************
    *                       Common public declarations                        *
