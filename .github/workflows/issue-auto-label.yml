@@ -1,16 +1,14 @@
 # =============================================================================
 # Issue auto-label — final sketch
 # =============================================================================
-# When an issue is opened or edited:
-#   1. Template: Issue report → Status: Awaiting triage
-#   2. Template: Feature request → Type: Feature request
-#   3. keywordLabelPairs: multi-word keywords = substring match; single-token = whole-word
+# When an issue is opened, edited, or labeled:
+#   1. Opened Issue report → Status: Awaiting triage
+#   2. Opened Feature request → Type: Feature request
+#   3. Area keywords are matched against the title and issue-form area fields.
 #      (so BLE does not match inside "problem"/"table"/"cable")
 #   4. Area labels → assignees: resolved from .github/CODEOWNERS using the paths below
 #      (same last-match-wins rules as GitHub). Organization teams (@org/team) are skipped
 #      because issue assignees must be user logins.
-#
-# Full label list: .github/ISSUE_TEMPLATE/LABELS.md
 # =============================================================================
 
 name: Issue auto-label
@@ -23,14 +21,17 @@ permissions:
   contents: read
   issues: write
 
+concurrency:
+  group: issue-${{ github.event.issue.number }}
+
 jobs:
   label-issue:
-    name: Apply labels from template
+    name: Apply labels and assignees
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Apply labels based on template and form fields
+      - name: Apply labels and CODEOWNERS assignees
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         with:
           script: |
@@ -38,55 +39,29 @@ jobs:
             const pathMod = require('path');
 
             const issue = context.payload.issue;
+            const action = context.payload.action;
             const body = issue.body || '';
             const title = issue.title || '';
             const existingLabels = (issue.labels || []).map(l => l.name);
             const labelsToAdd = new Set();
+            const newLabels = [];
 
-            // keywordLabelPairs: see keywordMatches() for single-token vs phrase matching.
-            const keywordLabelPairs = [
-              { keyword: 'component', label: 'Area: Arduino as ESP-IDF component' },
-              { keyword: 'BLE', label: 'Area: BLE' },
-              { keyword: 'Bluetooth', label: 'Area: BLE' },
-              { keyword: 'BT classic', label: 'Area: BT classic' },
-              { keyword: 'BT', label: 'Area: BT classic' },
-              { keyword: 'ESP-IDF', label: 'Area: ESP-IDF related' },
-              { keyword: 'IDF', label: 'Area: ESP-IDF related' },
-              { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
-              { keyword: 'Library Builder', label: 'Area: Lib Builder' },
-              { keyword: 'Libraries', label: 'Area: Libraries' },
-              { keyword: 'Matter', label: 'Area: Matter' },
-              { keyword: 'OpenThread', label: 'Area: OpenThread' },
-              { keyword: 'OT', label: 'Area: OpenThread' },
-              { keyword: 'Performance', label: 'Area: Performance' },
-              { keyword: 'Peripheral', label: 'Area: Peripherals API' },
-              { keyword: 'Tools', label: 'Area: Tools & Build System' },
-              { keyword: 'UART', label: 'Area: UART' },
-              { keyword: 'USB', label: 'Area: USB' },
-              { keyword: 'WiFi', label: 'Area: WiFi' },
-              { keyword: 'Wi-Fi', label: 'Area: WiFi' },
-              { keyword: 'Zigbee', label: 'Area: Zigbee' },
-              { keyword: 'ZB', label: 'Area: Zigbee' },
-              { keyword: 'CI', label: 'Type: CI & Testing' },
-              { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
-              { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' },
-              { keyword: 'Chip support', label: 'Type: Chip support' }
-            ];
-            const text = title + '\n' + body;
-            const textLower = text.toLowerCase();
             function escapeRegex(s) {
               return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             }
-            function keywordMatches(keyword) {
+            function issueFormField(label) {
+              const labelRegex = escapeRegex(label);
+              const match = body.match(new RegExp('(?:^|\\n)###\\s*' + labelRegex + '\\s*\\n\\s*\\n([\\s\\S]*?)(?=\\n###\\s|$)', 'i'));
+              return match ? match[1].trim() : '';
+            }
+            function keywordMatches(keyword, text) {
               const k = keyword.trim();
+              const textLower = text.toLowerCase();
               if (k.includes(' ')) {
                 return textLower.includes(k.toLowerCase());
               }
               // Single token: whole-word only (avoids "problem"/"table"/"cable" matching "BLE")
               return new RegExp('(?:^|[^a-z0-9_])' + escapeRegex(k) + '(?:[^a-z0-9_]|$)', 'i').test(text);
-            }
-            for (const { keyword, label } of keywordLabelPairs) {
-              if (keywordMatches(keyword)) labelsToAdd.add(label);
             }
 
             // Detect template and form fields by parsing the issue body.
@@ -97,16 +72,78 @@ jobs:
             // Feature request template: has "### Related area" and "### Is your feature request"
             const isFeatureRequest = /###\s*Related area\s*\n/i.test(body) && /Is your feature request related to a problem/i.test(body);
 
-            if (isIssueReport) {
-              labelsToAdd.add('Status: Awaiting triage');
-            }
+            if (action === 'labeled') {
+              core.info('Skipping label computation on labeled event.');
+            } else {
+              // Keep keyword matching scoped to title and explicit issue-form fields to avoid
+              // assigning labels from incidental words in descriptions, code, or logs.
+              const relatedArea = issueFormField('Related area');
+              const ideName = issueFormField('IDE Name');
+              const areaText = [title, relatedArea].filter(Boolean).join('\n');
+              const ideText = [title, ideName].filter(Boolean).join('\n');
+              const typeText = [title, relatedArea].filter(Boolean).join('\n');
 
-            if (isFeatureRequest) {
-              labelsToAdd.add('Type: Feature request');
+              const areaKeywordLabelPairs = [
+                { keyword: 'Arduino as ESP-IDF component', label: 'Area: Arduino as ESP-IDF component' },
+                { keyword: 'ESP-IDF component', label: 'Area: Arduino as ESP-IDF component' },
+                { keyword: 'BLE', label: 'Area: BLE' },
+                { keyword: 'Bluetooth Low Energy', label: 'Area: BLE' },
+                { keyword: 'BT classic', label: 'Area: BT classic' },
+                { keyword: 'Bluetooth classic', label: 'Area: BT classic' },
+                { keyword: 'BluetoothSerial', label: 'Area: BT classic' },
+                { keyword: 'ESP-IDF', label: 'Area: ESP-IDF related' },
+                { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
+                { keyword: 'Library Builder', label: 'Area: Lib Builder' },
+                { keyword: 'Matter', label: 'Area: Matter' },
+                { keyword: 'OpenThread', label: 'Area: OpenThread' },
+                { keyword: 'performance regression', label: 'Area: Performance' },
+                { keyword: 'performance issue', label: 'Area: Performance' },
+                { keyword: 'Peripherals API', label: 'Area: Peripherals API' },
+                { keyword: 'peripheral API', label: 'Area: Peripherals API' },
+                { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
+                { keyword: 'build system', label: 'Area: Tools & Build System' },
+                { keyword: 'UART', label: 'Area: UART' },
+                { keyword: 'USB', label: 'Area: USB' },
+                { keyword: 'WiFi', label: 'Area: WiFi' },
+                { keyword: 'Wi-Fi', label: 'Area: WiFi' },
+                { keyword: 'Zigbee', label: 'Area: Zigbee' },
+                { keyword: 'ZB', label: 'Area: Zigbee' }
+              ];
+              const typeKeywordLabelPairs = [
+                { keyword: 'CI & Testing', label: 'Type: CI & Testing' },
+                { keyword: 'CI failure', label: 'Type: CI & Testing' },
+                { keyword: 'GitHub Actions', label: 'Type: CI & Testing' },
+                { keyword: 'ci.yml', label: 'Type: CI & Testing' },
+                { keyword: 'Chip support', label: 'Type: Chip support' }
+              ];
+              const ideKeywordLabelPairs = [
+                { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
+                { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' }
+              ];
+
+              for (const { keyword, label } of areaKeywordLabelPairs) {
+                if (keywordMatches(keyword, areaText)) labelsToAdd.add(label);
+              }
+              for (const { keyword, label } of typeKeywordLabelPairs) {
+                if (keywordMatches(keyword, typeText)) labelsToAdd.add(label);
+              }
+              for (const { keyword, label } of ideKeywordLabelPairs) {
+                if (keywordMatches(keyword, ideText)) labelsToAdd.add(label);
+              }
+
+              if (action === 'opened') {
+                if (isIssueReport) {
+                  labelsToAdd.add('Status: Awaiting triage');
+                }
+
+                if (isFeatureRequest) {
+                  labelsToAdd.add('Type: Feature request');
+                }
+              }
             }
 
             // Add only labels that are not already on the issue
-            const newLabels = [...labelsToAdd].filter(name => !existingLabels.includes(name));
+            newLabels.push(...[...labelsToAdd].filter(name => !existingLabels.includes(name)));
             if (newLabels.length === 0) {
               core.info('No new labels to add.');
             }
@@ -121,15 +158,13 @@ jobs:
             }
 
             // Representative repo paths for each Area label (CODEOWNERS is path-based).
-            // Use paths that exist under a matching rule; generic areas without a dedicated
-            // rule resolve to default owners only (often a team → skipped for assignees).
+            // Generic areas without a clear CODEOWNERS-backed path are intentionally omitted.
             const areaLabelToPath = {
               'Area: Arduino as ESP-IDF component': '/idf_component_examples/',
               'Area: BLE': '/libraries/BLE/',
               'Area: BT classic': '/libraries/BLE/',
               'Area: ESP-IDF related': '/CMakeLists.txt',
               'Area: Lib Builder': '/tools/',
-              'Area: Libraries': '/libraries/__nocodeowners__/x',
               'Area: Matter': '/libraries/Matter/',
               'Area: OpenThread': '/libraries/OpenThread/',
               'Area: Performance': '/CMakeLists.txt',
@@ -163,25 +198,52 @@ jobs:
               return s.replace(/\/+/g, '/');
             }
 
+            function globToRegex(pattern) {
+              const anchored = pattern.startsWith('/');
+              let pat = anchored ? pattern.slice(1) : pattern;
+              const directoryPattern = pat.endsWith('/');
+              if (directoryPattern) pat += '**';
+
+              let re = '';
+              for (let i = 0; i < pat.length; i++) {
+                const c = pat[i];
+                const next = pat[i + 1];
+                if (c === '*') {
+                  if (next === '*') {
+                    const after = pat[i + 2];
+                    if (after === '/') {
+                      re += '(?:.*/)?';
+                      i += 2;
+                    } else {
+                      re += '.*';
+                      i += 1;
+                    }
+                  } else {
+                    re += '[^/]*';
+                  }
+                } else if (c === '?') {
+                  re += '[^/]';
+                } else if (c === '[') {
+                  const end = pat.indexOf(']', i + 1);
+                  if (end === -1) {
+                    re += '\\[';
+                  } else {
+                    re += pat.slice(i, end + 1);
+                    i = end;
+                  }
+                } else {
+                  re += escapeRegex(c);
+                }
+              }
+
+              const prefix = anchored ? '^' : '^(?:.*/)?';
+              return new RegExp(prefix + re + '$');
+            }
+
             function matchesPattern(targetPath, pattern) {
-              const path = normalizeTarget(targetPath);
               if (pattern === '*') return true;
-              if (pattern === '**/ci.yml') {
-                return /(^|\/)ci\.yml$/.test(path);
-              }
-              if (pattern === '/.*') {
-                const parts = path.split('/').filter(Boolean);
-                return parts.length === 1 && parts[0].startsWith('.');
-              }
-              if (pattern === '/*.md') {
-                const parts = path.split('/').filter(Boolean);
-                return parts.length === 1 && /\.md$/i.test(parts[0]);
-              }
-              const pat = pattern.startsWith('/') ? pattern : '/' + pattern;
-              if (pat.endsWith('/')) {
-                return path === pat.slice(0, -1) || path.startsWith(pat);
-              }
-              return path === pat || path.startsWith(pat + '/');
+              const path = normalizeTarget(targetPath).replace(/^\//, '');
+              return globToRegex(pattern).test(path);
             }
 
             function ownersForPath(rules, targetPath) {
