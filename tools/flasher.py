@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """esptool wrapper that enables fast reflashing via --diff-with."""
 
+from __future__ import annotations
+
 import argparse
 import re
 import shutil
@@ -105,8 +107,8 @@ def _save_flashed_copies(binaries: list[Path], build_dir: Path | None) -> None:
             )
 
 
-def _parse_flasher_args() -> tuple[str, Path | None, list[str]]:
-    """Parse flasher's own options, returning (esptool, build_dir, esptool_args).
+def _parse_flasher_args() -> tuple[str, Path | None, bool, list[str]]:
+    """Parse flasher's own options, returning (esptool, build_dir, no_fast_flash, esptool_args).
 
     parse_known_args() is used so that unrecognised tokens (all esptool flags
     and arguments) are collected into esptool_args without triggering errors.

@@ -6,7 +6,7 @@
 Local test script for tools/flasher.py
 
 Usage:
-    python3 .github/scripts/test_flasher.py
+    python3 .github/scripts/ci_testing/test_flasher.py
 
 Each test creates a temporary directory that mirrors the real filesystem layout,
 runs the flasher against a mock esptool that prints its received args as JSON,
@@ -47,7 +47,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-FLASHER = Path(__file__).parent.parent.parent / 'tools' / 'flasher.py'
+FLASHER = Path(__file__).parent.parent.parent.parent / 'tools' / 'flasher.py'
 
 PASS = '\033[32mPASS\033[0m'
 FAIL = '\033[31mFAIL\033[0m'
