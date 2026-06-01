@@ -227,6 +227,18 @@ protected:
   zb_power_source_t _power_source;
   uint8_t _time_status;
 
+  // Thread-safe outgoing ZCL helpers (not related to stack callbacks).
+  esp_zb_zcl_status_t setClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, bool check = false);
+  bool getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, uint16_t value_size);
+  bool reportClusterAttribute(esp_zb_zcl_report_attr_cmd_t *report_attr_cmd);
+  bool readClusterAttribute(esp_zb_zcl_read_attr_cmd_t *read_req);
+  bool setClusterReporting(esp_zb_zcl_reporting_info_t *reporting_info);
+  bool configureClusterReporting(esp_zb_zcl_config_report_cmd_t *report_cmd);
+
+  // Acquire/release pair for outgoing ZCL/ZDO commands (caller invokes SDK between them).
+  bool acquireCommandLock();
+  void releaseCommandLock();
+
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
 };

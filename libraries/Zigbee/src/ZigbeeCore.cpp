@@ -553,8 +553,11 @@ void ZigbeeCore::scanNetworks(u_int32_t channel_mask, u_int8_t scan_duration) {
     log_w("Scan already in progress, ignoring new scan request");
     return;
   }
-  log_v("Scanning Zigbee networks");
-  esp_zb_lock_acquire(portMAX_DELAY);
+  log_v("Starting to scan Zigbee networks");
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_e("Failed to start scanning Zigbee networks: failed to acquire Zigbee lock");
+    return;
+  }
   esp_zb_zdo_active_scan_request(channel_mask, scan_duration, scanCompleteCallback);
   esp_zb_lock_release();
   _scan_status = ZB_SCAN_RUNNING;
@@ -806,25 +809,6 @@ void ZigbeeCore::start() {
     _started = true;
   }
   return;
-}
-
-bool ZigbeeCore::updateReportingInfo(esp_zb_zcl_reporting_info_t *reporting_info) {
-  if (reporting_info == nullptr) {
-    log_e("Reporting info is null");
-    return false;
-  }
-  if (!started()) {
-    log_w("Cannot configure reporting: Zigbee stack not started");
-    return false;
-  }
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to update reporting info: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
 }
 
 // Function to convert enum value to string

@@ -117,9 +117,11 @@ void ZigbeeSwitch::lightToggle() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -134,9 +136,11 @@ void ZigbeeSwitch::lightToggle(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -152,9 +156,11 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_TOGGLE_ID;
     log_v("Sending 'light toggle' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -173,9 +179,11 @@ void ZigbeeSwitch::lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
       "Sending 'light toggle' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -189,9 +197,11 @@ void ZigbeeSwitch::lightOn() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -206,9 +216,11 @@ void ZigbeeSwitch::lightOn(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -224,9 +236,11 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_ON_ID;
     log_v("Sending 'light on' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -245,9 +259,11 @@ void ZigbeeSwitch::lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
       "Sending 'light on' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -261,9 +277,11 @@ void ZigbeeSwitch::lightOff() {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -278,9 +296,11 @@ void ZigbeeSwitch::lightOff(uint16_t group_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_GROUP_ENDP_NOT_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command to group address 0x%x", group_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -296,9 +316,11 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, uint16_t short_addr) {
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_16_ENDP_PRESENT;
     cmd_req.on_off_cmd_id = ESP_ZB_ZCL_CMD_ON_OFF_OFF_ID;
     log_v("Sending 'light off' command to endpoint %u, address 0x%x", endpoint, short_addr);
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -317,9 +339,11 @@ void ZigbeeSwitch::lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
       "Sending 'light off' command to endpoint %u, ieee address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", endpoint, ieee_addr[7], ieee_addr[6], ieee_addr[5],
       ieee_addr[4], ieee_addr[3], ieee_addr[2], ieee_addr[1], ieee_addr[0]
     );
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -334,9 +358,11 @@ void ZigbeeSwitch::lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant)
     cmd_req.effect_id = effect_id;
     cmd_req.effect_variant = effect_variant;
     log_v("Sending 'light off with effect' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_off_with_effect_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -349,9 +375,11 @@ void ZigbeeSwitch::lightOnWithSceneRecall() {
     cmd_req.zcl_basic_cmd.src_endpoint = _endpoint;
     cmd_req.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
     log_v("Sending 'light on with scene recall' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_on_with_recall_global_scene_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -367,9 +395,11 @@ void ZigbeeSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on,
     cmd_req.on_time = time_on;
     cmd_req.off_wait_time = time_off;
     log_v("Sending 'light on with time off' command");
-    esp_zb_lock_acquire(portMAX_DELAY);
+    if (!acquireCommandLock()) {
+      return;
+    }
     esp_zb_zcl_on_off_on_with_timed_off_cmd_req(&cmd_req);
-    esp_zb_lock_release();
+    releaseCommandLock();
   } else {
     log_e("Light not bound");
   }
@@ -385,9 +415,9 @@ void ZigbeeSwitch::getLightState() {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -402,9 +432,9 @@ void ZigbeeSwitch::getLightState(uint16_t group_addr) {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -420,9 +450,9 @@ void ZigbeeSwitch::getLightState(uint8_t endpoint, uint16_t short_addr) {
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 
@@ -438,9 +468,9 @@ void ZigbeeSwitch::getLightState(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr)
     read_req.attr_number = 1;
     uint16_t attr_id = ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID;
     read_req.attr_field = &attr_id;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_read_attr_cmd_req(&read_req);
-    esp_zb_lock_release();
+    if (!readClusterAttribute(&read_req)) {
+      log_e("Failed to send read light state command");
+    }
   }
 }
 

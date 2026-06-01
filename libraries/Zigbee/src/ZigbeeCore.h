@@ -143,6 +143,9 @@ public:
   void stop();
   void start();
 
+  bool initialized() {
+    return _initialized;
+  }
   bool started() {
     return _started;
   }
@@ -150,8 +153,6 @@ public:
     return _connected;
   }
 
-  // Configure ZCL attribute reporting (requires a running Zigbee stack).
-  bool updateReportingInfo(esp_zb_zcl_reporting_info_t *reporting_info);
   zigbee_role_t getRole() {
     return _role;
   }
