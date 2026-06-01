@@ -94,30 +94,15 @@ bool ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-
-  if (ret != ESP_OK) {
-    log_e("Failed to set reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return setClusterReporting(&reporting_info);
 }
 
 bool ZigbeeFlowSensor::setFlow(float flow) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   uint16_t zb_flow = (uint16_t)(flow * 10);
   log_v("Updating flow sensor value...");
-  /* Update temperature sensor measured value */
   log_d("Setting flow to %u", zb_flow);
-
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_VALUE_ID, &zb_flow, false
-  );
-  esp_zb_lock_release();
-
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_FLOW_MEASUREMENT_VALUE_ID, &zb_flow, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set flow value: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -136,12 +121,8 @@ bool ZigbeeFlowSensor::report() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-
-  if (ret != ESP_OK) {
-    log_e("Failed to send flow report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send flow report");
     return false;
   }
   log_v("Flow report sent");

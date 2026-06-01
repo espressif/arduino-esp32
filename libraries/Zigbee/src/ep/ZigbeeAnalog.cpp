@@ -193,17 +193,13 @@ void ZigbeeAnalog::analogOutputChanged() {
 }
 
 bool ZigbeeAnalog::setAnalogInput(float analog) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (!(_analog_clusters & ANALOG_INPUT)) {
     log_e("Analog Input cluster not added");
     return false;
   }
   log_d("Setting analog input to %.1f", analog);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &analog, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_ANALOG_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_INPUT_PRESENT_VALUE_ID, &analog, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set analog input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -212,18 +208,13 @@ bool ZigbeeAnalog::setAnalogInput(float analog) {
 }
 
 bool ZigbeeAnalog::setAnalogOutput(float analog) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   _output_state = analog;
   analogOutputChanged();
 
   log_v("Updating analog output to %.2f", analog);
-  /* Update analog output */
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
   );
-  esp_zb_lock_release();
-
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set analog output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -242,11 +233,8 @@ bool ZigbeeAnalog::reportAnalogInput() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Analog Input report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Analog Input report");
     return false;
   }
   log_v("Analog Input report sent");
@@ -264,11 +252,8 @@ bool ZigbeeAnalog::reportAnalogOutput() {
   report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
   report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Analog Output report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Analog Output report");
     return false;
   }
   log_v("Analog Output report sent");
@@ -291,14 +276,7 @@ bool ZigbeeAnalog::setAnalogInputReporting(uint16_t min_interval, uint16_t max_i
   reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_update_reporting_info(&reporting_info);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to set Analog Input reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return setClusterReporting(&reporting_info);
 }
 
 bool ZigbeeAnalog::setAnalogInputDescription(const char *description) {
