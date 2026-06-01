@@ -513,11 +513,6 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
     }
   }
 
-  //Check if Oneshot and Continuous handle exists
-  if (adc_handle[adc_unit].adc_oneshot_handle != NULL) {
-    log_e("ADC%d is running in oneshot mode. Aborting.", adc_unit + 1);
-    return false;
-  }
   if (adc_handle[adc_unit].adc_continuous_handle != NULL) {
     log_e("ADC%d continuous is already initialized. To reconfigure call analogContinuousDeinit() first.", adc_unit + 1);
     return false;
@@ -529,12 +524,17 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
     return false;
   }
 
-  //Set periman deinit function and reset all pins to init state.
+  // Release pins from any prior bus (e.g. ADC oneshot from analogRead) via periman before continuous init.
   perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_CONT, adcContinuousDetachBus);
   for (int j = 0; j < pins_count; j++) {
     if (!perimanClearPinBus(pins[j])) {
       return false;
     }
+  }
+
+  if (adc_handle[adc_unit].adc_oneshot_handle != NULL) {
+    log_e("ADC%d oneshot is still active on other pin(s). Release those pins first.", adc_unit + 1);
+    return false;
   }
 
   //Set conversion frame and buffer size (conversion frame must be in multiples of SOC_ADC_DIGI_DATA_BYTES_PER_CONV)

@@ -73,6 +73,22 @@ const char *hostedGetSlaveTargetName() {
 #if ESP_HOSTED_VERSION_VAL(ESP_HOSTED_VERSION_MAJOR_1, ESP_HOSTED_VERSION_MINOR_1, ESP_HOSTED_VERSION_PATCH_1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)
   return CONFIG_IDF_SLAVE_TARGET;
 #else
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  if (slave_version == 0) {
+    esp_err_t ret = esp_hosted_get_coprocessor_fwversion(&slave_version_struct);
+    if (ret != ESP_OK) {
+      log_e("Could not get slave firmware version: %s", esp_err_to_name(ret));
+    } else {
+      slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+    }
+  }
+  if (slave_version < ESP_HOSTED_VERSION_VAL(2, 12, 2)) {
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
   uint32_t chip_id = 0;
   static char target_name[20] = {0};
   size_t target_name_len = sizeof(target_name);

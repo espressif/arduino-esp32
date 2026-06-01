@@ -407,11 +407,6 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
     return false;
   }
 
-  // Update member variables immediately
-  holdTimeMin_seconds = _holdTimeMin_seconds;
-  holdTimeMax_seconds = _holdTimeMax_seconds;
-  holdTimeDefault_seconds = _holdTimeDefault_seconds;
-
   // Check if current HoldTime is outside the new limits and adjust if necessary
   uint16_t adjustedHoldTime = holdTime_seconds;
   bool holdTimeAdjusted = false;
@@ -429,13 +424,14 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   uint16_t endpoint_id = getEndPointId();
   CHIP_ERROR schedule_err;
 
+  // Schedule the attribute store update on the Matter event loop.
+  // Lambdas capture all values by copy, so they don't depend on member state.
   if (holdTimeAdjusted) {
     // Schedule both limits and HoldTime updates together
     schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds,
                                                                     def = _holdTimeDefault_seconds, holdTime = adjustedHoldTime]() {
       SetHoldTimeLimitsAndHoldTimeInEventLoop(endpoint_id, min, max, def, holdTime);
     });
-    holdTime_seconds = adjustedHoldTime;
   } else {
     // No adjustment needed, just schedule the limits update
     schedule_err =
@@ -447,6 +443,15 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   if (schedule_err != CHIP_NO_ERROR) {
     log_e("Failed to schedule HoldTimeLimits update: %" CHIP_ERROR_FORMAT, schedule_err.Format());
     return false;
+  }
+
+  // Commit to internal state only after scheduling succeeds,
+  // so that on failure the member variables remain unchanged (Ember pattern).
+  holdTimeMin_seconds = _holdTimeMin_seconds;
+  holdTimeMax_seconds = _holdTimeMax_seconds;
+  holdTimeDefault_seconds = _holdTimeDefault_seconds;
+  if (holdTimeAdjusted) {
+    holdTime_seconds = adjustedHoldTime;
   }
 
   log_v("HoldTimeLimits scheduled for update: Min=%u, Max=%u, Default=%u seconds", _holdTimeMin_seconds, _holdTimeMax_seconds, _holdTimeDefault_seconds);

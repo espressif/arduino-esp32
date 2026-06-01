@@ -41,6 +41,7 @@ typedef enum {
   I2S_RX_TRANSFORM_NONE,
   I2S_RX_TRANSFORM_32_TO_16,
   I2S_RX_TRANSFORM_16_STEREO_TO_MONO,
+  I2S_RX_TRANSFORM_8_UNPACK,
   I2S_RX_TRANSFORM_MAX
 } i2s_rx_transform_t;
 
@@ -67,9 +68,10 @@ public:
   void setInvertedPdm(bool clk);
 #endif
 
-  bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1);
+  bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1, i2s_role_t role = I2S_ROLE_MASTER);
   bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1);
-  bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform = I2S_RX_TRANSFORM_NONE);
+  bool
+    configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform = I2S_RX_TRANSFORM_NONE, int8_t slot_mask = -1);
   bool end();
 
   size_t readBytes(char *buffer, size_t size);
@@ -120,6 +122,13 @@ private:
   uint32_t rx_sample_rate;
   i2s_data_bit_width_t rx_data_bit_width;
   i2s_slot_mode_t rx_slot_mode;
+
+  i2s_role_t _role;
+  i2s_std_slot_mask_t _rx_slot_mask;
+#if SOC_I2S_HW_VERSION_1
+  bool _mono_hw_workaround;
+  bool _8bit_hw_packing;
+#endif
 
   //STD and TDM mode
   int8_t _mclk, _bclk, _ws, _dout, _din;
