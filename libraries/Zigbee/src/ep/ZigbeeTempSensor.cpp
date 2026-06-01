@@ -99,8 +99,9 @@ bool ZigbeeTempSensor::setTemperature(float temperature) {
   int16_t zb_temperature = zb_float_to_s16(temperature);
   log_v("Updating temperature sensor value...");
   log_d("Setting temperature to %d", zb_temperature);
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &zb_temperature, false);
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_TEMP_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TEMP_MEASUREMENT_VALUE_ID, &zb_temperature, false
+  );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

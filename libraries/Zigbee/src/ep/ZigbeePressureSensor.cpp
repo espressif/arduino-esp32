@@ -94,8 +94,9 @@ bool ZigbeePressureSensor::setReporting(uint16_t min_interval, uint16_t max_inte
 bool ZigbeePressureSensor::setPressure(int16_t pressure) {
   log_v("Updating pressure sensor value...");
   log_d("Setting pressure to %d hPa", pressure);
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &pressure, false);
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_PRESSURE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_ID, &pressure, false
+  );
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set pressure: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

@@ -383,7 +383,8 @@ bool ZigbeeMultistate::setMultistateInput(uint16_t state) {
     return false;
   }
   log_d("Setting multistate input to %u", state);
-  esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false);
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_MULTI_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_INPUT_PRESENT_VALUE_ID, &state, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set multistate input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -398,7 +399,9 @@ bool ZigbeeMultistate::setMultistateOutput(uint16_t state) {
 
   log_v("Updating multistate output to %u", state);
   /* Update multistate output */
-  esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID, &_output_state, false);
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_MULTI_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_MULTI_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  );
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set multistate output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));

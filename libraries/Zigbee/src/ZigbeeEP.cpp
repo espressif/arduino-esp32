@@ -336,9 +336,8 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
 }
 
 bool ZigbeeEP::setBatteryVoltage(uint8_t voltage) {
-  esp_zb_zcl_status_t ret = setClusterAttribute(
-    ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false
-  );
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set battery voltage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;

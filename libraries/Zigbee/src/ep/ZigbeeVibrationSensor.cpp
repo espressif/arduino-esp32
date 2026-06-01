@@ -47,7 +47,8 @@ void ZigbeeVibrationSensor::setIASClientEndpoint(uint8_t ep_number) {
 bool ZigbeeVibrationSensor::setVibration(bool sensed) {
   log_v("Setting Vibration sensor to %s", sensed ? "sensed" : "not sensed");
   uint8_t vibration = (uint8_t)sensed;
-  esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &vibration, false);
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &vibration, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set vibration status: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -87,9 +88,8 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_en
     log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->zone_id, message->response_code);
     if (message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
-      esp_zb_zcl_attr_t *ias_cie_attr = esp_zb_zcl_get_attribute(
-        _endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID
-      );
+      esp_zb_zcl_attr_t *ias_cie_attr =
+        esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
       if (ias_cie_attr == nullptr || ias_cie_attr->data_p == nullptr) {
         return;
       }
@@ -125,9 +125,7 @@ bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
     log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
     return false;
   }
-  if (!getClusterAttribute(
-        ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &_zone_id, sizeof(_zone_id)
-      )) {
+  if (!getClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &_zone_id, sizeof(_zone_id))) {
     log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
     return false;
   }

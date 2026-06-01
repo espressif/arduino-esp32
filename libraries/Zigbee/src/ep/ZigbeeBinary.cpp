@@ -132,7 +132,8 @@ bool ZigbeeBinary::setBinaryInput(bool input) {
     return false;
   }
   log_d("Setting binary input to %d", input);
-  esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false);
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -267,7 +268,9 @@ bool ZigbeeBinary::setBinaryOutput(bool output) {
 
   log_v("Updating binary output to %d", output);
   /* Update binary output */
-  esp_zb_zcl_status_t ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false);
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  );
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
