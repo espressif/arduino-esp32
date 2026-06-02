@@ -20,6 +20,7 @@
 #include "esp32-hal-periman.h"
 #include "esp32-hal.h"
 #include "pins_arduino.h"
+#include "soc/soc_caps.h"
 
 #include "esp_hosted.h"
 #include "esp_hosted_transport_config.h"
@@ -60,6 +61,8 @@ static bool hostedDeinit();
 static bool hostedDetachBus(void *bus_pointer);
 static bool hostedClearPinBuses(void);
 static bool hostedAssignPinBuses(void);
+static bool hostedSdioPinValid(uint8_t pin);
+static bool hostedSdioPinsValid(void);
 
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
@@ -287,11 +290,6 @@ static bool hostedInit() {
     return true;
   }
 
-  if (sdio_pin_config.pin_clk < 0 || sdio_pin_config.pin_cmd < 0 || sdio_pin_config.pin_d0 < 0 || sdio_pin_config.pin_d1 < 0 || sdio_pin_config.pin_d2 < 0 || sdio_pin_config.pin_d3 < 0 || sdio_pin_config.pin_reset < 0) {
-    log_e("ESP-Hosted: all SDIO pins must be defined");
-    return false;
-  }
-
   log_i("Initializing ESP-Hosted");
   log_d(
     "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
@@ -311,12 +309,12 @@ static bool hostedInit() {
     return false;
   }
 
+  // Assign before SDIO pins before configuration to turn on LDO when needed
+  if (!hostedAssignPinBuses()) {
     log_e("ESP-Hosted: failed to assign SDIO pins to peripheral manager");
-    return false;
     hostedClearPinBuses();
+    return false;
   }
-
-  hosted_initialized = true;
 
   struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
   conf.pin_clk.pin = sdio_pin_config.pin_clk;
@@ -342,17 +340,16 @@ static bool hostedInit() {
     hostedClearPinBuses();
     return false;
   }
-  log_i("ESP-Hosted initialized!");
-
   err = esp_hosted_connect_to_slave();
   if (err != ESP_OK) {
     log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
-    esp_hosted_deinit();    
+    esp_hosted_deinit();
     hosted_initialized = false;
     hostedClearPinBuses();
     return false;
   }
 
+  hosted_initialized = true;
   hostedHasUpdate();
   return true;
 }
