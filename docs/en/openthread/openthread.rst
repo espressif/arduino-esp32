@@ -199,7 +199,6 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 
 * **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_
 * **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_
-* **UDP Light** - Implements the server side of a UDP-based Thread IoT light demo using Native OpenThread APIs. `View UDP Light code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/IoT/udp_light>`_
 
 Common Problems and Issues
 --------------------------
