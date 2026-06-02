@@ -532,7 +532,8 @@ void OpenThread::otPrintNetworkInformation(Stream &output) {
     return;
   }
 
-  output.printf("Role: %s", otGetStringDeviceRole());
+  const otDeviceRole role = otThreadGetDeviceRole(mInstance);
+  output.printf("Role: %s", (role <= OT_DEVICE_ROLE_LEADER) ? otRoleString[role] : otRoleString[5]);
   output.println();
   output.printf("RLOC16: 0x%04x", otThreadGetRloc16(mInstance));  // RLOC16
   output.println();
