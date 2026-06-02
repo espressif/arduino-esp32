@@ -287,6 +287,11 @@ static bool hostedInit() {
     return true;
   }
 
+  if (sdio_pin_config.pin_clk < 0 || sdio_pin_config.pin_cmd < 0 || sdio_pin_config.pin_d0 < 0 || sdio_pin_config.pin_d1 < 0 || sdio_pin_config.pin_d2 < 0 || sdio_pin_config.pin_d3 < 0 || sdio_pin_config.pin_reset < 0) {
+    log_e("ESP-Hosted: all SDIO pins must be defined");
+    return false;
+  }
+
   log_i("Initializing ESP-Hosted");
   log_d(
     "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
@@ -306,10 +311,9 @@ static bool hostedInit() {
     return false;
   }
 
-  // Assign before SDIO bring-up: periman auto-LDO (VO4) must be on for GPIO 39-48
-  if (!hostedAssignPinBuses()) {
     log_e("ESP-Hosted: failed to assign SDIO pins to peripheral manager");
     return false;
+    hostedClearPinBuses();
   }
 
   hosted_initialized = true;
