@@ -284,6 +284,11 @@ void OpenThread::begin(bool OThreadAutoStart) {
   xTaskCreate(ot_task_worker, "ot_main_loop", 10240, NULL, 20, &s_ot_task);
   if (s_ot_task == NULL) {
     log_e("Error: Failed to create OpenThread task");
+    // otStarted is still false, so end() will not run to clean this up. Delete
+    // the handshake semaphore here so its handle is not leaked and a later
+    // begin() starts from a clean state.
+    vSemaphoreDelete(s_ot_init_done);
+    s_ot_init_done = NULL;
     return;
   }
   log_d("OpenThread task created successfully");
