@@ -14,8 +14,8 @@
 #include <BLE.h>
 
 // Custom UUIDs -- must match the Server example
-static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-static BLEUUID charUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 BLEClient client;
 bool connected = false;
@@ -31,7 +31,7 @@ void onNotification(BLERemoteCharacteristic chr, const uint8_t *data, size_t len
 // task that delivers this callback. Save the address and set a flag; do the
 // actual connection from loop().
 void onDeviceFound(BLEAdvertisedDevice device) {
-  if (!device.isAdvertisingService(serviceUUID)) {
+  if (!device.isAdvertisingService(SVC_UUID)) {
     return;
   }
 
@@ -66,7 +66,7 @@ bool connectToServer() {
   Serial.println("OK");
 
   Serial.print("Looking for service... ");
-  BLERemoteService svc = client.getService(serviceUUID);
+  BLERemoteService svc = client.getService(SVC_UUID);
   if (!svc) {
     Serial.println("NOT FOUND!");
     return false;
@@ -74,7 +74,7 @@ bool connectToServer() {
   Serial.printf("OK (handle 0x%04X)\n", svc.getHandle());
 
   Serial.print("Looking for characteristic... ");
-  BLERemoteCharacteristic chr = svc.getCharacteristic(charUUID);
+  BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
   if (!chr) {
     Serial.println("NOT FOUND!");
     return false;

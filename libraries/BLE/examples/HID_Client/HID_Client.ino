@@ -24,9 +24,9 @@
 #include <Arduino.h>
 #include <BLE.h>
 
-static BLEUUID hidServiceUUID((uint16_t)0x1812);     // HID Service (Bluetooth SIG assigned)
-static BLEUUID reportCharUUID((uint16_t)0x2A4D);     // HID Report characteristic
-static BLEUUID reportRefDescUUID((uint16_t)0x2908);  // Report Reference descriptor
+static const BLEUUID hidServiceUUID((uint16_t)0x1812);     // HID Service (Bluetooth SIG assigned)
+static const BLEUUID reportCharUUID((uint16_t)0x2A4D);     // HID Report characteristic
+static const BLEUUID reportRefDescUUID((uint16_t)0x2908);  // Report Reference descriptor
 
 struct __attribute__((packed)) GamepadReport {
   uint8_t reportId;

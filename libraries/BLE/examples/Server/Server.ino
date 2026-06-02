@@ -18,8 +18,8 @@
 #include <BLE.h>
 
 // Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
-static const char *SVC_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-static const char *CHR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 BLECharacteristic notifyChr;
 
 void onClientConnect(BLEServer server, const BLEConnInfo &conn) {
@@ -57,7 +57,7 @@ void setup() {
   server.onDisconnect(onClientDisconnect);
 
   Serial.print("Creating service (UUID: ");
-  Serial.print(SVC_UUID);
+  Serial.print(SVC_UUID.toString());
   Serial.print(")... ");
   BLEService svc = server.createService(SVC_UUID);
   if (!svc) {
@@ -67,7 +67,7 @@ void setup() {
   Serial.println("OK");
 
   Serial.print("Creating characteristic (UUID: ");
-  Serial.print(CHR_UUID);
+  Serial.print(CHR_UUID.toString());
   Serial.print(")... ");
   notifyChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
   if (!notifyChr) {

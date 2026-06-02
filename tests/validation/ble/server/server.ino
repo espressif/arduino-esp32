@@ -7,43 +7,43 @@
 #include <BLE.h>
 #include "esp_heap_caps.h"
 
-#define SERVICE_UUID       "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define RW_CHAR_UUID       "beb5483e-36e1-4688-b7f5-ea07361b26a8"
-#define NOTIFY_CHAR_UUID   "cba1d466-344c-4be3-ab3f-189f80dd7518"
-#define INDICATE_CHAR_UUID "d5f782b2-a36e-4d68-947c-0e9a5f2c78e1"
-#define SECURE_CHAR_UUID   "ff1d2614-e2d6-4c87-9154-6625d39ca7f8"
-#define DESC_CHAR_UUID     "a3c87501-8ed3-4bdf-8a39-a01bebede295"
-#define WRITENR_CHAR_UUID  "1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e"
+static const BLEUUID SERVICE_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID RW_CHAR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+static const BLEUUID NOTIFY_CHAR_UUID("cba1d466-344c-4be3-ab3f-189f80dd7518");
+static const BLEUUID INDICATE_CHAR_UUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
+static const BLEUUID SECURE_CHAR_UUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
+static const BLEUUID DESC_CHAR_UUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
+static const BLEUUID WRITENR_CHAR_UUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
 // Phase 15 (introspection_and_permissions): R|W properties but only OpenRead
 // permission. Exercises the fail-closed mapping: the Write property must be
 // stripped by the backend so the peer sees it as read-only, and writes must
 // be rejected at the ATT layer.
-#define PERM_FAIL_CLOSED_CHAR_UUID "e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41"
+static const BLEUUID PERM_FAIL_CLOSED_CHAR_UUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
 
 // Phase 15 (descriptor permissions): custom-UUID descriptor attached to
 // DESC_CHAR with read-only permission. The client reads it (expect success)
 // then attempts a write (expect ATT-layer rejection), proving that
 // bleValidateDescProps + the BluedroidServer descPerm translation enforce
 // the declared descriptor permissions end-to-end.
-#define DESC_READONLY_UUID "b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91"
+static const BLEUUID DESC_READONLY_UUID("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
 
 // --- New UUIDs introduced by phases 16+ ---------------------------------
 // Phase 18: application-level access gating via BLESecurity::onAuthorization.
 // Declares ReadAuthorized|WriteAuthorized so every read/write traps through
 // the handler. The handler approves reads and specific write payloads and
 // denies everything else, exercising both approve and deny branches.
-#define AUTHZ_CHAR_UUID "ca11aaaa-1111-4222-8333-444455556666"
+static const BLEUUID AUTHZ_CHAR_UUID("ca11aaaa-1111-4222-8333-444455556666");
 
 // Phase 19: EncryptedReadWrite permissions. Pre-pair access will fail with
 // insufficient-encryption; post-pair access succeeds. Used by both the
 // encrypted_perm_enforcement phase and the bond_and_whitelist phase (after
 // the bond is erased, the next read must re-trigger pairing).
-#define ENCRYPTED_CHAR_UUID "ca11bbbb-1111-4222-8333-444455556666"
+static const BLEUUID ENCRYPTED_CHAR_UUID("ca11bbbb-1111-4222-8333-444455556666");
 
 // Phase 23 helpers: fake UUIDs that must NOT be discoverable on the server,
 // and an extra writable char used to assert ops-after-disconnect failure.
-#define UNKNOWN_SVC_UUID  "deadbeef-0000-0000-0000-000000000001"
-#define UNKNOWN_CHAR_UUID "deadbeef-0000-0000-0000-000000000002"
+static const BLEUUID UNKNOWN_SVC_UUID("deadbeef-0000-0000-0000-000000000001");
+static const BLEUUID UNKNOWN_CHAR_UUID("deadbeef-0000-0000-0000-000000000002");
 
 String serverName;
 BLECharacteristic notifyChr;
@@ -341,9 +341,9 @@ bool phase_gatt_setup() {
   });
   server.advertiseOnDisconnect(true);
 
-  BLEService svc = server.createService(BLEUUID(SERVICE_UUID));
+  BLEService svc = server.createService(SERVICE_UUID);
 
-  auto rwChr = svc.createCharacteristic(BLEUUID(RW_CHAR_UUID), BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
+  auto rwChr = svc.createCharacteristic(RW_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
   rwChr.setValue("Hello from server!");
   rwChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
     syncPhaseFromHost();
@@ -355,19 +355,19 @@ bool phase_gatt_setup() {
     Serial.printf("[SERVER] Received %u bytes\n", (unsigned)len);
   });
 
-  notifyChr = svc.createCharacteristic(BLEUUID(NOTIFY_CHAR_UUID), BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
+  notifyChr = svc.createCharacteristic(NOTIFY_CHAR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
   notifyChr.onSubscribe([](BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue) {
     syncPhaseFromHost();
     Serial.printf("[SERVER] Subscriber count: %u\n", chr.getSubscribedCount());
   });
 
-  indicateChr = svc.createCharacteristic(BLEUUID(INDICATE_CHAR_UUID), BLEProperty::Read | BLEProperty::Indicate, BLEPermissions::OpenRead);
+  indicateChr = svc.createCharacteristic(INDICATE_CHAR_UUID, BLEProperty::Read | BLEProperty::Indicate, BLEPermissions::OpenRead);
 
-  auto secureChr = svc.createCharacteristic(BLEUUID(SECURE_CHAR_UUID), BLEProperty::Read, BLEPermissions::AuthenticatedRead);
+  auto secureChr = svc.createCharacteristic(SECURE_CHAR_UUID, BLEProperty::Read, BLEPermissions::AuthenticatedRead);
   secureChr.setValue("Secure Data!");
 
   // Phase 7: Descriptor test characteristic with User Description + Presentation Format
-  descChr = svc.createCharacteristic(BLEUUID(DESC_CHAR_UUID), BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
+  descChr = svc.createCharacteristic(DESC_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
   descChr.setValue("DescTest");
   descChr.setDescription("Test Characteristic");
 
@@ -387,11 +387,11 @@ bool phase_gatt_setup() {
   // the ATT layer because the declared permissions do not include Write.
   // Using a custom (non-SIG) UUID avoids triggering the reserved-UUID
   // access-profile rules so this is purely a permission-enforcement test.
-  auto roDesc = descChr.createDescriptor(BLEUUID(DESC_READONLY_UUID), BLEPermission::Read, 32);
+  auto roDesc = descChr.createDescriptor(DESC_READONLY_UUID, BLEPermission::Read, 32);
   roDesc.setValue("ro_desc_val");
 
   // Phase 8: WriteNR test characteristic
-  auto writeNrChr = svc.createCharacteristic(BLEUUID(WRITENR_CHAR_UUID), BLEProperty::Read | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
+  auto writeNrChr = svc.createCharacteristic(WRITENR_CHAR_UUID, BLEProperty::Read | BLEProperty::WriteNR, BLEPermissions::OpenReadWrite);
   writeNrChr.setValue("waiting");
   writeNrChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
     syncPhaseFromHost();
@@ -403,7 +403,7 @@ bool phase_gatt_setup() {
   // Phase 15: Fail-closed permission masking. Declares Read|Write but only
   // grants OpenRead, so the backend must drop the Write property from the
   // advertised characteristic and reject any write attempts.
-  permFailClosedChr = svc.createCharacteristic(BLEUUID(PERM_FAIL_CLOSED_CHAR_UUID), BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenRead);
+  permFailClosedChr = svc.createCharacteristic(PERM_FAIL_CLOSED_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenRead);
   permFailClosedChr.setValue("ro_data");
   permFailClosedChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
     syncPhaseFromHost();
@@ -417,7 +417,7 @@ bool phase_gatt_setup() {
   // counters accumulated from the handler are asserted against the exact
   // number of attempts. onWrite still fires on approved writes so we can
   // confirm the value reached the char.
-  authzChr = svc.createCharacteristic(BLEUUID(AUTHZ_CHAR_UUID), BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthorizedReadWrite);
+  authzChr = svc.createCharacteristic(AUTHZ_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::AuthorizedReadWrite);
   authzChr.setValue("init");
   authzChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
     syncPhaseFromHost();
@@ -429,7 +429,7 @@ bool phase_gatt_setup() {
   // Phase 19 & 22: EncryptedReadWrite. Access requires a paired link; used
   // to prove BLEConnInfo::isEncrypted/isBonded/isAuthenticated flip the
   // right way and to prove bond-delete forces a re-pair on next access.
-  encryptedChr = svc.createCharacteristic(BLEUUID(ENCRYPTED_CHAR_UUID), BLEProperty::Read | BLEProperty::Write, BLEPermissions::EncryptedReadWrite);
+  encryptedChr = svc.createCharacteristic(ENCRYPTED_CHAR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::EncryptedReadWrite);
   encryptedChr.setValue("enc_data");
   encryptedChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
     syncPhaseFromHost();
@@ -448,7 +448,7 @@ bool phase_gatt_setup() {
   Serial.println("[SERVER] Server started");
 
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+  adv.addServiceUUID(SERVICE_UUID);
   adv.start();
   Serial.println("[SERVER] Advertising started");
   return true;
@@ -895,7 +895,7 @@ void loop() {
     }
     adv.reset();
     adv.setType(BLEAdvType::Connectable);
-    adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+    adv.addServiceUUID(SERVICE_UUID);
     (void)adv.start();
 
     Serial.println("[SERVER] Phase17 done");
@@ -1031,7 +1031,7 @@ void loop() {
     delay(12000);
     adv.stop();
     adv.reset();
-    adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+    adv.addServiceUUID(SERVICE_UUID);
     adv.start();
     Serial.println("[SERVER] Phase20 done");
   }
@@ -1091,7 +1091,7 @@ void loop() {
 
     adv.reset();
     adv.setType(BLEAdvType::Connectable);
-    adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+    adv.addServiceUUID(SERVICE_UUID);
     adv.start();
     Serial.println("[SERVER] Phase21 done");
   }
@@ -1155,6 +1155,7 @@ void loop() {
   // - BLEService::getCharacteristics()/getCharacteristic(uuid)/removeCharacteristic
   // - BLECharacteristic::notify(connHandle), isSubscribed(conn)
   // - BLEUUID ==, bitSize, toUint16, to128 round-trip
+  // - Implicit const char* -> BLEUUID at every GATT/adv/beacon API boundary
   // Then trigger a notify targeted at the specific connection handle.
   if (currentPhase >= 23 && !phase23Done) {
     phase23Done = true;
@@ -1168,17 +1169,17 @@ void loop() {
     // Server-local API surface tests (no connection needed).
     auto svcs = srv.getServices();
     Serial.printf("[SERVER] Services: %u\n", (unsigned)svcs.size());
-    BLEService primarySvc = srv.getService(BLEUUID(SERVICE_UUID));
+    BLEService primarySvc = srv.getService(SERVICE_UUID);
     Serial.printf("[SERVER] GetService known ok=%d started=%d\n", (int)(bool)primarySvc, (int)primarySvc.isStarted());
-    BLEService unknownSvc = srv.getService(BLEUUID(UNKNOWN_SVC_UUID));
+    BLEService unknownSvc = srv.getService(UNKNOWN_SVC_UUID);
     Serial.printf("[SERVER] GetService unknown ok=%d\n", (int)(bool)unknownSvc);
 
     if (primarySvc) {
       auto chars = primarySvc.getCharacteristics();
       Serial.printf("[SERVER] Characteristics: %u\n", (unsigned)chars.size());
-      auto known = primarySvc.getCharacteristic(BLEUUID(RW_CHAR_UUID));
+      auto known = primarySvc.getCharacteristic(RW_CHAR_UUID);
       Serial.printf("[SERVER] GetCharacteristic known ok=%d\n", (int)(bool)known);
-      auto unknown = primarySvc.getCharacteristic(BLEUUID(UNKNOWN_CHAR_UUID));
+      auto unknown = primarySvc.getCharacteristic(UNKNOWN_CHAR_UUID);
       Serial.printf("[SERVER] GetCharacteristic unknown ok=%d\n", (int)(bool)unknown);
       Serial.printf("[SERVER] Characteristic handle=%u\n", (unsigned)known.getHandle());
     }
@@ -1191,6 +1192,62 @@ void loop() {
     );
     BLEUUID u32(static_cast<uint32_t>(0x0000180DUL));
     Serial.printf("[SERVER] UUID bitSize32=%u to32=0x%08lX\n", (unsigned)u32.bitSize(), (unsigned long)u32.toUint32());
+
+    // Implicit const char* -> BLEUUID (string literals at API boundaries).
+    int strPass = 0;
+    int strFail = 0;
+    auto strCheck = [&](bool ok) {
+      if (ok) {
+        ++strPass;
+      } else {
+        ++strFail;
+      }
+    };
+
+    strCheck(BLEUUID("180D").bitSize() == 16);
+    strCheck(BLEUUID("0000180D").bitSize() == 32);
+    strCheck(BLEUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b") == SERVICE_UUID);
+
+    BLEService svcByStr = srv.getService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+    strCheck(svcByStr && primarySvc && svcByStr.getHandle() == primarySvc.getHandle());
+
+    if (primarySvc) {
+      BLECharacteristic chrByStr = primarySvc.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+      strCheck(chrByStr && chrByStr.getUUID() == RW_CHAR_UUID);
+
+      if (descChr) {
+        BLEDescriptor descByStr = descChr.getDescriptor("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
+        strCheck(static_cast<bool>(descByStr));
+      }
+    }
+
+    BLEService ephemeral = srv.createService("cccccccc-0000-4000-8000-000000000099");
+    strCheck(static_cast<bool>(ephemeral));
+    if (ephemeral) {
+      BLECharacteristic epChr =
+        ephemeral.createCharacteristic("cccccccc-0000-4000-8000-00000000009a", BLEProperty::Read, BLEPermissions::OpenRead);
+      strCheck(static_cast<bool>(epChr));
+      if (epChr) {
+        BLEDescriptor epDesc = epChr.createDescriptor("2901", BLEPermission::Read, 16);
+        strCheck(static_cast<bool>(epDesc));
+      }
+    }
+
+    BLEAdvertisementData adStr;
+    adStr.addServiceUUID("180D");
+    adStr.setCompleteServices("180F");
+    adStr.setPartialServices("1810");
+    uint8_t svcDataStub[1] = {0x01};
+    adStr.setServiceData("180D", svcDataStub, sizeof(svcDataStub));
+    strCheck(adStr.length() > 0);
+
+    BLE.getAdvertising().addServiceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+
+    BLEBeacon beaconStr;
+    beaconStr.setProximityUUID("a1b2c3d4-e5f6-1122-3344-556677889900");
+    strCheck(beaconStr.getProximityUUID().isValid());
+
+    Serial.printf("[SERVER] StrConv pass=%d fail=%d\n", strPass, strFail);
 
     // Wait for the client to connect (it rescans before connecting).
     {

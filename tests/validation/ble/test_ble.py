@@ -518,7 +518,7 @@ def _phase_bond_and_whitelist(server, client):
 
 
 def _phase_error_paths_and_misc(server, client):
-    """Phase 23 — unknown UUIDs, typed reads, UUID algebra, ops-after-disconnect."""
+    """Phase 23 — unknown UUIDs, typed reads, UUID algebra, implicit str UUID conv."""
     # Server-side local API tests (run immediately, before client connects).
     server.expect(r"\[SERVER\] Services: \d+", timeout=15)
     server.expect(r"\[SERVER\] GetService known ok=[01] started=[01]", timeout=5)
@@ -531,6 +531,9 @@ def _phase_error_paths_and_misc(server, client):
     server.expect(r"\[SERVER\] Characteristic handle=\d+", timeout=5)
     server.expect(r"\[SERVER\] UUID bitSize16=16 bitSize128=128 to16=0x180D eq=\d+", timeout=5)
     server.expect(r"\[SERVER\] UUID bitSize32=32 to32=0x[0-9A-F]+", timeout=5)
+    m_str = server.expect(r"\[SERVER\] StrConv pass=(\d+) fail=(\d+)", timeout=5)
+    assert int(m_str.group(1)) > 0, "server StrConv: expected at least one passing check"
+    assert int(m_str.group(2)) == 0, "server StrConv: implicit const char* UUID conversion failed"
 
     # Client connects while server waits (server polls for up to 20 s).
     client.expect_exact("[CLIENT] Phase23 connected", timeout=30)
@@ -549,6 +552,9 @@ def _phase_error_paths_and_misc(server, client):
     assert int(m_wa.group(1)) == 0, "write-after-disconnect must fail"
     client.expect(r"\[CLIENT\] Phase23 connectAsync ok=[01]", timeout=10)
     client.expect(r"\[CLIENT\] Phase23 cancelConnect ok=[01]", timeout=10)
+    m_cstr = client.expect(r"\[CLIENT\] StrConv pass=(\d+) fail=(\d+)", timeout=10)
+    assert int(m_cstr.group(1)) > 0, "client StrConv: expected at least one passing check"
+    assert int(m_cstr.group(2)) == 0, "client StrConv: implicit const char* UUID conversion failed"
     client.expect_exact("[CLIENT] Phase23 done", timeout=10)
     server.expect_exact("[SERVER] Phase23 done", timeout=25)
 

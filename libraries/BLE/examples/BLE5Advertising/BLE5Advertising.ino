@@ -24,6 +24,10 @@
 // a single set; change the value to run several sets in parallel.
 static const uint8_t ADV_INSTANCE = 0;
 
+// Short 16-bit UUIDs (custom, for demo purposes only -- use 128-bit UUIDs in production)
+static const BLEUUID SVC_UUID("ABCD");
+static const BLEUUID CHR_UUID("1234");
+
 void onAdvComplete(uint8_t instance) {
   Serial.printf("Extended advertising instance %d completed\n", instance);
 }
@@ -37,9 +41,8 @@ void setup() {
   }
 
   BLEServer server = BLE.createServer();
-  // Short 16-bit UUIDs (custom, for demo purposes only -- use 128-bit UUIDs in production)
-  BLEService svc = server.createService("ABCD");
-  svc.createCharacteristic("1234", BLEProperty::Read, BLEPermissions::OpenRead).setValue("Hello BLE5");
+  BLEService svc = server.createService(SVC_UUID);
+  svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead).setValue("Hello BLE5");
 
   server.onConnect([](BLEServer s, const BLEConnInfo &conn) {
     Serial.printf("BLE5 client connected: %s\n", conn.getAddress().toString().c_str());
@@ -56,7 +59,7 @@ void setup() {
 
   BLEAdvertisementData data;
   data.setName("ESP32-BLE5-Extended");
-  data.addServiceUUID(BLEUUID("ABCD"));
+  data.addServiceUUID(SVC_UUID);
   adv.setExtAdvertisementData(ADV_INSTANCE, data);
 
   adv.onComplete(onAdvComplete);

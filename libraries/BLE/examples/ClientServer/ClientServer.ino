@@ -15,8 +15,8 @@
 #include <BLE.h>
 
 // Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
-static const char *SVC_UUID = "91bad492-b950-4226-aa2b-4ede9fa42f59";
-static const char *CHR_UUID = "0d563a58-196a-48ce-ace2-dfec78acc814";
+static const BLEUUID SVC_UUID("91bad492-b950-4226-aa2b-4ede9fa42f59");
+static const BLEUUID CHR_UUID("0d563a58-196a-48ce-ace2-dfec78acc814");
 
 BLECharacteristic localChr;
 BTAddress peerAddr;
@@ -42,20 +42,20 @@ void setup() {
     BLE.startAdvertising();
   });
 
-  BLEService svc = server.createService(BLEUUID(SVC_UUID));
-  localChr = svc.createCharacteristic(BLEUUID(CHR_UUID), BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
+  BLEService svc = server.createService(SVC_UUID);
+  localChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
   localChr.setValue("Hello from dual-role device");
   server.start();
 
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.addServiceUUID(BLEUUID(SVC_UUID));
+  adv.addServiceUUID(SVC_UUID);
   adv.start();
   Serial.println("Server started and advertising");
 
   // --- Client side ---
   BLEScan scan = BLE.getScan();
   scan.onResult([](const BLEAdvertisedDevice &dev) {
-    if (dev.isAdvertisingService(BLEUUID(SVC_UUID)) && dev.getName() != "ESP32-DualRole") {
+    if (dev.isAdvertisingService(SVC_UUID) && dev.getName() != "ESP32-DualRole") {
       Serial.printf("Found peer: %s\n", dev.getName().c_str());
       peerAddr = dev.getAddress();
       peerFound = true;
@@ -71,9 +71,9 @@ void setup() {
     BTStatus status = client.connect(peerAddr);
     if (status) {
       Serial.println("Connected to peer as client!");
-      BLERemoteService remoteSvc = client.getService(BLEUUID(SVC_UUID));
+      BLERemoteService remoteSvc = client.getService(SVC_UUID);
       if (remoteSvc) {
-        BLERemoteCharacteristic remoteChr = remoteSvc.getCharacteristic(BLEUUID(CHR_UUID));
+        BLERemoteCharacteristic remoteChr = remoteSvc.getCharacteristic(CHR_UUID);
         if (remoteChr) {
           String val = remoteChr.readValue();
           Serial.printf("Peer says: %s\n", val.c_str());

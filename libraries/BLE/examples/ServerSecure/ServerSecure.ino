@@ -21,9 +21,9 @@
 #include <BLE.h>
 
 // Custom UUIDs for this example (use https://www.uuidgenerator.net/ to create your own)
-static const char *SVC_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-static const char *SECURE_CHR_UUID = "ff1d2614-e2d6-4c87-9154-6625d39ca7f8";
-static const char *OPEN_CHR_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID SECURE_CHR_UUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
+static const BLEUUID OPEN_CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 void onAuthDone(const BLEConnInfo &conn, bool success) {
   Serial.printf("Auth %s with %s\n", success ? "OK" : "FAILED", conn.getAddress().toString().c_str());

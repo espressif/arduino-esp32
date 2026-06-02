@@ -100,6 +100,18 @@ UUID Byte Order
 Backend implementations convert to the stack-native byte order (little-endian for NimBLE) as needed.
 You never need to worry about byte order when using the public API.
 
+Define UUIDs once at file scope and pass them to GATT/advertising APIs (all take ``const BLEUUID &``):
+
+.. code-block:: cpp
+
+    static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+    static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+
+    BLEService svc = server.createService(SVC_UUID);
+    BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, ...);
+
+String literals (for example ``"180A"``) are also accepted via the implicit ``BLEUUID(const char *)`` constructor, but named ``BLEUUID`` constants are preferred in examples and application code.
+
 Error Handling
 **************
 
@@ -135,6 +147,9 @@ Getting Started
 
     #include <BLE.h>
 
+    static const BLEUUID SVC_UUID("180A");   // Device Information Service
+    static const BLEUUID CHR_UUID("2A29");   // Manufacturer Name String
+
     void setup() {
         Serial.begin(115200);
 
@@ -145,9 +160,9 @@ Getting Started
 
         // Create a GATT server
         BLEServer server = BLE.createServer();
-        BLEService svc = server.createService("180A");
+        BLEService svc = server.createService(SVC_UUID);
         BLECharacteristic chr = svc.createCharacteristic(
-            "2A29", BLEProperty::Read, BLEPermissions::OpenRead
+            CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead
         );
         chr.setValue("Espressif");
         server.start();

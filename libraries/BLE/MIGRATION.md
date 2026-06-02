@@ -89,9 +89,11 @@ BLECharacteristic *pChar = pService->createCharacteristic("2A29", ...);
 pChar->setValue("Hello");
 
 // v4.0 -- value types, shared ownership
+static const BLEUUID SVC_UUID("180A");
+static const BLEUUID CHR_UUID("2A29");
 BLEServer server = BLE.createServer();
-BLEService svc = server.createService("180A");
-BLECharacteristic chr = svc.createCharacteristic("2A29",
+BLEService svc = server.createService(SVC_UUID);
+BLECharacteristic chr = svc.createCharacteristic(CHR_UUID,
     BLEProperty::Read, BLEPermissions::OpenRead);
 chr.setValue("Hello");
 ```
@@ -166,12 +168,14 @@ pService->createCharacteristic("uuid",
     NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_AUTHEN);
 
 // v4.0 -- clean separation, same on both stacks, permissions required
-auto chr = svc.createCharacteristic("uuid",
+static const BLEUUID MY_CHAR_UUID("0000abcd-0000-1000-8000-00805f9b34fb");
+auto chr = svc.createCharacteristic(MY_CHAR_UUID,
     BLEProperty::Read | BLEProperty::Write,
     BLEPermissions::EncryptedReadWrite);
 
 // ...or use the raw bits directly for fine-grained control:
-auto chr2 = svc.createCharacteristic("uuid2",
+static const BLEUUID MY_CHAR2_UUID("0000abce-0000-1000-8000-00805f9b34fb");
+auto chr2 = svc.createCharacteristic(MY_CHAR2_UUID,
     BLEProperty::Read | BLEProperty::Write,
     BLEPermission::ReadEncrypted | BLEPermission::WriteAuthenticated);
 ```
@@ -346,7 +350,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
-| `pServer->createService(uuid)` | `server.createService(uuid)` | Returns `BLEService` value |
+| `pServer->createService(uuid)` | `server.createService(uuid)` | `uuid` is `const BLEUUID &`; define `static const BLEUUID` at file scope |
 | `pServer->getServiceByUUID(uuid)` | `server.getService(uuid)` | |
 | N/A | `server.getServices()` | New: returns all services |
 | `pServer->removeService(svc)` | `server.removeService(svc)` | Returns `BTStatus` |
@@ -375,7 +379,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
-| `pService->createCharacteristic(uuid, props)` → `BLECharacteristic*` | `svc.createCharacteristic(uuid, props, perms)` → `BLECharacteristic` | Value; `BLEProperty` + required `BLEPermission` |
+| `pService->createCharacteristic(uuid, props)` → `BLECharacteristic*` | `svc.createCharacteristic(uuid, props, perms)` → `BLECharacteristic` | Same `const BLEUUID &` convention; `BLEProperty` + required `BLEPermission` |
 | `pChar->setValue("hello")` | `chr.setValue("hello")` | |
 | `pChar->setValue(data, len)` | `chr.setValue(data, len)` | |
 | `pChar->setValue(uint32_t)` | `chr.setValue(uint32_t)` | Also: `uint16_t`, `int`, `float`, `double` |
@@ -773,8 +777,8 @@ void setup() {
 #include <BLE.h>
 #include <BLEServer.h>
 
-#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHAR_UUID    "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 void setup() {
     Serial.begin(115200);
@@ -789,9 +793,9 @@ void setup() {
     });
     server.advertiseOnDisconnect(true);
 
-    BLEService svc = server.createService(SERVICE_UUID);
+    BLEService svc = server.createService(SVC_UUID);
     BLECharacteristic chr = svc.createCharacteristic(
-        CHAR_UUID,
+        CHR_UUID,
         BLEProperty::Read | BLEProperty::Notify,
         BLEPermissions::OpenRead
     );
@@ -799,7 +803,7 @@ void setup() {
     chr.setValue("Hello World");
     server.start();
 
-    BLE.getAdvertising().addServiceUUID(BLEUUID(SERVICE_UUID));
+    BLE.getAdvertising().addServiceUUID(SVC_UUID);
     BLE.startAdvertising();
 }
 ```
@@ -826,14 +830,17 @@ pChr->registerForNotify([](BLERemoteCharacteristic *pChr, uint8_t *data, size_t 
 #include <BLE.h>
 #include <BLEClient.h>
 
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+
 BLEClient client = BLE.createClient();
 BTStatus status = client.connect(address, 5000);
 if (!status) {
     Serial.printf("Connect failed: %s\n", status.toString());
     return;
 }
-BLERemoteService svc = client.getService(serviceUUID);
-BLERemoteCharacteristic chr = svc.getCharacteristic(charUUID);
+BLERemoteService svc = client.getService(SVC_UUID);
+BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
 String val = chr.readValue();
 chr.writeValue("hello");
 chr.subscribe(true, [](BLERemoteCharacteristic c, const uint8_t *data, size_t len, bool isNotify) {
@@ -987,7 +994,8 @@ pChar->setDescription("Temperature");
 
 **After (v4.0):**
 ```cpp
-BLECharacteristic chr = svc.createCharacteristic(uuid,
+static const BLEUUID MY_CHAR_UUID("0000abcd-0000-1000-8000-00805f9b34fb");
+BLECharacteristic chr = svc.createCharacteristic(MY_CHAR_UUID,
     BLEProperty::Read | BLEProperty::Notify,
     BLEPermissions::OpenRead);
 // CCCD is auto-created! No BLE2902 needed.
@@ -1022,9 +1030,11 @@ BLEDevice::startAdvertising();
 #include <BLE.h>
 #include <BLEBeacon.h>
 
+static const BLEUUID PROXIMITY_UUID("FDA50693-A4E2-4FB1-AFCF-C6EB07647825");
+
 BLE.begin("");
 BLEBeacon beacon;
-beacon.setProximityUUID(BLEUUID("FDA50693-A4E2-4FB1-AFCF-C6EB07647825"));
+beacon.setProximityUUID(PROXIMITY_UUID);
 beacon.setMajor(1);
 beacon.setMinor(1);
 beacon.setSignalPower(-59);
@@ -1214,8 +1224,8 @@ For users migrating from the official [ArduinoBLE](https://www.arduino.cc/refere
 | `BLE.scan()` | `BLE.getScan().start(duration)` | |
 | `BLE.available()` | Use `scan.onResult(lambda)` | Callback-based |
 | `BLE.central()` | `server.getConnectedCount() > 0` | |
-| `BLEService svc("uuid", ...)` | `server.createService(BLEUUID("uuid"))` | Factory method |
-| `BLECharacteristic chr("uuid", props, size)` | `svc.createCharacteristic(BLEUUID("uuid"), props, perms)` | Factory method; permissions required |
+| `BLEService svc("uuid", ...)` | `server.createService(SVC_UUID)` with `static const BLEUUID SVC_UUID("uuid")` | Factory method |
+| `BLECharacteristic chr("uuid", props, size)` | `svc.createCharacteristic(CHR_UUID, props, perms)` with `static const BLEUUID CHR_UUID("uuid")` | Factory method; permissions required |
 | `chr.writeValue(val)` | `chr.setValue(val)` (server-side) | |
 | `chr.readValue()` | `chr.getStringValue()` (server-side) | |
 | `chr.subscribe()` | `remoteChr.subscribe(true, callback)` (client-side) | |

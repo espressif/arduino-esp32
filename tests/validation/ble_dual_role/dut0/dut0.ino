@@ -6,8 +6,8 @@
 #include <Arduino.h>
 #include <BLE.h>
 
-#define SERVICE_UUID "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHAR_UUID    "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 String myName;
 String peerName;
@@ -47,14 +47,14 @@ void setup() {
 
   // --- Server role ---
   BLEServer server = BLE.createServer();
-  BLEService svc = server.createService(BLEUUID(SERVICE_UUID));
-  BLECharacteristic chr = svc.createCharacteristic(BLEUUID(CHAR_UUID), BLEProperty::Read, BLEPermissions::OpenRead);
+  BLEService svc = server.createService(SVC_UUID);
+  BLECharacteristic chr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead);
   chr.setValue("DUT0 data");
   server.start();
   Serial.println("[DUT0] Server started");
 
   BLEAdvertising adv = BLE.getAdvertising();
-  adv.addServiceUUID(BLEUUID(SERVICE_UUID));
+  adv.addServiceUUID(SVC_UUID);
   adv.start();
   Serial.println("[DUT0] Advertising started");
 
@@ -92,14 +92,14 @@ void setup() {
   }
   Serial.println("[DUT0] Connected as client to DUT1");
 
-  BLERemoteService remoteSvc = client.getService(BLEUUID(SERVICE_UUID));
+  BLERemoteService remoteSvc = client.getService(SVC_UUID);
   if (!remoteSvc) {
     Serial.println("[DUT0] Remote service not found");
     client.disconnect();
     return;
   }
 
-  BLERemoteCharacteristic remoteChr = remoteSvc.getCharacteristic(BLEUUID(CHAR_UUID));
+  BLERemoteCharacteristic remoteChr = remoteSvc.getCharacteristic(CHR_UUID);
   if (!remoteChr) {
     Serial.println("[DUT0] Remote characteristic not found");
     client.disconnect();

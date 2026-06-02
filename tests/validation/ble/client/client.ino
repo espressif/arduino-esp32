@@ -11,25 +11,25 @@
 #include "impl/bluedroid/BluedroidClient.h"
 #endif
 
-static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-static BLEUUID rwCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
-static BLEUUID notifyCharUUID("cba1d466-344c-4be3-ab3f-189f80dd7518");
-static BLEUUID indicateCharUUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
-static BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
-static BLEUUID descCharUUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
-static BLEUUID writeNrCharUUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
-static BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
+static const BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID rwCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+static const BLEUUID notifyCharUUID("cba1d466-344c-4be3-ab3f-189f80dd7518");
+static const BLEUUID indicateCharUUID("d5f782b2-a36e-4d68-947c-0e9a5f2c78e1");
+static const BLEUUID secureCharUUID("ff1d2614-e2d6-4c87-9154-6625d39ca7f8");
+static const BLEUUID descCharUUID("a3c87501-8ed3-4bdf-8a39-a01bebede295");
+static const BLEUUID writeNrCharUUID("1c95d5e3-d8f7-413a-bf3d-7a2e5d7be87e");
+static const BLEUUID permFailClosedCharUUID("e8b1d3a1-6b3e-4a5d-9f1d-9b7e5c3a2f41");
 // Phase 15: custom-UUID descriptor on DESC_CHAR declared as read-only. The
 // client reads it (should succeed) and then writes to it (should be rejected
 // at the ATT layer), exercising runtime enforcement of the descriptor
 // permissions on both NimBLE and Bluedroid.
-static BLEUUID descReadOnlyUUID("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
+static const BLEUUID descReadOnlyUUID("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
 // Phase 18 (authorization) + Phase 19 (encrypted).
-static BLEUUID authzCharUUID("ca11aaaa-1111-4222-8333-444455556666");
-static BLEUUID encryptedCharUUID("ca11bbbb-1111-4222-8333-444455556666");
+static const BLEUUID authzCharUUID("ca11aaaa-1111-4222-8333-444455556666");
+static const BLEUUID encryptedCharUUID("ca11bbbb-1111-4222-8333-444455556666");
 // Phase 23 (error paths) — these UUIDs are advertised as absent.
-static BLEUUID unknownSvcUUID("deadbeef-0000-0000-0000-000000000001");
-static BLEUUID unknownCharUUID("deadbeef-0000-0000-0000-000000000002");
+static const BLEUUID unknownSvcUUID("deadbeef-0000-0000-0000-000000000001");
+static const BLEUUID unknownCharUUID("deadbeef-0000-0000-0000-000000000002");
 
 String targetName;
 BTAddress targetAddr;
@@ -1355,9 +1355,19 @@ void setup() {
   // Phase 23: Error paths + miscellaneous coverage
   // ===========================================================================
   // Unknown service/char lookups, ops-after-disconnect, connectAsync/cancel,
-  // typed readUInt* and readRawData paths, UUID algebra, operator bool.
+  // typed readUInt* and readRawData paths, UUID algebra, operator bool,
+  // implicit const char* -> BLEUUID at client/remote GATT API boundaries.
   waitForPhase(23);
   {
+    int strPass = 0;
+    int strFail = 0;
+    auto strCheck = [&](bool ok) {
+      if (ok) {
+        ++strPass;
+      } else {
+        ++strFail;
+      }
+    };
     // Earlier phases (17, 20, 21) have repeatedly torn down adv, rotated
     // own-address type, and rebuilt payloads — any of which can stale the
     // cached targetAddr. Do a short re-scan by name before reconnecting so
@@ -1378,6 +1388,7 @@ void setup() {
         for (const auto &dev : res) {
           BLEAdvertisedDevice d = dev;
           if (d.getName() == targetName) {
+            strCheck(d.isAdvertisingService("4fafc201-1fb5-459e-8fcc-c5c9c331914b"));
             targetAddr = d.getAddress();
             rescanFound = true;
             break;
@@ -1403,6 +1414,24 @@ void setup() {
       BLERemoteService good = ec.getService(serviceUUID);
       BLERemoteCharacteristic unkC = good.getCharacteristic(unknownCharUUID);
       Serial.printf("[CLIENT] Phase23 getChar unknown ok=%d\n", (int)(bool)unkC);
+
+      strCheck(BLEUUID("180D").bitSize() == 16);
+      strCheck(BLEUUID("0000180D").bitSize() == 32);
+      BLERemoteService goodStr = ec.getService("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+      strCheck(goodStr && good && goodStr.getUUID() == good.getUUID());
+      if (goodStr) {
+        BLERemoteCharacteristic rwStr = goodStr.getCharacteristic("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        strCheck(rwStr && rwStr.getUUID() == rwCharUUID);
+        String valByClient = ec.getValue("4fafc201-1fb5-459e-8fcc-c5c9c331914b", "beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        strCheck(valByClient.length() > 0);
+        String valBySvc = goodStr.getValue("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+        strCheck(valBySvc.length() > 0);
+        BLERemoteCharacteristic descStr = goodStr.getCharacteristic("a3c87501-8ed3-4bdf-8a39-a01bebede295");
+        if (descStr) {
+          BLERemoteDescriptor roStr = descStr.getDescriptor("b5f3e2c1-8a9e-4b7c-9f3d-2e8a5b7c3f91");
+          strCheck(static_cast<bool>(roStr));
+        }
+      }
 
       BLERemoteCharacteristic rwC = good.getCharacteristic(rwCharUUID);
       // Typed reads — any value fits in a uint8, so we just check that
@@ -1445,6 +1474,7 @@ void setup() {
       BTStatus cancel = ac.cancelConnect();
       Serial.printf("[CLIENT] Phase23 cancelConnect ok=%d\n", (int)(bool)cancel);
     }
+    Serial.printf("[CLIENT] StrConv pass=%d fail=%d\n", strPass, strFail);
     Serial.println("[CLIENT] Phase23 done");
   }
 

@@ -30,14 +30,14 @@
 // ---------------------------------------------------------------------------
 
 // Environment Service and its characteristics
-static const char *ENV_SVC_UUID = "a1b2c3d4-0001-4e8f-a5b6-000000000001";
-static const char *TEMP_CHR_UUID = "a1b2c3d4-0001-4e8f-a5b6-000000000002";
-static const char *HUM_CHR_UUID = "a1b2c3d4-0001-4e8f-a5b6-000000000003";
+static const BLEUUID ENV_SVC_UUID("a1b2c3d4-0001-4e8f-a5b6-000000000001");
+static const BLEUUID TEMP_CHR_UUID("a1b2c3d4-0001-4e8f-a5b6-000000000002");
+static const BLEUUID HUM_CHR_UUID("a1b2c3d4-0001-4e8f-a5b6-000000000003");
 
 // Device Info Service and its characteristics
-static const char *DEV_SVC_UUID = "a1b2c3d4-0002-4e8f-a5b6-000000000001";
-static const char *FW_CHR_UUID = "a1b2c3d4-0002-4e8f-a5b6-000000000002";
-static const char *NAME_CHR_UUID = "a1b2c3d4-0002-4e8f-a5b6-000000000003";
+static const BLEUUID DEV_SVC_UUID("a1b2c3d4-0002-4e8f-a5b6-000000000001");
+static const BLEUUID FW_CHR_UUID("a1b2c3d4-0002-4e8f-a5b6-000000000002");
+static const BLEUUID NAME_CHR_UUID("a1b2c3d4-0002-4e8f-a5b6-000000000003");
 
 static const char *FIRMWARE_VERSION = "1.0.0";
 

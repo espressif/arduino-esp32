@@ -15,8 +15,8 @@
 #include <BLE.h>
 
 // Custom UUIDs -- must match the ServerSecure example
-static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
-static BLEUUID charUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
 
 BTAddress targetAddr;
 bool found = false;
@@ -46,7 +46,7 @@ void setup() {
   BLEScan scan = BLE.getScan();
   scan.onResult([](const BLEAdvertisedDevice &dev) {
     Serial.printf("Found: %s (%s)\n", dev.getName().c_str(), dev.getAddress().toString().c_str());
-    if (dev.isAdvertisingService(serviceUUID)) {
+    if (dev.isAdvertisingService(SVC_UUID)) {
       Serial.println("Found target server!");
       targetAddr = dev.getAddress();
       found = true;
@@ -70,13 +70,13 @@ void setup() {
   }
   Serial.println("Connected!");
 
-  BLERemoteService svc = client.getService(serviceUUID);
+  BLERemoteService svc = client.getService(SVC_UUID);
   if (!svc) {
     Serial.println("Service not found");
     return;
   }
 
-  BLERemoteCharacteristic chr = svc.getCharacteristic(charUUID);
+  BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
   if (!chr) {
     Serial.println("Characteristic not found");
     return;

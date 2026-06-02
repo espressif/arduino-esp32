@@ -12,7 +12,7 @@
 #include <BLE.h>
 #include <algorithm>
 
-static BLEUUID svcUUID("180D");  // Heart Rate Service (Bluetooth SIG assigned UUID)
+static const BLEUUID SVC_UUID((uint16_t)0x180D);  // Heart Rate Service (Bluetooth SIG assigned)
 
 void onClientDisconnected(BLEClient client, const BLEConnInfo &conn, uint8_t reason) {
   Serial.printf("Client disconnected from %s (reason 0x%02X)\n", conn.getAddress().toString().c_str(), reason);
@@ -36,7 +36,7 @@ void setup() {
 
   for (size_t i = 0; i < std::min(results.getCount(), (size_t)3); i++) {
     BLEAdvertisedDevice dev = results.getDevice(i);
-    if (!dev.isAdvertisingService(svcUUID)) {
+    if (!dev.isAdvertisingService(SVC_UUID)) {
       continue;
     }
 
@@ -48,7 +48,7 @@ void setup() {
 
     if (client.connect(dev)) {
       if (client.discoverServices()) {
-        BLERemoteService svc = client.getService(svcUUID);
+        BLERemoteService svc = client.getService(SVC_UUID);
         if (svc) {
           Serial.printf("Client[%d] found Heart Rate service\n", i);
         }
