@@ -307,7 +307,6 @@ static bool hostedInit() {
   }
 
   // Assign before SDIO bring-up: periman auto-LDO (VO4) must be on for GPIO 39-48
-  // (e.g. core board D2/D3). ESP-Hosted does not enable it (SD_PWR_CTRL_LDO_INTERNAL_IO off).
   if (!hostedAssignPinBuses()) {
     log_e("ESP-Hosted: failed to assign SDIO pins to peripheral manager");
     return false;

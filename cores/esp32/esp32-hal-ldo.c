@@ -45,10 +45,19 @@ esp_err_t ldoReleaseChannel(ldo_channel_handle_t handle) {
   return err;
 }
 
-static int8_t s_sdmmc_ldo_chan = -1;
+static int8_t s_claimed_ldo_chan = -1;
+static const char *s_claimed_ldo_owner = NULL;
 
-void ldoSdmmcDriverAttached(uint8_t chan_id) {
-  s_sdmmc_ldo_chan = (int8_t)chan_id;
+void ldoDriverClaimChannel(uint8_t chan_id, const char *owner) {
+  s_claimed_ldo_chan = (int8_t)chan_id;
+  s_claimed_ldo_owner = (owner != NULL && owner[0] != '\0') ? owner : "driver";
+}
+
+void ldoDriverReleaseChannel(uint8_t chan_id) {
+  if (s_claimed_ldo_chan == (int8_t)chan_id) {
+    s_claimed_ldo_chan = -1;
+    s_claimed_ldo_owner = NULL;
+  }
 }
 
 #if BOARD_PERIMAN_IO_LDO_AUTO
@@ -101,8 +110,8 @@ static void io_ldo_try_acquire(void) {
   if (s_io_ldo_slot.refcount <= 0 || s_io_ldo_slot.handle != NULL) {
     return;
   }
-  if (s_sdmmc_ldo_chan >= 0 && s_sdmmc_ldo_chan == s_io_ldo.chan_id) {
-    log_d("periman IO LDO auto: channel %d held by SDMMC; skip acquire", s_io_ldo.chan_id);
+  if (s_claimed_ldo_chan >= 0 && s_claimed_ldo_chan == s_io_ldo.chan_id) {
+    log_d("periman IO LDO auto: channel %d held by %s; skip acquire", s_io_ldo.chan_id, s_claimed_ldo_owner ? s_claimed_ldo_owner : "driver");
     return;
   }
   if (ldoAcquireChannel((uint8_t)s_io_ldo.chan_id, s_io_ldo.voltage_mv, false, &s_io_ldo_slot.handle) == ESP_OK) {
@@ -149,6 +158,11 @@ void ldoPerimanPinBusSet(uint8_t pin, peripheral_bus_type_t old_type, peripheral
 #endif
 }
 
+#if SOC_SDMMC_HOST_SUPPORTED
+void ldoSdmmcDriverAttached(uint8_t chan_id) {
+  ldoDriverClaimChannel(chan_id, "SDMMC");
+}
+
 void ldoSdmmcPrepareAcquire(uint8_t chan_id) {
 #if BOARD_PERIMAN_IO_LDO_AUTO
   if (io_ldo_channel_matches(chan_id)) {
@@ -160,9 +174,7 @@ void ldoSdmmcPrepareAcquire(uint8_t chan_id) {
 }
 
 void ldoSdmmcDriverDetached(uint8_t chan_id) {
-  if (s_sdmmc_ldo_chan == (int8_t)chan_id) {
-    s_sdmmc_ldo_chan = -1;
-  }
+  ldoDriverReleaseChannel(chan_id);
 #if BOARD_PERIMAN_IO_LDO_AUTO
   if (io_ldo_channel_matches(chan_id)) {
     io_ldo_try_acquire();
@@ -179,5 +191,6 @@ void ldoSdmmcDriverCreateFailed(uint8_t chan_id) {
   (void)chan_id;
 #endif
 }
+#endif /* SOC_SDMMC_HOST_SUPPORTED */
 
 #endif /* SOC_GP_LDO_SUPPORTED */
