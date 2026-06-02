@@ -145,8 +145,8 @@ static void ot_task_worker(void *aContext) {
   // resources, causing a double esp_netif_destroy() or a vTaskDelete() on an
   // already-deleted task. Park instead and let end() release everything and
   // delete this (still valid) task handle.
-  while (true) {
-    vTaskDelay(portMAX_DELAY);
+  for (;;) {
+    vTaskSuspend(NULL);
   }
 }
 
