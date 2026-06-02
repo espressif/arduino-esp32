@@ -24,8 +24,28 @@
 #include <openthread/commissioner.h>
 #include <openthread/platform/radio.h>
 
+#include "esp_openthread_lock.h"
+
 static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
+
+// RAII helper for the OpenThread stack lock. The mainloop runs on the worker
+// task, so any otXxx() call made from another task must hold this lock. Acquire
+// on construction, release on destruction; evaluate as bool to check success.
+struct OtLock {
+  bool mLocked;
+  OtLock() : mLocked(esp_openthread_lock_acquire(portMAX_DELAY)) {}
+  ~OtLock() {
+    if (mLocked) {
+      esp_openthread_lock_release();
+    }
+  }
+  explicit operator bool() const {
+    return mLocked;
+  }
+  OtLock(const OtLock &) = delete;
+  OtLock &operator=(const OtLock &) = delete;
+};
 
 const char *otRoleString[] = {
   "Disabled",  ///< The Thread stack is disabled.
