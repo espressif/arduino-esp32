@@ -304,16 +304,19 @@
  // The frame format is the plain-text key/value string the node builds:
  //   "id=<str>,seq=<n>,temp_centi=<int>,batt_mv=<uint>"
  static void processPacket(const char *payload, const char *srcIp, uint16_t srcPort) {
-   char id[16] = {0};
-   uint32_t seq = 0;
-   int32_t tempCenti = 0;
-   uint16_t battMv = 0;
-   if (sscanf(payload, "id=%15[^,],seq=%lu,temp_centi=%ld,batt_mv=%hu", id, &seq, &tempCenti, &battMv) != 4) {
-     s_droppedPackets++;
-     Serial.printf("DROP malformed from [%s]:%u -> '%s'\n", srcIp, srcPort, payload);
-     return;
-   }
- 
+  char id[16] = {0};
+  unsigned long seqTmp = 0;
+  long tempTmp = 0;
+  unsigned int battTmp = 0;
+  if (sscanf(payload, "id=%15[^,],seq=%lu,temp_centi=%ld,batt_mv=%u", id, &seqTmp, &tempTmp, &battTmp) != 4) {
+    s_droppedPackets++;
+    Serial.printf("DROP malformed from [%s]:%u -> '%s'\n", srcIp, srcPort, payload);
+    return;
+  }
+  uint32_t seq = (uint32_t)seqTmp;
+  int32_t tempCenti = (int32_t)tempTmp;
+  uint16_t battMv = (uint16_t)battTmp;
+   
    int idx = findRecordById(id);
    if (idx < 0) {
      idx = allocateRecord(id);
@@ -363,7 +366,6 @@
  
  void setup() {
    Serial.begin(115200);
-   while (!Serial) {}
  
    Serial.println("=== udp_sensor_collector (CLI): Leader + UDP sink ===");
    // begin(false): start the OpenThread stack but do NOT auto-start a network -
