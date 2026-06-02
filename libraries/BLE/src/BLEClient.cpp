@@ -670,8 +670,7 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
 
     case ESP_GATTC_SRVC_CHG_EVT: log_i("SERVICE CHANGED"); break;
 
-    case ESP_GATTC_CLOSE_EVT:
-      break;
+    case ESP_GATTC_CLOSE_EVT: break;
 
     //
     // ESP_GATTC_DISCONNECT_EVT
