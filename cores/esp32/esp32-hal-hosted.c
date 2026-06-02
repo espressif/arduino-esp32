@@ -347,8 +347,8 @@ static bool hostedInit() {
   err = esp_hosted_connect_to_slave();
   if (err != ESP_OK) {
     log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
+    esp_hosted_deinit();    
     hosted_initialized = false;
-    esp_hosted_deinit();
     hostedClearPinBuses();
     return false;
   }
@@ -363,13 +363,12 @@ static bool hostedDeinit() {
     return false;
   }
 
-  hosted_initialized = false;
-
   if (esp_hosted_deinit() != ESP_OK) {
     log_e("esp_hosted_deinit failed!");
     return false;
   }
-
+  
+  hosted_initialized = false;
   hostedClearPinBuses();
   return true;
 }
