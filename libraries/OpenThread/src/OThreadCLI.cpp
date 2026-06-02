@@ -81,11 +81,13 @@ static void ot_cli_loop(void *context) {
 
 // process the CLI responses received from the OpenThread stack
 static int ot_cli_output_callback(void *context, const char *format, va_list args) {
-  char prompt_check[3];
-  int ret = 0;
+  char buf[OT_CLI_MAX_LINE_LENGTH];
+  int ret = vsnprintf(buf, sizeof(buf), format, args);
+  if (ret <= 0) {
+    return ret;
+  }
 
-  vsnprintf(prompt_check, sizeof(prompt_check), format, args);
-  if (!strncmp(prompt_check, "> ", sizeof(prompt_check))) {
+  if (!strncmp(buf, "> ", 2)) {
     if (s_cli_task) {
       xTaskNotifyGive(s_cli_task);
     }
@@ -93,27 +95,24 @@ static int ot_cli_output_callback(void *context, const char *format, va_list arg
       xTaskNotifyGive(s_console_cli_task);
     }
   } else {
-    char buf[OT_CLI_MAX_LINE_LENGTH];
-    ret = vsnprintf(buf, sizeof(buf), format, args);
-    if (ret) {
-      // store received data in the RX buffer
-      if (rx_queue != NULL) {
-        size_t freeSpace = uxQueueSpacesAvailable(rx_queue);
-        if (freeSpace < ret) {
-          // Drop the oldest data to make room for the new data
-          for (int i = 0; i < (ret - freeSpace); i++) {
-            uint8_t c;
-            xQueueReceive(rx_queue, &c, 0);
-          }
+    // store received data in the RX buffer
+    if (rx_queue != NULL) {
+      size_t len = (ret < (int)sizeof(buf)) ? (size_t)ret : sizeof(buf) - 1;
+      size_t freeSpace = uxQueueSpacesAvailable(rx_queue);
+      if (freeSpace < len) {
+        // Drop the oldest data to make room for the new data
+        for (size_t i = 0; i < (len - freeSpace); i++) {
+          uint8_t c;
+          xQueueReceive(rx_queue, &c, 0);
         }
-        for (int i = 0; i < ret; i++) {
-          xQueueSend(rx_queue, &buf[i], 0);
-        }
-        // if there is a user callback function in place, it shall have the priority
-        // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
-        if (otConsole.responseCallBack != nullptr) {
-          otConsole.responseCallBack();
-        }
+      }
+      for (size_t i = 0; i < len; i++) {
+        xQueueSend(rx_queue, &buf[i], 0);
+      }
+      // if there is a user callback function in place, it shall have the priority
+      // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
+      if (otConsole.responseCallBack != nullptr) {
+        otConsole.responseCallBack();
       }
     }
   }

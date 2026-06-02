@@ -19,6 +19,11 @@
 #include "esp_openthread_netif_glue.h"
 #include "lwip/netif.h"
 
+#include <openthread/instance.h>
+#include <openthread/joiner.h>
+#include <openthread/commissioner.h>
+#include <openthread/platform/radio.h>
+
 static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
 
@@ -32,6 +37,9 @@ const char *otRoleString[] = {
 };
 
 static TaskHandle_t s_ot_task = NULL;
+// Signaled by ot_task_worker() once the stack finished (or failed) initializing.
+// Mirrors the s_ot_syn_semaphore handshake done by IDF's esp_openthread_start().
+static SemaphoreHandle_t s_ot_init_done = NULL;
 #if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
 static struct netif *ot_lwip_netif = NULL;
 #endif
@@ -98,6 +106,14 @@ static void ot_task_worker(void *aContext) {
   if (!err && ESP_OK != esp_netif_set_default_netif(openthread_netif)) {
     log_e("Failed to set default OpenThread esp_netif");
     err = true;
+  }
+  // Tell begin() that initialization is finished (whether it succeeded or not)
+  // BEFORE entering the mainloop, which never returns. This matches IDF's
+  // esp_openthread_start(), where the worker task releases the sync semaphore
+  // only after esp_openthread_init() + netif setup are complete, so the caller
+  // can safely touch the instance/dataset (NVS already loaded) afterwards.
+  if (s_ot_init_done != NULL) {
+    xSemaphoreGive(s_ot_init_done);
   }
   if (!err) {
     // only returns in case there is an OpenThread Stack failure...
@@ -230,6 +246,16 @@ void OpenThread::begin(bool OThreadAutoStart) {
   ot_native_config.port_config.netif_queue_size = 10;
   ot_native_config.port_config.task_queue_size = 10;
 
+  // Handshake semaphore so begin() can block until the worker task has finished
+  // initializing the stack (mirrors IDF's esp_openthread_start()).
+  if (s_ot_init_done == NULL) {
+    s_ot_init_done = xSemaphoreCreateBinary();
+    if (s_ot_init_done == NULL) {
+      log_e("Error: Failed to create OpenThread init semaphore");
+      return;
+    }
+  }
+
   // Initialize OpenThread stack
   xTaskCreate(ot_task_worker, "ot_main_loop", 10240, NULL, 20, &s_ot_task);
   if (s_ot_task == NULL) {
@@ -238,30 +264,51 @@ void OpenThread::begin(bool OThreadAutoStart) {
   }
   log_d("OpenThread task created successfully");
 
-  // starts Thread with default dataset from NVS or from IDF default settings
-  if (OThreadAutoStart) {
-    otOperationalDatasetTlvs dataset;
-    otError error = otDatasetGetActiveTlvs(esp_openthread_get_instance(), &dataset);
-    //    error = OT_ERROR_FAILED; // teste para forçar NULL dataset
-    if (error != OT_ERROR_NONE) {
-      log_i("Failed to get active NVS dataset from OpenThread");
-    } else {
-      log_i("Got active NVS dataset from OpenThread");
-    }
-    esp_err_t err = esp_openthread_auto_start((error == OT_ERROR_NONE) ? &dataset : NULL);
-    if (err != ESP_OK) {
-      log_i("Failed to AUTO start OpenThread");
-    } else {
-      log_i("AUTO start OpenThread done");
-    }
-  }
-
-  // get the OpenThread instance that will be used for all operations
-  mInstance = esp_openthread_get_instance();
-  if (!mInstance) {
-    log_e("Error: Failed to initialize OpenThread instance");
+  // Wait for the worker task to finish initializing the stack before touching
+  // the instance or any otXxx() API. We must NOT hold the OpenThread lock here:
+  // esp_openthread_init() acquires that same lock on the worker task, so holding
+  // it would deadlock. This is exactly why the IDF uses a separate semaphore for
+  // the init handshake and the mutex only for protecting API calls.
+  if (xSemaphoreTake(s_ot_init_done, pdMS_TO_TICKS(5000)) != pdTRUE) {
+    log_e("Error: Timed out waiting for OpenThread stack initialization");
+    otStarted = true;  // force end() to run the full teardown below
     end();
     return;
+  }
+
+  // get the OpenThread instance that will be used for all operations. After the
+  // handshake above the stack is fully up and the persisted dataset (if any) has
+  // already been loaded from NVS, so this check is now reliable.
+  mInstance = esp_openthread_get_instance();
+  if (mInstance == nullptr || !otInstanceIsInitialized(mInstance)) {
+    log_e("Error: Failed to initialize OpenThread instance");
+    otStarted = true;  // force end() to run the full teardown below
+    end();
+    return;
+  }
+
+  // starts Thread with default dataset from NVS or from IDF default settings
+  if (OThreadAutoStart) {
+    // The mainloop is already running on the worker task, so every otXxx() call
+    // from this (non-OT) task must be made while holding the stack lock.
+    OtLock lock;
+    if (!lock) {
+      log_e("Failed to acquire OpenThread lock for auto start");
+    } else {
+      otOperationalDatasetTlvs dataset;
+      otError error = otDatasetGetActiveTlvs(mInstance, &dataset);
+      if (error != OT_ERROR_NONE) {
+        log_i("Failed to get active NVS dataset from OpenThread");
+      } else {
+        log_i("Got active NVS dataset from OpenThread");
+      }
+      esp_err_t err = esp_openthread_auto_start((error == OT_ERROR_NONE) ? &dataset : NULL);
+      if (err != ESP_OK) {
+        log_i("Failed to AUTO start OpenThread");
+      } else {
+        log_i("AUTO start OpenThread done");
+      }
+    }
   }
 
   otStarted = true;
@@ -276,6 +323,14 @@ void OpenThread::end() {
   if (s_ot_task != NULL) {
     vTaskDelete(s_ot_task);
     s_ot_task = NULL;
+  }
+
+  // Delete the init-handshake semaphore only AFTER the worker task is gone, so
+  // it can no longer xSemaphoreGive() a freed handle. Setting it back to NULL
+  // lets a subsequent begin() recreate it cleanly.
+  if (s_ot_init_done != NULL) {
+    vSemaphoreDelete(s_ot_init_done);
+    s_ot_init_done = NULL;
   }
 
   // Clean up in reverse order of initialization
@@ -349,6 +404,11 @@ void OpenThread::commitDataSet(const DataSet &dataset) {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return;
+  }
   // Commit the dataset as the active dataset
   otError error = otDatasetSetActive(mInstance, &(dataset.getDataset()));
   if (error != OT_ERROR_NONE) {
@@ -357,6 +417,22 @@ void OpenThread::commitDataSet(const DataSet &dataset) {
   }
   clearAllAddressCache();  // Clear cache when dataset changes
   log_d("Dataset committed successfully");
+}
+
+bool OpenThread::hasActiveDataset() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return false;
+  }
+
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return false;
+  }
+
+  otOperationalDatasetTlvs datasetTlvs;
+  return otDatasetGetActiveTlvs(mInstance, &datasetTlvs) == OT_ERROR_NONE;
 }
 
 ot_device_role_t OpenThread::otGetDeviceRole() {
