@@ -165,6 +165,11 @@ private:
   uint8_t getCurrentColorSaturation();
   uint16_t getCurrentColorTemperature();
 
+  // Stack callback helpers (must not use Zigbee lock).
+  uint16_t readColorAttributeU16(uint16_t attr_id);
+  uint8_t readColorAttributeU8(uint16_t attr_id);
+  void syncColorModeFromCallback(uint8_t color_mode);
+
   void lightChangedRgb();
   void lightChangedHsv();
   void lightChangedTemp();

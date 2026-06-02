@@ -20,7 +20,12 @@
 
 PBKDF2_HMACBuilder::PBKDF2_HMACBuilder(HashBuilder *hash, String password, String salt, uint32_t iterations) {
   this->hashBuilder = hash;
-  this->hashSize = hashBuilder->getHashSize();
+  if (hash) {
+    this->hashSize = hash->getHashSize();
+  } else {
+    this->hashSize = 0;
+    log_w("PBKDF2_HMACBuilder: No hash algorithm provided. Use setHashAlgorithm() before calculate().");
+  }
   this->iterations = iterations;
 
   // Initialize pointers
@@ -211,11 +216,13 @@ void PBKDF2_HMACBuilder::setIterations(uint32_t iterations) {
 }
 
 void PBKDF2_HMACBuilder::setHashAlgorithm(HashBuilder *hash) {
-  // Set the hash algorithm to use for the HMAC
-  // Note: We don't delete hashBuilder here as it might be owned by the caller
-  // The caller is responsible for managing the hashBuilder lifetime
   hashBuilder = hash;
-  hashSize = hashBuilder->getHashSize();
+  if (hash) {
+    hashSize = hash->getHashSize();
+  } else {
+    hashSize = 0;
+    log_e("PBKDF2_HMACBuilder: Hash algorithm set to null.");
+  }
 }
 
 void PBKDF2_HMACBuilder::pbkdf2_hmac(

@@ -40,6 +40,8 @@ Initializes the OpenThread stack.
 
 This function initializes the OpenThread stack and creates the OpenThread task. If ``OThreadAutoStart`` is ``true``, it will attempt to start Thread using the active dataset from NVS or ESP-IDF default settings.
 
+``begin()`` returns only after the worker task has finished initializing the OpenThread stack and reloaded any persisted Active Operational Dataset from NVS. After it returns successfully, APIs such as ``hasActiveDataset()`` can reliably query the stack state without an additional delay loop.
+
 **Note:** This is a static function and should be called before creating an ``OpenThread`` instance.
 
 end
@@ -130,6 +132,36 @@ This function sets the active operational dataset for the Thread network. The da
     dataset.setChannel(15);
     dataset.setNetworkKey(networkKey);
     OThread.commitDataSet(dataset);
+
+hasActiveDataset
+^^^^^^^^^^^^^^^^
+
+Checks whether OpenThread has a committed Active Operational Dataset.
+
+.. code-block:: arduino
+
+    bool hasActiveDataset() const;
+
+This function returns ``true`` when an Active Operational Dataset is available in the OpenThread stack. The dataset may have been loaded from NVS during ``OpenThread::begin()`` or committed by the application with ``commitDataSet()``.
+
+This is useful when a sketch needs to decide whether to resume an existing Thread network or provision a new one:
+
+.. code-block:: arduino
+
+    OpenThread::begin(false);
+
+    if (OThread.hasActiveDataset()) {
+        OThread.networkInterfaceUp();
+        OThread.start();
+    } else {
+        DataSet dataset;
+        dataset.initNew();
+        dataset.setNetworkName("MyThreadNetwork");
+        dataset.setChannel(15);
+        OThread.commitDataSet(dataset);
+        OThread.networkInterfaceUp();
+        OThread.start();
+    }
 
 getCurrentDataSet
 ^^^^^^^^^^^^^^^^^
@@ -447,7 +479,7 @@ Gets the OpenThread instance pointer.
 
 This function returns a pointer to the underlying OpenThread instance. This allows direct access to OpenThread API functions for advanced use cases.
 
-**Warning:** Direct use of the OpenThread instance requires knowledge of the OpenThread API. Use with caution.
+**Warning:** Direct use of the OpenThread instance requires knowledge of the OpenThread API. Use with caution. The Arduino wrapper methods acquire the ESP OpenThread stack lock internally, but raw ``ot*`` calls made through this pointer are outside that protection and must follow the ESP-IDF OpenThread locking rules.
 
 Operators
 *********

@@ -15,30 +15,9 @@
 #ifndef ESP32_HAL_BT_MEM_H
 #define ESP32_HAL_BT_MEM_H
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-
-#if defined(SOC_BT_CLASSIC_SUPPORTED) || defined(SOC_BLE_SUPPORTED)
-
-#include <stdbool.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-// Flag defined in esp32-hal-bt.c, set by constructors when BT libraries are linked
-extern bool _btLibraryInUse;
-
-// Constructor runs before app_main(), setting the flag if any BT library is used.
-// Multiple libraries including this header just set the same flag to true.
-__attribute__((constructor)) static void _setBtLibraryInUse(void) {
-  _btLibraryInUse = true;
-}
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SOC_BT_SUPPORTED */
+// DEPRECATED: File for backwards compatibility with existing code
+// TODO: Remove this file in v4.0. Use esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h instead.
+#include "esp32-hal-alloc-ble-mem.h"
+#include "esp32-hal-alloc-bt-classic-mem.h"
 
 #endif /* ESP32_HAL_BT_MEM_H */

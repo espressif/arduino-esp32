@@ -31,14 +31,12 @@
 #endif
 #include "esp32-hal-periman.h"
 #include "esp_private/periph_ctrl.h"
+#if !CONFIG_IDF_TARGET_ESP32 && !CONFIG_IDF_TARGET_ESP32S2
+#include "hal/spi_ll.h"
+#endif
 
 #include "esp_system.h"
 #include "esp_intr_alloc.h"
-
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-#include "sd_pwr_ctrl_by_on_chip_ldo.h"
-#include "soc/sdmmc_pins.h"
-#endif
 
 #if CONFIG_IDF_TARGET_ESP32  // ESP32/PICO-D4
 #include "soc/dport_reg.h"
@@ -67,7 +65,6 @@
 #elif CONFIG_IDF_TARGET_ESP32P4
 #include "esp32p4/rom/ets_sys.h"
 #include "esp32p4/rom/gpio.h"
-#include "hal/spi_ll.h"
 #include "hal/clk_tree_ll.h"
 
 // ESP32P4 SPI clock source frequencies
@@ -271,44 +268,6 @@ static bool spiDetachBus_SS(void *bus) {
   return true;
 }
 
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-static void setLDOPower(int8_t pin) {
-  if (pin < 0) {
-    return;
-  }
-
-#ifdef BOARD_SDMMC_POWER_PIN
-  if (perimanPinIsValid(BOARD_SDMMC_POWER_PIN) && perimanGetPinBusType(BOARD_SDMMC_POWER_PIN)) {
-    if (strcmp(perimanGetPinBusExtraType(BOARD_SDMMC_POWER_PIN), "SDMMC POWER") == 0) {
-      return;
-    }
-  }
-#endif
-
-  int8_t ldo_ctrld[] = {SDMMC_SLOT0_IOMUX_PIN_NUM_CLK, SDMMC_SLOT0_IOMUX_PIN_NUM_CMD, SDMMC_SLOT0_IOMUX_PIN_NUM_D0, SDMMC_SLOT0_IOMUX_PIN_NUM_D1,
-                        SDMMC_SLOT0_IOMUX_PIN_NUM_D2,  SDMMC_SLOT0_IOMUX_PIN_NUM_D3,  SDMMC_SLOT0_IOMUX_PIN_NUM_D4, SDMMC_SLOT0_IOMUX_PIN_NUM_D5,
-                        SDMMC_SLOT0_IOMUX_PIN_NUM_D6,  SDMMC_SLOT0_IOMUX_PIN_NUM_D7};
-  for (int j = 0; j < 10; j++) {
-    if (pin == ldo_ctrld[j]) {
-#ifdef BOARD_SDMMC_POWER_PIN
-      pinMode(BOARD_SDMMC_POWER_PIN, OUTPUT);
-      digitalWrite(BOARD_SDMMC_POWER_PIN, BOARD_SDMMC_POWER_ON_LEVEL);
-      perimanSetPinBusExtraType(BOARD_SDMMC_POWER_PIN, "SDMMC POWER");
-#endif
-      sd_pwr_ctrl_ldo_config_t ldo_config;
-      ldo_config.ldo_chan_id = BOARD_SDMMC_POWER_CHANNEL;
-      sd_pwr_ctrl_handle_t pwr_ctrl_handle = NULL;
-      sd_pwr_ctrl_new_on_chip_ldo(&ldo_config, &pwr_ctrl_handle);
-      if (sd_pwr_ctrl_set_io_voltage(pwr_ctrl_handle, 3300)) {
-        log_e("Unable to set power control to 3V3");
-        return;
-      }
-      break;
-    }
-  }
-}
-#endif
-
 bool spiAttachSCK(spi_t *spi, int8_t sck) {
   if (!spi || sck < 0) {
     return false;
@@ -317,9 +276,6 @@ bool spiAttachSCK(spi_t *spi, int8_t sck) {
   if (bus != NULL && !perimanClearPinBus(sck)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-  setLDOPower(sck);
-#endif
   pinMode(sck, OUTPUT);
   pinMatrixOutAttach(sck, SPI_CLK_IDX(spi->num), false, false);
   spi->sck = sck;
@@ -339,9 +295,6 @@ bool spiAttachMISO(spi_t *spi, int8_t miso) {
   if (bus != NULL && !perimanClearPinBus(miso)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-  setLDOPower(miso);
-#endif
   pinMode(miso, INPUT);
   pinMatrixInAttach(miso, SPI_MISO_IDX(spi->num), false);
   spi->miso = miso;
@@ -361,9 +314,6 @@ bool spiAttachMOSI(spi_t *spi, int8_t mosi) {
   if (bus != NULL && !perimanClearPinBus(mosi)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-  setLDOPower(mosi);
-#endif
   pinMode(mosi, OUTPUT);
   pinMatrixOutAttach(mosi, SPI_MOSI_IDX(spi->num), false, false);
   spi->mosi = mosi;
@@ -422,9 +372,6 @@ bool spiAttachSS(spi_t *spi, uint8_t ss_num, int8_t ss) {
   if (bus != NULL && !perimanClearPinBus(ss)) {
     return false;
   }
-#ifdef SOC_SDMMC_IO_POWER_EXTERNAL  //ESP32-P4
-  setLDOPower(ss);
-#endif
   pinMode(ss, OUTPUT);
   pinMatrixOutAttach(ss, SPI_SS_IDX(spi->num, ss_num), spi->ss_invert, false);
   spiEnableSSPins(spi, (1 << ss_num));
@@ -820,6 +767,9 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
 #endif
 
 #if CONFIG_IDF_TARGET_ESP32S2
+#ifndef DPORT_PERIP_RST_EN_REG
+#define DPORT_PERIP_RST_EN_REG DPORT_PERIP_RST_EN0_REG
+#endif
   if (spi_num == FSPI) {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI2_RST);
@@ -828,6 +778,21 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_SPI3_RST);
   }
 #elif CONFIG_IDF_TARGET_ESP32S3
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
+    }
+  }
+#else
   if (spi_num == FSPI) {
     periph_ll_reset(PERIPH_SPI2_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
@@ -835,6 +800,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
     periph_ll_reset(PERIPH_SPI3_MODULE);
     periph_ll_enable_clk_clear_rst(PERIPH_SPI3_MODULE);
   }
+#endif
 #elif CONFIG_IDF_TARGET_ESP32
   if (spi_num == HSPI) {
     DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_SPI2_CLK_EN);
@@ -849,6 +815,7 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
 #elif CONFIG_IDF_TARGET_ESP32P4
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   if (spi_num == FSPI) {
     PERIPH_RCC_ACQUIRE_ATOMIC(PERIPH_GPSPI2_MODULE, ref_count) {
       if (ref_count == 0) {
@@ -870,10 +837,31 @@ spi_t *spiStartBus(uint8_t spi_num, uint32_t clockDiv, uint8_t dataMode, uint8_t
       }
     }
   }
+#else
+  if (spi_num == FSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI2_HOST, true);
+      spi_ll_reset_register(SPI2_HOST);
+      spi_ll_enable_clock(SPI2_HOST, true);
+    }
+  } else if (spi_num == HSPI) {
+    PERIPH_RCC_ATOMIC() {
+      spi_ll_enable_bus_clock(SPI3_HOST, true);
+      spi_ll_reset_register(SPI3_HOST);
+      spi_ll_enable_clock(SPI3_HOST, true);
+    }
+  }
+#endif
 #pragma GCC diagnostic pop
-#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API)
+#elif defined(__PERIPH_CTRL_ALLOW_LEGACY_API) && ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
   periph_ll_reset(PERIPH_SPI2_MODULE);
   periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+#else
+  PERIPH_RCC_ATOMIC() {
+    spi_ll_enable_bus_clock(SPI2_HOST, true);
+    spi_ll_reset_register(SPI2_HOST);
+    spi_ll_enable_clock(SPI2_HOST, true);
+  }
 #endif
 
   SPI_MUTEX_LOCK();

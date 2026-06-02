@@ -68,9 +68,15 @@ size_t HEXBuilder::hex2bytes(unsigned char *out, size_t maxlen, const char *in) 
 }
 
 size_t HEXBuilder::bytes2hex(char *out, size_t maxlen, const unsigned char *in, size_t len) {
+  if (maxlen > 0) {
+    out[0] = '\0';
+  }
   for (size_t i = 0; i < len; i++) {
-    if (i * 2 + 1 < maxlen) {
-      snprintf(out + (i * 2), 3, "%02x", in[i]);
+    size_t pos = i * 2;
+    if (pos + 2 < maxlen) {
+      snprintf(out + pos, 3, "%02x", in[i]);
+    } else if (pos < maxlen) {
+      snprintf(out + pos, maxlen - pos, "%02x", in[i]);
     }
   }
   return len * 2 + 1;

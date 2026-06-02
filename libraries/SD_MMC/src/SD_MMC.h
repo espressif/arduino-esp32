@@ -16,11 +16,7 @@
 
 #include "sdkconfig.h"
 #include "soc/soc_caps.h"
-#ifndef SOC_SDMMC_HOST_SUPPORTED
-#ifdef ARDUINO
-#warning The SDMMC library requires a device with an SDIO Host
-#endif
-#else
+#ifdef SOC_SDMMC_HOST_SUPPORTED
 
 #include "FS.h"
 #include "driver/sdmmc_types.h"
@@ -46,6 +42,7 @@ protected:
   int8_t _pin_d3 = -1;
 #ifdef SOC_SDMMC_IO_POWER_EXTERNAL
   int8_t _power_channel = -1;
+  void *_pwr_ctrl_handle = nullptr;  // sd_pwr_ctrl; IDF unmount does not delete this
 #endif
   uint8_t _pdrv = 0xFF;
   bool _mode1bit = false;

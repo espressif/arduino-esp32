@@ -1,4 +1,4 @@
-// Copyright 2015-2025 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2015-2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@
 #include "hal/uart_ll.h"
 #include "soc/soc_caps.h"
 #include "soc/uart_struct.h"
-#include "soc/uart_periph.h"
 #include "rom/ets_sys.h"
 #include "rom/gpio.h"
 
@@ -39,6 +38,16 @@
 #include "soc/uart_pins.h"
 #include "esp_private/uart_share_hw_ctrl.h"
 #include "esp_private/esp_clk_tree_common.h"
+
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "soc/uart_periph.h"
+#else
+#include "hal/uart_periph.h"
+#define SOC_UART_RX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_RX
+#define SOC_UART_TX_PIN_IDX  SOC_UART_PERIPH_SIGNAL_TX
+#define SOC_UART_CTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_CTS
+#define SOC_UART_RTS_PIN_IDX SOC_UART_PERIPH_SIGNAL_RTS
+#endif
 
 // Weak function that is overridden by Arduino layer when HardwareSerial.cpp is linked
 // This removes the upward dependency from HAL to Arduino (HAL calls weak, Arduino provides strong implementation)
@@ -656,6 +665,14 @@ int8_t uart_get_TxPin(uint8_t uart_num) {
   return _uart_bus_array[uart_num]._txPin;
 }
 
+int8_t uart_get_CtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._ctsPin;
+}
+
+int8_t uart_get_RtsPin(uint8_t uart_num) {
+  return _uart_bus_array[uart_num]._rtsPin;
+}
+
 // Routines that take care of UART events will be in the HardwareSerial Class code
 void uartGetEventQueue(uart_t *uart, QueueHandle_t *q) {
   // passing back NULL for the Queue pointer when UART is not initialized yet
@@ -680,6 +697,95 @@ bool uartIsDriverInstalled(uart_t *uart) {
 
 // Negative Pin Number will keep it unmodified, thus this function can set individual pins
 // When pins are changed, it will detach the previous one
+
+// Helper function to detect if a pin needs to be attached and log the detection
+// Eliminates duplication in detection phase for RX/TX/CTS/RTS
+// Parameters:
+//   pin          - The GPIO pin number to check (-1 means no change)
+//   funcName     - String name of the function: "RX", "TX", "CTS", or "RTS"
+//   expectedType - The ESP32_BUS_TYPE_UART_* constant for this function type
+//   target_uart  - The target UART number where we want to assign this pin
+//   needsAttach  - Output: true if pin needs to be attached to target UART
+//   prevUARTOut  - Output: UART number that currently owns this pin (-1 if none or not UART)
+static void _uartDetectPin(int8_t pin, const char *funcName, peripheral_bus_type_t expectedType, uint8_t target_uart, bool *needsAttach, int8_t *prevUARTOut) {
+  *needsAttach = false;
+  if (prevUARTOut != NULL) {
+    *prevUARTOut = -1;
+  }
+
+  if (pin < 0) {
+    return;  // Pin not being changed
+  }
+
+  peripheral_bus_type_t t = perimanGetPinBusType(pin);
+  bool isUART = (t >= ESP32_BUS_TYPE_UART_RX && t <= ESP32_BUS_TYPE_UART_RTS);
+  int8_t prevU = isUART ? perimanGetPinBusNum(pin) : -1;
+
+  *needsAttach = (t != expectedType || target_uart != prevU);
+  if (prevUARTOut != NULL) {
+    *prevUARTOut = prevU;  // Set to actual UART if owned, -1 otherwise
+  }
+
+  if (isUART) {
+    log_v("%s: pin %d -> UART%d: currently [UART%d], attach=%s", funcName, pin, target_uart, prevU, *needsAttach ? "YES" : "NO");
+  } else {
+    log_v("%s: pin %d -> UART%d: currently [GPIO], attach=%s", funcName, pin, target_uart, *needsAttach ? "YES" : "NO");
+  }
+}
+
+// Detaches 'pin' from its current UART assignment (if any) before reusing it for a new function.
+// Only acts when 'needsAttach' is true (pin is being reassigned).
+// If the pin was taken from a *different* UART than 'target_uart_num', stores that UART in
+// '*prevOtherUARTOut' (for later termination check); sets it to -1 otherwise.
+// Returns false if a detach operation failed.
+static bool _uartDetachConflictingPin(int8_t pin, uint8_t target_uart_num, const char *target_func_name, bool needsAttach, int8_t *prevOtherUARTOut) {
+  if (prevOtherUARTOut != NULL) {
+    *prevOtherUARTOut = -1;
+  }
+  if (pin < 0 || !needsAttach) {
+    return true;
+  }
+
+  peripheral_bus_type_t currentType = perimanGetPinBusType(pin);
+  bool isPeriTypeUART = (currentType >= ESP32_BUS_TYPE_UART_RX && currentType <= ESP32_BUS_TYPE_UART_RTS);
+  if (!isPeriTypeUART) {
+    return true;  // Pin not assigned to any UART; nothing to detach
+  }
+
+  int8_t prevUART = perimanGetPinBusNum(pin);
+
+  // Build _uartDetachPins arguments from the pin's current function
+  int8_t d_rx = UART_PIN_NO_CHANGE, d_tx = UART_PIN_NO_CHANGE;
+  int8_t d_cts = UART_PIN_NO_CHANGE, d_rts = UART_PIN_NO_CHANGE;
+  const char *currentFuncName;
+
+  if (currentType == ESP32_BUS_TYPE_UART_RX) {
+    d_rx = pin;
+    currentFuncName = "RX";
+  } else if (currentType == ESP32_BUS_TYPE_UART_TX) {
+    d_tx = pin;
+    currentFuncName = "TX";
+  } else if (currentType == ESP32_BUS_TYPE_UART_CTS) {
+    d_cts = pin;
+    currentFuncName = "CTS";
+  } else {  // ESP32_BUS_TYPE_UART_RTS
+    d_rts = pin;
+    currentFuncName = "RTS";
+  }
+
+  if (prevUART != target_uart_num) {
+    log_d("Detaching pin %d (%s function) from UART%d", pin, currentFuncName, prevUART);
+    if (prevOtherUARTOut != NULL) {
+      *prevOtherUARTOut = prevUART;
+    }
+  } else {
+    log_d("Detaching pin %d (%s function) from UART%d before using as %s", pin, currentFuncName, prevUART, target_func_name);
+  }
+
+  (void)currentFuncName;  // Suppress unused variable warning when log_d is compiled out
+  return _uartDetachPins(prevUART, d_rx, d_tx, d_cts, d_rts);
+}
+
 bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, int8_t rtsPin) {
   // check uart_num and pins
   if (!_uartValidatePins(uart_num, rxPin, txPin, ctsPin, rtsPin)) {
@@ -689,11 +795,31 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // get UART information
   uart_t *uart = &_uart_bus_array[uart_num];
 
+  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
+  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+
   bool retCode = true;
   UART_MUTEX_LOCK();
 
-  //log_v("setting UART%u pins: prev->new RX(%d->%d) TX(%d->%d) CTS(%d->%d) RTS(%d->%d)", uart_num,
-  //        uart->_rxPin, rxPin, uart->_txPin, txPin, uart->_ctsPin, ctsPin, uart->_rtsPin, rtsPin); vTaskDelay(10);
+  // If driver is not yet installed, just store the pin configuration
+  // The pins will be properly attached when the driver is installed in uartBegin()
+  if (!uartIsDriverInstalled(uart)) {
+    log_v("UART%u: Driver not yet installed, storing pins for later attachment (RX:%d, TX:%d)", uart_num, rxPin, txPin);
+    if (rxPin >= 0) {
+      uart->_rxPin = rxPin;
+    }
+    if (txPin >= 0) {
+      uart->_txPin = txPin;
+    }
+    if (ctsPin >= 0) {
+      uart->_ctsPin = ctsPin;
+    }
+    if (rtsPin >= 0) {
+      uart->_rtsPin = rtsPin;
+    }
+    UART_MUTEX_UNLOCK();
+    return true;
+  }
 
   // mute bus detaching callbacks to avoid terminating the UART driver when both RX and TX pins are detached
   peripheral_bus_deinit_cb_t rxDeinit = perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX);
@@ -705,39 +831,107 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   perimanClearBusDeinit(ESP32_BUS_TYPE_UART_CTS);
   perimanClearBusDeinit(ESP32_BUS_TYPE_UART_RTS);
 
-  // First step: detaches all previous UART pins
-  bool rxPinChanged = rxPin >= 0 && rxPin != uart->_rxPin;
-  if (rxPinChanged) {
-    retCode &= _uartDetachPins(uart_num, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  // Track original pins to detect if current UART lost RX/TX capability
+  int8_t originalRxPin = uart->_rxPin;
+  int8_t originalTxPin = uart->_txPin;
+
+  // Determine whether each pin needs to be (re)attached and log verbose info
+  bool rxAttach = false, txAttach = false, ctsAttach = false, rtsAttach = false;
+
+  _uartDetectPin(rxPin, "RX", ESP32_BUS_TYPE_UART_RX, uart_num, &rxAttach, NULL);
+  _uartDetectPin(txPin, "TX", ESP32_BUS_TYPE_UART_TX, uart_num, &txAttach, NULL);
+  _uartDetectPin(ctsPin, "CTS", ESP32_BUS_TYPE_UART_CTS, uart_num, &ctsAttach, NULL);
+  _uartDetectPin(rtsPin, "RTS", ESP32_BUS_TYPE_UART_RTS, uart_num, &rtsAttach, NULL);
+
+  // Track which other UARTs had their pins taken (for termination check after attach)
+  int8_t rxPinPrevUART = -1, txPinPrevUART = -1, ctsPinPrevUART = -1, rtsPinPrevUART = -1;
+
+  // First step: for each pin, detach any conflict (pin already assigned elsewhere),
+  // then detach the old pin of this UART that is being replaced.
+  if (rxPin >= 0) {
+    retCode &= _uartDetachConflictingPin(rxPin, uart_num, "RX", rxAttach, &rxPinPrevUART);
+    if (rxPin != uart->_rxPin && uart->_rxPin >= 0) {
+      log_d("Detaching old RX pin %d from UART%d", uart->_rxPin, uart_num);
+      retCode &= _uartDetachPins(uart_num, uart->_rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
   }
-  bool txPinChanged = txPin >= 0 && txPin != uart->_txPin;
-  if (txPinChanged) {
-    retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, uart->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+  if (txPin >= 0) {
+    retCode &= _uartDetachConflictingPin(txPin, uart_num, "TX", txAttach, &txPinPrevUART);
+    if (txPin != uart->_txPin && uart->_txPin >= 0) {
+      log_d("Detaching old TX pin %d from UART%d", uart->_txPin, uart_num);
+      retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, uart->_txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    }
   }
-  bool ctsPinChanged = ctsPin >= 0 && ctsPin != uart->_ctsPin;
-  if (ctsPinChanged) {
-    retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_ctsPin, UART_PIN_NO_CHANGE);
+  if (ctsPin >= 0) {
+    retCode &= _uartDetachConflictingPin(ctsPin, uart_num, "CTS", ctsAttach, &ctsPinPrevUART);
+    if (ctsPin != uart->_ctsPin && uart->_ctsPin >= 0) {
+      log_d("Detaching old CTS pin %d from UART%d", uart->_ctsPin, uart_num);
+      retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_ctsPin, UART_PIN_NO_CHANGE);
+    }
   }
-  bool rtsPinChanged = rtsPin >= 0 && rtsPin != uart->_rtsPin;
-  if (rtsPinChanged) {
-    retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_rtsPin);
+  if (rtsPin >= 0) {
+    retCode &= _uartDetachConflictingPin(rtsPin, uart_num, "RTS", rtsAttach, &rtsPinPrevUART);
+    if (rtsPin != uart->_rtsPin && uart->_rtsPin >= 0) {
+      log_d("Detaching old RTS pin %d from UART%d", uart->_rtsPin, uart_num);
+      retCode &= _uartDetachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, uart->_rtsPin);
+    }
   }
 
   // Second step: attach all UART new pins
-  if (rxPinChanged) {
+  if (rxAttach) {
+    log_d("Attaching pin %d to UART%d as RX", rxPin, uart_num);
     retCode &= _uartAttachPins(uart_num, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   }
-  if (txPinChanged) {
+  if (txAttach) {
+    log_d("Attaching pin %d to UART%d as TX", txPin, uart_num);
     retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
   }
-  if (ctsPinChanged) {
-    retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin, UART_PIN_NO_CHANGE);
+  if (ctsAttach) {
+    log_d("Attaching pin %d to UART%d as CTS", ctsPin, uart_num);
+    retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, ctsPin, UART_PIN_NO_CHANGE);
   }
-  if (rtsPinChanged) {
-    retCode &= _uartAttachPins(uart->num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
+  if (rtsAttach) {
+    log_d("Attaching pin %d to UART%d as RTS", rtsPin, uart_num);
+    retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
   }
 
-  // restore bus detaching callbacks
+  // Collect unique UARTs that lost both RX and TX (need termination after mutex release)
+  int8_t uartsToTerminate[SOC_UART_NUM];
+  for (int i = 0; i < SOC_UART_NUM; i++) {
+    uartsToTerminate[i] = -1;
+  }
+  int terminateCount = 0;
+
+  int8_t prevUARTCandidates[4] = {rxPinPrevUART, txPinPrevUART, ctsPinPrevUART, rtsPinPrevUART};
+  for (int i = 0; i < 4; i++) {
+    int8_t prevU = prevUARTCandidates[i];
+    if (prevU < 0) {
+      continue;
+    }
+    bool alreadyTracked = false;
+    for (int j = 0; j < terminateCount; j++) {
+      if (uartsToTerminate[j] == prevU) {
+        alreadyTracked = true;
+        break;
+      }
+    }
+    if (!alreadyTracked) {
+      uart_t *prevUart = &_uart_bus_array[prevU];
+      if (prevUart->_rxPin < 0 && prevUart->_txPin < 0) {
+        log_d("UART%d marked for termination (lost both RX and TX pins)", prevU);
+        uartsToTerminate[terminateCount++] = prevU;
+      }
+    }
+  }
+
+  // Check if current UART lost both RX and TX pins (was functional, now has none)
+  bool terminateCurrentUart = false;
+  if ((originalRxPin >= 0 || originalTxPin >= 0) && rxPin < 0 && txPin < 0 && uart->_rxPin < 0 && uart->_txPin < 0) {
+    log_d("UART%d marked for termination (RX/TX pins removed)", uart_num);
+    terminateCurrentUart = true;
+  }
+
+  // Restore peripheral manager callbacks after all pin operations
   if (rxDeinit != NULL) {
     perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX, rxDeinit);
   }
@@ -756,6 +950,20 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   if (!retCode) {
     log_e("UART%u set pins failed.", uart_num);
   }
+
+  // Execute terminations AFTER releasing the mutex to avoid deadlock
+  for (int i = 0; i < terminateCount; i++) {
+    if (uartsToTerminate[i] >= 0) {
+      log_d("Terminating UART%d driver since both RX and TX pins were detached", uartsToTerminate[i]);
+      hardware_serial_end(uartsToTerminate[i]);
+    }
+  }
+
+  if (terminateCurrentUart) {
+    log_d("Terminating UART%d driver since all RX/TX pins were removed and no new pins were set", uart_num);
+    hardware_serial_end(uart_num);
+  }
+
   return retCode;
 }
 
@@ -992,8 +1200,10 @@ uart_t *uartBegin(
   UART_MUTEX_UNLOCK();
 
   // uartSetPins detaches previous pins if new ones are used over a previous begin()
+  // If any pins were pre-configured via setPins() before begin(), use those instead of UART_PIN_NO_CHANGE
   if (retCode) {
-    retCode &= uartSetPins(uart_nr, rxPin, txPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+    log_v("UART%u calling uartSetPins: RX=%d, TX=%d, CTS=%d, RTS=%d", uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
+    retCode &= uartSetPins(uart_nr, rxPin, txPin, uart->_ctsPin, uart->_rtsPin);
   }
   if (!retCode) {
     log_e("UART%u initialization error.", uart->num);
@@ -1433,6 +1643,43 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
   bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
   UART_MUTEX_UNLOCK();
   return retCode;
+}
+
+// Routine that sets UART_MODE_IRDA direction: TX or RX
+// irdaDirection: ESP32_UART_IRDA_TX (1) for TX mode, ESP32_UART_IRDA_RX (0) for RX mode
+// IrDA mode direction is exclusive: the UART can transmit OR receive, but not both simultaneously.
+// The UART hardware automatically handles IrDA pulse timing and encoding/decoding.
+bool uartSetIrdaDirection(uart_t *uart, esp32_uart_irda_direction_t irdaDirection) {
+  if (uart == NULL || uart->num >= SOC_UART_NUM || (irdaDirection != ESP32_UART_IRDA_RX && irdaDirection != ESP32_UART_IRDA_TX)) {
+    return false;
+  }
+
+  UART_MUTEX_LOCK();
+  uart_dev_t *hw = UART_LL_GET_HW(uart->num);
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  bool isIrdaModeEnabled = hw->conf0.irda_en == 1;
+#else
+  bool isIrdaModeEnabled = hw->conf0_sync.irda_en == 1;
+#endif
+  if (!isIrdaModeEnabled) {
+    __attribute__((unused)) uint8_t uart_num = uart->num;
+    UART_MUTEX_UNLOCK();
+    log_e("UART%u is not in IrDA mode; set UART_MODE_IRDA before setting IrDA TX/RX direction.", uart_num);
+    return false;
+  }
+
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3
+  // enables IRDA TX
+  hw->conf0.irda_tx_en = irdaDirection;
+#else
+  // enables IRDA TX
+  hw->conf0_sync.irda_tx_en = irdaDirection;
+  // it needs UART Update
+  uart_ll_update(hw);
+#endif
+  UART_MUTEX_UNLOCK();
+  return true;
 }
 
 // this function will set the uart clock source

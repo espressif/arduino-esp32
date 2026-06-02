@@ -61,7 +61,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 #include "esp32-hal-bt.h"
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #endif
 
 #include "esp32-hal-log.h"
@@ -293,6 +293,14 @@ bool BLEDevice::init(String deviceName) {
   log_i("Initializing BLE stack: %s", getBLEStackString().c_str());
 
   esp_err_t errRc = ESP_OK;
+
+#if defined(CONFIG_BT_CONTROLLER_ENABLED)
+  if (btMemReleased(BT_MODE_BLE)) {
+    log_e("BLE memory has been released. Cannot initialize BLE.");
+    return false;
+  }
+#endif
+
 #if defined(CONFIG_BLUEDROID_ENABLED)
 #if defined(ARDUINO_ARCH_ESP32)
   if (!btStart()) {
@@ -313,10 +321,6 @@ bool BLEDevice::init(String deviceName) {
     log_e("nvs_flash_init: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
     return false;
   }
-
-#ifndef CONFIG_BT_CLASSIC_ENABLED
-  esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
-#endif
 
   esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
   errRc = esp_bt_controller_init(&bt_cfg);
@@ -1141,9 +1145,8 @@ void BLEDevice::deinit(bool release_memory) {
   // Only release memory if requested (this prevents reinitialization)
   if (release_memory) {
 #ifdef ARDUINO_ARCH_ESP32
-    // Require tests because we released classic BT memory and this can cause crash (most likely not, esp-idf takes care of it)
 #if CONFIG_BT_CONTROLLER_ENABLED
-    esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    btMemRelease(BT_MODE_BLE);
 #endif
 #endif
   }

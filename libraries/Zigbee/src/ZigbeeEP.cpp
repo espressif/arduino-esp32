@@ -22,6 +22,33 @@
 #include "esp_zigbee_cluster.h"
 #include "zcl/esp_zigbee_zcl_power_config.h"
 
+#include <stdint.h>
+
+/* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
+static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
+static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
+
+static uint32_t zb_utctime_from_unix(time_t unix_ts) {
+  if (unix_ts == (time_t)-1) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  int64_t sec = (int64_t)unix_ts - ZIGBEE_UTCTIME_UNIX_OFFSET_SEC;
+  if (sec < 0) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  if (sec > (int64_t)UINT32_MAX) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  return (uint32_t)sec;
+}
+
+static time_t unix_time_from_zb_utctime(uint32_t zb_sec) {
+  if (zb_sec == ZIGBEE_UTCTIME_INVALID) {
+    return (time_t)-1;
+  }
+  return (time_t)(ZIGBEE_UTCTIME_UNIX_OFFSET_SEC + (int64_t)zb_sec);
+}
+
 /* Zigbee End Device Class */
 ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
   _endpoint = endpoint;
@@ -45,6 +72,148 @@ ZigbeeEP::ZigbeeEP(uint8_t endpoint) {
       log_e("Semaphore creation failed");
     }
   }
+}
+
+esp_zb_zcl_status_t ZigbeeEP::setClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, bool check) {
+  if (!Zigbee.initialized()) {
+    log_w("Cannot set attribute: Zigbee stack not initialized");
+    return ESP_ZB_ZCL_STATUS_FAIL;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot set attribute: failed to acquire Zigbee lock");
+    return ESP_ZB_ZCL_STATUS_FAIL;
+  }
+  esp_zb_zcl_status_t ret = esp_zb_zcl_set_attribute_val(_endpoint, cluster_id, cluster_role, attr_id, value, check);
+  esp_zb_lock_release();
+  return ret;
+}
+
+bool ZigbeeEP::getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, uint16_t value_size) {
+  if (value == nullptr || value_size == 0) {
+    log_e("Get attribute value buffer is invalid");
+    return false;
+  }
+  if (!Zigbee.initialized()) {
+    log_w("Cannot get attribute: Zigbee stack not initialized");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot get attribute: failed to acquire Zigbee lock");
+    return false;
+  }
+  esp_zb_zcl_attr_t *attr = esp_zb_zcl_get_attribute(_endpoint, cluster_id, cluster_role, attr_id);
+  if (attr == nullptr || attr->data_p == nullptr) {
+    esp_zb_lock_release();
+    log_w("Cannot get attribute: attribute not found");
+    return false;
+  }
+  memcpy(value, attr->data_p, value_size);
+  esp_zb_lock_release();
+  return true;
+}
+
+bool ZigbeeEP::reportClusterAttribute(esp_zb_zcl_report_attr_cmd_t *report_attr_cmd) {
+  if (report_attr_cmd == nullptr) {
+    log_e("Report attribute command is null");
+    return false;
+  }
+  if (!Zigbee.started()) {
+    log_w("Cannot report attribute: Zigbee stack not started");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot report attribute: failed to acquire Zigbee lock");
+    return false;
+  }
+  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(report_attr_cmd);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to report attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeEP::readClusterAttribute(esp_zb_zcl_read_attr_cmd_t *read_req) {
+  if (read_req == nullptr) {
+    log_e("Read attribute command is null");
+    return false;
+  }
+  if (!Zigbee.started()) {
+    log_w("Cannot read attribute: Zigbee stack not started");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot read attribute: failed to acquire Zigbee lock");
+    return false;
+  }
+  esp_err_t ret = esp_zb_zcl_read_attr_cmd_req(read_req);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to read attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeEP::setClusterReporting(esp_zb_zcl_reporting_info_t *reporting_info) {
+  if (reporting_info == nullptr) {
+    log_e("Reporting info is null");
+    return false;
+  }
+  if (!Zigbee.initialized()) {
+    log_w("Cannot configure reporting: Zigbee stack not initialized");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot configure reporting: failed to acquire Zigbee lock");
+    return false;
+  }
+  esp_err_t ret = esp_zb_zcl_update_reporting_info(reporting_info);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to update reporting info: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeEP::configureClusterReporting(esp_zb_zcl_config_report_cmd_t *report_cmd) {
+  if (report_cmd == nullptr) {
+    log_e("Configure report command is null");
+    return false;
+  }
+  if (!Zigbee.started()) {
+    log_w("Cannot configure cluster reporting: Zigbee stack not started");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot configure cluster reporting: failed to acquire Zigbee lock");
+    return false;
+  }
+  esp_err_t ret = esp_zb_zcl_config_report_cmd_req(report_cmd);
+  esp_zb_lock_release();
+  if (ret != ESP_OK) {
+    log_e("Failed to configure cluster reporting: 0x%x: %s", ret, esp_err_to_name(ret));
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeEP::acquireCommandLock() {
+  if (!Zigbee.initialized()) {
+    log_w("Cannot send command: Zigbee stack not initialized");
+    return false;
+  }
+  if (!esp_zb_lock_acquire(portMAX_DELAY)) {
+    log_w("Cannot send command: failed to acquire Zigbee lock");
+    return false;
+  }
+  return true;
+}
+
+void ZigbeeEP::releaseCommandLock() {
+  esp_zb_lock_release();
 }
 
 void ZigbeeEP::setVersion(uint8_t version) {
@@ -155,12 +324,9 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
     percentage = 100;
   }
   percentage = percentage * 2;
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &percentage,
-    false
+  ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_PERCENTAGE_REMAINING_ID, &percentage, false
   );
-  esp_zb_lock_release();
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set battery percentage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -170,12 +336,8 @@ bool ZigbeeEP::setBatteryPercentage(uint8_t percentage) {
 }
 
 bool ZigbeeEP::setBatteryVoltage(uint8_t voltage) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_POWER_CONFIG, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_POWER_CONFIG_BATTERY_VOLTAGE_ID, &voltage, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set battery voltage: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -195,11 +357,7 @@ bool ZigbeeEP::reportBatteryPercentage() {
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
   report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to report battery percentage: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
     return false;
   }
   log_v("Battery percentage reported");
@@ -234,9 +392,9 @@ char *ZigbeeEP::readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_i
   }
   _read_manufacturer = NULL;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
-  esp_zb_lock_release();
+  if (!readClusterAttribute(&read_req)) {
+    return NULL;
+  }
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -273,9 +431,9 @@ char *ZigbeeEP::readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_add
   }
   _read_model = NULL;
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
-  esp_zb_lock_release();
+  if (!readClusterAttribute(&read_req)) {
+    return NULL;
+  }
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -355,11 +513,15 @@ void ZigbeeEP::zbOTAState(bool otaActive) {
 }
 
 bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
-  time_t utc_time = 0;
+  uint32_t zb_utctime = 0;
   // Check if time is set
   if (time.tm_year > 0) {
-    // Convert time to UTC
-    utc_time = mktime(&time);
+    time_t unix_ts = mktime(&time);
+    if (unix_ts == (time_t)-1) {
+      log_e("Invalid calendar time");
+      return false;
+    }
+    zb_utctime = zb_utctime_from_unix(unix_ts);
   }
 
   // Create time cluster server attributes
@@ -369,7 +531,7 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
     log_e("Failed to add time zone attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
   }
-  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&utc_time);
+  ret = esp_zb_time_cluster_add_attr(time_cluster_server, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, (void *)&zb_utctime);
   if (ret != ESP_OK) {
     log_e("Failed to add time attribute: 0x%x: %s", ret, esp_err_to_name(ret));
     return false;
@@ -397,12 +559,14 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
 
 bool ZigbeeEP::setTime(tm time) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
-  time_t utc_time = mktime(&time);
-  // Cast to uint32_t is safe until year 2106.
-  log_d("Setting time to %" PRIu32, (uint32_t)utc_time);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &utc_time, false);
-  esp_zb_lock_release();
+  time_t unix_ts = mktime(&time);
+  if (unix_ts == (time_t)-1) {
+    log_e("Invalid calendar time");
+    return false;
+  }
+  uint32_t zb_utctime = zb_utctime_from_unix(unix_ts);
+  log_d("Setting ZCL UTCTime to %" PRIu32 " s since 2000-01-01 UTC", zb_utctime);
+  ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ID, &zb_utctime, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set time: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -413,10 +577,7 @@ bool ZigbeeEP::setTime(tm time) {
 bool ZigbeeEP::setTimezone(int32_t gmt_offset) {
   esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   log_d("Setting timezone to %" PRId32, gmt_offset);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret =
-    esp_zb_zcl_set_attribute_val(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
-  esp_zb_lock_release();
+  ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_ZONE_ID, &gmt_offset, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set timezone: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -450,7 +611,9 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
   _read_time = 0;
 
   log_v("Reading time from endpoint %u", endpoint);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  if (!readClusterAttribute(&read_req)) {
+    return tm();
+  }
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -458,17 +621,14 @@ tm ZigbeeEP::getTime(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_addr_t ie
     return tm();
   }
 
-  struct tm *timeinfo = localtime(&_read_time);
+  time_t unix_ts = unix_time_from_zb_utctime((uint32_t)_read_time);
+  struct tm *timeinfo = localtime(&unix_ts);
   if (timeinfo) {
     // Update time
     setTime(*timeinfo);
     // Update time status to synced
     _time_status |= 0x02;
-    esp_zb_lock_acquire(portMAX_DELAY);
-    esp_zb_zcl_set_attribute_val(
-      _endpoint, ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_status, false
-    );
-    esp_zb_lock_release();
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_TIME, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_TIME_TIME_STATUS_ID, &_time_status, false);
 
     return *timeinfo;
   } else {
@@ -503,7 +663,9 @@ int32_t ZigbeeEP::getTimezone(uint8_t endpoint, int32_t short_addr, esp_zb_ieee_
   _read_timezone = 0;
 
   log_v("Reading timezone from endpoint %u", endpoint);
-  esp_zb_zcl_read_attr_cmd_req(&read_req);
+  if (!readClusterAttribute(&read_req)) {
+    return 0;
+  }
 
   //Wait for response or timeout
   if (xSemaphoreTake(lock, ZB_CMD_TIMEOUT) != pdTRUE) {
@@ -607,11 +769,13 @@ void ZigbeeEP::requestOTAUpdate() {
   req.num_out_clusters = 0;
   req.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
   req.cluster_list = cluster_list;
-  esp_zb_lock_acquire(portMAX_DELAY);
+  if (!acquireCommandLock()) {
+    return;
+  }
   if (esp_zb_bdb_dev_joined()) {
     esp_zb_zdo_match_cluster(&req, findOTAServer, &_endpoint);
   }
-  esp_zb_lock_release();
+  releaseCommandLock();
 }
 
 void ZigbeeEP::removeBoundDevice(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr) {
@@ -672,9 +836,11 @@ void ZigbeeEP::zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *me
 }
 
 void ZigbeeEP::addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id) {
-  esp_zb_lock_acquire(portMAX_DELAY);
+  if (!acquireCommandLock()) {
+    return;
+  }
   esp_err_t ret = esp_zb_zcl_add_privilege_command(_endpoint, cluster_id, command_id);
-  esp_zb_lock_release();
+  releaseCommandLock();
   if (ret != ESP_OK) {
     log_e(
       "Failed to add privilege command for endpoint %u, cluster 0x%04x, command 0x%04x: 0x%x: %s", _endpoint, cluster_id, command_id, ret, esp_err_to_name(ret)

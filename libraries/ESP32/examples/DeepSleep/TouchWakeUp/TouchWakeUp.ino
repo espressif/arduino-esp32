@@ -15,6 +15,9 @@ Pranav Cherukupalli <cherukupallip@gmail.com>
 */
 
 #include <Arduino.h>
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/touch_sensor_legacy_types.h"
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
 #define THRESHOLD 40 /* Greater the value, more the sensitivity */

@@ -361,11 +361,15 @@ bool MatterWindowCovering::setLiftPosition(uint16_t liftPosition) {
   if (val.val.u16 != liftPosition) {
     val.val.u16 = liftPosition;
     bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val);
+    if (!ret) {
+      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val);
+    }
     if (ret) {
       currentLiftPosition = liftPosition;
-      // Also update CurrentPositionLiftPercent100ths to keep attributes in sync
-      // This matches ESP-Matter's LiftPositionSet() behavior
-      setLiftPercentage((uint8_t)(liftPercent100ths / 100));
+      if (!setLiftPercentage((uint8_t)(liftPercent100ths / 100))) {
+        log_e("Failed to sync Lift Percentage from Lift Position.");
+        return false;
+      }
     }
     return ret;
   }
@@ -373,10 +377,6 @@ bool MatterWindowCovering::setLiftPosition(uint16_t liftPosition) {
 }
 
 uint16_t MatterWindowCovering::getLiftPosition() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val)) {
-    currentLiftPosition = val.val.u16;
-  }
   return currentLiftPosition;
 }
 
@@ -409,6 +409,9 @@ bool MatterWindowCovering::setLiftPercentage(uint8_t liftPercent) {
   if (currentVal.val.u16 != liftPercent100ths) {
     currentVal.val.u16 = liftPercent100ths;
     bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal);
+    if (!ret) {
+      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal);
+    }
     if (ret) {
       currentLiftPercent = liftPercent;
     }
@@ -418,10 +421,6 @@ bool MatterWindowCovering::setLiftPercentage(uint8_t liftPercent) {
 }
 
 uint8_t MatterWindowCovering::getLiftPercentage() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &val)) {
-    currentLiftPercent = (uint8_t)(val.val.u16 / 100);
-  }
   return currentLiftPercent;
 }
 
@@ -516,11 +515,15 @@ bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
   if (val.val.u16 != tiltPosition) {
     val.val.u16 = tiltPosition;
     bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val);
+    if (!ret) {
+      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val);
+    }
     if (ret) {
       currentTiltPosition = tiltPosition;
-      // Also update CurrentPositionTiltPercent100ths to keep attributes in sync
-      // This matches ESP-Matter's TiltPositionSet() behavior
-      setTiltPercentage((uint8_t)(tiltPercent100ths / 100));
+      if (!setTiltPercentage((uint8_t)(tiltPercent100ths / 100))) {
+        log_e("Failed to sync Tilt Percentage from Tilt Position.");
+        return false;
+      }
     }
     return ret;
   }
@@ -528,10 +531,6 @@ bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
 }
 
 uint16_t MatterWindowCovering::getTiltPosition() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val)) {
-    currentTiltPosition = val.val.u16;
-  }
   return currentTiltPosition;
 }
 
@@ -564,6 +563,9 @@ bool MatterWindowCovering::setTiltPercentage(uint8_t tiltPercent) {
   if (currentVal.val.u16 != tiltPercent100ths) {
     currentVal.val.u16 = tiltPercent100ths;
     bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &currentVal);
+    if (!ret) {
+      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &currentVal);
+    }
     if (ret) {
       currentTiltPercent = tiltPercent;
     }
@@ -573,10 +575,6 @@ bool MatterWindowCovering::setTiltPercentage(uint8_t tiltPercent) {
 }
 
 uint8_t MatterWindowCovering::getTiltPercentage() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &val)) {
-    currentTiltPercent = (uint8_t)(val.val.u16 / 100);
-  }
   return currentTiltPercent;
 }
 

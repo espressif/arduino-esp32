@@ -61,7 +61,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
 static const char *strRequestDirections[] = {"OUT", "IN"};
 static const char *strRequestTypes[] = {"STANDARD", "CLASS", "VENDOR", "INVALID"};
 static const char *strRequestRecipients[] = {"DEVICE", "INTERFACE", "ENDPOINT", "OTHER"};
-static const char *strRequestStages[] = {"SETUP", "DATA", "ACK"};
+static const char *strRequestStages[] = {"IDLE", "SETUP", "DATA", "ACK"};
 
 //Handle USB requests to the vendor interface
 bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const *request) {

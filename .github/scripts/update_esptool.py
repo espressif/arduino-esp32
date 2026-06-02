@@ -40,6 +40,11 @@ import hashlib
 import requests
 from pathlib import Path
 
+def ensure_v_prefix(version):
+    if version.startswith("v"):
+        return version
+    return f"v{version}"
+
 def compute_sha256(filepath):
     sha256 = hashlib.sha256()
     with open(filepath, "rb") as f:
@@ -122,7 +127,7 @@ def create_archives(version, base_folder):
         base = dirpath.name[len("esptool-"):]
 
         if "windows" in dirpath.name:
-            zipfile_name = f"esptool-v{version}-{base}.zip"
+            zipfile_name = f"esptool-{ensure_v_prefix(version)}-{base}.zip"
             print(f"Creating {zipfile_name} from {dirpath} ...")
             with zipfile.ZipFile(zipfile_name, "w", zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(dirpath):
@@ -131,7 +136,7 @@ def create_archives(version, base_folder):
                         zipf.write(full_path, os.path.relpath(full_path, start=dirpath))
             archive_files.append(zipfile_name)
         else:
-            tarfile_name = f"esptool-v{version}-{base}.tar.gz"
+            tarfile_name = f"esptool-{ensure_v_prefix(version)}-{base}.tar.gz"
             print(f"Creating {tarfile_name} from {dirpath} ...")
             for root, dirs, files in os.walk(dirpath):
                 for name in dirs + files:
@@ -197,7 +202,7 @@ def update_json_from_release(tmp_json_path, version, release_info):
                 update_json_for_host(tmp_json_path, version, host, asset_url, asset_fname, asset_checksum, asset_size)
 
 def get_release_info(version):
-    url = f"https://api.github.com/repos/espressif/esptool/releases/tags/v{version}"
+    url = f"https://api.github.com/repos/espressif/esptool/releases/tags/{ensure_v_prefix(version)}"
     response = requests.get(url)
     response.raise_for_status()
     return response.json()

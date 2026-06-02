@@ -1338,7 +1338,7 @@ bash .github/scripts/check_official_variants.sh \
 
 **Features:**
 - Sources `socs_config.sh` for targets
-- Builds tests with Arduino CLI
+- Builds tests with `arduino_cmake.py` by default, or Arduino CLI with `--arduino-cli`
 - Supports multiple test types
 
 #### `tests_run.sh`
