@@ -90,8 +90,13 @@ struct BLEConnInfoImpl {
 // Static data
 // --------------------------------------------------------------------------
 
-uint16_t BLEClient::Impl::s_nextAppId = 0x10;  // Start from 0x10 to avoid collision with server
+static constexpr uint16_t APP_ID_INVALID = UINT16_MAX;
+uint16_t BLEClient::Impl::s_nextAppId = 0;
 std::vector<BLEClient::Impl *> BLEClient::Impl::s_clients;
+
+// --------------------------------------------------------------------------
+// Impl destructor
+// --------------------------------------------------------------------------
 
 /**
  * @brief Tear down the client: remove from the global list, unregister GATTC, delete mutex.
@@ -191,6 +196,44 @@ static void dispatchMtuChanged(BLEClient::Impl *impl, const BLEConnInfo &conn, u
 }
 
 // --------------------------------------------------------------------------
+// App ID allocation helper
+// --------------------------------------------------------------------------
+
+/**
+ * @brief Allocate the next free GATT application ID.
+ *
+ * Wraps at ESP_APP_ID_MAX (0x7FFF) back to 0 and checks for collisions with
+ * still-alive clients so that wrap-around is safe.
+ *
+ * @return A valid app ID, or APP_ID_INVALID if none are available.
+ */
+static uint16_t allocateAppId() {
+  uint16_t candidate = BLEClient::Impl::s_nextAppId;
+  uint16_t startedAt = candidate;
+
+  while (true) {
+    BLEClient::Impl::s_nextAppId = candidate + 1;
+    if (BLEClient::Impl::s_nextAppId > ESP_APP_ID_MAX) {
+      BLEClient::Impl::s_nextAppId = 0;
+    }
+
+    bool inUse = false;
+    for (auto *c : BLEClient::Impl::s_clients) {
+      if (c->appId == candidate) {
+        inUse = true;
+        break;
+      }
+    }
+    if (!inUse) {
+      return candidate;
+    }
+
+    candidate = BLEClient::Impl::s_nextAppId;
+    if (candidate == startedAt) return APP_ID_INVALID;
+  }
+}
+
+// --------------------------------------------------------------------------
 // createClient
 // --------------------------------------------------------------------------
 
@@ -208,7 +251,13 @@ BLEClient BLEClass::createClient() {
   }
 
   auto impl = std::make_shared<BLEClient::Impl>();
-  impl->appId = BLEClient::Impl::s_nextAppId++;
+
+  impl->appId = allocateAppId();
+  if (impl->appId == APP_ID_INVALID) {
+    log_e("createClient: no free app IDs");
+    return BLEClient();
+  }
+
   BLEClient::Impl::s_clients.push_back(impl.get());
 
   // Register GATTC application

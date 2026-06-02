@@ -7,6 +7,9 @@
 #include <BLE.h>
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#if defined(CONFIG_BLUEDROID_ENABLED)
+#include "impl/bluedroid/BluedroidClient.h"
+#endif
 
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static BLEUUID rwCharUUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -612,6 +615,39 @@ void setup() {
   }
 
   Serial.println("[CLIENT] All cycles complete");
+
+  // --- App ID boundary stress test ---
+  // Pre-seed the app ID counter near ESP_APP_ID_MAX (0x7FFF) to exercise
+  // the wrap-around back to 0 and collision detection.
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  {
+    static const uint16_t PRESEED = 0x7FF8;
+    static const int STRESS_CYCLES = 15;  // wraps around at cycle ~8
+    BLEClient::Impl::s_nextAppId = PRESEED;
+    Serial.printf("[CLIENT] AppId stress: preseed=%u, cycles=%d\n", PRESEED, STRESS_CYCLES);
+
+    for (int i = 0; i < STRESS_CYCLES; i++) {
+      BLEClient sc = BLE.createClient();
+      if (!sc) {
+        Serial.printf("[CLIENT] AppId stress FAILED cycle %d: createClient\n", i + 1);
+        break;
+      }
+      installClientCallbacks(sc);
+      status = sc.connect(targetAddr);
+      if (!status) {
+        Serial.printf("[CLIENT] AppId stress FAILED cycle %d: connect %s\n", i + 1, status.toString());
+        break;
+      }
+      sc.disconnect();
+      delay(500);
+      if (i == STRESS_CYCLES - 1) {
+        Serial.println("[CLIENT] AppId stress PASSED");
+      }
+    }
+  }
+#else
+  Serial.println("[CLIENT] AppId stress SKIPPED (NimBLE)");
+#endif
 
   // ===== Phase 13: BLEStream =====
   waitForPhase(13);

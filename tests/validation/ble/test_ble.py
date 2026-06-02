@@ -214,6 +214,14 @@ def _phase_reconnect(server, client):
     server.expect_exact("[SERVER] Client connected", timeout=10)
     server.expect_exact("[SERVER] Client disconnected", timeout=10)
 
+    # App ID boundary stress test (Bluedroid-only)
+    m = client.expect(
+        r"\[CLIENT\] AppId stress (PASSED|SKIPPED \(NimBLE\)|FAILED.*)",
+        timeout=120,
+    )
+    if b"FAILED" in m.group(0):
+        raise RuntimeError(f"App ID stress test failed: {m.group(0).decode()}")
+
 
 def _phase_blestream(server, client):
     # Init + onConnect callback + connected()
