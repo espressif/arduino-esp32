@@ -54,12 +54,12 @@ setPanId	KEYWORD2
 getPanId	KEYWORD2
 apply	KEYWORD2
 otStarted	KEYWORD2
-otCLIStarted	KEYWORD2
 start	KEYWORD2
 stop	KEYWORD2
 networkInterfaceUp	KEYWORD2
 networkInterfaceDown	KEYWORD2
 commitDataSet	KEYWORD2
+hasActiveDataset	KEYWORD2
 getInstance	KEYWORD2
 getCurrentDataSet	KEYWORD2
 getMeshLocalPrefix	KEYWORD2
