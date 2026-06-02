@@ -36,6 +36,7 @@ Recommended for lower power behavior:
 | `CONFIG_OPENTHREAD_MTD=y` | Builds as Minimal Thread Device (end-device profile) |
 | `CONFIG_IEEE802154_ENABLED=y` | 802.15.4 MAC/radio enabled in IDF |
 | `CONFIG_IEEE802154_SLEEP_ENABLE=y` | Enables MAC/radio sleep support (light-sleep oriented) |
+| `CONFIG_PM_ENABLE=y` | Enables ESP-IDF power management (required for 802.15.4 sleep) |
 
 ## CLI setup sequence used
 
