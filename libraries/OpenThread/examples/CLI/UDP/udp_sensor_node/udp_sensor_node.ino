@@ -327,7 +327,9 @@ static void forceReattach() {
     delay(1000);
   }
   Serial.println();
-  setupUdpCli();
+  if (!setupUdpCli()) {
+    Serial.println("UDP CLI setup failed after re-attach.");
+  }
 }
 
 void setup() {
