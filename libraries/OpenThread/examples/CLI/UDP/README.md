@@ -171,6 +171,7 @@ project and ensure these options are configured in that project's sdkconfig:
 - `CONFIG_OPENTHREAD_MTD=y` (recommended for end-device profile)
 - `CONFIG_IEEE802154_ENABLED=y`
 - `CONFIG_IEEE802154_SLEEP_ENABLE=y` (802.15.4 light-sleep support)
+- `CONFIG_PM_ENABLE=y` (power management required for 802.15.4 sleep)
 
 Why this matters:
 
