@@ -97,14 +97,14 @@ static int ot_cli_output_callback(void *context, const char *format, va_list arg
   } else {
     // store received data in the RX buffer
     if (rx_queue != NULL) {
+      const size_t capacity = uxQueueMessagesWaiting(rx_queue) + uxQueueSpacesAvailable(rx_queue);
       size_t len = (ret < (int)sizeof(buf)) ? (size_t)ret : sizeof(buf) - 1;
-      size_t freeSpace = uxQueueSpacesAvailable(rx_queue);
-      if (freeSpace < len) {
-        // Drop the oldest data to make room for the new data
-        for (size_t i = 0; i < (len - freeSpace); i++) {
-          uint8_t c;
-          xQueueReceive(rx_queue, &c, 0);
-        }
+      if (len > capacity) {
+        len = capacity;
+      }
+      while (uxQueueSpacesAvailable(rx_queue) < len) {
+        uint8_t c;
+        xQueueReceive(rx_queue, &c, 0);
       }
       for (size_t i = 0; i < len; i++) {
         xQueueSend(rx_queue, &buf[i], 0);
