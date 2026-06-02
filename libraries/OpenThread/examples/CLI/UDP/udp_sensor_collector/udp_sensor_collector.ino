@@ -430,14 +430,17 @@
    // setupThreadByCli() resumes the persisted dataset, so this restores the same
    // network rather than creating a new one.
    static uint32_t lastRoleCheck = 0;
-   if (millis() - lastRoleCheck >= 5000) {
-     lastRoleCheck = millis();
-     if (OThread.otGetDeviceRole() < OT_ROLE_CHILD) {
-       Serial.println("Collector detached; restarting Thread...");
-       if (setupThreadByCli()) {
-         setupUdpCli();
-       }
-     }
+    if (millis() - lastRoleCheck >= 5000) {
+      lastRoleCheck = millis();
+      if (OThread.otGetDeviceRole() < OT_ROLE_CHILD) {
+        Serial.println("Collector detached; restarting Thread...");
+        if (!setupThreadByCli()) {
+          Serial.println("Thread restart failed.");
+        } else if (!setupUdpCli()) {
+          Serial.println("UDP CLI setup failed after Thread restart.");
+        }
+      }
+    }
    }
  
    delay(20);
