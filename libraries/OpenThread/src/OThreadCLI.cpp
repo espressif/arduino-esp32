@@ -256,7 +256,10 @@ void OpenThreadCLI::begin() {
     }
   }
 
-  xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task);
+  if (xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task) != pdPASS || s_cli_task == NULL) {
+    log_e("Error: Failed to create OpenThread CLI task");
+    return;
+  }
   // Initialize the OpenThread CLI. The OpenThread mainloop is already running on
   // its worker task (begin() is only allowed after OpenThread::otStarted), so
   // this direct otCliInit() call must hold the stack lock to avoid racing the
