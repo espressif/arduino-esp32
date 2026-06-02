@@ -257,8 +257,18 @@ void OpenThreadCLI::begin() {
   }
 
   xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task);
-  // Initialize the OpenThread cli
-  otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
+  // Initialize the OpenThread CLI. The OpenThread mainloop is already running on
+  // its worker task (begin() is only allowed after OpenThread::otStarted), so
+  // this direct otCliInit() call must hold the stack lock to avoid racing the
+  // mainloop. Note: CLI command *input* later flows through
+  // esp_openthread_cli_input(), which is already thread-safe on its own (it
+  // marshals the line onto the OpenThread task queue), so it needs no lock here.
+  if (esp_openthread_lock_acquire(portMAX_DELAY)) {
+    otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
+    esp_openthread_lock_release();
+  } else {
+    log_e("Failed to acquire OpenThread lock to initialize the CLI");
+  }
 
   otCLIStarted = true;
   return;

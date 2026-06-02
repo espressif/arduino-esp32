@@ -27,8 +27,17 @@ static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
 
 // RAII helper for the OpenThread stack lock. The mainloop runs on the worker
-// task, so any otXxx() call made from another task must hold this lock. Acquire
-// on construction, release on destruction; evaluate as bool to check success.
+// task (ot_task_worker), so any otXxx()/esp_openthread_* call made from another
+// task races that mainloop and must be serialized with this lock. Acquire on
+// construction, release on destruction; evaluate as bool to check success.
+//
+// Policy for this file: every OpenThread/DataSet method that calls into the
+// stack from the caller's task (all the start/stop/interface/dataset calls and
+// every getter below) takes an OtLock for the duration of the ot* call. The
+// underlying mutex is recursive, so methods that call one another (or call into
+// helpers that also lock) are safe on the same task and will not self-deadlock.
+// Do NOT hold an OtLock across a call to end(), which deinitializes the stack
+// and destroys this very mutex.
 struct OtLock {
   bool mLocked;
   OtLock() : mLocked(esp_openthread_lock_acquire(portMAX_DELAY)) {}
@@ -166,6 +175,11 @@ void DataSet::initNew() {
     return;
   }
   clear();
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock for dataset init");
+    return;
+  }
   otDatasetCreateNewNetwork(mInstance, &mDataset);
 }
 
@@ -232,6 +246,11 @@ uint16_t DataSet::getPanId() const {
 }
 
 void DataSet::apply(otInstance *instance) {
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock for dataset apply");
+    return;
+  }
   otDatasetSetActive(instance, &mDataset);
 }
 
@@ -386,6 +405,11 @@ void OpenThread::start() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return;
+  }
   clearAllAddressCache();  // Clear cache when starting network
   otThreadSetEnabled(mInstance, true);
   log_d("Thread network started");
@@ -396,6 +420,11 @@ void OpenThread::stop() {
     log_w("Error: OpenThread instance not initialized");
     return;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return;
+  }
   clearAllAddressCache();  // Clear cache when stopping network
   otThreadSetEnabled(mInstance, false);
   log_d("Thread network stopped");
@@ -404,6 +433,11 @@ void OpenThread::stop() {
 void OpenThread::networkInterfaceUp() {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return;
   }
   // Enable the Thread interface (equivalent to CLI Command "ifconfig up")
@@ -418,6 +452,11 @@ void OpenThread::networkInterfaceUp() {
 void OpenThread::networkInterfaceDown() {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return;
   }
   // Disable the Thread interface (equivalent to CLI Command "ifconfig down")
@@ -469,6 +508,11 @@ ot_device_role_t OpenThread::otGetDeviceRole() {
     log_w("Error: OpenThread instance not initialized");
     return OT_ROLE_DISABLED;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return OT_ROLE_DISABLED;
+  }
   return (ot_device_role_t)otThreadGetDeviceRole(mInstance);
 }
 
@@ -479,6 +523,12 @@ const char *OpenThread::otGetStringDeviceRole() {
 void OpenThread::otPrintNetworkInformation(Stream &output) {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return;
+  }
+
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return;
   }
 
@@ -515,6 +565,11 @@ String OpenThread::getNetworkName() const {
     log_w("Error: OpenThread instance not initialized");
     return String();  // Return empty String, not nullptr
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return String();
+  }
   const char *networkName = otThreadGetNetworkName(mInstance);
   return networkName ? String(networkName) : String();
 }
@@ -523,6 +578,11 @@ String OpenThread::getNetworkName() const {
 const uint8_t *OpenThread::getExtendedPanId() const {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return nullptr;
   }
   const otExtendedPanId *extPanId = otThreadGetExtendedPanId(mInstance);
@@ -535,6 +595,11 @@ const uint8_t *OpenThread::getNetworkKey() const {
     log_w("Error: OpenThread instance not initialized");
     return nullptr;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return nullptr;
+  }
   otThreadGetNetworkKey(mInstance, &mNetworkKey);
   return mNetworkKey.m8;
 }
@@ -545,6 +610,11 @@ uint8_t OpenThread::getChannel() const {
     log_w("Error: OpenThread instance not initialized");
     return 0;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return 0;
+  }
   return otLinkGetChannel(mInstance);
 }
 
@@ -552,6 +622,11 @@ uint8_t OpenThread::getChannel() const {
 uint16_t OpenThread::getPanId() const {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return 0;
   }
   return otLinkGetPanId(mInstance);
@@ -571,6 +646,13 @@ const DataSet &OpenThread::getCurrentDataSet() const {
 
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    mCurrentDataset.clear();
+    return mCurrentDataset;
+  }
+
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     mCurrentDataset.clear();
     return mCurrentDataset;
   }
@@ -610,6 +692,11 @@ const otMeshLocalPrefix *OpenThread::getMeshLocalPrefix() const {
     log_w("Error: OpenThread instance not initialized");
     return nullptr;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return nullptr;
+  }
   return otThreadGetMeshLocalPrefix(mInstance);
 }
 
@@ -618,6 +705,11 @@ IPAddress OpenThread::getMeshLocalEid() const {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     return IPAddress(IPv6);  // Return empty IPv6 address
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return IPAddress(IPv6);
   }
   const otIp6Address *otAddr = otThreadGetMeshLocalEid(mInstance);
   if (!otAddr) {
@@ -632,6 +724,11 @@ IPAddress OpenThread::getLeaderRloc() const {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     return IPAddress(IPv6);  // Return empty IPv6 address
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return IPAddress(IPv6);
   }
   otIp6Address otAddr;
   otError error = otThreadGetLeaderRloc(mInstance, &otAddr);
@@ -648,6 +745,11 @@ IPAddress OpenThread::getRloc() const {
     log_w("Error: OpenThread instance not initialized");
     return IPAddress(IPv6);  // Return empty IPv6 address
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return IPAddress(IPv6);
+  }
   const otIp6Address *otAddr = otThreadGetRloc(mInstance);
   if (!otAddr) {
     log_w("Failed to get Node RLOC");
@@ -662,12 +764,23 @@ uint16_t OpenThread::getRloc16() const {
     log_w("Error: OpenThread instance not initialized");
     return 0;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return 0;
+  }
   return otThreadGetRloc16(mInstance);
 }
 
 // Populate unicast address cache from OpenThread
 void OpenThread::populateUnicastAddressCache() const {
   if (!mInstance) {
+    return;
+  }
+
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return;
   }
 
@@ -687,6 +800,12 @@ void OpenThread::populateUnicastAddressCache() const {
 // Populate multicast address cache from OpenThread
 void OpenThread::populateMulticastAddressCache() const {
   if (!mInstance) {
+    return;
+  }
+
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return;
   }
 
