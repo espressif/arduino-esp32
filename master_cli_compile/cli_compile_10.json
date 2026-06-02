@@ -140,7 +140,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 972864,
+                        "flash_bytes": 973024,
                         "flash_percentage": 74,
                         "ram_bytes": 48200,
                         "ram_percentage": 15
@@ -233,7 +233,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1016049,
+                        "flash_bytes": 1016215,
                         "flash_percentage": 78,
                         "ram_bytes": 37308,
                         "ram_percentage": 11
@@ -265,7 +265,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1107237,
+                        "flash_bytes": 1107407,
                         "flash_percentage": 84,
                         "ram_bytes": 37804,
                         "ram_percentage": 12
@@ -294,7 +294,7 @@
                 "sketches": [
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1081471,
+                        "flash_bytes": 1081637,
                         "flash_percentage": 83,
                         "ram_bytes": 49368,
                         "ram_percentage": 15
@@ -326,7 +326,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1172721,
+                        "flash_bytes": 1172891,
                         "flash_percentage": 89,
                         "ram_bytes": 49848,
                         "ram_percentage": 15
@@ -467,7 +467,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1033448,
+                        "flash_bytes": 1033614,
                         "flash_percentage": 79,
                         "ram_bytes": 43192,
                         "ram_percentage": 13
@@ -499,7 +499,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1121984,
+                        "flash_bytes": 1122154,
                         "flash_percentage": 86,
                         "ram_bytes": 43672,
                         "ram_percentage": 13
@@ -640,7 +640,7 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1134765,
+                        "flash_bytes": 1135599,
                         "flash_percentage": 87,
                         "ram_bytes": 49976,
                         "ram_percentage": 15
@@ -648,7 +648,7 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1136957,
+                        "flash_bytes": 1137797,
                         "flash_percentage": 87,
                         "ram_bytes": 49960,
                         "ram_percentage": 15
@@ -656,31 +656,31 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
                 "sizes": [{
-                        "flash_bytes": 1111533,
+                        "flash_bytes": 1112269,
                         "flash_percentage": 85,
-                        "ram_bytes": 48740,
+                        "ram_bytes": 48748,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleNode",
                 "sizes": [{
-                        "flash_bytes": 1111671,
-                        "flash_percentage": 85,
-                        "ram_bytes": 48764,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
-                "sizes": [{
-                        "flash_bytes": 1114787,
+                        "flash_bytes": 1112693,
                         "flash_percentage": 85,
                         "ram_bytes": 48772,
                         "ram_percentage": 15
                         }]
                 },
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+                "sizes": [{
+                        "flash_bytes": 1115761,
+                        "flash_percentage": 85,
+                        "ram_bytes": 48780,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1112113,
+                        "flash_bytes": 1112945,
                         "flash_percentage": 85,
                         "ram_bytes": 48772,
                         "ram_percentage": 15
@@ -688,7 +688,7 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 1112177,
+                        "flash_bytes": 1113009,
                         "flash_percentage": 85,
                         "ram_bytes": 48772,
                         "ram_percentage": 15
@@ -696,9 +696,9 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/ThreadScan",
                 "sizes": [{
-                        "flash_bytes": 1111815,
+                        "flash_bytes": 1112647,
                         "flash_percentage": 85,
-                        "ram_bytes": 48740,
+                        "ram_bytes": 48748,
                         "ram_percentage": 15
                         }]
                 }

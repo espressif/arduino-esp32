@@ -28,7 +28,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1054336,
+                        "flash_bytes": 1054488,
                         "flash_percentage": 80,
                         "ram_bytes": 48680,
                         "ram_percentage": 15
@@ -608,15 +608,15 @@
                 "sketches": [
 {"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1111429,
+                        "flash_bytes": 1112163,
                         "flash_percentage": 85,
-                        "ram_bytes": 48740,
+                        "ram_bytes": 48748,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1004497,
+                        "flash_bytes": 1006371,
                         "flash_percentage": 77,
                         "ram_bytes": 48388,
                         "ram_percentage": 15
@@ -624,9 +624,9 @@
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 1001709,
-                        "flash_percentage": 76,
-                        "ram_bytes": 48380,
+                        "flash_bytes": 1003035,
+                        "flash_percentage": 77,
+                        "ram_bytes": 48388,
                         "ram_percentage": 15
                         }]
                 },
@@ -757,7 +757,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 873316,
+                        "flash_bytes": 873482,
                         "flash_percentage": 67,
                         "ram_bytes": 31536,
                         "ram_percentage": 10
@@ -789,7 +789,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1044506,
+                        "flash_bytes": 1044676,
                         "flash_percentage": 80,
                         "ram_bytes": 32216,
                         "ram_percentage": 10
@@ -850,7 +850,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 909064,
+                        "flash_bytes": 909204,
                         "flash_percentage": 69,
                         "ram_bytes": 42124,
                         "ram_percentage": 13
@@ -882,7 +882,7 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 990988,
+                        "flash_bytes": 991128,
                         "flash_percentage": 76,
                         "ram_bytes": 42572,
                         "ram_percentage": 13
@@ -1007,7 +1007,7 @@
                 },
 {"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 948495,
+                        "flash_bytes": 948635,
                         "flash_percentage": 72,
                         "ram_bytes": 46248,
                         "ram_percentage": 14
@@ -1039,8 +1039,8 @@
                 },
 {"name": "libraries/Update/examples/Signed_OTA_Update",
                 "sizes": [{
-                        "flash_bytes": 1028911,
-                        "flash_percentage": 78,
+                        "flash_bytes": 1029055,
+                        "flash_percentage": 79,
                         "ram_bytes": 46680,
                         "ram_percentage": 14
                         }]
