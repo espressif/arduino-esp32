@@ -210,6 +210,7 @@ The Matter library includes a comprehensive set of examples demonstrating variou
 * **Matter Water Leak Detector** - Creates a Matter-compatible water leak detector device with automatic simulation of water leak detection state changes. `View Matter Water Leak Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterLeakDetector>`_
 * **Matter Water Freeze Detector** - Creates a Matter-compatible water freeze detector device with automatic simulation of water freeze detection state changes. `View Matter Water Freeze Detector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterWaterFreezeDetector>`_
 * **Matter Rain Sensor** - Creates a Matter-compatible rain sensor device with automatic simulation of rain detection state changes. `View Matter Rain Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterRainSensor>`_
+* **Matter Light Sensor** - Creates a Matter-compatible light (illuminance) sensor device with automatic simulation of illuminance readings. `View Matter Light Sensor code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterLightSensor>`_
 
 **Control Examples:**
 

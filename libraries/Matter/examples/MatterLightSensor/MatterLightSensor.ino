@@ -47,9 +47,8 @@ bool button_state = false;                     // false = released | true = pres
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
 
 // Simulate an illuminance sensor - add your preferred illuminance sensor library code here
+// Returns the illuminance in lux; the endpoint converts it to the Matter-style logarithmic value internally.
 float getSimulatedIlluminance() {
-  // The Endpoint implementation keeps an uint16_t as internal value information,
-  // which stores data as a Matter-style logarithmic value.
   static float simulatedIlluminanceHWSensor = 100.0;
 
   // it will increase from 100lx to 300lx in 10lx steps to simulate an illuminance sensor

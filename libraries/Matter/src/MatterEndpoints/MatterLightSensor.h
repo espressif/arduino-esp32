@@ -16,6 +16,7 @@
 #include <sdkconfig.h>
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
+#include <math.h>
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
@@ -29,7 +30,12 @@ public:
       log_e("Light illuminance value out of range [1..3576000].");
       return false;
     }
-    return begin(static_cast<uint16_t>(10000.0 * log10(illuminance) + 1));
+    // compute the raw value in a wider type, round, and clamp to the max valid Matter value (0xFFFE) before casting
+    long rawValue = lround(10000.0 * log10(illuminance) + 1);
+    if (rawValue > 65534) {
+      rawValue = 65534;
+    }
+    return begin(static_cast<uint16_t>(rawValue));
   }
   // this will just stop processing Light Sensor Matter events
   void end();
@@ -40,7 +46,12 @@ public:
       log_e("Light illuminance value out of range [1..3576000].");
       return false;
     }
-    return setRawIlluminance(static_cast<uint16_t>(10000.0 * log10(illuminance) + 1));
+    // compute the raw value in a wider type, round, and clamp to the max valid Matter value (0xFFFE) before casting
+    long rawValue = lround(10000.0 * log10(illuminance) + 1);
+    if (rawValue > 65534) {
+      rawValue = 65534;
+    }
+    return setRawIlluminance(static_cast<uint16_t>(rawValue));
   }
   // returns the reported float illuminance value
   double getIlluminance() {

@@ -25,7 +25,7 @@ The application showcases Matter commissioning, sensor data reporting to smart h
 
 - Matter protocol implementation for a light sensor device
 - Support for both Wi-Fi and Thread(*) connectivity
-- Illuminance measurement reporting (1lx-3.576Mlx)
+- Illuminance measurement reporting (1 lx to 3.576 Mlx)
 - Automatic simulation of illuminance readings (100lx to 300lx range)
 - Periodic sensor updates every 5 seconds
 - Button control for factory reset (decommission)
@@ -70,7 +70,7 @@ Before uploading the sketch, configure the following:
    ```
 
 3. **Real sensor integration** (optional):
-   To use a real illuminance sensor, replace the `getSimulatedIlluminance()` function with your sensor reading code. The function should return a float value representing the illuminance in lux (1lx-3.576Mlx).
+   To use a real illuminance sensor, replace the `getSimulatedIlluminance()` function with your sensor reading code. The function should return a float value representing the illuminance in lux (1 lx to 3.576 Mlx).
 
 ## Building and Flashing
 
@@ -103,12 +103,12 @@ Matter Node not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network. Ready for use.
 Current Illuminance is 2150.00lx
-Current Illuminance is 20.00lx
-Current Illuminance is 30.00lx
-Current Illuminance is 40.00lx
+Current Illuminance is 110.00lx
+Current Illuminance is 120.00lx
+Current Illuminance is 130.00lx
 ...
 Current Illuminance is 300.00lx
-Current Illuminance is 10.00lx
+Current Illuminance is 100.00lx
 ```
 
 ## Using the Device
@@ -181,7 +181,7 @@ Use a Matter-compatible hub (like an Apple HomePod, Google Nest Hub, or Amazon E
 
 The MatterLightSensor example consists of the following main components:
 
-1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Light Sensor endpoint with initial value (100 lx), and waits for Matter commissioning.
+1. **`setup()`**: Initializes hardware (button), configures Wi-Fi (if needed), sets up the Matter Light Sensor endpoint with initial value (2150 lx), and waits for Matter commissioning.
 2. **`loop()`**: Displays the current illuminance value every 5 seconds, updates the sensor reading from the simulated hardware sensor, handles button input for factory reset, and allows the Matter stack to process events.
 3. **`getSimulatedIlluminance()`**: Simulates a hardware illuminance sensor by cycling through values from 100lx to 300lx in 10lx steps. Replace this function with your actual sensor reading code.
 
@@ -189,7 +189,7 @@ The MatterLightSensor example consists of the following main components:
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
 - **Illuminance readings not updating**: Check that the sensor simulation function is being called correctly. For real sensors, verify sensor wiring and library initialization
-- **illuminance values out of range**: Ensure illuminance values are between 1lx-3.576Mlx.
+- **Illuminance values out of range**: Ensure illuminance values are between 1 lx and 3.576 Mlx.
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
 - **No serial output**: Check baudrate (115200) and USB connection
 
