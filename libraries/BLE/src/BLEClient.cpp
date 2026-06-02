@@ -516,8 +516,11 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   rc = m_semaphoreRegEvt.wait("connect");
 
   if (rc != ESP_GATT_OK) {
-    // fixes ESP_GATT_NO_RESOURCES error mostly
     log_e("esp_ble_gattc_app_register_error: rc=%d", rc);
+    if (m_gattc_if != ESP_GATT_IF_NONE) {
+      esp_ble_gattc_app_unregister(m_gattc_if);
+      m_gattc_if = ESP_GATT_IF_NONE;
+    }
     return false;
   }
 
@@ -668,11 +671,7 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
     case ESP_GATTC_SRVC_CHG_EVT: log_i("SERVICE CHANGED"); break;
 
     case ESP_GATTC_CLOSE_EVT:
-    {
-      // esp_ble_gattc_app_unregister(m_gattAppId);
-      // BLEDevice::removePeerDevice(m_gattc_if, true);
       break;
-    }
 
     //
     // ESP_GATTC_DISCONNECT_EVT

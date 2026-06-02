@@ -654,10 +654,10 @@ void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t 
  *
  * @return N/A
  */
-void BLEServer::registerApp(uint16_t m_gattAppId) {
-  log_v(">> registerApp - %u", m_gattAppId);
+void BLEServer::registerApp(uint16_t appId) {
+  log_v(">> registerApp - %u", appId);
   m_semaphoreRegisterAppEvt.take("registerApp");  // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
-  ::esp_ble_gatts_app_register(m_gattAppId);
+  ::esp_ble_gatts_app_register(appId);
   m_semaphoreRegisterAppEvt.wait("registerApp");
   log_v("<< registerApp");
 }  // registerApp

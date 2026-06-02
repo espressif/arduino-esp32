@@ -1047,15 +1047,8 @@ uint16_t BLEDevice::getNextAppId() {
   portENTER_CRITICAL(&mux);
   uint16_t id = m_appId++;
 #if defined(CONFIG_BLUEDROID_ENABLED)
-  if (m_appId == ESP_GATT_IF_NONE) {
-    m_appId++;
-  }
   if (m_appId > ESP_APP_ID_MAX) {
     m_appId = 0;
-  }
-#elif defined(CONFIG_NIMBLE_ENABLED)
-  if (m_appId == ESP_GATT_IF_NONE) {
-    m_appId++;
   }
 #endif
   portEXIT_CRITICAL(&mux);
