@@ -109,6 +109,15 @@ typedef enum {
   ESP32_BUS_TYPE_PPP_RTS,  // IO is used as PPP Modem RTS pin
   ESP32_BUS_TYPE_PPP_CTS,  // IO is used as PPP Modem CTS pin
 #endif
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK,  // IO is used as ESP-Hosted SDIO CLK pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD,  // IO is used as ESP-Hosted SDIO CMD pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0,   // IO is used as ESP-Hosted SDIO D0 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1,   // IO is used as ESP-Hosted SDIO D1 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2,   // IO is used as ESP-Hosted SDIO D2 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3,   // IO is used as ESP-Hosted SDIO D3 pin
+  ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST,  // IO is used as ESP-Hosted slave RESET pin
+#endif
   ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 
