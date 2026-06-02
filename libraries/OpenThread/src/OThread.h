@@ -98,6 +98,12 @@ public:
   // Set the dataset
   void commitDataSet(const DataSet &dataset);
 
+  // Returns true when OpenThread has a committed Active Operational Dataset.
+  // The dataset may have been loaded from NVS during begin(), or committed by
+  // the application. This is useful when deciding whether to resume an existing
+  // Thread network or provision a new one.
+  bool hasActiveDataset() const;
+
   // Get the Node Network Name
   String getNetworkName() const;
 

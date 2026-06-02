@@ -81,11 +81,13 @@ static void ot_cli_loop(void *context) {
 
 // process the CLI responses received from the OpenThread stack
 static int ot_cli_output_callback(void *context, const char *format, va_list args) {
-  char prompt_check[3];
-  int ret = 0;
+  char buf[OT_CLI_MAX_LINE_LENGTH];
+  int ret = vsnprintf(buf, sizeof(buf), format, args);
+  if (ret <= 0) {
+    return ret;
+  }
 
-  vsnprintf(prompt_check, sizeof(prompt_check), format, args);
-  if (!strncmp(prompt_check, "> ", sizeof(prompt_check))) {
+  if (!strncmp(buf, "> ", 2)) {
     if (s_cli_task) {
       xTaskNotifyGive(s_cli_task);
     }
@@ -93,27 +95,24 @@ static int ot_cli_output_callback(void *context, const char *format, va_list arg
       xTaskNotifyGive(s_console_cli_task);
     }
   } else {
-    char buf[OT_CLI_MAX_LINE_LENGTH];
-    ret = vsnprintf(buf, sizeof(buf), format, args);
-    if (ret) {
-      // store received data in the RX buffer
-      if (rx_queue != NULL) {
-        size_t freeSpace = uxQueueSpacesAvailable(rx_queue);
-        if (freeSpace < ret) {
-          // Drop the oldest data to make room for the new data
-          for (int i = 0; i < (ret - freeSpace); i++) {
-            uint8_t c;
-            xQueueReceive(rx_queue, &c, 0);
-          }
-        }
-        for (int i = 0; i < ret; i++) {
-          xQueueSend(rx_queue, &buf[i], 0);
-        }
-        // if there is a user callback function in place, it shall have the priority
-        // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
-        if (otConsole.responseCallBack != nullptr) {
-          otConsole.responseCallBack();
-        }
+    // store received data in the RX buffer
+    if (rx_queue != NULL) {
+      const size_t capacity = uxQueueMessagesWaiting(rx_queue) + uxQueueSpacesAvailable(rx_queue);
+      size_t len = (ret < (int)sizeof(buf)) ? (size_t)ret : sizeof(buf) - 1;
+      if (len > capacity) {
+        len = capacity;
+      }
+      while (uxQueueSpacesAvailable(rx_queue) < len) {
+        uint8_t c;
+        xQueueReceive(rx_queue, &c, 0);
+      }
+      for (size_t i = 0; i < len; i++) {
+        xQueueSend(rx_queue, &buf[i], 0);
+      }
+      // if there is a user callback function in place, it shall have the priority
+      // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
+      if (otConsole.responseCallBack != nullptr) {
+        otConsole.responseCallBack();
       }
     }
   }
@@ -257,9 +256,25 @@ void OpenThreadCLI::begin() {
     }
   }
 
-  xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task);
-  // Initialize the OpenThread cli
+  if (xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task) != pdPASS || s_cli_task == NULL) {
+    log_e("Error: Failed to create OpenThread CLI task");
+    return;
+  }
+  // Initialize the OpenThread CLI. The OpenThread mainloop is already running on
+  // its worker task (begin() is only allowed after OpenThread::otStarted), so
+  // this direct otCliInit() call must hold the stack lock to avoid racing the
+  // mainloop. Note: CLI command *input* later flows through
+  // esp_openthread_cli_input(), which is already thread-safe on its own (it
+  // marshals the line onto the OpenThread task queue), so it needs no lock here.
+  if (!esp_openthread_lock_acquire(portMAX_DELAY)) {
+    log_e("Failed to acquire OpenThread lock to initialize the CLI");
+    vTaskDelete(s_cli_task);
+    s_cli_task = NULL;
+    return;
+  }
+
   otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
+  esp_openthread_lock_release();
 
   otCLIStarted = true;
   return;
