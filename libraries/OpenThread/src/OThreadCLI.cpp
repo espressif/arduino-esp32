@@ -266,12 +266,15 @@ void OpenThreadCLI::begin() {
   // mainloop. Note: CLI command *input* later flows through
   // esp_openthread_cli_input(), which is already thread-safe on its own (it
   // marshals the line onto the OpenThread task queue), so it needs no lock here.
-  if (esp_openthread_lock_acquire(portMAX_DELAY)) {
-    otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
-    esp_openthread_lock_release();
-  } else {
+  if (!esp_openthread_lock_acquire(portMAX_DELAY)) {
     log_e("Failed to acquire OpenThread lock to initialize the CLI");
+    vTaskDelete(s_cli_task);
+    s_cli_task = NULL;
+    return;
   }
+
+  otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
+  esp_openthread_lock_release();
 
   otCLIStarted = true;
   return;
