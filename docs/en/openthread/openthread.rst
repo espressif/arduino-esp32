@@ -194,8 +194,6 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 
 * **UDP Sensor Collector** - Creates a Thread Leader and UDP sink that receives sensor telemetry and sends acknowledgements. `View UDP Sensor Collector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector>`_
 * **UDP Sensor Node** - Creates a sensor node, optionally configured as a sleepy child, that sends UDP telemetry to the collector. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node>`_
-* **UDP Sensor Collector Node** - Demonstrates a CLI UDP sensor collector workflow for the ``UDP_Sensor`` example pair. `View UDP Sensor Collector Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP_Sensor/CollectorNode>`_
-* **UDP Sensor Node** - Demonstrates a CLI UDP child sensor workflow for the ``UDP_Sensor`` example pair. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP_Sensor/SensorNode>`_
 
 **Native API Examples:**
 
