@@ -20,9 +20,6 @@
 #include "lwip/netif.h"
 
 #include <openthread/instance.h>
-#include <openthread/joiner.h>
-#include <openthread/commissioner.h>
-#include <openthread/platform/radio.h>
 
 #include "esp_openthread_lock.h"
 
@@ -139,11 +136,18 @@ static void ot_task_worker(void *aContext) {
     // only returns in case there is an OpenThread Stack failure...
     esp_openthread_launch_mainloop();
   }
-  // Clean up
-  esp_openthread_netif_glue_deinit();
-  esp_netif_destroy(openthread_netif);
-  esp_vfs_eventfd_unregister();
-  vTaskDelete(NULL);
+
+  // We only get here on an init failure, or if the mainloop returned because of
+  // a stack failure. Do NOT tear down the netif/glue/eventfd or self-delete from
+  // this task: teardown and deletion of this task handle are owned exclusively
+  // by end() (which begin() also invokes when a start fails). Cleaning up here
+  // would race end() and leave openthread_netif / s_ot_task pointing at freed
+  // resources, causing a double esp_netif_destroy() or a vTaskDelete() on an
+  // already-deleted task. Park instead and let end() release everything and
+  // delete this (still valid) task handle.
+  while (true) {
+    vTaskDelay(portMAX_DELAY);
+  }
 }
 
 // DataSet Implementation
