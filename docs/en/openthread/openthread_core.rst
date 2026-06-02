@@ -40,7 +40,7 @@ Initializes the OpenThread stack.
 
 This function initializes the OpenThread stack and creates the OpenThread task. If ``OThreadAutoStart`` is ``true``, it will attempt to start Thread using the active dataset from NVS or ESP-IDF default settings.
 
-``begin()`` returns only after the worker task has finished OpenThread stack initialization and reloaded any persisted Active Operational Dataset from NVS. After it returns successfully, APIs such as ``hasActiveDataset()`` can reliably query the stack state without an additional delay loop.
+``begin()`` returns only after the worker task has finished initializing the OpenThread stack and reloaded any persisted Active Operational Dataset from NVS. After it returns successfully, APIs such as ``hasActiveDataset()`` can reliably query the stack state without an additional delay loop.
 
 **Note:** This is a static function and should be called before creating an ``OpenThread`` instance.
 
