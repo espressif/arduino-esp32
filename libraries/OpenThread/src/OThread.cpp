@@ -66,6 +66,11 @@ static TaskHandle_t s_ot_task = NULL;
 // Signaled by ot_task_worker() once the stack finished (or failed) initializing.
 // Mirrors the s_ot_syn_semaphore handshake done by IDF's esp_openthread_start().
 static SemaphoreHandle_t s_ot_init_done = NULL;
+// Result of that initialization, written by ot_task_worker() BEFORE it gives
+// s_ot_init_done. The semaphore only says "init finished"; this says whether it
+// succeeded, so begin() can abort if a later init step failed (in which case the
+// worker never launches the mainloop and just suspends itself).
+static volatile bool s_ot_init_ok = false;
 #if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
 static struct netif *ot_lwip_netif = NULL;
 #endif
@@ -133,11 +138,14 @@ static void ot_task_worker(void *aContext) {
     log_e("Failed to set default OpenThread esp_netif");
     err = true;
   }
-  // Tell begin() that initialization is finished (whether it succeeded or not)
-  // BEFORE entering the mainloop, which never returns. This matches IDF's
-  // esp_openthread_start(), where the worker task releases the sync semaphore
-  // only after esp_openthread_init() + netif setup are complete, so the caller
-  // can safely touch the instance/dataset (NVS already loaded) afterwards.
+  // Publish the init result, then tell begin() that initialization is finished
+  // (whether it succeeded or not) BEFORE entering the mainloop, which never
+  // returns. This matches IDF's esp_openthread_start(), where the worker task
+  // releases the sync semaphore only after esp_openthread_init() + netif setup
+  // are complete, so the caller can safely touch the instance/dataset (NVS
+  // already loaded) afterwards. s_ot_init_ok MUST be set before the give so
+  // begin() reads a stable value once xSemaphoreTake() returns.
+  s_ot_init_ok = !err;
   if (s_ot_init_done != NULL) {
     xSemaphoreGive(s_ot_init_done);
   }
@@ -319,6 +327,17 @@ void OpenThread::begin(bool OThreadAutoStart) {
   // the init handshake and the mutex only for protecting API calls.
   if (xSemaphoreTake(s_ot_init_done, pdMS_TO_TICKS(5000)) != pdTRUE) {
     log_e("Error: Timed out waiting for OpenThread stack initialization");
+    otStarted = true;  // force end() to run the full teardown below
+    end();
+    return;
+  }
+
+  // The handshake only tells us init finished, not whether it succeeded. If a
+  // later init step failed (e.g. netif attach/set-default), the worker never
+  // launched the mainloop and is now suspended, so we must NOT proceed even
+  // though the instance may look initialized. Tear down instead.
+  if (!s_ot_init_ok) {
+    log_e("Error: OpenThread stack initialization failed in the worker task");
     otStarted = true;  // force end() to run the full teardown below
     end();
     return;
@@ -526,33 +545,54 @@ void OpenThread::otPrintNetworkInformation(Stream &output) {
     return;
   }
 
-  OtLock lock;
-  if (!lock) {
-    log_e("Error: Failed to acquire OpenThread lock");
-    return;
+  // Snapshot all OpenThread state under the lock, then release it before doing
+  // any Stream output. Stream writes can block on backpressure (e.g. Serial),
+  // and holding the stack lock across them would stall the OpenThread mainloop.
+  otDeviceRole role = OT_DEVICE_ROLE_DISABLED;
+  uint16_t rloc16 = 0;
+  char networkName[OT_NETWORK_NAME_MAX_SIZE + 1] = {0};
+  uint8_t channel = 0;
+  uint16_t panId = 0;
+  otExtendedPanId extPanId = {0};
+  otNetworkKey networkKey = {0};
+  {
+    OtLock lock;
+    if (!lock) {
+      log_e("Error: Failed to acquire OpenThread lock");
+      return;
+    }
+    role = otThreadGetDeviceRole(mInstance);
+    rloc16 = otThreadGetRloc16(mInstance);
+    const char *name = otThreadGetNetworkName(mInstance);
+    if (name) {
+      strncpy(networkName, name, sizeof(networkName) - 1);
+    }
+    channel = otLinkGetChannel(mInstance);
+    panId = otLinkGetPanId(mInstance);
+    const otExtendedPanId *extPanIdPtr = otThreadGetExtendedPanId(mInstance);
+    if (extPanIdPtr) {
+      extPanId = *extPanIdPtr;
+    }
+    otThreadGetNetworkKey(mInstance, &networkKey);
   }
 
-  const otDeviceRole role = otThreadGetDeviceRole(mInstance);
   output.printf("Role: %s", (role <= OT_DEVICE_ROLE_LEADER) ? otRoleString[role] : otRoleString[5]);
   output.println();
-  output.printf("RLOC16: 0x%04x", otThreadGetRloc16(mInstance));  // RLOC16
+  output.printf("RLOC16: 0x%04x", rloc16);
   output.println();
-  output.printf("Network Name: %s", otThreadGetNetworkName(mInstance));
+  output.printf("Network Name: %s", networkName);
   output.println();
-  output.printf("Channel: %u", otLinkGetChannel(mInstance));
+  output.printf("Channel: %u", channel);
   output.println();
-  output.printf("PAN ID: 0x%04x", otLinkGetPanId(mInstance));
+  output.printf("PAN ID: 0x%04x", panId);
   output.println();
 
-  const otExtendedPanId *extPanId = otThreadGetExtendedPanId(mInstance);
   output.print("Extended PAN ID: ");
   for (int i = 0; i < OT_EXT_PAN_ID_SIZE; i++) {
-    output.printf("%02x", extPanId->m8[i]);
+    output.printf("%02x", extPanId.m8[i]);
   }
   output.println();
 
-  otNetworkKey networkKey;
-  otThreadGetNetworkKey(mInstance, &networkKey);
   output.print("Network Key: ");
   for (int i = 0; i < OT_NETWORK_KEY_SIZE; i++) {
     output.printf("%02x", networkKey.m8[i]);
