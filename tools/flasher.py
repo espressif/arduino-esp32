@@ -110,14 +110,14 @@ def _save_flashed_copies(binaries: list[Path], build_dir: Path | None) -> None:
 def _parse_flasher_args() -> tuple[str, Path | None, bool, list[str]]:
     """Parse flasher's own options, returning (esptool, build_dir, no_fast_flash, esptool_args).
 
-    parse_known_args() is used so that unrecognised tokens (all esptool flags
+    parse_known_args() is used so that unrecognized tokens (all esptool flags
     and arguments) are collected into esptool_args without triggering errors.
     """
     parser = argparse.ArgumentParser(
         prog="flasher",
         description="esptool wrapper that enables fast reflashing via --diff-with.",
         epilog=(
-            "All unrecognised arguments are forwarded to esptool unchanged.\n"
+            "All unrecognized arguments are forwarded to esptool unchanged.\n"
             "See https://docs.espressif.com/projects/esptool for esptool usage."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
