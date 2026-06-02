@@ -206,6 +206,12 @@ Common Issues
   * Check that OpenThread is started before applying the dataset
   * Verify the dataset parameters match the target network
 
+**Unexpected network after reboot**
+  * OpenThread persists the committed Active Operational Dataset in NVS
+  * After ``OpenThread::begin()`` returns, use ``OThread.hasActiveDataset()`` to check whether a dataset was restored from NVS
+  * If a dataset is present, bring the interface up and start Thread to resume the existing network
+  * If you want to apply changed dataset constants, clear the stored dataset first (for example with the OpenThread CLI ``factoryreset`` command)
+
 Initialization Order
 ********************
 
