@@ -331,7 +331,7 @@
    // sequence number we have already recorded. Count it but do not overwrite the
    // stored reading, so duplicates never corrupt the latest values.
    SensorRecord &r = s_records[idx];
-   bool isDuplicate = (seq <= r.lastSeq && r.packetCount > 0);
+   bool isDuplicate = (r.packetCount > 0 && seq == r.lastSeq);
    if (isDuplicate) {
      r.duplicateCount++;
    } else {
