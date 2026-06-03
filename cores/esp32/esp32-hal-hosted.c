@@ -275,12 +275,11 @@ static bool hostedDetachBus(void *bus_pointer) {
   if (bus_pointer != (void *)&sdio_pin_config) {
     return false;
   }
-  if (!hosted_initialized) {
-    return true;
+  if (hosted_initialized) {
+    log_e("ESP-Hosted: stop WiFi/BLE before removing SDIO pins from periman");
+    return false;
   }
-  hosted_wifi_active = false;
-  hosted_ble_active = false;
-  return hostedDeinit();
+  return true;
 }
 
 static bool hostedInit() {
@@ -326,7 +325,6 @@ static bool hostedInit() {
   esp_err_t err = esp_hosted_sdio_set_config(&conf);
   if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
     log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
-    hosted_initialized = false;
     hostedClearPinBuses();
     return false;
   }
@@ -334,7 +332,6 @@ static bool hostedInit() {
   err = esp_hosted_init();
   if (err != ESP_OK) {
     log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
-    hosted_initialized = false;
     hostedClearPinBuses();
     return false;
   }
@@ -342,7 +339,6 @@ static bool hostedInit() {
   if (err != ESP_OK) {
     log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
     esp_hosted_deinit();
-    hosted_initialized = false;
     hostedClearPinBuses();
     return false;
   }
@@ -362,7 +358,6 @@ static bool hostedDeinit() {
     log_e("esp_hosted_deinit failed!");
     return false;
   }
-  
   hosted_initialized = false;
   hostedClearPinBuses();
   return true;
