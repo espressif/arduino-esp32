@@ -709,121 +709,121 @@
                 "sketches": [
 {"name": "libraries/Hash/examples/SHA2",
                 "sizes": [{
-                        "flash_bytes": 326656,
+                        "flash_bytes": 326916,
                         "flash_percentage": 25,
-                        "ram_bytes": 23444,
+                        "ram_bytes": 23476,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA3",
                 "sizes": [{
-                        "flash_bytes": 324348,
+                        "flash_bytes": 324608,
                         "flash_percentage": 25,
-                        "ram_bytes": 23444,
+                        "ram_bytes": 23476,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Hash/examples/SHA3Stream",
                 "sizes": [{
-                        "flash_bytes": 325588,
+                        "flash_bytes": 325848,
                         "flash_percentage": 25,
-                        "ram_bytes": 23444,
+                        "ram_bytes": 23476,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/LittleFS/examples/LITTLEFS_test",
                 "sizes": [{
-                        "flash_bytes": 371278,
+                        "flash_bytes": 371538,
                         "flash_percentage": 28,
-                        "ram_bytes": 24096,
+                        "ram_bytes": 24128,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/LittleFS/examples/LITTLEFS_time",
                 "sizes": [{
-                        "flash_bytes": 865212,
+                        "flash_bytes": 865926,
                         "flash_percentage": 66,
-                        "ram_bytes": 31420,
+                        "ram_bytes": 31452,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/NetBIOS/examples/ESP_NBNST",
                 "sizes": [{
-                        "flash_bytes": 798898,
+                        "flash_bytes": 799618,
                         "flash_percentage": 61,
-                        "ram_bytes": 29892,
+                        "ram_bytes": 29908,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientInsecure",
                 "sizes": [{
-                        "flash_bytes": 996856,
-                        "flash_percentage": 76,
-                        "ram_bytes": 32012,
-                        "ram_percentage": 10
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
-                "sizes": [{
-                        "flash_bytes": 996876,
+                        "flash_bytes": 997572,
                         "flash_percentage": 76,
                         "ram_bytes": 32028,
                         "ram_percentage": 10
                         }]
                 },
+{"name": "libraries/NetworkClientSecure/examples/WiFiClientPSK",
+                "sizes": [{
+                        "flash_bytes": 997592,
+                        "flash_percentage": 76,
+                        "ram_bytes": 32060,
+                        "ram_percentage": 10
+                        }]
+                },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecure",
                 "sizes": [{
-                        "flash_bytes": 998722,
+                        "flash_bytes": 999430,
                         "flash_percentage": 32,
-                        "ram_bytes": 32012,
+                        "ram_bytes": 32028,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientSecureProtocolUpgrade",
                 "sizes": [{
-                        "flash_bytes": 997874,
+                        "flash_bytes": 998590,
                         "flash_percentage": 76,
-                        "ram_bytes": 32012,
+                        "ram_bytes": 32028,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientShowPeerCredentials",
                 "sizes": [{
-                        "flash_bytes": 1039088,
+                        "flash_bytes": 1039804,
                         "flash_percentage": 79,
-                        "ram_bytes": 32000,
+                        "ram_bytes": 32032,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
                 "sizes": [{
-                        "flash_bytes": 1016718,
+                        "flash_bytes": 1017424,
                         "flash_percentage": 78,
-                        "ram_bytes": 32056,
+                        "ram_bytes": 32088,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/PPP/examples/PPP_Basic",
                 "sizes": [{
-                        "flash_bytes": 578584,
+                        "flash_bytes": 578854,
                         "flash_percentage": 44,
-                        "ram_bytes": 28452,
+                        "ram_bytes": 28468,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/PPP/examples/PPP_WIFI_BRIDGE",
                 "sizes": [{
-                        "flash_bytes": 877164,
+                        "flash_bytes": 877872,
                         "flash_percentage": 67,
-                        "ram_bytes": 30040,
+                        "ram_bytes": 30056,
                         "ram_percentage": 9
                         }]
                 },
 {"name": "libraries/Preferences/examples/Prefs2Struct",
                 "sizes": [{
-                        "flash_bytes": 329186,
+                        "flash_bytes": 329454,
                         "flash_percentage": 25,
-                        "ram_bytes": 23448,
+                        "ram_bytes": 23480,
                         "ram_percentage": 7
                         }]
                 }

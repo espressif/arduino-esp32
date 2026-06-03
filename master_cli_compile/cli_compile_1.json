@@ -709,121 +709,121 @@
                 "sketches": [
 {"name": "libraries/BLE/examples/Server",
                 "sizes": [{
-                        "flash_bytes": 773526,
-                        "flash_percentage": 25,
-                        "ram_bytes": 27696,
-                        "ram_percentage": 8
-                        }]
-                },
-{"name": "libraries/BLE/examples/Server_Gamepad",
-                "sizes": [{
-                        "flash_bytes": 786624,
+                        "flash_bytes": 775416,
                         "flash_percentage": 25,
                         "ram_bytes": 27728,
                         "ram_percentage": 8
                         }]
                 },
+{"name": "libraries/BLE/examples/Server_Gamepad",
+                "sizes": [{
+                        "flash_bytes": 788514,
+                        "flash_percentage": 25,
+                        "ram_bytes": 27760,
+                        "ram_percentage": 8
+                        }]
+                },
 {"name": "libraries/BLE/examples/Server_multiconnect",
                 "sizes": [{
-                        "flash_bytes": 777888,
+                        "flash_bytes": 779770,
                         "flash_percentage": 25,
-                        "ram_bytes": 27720,
+                        "ram_bytes": 27752,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/BLE/examples/Server_secure_static_passkey",
                 "sizes": [{
-                        "flash_bytes": 781810,
+                        "flash_bytes": 783692,
                         "flash_percentage": 25,
-                        "ram_bytes": 27704,
+                        "ram_bytes": 27736,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/BLE/examples/UART",
                 "sizes": [{
-                        "flash_bytes": 777962,
+                        "flash_bytes": 779844,
                         "flash_percentage": 25,
-                        "ram_bytes": 27712,
+                        "ram_bytes": 27744,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/BLE/examples/Write",
                 "sizes": [{
-                        "flash_bytes": 773918,
+                        "flash_bytes": 775808,
                         "flash_percentage": 25,
-                        "ram_bytes": 27696,
+                        "ram_bytes": 27728,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/BLE/examples/iBeacon",
                 "sizes": [{
-                        "flash_bytes": 780162,
+                        "flash_bytes": 782044,
                         "flash_percentage": 25,
-                        "ram_bytes": 27712,
+                        "ram_bytes": 27744,
                         "ram_percentage": 8
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleAdvanced",
                 "sizes": [{
-                        "flash_bytes": 364904,
+                        "flash_bytes": 365174,
                         "flash_percentage": 12,
-                        "ram_bytes": 23604,
+                        "ram_bytes": 23636,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleBasic",
                 "sizes": [{
-                        "flash_bytes": 359776,
+                        "flash_bytes": 360036,
                         "flash_percentage": 11,
-                        "ram_bytes": 23580,
+                        "ram_bytes": 23612,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleFS",
                 "sizes": [{
-                        "flash_bytes": 407906,
+                        "flash_bytes": 408174,
                         "flash_percentage": 13,
-                        "ram_bytes": 23992,
+                        "ram_bytes": 24024,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleGPIO",
                 "sizes": [{
-                        "flash_bytes": 364026,
+                        "flash_bytes": 364288,
                         "flash_percentage": 12,
-                        "ram_bytes": 23620,
+                        "ram_bytes": 23652,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleHistory",
                 "sizes": [{
-                        "flash_bytes": 407262,
+                        "flash_bytes": 407530,
                         "flash_percentage": 13,
-                        "ram_bytes": 23736,
+                        "ram_bytes": 23768,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleManual",
                 "sizes": [{
-                        "flash_bytes": 333018,
+                        "flash_bytes": 333278,
                         "flash_percentage": 11,
-                        "ram_bytes": 23568,
+                        "ram_bytes": 23600,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleSysInfo",
                 "sizes": [{
-                        "flash_bytes": 361770,
+                        "flash_bytes": 362036,
                         "flash_percentage": 12,
-                        "ram_bytes": 23572,
+                        "ram_bytes": 23604,
                         "ram_percentage": 7
                         }]
                 },
 {"name": "libraries/Console/examples/ConsoleWiFi",
                 "sizes": [{
-                        "flash_bytes": 852588,
+                        "flash_bytes": 853304,
                         "flash_percentage": 65,
-                        "ram_bytes": 31348,
+                        "ram_bytes": 31380,
                         "ram_percentage": 10
                         }]
                 }
