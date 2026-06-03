@@ -25,8 +25,9 @@ static const uint8_t RX = 38;
 static const uint8_t SDA = 7;
 static const uint8_t SCL = 8;
 
-// GPIO 36 and below: no extra on-chip LDO needed for the IO bank.
-// GPIO 39-48: LDO VO4 (channel 4). GPIO 37-38 (UART) are outside that VO4 range.
+// GPIO 36 and below: VDD_IO_4. GPIO 37-38 (UART): VDD_IO_4.
+// GPIO 39-48: VDD_IO_5 — board should tie VDD_IO_5 / SDIO pull-ups to VDDO_4 (VO4, chan 4).
+// GPIO 49-54: VDD_IO_6 (hosted CLK/CMD/D0/D1/RST on core board; no VO4).
 static const uint8_t SS = 30;
 static const uint8_t MOSI = 33;
 static const uint8_t MISO = 32;
@@ -62,10 +63,10 @@ static const uint8_t T11 = 13;
 static const uint8_t T12 = 14;
 static const uint8_t T13 = 15;
 
-// On-chip GP LDO: periman enables VO4 when a GPIO in the range is used (see esp32-hal-ldo.c).
+// On-chip GP LDO: periman/hosted enable VO4 for GPIO 39-48 (VDD_IO_5), e.g. hosted D2/D3 = 48/47.
 // No on-board SDMMC slot on this board (no BOARD_HAS_SDMMC / BOARD_SDMMC_POWER_*).
 #define BOARD_PERIMAN_IO_LDO_AUTO        1
-#define BOARD_PERIMAN_IO_LDO0_CHANNEL    4  // LDO_VO4 on ESP32-P4
+#define BOARD_PERIMAN_IO_LDO0_CHANNEL    4  // LDO_VO4 -> VDDO_4
 #define BOARD_PERIMAN_IO_LDO0_GPIO_MIN   39
 #define BOARD_PERIMAN_IO_LDO0_GPIO_MAX   48
 #define BOARD_PERIMAN_IO_LDO0_VOLTAGE_MV 3300
