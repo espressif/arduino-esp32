@@ -248,7 +248,7 @@ static bool setupUdpCli() {
   return true;
 }
 
-// Unicast an "OK,<nodeId>,<seq>" acknowledgement straight back to the sender's
+// Unicast an "OK,<nodeId>,<seq>" acknowledgment straight back to the sender's
 // address/port. The node uses this ACK to confirm delivery (and, for sleepy
 // nodes, as a cue that it can go back to sleep). We push the command directly
 // on the CLI stream rather than otExecCommand() because we do not need to block
