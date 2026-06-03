@@ -55,7 +55,7 @@ public:
   }
   // returns the reported float illuminance value
   double getIlluminance() {
-    return (double)pow(10, (rawIlluminance-1) / 10000.0);
+    return (double)pow(10, (rawIlluminance - 1) / 10000.0);
   }
   // double conversion operator
   void operator=(double illuminance) {

@@ -113,7 +113,7 @@ bool MatterLightSensor::setRawIlluminance(uint16_t _rawIlluminance) {
     }
     rawIlluminance = _rawIlluminance;
   }
-  log_v("Light Sensor set to %.02f Lux", (float)pow(10, (rawIlluminance-1) / 10000.0));
+  log_v("Light Sensor set to %.02f Lux", (float)pow(10, (rawIlluminance - 1) / 10000.0));
 
   return true;
 }
