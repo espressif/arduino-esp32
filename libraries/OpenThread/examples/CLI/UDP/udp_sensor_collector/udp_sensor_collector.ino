@@ -334,10 +334,10 @@ static bool otCliCmd(const char *cmd) {
    // A retransmitted frame (node resent because it missed our ACK) will carry a
    // sequence number we have already recorded. Count it but do not overwrite the
    // stored reading, so duplicates never corrupt the latest values.
-  SensorRecord &r = s_records[idx];
-  bool isDuplicate = (r.packetCount > 0 &&
-                      (seq == r.lastSeq || (seq < r.lastSeq && !(seq == 1 && r.lastSeq > 1))));
-  if (isDuplicate) {
+    SensorRecord &r = s_records[idx];
+    bool isRebootSeq = (r.packetCount > 0 && seq < r.lastSeq && seq <= 3);
+    bool isDuplicate = (r.packetCount > 0 && !isRebootSeq && seq <= r.lastSeq);
+    if (isDuplicate) {
     r.duplicateCount++;
   } else {
     r.lastSeq = seq;
