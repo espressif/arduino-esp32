@@ -35,6 +35,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "esp_zigbee.h"                 // all-in-one v2.x header (was esp_zigbee_core.h)
+#include "ezbee/zha.h"                  // ZHA standard device IDs (EZB_ZHA_*_DEVICE_ID); not pulled in by esp_zigbee.h
 #include "ezbee/zdo/zdo_nwk_mgmt.h"     // Mgmt_Bind_req (binding table retrieval)
 #include "ezbee/zdo/zdo_dev_srv_disc.h" // Match_Desc_req (endpoint discovery)
 #include <esp32-hal-log.h>
@@ -137,7 +138,7 @@ private:
 
   bool zigbeeInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs);
   static void scanCompleteCallback(ezb_nwk_active_scan_result_t *result, void *user_ctx);
-  const char *getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId);  // TODO(zb-v2): HA device id enum -> ezbee/zha.h
+  const char *getDeviceTypeString(uint16_t deviceId);  // ZHA device id (see EZB_ZHA_*_DEVICE_ID in ezbee/zha.h)
   void searchBindings();
   static void bindingTableCb(const ezb_zdo_nwk_mgmt_bind_req_result_t *result, void *user_ctx);
   void resetNVRAMChannelMask();             // Reset to default mask (persisted via NVS)

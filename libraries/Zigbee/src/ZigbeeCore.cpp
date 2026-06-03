@@ -872,47 +872,52 @@ void ZigbeeCore::start() {
 
 // Function to convert enum value to string
 // TODO(zb-v2): the HA device id enum lives in ezbee/zha.h in v2.x; verify the identifiers still match.
-const char *ZigbeeCore::getDeviceTypeString(esp_zb_ha_standard_devices_t deviceId) {
+const char *ZigbeeCore::getDeviceTypeString(uint16_t deviceId) {
   switch (deviceId) {
-    case ESP_ZB_HA_ON_OFF_SWITCH_DEVICE_ID:              return "General On/Off switch";
-    case ESP_ZB_HA_LEVEL_CONTROL_SWITCH_DEVICE_ID:       return "Level Control Switch";
-    case ESP_ZB_HA_ON_OFF_OUTPUT_DEVICE_ID:              return "General On/Off output";
-    case ESP_ZB_HA_LEVEL_CONTROLLABLE_OUTPUT_DEVICE_ID:  return "Level Controllable Output";
-    case ESP_ZB_HA_SCENE_SELECTOR_DEVICE_ID:             return "Scene Selector";
-    case ESP_ZB_HA_CONFIGURATION_TOOL_DEVICE_ID:         return "Configuration Tool";
-    case ESP_ZB_HA_REMOTE_CONTROL_DEVICE_ID:             return "Remote Control";
-    case ESP_ZB_HA_COMBINED_INTERFACE_DEVICE_ID:         return "Combined Interface";
-    case ESP_ZB_HA_RANGE_EXTENDER_DEVICE_ID:             return "Range Extender";
-    case ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID:         return "Mains Power Outlet";
-    case ESP_ZB_HA_DOOR_LOCK_DEVICE_ID:                  return "Door lock client";
-    case ESP_ZB_HA_DOOR_LOCK_CONTROLLER_DEVICE_ID:       return "Door lock controller";
-    case ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID:              return "Simple Sensor device";
-    case ESP_ZB_HA_CONSUMPTION_AWARENESS_DEVICE_ID:      return "Consumption Awareness Device";
-    case ESP_ZB_HA_HOME_GATEWAY_DEVICE_ID:               return "Home Gateway";
-    case ESP_ZB_HA_SMART_PLUG_DEVICE_ID:                 return "Smart plug";
-    case ESP_ZB_HA_WHITE_GOODS_DEVICE_ID:                return "White Goods";
-    case ESP_ZB_HA_METER_INTERFACE_DEVICE_ID:            return "Meter Interface";
-    case ESP_ZB_HA_ON_OFF_LIGHT_DEVICE_ID:               return "On/Off Light Device";
-    case ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID:             return "Dimmable Light Device";
-    case ESP_ZB_HA_COLOR_DIMMABLE_LIGHT_DEVICE_ID:       return "Color Dimmable Light Device";
-    case ESP_ZB_HA_DIMMER_SWITCH_DEVICE_ID:              return "Dimmer Switch Device";
-    case ESP_ZB_HA_COLOR_DIMMER_SWITCH_DEVICE_ID:        return "Color Dimmer Switch Device";
-    case ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID:               return "Light Sensor";
-    case ESP_ZB_HA_SHADE_DEVICE_ID:                      return "Shade";
-    case ESP_ZB_HA_SHADE_CONTROLLER_DEVICE_ID:           return "Shade controller";
-    case ESP_ZB_HA_WINDOW_COVERING_DEVICE_ID:            return "Window Covering client";
-    case ESP_ZB_HA_WINDOW_COVERING_CONTROLLER_DEVICE_ID: return "Window Covering controller";
-    case ESP_ZB_HA_HEATING_COOLING_UNIT_DEVICE_ID:       return "Heating/Cooling Unit device";
-    case ESP_ZB_HA_THERMOSTAT_DEVICE_ID:                 return "Thermostat Device";
-    case ESP_ZB_HA_TEMPERATURE_SENSOR_DEVICE_ID:         return "Temperature Sensor";
-    case ESP_ZB_HA_IAS_CONTROL_INDICATING_EQUIPMENT_ID:  return "IAS Control and Indicating Equipment";
-    case ESP_ZB_HA_IAS_ANCILLARY_CONTROL_EQUIPMENT_ID:   return "IAS Ancillary Control Equipment";
-    case ESP_ZB_HA_IAS_ZONE_ID:                          return "IAS Zone";
-    case ESP_ZB_HA_IAS_WARNING_DEVICE_ID:                return "IAS Warning Device";
-    case ESP_ZB_HA_TEST_DEVICE_ID:                       return "Custom HA device for test";
-    case ESP_ZB_HA_CUSTOM_TUNNEL_DEVICE_ID:              return "Custom Tunnel device";
-    case ESP_ZB_HA_CUSTOM_ATTR_DEVICE_ID:                return "Custom Attributes Device";
-    default:                                             return "Unknown device type";
+    case EZB_ZHA_ON_OFF_SWITCH_DEVICE_ID:              return "General On/Off switch";
+    case EZB_ZHA_LEVEL_CONTROL_SWITCH_DEVICE_ID:       return "Level Control Switch";
+    case EZB_ZHA_ON_OFF_OUTPUT_DEVICE_ID:              return "General On/Off output";
+    case EZB_ZHA_LEVEL_CONTROLLABLE_OUTPUT_DEVICE_ID:  return "Level Controllable Output";
+    case EZB_ZHA_SCENE_SELECTOR_DEVICE_ID:             return "Scene Selector";
+    case EZB_ZHA_CONFIGURATION_TOOL_DEVICE_ID:         return "Configuration Tool";
+    case EZB_ZHA_REMOTE_CONTROL_DEVICE_ID:             return "Remote Control";
+    case EZB_ZHA_COMBINED_INTERFACE_DEVICE_ID:         return "Combined Interface";
+    case EZB_ZHA_RANGE_EXTENDER_DEVICE_ID:             return "Range Extender";
+    case EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID:         return "Mains Power Outlet";
+    case EZB_ZHA_DOOR_LOCK_DEVICE_ID:                  return "Door lock client";
+    case EZB_ZHA_DOOR_LOCK_CONTROLLER_DEVICE_ID:       return "Door lock controller";
+    case EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID:              return "Simple Sensor device";
+    case EZB_ZHA_CONSUMPTION_AWARENESS_DEVICE_ID:      return "Consumption Awareness Device";
+    case EZB_ZHA_HOME_GATEWAY_DEVICE_ID:               return "Home Gateway";
+    case EZB_ZHA_SMART_PLUG_DEVICE_ID:                 return "Smart plug";
+    case EZB_ZHA_WHITE_GOODS_DEVICE_ID:                return "White Goods";
+    case EZB_ZHA_METER_INTERFACE_DEVICE_ID:            return "Meter Interface";
+    case EZB_ZHA_ON_OFF_LIGHT_DEVICE_ID:               return "On/Off Light Device";
+    case EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID:             return "Dimmable Light Device";
+    case EZB_ZHA_COLOR_DIMMABLE_LIGHT_DEVICE_ID:       return "Color Dimmable Light Device";
+    case EZB_ZHA_ON_OFF_LIGHT_SWITCH_DEVICE_ID:        return "On/Off Light Switch Device";
+    case EZB_ZHA_DIMMER_SWITCH_DEVICE_ID:              return "Dimmer Switch Device";
+    case EZB_ZHA_COLOR_DIMMER_SWITCH_DEVICE_ID:        return "Color Dimmer Switch Device";
+    case EZB_ZHA_LIGHT_SENSOR_DEVICE_ID:               return "Light Sensor";
+    case EZB_ZHA_OCCUPANCY_SENSOR_DEVICE_ID:           return "Occupancy Sensor";
+    case EZB_ZHA_SHADE_DEVICE_ID:                      return "Shade";
+    case EZB_ZHA_SHADE_CONTROLLER_DEVICE_ID:           return "Shade controller";
+    case EZB_ZHA_WINDOW_COVERING_DEVICE_ID:            return "Window Covering client";
+    case EZB_ZHA_WINDOW_COVERING_CONTROLLER_DEVICE_ID: return "Window Covering controller";
+    case EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID:       return "Heating/Cooling Unit device";
+    case EZB_ZHA_THERMOSTAT_DEVICE_ID:                 return "Thermostat Device";
+    case EZB_ZHA_TEMPERATURE_SENSOR_DEVICE_ID:         return "Temperature Sensor";
+    case EZB_ZHA_PUMP_DEVICE_ID:                       return "Pump Device";
+    case EZB_ZHA_PUMP_CONTROLLER_DEVICE_ID:            return "Pump Controller Device";
+    case EZB_ZHA_PRESSURE_SENSOR_DEVICE_ID:            return "Pressure Sensor Device";
+    case EZB_ZHA_FLOW_SENSOR_DEVICE_ID:                return "Flow Sensor Device";
+    case EZB_ZHA_MINI_SPLIT_AC_DEVICE_ID:              return "Mini Split AC Device";
+    case EZB_ZHA_IAS_CONTROL_INDICATING_EQUIPMENT_ID:  return "IAS Control and Indicating Equipment";
+    case EZB_ZHA_IAS_ANCILLARY_CONTROL_EQUIPMENT_ID:   return "IAS Ancillary Control Equipment";
+    case EZB_ZHA_IAS_ZONE_ID:                          return "IAS Zone";
+    case EZB_ZHA_IAS_WARNING_DEVICE_ID:                return "IAS Warning Device";
+    case EZB_ZHA_CUSTOM_GATEWAY_DEVICE_ID:             return "Custom Gateway Device";
+    default:                                           return "Unknown device type";
   }
 }
 
