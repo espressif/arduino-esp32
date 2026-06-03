@@ -80,14 +80,18 @@
  // Run a single CLI command and check its result. otExecCommand() sends the
  // command and waits for the terminating "Done"/"Error ..." line; ot_cmd_return_t
  // carries the parsed error code/message so we can log a useful failure.
- static bool otCliCmd(const char *cmd) {
-   ot_cmd_return_t rc;
-   bool ok = otExecCommand(cmd, nullptr, &rc);
-   if (!ok) {
-     Serial.printf("CLI ERROR: '%s' -> %d %s\n", cmd, rc.errorCode, rc.errorMessage.c_str());
-   }
-   return ok;
- }
+static bool otCliCmd(const char *cmd) {
+  ot_cmd_return_t rc;
+  // otExecCommand() uses Stream::readBytesUntil(), which depends on the current
+  // Stream timeout. RX parsing tweaks the timeout frequently, so force a
+  // known-safe value for CLI control commands.
+  OThreadCLI.setTimeout(1000);
+  bool ok = otExecCommand(cmd, nullptr, &rc);
+  if (!ok) {
+    Serial.printf("CLI ERROR: '%s' -> %d %s\n", cmd, rc.errorCode, rc.errorMessage.c_str());
+  }
+  return ok;
+}
  
  // Read one line of asynchronous CLI output. OThreadCLI is an Arduino Stream,
  // so unsolicited output (e.g. incoming UDP datagrams) can be read with the
