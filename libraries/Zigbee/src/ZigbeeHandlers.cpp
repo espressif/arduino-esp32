@@ -59,7 +59,7 @@ static esp_err_t zb_manuf_spec_command_handler(const ezb_zcl_manuf_spec_cmd_mess
 // Status is communicated back to the stack via message->out.result (left at its default here except
 // where a handler explicitly rejects, e.g. the OTA query-image response). The internal esp_err_t
 // returns below are kept only for local control flow/logging.
-void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message) {
+static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message) {
   switch (callback_id) {
     case EZB_ZCL_CORE_SET_ATTR_VALUE_CB_ID:   zb_attribute_set_handler((ezb_zcl_set_attr_value_message_t *)message); break;
     case EZB_ZCL_CORE_REPORT_ATTR_CB_ID:      zb_attribute_reporting_handler((ezb_zcl_cmd_report_attr_message_t *)message); break;
