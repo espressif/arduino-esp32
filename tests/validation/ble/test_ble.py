@@ -140,8 +140,29 @@ def test_ble(dut, ci_job_id):
     client.expect_exact("[CLIENT] Test operations completed", timeout=10)
     LOGGER.info("All characteristic operations completed successfully")
 
-    # Verify connection status
-    LOGGER.info("Verifying connection status...")
-    server.expect_exact("[SERVER] Status: Connected", timeout=5)
+    LOGGER.info("Security and characteristic test passed!")
+
+    # --- Reconnection stress test (app_id collision regression, issue #12625) ---
+    # The client disconnects, pre-seeds the allocator, and reconnects in a loop.
+    # We only rely on client-side messages for synchronization since server periodic
+    # "Status" messages can interleave and cause pexpect buffer position issues.
+    LOGGER.info("Starting reconnection stress test (app_id boundary crossing)...")
+    client.expect_exact("[CLIENT] Starting reconnection stress test", timeout=15)
+
+    reconnect_cycles = 10
+
+    # Crossing ESP_GATT_IF_NONE boundary (0xFF on Bluedroid, 0xFFFF on NimBLE)
+    LOGGER.info("Crossing ESP_GATT_IF_NONE boundary...")
+    client.expect(r"\[CLIENT\] Reconnect phase: crossing ESP_GATT_IF_NONE", timeout=10)
+
+    for i in range(1, reconnect_cycles + 1):
+        LOGGER.info(f"Reconnect cycle {i}/{reconnect_cycles}...")
+        client.expect_exact(f"[CLIENT] Reconnect cycle {i}/{reconnect_cycles} OK", timeout=20)
+
+    client.expect(r"\[CLIENT\] Reconnect phase ESP_GATT_IF_NONE PASSED", timeout=10)
+    LOGGER.info("Reconnect phase passed")
+
+    client.expect_exact("[CLIENT] Reconnection stress test PASSED", timeout=10)
+    LOGGER.info("Reconnection stress test passed")
 
     LOGGER.info("BLE test passed!")
