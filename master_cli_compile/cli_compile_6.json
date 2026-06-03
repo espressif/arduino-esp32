@@ -606,54 +606,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/Serial/Serial_STD_Func_OnReceive",
-                "sizes": [{
-                        "flash_bytes": 278606,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13688,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/onReceiveExample",
-                "sizes": [{
-                        "flash_bytes": 278212,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial/print64bitVariable",
-                "sizes": [{
-                        "flash_bytes": 278734,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAIreceive",
-                "sizes": [{
-                        "flash_bytes": 282652,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13688,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/TWAI/TWAItransmit",
-                "sizes": [{
-                        "flash_bytes": 283138,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Template/ExampleTemplate",
-                "sizes": [{
-                        "flash_bytes": 260570,
-                        "flash_percentage": 20,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/Timer/RepeatTimer",
                 "sizes": [{
                         "flash_bytes": 288170,
@@ -700,6 +652,62 @@
                         "flash_percentage": 45,
                         "ram_bytes": 19812,
                         "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
+                "sizes": [{
+                        "flash_bytes": 582016,
+                        "flash_percentage": 44,
+                        "ram_bytes": 19812,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/FFat/examples/FFat_Test",
+                "sizes": [{
+                        "flash_bytes": 342008,
+                        "flash_percentage": 26,
+                        "ram_bytes": 14464,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples/HEX",
+                "sizes": [{
+                        "flash_bytes": 279144,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples/MD5",
+                "sizes": [{
+                        "flash_bytes": 279378,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples/PBKDF2_HMAC",
+                "sizes": [{
+                        "flash_bytes": 294898,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples/SHA1",
+                "sizes": [{
+                        "flash_bytes": 285694,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples/SHA2",
+                "sizes": [{
+                        "flash_bytes": 284122,
+                        "flash_percentage": 22,
+                        "ram_bytes": 13696,
+                        "ram_percentage": 4
                         }]
                 }
 ]

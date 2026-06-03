@@ -606,62 +606,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
-                "sizes": [{
-                        "flash_bytes": 582016,
-                        "flash_percentage": 44,
-                        "ram_bytes": 19812,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/FFat/examples/FFat_Test",
-                "sizes": [{
-                        "flash_bytes": 342008,
-                        "flash_percentage": 26,
-                        "ram_bytes": 14464,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/HEX",
-                "sizes": [{
-                        "flash_bytes": 279144,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/MD5",
-                "sizes": [{
-                        "flash_bytes": 279378,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/PBKDF2_HMAC",
-                "sizes": [{
-                        "flash_bytes": 294898,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/SHA1",
-                "sizes": [{
-                        "flash_bytes": 285694,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples/SHA2",
-                "sizes": [{
-                        "flash_bytes": 284122,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/Hash/examples/SHA3",
                 "sizes": [{
                         "flash_bytes": 281814,
@@ -698,6 +642,70 @@
                 "sizes": [{
                         "flash_bytes": 2156477,
                         "flash_percentage": 69,
+                        "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterComposedLights",
+                "sizes": [{
+                        "flash_bytes": 2192603,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99012,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterContactSensor",
+                "sizes": [{
+                        "flash_bytes": 2168455,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99600,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterDimmableLight",
+                "sizes": [{
+                        "flash_bytes": 2188429,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99656,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterDimmablePlugin",
+                "sizes": [{
+                        "flash_bytes": 2188537,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99656,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterEnhancedColorLight",
+                "sizes": [{
+                        "flash_bytes": 2221493,
+                        "flash_percentage": 71,
+                        "ram_bytes": 99704,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterEvents",
+                "sizes": [{
+                        "flash_bytes": 2159933,
+                        "flash_percentage": 69,
+                        "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterFan",
+                "sizes": [{
+                        "flash_bytes": 2188119,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99920,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterHumiditySensor",
+                "sizes": [{
+                        "flash_bytes": 2149679,
+                        "flash_percentage": 68,
                         "ram_bytes": 98836,
                         "ram_percentage": 30
                         }]

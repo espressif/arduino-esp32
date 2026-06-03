@@ -292,6 +292,22 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+                "sizes": [{
+                        "flash_bytes": 1183857,
+                        "flash_percentage": 90,
+                        "ram_bytes": 46804,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/onReceive",
+                "sizes": [{
+                        "flash_bytes": 1159969,
+                        "flash_percentage": 88,
+                        "ram_bytes": 46492,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
                         "flash_bytes": 1054437,
@@ -427,22 +443,6 @@
                         "ram_bytes": 17788,
                         "ram_percentage": 5
                         }]
-                },
-{"name": "libraries/Ticker/examples/TickerParameter",
-                "sizes": [{
-                        "flash_bytes": 300024,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17836,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
-                "sizes": [{
-                        "flash_bytes": 1036863,
-                        "flash_percentage": 79,
-                        "ram_bytes": 49280,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
@@ -454,6 +454,22 @@
                         "flash_bytes": 1104564,
                         "flash_percentage": 84,
                         "ram_bytes": 50208,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
+                "sizes": [{
+                        "flash_bytes": 1110796,
+                        "flash_percentage": 85,
+                        "ram_bytes": 72008,
+                        "ram_percentage": 22
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+                "sizes": [{
+                        "flash_bytes": 1109814,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50528,
                         "ram_percentage": 15
                         }]
                 },
@@ -584,100 +600,12 @@
                         "ram_bytes": 42228,
                         "ram_percentage": 13
                         }]
-                },
-{"name": "libraries/Ticker/examples/Blinker",
-                "sizes": [{
-                        "flash_bytes": 260784,
-                        "flash_percentage": 20,
-                        "ram_bytes": 14916,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/Ticker/examples/TickerBasic",
-                "sizes": [{
-                        "flash_bytes": 260570,
-                        "flash_percentage": 20,
-                        "ram_bytes": 14868,
-                        "ram_percentage": 5
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Matter/examples/MatterOccupancyWithHoldTime",
-                "sizes": [{
-                        "flash_bytes": 2154683,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98876,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterOnIdentify",
-                "sizes": [{
-                        "flash_bytes": 2179919,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99624,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterOnOffLight",
-                "sizes": [{
-                        "flash_bytes": 2180505,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99640,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterOnOffPlugin",
-                "sizes": [{
-                        "flash_bytes": 2180629,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99640,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterPressureSensor",
-                "sizes": [{
-                        "flash_bytes": 2149663,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98836,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterRainSensor",
-                "sizes": [{
-                        "flash_bytes": 2168453,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99600,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterSimpleBlinds",
-                "sizes": [{
-                        "flash_bytes": 2162509,
-                        "flash_percentage": 69,
-                        "ram_bytes": 98932,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterSmartButton",
-                "sizes": [{
-                        "flash_bytes": 2155129,
-                        "flash_percentage": 69,
-                        "ram_bytes": 98844,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples/MatterStatus",
-                "sizes": [{
-                        "flash_bytes": 2178457,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99616,
-                        "ram_percentage": 30
-                        }]
-                },
 {"name": "libraries/Matter/examples/MatterTemperatureControlledCabinet",
                 "sizes": [{
                         "flash_bytes": 2151905,
@@ -700,6 +628,86 @@
                         "flash_percentage": 71,
                         "ram_bytes": 99680,
                         "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterTemperatureSensor",
+                "sizes": [{
+                        "flash_bytes": 2149701,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterThermostat",
+                "sizes": [{
+                        "flash_bytes": 2176469,
+                        "flash_percentage": 69,
+                        "ram_bytes": 98964,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterWaterFreezeDetector",
+                "sizes": [{
+                        "flash_bytes": 2168451,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99600,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterWaterLeakDetector",
+                "sizes": [{
+                        "flash_bytes": 2168443,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99600,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples/MatterWindowCovering",
+                "sizes": [{
+                        "flash_bytes": 2189959,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99744,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
+                "sizes": [{
+                        "flash_bytes": 1135599,
+                        "flash_percentage": 87,
+                        "ram_bytes": 49976,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
+                "sizes": [{
+                        "flash_bytes": 1137797,
+                        "flash_percentage": 87,
+                        "ram_bytes": 49960,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
+                "sizes": [{
+                        "flash_bytes": 1112269,
+                        "flash_percentage": 85,
+                        "ram_bytes": 48748,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleNode",
+                "sizes": [{
+                        "flash_bytes": 1112693,
+                        "flash_percentage": 85,
+                        "ram_bytes": 48772,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
+                "sizes": [{
+                        "flash_bytes": 1115761,
+                        "flash_percentage": 85,
+                        "ram_bytes": 48780,
+                        "ram_percentage": 15
                         }]
                 }
 ]

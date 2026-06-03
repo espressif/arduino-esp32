@@ -606,14 +606,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/BLE/examples/Server_multiconnect",
-                "sizes": [{
-                        "flash_bytes": 706487,
-                        "flash_percentage": 22,
-                        "ram_bytes": 16612,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/BLE/examples/Server_secure_authorization",
                 "sizes": [{
                         "flash_bytes": 711529,
@@ -699,6 +691,22 @@
                         "flash_bytes": 290554,
                         "flash_percentage": 9,
                         "ram_bytes": 13852,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Console/examples/ConsoleSysInfo",
+                "sizes": [{
+                        "flash_bytes": 318352,
+                        "flash_percentage": 10,
+                        "ram_bytes": 13860,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/EEPROM/examples/eeprom_class",
+                "sizes": [{
+                        "flash_bytes": 288976,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13784,
                         "ram_percentage": 4
                         }]
                 }

@@ -614,22 +614,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Console/examples/ConsoleSysInfo",
-                "sizes": [{
-                        "flash_bytes": 318328,
-                        "flash_percentage": 24,
-                        "ram_bytes": 13860,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/EEPROM/examples/eeprom_class",
-                "sizes": [{
-                        "flash_bytes": 288944,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13784,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/EEPROM/examples/eeprom_extra",
                 "sizes": [{
                         "flash_bytes": 291954,
@@ -707,6 +691,30 @@
                         "flash_bytes": 290124,
                         "flash_percentage": 22,
                         "ram_bytes": 13956,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogReadContinuous",
+                "sizes": [{
+                        "flash_bytes": 295180,
+                        "flash_percentage": 23,
+                        "ram_bytes": 13972,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ArduinoStackSize",
+                "sizes": [{
+                        "flash_bytes": 276886,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ArduinoWaitTimeBeforeStartingSketch",
+                "sizes": [{
+                        "flash_bytes": 276622,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13680,
                         "ram_percentage": 4
                         }]
                 }
