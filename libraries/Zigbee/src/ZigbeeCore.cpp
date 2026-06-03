@@ -76,7 +76,7 @@ ZigbeeCore::ZigbeeCore() {
 //forward declarations
 // v2.x ZCL core-action handler (implemented in ZigbeeHandlers.cpp). The callback now returns void and
 // receives a non-const message whose ->out.result field is used to communicate status back to the stack.
-void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message);
+static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, void *message);
 bool zb_app_signal_handler(const ezb_app_signal_t *signal);
 bool zb_apsde_data_indication_handler(const ezb_apsde_data_ind_t *ind);
 
