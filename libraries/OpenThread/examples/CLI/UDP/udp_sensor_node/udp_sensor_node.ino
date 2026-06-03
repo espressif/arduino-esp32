@@ -43,10 +43,10 @@
 #define OT_EXTPANID     "ce010000deadc0de"
 #define OT_NETWORK_KEY  "102030405060708090a0b0c0d0e0f002"
 
-const uint16_t COLLECTOR_PORT   = 61631;          // destination/listen UDP port
-const char     COLLECTOR_GROUP[] = "ff03::abcd";  // multicast group the collector subscribes to
-const uint32_t SAMPLE_PERIOD_MS = 30000;          // time between sensor samples
-const uint32_t ACK_TIMEOUT_MS   = 1200;           // how long to wait for the collector's ACK
+const uint16_t COLLECTOR_PORT = 61631;        // destination/listen UDP port
+const char COLLECTOR_GROUP[] = "ff03::abcd";  // multicast group the collector subscribes to
+const uint32_t SAMPLE_PERIOD_MS = 30000;      // time between sensor samples
+const uint32_t ACK_TIMEOUT_MS = 1200;         // how long to wait for the collector's ACK
 
 // Recovery: if this many samples in a row get no ACK, assume the collector (our
 // parent/leader) rebooted or vanished and force a clean Thread re-attach instead
@@ -55,16 +55,15 @@ const uint32_t ACK_TIMEOUT_MS   = 1200;           // how long to wait for the co
 const uint8_t REATTACH_AFTER_MISSED = 3;
 
 // Sleepy End Device setup via CLI.
-const bool USE_SLEEPY_MODE      = true;   // set false to stay a normal (always-on) child
-const uint32_t SED_POLL_MS      = 1000;   // data poll interval while sleeping (lower = lower latency, higher power)
-const uint32_t CHILD_TIMEOUT_S  = 300;    // parent keeps us as a child if we poll within this window
+const bool USE_SLEEPY_MODE = true;     // set false to stay a normal (always-on) child
+const uint32_t SED_POLL_MS = 1000;     // data poll interval while sleeping (lower = lower latency, higher power)
+const uint32_t CHILD_TIMEOUT_S = 300;  // parent keeps us as a child if we poll within this window
 
 // Sleepy behavior in this sketch (mode n / pollperiod / childtimeout) is only
 // meaningful when the build enables the required OT/802.15.4 low-power stack
 // options. This is typically configured in Arduino-as-IDF-component projects.
 #if defined(CONFIG_OPENTHREAD_MTD) && defined(CONFIG_IEEE802154_SLEEP_ENABLE) && defined(CONFIG_PM_ENABLE)
-static constexpr bool kBuildHasSleepySupport =
-  (CONFIG_OPENTHREAD_MTD && CONFIG_IEEE802154_SLEEP_ENABLE && CONFIG_PM_ENABLE);
+static constexpr bool kBuildHasSleepySupport = (CONFIG_OPENTHREAD_MTD && CONFIG_IEEE802154_SLEEP_ENABLE && CONFIG_PM_ENABLE);
 #else
 static constexpr bool kBuildHasSleepySupport = false;
 #endif
@@ -271,14 +270,12 @@ static bool sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv
   char frame[120];
   char cmd[192];
   char expectedAck[48];
-  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u",
-           s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
+  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u", s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
   snprintf(cmd, sizeof(cmd), "udp send %s %u %s", COLLECTOR_GROUP, COLLECTOR_PORT, frame);
   snprintf(expectedAck, sizeof(expectedAck), "OK,%s,%lu", s_nodeId, (unsigned long)seq);
 
   // Drain stale CLI lines before issuing the next tx command.
-  while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {
-  }
+  while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {}
 
   OThreadCLI.println(cmd);
   Serial.printf("TX [%s]:%u -> '%s'\n", COLLECTOR_GROUP, COLLECTOR_PORT, frame);
@@ -388,11 +385,7 @@ void loop() {
   // Monotonic sequence number lets the collector detect duplicates/retransmits.
   s_seq++;
   bool ok = sendFrameAndWaitAck(s_seq, tempCenti, battMv);
-  Serial.printf("sample=%lu temp=%.2fC batt=%umV status=%s\n",
-                (unsigned long)s_seq,
-                (float)tempCenti / 100.0f,
-                battMv,
-                ok ? "ACKED" : "NO_ACK");
+  Serial.printf("sample=%lu temp=%.2fC batt=%umV status=%s\n", (unsigned long)s_seq, (float)tempCenti / 100.0f, battMv, ok ? "ACKED" : "NO_ACK");
 
   // Track consecutive misses. A run of them is the signature of a collector
   // that rebooted/disappeared, so trigger a re-attach to recover quickly.
