@@ -2,6 +2,14 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Color_Dimmer_Switch",
+                "sizes": [{
+                        "flash_bytes": 661736,
+                        "flash_percentage": 50,
+                        "ram_bytes": 38324,
+                        "ram_percentage": 12
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Electrical_AC_Sensor",
                 "sizes": [{
                         "flash_bytes": 653648,
@@ -87,6 +95,14 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Fan_Control",
+                "sizes": [{
+                        "flash_bytes": 676250,
+                        "flash_percentage": 52,
+                        "ram_bytes": 30312,
+                        "ram_percentage": 9
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Gateway",
                 "sizes": [{
                         "flash_bytes": 1335347,
@@ -148,6 +164,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
+                "sizes": [{
+                        "flash_bytes": 665593,
+                        "flash_percentage": 51,
+                        "ram_bytes": 37020,
+                        "ram_percentage": 11
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Range_Extender",
                 "sizes": [{
                         "flash_bytes": 770331,
@@ -217,6 +241,14 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_Pressure_Flow_Sensor",
+                "sizes": [{
+                        "flash_bytes": 586284,
+                        "flash_percentage": 45,
+                        "ram_bytes": 32276,
+                        "ram_percentage": 10
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Privilege_Command",
                 "sizes": [{
                         "flash_bytes": 608810,
@@ -294,6 +326,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Zigbee/examples/Zigbee_PM25_Sensor",
+                "sizes": [{
+                        "flash_bytes": 581829,
+                        "flash_percentage": 44,
+                        "ram_bytes": 30704,
+                        "ram_percentage": 9
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Power_Outlet",
                 "sizes": [{
                         "flash_bytes": 719541,
@@ -456,6 +496,14 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
+{"name": "libraries/Wire/examples/WireMaster",
+                "sizes": [{
+                        "flash_bytes": 280320,
+                        "flash_percentage": 21,
+                        "ram_bytes": 17944,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Wire/examples/WireScan",
                 "sizes": [{
                         "flash_bytes": 280044,
@@ -581,6 +629,14 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
+{"name": "libraries/Wire/examples/WireSlaveFunctionalCallback",
+                "sizes": [{
+                        "flash_bytes": 318485,
+                        "flash_percentage": 24,
+                        "ram_bytes": 23348,
+                        "ram_percentage": 7
+                        }]
+                },
 {"name": "libraries/Zigbee/examples/Zigbee_Analog_Input_Output",
                 "sizes": [{
                         "flash_bytes": 648433,
