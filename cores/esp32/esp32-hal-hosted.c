@@ -61,8 +61,6 @@ static bool hostedDeinit();
 static bool hostedDetachBus(void *bus_pointer);
 static bool hostedClearPinBuses(void);
 static bool hostedAssignPinBuses(void);
-static bool hostedSdioPinValid(uint8_t pin);
-static bool hostedSdioPinsValid(void);
 
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
