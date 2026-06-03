@@ -45,7 +45,7 @@
  
  const uint16_t COLLECTOR_PORT = 61631;        // UDP port we bind/listen on
  const char COLLECTOR_GROUP[] = "ff03::abcd";  // realm-local multicast group sensors send to
- const uint16_t MAX_SENSORS = 256;             // capacity of the in-RAM node table
+const int MAX_SENSORS = 256;             // capacity of the in-RAM node table
  const uint32_t REPORT_PERIOD_MS = 30000;      // how often the fleet summary is printed
  
  // Liveness tracking. A node that goes silent (lost power, crashed, moved out of
