@@ -15,7 +15,7 @@ This is useful for:
 
 1. **Register commands** with `addPrivilegeCommand(cluster_id, command_id)` so that those command IDs on that cluster are **not** processed by the stack and are reported to your callback
 2. **Set a callback** with `onPrivilegeCommand(callback)` to handle those commands
-3. The callback receives an `esp_zb_zcl_privilege_command_message_t` with full command details (cluster, command ID, source address, payload)
+3. The callback receives an `ezb_zcl_manuf_spec_cmd_message_t` with full command details (cluster, command ID, source address, payload)
 
 Commands that are **not** registered remain fully handled by the stack (for example, this sketch leaves On / Off / Toggle to the stack and only registers `0x40`).
 

@@ -16,29 +16,31 @@
 #if CONFIG_ZB_ENABLED
 
 ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID;
+  _device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID;
   _on_state_change = nullptr;
 
-  esp_zb_mains_power_outlet_cfg_t outlet_cfg = ESP_ZB_DEFAULT_MAINS_POWER_OUTLET_CONFIG();
-  _cluster_list = esp_zb_mains_power_outlet_clusters_create(&outlet_cfg);
+  // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
+  // scenes, on/off clusters) instead of the v1 manual cluster-list factory.
+  ezb_zha_mains_power_outlet_config_t outlet_cfg = EZB_ZHA_MAINS_POWER_OUTLET_CONFIG();
+  _ep_desc = ezb_zha_create_mains_power_outlet(endpoint, &outlet_cfg);
   _ep_config = {
-    .endpoint = endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0
   };
   log_v("Outlet endpoint created %u", _endpoint);
 }
 
 //set attribute method -> method overridden in child class
-void ZigbeePowerOutlet::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
+void ZigbeePowerOutlet::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {
   //check the data and call right method
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-      _current_state = *(bool *)message->attribute.data.value;
+  if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_ON_OFF) {
+    if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_BOOL) {
+      _current_state = *(bool *)message->in.attribute.data.value;
       stateChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Outlet", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Outlet", message->in.attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Outlet", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Outlet", message->info.cluster_id);
   }
 }
 
@@ -56,10 +58,10 @@ bool ZigbeePowerOutlet::setState(bool state) {
 
   log_v("Updating on/off outlet state to %d", state);
   /* Update on/off outlet state */
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
 
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set outlet state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }

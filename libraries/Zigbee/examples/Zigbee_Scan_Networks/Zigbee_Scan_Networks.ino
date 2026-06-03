@@ -51,20 +51,20 @@ void printScannedNetworks(uint16_t networksFound) {
       // Print all available info for each network found
       Serial.printf("%2d", i + 1);
       Serial.print(" | ");
-      Serial.printf("0x%04x", scan_result[i].short_pan_id);
+      Serial.printf("0x%04x", scan_result[i].panid);
       Serial.print(" | ");
-      Serial.printf("%2u", scan_result[i].logic_channel);
+      Serial.printf("%2u", scan_result[i].channel_number);
       Serial.print(" | ");
-      Serial.printf("%-14.14s", scan_result[i].permit_joining ? "Yes" : "No");
+      Serial.printf("%-14.14s", scan_result[i].permit_join ? "Yes" : "No");
       Serial.print(" | ");
       Serial.printf("%-15.15s", scan_result[i].router_capacity ? "Yes" : "No");
       Serial.print(" | ");
-      Serial.printf("%-19.19s", scan_result[i].end_device_capacity ? "Yes" : "No");
+      Serial.printf("%-19.19s", scan_result[i].enddev_capacity ? "Yes" : "No");
       Serial.print(" | ");
       Serial.printf(
-        "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", scan_result[i].extended_pan_id[7], scan_result[i].extended_pan_id[6], scan_result[i].extended_pan_id[5],
-        scan_result[i].extended_pan_id[4], scan_result[i].extended_pan_id[3], scan_result[i].extended_pan_id[2], scan_result[i].extended_pan_id[1],
-        scan_result[i].extended_pan_id[0]
+        "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x", scan_result[i].extpanid.u8[7], scan_result[i].extpanid.u8[6], scan_result[i].extpanid.u8[5],
+        scan_result[i].extpanid.u8[4], scan_result[i].extpanid.u8[3], scan_result[i].extpanid.u8[2], scan_result[i].extpanid.u8[1],
+        scan_result[i].extpanid.u8[0]
       );
       Serial.println();
       delay(10);

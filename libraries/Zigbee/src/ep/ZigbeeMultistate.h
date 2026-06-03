@@ -7,7 +7,11 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/multistate_input_desc.h"
+#include "ezbee/zcl/cluster/multistate_output_desc.h"
 
 // Types for Multistate Input/Output
 // uint16_t for present value -> index to array of states
@@ -108,8 +112,8 @@ enum zigbee_multistate_clusters {
 };
 
 typedef struct zigbee_multistate_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
+  ezb_zcl_basic_cluster_config_t basic_cfg;
+  ezb_zcl_identify_cluster_config_t identify_cfg;
 } zigbee_multistate_cfg_t;
 
 class ZigbeeMultistate : public ZigbeeEP {
@@ -169,7 +173,7 @@ public:
   bool reportMultistateOutput();
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_multistate_output_change)(uint16_t state);
   void multistateOutputChanged();

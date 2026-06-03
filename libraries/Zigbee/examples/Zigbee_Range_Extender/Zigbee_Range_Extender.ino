@@ -81,7 +81,7 @@ void setup() {
 
 #if USE_CUSTOM_ZIGBEE_CONFIG
   // Optional: Create a custom Zigbee configuration for Zigbee Extender
-  esp_zb_cfg_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
+  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
   zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
 
   // When all EPs are registered, start Zigbee with custom config

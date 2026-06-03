@@ -21,33 +21,36 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/pressure_measurement_desc.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_PRESSURE_SENSOR_CONFIG()                                                     \
-    {                                                                                               \
-        .basic_cfg =                                                                                \
-            {                                                                                       \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                          \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                        \
-            },                                                                                      \
-        .identify_cfg =                                                                             \
-            {                                                                                       \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                   \
-            },                                                                                      \
-        .pressure_meas_cfg =                                                                        \
-            {                                                                                       \
-                .measured_value = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_VALUE_DEFAULT_VALUE,         \
-                .min_value = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MIN_VALUE_DEFAULT_VALUE,          \
-                .max_value = ESP_ZB_ZCL_ATTR_PRESSURE_MEASUREMENT_MAX_VALUE_DEFAULT_VALUE,          \
-            },                                                                                      \
+#define ZIGBEE_DEFAULT_PRESSURE_SENSOR_CONFIG()                                                            \
+    {                                                                                                      \
+        .basic_cfg =                                                                                       \
+            {                                                                                              \
+                .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                                    \
+                .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                                  \
+            },                                                                                             \
+        .identify_cfg =                                                                                    \
+            {                                                                                              \
+                .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                             \
+            },                                                                                             \
+        .pressure_meas_cfg =                                                                               \
+            {                                                                                              \
+                .measured_value = EZB_ZCL_PRESSURE_MEASUREMENT_MEASURED_VALUE_DEFAULT_VALUE,               \
+                .min_measured_value = EZB_ZCL_PRESSURE_MEASUREMENT_MIN_MEASURED_VALUE_DEFAULT_VALUE,       \
+                .max_measured_value = EZB_ZCL_PRESSURE_MEASUREMENT_MAX_MEASURED_VALUE_DEFAULT_VALUE,       \
+            },                                                                                             \
     }
 // clang-format on
 
 typedef struct zigbee_pressure_sensor_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_pressure_meas_cluster_cfg_t pressure_meas_cfg;
+  ezb_zcl_basic_cluster_config_t basic_cfg;
+  ezb_zcl_identify_cluster_config_t identify_cfg;
+  ezb_zcl_pressure_measurement_cluster_config_t pressure_meas_cfg;
 } zigbee_pressure_sensor_cfg_t;
 
 class ZigbeePressureSensor : public ZigbeeEP {

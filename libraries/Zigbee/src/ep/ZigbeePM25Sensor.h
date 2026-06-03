@@ -21,33 +21,36 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/pm2_5_measurement_desc.h"
 
 // clang-format off
-#define ZIGBEE_DEFAULT_PM2_5_SENSOR_CONFIG()                                           \
-  {                                                                                    \
-    .basic_cfg =                                                                       \
-      {                                                                                \
-        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                     \
-        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                   \
-      },                                                                               \
-    .identify_cfg =                                                                    \
-      {                                                                                \
-        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,              \
-      },                                                                               \
-    .pm2_5_meas_cfg =                                                                  \
-      {                                                                                \
-        .measured_value = 0.0,                                                         \
-        .min_measured_value = 0.0,                                                     \
-        .max_measured_value = 500.0,                                                   \
-      },                                                                               \
+#define ZIGBEE_DEFAULT_PM2_5_SENSOR_CONFIG()                          \
+  {                                                                    \
+    .basic_cfg =                                                       \
+      {                                                                \
+        .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
+        .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
+      },                                                               \
+    .identify_cfg =                                                    \
+      {                                                                \
+        .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
+      },                                                               \
+    .pm2_5_meas_cfg =                                                  \
+      {                                                                \
+        .measured_value = 0.0,                                         \
+        .min_measured_value = 0.0,                                     \
+        .max_measured_value = 500.0,                                   \
+      },                                                               \
   }
 // clang-format on
 
 typedef struct zigbee_pm2_5_sensor_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_pm2_5_measurement_cluster_cfg_t pm2_5_meas_cfg;
+  ezb_zcl_basic_cluster_config_t basic_cfg;
+  ezb_zcl_identify_cluster_config_t identify_cfg;
+  ezb_zcl_pm2_5_measurement_cluster_config_t pm2_5_meas_cfg;
 } zigbee_pm2_5_sensor_cfg_t;
 
 class ZigbeePM25Sensor : public ZigbeeEP {
