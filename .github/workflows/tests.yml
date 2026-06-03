@@ -12,6 +12,11 @@ name: Runtime Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_results:
+        description: 'Publish test results to gh-pages (report, badge, history)'
+        type: boolean
+        default: true
   pull_request:
     types: [opened, reopened, closed, synchronize, labeled, unlabeled]
     paths:
