@@ -88,7 +88,7 @@ void setup() {
   Zigbee.setRebootOpenNetwork(180);
 
   // Set custom radio configuration for RCP communication
-  esp_zb_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
+  esp_zigbee_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
   radio_config.radio_uart_config.port = GATEWAY_RCP_UART_PORT;
   radio_config.radio_uart_config.rx_pin = (gpio_num_t)GATEWAY_RCP_RX_PIN;
   radio_config.radio_uart_config.tx_pin = (gpio_num_t)GATEWAY_RCP_TX_PIN;

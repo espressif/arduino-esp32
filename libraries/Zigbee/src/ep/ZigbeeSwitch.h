@@ -21,7 +21,8 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off.h"
 
 class ZigbeeSwitch : public ZigbeeEP {
 public:
@@ -32,17 +33,17 @@ public:
   void lightToggle();
   void lightToggle(uint16_t group_addr);
   void lightToggle(uint8_t endpoint, uint16_t short_addr);
-  void lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightToggle(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOn();
   void lightOn(uint16_t group_addr);
   void lightOn(uint8_t endpoint, uint16_t short_addr);
-  void lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightOn(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOff();
   void lightOff(uint16_t group_addr);
   void lightOff(uint8_t endpoint, uint16_t short_addr);
-  void lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightOff(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant);
   void lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off);
@@ -51,12 +52,12 @@ public:
   void getLightState();
   void getLightState(uint16_t group_addr);
   void getLightState(uint8_t endpoint, uint16_t short_addr);
-  void getLightState(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void getLightState(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void onLightStateChange(void (*callback)(bool)) {
     _on_light_state_change = callback;
   }
-  void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, esp_zb_zcl_addr_t)) {
+  void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, ezb_address_t)) {
     _on_light_state_change_with_source = callback;
   }
 
@@ -66,14 +67,18 @@ private:
   zb_device_params_t *_device;
 
   void (*_on_light_state_change)(bool);
-  void (*_on_light_state_change_with_source)(bool, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_state_change_with_source)(bool, uint8_t, ezb_address_t);
 
-  void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-  void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
-  static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
-  static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) override;
+  // v2.x On/Off command + read senders shared by all addressing overloads.
+  void sendOnOffCommand(uint8_t on_off_cmd_id, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
+  void sendReadLightState(ezb_address_t dst_addr, uint8_t dst_ep);
+
+  void findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) override;
+  void bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
+  void findCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+  static void findCbWrapper(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+  static void bindCbWrapper(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
+  void zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) override;
 };
 
 #endif  // CONFIG_ZB_ENABLED

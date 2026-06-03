@@ -21,31 +21,35 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/wind_speed_measurement_desc.h"
 
-#define ZIGBEE_DEFAULT_WIND_SPEED_SENSOR_CONFIG()                                         \
-  {                                                                                       \
-    .basic_cfg =                                                                          \
-      {                                                                                   \
-        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                        \
-        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                      \
-      },                                                                                  \
-    .identify_cfg =                                                                       \
-      {                                                                                   \
-        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                 \
-      },                                                                                  \
-    .wind_speed_meas_cfg = {                                                              \
-      .measured_value = ESP_ZB_ZCL_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_DEFAULT,         \
-      .min_measured_value = ESP_ZB_ZCL_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_DEFAULT, \
-      .max_measured_value = ESP_ZB_ZCL_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_DEFAULT, \
-    },                                                                                    \
+// clang-format off
+#define ZIGBEE_DEFAULT_WIND_SPEED_SENSOR_CONFIG()                                          \
+  {                                                                                        \
+    .basic_cfg =                                                                           \
+      {                                                                                    \
+        .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                            \
+        .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                          \
+      },                                                                                   \
+    .identify_cfg =                                                                        \
+      {                                                                                    \
+        .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                     \
+      },                                                                                   \
+    .wind_speed_meas_cfg = {                                                               \
+      .measured_value = EZB_ZCL_WIND_SPEED_MEASUREMENT_MEASURED_VALUE_DEFAULT_VALUE,       \
+      .min_measured_value = EZB_ZCL_WIND_SPEED_MEASUREMENT_MIN_MEASURED_VALUE_DEFAULT_VALUE,\
+      .max_measured_value = EZB_ZCL_WIND_SPEED_MEASUREMENT_MAX_MEASURED_VALUE_DEFAULT_VALUE,\
+    },                                                                                     \
   }
+// clang-format on
 
 typedef struct zigbee_wind_speed_sensor_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;       /*!<  Basic cluster configuration, @ref esp_zb_basic_cluster_cfg_s */
-  esp_zb_identify_cluster_cfg_t identify_cfg; /*!<  Identify cluster configuration, @ref esp_zb_identify_cluster_cfg_s */
-  esp_zb_wind_speed_measurement_cluster_cfg_t
-    wind_speed_meas_cfg; /*!<  Wind speed measurement cluster configuration, @ref esp_zb_wind_speed_measurement_cluster_cfg_s */
+  ezb_zcl_basic_cluster_config_t basic_cfg;       /*!<  Basic cluster configuration */
+  ezb_zcl_identify_cluster_config_t identify_cfg; /*!<  Identify cluster configuration */
+  ezb_zcl_wind_speed_measurement_cluster_config_t wind_speed_meas_cfg; /*!<  Wind speed measurement cluster configuration */
 } zigbee_wind_speed_sensor_cfg_t;
 
 class ZigbeeWindSpeedSensor : public ZigbeeEP {

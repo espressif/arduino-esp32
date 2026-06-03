@@ -64,23 +64,23 @@ void setLED(bool value, uint8_t level) {
 
 // Privilege command callback — the stack will NOT handle registered commands,
 // so we are fully responsible for processing them here.
-void onPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message) {
+void onPrivilegeCommand(const ezb_zcl_manuf_spec_cmd_message_t *message) {
+  const ezb_zcl_cmd_hdr_t *hdr = message->in.header;
   Serial.println("--- Privilege command received ---");
-  Serial.printf("  Cluster: 0x%04x\r\n", message->info.cluster);
-  Serial.printf("  Command: 0x%02x\r\n", message->info.command.id);
-  Serial.printf("  Direction: %d (0=client-to-server, 1=server-to-client)\r\n", message->info.command.direction);
-  Serial.printf("  Src endpoint: %d, address: 0x%04x\r\n", message->info.src_endpoint, message->info.src_address.u.short_addr);
-  if (message->size > 0 && message->data) {
-    Serial.printf("  Payload (%d bytes):", message->size);
-    for (uint16_t i = 0; i < message->size; i++) {
-      Serial.printf(" %02x", ((uint8_t *)message->data)[i]);
+  Serial.printf("  Cluster: 0x%04x\r\n", message->info.cluster_id);
+  Serial.printf("  Command: 0x%02x\r\n", hdr ? hdr->cmd_id : 0);
+  Serial.printf("  Src endpoint: %d, address: 0x%04x\r\n", hdr ? hdr->src_ep : 0, hdr ? hdr->src_addr.u.short_addr : 0);
+  if (message->in.payload_size > 0 && message->in.payload) {
+    Serial.printf("  Payload (%d bytes):", message->in.payload_size);
+    for (uint16_t i = 0; i < message->in.payload_size; i++) {
+      Serial.printf(" %02x", message->in.payload[i]);
     }
     Serial.println();
   }
   Serial.println("---------------------------------");
 
   // Handle "Off with effect" (0x40) manually — implement custom fade-out behavior here
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF && message->info.command.id == 0x40) {
+  if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_ON_OFF && hdr && hdr->cmd_id == 0x40) {
     Serial.println("Handling 'Off with effect' — turning light off");
     zbLight.setLightState(false);
   }
@@ -106,7 +106,7 @@ void setup() {
 
   // Register "Off with effect" (0x40) as a privilege command. The stack will NOT process
   // this command — our callback is fully responsible for handling it.
-  zbLight.addPrivilegeCommand(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, 0x40);  // Off with effect
+  zbLight.addPrivilegeCommand(EZB_ZCL_CLUSTER_ID_ON_OFF, 0x40);  // Off with effect
 
   zbLight.onPrivilegeCommand(onPrivilegeCommand);
 

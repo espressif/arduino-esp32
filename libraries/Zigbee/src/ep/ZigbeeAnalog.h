@@ -21,7 +21,11 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/analog_input_desc.h"
+#include "ezbee/zcl/cluster/analog_output_desc.h"
 
 //enum for bits set to check what analog cluster were added
 enum zigbee_analog_clusters {
@@ -30,10 +34,10 @@ enum zigbee_analog_clusters {
 };
 
 typedef struct zigbee_analog_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_analog_output_cluster_cfg_t analog_output_cfg;
-  esp_zb_analog_input_cluster_cfg_t analog_input_cfg;
+  ezb_zcl_basic_cluster_config_t basic_cfg;
+  ezb_zcl_identify_cluster_config_t identify_cfg;
+  ezb_zcl_analog_output_cluster_config_t analog_output_cfg;
+  ezb_zcl_analog_input_cluster_config_t analog_input_cfg;
 } zigbee_analog_cfg_t;
 
 class ZigbeeAnalog : public ZigbeeEP {
@@ -81,7 +85,7 @@ public:
   bool setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_analog_output_change)(float);
   void analogOutputChanged();

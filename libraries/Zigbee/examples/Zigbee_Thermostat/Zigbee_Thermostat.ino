@@ -56,14 +56,14 @@ void receiveSensorTemp(float temperature) {
   sensor_temp = temperature;
 }
 #else
-void receiveSensorTempWithSource(float temperature, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) {
-  if (src_address.addr_type == ESP_ZB_ZCL_ADDR_TYPE_SHORT) {
+void receiveSensorTempWithSource(float temperature, uint8_t src_endpoint, ezb_address_t src_address) {
+  if (src_address.addr_mode == EZB_ADDR_MODE_SHORT) {
     Serial.printf("Temperature sensor value: %.2f°C from endpoint %u, address 0x%04x\n", temperature, src_endpoint, src_address.u.short_addr);
   } else {
     Serial.printf(
       "Temperature sensor value: %.2f°C from endpoint %u, address %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n", temperature, src_endpoint,
-      src_address.u.ieee_addr[7], src_address.u.ieee_addr[6], src_address.u.ieee_addr[5], src_address.u.ieee_addr[4], src_address.u.ieee_addr[3],
-      src_address.u.ieee_addr[2], src_address.u.ieee_addr[1], src_address.u.ieee_addr[0]
+      src_address.u.extended_addr.u8[7], src_address.u.extended_addr.u8[6], src_address.u.extended_addr.u8[5], src_address.u.extended_addr.u8[4],
+      src_address.u.extended_addr.u8[3], src_address.u.extended_addr.u8[2], src_address.u.extended_addr.u8[1], src_address.u.extended_addr.u8[0]
     );
   }
   sensor_temp = temperature;

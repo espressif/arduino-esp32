@@ -15,29 +15,41 @@
 #include "ZigbeeContactSwitch.h"
 #if CONFIG_ZB_ENABLED
 
-esp_zb_cluster_list_t *zigbee_contact_switch_clusters_create(zigbee_contact_switch_cfg_t *contact_switch) {
-  esp_zb_basic_cluster_cfg_t *basic_cfg = contact_switch ? &(contact_switch->basic_cfg) : NULL;
-  esp_zb_identify_cluster_cfg_t *identify_cfg = contact_switch ? &(contact_switch->identify_cfg) : NULL;
-  esp_zb_ias_zone_cluster_cfg_t *ias_zone_cfg = contact_switch ? &(contact_switch->ias_zone_cfg) : NULL;
-  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-  esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_ias_zone_cluster(cluster_list, esp_zb_ias_zone_cluster_create(ias_zone_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  return cluster_list;
+// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA IAS-zone template).
+// Basic + Identify + IasZone server clusters, registered as an IAS Zone device.
+ezb_af_ep_desc_t zigbee_contact_switch_create_ep_desc(uint8_t endpoint, zigbee_contact_switch_cfg_t *contact_switch) {
+  ezb_af_ep_config_t ep_config = {
+    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0
+  };
+  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
+  if (ep_desc == nullptr) {
+    log_e("Failed to create contact switch endpoint descriptor");
+    return nullptr;
+  }
+
+  const void *basic_cfg = contact_switch ? &(contact_switch->basic_cfg) : nullptr;
+  const void *identify_cfg = contact_switch ? &(contact_switch->identify_cfg) : nullptr;
+  const void *ias_zone_cfg = contact_switch ? &(contact_switch->ias_zone_cfg) : nullptr;
+
+  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_ias_zone_create_cluster_desc(ias_zone_cfg, EZB_ZCL_CLUSTER_SERVER));
+  return ep_desc;
 }
 
 ZigbeeContactSwitch::ZigbeeContactSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_IAS_ZONE_ID;
+  _device_id = EZB_ZHA_IAS_ZONE_ID;
   _zone_status = 0;
   _zone_id = 0xff;
   _ias_cie_endpoint = 1;
   _enrolled = false;
+  memset(_ias_cie_addr, 0, sizeof(_ias_cie_addr));
 
   //Create custom contact switch configuration
   zigbee_contact_switch_cfg_t contact_switch_cfg = ZIGBEE_DEFAULT_CONTACT_SWITCH_CONFIG();
-  _cluster_list = zigbee_contact_switch_clusters_create(&contact_switch_cfg);
+  _ep_desc = zigbee_contact_switch_create_ep_desc(_endpoint, &contact_switch_cfg);
 
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_IAS_ZONE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0};
 }
 
 void ZigbeeContactSwitch::setIASClientEndpoint(uint8_t ep_number) {
@@ -46,10 +58,10 @@ void ZigbeeContactSwitch::setIASClientEndpoint(uint8_t ep_number) {
 
 bool ZigbeeContactSwitch::setClosed() {
   log_v("Setting Contact switch to closed");
-  uint8_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &closed, false);
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  uint16_t closed = 0;  // ALARM1 = 0, ALARM2 = 0
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &closed, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set contact switch to closed: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -59,10 +71,10 @@ bool ZigbeeContactSwitch::setClosed() {
 
 bool ZigbeeContactSwitch::setOpen() {
   log_v("Setting Contact switch to open");
-  uint8_t open = ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | ESP_ZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONESTATUS_ID, &open, false);
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  uint16_t open = EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 | EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM2;  // ALARM1 = 1, ALARM2 = 1
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &open, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set contact switch to open: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -72,74 +84,71 @@ bool ZigbeeContactSwitch::setOpen() {
 
 bool ZigbeeContactSwitch::report() {
   /* Send IAS Zone status changed notification command */
-  if (_enrolled) {
-    esp_zb_zcl_ias_zone_status_change_notif_cmd_t status_change_notif_cmd;
-    status_change_notif_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_64_ENDP_PRESENT;
-    status_change_notif_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-    status_change_notif_cmd.zcl_basic_cmd.dst_endpoint = _ias_cie_endpoint;  //default is 1
-    memcpy(status_change_notif_cmd.zcl_basic_cmd.dst_addr_u.addr_long, _ias_cie_addr, sizeof(esp_zb_ieee_addr_t));
-
-    status_change_notif_cmd.zone_status = _zone_status;
-    status_change_notif_cmd.extend_status = 0;
-    status_change_notif_cmd.zone_id = _zone_id;
-    status_change_notif_cmd.delay = 0;
-
-    if (!acquireCommandLock()) {
-      return false;
-    }
-    esp_zb_zcl_ias_zone_status_change_notif_cmd_req(&status_change_notif_cmd);  //return transaction sequence number, ignore it
-    releaseCommandLock();
-    log_v("IAS Zone status changed notification sent");
-    return true;
-  } else {
+  if (!_enrolled) {
     log_e("Failed to report: IAS Zone not enrolled");
     return false;
   }
+  // TODO(zb-v2): ESP-ZIGBEE-SDK v2.x removed the explicit IAS Zone Status Change Notification sender used in
+  // v1 (esp_zb_zcl_ias_zone_status_change_notif_cmd_t + esp_zb_zcl_ias_zone_status_change_notif_cmd_req).
+  // Per ezbee/zcl/cluster/ias_zone.h, the Zone Status Change Notification is now emitted automatically by
+  // the stack whenever the ZoneStatus attribute (EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID) changes, which the
+  // set*() methods already do via setClusterAttribute(). A manual send to a specific CIE
+  // address/endpoint/zone-id/delay (_ias_cie_addr, _ias_cie_endpoint, _zone_id) has no direct v2.x
+  // equivalent and needs SDK guidance.
+  log_v("IAS Zone status change notification is emitted automatically on ZoneStatus attribute change");
+  return true;
 }
 
-void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE) {
-    log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->zone_id, message->response_code);
-    if (message->response_code == ESP_ZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
+void ZigbeeContactSwitch::zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enroll_rsp_message_t *message) {
+  if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_IAS_ZONE) {
+    log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->in.payload.zone_id, message->in.payload.enroll_rsp_code);
+    if (message->in.payload.enroll_rsp_code == EZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
-      esp_zb_zcl_attr_t *ias_cie_attr =
-        esp_zb_zcl_get_attribute(_endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID);
-      if (ias_cie_attr == nullptr || ias_cie_attr->data_p == nullptr) {
+      // v2.x: read the IAS CIE address attribute through the opaque attribute descriptor (replaces the v1
+      // esp_zb_zcl_get_attribute()->data_p access). No lock here: this runs in the stack callback context.
+      ezb_zcl_attr_desc_t ias_cie_attr =
+        ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, EZB_ZCL_STD_MANUF_CODE);
+      if (ias_cie_attr == nullptr || ezb_zcl_attr_desc_get_value(ias_cie_attr, _ias_cie_addr) != EZB_ERR_NONE) {
         return;
       }
-      memcpy(_ias_cie_addr, ias_cie_attr->data_p, sizeof(_ias_cie_addr));
-      _zone_id = message->zone_id;
+      _zone_id = message->in.payload.zone_id;
       _enrolled = true;
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %u not supported for On/Off Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for IAS Zone", message->info.cluster_id);
   }
 }
 
 bool ZigbeeContactSwitch::requestIASZoneEnroll() {
-  esp_zb_zcl_ias_zone_enroll_request_cmd_t enroll_request;
-  enroll_request.zcl_basic_cmd.src_endpoint = _endpoint;
-  enroll_request.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  enroll_request.zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_CONTACT_SWITCH;
-  enroll_request.manuf_code = 0;
+  ezb_zcl_ias_zone_enroll_req_cmd_t enroll_request;
+  memset(&enroll_request, 0, sizeof(enroll_request));
+  // No explicit destination: send to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  ezb_address_set_none(&enroll_request.cmd_ctrl.dst_addr);
+  enroll_request.cmd_ctrl.src_ep = _endpoint;
+  enroll_request.payload.zone_type = EZB_ZCL_IAS_ZONE_ZONE_TYPE_CONTACT_SWITCH;
+  enroll_request.payload.manuf_code = 0;
 
   if (!acquireCommandLock()) {
     return false;
   }
-  esp_zb_zcl_ias_zone_enroll_cmd_req(&enroll_request);  //return transaction sequence number, ignore it
+  ezb_err_t ret = ezb_zcl_ias_zone_enroll_cmd_req(&enroll_request);
   releaseCommandLock();
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to send IAS Zone enroll request: 0x%x", ret);
+    return false;
+  }
   log_v("IAS Zone enroll request sent");
   return true;
 }
 
 bool ZigbeeContactSwitch::restoreIASZoneEnroll() {
   if (!getClusterAttribute(
-        ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
+        EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
       )) {
     log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
     return false;
   }
-  if (!getClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &_zone_id, sizeof(_zone_id))) {
+  if (!getClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID, &_zone_id, sizeof(_zone_id))) {
     log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
     return false;
   }

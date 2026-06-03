@@ -21,7 +21,9 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/temperature_measurement_desc.h"
+#include "ezbee/zcl/cluster/rel_humidity_measurement_desc.h"
 
 class ZigbeeTempSensor : public ZigbeeEP {
 public:

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Class of Zigbee Pressure sensor endpoint inherited from common EP class */
+/* Class of Zigbee Fan Control endpoint inherited from common EP class */
 
 #pragma once
 
@@ -21,26 +21,29 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/basic_desc.h"
+#include "ezbee/zcl/cluster/identify_desc.h"
+#include "ezbee/zcl/cluster/fan_control_desc.h"
 
 // Custom Arduino-friendly enums for fan mode values
 enum ZigbeeFanMode {
-  FAN_MODE_OFF = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_OFF,
-  FAN_MODE_LOW = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_LOW,
-  FAN_MODE_MEDIUM = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_MEDIUM,
-  FAN_MODE_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_HIGH,
-  FAN_MODE_ON = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_ON,
-  FAN_MODE_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_AUTO,
-  FAN_MODE_SMART = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SMART,
+  FAN_MODE_OFF = EZB_ZCL_FAN_CONTROL_FAN_MODE_OFF,
+  FAN_MODE_LOW = EZB_ZCL_FAN_CONTROL_FAN_MODE_LOW,
+  FAN_MODE_MEDIUM = EZB_ZCL_FAN_CONTROL_FAN_MODE_MEDIUM,
+  FAN_MODE_HIGH = EZB_ZCL_FAN_CONTROL_FAN_MODE_HIGH,
+  FAN_MODE_ON = EZB_ZCL_FAN_CONTROL_FAN_MODE_ON,
+  FAN_MODE_AUTO = EZB_ZCL_FAN_CONTROL_FAN_MODE_AUTO,
+  FAN_MODE_SMART = EZB_ZCL_FAN_CONTROL_FAN_MODE_SMART,
 };
 
 // Custom Arduino-friendly enums for fan mode sequence
 enum ZigbeeFanModeSequence {
-  FAN_MODE_SEQUENCE_LOW_MED_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH,
-  FAN_MODE_SEQUENCE_LOW_HIGH = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH,
-  FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO,
-  FAN_MODE_SEQUENCE_LOW_HIGH_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH_AUTO,
-  FAN_MODE_SEQUENCE_ON_AUTO = ESP_ZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_ON_AUTO,
+  FAN_MODE_SEQUENCE_LOW_MED_HIGH = EZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH,
+  FAN_MODE_SEQUENCE_LOW_HIGH = EZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH,
+  FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO = EZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_MED_HIGH_AUTO,
+  FAN_MODE_SEQUENCE_LOW_HIGH_AUTO = EZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_LOW_HIGH_AUTO,
+  FAN_MODE_SEQUENCE_ON_AUTO = EZB_ZCL_FAN_CONTROL_FAN_MODE_SEQUENCE_ON_AUTO,
 };
 
 class ZigbeeFanControl : public ZigbeeEP {
@@ -67,7 +70,7 @@ public:
   }
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
   //callback function to be called on fan mode change
   void (*_on_fan_mode_change)(ZigbeeFanMode mode);
   void fanModeChanged();

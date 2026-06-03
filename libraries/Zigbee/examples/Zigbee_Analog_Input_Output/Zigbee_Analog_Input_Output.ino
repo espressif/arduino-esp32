@@ -63,13 +63,13 @@ void setup() {
 
   // Set up analog input
   zbAnalogDevice.addAnalogInput();
-  zbAnalogDevice.setAnalogInputApplication(ESP_ZB_ZCL_AI_POWER_IN_WATTS_CONSUMPTION);
+  zbAnalogDevice.setAnalogInputApplication(EZB_ZCL_AI_POWER_IN_WATTS_CONSUMPTION);
   zbAnalogDevice.setAnalogInputDescription("Power Consumption (Watts)");
   zbAnalogDevice.setAnalogInputResolution(0.01);
 
   // Set up analog output
   zbAnalogDevice.addAnalogOutput();
-  zbAnalogDevice.setAnalogOutputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogDevice.setAnalogOutputApplication(EZB_ZCL_AI_RPM_OTHER);
   zbAnalogDevice.setAnalogOutputDescription("Fan Speed (RPM)");
   zbAnalogDevice.setAnalogOutputResolution(1);
 
@@ -81,19 +81,19 @@ void setup() {
 
   // Set up analog input
   zbAnalogTemp.addAnalogInput();
-  zbAnalogTemp.setAnalogInputApplication(ESP_ZB_ZCL_AI_TEMPERATURE_OTHER);
+  zbAnalogTemp.setAnalogInputApplication(EZB_ZCL_AI_TEMPERATURE_OTHER);
   zbAnalogTemp.setAnalogInputDescription("Temperature");
   zbAnalogTemp.setAnalogInputResolution(0.1);
 
   // Set up analog input
   zbAnalogFan.addAnalogInput();
-  zbAnalogFan.setAnalogInputApplication(ESP_ZB_ZCL_AI_RPM_OTHER);
+  zbAnalogFan.setAnalogInputApplication(EZB_ZCL_AI_RPM_OTHER);
   zbAnalogFan.setAnalogInputDescription("RPM");
   zbAnalogFan.setAnalogInputResolution(1);
 
   // Set up analog input
   zbAnalogPercent.addAnalogInput();
-  zbAnalogPercent.setAnalogInputApplication(ESP_ZB_ZCL_AI_PERCENTAGE_OTHER);
+  zbAnalogPercent.setAnalogInputApplication(EZB_ZCL_AI_PERCENTAGE_OTHER);
   zbAnalogPercent.setAnalogInputDescription("Percentage");
   zbAnalogPercent.setAnalogInputResolution(0.01);
 
