@@ -79,6 +79,10 @@ static uint8_t s_consecutiveNoAck = 0;  // back-to-back samples with no ACK
 // ot_cmd_return_t carries the parsed error code/message for logging.
 static bool otCliCmd(const char *cmd) {
   ot_cmd_return_t rc;
+  // otExecCommand() uses Stream::readBytesUntil(), which depends on the current
+  // Stream timeout. The sketch adjusts the timeout frequently while parsing ACKs,
+  // so force a known-safe value for CLI control commands.
+  OThreadCLI.setTimeout(1000);
   bool ok = otExecCommand(cmd, nullptr, &rc);
   if (!ok) {
     Serial.printf("CLI ERROR: '%s' -> %d %s\n", cmd, rc.errorCode, rc.errorMessage.c_str());
