@@ -167,6 +167,39 @@ The OpenThread library requires ESP32 SoCs with IEEE 802.15.4 radio support:
 
 **Note:** Thread support must be enabled in the ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``). This is done automatically when using the ESP32 Arduino OpenThread library.
 
+OpenThread Examples
+-------------------
+
+The OpenThread library includes CLI-based and Native API examples demonstrating Thread network setup, CLI command automation, CoAP, UDP, and simple IoT device workflows. All examples are available in the `ESP Arduino GitHub repository <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples>`_.
+
+**CLI Examples:**
+
+* **Simple CLI** - Starts the OpenThread CLI console over Serial for interactive command-line testing. `View Simple CLI code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleCLI>`_
+* **Simple Node** - Demonstrates a minimal CLI-driven Thread node setup. `View Simple Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleNode>`_
+* **Thread Scan** - Uses OpenThread CLI commands to scan and report nearby Thread networks. `View Thread Scan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_
+* **onReceive** - Shows how to handle asynchronous CLI output using the ``OpenThreadCLI`` receive callback. `View onReceive code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/onReceive>`_
+
+**CLI Simple Thread Network Examples:**
+
+* **Leader Node** - Creates and starts a Thread network using CLI commands. `View CLI Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode>`_
+* **Router Node** - Joins the CLI-created Thread network as a router-capable node. `View CLI Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode>`_
+* **Extended Router Node** - Demonstrates a CLI-driven router node with extended network behavior. `View CLI Extended Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode>`_
+
+**CLI CoAP Examples:**
+
+* **CoAP Lamp** - Implements a CoAP-controlled lamp using OpenThread CLI commands. `View CoAP Lamp code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp>`_
+* **CoAP Switch** - Sends CoAP control commands to the CoAP lamp example over Thread. `View CoAP Switch code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch>`_
+
+**CLI UDP Examples:**
+
+* **UDP Sensor Collector** - Creates a Thread Leader and UDP sink that receives sensor telemetry and sends acknowledgments. `View UDP Sensor Collector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector>`_
+* **UDP Sensor Node** - Creates a sensor node, optionally configured as a sleepy child, that sends UDP telemetry to the collector. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node>`_
+
+**Native API Examples:**
+
+* **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_
+* **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_
+
 Common Problems and Issues
 --------------------------
 
