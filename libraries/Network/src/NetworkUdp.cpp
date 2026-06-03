@@ -274,6 +274,13 @@ int NetworkUDP::endPacket() {
 }
 
 size_t NetworkUDP::write(uint8_t data) {
+  // tx_buffer is only allocated by begin()/beginPacket(). It is NULL before the
+  // first successful beginPacket(), after stop() frees it, or when beginPacket()
+  // failed (e.g. out of memory) and its return value was ignored. Guard against
+  // dereferencing a NULL buffer, which would otherwise crash the device.
+  if (tx_buffer == NULL) {
+    return 0;
+  }
   if (tx_buffer_len == 1460) {
     endPacket();
     tx_buffer_len = 0;
