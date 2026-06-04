@@ -9,20 +9,20 @@ SCRIPTS_DIR="./.github/scripts"
 OUTPUT_DIR="$GITHUB_WORKSPACE/build"
 PACKAGE_JSON_DEV="package_esp32_dev_index.json"
 PACKAGE_JSON_REL="package_esp32_index.json"
-
-# Get release info
 RELEASE_PRE="${RELEASE_PRE:-false}"
+
+source "${SCRIPTS_DIR}/env.sh"
 
 # Convert path to absolute and handle Windows paths for file:// URLs
 function get_file_url {
     local file_path="$1"
 
-    # Get absolute path
-    if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-        # On Windows, convert to absolute path and use forward slashes
-        abs_path=$(cd "$(dirname "$file_path")" && pwd -W)/$(basename "$file_path") 2>/dev/null || echo "$file_path"
-        # Ensure forward slashes and proper file:// format for Windows
-        abs_path="${abs_path//\\//}"
+    if [[ "$OS_IS_WINDOWS" == "1" ]]; then
+        # On Windows use cygpath to produce a proper Windows-style path that
+        # native binaries (arduino-cli) can open.  cygpath is always available
+        # in Git Bash / MSYS2 and handles every quirk of drive-letter paths.
+        local abs_path
+        abs_path=$(cygpath -m "$(realpath "$file_path" 2>/dev/null || echo "$file_path")")
         echo "file:///$abs_path"
     else
         # On Unix systems, just ensure absolute path
@@ -34,9 +34,31 @@ function get_file_url {
     fi
 }
 
+# Verify that the installed esp32 core version matches the release tag.
+# GITHUB_REF_NAME is set automatically by GitHub Actions for release events.
+# Strip a leading 'v' to normalise tags like v3.3.9 → 3.3.9.
+function verify_installed_version {
+    local expected_version="${GITHUB_REF_NAME#v}"
+
+    if [ -z "$expected_version" ]; then
+        echo "WARNING: GITHUB_REF_NAME is not set; skipping version check"
+        return 0
+    fi
+
+    local installed_version
+    installed_version=$(arduino-cli core list 2>/dev/null | awk '/^esp32:esp32[[:space:]]/{print $2}')
+
+    if [ "$installed_version" != "$expected_version" ]; then
+        echo "ERROR: Expected esp32:esp32@$expected_version but found esp32:esp32@${installed_version:-<none>}"
+        echo "       The local package JSON was likely not loaded properly."
+        return 1
+    fi
+    echo "✓ Verified esp32:esp32@$expected_version is installed"
+}
+
 echo "Installing arduino-cli ..."
 # Set up PATH based on OS
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
+if [[ "$OS_IS_WINDOWS" == "1" ]]; then
     export PATH="$HOME/bin:$PATH"
 else
     export PATH="/home/runner/bin:$HOME/bin:$PATH"
@@ -60,6 +82,8 @@ if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install esp32 ($?)"
     exit 1
 fi
+
+verify_installed_version || exit 1
 
 echo "Compiling example ..."
 arduino-cli compile --fqbn esp32:esp32:esp32 "$GITHUB_WORKSPACE"/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino
@@ -91,6 +115,8 @@ if [ "$RELEASE_PRE" == "false" ]; then
         echo "ERROR: Failed to install esp32 ($?)"
         exit 1
     fi
+
+    verify_installed_version || exit 1
 
     echo "Compiling example ..."
     arduino-cli compile --fqbn esp32:esp32:esp32 "$GITHUB_WORKSPACE"/libraries/ESP32/examples/CI/CIBoardsTest/CIBoardsTest.ino

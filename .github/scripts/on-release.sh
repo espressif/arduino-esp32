@@ -184,15 +184,23 @@ cp -f  "$GITHUB_WORKSPACE/package.json"                     "$PKG_DIR/"
 cp -f  "$GITHUB_WORKSPACE/programmers.txt"                  "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/cores"                            "$PKG_DIR/"
 cp -Rf "$GITHUB_WORKSPACE/libraries"                        "$PKG_DIR/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.exe"                 "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/espota.py"                  "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.py"           "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_esp32part.exe"          "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.py"    "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/gen_insights_package.exe"   "$PKG_DIR/tools/"
+
+# Copy every tools/*.py and tools/*.exe at the repository root (not subdirs).
+# Dev-only scripts are skipped by name prefix (toolchain bootstrap / CI / unused).
+echo "Copying tools root scripts ..."
+shopt -s nullglob
+for tool_file in "$GITHUB_WORKSPACE"/tools/*.py "$GITHUB_WORKSPACE"/tools/*.exe; do
+    tool_base="${tool_file##*/}"
+    case "$tool_base" in
+        get.*|arduino_cmake.*) continue ;;
+        *) echo "Copying $tool_file" ;;
+    esac
+    cp -f "$tool_file" "$PKG_DIR/tools/"
+done
+shopt -u nullglob
+
 cp -Rf "$GITHUB_WORKSPACE/tools/partitions"                 "$PKG_DIR/tools/"
 cp -Rf "$GITHUB_WORKSPACE/tools/ide-debug"                  "$PKG_DIR/tools/"
-cp -f  "$GITHUB_WORKSPACE/tools/pioarduino-build.py"        "$PKG_DIR/tools/"
 
 # Remove unnecessary files in the package folder
 echo "Cleaning up folders ..."
