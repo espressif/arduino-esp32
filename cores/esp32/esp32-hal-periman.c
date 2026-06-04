@@ -121,6 +121,20 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3:  return "ESP_HOSTED_SDIO_D3";
     case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST: return "ESP_HOSTED_SDIO_RST";
 #endif
+#if SOC_LCDCAM_CAM_SUPPORTED
+    case ESP32_BUS_TYPE_LCDCAM_CAM_VSYNC: return "LCDCAM_CAM_VSYNC";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_HSYNC: return "LCDCAM_CAM_HSYNC";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_PCLK:  return "LCDCAM_CAM_PCLK";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_XCLK:  return "LCDCAM_CAM_XCLK";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D0:    return "LCDCAM_CAM_D0";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D1:    return "LCDCAM_CAM_D1";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D2:    return "LCDCAM_CAM_D2";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D3:    return "LCDCAM_CAM_D3";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D4:    return "LCDCAM_CAM_D4";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D5:    return "LCDCAM_CAM_D5";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D6:    return "LCDCAM_CAM_D6";
+    case ESP32_BUS_TYPE_LCDCAM_CAM_D7:    return "LCDCAM_CAM_D7";
+#endif
     default: return "UNKNOWN";
   }
 }

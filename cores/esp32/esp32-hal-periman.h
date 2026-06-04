@@ -118,6 +118,20 @@ typedef enum {
   ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3,   // IO is used as ESP-Hosted SDIO D3 pin
   ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST,  // IO is used as ESP-Hosted slave RESET pin
 #endif
+#if SOC_LCDCAM_CAM_SUPPORTED
+  ESP32_BUS_TYPE_LCDCAM_CAM_VSYNC,  // IO is used as LCDCAM CAM VSYNC pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_HSYNC,  // IO is used as LCDCAM CAM HSYNC/DE pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_PCLK,   // IO is used as LCDCAM CAM PCLK pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_XCLK,   // IO is used as LCDCAM CAM XCLK pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D0,     // IO is used as LCDCAM CAM D0 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D1,     // IO is used as LCDCAM CAM D1 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D2,     // IO is used as LCDCAM CAM D2 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D3,     // IO is used as LCDCAM CAM D3 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D4,     // IO is used as LCDCAM CAM D4 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D5,     // IO is used as LCDCAM CAM D5 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D6,     // IO is used as LCDCAM CAM D6 pin
+  ESP32_BUS_TYPE_LCDCAM_CAM_D7,     // IO is used as LCDCAM CAM D7 pin
+#endif
   ESP32_BUS_TYPE_MAX
 } peripheral_bus_type_t;
 

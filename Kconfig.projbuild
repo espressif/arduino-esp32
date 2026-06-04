@@ -277,6 +277,11 @@ config ARDUINO_SELECTIVE_ESP_SR
     depends on ARDUINO_SELECTIVE_COMPILATION
     default y
 
+config ARDUINO_SELECTIVE_ESP_Video
+    bool "Enable ESP-Video"
+    depends on ARDUINO_SELECTIVE_COMPILATION
+    default y
+
 config ARDUINO_SELECTIVE_EEPROM
     bool "Enable EEPROM"
     depends on ARDUINO_SELECTIVE_COMPILATION
