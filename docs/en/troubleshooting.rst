@@ -84,6 +84,175 @@ Here are some steps that you can try:
 
 In some development boards, you can try adding the reset delay circuit, as described in the *Power-on Sequence* section on the `ESP32 Hardware Design Guidelines <https://www.espressif.com/sites/default/files/documentation/esp32_hardware_design_guidelines_en.pdf>`_ to get into the download mode automatically.
 
+Arduino IDE 1.x: ``{placeholder}`` expansion in upload recipes
+**************************************************************
+
+This section documents how **Arduino IDE 1.8.x** (Java IDE) expands properties in ``platform.txt`` when you **Upload** a sketch. It explains why some patterns that work with **arduino-cli** or **Arduino IDE 2.x** fail on IDE 1.x, and records approaches we tried while wiring the ``flasher.py`` upload wrapper.
+
+This does **not** apply to the compile step: builds use **arduino-builder**, which merges ``platform.txt`` and ``boards.txt`` much like arduino-cli. Only the **upload** step uses the Java path described below.
+
+How IDE 1.8.x builds the upload command
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On upload, ``SerialUploader`` (Arduino IDE 1.8.19) assembles a property map and runs ``StringReplacer`` on ``tools.<upload.tool>.upload.pattern``:
+
+1. Start from ``PreferencesData.getMap()`` (IDE settings and a few ``runtime.*`` keys, such as ``runtime.platform.path``).
+2. Merge **board** preferences from ``boards.txt`` (including menu selections), e.g. ``upload.speed``, ``build.mcu``.
+3. Merge **only the active upload tool** subtree: ``targetPlatform.getTool(upload.tool)``, which strips the ``tools.<tool>.`` prefix.
+
+   Example: ``tools.esptool_py.cmd`` becomes the short key ``{cmd}`` inside the pattern.
+
+4. Replace ``{name}`` tokens in the pattern for up to 10 passes (``StringReplacer.formatAndSplit``).
+
+So at upload time the recipe sees **board prefs + one tool's shorthands + runtime keys**, not the full ``platform.txt`` file.
+
+What works on IDE 1.x (reference patterns)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+These patterns are known to expand correctly:
+
+* **Board-scoped** names from ``boards.txt``: ``{upload.speed}``, ``{upload.flags}``, ``{build.mcu}``, ``{upload.erase_cmd}``, etc.
+* **Runtime** keys set when you select the board/port: ``{runtime.platform.path}``, ``{serial.port}``, ``{build.path}`` (set on upload).
+* **Tool shorthands** for the **selected** ``upload.tool`` only, e.g. ``{path}``, ``{cmd}``, ``{upload.pattern_args}``, ``{network_cmd}`` (from ``tools.esptool_py.network_cmd``).
+
+The core uses ``upload.flash_prefix`` the same way as ``network_cmd``: define it under each upload tool that needs the flasher wrapper, then reference ``{upload.flash_prefix}`` in ``upload.pattern`` / ``program.pattern``:
+
+.. code-block:: properties
+
+   tools.esptool_py.upload.flash_prefix=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.flash_prefix.windows="{runtime.platform.path}\tools\flasher.exe"
+   tools.esptool_py.upload.pattern={upload.flash_prefix} --esptool "{path}/{cmd}" --build-dir "{build.path}" {upload.pattern_args}
+   tools.esptool_py.program.pattern={upload.flash_prefix} --esptool "{path}/{cmd}" --build-dir "{build.path}" {program.pattern_args}
+
+A second upload tool (``esptool_py_app_only``, used e.g. by the kode dot board) needs its **own** ``upload.flash_prefix`` because IDE 1.x never loads another tool's keys during upload.
+
+Approaches that do **not** work on IDE 1.x (and why)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following are real configurations we tried for a single shared flasher command. They may work with arduino-cli or IDE 2.x but fail on IDE 1.8.x upload for the reasons given.
+
+``{tools.flasher.cmd}`` or a global ``tools.flasher.cmd`` property
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   tools.flasher.cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.pattern={tools.flasher.cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** Upload runs a program literally named ``{tools.flasher.cmd}`` (file not found).
+
+**Why:** Only keys from the **active** tool subtree are merged as short names. Top-level ``tools.flasher.*`` is not part of ``getTool("esptool_py")``. The full name ``tools.flasher.cmd`` is not in the upload property map at all.
+
+``{flasher.cmd}`` with ``tools.esptool_py.flasher.cmd`` duplicated on every upload tool
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   tools.esptool_py.flasher.cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py_app_only.flasher.cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.pattern={flasher.cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** Works on IDE 1.x, but the flasher command must be **copied once per upload tool** (and per OS variant).
+
+**Why:** Same as above: each ``upload.tool`` value only exposes **its** ``tools.<that_tool>.*`` keys. There is no cross-tool alias.
+
+``{build.flasher.cmd}`` defined once in ``platform.txt``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   build.flasher.cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.pattern={build.flasher.cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** Unexpanded ``{build.flasher.cmd}`` in the executed command (or upload failure).
+
+**Why:** ``getBoardPreferences()`` only contains ``build.*`` entries from **boards.txt** (and menus), not arbitrary ``build.*`` defaults from ``platform.txt``. Unless every board defines ``build.flasher.cmd``, the key is missing at upload time.
+
+``{upload.flasher_cmd}`` defined once at the top of ``platform.txt``
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   upload.flasher_cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.pattern={upload.flasher_cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** Same as ``build.flasher.cmd``: placeholder not expanded.
+
+**Why:** Platform-level ``upload.*`` keys are not merged into board preferences. Only ``upload.*`` from **boards.txt** (e.g. ``esp32.upload.speed``) appear in the upload map—compare with ``{upload.speed}``, which works because boards define it.
+
+Tool alias to a platform property: ``tools.esptool_py.upload.flasher_cmd={upload.flasher_cmd}``
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   upload.flasher_cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   tools.esptool_py.upload.flasher_cmd={upload.flasher_cmd}
+   tools.esptool_py.upload.pattern={upload.flasher_cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** ``{upload.flasher_cmd}`` stays literal in the final command.
+
+**Why:** After step 3 above, the tool map contains ``upload.flasher_cmd={upload.flasher_cmd}`` (a self-reference). The upload map still does **not** contain the resolved ``upload.flasher_cmd`` from the top of ``platform.txt``, so ``StringReplacer`` never substitutes the Python path. arduino-cli avoids this by expanding the whole platform when loading properties; IDE 1.x upload does not.
+
+``kodedot.upload.flasher_cmd`` in ``boards.txt`` (board-only definition)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   kodedot.upload.flasher_cmd=python3 "{runtime.platform.path}/tools/flasher.py"
+   kodedot.upload.tool=esptool_py_app_only
+   tools.esptool_py_app_only.upload.pattern={upload.flasher_cmd} --esptool "{path}/{cmd}" ...
+
+**Result:** Can work for that **one** board.
+
+**Why:** Board keys are merged in step 2. This only fixes boards that define the property; it duplicates the flasher path in ``boards.txt`` instead of ``platform.txt`` and does not help other boards or tools.
+
+Inlining ``{runtime.platform.path}/tools/flasher.py`` in every ``upload.pattern``
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+.. code-block:: properties
+
+   tools.esptool_py.upload.pattern=python3 "{runtime.platform.path}/tools/flasher.py" --esptool "{path}/{cmd}" ...
+   tools.esptool_py.program.pattern=python3 "{runtime.platform.path}/tools/flasher.py" --esptool "{path}/{cmd}" ...
+   tools.esptool_py_app_only.upload.pattern=python3 "{runtime.platform.path}/tools/flasher.py" --esptool "{path}/{cmd}" ...
+
+**Result:** Works on IDE 1.x.
+
+**Why:** ``{runtime.platform.path}`` **is** in the upload map. The downside is repeating the same flasher invocation in every pattern (and ``.windows`` variants), which is why ``upload.flash_prefix`` is preferred within each tool.
+
+Summary
+^^^^^^^
+
++-----------------------------+------------------+-------------------------------+
+| Approach                    | IDE 1.8.x upload | Note                          |
++=============================+==================+===============================+
+| ``{tools.*}`` global tool   | No               | Not in active tool map        |
++-----------------------------+------------------+-------------------------------+
+| ``{build.*}`` in platform   | No               | Board map has no platform     |
+| only                        |                  | ``build.*`` defaults          |
++-----------------------------+------------------+-------------------------------+
+| ``{upload.*}`` in platform  | No               | Board map has no platform     |
+| only                        |                  | ``upload.*`` defaults         |
++-----------------------------+------------------+-------------------------------+
+| Tool alias to platform key  | No               | Alias value never resolved    |
++-----------------------------+------------------+-------------------------------+
+| ``tools.<tool>.upload.*``   | Yes              | One definition per upload tool|
+| shorthand                   |                  |                               |
++-----------------------------+------------------+-------------------------------+
+| ``{runtime.platform.path}`` | Yes              | Inline in pattern             |
+| inline                      |                  |                               |
++-----------------------------+------------------+-------------------------------+
+| Board ``upload.*`` in       | Yes              | Per-board duplication         |
+| ``boards.txt``              |                  |                               |
++-----------------------------+------------------+-------------------------------+
+
+To have **one** flasher definition for the whole core you would need either a single upload tool for all boards or a change in IDE 1.x (not something this core can assume). The maintained approach is ``upload.flash_prefix`` per upload tool, mirroring ``network_cmd``.
+
+A small script in the core tree simulates IDE 1.8.19 upload expansion for regression checks (run from the ``esp32`` hardware folder):
+
+.. code-block:: bash
+
+   python3 .github/scripts/ci_testing/test_ide1_upload_pattern.py
+
 Hardware
 --------
 
