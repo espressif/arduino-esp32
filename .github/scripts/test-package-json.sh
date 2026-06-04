@@ -6,12 +6,17 @@
 set -e
 
 SCRIPTS_DIR="./.github/scripts"
+
+source "${SCRIPTS_DIR}/env.sh"
+
 OUTPUT_DIR="$GITHUB_WORKSPACE/build"
 PACKAGE_JSON_DEV="package_esp32_dev_index.json"
 PACKAGE_JSON_REL="package_esp32_index.json"
 RELEASE_PRE="${RELEASE_PRE:-false}"
 
-source "${SCRIPTS_DIR}/env.sh"
+# Strip a leading 'v' to normalise tags like v3.3.9 → 3.3.9.
+# Empty when run outside of a GitHub Actions release event.
+RELEASE_VERSION="${GITHUB_REF_NAME#v}"
 
 # Convert path to absolute and handle Windows paths for file:// URLs
 function get_file_url {
@@ -35,12 +40,8 @@ function get_file_url {
 }
 
 # Verify that the installed esp32 core version matches the release tag.
-# GITHUB_REF_NAME is set automatically by GitHub Actions for release events.
-# Strip a leading 'v' to normalise tags like v3.3.9 → 3.3.9.
 function verify_installed_version {
-    local expected_version="${GITHUB_REF_NAME#v}"
-
-    if [ -z "$expected_version" ]; then
+    if [ -z "$RELEASE_VERSION" ]; then
         echo "WARNING: GITHUB_REF_NAME is not set; skipping version check"
         return 0
     fi
@@ -48,12 +49,12 @@ function verify_installed_version {
     local installed_version
     installed_version=$(arduino-cli core list 2>/dev/null | awk '/^esp32:esp32[[:space:]]/{print $2}')
 
-    if [ "$installed_version" != "$expected_version" ]; then
-        echo "ERROR: Expected esp32:esp32@$expected_version but found esp32:esp32@${installed_version:-<none>}"
+    if [ "$installed_version" != "$RELEASE_VERSION" ]; then
+        echo "ERROR: Expected esp32:esp32@$RELEASE_VERSION but found esp32:esp32@${installed_version:-<none>}"
         echo "       The local package JSON was likely not loaded properly."
         return 1
     fi
-    echo "✓ Verified esp32:esp32@$expected_version is installed"
+    echo "✓ Verified esp32:esp32@$RELEASE_VERSION is installed"
 }
 
 echo "Installing arduino-cli ..."
@@ -77,7 +78,7 @@ echo "==========================================="
 echo "Installing esp32 core ..."
 package_json_url=$(get_file_url "$OUTPUT_DIR/$PACKAGE_JSON_DEV")
 echo "Package JSON URL: $package_json_url"
-arduino-cli core install esp32:esp32 --additional-urls "$package_json_url"
+arduino-cli core install "esp32:esp32${RELEASE_VERSION:+@$RELEASE_VERSION}" --additional-urls "$package_json_url"
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to install esp32 ($?)"
     exit 1
@@ -110,7 +111,7 @@ if [ "$RELEASE_PRE" == "false" ]; then
     echo "Installing esp32 core ..."
     package_json_url=$(get_file_url "$OUTPUT_DIR/$PACKAGE_JSON_REL")
     echo "Package JSON URL: $package_json_url"
-    arduino-cli core install esp32:esp32 --additional-urls "$package_json_url"
+    arduino-cli core install "esp32:esp32${RELEASE_VERSION:+@$RELEASE_VERSION}" --additional-urls "$package_json_url"
     if [ $? -ne 0 ]; then
         echo "ERROR: Failed to install esp32 ($?)"
         exit 1
