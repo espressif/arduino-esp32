@@ -58533,7 +58533,7 @@ ozobot_drvkit.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_s
 
 ##############################################################
 
-canipulator_v1.name=CANipulator V2 (ESP32-C6)
+canipulator_v1.name=CANipulator V1 (ESP32-C6)
 
 canipulator_v1.bootloader.tool=esptool_py
 canipulator_v1.bootloader.tool.default=esptool_py
@@ -58556,7 +58556,7 @@ canipulator_v1.build.tarch=riscv32
 canipulator_v1.build.target=esp
 canipulator_v1.build.mcu=esp32c6
 canipulator_v1.build.core=esp32
-canipulator_v1.build.variant=canipulator_v1
+canipulator_v1.build.variant=CANipulator_V1
 canipulator_v1.build.board=CANIPULATOR_V1
 canipulator_v1.build.bootloader_addr=0x0
 
@@ -58739,7 +58739,7 @@ canipulator_v2.build.tarch=riscv32
 canipulator_v2.build.target=esp
 canipulator_v2.build.mcu=esp32c5
 canipulator_v2.build.core=esp32
-canipulator_v2.build.variant=canipulator_v2
+canipulator_v2.build.variant=CANipulator_V2
 canipulator_v2.build.board=CANIPULATOR_V2
 canipulator_v2.build.bootloader_addr=0x2000
 
