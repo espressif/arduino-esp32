@@ -229,11 +229,7 @@ collector application is gone, so it is not a reliable signal that data was
 
 ### "It still shows ACKED after I turned the collector off"
 
-Every ACK echoes the **exact sequence number** of the frame just sent
-(`OK,<id>,<seq>`). The collector builds that string only when it actually
-receives that specific frame, so if the node keeps printing `status=ACKED` for
-brand-new sequence numbers, a device really is receiving and answering them - a
-powered-off board cannot invent new sequence numbers. Check:
+When the node prints `status=ACKED`, the collector’s ACK carried the same sequence number as the frame just sent (`OK,<id>,<collectorLastSeq>` where `collectorLastSeq == seq`). The collector can only generate such an ACK after actually receiving that datagram, so if the node keeps printing `status=ACKED` for brand-new sequence numbers, a device really is receiving and answering them — a powered-off board cannot invent new sequence numbers. Check:
 
 - The collector is **truly unpowered**, not just reset or with its serial monitor
   closed. Over USB the board stays powered and keeps ACKing; a reset makes it
