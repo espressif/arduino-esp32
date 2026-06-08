@@ -7,8 +7,8 @@ About
 
 The OpenThread library provides support for creating Thread network devices using ESP32 SoCs with IEEE 802.15.4 radio support. The library offers two different programming interfaces for interacting with the OpenThread stack:
 
-* **Stream-based CLI enhanced with Helper Functions API**: Command-line interface helper functions that send OpenThread CLI commands and parse responses
-* **Classes API**: Object-oriented classes that directly call OpenThread API functions
+* **Stream-based CLI enhanced with Helper Functions API**: Command-line interface helper functions that send OpenThread CLI commands and parse responses.
+* **Classes API**: Object-oriented classes that directly call OpenThread API functions.
 
 The OpenThread library is built on top of `ESP OpenThread <https://github.com/espressif/esp-openthread>`_ and provides a high-level Arduino-style interface for creating Thread devices.
 
@@ -167,6 +167,39 @@ The OpenThread library requires ESP32 SoCs with IEEE 802.15.4 radio support:
 
 **Note:** Thread support must be enabled in the ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``). This is done automatically when using the ESP32 Arduino OpenThread library.
 
+OpenThread Examples
+-------------------
+
+The OpenThread library includes CLI-based and Native API examples demonstrating Thread network setup, CLI command automation, CoAP, UDP, and simple IoT device workflows. All examples are available in the `ESP Arduino GitHub repository <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples>`_.
+
+**CLI Examples:**
+
+* **Simple CLI** - Starts the OpenThread CLI console over Serial for interactive command-line testing. `View Simple CLI code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleCLI>`_
+* **Simple Node** - Demonstrates a minimal CLI-driven Thread node setup. `View Simple Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleNode>`_
+* **Thread Scan** - Uses OpenThread CLI commands to scan and report nearby Thread networks. `View Thread Scan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_
+* **onReceive** - Shows how to handle asynchronous CLI output using the ``OpenThreadCLI`` receive callback. `View onReceive code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/onReceive>`_
+
+**CLI Simple Thread Network Examples:**
+
+* **Leader Node** - Creates and starts a Thread network using CLI commands. `View CLI Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode>`_
+* **Router Node** - Joins the CLI-created Thread network as a router-capable node. `View CLI Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode>`_
+* **Extended Router Node** - Demonstrates a CLI-driven router node with extended network behavior. `View CLI Extended Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode>`_
+
+**CLI CoAP Examples:**
+
+* **CoAP Lamp** - Implements a CoAP-controlled lamp using OpenThread CLI commands. `View CoAP Lamp code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp>`_
+* **CoAP Switch** - Sends CoAP control commands to the CoAP lamp example over Thread. `View CoAP Switch code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch>`_
+
+**CLI UDP Examples:**
+
+* **UDP Sensor Collector** - Creates a Thread Leader and UDP sink that receives sensor telemetry and sends acknowledgments. `View UDP Sensor Collector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector>`_
+* **UDP Sensor Node** - Creates a sensor node, optionally configured as a sleepy child, that sends UDP telemetry to the collector. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node>`_
+
+**Native API Examples:**
+
+* **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_
+* **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_
+
 Common Problems and Issues
 --------------------------
 
@@ -177,34 +210,40 @@ Common Issues
 *************
 
 **Thread network not starting**
-  * Ensure the device has IEEE 802.15.4 radio support (ESP32-H2, ESP32-C6, ESP32-C5)
-  * Check that Thread is enabled in ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``)
-  * Verify that ``OpenThread::begin()`` is called before using Thread functions
-  * Check Serial Monitor for initialization errors
+  * Ensure the device has IEEE 802.15.4 radio support (ESP32-H2, ESP32-C6, ESP32-C5).
+  * Check that Thread is enabled in ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``).
+  * Verify that ``OpenThread::begin()`` is called before using Thread functions.
+  * Check Serial Monitor for initialization errors.
 
 **Device not joining network**
-  * Verify the operational dataset parameters (network name, network key, channel, PAN ID)
-  * Ensure the device is within range of the Thread network
-  * Check that the network key and extended PAN ID match the network you're trying to join
-  * Verify the device role is not "Detached"
+  * Verify the operational dataset parameters (network name, network key, channel, PAN ID).
+  * Ensure the device is within range of the Thread network.
+  * Check that the network key and extended PAN ID match the network you're trying to join.
+  * Verify the device role is not "Detached".
 
 **CLI commands not working**
-  * Ensure ``OpenThreadCLI::begin()`` is called before using CLI functions
-  * Check that ``OpenThreadCLI::startConsole()`` is called with a valid Stream
-  * Verify the CLI is properly initialized and running
-  * Check Serial Monitor for CLI initialization errors
+  * Ensure ``OpenThreadCLI::begin()`` is called before using CLI functions.
+  * Check that ``OpenThreadCLI::startConsole()`` is called with a valid Stream.
+  * Verify the CLI is properly initialized and running.
+  * Check Serial Monitor for CLI initialization errors.
 
 **Address not available**
-  * Wait for the device to join the Thread network (role should be Child, Router, or Leader)
-  * Check that the network interface is up using ``networkInterfaceUp()``
-  * Verify the device has obtained a mesh-local address
-  * Check network connectivity using ``getRloc()`` or ``getMeshLocalEid()``
+  * Wait for the device to join the Thread network (role should be Child, Router, or Leader).
+  * Check that the network interface is up using ``networkInterfaceUp()``.
+  * Verify the device has obtained a mesh-local address.
+  * Check network connectivity using ``getRloc()`` or ``getMeshLocalEid()``.
 
 **Dataset not applying**
-  * Ensure all required dataset parameters are set (network name, network key, channel)
-  * Verify the dataset is valid before applying
-  * Check that OpenThread is started before applying the dataset
-  * Verify the dataset parameters match the target network
+  * Ensure all required dataset parameters are set (network name, network key, channel).
+  * Verify the dataset is valid before applying.
+  * Check that OpenThread is started before applying the dataset.
+  * Verify the dataset parameters match the target network.
+
+**Unexpected network after reboot**
+  * OpenThread persists the committed Active Operational Dataset in NVS.
+  * After ``OpenThread::begin()`` returns, use ``OThread.hasActiveDataset()`` to check whether a dataset was restored from NVS.
+  * If a dataset is present, bring the interface up and start Thread to resume the existing network.
+  * If you want to apply changed dataset constants, clear the stored dataset first (for example with the OpenThread CLI ``factoryreset`` command).
 
 Initialization Order
 ********************

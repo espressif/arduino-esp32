@@ -1,3 +1,4 @@
+# Ignore toolchain directories
 tools/esp32-arduino-libs
 tools/xtensa-esp-elf
 tools/xtensa-esp32-elf
@@ -20,8 +21,9 @@ tools/openocd-esp32
 .*.swo
 *~
 
-# Ignore build folder
+# Ignore build and temporary files
 /build
+*.tmp
 
 # Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/

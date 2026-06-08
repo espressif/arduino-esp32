@@ -81,7 +81,11 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
       cliResp[i] = '\0';
     }
   }
-  log_d("CMD[%s %s] Resp[%s]", cmd, arg, cliResp);
+  if (arg == NULL) {
+    log_d("CMD[%s] Resp[%s]", cmd, cliResp);
+  } else {
+    log_d("CMD[%s %s] Resp[%s]", cmd, arg, cliResp);
+  }
   // initial returnCode is success values
   if (returnCode) {
     returnCode->errorCode = 0;

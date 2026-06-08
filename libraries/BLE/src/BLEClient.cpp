@@ -111,9 +111,11 @@ BLEClient::BLEClient() {
   m_conn_id = ESP_GATT_IF_NONE;
   m_haveServices = false;
   m_isConnected = false;  // Initially, we are flagged as not connected.
+  m_gattAppId = BLEDevice::getNextAppId();
 
 #if defined(CONFIG_BLUEDROID_ENABLED)
   m_gattc_if = ESP_GATT_IF_NONE;
+  BLEDevice::addPeerDevice(this, true, m_gattAppId);
 #endif
 
 #if defined(CONFIG_NIMBLE_ENABLED)
@@ -137,8 +139,24 @@ BLEClient::BLEClient() {
  * @brief Destructor.
  */
 BLEClient::~BLEClient() {
-  // We may have allocated service references associated with this client.  Before we are finished
-  // with the client, we must release resources.
+#if defined(CONFIG_BLUEDROID_ENABLED)
+  BLEDevice::removePeerDevice(m_gattAppId, true);
+  if (m_gattc_if != ESP_GATT_IF_NONE) {
+    esp_ble_gattc_app_unregister(m_gattc_if);
+    m_gattc_if = ESP_GATT_IF_NONE;
+  }
+#elif defined(CONFIG_NIMBLE_ENABLED)
+  // NimBLE passes `this` directly to ble_gap_connect as the callback arg.
+  // We must keep the object alive until the disconnect event has been delivered.
+  if (m_isConnected) {
+    ble_gap_terminate(m_conn_id, BLE_ERR_REM_USER_CONN_TERM);
+  }
+  unsigned long start = millis();
+  while (m_conn_id != BLE_HS_CONN_HANDLE_NONE && (millis() - start < 2000)) {
+    delay(10);
+  }
+  BLEDevice::removePeerDevice(m_gattAppId, true);
+#endif
   for (auto &myPair : m_servicesMap) {
     delete myPair.second;
   }
@@ -484,30 +502,25 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     delay(50);  // Give the BLE stack time to settle after stopping scan
   }
 
-  // We need the connection handle that we get from registering the application.  We register the app
-  // and then block on its completion.  When the event has arrived, we will have the handle.
-  m_appId = BLEDevice::m_appId++;
-  BLEDevice::addPeerDevice(this, true, m_appId);
+  // Register the GATT client application to get a gattc_if for this connection.
+  // m_gattAppId was assigned once in the constructor and is stable for the lifetime of this client.
   m_semaphoreRegEvt.take("connect");
-
-  // clearServices(); // we dont need to delete services since every client is unique?
-  log_d("Registering GATT client app (appId=%u)...", m_appId);
-  errRc = ::esp_ble_gattc_app_register(m_appId);
+  log_d("Registering GATT client app (appId=%u)...", m_gattAppId);
+  errRc = ::esp_ble_gattc_app_register(m_gattAppId);
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_app_register: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    BLEDevice::removePeerDevice(m_appId, true);
+    m_semaphoreRegEvt.give(ESP_GATT_ERROR);
     return false;
   }
 
   rc = m_semaphoreRegEvt.wait("connect");
 
   if (rc != ESP_GATT_OK) {
-    // fixes ESP_GATT_NO_RESOURCES error mostly
     log_e("esp_ble_gattc_app_register_error: rc=%d", rc);
-    BLEDevice::removePeerDevice(m_appId, true);
-    // not sure if this is needed here
-    // esp_ble_gattc_app_unregister(m_gattc_if);
-    // m_gattc_if = ESP_GATT_IF_NONE;
+    if (m_gattc_if != ESP_GATT_IF_NONE) {
+      esp_ble_gattc_app_unregister(m_gattc_if);
+      m_gattc_if = ESP_GATT_IF_NONE;
+    }
     return false;
   }
 
@@ -542,7 +555,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
       // Other errors, don't retry
       log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
       m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
-      BLEDevice::removePeerDevice(m_appId, true);
       esp_ble_gattc_app_unregister(m_gattc_if);
       m_gattc_if = ESP_GATT_IF_NONE;
       return false;
@@ -553,7 +565,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
   if (errRc != ESP_OK) {
     log_e("esp_ble_gattc_open failed after %d retries: rc=%d %s", maxRetries, errRc, GeneralUtils::errorToString(errRc));
     m_semaphoreOpenEvt.give(ESP_GATT_ERROR);  // Release semaphore before cleanup
-    BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
     return false;
@@ -568,7 +579,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     log_e("Connection timeout after %" PRIu32 " ms to %s (no OPEN event received)", timeoutMs, address.toString().c_str());
     // Cancel any pending connection attempt
     esp_ble_gap_disconnect(getPeerAddress().getNative());
-    BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
     return false;
@@ -576,7 +586,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
 
   if (rc != ESP_GATT_OK) {
     log_e("Connection failed to %s, status=%d %s", address.toString().c_str(), rc, GeneralUtils::errorToString(rc));
-    BLEDevice::removePeerDevice(m_appId, true);
     esp_ble_gattc_app_unregister(m_gattc_if);
     m_gattc_if = ESP_GATT_IF_NONE;
     return false;
@@ -661,12 +670,7 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
 
     case ESP_GATTC_SRVC_CHG_EVT: log_i("SERVICE CHANGED"); break;
 
-    case ESP_GATTC_CLOSE_EVT:
-    {
-      // esp_ble_gattc_app_unregister(m_appId);
-      // BLEDevice::removePeerDevice(m_gattc_if, true);
-      break;
-    }
+    case ESP_GATTC_CLOSE_EVT: break;
 
     //
     // ESP_GATTC_DISCONNECT_EVT
@@ -686,10 +690,11 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
       m_isConnected = false;
       esp_ble_gattc_app_unregister(m_gattc_if);
       m_gattc_if = ESP_GATT_IF_NONE;
+      m_conn_id = ESP_GATT_IF_NONE;
       m_semaphoreOpenEvt.give(ESP_GATT_IF_NONE);
       m_semaphoreRssiCmplEvt.give();
       m_semaphoreSearchCmplEvt.give(1);
-      BLEDevice::removePeerDevice(m_appId, true);
+      // Client stays in the peer map until the object is destroyed.
       // Reset security state on disconnect
       BLESecurity::resetSecurity();
       if (m_wasConnected && m_pClientCallbacks != nullptr) {
@@ -751,7 +756,6 @@ void BLEClient::gattClientEventHandler(esp_gattc_cb_event_t event, esp_gatt_if_t
       if (evtParam->connect.conn_id != getConnId()) {
         break;
       }
-      BLEDevice::updatePeerDevice(this, true, m_appId);
       esp_err_t errRc = esp_ble_gattc_send_mtu_req(gattc_if, evtParam->connect.conn_id);
       if (errRc != ESP_OK) {
         log_e("esp_ble_gattc_send_mtu_req: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
@@ -946,7 +950,6 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
     return false;
   }
 
-  m_appId = BLEDevice::m_appId++;
   m_peerAddress = address;
 
   int rc = 0;
@@ -1019,7 +1022,7 @@ bool BLEClient::connect(BLEAddress address, uint8_t type, uint32_t timeoutMs) {
 
   log_i("<< connect()");
 
-  BLEDevice::addPeerDevice(this, true, m_appId);
+  BLEDevice::addPeerDevice(this, true, m_gattAppId);
   // Check if still connected before returning
   return isConnected();
 }
@@ -1140,7 +1143,7 @@ int BLEClient::handleGAPEvent(struct ble_gap_event *event, void *arg) {
 
       log_i("BLEClient", "disconnect; reason=%d, %s", rc, BLEUtils::returnCodeToString(rc));
 
-      BLEDevice::removePeerDevice(client->m_appId, true);
+      BLEDevice::removePeerDevice(client->m_gattAppId, true);
       client->m_isConnected = false;
       // Reset security state on disconnect
       BLESecurity::resetSecurity();

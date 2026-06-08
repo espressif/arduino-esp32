@@ -10,7 +10,10 @@ ENV_SOURCED=1
 ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # OS detection
+# $OSTYPE can be unset or report unexpected values when bash is launched from
+# PowerShell on Windows CI runners, so cross-check with uname -s as a fallback.
 OSBITS=$(uname -m)
+_UNAME_S=$(uname -s)
 if [[ "$OSTYPE" == "linux"* ]]; then
     export OS_IS_LINUX="1"
     if [[ "$OSBITS" == "i686" ]]; then
@@ -27,7 +30,8 @@ if [[ "$OSTYPE" == "linux"* ]]; then
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     export OS_IS_MACOS="1"
     OS_NAME="macosx"
-elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || \
+        "$_UNAME_S" == MINGW* || "$_UNAME_S" == CYGWIN* || "$_UNAME_S" == MSYS* ]]; then
     export OS_IS_WINDOWS="1"
     OS_NAME="windows"
 else
@@ -35,6 +39,7 @@ else
     echo "Unknown OS '$OS_NAME'"
     exit 1
 fi
+unset _UNAME_S
 export OS_NAME
 
 # Arduino paths

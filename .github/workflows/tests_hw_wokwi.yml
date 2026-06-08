@@ -166,6 +166,12 @@ jobs:
             push_time=""
           fi
 
+          # Non-security-critical: publish_results is only present for workflow_dispatch events
+          publish_results=$(jq -r '.inputs.publish_results // "true"' artifacts/event_file/event.json | tr -cd "[:alpha:]")
+          if [ "$publish_results" != "false" ]; then
+            publish_results="true"
+          fi
+
           # HW tests enablement
           if [ -n "$GITLAB_ACCESS_TOKEN" ]; then
             hw_tests_enabled="true"
@@ -232,7 +238,8 @@ jobs:
             "sha": "$WR_HEAD_SHA",
             "action": "$action",
             "run_id": "$WR_RUN_ID",
-            "conclusion": "$WR_CONCLUSION"
+            "conclusion": "$WR_CONCLUSION",
+            "publish_results": $publish_results
           }
           EOF
 

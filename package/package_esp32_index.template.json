@@ -54,7 +54,7 @@
             {
               "packager": "esp32",
               "name": "esp32-arduino-libs",
-              "version": "idf-release_v5.5-73550728-v2"
+              "version": "idf-release_v5.5-73550728-v6"
             },
             {
               "packager": "esp32",
@@ -84,7 +84,7 @@
             {
               "packager": "esp32",
               "name": "esptool_py",
-              "version": "5.2.0"
+              "version": "5.3.0"
             },
             {
               "packager": "esp32",
@@ -107,63 +107,63 @@
       "tools": [
         {
           "name": "esp32-arduino-libs",
-          "version": "idf-release_v5.5-73550728-v2",
+          "version": "idf-release_v5.5-73550728-v6",
           "systems": [
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "i686-pc-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v2.zip",
-              "checksum": "SHA-256:73b7fe71f1d5e1797fc68a61026e8bbb7b1fdc86f88a9d412fee50944afcfcb8",
-              "size": "519857151"
+              "url": "https://github.com/espressif/esp32-arduino-lib-builder/releases/download/idf-release_v5.5/esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "archiveFileName": "esp32-arduino-libs-idf-release_v5.5-73550728-v6.zip",
+              "checksum": "SHA-256:6d923bbf17f16d094adc6b503697bf90cce306856350ee815e087d5582f7d37a",
+              "size": "525997017"
             }
           ]
         },
@@ -472,56 +472,56 @@
         },
         {
           "name": "esptool_py",
-          "version": "5.2.0",
+          "version": "5.3.0",
           "systems": [
             {
               "host": "aarch64-linux-gnu",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-aarch64.tar.gz",
-              "archiveFileName": "esptool-v5.2.0-linux-aarch64.tar.gz",
-              "checksum": "SHA-256:a3a0fc13ada8d69dddbdfff1c765fa0b88fb578a83d02315be9c15fefa6ca58e",
-              "size": "66991044"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-linux-aarch64.tar.gz",
+              "archiveFileName": "esptool-v5.3.0-linux-aarch64.tar.gz",
+              "checksum": "SHA-256:5a03918919f0b94222b639803e97e74d679d0fc3c5092cf27292f8e5a1430794",
+              "size": "75198819"
             },
             {
               "host": "x86_64-pc-linux-gnu",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-amd64.tar.gz",
-              "archiveFileName": "esptool-v5.2.0-linux-amd64.tar.gz",
-              "checksum": "SHA-256:0a9f6c913fccfacac9261eb2acd8060010db5933c18c8e47cb32377eaa7202a3",
-              "size": "73991509"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-linux-amd64.tar.gz",
+              "archiveFileName": "esptool-v5.3.0-linux-amd64.tar.gz",
+              "checksum": "SHA-256:46ca7b52c309790bc4d140990680f6088e8cad40b230fda6999661efc24845b6",
+              "size": "82516240"
             },
             {
               "host": "arm-linux-gnueabihf",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-linux-armv7.tar.gz",
-              "archiveFileName": "esptool-v5.2.0-linux-armv7.tar.gz",
-              "checksum": "SHA-256:dbf92966eb6ad5f4d068d8b2461f534b15219cb405083a38d26519284e91b73a",
-              "size": "57875713"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-linux-armv7.tar.gz",
+              "archiveFileName": "esptool-v5.3.0-linux-armv7.tar.gz",
+              "checksum": "SHA-256:59fad3317798ec65567cb6fda49db081c778cf971e35155a06dde0919d4e7e96",
+              "size": "65340824"
             },
             {
               "host": "x86_64-apple-darwin",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-macos-amd64.tar.gz",
-              "archiveFileName": "esptool-v5.2.0-macos-amd64.tar.gz",
-              "checksum": "SHA-256:dcb6c38cb10e1d7ca5ce658687e4abe47dfda22284857673b55cae010ff5f5ee",
-              "size": "58174910"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-macos-amd64.tar.gz",
+              "archiveFileName": "esptool-v5.3.0-macos-amd64.tar.gz",
+              "checksum": "SHA-256:ea33d15db3cc1f7aec1e6af0ed327ec13c82f139f442a100eca76d5b29094be9",
+              "size": "63866831"
             },
             {
               "host": "arm64-apple-darwin",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-macos-arm64.tar.gz",
-              "archiveFileName": "esptool-v5.2.0-macos-arm64.tar.gz",
-              "checksum": "SHA-256:2b45270273ff96b6394bd6e317b153cf4a42869ca917d2bcebafc9a3cdac0e1e",
-              "size": "54970972"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-macos-arm64.tar.gz",
+              "archiveFileName": "esptool-v5.3.0-macos-arm64.tar.gz",
+              "checksum": "SHA-256:78369f963f1454ecc1b5516119e43aa5aa5cc1afeaca467458cbbeef02675dd4",
+              "size": "60740013"
             },
             {
               "host": "x86_64-mingw32",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-windows-amd64.zip",
-              "archiveFileName": "esptool-v5.2.0-windows-amd64.zip",
-              "checksum": "SHA-256:ef0522120afb5e8e673d68726c32e0de416990fc62dc313191721edeb0a74fc6",
-              "size": "58319204"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-windows-amd64.zip",
+              "archiveFileName": "esptool-v5.3.0-windows-amd64.zip",
+              "checksum": "SHA-256:c86e30586e559f0ae5b41a828f21b4c69a7fc11a194e09391f5a2e31952b2471",
+              "size": "63716106"
             },
             {
               "host": "i686-mingw32",
-              "url": "https://github.com/espressif/esptool/releases/download/v5.2.0/esptool-v5.2.0-windows-amd64.zip",
-              "archiveFileName": "esptool-v5.2.0-windows-amd64.zip",
-              "checksum": "SHA-256:ef0522120afb5e8e673d68726c32e0de416990fc62dc313191721edeb0a74fc6",
-              "size": "58319204"
+              "url": "https://github.com/espressif/esptool/releases/download/v5.3.0/esptool-v5.3.0-windows-amd64.zip",
+              "archiveFileName": "esptool-v5.3.0-windows-amd64.zip",
+              "checksum": "SHA-256:c86e30586e559f0ae5b41a828f21b4c69a7fc11a194e09391f5a2e31952b2471",
+              "size": "63716106"
             }
           ]
         },

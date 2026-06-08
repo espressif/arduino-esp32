@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=3.3.8
+version=3.3.10
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
@@ -187,6 +187,10 @@ recipe.hooks.objcopy.postobjcopy.3.pattern="{tools.esptool_py.path}/{tools.espto
 recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size}'>'{build.path}/flash_args'&& echo '{build.bootloader_addr} {build.project_name}.bootloader.bin'>> '{build.path}/flash_args'&& echo '0x8000 {build.project_name}.partitions.bin'>> '{build.path}/flash_args'&& echo '0xe000 boot_app0.bin'>> '{build.path}/flash_args'&& echo '0x10000 {build.project_name}.bin'>> '{build.path}/flash_args'"
 recipe.hooks.objcopy.postobjcopy.4.pattern.windows=cmd /c echo --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} > "{build.path}\flash_args" && echo {build.bootloader_addr} {build.project_name}.bootloader.bin >> "{build.path}\flash_args" && echo 0x8000 {build.project_name}.partitions.bin >> "{build.path}\flash_args" && echo 0xe000 boot_app0.bin >> "{build.path}\flash_args" && echo 0x10000 {build.project_name}.bin >> "{build.path}\flash_args"
 
+# Copy boot_app0.bin into the build directory so flash_args is self-contained
+recipe.hooks.objcopy.postobjcopy.5.pattern=/usr/bin/env bash -c "cp -f '{runtime.platform.path}/tools/partitions/boot_app0.bin' '{build.path}/boot_app0.bin'"
+recipe.hooks.objcopy.postobjcopy.5.pattern.windows=cmd /c copy /y "{runtime.platform.path}\tools\partitions\boot_app0.bin" "{build.path}\boot_app0.bin"
+
 ## Save bin
 recipe.output.tmp_file={build.project_name}.bin
 recipe.output.save_file={build.project_name}.{build.variant}.bin
@@ -337,14 +341,16 @@ tools.esptool_py.upload.protocol=serial
 tools.esptool_py.upload.params.verbose=
 tools.esptool_py.upload.params.quiet=
 tools.esptool_py.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash {upload.erase_cmd} -z --flash-mode keep --flash-freq keep --flash-size keep {build.bootloader_addr} "{build.path}/{build.project_name}.bootloader.bin" 0x8000 "{build.path}/{build.project_name}.partitions.bin" 0xe000 "{runtime.platform.path}/tools/partitions/boot_app0.bin" 0x10000 "{build.path}/{build.project_name}.bin" {upload.extra_flags}
-tools.esptool_py.upload.pattern="{path}/{cmd}" {upload.pattern_args}
+tools.esptool_py.upload.flash_prefix=python3 "{runtime.platform.path}/tools/flasher.py"
+tools.esptool_py.upload.flash_prefix.windows="{runtime.platform.path}\tools\flasher.exe"
+tools.esptool_py.upload.pattern={upload.flash_prefix} --esptool "{path}/{cmd}" --build-dir "{build.path}" {upload.pattern_args}
 
 ## Program Application
 ## -------------------
 tools.esptool_py.program.params.verbose=
 tools.esptool_py.program.params.quiet=
 tools.esptool_py.program.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash -z --flash-mode keep --flash-freq keep --flash-size keep 0x10000 "{build.path}/{build.project_name}.bin"
-tools.esptool_py.program.pattern="{path}/{cmd}" {program.pattern_args}
+tools.esptool_py.program.pattern={upload.flash_prefix} --esptool "{path}/{cmd}" --build-dir "{build.path}" {program.pattern_args}
 
 ## Erase Chip (before burning the bootloader)
 ## ------------------------------------------
@@ -396,4 +402,6 @@ tools.esptool_py_app_only.upload.params.quiet=
 
 tools.esptool_py_app_only.upload.pattern_args=--chip {build.mcu} --port "{serial.port}" --baud {upload.speed} {upload.flags} --before default-reset --after hard-reset write-flash --flash-mode {build.flash_mode} --flash-freq {build.flash_freq} --flash-size {build.flash_size} {build.flash_offset} "{build.path}/{build.project_name}.bin" {upload.extra_flags}
 
-tools.esptool_py_app_only.upload.pattern="{path}/{cmd}" {tools.esptool_py_app_only.upload.pattern_args}
+tools.esptool_py_app_only.upload.flash_prefix=python3 "{runtime.platform.path}/tools/flasher.py"
+tools.esptool_py_app_only.upload.flash_prefix.windows="{runtime.platform.path}\tools\flasher.exe"
+tools.esptool_py_app_only.upload.pattern={upload.flash_prefix} --esptool "{path}/{cmd}" --build-dir "{build.path}" {upload.pattern_args}

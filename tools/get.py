@@ -109,6 +109,43 @@ def mkdir_p(path):
             raise
 
 
+def is_archive_metadata_path(name):
+    """True for AppleDouble, __MACOSX, and other non-content archive entries."""
+    if not name:
+        return True
+    parts = name.replace("\\", "/").split("/")
+    if parts[0] in ("__MACOSX", "pax_global_header"):
+        return True
+    return any(part.startswith("._") for part in parts)
+
+
+def archive_root_dir(member_names):
+    """Return the top-level directory inside an archive, ignoring metadata entries."""
+    roots = set()
+    for name in member_names:
+        if is_archive_metadata_path(name):
+            continue
+        name = name.rstrip("/")
+        if not name:
+            continue
+        roots.add(name.split("/")[0])
+
+    if len(roots) == 1:
+        return roots.pop()
+
+    non_meta = [r for r in roots if not r.startswith(".")]
+    if len(non_meta) == 1:
+        return non_meta[0]
+
+    for name in member_names:
+        if is_archive_metadata_path(name):
+            continue
+        name = name.rstrip("/")
+        if name:
+            return name.split("/")[0]
+    return ""
+
+
 def format_time(seconds):
     minutes, seconds = divmod(seconds, 60)
     return "{:02}:{:05.2f}".format(int(minutes), seconds)
@@ -170,9 +207,10 @@ def verify_files(filename, destination, rename_to):
         raise NotImplementedError("Unsupported archive type")
 
     try:
-        first_dir = file_list[0].split("/")[0]
-        total_files = len(file_list)
-        for i, zipped_file in enumerate(file_list, 1):
+        first_dir = archive_root_dir(file_list)
+        entries_to_verify = [f for f in file_list if not is_archive_metadata_path(f)]
+        total_files = len(entries_to_verify)
+        for i, zipped_file in enumerate(entries_to_verify, 1):
             local_path = os.path.join(extracted_dir_path, zipped_file.replace(first_dir, rename_to, 1))
             if not os.path.exists(local_path):
                 if verbose:
@@ -231,21 +269,21 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         if filename.endswith("tar.gz"):
             if tarfile.is_tarfile(filename):
                 cfile = tarfile.open(filename, "r:gz")
-                dirname = cfile.getnames()[0].split("/")[0]
+                dirname = archive_root_dir(cfile.getnames())
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
         elif filename.endswith("tar.xz"):
             if tarfile.is_tarfile(filename):
                 cfile = tarfile.open(filename, "r:xz")
-                dirname = cfile.getnames()[0].split("/")[0]
+                dirname = archive_root_dir(cfile.getnames())
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
         elif filename.endswith("zip"):
             if zipfile.is_zipfile(filename):
                 cfile = zipfile.ZipFile(filename)
-                dirname = cfile.namelist()[0].split("/")[0]
+                dirname = archive_root_dir(cfile.namelist())
             else:
                 print("File corrupted!")
                 file_is_corrupted = True
@@ -268,7 +306,8 @@ def unpack(filename, destination, force_extract, checksum):  # noqa: C901
         return False
 
     # A little trick to rename tool directories so they don't contain version number
-    rename_to = re.match(r"^([a-z][^\-]*\-*)+", dirname).group(0).strip("-")
+    match = re.match(r"^([a-z][^\-]*\-*)+", dirname)
+    rename_to = match.group(0).strip("-") if match else dirname
     if rename_to == dirname and dirname.startswith("esp32-arduino-libs-"):
         rename_to = "esp32-arduino-libs"
     elif rename_to == dirname and dirname.startswith("esptool-"):

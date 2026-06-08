@@ -17,8 +17,10 @@
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
+#include "esp32-hal-periman.h"
 #include "esp32-hal.h"
 #include "pins_arduino.h"
+#include "soc/soc_caps.h"
 
 #include "esp_hosted.h"
 #include "esp_hosted_transport_config.h"
@@ -56,6 +58,9 @@ static esp_hosted_coprocessor_fwver_t host_version_struct = {
 
 static bool hostedInit();
 static bool hostedDeinit();
+static bool hostedDetachBus(void *bus_pointer);
+static bool hostedClearPinBuses(void);
+static bool hostedAssignPinBuses(void);
 
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
@@ -214,54 +219,132 @@ bool hostedActivateUpdate() {
   return true;
 }
 
+static bool hostedClearPinBuses(void) {
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_clk)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_cmd)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d0)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d1)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d2)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d3)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_reset)) {
+    return false;
+  }
+  return true;
+}
+
+static bool hostedAssignPinBuses(void) {
+  void *const bus = (void *)&sdio_pin_config;
+
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_clk, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_cmd, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d0, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d1, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d2, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d3, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_reset, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST, bus, 0, -1)) {
+    return false;
+  }
+  return true;
+}
+
+static bool hostedDetachBus(void *bus_pointer) {
+  if (bus_pointer != (void *)&sdio_pin_config) {
+    return false;
+  }
+  if (hosted_initialized) {
+    log_e("ESP-Hosted: stop WiFi/BLE before removing SDIO pins from periman");
+    return false;
+  }
+  return true;
+}
+
 static bool hostedInit() {
-  if (!hosted_initialized) {
-    log_i("Initializing ESP-Hosted");
-    log_d(
-      "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
-      sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset
-    );
-    hosted_initialized = true;
-    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
-    conf.pin_clk.pin = sdio_pin_config.pin_clk;
-    conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
-    conf.pin_d0.pin = sdio_pin_config.pin_d0;
-    conf.pin_d1.pin = sdio_pin_config.pin_d1;
-    conf.pin_d2.pin = sdio_pin_config.pin_d2;
-    conf.pin_d3.pin = sdio_pin_config.pin_d3;
-    conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    esp_err_t err = esp_hosted_sdio_set_config(&conf);
-    if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
-      log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
-      return false;
-    }
-    err = esp_hosted_init();
-    if (err != ESP_OK) {
-      log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
-      hosted_initialized = false;
-      return false;
-    }
-    log_i("ESP-Hosted initialized!");
-    err = esp_hosted_connect_to_slave();
-    if (err != ESP_OK) {
-      log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
-      hosted_initialized = false;
-      return false;
-    }
-    hostedHasUpdate();
+  if (hosted_initialized) {
     return true;
   }
 
-  // Attach pins to PeriMan here
-  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
-  // sdio_pin_config.pin_clk
-  // sdio_pin_config.pin_cmd
-  // sdio_pin_config.pin_d0
-  // sdio_pin_config.pin_d1
-  // sdio_pin_config.pin_d2
-  // sdio_pin_config.pin_d3
-  // sdio_pin_config.pin_reset
+  log_i("Initializing ESP-Hosted");
+  log_d(
+    "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
+    sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset
+  );
 
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST, hostedDetachBus);
+
+  if (!hostedClearPinBuses()) {
+    log_e("ESP-Hosted: failed to clear SDIO pins from peripheral manager");
+    return false;
+  }
+
+  // Assign before SDIO pins before configuration to turn on LDO when needed
+  if (!hostedAssignPinBuses()) {
+    log_e("ESP-Hosted: failed to assign SDIO pins to peripheral manager");
+    hostedClearPinBuses();
+    return false;
+  }
+
+  struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
+  conf.pin_clk.pin = sdio_pin_config.pin_clk;
+  conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
+  conf.pin_d0.pin = sdio_pin_config.pin_d0;
+  conf.pin_d1.pin = sdio_pin_config.pin_d1;
+  conf.pin_d2.pin = sdio_pin_config.pin_d2;
+  conf.pin_d3.pin = sdio_pin_config.pin_d3;
+  conf.pin_reset.pin = sdio_pin_config.pin_reset;
+
+  esp_err_t err = esp_hosted_sdio_set_config(&conf);
+  if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
+    log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
+    hostedClearPinBuses();
+    return false;
+  }
+
+  err = esp_hosted_init();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
+    hostedClearPinBuses();
+    return false;
+  }
+  err = esp_hosted_connect_to_slave();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
+    esp_hosted_deinit();
+    hostedClearPinBuses();
+    return false;
+  }
+
+  hosted_initialized = true;
+  hostedHasUpdate();
   return true;
 }
 
@@ -275,8 +358,8 @@ static bool hostedDeinit() {
     log_e("esp_hosted_deinit failed!");
     return false;
   }
-
   hosted_initialized = false;
+  hostedClearPinBuses();
   return true;
 }
 

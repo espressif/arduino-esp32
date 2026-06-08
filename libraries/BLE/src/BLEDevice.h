@@ -224,7 +224,6 @@ public:
   static void stopAdvertising();
   static std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
   static void addPeerDevice(void *peer, bool is_client, uint16_t conn_id);
-  static void updatePeerDevice(void *peer, bool _client, uint16_t conn_id);
   static void removePeerDevice(uint16_t conn_id, bool client);
   static BLEClient *getClientByID(uint16_t conn_id);
   static BLEClient *getClientByAddress(BLEAddress address);
@@ -283,6 +282,7 @@ private:
   static std::map<uint16_t, conn_status_t> m_connectedClientsMap;
   static portMUX_TYPE mux;
   static String m_deviceName;
+  static uint16_t getNextAppId();
 
   /***************************************************************************
    *                        NimBLE private properties                        *

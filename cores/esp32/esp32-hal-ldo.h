@@ -43,10 +43,20 @@ esp_err_t ldoReleaseChannel(ldo_channel_handle_t handle);
  */
 
 void ldoPerimanPinBusSet(uint8_t pin, peripheral_bus_type_t old_type, peripheral_bus_type_t new_type);
+
+/** Mark an on-chip LDO channel as already acquired (periman auto-LDO will skip re-acquire).
+ *
+ * @param owner Must remain valid after the call (e.g. string literal / static storage); used for debug logging.
+ */
+void ldoDriverClaimChannel(uint8_t chan_id, const char *owner);
+void ldoDriverReleaseChannel(uint8_t chan_id);
+
+#if SOC_SDMMC_HOST_SUPPORTED
 void ldoSdmmcPrepareAcquire(uint8_t chan_id);
 void ldoSdmmcDriverAttached(uint8_t chan_id);
 void ldoSdmmcDriverDetached(uint8_t chan_id);
 void ldoSdmmcDriverCreateFailed(uint8_t chan_id);
+#endif
 
 #endif /* SOC_GP_LDO_SUPPORTED */
 

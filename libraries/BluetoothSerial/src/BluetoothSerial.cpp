@@ -972,7 +972,7 @@ bool BluetoothSerial::connect(String remoteName) {
   }
   disconnect();
   _doConnect = true;
-  _isRemoteAddressSet = true;
+  _isRemoteAddressSet = false;
   _sec_mask = ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE;
   _role = ESP_SPP_ROLE_MASTER;
   strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);

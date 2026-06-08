@@ -290,7 +290,6 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
         else
             build_dir="$HOME/.arduino/tests/$target/$build_output_name/build$i.tmp"
         fi
-        rm -rf "$build_dir"
         mkdir -p "$build_dir"
 
         currfqbn=$(echo "$fqbn" | jq -r --argjson i "$i" '.[$i]')

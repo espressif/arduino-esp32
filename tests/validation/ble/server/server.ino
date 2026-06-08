@@ -11,17 +11,18 @@
 
 String serverName = "";
 static bool deviceConnected = false;
+static int connectionCount = 0;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
     deviceConnected = true;
-    Serial.println("[SERVER] Client connected");
+    connectionCount++;
+    Serial.printf("[SERVER] Client connected (count: %d)\n", connectionCount);
   }
 
   void onDisconnect(BLEServer *pServer) {
     deviceConnected = false;
-    Serial.println("[SERVER] Client disconnected");
-    // Restart advertising after disconnect
+    Serial.printf("[SERVER] Client disconnected (count: %d)\n", connectionCount);
     BLEDevice::startAdvertising();
     Serial.println("[SERVER] Advertising restarted");
   }
