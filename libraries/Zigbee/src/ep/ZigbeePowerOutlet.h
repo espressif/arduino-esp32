@@ -21,8 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/on_off_desc.h"
 
 class ZigbeePowerOutlet : public ZigbeeEP {
 public:

@@ -85,8 +85,15 @@ void onStateChangeCustom(uint16_t state) {
 }
 
 void setup() {
-  log_d("Starting serial");
   Serial.begin(115200);
+
+  // Initialize Zigbee stack as coordinator/router
+  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
 
   // Init button switch
   log_d("Init button switch");
@@ -134,8 +141,8 @@ void setup() {
   Zigbee.addEndpoint(&zbMultistateDeviceCustom);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in Router Device mode
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();

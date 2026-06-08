@@ -14,72 +14,57 @@
 
 #include "ZigbeePM25Sensor.h"
 #if CONFIG_ZB_ENABLED
-
-// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA PM2.5-sensor template).
-// Basic + Identify + PM2_5Measurement server clusters, registered as a Simple Sensor device.
-ezb_af_ep_desc_t zigbee_pm2_5_sensor_create_ep_desc(uint8_t endpoint, zigbee_pm2_5_sensor_cfg_t *pm2_5_sensor) {
-  ezb_af_ep_config_t ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
-  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (ep_desc == nullptr) {
-    log_e("Failed to create PM2.5 sensor endpoint descriptor");
-    return nullptr;
-  }
-
-  const void *basic_cfg = pm2_5_sensor ? &(pm2_5_sensor->basic_cfg) : nullptr;
-  const void *identify_cfg = pm2_5_sensor ? &(pm2_5_sensor->identify_cfg) : nullptr;
-  const void *pm2_5_meas_cfg = pm2_5_sensor ? &(pm2_5_sensor->pm2_5_meas_cfg) : nullptr;
-
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_pm2_5_measurement_create_cluster_desc(pm2_5_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
-  return ep_desc;
-}
+#include "ezbee/zha.h"
 
 ZigbeePM25Sensor::ZigbeePM25Sensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
-
-  //Create custom PM2.5 sensor configuration
-  zigbee_pm2_5_sensor_cfg_t pm2_5_sensor_cfg = ZIGBEE_DEFAULT_PM2_5_SENSOR_CONFIG();
-  _ep_desc = zigbee_pm2_5_sensor_create_ep_desc(_endpoint, &pm2_5_sensor_cfg);
+  _pm2_5_meas_cfg = {
+    .measured_value = 0.0f,
+    .min_measured_value = 0.0f,
+    .max_measured_value = 500.0f,
+  };
+  _tolerance = 0.0f;
 
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create PM2.5 sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_pm2_5_measurement_create_cluster_desc(&_pm2_5_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeePM25Sensor::setDefaultValue(float defaultValue) {
-  ezb_zcl_cluster_desc_t pm2_5_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_pm2_5_measurement_cluster_desc_add_attr(pm2_5_measure_cluster, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID, (void *)&defaultValue);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set default value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _pm2_5_meas_cfg.measured_value = defaultValue;
+  return configureEpClusterAttr(
+    "setDefaultValue", EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MEASURED_VALUE_ID,
+    &_pm2_5_meas_cfg.measured_value, ezb_zcl_pm2_5_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeePM25Sensor::setMinMaxValue(float min, float max) {
-  ezb_zcl_cluster_desc_t pm2_5_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_pm2_5_measurement_cluster_desc_add_attr(pm2_5_measure_cluster, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&min);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
+  _pm2_5_meas_cfg.min_measured_value = min;
+  _pm2_5_meas_cfg.max_measured_value = max;
+  if (!configureEpClusterAttr(
+        "setMinMaxValue", EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MIN_MEASURED_VALUE_ID,
+        &_pm2_5_meas_cfg.min_measured_value, ezb_zcl_pm2_5_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret = ezb_zcl_pm2_5_measurement_cluster_desc_add_attr(pm2_5_measure_cluster, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&max);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMinMaxValue", EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_MAX_MEASURED_VALUE_ID,
+    &_pm2_5_meas_cfg.max_measured_value, ezb_zcl_pm2_5_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeePM25Sensor::setTolerance(float tolerance) {
-  ezb_zcl_cluster_desc_t pm2_5_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_pm2_5_measurement_cluster_desc_add_attr(pm2_5_measure_cluster, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set tolerance: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _tolerance = tolerance;
+  return configureEpClusterAttr(
+    "setTolerance", EZB_ZCL_CLUSTER_ID_PM2_5_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_PM2_5_MEASUREMENT_TOLERANCE_ID, &_tolerance,
+    ezb_zcl_pm2_5_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeePM25Sensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {

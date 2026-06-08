@@ -21,11 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/thermostat.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
-#include "ezbee/zcl/cluster/temperature_measurement_desc.h"
-#include "ezbee/zcl/cluster/rel_humidity_measurement_desc.h"
 
 // NOTE(zb-v2): v1 defined a local ZB_DEFAULT_THERMOSTAT_CONFIG() macro to dodge a narrowing-conversion
 // warning in the SDK. v2.x ships EZB_ZHA_THERMOSTAT_CONFIG() (see ezbee/zha.h) with the same purpose, so

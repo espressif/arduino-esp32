@@ -14,84 +14,58 @@
 
 #include "ZigbeeCarbonDioxideSensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
-// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA carbon-dioxide-sensor template).
-// Basic + Identify + CarbonDioxideMeasurement server clusters, registered as a Simple Sensor device.
-ezb_af_ep_desc_t zigbee_carbon_dioxide_sensor_create_ep_desc(uint8_t endpoint, zigbee_carbon_dioxide_sensor_cfg_t *carbon_dioxide_sensor) {
-  ezb_af_ep_config_t ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
-  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (ep_desc == nullptr) {
-    log_e("Failed to create carbon dioxide sensor endpoint descriptor");
-    return nullptr;
-  }
-
-  const void *basic_cfg = carbon_dioxide_sensor ? &(carbon_dioxide_sensor->basic_cfg) : nullptr;
-  const void *identify_cfg = carbon_dioxide_sensor ? &(carbon_dioxide_sensor->identify_cfg) : nullptr;
-  const void *carbon_dioxide_meas_cfg = carbon_dioxide_sensor ? &(carbon_dioxide_sensor->carbon_dioxide_meas_cfg) : nullptr;
-
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_carbon_dioxide_measurement_create_cluster_desc(carbon_dioxide_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
-  return ep_desc;
-}
 
 ZigbeeCarbonDioxideSensor::ZigbeeCarbonDioxideSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
-
-  //Create custom carbon dioxide sensor configuration
-  zigbee_carbon_dioxide_sensor_cfg_t carbon_dioxide_sensor_cfg = ZIGBEE_DEFAULT_CARBON_DIOXIDE_SENSOR_CONFIG();
-  _ep_desc = zigbee_carbon_dioxide_sensor_create_ep_desc(_endpoint, &carbon_dioxide_sensor_cfg);
+  _carbon_dioxide_meas_cfg = {
+    .measured_value = 0.0f,
+    .min_measured_value = 0.0f,
+    .max_measured_value = 1.0f,
+  };
+  _tolerance = 0.0f;
 
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create carbon dioxide sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_carbon_dioxide_measurement_create_cluster_desc(&_carbon_dioxide_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeeCarbonDioxideSensor::setDefaultValue(float defaultValue) {
-  float zb_default_value = defaultValue / 1000000.0f;
-  ezb_zcl_cluster_desc_t carbon_dioxide_measure_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr(
-    carbon_dioxide_measure_cluster, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID, (void *)&zb_default_value
+  _carbon_dioxide_meas_cfg.measured_value = defaultValue / 1000000.0f;
+  return configureEpClusterAttr(
+    "setDefaultValue", EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MEASURED_VALUE_ID,
+    &_carbon_dioxide_meas_cfg.measured_value, ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr
   );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set default value: 0x%x", ret);
-    return false;
-  }
-  return true;
 }
 
 bool ZigbeeCarbonDioxideSensor::setMinMaxValue(float min, float max) {
-  float zb_min = min / 1000000.0f;
-  float zb_max = max / 1000000.0f;
-  ezb_zcl_cluster_desc_t carbon_dioxide_measure_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret =
-    ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr(carbon_dioxide_measure_cluster, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
+  _carbon_dioxide_meas_cfg.min_measured_value = min / 1000000.0f;
+  _carbon_dioxide_meas_cfg.max_measured_value = max / 1000000.0f;
+  if (!configureEpClusterAttr(
+        "setMinMaxValue", EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MIN_MEASURED_VALUE_ID,
+        &_carbon_dioxide_meas_cfg.min_measured_value, ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret =
-    ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr(carbon_dioxide_measure_cluster, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMinMaxValue", EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_MAX_MEASURED_VALUE_ID,
+    &_carbon_dioxide_meas_cfg.max_measured_value, ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeCarbonDioxideSensor::setTolerance(float tolerance) {
-  float zb_tolerance = tolerance / 1000000.0f;
-  ezb_zcl_cluster_desc_t carbon_dioxide_measure_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret =
-    ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr(carbon_dioxide_measure_cluster, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set tolerance: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _tolerance = tolerance / 1000000.0f;
+  return configureEpClusterAttr(
+    "setTolerance", EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_CARBON_DIOXIDE_MEASUREMENT_TOLERANCE_ID, &_tolerance,
+    ezb_zcl_carbon_dioxide_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeCarbonDioxideSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
@@ -130,7 +104,7 @@ bool ZigbeeCarbonDioxideSensor::report() {
   /* Send report attributes command */
   ezb_zcl_report_attr_cmd_t report_attr_cmd;
   memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
-  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_NOT_PRESENT).
   ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
   report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
   report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_CARBON_DIOXIDE_MEASUREMENT;

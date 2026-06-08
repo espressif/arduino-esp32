@@ -14,6 +14,8 @@
 
 #include "ZigbeeSwitch.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off.h"
 
 // Initialize the static instance pointer
 ZigbeeSwitch *ZigbeeSwitch::_instance = nullptr;
@@ -61,11 +63,12 @@ ZigbeeSwitch::ZigbeeSwitch(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_light_state_change = nullptr;
   _on_light_state_change_with_source = nullptr;
 
-  ezb_zha_on_off_switch_config_t switch_cfg = EZB_ZHA_ON_OFF_SWITCH_CONFIG();
-  _ep_desc = ezb_zha_create_on_off_switch(_endpoint, &switch_cfg);
-
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_SWITCH_DEVICE_ID, .app_device_version = 0};
+    ezb_zha_on_off_switch_config_t switch_cfg = EZB_ZHA_ON_OFF_SWITCH_CONFIG();
+    _ep_desc = ezb_zha_create_on_off_switch(_endpoint, &switch_cfg);
 }
+
+
 
 void ZigbeeSwitch::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeSwitch *instance = static_cast<ZigbeeSwitch *>(user_ctx);
@@ -159,7 +162,8 @@ void ZigbeeSwitch::findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) {
   ezb_zdo_match_desc_req(cmd_req);
 }
 
-void ZigbeeSwitch::sendOnOffCommand(uint8_t on_off_cmd_id, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl) {
+void ZigbeeSwitch::sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl_ptr) {
+  const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl = static_cast<const ezb_zcl_cluster_cmd_ctrl_t *>(cmd_ctrl_ptr);
   if (!_is_bound) {
     log_e("Light not bound");
     return;

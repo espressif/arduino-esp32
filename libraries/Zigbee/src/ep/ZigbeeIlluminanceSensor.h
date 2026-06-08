@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/illuminance_measurement_desc.h"
 
 class ZigbeeIlluminanceSensor : public ZigbeeEP {
@@ -47,6 +46,10 @@ public:
 
   // Report the illuminance value
   bool report();
+
+private:
+  ezb_zcl_illuminance_measurement_cluster_config_t _illuminance_meas_cfg;
+  uint16_t _tolerance;
 };
 
 #endif  // CONFIG_ZB_ENABLED

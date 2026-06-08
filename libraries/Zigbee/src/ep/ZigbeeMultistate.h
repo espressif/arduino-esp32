@@ -7,11 +7,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/basic_desc.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
-#include "ezbee/zcl/cluster/multistate_input_desc.h"
-#include "ezbee/zcl/cluster/multistate_output_desc.h"
 
 // Types for Multistate Input/Output
 // uint16_t for present value -> index to array of states
@@ -111,10 +106,6 @@ enum zigbee_multistate_clusters {
   MULTISTATE_OUTPUT = 2
 };
 
-typedef struct zigbee_multistate_cfg_s {
-  ezb_zcl_basic_cluster_config_t basic_cfg;
-  ezb_zcl_identify_cluster_config_t identify_cfg;
-} zigbee_multistate_cfg_t;
 
 class ZigbeeMultistate : public ZigbeeEP {
 public:
@@ -187,6 +178,11 @@ private:
   uint16_t _output_state_names_length;
   // const char* const* _input_state_names;
   // const char* const* _output_state_names;
+
+  uint32_t _mi_application_type;
+  uint32_t _mo_application_type;
+  char _mi_description[ZB_MAX_NAME_LENGTH + 2];
+  char _mo_description[ZB_MAX_NAME_LENGTH + 2];
 };
 
 #endif  // CONFIG_ZB_ENABLED

@@ -14,6 +14,8 @@
 
 #include "ZigbeeWindowCovering.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/window_covering.h"
 
 ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_WINDOW_COVERING_DEVICE_ID;
@@ -39,59 +41,74 @@ ZigbeeWindowCovering::ZigbeeWindowCovering(uint8_t endpoint) : ZigbeeEP(endpoint
 
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, window covering clusters) instead of the v1 cluster-list factory.
-  ezb_zha_window_covering_config_t window_covering_cfg = EZB_ZHA_WINDOW_COVERING_CONFIG();
-  _ep_desc = ezb_zha_create_window_covering(_endpoint, &window_covering_cfg);
-
-  // The ZHA template only adds the mandatory window covering attributes (type, config status). Add the
-  // optional position/limit attributes that this endpoint reports, matching the v1 cluster factory.
-  ezb_zcl_cluster_desc_t window_covering_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, &_current_lift_percentage
-  );
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID, &_current_tilt_percentage
-  );
-  ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, &_current_lift_position);
-  ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, &_current_lift_position);
-  ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID, &_installed_open_limit_lift);
-  ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_TILT_ID, &_installed_open_limit_tilt);
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_LIFT_ID, &_installed_closed_limit_lift
-  );
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_TILT_ID, &_installed_closed_limit_tilt
-  );
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_LIFT_ID, &_physical_closed_limit_lift
-  );
-  ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_TILT_ID, &_physical_closed_limit_lift
-  );
-
   _ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_WINDOW_COVERING_DEVICE_ID, .app_device_version = 0
   };
+  ezb_zha_window_covering_config_t window_covering_cfg = EZB_ZHA_WINDOW_COVERING_CONFIG();
+  _ep_desc = ezb_zha_create_window_covering(_endpoint, &window_covering_cfg);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create window covering endpoint descriptor");
+    return;
+  }
+
+  // The ZHA template only adds the mandatory window covering attributes (type, config status). Add the
+  // optional position/limit attributes that this endpoint reports, matching the v1 cluster factory.
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID,
+    (void *)&_current_lift_percentage, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID,
+    (void *)&_current_tilt_percentage, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, (void *)&_current_lift_position,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, (void *)&_current_tilt_position,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID, (void *)&_installed_open_limit_lift,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_TILT_ID, (void *)&_installed_open_limit_tilt,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_LIFT_ID,
+    (void *)&_installed_closed_limit_lift, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_TILT_ID,
+    (void *)&_installed_closed_limit_tilt, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_LIFT_ID,
+    (void *)&_physical_closed_limit_lift, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_TILT_ID,
+    (void *)&_physical_closed_limit_tilt, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
 }
 
 // Configuration methods for window covering
 bool ZigbeeWindowCovering::setCoveringType(ZigbeeWindowCoveringType covering_type) {
-  ezb_zcl_cluster_desc_t window_covering_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret =
-    ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_WINDOW_COVERING_TYPE_ID, (void *)&covering_type);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set covering type: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _covering_type = covering_type;
+  return configureEpClusterAttr(
+    "setCoveringType", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_WINDOW_COVERING_TYPE_ID,
+    (void *)&_covering_type, ezb_zcl_window_covering_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeWindowCovering::setConfigStatus(
   bool operational, bool online, bool commands_reversed, bool lift_closed_loop, bool tilt_closed_loop, bool lift_encoder_controlled,
   bool tilt_encoder_controlled
 ) {
-  uint8_t config_status =
+  _config_status =
     (operational ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPERATIONAL : 0) | (online ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_ONLINE : 0)
     | (commands_reversed ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_OPEN_AND_UP_COMMANDS_REVERSED : 0)
     | (lift_closed_loop ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_CLOSED_LOOP : 0)
@@ -99,33 +116,25 @@ bool ZigbeeWindowCovering::setConfigStatus(
     | (lift_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_LIFT_ENCODER_CONTROLLED : 0)
     | (tilt_encoder_controlled ? EZB_ZCL_WINDOW_COVERING_CONFIG_STATUS_TILT_ENCODER_CONTROLLED : 0);
 
-  log_v("Updating window covering config status to %u", config_status);
+  log_v("Updating window covering config status to %u", _config_status);
 
-  ezb_zcl_cluster_desc_t window_covering_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, (void *)&config_status);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set config status: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setConfigStatus", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_STATUS_ID, (void *)&_config_status,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeWindowCovering::setMode(bool motor_reversed, bool calibration_mode, bool maintenance_mode, bool leds_on) {
-  uint8_t mode = (motor_reversed ? EZB_ZCL_WINDOW_COVERING_MODE_MOTOR_DIRECTION_REVERSED : 0)
-                 | (calibration_mode ? EZB_ZCL_WINDOW_COVERING_MODE_CALIBRATION_MODE : 0)
-                 | (maintenance_mode ? EZB_ZCL_WINDOW_COVERING_MODE_MAINTENANCE_MODE : 0) | (leds_on ? EZB_ZCL_WINDOW_COVERING_MODE_LED_FEEDBACK : 0);
+  _mode = (motor_reversed ? EZB_ZCL_WINDOW_COVERING_MODE_MOTOR_DIRECTION_REVERSED : 0)
+        | (calibration_mode ? EZB_ZCL_WINDOW_COVERING_MODE_CALIBRATION_MODE : 0)
+        | (maintenance_mode ? EZB_ZCL_WINDOW_COVERING_MODE_MAINTENANCE_MODE : 0) | (leds_on ? EZB_ZCL_WINDOW_COVERING_MODE_LED_FEEDBACK : 0);
 
-  log_v("Updating window covering mode to %u", mode);
+  log_v("Updating window covering mode to %u", _mode);
 
-  ezb_zcl_cluster_desc_t window_covering_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID, (void *)&mode);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set mode: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMode", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID, (void *)&_mode,
+    ezb_zcl_window_covering_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeWindowCovering::setLimits(
@@ -138,50 +147,40 @@ bool ZigbeeWindowCovering::setLimits(
   _installed_closed_limit_tilt = installed_closed_limit_tilt;
   _physical_closed_limit_tilt = installed_closed_limit_tilt;
 
-  ezb_zcl_cluster_desc_t window_covering_cluster =
-    ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret =
-    ezb_zcl_window_covering_cluster_desc_add_attr(window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID, (void *)&_installed_open_limit_lift);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set installed open limit lift: 0x%x", ret);
+  if (!configureEpClusterAttr(
+        "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID,
+        (void *)&_installed_open_limit_lift, ezb_zcl_window_covering_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret = ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_LIFT_ID, (void *)&_installed_closed_limit_lift
+  if (!configureEpClusterAttr(
+        "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_LIFT_ID,
+        (void *)&_installed_closed_limit_lift, ezb_zcl_window_covering_cluster_desc_add_attr
+      )) {
+    return false;
+  }
+  if (!configureEpClusterAttr(
+        "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_TILT_ID,
+        (void *)&_installed_open_limit_tilt, ezb_zcl_window_covering_cluster_desc_add_attr
+      )) {
+    return false;
+  }
+  if (!configureEpClusterAttr(
+        "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_TILT_ID,
+        (void *)&_installed_closed_limit_tilt, ezb_zcl_window_covering_cluster_desc_add_attr
+      )) {
+    return false;
+  }
+  if (!configureEpClusterAttr(
+        "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_LIFT_ID,
+        (void *)&_physical_closed_limit_lift, ezb_zcl_window_covering_cluster_desc_add_attr
+      )) {
+    return false;
+  }
+  return configureEpClusterAttr(
+    "setLimits", EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_TILT_ID,
+    (void *)&_physical_closed_limit_tilt, ezb_zcl_window_covering_cluster_desc_add_attr
   );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set installed closed limit lift: 0x%x", ret);
-    return false;
-  }
-  ret = ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_TILT_ID, (void *)&_installed_open_limit_tilt
-  );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set installed open limit tilt: 0x%x", ret);
-    return false;
-  }
-  ret = ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_TILT_ID, (void *)&_installed_closed_limit_tilt
-  );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set installed closed limit tilt: 0x%x", ret);
-    return false;
-  }
-  ret = ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_LIFT_ID, (void *)&_physical_closed_limit_lift
-  );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set physical closed limit lift: 0x%x", ret);
-    return false;
-  }
-  ret = ezb_zcl_window_covering_cluster_desc_add_attr(
-    window_covering_cluster, EZB_ZCL_ATTR_WINDOW_COVERING_PHYSICAL_CLOSED_LIMIT_TILT_ID, (void *)&_physical_closed_limit_tilt
-  );
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set physical closed limit tilt: 0x%x", ret);
-    return false;
-  }
-  return true;
 }
 
 // Callback for handling incoming messages and commands

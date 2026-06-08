@@ -21,11 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/basic_desc.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
-#include "ezbee/zcl/cluster/analog_input_desc.h"
-#include "ezbee/zcl/cluster/analog_output_desc.h"
 
 //enum for bits set to check what analog cluster were added
 enum zigbee_analog_clusters {
@@ -33,12 +28,6 @@ enum zigbee_analog_clusters {
   ANALOG_OUTPUT = 2
 };
 
-typedef struct zigbee_analog_cfg_s {
-  ezb_zcl_basic_cluster_config_t basic_cfg;
-  ezb_zcl_identify_cluster_config_t identify_cfg;
-  ezb_zcl_analog_output_cluster_config_t analog_output_cfg;
-  ezb_zcl_analog_input_cluster_config_t analog_input_cfg;
-} zigbee_analog_cfg_t;
 
 class ZigbeeAnalog : public ZigbeeEP {
 public:
@@ -92,6 +81,17 @@ private:
 
   uint8_t _analog_clusters;
   float _output_state;
+
+  uint32_t _ai_application_type;
+  uint32_t _ao_application_type;
+  char _ai_description[ZB_MAX_NAME_LENGTH + 2];
+  char _ao_description[ZB_MAX_NAME_LENGTH + 2];
+  float _ai_resolution;
+  float _ao_resolution;
+  float _ai_min;
+  float _ai_max;
+  float _ao_min;
+  float _ao_max;
 };
 
 #endif  // CONFIG_ZB_ENABLED

@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
 
 class ZigbeeLight : public ZigbeeEP {
 public:

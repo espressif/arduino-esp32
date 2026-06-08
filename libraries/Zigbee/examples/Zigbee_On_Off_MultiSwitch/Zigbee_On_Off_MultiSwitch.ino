@@ -73,6 +73,14 @@ void loadLightParams(zb_device_params_t *light, int light_number) {
 void setup() {
   Serial.begin(115200);
 
+  // Initialize Zigbee stack with given role (coordinator or router)
+  if (!Zigbee.init(ZIGBEE_ROLE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Initialize Preferences
   prefs.begin("lights", false);  // false means read/write mode
 
@@ -94,15 +102,17 @@ void setup() {
     zbSwitch.setManualBinding(true);  //Set manual binding to true, so binding is done on Home Assistant side
   }
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeSwitch endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbSwitch);
 
-  // When all EPs are registered, start Zigbee with given role
-  if (!Zigbee.begin(ZIGBEE_ROLE)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
 
   Serial.println("Connecting to network");

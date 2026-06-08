@@ -14,76 +14,58 @@
 
 #include "ZigbeeFlowSensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
-// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA flow-sensor template).
-// Basic + Identify + FlowMeasurement server clusters, registered as a Simple Sensor device.
-ezb_af_ep_desc_t zigbee_flow_sensor_create_ep_desc(uint8_t endpoint, zigbee_flow_sensor_cfg_t *flow_sensor) {
-  ezb_af_ep_config_t ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
-  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (ep_desc == nullptr) {
-    log_e("Failed to create flow sensor endpoint descriptor");
-    return nullptr;
-  }
-
-  const void *basic_cfg = flow_sensor ? &(flow_sensor->basic_cfg) : nullptr;
-  const void *identify_cfg = flow_sensor ? &(flow_sensor->identify_cfg) : nullptr;
-  const void *flow_meas_cfg = flow_sensor ? &(flow_sensor->flow_meas_cfg) : nullptr;
-
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_flow_measurement_create_cluster_desc(flow_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
-  return ep_desc;
-}
 
 ZigbeeFlowSensor::ZigbeeFlowSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
-
-  //Create custom flow sensor configuration
-  zigbee_flow_sensor_cfg_t flow_sensor_cfg = ZIGBEE_DEFAULT_FLOW_SENSOR_CONFIG();
-  _ep_desc = zigbee_flow_sensor_create_ep_desc(_endpoint, &flow_sensor_cfg);
+  _flow_meas_cfg = {
+    .measured_value = 0,
+    .min_measured_value = 0,
+    .max_measured_value = 0x7FFF,
+  };
+  _tolerance = 0;
 
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create flow sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_flow_measurement_create_cluster_desc(&_flow_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeeFlowSensor::setDefaultValue(float defaultValue) {
-  uint16_t zb_default_value = (uint16_t)(defaultValue * 10);
-  ezb_zcl_cluster_desc_t flow_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_flow_measurement_cluster_desc_add_attr(flow_measure_cluster, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MEASURED_VALUE_ID, (void *)&zb_default_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set default value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _flow_meas_cfg.measured_value = (uint16_t)(defaultValue * 10);
+  return configureEpClusterAttr(
+    "setDefaultValue", EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MEASURED_VALUE_ID,
+    &_flow_meas_cfg.measured_value, ezb_zcl_flow_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeFlowSensor::setMinMaxValue(float min, float max) {
-  uint16_t zb_min = (uint16_t)(min * 10);
-  uint16_t zb_max = (uint16_t)(max * 10);
-  ezb_zcl_cluster_desc_t flow_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_flow_measurement_cluster_desc_add_attr(flow_measure_cluster, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&zb_min);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
+  _flow_meas_cfg.min_measured_value = (uint16_t)(min * 10);
+  _flow_meas_cfg.max_measured_value = (uint16_t)(max * 10);
+  if (!configureEpClusterAttr(
+        "setMinMaxValue", EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MIN_MEASURED_VALUE_ID,
+        &_flow_meas_cfg.min_measured_value, ezb_zcl_flow_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret = ezb_zcl_flow_measurement_cluster_desc_add_attr(flow_measure_cluster, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&zb_max);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMinMaxValue", EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FLOW_MEASUREMENT_MAX_MEASURED_VALUE_ID,
+    &_flow_meas_cfg.max_measured_value, ezb_zcl_flow_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeFlowSensor::setTolerance(float tolerance) {
-  uint16_t zb_tolerance = (uint16_t)(tolerance * 10);
-  ezb_zcl_cluster_desc_t flow_measure_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_flow_measurement_cluster_desc_add_attr(flow_measure_cluster, EZB_ZCL_ATTR_FLOW_MEASUREMENT_TOLERANCE_ID, (void *)&zb_tolerance);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set tolerance: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _tolerance = (uint16_t)(tolerance * 10);
+  return configureEpClusterAttr(
+    "setTolerance", EZB_ZCL_CLUSTER_ID_FLOW_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FLOW_MEASUREMENT_TOLERANCE_ID, &_tolerance,
+    ezb_zcl_flow_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeFlowSensor::setReporting(uint16_t min_interval, uint16_t max_interval, float delta) {

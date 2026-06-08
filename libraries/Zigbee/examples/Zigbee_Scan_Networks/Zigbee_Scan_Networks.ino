@@ -78,11 +78,21 @@ void printScannedNetworks(uint16_t networksFound) {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Zigbee stack without any EPs just for scanning
-  if (!Zigbee.begin(role)) {
+  // Initialize Zigbee stack without any EPs and start it
+  if (!Zigbee.init(role)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
+  Serial.println("Starting Zigbee...");
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
 
   Serial.println("Setup done, starting Zigbee network scan...");

@@ -55,14 +55,22 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
   pinMode(sensor_pin, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as End Device (default)
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbContactSwitch.setManufacturerAndModel("Espressif", "ZigbeeContactSwitch");
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbContactSwitch);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

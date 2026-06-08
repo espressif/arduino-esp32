@@ -21,37 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/basic_desc.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
 #include "ezbee/zcl/cluster/flow_measurement_desc.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_FLOW_SENSOR_CONFIG()                           \
-  {                                                                    \
-    .basic_cfg =                                                       \
-      {                                                                \
-        .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,        \
-        .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,      \
-      },                                                               \
-    .identify_cfg =                                                    \
-      {                                                                \
-        .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE, \
-      },                                                               \
-    .flow_meas_cfg =                                                   \
-      {                                                                \
-        .measured_value = 0,                                           \
-        .min_measured_value = 0,                                       \
-        .max_measured_value = 0x7FFF,                                  \
-      },                                                               \
-  }
-// clang-format on
-
-typedef struct zigbee_flow_sensor_cfg_s {
-  ezb_zcl_basic_cluster_config_t basic_cfg;
-  ezb_zcl_identify_cluster_config_t identify_cfg;
-  ezb_zcl_flow_measurement_cluster_config_t flow_meas_cfg;
-} zigbee_flow_sensor_cfg_t;
 
 class ZigbeeFlowSensor : public ZigbeeEP {
 public:
@@ -76,6 +46,10 @@ public:
 
   // Report the flow value
   bool report();
+
+private:
+  ezb_zcl_flow_measurement_cluster_config_t _flow_meas_cfg;
+  uint16_t _tolerance;
 };
 
 #endif  // CONFIG_ZB_ENABLED

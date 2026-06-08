@@ -14,6 +14,7 @@
 
 #include "ZigbeeLight.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
 ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_ON_OFF_LIGHT_DEVICE_ID;
@@ -21,11 +22,14 @@ ZigbeeLight::ZigbeeLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, on/off clusters) instead of the v1 cluster-list factory.
-  ezb_zha_on_off_light_config_t light_cfg = EZB_ZHA_ON_OFF_LIGHT_CONFIG();
-  _ep_desc = ezb_zha_create_on_off_light(endpoint, &light_cfg);
   _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_ON_OFF_LIGHT_DEVICE_ID, .app_device_version = 0};
   log_v("Light endpoint created %u", _endpoint);
+
+  ezb_zha_on_off_light_config_t light_cfg = EZB_ZHA_ON_OFF_LIGHT_CONFIG();
+  _ep_desc = ezb_zha_create_on_off_light(_endpoint, &light_cfg);
 }
+
+
 
 //set attribute method -> method overridden in child class
 void ZigbeeLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {

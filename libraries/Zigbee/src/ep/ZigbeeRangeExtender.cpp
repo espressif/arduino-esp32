@@ -14,6 +14,7 @@
 
 #include "ZigbeeRangeExtender.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
 ZigbeeRangeExtender::ZigbeeRangeExtender(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_RANGE_EXTENDER_DEVICE_ID;
@@ -23,17 +24,16 @@ ZigbeeRangeExtender::ZigbeeRangeExtender(uint8_t endpoint) : ZigbeeEP(endpoint) 
   ezb_af_ep_config_t ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_RANGE_EXTENDER_DEVICE_ID, .app_device_version = 0
   };
-  _ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (_ep_desc == nullptr) {
-    log_e("Failed to create range extender endpoint descriptor");
-    return;
-  }
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  // Preserve the v1 client-role Identify cluster (was esp_zb_zcl_attr_list_create at CLIENT role).
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
-
   _ep_config = ep_config;
+    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+    if (_ep_desc == nullptr) {
+    log_e("Failed to create range extender endpoint descriptor");
+    }
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
 }
+
+
 
 #endif  // CONFIG_ZB_ENABLED

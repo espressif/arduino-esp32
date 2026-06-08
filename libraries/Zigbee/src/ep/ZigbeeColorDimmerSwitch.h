@@ -21,10 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/on_off.h"
-#include "ezbee/zcl/cluster/level.h"
-#include "ezbee/zcl/cluster/color_control.h"
 
 /** Level step direction for setLightLevelStep (ZCL Step command: 0 = Up, 1 = Down) */
 enum ZigbeeLevelStepDirection {
@@ -128,10 +124,10 @@ private:
   void (*_on_light_color_change_with_source)(uint8_t, uint8_t, uint8_t, uint8_t, ezb_address_t);
 
   // v2.x On/Off, Level, Color and read senders shared by all addressing overloads.
-  void sendOnOffCommand(uint8_t on_off_cmd_id, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
-  void sendMoveToLevel(uint8_t level, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
-  void sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
-  void sendMoveToColor(espXyColor_t xy_color, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
+  void sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl);
+  void sendMoveToLevel(uint8_t level, const void *cmd_ctrl);
+  void sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const void *cmd_ctrl);
+  void sendMoveToColor(espXyColor_t xy_color, const void *cmd_ctrl);
   void sendReadAttributes(ezb_address_t dst_addr, uint8_t dst_ep, uint16_t cluster_id, uint16_t *attr_field, uint8_t attr_number, const char *err_msg);
 
   void findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) override;

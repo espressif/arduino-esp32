@@ -14,6 +14,8 @@
 
 #include "ZigbeePowerOutlet.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off_desc.h"
 
 ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID;
@@ -21,13 +23,15 @@ ZigbeePowerOutlet::ZigbeePowerOutlet(uint8_t endpoint) : ZigbeeEP(endpoint) {
 
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, on/off clusters) instead of the v1 manual cluster-list factory.
-  ezb_zha_mains_power_outlet_config_t outlet_cfg = EZB_ZHA_MAINS_POWER_OUTLET_CONFIG();
-  _ep_desc = ezb_zha_create_mains_power_outlet(endpoint, &outlet_cfg);
   _ep_config = {
     .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_MAINS_POWER_OUTLET_DEVICE_ID, .app_device_version = 0
   };
   log_v("Outlet endpoint created %u", _endpoint);
+    ezb_zha_mains_power_outlet_config_t outlet_cfg = EZB_ZHA_MAINS_POWER_OUTLET_CONFIG();
+    _ep_desc = ezb_zha_create_mains_power_outlet(_endpoint, &outlet_cfg);
 }
+
+
 
 //set attribute method -> method overridden in child class
 void ZigbeePowerOutlet::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {

@@ -73,10 +73,11 @@ public:
   // class creates an endpoint descriptor with ezb_af_create_endpoint_desc(&ep_config), attaches each
   // cluster descriptor with ezb_af_endpoint_add_cluster_desc(), and passes the result here. ZigbeeCore
   // then attaches _ep_desc to the device descriptor via ezb_af_device_add_endpoint_desc().
-  void setEpConfig(ezb_af_ep_config_t ep_config, ezb_af_ep_desc_t ep_desc) {
-    _ep_config = ep_config;
-    _ep_desc = ep_desc;
+  // v2.x lifecycle: Zigbee.init(), configure EPs, Zigbee.addEndpoint(), Zigbee.begin().
+  bool isEpReady() const {
+    return _ep_desc != nullptr;
   }
+
 
   // Set application version and hardware version
   void setVersion(uint8_t version);
@@ -256,6 +257,37 @@ protected:
   // Acquire/release pair for outgoing ZCL/ZDO commands (caller invokes SDK between them).
   bool acquireCommandLock();
   void releaseCommandLock();
+
+  bool requireBeforeAddEndpoint(const char *api) const;
+
+  // Descriptor-time helpers (before Zigbee.addEndpoint()): read/update attributes on _ep_desc.
+  typedef ezb_err_t (*ep_cluster_desc_add_attr_fn)(ezb_zcl_cluster_desc_t cluster_desc, uint16_t attr_id, const void *value);
+
+  ezb_zcl_cluster_desc_t getEpClusterDesc(uint16_t cluster_id, uint8_t cluster_role = EZB_ZCL_CLUSTER_SERVER) const;
+  ezb_zcl_attr_desc_t getEpClusterAttrDesc(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id) const;
+  bool setEpClusterAttrValue(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value) const;
+  bool addOrSetEpClusterAttr(
+    uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, const void *value, ep_cluster_desc_add_attr_fn add_attr
+  ) const;
+  bool configureEpClusterAttr(
+    const char *api, uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, ep_cluster_desc_add_attr_fn add_attr
+  );
+
+  char _zb_manufacturer[ZB_MAX_NAME_LENGTH + 2];
+  char _zb_model[ZB_MAX_NAME_LENGTH + 2];
+  uint8_t _app_version;
+  uint8_t _hw_version;
+
+  ezb_zcl_power_config_cluster_server_config_t _power_config_cfg;
+  uint8_t _battery_percentage;  // BatteryPercentageRemaining (0-200), not in power_config cluster config
+  uint8_t _battery_voltage;     // BatteryVoltage in 100 mV, not in power_config cluster config
+
+  ezb_zcl_time_cluster_server_config_t _time_server_cfg;
+  int32_t _time_gmt_offset;  // TimeZone, not in time server cluster config
+
+  ezb_zcl_ota_upgrade_cluster_client_config_t _ota_client_cfg;
+  uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config
+  uint32_t _ota_downloaded_file_version;  // DownloadedFileVersion, not in OTA client cluster config
 
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;
