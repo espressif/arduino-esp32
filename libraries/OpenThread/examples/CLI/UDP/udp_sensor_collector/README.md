@@ -6,7 +6,7 @@ It:
 
 - configures Thread with CLI commands,
 - starts and attaches as a Thread node (Leader in a fresh partition),
-- binds a UDP socket on port `61631`,
+- binds a UDP socket on port `5050`,
 - receives sensor frames from many nodes,
 - prints decoded values and periodic fleet status to Serial,
 - replies with per-frame ACK.
@@ -51,7 +51,7 @@ thread start
 udp close
 udp open
 ipmaddr add ff03::abcd
-udp bind :: 61631
+udp bind :: 5050
 ```
 
 On **subsequent** boots the sketch detects the persisted dataset with the
@@ -77,11 +77,27 @@ Incoming telemetry payload:
 id=<nodeId>,seq=<u32>,temp_centi=<i32>,batt_mv=<u16>
 ```
 
-ACK payload:
+ACK payload (the collector's authoritative last-stored sequence for that node,
+which the node uses to confirm delivery and resync its own counter):
 
 ```text
-OK,<nodeId>,<seq>
+OK,<nodeId>,<collectorLastSeq>
 ```
+
+### Sequence handling
+
+The collector owns each node's sequence and classifies every incoming frame:
+
+| Incoming `seq` vs stored `lastSeq` | Meaning | Action | RX note |
+| --- | --- | --- | --- |
+| first frame / `seq > lastSeq` | new reading | store reading, `lastSeq = seq` | — |
+| `seq == lastSeq` | node missed our ACK | count duplicate, keep reading | `(dup)` |
+| `seq == 1` while `lastSeq > 1` | node restarted | follow it: `lastSeq = 1`, store reading | `(restart)` |
+| other `seq < lastSeq` | old/out-of-order frame | ignore reading | `(stale)` |
+
+In every case the ACK carries the **stored** `lastSeq`, so a node that resent a
+missed frame is confirmed, and a node that sent a stale frame is told the real
+last sequence and resyncs forward.
 
 ## Expected serial output
 
@@ -89,9 +105,9 @@ OK,<nodeId>,<seq>
 === udp_sensor_collector (CLI): Leader + UDP sink ===
 ...
 Attached as Leader
-Collector listening on UDP ff03::abcd:61631
+Collector listening on UDP ff03::abcd:5050
 node 3CAAB123 -> ONLINE
-RX node=3CAAB123 seq=1 temp=23.18C batt=3810mV from [fd..]:61631
+RX node=3CAAB123 seq=1 temp=23.18C batt=3810mV from [fd..]:5050
 [collector-cli] role=Leader nodes=1 online=1 packets=1 dropped=0
 node 3CAAB123 -> OFFLINE (silent 96s)
 ```
@@ -111,6 +127,25 @@ node 3CAAB123 -> OFFLINE (silent 96s)
   empty and is rebuilt automatically from the frames sensors keep multicasting -
   no persisted state is needed to recover.
 - A role watchdog re-forms the network if the collector ever detaches.
+
+## Troubleshooting
+
+### `DROP malformed` from RLOC addresses (e.g. `...:0:ff:fe00:f801`)
+
+If the collector logs a stream of `DROP malformed` packets whose source is an
+RLOC address (IID `0000:00ff:fe00:<rloc16>`) and whose payload is binary
+starting with `0x42` ('B'), the application UDP port collides with a Thread
+**reserved port** and the socket is receiving Thread's own management traffic
+(the `0x42` byte is a CoAP `Ver=1, CON, TKL=2` header). Do **not** bind these:
+
+| Port | Used by Thread for |
+| --- | --- |
+| `61631` | Thread Management Framework (TMF) CoAP (address query/notify, network data) |
+| `5683` / `5684` | CoAP / CoAPs |
+| `19788` | MLE |
+
+This example uses `5050`, a free application port. Pick any non-reserved port
+and keep it identical on the collector and the nodes.
 
 ## License
 
