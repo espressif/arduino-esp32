@@ -276,8 +276,8 @@ static bool isOwnAddress(const char *ip) {
   if (!addr.fromString(ip)) {
     return false;
   }
-  for (const IPAddress &own : OThread.getAllUnicastAddresses()) {
-    if (own == addr) {
+  for (size_t i = 0, n = OThread.getUnicastAddressCount(); i < n; i++) {
+    if (OThread.getUnicastAddress(i) == addr) {
       return true;
     }
   }
