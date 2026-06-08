@@ -48,8 +48,14 @@ ZigbeeElectricalMeasurement zbElectricalMeasurement = ZigbeeElectricalMeasuremen
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting...");
 
+  // Initialize Zigbee stack
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 

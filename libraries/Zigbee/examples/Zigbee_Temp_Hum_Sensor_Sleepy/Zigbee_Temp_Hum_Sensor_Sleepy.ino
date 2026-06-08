@@ -130,6 +130,18 @@ void setup() {
   // Configure the wake up source and set to wake up every 5 seconds
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
 
+  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
+  zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
+  Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
+
+  // Initialize Zigbee stack with custom End Device config
+  if (!Zigbee.init(&zigbeeConfig, false)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "SleepyZigbeeTempSensor");
 
@@ -159,22 +171,17 @@ void setup() {
   zbTempSensor.onDefaultResponse(onResponse);
 #endif
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
-  // Create a custom Zigbee configuration for End Device with keep alive 10s to avoid interference with reporting data
-  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
-  zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
-
-  // For battery powered devices, it can be better to set timeout for Zigbee Begin to lower value to save battery
-  // If the timeout has been reached, the network channel mask will be reset and the device will try to connect again after reset (scanning all channels)
-  Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
-
-  // When all EPs are registered, start Zigbee in End Device mode
-  if (!Zigbee.begin(&zigbeeConfig, false)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();  // If Zigbee failed to start, reboot the device and try again
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

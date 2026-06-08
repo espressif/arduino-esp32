@@ -63,6 +63,14 @@ void setup() {
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as End Device (default)
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbTempSensor.setManufacturerAndModel("Espressif", "ZigbeeTempSensor");
 
@@ -78,11 +86,11 @@ void setup() {
   // Optional: Time cluster configuration (default params, as this device will revieve time from coordinator)
   zbTempSensor.addTimeCluster();
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbTempSensor);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

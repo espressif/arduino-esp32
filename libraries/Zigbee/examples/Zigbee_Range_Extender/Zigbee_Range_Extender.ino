@@ -69,30 +69,43 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
+#if USE_CUSTOM_ZIGBEE_CONFIG
+  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
+  zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
+
+  // Initialize Zigbee stack as router with custom config
+  if (!Zigbee.init(&zigbeeConfig)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+#else
+  // Initialize Zigbee stack as router
+  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+#endif
+
   // Optional: Set callback function for device identify
   zbExtender.onIdentify(identify);
 
   // Optional: Set Zigbee device name and model
   zbExtender.setManufacturerAndModel("Espressif", "ZigbeeRangeExtender");
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding Zigbee Extender endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbExtender);
 
-#if USE_CUSTOM_ZIGBEE_CONFIG
-  // Optional: Create a custom Zigbee configuration for Zigbee Extender
-  esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
-  zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
-
-  // When all EPs are registered, start Zigbee with custom config
-  if (!Zigbee.begin(&zigbeeConfig)) {
-#else
-  // When all EPs are registered, start Zigbee as ROUTER device
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
-#endif
+  Serial.println("Starting Zigbee...");
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

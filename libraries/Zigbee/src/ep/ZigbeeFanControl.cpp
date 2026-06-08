@@ -14,10 +14,14 @@
 
 #include "ZigbeeFanControl.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/fan_control_desc.h"
 
 ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID;  //There is no FAN_CONTROL_DEVICE_ID in the Zigbee spec
   _on_fan_mode_change = nullptr;
+  _current_fan_mode = FAN_MODE_OFF;
+  _current_fan_mode_sequence = FAN_MODE_SEQUENCE_LOW_MED_HIGH;
 
   // v2.x data model: build the endpoint descriptor manually (Basic + Identify + FanControl server).
   // NOTE(zb-v2): the v1 device id mismatch is preserved: _device_id is Thermostat while the endpoint
@@ -25,36 +29,31 @@ ZigbeeFanControl::ZigbeeFanControl(uint8_t endpoint) : ZigbeeEP(endpoint) {
   ezb_af_ep_config_t ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_HEATING_COOLING_UNIT_DEVICE_ID, .app_device_version = 0
   };
-  _ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (_ep_desc == nullptr) {
-    log_e("Failed to create fan control endpoint descriptor");
-    return;
-  }
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_fan_control_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-
   _ep_config = ep_config;
+    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+    if (_ep_desc == nullptr) {
+    log_e("Failed to create fan control endpoint descriptor");
+    }
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_fan_control_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
 
+
+
 bool ZigbeeFanControl::setFanModeSequence(ZigbeeFanModeSequence sequence) {
-  ezb_zcl_cluster_desc_t fan_control_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_FAN_CONTROL, EZB_ZCL_CLUSTER_SERVER);
-  uint8_t seq_value = (uint8_t)sequence;
-  ezb_err_t ret = ezb_zcl_fan_control_cluster_desc_add_attr(fan_control_cluster, EZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_SEQUENCE_ID, (void *)&seq_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set fan mode sequence: 0x%x", ret);
-    return false;
-  }
   _current_fan_mode_sequence = sequence;
   _current_fan_mode = FAN_MODE_OFF;
-  // Set initial fan mode to OFF
-  uint8_t mode_value = (uint8_t)_current_fan_mode;
-  ret = ezb_zcl_fan_control_cluster_desc_add_attr(fan_control_cluster, EZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_ID, (void *)&mode_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set fan mode: 0x%x", ret);
+  if (!configureEpClusterAttr(
+        "setFanModeSequence", EZB_ZCL_CLUSTER_ID_FAN_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_SEQUENCE_ID,
+        (void *)&_current_fan_mode_sequence, ezb_zcl_fan_control_cluster_desc_add_attr
+      )) {
     return false;
   }
-  return true;
+  return configureEpClusterAttr(
+    "setFanModeSequence", EZB_ZCL_CLUSTER_ID_FAN_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_FAN_CONTROL_FAN_MODE_ID, (void *)&_current_fan_mode,
+    ezb_zcl_fan_control_cluster_desc_add_attr
+  );
 }
 
 //set attribute method -> method overridden in child class

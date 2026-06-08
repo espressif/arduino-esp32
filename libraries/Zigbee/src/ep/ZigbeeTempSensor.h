@@ -21,9 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
 #include "ezbee/zcl/cluster/temperature_measurement_desc.h"
-#include "ezbee/zcl/cluster/rel_humidity_measurement_desc.h"
 
 class ZigbeeTempSensor : public ZigbeeEP {
 public:
@@ -34,7 +32,6 @@ public:
   bool setTemperature(float value);
 
   // Set the default (initial) value for the temperature sensor in 0,01°C
-  // Must be called before adding the EP to Zigbee class. Only effective in factory reset mode (before commissioning)
   bool setDefaultValue(float defaultValue);
 
   // Set the min and max value for the temperature sensor in 0,01°C
@@ -65,6 +62,8 @@ public:
   bool report();
 
 private:
+  ezb_zcl_temperature_measurement_cluster_config_t _temp_meas_cfg;
+  uint16_t _tolerance;
   bool _humidity_sensor;
 };
 

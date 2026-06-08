@@ -123,8 +123,11 @@ private:
   ezb_af_device_desc_t _zb_dev_desc;  // was esp_zb_ep_list_t *_zb_ep_list
   zigbee_role_t _role;
   bool _initialized;
+  bool _endpoints_registered;
+  bool _stack_running;
   bool _started;
   bool _connected;
+  bool _paused;
 
   uint8_t _open_network;
   zigbee_scan_result_t *_scan_result;
@@ -136,7 +139,9 @@ private:
   // Global default response callback
   void (*_global_default_response_cb)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster);
 
-  bool zigbeeInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs);
+  bool zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs);
+  bool zigbeeStartStack();
+  bool registerEndpoints();
   static void scanCompleteCallback(ezb_nwk_active_scan_result_t *result, void *user_ctx);
   const char *getDeviceTypeString(uint16_t deviceId);  // ZHA device id (see EZB_ZHA_*_DEVICE_ID in ezbee/zha.h)
   void searchBindings();
@@ -150,17 +155,29 @@ public:
 
   std::list<ZigbeeEP *> ep_objects;
 
-  bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
-  bool begin(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
-  // bool end();
-  void stop();
-  void start();
+  // init(): esp_zigbee_init() + commissioning setup (SDK: before endpoint registration).
+  // addEndpoint(): after init(), attach endpoints to the device descriptor.
+  // begin(): ezb_af_device_desc_register(), esp_zigbee_start().
+  bool init(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
+  bool init(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
+  bool begin();
+  void pause();
+  void resume();
 
   bool initialized() {
     return _initialized;
   }
+  bool endpointsRegistered() {
+    return _endpoints_registered;
+  }
+  bool stackRunning() {
+    return _stack_running;
+  }
   bool started() {
     return _started;
+  }
+  bool paused() {
+    return _paused;
   }
   bool connected() {
     return _connected;

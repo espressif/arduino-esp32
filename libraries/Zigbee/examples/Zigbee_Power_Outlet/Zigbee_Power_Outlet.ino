@@ -55,6 +55,14 @@ void setLED(bool value) {
 void setup() {
   Serial.begin(115200);
 
+  // Initialize Zigbee stack as router
+  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Init LED and turn it OFF (if LED_PIN == RGB_BUILTIN, the rgbLedWrite() will be used under the hood)
   pinMode(led, OUTPUT);
   digitalWrite(led, LOW);
@@ -68,15 +76,17 @@ void setup() {
   // Set callback function for power outlet change
   zbOutlet.onPowerOutletChange(setLED);
 
-  //Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeePowerOutlet endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbOutlet);
 
-  // When all EPs are registered, start Zigbee. By default acts as ZIGBEE_END_DEVICE
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

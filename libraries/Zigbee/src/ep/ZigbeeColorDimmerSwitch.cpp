@@ -14,6 +14,10 @@
 
 #include "ZigbeeColorDimmerSwitch.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off.h"
+#include "ezbee/zcl/cluster/level.h"
+#include "ezbee/zcl/cluster/color_control.h"
 
 // Initialize the static instance pointer
 ZigbeeColorDimmerSwitch *ZigbeeColorDimmerSwitch::_instance = nullptr;
@@ -69,13 +73,14 @@ ZigbeeColorDimmerSwitch::ZigbeeColorDimmerSwitch(uint8_t endpoint) : ZigbeeEP(en
   _on_light_color_change = nullptr;
   _on_light_color_change_with_source = nullptr;
 
-  ezb_zha_color_dimmer_switch_config_t switch_cfg = EZB_ZHA_COLOR_DIMMER_SWITCH_CONFIG();
-  _ep_desc = ezb_zha_create_color_dimmer_switch(_endpoint, &switch_cfg);
-
   _ep_config = {
     .ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMER_SWITCH_DEVICE_ID, .app_device_version = 0
   };
+    ezb_zha_color_dimmer_switch_config_t switch_cfg = EZB_ZHA_COLOR_DIMMER_SWITCH_CONFIG();
+    _ep_desc = ezb_zha_create_color_dimmer_switch(_endpoint, &switch_cfg);
 }
+
+
 
 void ZigbeeColorDimmerSwitch::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeColorDimmerSwitch *instance = static_cast<ZigbeeColorDimmerSwitch *>(user_ctx);
@@ -178,7 +183,9 @@ void ZigbeeColorDimmerSwitch::findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) {
   ezb_zdo_match_desc_req(cmd_req);
 }
 
-void ZigbeeColorDimmerSwitch::sendOnOffCommand(uint8_t on_off_cmd_id, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl) {
+void ZigbeeColorDimmerSwitch::sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl_ptr) {
+  const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl = static_cast<const ezb_zcl_cluster_cmd_ctrl_t *>(cmd_ctrl_ptr);
+
   if (!_is_bound) {
     log_e("Light not bound");
     return;
@@ -329,7 +336,9 @@ void ZigbeeColorDimmerSwitch::lightOnWithTimedOff(uint8_t on_off_control, uint16
   releaseCommandLock();
 }
 
-void ZigbeeColorDimmerSwitch::sendMoveToLevel(uint8_t level, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl) {
+void ZigbeeColorDimmerSwitch::sendMoveToLevel(uint8_t level, const void *cmd_ctrl_ptr) {
+  const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl = static_cast<const ezb_zcl_cluster_cmd_ctrl_t *>(cmd_ctrl_ptr);
+
   if (!_is_bound) {
     log_e("Light not bound");
     return;
@@ -372,7 +381,9 @@ void ZigbeeColorDimmerSwitch::setLightLevel(uint8_t level, uint8_t endpoint, con
   sendMoveToLevel(level, &c);
 }
 
-void ZigbeeColorDimmerSwitch::sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl) {
+void ZigbeeColorDimmerSwitch::sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const void *cmd_ctrl_ptr) {
+  const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl = static_cast<const ezb_zcl_cluster_cmd_ctrl_t *>(cmd_ctrl_ptr);
+
   if (!_is_bound) {
     log_e("Light not bound");
     return;
@@ -420,7 +431,9 @@ void ZigbeeColorDimmerSwitch::setLightLevelStep(
   sendLevelStep(direction, step_size, transition_time, &c);
 }
 
-void ZigbeeColorDimmerSwitch::sendMoveToColor(espXyColor_t xy_color, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl) {
+void ZigbeeColorDimmerSwitch::sendMoveToColor(espXyColor_t xy_color, const void *cmd_ctrl_ptr) {
+  const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl = static_cast<const ezb_zcl_cluster_cmd_ctrl_t *>(cmd_ctrl_ptr);
+
   if (!_is_bound) {
     log_e("Light not bound");
     return;
@@ -487,7 +500,7 @@ void ZigbeeColorDimmerSwitch::sendReadAttributes(
   }
 }
 
-// v2.x read addressing helpers building ezb_address_t for each destination style.
+// v2.x read addressing helpers (library ezb_address_t; converted at SDK boundary).
 static ezb_address_t make_read_addr_bound() {
   ezb_address_t a;
   ezb_address_set_none(&a);

@@ -60,8 +60,11 @@ ZigbeeCore::ZigbeeCore() {
   _scan_count = 0;
   _begin_timeout = ZB_BEGIN_TIMEOUT_DEFAULT;
   _initialized = false;
+  _endpoints_registered = false;
+  _stack_running = false;
   _started = false;
   _connected = false;
+  _paused = false;
   _scan_duration = 3;  // default scan duration
   _rx_on_when_idle = true;
   _debug = false;
@@ -106,14 +109,65 @@ static void scheduleCommissioning(uint8_t mode, uint32_t delay_ms) {
   esp_timer_start_once(s_comm_retry_timer, (uint64_t)delay_ms * 1000);
 }
 
-bool ZigbeeCore::begin(esp_zigbee_device_config_t *role_cfg, bool erase_nvs) {
+bool ZigbeeCore::init(esp_zigbee_device_config_t *role_cfg, bool erase_nvs) {
   if (_initialized) {
-    log_w("Zigbee already initialized; begin() ignored (use start()/stop() to pause/resume)");
+    log_w("Zigbee already initialized");
     return false;
   }
 
   _role = (zigbee_role_t)role_cfg->device_type;
-  if (!zigbeeInit(role_cfg, erase_nvs)) {
+  if (!zigbeeStackInit(role_cfg, erase_nvs)) {
+    log_e("ZigbeeCore init failed");
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeCore::init(zigbee_role_t role, bool erase_nvs) {
+  if (_initialized) {
+    log_w("Zigbee already initialized");
+    return false;
+  }
+
+  switch (role) {
+    case ZIGBEE_COORDINATOR:
+    {
+      _role = ZIGBEE_COORDINATOR;
+      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_COORDINATOR_CONFIG();
+      return init(&zb_nwk_cfg, erase_nvs);
+    }
+    case ZIGBEE_ROUTER:
+    {
+      _role = ZIGBEE_ROUTER;
+      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG();
+      return init(&zb_nwk_cfg, erase_nvs);
+    }
+    case ZIGBEE_END_DEVICE:
+    {
+      _role = ZIGBEE_END_DEVICE;
+      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG();
+      return init(&zb_nwk_cfg, erase_nvs);
+    }
+    default: log_e("Invalid Zigbee Role"); return false;
+  }
+}
+
+bool ZigbeeCore::begin() {
+  if (!_initialized) {
+    log_e("Zigbee.init() must be called before Zigbee.begin()");
+    return false;
+  }
+  if (_stack_running) {
+    log_w("Zigbee stack already running");
+    return _started;
+  }
+  if (!_endpoints_registered) {
+    if (!registerEndpoints()) {
+      log_e("ZigbeeCore begin failed to register endpoints");
+      return false;
+    }
+  }
+  if (!zigbeeStartStack()) {
     log_e("ZigbeeCore begin failed");
     return false;
   }
@@ -122,67 +176,67 @@ bool ZigbeeCore::begin(esp_zigbee_device_config_t *role_cfg, bool erase_nvs) {
     if (_role != ZIGBEE_COORDINATOR) {  // Only End Device and Router can rejoin
       resetNVRAMChannelMask();
     }
-  }
-  return started();
-}
-
-bool ZigbeeCore::begin(zigbee_role_t role, bool erase_nvs) {
-  if (_initialized) {
-    log_w("Zigbee already initialized; begin() ignored (use start()/stop() to pause/resume)");
     return false;
   }
-
-  bool status = true;
-  switch (role) {
-    case ZIGBEE_COORDINATOR:
-    {
-      _role = ZIGBEE_COORDINATOR;
-      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_COORDINATOR_CONFIG();
-      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
-      break;
-    }
-    case ZIGBEE_ROUTER:
-    {
-      _role = ZIGBEE_ROUTER;
-      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_ROUTER_CONFIG();
-      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
-      break;
-    }
-    case ZIGBEE_END_DEVICE:
-    {
-      _role = ZIGBEE_END_DEVICE;
-      esp_zigbee_device_config_t zb_nwk_cfg = ZIGBEE_DEFAULT_ED_CONFIG();
-      status = zigbeeInit(&zb_nwk_cfg, erase_nvs);
-      break;
-    }
-    default: log_e("Invalid Zigbee Role"); return false;
-  }
-  if (!status || xSemaphoreTake(lock, _begin_timeout) != pdTRUE) {
-    log_e("ZigbeeCore begin failed or timeout");
-    if (_role != ZIGBEE_COORDINATOR) {  // Only End Device and Router can rejoin
-      resetNVRAMChannelMask();
-    }
-  }
-  return started();
+  return _started;
 }
 
 bool ZigbeeCore::addEndpoint(ZigbeeEP *ep) {
+  if (!_initialized) {
+    log_e("Zigbee.init() must be called before Zigbee.addEndpoint()");
+    return false;
+  }
+  if (_endpoints_registered) {
+    log_e("Cannot add endpoint after Zigbee.begin()");
+    return false;
+  }
+
+  if (ep->_ep_desc == nullptr) {
+    log_e("Endpoint %u descriptor was not created in the constructor", ep->_endpoint);
+    return false;
+  }
+  if (ep->_ep_config.ep_id == 0) {
+    ep->_ep_config.ep_id = ep->_endpoint;
+  }
+
   ep_objects.push_back(ep);
 
   log_d("Endpoint: %u, Device ID: 0x%04x", ep->_endpoint, ep->_device_id);
-  if (ep->_ep_config.ep_id == 0 || ep->_ep_desc == nullptr) {
-    log_e("Endpoint config or endpoint descriptor is not initialized, EP not added to ZigbeeCore's EP list");
+
+  ezb_err_t ret = ezb_af_device_add_endpoint_desc(_zb_dev_desc, ep->_ep_desc);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add endpoint %u descriptor to device descriptor: 0x%x", ep->_endpoint, ret);
+    return false;
+  }
+  return true;
+}
+
+bool ZigbeeCore::registerEndpoints() {
+  if (_endpoints_registered) {
+    return true;
+  }
+  if (ep_objects.empty()) {
+    log_w("No Zigbee EPs to register");
     return false;
   }
 
-  // v2.x data model: each ZigbeeEP builds its own endpoint descriptor (ep->_ep_desc) with the
-  // appropriate clusters attached. Here we just register it with the device descriptor; the actual
-  // stack registration happens in zigbeeInit() via ezb_af_device_desc_register(_zb_dev_desc).
-  ezb_err_t ret = ezb_af_device_add_endpoint_desc(_zb_dev_desc, ep->_ep_desc);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to add endpoint descriptor to device descriptor: 0x%x", ret);
+  log_d("Register Zigbee device descriptor");
+  if (ezb_af_device_desc_register(_zb_dev_desc) != EZB_ERR_NONE) {
+    log_e("Failed to register Zigbee device descriptor");
     return false;
   }
+
+  // SDK order: register device descriptor, then ZCL core action handler.
+  ezb_zcl_core_action_handler_register(zb_action_handler);
+
+  for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
+    log_i("Device type: %s, Endpoint: %u, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
+    if ((*it)->_power_source == ZB_POWER_SOURCE_BATTERY) {
+      edBatteryPowered = true;
+    }
+  }
+
+  _endpoints_registered = true;
   return true;
 }
 
@@ -208,8 +262,8 @@ static void esp_zb_task(void *pvParameters) {
   esp_zigbee_launch_mainloop();
 }
 
-// Zigbee core init function
-bool ZigbeeCore::zigbeeInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) {
+// Zigbee stack init: esp_zigbee_init() + commissioning setup (no endpoint registration yet).
+bool ZigbeeCore::zigbeeStackInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) {
   // The persistent data partition is now NVS (was a FAT partition in v1.x). The partitions.csv
   // entry for `zb_storage` must use subtype `nvs`, and the partition must be initialized as NVS.
   esp_err_t nvs_err = nvs_flash_init_partition("zb_storage");
@@ -239,37 +293,21 @@ bool ZigbeeCore::zigbeeInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) 
     return false;
   }
 
-  // Register all Zigbee EPs in list
-  if (ep_objects.empty()) {
-    log_w("No Zigbee EPs to register");
-  } else {
-    log_d("Register all Zigbee EPs in list");
-    if (ezb_af_device_desc_register(_zb_dev_desc) != EZB_ERR_NONE) {
-      log_e("Failed to register Zigbee device descriptor");
-      return false;
-    }
-
-    //print the list of Zigbee EPs from ep_objects
-    log_i("List of registered Zigbee EPs:");
-    for (std::list<ZigbeeEP *>::iterator it = ep_objects.begin(); it != ep_objects.end(); ++it) {
-      log_i("Device type: %s, Endpoint: %u, Device ID: 0x%04x", getDeviceTypeString((*it)->_device_id), (*it)->_endpoint, (*it)->_device_id);
-      if ((*it)->_power_source == ZB_POWER_SOURCE_BATTERY) {
-        edBatteryPowered = true;
-      }
-    }
-  }
-
-  // Register the application signal handler (v2.x register model).
+  // SDK order: esp_zigbee_init(), then commissioning setup, then endpoint registration in begin().
   if (ezb_app_signal_add_handler(zb_app_signal_handler) != EZB_ERR_NONE) {
     log_e("Failed to register Zigbee application signal handler");
     return false;
   }
 
-  // Register the ZCL core-action handler (v2.x). Replaces the v1 esp_zb_core_action_handler_register().
-  ezb_zcl_core_action_handler_register(zb_action_handler);
+  ezb_aps_secur_enable_distributed_security(false);
 
   if (ezb_bdb_set_primary_channel_set(_primary_channel_mask) != EZB_ERR_NONE) {
     log_e("Failed to set primary network channel mask");
+    return false;
+  }
+
+  if (ezb_bdb_set_secondary_channel_set(ZB_TRANSCEIVER_ALL_CHANNELS_MASK) != EZB_ERR_NONE) {
+    log_e("Failed to set secondary network channel mask");
     return false;
   }
 
@@ -279,17 +317,27 @@ bool ZigbeeCore::zigbeeInit(esp_zigbee_device_config_t *zb_cfg, bool erase_nvs) 
   // NOTE(zb-v2): esp_zb_nvram_erase_at_start() is removed. NVRAM erase on join is handled above
   // by erasing the zb_storage NVS partition when `erase_nvs` is set.
 
-  // Create Zigbee task and start Zigbee stack
-  if (xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL) != pdPASS) {
-    log_e("Failed to create Zigbee task");
-    return false;
-  }
-
   _initialized = true;
   return true;
 }
 
+bool ZigbeeCore::zigbeeStartStack() {
+  if (_stack_running) {
+    return true;
+  }
+  if (xTaskCreate(esp_zb_task, "Zigbee_main", 8192, NULL, 5, NULL) != pdPASS) {
+    log_e("Failed to create Zigbee task");
+    return false;
+  }
+  _stack_running = true;
+  return true;
+}
+
 void ZigbeeCore::setRadioConfig(esp_zigbee_radio_config_t config) {
+  if (_initialized) {
+    log_e("Zigbee.setRadioConfig() must be called before Zigbee.init()");
+    return;
+  }
   _radio_config = config;
 }
 
@@ -298,6 +346,10 @@ esp_zigbee_radio_config_t ZigbeeCore::getRadioConfig() {
 }
 
 void ZigbeeCore::setPrimaryChannelMask(uint32_t mask) {
+  if (_initialized) {
+    log_e("Zigbee.setPrimaryChannelMask() must be called before Zigbee.init()");
+    return;
+  }
   _primary_channel_mask = mask;
 }
 
@@ -314,14 +366,14 @@ void ZigbeeCore::setRebootOpenNetwork(uint8_t time) {
 }
 
 void ZigbeeCore::openNetwork(uint8_t time) {
-  if (started()) {
+  if (_stack_running && !_paused) {
     log_v("Opening network for joining for %u seconds", time);
     ezb_bdb_open_network(time);
   }
 }
 
 void ZigbeeCore::closeNetwork() {
-  if (started()) {
+  if (_stack_running && !_paused) {
     log_v("Closing network");
     ezb_bdb_close_network();
   }
@@ -852,22 +904,20 @@ void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
   log_v("Channel mask set to 0x%08" PRIx32, mask);
 }
 
-void ZigbeeCore::stop() {
-  if (started()) {
+void ZigbeeCore::pause() {
+  if (_stack_running && !_paused) {
     vTaskSuspend(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack stopped");
-    _started = false;
+    log_v("Zigbee stack paused");
+    _paused = true;
   }
-  return;
 }
 
-void ZigbeeCore::start() {
-  if (!started()) {
+void ZigbeeCore::resume() {
+  if (_stack_running && _paused) {
     vTaskResume(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack started");
-    _started = true;
+    log_v("Zigbee stack resumed");
+    _paused = false;
   }
-  return;
 }
 
 // Function to convert enum value to string

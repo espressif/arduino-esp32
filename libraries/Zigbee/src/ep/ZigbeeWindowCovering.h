@@ -21,21 +21,19 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/window_covering.h"
 
 // Window covering types supported by Zigbee Window Covering cluster
 enum ZigbeeWindowCoveringType {
-  ROLLERSHADE = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_ROLLERSHADE,                          // LIFT support
-  ROLLERSHADE_2_MOTOR = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_ROLLERSHADE2_MOTOR,           // LIFT support
-  ROLLERSHADE_EXTERIOR = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR,        // LIFT support
-  ROLLERSHADE_EXTERIOR_2_MOTOR = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR2_MOTOR,  // LIFT support
-  DRAPERY = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_DRAPERY,                                  // LIFT support
-  AWNING = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_AWNING,                                    // LIFT support
-  SHUTTER = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_SHUTTER,                                  // TILT support
-  BLIND_TILT_ONLY = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_TILT_BLIND_TILT_ONLY,             // TILT support
-  BLIND_LIFT_AND_TILT = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_TILT_BLIND_LIFT_AND_TILT,     // LIFT and TILT support
-  PROJECTOR_SCREEN = EZB_ZCL_WINDOW_COVERING_WINDOW_COVERING_TYPE_PROJECTOR_SCREEN,                // LIFT support
+  ROLLERSHADE = 0x00,                          // LIFT support
+  ROLLERSHADE_2_MOTOR = 0x01,           // LIFT support
+  ROLLERSHADE_EXTERIOR = 0x02,        // LIFT support
+  ROLLERSHADE_EXTERIOR_2_MOTOR = 0x03,  // LIFT support
+  DRAPERY = 0x04,                                  // LIFT support
+  AWNING = 0x05,                                    // LIFT support
+  SHUTTER = 0x06,                                  // TILT support
+  BLIND_TILT_ONLY = 0x07,             // TILT support
+  BLIND_LIFT_AND_TILT = 0x08,     // LIFT and TILT support
+  PROJECTOR_SCREEN = 0x09,                // LIFT support
 };
 
 class ZigbeeWindowCovering : public ZigbeeEP {
@@ -99,6 +97,10 @@ private:
   void (*_on_go_to_lift_percentage)(uint8_t);
   void (*_on_go_to_tilt_percentage)(uint8_t);
   void (*_on_stop)();
+
+  uint8_t _covering_type;
+  uint8_t _config_status;
+  uint8_t _mode;
 
   // Widows covering lift attributes
   uint8_t _current_lift_percentage;

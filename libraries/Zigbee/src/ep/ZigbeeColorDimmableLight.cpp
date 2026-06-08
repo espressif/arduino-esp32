@@ -16,31 +16,16 @@
 #include <algorithm>
 #include "ZigbeeColorDimmableLight.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off_desc.h"
+#include "ezbee/zcl/cluster/level_desc.h"
+#include "ezbee/zcl/cluster/color_control_desc.h"
 
 ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_COLOR_DIMMABLE_LIGHT_DEVICE_ID;
-
-  // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
-  // scenes, on/off, level, color-control clusters) instead of the v1 color-light cluster-list factory.
-  ezb_zha_color_dimmable_light_config_t light_cfg = EZB_ZHA_COLOR_DIMMABLE_LIGHT_CONFIG();
-  _ep_desc = ezb_zha_create_color_dimmable_light(endpoint, &light_cfg);
-
-  // The mandatory color-control config only seeds CurrentX/Y, ColorMode, Options, EnhancedColorMode,
-  // ColorCapabilities and NumberOfPrimaries. Add the optional Hue/Saturation and color-temperature
-  // attributes to the existing color-control cluster descriptor.
-  uint8_t hue = 0;
-  uint8_t saturation = 0;
-  uint16_t color_temperature = EZB_ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_DEFAULT_VALUE;
-  uint16_t min_temp = EZB_ZCL_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_DEFAULT_VALUE;
-  uint16_t max_temp = EZB_ZCL_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_DEFAULT_VALUE;
-
-  ezb_zcl_cluster_desc_t color_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER);
-  ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, (void *)&hue);
-  ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, (void *)&saturation);
-  // NOTE(zb-v2): v1 EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_ID is renamed to *_COLOR_TEMPERATURE_MIREDS_ID in v2.x.
-  ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID, (void *)&color_temperature);
-  ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_ID, (void *)&min_temp);
-  ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID, (void *)&max_temp);
+  _color_capabilities = ZIGBEE_COLOR_CAPABILITY_X_Y;
+  _color_temp_physical_min_mireds = EZB_ZCL_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_DEFAULT_VALUE;
+  _color_temp_physical_max_mireds = EZB_ZCL_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_DEFAULT_VALUE;
 
   _ep_config = {
     .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_COLOR_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0
@@ -48,17 +33,51 @@ ZigbeeColorDimmableLight::ZigbeeColorDimmableLight(uint8_t endpoint) : ZigbeeEP(
 
   //set default values
   _current_state = false;
+  _on_off_value = 0;
   _current_level = 255;
   _current_color = {255, 255, 255};
   _current_hsv = {0, 0, 255};
   _current_color_temperature = EZB_ZCL_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_DEFAULT_VALUE;
   _current_color_mode = ZIGBEE_COLOR_MODE_CURRENT_X_Y;  //default XY color mode
-  _color_capabilities = ZIGBEE_COLOR_CAPABILITY_X_Y;    //default XY color supported only
 
   // Initialize callbacks to nullptr
   _on_light_change_rgb = nullptr;
   _on_light_change_hsv = nullptr;
   _on_light_change_temp = nullptr;
+
+  ezb_zha_color_dimmable_light_config_t light_cfg = EZB_ZHA_COLOR_DIMMABLE_LIGHT_CONFIG();
+  light_cfg.on_off_cfg.on_off = _current_state;
+  light_cfg.level_cfg.current_level = _current_level;
+  light_cfg.color_cfg.color_capabilities = _color_capabilities;
+  light_cfg.color_cfg.color_mode = _current_color_mode;
+
+  _ep_desc = ezb_zha_create_color_dimmable_light(_endpoint, &light_cfg);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create color dimmable light endpoint descriptor");
+    return;
+  }
+
+  // Optional color attributes are not all created from color_cfg; add only if missing.
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_HUE_ID, (void *)&_current_hsv.h,
+    ezb_zcl_color_control_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_CURRENT_SATURATION_ID, (void *)&_current_hsv.s,
+    ezb_zcl_color_control_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMPERATURE_MIREDS_ID, (void *)&_current_color_temperature,
+    ezb_zcl_color_control_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_ID,
+    (void *)&_color_temp_physical_min_mireds, ezb_zcl_color_control_cluster_desc_add_attr
+  );
+  addOrSetEpClusterAttr(
+    EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID,
+    (void *)&_color_temp_physical_max_mireds, ezb_zcl_color_control_cluster_desc_add_attr
+  );
 }
 
 uint16_t ZigbeeColorDimmableLight::getCurrentColorX() {
@@ -121,6 +140,21 @@ uint8_t ZigbeeColorDimmableLight::readColorAttributeU8(uint16_t attr_id) {
     return 0;
   }
   return value;
+}
+
+void ZigbeeColorDimmableLight::syncOnOffFromDataModel() {
+  // Stack callback context: read straight from the data model without taking the Zigbee lock.
+  ezb_zcl_attr_desc_t attr =
+    ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, EZB_ZCL_STD_MANUF_CODE);
+  if (attr == nullptr) {
+    return;
+  }
+  uint8_t value = 0;
+  if (ezb_zcl_attr_desc_get_value(attr, &value) != EZB_ERR_NONE) {
+    return;
+  }
+  _on_off_value = value;
+  _current_state = value != 0;
 }
 
 void ZigbeeColorDimmableLight::syncColorModeFromCallback(uint8_t color_mode) {
@@ -306,6 +340,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   ezb_zcl_status_t ret = EZB_ZCL_STATUS_SUCCESS;
   // Update all attributes
   _current_state = state;
+  _on_off_value = state ? 1 : 0;
   _current_level = level;
   _current_color = {red, green, blue};
   lightChangedRgb();
@@ -319,7 +354,7 @@ bool ZigbeeColorDimmableLight::setLight(bool state, uint8_t level, uint8_t red, 
   _current_hsv = hsv_color;
 
   log_v("Updating light state: %d, level: %u, color: %u, %u, %u", state, level, red, green, blue);
-  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_on_off_value, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -358,7 +393,8 @@ bool ZigbeeColorDimmableLight::setLightState(bool state) {
   }
 
   _current_state = state;
-  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  _on_off_value = state ? 1 : 0;
+  ezb_zcl_status_t ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_on_off_value, false);
 
   if (ret == EZB_ZCL_STATUS_SUCCESS) {
     lightChangedByMode();  // Call appropriate callback based on current color mode
@@ -498,51 +534,83 @@ bool ZigbeeColorDimmableLight::setLightColorMode(uint8_t color_mode) {
 }
 
 bool ZigbeeColorDimmableLight::setLightColorCapabilities(uint16_t capabilities) {
-  // v2.x data model: capabilities are seeded on the cluster descriptor before the endpoint is
-  // registered (the v1 esp_zb_cluster_update_attr on a live cluster list has no equivalent).
-  ezb_zcl_cluster_desc_t color_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER);
-  if (color_cluster == nullptr) {
-    log_e("Color control cluster not found");
-    return false;
-  }
-
-  // Validate capabilities (max value is 0x001f per ZCL spec)
   if (capabilities > 0x001f) {
     log_e("Invalid color capabilities value: 0x%04x (max: 0x001f)", capabilities);
     return false;
   }
 
-  _color_capabilities = capabilities;
+  if (Zigbee.endpointsRegistered()) {
+    _color_capabilities = capabilities;
+    ezb_zcl_status_t ret = setClusterAttribute(
+      EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_CAPABILITIES_ID, (void *)&_color_capabilities, false
+    );
+    if (ret != EZB_ZCL_STATUS_SUCCESS) {
+      log_e("Failed to set color capabilities: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+      return false;
+    }
+    log_v("Color capabilities set to: 0x%04x", _color_capabilities);
+    return true;
+  }
 
-  ezb_err_t ret = ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_CAPABILITIES_ID, (void *)&_color_capabilities);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set color capabilities: 0x%x", ret);
+  if (!requireBeforeAddEndpoint("setLightColorCapabilities")) {
     return false;
   }
 
+  _color_capabilities = capabilities;
+  if (!setEpClusterAttrValue(EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_CAPABILITIES_ID, &_color_capabilities)) {
+    log_e("Failed to set color capabilities on endpoint descriptor");
+    return false;
+  }
   log_v("Color capabilities set to: 0x%04x", _color_capabilities);
   return true;
 }
 
 bool ZigbeeColorDimmableLight::setLightColorTemperatureRange(uint16_t min_temp, uint16_t max_temp) {
-  // v2.x data model: physical mireds limits are seeded on the cluster descriptor before registration.
-  ezb_zcl_cluster_desc_t color_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER);
-  if (color_cluster == nullptr) {
-    log_e("Color control cluster not found");
-    return false;
-  }
   if (!(_color_capabilities & ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP)) {
     log_e("Color temperature capability not enabled. Current capabilities: 0x%04x", _color_capabilities);
     return false;
   }
-  ezb_err_t ret = ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_ID, (void *)&min_temp);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
+
+  if (Zigbee.endpointsRegistered()) {
+    _color_temp_physical_min_mireds = min_temp;
+    _color_temp_physical_max_mireds = max_temp;
+    ezb_zcl_status_t ret = setClusterAttribute(
+      EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_ID,
+      (void *)&_color_temp_physical_min_mireds, false
+    );
+    if (ret != EZB_ZCL_STATUS_SUCCESS) {
+      log_e("Failed to set min color temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+      return false;
+    }
+    ret = setClusterAttribute(
+      EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID,
+      (void *)&_color_temp_physical_max_mireds, false
+    );
+    if (ret != EZB_ZCL_STATUS_SUCCESS) {
+      log_e("Failed to set max color temperature: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
+      return false;
+    }
+    return true;
+  }
+
+  if (!requireBeforeAddEndpoint("setLightColorTemperatureRange")) {
     return false;
   }
-  ret = ezb_zcl_color_control_cluster_desc_add_attr(color_cluster, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID, (void *)&max_temp);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
+
+  _color_temp_physical_min_mireds = min_temp;
+  _color_temp_physical_max_mireds = max_temp;
+  if (!addOrSetEpClusterAttr(
+        EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MIN_MIREDS_ID,
+        (void *)&_color_temp_physical_min_mireds, ezb_zcl_color_control_cluster_desc_add_attr
+      )) {
+    log_e("Failed to set min color temperature on endpoint descriptor");
+    return false;
+  }
+  if (!addOrSetEpClusterAttr(
+        EZB_ZCL_CLUSTER_ID_COLOR_CONTROL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_COLOR_CONTROL_COLOR_TEMP_PHYSICAL_MAX_MIREDS_ID,
+        (void *)&_color_temp_physical_max_mireds, ezb_zcl_color_control_cluster_desc_add_attr
+      )) {
+    log_e("Failed to set max color temperature on endpoint descriptor");
     return false;
   }
   return true;

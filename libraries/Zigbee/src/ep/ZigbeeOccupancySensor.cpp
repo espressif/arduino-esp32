@@ -14,54 +14,41 @@
 
 #include "ZigbeeOccupancySensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
-// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA occupancy-sensor template).
-// Basic + Identify + OccupancySensing server clusters, registered as a Simple Sensor device.
-ezb_af_ep_desc_t zigbee_occupancy_sensor_create_ep_desc(uint8_t endpoint, zigbee_occupancy_sensor_cfg_t *occupancy_sensor) {
-  ezb_af_ep_config_t ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0
-  };
-  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (ep_desc == nullptr) {
-    log_e("Failed to create occupancy sensor endpoint descriptor");
-    return nullptr;
-  }
-
-  const void *basic_cfg = occupancy_sensor ? &(occupancy_sensor->basic_cfg) : nullptr;
-  const void *identify_cfg = occupancy_sensor ? &(occupancy_sensor->identify_cfg) : nullptr;
-  const void *occupancy_meas_cfg = occupancy_sensor ? &(occupancy_sensor->occupancy_meas_cfg) : nullptr;
-
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_occupancy_sensing_create_cluster_desc(occupancy_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
-  return ep_desc;
-}
 
 ZigbeeOccupancySensor::ZigbeeOccupancySensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
-
-  //Create custom occupancy sensor configuration
-  zigbee_occupancy_sensor_cfg_t occupancy_sensor_cfg = ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG();
-  _ep_desc = zigbee_occupancy_sensor_create_ep_desc(_endpoint, &occupancy_sensor_cfg);
+  _occupancy_meas_cfg = {
+    .occupancy = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_UNOCCUPIED,
+    .occupancy_sensor_type = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR,
+    .occupancy_sensor_type_bitmap = (1 << EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR),
+  };
 
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create occupancy sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_occupancy_sensing_create_cluster_desc(&_occupancy_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
-  uint8_t sensor_type_bitmap = 1 << sensor_type;
-  ezb_zcl_cluster_desc_t occupancy_sens_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_occupancy_sensing_cluster_desc_add_attr(occupancy_sens_cluster, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set sensor type: 0x%x", ret);
+  _occupancy_meas_cfg.occupancy_sensor_type = sensor_type;
+  _occupancy_meas_cfg.occupancy_sensor_type_bitmap = (1 << sensor_type);
+  if (!configureEpClusterAttr(
+        "setSensorType", EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID,
+        &_occupancy_meas_cfg.occupancy_sensor_type, ezb_zcl_occupancy_sensing_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret =
-    ezb_zcl_occupancy_sensing_cluster_desc_add_attr(occupancy_sens_cluster, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set sensor type bitmap: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setSensorType", EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID,
+    &_occupancy_meas_cfg.occupancy_sensor_type_bitmap, ezb_zcl_occupancy_sensing_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {

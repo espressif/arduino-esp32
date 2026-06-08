@@ -14,6 +14,9 @@
 
 #include "ZigbeeDimmableLight.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off_desc.h"
+#include "ezbee/zcl/cluster/level_desc.h"
 
 ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID;
@@ -21,14 +24,16 @@ ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) 
 
   // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
   // scenes, on/off, level clusters) instead of the v1 manual cluster-list factory.
-  ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
-  _ep_desc = ezb_zha_create_dimmable_light(endpoint, &light_cfg);
   _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0};
 
   // set default values
   _current_state = false;
   _current_level = 255;
+    ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
+    _ep_desc = ezb_zha_create_dimmable_light(_endpoint, &light_cfg);
 }
+
+
 
 // set attribute method -> method overridden in child class
 void ZigbeeDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {

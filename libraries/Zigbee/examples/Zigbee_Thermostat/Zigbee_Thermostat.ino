@@ -80,6 +80,14 @@ void receiveSensorConfig(float min_temp, float max_temp, float tolerance) {
 void setup() {
   Serial.begin(115200);
 
+  // Initialize Zigbee stack as coordinator
+  if (!Zigbee.init(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
@@ -109,17 +117,20 @@ void setup() {
   // Set time and gmt offset (timezone in seconds -> CET = +3600 seconds)
   zbThermostat.addTimeCluster(timeinfo, 3600);
 
-  //Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbThermostat);
 
-  //Open network for 180 seconds after boot
+  // Optional: set reboot open network time to 180 seconds
   Zigbee.setRebootOpenNetwork(180);
 
-  // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR mode
-  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
 
   Serial.println("Waiting for Temperature sensor to bound to the thermostat");

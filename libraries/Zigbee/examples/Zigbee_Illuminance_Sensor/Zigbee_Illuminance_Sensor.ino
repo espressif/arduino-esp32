@@ -75,6 +75,14 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as end device (default)
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: Set Zigbee device name and model
   zbIlluminanceSensor.setManufacturerAndModel("Espressif", "ZigbeeIlluminanceSensor");
 
@@ -87,12 +95,11 @@ void setup() {
   // Optional: Set tolerance for raw illuminance value
   zbIlluminanceSensor.setTolerance(1);
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding Zigbee illuminance sensor endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbIlluminanceSensor);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

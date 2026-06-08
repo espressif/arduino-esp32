@@ -21,8 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/on_off.h"
 
 class ZigbeeSwitch : public ZigbeeEP {
 public:
@@ -69,15 +67,14 @@ private:
   void (*_on_light_state_change)(bool);
   void (*_on_light_state_change_with_source)(bool, uint8_t, ezb_address_t);
 
-  // v2.x On/Off command + read senders shared by all addressing overloads.
-  void sendOnOffCommand(uint8_t on_off_cmd_id, const ezb_zcl_cluster_cmd_ctrl_t *cmd_ctrl);
+  void sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl);
   void sendReadLightState(ezb_address_t dst_addr, uint8_t dst_ep);
 
   void findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) override;
   void bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
   void findCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
-  static void findCbWrapper(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
   static void bindCbWrapper(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
+  static void findCbWrapper(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
   void zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) override;
 };
 

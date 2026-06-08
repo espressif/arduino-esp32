@@ -14,6 +14,9 @@
 
 #include "ZigbeeAnalog.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/analog_input_desc.h"
+#include "ezbee/zcl/cluster/analog_output_desc.h"
 #include <cfloat>
 
 // NOTE(zb-v2): v2.x does not expose application-type "group id" macros (v1 ESP_ZB_ZCL_AI_GROUP_ID /
@@ -29,21 +32,25 @@ ZigbeeAnalog::ZigbeeAnalog(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
   // Analog Input/Output clusters are attached later by addAnalogInput()/addAnalogOutput().
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
-  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-  if (_ep_desc == nullptr) {
+    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+    if (_ep_desc == nullptr) {
     log_e("Failed to create analog endpoint descriptor");
-    return;
-  }
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    }
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
 
+
+
 bool ZigbeeAnalog::addAnalogInput() {
+  if (!requireBeforeAddEndpoint("addAnalogInput")) {
+    return false;
+  }
   ezb_zcl_cluster_desc_t analog_input_cluster = ezb_zcl_analog_input_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
   // Create default description for Analog Input
   char default_description[] = "\x0C"
-                               "Analog Input";
+                             "Analog Input";
   uint32_t application_type = 0x00000000 | (ZB_ANALOG_INPUT_GROUP_ID << 24);
   float resolution = 0.1;  // Default resolution of 0.1
   float min = -FLT_MAX;    // Default min value for float
@@ -96,24 +103,22 @@ bool ZigbeeAnalog::setAnalogInputApplication(uint32_t application_type) {
     return false;
   }
 
-  // Add the Analog Input group ID (0x00) to the application type
-  uint32_t application_type_value = (ZB_ANALOG_INPUT_GROUP_ID << 24) | application_type;
-
-  ezb_zcl_cluster_desc_t analog_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set AI application type: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _ai_application_type = (ZB_ANALOG_INPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setAnalogInputApplication", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_APPLICATION_TYPE_ID,
+    &_ai_application_type, ezb_zcl_analog_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::addAnalogOutput() {
+  if (!requireBeforeAddEndpoint("addAnalogOutput")) {
+    return false;
+  }
   ezb_zcl_cluster_desc_t analog_output_cluster = ezb_zcl_analog_output_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
   // Create default description for Analog Output
   char default_description[] = "\x0D"
-                               "Analog Output";
+                             "Analog Output";
   uint32_t application_type = 0x00000000 | (ZB_ANALOG_OUTPUT_GROUP_ID << 24);
   float resolution = 1;  // Default resolution of 1
   float min = -FLT_MAX;  // Default min value for float
@@ -165,16 +170,11 @@ bool ZigbeeAnalog::setAnalogOutputApplication(uint32_t application_type) {
     return false;
   }
 
-  // Add the Analog Output group ID (0x01) to the application type
-  uint32_t application_type_value = (ZB_ANALOG_OUTPUT_GROUP_ID << 24) | application_type;
-
-  ezb_zcl_cluster_desc_t analog_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set AO application type: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _ao_application_type = (ZB_ANALOG_OUTPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setAnalogOutputApplication", EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID,
+    &_ao_application_type, ezb_zcl_analog_output_cluster_desc_add_attr
+  );
 }
 
 //set attribute method -> method overridden in child class
@@ -291,37 +291,20 @@ bool ZigbeeAnalog::setAnalogInputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the analog input cluster
-  ezb_zcl_cluster_desc_t analog_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_input_cluster == nullptr) {
-    log_e("Failed to get analog input cluster");
-    return false;
-  }
+  _ai_description[0] = static_cast<char>(description_length);
+  memcpy(_ai_description + 1, description, description_length);
+  _ai_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set description: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setAnalogInputDescription", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_DESCRIPTION_ID, _ai_description,
+    ezb_zcl_analog_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::setAnalogOutputDescription(const char *description) {
@@ -330,37 +313,20 @@ bool ZigbeeAnalog::setAnalogOutputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the analog output cluster
-  ezb_zcl_cluster_desc_t analog_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_output_cluster == nullptr) {
-    log_e("Failed to get analog output cluster");
-    return false;
-  }
+  _ao_description[0] = static_cast<char>(description_length);
+  memcpy(_ao_description + 1, description, description_length);
+  _ao_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set description: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setAnalogOutputDescription", EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID, _ao_description,
+    ezb_zcl_analog_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::setAnalogInputResolution(float resolution) {
@@ -369,18 +335,11 @@ bool ZigbeeAnalog::setAnalogInputResolution(float resolution) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t analog_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_input_cluster == nullptr) {
-    log_e("Failed to get analog input cluster");
-    return false;
-  }
-
-  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, (void *)&resolution);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set resolution: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _ai_resolution = resolution;
+  return configureEpClusterAttr(
+    "setAnalogInputResolution", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_RESOLUTION_ID, &_ai_resolution,
+    ezb_zcl_analog_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::setAnalogOutputResolution(float resolution) {
@@ -389,18 +348,11 @@ bool ZigbeeAnalog::setAnalogOutputResolution(float resolution) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t analog_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_output_cluster == nullptr) {
-    log_e("Failed to get analog output cluster");
-    return false;
-  }
-
-  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, (void *)&resolution);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set resolution: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _ao_resolution = resolution;
+  return configureEpClusterAttr(
+    "setAnalogOutputResolution", EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID, &_ao_resolution,
+    ezb_zcl_analog_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::setAnalogOutputMinMax(float min, float max) {
@@ -409,24 +361,18 @@ bool ZigbeeAnalog::setAnalogOutputMinMax(float min, float max) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t analog_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_output_cluster == nullptr) {
-    log_e("Failed to get analog output cluster");
+  _ao_min = min;
+  _ao_max = max;
+  if (!configureEpClusterAttr(
+        "setAnalogOutputMinMax", EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_OUTPUT_MIN_PRESENT_VALUE_ID, &_ao_min,
+        ezb_zcl_analog_output_cluster_desc_add_attr
+      )) {
     return false;
   }
-
-  ezb_err_t ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_analog_output_cluster_desc_add_attr(analog_output_cluster, EZB_ZCL_ATTR_ANALOG_OUTPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setAnalogOutputMinMax", EZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_OUTPUT_MAX_PRESENT_VALUE_ID, &_ao_max,
+    ezb_zcl_analog_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeAnalog::setAnalogInputMinMax(float min, float max) {
@@ -435,24 +381,18 @@ bool ZigbeeAnalog::setAnalogInputMinMax(float min, float max) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t analog_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (analog_input_cluster == nullptr) {
-    log_e("Failed to get analog input cluster");
+  _ai_min = min;
+  _ai_max = max;
+  if (!configureEpClusterAttr(
+        "setAnalogInputMinMax", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_MIN_PRESENT_VALUE_ID, &_ai_min,
+        ezb_zcl_analog_input_cluster_desc_add_attr
+      )) {
     return false;
   }
-
-  ezb_err_t ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_MIN_PRESENT_VALUE_ID, (void *)&min);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set min value: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_analog_input_cluster_desc_add_attr(analog_input_cluster, EZB_ZCL_ATTR_ANALOG_INPUT_MAX_PRESENT_VALUE_ID, (void *)&max);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set max value: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setAnalogInputMinMax", EZB_ZCL_CLUSTER_ID_ANALOG_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ANALOG_INPUT_MAX_PRESENT_VALUE_ID, &_ai_max,
+    ezb_zcl_analog_input_cluster_desc_add_attr
+  );
 }
 
 #endif  // CONFIG_ZB_ENABLED

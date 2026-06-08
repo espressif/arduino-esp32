@@ -14,6 +14,10 @@
 
 #include "ZigbeeThermostat.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/thermostat.h"
+#include "ezbee/zcl/cluster/temperature_measurement_desc.h"
+#include "ezbee/zcl/cluster/rel_humidity_measurement_desc.h"
 
 static float zb_s16_to_temperature(int16_t value) {
   return 1.0 * value / 100;
@@ -64,23 +68,23 @@ ZigbeeThermostat::ZigbeeThermostat(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _on_humidity_receive_with_source = nullptr;
   _on_humidity_config_receive = nullptr;
 
-  ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
-  _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0};
+    ezb_zha_thermostat_config_t thermostat_cfg = EZB_ZHA_THERMOSTAT_CONFIG();
+    _ep_desc = ezb_zha_create_thermostat(_endpoint, &thermostat_cfg);
 
-  // NOTE(zb-v2): ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
-  // The v1 endpoint manually added Identify (client) plus Temperature/RelHumidity measurement (client)
-  // clusters so the thermostat can bind to a remote sensor and accept its reports. Re-add them here with
-  // ezb_af_endpoint_add_cluster_desc() (replaces the v1 esp_zb_cluster_list_add_*_cluster() calls).
-  if (_ep_desc != nullptr) {
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
+    // NOTE(zb-v2): ezb_zha_create_thermostat() only creates the Basic/Identify/Thermostat (server) clusters.
+    // The v1 _endpoint manually added Identify (client) plus Temperature/RelHumidity measurement (client)
+    // clusters so the thermostat can bind to a remote sensor and accept its reports. Re-add them here with
+    // ezb_af_endpoint_add_cluster_desc() (replaces the v1 esp_zb_cluster_list_add_*_cluster() calls).
+    if (_ep_desc != nullptr) {
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_temperature_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
     ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_rel_humidity_measurement_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_CLIENT));
-  } else {
-    log_e("Failed to create thermostat endpoint descriptor");
-  }
-
-  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_THERMOSTAT_DEVICE_ID, .app_device_version = 0};
+    } else {
+    log_e("Failed to create thermostat _endpoint descriptor");
+    }
 }
+
+
 
 void ZigbeeThermostat::bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx) {
   ZigbeeThermostat *instance = static_cast<ZigbeeThermostat *>(user_ctx);

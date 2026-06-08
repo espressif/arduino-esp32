@@ -21,37 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/basic_desc.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
 #include "ezbee/zcl/cluster/occupancy_sensing_desc.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG()                                                             \
-  {                                                                                                          \
-    .basic_cfg =                                                                                             \
-      {                                                                                                      \
-        .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                                              \
-        .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                                            \
-      },                                                                                                     \
-    .identify_cfg =                                                                                          \
-      {                                                                                                      \
-        .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                                       \
-      },                                                                                                     \
-    .occupancy_meas_cfg =                                                                                    \
-      {                                                                                                      \
-        .occupancy = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_UNOCCUPIED,                                         \
-        .occupancy_sensor_type = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR,                        \
-        .occupancy_sensor_type_bitmap = (1 << EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR),          \
-      },                                                                                                     \
-  }
-// clang-format on
-
-typedef struct zigbee_occupancy_sensor_cfg_s {
-  ezb_zcl_basic_cluster_config_t basic_cfg;
-  ezb_zcl_identify_cluster_config_t identify_cfg;
-  ezb_zcl_occupancy_sensing_cluster_config_t occupancy_meas_cfg;
-} zigbee_occupancy_sensor_cfg_t;
 
 class ZigbeeOccupancySensor : public ZigbeeEP {
 public:
@@ -66,6 +36,9 @@ public:
 
   // Report the occupancy value
   bool report();
+
+private:
+  ezb_zcl_occupancy_sensing_cluster_config_t _occupancy_meas_cfg;
 };
 
 #endif  // CONFIG_ZB_ENABLED

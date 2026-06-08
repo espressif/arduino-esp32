@@ -60,6 +60,14 @@ void setup() {
   // Init button switch
   pinMode(BUTTON_PIN, INPUT);
 
+  // Initialize Zigbee stack as End Device (default)
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbWindSpeedSensor.setManufacturerAndModel("Espressif", "ZigbeeWindSpeedSensor");
 
@@ -69,11 +77,11 @@ void setup() {
   // Set tolerance for windspeed measurement in m/s (lowest possible value is 0.01 m/s)
   zbWindSpeedSensor.setTolerance(1);
 
-  // Add endpoint to Zigbee Core
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbWindSpeedSensor);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

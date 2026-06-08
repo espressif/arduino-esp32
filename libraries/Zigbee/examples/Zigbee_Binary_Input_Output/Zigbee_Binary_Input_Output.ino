@@ -56,13 +56,20 @@ void humidifierSwitch(bool state) {
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting...");
 
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
   // Set analog resolution to 10 bits
   analogReadResolution(10);
+
+  // Initialize Zigbee stack as end device (default)
+  if (!Zigbee.init()) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
 
   // Optional: set Zigbee device name and model
   zbBinaryFan.setManufacturerAndModel("Espressif", "ZigbeeBinarySensor");
@@ -96,7 +103,7 @@ void setup() {
   Zigbee.addEndpoint(&zbBinaryHumidifier);
 
   Serial.println("Starting Zigbee...");
-  // When all EPs are registered, start Zigbee in End Device mode
+  // When all EPs are registered, start Zigbee
   if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");

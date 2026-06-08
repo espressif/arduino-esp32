@@ -77,6 +77,14 @@ void setFan(ZigbeeFanMode mode) {
 void setup() {
   Serial.begin(115200);
 
+  // Initialize Zigbee stack as router
+  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Init LED that will be used to indicate the current fan control mode
   rgbLedWrite(led, 0, 0, 0);
 
@@ -92,15 +100,17 @@ void setup() {
   // Set callback function for fan mode change
   zbFanControl.onFanModeChange(setFan);
 
-  //Add endpoint to Zigbee Core
-  Serial.println("Adding ZigbeeFanControl endpoint to Zigbee Core");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbFanControl);
 
-  // When all EPs are registered, start Zigbee in ROUTER mode
-  if (!Zigbee.begin(ZIGBEE_ROUTER)) {
+  Serial.println("Starting Zigbee...");
+  // When all EPs are registered, start Zigbee
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
   Serial.println("Connecting to network");
   while (!Zigbee.connected()) {

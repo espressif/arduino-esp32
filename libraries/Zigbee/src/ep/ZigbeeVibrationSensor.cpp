@@ -14,42 +14,34 @@
 
 #include "ZigbeeVibrationSensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/ias_zone.h"
 
-// v2.x data model: build the endpoint descriptor manually (no dedicated ZHA IAS-zone template).
-// Basic + Identify + IasZone server clusters, registered as an IAS Zone device.
-ezb_af_ep_desc_t zigbee_vibration_sensor_create_ep_desc(uint8_t endpoint, zigbee_vibration_sensor_cfg_t *vibration_sensor) {
-  ezb_af_ep_config_t ep_config = {
-    .ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0
-  };
-  ezb_af_ep_desc_t ep_desc = ezb_af_create_endpoint_desc(&ep_config);
-  if (ep_desc == nullptr) {
-    log_e("Failed to create vibration sensor endpoint descriptor");
-    return nullptr;
-  }
-
-  const void *basic_cfg = vibration_sensor ? &(vibration_sensor->basic_cfg) : nullptr;
-  const void *identify_cfg = vibration_sensor ? &(vibration_sensor->identify_cfg) : nullptr;
-  const void *ias_zone_cfg = vibration_sensor ? &(vibration_sensor->ias_zone_cfg) : nullptr;
-
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_basic_create_cluster_desc(basic_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_identify_create_cluster_desc(identify_cfg, EZB_ZCL_CLUSTER_SERVER));
-  ezb_af_endpoint_add_cluster_desc(ep_desc, ezb_zcl_ias_zone_create_cluster_desc(ias_zone_cfg, EZB_ZCL_CLUSTER_SERVER));
-  return ep_desc;
-}
 
 ZigbeeVibrationSensor::ZigbeeVibrationSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
   _device_id = EZB_ZHA_IAS_ZONE_ID;
+  _ias_zone_cfg = {
+    .zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_NOT_ENROLLED,
+    .zone_type = EZB_ZCL_IAS_ZONE_ZONE_TYPE_VIBRATION_MOVEMENT_SENSOR,
+    .zone_status = EZB_ZCL_IAS_ZONE_ZONE_STATUS_DEFAULT_VALUE,
+    .ias_cie_address = 0,
+    .zone_id = EZB_ZCL_IAS_ZONE_ZONE_ID_DEFAULT_VALUE,
+  };
   _zone_status = 0;
   _zone_id = 0xff;
   _ias_cie_endpoint = 1;
   _enrolled = false;
   memset(_ias_cie_addr, 0, sizeof(_ias_cie_addr));
 
-  //Create custom vibration sensor configuration
-  zigbee_vibration_sensor_cfg_t vibration_sensor_cfg = ZIGBEE_DEFAULT_VIBRATION_SENSOR_CONFIG();
-  _ep_desc = zigbee_vibration_sensor_create_ep_desc(_endpoint, &vibration_sensor_cfg);
-
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_IAS_ZONE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create vibration sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_ias_zone_create_cluster_desc(&_ias_zone_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 void ZigbeeVibrationSensor::setIASClientEndpoint(uint8_t ep_number) {
@@ -130,8 +122,8 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
 
 bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
   if (!getClusterAttribute(
-        EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
-      )) {
+      EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
+    )) {
     log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
     return false;
   }

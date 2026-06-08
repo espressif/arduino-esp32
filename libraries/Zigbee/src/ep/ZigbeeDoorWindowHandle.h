@@ -21,45 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/basic_desc.h"
-#include "ezbee/zcl/cluster/identify_desc.h"
-#include "ezbee/zcl/cluster/ias_zone.h"
 #include "ezbee/zcl/cluster/ias_zone_desc.h"
-
-// clang-format off
-// NOTE(zb-v2): v1 defined a local ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_DOOR_WINDOW_HANDLE because the v1 SDK lacked
-// the enum value. v2.x provides EZB_ZCL_IAS_ZONE_ZONE_TYPE_DOOR_WINDOW_HANDLE in ias_zone_desc.h, so the
-// local define is dropped.
-#define ZIGBEE_DEFAULT_DOOR_WINDOW_HANDLE_CONFIG()                                                  \
-    {                                                                                               \
-        .basic_cfg =                                                                                \
-            {                                                                                       \
-                .zcl_version = EZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                             \
-                .power_source = EZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                           \
-            },                                                                                      \
-        .identify_cfg =                                                                             \
-            {                                                                                       \
-                .identify_time = EZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                      \
-            },                                                                                      \
-        .ias_zone_cfg =                                                                             \
-            {                                                                                       \
-                .zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_NOT_ENROLLED,                             \
-                .zone_type = EZB_ZCL_IAS_ZONE_ZONE_TYPE_DOOR_WINDOW_HANDLE,                         \
-                .zone_status = EZB_ZCL_IAS_ZONE_ZONE_STATUS_DEFAULT_VALUE,                          \
-                .ias_cie_address = 0,                                                               \
-                .zone_id = EZB_ZCL_IAS_ZONE_ZONE_ID_DEFAULT_VALUE,                                  \
-            },                                                                                      \
-    }
-// clang-format on
-
-// NOTE(zb-v2): the v2.x IasZone server config struct replaces the v1 ias_cie_addr byte array with a single
-// uint64_t ias_cie_address and drops the zone_ctx field.
-typedef struct zigbee_door_window_handle_cfg_s {
-  ezb_zcl_basic_cluster_config_t basic_cfg;
-  ezb_zcl_identify_cluster_config_t identify_cfg;
-  ezb_zcl_ias_zone_cluster_config_t ias_zone_cfg;
-} zigbee_door_window_handle_cfg_t;
 
 class ZigbeeDoorWindowHandle : public ZigbeeEP {
 public:
@@ -93,6 +55,7 @@ public:
   }
 
 private:
+  ezb_zcl_ias_zone_cluster_config_t _ias_zone_cfg;
   void zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enroll_rsp_message_t *message) override;
   uint16_t _zone_status;  // ZoneStatus is a 16-bit bitmap in v2.x
   uint8_t _zone_id;

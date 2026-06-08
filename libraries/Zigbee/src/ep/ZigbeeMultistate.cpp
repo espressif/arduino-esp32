@@ -1,5 +1,8 @@
 #include "ZigbeeMultistate.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/multistate_input_desc.h"
+#include "ezbee/zcl/cluster/multistate_output_desc.h"
 
 // NOTE(zb-v2): The v1 build needed an extern-"C" shim that aliased esp_zb_zcl_multistate_input_init_*()
 // onto the misnamed esp_zb_zcl_multi_input_init_*() symbols (ESP-ZIGBEE-SDK 1.6.6 bug). v2.x ships the
@@ -18,13 +21,6 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
   // Multistate Input/Output clusters are attached later by addMultistateInput()/addMultistateOutput().
   _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
-  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
-  if (_ep_desc != nullptr) {
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
-  } else {
-    log_e("Failed to create multistate endpoint descriptor");
-  }
 
   // Initialize member variables
   _multistate_clusters = 0;
@@ -35,9 +31,19 @@ ZigbeeMultistate::ZigbeeMultistate(uint8_t endpoint) : ZigbeeEP(endpoint) {
   // _input_state_names = nullptr;
   // _output_state_names = nullptr;
   _on_multistate_output_change = nullptr;
+    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+    if (_ep_desc == nullptr) {
+    log_e("Failed to create multistate endpoint descriptor");
+    }
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
 
+
 bool ZigbeeMultistate::addMultistateInput() {
+  if (!requireBeforeAddEndpoint("addMultistateInput")) {
+    return false;
+  }
   ezb_zcl_multistate_input_cluster_config_t multistate_input_cfg = {
     .number_of_states = 3, .out_of_service = false, .present_value = 0, .status_flags = EZB_ZCL_MULTISTATE_INPUT_STATUS_FLAGS_DEFAULT_VALUE
   };
@@ -46,7 +52,7 @@ bool ZigbeeMultistate::addMultistateInput() {
 
   // Create default description for Multistate Input
   char default_description[] = "\x10"                                              // Size of the description text
-                               "Multistate Input";                                 // Description text
+                             "Multistate Input";                                 // Description text
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_INPUT_GROUP_ID << 24);  // Application type
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
@@ -79,6 +85,9 @@ bool ZigbeeMultistate::addMultistateInput() {
 }
 
 bool ZigbeeMultistate::addMultistateOutput() {
+  if (!requireBeforeAddEndpoint("addMultistateOutput")) {
+    return false;
+  }
   ezb_zcl_multistate_output_cluster_config_t multistate_output_cfg = {
     .number_of_states = 3, .out_of_service = false, .present_value = 0, .status_flags = EZB_ZCL_MULTISTATE_OUTPUT_STATUS_FLAGS_DEFAULT_VALUE
   };
@@ -87,7 +96,7 @@ bool ZigbeeMultistate::addMultistateOutput() {
 
   // Create default description for Multistate Output
   char default_description[] = "\x11"                                           // Size of the description text
-                               "Multistate Output";                             // Description text
+                             "Multistate Output";                             // Description text
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_OUTPUT_GROUP_ID << 24);
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
@@ -125,16 +134,11 @@ bool ZigbeeMultistate::setMultistateInputApplication(uint32_t application_type) 
     return false;
   }
 
-  // Add the Multistate Input group ID (0x0D) to the application type
-  uint32_t application_type_value = (ZB_MULTISTATE_INPUT_GROUP_ID << 24) | application_type;
-
-  ezb_zcl_cluster_desc_t multistate_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set Multistate Input application type: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _mi_application_type = (ZB_MULTISTATE_INPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setMultistateInputApplication", EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID,
+    &_mi_application_type, ezb_zcl_multistate_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeMultistate::setMultistateOutputApplication(uint32_t application_type) {
@@ -143,16 +147,11 @@ bool ZigbeeMultistate::setMultistateOutputApplication(uint32_t application_type)
     return false;
   }
 
-  // Add the Multistate Output group ID (0x0E) to the application type
-  uint32_t application_type_value = (ZB_MULTISTATE_OUTPUT_GROUP_ID << 24) | application_type;
-
-  ezb_zcl_cluster_desc_t multistate_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set Multistate Output application type: 0x%x", ret);
-    return false;
-  }
-  return true;
+  _mo_application_type = (ZB_MULTISTATE_OUTPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setMultistateOutputApplication", EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID,
+    &_mo_application_type, ezb_zcl_multistate_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeMultistate::setMultistateInputDescription(const char *description) {
@@ -161,37 +160,20 @@ bool ZigbeeMultistate::setMultistateInputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the multistate input cluster
-  ezb_zcl_cluster_desc_t multistate_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (multistate_input_cluster == nullptr) {
-    log_e("Failed to get multistate input cluster");
-    return false;
-  }
+  _mi_description[0] = static_cast<char>(description_length);
+  memcpy(_mi_description + 1, description, description_length);
+  _mi_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set description: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMultistateInputDescription", EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID,
+    _mi_description, ezb_zcl_multistate_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeMultistate::setMultistateOutputDescription(const char *description) {
@@ -200,37 +182,20 @@ bool ZigbeeMultistate::setMultistateOutputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the multistate output cluster
-  ezb_zcl_cluster_desc_t multistate_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (multistate_output_cluster == nullptr) {
-    log_e("Failed to get multistate output cluster");
-    return false;
-  }
+  _mo_description[0] = static_cast<char>(description_length);
+  memcpy(_mo_description + 1, description, description_length);
+  _mo_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set description: 0x%x", ret);
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMultistateOutputDescription", EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID,
+    _mo_description, ezb_zcl_multistate_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeMultistate::setMultistateInputStates(uint16_t number_of_states) {
@@ -239,20 +204,11 @@ bool ZigbeeMultistate::setMultistateInputStates(uint16_t number_of_states) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t multistate_input_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (multistate_input_cluster == nullptr) {
-    log_e("Failed to get multistate input cluster");
-    return false;
-  }
-
-  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_NUMBER_OF_STATES_ID, (void *)&number_of_states);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set number of states: 0x%x", ret);
-    return false;
-  }
-
   _input_state_names_length = number_of_states;
-  return true;
+  return configureEpClusterAttr(
+    "setMultistateInputStates", EZB_ZCL_CLUSTER_ID_MULTISTATE_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_INPUT_NUMBER_OF_STATES_ID,
+    &_input_state_names_length, ezb_zcl_multistate_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeMultistate::setMultistateOutputStates(uint16_t number_of_states) {
@@ -261,20 +217,11 @@ bool ZigbeeMultistate::setMultistateOutputStates(uint16_t number_of_states) {
     return false;
   }
 
-  ezb_zcl_cluster_desc_t multistate_output_cluster = ezb_af_endpoint_get_cluster_desc(_ep_desc, EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER);
-  if (multistate_output_cluster == nullptr) {
-    log_e("Failed to get multistate output cluster");
-    return false;
-  }
-
-  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_NUMBER_OF_STATES_ID, (void *)&number_of_states);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to set number of states: 0x%x", ret);
-    return false;
-  }
-
   _output_state_names_length = number_of_states;
-  return true;
+  return configureEpClusterAttr(
+    "setMultistateOutputStates", EZB_ZCL_CLUSTER_ID_MULTISTATE_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_NUMBER_OF_STATES_ID,
+    &_output_state_names_length, ezb_zcl_multistate_output_cluster_desc_add_attr
+  );
 }
 
 /* TODO: revisit this after arrays are supported

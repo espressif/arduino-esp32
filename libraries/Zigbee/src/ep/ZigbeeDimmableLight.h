@@ -21,9 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/on_off_desc.h"
-#include "ezbee/zcl/cluster/level_desc.h"
 
 class ZigbeeDimmableLight : public ZigbeeEP {
 public:

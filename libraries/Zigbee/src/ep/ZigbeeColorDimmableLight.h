@@ -21,10 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ezbee/zha.h"
-#include "ezbee/zcl/cluster/on_off_desc.h"
-#include "ezbee/zcl/cluster/level_desc.h"
-#include "ezbee/zcl/cluster/color_control_desc.h"
 
 // Color capabilities bit flags (matching ZCL spec) - can be combined with bitwise OR
 static constexpr uint16_t ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION = (1 << 0);  // Bit 0: Hue/saturation supported
@@ -53,7 +49,7 @@ public:
   ZigbeeColorDimmableLight(uint8_t endpoint);
   ~ZigbeeColorDimmableLight() {}
 
-  // Must be called before starting Zigbee, by default XY are selected as color mode
+  // Configure before Zigbee.addEndpoint(). After registration, runtime changes use setClusterAttribute().
   bool setLightColorCapabilities(uint16_t capabilities);
 
   [[deprecated("Use onLightChangeRgb() instead. This will be removed in a future major version.")]]
@@ -116,6 +112,7 @@ public:
     return _color_capabilities;
   }
 
+
 private:
   void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
   bool setLightColorMode(uint8_t color_mode);
@@ -130,6 +127,7 @@ private:
   // Stack callback helpers (must not use Zigbee lock).
   uint16_t readColorAttributeU16(uint16_t attr_id);
   uint8_t readColorAttributeU8(uint16_t attr_id);
+  void syncOnOffFromDataModel();
   void syncColorModeFromCallback(uint8_t color_mode);
 
   void lightChangedRgb();
@@ -145,6 +143,7 @@ private:
   ZigbeeColorLightTempCallback _on_light_change_temp;
 
   bool _current_state;
+  uint8_t _on_off_value;
   uint8_t _current_level;
   espRgbColor_t _current_color;
   espHsvColor_t _current_hsv;
@@ -152,6 +151,8 @@ private:
   uint8_t _current_color_mode;
 
   uint16_t _color_capabilities;
+  uint16_t _color_temp_physical_min_mireds;
+  uint16_t _color_temp_physical_max_mireds;
 };
 
 #endif  // CONFIG_ZB_ENABLED
