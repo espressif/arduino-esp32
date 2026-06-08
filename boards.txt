@@ -13556,6 +13556,154 @@ dfrobot_firebeetle2_esp32c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_z
 
 ##############################################################
 
+dfrobot_firebeetle2_esp32c5_n16r8.name=DFRobot Firebeetle 2 ESP32-C5(N16R8)
+
+dfrobot_firebeetle2_esp32c5_n16r8.bootloader.tool=esptool_py
+dfrobot_firebeetle2_esp32c5_n16r8.bootloader.tool.default=esptool_py
+
+dfrobot_firebeetle2_esp32c5_n16r8.upload.tool=esptool_py
+dfrobot_firebeetle2_esp32c5_n16r8.upload.tool.default=esptool_py
+dfrobot_firebeetle2_esp32c5_n16r8.upload.tool.network=esp_ota
+
+dfrobot_firebeetle2_esp32c5_n16r8.upload.maximum_size=1310720
+dfrobot_firebeetle2_esp32c5_n16r8.upload.maximum_data_size=327680
+dfrobot_firebeetle2_esp32c5_n16r8.upload.flags=
+dfrobot_firebeetle2_esp32c5_n16r8.upload.extra_flags=
+dfrobot_firebeetle2_esp32c5_n16r8.upload.use_1200bps_touch=false
+dfrobot_firebeetle2_esp32c5_n16r8.upload.wait_for_upload_port=false
+
+dfrobot_firebeetle2_esp32c5_n16r8.serial.disableDTR=false
+dfrobot_firebeetle2_esp32c5_n16r8.serial.disableRTS=false
+
+dfrobot_firebeetle2_esp32c5_n16r8.build.tarch=riscv32
+dfrobot_firebeetle2_esp32c5_n16r8.build.target=esp
+dfrobot_firebeetle2_esp32c5_n16r8.build.mcu=esp32c5
+dfrobot_firebeetle2_esp32c5_n16r8.build.core=esp32
+dfrobot_firebeetle2_esp32c5_n16r8.build.variant=dfrobot_firebeetle2_esp32c5_n16r8
+dfrobot_firebeetle2_esp32c5_n16r8.build.board=DFROBOT_FIREBEETLE_2_ESP32C5
+dfrobot_firebeetle2_esp32c5_n16r8.build.bootloader_addr=0x2000
+
+dfrobot_firebeetle2_esp32c5_n16r8.build.cdc_on_boot=0
+dfrobot_firebeetle2_esp32c5_n16r8.build.f_cpu=240000000L
+dfrobot_firebeetle2_esp32c5_n16r8.build.flash_size=16MB
+dfrobot_firebeetle2_esp32c5_n16r8.build.flash_freq=80m
+dfrobot_firebeetle2_esp32c5_n16r8.build.flash_mode=qio
+dfrobot_firebeetle2_esp32c5_n16r8.build.boot=qio
+dfrobot_firebeetle2_esp32c5_n16r8.build.partitions=default
+dfrobot_firebeetle2_esp32c5_n16r8.build.defines=
+
+## IDE 2.0 Seems to not update the value
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.default=Disabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.default.build.copy_jtag_files=0
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.builtin=Integrated USB JTAG
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.external=FTDI Adapter
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.external.build.copy_jtag_files=1
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.bridge=ESP USB Bridge
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+dfrobot_firebeetle2_esp32c5_n16r8.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PSRAM.disabled=Disabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PSRAM.disabled.build.defines=
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PSRAM.enabled=Enabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CDCOnBoot.default=Disabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CDCOnBoot.default.build.cdc_on_boot=0
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CDCOnBoot.cdc=Enabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.fatflash=16M Flash (2MB APP/12.5MB FATFS)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.fatflash.build.partitions=ffat
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.fatflash.upload.maximum_size=2097152
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.app3M_fat9M_16MB=16M Flash (3MB APP/9.9MB FATFS)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.app3M_fat9M_16MB.build.partitions=app3M_fat9M_16MB
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.app3M_fat9M_16MB.upload.maximum_size=3145728
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.custom=Custom
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.custom.build.partitions=
+dfrobot_firebeetle2_esp32c5_n16r8.menu.PartitionScheme.custom.upload.maximum_size=16777216
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.240=240MHz (WiFi)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.240.build.f_cpu=240000000L
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.120=120MHz (WiFi)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.120.build.f_cpu=120000000L
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.80=80MHz (WiFi)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.80.build.f_cpu=80000000L
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.40=40MHz
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.40.build.f_cpu=40000000L
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.20=20MHz
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.20.build.f_cpu=20000000L
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.10=10MHz
+dfrobot_firebeetle2_esp32c5_n16r8.menu.CPUFreq.10.build.f_cpu=10000000L
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.qio=QIO
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.qio.build.flash_mode=dio
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.qio.build.boot=qio
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.dio=DIO
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.dio.build.flash_mode=dio
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashMode.dio.build.boot=dio
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashFreq.80=80MHz
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashFreq.80.build.flash_freq=80m
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashFreq.40=40MHz
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashFreq.40.build.flash_freq=40m
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashSize.16M=16MB (128Mb)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.FlashSize.16M.build.flash_size=16MB
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.921600=921600
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.921600.upload.speed=921600
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.115200=115200
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.115200.upload.speed=115200
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.256000.windows=256000
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.256000.upload.speed=256000
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.230400.windows.upload.speed=256000
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.230400=230400
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.230400.upload.speed=230400
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.460800.linux=460800
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.460800.macosx=460800
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.460800.upload.speed=460800
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.512000.windows=512000
+dfrobot_firebeetle2_esp32c5_n16r8.menu.UploadSpeed.512000.upload.speed=512000
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.none=None
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.none.build.code_debug=0
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.error=Error
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.error.build.code_debug=1
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.warn=Warn
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.warn.build.code_debug=2
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.info=Info
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.info.build.code_debug=3
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.debug=Debug
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.debug.build.code_debug=4
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.verbose=Verbose
+dfrobot_firebeetle2_esp32c5_n16r8.menu.DebugLevel.verbose.build.code_debug=5
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.EraseFlash.none=Disabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.EraseFlash.none.upload.erase_cmd=
+dfrobot_firebeetle2_esp32c5_n16r8.menu.EraseFlash.all=Enabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.EraseFlash.all.upload.erase_cmd=-e
+
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.default=Disabled
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.default.build.zigbee_mode=
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.default.build.zigbee_libs=
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed=Zigbee ED (end device)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+dfrobot_firebeetle2_esp32c5_n16r8.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+
 dfrobot_firebeetle2_esp32c6.name=DFRobot FireBeetle 2 ESP32-C6
 
 dfrobot_firebeetle2_esp32c6.bootloader.tool=esptool_py
