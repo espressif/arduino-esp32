@@ -162,7 +162,7 @@ jobs:
             const areaLabelToPath = {
               'Area: Arduino as ESP-IDF component': '/idf_component_examples/',
               'Area: BLE': '/libraries/BLE/',
-              'Area: BT classic': '/libraries/BLE/',
+              'Area: BT classic': '/libraries/BluetoothSerial/',
               'Area: ESP-IDF related': '/CMakeLists.txt',
               'Area: Lib Builder': '/tools/',
               'Area: Matter': '/libraries/Matter/',
