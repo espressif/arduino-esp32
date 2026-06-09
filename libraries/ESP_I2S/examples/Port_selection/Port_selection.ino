@@ -20,7 +20,7 @@ const int sampleRate = 8000;
 const unsigned int halfWavelength = sampleRate / frequency / 2;
 
 I2SClass i2s;
-int32_t sample = amplitude;
+int16_t sample = amplitude;
 unsigned int count = 0;
 
 void setup() {
@@ -46,10 +46,10 @@ void loop() {
     sample = -sample;
   }
 
-  i2s.write(sample);
-  i2s.write(sample >> 8);
-  i2s.write(sample);
-  i2s.write(sample >> 8);
+  int16_t left = sample;
+  int16_t right = sample;
+  i2s.write(&left, sizeof(left));
+  i2s.write(&right, sizeof(right));
 
   count++;
 }
