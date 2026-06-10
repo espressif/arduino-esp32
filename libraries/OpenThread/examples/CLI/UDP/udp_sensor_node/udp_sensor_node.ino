@@ -47,11 +47,11 @@
 // Thread's reserved UDP ports (61631 = TMF CoAP, 5683/5684 = CoAP/CoAPs,
 // 19788 = MLE); binding those makes the app socket receive Thread's internal
 // management traffic, which shows up at the collector as "DROP malformed".
-const uint16_t COLLECTOR_PORT   = 5050;           // destination/listen UDP port
-const char     COLLECTOR_GROUP[] = "ff03::abcd";  // multicast group the collector subscribes to
-const uint32_t SAMPLE_PERIOD_MS = 30000;          // time between sensor samples
-const uint32_t ACK_TIMEOUT_MS   = 1200;           // how long to wait for the collector's ACK
-const uint8_t  TX_RETRIES       = 2;              // immediate resends of the SAME seq before giving up on this sample
+const uint16_t COLLECTOR_PORT = 5050;         // destination/listen UDP port
+const char COLLECTOR_GROUP[] = "ff03::abcd";  // multicast group the collector subscribes to
+const uint32_t SAMPLE_PERIOD_MS = 30000;      // time between sensor samples
+const uint32_t ACK_TIMEOUT_MS = 1200;         // how long to wait for the collector's ACK
+const uint8_t TX_RETRIES = 2;                 // immediate resends of the SAME seq before giving up on this sample
 
 // Recovery: if this many samples in a row get no ACK, assume the collector (our
 // parent/leader) rebooted or vanished and force a clean Thread re-attach instead
@@ -60,16 +60,15 @@ const uint8_t  TX_RETRIES       = 2;              // immediate resends of the SA
 const uint8_t REATTACH_AFTER_MISSED = 3;
 
 // Sleepy End Device setup via CLI.
-const bool USE_SLEEPY_MODE      = true;   // set false to stay a normal (always-on) child
-const uint32_t SED_POLL_MS      = 1000;   // data poll interval while sleeping (lower = lower latency, higher power)
-const uint32_t CHILD_TIMEOUT_S  = 300;    // parent keeps us as a child if we poll within this window
+const bool USE_SLEEPY_MODE = true;     // set false to stay a normal (always-on) child
+const uint32_t SED_POLL_MS = 1000;     // data poll interval while sleeping (lower = lower latency, higher power)
+const uint32_t CHILD_TIMEOUT_S = 300;  // parent keeps us as a child if we poll within this window
 
 // Sleepy behavior in this sketch (mode n / pollperiod / childtimeout) is only
 // meaningful when the build enables the required OT/802.15.4 low-power stack
 // options. This is typically configured in Arduino-as-IDF-component projects.
 #if defined(CONFIG_OPENTHREAD_MTD) && defined(CONFIG_IEEE802154_SLEEP_ENABLE) && defined(CONFIG_PM_ENABLE)
-static constexpr bool kBuildHasSleepySupport =
-  (CONFIG_OPENTHREAD_MTD && CONFIG_IEEE802154_SLEEP_ENABLE && CONFIG_PM_ENABLE);
+static constexpr bool kBuildHasSleepySupport = (CONFIG_OPENTHREAD_MTD && CONFIG_IEEE802154_SLEEP_ENABLE && CONFIG_PM_ENABLE);
 #else
 static constexpr bool kBuildHasSleepySupport = false;
 #endif
@@ -317,20 +316,17 @@ static long parseAckSeq(const char *payload) {
 static long sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv) {
   char frame[120];
   char cmd[192];
-  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u",
-           s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
+  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u", s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
   snprintf(cmd, sizeof(cmd), "udp send %s %u %s", COLLECTOR_GROUP, COLLECTOR_PORT, frame);
 
   long bestAcked = -1;  // highest sequence the collector reported, for resync
   for (uint8_t attempt = 0; attempt <= TX_RETRIES; attempt++) {
     // Drain any stale CLI output (e.g. a duplicate ACK for an older seq) so it
     // cannot be confused with the response to the frame we are about to send.
-    while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {
-    }
+    while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {}
 
     OThreadCLI.println(cmd);
-    Serial.printf("TX [%s]:%u -> '%s'%s\n", COLLECTOR_GROUP, COLLECTOR_PORT, frame,
-                  attempt ? " (retransmit)" : "");
+    Serial.printf("TX [%s]:%u -> '%s'%s\n", COLLECTOR_GROUP, COLLECTOR_PORT, frame, attempt ? " (retransmit)" : "");
 
     // Watch the CLI stream for the ACK until the timeout. "Done" is just the
     // result of our send command; "Error" means the send itself failed (no
@@ -459,8 +455,7 @@ void loop() {
     // No ACK at all: the collector is off/unreachable. HOLD the sequence (do
     // not advance s_seq) and resend the same reading next time, so the count
     // never moves forward without proof of delivery.
-    Serial.printf("sample seq=%lu temp=%.2fC batt=%umV status=NO_ACK (sequence held)\n",
-                  (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv);
+    Serial.printf("sample seq=%lu temp=%.2fC batt=%umV status=NO_ACK (sequence held)\n", (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv);
     // A run of misses is the signature of a collector that rebooted/vanished,
     // so trigger a clean re-attach to recover the network quickly.
     if (++s_consecutiveNoAck >= REATTACH_AFTER_MISSED) {
@@ -475,13 +470,12 @@ void loop() {
     uint32_t ackedSeq = (uint32_t)acked;
     bool delivered = (ackedSeq == seqToSend);
     if (!delivered) {
-      Serial.printf("Resync: collector last seq=%lu (we sent %lu); aligning local sequence.\n",
-                    (unsigned long)ackedSeq, (unsigned long)seqToSend);
+      Serial.printf("Resync: collector last seq=%lu (we sent %lu); aligning local sequence.\n", (unsigned long)ackedSeq, (unsigned long)seqToSend);
     }
     s_seq = ackedSeq;  // collector is the source of truth for the sequence
-    Serial.printf("sample seq=%lu temp=%.2fC batt=%umV status=%s\n",
-                  (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv,
-                  delivered ? "ACKED" : "RESYNC");
+    Serial.printf(
+      "sample seq=%lu temp=%.2fC batt=%umV status=%s\n", (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv, delivered ? "ACKED" : "RESYNC"
+    );
   }
 
   delay(SAMPLE_PERIOD_MS);
