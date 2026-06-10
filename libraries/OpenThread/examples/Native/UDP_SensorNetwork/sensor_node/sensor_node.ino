@@ -23,9 +23,6 @@
 #include <Arduino.h>
 #include "OThread.h"
 #include "OThreadUDP.h"
-#include "esp_system.h"
-#include <openthread/link.h>
-#include <openthread/thread.h>
 
 // Must match collector side.
 const char    PSKD[]                 = "J01NME";
@@ -138,9 +135,18 @@ static void configureSleepyEndDevice() {
     return;
   }
   otInstance *inst = OThread.getInstance();
+  if (!inst) {
+    Serial.println("OpenThread instance not available");
+    return;
+  }
+  if (!esp_openthread_lock_acquire(portMAX_DELAY)) {
+    Serial.println("Failed to acquire OpenThread lock");
+    return;
+  }
   otError e1 = otLinkSetPollPeriod(inst, SED_POLL_PERIOD_MS);
   otThreadSetChildTimeout(inst, CHILD_TIMEOUT_SEC);
   otError e2 = otLinkSetRxOnWhenIdle(inst, false);
+  esp_openthread_lock_release();
 
   Serial.printf("SED cfg poll=%lums childTimeout=%lus rxOnIdle=0 (errs poll=%d rx=%d)\n",
                 (unsigned long)SED_POLL_PERIOD_MS,

@@ -30,6 +30,8 @@
 #include <openthread/commissioner.h>
 #endif
 #include <esp_openthread.h>
+#include "esp_openthread_lock.h"
+
 #include <Arduino.h>
 #include "IPAddress.h"
 #include <vector>
