@@ -1217,6 +1217,11 @@ size_t I2SClass::readBytes(char *buffer, size_t size) {
 }
 
 size_t I2SClass::write(const uint8_t *buffer, size_t size) {
+  return write((const void *)buffer, size);
+}
+
+size_t I2SClass::write(const void *buffer, size_t size) {
+  const uint8_t *data = (const uint8_t *)buffer;
   size_t written = 0;
   size_t bytes_sent = 0;
   size_t bytes_to_send = 0;
@@ -1226,6 +1231,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   }
   size_t min_size = (tx_data_bit_width == I2S_DATA_BIT_WIDTH_8BIT) ? 1 : (tx_data_bit_width / 8);
   if (size < min_size) {
+    log_w("I2S write ignored: %u byte(s) is less than the %u-byte minimum for %u-bit PCM", (unsigned)size, (unsigned)min_size, (unsigned)tx_data_bit_width);
     last_error = ESP_OK;
     return 0;
   }
@@ -1233,7 +1239,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   if (_8bit_hw_packing && _mono_hw_workaround) {
     // 8-bit mono on HW v1: pack each int8_t sample into the high byte of
     // a uint16_t, then duplicate into L+R stereo for DMA.
-    const int8_t *src = (const int8_t *)buffer;
+    const int8_t *src = (const int8_t *)data;
     size_t mono_samples = size;
     size_t mono_written = 0;
     while (mono_written < mono_samples) {
@@ -1265,7 +1271,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   }
   if (_8bit_hw_packing && !_mono_hw_workaround) {
     // 8-bit stereo on HW v1: pack each int8_t into the high byte of a uint16_t.
-    const int8_t *src = (const int8_t *)buffer;
+    const int8_t *src = (const int8_t *)data;
     size_t n_samples = size;
     size_t samples_written = 0;
     while (samples_written < n_samples) {
@@ -1294,7 +1300,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
     return samples_written;
   }
   if (_mono_hw_workaround) {
-    const int16_t *src = (const int16_t *)buffer;
+    const int16_t *src = (const int16_t *)data;
     size_t mono_samples = size / sizeof(int16_t);
     size_t mono_written = 0;
     while (mono_written < mono_samples) {
@@ -1327,7 +1333,7 @@ size_t I2SClass::write(const uint8_t *buffer, size_t size) {
   while (written < size) {
     bytes_sent = 0;
     bytes_to_send = size - written;
-    esp_err_t err = i2s_channel_write(tx_chan, (char *)(buffer + written), bytes_to_send, &bytes_sent, _timeout);
+    esp_err_t err = i2s_channel_write(tx_chan, (char *)(data + written), bytes_to_send, &bytes_sent, _timeout);
     setWriteError(err);
     I2S_ERROR_CHECK_RETURN(err, written);
     written += bytes_sent;
