@@ -52718,6 +52718,86 @@ Pcbcupid_GLYPH_S3_PSRAM.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+# PCBCupid GLYPH C5
+pcbcupid_glyph_c5.name=PCBCupid GLYPH C5
+
+pcbcupid_glyph_c5.bootloader.tool=esptool_py
+pcbcupid_glyph_c5.bootloader.tool.default=esptool_py
+
+pcbcupid_glyph_c5.upload.tool=esptool_py
+pcbcupid_glyph_c5.upload.tool.default=esptool_py
+pcbcupid_glyph_c5.upload.maximum_size=1310720
+pcbcupid_glyph_c5.upload.maximum_data_size=327680
+pcbcupid_glyph_c5.upload.flags=
+pcbcupid_glyph_c5.upload.extra_flags=
+pcbcupid_glyph_c5.upload.erase_cmd=
+pcbcupid_glyph_c5.upload.use_1200bps_touch=false
+pcbcupid_glyph_c5.upload.wait_for_upload_port=false
+pcbcupid_glyph_c5.upload.before_reset=default_reset
+pcbcupid_glyph_c5.upload.after_reset=hard_reset
+
+pcbcupid_glyph_c5.serial.disableDTR=false
+pcbcupid_glyph_c5.serial.disableRTS=false
+
+pcbcupid_glyph_c5.build.tarch=riscv32
+pcbcupid_glyph_c5.build.target=esp
+pcbcupid_glyph_c5.build.mcu=esp32c5
+pcbcupid_glyph_c5.build.core=esp32
+pcbcupid_glyph_c5.build.variant=Pcbcupid_GLYPH_C5
+pcbcupid_glyph_c5.build.board=PCBCUPID_GLYPH_C5
+pcbcupid_glyph_c5.build.bootloader_addr=0x2000
+
+pcbcupid_glyph_c5.build.cdc_on_boot=1
+pcbcupid_glyph_c5.build.f_cpu=240000000L
+pcbcupid_glyph_c5.build.flash_size=4MB
+pcbcupid_glyph_c5.build.flash_freq=80m
+pcbcupid_glyph_c5.build.flash_mode=dio
+pcbcupid_glyph_c5.build.boot=dio
+pcbcupid_glyph_c5.build.partitions=default
+pcbcupid_glyph_c5.build.defines=
+
+pcbcupid_glyph_c5.menu.CDCOnBoot.cdc=Enabled
+pcbcupid_glyph_c5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+pcbcupid_glyph_c5.menu.CDCOnBoot.default=Disabled
+pcbcupid_glyph_c5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+pcbcupid_glyph_c5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.default.build.partitions=default
+pcbcupid_glyph_c5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+
+pcbcupid_glyph_c5.menu.CPUFreq.240=240MHz
+pcbcupid_glyph_c5.menu.CPUFreq.240.build.f_cpu=240000000L
+pcbcupid_glyph_c5.menu.CPUFreq.160=160MHz (WiFi)
+pcbcupid_glyph_c5.menu.CPUFreq.160.build.f_cpu=160000000L
+pcbcupid_glyph_c5.menu.CPUFreq.80=80MHz (WiFi)
+pcbcupid_glyph_c5.menu.CPUFreq.80.build.f_cpu=80000000L
+
+pcbcupid_glyph_c5.menu.FlashSize.4M=4MB (32Mb)
+pcbcupid_glyph_c5.menu.FlashSize.4M.build.flash_size=4MB
+
+pcbcupid_glyph_c5.menu.UploadSpeed.921600=921600
+pcbcupid_glyph_c5.menu.UploadSpeed.921600.upload.speed=921600
+pcbcupid_glyph_c5.menu.UploadSpeed.460800=460800
+pcbcupid_glyph_c5.menu.UploadSpeed.460800.upload.speed=460800
+pcbcupid_glyph_c5.menu.UploadSpeed.115200=115200
+pcbcupid_glyph_c5.menu.UploadSpeed.115200.upload.speed=115200
+
+pcbcupid_glyph_c5.menu.DebugLevel.none=None
+pcbcupid_glyph_c5.menu.DebugLevel.none.build.code_debug=0
+pcbcupid_glyph_c5.menu.PartitionScheme.default.upload.maximum_size=1310720
+
+##############################################################
+
 yb_esp32s3_amp_v2.name=YelloByte YB-ESP32-S3-AMP (Rev.2)
 
 yb_esp32s3_amp_v2.bootloader.tool=esptool_py
