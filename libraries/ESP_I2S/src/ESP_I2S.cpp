@@ -1231,8 +1231,7 @@ size_t I2SClass::write(const void *buffer, size_t size) {
   }
   size_t min_size = (tx_data_bit_width == I2S_DATA_BIT_WIDTH_8BIT) ? 1 : (tx_data_bit_width / 8);
   if (size < min_size) {
-    log_w("I2S write ignored: %u byte(s) is less than the %u-byte minimum for %u-bit PCM", (unsigned)size, (unsigned)min_size,
-          (unsigned)tx_data_bit_width);
+    log_w("I2S write ignored: %u byte(s) is less than the %u-byte minimum for %u-bit PCM", (unsigned)size, (unsigned)min_size, (unsigned)tx_data_bit_width);
     last_error = ESP_OK;
     return 0;
   }
