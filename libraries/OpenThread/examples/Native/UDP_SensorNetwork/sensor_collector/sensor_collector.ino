@@ -76,9 +76,10 @@ static int findRecordById(const char *id) {
 static int allocateRecord(const char *id) {
   for (int i = 0; i < MAX_SENSORS; i++) {
     if (!s_records[i].used) {
-      memset(&s_records[i], 0, sizeof(s_records[i]));
+      s_records[i] = SensorRecord{};
       s_records[i].used = true;
       strncpy(s_records[i].nodeId, id, sizeof(s_records[i].nodeId) - 1);
+      s_records[i].nodeId[sizeof(s_records[i].nodeId) - 1] = '\0';
       return i;
     }
   }
