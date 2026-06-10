@@ -64,6 +64,8 @@ OThreadUDP::OThreadUDP()
 }
 
 OThreadUDP::~OThreadUDP() {
+  // stop() guarantees _open is false on return, so the OT receive callback
+  // cannot be invoked with 'this' as aContext after this point.
   stop();
   if (_rxQueue) {
     vQueueDelete(_rxQueue);
@@ -195,10 +197,10 @@ void OThreadUDP::stop() {
     OtLock lock;
     if (lock) {
       otMessageFree(_txMessage);
-      _txMessage = nullptr;
     } else {
       log_e("OThreadUDP::stop: failed to acquire OpenThread lock; pending TX message not freed");
     }
+    _txMessage = nullptr;  // always clear so the destructor doesn't retry
   }
   if (!_open) {
     return;
@@ -206,18 +208,24 @@ void OThreadUDP::stop() {
   otInstance *inst = OThread.getInstance();
   if (inst) {
     OtLock lock;
-    if (!lock) {
-      log_e("OThreadUDP::stop: failed to acquire OpenThread lock; socket not closed");
-      return;
-    }
-    if (_hasMulticast) {
-      otIp6UnsubscribeMulticastAddress(inst, &_multicastGroup);
-      _hasMulticast = false;
-    }
-    if (otUdpIsOpen(inst, &_sock)) {
-      otUdpClose(inst, &_sock);
+    if (lock) {
+      if (_hasMulticast) {
+        otIp6UnsubscribeMulticastAddress(inst, &_multicastGroup);
+      }
+      if (otUdpIsOpen(inst, &_sock)) {
+        otUdpClose(inst, &_sock);
+      }
+    } else {
+      // esp_openthread_lock_acquire() failed with portMAX_DELAY. This only
+      // happens when the OT mutex no longer exists (stack shut down), meaning
+      // no OT task is running and the receive callback cannot fire. Fall
+      // through to clear _open instead of returning early: an early return
+      // leaves _open true, which causes the destructor to free _rxQueue while
+      // the socket's aContext still points at this object.
+      log_e("OThreadUDP::stop: failed to acquire OpenThread lock; socket not cleanly closed");
     }
   }
+  _hasMulticast = false;
   _open = false;
   _hasCurrent = false;
 }
