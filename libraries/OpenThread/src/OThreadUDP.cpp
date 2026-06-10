@@ -195,8 +195,10 @@ void OThreadUDP::stop() {
     OtLock lock;
     if (lock) {
       otMessageFree(_txMessage);
+      _txMessage = nullptr;
+    } else {
+      log_e("OThreadUDP::stop: failed to acquire OpenThread lock; pending TX message not freed");
     }
-    _txMessage = nullptr;
   }
   if (!_open) {
     return;
@@ -238,8 +240,11 @@ int OThreadUDP::beginPacket(IPAddress ip, uint16_t port) {
     OtLock lock;
     if (lock) {
       otMessageFree(_txMessage);
+      _txMessage = nullptr;
+    } else {
+      log_e("OThreadUDP::beginPacket: failed to acquire OpenThread lock; pending TX message not freed");
+      return 0;
     }
-    _txMessage = nullptr;
   }
 
   OtLock lock;
@@ -275,6 +280,10 @@ size_t OThreadUDP::write(uint8_t b) {
 
 size_t OThreadUDP::write(const uint8_t *buf, size_t size) {
   if (_txMessage == nullptr || size == 0 || buf == nullptr) {
+    return 0;
+  }
+  if (size > UINT16_MAX) {
+    log_e("OThreadUDP::write: payload too large (%u bytes)", (unsigned)size);
     return 0;
   }
   OtLock lock;

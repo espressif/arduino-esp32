@@ -133,7 +133,8 @@ public:
   // Live setters applied directly on the running OpenThread instance.
   // Useful when joining via Commissioner/Joiner where the full Active
   // Operational Dataset is not built locally (see commitDataSet/DataSet for
-  // the offline path). All require the Thread protocol to be stopped.
+  // the offline path). The Thread protocol should typically be stopped before
+  // changing these parameters on an already-attached device.
   otError setChannel(uint8_t channel);
   otError setPanId(uint16_t panid);
   otError setExtendedPanId(const uint8_t *extpanid);
