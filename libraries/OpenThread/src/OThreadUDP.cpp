@@ -110,6 +110,10 @@ void OThreadUDP::udpReceiveCallback(void *aContext, otMessage *aMessage, const o
 }
 
 uint8_t OThreadUDP::begin(IPAddress addr, uint16_t port) {
+  if (addr.type() != IPv6) {
+    log_e("OThreadUDP::begin: IPv6 address required");
+    return 0;
+  }
   if (_open) {
     stop();
   }
@@ -155,11 +159,16 @@ uint8_t OThreadUDP::begin(uint16_t port) {
 }
 
 uint8_t OThreadUDP::beginMulticast(IPAddress group, uint16_t port) {
+  if (group.type() != IPv6) {
+    log_e("OThreadUDP::beginMulticast: IPv6 multicast address required");
+    return 0;
+  }
   if (!begin(OT_IN6ADDR_ANY, port)) {
     return 0;
   }
   otInstance *inst = OThread.getInstance();
   if (!inst) {
+    stop();
     return 0;
   }
   otIp6Address grp;
@@ -167,11 +176,13 @@ uint8_t OThreadUDP::beginMulticast(IPAddress group, uint16_t port) {
 
   OtLock lock;
   if (!lock) {
+    stop();
     return 0;
   }
   otError err = otIp6SubscribeMulticastAddress(inst, &grp);
   if (err != OT_ERROR_NONE && err != OT_ERROR_ALREADY) {
     log_e("otIp6SubscribeMulticastAddress failed: %d", err);
+    stop();
     return 0;
   }
   _multicastGroup = grp;
@@ -210,6 +221,14 @@ void OThreadUDP::stop() {
 // ---- TX -------------------------------------------------------------------
 
 int OThreadUDP::beginPacket(IPAddress ip, uint16_t port) {
+  if (!_open) {
+    log_e("OThreadUDP::beginPacket: socket not open (call begin() first)");
+    return 0;
+  }
+  if (ip.type() != IPv6) {
+    log_e("OThreadUDP::beginPacket: IPv6 destination required");
+    return 0;
+  }
   otInstance *inst = OThread.getInstance();
   if (!inst) {
     return 0;

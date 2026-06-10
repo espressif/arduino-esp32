@@ -21,7 +21,6 @@
 #include "lwip/netif.h"
 
 #include <openthread/instance.h>
-#include "esp_openthread_lock.h"
 
 static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
@@ -1093,6 +1092,11 @@ const uint8_t *OpenThread::getExtendedAddress() const {
     log_w("Error: OpenThread instance not initialized");
     return nullptr;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return nullptr;
+  } 
   // otLinkGetExtendedAddress returns a pointer into stack-owned memory.
   // Caller must use it transiently.
   const otExtAddress *addr = otLinkGetExtendedAddress(mInstance);
@@ -1128,6 +1132,11 @@ int8_t OpenThread::getTxPower() const {
 uint32_t OpenThread::getPollPeriod() const {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return 0;
   }
   return otLinkGetPollPeriod(mInstance);
@@ -1212,11 +1221,21 @@ otJoinerState OpenThread::getJoinerState() const {
   if (!mInstance) {
     return OT_JOINER_STATE_IDLE;
   }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    return OT_JOINER_STATE_IDLE;
+  }
   return otJoinerGetState(mInstance);
 }
 
 const otExtAddress *OpenThread::getJoinerId() const {
   if (!mInstance) {
+    return nullptr;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return nullptr;
   }
   return otJoinerGetId(mInstance);
@@ -1318,6 +1337,11 @@ void OpenThread::stopCommissioner() {
 
 otCommissionerState OpenThread::getCommissionerState() const {
   if (!mInstance) {
+    return OT_COMMISSIONER_STATE_DISABLED;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_COMMISSIONER_STATE_DISABLED;
   }
   return otCommissionerGetState(mInstance);
