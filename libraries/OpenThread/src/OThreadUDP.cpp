@@ -343,6 +343,7 @@ int OThreadUDP::endPacket() {
     _txMessage = nullptr;
     return 0;
   }
+  _txMessage = nullptr;
   return 1;
 }
 
