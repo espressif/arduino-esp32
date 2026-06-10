@@ -122,6 +122,12 @@ uint8_t OThreadUDP::begin(IPAddress addr, uint16_t port) {
   if (!ensureRxQueue()) {
     return 0;
   }
+  
+  // Drop any datagrams left from a previous session so the new socket starts clean.
+  xQueueReset(_rxQueue);
+  _hasCurrent = false;
+  _currentOffset = 0;
+
   otInstance *inst = OThread.getInstance();
   if (!inst) {
     log_w("OThreadUDP::begin: OpenThread not initialized");
