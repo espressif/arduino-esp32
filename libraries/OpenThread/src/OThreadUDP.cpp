@@ -197,10 +197,10 @@ void OThreadUDP::stop() {
     OtLock lock;
     if (lock) {
       otMessageFree(_txMessage);
+      _txMessage = nullptr;
     } else {
       log_e("OThreadUDP::stop: failed to acquire OpenThread lock; pending TX message not freed");
     }
-    _txMessage = nullptr;  // always clear so the destructor doesn't retry
   }
   if (!_open) {
     return;
@@ -317,8 +317,10 @@ int OThreadUDP::endPacket() {
     OtLock lock;
     if (lock) {
       otMessageFree(_txMessage);
+      _txMessage = nullptr;
+    } else {
+      log_e("OThreadUDP::endPacket: failed to acquire OpenThread lock; pending TX message not freed");
     }
-    _txMessage = nullptr;
     return 0;
   }
 
@@ -341,7 +343,6 @@ int OThreadUDP::endPacket() {
     _txMessage = nullptr;
     return 0;
   }
-  _txMessage = nullptr;
   return 1;
 }
 
