@@ -146,7 +146,7 @@ Initializes the OpenThread CLI.
 
 This function initializes the OpenThread CLI interface. It must be called after ``OpenThread::begin()`` and before using any CLI functions.
 
-**Note:** The OpenThread stack must be started before initializing the CLI.
+**Note:** The OpenThread stack must be initialized with ``OpenThread::begin()`` before initializing the CLI. The Thread protocol itself may still be stopped while CLI commands configure the dataset.
 
 end
 ^^^

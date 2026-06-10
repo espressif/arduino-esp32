@@ -23,10 +23,15 @@
 #include <openthread/netdata.h>
 #include <openthread/ip6.h>
 #include <openthread/dataset_ftd.h>
+#include <openthread/joiner.h>
+#include <openthread/commissioner.h>
 #include <esp_openthread.h>
 #include <Arduino.h>
 #include "IPAddress.h"
 #include <vector>
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 typedef enum {
   OT_ROLE_DISABLED = 0,  ///< The Thread stack is disabled.
@@ -119,6 +124,60 @@ public:
   // Get the Node PAN ID
   uint16_t getPanId() const;
 
+  // Live setters applied directly on the running OpenThread instance.
+  // Useful when joining via Commissioner/Joiner where the full Active
+  // Operational Dataset is not built locally (see commitDataSet/DataSet for
+  // the offline path). All require the Thread protocol to be stopped.
+  otError setChannel(uint8_t channel);
+  otError setPanId(uint16_t panid);
+  otError setExtendedPanId(const uint8_t *extpanid);
+  otError setNetworkKey(const uint8_t *key);
+  otError setNetworkName(const char *name);
+
+  // Factory-assigned EUI-64 (IEEE 802.15.4 extended address derived from HW)
+  bool getEui64(uint8_t out[8]) const;
+  String getEui64() const;
+
+  // Currently configured 802.15.4 extended address (may differ from EUI-64)
+  const uint8_t *getExtendedAddress() const;
+
+  // Thread protocol version (e.g. 4 == 1.3)
+  uint16_t getThreadVersion() const;
+
+  // Human-readable OpenThread stack version string
+  String getVersionString() const;
+
+  // Radio transmit power in dBm. Returns INT8_MIN on failure.
+  int8_t getTxPower() const;
+
+  // Sleepy End Device data poll period in milliseconds
+  uint32_t getPollPeriod() const;
+
+  // Joiner (Thread Commissioning) ---------------------------------------
+  // Synchronously runs the Joiner state machine. The OpenThread IPv6 stack
+  // must be up (networkInterfaceUp()) and the Thread protocol must NOT be
+  // started yet. On success, the active dataset is provisioned by the
+  // commissioner and Thread can be started with start().
+  otError startJoiner(
+    const char *pskd, const char *provisioningUrl = nullptr, const char *vendorName = nullptr, const char *vendorModel = nullptr,
+    const char *vendorSwVersion = nullptr, const char *vendorData = nullptr, uint32_t timeoutMs = 30000
+  );
+  void stopJoiner();
+  otJoinerState getJoinerState() const;
+  const otExtAddress *getJoinerId() const;
+
+  // Commissioner (Thread Commissioning leader side) ---------------------
+  // Petitions the network to become the active Commissioner. Blocks until
+  // OT_COMMISSIONER_STATE_ACTIVE is reached or the timeout fires. The
+  // device must already be attached to a Thread network (e.g. as Leader).
+  otError startCommissioner(uint32_t timeoutMs = 30000);
+  // Adds a Joiner entry that will be accepted by this commissioner.
+  // Passing nullptr for eui64 accepts any joiner ("*" wildcard in ot-ctl).
+  // timeoutSec is the lifetime of the joiner entry on the commissioner.
+  otError addJoiner(const char *pskd, const otExtAddress *eui64 = nullptr, uint32_t timeoutSec = 120);
+  void stopCommissioner();
+  otCommissionerState getCommissionerState() const;
+
   // Get the OpenThread instance
   otInstance *getInstance();
 
@@ -156,8 +215,19 @@ public:
 
 private:
   static otInstance *mInstance;
-  static DataSet mCurrentDataset;   // Current dataset being used by the OpenThread instance.
-  static otNetworkKey mNetworkKey;  // Static storage to persist after function return
+  static DataSet mCurrentDataset;        // Current dataset being used by the OpenThread instance.
+  static otNetworkKey mNetworkKey;       // Static storage to persist after function return
+  static otExtAddress mFactoryEui64;     // Cached factory-assigned EUI-64
+
+  // Joiner synchronization
+  static SemaphoreHandle_t mJoinerSemaphore;
+  static otError mJoinerResult;
+  static void joinerCallback(otError aError, void *aContext);
+
+  // Commissioner synchronization
+  static SemaphoreHandle_t mCommissionerSemaphore;
+  static otCommissionerState mCommissionerLastState;
+  static void commissionerStateCallback(otCommissionerState aState, void *aContext);
 
   // Address caching for performance (user-controlled)
   mutable std::vector<IPAddress> mCachedUnicastAddresses;

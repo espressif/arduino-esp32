@@ -1,13 +1,14 @@
-| Supported Targets | ESP32-C6 | ESP32-H2 |
-| ----------------- | -------- | -------- |
+| Supported Targets | ESP32-C5 | ESP32-C6 | ESP32-H2 |
+| ----------------- | -------- | -------- | -------- |
 
 # General View
 
 This Arduino OpenThread Library allows using ESP OpenThread implementation using CLI and/or Native OpenThread API.
 
-The Library implements 3 C++ Classes:
+The Library implements 4 C++ Classes:
 - `OThread` Class for Native OpenThread API
 - `OThreadCLI` Class for CLI OpenThread API
+- `OThreadUDP` Class for sending/receiving IPv6 UDP datagrams over the Thread network (raw `otUdpSocket`, no lwIP)
 - `DataSet` Class for OpenThread dataset manipulation using Native `OThread` Class
 
 # ESP32 Arduino OpenThread Native
@@ -56,6 +57,34 @@ class OpenThread {
 
     // Commit a dataset to the OpenThread instance.
     void commitDataSet(const DataSet &dataset);
+
+    // Live setters (apply directly to the running instance)
+    otError setChannel(uint8_t channel);
+    otError setPanId(uint16_t panid);
+    otError setExtendedPanId(const uint8_t *extpanid);
+    otError setNetworkKey(const uint8_t *key);
+    otError setNetworkName(const char *name);
+
+    // Extra read-only getters
+    bool   getEui64(uint8_t out[8]) const;
+    String getEui64() const;
+    const uint8_t *getExtendedAddress() const;
+    uint16_t getThreadVersion() const;
+    String   getVersionString() const;
+    int8_t   getTxPower() const;
+    uint32_t getPollPeriod() const;
+
+    // Joiner (Thread Commissioning) - synchronous helper
+    otError startJoiner(const char *pskd,
+                        const char *provisioningUrl = nullptr,
+                        const char *vendorName      = nullptr,
+                        const char *vendorModel     = nullptr,
+                        const char *vendorSwVersion = nullptr,
+                        const char *vendorData      = nullptr,
+                        uint32_t    timeoutMs       = 30000);
+    void          stopJoiner();
+    otJoinerState getJoinerState() const;
+    const otExtAddress *getJoinerId() const;
 
 private:
     static otInstance *mInstance; // Pointer to the OpenThread instance.
@@ -178,7 +207,7 @@ Some [helper functions](helper_functions.md) were made available for working wit
 
 The available OpenThread Commands are documented in the [OpenThread CLI Reference Page](https://openthread.io/reference/cli/commands)
 
-It is important to note that the current implementation can only be used with Espressif SoC that has support to IEEE 802.15.4, such as **ESP32-C6** and **ESP32-H2**.
+It is important to note that the current implementation can only be used with Espressif SoCs that have IEEE 802.15.4 radio support, such as **ESP32-C5**, **ESP32-C6** and **ESP32-H2**.
 
 Below are the details of the class:
 
@@ -259,3 +288,152 @@ extern OpenThreadCLI OThreadCLI;
 - Ensure that the OpenThread stack is initialized (`OThreadCLI.begin()`) before starting the CLI console.
 
 This documentation provides a comprehensive overview of the `OThreadCLI` class, its methods, and example usage. It is designed to help developers easily integrate OpenThread CLI functionality into their Arduino projects.
+
+# Joiner (Thread Commissioning)
+
+The `OThread` class exposes a synchronous Thread Joiner helper that drives the OpenThread commissioning state machine. Use it when the device should obtain its operational dataset (network key, ext-PAN-ID, channel, ...) from an external Commissioner via the PSKd shared secret instead of being preconfigured with a `DataSet`.
+
+## Required order
+
+1. `OThread.begin(false)` - initialize the stack without auto-starting Thread (do **not** commit a DataSet).
+2. (optional) Pre-configure the radio with `setChannel()`, `setPanId()`, `setExtendedPanId()` so the joiner only listens on the expected channel/PAN.
+3. `OThread.networkInterfaceUp()` - the IPv6 stack must be up.
+4. `OThread.startJoiner(PSKD)` - blocks until commissioning completes (or `timeoutMs` elapses).
+5. On success, call `OThread.start()` to enable Thread with the provisioned dataset.
+
+## Return values
+
+`startJoiner()` returns an `otError`:
+
+- `OT_ERROR_NONE` - successfully joined the network.
+- `OT_ERROR_SECURITY` - PSKd mismatch.
+- `OT_ERROR_NOT_FOUND` - no joinable network was discovered.
+- `OT_ERROR_RESPONSE_TIMEOUT` - commissioner did not respond within `timeoutMs`.
+- `OT_ERROR_INVALID_STATE` - IPv6 stack not up, or Thread already enabled.
+
+## Joiner status helpers
+
+- `OThread.getJoinerState()` returns the live `otJoinerState` (idle / discover / connect / connected / entrust / joined).
+- `OThread.getJoinerId()` returns the device's joiner ID (used as IEEE 802.15.4 extended address during commissioning).
+
+## Timeouts at a glance
+
+Three independent timeouts are at play during a join. Tune them in pairs so the joiner side does not give up before the commissioner side does:
+
+| Timeout                                        | Owner            | Default | Purpose                                                                                              |
+| ---------------------------------------------- | ---------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `startJoiner(..., timeoutMs)`                  | Joiner sketch    | 30 s    | How long the wrapper blocks on its FreeRTOS semaphore. On expiry the wrapper calls `otJoinerStop()`. |
+| Internal MeshCoP / DTLS timers                 | OpenThread stack | various | Not configurable from Arduino. Causes the callback to eventually fire with `OT_ERROR_NOT_FOUND` or `OT_ERROR_RESPONSE_TIMEOUT`. |
+| `addJoiner(..., timeoutSec)`                   | Commissioner     | 120 s   | How long the joiner entry remains valid on the commissioner. After this it must be re-added.        |
+
+For best interoperability use `startJoiner(..., timeoutSec_for_commissioner * 1000 + 10000)`.
+
+# Commissioner (Thread Commissioning - Leader Side)
+
+The `OThread` class also exposes the **other** side of the commissioning flow: petitioning the Commissioner role and authorising a remote joiner.
+
+The Commissioner must already be **attached** to the Thread network (typically as the Leader of a freshly-formed partition).
+
+## Required order
+
+1. Bring up the Thread network normally (DataSet + `commitDataSet` + `start`) until the device is no longer Detached / Disabled.
+2. `OThread.startCommissioner()` - blocks until the Commissioner is `ACTIVE` (default timeout: 30 s).
+3. `OThread.addJoiner(PSKD, /*eui64=*/nullptr, /*timeoutSec=*/120)` - whitelists any joiner that knows `PSKD` for 120 s.
+4. The companion Joiner device now runs `startJoiner(PSKD)` on its side; the dataset is delivered to it over an authenticated DTLS handshake.
+5. (Optional) Call `OThread.stopCommissioner()` once you no longer want to admit new joiners.
+
+## API
+
+```cpp
+otError startCommissioner(uint32_t timeoutMs = 30000);
+otError addJoiner(const char *pskd,
+                  const otExtAddress *eui64 = nullptr,
+                  uint32_t timeoutSec = 120);
+void                stopCommissioner();
+otCommissionerState getCommissionerState() const;
+```
+
+## Return values
+
+- `OT_ERROR_NONE` - success.
+- `OT_ERROR_REJECTED` - petition rejected (another commissioner already active in the partition, or local state fell back to `DISABLED`).
+- `OT_ERROR_RESPONSE_TIMEOUT` - petition did not resolve within `timeoutMs` (the wrapper auto-calls `otCommissionerStop`).
+- `OT_ERROR_INVALID_STATE` - the device is not attached to a network yet.
+- `OT_ERROR_NO_BUFS` / `OT_ERROR_INVALID_ARGS` - for `addJoiner`: commissioner table full or invalid PSKd.
+
+## PSKd format
+
+The PSKd is an ASCII string, **6 to 32 characters**, using the base32-thread alphabet: digits and uppercase letters, **excluding** `I`, `O`, `Q` and the digit `0`. Both sides must use the exact same value.
+
+## Required Kconfig
+
+- `CONFIG_OPENTHREAD_COMMISSIONER=y` on the leader side.
+- `CONFIG_OPENTHREAD_JOINER=y` on the joiner side.
+
+## Working example
+
+`examples/Native/ThreadCommissioning/` contains a ready-to-run pair:
+
+- [`CommissionerNode`](examples/Native/ThreadCommissioning/CommissionerNode/CommissionerNode.ino) builds a fresh DataSet, forms the network, then runs the Commissioner.
+- [`JoinerNode`](examples/Native/ThreadCommissioning/JoinerNode/JoinerNode.ino) has **no** local DataSet, only the PSKd, and uses `startJoiner()` to obtain the dataset over the air.
+
+# OThreadUDP Class - IPv6 UDP over Thread
+
+`OThreadUDP` is an Arduino `UDP` implementation backed directly by the `otUdpSocket` API. It does not go through lwIP, so it is the lightest path to send/receive IPv6 UDP datagrams over the Thread mesh.
+
+## Class Definition
+
+```cpp
+class OThreadUDP : public UDP {
+public:
+  OThreadUDP();
+  ~OThreadUDP();
+  operator bool() const;
+
+  uint8_t begin(IPAddress addr, uint16_t port);
+  uint8_t begin(uint16_t port);              // bind to OT_IN6ADDR_ANY
+  uint8_t beginMulticast(IPAddress group, uint16_t port);
+  void    stop();
+
+  int    beginPacket(IPAddress ip, uint16_t port);
+  int    beginPacket(const char *host, uint16_t port);  // textual IPv6
+  int    endPacket();
+  size_t write(uint8_t);
+  size_t write(const uint8_t *buf, size_t size);
+
+  int       parsePacket();
+  int       available();
+  int       read();
+  int       read(unsigned char *buf, size_t len);
+  int       read(char *buf, size_t len);
+  int       peek();
+  void      flush();
+  IPAddress remoteIP();
+  uint16_t  remotePort();
+};
+
+extern const IPAddress OT_IN6ADDR_ANY;
+```
+
+## Tunables
+
+These build-time defines control the per-instance RX queue. Override them on the command line if your application sends/receives larger or more bursty traffic:
+
+| Macro | Default | Meaning |
+| ----- | ------- | ------- |
+| `OT_UDP_MAX_PACKET_SIZE` | 512  | Maximum payload bytes of a single received datagram. Larger packets are truncated. |
+| `OT_UDP_RX_QUEUE_DEPTH`  | 4    | Number of datagrams that may be queued before the oldest is dropped. |
+
+## Example (UDP Light + Switch)
+
+`examples/Native/UDP_Light_Switch/` contains a complete two-board demo that combines the Joiner / Commissioner flow with `OThreadUDP` to build a controllable IoT lamp:
+
+- [`light`](examples/Native/UDP_Light_Switch/light/light.ino) is the **server**. It boots as Thread Leader, resumes the persisted dataset when available, runs the **Commissioner** role (accepts joiners that present PSKd `J01NME`) and subscribes to the realm-local multicast group `ff03::abcd` on UDP port `5051`. For every `ON` / `OFF` / `TOGGLE` / `STATUS` command it receives, it updates the on-board RGB LED ("lamp") and unicasts an `ACK ON` / `ACK OFF` confirmation back to the sender.
+- [`switch`](examples/Native/UDP_Light_Switch/switch/switch.ino) is the **client**. It boots **without** any local DataSet, runs the **Joiner** state machine, and once attached opens a UDP socket on the same port. Pressing the BOOT button sends `TOGGLE` to `ff03::abcd` on UDP port `5051` and waits for the light's confirmation packet within 1 s.
+
+One light can serve **many switches** in parallel - just flash `switch.ino` on additional H2 / C6 / C5 boards within the joining window. The pair demonstrates an end-to-end IoT pattern (commissioning + many-to-one multicast control + per-command acknowledgement) using only the Native OpenThread API. Port `5051` is used to avoid OpenThread-reserved CoAP ports such as `5683`, `5684`, and `61631`.
+
+For a telemetry-oriented deployment with many sleepy sensors, see:
+
+- [`examples/Native/UDP_SensorNetwork/sensor_collector/sensor_collector.ino`](examples/Native/UDP_SensorNetwork/sensor_collector/sensor_collector.ino): leader + commissioner + UDP sink that tracks up to 256 unique node IDs and prints periodic fleet status.
+- [`examples/Native/UDP_SensorNetwork/sensor_node/sensor_node.ino`](examples/Native/UDP_SensorNetwork/sensor_node/sensor_node.ino): joiner sensor client with optional Sleepy End Device behavior (`otLinkSetRxOnWhenIdle(false)`, poll period, child timeout) that periodically uploads readings over UDP.

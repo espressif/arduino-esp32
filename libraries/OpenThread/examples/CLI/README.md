@@ -91,7 +91,7 @@ Use CLI when you want to:
 - mirror or reuse known OpenThread shell commands directly,
 - validate behavior quickly with command-like flows,
 - use a capability exposed in CLI before a Native wrapper exists,
-- keep behavior close to COP/manual operational procedures.
+- keep behavior close to CLI/manual operational procedures.
 
 ## When should I use Native API?
 
@@ -192,10 +192,13 @@ Why this is a good starter pattern:
 ## Related examples in this folder
 
 - `SimpleCLI` - basic CLI console pass-through.
+- `SimpleNode` - minimal OpenThread stack startup through the CLI wrapper.
+- `ThreadScan` - active Thread network scanning through CLI commands.
 - `onReceive` - asynchronous CLI response callback usage.
 - `SimpleThreadNetwork/*` - CLI-driven network bring-up examples.
 - `COAP/*` - command-driven CoAP workflows via CLI.
 - `UDP/*` - command-driven UDP telemetry workflow via CLI.
+- `UDP_Sensor/*` - CLI-based sensor / collector UDP telemetry workflow.
 
 ## License
 

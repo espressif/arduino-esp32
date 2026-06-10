@@ -17,10 +17,10 @@
 
 #include "esp_netif_net_stack.h"
 #include "esp_openthread_netif_glue.h"
+#include "esp_openthread_lock.h"
 #include "lwip/netif.h"
 
 #include <openthread/instance.h>
-
 #include "esp_openthread_lock.h"
 
 static esp_openthread_platform_config_t ot_native_config;
@@ -267,6 +267,11 @@ bool OpenThread::otStarted;
 otInstance *OpenThread::mInstance;
 DataSet OpenThread::mCurrentDataset;
 otNetworkKey OpenThread::mNetworkKey;
+otExtAddress OpenThread::mFactoryEui64;
+SemaphoreHandle_t OpenThread::mJoinerSemaphore = nullptr;
+otError OpenThread::mJoinerResult = OT_ERROR_NONE;
+SemaphoreHandle_t OpenThread::mCommissionerSemaphore = nullptr;
+otCommissionerState OpenThread::mCommissionerLastState = OT_COMMISSIONER_STATE_DISABLED;
 
 OpenThread::OpenThread() {
   // static initialization (node data and stack starting information)
@@ -950,6 +955,372 @@ std::vector<IPAddress> OpenThread::getAllMulticastAddresses() const {
   }
 
   return mCachedMulticastAddresses;  // Return copy of cached vector
+}
+
+// =====================================================================
+// Live setters (apply directly to the running instance)
+// =====================================================================
+
+otError OpenThread::setChannel(uint8_t channel) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otLinkSetChannel(mInstance, channel);
+  if (err != OT_ERROR_NONE) {
+    log_e("otLinkSetChannel failed: %d", err);
+  }
+  return err;
+}
+
+otError OpenThread::setPanId(uint16_t panid) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otLinkSetPanId(mInstance, panid);
+  if (err != OT_ERROR_NONE) {
+    log_e("otLinkSetPanId failed: %d", err);
+  }
+  return err;
+}
+
+otError OpenThread::setExtendedPanId(const uint8_t *extpanid) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  if (!extpanid) {
+    log_w("setExtendedPanId: null pointer");
+    return OT_ERROR_INVALID_ARGS;
+  }
+  otExtendedPanId xpid;
+  memcpy(xpid.m8, extpanid, OT_EXT_PAN_ID_SIZE);
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otThreadSetExtendedPanId(mInstance, &xpid);
+  if (err != OT_ERROR_NONE) {
+    log_e("otThreadSetExtendedPanId failed: %d", err);
+  }
+  return err;
+}
+
+otError OpenThread::setNetworkKey(const uint8_t *key) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  if (!key) {
+    log_w("setNetworkKey: null pointer");
+    return OT_ERROR_INVALID_ARGS;
+  }
+  otNetworkKey nk;
+  memcpy(nk.m8, key, OT_NETWORK_KEY_SIZE);
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otThreadSetNetworkKey(mInstance, &nk);
+  if (err != OT_ERROR_NONE) {
+    log_e("otThreadSetNetworkKey failed: %d", err);
+  }
+  return err;
+}
+
+otError OpenThread::setNetworkName(const char *name) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  if (!name) {
+    log_w("setNetworkName: null pointer");
+    return OT_ERROR_INVALID_ARGS;
+  }
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otThreadSetNetworkName(mInstance, name);
+  if (err != OT_ERROR_NONE) {
+    log_e("otThreadSetNetworkName failed: %d", err);
+  }
+  return err;
+}
+
+// =====================================================================
+// Extra read-only getters
+// =====================================================================
+
+bool OpenThread::getEui64(uint8_t out[8]) const {
+  if (!mInstance || !out) {
+    log_w("Error: OpenThread instance not initialized");
+    return false;
+  }
+  OtLock lock;
+  if (!lock) {
+    return false;
+  }
+  otLinkGetFactoryAssignedIeeeEui64(mInstance, &mFactoryEui64);
+  memcpy(out, mFactoryEui64.m8, OT_EXT_ADDRESS_SIZE);
+  return true;
+}
+
+String OpenThread::getEui64() const {
+  uint8_t eui[8];
+  if (!getEui64(eui)) {
+    return String();
+  }
+  char buf[2 * 8 + 1];
+  for (int i = 0; i < 8; i++) {
+    sprintf(&buf[2 * i], "%02x", eui[i]);
+  }
+  buf[16] = 0;
+  return String(buf);
+}
+
+const uint8_t *OpenThread::getExtendedAddress() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return nullptr;
+  }
+  // otLinkGetExtendedAddress returns a pointer into stack-owned memory.
+  // Caller must use it transiently.
+  const otExtAddress *addr = otLinkGetExtendedAddress(mInstance);
+  return addr ? addr->m8 : nullptr;
+}
+
+uint16_t OpenThread::getThreadVersion() const {
+  return otThreadGetVersion();
+}
+
+String OpenThread::getVersionString() const {
+  const char *v = otGetVersionString();
+  return v ? String(v) : String();
+}
+
+int8_t OpenThread::getTxPower() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return INT8_MIN;
+  }
+  int8_t power = INT8_MIN;
+  OtLock lock;
+  if (!lock) {
+    return INT8_MIN;
+  }
+  otError err = otPlatRadioGetTransmitPower(mInstance, &power);
+  if (err != OT_ERROR_NONE) {
+    return INT8_MIN;
+  }
+  return power;
+}
+
+uint32_t OpenThread::getPollPeriod() const {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return 0;
+  }
+  return otLinkGetPollPeriod(mInstance);
+}
+
+// =====================================================================
+// Joiner
+// =====================================================================
+
+void OpenThread::joinerCallback(otError aError, void *aContext) {
+  // Runs in the OpenThread task context (NOT in an ISR). We just stash
+  // the result and unblock the caller in startJoiner().
+  (void)aContext;
+  mJoinerResult = aError;
+  if (mJoinerSemaphore != nullptr) {
+    xSemaphoreGive(mJoinerSemaphore);
+  }
+}
+
+otError OpenThread::startJoiner(
+  const char *pskd, const char *provisioningUrl, const char *vendorName, const char *vendorModel, const char *vendorSwVersion, const char *vendorData,
+  uint32_t timeoutMs
+) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  if (!pskd) {
+    return OT_ERROR_INVALID_ARGS;
+  }
+
+  if (mJoinerSemaphore == nullptr) {
+    mJoinerSemaphore = xSemaphoreCreateBinary();
+    if (mJoinerSemaphore == nullptr) {
+      log_e("startJoiner: failed to allocate semaphore");
+      return OT_ERROR_NO_BUFS;
+    }
+  } else {
+    // Drain any stale token
+    xSemaphoreTake(mJoinerSemaphore, 0);
+  }
+
+  mJoinerResult = OT_ERROR_GENERIC;
+
+  otError err;
+  {
+    OtLock lock;
+    if (!lock) {
+      return OT_ERROR_FAILED;
+    }
+    err = otJoinerStart(mInstance, pskd, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData, joinerCallback, nullptr);
+  }
+  if (err != OT_ERROR_NONE) {
+    log_e("otJoinerStart failed: %d", err);
+    return err;
+  }
+
+  // Wait for the completion callback. The OT task drives the state machine.
+  if (xSemaphoreTake(mJoinerSemaphore, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {
+    log_e("Joiner timed out after %lu ms", (unsigned long)timeoutMs);
+    OtLock lock;
+    if (lock) {
+      otJoinerStop(mInstance);
+    }
+    return OT_ERROR_RESPONSE_TIMEOUT;
+  }
+
+  return mJoinerResult;
+}
+
+void OpenThread::stopJoiner() {
+  if (!mInstance) {
+    return;
+  }
+  OtLock lock;
+  if (lock) {
+    otJoinerStop(mInstance);
+  }
+}
+
+otJoinerState OpenThread::getJoinerState() const {
+  if (!mInstance) {
+    return OT_JOINER_STATE_IDLE;
+  }
+  return otJoinerGetState(mInstance);
+}
+
+const otExtAddress *OpenThread::getJoinerId() const {
+  if (!mInstance) {
+    return nullptr;
+  }
+  return otJoinerGetId(mInstance);
+}
+
+// =====================================================================
+// Commissioner
+// =====================================================================
+
+void OpenThread::commissionerStateCallback(otCommissionerState aState, void *aContext) {
+  // Runs in the OpenThread task. Signal startCommissioner() once we either
+  // reach ACTIVE (success) or fall back to DISABLED (petition rejected).
+  (void)aContext;
+  mCommissionerLastState = aState;
+  if (mCommissionerSemaphore != nullptr && (aState == OT_COMMISSIONER_STATE_ACTIVE || aState == OT_COMMISSIONER_STATE_DISABLED)) {
+    xSemaphoreGive(mCommissionerSemaphore);
+  }
+}
+
+otError OpenThread::startCommissioner(uint32_t timeoutMs) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+
+  if (mCommissionerSemaphore == nullptr) {
+    mCommissionerSemaphore = xSemaphoreCreateBinary();
+    if (mCommissionerSemaphore == nullptr) {
+      log_e("startCommissioner: failed to allocate semaphore");
+      return OT_ERROR_NO_BUFS;
+    }
+  } else {
+    xSemaphoreTake(mCommissionerSemaphore, 0);
+  }
+
+  mCommissionerLastState = OT_COMMISSIONER_STATE_DISABLED;
+
+  otError err;
+  {
+    OtLock lock;
+    if (!lock) {
+      return OT_ERROR_FAILED;
+    }
+    err = otCommissionerStart(mInstance, commissionerStateCallback, nullptr, nullptr);
+  }
+  if (err == OT_ERROR_ALREADY) {
+    // Nothing to do: already active.
+    return OT_ERROR_NONE;
+  }
+  if (err != OT_ERROR_NONE) {
+    log_e("otCommissionerStart failed: %d", err);
+    return err;
+  }
+
+  if (xSemaphoreTake(mCommissionerSemaphore, pdMS_TO_TICKS(timeoutMs)) != pdTRUE) {
+    log_e("Commissioner petition timed out after %lu ms", (unsigned long)timeoutMs);
+    OtLock lock;
+    if (lock) {
+      otCommissionerStop(mInstance);
+    }
+    return OT_ERROR_RESPONSE_TIMEOUT;
+  }
+
+  if (mCommissionerLastState != OT_COMMISSIONER_STATE_ACTIVE) {
+    log_e("Commissioner petition rejected (final state: %d)", (int)mCommissionerLastState);
+    return OT_ERROR_REJECTED;
+  }
+  return OT_ERROR_NONE;
+}
+
+otError OpenThread::addJoiner(const char *pskd, const otExtAddress *eui64, uint32_t timeoutSec) {
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return OT_ERROR_INVALID_STATE;
+  }
+  if (!pskd) {
+    return OT_ERROR_INVALID_ARGS;
+  }
+  OtLock lock;
+  if (!lock) {
+    return OT_ERROR_FAILED;
+  }
+  otError err = otCommissionerAddJoiner(mInstance, eui64, pskd, timeoutSec);
+  if (err != OT_ERROR_NONE) {
+    log_e("otCommissionerAddJoiner failed: %d", err);
+  }
+  return err;
+}
+
+void OpenThread::stopCommissioner() {
+  if (!mInstance) {
+    return;
+  }
+  OtLock lock;
+  if (lock) {
+    otCommissionerStop(mInstance);
+  }
+}
+
+otCommissionerState OpenThread::getCommissionerState() const {
+  if (!mInstance) {
+    return OT_COMMISSIONER_STATE_DISABLED;
+  }
+  return otCommissionerGetState(mInstance);
 }
 
 OpenThread OThread;

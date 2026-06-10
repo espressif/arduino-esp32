@@ -62,7 +62,7 @@ Initializes a new operational dataset.
 
 This function creates a new operational dataset with randomly generated values for network key, extended PAN ID, and other parameters. The dataset will be ready to form a new Thread network.
 
-**Note:** OpenThread must be started (``OpenThread::begin()``) before calling this function.
+**Note:** OpenThread must be initialized with ``OpenThread::begin()`` before calling this function.
 
 **Example:**
 
@@ -321,8 +321,8 @@ Creating a New Network
 
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
-        OThread.start();
         OThread.networkInterfaceUp();
+        OThread.start();
 
         Serial.println("New Thread network created");
     }
@@ -364,8 +364,8 @@ Joining an Existing Network
 
         // Apply dataset and start network
         OThread.commitDataSet(dataset);
-        OThread.start();
         OThread.networkInterfaceUp();
+        OThread.start();
 
         Serial.println("Joining existing Thread network");
     }
