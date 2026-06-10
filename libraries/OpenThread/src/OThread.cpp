@@ -1079,7 +1079,11 @@ otError OpenThread::setNetworkName(const char *name) {
 // =====================================================================
 
 bool OpenThread::getEui64(uint8_t out[8]) const {
-  if (!mInstance || !out) {
+ if (!out) {
+    log_w("getEui64: null output buffer");
+    return false;
+  }
+  if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     return false;
   }
@@ -1114,7 +1118,7 @@ const uint8_t *OpenThread::getExtendedAddress() const {
   if (!lock) {
     log_e("Error: Failed to acquire OpenThread lock");
     return nullptr;
-  } 
+  }
   // otLinkGetExtendedAddress returns a pointer into stack-owned memory.
   // Caller must use it transiently.
   const otExtAddress *addr = otLinkGetExtendedAddress(mInstance);
