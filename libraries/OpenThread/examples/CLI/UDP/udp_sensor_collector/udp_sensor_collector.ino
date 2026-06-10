@@ -255,7 +255,7 @@ static bool setupUdpCli() {
   return true;
 }
 
-// Unicast an "OK,<nodeId>,<seq>" acknowledgement straight back to the sender's
+// Unicast an "OK,<nodeId>,<seq>" acknowledgment straight back to the sender's
 // address/port, where seq is the collector's authoritative last-stored sequence
 // for that node. The node uses this ACK both to confirm delivery and to resync
 // its own counter to ours (rolling back or skipping forward as needed). We push
