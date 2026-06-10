@@ -18,7 +18,7 @@ static const uint8_t CAN0_TX = 5;
 static const uint8_t CAN1_RX = 6;
 static const uint8_t CAN1_TX = 7;
 
-// The following 4 pins are only available via the I2C GPIO expander (address 0x41) 
+// The following 4 pins are only available via the I2C GPIO expander (address 0x41)
 static const uint8_t EXP_CAN0_RS = 0;
 static const uint8_t EXP_CAN0_STBY = 1;
 static const uint8_t EXP_CAN1_RS = 2;
@@ -36,7 +36,7 @@ static const uint8_t SS = 27;
 static const uint8_t MOSI = 23;
 static const uint8_t MISO = 25;
 static const uint8_t SCK = 24;
-static const uint8_t SD_DET = 26; // uSD insertion detection, low = inserted
+static const uint8_t SD_DET = 26;  // uSD insertion detection, low = inserted
 
 static const uint8_t A0 = 3;
 
