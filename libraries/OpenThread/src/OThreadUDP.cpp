@@ -49,7 +49,7 @@ inline void ipToOt(const IPAddress &in, otIp6Address &out) {
   }
 }
 
-inline IPAddress otToIp(const otIp6Address &in) {
+[[maybe_unused]] inline IPAddress otToIp(const otIp6Address &in) {
   return IPAddress(IPv6, in.mFields.m8);
 }
 
@@ -206,14 +206,16 @@ void OThreadUDP::stop() {
   otInstance *inst = OThread.getInstance();
   if (inst) {
     OtLock lock;
-    if (lock) {
-      if (_hasMulticast) {
-        otIp6UnsubscribeMulticastAddress(inst, &_multicastGroup);
-        _hasMulticast = false;
-      }
-      if (otUdpIsOpen(inst, &_sock)) {
-        otUdpClose(inst, &_sock);
-      }
+    if (!lock) {
+      log_e("OThreadUDP::stop: failed to acquire OpenThread lock; socket not closed");
+      return;
+    }
+    if (_hasMulticast) {
+      otIp6UnsubscribeMulticastAddress(inst, &_multicastGroup);
+      _hasMulticast = false;
+    }
+    if (otUdpIsOpen(inst, &_sock)) {
+      otUdpClose(inst, &_sock);
     }
   }
   _open = false;
