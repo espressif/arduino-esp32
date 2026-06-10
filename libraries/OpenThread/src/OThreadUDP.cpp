@@ -257,9 +257,13 @@ int OThreadUDP::beginPacket(IPAddress ip, uint16_t port) {
 }
 
 int OThreadUDP::beginPacket(const char *host, uint16_t port) {
+  if (host == nullptr) {
+    log_e("beginPacket: host is null");
+    return 0;
+  }
   IPAddress ip;
   if (!ip.fromString(host)) {
-    log_e("beginPacket: cannot parse '%s' as IPv6", host ? host : "(null)");
+    log_e("beginPacket: cannot parse '%s' as IPv6", host);
     return 0;
   }
   return beginPacket(ip, port);
@@ -306,8 +310,7 @@ int OThreadUDP::endPacket() {
 
   OtLock lock;
   if (!lock) {
-    otMessageFree(_txMessage);
-    _txMessage = nullptr;
+    log_e("OThreadUDP::endPacket: failed to acquire OpenThread lock");
     return 0;
   }
   otError err = otUdpSend(inst, &_sock, _txMessage, &info);
