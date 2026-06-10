@@ -99,7 +99,7 @@ private:
   otIp6Address _txPeerAddr;
   uint16_t _txPeerPort;
 
-  // RX queue is allocated lazily on begin() (each RxPacket is ~520 bytes,
+  // RX queue is allocated lazily on begin() (each RxPacket is ~ (OT_UDP_MAX_PACKET_SIZE + 20) ~ 532 bytes,
   // so we do not want to pay for it unless the user actually opens a socket).
   QueueHandle_t _rxQueue;
 

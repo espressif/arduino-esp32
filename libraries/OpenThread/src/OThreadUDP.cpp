@@ -64,8 +64,9 @@ OThreadUDP::OThreadUDP()
 }
 
 OThreadUDP::~OThreadUDP() {
-  // stop() guarantees _open is false on return, so the OT receive callback
-  // cannot be invoked with 'this' as aContext after this point.
+  // stop() attempts to close the underlying socket and detach the receive callback.
+  // After stop(), the object considers itself closed and it is safe to release
+  // local resources like the RX queue.
   stop();
   if (_rxQueue) {
     vQueueDelete(_rxQueue);
@@ -122,7 +123,7 @@ uint8_t OThreadUDP::begin(IPAddress addr, uint16_t port) {
   if (!ensureRxQueue()) {
     return 0;
   }
-  
+
   // Drop any datagrams left from a previous session so the new socket starts clean.
   xQueueReset(_rxQueue);
   _hasCurrent = false;
