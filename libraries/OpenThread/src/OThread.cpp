@@ -267,10 +267,14 @@ otInstance *OpenThread::mInstance;
 DataSet OpenThread::mCurrentDataset;
 otNetworkKey OpenThread::mNetworkKey;
 otExtAddress OpenThread::mFactoryEui64;
+#if CONFIG_OPENTHREAD_JOINER
 SemaphoreHandle_t OpenThread::mJoinerSemaphore = nullptr;
 otError OpenThread::mJoinerResult = OT_ERROR_NONE;
+#endif /* CONFIG_OPENTHREAD_JOINER */
+#if CONFIG_OPENTHREAD_COMMISSIONER
 SemaphoreHandle_t OpenThread::mCommissionerSemaphore = nullptr;
 otCommissionerState OpenThread::mCommissionerLastState = OT_COMMISSIONER_STATE_DISABLED;
+#endif /* CONFIG_OPENTHREAD_COMMISSIONER */
 
 OpenThread::OpenThread() {
   // static initialization (node data and stack starting information)
@@ -1146,6 +1150,8 @@ uint32_t OpenThread::getPollPeriod() const {
 // Joiner
 // =====================================================================
 
+#if CONFIG_OPENTHREAD_JOINER
+
 void OpenThread::joinerCallback(otError aError, void *aContext) {
   // Runs in the OpenThread task context (NOT in an ISR). We just stash
   // the result and unblock the caller in startJoiner().
@@ -1241,9 +1247,13 @@ const otExtAddress *OpenThread::getJoinerId() const {
   return otJoinerGetId(mInstance);
 }
 
+#endif /* CONFIG_OPENTHREAD_JOINER */
+
 // =====================================================================
 // Commissioner
 // =====================================================================
+
+#if CONFIG_OPENTHREAD_COMMISSIONER
 
 void OpenThread::commissionerStateCallback(otCommissionerState aState, void *aContext) {
   // Runs in the OpenThread task. Signal startCommissioner() once we either
@@ -1346,6 +1356,8 @@ otCommissionerState OpenThread::getCommissionerState() const {
   }
   return otCommissionerGetState(mInstance);
 }
+
+#endif /* CONFIG_OPENTHREAD_COMMISSIONER */
 
 OpenThread OThread;
 

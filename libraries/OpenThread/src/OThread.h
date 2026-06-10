@@ -23,8 +23,12 @@
 #include <openthread/netdata.h>
 #include <openthread/ip6.h>
 #include <openthread/dataset_ftd.h>
+#if CONFIG_OPENTHREAD_JOINER
 #include <openthread/joiner.h>
+#endif
+#if CONFIG_OPENTHREAD_COMMISSIONER
 #include <openthread/commissioner.h>
+#endif
 #include <esp_openthread.h>
 #include <Arduino.h>
 #include "IPAddress.h"
@@ -154,10 +158,12 @@ public:
   uint32_t getPollPeriod() const;
 
   // Joiner (Thread Commissioning) ---------------------------------------
+  // Requires CONFIG_OPENTHREAD_JOINER=y in sdkconfig.
   // Synchronously runs the Joiner state machine. The OpenThread IPv6 stack
   // must be up (networkInterfaceUp()) and the Thread protocol must NOT be
   // started yet. On success, the active dataset is provisioned by the
   // commissioner and Thread can be started with start().
+#if CONFIG_OPENTHREAD_JOINER
   otError startJoiner(
     const char *pskd, const char *provisioningUrl = nullptr, const char *vendorName = nullptr, const char *vendorModel = nullptr,
     const char *vendorSwVersion = nullptr, const char *vendorData = nullptr, uint32_t timeoutMs = 30000
@@ -165,11 +171,14 @@ public:
   void stopJoiner();
   otJoinerState getJoinerState() const;
   const otExtAddress *getJoinerId() const;
+#endif /* CONFIG_OPENTHREAD_JOINER */
 
   // Commissioner (Thread Commissioning leader side) ---------------------
+  // Requires CONFIG_OPENTHREAD_COMMISSIONER=y in sdkconfig.
   // Petitions the network to become the active Commissioner. Blocks until
   // OT_COMMISSIONER_STATE_ACTIVE is reached or the timeout fires. The
   // device must already be attached to a Thread network (e.g. as Leader).
+#if CONFIG_OPENTHREAD_COMMISSIONER
   otError startCommissioner(uint32_t timeoutMs = 30000);
   // Adds a Joiner entry that will be accepted by this commissioner.
   // Passing nullptr for eui64 accepts any joiner ("*" wildcard in ot-ctl).
@@ -177,6 +186,7 @@ public:
   otError addJoiner(const char *pskd, const otExtAddress *eui64 = nullptr, uint32_t timeoutSec = 120);
   void stopCommissioner();
   otCommissionerState getCommissionerState() const;
+#endif /* CONFIG_OPENTHREAD_COMMISSIONER */
 
   // Get the OpenThread instance
   otInstance *getInstance();
@@ -220,14 +230,18 @@ private:
   static otExtAddress mFactoryEui64;     // Cached factory-assigned EUI-64
 
   // Joiner synchronization
+#if CONFIG_OPENTHREAD_JOINER
   static SemaphoreHandle_t mJoinerSemaphore;
   static otError mJoinerResult;
   static void joinerCallback(otError aError, void *aContext);
+#endif /* CONFIG_OPENTHREAD_JOINER */
 
   // Commissioner synchronization
+#if CONFIG_OPENTHREAD_COMMISSIONER
   static SemaphoreHandle_t mCommissionerSemaphore;
   static otCommissionerState mCommissionerLastState;
   static void commissionerStateCallback(otCommissionerState aState, void *aContext);
+#endif /* CONFIG_OPENTHREAD_COMMISSIONER */
 
   // Address caching for performance (user-controlled)
   mutable std::vector<IPAddress> mCachedUnicastAddresses;
