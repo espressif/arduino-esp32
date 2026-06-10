@@ -1,0 +1,291 @@
+# =============================================================================
+# Issue auto-label — final sketch
+# =============================================================================
+# When an issue is opened, edited, or labeled:
+#   1. Opened Issue report → Status: Awaiting triage
+#   2. Opened Feature request → Type: Feature request
+#   3. Area keywords are matched against the title and issue-form area fields.
+#      (so BLE does not match inside "problem"/"table"/"cable")
+#   4. Area labels → assignees: resolved from .github/CODEOWNERS using the paths below
+#      (same last-match-wins rules as GitHub). Organization teams (@org/team) are skipped
+#      because issue assignees must be user logins.
+# =============================================================================
+
+name: Issue auto-label
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-${{ github.event.issue.number }}
+
+jobs:
+  label-issue:
+    name: Apply labels and assignees
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Apply labels and CODEOWNERS assignees
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const pathMod = require('path');
+
+            const issue = context.payload.issue;
+            const action = context.payload.action;
+            const body = issue.body || '';
+            const title = issue.title || '';
+            const existingLabels = (issue.labels || []).map(l => l.name);
+            const labelsToAdd = new Set();
+            const newLabels = [];
+
+            function escapeRegex(s) {
+              return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            }
+            function issueFormField(label) {
+              const labelRegex = escapeRegex(label);
+              const match = body.match(new RegExp('(?:^|\\n)###\\s*' + labelRegex + '\\s*\\n\\s*\\n([\\s\\S]*?)(?=\\n###\\s|$)', 'i'));
+              return match ? match[1].trim() : '';
+            }
+            function keywordMatches(keyword, text) {
+              const k = keyword.trim();
+              const textLower = text.toLowerCase();
+              if (k.includes(' ')) {
+                return textLower.includes(k.toLowerCase());
+              }
+              // Single token: whole-word only (avoids "problem"/"table"/"cable" matching "BLE")
+              return new RegExp('(?:^|[^a-z0-9_])' + escapeRegex(k) + '(?:[^a-z0-9_]|$)', 'i').test(text);
+            }
+
+            // Detect template and form fields by parsing the issue body.
+            // GitHub issue forms render as "### Label\n\nValue"
+
+            // Issue report template: has "### Board" and "### Type" sections
+            const isIssueReport = /###\s*Board\s*\n/i.test(body) && /###\s*Type\s*\n/i.test(body);
+            // Feature request template: has "### Related area" and "### Is your feature request"
+            const isFeatureRequest = /###\s*Related area\s*\n/i.test(body) && /Is your feature request related to a problem/i.test(body);
+
+            if (action === 'labeled') {
+              core.info('Skipping label computation on labeled event.');
+            } else {
+              // Keep keyword matching scoped to title and explicit issue-form fields to avoid
+              // assigning labels from incidental words in descriptions, code, or logs.
+              const relatedArea = issueFormField('Related area');
+              const ideName = issueFormField('IDE Name');
+              const areaText = [title, relatedArea].filter(Boolean).join('\n');
+              const ideText = [title, ideName].filter(Boolean).join('\n');
+              const typeText = [title, relatedArea].filter(Boolean).join('\n');
+
+              const areaKeywordLabelPairs = [
+                { keyword: 'Arduino as ESP-IDF component', label: 'Area: Arduino as ESP-IDF component' },
+                { keyword: 'ESP-IDF component', label: 'Area: Arduino as ESP-IDF component' },
+                { keyword: 'BLE', label: 'Area: BLE' },
+                { keyword: 'Bluetooth Low Energy', label: 'Area: BLE' },
+                { keyword: 'BT classic', label: 'Area: BT classic' },
+                { keyword: 'Bluetooth classic', label: 'Area: BT classic' },
+                { keyword: 'BluetoothSerial', label: 'Area: BT classic' },
+                { keyword: 'ESP-IDF', label: 'Area: ESP-IDF related' },
+                { keyword: 'Lib Builder', label: 'Area: Lib Builder' },
+                { keyword: 'Library Builder', label: 'Area: Lib Builder' },
+                { keyword: 'Matter', label: 'Area: Matter' },
+                { keyword: 'OpenThread', label: 'Area: OpenThread' },
+                { keyword: 'performance regression', label: 'Area: Performance' },
+                { keyword: 'performance issue', label: 'Area: Performance' },
+                { keyword: 'Peripherals API', label: 'Area: Peripherals API' },
+                { keyword: 'peripheral API', label: 'Area: Peripherals API' },
+                { keyword: 'Tools & Build System', label: 'Area: Tools & Build System' },
+                { keyword: 'build system', label: 'Area: Tools & Build System' },
+                { keyword: 'UART', label: 'Area: UART' },
+                { keyword: 'USB', label: 'Area: USB' },
+                { keyword: 'WiFi', label: 'Area: WiFi' },
+                { keyword: 'Wi-Fi', label: 'Area: WiFi' },
+                { keyword: 'Zigbee', label: 'Area: Zigbee' },
+                { keyword: 'ZB', label: 'Area: Zigbee' }
+              ];
+              const typeKeywordLabelPairs = [
+                { keyword: 'CI & Testing', label: 'Type: CI & Testing' },
+                { keyword: 'CI failure', label: 'Type: CI & Testing' },
+                { keyword: 'GitHub Actions', label: 'Type: CI & Testing' },
+                { keyword: 'ci.yml', label: 'Type: CI & Testing' },
+                { keyword: 'Chip support', label: 'Type: Chip support' }
+              ];
+              const ideKeywordLabelPairs = [
+                { keyword: 'Arduino IDE', label: 'IDE: Arduino IDE' },
+                { keyword: 'Arduino PIO', label: 'IDE: Arduino PIO' }
+              ];
+
+              for (const { keyword, label } of areaKeywordLabelPairs) {
+                if (keywordMatches(keyword, areaText)) labelsToAdd.add(label);
+              }
+              for (const { keyword, label } of typeKeywordLabelPairs) {
+                if (keywordMatches(keyword, typeText)) labelsToAdd.add(label);
+              }
+              for (const { keyword, label } of ideKeywordLabelPairs) {
+                if (keywordMatches(keyword, ideText)) labelsToAdd.add(label);
+              }
+
+              if (action === 'opened') {
+                if (isIssueReport) {
+                  labelsToAdd.add('Status: Awaiting triage');
+                }
+
+                if (isFeatureRequest) {
+                  labelsToAdd.add('Type: Feature request');
+                }
+              }
+            }
+
+            // Add only labels that are not already on the issue
+            newLabels.push(...[...labelsToAdd].filter(name => !existingLabels.includes(name)));
+            if (newLabels.length === 0) {
+              core.info('No new labels to add.');
+            }
+            if (newLabels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: newLabels
+              });
+              core.info('Added labels: ' + newLabels.join(', '));
+            }
+
+            // Representative repo paths for each Area label (CODEOWNERS is path-based).
+            // Generic areas without a clear CODEOWNERS-backed path are intentionally omitted.
+            const areaLabelToPath = {
+              'Area: Arduino as ESP-IDF component': '/idf_component_examples/',
+              'Area: BLE': '/libraries/BLE/',
+              'Area: BT classic': '/libraries/BluetoothSerial/',
+              'Area: ESP-IDF related': '/CMakeLists.txt',
+              'Area: Lib Builder': '/tools/',
+              'Area: Matter': '/libraries/Matter/',
+              'Area: OpenThread': '/libraries/OpenThread/',
+              'Area: Performance': '/CMakeLists.txt',
+              'Area: Peripherals API': '/variants/',
+              'Area: Tools & Build System': '/tools/',
+              'Area: UART': '/libraries/Console/',
+              'Area: USB': '/libraries/USB/',
+              'Area: WiFi': '/libraries/WiFi/',
+              'Area: Zigbee': '/libraries/Zigbee/'
+            };
+
+            function parseCodeowners(content) {
+              const rules = [];
+              for (const line of content.split(/\r?\n/)) {
+                const head = line.split('#')[0].trim();
+                if (!head) continue;
+                const tokens = head.split(/\s+/);
+                const pattern = tokens[0];
+                const owners = tokens
+                  .slice(1)
+                  .filter(t => t.startsWith('@'))
+                  .map(t => t.slice(1));
+                rules.push({ pattern, owners });
+              }
+              return rules;
+            }
+
+            function normalizeTarget(p) {
+              let s = String(p).replace(/\\/g, '/');
+              if (!s.startsWith('/')) s = '/' + s;
+              return s.replace(/\/+/g, '/');
+            }
+
+            function globToRegex(pattern) {
+              const anchored = pattern.startsWith('/');
+              let pat = anchored ? pattern.slice(1) : pattern;
+              const directoryPattern = pat.endsWith('/');
+              if (directoryPattern) pat += '**';
+
+              let re = '';
+              for (let i = 0; i < pat.length; i++) {
+                const c = pat[i];
+                const next = pat[i + 1];
+                if (c === '*') {
+                  if (next === '*') {
+                    const after = pat[i + 2];
+                    if (after === '/') {
+                      re += '(?:.*/)?';
+                      i += 2;
+                    } else {
+                      re += '.*';
+                      i += 1;
+                    }
+                  } else {
+                    re += '[^/]*';
+                  }
+                } else if (c === '?') {
+                  re += '[^/]';
+                } else if (c === '[') {
+                  const end = pat.indexOf(']', i + 1);
+                  if (end === -1) {
+                    re += '\\[';
+                  } else {
+                    re += pat.slice(i, end + 1);
+                    i = end;
+                  }
+                } else {
+                  re += escapeRegex(c);
+                }
+              }
+
+              const prefix = anchored ? '^' : '^(?:.*/)?';
+              return new RegExp(prefix + re + '$');
+            }
+
+            function matchesPattern(targetPath, pattern) {
+              if (pattern === '*') return true;
+              const path = normalizeTarget(targetPath).replace(/^\//, '');
+              return globToRegex(pattern).test(path);
+            }
+
+            function ownersForPath(rules, targetPath) {
+              let owners = [];
+              const tp = normalizeTarget(targetPath);
+              for (const rule of rules) {
+                if (matchesPattern(tp, rule.pattern)) {
+                  owners = rule.owners;
+                }
+              }
+              return owners;
+            }
+
+            function isAssignableLogin(owner) {
+              return owner && !owner.includes('/');
+            }
+
+            let codeownersRules = [];
+            try {
+              const cp = pathMod.join(process.env.GITHUB_WORKSPACE, '.github', 'CODEOWNERS');
+              codeownersRules = parseCodeowners(fs.readFileSync(cp, 'utf8'));
+            } catch (e) {
+              core.warning('Could not read .github/CODEOWNERS: ' + e.message);
+            }
+
+            const allLabels = [...new Set([...existingLabels, ...newLabels])];
+            const assigneesToAdd = new Set();
+            for (const label of allLabels) {
+              const relPath = areaLabelToPath[label];
+              if (!relPath || codeownersRules.length === 0) continue;
+              for (const o of ownersForPath(codeownersRules, relPath)) {
+                if (isAssignableLogin(o)) assigneesToAdd.add(o);
+              }
+            }
+            const existingAssignees = (issue.assignees || []).map(a => a.login);
+            const newAssignees = [...assigneesToAdd].filter(login => !existingAssignees.includes(login));
+            if (newAssignees.length > 0) {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                assignees: newAssignees
+              });
+              core.info('Added assignees: ' + newAssignees.join(', '));
+            }

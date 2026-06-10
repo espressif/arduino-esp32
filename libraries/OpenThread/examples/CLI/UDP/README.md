@@ -24,7 +24,7 @@ Demonstrate a many-to-one Thread telemetry topology where:
 - **Control plane**: OpenThread CLI commands via `OThreadCLI`.
 - **Data plane**: OpenThread CLI UDP commands and parsing of CLI async output.
 - **Transport model**:
-  - Sensor sends telemetry to realm-local multicast `ff03::abcd:61631`.
+  - Sensor sends telemetry to realm-local multicast `ff03::abcd:5050`.
   - Collector receives payload, updates in-memory state, sends unicast ACK.
 
 ## Topology
@@ -95,7 +95,7 @@ thread start
 udp close
 udp open
 ipmaddr add ff03::abcd
-udp bind :: 61631
+udp bind :: 5050
 ```
 
 ### Runtime send command (ACK)
@@ -135,13 +135,13 @@ ifconfig up
 thread start
 udp close
 udp open
-udp bind :: 61631
+udp bind :: 5050
 ```
 
 ### Runtime send command (telemetry)
 
 ```text
-udp send ff03::abcd 61631 id=<nodeId>,seq=<u32>,temp_centi=<i32>,batt_mv=<u16>
+udp send ff03::abcd 5050 id=<nodeId>,seq=<u32>,temp_centi=<i32>,batt_mv=<u16>
 ```
 
 ## How RX is handled (CLI output parsing)

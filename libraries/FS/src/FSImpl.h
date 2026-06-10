@@ -22,29 +22,65 @@
 
 #include <stddef.h>
 #include <stdint.h>
+
+#if defined(ARDUINO_ARCH_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+using FSMutexHandle = SemaphoreHandle_t;
+inline void fsLockTake(FSMutexHandle mtx) {
+  if (mtx) {
+    xSemaphoreTakeRecursive(mtx, portMAX_DELAY);
+  }
+}
+inline void fsLockGive(FSMutexHandle mtx) {
+  if (mtx) {
+    xSemaphoreGiveRecursive(mtx);
+  }
+}
+inline void fsLockDelete(FSMutexHandle mtx) {
+  if (mtx) {
+    vSemaphoreDelete(mtx);
+  }
+}
+inline FSMutexHandle fsMutexCreate() {
+  return xSemaphoreCreateRecursiveMutex();
+}
+inline bool fsMutexEnabled() {
+  return true;
+}
+#else
+using FSMutexHandle = void *;
+inline void fsLockTake(FSMutexHandle) {}
+inline void fsLockGive(FSMutexHandle) {}
+inline void fsLockDelete(FSMutexHandle) {}
+inline FSMutexHandle fsMutexCreate() {
+  return nullptr;
+}
+inline bool fsMutexEnabled() {
+  return false;
+}
+#endif
 
 namespace fs {
 
-// RAII lock guard for the per-filesystem recursive mutex.
+// RAII lock guard for the per-filesystem recursive mutex (no-op when _mtx is null).
 class FSLockGuard {
 public:
-  explicit FSLockGuard(SemaphoreHandle_t mtx) : _mtx(mtx) {
-    if (_mtx) {
-      xSemaphoreTakeRecursive(_mtx, portMAX_DELAY);
-    }
+  explicit FSLockGuard(FSMutexHandle mtx = nullptr) : _mtx(mtx) {
+    fsLockTake(_mtx);
   }
   ~FSLockGuard() {
-    if (_mtx) {
-      xSemaphoreGiveRecursive(_mtx);
-    }
+    fsLockGive(_mtx);
   }
   FSLockGuard(const FSLockGuard &) = delete;
   FSLockGuard &operator=(const FSLockGuard &) = delete;
+  FSLockGuard(FSLockGuard &&other) noexcept : _mtx(other._mtx) {
+    other._mtx = nullptr;
+  }
+  FSLockGuard &operator=(FSLockGuard &&) = delete;
 
 private:
-  SemaphoreHandle_t _mtx;
+  FSMutexHandle _mtx;
 };
 
 class FileImpl {
@@ -73,14 +109,15 @@ public:
 class FSImpl {
 protected:
   const char *_mountpoint;
-  SemaphoreHandle_t _mtx;
+  FSMutexHandle _mtx;
+  FSLockGuard fsLock() {
+    return FSLockGuard(_mtx);
+  }
 
 public:
-  FSImpl() : _mountpoint(NULL), _mtx(NULL) {}
+  FSImpl() : _mountpoint(NULL), _mtx(nullptr) {}
   virtual ~FSImpl() {
-    if (_mtx) {
-      vSemaphoreDelete(_mtx);
-    }
+    fsLockDelete(_mtx);
   }
 
   virtual FileImplPtr open(const char *path, const char *mode, const bool create) = 0;

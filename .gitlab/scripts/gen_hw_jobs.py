@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import re
 import yaml
 import os
 import sys
@@ -159,6 +160,19 @@ def sdkconfig_path_for(chip: str, sketch: str, ci_json: dict) -> Path:
     return Path.home() / f".arduino/tests/{chip}/{sketch}/{build_suffix}/sdkconfig"
 
 
+def compile_requirement(req: str) -> re.Pattern | None:
+    # Mirror grep -E "^$requirement" in sketch_utils.sh
+    try:
+        return re.compile(req)
+    except re.error as e:
+        sys.stderr.write(f"[WARN] Invalid requirement regex '{req}': {e}\n")
+        return None
+
+
+def any_line_matches(lines: list[str], pattern: re.Pattern) -> bool:
+    return any(pattern.match(line) for line in lines)
+
+
 def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
     # Mirror check_requirements in sketch_utils.sh
     if not sdkconfig.exists():
@@ -168,19 +182,30 @@ def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
         requires = ci_json.get("requires") or []
         requires_any = ci_json.get("requires_any") or []
         content = sdkconfig.read_text(encoding="utf-8", errors="ignore")
+        lines = content.splitlines()
         # AND requirements
         for req in requires:
             if not isinstance(req, str):
                 continue
-            if not any(line.startswith(req) for line in content.splitlines()):
+            req = req.strip()
+            if not req:
+                continue
+            pattern = compile_requirement(req)
+            if pattern is None or not any_line_matches(lines, pattern):
                 return False
         # OR requirements
         if requires_any:
-            ok = any(
-                any(line.startswith(req) for line in content.splitlines())
-                for req in requires_any
-                if isinstance(req, str)
-            )
+            ok = False
+            for req in requires_any:
+                if not isinstance(req, str):
+                    continue
+                req = req.strip()
+                if not req:
+                    continue
+                pattern = compile_requirement(req)
+                if pattern is not None and any_line_matches(lines, pattern):
+                    ok = True
+                    break
             if not ok:
                 return False
         return True

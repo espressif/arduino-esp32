@@ -43,10 +43,15 @@
 #define OT_EXTPANID     "ce010000deadc0de"
 #define OT_NETWORK_KEY  "102030405060708090a0b0c0d0e0f002"
 
-const uint16_t COLLECTOR_PORT = 61631;        // destination/listen UDP port
+// Destination/listen UDP port. MUST match the collector and MUST NOT be one of
+// Thread's reserved UDP ports (61631 = TMF CoAP, 5683/5684 = CoAP/CoAPs,
+// 19788 = MLE); binding those makes the app socket receive Thread's internal
+// management traffic, which shows up at the collector as "DROP malformed".
+const uint16_t COLLECTOR_PORT = 5050;         // destination/listen UDP port
 const char COLLECTOR_GROUP[] = "ff03::abcd";  // multicast group the collector subscribes to
 const uint32_t SAMPLE_PERIOD_MS = 30000;      // time between sensor samples
 const uint32_t ACK_TIMEOUT_MS = 1200;         // how long to wait for the collector's ACK
+const uint8_t TX_RETRIES = 2;                 // immediate resends of the SAME seq before giving up on this sample
 
 // Recovery: if this many samples in a row get no ACK, assume the collector (our
 // parent/leader) rebooted or vanished and force a clean Thread re-attach instead
@@ -262,51 +267,110 @@ static void readFakeSensor(int32_t &tempCenti, uint16_t &battMv) {
   battMv = 3600 + (uint16_t)random(0, 400);
 }
 
-// Multicast one sensor frame and block until the collector's matching ACK
-// arrives (or ACK_TIMEOUT_MS elapses). The ACK is "OK,<nodeId>,<seq>"; we only
-// accept the one whose sequence matches this frame, so a late ACK for an older
-// frame does not falsely confirm this one. Returns true only on a matching ACK.
-static bool sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv) {
+// True if "ip" is one of this node's own Thread addresses. Used to reject a
+// datagram that looped back to us (a node is never its own collector), so the
+// node can never mistake its own traffic for a real ACK from the collector.
+static bool isOwnAddress(const char *ip) {
+  IPAddress addr;
+  if (!addr.fromString(ip)) {
+    return false;
+  }
+  for (size_t i = 0, n = OThread.getUnicastAddressCount(); i < n; i++) {
+    if (OThread.getUnicastAddress(i) == addr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Parse a collector ACK payload "OK,<nodeId>,<seq>" addressed to THIS node.
+// Returns the acknowledged sequence number, or -1 if the line is not an ACK for
+// us. The collector reports its own authoritative last-stored sequence here, so
+// the caller can resync to it.
+static long parseAckSeq(const char *payload) {
+  char id[16] = {0};
+  unsigned long ackSeq = 0;
+  if (sscanf(payload, "OK,%15[^,],%lu", id, &ackSeq) != 2) {
+    return -1;
+  }
+  if (strcmp(id, s_nodeId) != 0) {
+    return -1;  // an ACK for a different node
+  }
+  return (long)ackSeq;
+}
+
+// Send one sensor frame for sequence "seq" and wait for the collector's ACK.
+//
+// The ACK payload is "OK,<nodeId>,<collectorLastSeq>", where collectorLastSeq is
+// the last sequence the collector has stored for THIS node (its authoritative
+// value). An ACK is considered only when it parses as a genuine UDP-receive line
+// whose source is NOT one of our own addresses (no loopback) and whose id field
+// matches ours.
+//
+// Returns the acknowledged sequence number (>= 0) so the caller can resync its
+// own counter to the collector, or -1 if no valid ACK was seen after every
+// retransmission (collector off/unreachable). On a miss we retransmit the SAME
+// seq up to TX_RETRIES times so a single lost frame/ACK does not waste a whole
+// sample period. An exact match (ack == seq) is returned immediately; otherwise
+// the highest sequence the collector reported is returned for resyncing.
+static long sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv) {
   char frame[120];
   char cmd[192];
-  char expectedAck[48];
   snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u", s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
   snprintf(cmd, sizeof(cmd), "udp send %s %u %s", COLLECTOR_GROUP, COLLECTOR_PORT, frame);
-  snprintf(expectedAck, sizeof(expectedAck), "OK,%s,%lu", s_nodeId, (unsigned long)seq);
 
-  // Drain stale CLI lines before issuing the next tx command.
-  while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {}
+  long bestAcked = -1;  // highest sequence the collector reported, for resync
+  for (uint8_t attempt = 0; attempt <= TX_RETRIES; attempt++) {
+    // Drain any stale CLI output (e.g. a duplicate ACK for an older seq) so it
+    // cannot be confused with the response to the frame we are about to send.
+    while (readCliLine(s_cliLine, sizeof(s_cliLine), 10)) {}
 
-  OThreadCLI.println(cmd);
-  Serial.printf("TX [%s]:%u -> '%s'\n", COLLECTOR_GROUP, COLLECTOR_PORT, frame);
+    OThreadCLI.println(cmd);
+    Serial.printf("TX [%s]:%u -> '%s'%s\n", COLLECTOR_GROUP, COLLECTOR_PORT, frame, attempt ? " (retransmit)" : "");
 
-  // Watch the CLI stream for the ACK until the timeout. "Done" is just the echo
-  // of our send command; "Error" means the send itself failed; anything else is
-  // tested for a UDP receive line.
-  uint32_t started = millis();
-  while (millis() - started < ACK_TIMEOUT_MS) {
-    if (!readCliLine(s_cliLine, sizeof(s_cliLine), 30)) {
-      continue;
-    }
-    if (!strncmp(s_cliLine, "Done", 4)) {
-      continue;
-    }
-    if (!strncmp(s_cliLine, "Error", 5)) {
-      Serial.printf("UDP send command failed: %s\n", s_cliLine);
-      return false;
-    }
-    char srcIp[40] = {0};
-    uint16_t srcPort = 0;
-    char payload[160] = {0};
-    if (parseUdpLine(s_cliLine, srcIp, sizeof(srcIp), srcPort, payload, sizeof(payload))) {
-      Serial.printf("ACK [%s]:%u <- '%s'\n", srcIp, srcPort, payload);
-      if (!strcmp(payload, expectedAck)) {
-        return true;
+    // Watch the CLI stream for the ACK until the timeout. "Done" is just the
+    // result of our send command; "Error" means the send itself failed (no
+    // route to the collector) so we retry; anything else is tested as a UDP
+    // receive line.
+    uint32_t started = millis();
+    while (millis() - started < ACK_TIMEOUT_MS) {
+      if (!readCliLine(s_cliLine, sizeof(s_cliLine), 30)) {
+        continue;
+      }
+      if (!strncmp(s_cliLine, "Done", 4)) {
+        continue;
+      }
+      if (!strncmp(s_cliLine, "Error", 5)) {
+        Serial.printf("UDP send command failed: %s\n", s_cliLine);
+        break;  // give up on this attempt; the retry loop will resend
+      }
+      char srcIp[40] = {0};
+      uint16_t srcPort = 0;
+      char payload[160] = {0};
+      if (parseUdpLine(s_cliLine, srcIp, sizeof(srcIp), srcPort, payload, sizeof(payload))) {
+        if (isOwnAddress(srcIp)) {
+          // Our own looped-back traffic is never a valid ACK. Log it so a
+          // loopback situation is visible instead of silently masquerading.
+          Serial.printf("Ignoring datagram from own address [%s]: '%s'\n", srcIp, payload);
+          continue;
+        }
+        long ackSeq = parseAckSeq(payload);
+        if (ackSeq >= 0) {
+          Serial.printf("ACK [%s]:%u <- '%s'\n", srcIp, srcPort, payload);
+          if ((uint32_t)ackSeq == seq) {
+            return ackSeq;  // exact confirmation of the frame we just sent
+          }
+          if (ackSeq > bestAcked) {
+            bestAcked = ackSeq;  // remember the collector's reported seq for resync
+          }
+        }
       }
     }
   }
-  Serial.println("ACK timeout");
-  return false;
+  if (bestAcked < 0) {
+    Serial.println("ACK timeout (no valid ACK from collector)");
+  }
+  return bestAcked;
 }
 
 // Force a clean re-attach to the Thread network. A Sleepy End Device only talks
@@ -382,18 +446,36 @@ void loop() {
   uint16_t battMv;
   readFakeSensor(tempCenti, battMv);
 
-  // Monotonic sequence number lets the collector detect duplicates/retransmits.
-  s_seq++;
-  bool ok = sendFrameAndWaitAck(s_seq, tempCenti, battMv);
-  Serial.printf("sample=%lu temp=%.2fC batt=%umV status=%s\n", (unsigned long)s_seq, (float)tempCenti / 100.0f, battMv, ok ? "ACKED" : "NO_ACK");
+  // Candidate sequence number: s_seq is the last value the collector has
+  // confirmed, so the frame we send is always s_seq + 1.
+  uint32_t seqToSend = s_seq + 1;
+  long acked = sendFrameAndWaitAck(seqToSend, tempCenti, battMv);
 
-  // Track consecutive misses. A run of them is the signature of a collector
-  // that rebooted/disappeared, so trigger a re-attach to recover quickly.
-  if (ok) {
+  if (acked < 0) {
+    // No ACK at all: the collector is off/unreachable. HOLD the sequence (do
+    // not advance s_seq) and resend the same reading next time, so the count
+    // never moves forward without proof of delivery.
+    Serial.printf("sample seq=%lu temp=%.2fC batt=%umV status=NO_ACK (sequence held)\n", (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv);
+    // A run of misses is the signature of a collector that rebooted/vanished,
+    // so trigger a clean re-attach to recover the network quickly.
+    if (++s_consecutiveNoAck >= REATTACH_AFTER_MISSED) {
+      forceReattach();
+      s_consecutiveNoAck = 0;
+    }
+  } else {
+    // The collector responded, so the network is healthy. Resync our counter to
+    // the collector's authoritative last sequence: this rolls back if we ran
+    // ahead, or skips forward if the collector ignored a stale/old frame.
     s_consecutiveNoAck = 0;
-  } else if (++s_consecutiveNoAck >= REATTACH_AFTER_MISSED) {
-    forceReattach();
-    s_consecutiveNoAck = 0;
+    uint32_t ackedSeq = (uint32_t)acked;
+    bool delivered = (ackedSeq == seqToSend);
+    if (!delivered) {
+      Serial.printf("Resync: collector last seq=%lu (we sent %lu); aligning local sequence.\n", (unsigned long)ackedSeq, (unsigned long)seqToSend);
+    }
+    s_seq = ackedSeq;  // collector is the source of truth for the sequence
+    Serial.printf(
+      "sample seq=%lu temp=%.2fC batt=%umV status=%s\n", (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv, delivered ? "ACKED" : "RESYNC"
+    );
   }
 
   delay(SAMPLE_PERIOD_MS);
