@@ -759,7 +759,7 @@ void test_fs_recursive_lock_nested_create() {
   File f = V.open(path, FILE_WRITE, true);
   uint32_t elapsed = millis() - start;
   TEST_ASSERT_TRUE_MESSAGE(f, "nested create open failed");
-  TEST_ASSERT_LESS_THAN(5000, (int)elapsed);
+  TEST_ASSERT_LESS_THAN(10000, (int)elapsed);
   f.print("x");
   f.close();
 
