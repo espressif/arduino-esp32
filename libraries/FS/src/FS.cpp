@@ -273,8 +273,8 @@ const char *FS::mountpoint() {
 
 void FSImpl::mountpoint(const char *mp) {
   _mountpoint = mp;
-  if (mp && !_mtx) {
-    _mtx = xSemaphoreCreateRecursiveMutex();
+  if (mp && !_mtx && fsMutexEnabled()) {
+    _mtx = fsMutexCreate();
     if (!_mtx) {
       log_w("Failed to create recursive mutex for filesystem in mountpoint %s", mp ? mp : "NULL");
       log_w("Some filesystem operations on this mountpoint will continue without synchronization and will not be serialized.");

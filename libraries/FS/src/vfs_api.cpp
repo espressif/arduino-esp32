@@ -23,7 +23,7 @@ using namespace fs;
 #define DEFAULT_FILE_BUFFER_SIZE 4096
 
 FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return FileImplPtr();
@@ -84,7 +84,7 @@ FileImplPtr VFSImpl::open(const char *fpath, const char *mode, const bool create
 }
 
 bool VFSImpl::exists(const char *fpath) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -99,7 +99,7 @@ bool VFSImpl::exists(const char *fpath) {
 }
 
 bool VFSImpl::rename(const char *pathFrom, const char *pathTo) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -136,7 +136,7 @@ bool VFSImpl::rename(const char *pathFrom, const char *pathTo) {
 }
 
 bool VFSImpl::remove(const char *fpath) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -163,7 +163,7 @@ bool VFSImpl::remove(const char *fpath) {
 }
 
 bool VFSImpl::mkdir(const char *fpath) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;
@@ -216,7 +216,7 @@ bool VFSImpl::mkdir(const char *fpath) {
 }
 
 bool VFSImpl::rmdir(const char *fpath) {
-  FSLockGuard lock(_mtx);
+  auto lock = fsLock();
   if (!_mountpoint) {
     log_e("File system is not mounted");
     return false;

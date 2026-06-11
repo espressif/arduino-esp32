@@ -43,9 +43,16 @@
 // same network instead of the random prefix "dataset init new" would generate.
 #define OT_MESHLOCAL_PREFIX "fdde:ad00:beef:0::"
 
-const uint16_t COLLECTOR_PORT = 61631;        // UDP port we bind/listen on
+// UDP port we bind/listen on. MUST NOT be one of Thread's reserved UDP ports,
+// or the application socket also receives Thread's own internal traffic:
+//   61631 -> Thread Management Framework (TMF) CoAP  (address query/notify, etc.)
+//   5683/5684 -> CoAP / CoAPs
+//   19788 -> MLE
+// Binding any of those shows up here as "DROP malformed" CoAP datagrams (first
+// byte 0x42 = 'B'). 5050 is a free application port; keep it aligned with the node.
+const uint16_t COLLECTOR_PORT = 5050;         // UDP port we bind/listen on
 const char COLLECTOR_GROUP[] = "ff03::abcd";  // realm-local multicast group sensors send to
-const int MAX_SENSORS = 256;                  // capacity of the in-RAM node table
+const uint16_t MAX_SENSORS = 256;             // capacity of the in-RAM node table
 const uint32_t REPORT_PERIOD_MS = 30000;      // how often the fleet summary is printed
 
 // Liveness tracking. A node that goes silent (lost power, crashed, moved out of
@@ -249,10 +256,11 @@ static bool setupUdpCli() {
 }
 
 // Unicast an "OK,<nodeId>,<seq>" acknowledgment straight back to the sender's
-// address/port. The node uses this ACK to confirm delivery (and, for sleepy
-// nodes, as a cue that it can go back to sleep). We push the command directly
-// on the CLI stream rather than otExecCommand() because we do not need to block
-// on the "Done" response here.
+// address/port, where seq is the collector's authoritative last-stored sequence
+// for that node. The node uses this ACK both to confirm delivery and to resync
+// its own counter to ours (rolling back or skipping forward as needed). We push
+// the command directly on the CLI stream rather than otExecCommand() because we
+// do not need to block on the "Done" response here.
 static void sendAck(const char *dstIp, uint16_t dstPort, const char *nodeId, uint32_t seq) {
   char ack[48];
   char cmd[128];
@@ -320,7 +328,8 @@ static void processPacket(const char *payload, const char *srcIp, uint16_t srcPo
   uint16_t battMv = (uint16_t)battTmp;
 
   int idx = findRecordById(id);
-  if (idx < 0) {
+  bool brandNew = (idx < 0);
+  if (brandNew) {
     idx = allocateRecord(id);
     if (idx < 0) {
       s_droppedPackets++;
@@ -329,18 +338,35 @@ static void processPacket(const char *payload, const char *srcIp, uint16_t srcPo
     }
   }
 
-  // A retransmitted frame (node resent because it missed our ACK) will carry a
-  // sequence number we have already recorded. Count it but do not overwrite the
-  // stored reading, so duplicates never corrupt the latest values.
+  // Classify the incoming sequence against what we have stored for this node.
+  // The collector is the authoritative owner of each node's sequence: it accepts
+  // forward progress, recognizes exact retransmits as duplicates, treats a reset
+  // to 1 as a node restart, and ignores any other backward (stale/out-of-order)
+  // frame. In every case it ACKs its own stored lastSeq so the node can resync.
   SensorRecord &r = s_records[idx];
-  bool isRebootSeq = (r.packetCount > 0 && seq < r.lastSeq && seq <= 3);
-  bool isDuplicate = (r.packetCount > 0 && !isRebootSeq && seq <= r.lastSeq);
-  if (isDuplicate) {
-    r.duplicateCount++;
-  } else {
+  const char *seqNote = "";
+  if (brandNew || seq > r.lastSeq) {
+    // first contact, or normal forward progress (a gap is tolerated)
     r.lastSeq = seq;
     r.lastTempCenti = tempCenti;
     r.lastBatteryMv = battMv;
+  } else if (seq == r.lastSeq) {
+    // node resent because it missed our ACK: count it, keep the stored reading
+    r.duplicateCount++;
+    seqNote = " (dup)";
+  } else if (seq == 1) {
+    // seq dropped back to 1 while we held a higher value: the node rebooted and
+    // restarted its counter. Follow it back so the ACK logic stays in sync.
+    Serial.printf("node %s restarted: sequence reset to 1\n", r.nodeId);
+    r.lastSeq = 1;
+    r.lastTempCenti = tempCenti;
+    r.lastBatteryMv = battMv;
+    r.duplicateCount = 0;
+    seqNote = " (restart)";
+  } else {
+    // an older/out-of-order frame: ignore the reading but re-ACK our last seq
+    r.duplicateCount++;
+    seqNote = " (stale)";
   }
   r.packetCount++;
   r.lastSeenMs = millis();
@@ -356,11 +382,13 @@ static void processPacket(const char *payload, const char *srcIp, uint16_t srcPo
   }
 
   Serial.printf(
-    "RX node=%s seq=%lu temp=%.2fC batt=%umV from [%s]:%u%s\n", r.nodeId, (unsigned long)seq, (float)tempCenti / 100.0f, battMv, srcIp, srcPort,
-    isDuplicate ? " (dup)" : ""
+    "RX node=%s seq=%lu temp=%.2fC batt=%umV from [%s]:%u%s\n", r.nodeId, (unsigned long)seq, (float)tempCenti / 100.0f, battMv, srcIp, srcPort, seqNote
   );
 
-  sendAck(srcIp, srcPort, r.nodeId, seq);
+  // ACK our authoritative last stored sequence (not necessarily the one just
+  // received): for a fresh/duplicate/restart frame this equals seq and confirms
+  // it; for a stale frame it is higher, telling the node to resync forward.
+  sendAck(srcIp, srcPort, r.nodeId, r.lastSeq);
 }
 
 void setup() {
