@@ -25,7 +25,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiScan.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 
 extern "C" {
 #include <stdint.h>

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "sdkconfig.h"
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
@@ -478,4 +478,4 @@ bool hostedIsInitialized() {
   return hosted_initialized;
 }
 
-#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED) */
+#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED) */

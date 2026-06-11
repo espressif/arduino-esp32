@@ -24,7 +24,7 @@
 
 #include "soc/soc_caps.h"
 #include "sdkconfig.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 
 #include "esp_err.h"
 #include "esp_event.h"
@@ -82,7 +82,7 @@ class WiFiGenericClass {
 public:
   WiFiGenericClass();
 
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
   // Set SDIO pins for connection to external ESP MCU
   static bool setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst);
 #endif

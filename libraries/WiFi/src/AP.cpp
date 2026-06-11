@@ -7,7 +7,7 @@
 #include "WiFi.h"
 #include "WiFiGeneric.h"
 #include "WiFiAP.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
