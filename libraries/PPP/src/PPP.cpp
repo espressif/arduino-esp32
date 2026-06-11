@@ -7,7 +7,17 @@
 #include <string>
 #include "driver/uart.h"
 #include "hal/uart_ll.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 1, 0)
 #include "esp_private/uart_share_hw_ctrl.h"
+#else
+#include "soc/soc_caps.h"
+#include "esp_private/periph_ctrl.h"
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define HP_UART_SRC_CLK_ATOMIC()       PERIPH_RCC_ATOMIC()
+#else
+#define HP_UART_SRC_CLK_ATOMIC()
+#endif
+#endif
 
 #define PPP_CMD_MODE_CHECK(x)                                    \
   if (_dce == NULL) {                                            \

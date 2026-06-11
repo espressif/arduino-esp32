@@ -1,7 +1,7 @@
 // Include necessary headers for SDK configuration, Arduino framework, and networking
 #include "sdkconfig.h"
 #include <stdbool.h>
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #include "Arduino.h"
 #include "esp32-hal-hosted.h"     // ESP-Hosted specific functions
 #include "Network.h"              // Network connectivity management
@@ -15,7 +15,7 @@
  * @return true if update was successful, false otherwise
  */
 bool updateEspHostedSlave() {
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
   bool updateSuccess = false;
 
   // Step 1: Verify ESP-Hosted is properly initialized

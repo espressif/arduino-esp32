@@ -48,7 +48,7 @@ files:
     - "platform.txt"
     - "programmers.txt"
 dependencies:
-  idf: ">=5.3,<6.1"
+  idf: ">=5.3,<6.2"
   espressif/mdns:
     version: "^1.2.3"
     require: public
