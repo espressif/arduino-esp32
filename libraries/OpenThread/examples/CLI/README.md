@@ -198,7 +198,6 @@ Why this is a good starter pattern:
 - `SimpleThreadNetwork/*` - CLI-driven network bring-up examples.
 - `COAP/*` - command-driven CoAP workflows via CLI.
 - `UDP/*` - command-driven UDP telemetry workflow via CLI.
-- `UDP_Sensor/*` - CLI-based sensor / collector UDP telemetry workflow.
 
 ## License
 
