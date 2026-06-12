@@ -52718,6 +52718,183 @@ Pcbcupid_GLYPH_S3_PSRAM.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+# PCBCupid GLYPH C5
+pcbcupid_glyph_c5.name=PCBCupid GLYPH C5
+
+pcbcupid_glyph_c5.bootloader.tool=esptool_py
+pcbcupid_glyph_c5.bootloader.tool.default=esptool_py
+
+pcbcupid_glyph_c5.upload.tool=esptool_py
+pcbcupid_glyph_c5.upload.tool.default=esptool_py
+pcbcupid_glyph_c5.upload.tool.network=esp_ota
+
+pcbcupid_glyph_c5.upload.maximum_size=1310720
+pcbcupid_glyph_c5.upload.maximum_data_size=327680
+pcbcupid_glyph_c5.upload.flags=
+pcbcupid_glyph_c5.upload.extra_flags=
+pcbcupid_glyph_c5.upload.use_1200bps_touch=false
+pcbcupid_glyph_c5.upload.wait_for_upload_port=false
+
+pcbcupid_glyph_c5.serial.disableDTR=false
+pcbcupid_glyph_c5.serial.disableRTS=false
+
+pcbcupid_glyph_c5.build.tarch=riscv32
+pcbcupid_glyph_c5.build.target=esp
+pcbcupid_glyph_c5.build.mcu=esp32c5
+pcbcupid_glyph_c5.build.core=esp32
+pcbcupid_glyph_c5.build.variant=pcbcupid_glyph_c5
+pcbcupid_glyph_c5.build.board=PCBCUPID_GLYPH_C5
+pcbcupid_glyph_c5.build.bootloader_addr=0x2000
+
+pcbcupid_glyph_c5.build.cdc_on_boot=1
+pcbcupid_glyph_c5.build.f_cpu=240000000L
+pcbcupid_glyph_c5.build.flash_size=4MB
+pcbcupid_glyph_c5.build.flash_freq=80m
+pcbcupid_glyph_c5.build.flash_mode=dio
+pcbcupid_glyph_c5.build.boot=dio
+pcbcupid_glyph_c5.build.partitions=default
+pcbcupid_glyph_c5.build.defines=
+
+## IDE 2.0 Seems to not update the value
+pcbcupid_glyph_c5.menu.JTAGAdapter.default=Disabled
+pcbcupid_glyph_c5.menu.JTAGAdapter.default.build.copy_jtag_files=0
+pcbcupid_glyph_c5.menu.JTAGAdapter.builtin=Integrated USB JTAG
+pcbcupid_glyph_c5.menu.JTAGAdapter.builtin.build.openocdscript=esp32c5-builtin.cfg
+pcbcupid_glyph_c5.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+pcbcupid_glyph_c5.menu.JTAGAdapter.external=FTDI Adapter
+pcbcupid_glyph_c5.menu.JTAGAdapter.external.build.openocdscript=esp32c5-ftdi.cfg
+pcbcupid_glyph_c5.menu.JTAGAdapter.external.build.copy_jtag_files=1
+pcbcupid_glyph_c5.menu.JTAGAdapter.bridge=ESP USB Bridge
+pcbcupid_glyph_c5.menu.JTAGAdapter.bridge.build.openocdscript=esp32c5-bridge.cfg
+pcbcupid_glyph_c5.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+pcbcupid_glyph_c5.menu.PSRAM.disabled=Disabled
+pcbcupid_glyph_c5.menu.PSRAM.disabled.build.defines=
+pcbcupid_glyph_c5.menu.PSRAM.enabled=Enabled
+pcbcupid_glyph_c5.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
+
+pcbcupid_glyph_c5.menu.CDCOnBoot.cdc=Enabled
+pcbcupid_glyph_c5.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+pcbcupid_glyph_c5.menu.CDCOnBoot.default=Disabled
+pcbcupid_glyph_c5.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+pcbcupid_glyph_c5.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.default.build.partitions=default
+pcbcupid_glyph_c5.menu.PartitionScheme.default.upload.maximum_size=1310720
+pcbcupid_glyph_c5.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+pcbcupid_glyph_c5.menu.PartitionScheme.minimal=Minimal (1.3MB APP/700KB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.minimal.build.partitions=minimal
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota=No OTA (2MB APP/2MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota.build.partitions=no_ota
+pcbcupid_glyph_c5.menu.PartitionScheme.no_ota.upload.maximum_size=2097152
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3g=No OTA (1MB APP/3MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3g.build.partitions=noota_3g
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3g.upload.maximum_size=1048576
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_ffat=No OTA (2MB APP/2MB FATFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_ffat.build.partitions=noota_ffat
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_ffat.upload.maximum_size=2097152
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3gffat=No OTA (1MB APP/3MB FATFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3gffat.build.partitions=noota_3gffat
+pcbcupid_glyph_c5.menu.PartitionScheme.noota_3gffat.upload.maximum_size=1048576
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app=Huge APP (3MB No OTA/1MB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app.build.partitions=huge_app
+pcbcupid_glyph_c5.menu.PartitionScheme.huge_app.upload.maximum_size=3145728
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs=Minimal SPIFFS (1.9MB APP with OTA/128KB SPIFFS)
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs.build.partitions=min_spiffs
+pcbcupid_glyph_c5.menu.PartitionScheme.min_spiffs.upload.maximum_size=1966080
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker=RainMaker 4MB
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker.build.partitions=rainmaker
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker.upload.maximum_size=1966080
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker_4MB=RainMaker 4MB No OTA
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker_4MB.build.partitions=rainmaker_4MB_no_ota
+pcbcupid_glyph_c5.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=4038656
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee.build.partitions=zigbee
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
+pcbcupid_glyph_c5.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
+
+pcbcupid_glyph_c5.menu.CPUFreq.240=240MHz (WiFi)
+pcbcupid_glyph_c5.menu.CPUFreq.240.build.f_cpu=240000000L
+pcbcupid_glyph_c5.menu.CPUFreq.160=160MHz (WiFi)
+pcbcupid_glyph_c5.menu.CPUFreq.160.build.f_cpu=160000000L
+pcbcupid_glyph_c5.menu.CPUFreq.80=80MHz (WiFi)
+pcbcupid_glyph_c5.menu.CPUFreq.80.build.f_cpu=80000000L
+pcbcupid_glyph_c5.menu.CPUFreq.40=40MHz
+pcbcupid_glyph_c5.menu.CPUFreq.40.build.f_cpu=40000000L
+pcbcupid_glyph_c5.menu.CPUFreq.20=20MHz
+pcbcupid_glyph_c5.menu.CPUFreq.20.build.f_cpu=20000000L
+pcbcupid_glyph_c5.menu.CPUFreq.10=10MHz
+pcbcupid_glyph_c5.menu.CPUFreq.10.build.f_cpu=10000000L
+
+pcbcupid_glyph_c5.menu.FlashMode.qio=QIO
+pcbcupid_glyph_c5.menu.FlashMode.qio.build.flash_mode=dio
+pcbcupid_glyph_c5.menu.FlashMode.qio.build.boot=qio
+pcbcupid_glyph_c5.menu.FlashMode.dio=DIO
+pcbcupid_glyph_c5.menu.FlashMode.dio.build.flash_mode=dio
+pcbcupid_glyph_c5.menu.FlashMode.dio.build.boot=dio
+
+pcbcupid_glyph_c5.menu.FlashFreq.80=80MHz
+pcbcupid_glyph_c5.menu.FlashFreq.80.build.flash_freq=80m
+pcbcupid_glyph_c5.menu.FlashFreq.40=40MHz
+pcbcupid_glyph_c5.menu.FlashFreq.40.build.flash_freq=40m
+
+pcbcupid_glyph_c5.menu.FlashSize.4M=4MB (32Mb)
+pcbcupid_glyph_c5.menu.FlashSize.4M.build.flash_size=4MB
+
+pcbcupid_glyph_c5.menu.UploadSpeed.921600=921600
+pcbcupid_glyph_c5.menu.UploadSpeed.921600.upload.speed=921600
+pcbcupid_glyph_c5.menu.UploadSpeed.115200=115200
+pcbcupid_glyph_c5.menu.UploadSpeed.115200.upload.speed=115200
+pcbcupid_glyph_c5.menu.UploadSpeed.256000.windows=256000
+pcbcupid_glyph_c5.menu.UploadSpeed.256000.upload.speed=256000
+pcbcupid_glyph_c5.menu.UploadSpeed.230400.windows.upload.speed=256000
+pcbcupid_glyph_c5.menu.UploadSpeed.230400=230400
+pcbcupid_glyph_c5.menu.UploadSpeed.230400.upload.speed=230400
+pcbcupid_glyph_c5.menu.UploadSpeed.460800.linux=460800
+pcbcupid_glyph_c5.menu.UploadSpeed.460800.macosx=460800
+pcbcupid_glyph_c5.menu.UploadSpeed.460800.upload.speed=460800
+pcbcupid_glyph_c5.menu.UploadSpeed.512000.windows=512000
+pcbcupid_glyph_c5.menu.UploadSpeed.512000.upload.speed=512000
+
+pcbcupid_glyph_c5.menu.DebugLevel.none=None
+pcbcupid_glyph_c5.menu.DebugLevel.none.build.code_debug=0
+pcbcupid_glyph_c5.menu.DebugLevel.error=Error
+pcbcupid_glyph_c5.menu.DebugLevel.error.build.code_debug=1
+pcbcupid_glyph_c5.menu.DebugLevel.warn=Warn
+pcbcupid_glyph_c5.menu.DebugLevel.warn.build.code_debug=2
+pcbcupid_glyph_c5.menu.DebugLevel.info=Info
+pcbcupid_glyph_c5.menu.DebugLevel.info.build.code_debug=3
+pcbcupid_glyph_c5.menu.DebugLevel.debug=Debug
+pcbcupid_glyph_c5.menu.DebugLevel.debug.build.code_debug=4
+pcbcupid_glyph_c5.menu.DebugLevel.verbose=Verbose
+pcbcupid_glyph_c5.menu.DebugLevel.verbose.build.code_debug=5
+
+pcbcupid_glyph_c5.menu.EraseFlash.none=Disabled
+pcbcupid_glyph_c5.menu.EraseFlash.none.upload.erase_cmd=
+pcbcupid_glyph_c5.menu.EraseFlash.all=Enabled
+pcbcupid_glyph_c5.menu.EraseFlash.all.upload.erase_cmd=-e
+
+pcbcupid_glyph_c5.menu.ZigbeeMode.default=Disabled
+pcbcupid_glyph_c5.menu.ZigbeeMode.default.build.zigbee_mode=
+pcbcupid_glyph_c5.menu.ZigbeeMode.default.build.zigbee_libs=
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed=Zigbee ED (end device)
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp_zb_api.ed -lzboss_stack.ed -lzboss_port.native
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.native
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+pcbcupid_glyph_c5.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp_zb_api.ed.debug -lzboss_stack.ed.debug -lzboss_port.native.debug
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+pcbcupid_glyph_c5.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp_zb_api.zczr.debug -lzboss_stack.zczr.debug -lzboss_port.native.debug
+
+##############################################################
+
 yb_esp32s3_amp_v2.name=YelloByte YB-ESP32-S3-AMP (Rev.2)
 
 yb_esp32s3_amp_v2.bootloader.tool=esptool_py
