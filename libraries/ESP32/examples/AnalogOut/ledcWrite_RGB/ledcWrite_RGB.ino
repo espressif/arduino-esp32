@@ -19,7 +19,7 @@ const boolean invert = true;  // set true if common anode, false if common catho
 
 uint8_t color = 0;         // a value from 0 to 255 representing the hue
 uint32_t R, G, B;          // the Red Green and Blue color components
-uint8_t brightness = 255;  // 255 is maximum brightness, but can be changed.  Might need 256 for common anode to fully turn off.
+uint8_t brightness = 255; // 255 is maximum brightness, but can be changed. Might need 256 for common anode to fully turn off.
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -35,12 +35,12 @@ void setup() {
 
 // void loop runs over and over again
 void loop() {
-  Serial.println("Send all LEDs a 255 and wait 2 seconds.");
+  Serial.println("Send all LEDs a 256 and wait 2 seconds.");
   // If your RGB LED turns off instead of on here you should check if the LED is common anode or cathode.
   // If it doesn't fully turn off and is common anode try using 256.
-  ledcWrite(ledR, 255);
-  ledcWrite(ledG, 255);
-  ledcWrite(ledB, 255);
+  ledcWrite(ledR, 256);
+  ledcWrite(ledG, 256);
+  ledcWrite(ledB, 256);
   delay(2000);
   Serial.println("Send all LEDs a 0 and wait 2 seconds.");
   ledcWrite(ledR, 0);

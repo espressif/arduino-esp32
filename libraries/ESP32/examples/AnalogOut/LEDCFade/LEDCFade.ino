@@ -19,7 +19,7 @@
 
 // define starting duty, target duty and maximum fade time
 #define LEDC_START_DUTY  (0)
-#define LEDC_TARGET_DUTY (4095)
+#define LEDC_TARGET_DUTY (4096)
 #define LEDC_FADE_TIME   (3000)
 
 bool fade_ended = false;  // status of LED fade
