@@ -8,22 +8,22 @@ About
 The ``OpenThread`` class provides direct access to OpenThread API functions for managing Thread network operations. This is the **Classes API** approach, which offers object-oriented methods that directly call OpenThread API functions.
 
 **Key Features:**
-* Direct OpenThread API access
-* Network management (start, stop, interface control)
-* Dataset management
-* Live setters that act directly on the running instance (no DataSet required)
-* Thread Joiner role (synchronous commissioning of a new device using a PSKd)
-* Thread Commissioner role (let new devices attach with just a PSKd)
-* Address management with caching
-* Network information retrieval
-* Device role monitoring
+* Direct OpenThread API access.
+* Network management. (start, stop, interface control)
+* Dataset management.
+* Live setters that act directly on the running instance. (no DataSet required)
+* Thread Joiner role. (synchronous commissioning of a new device using a PSKd)
+* Thread Commissioner role. (let new devices attach with just a PSKd)
+* Address management with caching.
+* Network information retrieval.
+* Device role monitoring.
 
 **Use Cases:**
-* Thread network configuration and management
+* Thread network configuration and management.
 * Direct control over Thread operations
-* Programmatic network setup
-* Commissioning new devices over-the-air with a PSKd
-* Address and routing information access
+* Programmatic network setup.
+* Commissioning new devices over-the-air with a PSKd.
+* Address and routing information access.
 
 API Reference
 -------------
@@ -329,6 +329,7 @@ Wraps ``otThreadSetNetworkName``.
     uint8_t xp[8] = {0x11,0x11,0x11,0x11,0x22,0x22,0x22,0x22};
     OThread.setExtendedPanId(xp);
     OThread.networkInterfaceUp();
+    OThread.start();                            // enable Thread protocol
     OThread.startJoiner("J01NME");              // run Joiner state machine
 
 Device Identity
@@ -372,8 +373,7 @@ The returned pointer is stack-owned and valid only transiently. Wraps
 getThreadVersion
 ^^^^^^^^^^^^^^^^
 
-Returns the Thread protocol version implemented by the stack
-(for example ``4`` for Thread 1.3).
+Returns the Thread protocol version implemented by the stack (for example ``4`` for Thread 1.3).
 
 .. code-block:: arduino
 
@@ -436,9 +436,9 @@ commissioning callback fires (or the timeout elapses).
    joiner does not have to scan every channel.
 3. ``OThread.networkInterfaceUp();``  - IPv6 stack must be up before
    ``startJoiner``.
-4. ``OThread.startJoiner(PSKD);``     - blocks until success / failure.
-5. ``OThread.start();``               - enable Thread protocol with the
+4. ``OThread.start();``               - enable Thread protocol with the
    dataset just provisioned by the commissioner.
+5. ``OThread.startJoiner(PSKD);``     - blocks until success / failure.
 
 **Required Kconfig:** ``CONFIG_OPENTHREAD_JOINER=y``.
 
@@ -668,11 +668,11 @@ Gets the current device role.
 
 This function returns the current Thread device role:
 
-* ``OT_ROLE_DISABLED`` - The Thread stack is disabled
-* ``OT_ROLE_DETACHED`` - Not currently participating in a Thread network
-* ``OT_ROLE_CHILD`` - The Thread Child role
-* ``OT_ROLE_ROUTER`` - The Thread Router role
-* ``OT_ROLE_LEADER`` - The Thread Leader role
+* ``OT_ROLE_DISABLED`` - The Thread stack is disabled.
+* ``OT_ROLE_DETACHED`` - Not currently participating in a Thread network.
+* ``OT_ROLE_CHILD`` - The Thread Child role.
+* ``OT_ROLE_ROUTER`` - The Thread Router role.
+* ``OT_ROLE_LEADER`` - The Thread Leader role.
 
 **Note:** This is a static function.
 
@@ -701,13 +701,13 @@ Prints network information to a Stream.
 * ``output`` - The Stream object to print to (e.g., ``Serial``)
 
 This function prints comprehensive network information including:
-* Device role
-* RLOC16
-* Network name
-* Channel
-* PAN ID
-* Extended PAN ID
-* Network key
+* Device role.
+* RLOC16.
+* Network name.
+* Channel.
+* PAN ID.
+* Extended PAN ID.
+* Network key.
 
 **Note:** This is a static function.
 

@@ -19,12 +19,12 @@ Thread is an IPv6-based, low-power wireless mesh networking protocol designed fo
 
 **Key Features:**
 
-* **IPv6-based**: Native IPv6 addressing and routing
-* **Mesh Networking**: Self-healing mesh topology with automatic routing
-* **Low Power**: Optimized for battery-operated devices
-* **Security**: Built-in security features including encryption and authentication
-* **Scalability**: Supports up to 250+ devices per network
-* **Reliability**: Automatic route discovery and self-healing capabilities
+* **IPv6-based**: Native IPv6 addressing and routing.
+* **Mesh Networking**: Self-healing mesh topology with automatic routing.
+* **Low Power**: Optimized for battery-operated devices.
+* **Security**: Built-in security features including encryption and authentication.
+* **Scalability**: Supports up to 250+ devices per network.
+* **Reliability**: Automatic route discovery and self-healing capabilities.
 
 Thread Network Topology
 ***********************
@@ -82,28 +82,28 @@ OpenThread Library Structure
 **The library provides two main programming interfaces:**
 
 * **CLI Helper Functions API**: Functions that interact with OpenThread through the CLI interface
-  * ``otGetRespCmd()``: Execute CLI command and get response
-  * ``otExecCommand()``: Execute CLI command with arguments
-  * ``otPrintRespCLI()``: Execute CLI command and print response to Stream
-  * ``OpenThreadCLI``: Stream-based CLI interface class
+  * ``otGetRespCmd()``: Execute CLI command and get response.
+  * ``otExecCommand()``: Execute CLI command with arguments.
+  * ``otPrintRespCLI()``: Execute CLI command and print response to Stream.
+  * ``OpenThreadCLI``: Stream-based CLI interface class.
 
 * **Classes API**: Object-oriented classes that directly call OpenThread API functions
-  * ``OpenThread``: Main class for managing Thread network operations (includes the Joiner / Commissioner roles)
-  * ``DataSet``: Class for managing Thread operational datasets
-  * ``OThreadUDP``: Arduino ``UDP``-compatible class for sending and receiving IPv6 UDP datagrams over the Thread mesh, backed by the raw ``otUdpSocket`` API (no lwIP)
+  * ``OpenThread``: Main class for managing Thread network operations (includes the Joiner / Commissioner roles).
+  * ``DataSet``: Class for managing Thread operational datasets.
+  * ``OThreadUDP``: Arduino ``UDP``-compatible class for sending and receiving IPv6 UDP datagrams over the Thread mesh, backed by the raw ``otUdpSocket`` API (no lwIP).
 
 OpenThread Class
 ****************
 
 The ``OpenThread`` class is the main entry point for Thread operations using the Classes API. It provides direct access to OpenThread API functions for managing the Thread network.
 
-* **Network Management**: Starting, stopping, and managing the Thread network
-* **Device Role Management**: Getting and monitoring device role (Leader, Router, Child, Detached, Disabled)
-* **Dataset Management**: Setting and getting operational dataset parameters (offline via ``DataSet`` + ``commitDataSet`` or live via per-parameter setters)
-* **Joiner Role**: Synchronously attach a brand-new device to a Thread network using only a PSKd (Pre-Shared Key for Device)
-* **Commissioner Role**: Authorise remote Joiners on the network side using a PSKd
-* **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses
-* **Network Information**: Getting network name, channel, PAN ID, EUI-64, Thread version, TX power, and other network parameters
+* **Network Management**: Starting, stopping, and managing the Thread network.
+* **Device Role Management**: Getting and monitoring device role (Leader, Router, Child, Detached, Disabled).
+* **Dataset Management**: Setting and getting operational dataset parameters (offline via ``DataSet`` + ``commitDataSet`` or live via per-parameter setters).
+* **Joiner Role**: Synchronously attach a brand-new device to a Thread network using only a PSKd (Pre-Shared Key for Device).
+* **Commissioner Role**: Authorise remote Joiners on the network side using a PSKd.
+* **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses.
+* **Network Information**: Getting network name, channel, PAN ID, EUI-64, Thread version, TX power, and other network parameters.
 
 The ``OpenThread`` class is implemented as a singleton, meaning there's only one instance available globally. You access it directly as ``OThread`` without creating an instance.
 
@@ -117,10 +117,10 @@ DataSet Class
 
 The ``DataSet`` class provides a convenient way to manage Thread operational datasets. It allows you to create, configure, and apply operational datasets to the Thread network.
 
-* **Dataset Creation**: Create new operational datasets
-* **Parameter Configuration**: Set network name, channel, PAN ID, network key, and extended PAN ID
-* **Dataset Application**: Apply datasets to the Thread network
-* **Dataset Retrieval**: Get current dataset parameters
+* **Dataset Creation**: Create new operational datasets.
+* **Parameter Configuration**: Set network name, channel, PAN ID, network key, and extended PAN ID.
+* **Dataset Application**: Apply datasets to the Thread network.
+* **Dataset Retrieval**: Get current dataset parameters.
 
 .. toctree::
     :maxdepth: 2
@@ -132,10 +132,10 @@ OpenThreadCLI
 
 The ``OpenThreadCLI`` class provides a Stream-based interface for interacting with the OpenThread CLI. It allows you to send CLI commands and receive responses programmatically.
 
-* **CLI Interface**: Stream-based interface for sending commands and receiving responses
-* **Command Execution**: Execute OpenThread CLI commands programmatically
-* **Response Handling**: Parse and handle CLI command responses
-* **Console Mode**: Interactive console mode for debugging and testing
+* **CLI Interface**: Stream-based interface for sending commands and receiving responses.
+* **Command Execution**: Execute OpenThread CLI commands programmatically.
+* **Response Handling**: Parse and handle CLI command responses.
+* **Console Mode**: Interactive console mode for debugging and testing.
 
 .. toctree::
     :maxdepth: 2
@@ -162,15 +162,15 @@ CLI Helper Functions API
 
 The CLI Helper Functions API provides utility functions for executing OpenThread CLI commands and parsing responses. This API is useful when you need to interact with OpenThread through the CLI interface.
 
-* **Command Execution**: Execute CLI commands with arguments
-* **Response Parsing**: Get and parse CLI command responses
-* **Error Handling**: Handle CLI command errors and return codes
+* **Command Execution**: Execute CLI commands with arguments.
+* **Response Parsing**: Get and parse CLI command responses.
+* **Error Handling**: Handle CLI command errors and return codes.
 
 **Key Functions:**
 
-* ``otGetRespCmd()``: Execute CLI command and get response string
-* ``otExecCommand()``: Execute CLI command with arguments and error handling
-* ``otPrintRespCLI()``: Execute CLI command and print response to Stream
+* ``otGetRespCmd()``: Execute CLI command and get response string.
+* ``otExecCommand()``: Execute CLI command with arguments and error handling.
+* ``otPrintRespCLI()``: Execute CLI command and print response to Stream.
 
 For detailed documentation on the CLI Helper Functions API, see the :doc:`openthread_cli` documentation.
 
@@ -179,9 +179,9 @@ Supported Hardware
 
 The OpenThread library requires ESP32 SoCs with IEEE 802.15.4 radio support:
 
-* **ESP32-H2**: Native Thread support with IEEE 802.15.4 radio
-* **ESP32-C6**: Thread support with IEEE 802.15.4 radio (when Thread is enabled)
-* **ESP32-C5**: Thread support with IEEE 802.15.4 radio (when Thread is enabled)
+* **ESP32-H2**: Native Thread support with IEEE 802.15.4 radio.
+* **ESP32-C6**: Thread support with IEEE 802.15.4 radio (when Thread is enabled).
+* **ESP32-C5**: Thread support with IEEE 802.15.4 radio (when Thread is enabled).
 
 **Note:** Thread support must be enabled in the ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``). This is done automatically when using the ESP32 Arduino OpenThread library.
 
@@ -310,8 +310,8 @@ code or NVS), follow this order on the **joiner** side:
 1. ``OThread.begin(false);``           - start the stack without loading a DataSet from NVS.
 2. (optional) ``OThread.setChannel(...) / setPanId(...) / setExtendedPanId(...)`` - hint the radio so the Joiner does not have to scan every channel.
 3. ``OThread.networkInterfaceUp();``   - the IPv6 stack must be up before running the Joiner state machine.
-4. ``OThread.startJoiner(PSKD);``      - blocks until commissioning completes or the timeout expires.
-5. ``OThread.start();``                - enable Thread protocol using the dataset just provisioned by the Commissioner.
+4. ``OThread.start();``                - enable Thread protocol using the dataset just provisioned by the Commissioner.
+5. ``OThread.startJoiner(PSKD);``      - blocks until commissioning completes or the timeout expires.
 
 And on the **commissioner** side, after the device has already attached to the network (typically as Leader):
 
@@ -421,6 +421,7 @@ Joiner (new device) - obtains the network key over the air from a Commissioner u
         OThread.begin(false);              // stack up, no DataSet
         OThread.setChannel(15);            // optional channel hint
         OThread.networkInterfaceUp();      // IPv6 must be up
+        OThread.start();                   // enable Thread protocol
 
         otError err = OThread.startJoiner(PSKD);
         if (err == OT_ERROR_NONE) {
