@@ -28,10 +28,7 @@
  * Adapt the EXAMPLE_MIPI_CSI_* pin defines if your camera is wired differently.
  */
 #include "Arduino.h"
-#include <array>
-#include <memory>
 #include <ESP_Video.h>
-#include "esp_video_device.h"
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #if CONFIG_IDF_TARGET_ESP32P4
@@ -98,7 +95,7 @@ void loop() {
   }
 
   Serial.printf(
-    "captured buffer: %p size: %lu format: %s width: %u height: %u\n", buffer.data(), (unsigned long)buffer.size(), buffer.formatName(), buffer.getWidth(),
+    "captured buffer: %p size: %lu format: %s width: %lu height: %lu\n", buffer.data(), (unsigned long)buffer.size(), buffer.formatName(), buffer.getWidth(),
     buffer.getHeight()
   );
 }

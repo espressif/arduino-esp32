@@ -11,14 +11,11 @@
 #include "esp_idf_version.h"
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #include "Arduino.h"
-#include <array>
-#include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 #include "linux/videodev2.h"
 #include "esp_video_init.h"
+#include "esp_video_device.h"
 
 typedef enum {
   ESP_VIDEO_FORMAT_UNKNOWN = 0,
