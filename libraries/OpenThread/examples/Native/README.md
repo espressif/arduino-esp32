@@ -18,8 +18,8 @@ directly, for example:
 - `OThread.commitDataSet(ds)`
 - `OThread.networkInterfaceUp()`
 - `OThread.start()`
-- `OThread.startJoiner(...)`
-- `OThread.startCommissioner()`
+- `OThread.startJoiner(...)` then `OThread.start()` on success (Joiner side)
+- `OThread.start()` then `OThread.startCommissioner()` when attached (Commissioner side)
 - `Udp.begin(...)`
 - `Udp.beginPacket(...)`
 
@@ -34,7 +34,7 @@ values (`otError`, booleans, typed getters), and avoids parsing CLI text output.
 helpers for stack startup, Thread interface control, role checks, address
 queries, dataset handling, and, when enabled, Joiner / Commissioner operations.
 
-Typical usage:
+Typical usage (form or resume a network with a known dataset):
 
 ```cpp
 OThread.begin(false);
@@ -44,6 +44,17 @@ OThread.start();
 Serial.println(OThread.otGetStringDeviceRole());
 Serial.println(OThread.getMeshLocalEid());
 ```
+
+Commissioning call order (see `ThreadCommissioning/` and UDP examples):
+
+| Role | Order after `begin(false)` |
+| --- | --- |
+| Joiner | `networkInterfaceUp()` → `startJoiner(PSKD)` → `start()` on success |
+| Commissioner | `commitDataSet()` (or NVS resume) → `networkInterfaceUp()` → `start()` → wait for attach → `startCommissioner()` → `addJoiner()` |
+
+Do **not** call `start()` before `startJoiner()`; OpenThread returns
+`OT_ERROR_INVALID_STATE` if Thread is already enabled during Joiner
+commissioning.
 
 ### `DataSet`
 

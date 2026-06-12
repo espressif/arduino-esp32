@@ -329,8 +329,11 @@ Wraps ``otThreadSetNetworkName``.
     uint8_t xp[8] = {0x11,0x11,0x11,0x11,0x22,0x22,0x22,0x22};
     OThread.setExtendedPanId(xp);
     OThread.networkInterfaceUp();
-    OThread.start();                            // enable Thread protocol
-    OThread.startJoiner("J01NME");              // run Joiner state machine
+
+    otError err = OThread.startJoiner("J01NME"); // run Joiner state machine
+    if (err == OT_ERROR_NONE) {
+        OThread.start();                         // enable Thread with provisioned dataset
+    }
 
 Device Identity
 ***************
@@ -436,9 +439,11 @@ commissioning callback fires (or the timeout elapses).
    joiner does not have to scan every channel.
 3. ``OThread.networkInterfaceUp();``  - IPv6 stack must be up before
    ``startJoiner``.
-4. ``OThread.start();``               - enable Thread protocol with the
+4. ``OThread.startJoiner(PSKD);``     - blocks until success / failure.
+   Thread must **not** be enabled yet (``start()`` must not have been
+   called).
+5. On success, ``OThread.start();``   - enable Thread protocol with the
    dataset just provisioned by the commissioner.
-5. ``OThread.startJoiner(PSKD);``     - blocks until success / failure.
 
 **Required Kconfig:** ``CONFIG_OPENTHREAD_JOINER=y``.
 
@@ -544,6 +549,15 @@ The Arduino wrapper exposes a **synchronous** ``startCommissioner``: it
 petitions the Commissioner role and blocks until either
 ``OT_COMMISSIONER_STATE_ACTIVE`` is reached or the petition is rejected.
 
+**Order of calls:**
+
+1. Form or resume a network (``commitDataSet()`` or NVS resume).
+2. ``OThread.networkInterfaceUp();`` + ``OThread.start();`` - bring up
+   Thread and wait until the role is no longer Detached / Disabled.
+3. ``OThread.startCommissioner();`` - blocks until the petition succeeds.
+4. ``OThread.addJoiner(PSKD);`` - open the joiner window for incoming
+   devices.
+
 **Required Kconfig:** ``CONFIG_OPENTHREAD_COMMISSIONER=y``.
 
 startCommissioner
@@ -626,7 +640,8 @@ Wraps ``otCommissionerGetState``.
 
 .. code-block:: arduino
 
-    // Already attached to the network at this point.
+    // Already attached to the network at this point
+    // (networkInterfaceUp() + start() completed earlier).
     otError err = OThread.startCommissioner();
     if (err == OT_ERROR_NONE) {
         OThread.addJoiner("J01NME",      // PSKd

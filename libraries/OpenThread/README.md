@@ -298,7 +298,7 @@ The `OThread` class exposes a synchronous Thread Joiner helper that drives the O
 1. `OThread.begin(false)` - initialize the stack without auto-starting Thread (do **not** commit a DataSet).
 2. (optional) Pre-configure the radio with `setChannel()`, `setPanId()`, `setExtendedPanId()` so the joiner only listens on the expected channel/PAN.
 3. `OThread.networkInterfaceUp()` - the IPv6 stack must be up.
-4. `OThread.startJoiner(PSKD)` - blocks until commissioning completes (or `timeoutMs` elapses).
+4. `OThread.startJoiner(PSKD)` - blocks until commissioning completes (or `timeoutMs` elapses). Do **not** call `start()` before this step.
 5. On success, call `OThread.start()` to enable Thread with the provisioned dataset.
 
 ## Return values
@@ -336,11 +336,12 @@ The Commissioner must already be **attached** to the Thread network (typically a
 
 ## Required order
 
-1. Bring up the Thread network normally (DataSet + `commitDataSet` + `start`) until the device is no longer Detached / Disabled.
-2. `OThread.startCommissioner()` - blocks until the Commissioner is `ACTIVE` (default timeout: 30 s).
-3. `OThread.addJoiner(PSKD, /*eui64=*/nullptr, /*timeoutSec=*/120)` - whitelists any joiner that knows `PSKD` for 120 s.
-4. The companion Joiner device now runs `startJoiner(PSKD)` on its side; the dataset is delivered to it over an authenticated DTLS handshake.
-5. (Optional) Call `OThread.stopCommissioner()` once you no longer want to admit new joiners.
+1. Form or resume the network (`commitDataSet()` or NVS resume).
+2. `OThread.networkInterfaceUp()` + `OThread.start()` - bring up Thread until the device is no longer Detached / Disabled.
+3. `OThread.startCommissioner()` - blocks until the Commissioner is `ACTIVE` (default timeout: 30 s).
+4. `OThread.addJoiner(PSKD, /*eui64=*/nullptr, /*timeoutSec=*/120)` - whitelists any joiner that knows `PSKD` for 120 s.
+5. The companion Joiner device now runs `startJoiner(PSKD)` on its side; the dataset is delivered to it over an authenticated DTLS handshake.
+6. (Optional) Call `OThread.stopCommissioner()` once you no longer want to admit new joiners.
 
 ## API
 

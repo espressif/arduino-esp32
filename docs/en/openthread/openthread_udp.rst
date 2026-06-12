@@ -319,8 +319,9 @@ Basic UDP Echo
 
         // Bring up Thread (using a DataSet, or via the Joiner role).
         OThread.begin(false);
-        // ... configure dataset and call commitDataSet(), or call
-        // setChannel + setExtendedPanId + networkInterfaceUp + startJoiner.
+        // ... configure dataset and call commitDataSet(), then
+        // networkInterfaceUp() + start(); or, for a Joiner device,
+        // networkInterfaceUp() + startJoiner() + start() on success.
         OThread.networkInterfaceUp();
         OThread.start();
 

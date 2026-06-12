@@ -307,16 +307,17 @@ When the device must attach to a network using only a PSKd (and learn the
 operational dataset from a Commissioner instead of carrying it in source
 code or NVS), follow this order on the **joiner** side:
 
-1. ``OThread.begin(false);``           - start the stack without loading a DataSet from NVS.
+1. ``OThread.begin(false);``           - initialize the stack without loading a DataSet from NVS.
 2. (optional) ``OThread.setChannel(...) / setPanId(...) / setExtendedPanId(...)`` - hint the radio so the Joiner does not have to scan every channel.
 3. ``OThread.networkInterfaceUp();``   - the IPv6 stack must be up before running the Joiner state machine.
-4. ``OThread.start();``                - enable Thread protocol using the dataset just provisioned by the Commissioner.
-5. ``OThread.startJoiner(PSKD);``      - blocks until commissioning completes or the timeout expires.
+4. ``OThread.startJoiner(PSKD);``      - blocks until commissioning completes or the timeout expires. Thread must **not** be enabled yet (``start()`` must not have been called).
+5. On success, ``OThread.start();``    - enable Thread protocol with the dataset just provisioned by the Commissioner.
 
-And on the **commissioner** side, after the device has already attached to the network (typically as Leader):
+And on the **commissioner** side, after the device has formed or resumed a network and attached (typically as Leader):
 
-1. ``OThread.startCommissioner();``    - blocks until ``OT_COMMISSIONER_STATE_ACTIVE``.
-2. ``OThread.addJoiner(PSKD);``        - authorise an incoming joiner (any EUI-64 by default, valid for 120 s).
+1. ``OThread.networkInterfaceUp();`` + ``OThread.start();`` - bring up Thread and wait until the role is no longer Detached / Disabled.
+2. ``OThread.startCommissioner();``    - blocks until ``OT_COMMISSIONER_STATE_ACTIVE``.
+3. ``OThread.addJoiner(PSKD);``        - authorise an incoming joiner (any EUI-64 by default, valid for 120 s).
 
 For detailed API documentation see :doc:`openthread_core`, sections
 "Joiner Role" and "Commissioner Role". The
@@ -421,7 +422,6 @@ Joiner (new device) - obtains the network key over the air from a Commissioner u
         OThread.begin(false);              // stack up, no DataSet
         OThread.setChannel(15);            // optional channel hint
         OThread.networkInterfaceUp();      // IPv6 must be up
-        OThread.start();                   // enable Thread protocol
 
         otError err = OThread.startJoiner(PSKD);
         if (err == OT_ERROR_NONE) {
