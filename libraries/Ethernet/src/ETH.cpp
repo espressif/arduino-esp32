@@ -223,6 +223,37 @@ void ETHClass::setTaskStackSize(size_t size) {
       }                                                                            \
     },                                                                             \
   }
+#elif CONFIG_IDF_TARGET_ESP32S31
+// clang-format off
+#define ETH_EMAC_DEFAULT_CONFIG()                                                  \
+  {                                                                                \
+    .smi_gpio = {.mdc_num = 31, .mdio_num = 52},                                   \
+    .interface = EMAC_DATA_INTERFACE_RMII,                                         \
+    .clock_config = {                                                              \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t)ETH_RMII_CLK                         \
+      }                                                                            \
+    },                                                                             \
+    .dma_burst_len = ETH_DMA_BURST_LEN_32,                                         \
+    .intr_priority = 0,                                                            \
+    .emac_dataif_gpio = {                                                          \
+      .rmii = {                                                                    \
+        .tx_en_num = ETH_RMII_TX_EN,                                               \
+        .txd0_num = ETH_RMII_TX0,                                                  \
+        .txd1_num = ETH_RMII_TX1,                                                  \
+        .crs_dv_num = ETH_RMII_CRS_DV,                                             \
+        .rxd0_num = ETH_RMII_RX0,                                                  \
+        .rxd1_num = ETH_RMII_RX1_EN                                                \
+      }                                                                            \
+    },                                                                             \
+    .clock_config_out_in = {                                                       \
+      .rmii = {                                                                    \
+        .clock_mode = EMAC_CLK_EXT_IN,                                             \
+        .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
+      }                                                                            \
+    },                                                                             \
+  }
 #endif
 // clang-format on
 
