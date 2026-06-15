@@ -222,9 +222,101 @@ void ETHClass::setTaskStackSize(size_t size) {
         .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
       }                                                                            \
     },                                                                             \
+    .mdc_freq_hz = 0,                                                              \
+  }
+#elif CONFIG_IDF_TARGET_ESP32S31
+// clang-format off
+#define ETH_EMAC_DEFAULT_CONFIG()                                                  \
+  {                                                                                \
+    .smi_gpio = {.mdc_num = 5, .mdio_num = 6},                                     \
+    .interface = EMAC_DATA_INTERFACE_RGMII,                                        \
+    .clock_config = {                                                              \
+      .rgmii = {                                                                   \
+        .clock_rx_gpio = ETH_RMII_RX_CLK,                                          \
+        .clock_tx_gpio = ETH_RMII_TX_CLK,                                          \
+        .clock_phy_ref_gpio = -1                                                   \
+      }                                                                            \
+    },                                                                             \
+    .dma_burst_len = ETH_DMA_BURST_LEN_16,                                         \
+    .intr_priority = 0,                                                            \
+    .emac_dataif_gpio = {                                                          \
+      .rgmii = {                                                                   \
+        .tx_ctl_num = ETH_RMII_TX_CTL,                                             \
+        .txd0_num = ETH_RMII_TX0,                                                  \
+        .txd1_num = ETH_RMII_TX1,                                                  \
+        .txd2_num = ETH_RMII_TX2,                                                  \
+        .txd3_num = ETH_RMII_TX3,                                                  \
+        .rx_ctl_num = ETH_RMII_RX_CTL,                                             \
+        .rxd0_num = ETH_RMII_RX0,                                                  \
+        .rxd1_num = ETH_RMII_RX1,                                                  \
+        .rxd2_num = ETH_RMII_RX2,                                                  \
+        .rxd3_num = ETH_RMII_RX3,                                                  \
+      }                                                                            \
+    },                                                                             \
+    .clock_config_out_in = {                                                       \
+      .rgmii = {                                                                   \
+        .clock_rx_gpio = -1,                                                       \
+        .clock_tx_gpio = -1,                                                       \
+        .clock_phy_ref_gpio = -1                                                   \
+      }                                                                            \
+    },                                                                             \
+    .mdc_freq_hz = 0,                                                              \
   }
 #endif
 // clang-format on
+
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+#define ETH_RETURN_ON_ERROR(e, m) { esp_err_t r = e; if (r != ESP_OK) { log_e(m); return r;} }
+/**
+ * @brief Initialize YT8531 PHY specific configuration
+ *
+ * @note This function demonstrates how to configure PHY specific registers needed for proper
+ *       operation of the PHY without specific PHY driver by just using the esp_eth_ioctl API.
+ *       This example is YT8531 specific but you can use it as a template to configure other PHYs.
+ *
+ * @param eth_handle Ethernet handle
+ * @return ESP_OK on success, ESP_FAIL on failure
+ */
+static esp_err_t eth_phy_yt8531_specific_init(esp_eth_handle_t eth_handle)
+{
+    /* When the YT8531 PHY is reset during the Generic 802.3 PHY driver initialization, it disables auto negotiation.
+     * So we need to enable it again. This is undocumented but observed behavior.
+     */
+    bool auto_nego_en = true;
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_S_AUTONEGO, &auto_nego_en), "set auto negotiation failed");
+
+    /*
+    * RGMII requires Tx and Rx paths clock delays to be configured.
+    *
+    * Target delay: ~2 ns on both Tx and Rx.
+    */
+    esp_eth_phy_reg_rw_data_t phy_reg = {.reg_value_p = NULL};
+    uint32_t reg_val;
+    phy_reg.reg_value_p = &reg_val;
+
+    // --- Configure RX ~2 ns coarse delay (EXT_CHIP_CONFIG 0xA001, bit[8]) ---
+    reg_val = 0xA001;
+    phy_reg.reg_addr = 0x1E;  // EXT address register
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (Chip_Config) failed");
+    phy_reg.reg_addr = 0x1F;  // EXT data register
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read Chip_Config failed");
+    reg_val |= (1U << 8);     // set rxc_dly_en
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write Chip_Config failed");
+
+    // --- Configure TX ~2 ns delay (EXT_RGMII_CONFIG1 0xA003, bits[7:0]) ---
+    reg_val = 0xA003;
+    phy_reg.reg_addr = 0x1E;  // EXT address register
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write EXT addr reg (RGMII_Config1) failed");
+    phy_reg.reg_addr = 0x1F;  // EXT data register
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_READ_PHY_REG, &phy_reg), "read RGMII_Config1 failed");
+    // Clear tx_delay_sel [3:0] and tx_delay_sel_fe [7:4], then set both to 13 (~1.95 ns)
+    reg_val = (reg_val & ~0x00FFU) | (13U << 4) | (13U << 0);
+    ETH_RETURN_ON_ERROR(esp_eth_ioctl(eth_handle, ETH_CMD_WRITE_PHY_REG, &phy_reg), "write RGMII_Config1 failed");
+
+    log_i("RGMII PHY delays configured: Rx ~2 ns (coarse), Tx ~2 ns (13 steps x 150 ps)");
+    return ESP_OK;
+}
+#endif
 
 bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, int power, eth_clock_mode_t clock_mode) {
   esp_err_t ret = ESP_OK;
@@ -267,18 +359,23 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   mac_config.smi_gpio.mdc_num = digitalPinToGPIONumber(mdc);
   mac_config.smi_gpio.mdio_num = digitalPinToGPIONumber(mdio);
 
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32P4
+  _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
+#endif
   _pin_mcd = digitalPinToGPIONumber(mdc);
   _pin_mdio = digitalPinToGPIONumber(mdio);
-  _pin_rmii_clock = mac_config.clock_config.rmii.clock_gpio;
   _pin_power = digitalPinToGPIONumber(power);
 
-  if (!perimanClearPinBus(_pin_rmii_clock)) {
-    return false;
-  }
   if (!perimanClearPinBus(_pin_mcd)) {
     return false;
   }
   if (!perimanClearPinBus(_pin_mdio)) {
+    return false;
+  }
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+
+#else
+  if (!perimanClearPinBus(_pin_rmii_clock)) {
     return false;
   }
   if (!perimanClearPinBus(ETH_RMII_TX_EN)) {
@@ -299,6 +396,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   if (!perimanClearPinBus(ETH_RMII_CRS_DV)) {
     return false;
   }
+#endif
   if (_pin_power != -1) {
     if (!perimanClearPinBus(_pin_power)) {
       return false;
@@ -323,6 +421,9 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
     case ETH_PHY_GENERIC: _phy = esp_eth_phy_new_generic(&phy_config); break;
 #endif
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+    case ETH_PHY_YT8531DC: _phy = esp_eth_phy_new_generic(&phy_config); break;
+#endif
     case ETH_PHY_LAN8720: _phy = esp_eth_phy_new_lan87xx(&phy_config); break;
     case ETH_PHY_TLK110:  _phy = esp_eth_phy_new_ip101(&phy_config); break;
     case ETH_PHY_RTL8201: _phy = esp_eth_phy_new_rtl8201(&phy_config); break;
@@ -345,12 +446,27 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   ret = esp_eth_driver_install(&eth_config, &_eth_handle);
   if (ret != ESP_OK) {
     log_e("Ethernet driver install failed: %d", ret);
+    _delMacAndPhy();
     return false;
   }
   if (_eth_handle == NULL) {
     log_e("esp_eth_driver_install failed! eth_handle is NULL");
+    _delMacAndPhy();
     return false;
   }
+
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+  if (type == ETH_PHY_YT8531DC) {
+    //Run specific init
+    if (eth_phy_yt8531_specific_init(_eth_handle) != ESP_OK) {
+      log_e("YT8531 PHY specific initialization failed");
+      esp_eth_driver_uninstall(_eth_handle);
+      _delMacAndPhy();
+      _eth_handle = NULL;
+      return false;
+    }
+  }
+#endif
 
   esp_netif_config_t cfg = ESP_NETIF_DEFAULT_ETH();
 
@@ -424,13 +540,17 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
 
   _eth_started = true;
 
-  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
-    goto err;
-  }
   if (!perimanSetPinBus(_pin_mcd, ESP32_BUS_TYPE_ETHERNET_MCD, (void *)(this), -1, -1)) {
     goto err;
   }
   if (!perimanSetPinBus(_pin_mdio, ESP32_BUS_TYPE_ETHERNET_MDIO, (void *)(this), -1, -1)) {
+    goto err;
+  }
+
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+
+#else
+  if (!perimanSetPinBus(_pin_rmii_clock, ESP32_BUS_TYPE_ETHERNET_CLK, (void *)(this), -1, -1)) {
     goto err;
   }
 
@@ -452,7 +572,7 @@ bool ETHClass::begin(eth_phy_type_t type, int32_t phy_addr, int mdc, int mdio, i
   if (!perimanSetPinBus(ETH_RMII_CRS_DV, ESP32_BUS_TYPE_ETHERNET_RMII, (void *)(this), -1, -1)) {
     goto err;
   }
-
+#endif
   if (_pin_power != -1) {
     if (!perimanSetPinBus(_pin_power, ESP32_BUS_TYPE_ETHERNET_PWR, (void *)(this), -1, -1)) {
       goto err;
@@ -1044,7 +1164,7 @@ void ETHClass::end(void) {
 #if ETH_SPI_SUPPORTS_CUSTOM
   _spi = NULL;
 #endif
-#if (CONFIG_ETH_USE_ESP32_EMAC && !defined(CONFIG_IDF_TARGET_ESP32P4))
+#if (CONFIG_ETH_USE_ESP32_EMAC && CONFIG_IDF_TARGET_ESP32)
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_RMII, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_CLK, empty_ethDetachBus);
   perimanSetBusDeinit(ESP32_BUS_TYPE_ETHERNET_MCD, empty_ethDetachBus);

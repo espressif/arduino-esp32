@@ -76,6 +76,9 @@
 #elif CONFIG_IDF_TARGET_ESP32C61
 #include "esp32c61/rom/ets_sys.h"
 #include "esp32c61/rom/gpio.h"
+#elif CONFIG_IDF_TARGET_ESP32S31
+#include "esp32s31/rom/ets_sys.h"
+#include "esp32s31/rom/gpio.h"
 #else
 #error Target CONFIG_IDF_TARGET is not supported
 #endif
@@ -140,6 +143,24 @@ struct spi_struct_t {
 
 #define SPI_SS_IDX(p, n) ((p == 0) ? SPI_FSPI_SS_IDX(n) : ((p == 1) ? SPI_HSPI_SS_IDX(n) : 0))
 
+#elif CONFIG_IDF_TARGET_ESP32S31
+// ESP32S31
+#define SPI_COUNT (2)  // SPI2 and SPI3. SPI0 and SPI1 are reserved for flash and PSRAM
+
+#define SPI_CLK_IDX(p)  ((p == 0) ? SPI2_CK_PAD_OUT_IDX : ((p == 1) ? SPI3_CK_PAD_OUT_IDX : 0))
+#define SPI_MISO_IDX(p) ((p == 0) ? SPI2_Q_PAD_OUT_IDX : ((p == 1) ? SPI3_QO_PAD_OUT_IDX : 0))
+#define SPI_MOSI_IDX(p) ((p == 0) ? SPI2_D_PAD_IN_IDX : ((p == 1) ? SPI3_D_PAD_IN_IDX : 0))
+
+#define SPI_HSPI_SS_IDX(n) ((n == 0) ? SPI3_CS_PAD_OUT_IDX : ((n == 1) ? SPI3_CS1_PAD_OUT_IDX : ((n == 2) ? SPI3_CS2_PAD_OUT_IDX : 0)))
+
+#define SPI_FSPI_SS_IDX(n)                                 \
+  ((n == 0) ? SPI2_CS_PAD_OUT_IDX                          \
+            : ((n == 1) ? SPI2_CS1_PAD_OUT_IDX             \
+                        : ((n == 2) ? SPI2_CS2_PAD_OUT_IDX \
+                                    : ((n == 3) ? SPI2_CS3_PAD_OUT_IDX : ((n == 4) ? SPI2_CS4_PAD_OUT_IDX : ((n == 5) ? SPI2_CS5_PAD_OUT_IDX : 0))))))
+
+#define SPI_SS_IDX(p, n) ((p == 0) ? SPI_FSPI_SS_IDX(n) : ((p == 1) ? SPI_HSPI_SS_IDX(n) : 0))
+
 #elif CONFIG_IDF_TARGET_ESP32
 // ESP32
 #define SPI_COUNT (4)
@@ -174,6 +195,9 @@ static spi_t _spi_bus_array[] = {
 #if CONFIG_IDF_TARGET_ESP32S2 ||CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), 1, -1, -1, -1, -1, false}
+#elif CONFIG_IDF_TARGET_ESP32S31
+  {(volatile spi_dev_t *)(DR_REG_GPSPI2_BASE), 0, -1, -1, -1, -1, false},
+  {(volatile spi_dev_t *)(DR_REG_GPSPI3_BASE), 1, -1, -1, -1, -1, false}
 #elif CONFIG_IDF_TARGET_ESP32
   {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), 1, -1, -1, -1, -1, false},
@@ -195,6 +219,9 @@ static spi_t _spi_bus_array[] = {
 #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32P4
   {(volatile spi_dev_t *)(DR_REG_SPI2_BASE), NULL, 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI3_BASE), NULL, 1, -1, -1, -1, -1, false}
+#elif CONFIG_IDF_TARGET_ESP32S31
+  {(volatile spi_dev_t *)(DR_REG_GPSPI2_BASE), NULL, 0, -1, -1, -1, -1, false},
+  {(volatile spi_dev_t *)(DR_REG_GPSPI3_BASE), NULL, 1, -1, -1, -1, -1, false}
 #elif CONFIG_IDF_TARGET_ESP32
   {(volatile spi_dev_t *)(DR_REG_SPI0_BASE), NULL, 0, -1, -1, -1, -1, false},
   {(volatile spi_dev_t *)(DR_REG_SPI1_BASE), NULL, 1, -1, -1, -1, -1, false},

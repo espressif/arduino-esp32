@@ -85,6 +85,12 @@ bool btStart() {
   return btStartMode(BT_MODE);
 }
 
+#if CONFIG_IDF_TARGET_ESP32S31
+#define cfg_bt_mode cfg.btdm.bluetooth_mode
+#else
+#define cfg_bt_mode cfg.mode
+#endif
+
 bool btStartMode(bt_mode mode) {
   esp_bt_mode_t esp_bt_mode;
   esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
@@ -96,8 +102,8 @@ bool btStartMode(bt_mode mode) {
     default:                 esp_bt_mode = BT_MODE; break;
   }
   // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
-  cfg.mode = esp_bt_mode;
-  if (cfg.mode == ESP_BT_MODE_CLASSIC_BT) {
+  cfg_bt_mode = esp_bt_mode;
+  if (cfg_bt_mode == ESP_BT_MODE_CLASSIC_BT) {
     btMemRelease(BT_MODE_BLE);
   }
 #else
@@ -114,7 +120,7 @@ bool btStartMode(bt_mode mode) {
 #if CONFIG_SOC_BT_CLASSIC_SUPPORTED
     if (esp_bt_mode == ESP_BT_MODE_BTDM && available != ESP_BT_MODE_IDLE) {
       esp_bt_mode = available;
-      cfg.mode = esp_bt_mode;
+      cfg_bt_mode = esp_bt_mode;
     } else
 #endif
     {
