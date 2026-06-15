@@ -179,6 +179,7 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             esp32h2_opts=$(echo "$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32p4_opts=$(echo "PSRAM=enabled,USBMode=default,ChipVariant=postv3,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
             esp32c5_opts=$(echo "PSRAM=enabled,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
+            esp32s31_opts=$(echo "USBMode=default,$debug_level,$fqbn_append" | sed 's/^,*//;s/,*$//;s/,\{2,\}/,/g')
 
             # Select the common part of the FQBN based on the target.  The rest will be
             # appended depending on the passed options.
@@ -217,6 +218,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
                 "esp32c5")
                     [ -n "${options:-$esp32c5_opts}" ] && opt=":${options:-$esp32c5_opts}"
                     fqbn="espressif:esp32:esp32c5$opt"
+                ;;
+                "esp32s31")
+                    [ -n "${options:-$esp32s31_opts}" ] && opt=":${options:-$esp32s31_opts}"
+                    fqbn="espressif:esp32:esp32s31$opt"
                 ;;
                 *)
                     echo "ERROR: Invalid chip: $target"
