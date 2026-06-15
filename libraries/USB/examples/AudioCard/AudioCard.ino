@@ -42,7 +42,7 @@
 #define I2S_DIN   7
 #define I2S_WIDTH I2S_DATA_BIT_WIDTH_16BIT
 #define UAC_BPS   UAC_BPS_16
-#elif CONFIG_IDF_TARGET_ESP32P4
+#elif CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
 #define I2S_BCLK  0
 #define I2S_LRCK  1
 #define I2S_DOUT  2
@@ -87,7 +87,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
 
 // BOOT button: debounced edge detect toggles USB master mute (does not affect I2S hardware).
 void checkButton() {
-#if CONFIG_IDF_TARGET_ESP32P4
+#if CONFIG_IDF_TARGET_ESP32P4 || CONFIG_IDF_TARGET_ESP32S31
   // Poll every 50ms
   const uint32_t interval_ms = 50;
   static uint32_t start_ms = 0;
