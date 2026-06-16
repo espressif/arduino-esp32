@@ -82,7 +82,7 @@ You can do the following:
 By default, the coordinator network is closed after rebooting or flashing new firmware.
 To open the network you have 2 options:
 
-* Open network after reboot by setting `Zigbee.setRebootOpenNetwork(time)` before calling `Zigbee.init()`
+* Open network after reboot by setting `Zigbee.setRebootOpenNetwork(time)` before calling `Zigbee.role()`
 * In application you can anytime call `Zigbee.openNetwork(time)` to open the network for devices to join
 
 ***Important: Make sure you are using a good quality USB cable and that you have a reliable power source***

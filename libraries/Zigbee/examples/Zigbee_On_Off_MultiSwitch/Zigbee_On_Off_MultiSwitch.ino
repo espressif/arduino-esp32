@@ -74,12 +74,6 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack with given role (coordinator or router)
-  if (!Zigbee.init(ZIGBEE_ROLE)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
 
   // Initialize Preferences
   prefs.begin("lights", false);  // false means read/write mode
@@ -93,6 +87,14 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
 
   // Set Zigbee device name and model
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_ROLE)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
   zbSwitch.setManufacturerAndModel("Espressif", "ZBMultiSwitch");
 
   // Set binding settings depending on the role

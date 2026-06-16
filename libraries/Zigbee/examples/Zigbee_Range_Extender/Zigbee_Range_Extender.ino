@@ -69,26 +69,19 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
+  // Initialize Zigbee stack as router (must be before EP setters)
 #if USE_CUSTOM_ZIGBEE_CONFIG
   esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
   zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
-
-  // Initialize Zigbee stack as router with custom config
-  if (!Zigbee.init(&zigbeeConfig)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
+  if (!Zigbee.role(&zigbeeConfig)) {
 #else
-  // Initialize Zigbee stack as router
-  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+#endif
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);
     ESP.restart();
   }
-#endif
 
   // Optional: Set callback function for device identify
   zbExtender.onIdentify(identify);

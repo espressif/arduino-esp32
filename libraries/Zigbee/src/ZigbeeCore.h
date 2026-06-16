@@ -155,11 +155,14 @@ public:
 
   std::list<ZigbeeEP *> ep_objects;
 
-  // init(): esp_zigbee_init() + commissioning setup (SDK: before endpoint registration).
-  // addEndpoint(): after init(), attach endpoints to the device descriptor.
-  // begin(): ezb_af_device_desc_register(), esp_zigbee_start().
-  bool init(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
-  bool init(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
+  // Lifecycle (all steps are mandatory):
+  //   role(role)      — esp_zigbee_init() + commissioning setup. Must be the first Zigbee call.
+  //   role(cfg*)      — same with a custom esp_zigbee_device_config_t (sleepy ED, max_children, …).
+  //   configure EPs   — call EP setters (setManufacturerAndModel, etc.) after role().
+  //   addEndpoint(ep) — store the endpoint pointer; before begin().
+  //   begin()         — attach all EPs, register the device descriptor and start the stack.
+  bool role(zigbee_role_t role, bool erase_nvs = false);
+  bool role(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
   bool begin();
   void pause();
   void resume();
@@ -189,7 +192,8 @@ public:
 
   bool addEndpoint(ZigbeeEP *ep);
   //void removeEndpoint(ZigbeeEP *ep);
-
+  
+  //   setRadioConfig() / setPrimaryChannelMask() must be called before role() is called.
   void setRadioConfig(esp_zigbee_radio_config_t config);
   esp_zigbee_radio_config_t getRadioConfig();
 
