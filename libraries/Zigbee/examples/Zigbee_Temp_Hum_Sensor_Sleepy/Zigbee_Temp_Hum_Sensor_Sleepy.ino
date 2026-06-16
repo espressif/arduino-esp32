@@ -134,7 +134,7 @@ void setup() {
   zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
   Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
 
-  // Initialize Zigbee stack with custom End Device config (must be before EP setters)
+  // Initialize Zigbee stack as end device with custom config
   if (!Zigbee.role(&zigbeeConfig)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");

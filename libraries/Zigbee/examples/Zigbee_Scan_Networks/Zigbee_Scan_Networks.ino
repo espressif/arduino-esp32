@@ -78,7 +78,7 @@ void printScannedNetworks(uint16_t networksFound) {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Zigbee stack without any EPs and start it
+  // Initialize Zigbee stack with given role
   if (!Zigbee.role(role)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");

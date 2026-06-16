@@ -87,17 +87,17 @@ void onStateChangeCustom(uint16_t state) {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Zigbee stack as coordinator/router
+  // Init button switch
+  log_d("Init button switch");
+  pinMode(button, INPUT_PULLUP);
+
+  // Initialize Zigbee stack as router
   if (!Zigbee.role(ZIGBEE_ROUTER)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);
     ESP.restart();
   }
-
-  // Init button switch
-  log_d("Init button switch");
-  pinMode(button, INPUT_PULLUP);
 
   // Optional: set Zigbee device name and model
   log_d("Set Zigbee device name and model");

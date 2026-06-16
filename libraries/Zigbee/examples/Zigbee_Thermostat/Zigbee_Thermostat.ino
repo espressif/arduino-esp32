@@ -80,6 +80,9 @@ void receiveSensorConfig(float min_temp, float max_temp, float tolerance) {
 void setup() {
   Serial.begin(115200);
 
+  // Init button switch
+  pinMode(button, INPUT_PULLUP);
+
   // Initialize Zigbee stack as coordinator
   if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
     Serial.println("Zigbee failed to init!");
@@ -87,9 +90,6 @@ void setup() {
     delay(1000);
     ESP.restart();
   }
-
-  // Init button switch
-  pinMode(button, INPUT_PULLUP);
 
 // Set callback function for receiving temperature from sensor - Use only one option
 #if USE_RECEIVE_TEMP_WITH_SOURCE == 0

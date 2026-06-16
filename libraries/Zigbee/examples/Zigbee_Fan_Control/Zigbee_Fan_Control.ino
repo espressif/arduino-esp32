@@ -77,15 +77,12 @@ void setFan(ZigbeeFanMode mode) {
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Zigbee stack as router
-
   // Init LED that will be used to indicate the current fan control mode
   rgbLedWrite(led, 0, 0, 0);
 
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
-  //Optional: set Zigbee device name and model
   // Initialize Zigbee stack
   if (!Zigbee.role(ZIGBEE_ROUTER)) {
     Serial.println("Zigbee failed to init!");
@@ -93,7 +90,8 @@ void setup() {
     delay(1000);
     ESP.restart();
   }
-  
+
+  //Optional: set Zigbee device name and model
   zbFanControl.setManufacturerAndModel("Espressif", "ZBFanControl");
 
   // Set the fan mode sequence to LOW_MED_HIGH

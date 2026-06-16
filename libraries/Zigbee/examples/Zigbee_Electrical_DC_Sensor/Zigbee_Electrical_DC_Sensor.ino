@@ -49,22 +49,21 @@ ZigbeeElectricalMeasurement zbElectricalMeasurement = ZigbeeElectricalMeasuremen
 void setup() {
   Serial.begin(115200);
 
-  // Initialize Zigbee stack
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
   // Set analog resolution to 10 bits
   analogReadResolution(10);
 
-  // Optional: set Zigbee device name and model
-  // Initialize Zigbee stack
+  // Initialize Zigbee stack as end device
   if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);
     ESP.restart();
   }
-  
+
+  // Optional: set Zigbee device name and model
   zbElectricalMeasurement.setManufacturerAndModel("Espressif", "ZigbeeElectricalMeasurementDC");
 
   // Add analog clusters to Zigbee Analog according your needs
