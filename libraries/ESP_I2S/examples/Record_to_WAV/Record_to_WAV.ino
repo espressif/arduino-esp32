@@ -15,9 +15,9 @@
 #include "FS.h"
 #include "SD_MMC.h"
 
-const uint8_t I2S_SCK = 41;
-const uint8_t I2S_WS = 42;
-const uint8_t I2S_DIN = 2;
+const uint8_t I2S_PIN_SCK = 41;
+const uint8_t I2S_PIN_WS = 42;
+const uint8_t I2S_PIN_DIN = 2;
 
 const uint8_t SD_CMD = 38;
 const uint8_t SD_CLK = 39;
@@ -37,7 +37,7 @@ void setup() {
   Serial.println("Initializing I2S bus...");
 
   // Set up the pins used for audio input
-  i2s.setPins(I2S_SCK, I2S_WS, -1, I2S_DIN);
+  i2s.setPins(I2S_PIN_SCK, I2S_PIN_WS, -1, I2S_PIN_DIN);
 
   // Initialize the I2S bus in standard mode
   if (!i2s.begin(I2S_MODE_STD, 16000, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_MONO, I2S_STD_SLOT_LEFT)) {
