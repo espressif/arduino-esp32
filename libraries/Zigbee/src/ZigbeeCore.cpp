@@ -890,18 +890,18 @@ void ZigbeeCore::setNVRAMChannelMask(uint32_t mask) {
   log_v("Channel mask set to 0x%08" PRIx32, mask);
 }
 
-void ZigbeeCore::pause() {
+void ZigbeeCore::stop() {
   if (_stack_running && !_paused) {
     vTaskSuspend(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack paused");
+    log_v("Zigbee stack stopped");
     _paused = true;
   }
 }
 
-void ZigbeeCore::resume() {
+void ZigbeeCore::start() {
   if (_stack_running && _paused) {
     vTaskResume(xTaskGetHandle("Zigbee_main"));
-    log_v("Zigbee stack resumed");
+    log_v("Zigbee stack started");
     _paused = false;
   }
 }

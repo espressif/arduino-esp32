@@ -164,8 +164,8 @@ public:
   bool role(zigbee_role_t role, bool erase_nvs = false);
   bool role(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
   bool begin();
-  void pause();
-  void resume();
+  void stop();
+  void start();
 
   bool initialized() {
     return _initialized;
