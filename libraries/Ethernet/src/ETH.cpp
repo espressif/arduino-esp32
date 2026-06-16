@@ -225,7 +225,6 @@ void ETHClass::setTaskStackSize(size_t size) {
     .mdc_freq_hz = 0,                                                              \
   }
 #elif CONFIG_IDF_TARGET_ESP32S31
-// clang-format off
 #define ETH_EMAC_DEFAULT_CONFIG()                                                  \
   {                                                                                \
     .smi_gpio = {.mdc_num = 5, .mdio_num = 6},                                     \
