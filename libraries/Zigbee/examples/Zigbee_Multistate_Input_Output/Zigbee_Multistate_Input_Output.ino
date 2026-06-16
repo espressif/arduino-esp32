@@ -88,7 +88,7 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack as coordinator/router
-  if (!Zigbee.init(ZIGBEE_ROUTER)) {
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);

@@ -78,12 +78,6 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack as router
-  if (!Zigbee.init(ZIGBEE_ROUTER)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
 
   // Init LED that will be used to indicate the current fan control mode
   rgbLedWrite(led, 0, 0, 0);
@@ -92,6 +86,14 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
   zbFanControl.setManufacturerAndModel("Espressif", "ZBFanControl");
 
   // Set the fan mode sequence to LOW_MED_HIGH

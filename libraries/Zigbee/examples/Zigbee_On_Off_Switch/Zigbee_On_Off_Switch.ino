@@ -139,7 +139,7 @@ void setup() {
   }
 
   // Initialize Zigbee stack as coordinator
-  if (!Zigbee.init(ZIGBEE_COORDINATOR)) {
+  if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);

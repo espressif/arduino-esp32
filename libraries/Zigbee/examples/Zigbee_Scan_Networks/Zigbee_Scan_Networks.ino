@@ -79,7 +79,7 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack without any EPs and start it
-  if (!Zigbee.init(role)) {
+  if (!Zigbee.role(role)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);

@@ -63,8 +63,8 @@ void setup() {
   // Set analog resolution to 10 bits
   analogReadResolution(10);
 
-  // Initialize Zigbee stack as end device (default)
-  if (!Zigbee.init()) {
+  // Initialize Zigbee stack as end device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);

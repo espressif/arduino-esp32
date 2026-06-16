@@ -73,7 +73,7 @@ public:
   // class creates an endpoint descriptor with ezb_af_create_endpoint_desc(&ep_config), attaches each
   // cluster descriptor with ezb_af_endpoint_add_cluster_desc(), and passes the result here. ZigbeeCore
   // then attaches _ep_desc to the device descriptor via ezb_af_device_add_endpoint_desc().
-  // v2.x lifecycle: Zigbee.init(), configure EPs, Zigbee.addEndpoint(), Zigbee.begin().
+  // v2.x lifecycle: Zigbee.role(role), configure EPs, Zigbee.addEndpoint(), Zigbee.begin().
   bool isEpReady() const {
     return _ep_desc != nullptr;
   }

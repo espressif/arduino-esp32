@@ -50,17 +50,19 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack as coordinator
-  if (!Zigbee.init(ZIGBEE_COORDINATOR)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
 
   //Init button switch
   pinMode(button, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
   zbSwitch.setManufacturerAndModel("Espressif", "ZigbeeSwitch");
 
   //Optional to allow multiple light to bind to the switch

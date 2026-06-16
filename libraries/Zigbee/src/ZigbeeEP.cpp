@@ -263,6 +263,10 @@ bool ZigbeeEP::requireBeforeAddEndpoint(const char *api) const {
     log_e("%s(): endpoint descriptor not created", api);
     return false;
   }
+  if (!Zigbee.initialized()) {
+    log_e("%s(): Zigbee.role() must be called before configuring endpoints", api);
+    return false;
+  }
   return true;
 }
 

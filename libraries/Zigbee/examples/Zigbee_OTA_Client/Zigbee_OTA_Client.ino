@@ -73,8 +73,8 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
-  // Initialize Zigbee stack as End Device (default)
-  if (!Zigbee.init()) {
+  // Initialize Zigbee stack as End Device
+  if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);

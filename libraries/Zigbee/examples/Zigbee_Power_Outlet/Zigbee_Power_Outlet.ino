@@ -56,12 +56,6 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack as router
-  if (!Zigbee.init(ZIGBEE_ROUTER)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
 
   // Init LED and turn it OFF (if LED_PIN == RGB_BUILTIN, the rgbLedWrite() will be used under the hood)
   pinMode(led, OUTPUT);
@@ -71,6 +65,14 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
 
   //Optional: set Zigbee device name and model
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
   zbOutlet.setManufacturerAndModel("Espressif", "ZBPowerOutlet");
 
   // Set callback function for power outlet change

@@ -56,12 +56,6 @@ void setup() {
   Serial.begin(115200);
 
   // Initialize Zigbee stack as router
-  if (!Zigbee.init(ZIGBEE_ROUTER)) {
-    Serial.println("Zigbee failed to init!");
-    Serial.println("Rebooting...");
-    delay(1000);
-    ESP.restart();
-  }
   // Init button switch
   pinMode(button, INPUT_PULLUP);
 
@@ -69,6 +63,14 @@ void setup() {
   analogReadResolution(10);
 
   // Optional: set Zigbee device name and model
+  // Initialize Zigbee stack
+  if (!Zigbee.role(ZIGBEE_ROUTER)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+  
   zbElectricalMeasurement.setManufacturerAndModel("Espressif", "ZigbeeElectricalMeasurementAC");
 
   // Add analog clusters to Zigbee Analog according your needs

@@ -75,7 +75,7 @@ void setup() {
   }
   Serial.println("WiFi connected");
 
-  // Set custom radio configuration for RCP communication (must be before Zigbee.init())
+  // Set custom radio configuration for RCP communication (must be before Zigbee.role())
   esp_zigbee_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
   radio_config.radio_uart_config.port = GATEWAY_RCP_UART_PORT;
   radio_config.radio_uart_config.rx_pin = (gpio_num_t)GATEWAY_RCP_RX_PIN;
@@ -83,7 +83,7 @@ void setup() {
   Zigbee.setRadioConfig(radio_config);
 
   // Initialize Zigbee stack as coordinator
-  if (!Zigbee.init(ZIGBEE_COORDINATOR)) {
+  if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");
     delay(1000);
