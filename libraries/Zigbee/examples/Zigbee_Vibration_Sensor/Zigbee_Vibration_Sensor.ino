@@ -55,7 +55,7 @@ void setup() {
   pinMode(button, INPUT_PULLUP);
   pinMode(sensor_pin, INPUT);
 
-  // Initialize Zigbee stack as End Device
+  // Initialize Zigbee stack as end device
   if (!Zigbee.role(ZIGBEE_END_DEVICE)) {
     Serial.println("Zigbee failed to init!");
     Serial.println("Rebooting...");

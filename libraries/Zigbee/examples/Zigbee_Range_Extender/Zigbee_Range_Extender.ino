@@ -69,7 +69,7 @@ void setup() {
   // Init button for factory reset
   pinMode(button, INPUT_PULLUP);
 
-  // Initialize Zigbee stack as router (must be before EP setters)
+  // Initialize Zigbee stack as router
 #if USE_CUSTOM_ZIGBEE_CONFIG
   esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
   zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
