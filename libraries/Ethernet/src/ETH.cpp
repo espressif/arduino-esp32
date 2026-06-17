@@ -222,7 +222,6 @@ void ETHClass::setTaskStackSize(size_t size) {
         .clock_gpio = (emac_rmii_clock_gpio_t) - 1                                 \
       }                                                                            \
     },                                                                             \
-    .mdc_freq_hz = 0,                                                              \
   }
 #elif CONFIG_IDF_TARGET_ESP32S31
 #define ETH_EMAC_DEFAULT_CONFIG()                                                  \
