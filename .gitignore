@@ -23,11 +23,13 @@ tools/openocd-esp32
 
 # Ignore build and temporary files
 /build
+tmp/
 *.tmp
 
 # Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
 [Rr]elease/
+!.github/scripts/release
 .vs/
 __vm/
 *.vcxproj*

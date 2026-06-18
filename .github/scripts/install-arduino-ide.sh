@@ -1,57 +1,61 @@
 #!/bin/bash
 
-#OSTYPE: 'linux-gnu', ARCH: 'x86_64' => linux64
-#OSTYPE: 'msys', ARCH: 'x86_64' => win32
-#OSTYPE: 'darwin18', ARCH: 'i386' => macos
-
 SCRIPTS_DIR_IDE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPTS_DIR_IDE}/env.sh"
 
+ARDUINO_IDE_VERSION="1.8.19"
+
 if [ "$OS_IS_LINUX" == "1" ]; then
     ARCHIVE_FORMAT="tar.xz"
+    ARDUINO_IDE_URL="https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-linux64.tar.xz"
 elif [ "$OS_IS_WINDOWS" == "1" ]; then
     ARCHIVE_FORMAT="zip"
-else
+    ARDUINO_IDE_URL="https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-windows.zip"
+elif [ "$OS_IS_MACOS" == "1" ]; then
     ARCHIVE_FORMAT="zip"
+    ARDUINO_IDE_URL="https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-macosx.zip"
+else
+    echo "ERROR: Unsupported OS for Arduino IDE installation"
+    exit 1
 fi
 
 if [ "$OS_IS_MACOS" == "1" ]; then
-    export ARDUINO_IDE_PATH="/Applications/Arduino.app/Contents/Java"
+    if [ -d "/Applications/Arduino.app/Contents/Java" ]; then
+        export ARDUINO_IDE_PATH="/Applications/Arduino.app/Contents/Java"
+    else
+        export ARDUINO_IDE_PATH="$HOME/arduino-ide-${ARDUINO_IDE_VERSION}/Arduino.app/Contents/Java"
+    fi
 elif [ "$OS_IS_WINDOWS" == "1" ]; then
     export ARDUINO_IDE_PATH="$HOME/arduino_ide"
 else
     export ARDUINO_IDE_PATH="$HOME/arduino_ide"
 fi
 
-# Updated as of Nov 3rd 2020
-ARDUINO_IDE_URL="https://github.com/espressif/arduino-esp32/releases/download/1.0.4/arduino-nightly-"
-
-# Currently not working
-#ARDUINO_IDE_URL="https://www.arduino.cc/download.php?f=/arduino-nightly-"
-
 if [ ! -d "$ARDUINO_IDE_PATH" ]; then
-    echo "Installing Arduino IDE on $OS_NAME ..."
-    echo "Downloading '$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT' to 'arduino.$ARCHIVE_FORMAT' ..."
+    echo "Installing Arduino IDE ${ARDUINO_IDE_VERSION} on $OS_NAME ..."
+    echo "Downloading '$ARDUINO_IDE_URL' ..."
     if [ "$OS_IS_LINUX" == "1" ]; then
-        wget -O "arduino.$ARCHIVE_FORMAT" "$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
+        wget -q -O "arduino.$ARCHIVE_FORMAT" "$ARDUINO_IDE_URL"
         echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
-        tar xf "arduino.$ARCHIVE_FORMAT" > /dev/null
-        mv arduino-nightly "$ARDUINO_IDE_PATH"
+        tar xf "arduino.$ARCHIVE_FORMAT"
+        mv "arduino-${ARDUINO_IDE_VERSION}" "$ARDUINO_IDE_PATH"
+    elif [ "$OS_IS_MACOS" == "1" ]; then
+        mkdir -p "$HOME/arduino-ide-${ARDUINO_IDE_VERSION}"
+        curl -fsSL -o "arduino.$ARCHIVE_FORMAT" "$ARDUINO_IDE_URL"
+        echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
+        unzip -q "arduino.$ARCHIVE_FORMAT"
+        mv "Arduino.app" "$HOME/arduino-ide-${ARDUINO_IDE_VERSION}/Arduino.app"
     else
-        curl -o "arduino.$ARCHIVE_FORMAT" -L "$ARDUINO_IDE_URL$OS_NAME.$ARCHIVE_FORMAT" > /dev/null 2>&1
+        curl -fsSL -o "arduino.$ARCHIVE_FORMAT" "$ARDUINO_IDE_URL"
         echo "Extracting 'arduino.$ARCHIVE_FORMAT' ..."
-        unzip "arduino.$ARCHIVE_FORMAT" > /dev/null
-        if [ "$OS_IS_MACOS" == "1" ]; then
-            mv "Arduino.app" "/Applications/Arduino.app"
-        else
-            mv arduino-nightly "$ARDUINO_IDE_PATH"
-        fi
+        unzip -q "arduino.$ARCHIVE_FORMAT" > /dev/null
+        mv "arduino-${ARDUINO_IDE_VERSION}" "$ARDUINO_IDE_PATH"
     fi
     rm -rf "arduino.$ARCHIVE_FORMAT"
 
     mkdir -p "$ARDUINO_USR_PATH/libraries"
     mkdir -p "$ARDUINO_USR_PATH/hardware"
 
-    echo "Arduino IDE Installed in '$ARDUINO_IDE_PATH'"
+    echo "Arduino IDE ${ARDUINO_IDE_VERSION} installed in '$ARDUINO_IDE_PATH'"
     echo ""
 fi

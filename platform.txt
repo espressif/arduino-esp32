@@ -188,7 +188,9 @@ recipe.hooks.objcopy.postobjcopy.4.pattern=/usr/bin/env bash -c "echo '--flash-m
 recipe.hooks.objcopy.postobjcopy.4.pattern.windows=cmd /c echo --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} > "{build.path}\flash_args" && echo {build.bootloader_addr} {build.project_name}.bootloader.bin >> "{build.path}\flash_args" && echo 0x8000 {build.project_name}.partitions.bin >> "{build.path}\flash_args" && echo 0xe000 boot_app0.bin >> "{build.path}\flash_args" && echo 0x10000 {build.project_name}.bin >> "{build.path}\flash_args"
 
 # Copy boot_app0.bin into the build directory so flash_args is self-contained
-recipe.hooks.objcopy.postobjcopy.5.pattern=/usr/bin/env bash -c "cp -f '{runtime.platform.path}/tools/partitions/boot_app0.bin' '{build.path}/boot_app0.bin'"
+# Do not use bash -c with adjacent single-quoted paths ('...' '...'); IDE 1.x
+# arduino-builder misparses the space between quotes (see postobjcopy.4 note).
+recipe.hooks.objcopy.postobjcopy.5.pattern=/bin/cp -f "{runtime.platform.path}/tools/partitions/boot_app0.bin" "{build.path}/boot_app0.bin"
 recipe.hooks.objcopy.postobjcopy.5.pattern.windows=cmd /c copy /y "{runtime.platform.path}\tools\partitions\boot_app0.bin" "{build.path}\boot_app0.bin"
 
 ## Save bin

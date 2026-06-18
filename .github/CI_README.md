@@ -8,6 +8,7 @@ This document explains how the Continuous Integration and Continuous Deployment 
 - [Centralized SoC Configuration](#centralized-soc-configuration)
 - [Workflows](#workflows)
   - [Compilation Tests](#compilation-tests-pushyml)
+  - [Mock Upload Tests](#mock-upload-tests-upload-testsyml)
   - [Runtime Tests](#runtime-tests)
   - [Multi-Device (Multi-DUT) Tests](#multi-device-multi-dut-tests)
   - [IDF Component Build](#idf-component-build-build_componentyml)
@@ -171,6 +172,66 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 
 **SoC Config Usage:**
 The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine which variants are considered official.
+
+### Mock Upload Tests (`upload-tests.yml`)
+
+**Trigger:**
+- Push to `master` or `release/*` branches
+- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `CIBoardsTest/**`, etc.)
+- Manual workflow dispatch
+
+**Purpose:** Validate `upload.pattern` → `flasher.py` → esptool on every supported SoC, using a mock bootloader. Each tool uploads the same sketch **twice** per SoC (second flash exercises `--diff-with`).
+
+| Tool | Underlying | Install script |
+|------|------------|----------------|
+| `cli` | `arduino-cli` | `install-arduino-cli.sh` |
+| `builder` | arduino-nightly `processing.app.Base --upload` | `install-arduino-builder.sh` |
+
+The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink + `get.py`), not Board Manager.
+
+**Jobs:**
+
+#### `mock-upload`
+**Matrix:** `ubuntu-latest`, `windows-latest`, `macos-26-intel` (3 parallel jobs)
+
+Each job loops all `CORE_SOCS` (8 chips): `start_mock_bootloader` (chip auto-detect by default) → cli twice → builder twice → `stop_mock_bootloader`.
+
+**Per-job setup:** Python + pyserial, `pip install esp32-mock-bootloader==$(cat .github/esp32-mock-bootloader-version)` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), libs cache (same key as `push.yml`), xvfb on Linux, `pip install esptool` + `MOCK_ESPTOOL_OVERRIDE=1` on all matrix OSes until bundled esptool supports `socket://`.
+
+The mock listens on TCP and upload tools use `socket://127.0.0.1:9876` on every OS (same as `test_mock_bootloader.py`). Older bundled esptool builds may lack `socket://` in vendored pyserial; `MOCK_ESPTOOL_OVERRIDE` routes `flasher.py` through pip esptool until the esptool packaging fix is released and picked up by the core.
+
+**CI entry script:** `.github/scripts/test-mock-upload.sh` (sources `mock_upload_lib.sh`; no args in GHA).
+
+**Libraries:** `mock_upload_lib.sh` (bootloader, esptool override, twice-upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
+
+**Local commands:**
+
+```bash
+# Install mock bootloader (see https://github.com/espressif/esp32-mock-bootloader):
+pip install esp32-mock-bootloader
+
+# flasher.py integration only (protocol tests live in esp32-mock-bootloader repo):
+python3 .github/scripts/ci_testing/test_mock_bootloader.py
+
+# Full upload pipeline locally (requires pip esptool until bundled fix lands):
+MOCK_ESPTOOL_OVERRIDE=1 bash .github/scripts/test-mock-upload.sh cli esp32
+
+# Full matrix locally (all SoCs, cli + builder):
+bash .github/scripts/test-mock-upload.sh
+
+# Filter by tool and/or SoC:
+bash .github/scripts/test-mock-upload.sh cli esp32c3
+bash .github/scripts/test-mock-upload.sh builder esp32s3
+
+# Thin local wrapper (not used by GHA):
+bash .github/scripts/ci_testing/mock_upload_validation.sh
+```
+
+`MOCK_ESPTOOL_OVERRIDE=1` replaces bundled `tools/esptool/esptool` with pip `esptool` for the duration of the run (restored on exit). GHA sets this on all matrix OSes; remove that workflow step once bundled esptool supports `socket://`.
+
+FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.sh` (compile CI defaults + `UploadSpeed=115200`).
+
+**Note:** Scripts under `.github/scripts/ci_testing/` are for local validation only; GHA does not run them.
 
 #### 2. `build-arduino-linux`
 **Runs on:** Ubuntu-latest (matrix of chunks)
