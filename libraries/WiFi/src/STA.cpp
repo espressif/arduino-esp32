@@ -535,6 +535,10 @@ bool STAClass::connect(
 #endif /* CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT */
 
 bool STAClass::disconnect(bool eraseap, unsigned long timeout) {
+  if (!started()) {
+    return true;
+  }
+
   esp_err_t err = esp_wifi_disconnect();
   if (err != ESP_OK) {
     log_e("STA disconnect failed! 0x%x: %s", err, esp_err_to_name(err));
