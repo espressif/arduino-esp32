@@ -25,7 +25,7 @@
 #include "OThread.h"
 
 OpenThread threadCommissionerNode;
-DataSet    dataset;
+DataSet dataset;
 
 // Pre-Shared Key for Device. Joiners must use the same string.
 const char PSKD[] = "J01NME";
@@ -169,8 +169,8 @@ void loop() {
     const char *commState = "DISABLED";
     switch (threadCommissionerNode.getCommissionerState()) {
       case OT_COMMISSIONER_STATE_PETITION: commState = "PETITION"; break;
-      case OT_COMMISSIONER_STATE_ACTIVE:   commState = "ACTIVE";   break;
-      default: break;
+      case OT_COMMISSIONER_STATE_ACTIVE:   commState = "ACTIVE"; break;
+      default:                             break;
     }
     Serial.printf("Commissioner:   %s\r\n", commState);
 

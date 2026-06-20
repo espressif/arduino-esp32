@@ -1079,7 +1079,7 @@ otError OpenThread::setNetworkName(const char *name) {
 // =====================================================================
 
 bool OpenThread::getEui64(uint8_t out[8]) const {
- if (!out) {
+  if (!out) {
     log_w("getEui64: null output buffer");
     return false;
   }

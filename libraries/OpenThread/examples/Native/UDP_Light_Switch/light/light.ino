@@ -36,29 +36,28 @@
 
 // -------------------- Thread network configuration --------------------
 // Pre-Shared Key for Device: every joiner must present this string.
-const char     PSKD[]            = "J01NME";
+const char PSKD[] = "J01NME";
 // How long the joiner entry stays alive on the commissioner. Switches that
 // power up within this window can be commissioned without further action.
 const uint32_t JOINER_WINDOW_SEC = 600;  // 10 min
 
 // Hard-coded operational dataset so subsequent power cycles always join the
 // same Thread network and switches can find the light again.
-const uint8_t  OT_CHANNEL = 15;
-const uint16_t OT_PAN_ID  = 0xABCD;
-const uint8_t  OT_EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xDE, 0xAD, 0x00, 0xBE, 0xEF, 0x00, 0xCA, 0xFE};
-const uint8_t  OT_NETKEY[OT_NETWORK_KEY_SIZE]  = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-const char     OT_NETWORK_NAME[]               = "ESP_OT_UDP_IoT";
+const uint8_t OT_CHANNEL = 15;
+const uint16_t OT_PAN_ID = 0xABCD;
+const uint8_t OT_EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xDE, 0xAD, 0x00, 0xBE, 0xEF, 0x00, 0xCA, 0xFE};
+const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+const char OT_NETWORK_NAME[] = "ESP_OT_UDP_IoT";
 
 // -------------------- UDP IoT configuration ----------------------------
 // Realm-local multicast group that the light subscribes to. Switches send
 // commands to this group + LIGHT_PORT so that they do not need to know
 // the light's individual IPv6 address. ff03::/16 is mesh-wide on Thread.
-const uint8_t   LIGHT_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
+const uint8_t LIGHT_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
 const IPAddress LIGHT_GROUP(IPv6, LIGHT_GROUP_BYTES);
 // Use an application port that does not collide with OpenThread internals.
 // 5683/5684 are CoAP/CoAPs ports and 61631 is Thread TMF CoAP.
-const uint16_t  LIGHT_PORT = 5051;
+const uint16_t LIGHT_PORT = 5051;
 
 OThreadUDP otUdp;
 
@@ -236,10 +235,10 @@ void loop() {
   // Drain pending UDP commands.
   while (int n = otUdp.parsePacket()) {
     char buf[32];
-    int  got = otUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
+    int got = otUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
     buf[got] = '\0';
     IPAddress src = otUdp.remoteIP();
-    uint16_t  sp  = otUdp.remotePort();
+    uint16_t sp = otUdp.remotePort();
 
     Serial.printf("RX [%s]:%u -> '%s'\n", src.toString().c_str(), sp, buf);
 

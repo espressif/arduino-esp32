@@ -228,9 +228,9 @@ public:
 
 private:
   static otInstance *mInstance;
-  static DataSet mCurrentDataset;        // Current dataset being used by the OpenThread instance.
-  static otNetworkKey mNetworkKey;       // Static storage to persist after function return
-  static otExtAddress mFactoryEui64;     // Cached factory-assigned EUI-64
+  static DataSet mCurrentDataset;     // Current dataset being used by the OpenThread instance.
+  static otNetworkKey mNetworkKey;    // Static storage to persist after function return
+  static otExtAddress mFactoryEui64;  // Cached factory-assigned EUI-64
 
   // Joiner synchronization
 #if CONFIG_OPENTHREAD_JOINER

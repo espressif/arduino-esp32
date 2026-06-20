@@ -49,14 +49,14 @@ inline void ipToOt(const IPAddress &in, otIp6Address &out) {
   }
 }
 
-[[maybe_unused]] inline IPAddress otToIp(const otIp6Address &in) {
+[[maybe_unused]]
+inline IPAddress otToIp(const otIp6Address &in) {
   return IPAddress(IPv6, in.mFields.m8);
 }
 
 }  // namespace
 
-OThreadUDP::OThreadUDP()
-  : _open(false), _txMessage(nullptr), _txPeerPort(0), _rxQueue(nullptr), _currentOffset(0), _hasCurrent(false), _hasMulticast(false) {
+OThreadUDP::OThreadUDP() : _open(false), _txMessage(nullptr), _txPeerPort(0), _rxQueue(nullptr), _currentOffset(0), _hasCurrent(false), _hasMulticast(false) {
   memset(&_sock, 0, sizeof(_sock));
   memset(&_txPeerAddr, 0, sizeof(_txPeerAddr));
   memset(&_current, 0, sizeof(_current));

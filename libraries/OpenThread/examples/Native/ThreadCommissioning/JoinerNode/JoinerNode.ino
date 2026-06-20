@@ -22,7 +22,7 @@
 OpenThread threadJoinerNode;
 
 // Must match the commissioner side (CommissionerNode sketch).
-const char    PSKD[]  = "J01NME";
+const char PSKD[] = "J01NME";
 
 // IEEE 802.15.4 channel the Joiner will use to attach.
 //
@@ -72,12 +72,13 @@ void setup() {
   // Run the Joiner state machine. Retries on transient failures so the user
   // can power-up the CommissionerNode at any time.
   while (!joined) {
-    otError err = threadJoinerNode.startJoiner(PSKD, /*provisioningUrl=*/nullptr,
-                                              /*vendorName=*/nullptr,
-                                              /*vendorModel=*/nullptr,
-                                              /*vendorSwVersion=*/nullptr,
-                                              /*vendorData=*/nullptr,
-                                              JOIN_TIMEOUT_MS);
+    otError err = threadJoinerNode.startJoiner(
+      PSKD, /*provisioningUrl=*/nullptr,
+      /*vendorName=*/nullptr,
+      /*vendorModel=*/nullptr,
+      /*vendorSwVersion=*/nullptr,
+      /*vendorData=*/nullptr, JOIN_TIMEOUT_MS
+    );
     if (err == OT_ERROR_NONE) {
       Serial.println("Joiner: commissioning SUCCESS.");
       joined = true;
@@ -87,7 +88,7 @@ void setup() {
       case OT_ERROR_SECURITY:         Serial.println("Joiner: PSKd mismatch. Check CommissionerNode PSKD."); break;
       case OT_ERROR_NOT_FOUND:        Serial.println("Joiner: no joinable network found. Is the CommissionerNode running?"); break;
       case OT_ERROR_RESPONSE_TIMEOUT: Serial.println("Joiner: commissioner did not respond in time."); break;
-      default:                        Serial.printf("Joiner: error %d.\r\n", err);                       break;
+      default:                        Serial.printf("Joiner: error %d.\r\n", err); break;
     }
     delay(2000);
   }
