@@ -56,7 +56,7 @@ OThread.addJoiner("J01NME", nullptr, 600 /* seconds */);
 // 4) Bind UDP server on ff03::abcd:5051.
 const uint8_t groupBytes[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
-Udp.beginMulticast(IPAddress(IPv6, groupBytes), 5051);
+otUdp.beginMulticast(IPAddress(IPv6, groupBytes), 5051);
 
 // 5) loop(): parsePacket() -> apply -> beginPacket(src,port) ACK -> endPacket().
 ```
@@ -71,7 +71,7 @@ Udp.beginMulticast(IPAddress(IPv6, groupBytes), 5051);
 | `STATUS`         | (no change, query only)             | `ACK ON/OFF`|
 | anything else    | logged and dropped                  | (no ACK)    |
 
-ACKs are sent **unicast** back to `Udp.remoteIP() : Udp.remotePort()` so
+ACKs are sent **unicast** back to `otUdp.remoteIP() : otUdp.remotePort()` so
 that only the switch that issued the command sees the response.
 
 ## Expected serial output

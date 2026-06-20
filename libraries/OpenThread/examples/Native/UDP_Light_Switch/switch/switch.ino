@@ -52,7 +52,7 @@ const uint32_t  RESUME_ATTACH_TIMEOUT_MS = 30000;
 const uint8_t   REATTACH_AFTER_MISSED = 3;
 const uint32_t  DETACHED_REATTACH_MS  = 15000;
 
-OThreadUDP Udp;
+OThreadUDP otUdp;
 static uint8_t s_consecutiveNoAck = 0;
 static uint32_t s_lastAttachedMs = 0;
 
@@ -155,17 +155,17 @@ static bool joinThreadNetwork() {
 static void drainRx() {
   // Discard any stray packets sitting in the RX queue before a new TX so
   // the ACK we are about to wait for is not confused with old traffic.
-  while (Udp.parsePacket() > 0) {
-    while (Udp.available()) {
-      Udp.read();
+  while (otUdp.parsePacket() > 0) {
+    while (otUdp.available()) {
+      otUdp.read();
     }
   }
 }
 
 static bool reopenUdpSocket() {
-  Udp.stop();
+  otUdp.stop();
   delay(50);
-  if (!Udp.begin(LIGHT_PORT)) {
+  if (!otUdp.begin(LIGHT_PORT)) {
     Serial.println("UDP begin failed after re-open.");
     return false;
   }
@@ -175,7 +175,7 @@ static bool reopenUdpSocket() {
 static void forceReattach() {
   Serial.println("Light unreachable; forcing Thread re-attach...");
   showConnectionLed(false);
-  Udp.stop();
+  otUdp.stop();
   OThread.stop();
   delay(200);
   OThread.start();
@@ -198,12 +198,12 @@ static bool sendCommand(const char *cmd) {
   drainRx();
 
   Serial.printf("TX [%s]:%u -> '%s'\n", LIGHT_GROUP.toString().c_str(), LIGHT_PORT, cmd);
-  if (!Udp.beginPacket(LIGHT_GROUP, LIGHT_PORT)) {
+  if (!otUdp.beginPacket(LIGHT_GROUP, LIGHT_PORT)) {
     Serial.println("beginPacket failed");
     return false;
   }
-  Udp.write((const uint8_t *)cmd, strlen(cmd));
-  if (!Udp.endPacket()) {
+  otUdp.write((const uint8_t *)cmd, strlen(cmd));
+  if (!otUdp.endPacket()) {
     Serial.println("endPacket failed");
     return false;
   }
@@ -213,13 +213,13 @@ static bool sendCommand(const char *cmd) {
   // would toggle the lamp a second time.
   uint32_t start = millis();
   while (millis() - start < ACK_TIMEOUT_MS) {
-    int n = Udp.parsePacket();
+    int n = otUdp.parsePacket();
     if (n > 0) {
       char buf[32];
-      int  got = Udp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
+      int  got = otUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
       buf[got] = '\0';
-      IPAddress remote = Udp.remoteIP();
-      Serial.printf("ACK from [%s]:%u <- '%s'\n", remote.toString().c_str(), Udp.remotePort(), buf);
+      IPAddress remote = otUdp.remoteIP();
+      Serial.printf("ACK from [%s]:%u <- '%s'\n", remote.toString().c_str(), otUdp.remotePort(), buf);
       if (isOwnAddress(remote)) {
         Serial.println("Ignoring datagram from own address.");
         continue;
@@ -272,7 +272,7 @@ void setup() {
   // Bind UDP on the same port the light replies to. We do NOT subscribe
   // to ff03::abcd here because we are not a recipient of multicast
   // commands - the light's ACK comes back as unicast on this port.
-  if (!Udp.begin(LIGHT_PORT)) {
+  if (!otUdp.begin(LIGHT_PORT)) {
     Serial.println("UDP begin failed!");
     while (1) {
       delay(1000);
@@ -297,7 +297,7 @@ void loop() {
     return;
   }
   s_lastAttachedMs = millis();
-  showConnectionLed((bool)Udp);
+  showConnectionLed((bool)otUdp);
 
   checkButton();
   delay(10);

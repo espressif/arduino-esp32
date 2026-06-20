@@ -312,7 +312,7 @@ Basic UDP Echo
                                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
     IPAddress server(IPv6, serverBytes);
 
-    OThreadUDP Udp;
+    OThreadUDP otUdp;
 
     void setup() {
         Serial.begin(115200);
@@ -326,23 +326,23 @@ Basic UDP Echo
         OThread.start();
 
         // Bind a UDP socket on port 7, any IPv6 local address.
-        Udp.begin(7);
+        otUdp.begin(7);
     }
 
     void loop() {
         // Send "Hello" to the link-local all-nodes group, port 7.
-        Udp.beginPacket(server, 7);
-        Udp.write((const uint8_t *)"Hello", 5);
-        Udp.endPacket();
+        otUdp.beginPacket(server, 7);
+        otUdp.write((const uint8_t *)"Hello", 5);
+        otUdp.endPacket();
 
         // Drain any pending datagrams.
-        while (int n = Udp.parsePacket()) {
+        while (int n = otUdp.parsePacket()) {
             char buf[64];
-            int  r = Udp.read(buf, sizeof(buf) - 1);
+            int  r = otUdp.read(buf, sizeof(buf) - 1);
             buf[r] = 0;
             Serial.printf("From [%s]:%u -> '%s'\r\n",
-                          Udp.remoteIP().toString().c_str(),
-                          Udp.remotePort(), buf);
+                          otUdp.remoteIP().toString().c_str(),
+                          otUdp.remotePort(), buf);
         }
 
         delay(1000);
@@ -353,31 +353,31 @@ Multicast Receiver
 
 .. code-block:: arduino
 
-    OThreadUDP Udp;
+    OThreadUDP otUdp;
     const uint8_t realmLocalBytes[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
     IPAddress realmLocalAllNodes(IPv6, realmLocalBytes);  // ff03::1
 
     void setup() {
         // ... bring up Thread ...
-        Udp.beginMulticast(realmLocalAllNodes, 7);
+        otUdp.beginMulticast(realmLocalAllNodes, 7);
     }
 
     void loop() {
-        if (int n = Udp.parsePacket()) {
+        if (int n = otUdp.parsePacket()) {
             char buf[64];
-            int  r = Udp.read(buf, sizeof(buf) - 1);
+            int  r = otUdp.read(buf, sizeof(buf) - 1);
             buf[r] = 0;
             Serial.printf("Multicast from [%s]:%u -> '%s'\r\n",
-                          Udp.remoteIP().toString().c_str(),
-                          Udp.remotePort(), buf);
+                          otUdp.remoteIP().toString().c_str(),
+                          otUdp.remotePort(), buf);
         }
     }
 
 Best Practices
 --------------
 
-* **Open after attach**: only call ``Udp.begin()`` after the device is
+* **Open after attach**: only call ``otUdp.begin()`` after the device is
   attached to the network (role is Child / Router / Leader). Binding
   before attach succeeds, but no traffic will flow until the IPv6
   stack acquires its mesh-local address.

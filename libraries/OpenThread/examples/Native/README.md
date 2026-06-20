@@ -20,8 +20,8 @@ directly, for example:
 - `OThread.start()`
 - `OThread.startJoiner(...)` then `OThread.start()` on success (Joiner side)
 - `OThread.start()` then `OThread.startCommissioner()` when attached (Commissioner side)
-- `Udp.begin(...)`
-- `Udp.beginPacket(...)`
+- `otUdp.begin(...)`
+- `otUdp.beginPacket(...)`
 
 This style keeps application logic in structured C++ code, gives clearer return
 values (`otError`, booleans, typed getters), and avoids parsing CLI text output.
@@ -83,10 +83,10 @@ traffic over the Thread mesh without using lwIP.
 Typical usage:
 
 ```cpp
-Udp.begin(localPort);
-Udp.beginPacket(peerAddress, peerPort);
-Udp.write(payload, length);
-Udp.endPacket();
+otUdp.begin(localPort);
+otUdp.beginPacket(peerAddress, peerPort);
+otUdp.write(payload, length);
+otUdp.endPacket();
 ```
 
 ## Native vs CLI: quick comparison

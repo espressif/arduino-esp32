@@ -60,7 +60,7 @@ const IPAddress LIGHT_GROUP(IPv6, LIGHT_GROUP_BYTES);
 // 5683/5684 are CoAP/CoAPs ports and 61631 is Thread TMF CoAP.
 const uint16_t  LIGHT_PORT = 5051;
 
-OThreadUDP Udp;
+OThreadUDP otUdp;
 
 // -------------------- Lamp state ---------------------------------------
 bool lampOn = false;
@@ -104,17 +104,17 @@ static void applyLamp(bool on) {
 
 static void replyAck(IPAddress to, uint16_t port) {
   const char *resp = lampOn ? "ACK ON" : "ACK OFF";
-  Udp.beginPacket(to, port);
-  Udp.write((const uint8_t *)resp, strlen(resp));
-  Udp.endPacket();
+  otUdp.beginPacket(to, port);
+  otUdp.write((const uint8_t *)resp, strlen(resp));
+  otUdp.endPacket();
 }
 
 static bool openUdpSocket() {
-  Udp.stop();
+  otUdp.stop();
   delay(50);
   // beginMulticast() subscribes to LIGHT_GROUP and also accepts unicast packets
   // to our addresses on LIGHT_PORT.
-  return Udp.beginMulticast(LIGHT_GROUP, LIGHT_PORT);
+  return otUdp.beginMulticast(LIGHT_GROUP, LIGHT_PORT);
 }
 
 static void networkSetup() {
@@ -198,7 +198,7 @@ void setup() {
 static bool restartThreadNetwork() {
   Serial.println("Light detached; restarting Thread on the persisted dataset...");
   showConnectionLed(false);
-  Udp.stop();
+  otUdp.stop();
   OThread.stop();
   delay(200);
   OThread.start();
@@ -234,12 +234,12 @@ void loop() {
   }
 
   // Drain pending UDP commands.
-  while (int n = Udp.parsePacket()) {
+  while (int n = otUdp.parsePacket()) {
     char buf[32];
-    int  got = Udp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
+    int  got = otUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
     buf[got] = '\0';
-    IPAddress src = Udp.remoteIP();
-    uint16_t  sp  = Udp.remotePort();
+    IPAddress src = otUdp.remoteIP();
+    uint16_t  sp  = otUdp.remotePort();
 
     Serial.printf("RX [%s]:%u -> '%s'\n", src.toString().c_str(), sp, buf);
 

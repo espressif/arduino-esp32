@@ -67,12 +67,12 @@ OThread.startJoiner("J01NME", nullptr, nullptr, nullptr,
 OThread.start();                          // enable Thread with the new dataset
 
 // 3) Bind UDP on the same port the light replies to (5051).
-Udp.begin(5051);
+otUdp.begin(5051);
 
 // 4) On BOOT press: send "TOGGLE" to ff03::abcd:5051 and wait for the ACK.
-Udp.beginPacket(LIGHT_GROUP, 5051);
-Udp.write("TOGGLE", 6);
-Udp.endPacket();
+otUdp.beginPacket(LIGHT_GROUP, 5051);
+otUdp.write("TOGGLE", 6);
+otUdp.endPacket();
 // then parsePacket() for up to ACK_TIMEOUT_MS waiting for "ACK ON"/"ACK OFF"
 ```
 

@@ -45,7 +45,7 @@ const bool     ENABLE_SLEEPY_END_DEV = true;
 const uint32_t SED_POLL_PERIOD_MS    = 1000;
 const uint32_t CHILD_TIMEOUT_SEC     = 300;
 
-OThreadUDP Udp;
+OThreadUDP otUdp;
 static IPAddress s_collectorIp;
 static char s_nodeId[16] = {0};
 static uint32_t s_seq = 0;  // Last sequence confirmed by the collector.
@@ -174,16 +174,16 @@ static long parseAckSeq(const char *payload) {
 }
 
 static void reopenUdpSocket() {
-  Udp.stop();
+  otUdp.stop();
   delay(50);
-  if (!Udp.begin(COLLECTOR_PORT)) {
-    Serial.println("Udp.begin failed after re-open.");
+  if (!otUdp.begin(COLLECTOR_PORT)) {
+    Serial.println("otUdp.begin failed after re-open.");
   }
 }
 
 static void forceReattach() {
   Serial.println("Collector unreachable; forcing Thread re-attach...");
-  Udp.stop();
+  otUdp.stop();
   OThread.stop();
   delay(200);
   OThread.start();
@@ -211,18 +211,18 @@ static long sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv
   long bestAcked = -1;
   for (uint8_t attempt = 0; attempt <= TX_RETRIES; attempt++) {
     // Drain stale packets before sending this attempt.
-    while (Udp.parsePacket() > 0) {
-      while (Udp.available()) {
-        Udp.read();
+    while (otUdp.parsePacket() > 0) {
+      while (otUdp.available()) {
+        otUdp.read();
       }
     }
 
-    if (!Udp.beginPacket(s_collectorIp, COLLECTOR_PORT)) {
+    if (!otUdp.beginPacket(s_collectorIp, COLLECTOR_PORT)) {
       Serial.println("beginPacket failed");
       continue;
     }
-    Udp.write((const uint8_t *)frame, strlen(frame));
-    if (!Udp.endPacket()) {
+    otUdp.write((const uint8_t *)frame, strlen(frame));
+    if (!otUdp.endPacket()) {
       Serial.println("endPacket failed");
       continue;
     }
@@ -231,13 +231,13 @@ static long sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv
 
     uint32_t started = millis();
     while (millis() - started < ACK_TIMEOUT_MS) {
-      int n = Udp.parsePacket();
+      int n = otUdp.parsePacket();
       if (n > 0) {
         char ack[64];
-        int got = Udp.read(ack, (n < (int)sizeof(ack) - 1) ? n : (int)sizeof(ack) - 1);
+        int got = otUdp.read(ack, (n < (int)sizeof(ack) - 1) ? n : (int)sizeof(ack) - 1);
         ack[got] = '\0';
-        Serial.printf("ACK [%s]:%u <- '%s'\n", Udp.remoteIP().toString().c_str(), Udp.remotePort(), ack);
-        if (Udp.remoteIP() != s_collectorIp) {
+        Serial.printf("ACK [%s]:%u <- '%s'\n", otUdp.remoteIP().toString().c_str(), otUdp.remotePort(), ack);
+        if (otUdp.remoteIP() != s_collectorIp) {
           Serial.println("Ignoring ACK from unexpected source.");
           continue;
         }
@@ -283,8 +283,8 @@ void setup() {
   Serial.printf("Collector (Leader RLOC): %s\n", s_collectorIp.toString().c_str());
 
   // Use a fixed source port for easier troubleshooting.
-  if (!Udp.begin(COLLECTOR_PORT)) {
-    Serial.println("Udp.begin failed. Halting.");
+  if (!otUdp.begin(COLLECTOR_PORT)) {
+    Serial.println("otUdp.begin failed. Halting.");
     while (1) {
       delay(1000);
     }

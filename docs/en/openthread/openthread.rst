@@ -469,7 +469,7 @@ Sending and receiving IPv6 UDP datagrams over the Thread mesh, using
     const uint8_t allNodesBytes[16] = {0xff, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
     IPAddress allNodes(IPv6, allNodesBytes);   // ff02::1
-    OThreadUDP Udp;
+    OThreadUDP otUdp;
 
     void setup() {
         Serial.begin(115200);
@@ -478,21 +478,21 @@ Sending and receiving IPv6 UDP datagrams over the Thread mesh, using
         OThread.networkInterfaceUp();
         OThread.start();
 
-        Udp.begin(7);                          // bind to UDP port 7
+        otUdp.begin(7);                          // bind to UDP port 7
     }
 
     void loop() {
-        Udp.beginPacket(allNodes, 7);
-        Udp.write((const uint8_t *)"hi", 2);
-        Udp.endPacket();
+        otUdp.beginPacket(allNodes, 7);
+        otUdp.write((const uint8_t *)"hi", 2);
+        otUdp.endPacket();
 
-        if (int n = Udp.parsePacket()) {
+        if (int n = otUdp.parsePacket()) {
             char buf[64];
-            int  r  = Udp.read(buf, sizeof(buf) - 1);
+            int  r  = otUdp.read(buf, sizeof(buf) - 1);
             buf[r]  = 0;
             Serial.printf("From [%s]:%u -> '%s'\r\n",
-                          Udp.remoteIP().toString().c_str(),
-                          Udp.remotePort(), buf);
+                          otUdp.remoteIP().toString().c_str(),
+                          otUdp.remotePort(), buf);
         }
 
         delay(1000);

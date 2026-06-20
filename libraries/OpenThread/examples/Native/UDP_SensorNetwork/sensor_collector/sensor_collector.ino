@@ -44,7 +44,7 @@ const uint32_t REPORT_PERIOD_MS   = 30000;
 const uint32_t NODE_OFFLINE_MS    = 95000;               // ~3 missed 30 s samples
 const uint32_t NODE_EVICT_MS      = 30UL * 60UL * 1000UL;  // free slots after 30 min
 
-OThreadUDP Udp;
+OThreadUDP otUdp;
 
 struct SensorRecord {
   bool      used;
@@ -134,21 +134,21 @@ static bool startCommissioner() {
 static void sendAck(const IPAddress &dstIp, uint16_t dstPort, const char *nodeId, uint32_t seq) {
   char ack[48];
   snprintf(ack, sizeof(ack), "OK,%s,%lu", nodeId, (unsigned long)seq);
-  if (Udp.beginPacket(dstIp, dstPort)) {
-    Udp.write((const uint8_t *)ack, strlen(ack));
-    Udp.endPacket();
+  if (otUdp.beginPacket(dstIp, dstPort)) {
+    otUdp.write((const uint8_t *)ack, strlen(ack));
+    otUdp.endPacket();
   }
 }
 
 static bool reopenUdpSocket() {
-  Udp.stop();
+  otUdp.stop();
   delay(50);
-  return Udp.begin(COLLECTOR_PORT);
+  return otUdp.begin(COLLECTOR_PORT);
 }
 
 static bool restartThreadNetwork() {
   Serial.println("Collector detached; restarting Thread on the persisted dataset...");
-  Udp.stop();
+  otUdp.stop();
   OThread.stop();
   delay(200);
   OThread.start();
@@ -305,8 +305,8 @@ void setup() {
 
   s_commissionerStarted = startCommissioner();
 
-  if (!Udp.begin(COLLECTOR_PORT)) {
-    Serial.println("Udp.begin failed. Halting.");
+  if (!otUdp.begin(COLLECTOR_PORT)) {
+    Serial.println("otUdp.begin failed. Halting.");
     while (1) {
       delay(1000);
     }
@@ -322,11 +322,11 @@ void loop() {
     }
   }
 
-  while (int n = Udp.parsePacket()) {
+  while (int n = otUdp.parsePacket()) {
     char buf[160];
-    int got = Udp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
+    int got = otUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
     buf[got] = '\0';
-    processPacket(buf, Udp.remoteIP(), Udp.remotePort());
+    processPacket(buf, otUdp.remoteIP(), otUdp.remotePort());
   }
 
   static uint32_t lastReport = 0;
