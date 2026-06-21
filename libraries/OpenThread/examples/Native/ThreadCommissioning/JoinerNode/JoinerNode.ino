@@ -36,7 +36,7 @@ const char PSKD[] = "J01NME";
 #define THREAD_CHANNEL 15
 #endif
 
-// How long to wait for the commissioner to finalise the join. 30 s is enough
+// How long to wait for the commissioner to finalize the join. 30 s is enough
 // for most setups; bump it up if your network is busy or far away.
 const uint32_t JOIN_TIMEOUT_MS = 30000;
 

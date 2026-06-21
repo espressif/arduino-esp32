@@ -101,7 +101,7 @@ The ``OpenThread`` class is the main entry point for Thread operations using the
 * **Device Role Management**: Getting and monitoring device role (Leader, Router, Child, Detached, Disabled).
 * **Dataset Management**: Setting and getting operational dataset parameters (offline via ``DataSet`` + ``commitDataSet`` or live via per-parameter setters).
 * **Joiner Role**: Synchronously attach a brand-new device to a Thread network using only a PSKd (Pre-Shared Key for Device).
-* **Commissioner Role**: Authorise remote Joiners on the network side using a PSKd.
+* **Commissioner Role**: Authorize remote Joiners on the network side using a PSKd.
 * **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses.
 * **Network Information**: Getting network name, channel, PAN ID, EUI-64, Thread version, TX power, and other network parameters.
 
@@ -218,7 +218,7 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 * **Native Examples Overview** - Describes the Native API examples and how to choose between them. `View Native examples README on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native>`_
 * **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_
 * **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_
-* **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorises a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_
+* **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorizes a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_
 * **UDP Light + Switch** - Demonstrates a Native UDP light server and one or more switch clients using Thread commissioning and application port ``5051``. `View UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP_Light_Switch>`_
 * **UDP Sensor Network** - Demonstrates a Native UDP collector and multiple sensor nodes, including application-level sequence ACKs, application port ``5050``, and optional Sleepy End Device behavior. `View UDP Sensor Network examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP_SensorNetwork>`_
 
@@ -317,7 +317,7 @@ And on the **commissioner** side, after the device has formed or resumed a netwo
 
 1. ``OThread.networkInterfaceUp();`` + ``OThread.start();`` - bring up Thread and wait until the role is no longer Detached / Disabled.
 2. ``OThread.startCommissioner();``    - blocks until ``OT_COMMISSIONER_STATE_ACTIVE``.
-3. ``OThread.addJoiner(PSKD);``        - authorise an incoming joiner (any EUI-64 by default, valid for 120 s).
+3. ``OThread.addJoiner(PSKD);``        - authorize an incoming joiner (any EUI-64 by default, valid for 120 s).
 
 For detailed API documentation see :doc:`openthread_core`, sections
 "Joiner Role" and "Commissioner Role". The

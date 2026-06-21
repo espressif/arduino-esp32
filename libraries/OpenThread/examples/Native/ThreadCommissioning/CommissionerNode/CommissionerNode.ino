@@ -9,7 +9,7 @@
  * IMPORTANT: becoming Commissioner is not the same as accepting joiners.
  * After this sketch prints "Press the button ...", press JOIN_BUTTON_PIN
  * (BOOT_PIN by default) to open the commissioning/joiner listening window.
- * Until the button is pressed, the JoinerNode will not be authorised.
+ * Until the button is pressed, the JoinerNode will not be authorized.
  *
  * Workflow:
  *   1. Configure and commit an Operational Dataset.

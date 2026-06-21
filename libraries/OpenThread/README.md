@@ -330,7 +330,7 @@ For best interoperability use `startJoiner(..., timeoutSec_for_commissioner * 10
 
 # Commissioner (Thread Commissioning - Leader Side)
 
-The `OThread` class also exposes the **other** side of the commissioning flow: petitioning the Commissioner role and authorising a remote joiner.
+The `OThread` class also exposes the **other** side of the commissioning flow: petitioning the Commissioner role and authorizing a remote joiner.
 
 The Commissioner must already be **attached** to the Thread network (typically as the Leader of a freshly-formed partition).
 
@@ -432,7 +432,7 @@ These build-time defines control the per-instance RX queue. Override them on the
 - [`light`](examples/Native/UDP_Light_Switch/light/light.ino) is the **server**. It boots as Thread Leader, resumes the persisted dataset when available, runs the **Commissioner** role (accepts joiners that present PSKd `J01NME`) and subscribes to the realm-local multicast group `ff03::abcd` on UDP port `5051`. For every `ON` / `OFF` / `TOGGLE` / `STATUS` command it receives, it updates the on-board RGB LED ("lamp") and unicasts an `ACK ON` / `ACK OFF` confirmation back to the sender.
 - [`switch`](examples/Native/UDP_Light_Switch/switch/switch.ino) is the **client**. It boots **without** any local DataSet, runs the **Joiner** state machine, and once attached opens a UDP socket on the same port. Pressing the BOOT button sends `TOGGLE` to `ff03::abcd` on UDP port `5051` and waits for the light's confirmation packet within 1 s.
 
-One light can serve **many switches** in parallel - just flash `switch.ino` on additional H2 / C6 / C5 boards within the joining window. The pair demonstrates an end-to-end IoT pattern (commissioning + many-to-one multicast control + per-command acknowledgement) using only the Native OpenThread API. Port `5051` is used to avoid OpenThread-reserved CoAP ports such as `5683`, `5684`, and `61631`.
+One light can serve **many switches** in parallel - just flash `switch.ino` on additional H2 / C6 / C5 boards within the joining window. The pair demonstrates an end-to-end IoT pattern (commissioning + many-to-one multicast control + per-command acknowledgment) using only the Native OpenThread API. Port `5051` is used to avoid OpenThread-reserved CoAP ports such as `5683`, `5684`, and `61631`.
 
 For a telemetry-oriented deployment with many sleepy sensors, see:
 

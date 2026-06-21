@@ -163,7 +163,7 @@ Some examples also require:
   instead of carrying the network key in source code.
 - Use `UDP_Light_Switch/` if you want a compact command/ACK example over UDP.
 - Use `UDP_SensorNetwork/` if you want a more robust telemetry pattern with
-  application-level acknowledgements and node liveness tracking.
+  application-level acknowledgments and node liveness tracking.
 
 ## Practical guidance
 
