@@ -36,7 +36,7 @@ Library methods are provided to:
    - determine data types stored against a key;
    - determine the number of key entries in the namespace.
 
-Preferences directly supports the following data types:
+Keys are ASCII strings; the maximum key length is currently 15 characters. Preferences directly supports the following data types:
 
 .. table:: **Table 1 — Preferences Data Types**
    :align: center
