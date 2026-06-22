@@ -59,8 +59,11 @@ static const uint8_t D48 = PIN_IO48;  // Digital
 static const uint8_t T48 = PIN_IO48;  // Touch
 
 // Button
-#define PIN_BUTTON 21
-#define BUTTON 21
+#ifndef SENSEBOX_EYE_BUTTON_PIN
+  #define SENSEBOX_EYE_BUTTON_PIN 21
+#endif
+#define PIN_BUTTON SENSEBOX_EYE_BUTTON_PIN
+#define BUTTON     SENSEBOX_EYE_BUTTON_PIN
 
 // =============================================
 // SD Card

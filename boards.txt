@@ -43568,6 +43568,11 @@ sensebox_eye.menu.EraseFlash.none.upload.erase_cmd=
 sensebox_eye.menu.EraseFlash.all=Enabled
 sensebox_eye.menu.EraseFlash.all.upload.erase_cmd=-e
 
+sensebox_eye.menu.Revision.v15=v1.5 and above
+sensebox_eye.menu.Revision.v15.build.defines=-DSENSEBOX_EYE_BUTTON_PIN=21
+sensebox_eye.menu.Revision.v14=v1.4 and below
+sensebox_eye.menu.Revision.v14.build.defines=-DSENSEBOX_EYE_BUTTON_PIN=47
+
 ##############################################################
 
 nano_nora.name=Arduino Nano ESP32
