@@ -10,10 +10,10 @@
 #define USB_SERIAL       ""  // Empty string for MAC address
 
 // Default USB FirmwareMSC Settings
-#define USB_FW_MSC_VENDOR_ID        "senseBox"     // max 8 chars
+#define USB_FW_MSC_VENDOR_ID        "senseBox"         // max 8 chars
 #define USB_FW_MSC_PRODUCT_ID       "MCU Eye ESP32S3"  // max 16 chars
-#define USB_FW_MSC_PRODUCT_REVISION "1.5"      // max 4 chars
-#define USB_FW_MSC_VOLUME_NAME      "senseBox"     // max 11 chars
+#define USB_FW_MSC_PRODUCT_REVISION "1.5"              // max 4 chars
+#define USB_FW_MSC_VOLUME_NAME      "senseBox"         // max 11 chars
 #define USB_FW_MSC_SERIAL_NUMBER    0x00000000
 
 #define PIN_RGB_LED 45  // RGB LED
@@ -60,7 +60,7 @@ static const uint8_t T48 = PIN_IO48;  // Touch
 
 // Button
 #ifndef SENSEBOX_EYE_BUTTON_PIN
-  #define SENSEBOX_EYE_BUTTON_PIN 21
+#define SENSEBOX_EYE_BUTTON_PIN 21
 #endif
 #define PIN_BUTTON SENSEBOX_EYE_BUTTON_PIN
 #define BUTTON     SENSEBOX_EYE_BUTTON_PIN
