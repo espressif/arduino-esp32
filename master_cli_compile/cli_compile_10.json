@@ -292,6 +292,54 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/SD/examples/SD_time",
+                "sizes": [{
+                        "flash_bytes": 1083403,
+                        "flash_percentage": 83,
+                        "ram_bytes": 49264,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 303406,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17820,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+                "sizes": [{
+                        "flash_bytes": 335424,
+                        "flash_percentage": 26,
+                        "ram_bytes": 17816,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1054035,
+                        "flash_percentage": 80,
+                        "ram_bytes": 49004,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/Ticker/examples/Blinker",
+                "sizes": [{
+                        "flash_bytes": 300194,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17844,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Ticker/examples/TickerBasic",
+                "sizes": [{
+                        "flash_bytes": 299980,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17788,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Ticker/examples/TickerParameter",
                 "sizes": [{
                         "flash_bytes": 300024,
@@ -395,60 +443,60 @@
                         "ram_bytes": 51840,
                         "ram_percentage": 16
                         }]
-                },
-{"name": "libraries/WebServer/examples/HttpAdvancedAuth",
-                "sizes": [{
-                        "flash_bytes": 1122447,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54176,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpAuthCallback",
-                "sizes": [{
-                        "flash_bytes": 1123143,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54312,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
-                "sizes": [{
-                        "flash_bytes": 1122459,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54200,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuth",
-                "sizes": [{
-                        "flash_bytes": 1122507,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54160,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1",
-                "sizes": [{
-                        "flash_bytes": 1131659,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54176,
-                        "ram_percentage": 17
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuthSHA1orBearerToken",
-                "sizes": [{
-                        "flash_bytes": 1132353,
-                        "flash_percentage": 86,
-                        "ram_bytes": 54192,
-                        "ram_percentage": 17
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/RainMaker/examples/RMakerSwitch",
+                "sizes": [{
+                        "flash_bytes": 1822454,
+                        "flash_percentage": 45,
+                        "ram_bytes": 47224,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/SD/examples/SD_Test",
+                "sizes": [{
+                        "flash_bytes": 332634,
+                        "flash_percentage": 8,
+                        "ram_bytes": 15620,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SD/examples/SD_time",
+                "sizes": [{
+                        "flash_bytes": 1031534,
+                        "flash_percentage": 79,
+                        "ram_bytes": 43080,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+                "sizes": [{
+                        "flash_bytes": 263952,
+                        "flash_percentage": 20,
+                        "ram_bytes": 14900,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+                "sizes": [{
+                        "flash_bytes": 294776,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14296,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+                "sizes": [{
+                        "flash_bytes": 1001124,
+                        "flash_percentage": 76,
+                        "ram_bytes": 42228,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/Ticker/examples/Blinker",
                 "sizes": [{
                         "flash_bytes": 260784,
@@ -552,54 +600,6 @@
                         "ram_bytes": 45228,
                         "ram_percentage": 14
                         }]
-                },
-{"name": "libraries/WebServer/examples/Filters",
-                "sizes": [{
-                        "flash_bytes": 1053632,
-                        "flash_percentage": 80,
-                        "ram_bytes": 45680,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HelloServer",
-                "sizes": [{
-                        "flash_bytes": 1051308,
-                        "flash_percentage": 80,
-                        "ram_bytes": 45672,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpAdvancedAuth",
-                "sizes": [{
-                        "flash_bytes": 1080056,
-                        "flash_percentage": 82,
-                        "ram_bytes": 48008,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpAuthCallback",
-                "sizes": [{
-                        "flash_bytes": 1080748,
-                        "flash_percentage": 82,
-                        "ram_bytes": 48144,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpAuthCallbackInline",
-                "sizes": [{
-                        "flash_bytes": 1080064,
-                        "flash_percentage": 82,
-                        "ram_bytes": 48032,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/WebServer/examples/HttpBasicAuth",
-                "sizes": [{
-                        "flash_bytes": 1080114,
-                        "flash_percentage": 82,
-                        "ram_bytes": 47992,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
@@ -608,106 +608,106 @@
                 "sketches": [
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1112945,
+                        "flash_bytes": 1113033,
                         "flash_percentage": 85,
-                        "ram_bytes": 48772,
+                        "ram_bytes": 48804,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 1113009,
+                        "flash_bytes": 1113097,
                         "flash_percentage": 85,
-                        "ram_bytes": 48772,
+                        "ram_bytes": 48804,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/ThreadScan",
                 "sizes": [{
-                        "flash_bytes": 1112647,
+                        "flash_bytes": 1112739,
                         "flash_percentage": 85,
-                        "ram_bytes": 48748,
+                        "ram_bytes": 48780,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1137265,
+                        "flash_bytes": 1137355,
                         "flash_percentage": 87,
-                        "ram_bytes": 70548,
+                        "ram_bytes": 70580,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1139091,
+                        "flash_bytes": 1139179,
                         "flash_percentage": 87,
-                        "ram_bytes": 49060,
+                        "ram_bytes": 49092,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1112163,
+                        "flash_bytes": 1112251,
                         "flash_percentage": 85,
-                        "ram_bytes": 48748,
+                        "ram_bytes": 48780,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1006371,
+                        "flash_bytes": 1006459,
                         "flash_percentage": 77,
-                        "ram_bytes": 48388,
+                        "ram_bytes": 48420,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 1003035,
+                        "flash_bytes": 1003125,
                         "flash_percentage": 77,
-                        "ram_bytes": 48388,
+                        "ram_bytes": 48420,
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/PPP/examples/PPP_Basic",
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
                 "sizes": [{
-                        "flash_bytes": 557674,
-                        "flash_percentage": 43,
-                        "ram_bytes": 19484,
-                        "ram_percentage": 6
+                        "flash_bytes": 1012089,
+                        "flash_percentage": 77,
+                        "ram_bytes": 48764,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Preferences/examples/Prefs2Struct",
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
                 "sizes": [{
-                        "flash_bytes": 286670,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13704,
-                        "ram_percentage": 4
+                        "flash_bytes": 1009671,
+                        "flash_percentage": 77,
+                        "ram_bytes": 48316,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Preferences/examples/StartCounter",
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/light",
                 "sizes": [{
-                        "flash_bytes": 286332,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13712,
-                        "ram_percentage": 4
+                        "flash_bytes": 1033399,
+                        "flash_percentage": 79,
+                        "ram_bytes": 50064,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/SD/examples/SD_Test",
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/switch",
                 "sizes": [{
-                        "flash_bytes": 368412,
-                        "flash_percentage": 28,
-                        "ram_bytes": 15540,
-                        "ram_percentage": 5
+                        "flash_bytes": 1039577,
+                        "flash_percentage": 79,
+                        "ram_bytes": 50072,
+                        "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 290834,
-                        "flash_percentage": 22,
-                        "ram_bytes": 14860,
-                        "ram_percentage": 5
+                        "flash_bytes": 1031649,
+                        "flash_percentage": 79,
+                        "ram_bytes": 67372,
+                        "ram_percentage": 21
                         }]
                 }
 ]

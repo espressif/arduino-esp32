@@ -294,33 +294,81 @@
                 "sketches": [
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1186685,
+                        "flash_bytes": 1186773,
                         "flash_percentage": 91,
-                        "ram_bytes": 46804,
+                        "ram_bytes": 46820,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1159969,
-                        "flash_percentage": 88,
-                        "ram_bytes": 46492,
+                        "flash_bytes": 1160057,
+                        "flash_percentage": 89,
+                        "ram_bytes": 46508,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 1054437,
+                        "flash_bytes": 1054527,
                         "flash_percentage": 80,
-                        "ram_bytes": 46132,
+                        "ram_bytes": 46148,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 1051115,
+                        "flash_bytes": 1051205,
                         "flash_percentage": 80,
-                        "ram_bytes": 46132,
+                        "ram_bytes": 46148,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+                "sizes": [{
+                        "flash_bytes": 1059969,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46476,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+                "sizes": [{
+                        "flash_bytes": 1057661,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46044,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/light",
+                "sizes": [{
+                        "flash_bytes": 1080213,
+                        "flash_percentage": 82,
+                        "ram_bytes": 47184,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/switch",
+                "sizes": [{
+                        "flash_bytes": 1086099,
+                        "flash_percentage": 83,
+                        "ram_bytes": 47192,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_collector",
+                "sizes": [{
+                        "flash_bytes": 1079619,
+                        "flash_percentage": 82,
+                        "ram_bytes": 65100,
+                        "ram_percentage": 20
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_node",
+                "sizes": [{
+                        "flash_bytes": 1082535,
+                        "flash_percentage": 83,
+                        "ram_bytes": 46732,
                         "ram_percentage": 14
                         }]
                 },
@@ -395,54 +443,6 @@
                         "ram_bytes": 18540,
                         "ram_percentage": 6
                         }]
-                },
-{"name": "libraries/SD/examples/SD_time",
-                "sizes": [{
-                        "flash_bytes": 1083403,
-                        "flash_percentage": 83,
-                        "ram_bytes": 49264,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
-                "sizes": [{
-                        "flash_bytes": 303406,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17820,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
-                "sizes": [{
-                        "flash_bytes": 335424,
-                        "flash_percentage": 26,
-                        "ram_bytes": 17816,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
-                "sizes": [{
-                        "flash_bytes": 1054035,
-                        "flash_percentage": 80,
-                        "ram_bytes": 49004,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/Ticker/examples/Blinker",
-                "sizes": [{
-                        "flash_bytes": 300194,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17844,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/Ticker/examples/TickerBasic",
-                "sizes": [{
-                        "flash_bytes": 299980,
-                        "flash_percentage": 23,
-                        "ram_bytes": 17788,
-                        "ram_percentage": 5
-                        }]
                 }
 ]
 },
@@ -451,49 +451,97 @@
                 "sketches": [
 {"name": "libraries/OpenThread/examples/CLI/ThreadScan",
                 "sizes": [{
-                        "flash_bytes": 1104564,
+                        "flash_bytes": 1104656,
                         "flash_percentage": 84,
-                        "ram_bytes": 50208,
+                        "ram_bytes": 50240,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
                 "sizes": [{
-                        "flash_bytes": 1110918,
+                        "flash_bytes": 1111010,
                         "flash_percentage": 85,
-                        "ram_bytes": 72008,
+                        "ram_bytes": 72040,
                         "ram_percentage": 22
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
                 "sizes": [{
-                        "flash_bytes": 1112648,
+                        "flash_bytes": 1112740,
                         "flash_percentage": 85,
-                        "ram_bytes": 50528,
+                        "ram_bytes": 50560,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/onReceive",
                 "sizes": [{
-                        "flash_bytes": 1104082,
+                        "flash_bytes": 1104170,
                         "flash_percentage": 84,
-                        "ram_bytes": 50208,
+                        "ram_bytes": 50240,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
                 "sizes": [{
-                        "flash_bytes": 998292,
+                        "flash_bytes": 998380,
                         "flash_percentage": 76,
-                        "ram_bytes": 49864,
+                        "ram_bytes": 49896,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
                 "sizes": [{
-                        "flash_bytes": 994956,
+                        "flash_bytes": 995046,
                         "flash_percentage": 76,
-                        "ram_bytes": 49856,
+                        "ram_bytes": 49888,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+                "sizes": [{
+                        "flash_bytes": 1003718,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50232,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+                "sizes": [{
+                        "flash_bytes": 1001508,
+                        "flash_percentage": 76,
+                        "ram_bytes": 49784,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/light",
+                "sizes": [{
+                        "flash_bytes": 1025248,
+                        "flash_percentage": 78,
+                        "ram_bytes": 51524,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/switch",
+                "sizes": [{
+                        "flash_bytes": 1031064,
+                        "flash_percentage": 79,
+                        "ram_bytes": 51532,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_collector",
+                "sizes": [{
+                        "flash_bytes": 1005298,
+                        "flash_percentage": 77,
+                        "ram_bytes": 68848,
+                        "ram_percentage": 21
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_node",
+                "sizes": [{
+                        "flash_bytes": 1008224,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50472,
                         "ram_percentage": 15
                         }]
                 },
@@ -551,54 +599,6 @@
                         "flash_percentage": 45,
                         "ram_bytes": 47536,
                         "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/RainMaker/examples/RMakerSwitch",
-                "sizes": [{
-                        "flash_bytes": 1822454,
-                        "flash_percentage": 45,
-                        "ram_bytes": 47224,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/SD/examples/SD_Test",
-                "sizes": [{
-                        "flash_bytes": 332634,
-                        "flash_percentage": 8,
-                        "ram_bytes": 15620,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/SD/examples/SD_time",
-                "sizes": [{
-                        "flash_bytes": 1031534,
-                        "flash_percentage": 79,
-                        "ram_bytes": 43080,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
-                "sizes": [{
-                        "flash_bytes": 263952,
-                        "flash_percentage": 20,
-                        "ram_bytes": 14900,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
-                "sizes": [{
-                        "flash_bytes": 294776,
-                        "flash_percentage": 22,
-                        "ram_bytes": 14296,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
-                "sizes": [{
-                        "flash_bytes": 1001124,
-                        "flash_percentage": 76,
-                        "ram_bytes": 42228,
-                        "ram_percentage": 13
                         }]
                 }
 ]
@@ -672,41 +672,41 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP/coap_lamp",
                 "sizes": [{
-                        "flash_bytes": 1135599,
+                        "flash_bytes": 1135691,
                         "flash_percentage": 87,
-                        "ram_bytes": 49976,
+                        "ram_bytes": 50008,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP/coap_switch",
                 "sizes": [{
-                        "flash_bytes": 1137797,
+                        "flash_bytes": 1137885,
                         "flash_percentage": 87,
-                        "ram_bytes": 49960,
+                        "ram_bytes": 49992,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleCLI",
                 "sizes": [{
-                        "flash_bytes": 1112269,
+                        "flash_bytes": 1112359,
                         "flash_percentage": 85,
-                        "ram_bytes": 48748,
+                        "ram_bytes": 48780,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleNode",
                 "sizes": [{
-                        "flash_bytes": 1112693,
+                        "flash_bytes": 1112781,
                         "flash_percentage": 85,
-                        "ram_bytes": 48772,
+                        "ram_bytes": 48804,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode",
                 "sizes": [{
-                        "flash_bytes": 1115761,
+                        "flash_bytes": 1115849,
                         "flash_percentage": 85,
-                        "ram_bytes": 48780,
+                        "ram_bytes": 48812,
                         "ram_percentage": 15
                         }]
                 }
