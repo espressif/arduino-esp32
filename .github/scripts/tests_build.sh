@@ -109,8 +109,21 @@ function build_multi_device_test {
     local sketch_name
     local sketch_path
     local sketch_dir
+    local device_fqbn_append
     for device in $devices; do
-        sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+        # multi_device values can be either a scalar (sketch name) or a map
+        # with "sketch" and optional "fqbn_append" keys.
+        local device_type
+        device_type=$(yq eval ".multi_device.$device | type" "$test_dir/ci.yml" 2>/dev/null)
+
+        if [ "$device_type" == "!!map" ]; then
+            sketch_name=$(yq eval ".multi_device.$device.sketch" "$test_dir/ci.yml" 2>/dev/null)
+            device_fqbn_append=$(yq eval ".multi_device.$device.fqbn_append // \"\"" "$test_dir/ci.yml" 2>/dev/null)
+        else
+            sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+            device_fqbn_append=""
+        fi
+
         sketch_path="$test_dir/$sketch_name/$sketch_name.ino"
         sketch_dir="$test_dir/$sketch_name"
 
@@ -123,8 +136,13 @@ function build_multi_device_test {
 
         # -td: ci.yml lives in the parent test directory
         # -bn: sets the parent build dir to the test name (nested: $test_name/$sketch_name/build.tmp)
+        local fa_args=()
+        if [ -n "$device_fqbn_append" ]; then
+            fa_args=(-fa "$device_fqbn_append")
+        fi
+
         ${SKETCH_UTILS} build "${build_args[@]}" -s "$sketch_dir" \
-            -td "$test_dir" -bn "$test_name"
+            -td "$test_dir" -bn "$test_name" "${fa_args[@]}"
         result=$?
         if [ $result -ne 0 ]; then
             echo "ERROR: Failed to build sketch $sketch_name for test $test_name"

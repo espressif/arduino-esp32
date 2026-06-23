@@ -21,9 +21,12 @@ tools/openocd-esp32
 .*.swo
 *~
 
-# Ignore build and temporary files
+# Ignore build, environment, and temporary files
 /build
 *.tmp
+.env
+.venv/
+venv/
 
 # Ignore files built by Visual Studio/Visual Micro and other IDEs
 [Dd]ebug/
@@ -50,6 +53,7 @@ debug.svd
 debug_custom.json
 libraries/Insights/examples/*/*.ino.zip
 test_results.json
+debug.xml
 
 # Vale Style
 .vale/styles/*
