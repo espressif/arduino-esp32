@@ -50,7 +50,8 @@ void ZigbeeVibrationSensor::setIASClientEndpoint(uint8_t ep_number) {
 
 bool ZigbeeVibrationSensor::setVibration(bool sensed) {
   log_v("Setting Vibration sensor to %s", sensed ? "sensed" : "not sensed");
-  uint16_t vibration = sensed ? EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 : 0;
+  // Keep RESTORE_NOTIFY set so the server emits the restore notification on alarm clear (sensed -> not sensed).
+  uint16_t vibration = EZB_ZCL_IAS_ZONE_ZONE_STATUS_RESTORE_NOTIFY | (sensed ? EZB_ZCL_IAS_ZONE_ZONE_STATUS_ALARM1 : 0);
   ezb_zcl_status_t ret =
     setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID, &vibration, false);
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
@@ -67,13 +68,7 @@ bool ZigbeeVibrationSensor::report() {
     log_e("Failed to report: IAS Zone not enrolled");
     return false;
   }
-  // TODO(zb-v2): ESP-ZIGBEE-SDK v2.x removed the explicit IAS Zone Status Change Notification sender used in
-  // v1 (esp_zb_zcl_ias_zone_status_change_notif_cmd_t + esp_zb_zcl_ias_zone_status_change_notif_cmd_req).
-  // Per ezbee/zcl/cluster/ias_zone.h, the Zone Status Change Notification is now emitted automatically by
-  // the stack whenever the ZoneStatus attribute (EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATUS_ID) changes, which
-  // setVibration() already does via setClusterAttribute(). A manual send to a specific CIE
-  // address/endpoint/zone-id/delay (_ias_cie_addr, _ias_cie_endpoint, _zone_id) has no direct v2.x
-  // equivalent and needs SDK guidance.
+  // v2.x has no public notification sender; the server emits it automatically on ZoneStatus change.
   log_v("IAS Zone status change notification is emitted automatically on ZoneStatus attribute change");
   return true;
 }
@@ -83,8 +78,6 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enrol
     log_v("IAS Zone Enroll Response: zone id(%u), status(%u)", message->in.payload.zone_id, message->in.payload.enroll_rsp_code);
     if (message->in.payload.enroll_rsp_code == EZB_ZCL_IAS_ZONE_ENROLL_RESPONSE_CODE_SUCCESS) {
       log_v("IAS Zone Enroll Response: success");
-      // v2.x: read the IAS CIE address attribute through the opaque attribute descriptor (replaces the v1
-      // esp_zb_zcl_get_attribute()->data_p access). No lock here: this runs in the stack callback context.
       ezb_zcl_attr_desc_t ias_cie_attr =
         ezb_zcl_get_attr_desc(_endpoint, EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, EZB_ZCL_STD_MANUF_CODE);
       if (ias_cie_attr == nullptr || ezb_zcl_attr_desc_get_value(ias_cie_attr, _ias_cie_addr) != EZB_ERR_NONE) {
@@ -101,7 +94,7 @@ void ZigbeeVibrationSensor::zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enrol
 bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
   ezb_zcl_ias_zone_enroll_req_cmd_t enroll_request;
   memset(&enroll_request, 0, sizeof(enroll_request));
-  // No explicit destination: send to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  // No explicit destination: send to bound devices.
   ezb_address_set_none(&enroll_request.cmd_ctrl.dst_addr);
   enroll_request.cmd_ctrl.src_ep = _endpoint;
   enroll_request.payload.zone_type = EZB_ZCL_IAS_ZONE_ZONE_TYPE_VIBRATION_MOVEMENT_SENSOR;
@@ -121,27 +114,18 @@ bool ZigbeeVibrationSensor::requestIASZoneEnroll() {
 }
 
 bool ZigbeeVibrationSensor::restoreIASZoneEnroll() {
-  if (!getClusterAttribute(
-      EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, _ias_cie_addr, sizeof(_ias_cie_addr)
-    )) {
-    log_e("Failed to restore IAS Zone enroll: ias cie address attribute not found");
-    return false;
-  }
-  if (!getClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_ID_ID, &_zone_id, sizeof(_zone_id))) {
-    log_e("Failed to restore IAS Zone enroll: zone id attribute not found");
-    return false;
-  }
-
-  log_d(
-    "Restored IAS Zone enroll: zone id(%u), ias cie address(%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X)", _zone_id, _ias_cie_addr[0], _ias_cie_addr[1],
-    _ias_cie_addr[2], _ias_cie_addr[3], _ias_cie_addr[4], _ias_cie_addr[5], _ias_cie_addr[6], _ias_cie_addr[7]
-  );
-
-  if (_zone_id == 0xFF) {
-    log_e("Failed to restore IAS Zone enroll: zone id not valid");
+  // NOTE: Workaround, not a proper fix. v2.x does not persist the IAS Zone attributes across reboot
+  // (unlike SDK in v1.x), so we just re-assert ZoneState = ENROLLED to resume notifications to the
+  // persisted CIE binding. Revert to reading back the persisted attributes if the SDK matches old behaviour.
+  uint8_t zone_state = EZB_ZCL_IAS_ZONE_ZONE_STATE_ENROLLED;
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_IAS_ZONE, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_IAS_ZONE_ZONE_STATE_ID, &zone_state, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
+    log_e("Failed to restore IAS Zone enroll: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
   _enrolled = true;
+  log_d("Restored IAS Zone enrollment (ZoneState set to ENROLLED)");
   return true;
 }
 
