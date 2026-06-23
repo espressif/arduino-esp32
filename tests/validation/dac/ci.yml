@@ -1,0 +1,13 @@
+tags:
+  - generic_multi_device
+
+multi_device:
+  device0: sender
+  device1: reader
+
+platforms:
+  wokwi: false
+  qemu: false
+
+requires:
+  - CONFIG_SOC_DAC_SUPPORTED=y
