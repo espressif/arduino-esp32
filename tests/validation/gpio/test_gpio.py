@@ -20,15 +20,16 @@ def test_gpio(dut: Dut, wokwi: Wokwi):
 
     def test_write_basic():
         dut.expect_exact("GPIO LED set to OUTPUT")
-        assert wokwi.client.read_pin("led1", "A")["value"] == 0  # Anode pin
+        assert not wokwi.client.read_pin("led1", "A")["value"]
         wokwi.client.serial_write("OK\n")  # Sync ack W1
 
         dut.expect_exact("LED set to HIGH")
-        assert wokwi.client.read_pin("led1", "A")["value"] == 1
+        assert wokwi.client.read_pin("led1", "A")["value"]
         wokwi.client.serial_write("OK\n")  # Sync ack W2
 
         dut.expect_exact("LED set to LOW")
-        assert wokwi.client.read_pin("led1", "A")["value"] == 0
+        assert not wokwi.client.read_pin("led1", "A")["value"]
+        wokwi.client.serial_write("OK\n")  # Sync ack W3
         LOGGER.info("GPIO write basic test passed.")
 
     def test_interrupt_attach_detach():
@@ -101,10 +102,30 @@ def test_gpio(dut: Dut, wokwi: Wokwi):
         wokwi.client.serial_write("OK\n")
         LOGGER.info("GPIO interrupt with argument test passed.")
 
+    def test_read_pulldown():
+        dut.expect_exact("BTN read as LOW after pinMode INPUT_PULLDOWN")
+        dut.expect_exact("BTN back to HIGH after INPUT_PULLUP")
+        LOGGER.info("GPIO read pulldown test passed.")
+
+    def test_pin_mode_switch():
+        dut.expect_exact("LED OUTPUT HIGH")
+        assert wokwi.client.read_pin("led1", "A")["value"]
+        wokwi.client.serial_write("OK\n")  # Sync ack MS1
+
+        dut.expect_exact("LED switched to INPUT_PULLUP reads HIGH")
+        wokwi.client.serial_write("OK\n")  # Sync ack MS2
+
+        dut.expect_exact("LED back to OUTPUT LOW")
+        assert not wokwi.client.read_pin("led1", "A")["value"]
+        wokwi.client.serial_write("OK\n")  # Sync ack MS3
+        LOGGER.info("GPIO pin mode switch test passed.")
+
     LOGGER.info("Waiting for GPIO test begin...")
     dut.expect_exact("GPIO test START")
     test_read_basic()
     test_write_basic()
+    test_read_pulldown()
+    test_pin_mode_switch()
     dut.expect_exact("GPIO interrupt START")
     test_interrupt_attach_detach()
     test_interrupt_falling()
