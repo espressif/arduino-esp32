@@ -401,15 +401,15 @@ esp32p4.build.target=esp
 esp32p4.build.mcu=esp32p4
 esp32p4.build.core=esp32
 esp32p4.build.variant=esp32p4
-esp32p4.build.chip_variant=esp32p4_es
+esp32p4.build.chip_variant=esp32p4
 esp32p4.build.board=ESP32P4_DEV
 esp32p4.build.bootloader_addr=0x2000
 
-esp32p4.build.usb_mode=0
-esp32p4.build.cdc_on_boot=0
+esp32p4.build.usb_mode=1
+esp32p4.build.cdc_on_boot=1
 esp32p4.build.msc_on_boot=0
 esp32p4.build.dfu_on_boot=0
-esp32p4.build.f_cpu=360000000L
+esp32p4.build.f_cpu=400000000L
 esp32p4.build.flash_size=4MB
 esp32p4.build.flash_freq=80m
 esp32p4.build.img_freq=80m
@@ -418,12 +418,12 @@ esp32p4.build.boot=qio
 esp32p4.build.partitions=default
 esp32p4.build.defines=
 
-esp32p4.menu.ChipVariant.prev3=Before v3.00
-esp32p4.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
-esp32p4.menu.ChipVariant.prev3.build.f_cpu=360000000L
 esp32p4.menu.ChipVariant.postv3=v3.00 or newer
 esp32p4.menu.ChipVariant.postv3.build.chip_variant=esp32p4
 esp32p4.menu.ChipVariant.postv3.build.f_cpu=400000000L
+esp32p4.menu.ChipVariant.prev3=Before v3.00
+esp32p4.menu.ChipVariant.prev3.build.chip_variant=esp32p4_es
+esp32p4.menu.ChipVariant.prev3.build.f_cpu=360000000L
 
 ## IDE 2.0 Seems to not update the value
 esp32p4.menu.JTAGAdapter.default=Disabled
@@ -443,15 +443,15 @@ esp32p4.menu.PSRAM.disabled.build.defines=
 esp32p4.menu.PSRAM.enabled=Enabled
 esp32p4.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
 
-esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
-esp32p4.menu.USBMode.default.build.usb_mode=0
 esp32p4.menu.USBMode.hwcdc=Hardware CDC and JTAG
 esp32p4.menu.USBMode.hwcdc.build.usb_mode=1
+esp32p4.menu.USBMode.default=USB-OTG (TinyUSB)
+esp32p4.menu.USBMode.default.build.usb_mode=0
 
-esp32p4.menu.CDCOnBoot.default=Disabled
-esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
 esp32p4.menu.CDCOnBoot.cdc=Enabled
 esp32p4.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+esp32p4.menu.CDCOnBoot.default=Disabled
+esp32p4.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 esp32p4.menu.MSCOnBoot.default=Disabled
 esp32p4.menu.MSCOnBoot.default.build.msc_on_boot=0
