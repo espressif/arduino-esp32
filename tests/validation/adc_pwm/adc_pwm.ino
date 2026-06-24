@@ -12,8 +12,8 @@
 #include "esp_adc/adc_continuous.h"
 #endif
 
-#define LEDC_FREQ   5000
-#define LEDC_RES    8
+#define LEDC_FREQ 5000
+#define LEDC_RES  8
 
 void setUp(void) {}
 

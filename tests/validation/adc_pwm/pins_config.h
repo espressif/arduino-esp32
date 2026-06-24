@@ -13,8 +13,8 @@
 #include <Arduino.h>
 
 #if CONFIG_IDF_TARGET_ESP32
-#define ADC_PIN        A4    /* GPIO32, ADC1 — see CI_README Peripheral API constraints */
-#define LEDC_PIN       16   /* not T0 (GPIO4); see CI_README LEDC + Touch note */
+#define ADC_PIN        A4 /* GPIO32, ADC1 — see CI_README Peripheral API constraints */
+#define LEDC_PIN       16 /* not T0 (GPIO4); see CI_README LEDC + Touch note */
 #define SIGMADELTA_PIN 13
 #elif CONFIG_IDF_TARGET_ESP32S2
 #define ADC_PIN        A0
@@ -41,7 +41,7 @@
 #define LEDC_PIN       4
 #define SIGMADELTA_PIN 5
 #elif CONFIG_IDF_TARGET_ESP32P4
-#define ADC_PIN        A4   /* GPIO20; A0→16 is SDIO */
+#define ADC_PIN        A4 /* GPIO20; A0→16 is SDIO */
 #define LEDC_PIN       6
 #define SIGMADELTA_PIN 7
 #else
