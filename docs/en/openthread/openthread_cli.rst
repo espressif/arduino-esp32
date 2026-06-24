@@ -26,12 +26,12 @@ Executes a CLI command and gets the response.
 
 .. code-block:: arduino
 
-    bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000, size_t respBufSize = 0);
+    bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000);
 
 * ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``).
 * ``resp`` - Buffer to store the response (optional, can be ``NULL``).
-* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms).
 * ``respBufSize`` - Size of ``resp`` in bytes including the terminating NUL. **Required** when ``resp`` is not ``NULL`` (use ``sizeof(buffer)``).
+* ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms).
 
 This function executes a CLI command and collects all response lines until "Done" or "Error" is received. Stale lines left in the CLI RX queue from a prior timed-out command are discarded before sending ``cmd`` (50 ms idle window). When ``resp`` is provided, the accumulated response text is copied into the buffer; if the response is longer than ``respBufSize - 1`` bytes it is truncated and a warning is logged.
 
@@ -42,11 +42,11 @@ This function executes a CLI command and collects all response lines until "Done
 .. code-block:: arduino
 
     char response[256];
-    if (otGetRespCmd("state", response, 5000, sizeof(response))) {
+    if (otGetRespCmd("state", response, sizeof(response))) {
         Serial.printf("Thread state: %s\r\n", response);
     }
 
-    if (otGetRespCmd("networkname", response, 5000, sizeof(response))) {
+    if (otGetRespCmd("networkname", response, sizeof(response))) {
         Serial.printf("Network name: %s\r\n", response);
     }
 
@@ -427,7 +427,7 @@ Using CLI Helper Functions API
 
         // Get network state
         char resp[256];
-        if (otGetRespCmd("state", resp, 5000, sizeof(resp))) {
+        if (otGetRespCmd("state", resp, sizeof(resp))) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
 

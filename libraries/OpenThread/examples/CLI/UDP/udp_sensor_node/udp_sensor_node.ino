@@ -143,7 +143,7 @@ static bool parseUdpLine(const char *line, char *srcIp, size_t srcIpLen, uint16_
 // core releases. Returns true if a usable EUI-64 was obtained.
 static bool makeNodeIdFromCli() {
   char resp[64] = {0};
-  if (!otGetRespCmd("eui64", resp, 5000, sizeof(resp))) {
+  if (!otGetRespCmd("eui64", resp, sizeof(resp))) {
     return false;
   }
   // otGetRespCmd appends an OS end-of-line; strip any trailing CR/LF/space.

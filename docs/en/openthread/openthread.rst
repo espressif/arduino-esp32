@@ -518,7 +518,7 @@ Using the CLI Helper Functions API:
 
         // Execute CLI commands
         char resp[256];
-        if (otGetRespCmd("state", resp, 5000, sizeof(resp))) {
+        if (otGetRespCmd("state", resp, sizeof(resp))) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
 

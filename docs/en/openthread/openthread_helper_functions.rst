@@ -62,7 +62,7 @@ otGetRespCmd
 
 .. code-block:: arduino
 
-    bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000, size_t respBufSize = 0);
+    bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000);
 
 When ``resp`` is non-NULL, ``respBufSize`` must be set (use ``sizeof(buffer)``).
 Responses longer than ``respBufSize - 1`` bytes are truncated with a warning.

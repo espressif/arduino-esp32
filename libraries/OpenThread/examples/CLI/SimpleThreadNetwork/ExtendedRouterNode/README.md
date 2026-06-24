@@ -109,7 +109,7 @@ The Extended Router/Child node is automatically configured in `setup()` using th
 
 This example demonstrates two ways to access OpenThread information:
 
-1. **CLI Helper Functions API**: Uses `otGetRespCmd("panid", resp, 5000, sizeof(resp))` to get PAN ID via CLI
+1. **CLI Helper Functions API**: Uses `otGetRespCmd("panid", resp, sizeof(resp))` to get PAN ID via CLI
 2. **Native OpenThread API**: Uses `otLinkGetPanId(esp_openthread_get_instance())` to get PAN ID directly
 
 Both methods should return the same value, demonstrating API equivalence.

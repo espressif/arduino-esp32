@@ -39,7 +39,7 @@ static void drainCliRxQueue() {
 
 }  // namespace
 
-bool otGetRespCmd(const char *cmd, char *resp, uint32_t respTimeout, size_t respBufSize) {
+bool otGetRespCmd(const char *cmd, char *resp, size_t respBufSize, uint32_t respTimeout) {
   if (!OThreadCLI) {
     log_w("otGetRespCmd: OpenThread CLI not started");
     return false;
@@ -240,29 +240,29 @@ void otCLIPrintNetworkInformation(Stream &output) {
   }
   char resp[512];
   output.println("Thread Setup:");
-  if (otGetRespCmd("state", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("state", resp, sizeof(resp))) {
     output.printf("Node State: \t%s", resp);
   }
-  if (otGetRespCmd("networkname", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("networkname", resp, sizeof(resp))) {
     output.printf("Network Name: \t%s", resp);
   }
-  if (otGetRespCmd("channel", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("channel", resp, sizeof(resp))) {
     output.printf("Channel: \t%s", resp);
   }
-  if (otGetRespCmd("panid", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("panid", resp, sizeof(resp))) {
     output.printf("Pan ID: \t%s", resp);
   }
-  if (otGetRespCmd("extpanid", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("extpanid", resp, sizeof(resp))) {
     output.printf("Ext Pan ID: \t%s", resp);
   }
-  if (otGetRespCmd("networkkey", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("networkkey", resp, sizeof(resp))) {
     output.printf("Network Key: \t%s", resp);
   }
-  if (otGetRespCmd("ipaddr", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("ipaddr", resp, sizeof(resp))) {
     output.println("Node IP Addresses are:");
     output.printf("%s", resp);
   }
-  if (otGetRespCmd("ipmaddr", resp, 5000, sizeof(resp))) {
+  if (otGetRespCmd("ipmaddr", resp, sizeof(resp))) {
     output.println("Node Multicast Addresses are:");
     output.printf("%s", resp);
   }

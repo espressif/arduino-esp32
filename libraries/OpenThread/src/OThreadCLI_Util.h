@@ -82,9 +82,9 @@ typedef struct {
 
  * @param resp        Optional buffer to receive accumulated response text; pass NULL to ignore.
 
- * @param respTimeout Maximum time to wait for the response, in milliseconds.
-
  * @param respBufSize Size of @p resp in bytes (including NUL). Required when @p resp is non-NULL.
+
+ * @param respTimeout Maximum time to wait for the response, in milliseconds.
 
  * @return true if the command completed with `Done`, false on error/timeout.
 
@@ -96,7 +96,7 @@ typedef struct {
 
  */
 
-bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000, size_t respBufSize = 0);
+bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000);
 
 
 

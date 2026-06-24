@@ -34,14 +34,14 @@ This structure represents the return status of an OpenThread CLI command:
 
 The following are **free functions** for programmatic CLI automation (not methods on `OThread`):
 
-### Function: `otGetRespCmd(const char* cmd, char* resp = NULL, uint32_t respTimeout = 5000, size_t respBufSize = 0)`
+### Function: `otGetRespCmd(const char* cmd, char* resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000)`
 
 - Executes an OpenThread CLI command and retrieves the response.
 - Parameters:
   - `cmd`: The OpenThread CLI command to execute.
   - `resp`: Optional buffer to store the response (if provided).
-  - `respTimeout`: Timeout (in milliseconds) for waiting for the response.
   - `respBufSize`: Size of `resp` in bytes including NUL. **Required** when `resp` is non-NULL (use `sizeof(buffer)`).
+  - `respTimeout`: Timeout (in milliseconds) for waiting for the response.
 - When the response exceeds `respBufSize - 1` bytes it is truncated and a warning is logged.
 
 ### Function: `otExecCommand(const char* cmd, const char* arg, ot_cmd_return_t* returnCode = NULL, uint32_t respTimeout = 5000)`
