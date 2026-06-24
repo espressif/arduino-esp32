@@ -177,6 +177,10 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             shift
             build_name=$1
             ;;
+        -fa )
+            shift
+            fqbn_append_override=$1
+            ;;
         --arduino-cli )
             use_arduino_cli=1
             ;;
@@ -236,7 +240,9 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
 
             len=1
 
-            if [ -n "$ci_yml_for_build" ]; then
+            if [ -n "${fqbn_append_override:-}" ]; then
+                fqbn_append="$fqbn_append_override"
+            elif [ -n "$ci_yml_for_build" ]; then
                 fqbn_append=$(yq eval '.fqbn_append' "$ci_yml_for_build" 2>/dev/null)
                 if [ "$fqbn_append" == "null" ]; then
                     fqbn_append=""

@@ -125,11 +125,13 @@ def test_enabled_for_target(ci_json: dict, chip: str) -> bool:
     return True
 
 
-def platform_allowed(ci_json: dict, platform: str = "hardware") -> bool:
+def platform_allowed(ci_json: dict, platform: str = "hardware", chip: str = "") -> bool:
     platforms = ci_json.get("platforms")
     if isinstance(platforms, dict):
         v = platforms.get(platform)
         if v is False:
+            return False
+        if chip and isinstance(v, dict) and v.get(chip) is False:
             return False
     return True
 
@@ -154,7 +156,12 @@ def sdkconfig_path_for(chip: str, sketch: str, ci_json: dict) -> Path:
     # {test_name}/{first_device}/build[0].tmp/ (see tests_build.sh build_multi_device_test).
     multi_device = ci_json.get("multi_device") if isinstance(ci_json, dict) else None
     if isinstance(multi_device, dict) and multi_device:
-        first_device = str(next(iter(multi_device.values())))
+        first_val = next(iter(multi_device.values()))
+        # multi_device values can be a scalar (sketch name) or a map with a "sketch" key
+        if isinstance(first_val, dict):
+            first_device = str(first_val.get("sketch", ""))
+        else:
+            first_device = str(first_val)
         return Path.home() / f".arduino/tests/{chip}/{sketch}/{first_device}/{build_suffix}/sdkconfig"
 
     return Path.home() / f".arduino/tests/{chip}/{sketch}/{build_suffix}/sdkconfig"
@@ -414,7 +421,7 @@ def main():
             if not test_enabled_for_target(ci, chip):
                 continue
             # Skip tests that explicitly disable the hardware platform
-            if not platform_allowed(ci, "hardware"):
+            if not platform_allowed(ci, "hardware", chip):
                 continue
             sdk = sdkconfig_path_for(chip, sketch, ci)
             if not args.dry_run and not sdk_meets_requirements(sdk, ci):
