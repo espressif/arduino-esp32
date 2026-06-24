@@ -33,6 +33,17 @@ static TaskHandle_t s_console_cli_task = NULL;
 static QueueHandle_t rx_queue = NULL;
 static QueueHandle_t tx_queue = NULL;
 
+static bool s_txQueueWasFull = false;
+static uint32_t s_txDroppedSinceFull = 0;
+
+static void resetTxDropState(bool logPendingSummary = false) {
+  if (logPendingSummary && s_txQueueWasFull && s_txDroppedSinceFull > 0) {
+    log_w("OpenThreadCLI: TX queue torn down; %u byte(s) dropped while full", (unsigned)s_txDroppedSinceFull);
+  }
+  s_txQueueWasFull = false;
+  s_txDroppedSinceFull = 0;
+}
+
 #define OT_CLI_MAX_LINE_LENGTH 512
 
 typedef struct {
@@ -308,14 +319,27 @@ size_t OpenThreadCLI::write(uint8_t c) {
     return 0;
   }
   if (xQueueSend(tx_queue, &c, 0) != pdPASS) {
-    log_w("OpenThreadCLI: TX queue full; byte dropped");
+    if (!s_txQueueWasFull) {
+      log_w("OpenThreadCLI: TX queue full; bytes will be dropped until it drains");
+      s_txQueueWasFull = true;
+      s_txDroppedSinceFull = 0;
+    }
+    ++s_txDroppedSinceFull;
     return 0;
+  }
+  if (s_txQueueWasFull) {
+    log_w("OpenThreadCLI: TX queue recovered; %u byte(s) dropped while full", (unsigned)s_txDroppedSinceFull);
+    resetTxDropState(false);
   }
   return 1;
 }
 
 size_t OpenThreadCLI::setBuffer(QueueHandle_t &queue, size_t queue_len) {
+  const bool isTxQueue = (&queue == &tx_queue);
   if (queue) {
+    if (isTxQueue) {
+      resetTxDropState(true);
+    }
     vQueueDelete(queue);
     queue = NULL;
   }
@@ -325,6 +349,9 @@ size_t OpenThreadCLI::setBuffer(QueueHandle_t &queue, size_t queue_len) {
   queue = xQueueCreate(queue_len, sizeof(uint8_t));
   if (!queue) {
     return 0;
+  }
+  if (isTxQueue) {
+    resetTxDropState(false);
   }
   return queue_len;
 }
