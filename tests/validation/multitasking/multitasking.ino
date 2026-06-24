@@ -9,9 +9,9 @@
 #include <Arduino.h>
 #include <unity.h>
 
-#define TASK_STACK_SIZE   4096
-#define INCREMENT_COUNT   100000
-#define TASK_TIMEOUT_MS   5000
+#define TASK_STACK_SIZE 4096
+#define INCREMENT_COUNT 100000
+#define TASK_TIMEOUT_MS 5000
 
 void setUp(void) {}
 void tearDown(void) {}

@@ -21,7 +21,7 @@
 #include <esp_sleep.h>
 #include <esp_task_wdt.h>
 
-#define DEEP_SLEEP_US   2000000  // 2 seconds
+#define DEEP_SLEEP_US 2000000  // 2 seconds
 
 RTC_DATA_ATTR int boot_count = 0;
 RTC_DATA_ATTR uint32_t rtc_magic = 0;
@@ -33,10 +33,7 @@ void tearDown(void) {}
 
 void test_reset_reason_power_on(void) {
   esp_reset_reason_t reason = esp_reset_reason();
-  TEST_ASSERT_TRUE_MESSAGE(
-    reason == ESP_RST_POWERON || reason == ESP_RST_DEEPSLEEP,
-    "Unexpected reset reason on initial boot"
-  );
+  TEST_ASSERT_TRUE_MESSAGE(reason == ESP_RST_POWERON || reason == ESP_RST_DEEPSLEEP, "Unexpected reset reason on initial boot");
 }
 
 // ==================== TWDT ====================
