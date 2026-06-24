@@ -9,8 +9,8 @@ Validates power management features including task watchdog timer (TWDT), light 
 | Test Function | Description |
 |---|---|
 | `test_reset_reason_power_on` | Reset reason is power-on or deep sleep |
-| `test_twdt_feed` | Add task to TWDT, feed it, verify no timeout in 500ms |
-| `test_light_sleep_timer` | Enter light sleep for 500ms, verify wakeup cause and elapsed time |
+| `test_twdt_feed` | Add task to TWDT, feed it, verify no timeout in 500 ms |
+| `test_light_sleep_timer` | Enter light sleep for 500 ms, verify wakeup cause and elapsed time |
 
 ### Phase 1 (After Deep Sleep Wakeup)
 

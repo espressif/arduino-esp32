@@ -7,16 +7,16 @@ Validates the Ticker library: initial inactive state, periodic callbacks (attach
 | Test Function | Description |
 |---|---|
 | `test_initially_inactive` | New Ticker reports `active() == false` |
-| `test_attach_ms_periodic` | 100ms periodic fires ~5 times in 550ms |
-| `test_attach_us_periodic` | 100000µs periodic fires ~5 times in 550ms |
-| `test_attach_seconds_periodic` | 0.1s periodic fires ~5 times in 550ms |
+| `test_attach_ms_periodic` | 100 ms periodic fires ~5 times in 550 ms |
+| `test_attach_us_periodic` | 100000 µs periodic fires ~5 times in 550 ms |
+| `test_attach_seconds_periodic` | 0.1 s periodic fires ~5 times in 550 ms |
 | `test_once_ms` | One-shot fires exactly once, becomes inactive |
 | `test_once_us` | One-shot (µs) fires exactly once |
 | `test_once_seconds` | One-shot (float seconds) fires exactly once |
 | `test_active_while_running` | `active()` is true while attached, false after detach |
 | `test_detach_stops_periodic` | No callbacks fire after detach |
 | `test_detach_on_inactive_is_safe` | Double-detach does not crash |
-| `test_restart_ms` | Change period from 5s to 100ms via restart |
+| `test_restart_ms` | Change period from 5 s to 100 ms via restart |
 | `test_restart_us` | Restart with µs period |
 | `test_restart_seconds` | Restart with float seconds |
 | `test_reattach_while_running` | Re-attach without manual detach succeeds |
