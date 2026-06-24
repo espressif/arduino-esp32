@@ -2,7 +2,7 @@
 { "board": "espressif:esp32:esp32",
                 "target": "esp32",
                 "sketches": [
-{"name": "libraries/NetworkClientSecure/examples/WiFiClientTrustOnFirstUse",
+{"name": "libraries/NetworkClientSecure/examples",
                 "sizes": [{
                         "flash_bytes": 1020008,
                         "flash_percentage": 78,
@@ -10,7 +10,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/PPP/examples/PPP_Basic",
+{"name": "libraries/PPP/examples",
                 "sizes": [{
                         "flash_bytes": 538700,
                         "flash_percentage": 41,
@@ -18,7 +18,7 @@
                         "ram_percentage": 8
                         }]
                 },
-{"name": "libraries/PPP/examples/PPP_WIFI_BRIDGE",
+{"name": "libraries/PPP/examples",
                 "sizes": [{
                         "flash_bytes": 982644,
                         "flash_percentage": 75,
@@ -26,7 +26,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Preferences/examples/Prefs2Struct",
+{"name": "libraries/Preferences/examples",
                 "sizes": [{
                         "flash_bytes": 302216,
                         "flash_percentage": 23,
@@ -34,7 +34,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Preferences/examples/StartCounter",
+{"name": "libraries/Preferences/examples",
                 "sizes": [{
                         "flash_bytes": 301932,
                         "flash_percentage": 23,
@@ -42,7 +42,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD/examples/SD_Test",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 358898,
                         "flash_percentage": 27,
@@ -50,7 +50,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD/examples/SD_time",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 973022,
                         "flash_percentage": 74,
@@ -58,7 +58,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SDMMC_Test",
+{"name": "libraries/SD_MMC/examples",
                 "sizes": [{
                         "flash_bytes": 384586,
                         "flash_percentage": 29,
@@ -66,7 +66,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SD_MMC/examples/SDMMC_time",
+{"name": "libraries/SD_MMC/examples",
                 "sizes": [{
                         "flash_bytes": 1000058,
                         "flash_percentage": 76,
@@ -74,7 +74,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+{"name": "libraries/SPI/examples",
                 "sizes": [{
                         "flash_bytes": 288848,
                         "flash_percentage": 22,
@@ -82,7 +82,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 331728,
                         "flash_percentage": 25,
@@ -90,7 +90,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 960214,
                         "flash_percentage": 73,
@@ -98,7 +98,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/SimpleBLE/examples/SimpleBleDevice",
+{"name": "libraries/SimpleBLE/examples",
                 "sizes": [{
                         "flash_bytes": 1059504,
                         "flash_percentage": 81,
@@ -106,7 +106,7 @@
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/Ticker/examples/Blinker",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285400,
                         "flash_percentage": 22,
@@ -114,7 +114,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerBasic",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285196,
                         "flash_percentage": 22,
@@ -122,7 +122,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerParameter",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285288,
                         "flash_percentage": 22,
@@ -130,7 +130,7 @@
                         "ram_percentage": 7
                         }]
                 },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 928656,
                         "flash_percentage": 71,
@@ -138,7 +138,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1034304,
                         "flash_percentage": 79,
@@ -151,7 +151,7 @@
 { "board": "espressif:esp32:esp32c3",
                 "target": "esp32c3",
                 "sketches": [
-{"name": "libraries/RainMaker/examples/RMakerSwitch",
+{"name": "libraries/RainMaker/examples",
                 "sizes": [{
                         "flash_bytes": 1678135,
                         "flash_percentage": 42,
@@ -159,7 +159,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/SD/examples/SD_Test",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 365790,
                         "flash_percentage": 9,
@@ -167,7 +167,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/SD/examples/SD_time",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 1018077,
                         "flash_percentage": 78,
@@ -175,7 +175,7 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+{"name": "libraries/SPI/examples",
                 "sizes": [{
                         "flash_bytes": 288700,
                         "flash_percentage": 22,
@@ -183,7 +183,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 317984,
                         "flash_percentage": 24,
@@ -191,7 +191,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 987309,
                         "flash_percentage": 75,
@@ -199,7 +199,7 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Ticker/examples/Blinker",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285520,
                         "flash_percentage": 22,
@@ -207,7 +207,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerBasic",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285284,
                         "flash_percentage": 22,
@@ -215,7 +215,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerParameter",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 285318,
                         "flash_percentage": 22,
@@ -223,7 +223,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 971443,
                         "flash_percentage": 74,
@@ -231,7 +231,7 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1071449,
                         "flash_percentage": 82,
@@ -239,7 +239,7 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1016215,
                         "flash_percentage": 78,
@@ -247,7 +247,7 @@
                         "ram_percentage": 11
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1053401,
                         "flash_percentage": 80,
@@ -255,7 +255,7 @@
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/Update/examples/OTAWebUpdater",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1045317,
                         "flash_percentage": 80,
@@ -263,7 +263,7 @@
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/Update/examples/SD_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 370720,
                         "flash_percentage": 28,
@@ -271,7 +271,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Update/examples/Signed_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1107407,
                         "flash_percentage": 84,
@@ -279,7 +279,7 @@
                         "ram_percentage": 12
                         }]
                 },
-{"name": "libraries/WebServer/examples/AdvancedWebServer",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1029573,
                         "flash_percentage": 79,
@@ -292,7 +292,7 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/SD/examples/SD_time",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 1083403,
                         "flash_percentage": 83,
@@ -300,7 +300,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+{"name": "libraries/SPI/examples",
                 "sizes": [{
                         "flash_bytes": 303406,
                         "flash_percentage": 23,
@@ -308,7 +308,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 335424,
                         "flash_percentage": 26,
@@ -316,7 +316,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 1054035,
                         "flash_percentage": 80,
@@ -324,7 +324,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Ticker/examples/Blinker",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 300194,
                         "flash_percentage": 23,
@@ -332,7 +332,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerBasic",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 299980,
                         "flash_percentage": 23,
@@ -340,7 +340,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerParameter",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 300024,
                         "flash_percentage": 23,
@@ -348,7 +348,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1042463,
                         "flash_percentage": 80,
@@ -356,7 +356,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1138017,
                         "flash_percentage": 87,
@@ -364,7 +364,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1087245,
                         "flash_percentage": 83,
@@ -372,7 +372,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1124385,
                         "flash_percentage": 86,
@@ -380,7 +380,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Update/examples/OTAWebUpdater",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1116265,
                         "flash_percentage": 85,
@@ -388,7 +388,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/Update/examples/SD_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 392852,
                         "flash_percentage": 30,
@@ -396,7 +396,7 @@
                         "ram_percentage": 6
                         }]
                 },
-{"name": "libraries/Update/examples/Signed_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1172861,
                         "flash_percentage": 89,
@@ -404,7 +404,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/WebServer/examples/AdvancedWebServer",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1094941,
                         "flash_percentage": 84,
@@ -412,7 +412,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/WebServer/examples/ChunkWriting",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1073919,
                         "flash_percentage": 82,
@@ -420,7 +420,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1131473,
                         "flash_percentage": 86,
@@ -428,7 +428,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/WebServer/examples/Filters",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1096037,
                         "flash_percentage": 84,
@@ -436,7 +436,7 @@
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/WebServer/examples/HelloServer",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1093723,
                         "flash_percentage": 83,
@@ -449,7 +449,7 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/RainMaker/examples/RMakerSwitch",
+{"name": "libraries/RainMaker/examples",
                 "sizes": [{
                         "flash_bytes": 1822454,
                         "flash_percentage": 45,
@@ -457,7 +457,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/SD/examples/SD_Test",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 332634,
                         "flash_percentage": 8,
@@ -465,7 +465,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/SD/examples/SD_time",
+{"name": "libraries/SD/examples",
                 "sizes": [{
                         "flash_bytes": 1031534,
                         "flash_percentage": 79,
@@ -473,7 +473,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/SPI/examples/SPI_Multiple_Buses",
+{"name": "libraries/SPI/examples",
                 "sizes": [{
                         "flash_bytes": 263952,
                         "flash_percentage": 20,
@@ -481,7 +481,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_Test",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 294776,
                         "flash_percentage": 22,
@@ -489,7 +489,7 @@
                         "ram_percentage": 4
                         }]
                 },
-{"name": "libraries/SPIFFS/examples/SPIFFS_time",
+{"name": "libraries/SPIFFS/examples",
                 "sizes": [{
                         "flash_bytes": 1001124,
                         "flash_percentage": 76,
@@ -497,7 +497,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Ticker/examples/Blinker",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 260784,
                         "flash_percentage": 20,
@@ -505,7 +505,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerBasic",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 260570,
                         "flash_percentage": 20,
@@ -513,7 +513,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Ticker/examples/TickerParameter",
+{"name": "libraries/Ticker/examples",
                 "sizes": [{
                         "flash_bytes": 260614,
                         "flash_percentage": 20,
@@ -521,7 +521,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Update/examples/AWS_S3_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 999940,
                         "flash_percentage": 76,
@@ -529,7 +529,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Update/examples/HTTPS_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1113698,
                         "flash_percentage": 85,
@@ -537,7 +537,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Client_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1039124,
                         "flash_percentage": 79,
@@ -545,7 +545,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/Update/examples/HTTP_Server_AES_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1081980,
                         "flash_percentage": 83,
@@ -553,7 +553,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Update/examples/OTAWebUpdater",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1073856,
                         "flash_percentage": 82,
@@ -561,7 +561,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/Update/examples/SD_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 343142,
                         "flash_percentage": 26,
@@ -569,7 +569,7 @@
                         "ram_percentage": 5
                         }]
                 },
-{"name": "libraries/Update/examples/Signed_OTA_Update",
+{"name": "libraries/Update/examples",
                 "sizes": [{
                         "flash_bytes": 1122154,
                         "flash_percentage": 86,
@@ -577,7 +577,7 @@
                         "ram_percentage": 13
                         }]
                 },
-{"name": "libraries/WebServer/examples/AdvancedWebServer",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1052542,
                         "flash_percentage": 80,
@@ -585,7 +585,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/WebServer/examples/ChunkWriting",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1030462,
                         "flash_percentage": 79,
@@ -593,7 +593,7 @@
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/WebServer/examples/FSBrowser",
+{"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1088764,
                         "flash_percentage": 83,
@@ -606,7 +606,7 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
                         "flash_bytes": 1113033,
                         "flash_percentage": 85,
@@ -614,7 +614,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
                         "flash_bytes": 1113097,
                         "flash_percentage": 85,
@@ -622,7 +622,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/ThreadScan",
+{"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
                         "flash_bytes": 1112739,
                         "flash_percentage": 85,
@@ -630,7 +630,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector",
+{"name": "libraries/OpenThread/examples/CLI/UDP",
                 "sizes": [{
                         "flash_bytes": 1137355,
                         "flash_percentage": 87,
@@ -638,7 +638,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP/udp_sensor_node",
+{"name": "libraries/OpenThread/examples/CLI/UDP",
                 "sizes": [{
                         "flash_bytes": 1139179,
                         "flash_percentage": 87,
@@ -646,7 +646,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/onReceive",
+{"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
                         "flash_bytes": 1112251,
                         "flash_percentage": 85,
@@ -654,7 +654,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
                 "sizes": [{
                         "flash_bytes": 1006459,
                         "flash_percentage": 77,
@@ -662,7 +662,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode",
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
                 "sizes": [{
                         "flash_bytes": 1003125,
                         "flash_percentage": 77,
@@ -670,7 +670,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
                 "sizes": [{
                         "flash_bytes": 1012089,
                         "flash_percentage": 77,
@@ -678,7 +678,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode",
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
                 "sizes": [{
                         "flash_bytes": 1009671,
                         "flash_percentage": 77,
@@ -686,7 +686,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/light",
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
                 "sizes": [{
                         "flash_bytes": 1033399,
                         "flash_percentage": 79,
@@ -694,7 +694,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch/switch",
+{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
                 "sizes": [{
                         "flash_bytes": 1039577,
                         "flash_percentage": 79,
@@ -702,7 +702,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork/sensor_collector",
+{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
                 "sizes": [{
                         "flash_bytes": 1031649,
                         "flash_percentage": 79,
@@ -715,7 +715,7 @@
 { "board": "espressif:esp32:esp32p4",
                 "target": "esp32p4",
                 "sketches": [
-{"name": "libraries/USB/examples/CustomHIDDevice",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 388736,
                         "flash_percentage": 30,
@@ -723,7 +723,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/FirmwareMSC",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 405734,
                         "flash_percentage": 31,
@@ -731,7 +731,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 389176,
                         "flash_percentage": 30,
@@ -739,7 +739,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/HIDVendor",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 392730,
                         "flash_percentage": 30,
@@ -747,7 +747,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 372880,
                         "flash_percentage": 28,
@@ -755,7 +755,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 373236,
                         "flash_percentage": 28,
@@ -763,7 +763,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 373414,
                         "flash_percentage": 28,
@@ -771,7 +771,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 386340,
                         "flash_percentage": 29,
@@ -779,7 +779,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 390562,
                         "flash_percentage": 30,
@@ -787,7 +787,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiController",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 400016,
                         "flash_percentage": 31,
@@ -795,7 +795,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiInterface",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 384690,
                         "flash_percentage": 29,
@@ -803,7 +803,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 392268,
                         "flash_percentage": 30,
@@ -811,7 +811,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 388058,
                         "flash_percentage": 30,
@@ -819,7 +819,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 385910,
                         "flash_percentage": 29,
@@ -827,7 +827,7 @@
                         "ram_percentage": 22
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/Mouse",
                 "sizes": [{
                         "flash_bytes": 371642,
                         "flash_percentage": 28,
@@ -840,7 +840,7 @@
 { "board": "espressif:esp32:esp32s2",
                 "target": "esp32s2",
                 "sketches": [
-{"name": "libraries/USB/examples/FirmwareMSC",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 335168,
                         "flash_percentage": 26,
@@ -848,7 +848,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 324396,
                         "flash_percentage": 25,
@@ -856,7 +856,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/HIDVendor",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 326536,
                         "flash_percentage": 25,
@@ -864,7 +864,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 311476,
                         "flash_percentage": 24,
@@ -872,7 +872,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 311632,
                         "flash_percentage": 24,
@@ -880,7 +880,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 311820,
                         "flash_percentage": 24,
@@ -888,7 +888,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 319988,
                         "flash_percentage": 24,
@@ -896,7 +896,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 325192,
                         "flash_percentage": 25,
@@ -904,7 +904,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiController",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 332872,
                         "flash_percentage": 25,
@@ -912,7 +912,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiInterface",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 319036,
                         "flash_percentage": 24,
@@ -920,7 +920,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 326324,
                         "flash_percentage": 25,
@@ -928,7 +928,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 323604,
                         "flash_percentage": 25,
@@ -936,7 +936,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 319892,
                         "flash_percentage": 24,
@@ -944,7 +944,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/Mouse",
                 "sizes": [{
                         "flash_bytes": 310684,
                         "flash_percentage": 24,
@@ -952,7 +952,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/SystemControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 310296,
                         "flash_percentage": 24,
@@ -960,7 +960,7 @@
                         "ram_percentage": 15
                         }]
                 },
-{"name": "libraries/USB/examples/USBMSC",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 321744,
                         "flash_percentage": 25,
@@ -968,7 +968,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/USBSerial",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 316716,
                         "flash_percentage": 24,
@@ -981,7 +981,7 @@
 { "board": "espressif:esp32:esp32s3",
                 "target": "esp32s3",
                 "sketches": [
-{"name": "libraries/USB/examples/AudioCard",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 418422,
                         "flash_percentage": 32,
@@ -989,7 +989,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/CompositeDevice",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 418766,
                         "flash_percentage": 32,
@@ -997,7 +997,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/ConsumerControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 371726,
                         "flash_percentage": 28,
@@ -1005,7 +1005,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/CustomHIDDevice",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 385042,
                         "flash_percentage": 29,
@@ -1013,7 +1013,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/FirmwareMSC",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 400894,
                         "flash_percentage": 31,
@@ -1021,7 +1021,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Gamepad",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 385426,
                         "flash_percentage": 29,
@@ -1029,7 +1029,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/HIDVendor",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 387482,
                         "flash_percentage": 30,
@@ -1037,7 +1037,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardLogout",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 372886,
                         "flash_percentage": 28,
@@ -1045,7 +1045,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardMessage",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 373058,
                         "flash_percentage": 28,
@@ -1053,7 +1053,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardReprogram",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 373238,
                         "flash_percentage": 28,
@@ -1061,7 +1061,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Keyboard/KeyboardSerial",
+{"name": "libraries/USB/examples/Keyboard",
                 "sizes": [{
                         "flash_bytes": 385474,
                         "flash_percentage": 29,
@@ -1069,7 +1069,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/KeyboardAndMouseControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 386222,
                         "flash_percentage": 29,
@@ -1077,7 +1077,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiController",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 394026,
                         "flash_percentage": 30,
@@ -1085,7 +1085,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiInterface",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 384502,
                         "flash_percentage": 29,
@@ -1093,7 +1093,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMultiChannel",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 387322,
                         "flash_percentage": 30,
@@ -1101,7 +1101,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/MidiMusicBox",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 384590,
                         "flash_percentage": 29,
@@ -1109,7 +1109,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/MIDI/ReceiveMidi",
+{"name": "libraries/USB/examples/MIDI",
                 "sizes": [{
                         "flash_bytes": 385342,
                         "flash_percentage": 29,
@@ -1117,7 +1117,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/Mouse/ButtonMouseControl",
+{"name": "libraries/USB/examples/Mouse",
                 "sizes": [{
                         "flash_bytes": 372106,
                         "flash_percentage": 28,
@@ -1125,7 +1125,7 @@
                         "ram_percentage": 17
                         }]
                 },
-{"name": "libraries/USB/examples/SystemControl",
+{"name": "libraries/USB/examples",
                 "sizes": [{
                         "flash_bytes": 371742,
                         "flash_percentage": 28,
