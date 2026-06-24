@@ -43379,9 +43379,9 @@ sensebox_mcu_esp32s2.menu.EraseFlash.all=Enabled
 sensebox_mcu_esp32s2.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
-# senseBox Eye
+# senseBox MCU Eye
 
-sensebox_eye.name=senseBox Eye
+sensebox_eye.name=senseBox MCU Eye
 sensebox_eye.vid.0=0x303A
 sensebox_eye.pid.0=0x82D1
 sensebox_eye.vid.1=0x303A
@@ -43567,6 +43567,11 @@ sensebox_eye.menu.DebugLevel.verbose.build.code_debug=5
 sensebox_eye.menu.EraseFlash.none=Disabled
 sensebox_eye.menu.EraseFlash.all=Enabled
 sensebox_eye.menu.EraseFlash.all.upload.erase_cmd=-e
+
+sensebox_eye.menu.Revision.v15=v1.5 and above
+sensebox_eye.menu.Revision.v15.build.defines=-DSENSEBOX_EYE_BUTTON_PIN=21
+sensebox_eye.menu.Revision.v14=v1.4 and below
+sensebox_eye.menu.Revision.v14.build.defines=-DSENSEBOX_EYE_BUTTON_PIN=47
 
 ##############################################################
 
