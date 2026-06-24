@@ -44,7 +44,7 @@ Returns ``ot_device_role_t``. Call as ``OThread.otGetDeviceRole()``.
 Returns a role string (e.g. ``"Child"``). Call as ``OThread.otGetStringDeviceRole()``.
 
 ``OpenThread::otPrintNetworkInformation(Stream &output)``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Static method that prints role, network name, channel, PAN ID, keys, and IP
 addresses. Example: ``OThread.otPrintNetworkInformation(Serial);``
