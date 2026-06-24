@@ -89,10 +89,14 @@ void test_tls_send_receive(void) {
 // ==================== HTTP Client Tests ====================
 
 void test_http_get(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
+  NetworkClientSecure sslClient;
+  sslClient.setCACert(ca_cert);
+
   HTTPClient http;
-  TEST_ASSERT_TRUE(http.begin("http://postman-echo.com/get"));
+  TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/get"));
   int code = http.GET();
   TEST_ASSERT_EQUAL(200, code);
 
@@ -103,10 +107,14 @@ void test_http_get(void) {
 }
 
 void test_http_post(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
+  NetworkClientSecure sslClient;
+  sslClient.setCACert(ca_cert);
+
   HTTPClient http;
-  TEST_ASSERT_TRUE(http.begin("http://postman-echo.com/post"));
+  TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/post"));
   http.addHeader("Content-Type", "application/json");
   int code = http.POST("{\"key\":\"value\"}");
   TEST_ASSERT_EQUAL(200, code);
@@ -118,10 +126,14 @@ void test_http_post(void) {
 }
 
 void test_http_custom_header(void) {
+  TEST_ASSERT_TRUE_MESSAGE(ca_cert_len > 0, "No CA cert received from test driver");
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
+  NetworkClientSecure sslClient;
+  sslClient.setCACert(ca_cert);
+
   HTTPClient http;
-  TEST_ASSERT_TRUE(http.begin("http://postman-echo.com/headers"));
+  TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/headers"));
   http.addHeader("X-Custom-Test", "Arduino123");
   int code = http.GET();
   TEST_ASSERT_EQUAL(200, code);
@@ -174,12 +186,15 @@ static void readCredentialsAndCert() {
   flushSerial();
 
   Serial.println("Send SSID:");
-  while (wifi_ssid.length() == 0) {
-    if (Serial.available()) {
-      wifi_ssid = Serial.readStringUntil('\n');
-      wifi_ssid.trim();
+  {
+    unsigned long timeout = millis() + 10000;
+    while (wifi_ssid.length() == 0 && millis() < timeout) {
+      if (Serial.available()) {
+        wifi_ssid = Serial.readStringUntil('\n');
+        wifi_ssid.trim();
+      }
+      delay(10);
     }
-    delay(10);
   }
   flushSerial();
 
@@ -198,20 +213,36 @@ static void readCredentialsAndCert() {
 
   Serial.println("SEND_CA_CERT");
   ca_cert_len = 0;
-  while (true) {
-    if (Serial.available()) {
-      String line = Serial.readStringUntil('\n');
-      line.trim();
-      if (line == "CERT_END") {
-        break;
+  {
+    bool cert_overflow = false;
+    unsigned long cert_timeout = millis() + 15000;
+    bool cert_done = false;
+    while (!cert_done && millis() < cert_timeout) {
+      if (Serial.available()) {
+        String line = Serial.readStringUntil('\n');
+        line.trim();
+        if (line == "CERT_END") {
+          cert_done = true;
+          break;
+        }
+        if (line.length() > 0) {
+          if (ca_cert_len + line.length() + 1 < MAX_CERT_SIZE) {
+            memcpy(ca_cert + ca_cert_len, line.c_str(), line.length());
+            ca_cert_len += line.length();
+            ca_cert[ca_cert_len++] = '\n';
+          } else {
+            cert_overflow = true;
+          }
+        }
       }
-      if (line.length() > 0 && ca_cert_len + line.length() + 1 < MAX_CERT_SIZE) {
-        memcpy(ca_cert + ca_cert_len, line.c_str(), line.length());
-        ca_cert_len += line.length();
-        ca_cert[ca_cert_len++] = '\n';
-      }
+      delay(10);
     }
-    delay(10);
+    if (!cert_done) {
+      Serial.println("CERT_TIMEOUT");
+    }
+    if (cert_overflow) {
+      Serial.printf("CERT_OVERFLOW max=%d\n", MAX_CERT_SIZE);
+    }
   }
   ca_cert[ca_cert_len] = '\0';
   Serial.printf("GOT_CERT len=%d\n", (int)ca_cert_len);

@@ -9,10 +9,10 @@ Validates `NetworkClientSecure` TLS connections (CA cert, insecure mode, send/re
 | `test_tls_with_ca` | TLS handshake with CA certificate to postman-echo.com:443 |
 | `test_tls_insecure` | TLS connect with `setInsecure()` (skip cert verification) |
 | `test_tls_send_receive` | Send raw HTTP GET over TLS, verify 200 response |
-| `test_http_get` | `HTTPClient` GET request, verify 200 and body content |
-| `test_http_post` | `HTTPClient` POST with JSON payload, verify echoed body |
-| `test_http_custom_header` | `HTTPClient` GET with `X-Custom-Test` header, verify echoed |
-| `test_https_get` | `HTTPClient` HTTPS GET via `NetworkClientSecure` with CA cert |
+| `test_http_get` | `HTTPClient` HTTPS GET via CA cert, verify 200 and body content |
+| `test_http_post` | `HTTPClient` HTTPS POST with JSON payload, verify echoed body |
+| `test_http_custom_header` | `HTTPClient` HTTPS GET with `X-Custom-Test` header, verify echoed |
+| `test_https_get` | `HTTPClient` HTTPS GET via `NetworkClientSecure` with CA cert (status only) |
 | `test_http_timeout` | `HTTPClient` to unreachable IP (192.0.2.1), verify timeout error |
 
 ## Requirements

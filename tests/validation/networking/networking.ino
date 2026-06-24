@@ -297,12 +297,15 @@ static void readCredentials() {
   }
 
   Serial.println("Send SSID:");
-  while (wifi_ssid.length() == 0) {
-    if (Serial.available()) {
-      wifi_ssid = Serial.readStringUntil('\n');
-      wifi_ssid.trim();
+  {
+    unsigned long timeout = millis() + 10000;
+    while (wifi_ssid.length() == 0 && millis() < timeout) {
+      if (Serial.available()) {
+        wifi_ssid = Serial.readStringUntil('\n');
+        wifi_ssid.trim();
+      }
+      delay(10);
     }
-    delay(10);
   }
 
   while (Serial.available()) {
