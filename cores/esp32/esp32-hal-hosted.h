@@ -16,7 +16,7 @@
 #define MAIN_ESP32_HAL_HOSTED_H_
 
 #include "sdkconfig.h"
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
 
 #include "stdint.h"
 #include "stdbool.h"
@@ -58,5 +58,5 @@ bool hostedActivateUpdate();
 }
 #endif
 
-#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED) */
+#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED) */
 #endif /* MAIN_ESP32_HAL_HOSTED_H_ */

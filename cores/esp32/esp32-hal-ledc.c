@@ -26,6 +26,13 @@
 #include <math.h>
 #endif
 
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 1, 0)
+#define LEDC_LL_GET_HW_FN() LEDC_LL_GET_HW()
+#else
+#define LEDC_LL_GET_HW_FN() LEDC_LL_GET_HW(0)
+#endif
+
 #ifdef SOC_LEDC_SUPPORT_HS_MODE
 #define LEDC_CHANNELS (SOC_LEDC_CHANNEL_NUM << 1)
 #else
@@ -272,7 +279,7 @@ bool ledcAttachChannel(uint8_t pin, uint32_t freq, uint8_t resolution, uint8_t c
   //get resolution of selected channel when used
   if (channel_used) {
     uint32_t channel_resolution = 0;
-    ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &channel_resolution);
+    ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &channel_resolution);
     log_i("Channel %u frequency: %" PRIu32 ", resolution: %" PRIu32, channel, ledc_get_freq(group, timer), channel_resolution);
     handle->channel_resolution = (uint8_t)channel_resolution;
   } else {
@@ -364,11 +371,11 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
   ledc_timer_t timer;
 
   // Get the actual timer being used by this channel
-  ledc_ll_get_channel_timer(LEDC_LL_GET_HW(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
+  ledc_ll_get_channel_timer(LEDC_LL_GET_HW_FN(), group, (channel % SOC_LEDC_CHANNEL_NUM), &timer);
 
   //Fixing if all bits in resolution is set = LEDC FULL ON
   uint32_t resolution = 0;
-  ledc_ll_get_duty_resolution(LEDC_LL_GET_HW(), group, timer, &resolution);
+  ledc_ll_get_duty_resolution(LEDC_LL_GET_HW_FN(), group, timer, &resolution);
 
   uint32_t max_duty = (1 << resolution) - 1;
 
