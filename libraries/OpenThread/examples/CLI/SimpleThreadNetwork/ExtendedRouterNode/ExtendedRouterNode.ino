@@ -56,7 +56,7 @@ void setup() {
 
     // CLI
     char resp[256];
-    if (otGetRespCmd("panid", resp, sizeof(resp))) {
+    if (otGetRespCmd("panid", resp)) {
       Serial.printf("\r\nPanID[using CLI]: %s\r\n", resp);
     } else {
       Serial.printf("\r\nPanID[using CLI]: FAILED!\r\n");

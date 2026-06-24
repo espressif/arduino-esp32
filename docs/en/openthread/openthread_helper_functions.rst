@@ -64,8 +64,7 @@ otGetRespCmd
 
     bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, uint32_t respTimeout = 5000);
 
-When ``resp`` is non-NULL, ``respBufSize`` must be set (use ``sizeof(buffer)``).
-Responses longer than ``respBufSize - 1`` bytes are truncated with a warning.
+When ``resp`` is a fixed-size stack array, pass only ``cmd`` and ``resp`` (buffer size is deduced; default timeout 5000 ms). Use ``otGetRespCmd(cmd, resp, timeoutMs)`` for a custom timeout. For a raw ``char*``, pass ``respBufSize`` explicitly; responses longer than ``respBufSize - 1`` bytes are truncated with a warning.
 
 otExecCommand
 ^^^^^^^^^^^^^

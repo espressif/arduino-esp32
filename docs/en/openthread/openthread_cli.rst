@@ -30,10 +30,12 @@ Executes a CLI command and gets the response.
 
 * ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``).
 * ``resp`` - Buffer to store the response (optional, can be ``NULL``).
-* ``respBufSize`` - Size of ``resp`` in bytes including the terminating NUL. **Required** when ``resp`` is not ``NULL`` (use ``sizeof(buffer)``).
+* ``respBufSize`` - Size of ``resp`` in bytes including the terminating NUL. Required for raw ``char*`` buffers; for stack arrays use the two-argument form below (size deduced automatically).
 * ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms).
 
 This function executes a CLI command and collects all response lines until "Done" or "Error" is received. Stale lines left in the CLI RX queue from a prior timed-out command are discarded before sending ``cmd`` (50 ms idle window). When ``resp`` is provided, the accumulated response text is copied into the buffer; if the response is longer than ``respBufSize - 1`` bytes it is truncated and a warning is logged.
+
+For a fixed-size stack buffer, pass only ``cmd`` and ``resp`` — buffer size and default timeout are applied automatically. A custom timeout on a stack buffer: ``otGetRespCmd(cmd, resp, timeoutMs)``. For a raw ``char*`` with a known size: ``otGetRespCmd(cmd, ptr, len)`` or ``otGetRespCmd(cmd, ptr, len, timeoutMs)``. Legacy raw-pointer calls with unknown buffer size (``respBufSize`` = 0) copy the full response without bounds checking.
 
 **Returns:** ``true`` if command executed successfully, ``false`` on error or timeout.
 
@@ -42,11 +44,11 @@ This function executes a CLI command and collects all response lines until "Done
 .. code-block:: arduino
 
     char response[256];
-    if (otGetRespCmd("state", response, sizeof(response))) {
+    if (otGetRespCmd("state", response)) {
         Serial.printf("Thread state: %s\r\n", response);
     }
 
-    if (otGetRespCmd("networkname", response, sizeof(response))) {
+    if (otGetRespCmd("networkname", response)) {
         Serial.printf("Network name: %s\r\n", response);
     }
 
@@ -427,7 +429,7 @@ Using CLI Helper Functions API
 
         // Get network state
         char resp[256];
-        if (otGetRespCmd("state", resp, sizeof(resp))) {
+        if (otGetRespCmd("state", resp)) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
 

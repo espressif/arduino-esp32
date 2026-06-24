@@ -18,6 +18,7 @@
 
 #include "OThreadCLI_Util.h"
 #include <StreamString.h>
+#include <string.h>
 
 namespace {
 
@@ -42,10 +43,6 @@ static void drainCliRxQueue() {
 bool otGetRespCmd(const char *cmd, char *resp, size_t respBufSize, uint32_t respTimeout) {
   if (!OThreadCLI) {
     log_w("otGetRespCmd: OpenThread CLI not started");
-    return false;
-  }
-  if (resp != NULL && respBufSize == 0) {
-    log_e("otGetRespCmd: respBufSize required when resp is set (use sizeof(buffer))");
     return false;
   }
   StreamString cliRespAllLines;
@@ -91,12 +88,18 @@ bool otGetRespCmd(const char *cmd, char *resp, size_t respBufSize, uint32_t resp
   }
   if (resp != NULL) {
     size_t n = cliRespAllLines.length();
-    if (n + 1 > respBufSize) {
-      log_w("otGetRespCmd: response truncated (%u bytes into %u-byte buffer)", (unsigned)n, (unsigned)respBufSize);
-      n = respBufSize - 1;
+    if (respBufSize == 0) {
+      // Legacy raw char* path: caller did not supply a buffer size. Stack-buffer
+      // callers use the template overload, which always passes N > 0.
+      strcpy(resp, cliRespAllLines.c_str());
+    } else {
+      if (n + 1 > respBufSize) {
+        log_w("otGetRespCmd: response truncated (%u bytes into %u-byte buffer)", (unsigned)n, (unsigned)respBufSize);
+        n = respBufSize - 1;
+      }
+      memcpy(resp, cliRespAllLines.c_str(), n);
+      resp[n] = '\0';
     }
-    memcpy(resp, cliRespAllLines.c_str(), n);
-    resp[n] = '\0';
   }
   return true;
 }
@@ -240,29 +243,29 @@ void otCLIPrintNetworkInformation(Stream &output) {
   }
   char resp[512];
   output.println("Thread Setup:");
-  if (otGetRespCmd("state", resp, sizeof(resp))) {
+  if (otGetRespCmd("state", resp)) {
     output.printf("Node State: \t%s", resp);
   }
-  if (otGetRespCmd("networkname", resp, sizeof(resp))) {
+  if (otGetRespCmd("networkname", resp)) {
     output.printf("Network Name: \t%s", resp);
   }
-  if (otGetRespCmd("channel", resp, sizeof(resp))) {
+  if (otGetRespCmd("channel", resp)) {
     output.printf("Channel: \t%s", resp);
   }
-  if (otGetRespCmd("panid", resp, sizeof(resp))) {
+  if (otGetRespCmd("panid", resp)) {
     output.printf("Pan ID: \t%s", resp);
   }
-  if (otGetRespCmd("extpanid", resp, sizeof(resp))) {
+  if (otGetRespCmd("extpanid", resp)) {
     output.printf("Ext Pan ID: \t%s", resp);
   }
-  if (otGetRespCmd("networkkey", resp, sizeof(resp))) {
+  if (otGetRespCmd("networkkey", resp)) {
     output.printf("Network Key: \t%s", resp);
   }
-  if (otGetRespCmd("ipaddr", resp, sizeof(resp))) {
+  if (otGetRespCmd("ipaddr", resp)) {
     output.println("Node IP Addresses are:");
     output.printf("%s", resp);
   }
-  if (otGetRespCmd("ipmaddr", resp, sizeof(resp))) {
+  if (otGetRespCmd("ipmaddr", resp)) {
     output.println("Node Multicast Addresses are:");
     output.printf("%s", resp);
   }
