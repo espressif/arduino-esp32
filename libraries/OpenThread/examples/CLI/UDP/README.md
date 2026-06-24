@@ -16,8 +16,8 @@ Demonstrate a many-to-one Thread telemetry topology where:
 
 | Sketch | Role |
 | --- | --- |
-| [`udp_sensor_collector/udp_sensor_collector.ino`](udp_sensor_collector/) | Central collector node (Leader) |
-| [`udp_sensor_node/udp_sensor_node.ino`](udp_sensor_node/) | Sensor node (Child / Sleepy End Device) |
+| [CLI UDP sensor collector (Leader)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector) | Central collector node (Leader) |
+| [CLI UDP sensor node (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node) | Sensor node (Child / Sleepy End Device) |
 
 ## High-level design
 
@@ -214,14 +214,16 @@ layer:
   Thread re-attach and re-opens its UDP socket, so a Sleepy End Device does not
   sit polling a dead parent until `CHILD_TIMEOUT_S` expires.
 
-## Troubleshooting quick checks
+## Troubleshooting
 
-- `Error ...` after `udp open/bind/send`: verify Thread state and command order.
-- No ACK on sensor:
-  - collector not bound yet,
-  - wrong port/group/dataset mismatch,
-  - sensor detached (`state` not child/router/leader).
-- Frequent drops on collector: malformed payload or table full.
+**Startup order:** Flash [CLI UDP sensor collector (Leader)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector) first and wait for `Attached as Leader` and `Collector listening on UDP ff03::abcd:5050`. Then flash [CLI UDP sensor node (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node) boards. Reset any sensor that booted before the collector was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| `Error ...` after `udp open/bind/send` | Thread not attached or wrong CLI command order — run `state` and verify `child`/`router`/`leader`. |
+| No ACK on sensor | Collector not bound yet, wrong port/group, dataset mismatch, or sensor detached (`state` not child/router/leader). |
+| Frequent `DROP malformed` on collector | Bound to Thread-reserved port — use **5050**, not 61631/5683/5684. See collector README. |
+| Sensor started before collector | Reset sensor after collector is Leader and listening on UDP. |
 
 ## Why CLI-only
 

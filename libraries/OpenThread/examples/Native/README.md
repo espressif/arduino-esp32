@@ -10,6 +10,7 @@ The Native API is the typed C++ interface exposed by Arduino wrappers such as:
 - `OThread`
 - `DataSet`
 - `OThreadUDP`
+- `OThreadCoAP` (`OThreadCoAPClient`, `OThreadCoAPServer`, …)
 
 Instead of sending textual OpenThread CLI commands, sketches call methods
 directly, for example:
@@ -45,7 +46,7 @@ Serial.println(OThread.otGetStringDeviceRole());
 Serial.println(OThread.getMeshLocalEid());
 ```
 
-Commissioning call order (see `ThreadCommissioning/` and UDP examples):
+Commissioning call order (see [Thread Commissioning examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning) and [Native UDP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP)):
 
 | Role | Order after `begin(false)` |
 | --- | --- |
@@ -55,6 +56,33 @@ Commissioning call order (see `ThreadCommissioning/` and UDP examples):
 Do **not** call `start()` before `startJoiner()`; OpenThread returns
 `OT_ERROR_INVALID_STATE` if Thread is already enabled during Joiner
 commissioning.
+
+### Network identity: `initNew()` vs NVS resume
+
+Multi-board demos behave differently depending on how each sketch obtains its
+Thread identity:
+
+| Pattern | Typical sketches | After server reboot |
+| --- | --- | --- |
+| **`initNew()` every boot** | Most CoAP servers (SimpleGet, Light Switch, CRUD, Sensor server, Secure/Greenhouse servers) | Forms a **new** partition (new Extended PAN ID). Clients must **reset or re-flash** to re-join. |
+| **NVS resume** (`begin(true)` or `commitDataSet` without `initNew`) | UDP Light Switch `light`, some Commissioner flows | Same network identity when NVS is intact. Clients usually re-attach without erase. |
+| **Network key only (client)** | CoAP SimpleGet `client`, CoAP Sensor `sensor_client`, Native/CLI `RouterNode` | Joins whichever Leader matches `NETKEY`; fails if server rebooted with a fresh `initNew()` partition. |
+| **Joiner + PSKd (no local dataset)** | CoAP Light Switch `switch`, UDP Light Switch `switch`, [Thread Commissioning — JoinerNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode) | Needs an open Commissioner window (`addJoiner`); not the same as NETKEY-only join. |
+
+Before changing dataset constants in source, **erase flash** (or factory-reset
+the OpenThread dataset) on all boards. If a client shows `Started as Leader` or
+attach timeout after a server reboot, the server likely started a fresh
+`initNew()` network — reset the client after the server is Leader again.
+
+### Commissioner join-window patterns
+
+| Pattern | When `addJoiner()` runs | Examples |
+| --- | --- | --- |
+| **Automatic** | Right after `startCommissioner()` succeeds | CoAP Light Switch `light`, UDP Light Switch `light`, CoAP CRUD `notes_server`, CoAP Secure/Greenhouse servers |
+| **Button-gated** | On user button press after Commissioner is active | [Thread Commissioning — CommissionerNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode) |
+
+If you flash a joiner sketch while no Commissioner window is open, attach fails
+until the server calls `addJoiner()` (or you press the Commissioner button).
 
 ### `DataSet`
 
@@ -88,6 +116,36 @@ otUdp.beginPacket(peerAddress, peerPort);
 otUdp.write(payload, length);
 otUdp.endPacket();
 ```
+
+### `OThreadCoAP`
+
+`OThreadCoAP*` classes wrap the OpenThread Application CoAP API (`otCoap*`) in an
+Arduino-style interface. Plain CoAP uses UDP port **5683**; CoAPS (DTLS) uses
+port **5684** when enabled at build time.
+
+Typical server usage (global singleton — do not declare a local server variable):
+
+```cpp
+static void onHello(OThreadCoAPRequest &req, OThreadCoAPResponse &resp, void *ctx) {
+  resp.setCode(OT_COAP_RESP_OK);
+  resp.setPayload("Hello from CoAP!");
+  resp.send();
+}
+
+OThreadCoAPServer.on("hello", OT_COAP_METHOD_GET, onHello);
+OThreadCoAPServer.begin();
+```
+
+Typical client usage:
+
+```cpp
+OThreadCoAPClient client;
+client.setConfirmable(true);
+int code = client.GET(serverIp, "hello");
+```
+
+See the [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) for full two-board CoAP demos. CLI-based
+CoAP examples remain under [CLI CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP) for reference.
 
 ## Native vs CLI: quick comparison
 
@@ -150,32 +208,57 @@ Some examples also require:
 
 | Folder | Sketches | What it demonstrates |
 | --- | --- | --- |
-| `SimpleThreadNetwork/` | `LeaderNode`, `RouterNode` | Basic Native network formation and joining using `OThread` and `DataSet`. |
-| `ThreadCommissioning/` | `CommissionerNode`, `JoinerNode` | Thread commissioning: a Commissioner opens a joiner window and a Joiner obtains the dataset using only a PSKd. |
-| `UDP_Light_Switch/` | `light`, `switch` | Two-board UDP light control demo using Joiner / Commissioner and `OThreadUDP` on application port `5051`. |
-| `UDP_SensorNetwork/` | `sensor_collector`, `sensor_node` | Many-to-one UDP telemetry demo with sequence ACKs, collector-side node tracking, and optional Sleepy End Device behavior. |
+| [Native StackShutdown](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown) | [StackShutdown](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown) | Graceful teardown then restart: `OThreadCoAPServer.stop()` → `OThreadUDP.stop()` → `OThread.end()` → `setup()`. |
+| [Simple Thread Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork) | [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode), [RouterNode (joiner)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode) | Basic Native network formation and joining using `OThread` and `DataSet`. |
+| [Thread Commissioning](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning) | [CommissionerNode (server)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode), [JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode) | Thread commissioning: a Commissioner opens a joiner window and a Joiner obtains the dataset using only a PSKd. |
+| [Native UDP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP) | [UDP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch), [UDP Sensor Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork) | Native UDP application traffic (ports 5050/5051). See [Native UDP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/UDP/README.md). |
+| [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) | [CoAP SimpleGet](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet), [CoAP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch), [CoAP Sensor](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor), [CoAP CRUD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD), [CoAP Secure](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure), [CoAP Greenhouse](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse) | Native CoAP / CoAPS on ports 5683/5684. See [Native CoAP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/CoAP/README.md). |
 
 ## Choosing an example
 
-- Start with `SimpleThreadNetwork/` if you only need to learn how to form and
+- Use [Native StackShutdown](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown) if you need a working Native teardown
+  sequence with UDP and CoAP before `OThread.end()`, plus a `setup()` restart without chip reset.
+- Start with [Simple Thread Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork) if you only need to learn how to form and
   join a Thread network with a preconfigured dataset.
-- Use `ThreadCommissioning/` if devices should join securely using a PSKd
+- Use [Thread Commissioning examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning) if devices should join securely using a PSKd
   instead of carrying the network key in source code.
-- Use `UDP_Light_Switch/` if you want a compact command/ACK example over UDP.
-- Use `UDP_SensorNetwork/` if you want a more robust telemetry pattern with
-  application-level acknowledgments and node liveness tracking.
+- Use [UDP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch) if you want a compact command/ACK example over UDP.
+- Use [UDP Sensor Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork) if you want a more robust telemetry pattern with
+  application-level acknowledgements and node liveness tracking.
+- Use [CoAP SimpleGet](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet) for the smallest introduction to `OThreadCoAPClient` and
+  `OThreadCoAPServer`.
+- Use [CoAP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) for multicast command/response patterns over CoAP port 5683.
+- Use [CoAP Sensor](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor) for a read-only resource with changing values and NON polling.
+- Use [CoAP CRUD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD) for REST collections with `OThreadCoAPResourceStore`.
+- Use [CoAP Secure](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure) or [CoAP Greenhouse](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse) when CoAPS (DTLS) is required.
 
 ## Practical guidance
 
 - Check return values from Native APIs, especially `otError` results from
   Joiner / Commissioner calls.
 - Bind UDP sockets only after the device has attached to a Thread network.
-- Avoid OpenThread-reserved UDP ports for application traffic. For these
-  examples, `5050` and `5051` are used instead of CoAP / TMF ports.
+- Avoid OpenThread-reserved UDP ports for application traffic. For UDP examples,
+  `5050` and `5051` are used instead of CoAP / TMF ports. For CoAP examples,
+  use application ports **5683** (plain) and **5684** (CoAPS) — not **61631**
+  (Thread TMF CoAP).
 - If a sketch resumes a dataset from NVS, erase NVS or factory-reset the
   OpenThread dataset before expecting changed dataset constants to take effect.
 - For commissioning examples, make sure the Commissioner joiner window is open
   before starting or retrying the Joiner.
+- To stop Thread without rebooting, follow the shutdown order in the [OpenThread library README](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/README.md):
+  [Native StackShutdown](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown) (Native UDP + CoAP teardown and `setup()` restart) or [CLI StackShutdown](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/StackShutdown) (CLI-only).
+
+## Troubleshooting
+
+Multi-board demos (UDP, CoAP, SimpleThreadNetwork, ThreadCommissioning) share the same bring-up rule: **start the server / Leader / Commissioner / collector sketch first**, wait until Serial reports attached (and Commissioner ready when commissioning is used), then flash or **reset** client / Joiner / router boards that booted too early.
+
+| Symptom | Likely cause |
+| --- | --- |
+| Joiner or client cannot attach | Server/Leader not running yet, join window closed, or client started before server was ready — reset client after server is up. |
+| Attached but application traffic fails | Server not listening, wrong port, stale Leader RLOC, or dataset mismatch between boards. |
+| Works once, fails after reboot | Demo may use `initNew()` (new network each boot) vs NVS resume — erase NVS or reset clients to re-join; see the specific example README. |
+| `OT_ERROR_INVALID_STATE` on Joiner | Called `start()` before `startJoiner()` — use Joiner call order from the table above. |
+| Build errors for Joiner/Commissioner | Missing `CONFIG_OPENTHREAD_JOINER=y` or `CONFIG_OPENTHREAD_COMMISSIONER=y` in sdkconfig for that sketch. |
 
 ## License
 

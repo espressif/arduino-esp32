@@ -20,18 +20,12 @@
 #include "OThreadCLI.h"
 
 #include "esp_err.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_netif_types.h"
-#include "esp_vfs_eventfd.h"
+#include "esp_openthread_lock.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
-
-#include "esp_netif_net_stack.h"
-#include "lwip/netif.h"
 
 bool OpenThreadCLI::otCLIStarted = false;
 static TaskHandle_t s_cli_task = NULL;
@@ -54,24 +48,26 @@ static void ot_cli_loop(void *context) {
   String sTxString("");
 
   while (true) {
-    if (tx_queue != NULL) {
-      uint8_t c;
-      if (xQueueReceive(tx_queue, &c, portMAX_DELAY)) {
-        // avoids sending a empty command, specially when the terminal send "\r\n" together
-        if (sTxString.length() > 0 && (c == '\r' || c == '\n')) {
-          esp_openthread_cli_input(sTxString.c_str());
-          xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
-          sTxString = "";
+    if (tx_queue == NULL) {
+      delay(1);
+      continue;
+    }
+    uint8_t c;
+    if (xQueueReceive(tx_queue, &c, portMAX_DELAY)) {
+      // avoids sending a empty command, specially when the terminal send "\r\n" together
+      if (sTxString.length() > 0 && (c == '\r' || c == '\n')) {
+        esp_openthread_cli_input(sTxString.c_str());
+        xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
+        sTxString = "";
+      } else {
+        if (c == '\b' || c == 127) {
+          if (sTxString.length() > 0) {
+            sTxString.remove(sTxString.length() - 1);
+          }
         } else {
-          if (c == '\b' || c == 127) {
-            if (sTxString.length() > 0) {
-              sTxString.remove(sTxString.length() - 1);
-            }
-          } else {
-            // only allow printable characters
-            if (c > 31 && c < 127) {
-              sTxString += (char)c;
-            }
+          // only allow printable characters
+          if (c > 31 && c < 127) {
+            sTxString += (char)c;
           }
         }
       }
@@ -175,6 +171,8 @@ static void ot_cli_console_worker(void *context) {
           cli->cliStream->printf(cli->prompt.c_str());
         }
       }
+    } else {
+      delay(1);
     }
   }
 }
@@ -246,18 +244,23 @@ void OpenThreadCLI::begin() {
   //RX Buffer default has 1024 bytes if not preset
   if (rx_queue == NULL) {
     if (!setRxBufferSize(1024)) {
-      log_e("HW CDC RX Buffer error");
+      log_e("OpenThread CLI: failed to allocate RX queue");
+      return;
     }
   }
   //TX Buffer default has 256 bytes if not preset
   if (tx_queue == NULL) {
     if (!setTxBufferSize(256)) {
-      log_e("HW CDC RX Buffer error");
+      log_e("OpenThread CLI: failed to allocate TX queue");
+      setRxBufferSize(0);
+      return;
     }
   }
 
   if (xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task) != pdPASS || s_cli_task == NULL) {
     log_e("Error: Failed to create OpenThread CLI task");
+    setRxBufferSize(0);
+    setTxBufferSize(0);
     return;
   }
   // Initialize the OpenThread CLI. The OpenThread mainloop is already running on
@@ -270,6 +273,8 @@ void OpenThreadCLI::begin() {
     log_e("Failed to acquire OpenThread lock to initialize the CLI");
     vTaskDelete(s_cli_task);
     s_cli_task = NULL;
+    setRxBufferSize(0);
+    setTxBufferSize(0);
     return;
   }
 
@@ -282,15 +287,17 @@ void OpenThreadCLI::begin() {
 
 void OpenThreadCLI::end() {
   if (!otCLIStarted) {
-    log_w("OpenThread CLI already stopped. Please begin() it before stopping again.");
+    log_w("OpenThread CLI already stopped.");
     return;
   }
+  stopConsole();
+  flush();
+  // OpenThread provides otCliInit() but no otCliDeinit(); stop feeding commands
+  // and delete the marshaling task while the stack is still live.
   if (s_cli_task != NULL) {
     vTaskDelete(s_cli_task);
     s_cli_task = NULL;
   }
-  stopConsole();
-  esp_event_loop_delete_default();
   setRxBufferSize(0);
   setTxBufferSize(0);
   otCLIStarted = false;
@@ -301,6 +308,7 @@ size_t OpenThreadCLI::write(uint8_t c) {
     return 0;
   }
   if (xQueueSend(tx_queue, &c, 0) != pdPASS) {
+    log_w("OpenThreadCLI: TX queue full; byte dropped");
     return 0;
   }
   return 1;
@@ -363,7 +371,9 @@ void OpenThreadCLI::flush() {
     return;
   }
   // wait for the TX Queue to be empty
-  while (uxQueueMessagesWaiting(tx_queue));
+  while (uxQueueMessagesWaiting(tx_queue)) {
+    delay(1);
+  }
 }
 
 OpenThreadCLI OThreadCLI;

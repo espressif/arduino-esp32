@@ -1,68 +1,76 @@
-# Joiner Demo - Commissioner Node (Native API)
+# CommissionerNode - Thread Leader + Commissioner (Native API)
 
-This example is part of the `ThreadCommissioning` pair. It plays the
-role of:
+Server side of the [Thread Commissioning demo](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/README.md). This sketch:
 
-- **Thread network former**: provides the operational dataset (network key,
-  channel, PAN ID, ...) of a brand-new Thread network and normally becomes
-  Leader.
-- **Commissioner**: accepts a remote Joiner that knows only the PSKd
-  (Pre-Shared Key for Device) and securely hands the dataset over to it
-  during commissioning.
+* forms a brand-new Thread network with a hard-coded `DataSet` (network name,
+  channel `THREAD_CHANNEL`, PAN ID, extended PAN ID, network key),
+* becomes the **Leader** of a new partition via `networkInterfaceUp()` +
+  `start()`,
+* petitions the **Commissioner** role automatically once attached,
+* opens the **joiner window** only when you **press the button** (`JOIN_BUTTON_PIN`,
+  BOOT by default), calling `addJoiner(PSKD, 120)` to accept any Joiner that
+  presents PSKd `J01NME`,
+* prints role, RLOC, addresses, and Commissioner state every 5 seconds in
+  `loop()`.
 
-Run this sketch on one ESP32-H2 / ESP32-C6 / ESP32-C5 and the companion
-[`../JoinerNode/JoinerNode.ino`](../JoinerNode/JoinerNode.ino) on a second
-board.
+It is the counterpart of [Thread Commissioning — JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode).
 
-> **Important:** the Commissioner role starts automatically after this node
-> attaches, but it does **not** accept Joiners until you press the button.
-> Wait for `Press the button on GPIO ... to open the joiner window`, then press
-> `JOIN_BUTTON_PIN` (the on-board BOOT button by default). This starts the
-> commissioning/joiner listening window for `JOINER_WINDOW_SEC` seconds.
+> **Important:** the Commissioner role starts automatically after attach, but it
+> does **not** accept Joiners until you press the button. Wait for
+> `Press the button on GPIO ... to open the joiner window`, then press
+> `JOIN_BUTTON_PIN`.
 
 ## Supported Targets
 
-| SoC | Thread | Status |
-| --- | ------ | ------ |
-| ESP32-H2 | yes | Supported |
-| ESP32-C6 | yes | Supported |
-| ESP32-C5 | yes | Supported |
+| SoC      | Thread | BOOT Button | Status    |
+| -------- | ------ | ----------- | --------- |
+| ESP32-H2 | yes    | `BOOT_PIN`  | Supported |
+| ESP32-C6 | yes    | `BOOT_PIN`  | Supported |
+| ESP32-C5 | yes    | `BOOT_PIN`  | Supported |
 
-## Required IDF / sdkconfig
+Override `JOIN_BUTTON_PIN` at the top of the sketch if your button GPIO differs.
 
-- `CONFIG_OPENTHREAD_ENABLED=y`
-- `CONFIG_OPENTHREAD_COMMISSIONER=y`
-- `CONFIG_SOC_IEEE802154_SUPPORTED=y`
+## Required IDF features (sdkconfig)
 
-## What it does
+| Feature                              | Why                                              |
+| ------------------------------------ | ------------------------------------------------ |
+| `CONFIG_OPENTHREAD_ENABLED=y`        | Build the OpenThread stack.                      |
+| `CONFIG_SOC_IEEE802154_SUPPORTED=y`  | Ensure the SoC has the 802.15.4 radio.           |
+| `CONFIG_OPENTHREAD_COMMISSIONER=y`   | Enable Commissioner APIs.                        |
 
-1. `OpenThread.begin(false)` - start the stack without auto-loading any NVS
-   dataset.
-2. Build a fresh `DataSet` (network name, channel `THREAD_CHANNEL` (default
-   15), PAN 0x1234, extended PAN ID, network key) and `commitDataSet()` it.
-   Pinning the channel is optional - `initNew()` already picks a valid
-   (random) one - but it lets the Joiner skip the channel scan (see below).
-3. `networkInterfaceUp()` + `start()` - bring up Thread; this node becomes
-   the Leader of a brand-new partition.
-4. Once attached, call `startCommissioner()` which petitions the role and
-   blocks until `OT_COMMISSIONER_STATE_ACTIVE`.
-5. **Press the button** (`JOIN_BUTTON_PIN`, defaults to the on-board BOOT
-   button) to call `addJoiner(PSKD, nullptr, 120)`. This opens the joiner
-   window, accepting **any** joiner that presents the PSKd `"J01NME"` for the
-   next 120 seconds. Press again any time to re-open the window after it
-   expires.
-6. The `loop()` prints role / RLOC / addresses and the Commissioner state
-   every 5 seconds.
+## Prerequisites
 
-## Configuration
+Flash this sketch **before** [Thread Commissioning — JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode).
 
-These build-time macros can be overridden from the top of the sketch or with
-`-D` compiler flags (e.g. in `boards.local.txt` / PlatformIO `build_flags`):
+After attach and `Commissioner ACTIVE`, **press the BOOT button** to open the
+joiner window before starting or resetting the Joiner. The window stays open for
+120 s (`JOINER_WINDOW_SEC`); press the button again to re-open it after expiry.
 
-| Macro | Default | Purpose |
-| ----- | ------- | ------- |
-| `THREAD_CHANNEL` | `15` | IEEE 802.15.4 channel (11..26) the network is formed on. Must match the Joiner's `THREAD_CHANNEL` so it can attach without scanning. |
-| `JOIN_BUTTON_PIN` | `BOOT_PIN` | GPIO of the (active-low) button that opens the joiner window. `BOOT_PIN` comes from `Arduino.h` (GPIO9 on C6/H2, GPIO28 on C5). |
+Pin `THREAD_CHANNEL` (default 15) so it matches the Joiner's channel hint and
+avoids a full channel scan on the Joiner side.
+
+## What the sketch does
+
+```cpp
+// 1) Form the Thread network and become Leader.
+threadCommissionerNode.begin(false);
+dataset.initNew();
+dataset.setNetworkName("ESP_OT_Joiner");
+dataset.setChannel(THREAD_CHANNEL);
+dataset.setPanId(0x1234);
+// ... ext PAN ID, network key ...
+threadCommissionerNode.commitDataSet(dataset);
+threadCommissionerNode.networkInterfaceUp();
+threadCommissionerNode.start();
+
+// 2) Petition Commissioner once attached (in loop()).
+threadCommissionerNode.startCommissioner();
+
+// 3) On button press: open joiner window.
+if (joinButtonPressed()) {
+  threadCommissionerNode.addJoiner("J01NME", 120);
+}
+```
 
 ## Expected serial output
 
@@ -71,7 +79,7 @@ These build-time macros can be overridden from the top of the sketch or with
 Thread network started, waiting to become Leader...
 Attached as Leader. Petitioning Commissioner...
 Commissioner ACTIVE.
-Press the button on GPIO 9 to open the joiner window.
+===>>>Press the button on GPIO 9 to open the joiner window.
 ==============================================
 Role:           Leader
 RLOC16:         0x0000
@@ -88,42 +96,39 @@ Joiner window OPEN: PSKd "J01NME" accepted for 120 s.
 Bring up the JoinerNode sketch now.
 ```
 
-## Key APIs
+## Customisation
 
-```cpp
-// Set up a network and become Leader (same as the legacy example).
-threadCommissionerNode.begin(false);
-dataset.initNew();
-// ... configure dataset ...
-threadCommissionerNode.commitDataSet(dataset);
-threadCommissionerNode.networkInterfaceUp();
-threadCommissionerNode.start();
+Build-time macros at the top of the sketch (override with `-D` flags):
 
-// NEW: become the Commissioner so joiners can attach with a PSKd.
-threadCommissionerNode.startCommissioner();    // blocks until ACTIVE
+| Macro             | Default    | Purpose                                                      |
+| ----------------- | ---------- | ------------------------------------------------------------ |
+| `THREAD_CHANNEL`  | `15`       | 802.15.4 channel (11..26). Must match Joiner's `THREAD_CHANNEL`. |
+| `JOIN_BUTTON_PIN` | `BOOT_PIN` | GPIO of active-low button that opens the joiner window.      |
+| `PSKD`            | `J01NME`   | Pre-Shared Key for Device accepted by `addJoiner()`.          |
+| `JOINER_WINDOW_SEC` | `120`    | How long each `addJoiner()` entry stays valid.               |
 
-// Open the joiner window on demand, when the button is pressed.
-if (joinButtonPressed()) {                     // active-low JOIN_BUTTON_PIN
-  threadCommissionerNode.addJoiner("J01NME",   // PSKd
-                                    nullptr,   // any joiner (wildcard)
-                                    120);      // valid for 120 s
-}
-```
+Pinning the channel is optional — `initNew()` already picks a valid channel —
+but matching the Joiner hint avoids a channel scan.
 
 ## Troubleshooting
 
-- **`Commissioner petition failed`** - the petition is only accepted once
-  the device is attached to a network. The sketch automatically waits for
-  attachment before petitioning; if it still fails, increase the timeout
-  (`startCommissioner(60000)`) or check that no other commissioner is
-  active in the partition.
-- **Joiner never appears** - first make sure you **pressed the button** to
-  open the joiner window (look for `Joiner window OPEN` on the serial log). The
-  window only stays open for `JOINER_WINDOW_SEC` (120 s); press the button
-  again to re-open it. Then confirm both boards run on the same channel
-  (`THREAD_CHANNEL`; radio is restricted to 15.4 channels 11..26) and that the
-  PSKd matches exactly. The PSKd must be ASCII, 6 to 32 characters,
-  base32-thread-friendly (no `0`, `I`, `O`, `Q`).
+**Startup order:** Flash this Commissioner sketch first. Wait for Leader +
+Commissioner `ACTIVE`. **Press the BOOT button** before flashing
+[Thread Commissioning — JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode). Press again to re-open the window after 120 s.
+
+| Symptom | Likely cause |
+| --- | --- |
+| `Commissioner petition failed` | Device not attached yet, or another Commissioner is active — retry or stop the other Commissioner. |
+| Joiner never appears | Joiner window not open — press the button and look for `Joiner window OPEN` before starting JoinerNode. |
+| Join window expired | Window lasts 120 s — press the button again, then reset the Joiner. |
+| `addJoiner failed` | Invalid PSKd — ASCII 6–32 chars, base32-thread alphabet (no `0`, `I`, `O`, `Q`). |
+| Joiner on wrong channel | Both sketches must use the same `THREAD_CHANNEL`. |
+
+## See also
+
+* [Thread Commissioning — group overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/README.md) — how to run both boards and open the joiner window.
+* [Thread Commissioning — JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode) — companion Joiner sketch.
+* [UDP Light Switch — light (server)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch/light) — Commissioner with UDP lamp server.
 
 ## License
 

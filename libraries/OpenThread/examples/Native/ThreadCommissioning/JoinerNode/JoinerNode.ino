@@ -45,7 +45,6 @@ ot_device_role_t lastKnownRole = OT_ROLE_DISABLED;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}
 
   Serial.println("=== Joiner Demo - Joiner Node ===");
 
@@ -72,13 +71,7 @@ void setup() {
   // Run the Joiner state machine. Retries on transient failures so the user
   // can power-up the CommissionerNode at any time.
   while (!joined) {
-    otError err = threadJoinerNode.startJoiner(
-      PSKD, /*provisioningUrl=*/nullptr,
-      /*vendorName=*/nullptr,
-      /*vendorModel=*/nullptr,
-      /*vendorSwVersion=*/nullptr,
-      /*vendorData=*/nullptr, JOIN_TIMEOUT_MS
-    );
+    otError err = threadJoinerNode.startJoiner(PSKD, JOIN_TIMEOUT_MS);
     if (err == OT_ERROR_NONE) {
       Serial.println("Joiner: commissioning SUCCESS.");
       joined = true;
