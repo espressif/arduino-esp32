@@ -12,6 +12,8 @@ The OpenThread CLI (Command-Line Interface) provides two ways to interact with t
 
 The CLI Helper Functions API is useful for programmatic control using OpenThread CLI commands, while the ``OpenThreadCLI`` class provides a Stream interface for interactive console access.
 
+See also :doc:`openthread_helper_functions` (and `helper_functions.md <https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/helper_functions.md>`_ in the repo) for a walkthrough of the same helpers with example sketches.
+
 CLI Helper Functions API
 ************************
 
@@ -24,13 +26,14 @@ Executes a CLI command and gets the response.
 
 .. code-block:: arduino
 
-    bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000);
+    bool otGetRespCmd(const char *cmd, char *resp = NULL, uint32_t respTimeout = 5000, size_t respBufSize = 0);
 
 * ``cmd`` - The CLI command to execute (e.g., ``"state"``, ``"networkname"``).
 * ``resp`` - Buffer to store the response (optional, can be ``NULL``).
 * ``respTimeout`` - Timeout in milliseconds for waiting for response (default: 5000 ms).
+* ``respBufSize`` - Size of ``resp`` in bytes including the terminating NUL. **Required** when ``resp`` is not ``NULL`` (use ``sizeof(buffer)``).
 
-This function executes a CLI command and collects all response lines until "Done" or "Error" is received. If ``resp`` is not ``NULL``, the response is stored in the buffer.
+This function executes a CLI command and collects all response lines until "Done" or "Error" is received. Stale lines left in the CLI RX queue from a prior timed-out command are discarded before sending ``cmd`` (50 ms idle window). When ``resp`` is provided, the accumulated response text is copied into the buffer; if the response is longer than ``respBufSize - 1`` bytes it is truncated and a warning is logged.
 
 **Returns:** ``true`` if command executed successfully, ``false`` on error or timeout.
 
@@ -39,11 +42,11 @@ This function executes a CLI command and collects all response lines until "Done
 .. code-block:: arduino
 
     char response[256];
-    if (otGetRespCmd("state", response)) {
+    if (otGetRespCmd("state", response, 5000, sizeof(response))) {
         Serial.printf("Thread state: %s\r\n", response);
     }
 
-    if (otGetRespCmd("networkname", response)) {
+    if (otGetRespCmd("networkname", response, 5000, sizeof(response))) {
         Serial.printf("Network name: %s\r\n", response);
     }
 
@@ -54,13 +57,14 @@ Executes a CLI command with arguments.
 
 .. code-block:: arduino
 
-    bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL);
+    bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL, uint32_t respTimeout = 5000);
 
-* ``cmd`` - The CLI command to execute. (e.g., ``"networkname"``, ``"channel"``)
-* ``arg`` - The command argument. (can be ``NULL`` for commands without arguments)
-* ``returnCode`` - Pointer to ``ot_cmd_return_t`` structure to receive error information. (optional)
+* ``cmd`` - The CLI command to execute. (e.g., ``"networkname"``, ``"channel"``).
+* ``arg`` - The command argument. (can be ``NULL`` for commands without arguments).
+* ``returnCode`` - Pointer to ``ot_cmd_return_t`` structure to receive error information. (optional).
+* ``respTimeout`` - Timeout in milliseconds for waiting for Done/Error (default: 5000 ms).
 
-This function executes a CLI command with an optional argument and returns the success status. If ``returnCode`` is provided, it will be populated with error information on failure.
+This function executes a CLI command with an optional argument and returns the success status. The RX queue is drained before sending the command. If ``returnCode`` is provided, it will be populated with error information on failure.
 
 **Returns:** ``true`` if command executed successfully, ``false`` on error.
 
@@ -105,9 +109,9 @@ Executes a CLI command and prints the response to a Stream.
 
     bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout);
 
-* ``cmd`` - The CLI command to execute
-* ``output`` - The Stream object to print responses to (e.g., ``Serial``)
-* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000 ms)
+* ``cmd`` - The CLI command to execute.
+* ``output`` - The Stream object to print responses to (e.g., ``Serial``).
+* ``respTimeout`` - Timeout in milliseconds per response line (default: 5000 ms).
 
 This function executes a CLI command and prints all response lines to the specified Stream until "Done" or "Error" is received.
 
@@ -246,6 +250,10 @@ Sets a callback function for CLI responses.
 
 The callback function is called whenever a complete line of output is received from the OpenThread CLI. This allows you to process CLI responses asynchronously.
 
+.. note::
+
+   The callback runs on the **OpenThread worker task**, not in `loop()`. Keep it minimal: read available bytes with ``OThreadCLI.read()`` and return quickly. Do **not** block, call ``otGetRespCmd()`` / ``otExecCommand()``, or start console I/O from the callback (that can stall the mainloop or deadlock). Defer parsing and follow-up commands to ``loop()`` or a dedicated task.
+
 **Callback Signature:**
 
 .. code-block:: arduino
@@ -312,7 +320,7 @@ Writes a byte to the CLI.
 
     size_t write(uint8_t c);
 
-* ``c`` - The byte to write
+* ``c`` - The byte to write.
 
 This function writes a single byte to the CLI transmit buffer.
 
@@ -419,7 +427,7 @@ Using CLI Helper Functions API
 
         // Get network state
         char resp[256];
-        if (otGetRespCmd("state", resp)) {
+        if (otGetRespCmd("state", resp, 5000, sizeof(resp))) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
 

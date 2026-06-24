@@ -81,16 +81,17 @@ OpenThread Library Structure
 
 **The library provides two main programming interfaces:**
 
-* **CLI Helper Functions API**: Functions that interact with OpenThread through the CLI interface
+* **CLI Helper Functions API**: Functions that interact with OpenThread through the CLI interface.
   * ``otGetRespCmd()``: Execute CLI command and get response.
   * ``otExecCommand()``: Execute CLI command with arguments.
   * ``otPrintRespCLI()``: Execute CLI command and print response to Stream.
   * ``OpenThreadCLI``: Stream-based CLI interface class.
 
-* **Classes API**: Object-oriented classes that directly call OpenThread API functions
+* **Classes API**: Object-oriented classes that directly call OpenThread API functions.
   * ``OpenThread``: Main class for managing Thread network operations (includes the Joiner / Commissioner roles).
   * ``DataSet``: Class for managing Thread operational datasets.
   * ``OThreadUDP``: Arduino ``UDP``-compatible class for sending and receiving IPv6 UDP datagrams over the Thread mesh, backed by the raw ``otUdpSocket`` API (no lwIP).
+  * ``OThreadCoAP`` classes: Application CoAP client and server wrappers (``OThreadCoAPClient``, ``OThreadCoAPServer``, optional CoAPS classes) backed by ``otCoap*`` / ``otCoapSecure*``.
 
 OpenThread Class
 ****************
@@ -101,8 +102,8 @@ The ``OpenThread`` class is the main entry point for Thread operations using the
 * **Device Role Management**: Getting and monitoring device role (Leader, Router, Child, Detached, Disabled).
 * **Dataset Management**: Setting and getting operational dataset parameters (offline via ``DataSet`` + ``commitDataSet`` or live via per-parameter setters).
 * **Joiner Role**: Synchronously attach a brand-new device to a Thread network using only a PSKd (Pre-Shared Key for Device).
-* **Commissioner Role**: Authorize remote Joiners on the network side using a PSKd.
-* **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses.
+* **Commissioner Role**: Authorise remote Joiners on the network side using a PSKd.
+* **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses. Multicast join/leave: :doc:`Multicast guide <Multicasting>`.
 * **Network Information**: Getting network name, channel, PAN ID, EUI-64, Thread version, TX power, and other network parameters.
 
 The ``OpenThread`` class is implemented as a singleton, meaning there's only one instance available globally. You access it directly as ``OThread`` without creating an instance.
@@ -149,13 +150,50 @@ The ``OThreadUDP`` class is an Arduino ``UDP``-compatible class that sends and r
 
 * **Familiar API**: Inherits from Arduino's ``UDP`` base, so ``begin``, ``beginPacket``, ``write``, ``endPacket``, ``parsePacket``, ``read``, ``remoteIP``, ``remotePort`` work like any other Arduino UDP driver.
 * **Native OpenThread**: Uses ``otUdpOpen`` / ``otUdpBind`` / ``otUdpSend`` and exposes one ``otUdpSocket`` per instance.
-* **Multicast**: ``beginMulticast(group, port)`` joins an IPv6 multicast group via ``otIp6SubscribeMulticastAddress``.
+* **Multicast**: ``beginMulticast(group, port)`` joins an IPv6 multicast group via ``otIp6SubscribeMulticastAddress``. See :doc:`Multicast guide <Multicasting>`.
 * **Tunable RX queue**: ``OT_UDP_MAX_PACKET_SIZE`` and ``OT_UDP_RX_QUEUE_DEPTH`` build-time defines control per-instance memory footprint.
 
 .. toctree::
     :maxdepth: 2
 
     openthread_udp
+
+OThreadCoAP
+***********
+
+The ``OThreadCoAP`` classes wrap the OpenThread Application CoAP API in an
+Arduino-style interface comparable to ``HTTPClient`` and ``WebServer``. Plain
+CoAP listens on port **5683**; CoAPS (DTLS) uses port **5684** when enabled at
+build time.
+
+* **Client**: ``OThreadCoAPClient`` — blocking GET/PUT/POST/DELETE with
+  ``setConfirmable()`` (CLI ``con`` / ``non-con``); create as many instances as needed.
+* **Server**: global ``OThreadCoAPServer`` — ``on(path, methodMask, handler)`` resource
+  registration; also ``onNotFound``, ``serve``, and ``joinMulticastGroup``. One plain
+  server per device (OpenThread limit); do not construct ``OThreadCoAPServerClass``.
+  Multicast usage: :doc:`Multicast guide <Multicasting>`.
+* **Secure**: ``OThreadCoAPSecureClient`` (one active session) and global
+  ``OThreadCoAPSecureServer`` when ``OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1``
+  (secure server: ``on()`` and credentials only — no ``serve`` / multicast helpers).
+* **REST helper**: ``OThreadCoAPResourceStore`` — CRUD on plain
+  ``OThreadCoAPServer`` only.
+
+.. toctree::
+    :maxdepth: 2
+
+    openthread_coap
+
+Multicasting
+************
+
+IPv6 multicast group membership for UDP and CoAP applications — send vs receive,
+``subscribeMulticast`` / ``unsubscribeMulticast``, wrappers, scopes, shutdown, and
+example mapping.
+
+.. toctree::
+    :maxdepth: 2
+
+    Multicasting
 
 CLI Helper Functions API
 *************************
@@ -172,7 +210,7 @@ The CLI Helper Functions API provides utility functions for executing OpenThread
 * ``otExecCommand()``: Execute CLI command with arguments and error handling.
 * ``otPrintRespCLI()``: Execute CLI command and print response to Stream.
 
-For detailed documentation on the CLI Helper Functions API, see the :doc:`openthread_cli` documentation.
+For detailed documentation on the CLI Helper Functions API, see the :doc:`openthread_cli` documentation and the walkthrough in `helper_functions.md <https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/helper_functions.md>`_.
 
 Supported Hardware
 ------------------
@@ -185,6 +223,43 @@ The OpenThread library requires ESP32 SoCs with IEEE 802.15.4 radio support:
 
 **Note:** Thread support must be enabled in the ESP-IDF configuration (``CONFIG_OPENTHREAD_ENABLED``). This is done automatically when using the ESP32 Arduino OpenThread library.
 
+Build-time options (Kconfig / OpenThread macros)
+************************************************
+
+Arduino OpenThread sketches read ESP-IDF **sdkconfig** symbols (``CONFIG_OPENTHREAD_*``).
+The ESP-IDF OpenThread port maps many of them to OpenThread core macros
+(``OPENTHREAD_CONFIG_*``) in ``openthread-core-esp32x-ftd-config.h``. Some
+library features also depend on macros that are **not** direct menu toggles and
+must be set in a custom OpenThread header when using Arduino as an ESP-IDF
+component.
+
++-------------------------------+------------------------------------------+----------------------------------------+
+| ESP-IDF Kconfig (sdkconfig)   | OpenThread macro                         | Arduino library impact                 |
++===============================+==========================================+========================================+
+| ``CONFIG_OPENTHREAD_ENABLED`` | (stack enabled)                          | Required for the entire library        |
++-------------------------------+------------------------------------------+----------------------------------------+
+| ``CONFIG_OPENTHREAD_JOINER``  | ``OPENTHREAD_CONFIG_JOINER_ENABLE``      | ``OThread.startJoiner()``              |
++-------------------------------+------------------------------------------+----------------------------------------+
+| ``CONFIG_OPENTHREAD_          | ``OPENTHREAD_CONFIG_COMMISSIONER_ENABLE``| ``OThread.startCommissioner()``,       |
+| COMMISSIONER``                |                                          | ``OThread.addJoiner()``                |
++-------------------------------+------------------------------------------+----------------------------------------+
+| ``CONFIG_OPENTHREAD_NUM_      | ``OPENTHREAD_CONFIG_NUM_MESSAGE_         | UDP / CoAP message buffer pool size    |
+| MESSAGE_BUFFERS``             | BUFFERS``                                |                                        |
++-------------------------------+------------------------------------------+----------------------------------------+
+| (FTD default)                 | ``OPENTHREAD_CONFIG_COAP_API_ENABLE=1``  | ``OThreadCoAP*`` plain CoAP classes    |
++-------------------------------+------------------------------------------+----------------------------------------+
+| Custom header only            | ``OPENTHREAD_CONFIG_COAP_SECURE_         | ``OThreadCoAPSecure*`` on port 5684    |
+| (see CoAPS examples)          | API_ENABLE=1``                           |                                        |
++-------------------------------+------------------------------------------+----------------------------------------+
+| ``CONFIG_OPENTHREAD_HEADER_   | User ``OPENTHREAD_CONFIG_*`` overrides   | Advanced OpenThread tuning (CoAPS,     |
+| CUSTOM`` + header path        | in custom header file                    | resource limits, etc.)                 |
++-------------------------------+------------------------------------------+----------------------------------------+
+
+CoAPS builds: enable **Thread Extensioned Features → Use a header file defined
+by customer**, define ``OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE 1`` in that
+header, and enable mbedtls PSK ciphers — see
+`README.md <https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure/README.md>`_.
+
 OpenThread Examples
 -------------------
 
@@ -192,35 +267,46 @@ The OpenThread library includes CLI-based and Native API examples demonstrating 
 
 **CLI Examples:**
 
-* **Simple CLI** - Starts the OpenThread CLI console over Serial for interactive command-line testing. `View Simple CLI code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleCLI>`_
-* **Simple Node** - Demonstrates a minimal CLI-driven Thread node setup. `View Simple Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleNode>`_
-* **Thread Scan** - Uses OpenThread CLI commands to scan and report nearby Thread networks. `View Thread Scan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_
-* **onReceive** - Shows how to handle asynchronous CLI output using the ``OpenThreadCLI`` receive callback. `View onReceive code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/onReceive>`_
+* **Simple CLI** - Starts the OpenThread CLI console over Serial for interactive command-line testing. `View Simple CLI code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleCLI>`_.
+* **Stack Shutdown** - Runs Thread with auto-start, then tears the stack down with ``OThread.end()`` after 30 seconds (documented shutdown order). `View Stack Shutdown code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/StackShutdown>`_.
+* **Simple Node** - Minimal auto-start node; network info via Native ``OThread`` API. `View Simple Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleNode>`_.
+* **Thread Scan** - Uses OpenThread CLI commands to scan and report nearby Thread networks. `View Thread Scan code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_.
+* **onReceive** - Shows how to handle asynchronous CLI output using the ``OpenThreadCLI`` receive callback. `View onReceive code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/onReceive>`_.
 
 **CLI Simple Thread Network Examples:**
 
-* **Leader Node** - Creates and starts a Thread network using CLI commands. `View CLI Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode>`_
-* **Router Node** - Joins the CLI-created Thread network as a router-capable node. `View CLI Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode>`_
-* **Extended Router Node** - Demonstrates a CLI-driven router node with extended network behavior. `View CLI Extended Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode>`_
+* **Leader Node** - Creates and starts a Thread network using CLI commands. `View CLI Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode>`_.
+* **Router Node** - Joins the CLI-created Thread network as a router-capable node. `View CLI Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode>`_.
+* **Extended Router Node** - Demonstrates a CLI-driven router node with extended network behavior. `View CLI Extended Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode>`_.
 
 **CLI CoAP Examples:**
 
-* **CoAP Lamp** - Implements a CoAP-controlled lamp using OpenThread CLI commands. `View CoAP Lamp code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp>`_
-* **CoAP Switch** - Sends CoAP control commands to the CoAP lamp example over Thread. `View CoAP Switch code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch>`_
+* **CoAP Lamp** - Implements a CoAP-controlled lamp using OpenThread CLI commands. `View CoAP Lamp code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp>`_.
+* **CoAP Switch** - Sends CoAP control commands to the CoAP lamp example over Thread. `View CoAP Switch code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch>`_.
 
 **CLI UDP Examples:**
 
-* **UDP Sensor Collector** - Creates a Thread Leader and UDP sink that receives sensor telemetry and sends acknowledgments. `View UDP Sensor Collector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector>`_
-* **UDP Sensor Node** - Creates a sensor node, optionally configured as a sleepy child, that sends UDP telemetry to the collector. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node>`_
+* **UDP Sensor Collector** - Creates a Thread Leader and UDP sink that receives sensor telemetry and sends acknowledgments. `View UDP Sensor Collector code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector>`_.
+* **UDP Sensor Node** - Creates a sensor node, optionally configured as a sleepy child, that sends UDP telemetry to the collector. `View UDP Sensor Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node>`_.
 
 **Native API Examples:**
 
-* **Native Examples Overview** - Describes the Native API examples and how to choose between them. `View Native examples README on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native>`_
-* **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_
-* **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_
-* **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorizes a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_
-* **UDP Light + Switch** - Demonstrates a Native UDP light server and one or more switch clients using Thread commissioning and application port ``5051``. `View UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP_Light_Switch>`_
-* **UDP Sensor Network** - Demonstrates a Native UDP collector and multiple sensor nodes, including application-level sequence ACKs, application port ``5050``, and optional Sleepy End Device behavior. `View UDP Sensor Network examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP_SensorNetwork>`_
+* **Native Examples Overview** - Describes the Native API examples and how to choose between them. `View Native examples README on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native>`_.
+* **Native Stack Shutdown** - Forms a network, binds UDP and CoAP, tears down with ``OThreadCoAPServer.stop()``, ``OThreadUDP.stop()``, and ``OThread.end()`` after 30 seconds, then calls ``setup()`` again to restart without resetting the chip. `View Native Stack Shutdown code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown>`_.
+* **Native Leader Node** - Creates and starts a Thread network using the OpenThread Classes API. `View Native Leader Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode>`_.
+* **Native Router Node** - Joins the Native API simple Thread network as a router-capable node. `View Native Router Node code on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/RouterNode>`_.
+* **Thread Commissioning** - Demonstrates a CommissionerNode that forms a network and authorises a JoinerNode that joins using only a PSKd. `View Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_.
+* **UDP Light + Switch** - Demonstrates a Native UDP light server and one or more switch clients using Thread commissioning and application port ``5051``. `View UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch>`_.
+* **UDP Sensor Network** - Demonstrates a Native UDP collector and multiple sensor nodes, including application-level sequence ACKs, application port ``5050``, and optional Sleepy End Device behavior. `View UDP Sensor Network examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork>`_.
+
+**Native CoAP Examples** (``OThreadCoAPClient`` / ``OThreadCoAPServer`` on port 5683; CoAPS on 5684 when enabled):
+
+* **CoAP Simple GET** - Minimal server and client with one GET resource on path ``hello``. `View CoAP Simple GET on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet>`_.
+* **CoAP Light Switch** - Multicast lamp server and switch client (Native rewrite of CLI ``coap_lamp`` / ``coap_switch``). `View CoAP Light Switch on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch>`_.
+* **CoAP Sensor** - Read-only resource with ``serve()`` and a NON GET telemetry client. `View CoAP Sensor on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor>`_.
+* **CoAP CRUD** - REST notes collection using ``OThreadCoAPResourceStore``. `View CoAP CRUD on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD>`_.
+* **CoAP Secure** - CoAPS client and server with shared PSK. `View CoAP Secure on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure>`_.
+* **CoAP Greenhouse** - Plain CoAP telemetry plus CoAPS actuators; demonstrates CON vs NON and dual transport on one device pair. `View CoAP Greenhouse on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse>`_.
 
 Common Problems and Issues
 --------------------------
@@ -282,10 +368,20 @@ Common Issues
 
 **OThreadUDP packets not received**
   * Make sure the device has finished attaching (role != Detached) before binding the socket; binding before attach succeeds but no traffic flows until a mesh-local address is acquired.
-  * If using multicast, double-check the group scope (``ff02::`` = link-local, ``ff03::`` = realm-local).
-  * Avoid OpenThread-reserved UDP ports for application traffic. ``5683`` / ``5684`` are CoAP/CoAPs ports and ``61631`` is Thread TMF CoAP; the Native examples use ``5050`` and ``5051``.
+  * If using multicast, double-check the group scope (``ff02::`` = link-local, ``ff03::`` = realm-local). See :doc:`openthread_coap` §8.2 for CoAP server silence on group requests.
+  * For CoAP multicast commands with no reply, the server intentionally stays silent (RFC 7252 §8.2) — this is not a UDP receive failure.
+  * Avoid OpenThread-reserved UDP ports for application traffic. ``5683`` / ``5684`` are CoAP/CoAPs ports and ``61631`` is Thread TMF CoAP; the Native UDP examples use ``5050`` and ``5051``.
   * If you are seeing dropped or truncated packets, bump ``OT_UDP_MAX_PACKET_SIZE`` and ``OT_UDP_RX_QUEUE_DEPTH`` at build time.
   * If ``otUdpNewMessage()`` consistently returns ``NULL``, the OpenThread message buffer pool is exhausted - reduce send rate or increase ``CONFIG_OPENTHREAD_NUM_MESSAGE_BUFFERS``.
+
+**OThreadCoAP requests fail or time out**
+  * Ensure the device is attached (role ≥ Child) before ``server.begin()`` or client requests.
+  * ``OT_COAP_ERROR_NOT_ATTACHED`` means the Thread role is too low; ``OT_COAP_ERROR_INVALID_STATE`` means the OpenThread lock or CoAP service was unavailable (for example stack torn down or ``otCoapStart`` failed) — check with ``OThreadCoAP::errorToString()``.
+  * Plain CoAP requires ``OPENTHREAD_CONFIG_COAP_API_ENABLE=1`` (enabled by default on ESP32 OpenThread builds).
+  * CoAPS requires ``OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1`` plus mbedtls PSK/ECDH flags; without them, secure classes return ``OT_COAP_ERROR_NOT_CONNECTED``.
+  * Use port **5683** for plain CoAP and **5684** for CoAPS — do not bind application servers on **61631** (Thread TMF).
+  * Register one ``on()`` handler per distinct URI path; combine methods with ``methodMask`` and dispatch inside the handler.
+  * For reliable commands use ``client.setConfirmable(true)`` (CON); for telemetry polling ``setConfirmable(false)`` (NON) reduces overhead.
 
 Initialization Order
 ********************
@@ -299,6 +395,36 @@ For proper initialization, follow this order:
 5. Apply dataset (if needed): ``OThread.commitDataSet(dataset)``
 6. Bring network interface up: ``OThread.networkInterfaceUp()``
 7. Start Thread network: ``OThread.start()``
+
+``begin(true)`` vs ``begin(false)``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``OpenThread::begin(true)`` (default) — load the Active Operational Dataset from NVS when present and may auto-start Thread. Use when resuming a network saved on the device.
+* ``OpenThread::begin(false)`` — initialize the stack only; the application commits or resumes a dataset explicitly. **Required** for Joiner sketches and most Native examples that call ``initNew()`` or ``commitDataSet()`` in code.
+
+Commissioner join-window patterns
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Two patterns appear in the examples:
+
+* **Automatic window** — after ``startCommissioner()`` succeeds, call ``addJoiner(PSKD, timeoutSec)`` immediately. Used by CoAP/UDP lamp servers, CRUD notes server, Secure/Greenhouse servers.
+* **Button-gated window** — petition as Commissioner when attached, then call ``addJoiner()`` only when the user presses a button. Used by ``ThreadCommissioning/CommissionerNode``.
+
+Do not mix expectations: a joiner flashed while the Commissioner has not opened a window will fail with ``OT_ERROR_NOT_FOUND`` or timeout.
+
+Shutdown Order
+**************
+
+Reverse the initialization order before ``OpenThread::end()`` (``end()`` also
+performs these steps if you skip them):
+
+1. Stop CoAP servers/clients: ``OThreadCoAPServer.stop()``, ``OThreadCoAPSecureServer.stop()``, destroy client objects (releases lazy UDP holds)
+2. Close UDP sockets: ``OThreadUDP.stop()``
+3. Stop CLI console and CLI: ``OThreadCLI.stopConsole()``, ``OThreadCLI.end()``
+4. Stop Thread and bring the interface down (optional if resetting): ``OThread.stop()``, ``OThread.networkInterfaceDown()``
+5. Deinitialize the stack: ``OpenThread::end()``
+
+See also the `CLI Stack Shutdown example <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/StackShutdown>`_ (CLI-only teardown) and the `Native Stack Shutdown example <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown>`_ (``OThreadCoAPServer.stop()`` and ``OThreadUDP.stop()`` before ``OThread.end()``, then ``setup()`` to restart).
 
 Joiner Initialization Order (Commissioning)
 *******************************************
@@ -321,10 +447,10 @@ And on the **commissioner** side, after the device has formed or resumed a netwo
 
 For detailed API documentation see :doc:`openthread_core`, sections
 "Joiner Role" and "Commissioner Role". The
-``examples/Native/ThreadCommissioning/`` directory contains a working
+`Thread Commissioning examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning>`_ directory contains a working
 CommissionerNode / JoinerNode pair using this flow. A more elaborate end-to-end
 demo that combines Joiner / Commissioner with the ``OThreadUDP`` socket
-class lives in ``examples/Native/UDP_Light_Switch/`` (``light`` server +
+class lives in the `UDP Light + Switch examples on GitHub <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch>`_ (``light`` server +
 ``switch`` client) - one Leader/Commissioner accepts any number of
 joiner switches that drive an on-board RGB lamp via realm-local
 multicast and receive a UDP ACK for every command.
@@ -335,7 +461,7 @@ Example
 Basic OpenThread Setup
 **********************
 
-Using the Classes API:
+Using the Classes API (explicit dataset — typical for Native examples):
 
 .. code-block:: arduino
 
@@ -344,28 +470,28 @@ Using the Classes API:
     void setup() {
         Serial.begin(115200);
 
-        // Initialize OpenThread stack
-        OpenThread::begin();
+        // Initialize stack without auto-loading NVS dataset (see begin(true) vs begin(false) above)
+        OpenThread::begin(false);
 
-        // Wait for OpenThread to be ready
         while (!OThread) {
             delay(100);
         }
 
-        // Create and configure dataset
         DataSet dataset;
         dataset.initNew();
         dataset.setNetworkName("MyThreadNetwork");
         dataset.setChannel(15);
 
-        // Apply dataset and start network
         OThread.commitDataSet(dataset);
         OThread.networkInterfaceUp();
         OThread.start();
 
-        // Print network information
         OpenThread::otPrintNetworkInformation(Serial);
     }
+
+To resume a network saved in NVS instead, call ``OpenThread::begin(true)`` and
+skip ``initNew()`` / ``commitDataSet()`` when ``OThread.hasActiveDataset()`` is
+true.
 
 Using the CLI Helper Functions API:
 
@@ -392,7 +518,7 @@ Using the CLI Helper Functions API:
 
         // Execute CLI commands
         char resp[256];
-        if (otGetRespCmd("state", resp)) {
+        if (otGetRespCmd("state", resp, 5000, sizeof(resp))) {
             Serial.printf("Thread state: %s\r\n", resp);
         }
 
@@ -451,7 +577,7 @@ Commissioner (Leader / attached Router) - admits new joiners via PSKd:
 
         // Become the Commissioner and accept any joiner with PSKd "J01NME"
         if (OThread.startCommissioner() == OT_ERROR_NONE) {
-            OThread.addJoiner("J01NME", nullptr, 120);  // window: 120 s
+            OThread.addJoiner("J01NME", 120);  // window: 120 s (any joiner)
         }
     }
 
@@ -496,4 +622,34 @@ Sending and receiving IPv6 UDP datagrams over the Thread mesh, using
         }
 
         delay(1000);
+    }
+
+CoAP over Thread
+****************
+
+Application CoAP using ``OThreadCoAPClient`` and ``OThreadCoAPServer`` on port
+5683 (plain CoAP). Handlers run when requests arrive; call ``resp.send()``
+before returning from the handler.
+
+.. code-block:: arduino
+
+    #include <OThread.h>
+    #include <OThreadCoAP.h>
+
+    static void onHello(OThreadCoAPRequest &req, OThreadCoAPResponse &resp, void *ctx) {
+        (void)ctx;
+        resp.setCode(OT_COAP_RESP_OK);
+        resp.setPayload("Hello from CoAP!");
+        resp.send();
+    }
+
+    void setup() {
+        Serial.begin(115200);
+
+        // ... bring up Thread (DataSet or Joiner) ...
+        OThread.networkInterfaceUp();
+        OThread.start();
+
+        OThreadCoAPServer.on("hello", OT_COAP_METHOD_GET, onHello);
+        OThreadCoAPServer.begin();
     }
