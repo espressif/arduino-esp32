@@ -109,6 +109,9 @@ void setup() {
     Serial.println("Zigbee started successfully!");
   }
 
+  // Activate the Time cluster server so the gateway can serve/update the time (must be after Zigbee.begin())
+  zbGateway.registerTimeServer();
+
   // set notification call-back function
   sntp_set_time_sync_notification_cb(timeavailable);
   sntp_set_sync_interval(30000);  // sync every 30 seconds

@@ -121,6 +121,9 @@ public:
 
   // Set time
   bool addTimeCluster(tm time = {}, int32_t gmt_offset = 0);  // gmt offset in seconds
+  // Activate the Time cluster server so the Time attribute (0x0000) can be served/written.
+  // MUST be called after Zigbee.begin() (the per-endpoint time context exists only once the stack runs).
+  bool registerTimeServer();
   bool setTime(tm time);
   bool setTimezone(int32_t gmt_offset);
 
@@ -283,7 +286,9 @@ protected:
   uint8_t _battery_voltage;     // BatteryVoltage in 100 mV, not in power_config cluster config
 
   ezb_zcl_time_cluster_server_config_t _time_server_cfg;
-  int32_t _time_gmt_offset;  // TimeZone, not in time server cluster config
+  int32_t _time_gmt_offset;       // TimeZone, not in time server cluster config
+  bool _time_server = false;      // addTimeCluster() was called (a Time server cluster exists)
+  bool _time_server_registered = false;  // registerTimeServer() succeeded (interface active)
 
   ezb_zcl_ota_upgrade_cluster_client_config_t _ota_client_cfg;
   uint32_t _ota_current_file_version;     // CurrentFileVersion, not in OTA client cluster config

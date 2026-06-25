@@ -105,6 +105,10 @@ void setup() {
   }
   Serial.println();
 
+  // Activate the local Time cluster server (must be after Zigbee.begin()) so getTime() can store the
+  // synchronized time locally without hitting the SDK time-server write hook.
+  zbTempSensor.registerTimeServer();
+
   // Optional: If time cluster is added, time can be read from the coordinator
   timeinfo = zbTempSensor.getTime();
   timezone = zbTempSensor.getTimezone();
