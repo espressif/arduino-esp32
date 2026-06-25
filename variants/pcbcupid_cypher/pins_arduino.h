@@ -22,6 +22,7 @@ static const uint8_t SCL = 5;
 
 // SPI / TFT
 static const uint8_t SS = 16;
+static const uint8_t MISO = -1;
 static const uint8_t MOSI = 11;
 static const uint8_t SCK = 12;
 
