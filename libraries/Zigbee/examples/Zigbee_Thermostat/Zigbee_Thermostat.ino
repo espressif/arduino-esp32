@@ -133,6 +133,9 @@ void setup() {
     Serial.println("Zigbee started successfully!");
   }
 
+  // Activate the Time cluster server so bound devices can read the time (must be after Zigbee.begin())
+  zbThermostat.registerTimeServer();
+
   Serial.println("Waiting for Temperature sensor to bound to the thermostat");
   while (!zbThermostat.bound()) {
     Serial.printf(".");

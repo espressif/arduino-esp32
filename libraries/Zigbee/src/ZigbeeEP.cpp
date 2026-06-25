@@ -22,10 +22,34 @@
 
 #include "esp_zigbee.h"
 #include "ezbee/zcl/zcl_desc.h"
+#include "ezbee/zcl/cluster/time.h"
 
 /* ZigBee ZCL UTCTime: seconds since 2000-01-01 00:00:00 UTC (not Unix 1970 epoch). */
 static constexpr int64_t ZIGBEE_UTCTIME_UNIX_OFFSET_SEC = 946684800LL;
 static constexpr uint32_t ZIGBEE_UTCTIME_INVALID = UINT32_MAX;
+
+/* Time cluster server interface (SDK v2.x): the Time attribute (0x0000) is no longer served from stored
+ * attribute memory — the server reads it through a registered interface callback (see
+ * zcl_time_cluster_read_time() in the SDK, which returns ZCL_STATUS_NOT_FOUND when no interface is set).
+ * A single device-wide wall clock backs all Time server endpoints; it is anchored to a millis() baseline
+ * so the served time advances between updates. The clock is updated automatically whenever the Time
+ * attribute is written (the server's write hook calls set_utc_time). */
+static uint32_t s_time_server_utc_base = 0;  // ZCL UTCTime (s since 2000-01-01) captured at the anchor
+static uint32_t s_time_server_ms_base = 0;   // millis() captured at the anchor
+static bool s_time_server_clock_valid = false;
+
+static uint32_t zb_time_server_get_utc_time(void) {
+  if (!s_time_server_clock_valid) {
+    return ZIGBEE_UTCTIME_INVALID;
+  }
+  return s_time_server_utc_base + (uint32_t)((millis() - s_time_server_ms_base) / 1000U);
+}
+
+static void zb_time_server_set_utc_time(uint32_t utc_time) {
+  s_time_server_utc_base = utc_time;
+  s_time_server_ms_base = millis();
+  s_time_server_clock_valid = (utc_time != ZIGBEE_UTCTIME_INVALID);
+}
 
 static uint32_t zb_utctime_from_unix(time_t unix_ts) {
   if (unix_ts == (time_t)-1) {
@@ -657,6 +681,10 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
       return false;
     }
     _time_server_cfg.time = zb_utctime_from_unix(unix_ts);
+    // Seed the device-wide wall clock so the Time attribute (0x0000) is served once the interface is
+    // registered (after the stack starts). Without a provided time the clock stays invalid until the
+    // Time attribute is written (e.g. after getTime() synchronizes from another time server).
+    zb_time_server_set_utc_time(_time_server_cfg.time);
   }
   _time_gmt_offset = gmt_offset;
 
@@ -673,10 +701,41 @@ bool ZigbeeEP::addTimeCluster(tm time, int32_t gmt_offset) {
     log_e("Failed to add time cluster: 0x%x", ret);
     return false;
   }
+  _time_server = true;
+  return true;
+}
+
+bool ZigbeeEP::registerTimeServer() {
+  // v2.x serves the Time attribute (0x0000) through this interface; the per-endpoint time context is
+  // created when the stack starts, so this must be called after Zigbee.begin().
+  if (!_time_server) {
+    log_e("registerTimeServer: no Time cluster on this endpoint, call addTimeCluster() first");
+    return false;
+  }
+  if (_time_server_registered) {
+    return true;
+  }
+  ezb_zcl_time_interface_t interface = {
+    .get_utc_time = zb_time_server_get_utc_time,
+    .set_utc_time = zb_time_server_set_utc_time,
+  };
+  ezb_err_t ret = ezb_zcl_time_server_interface_register(_endpoint, interface);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to register time server on endpoint %u: 0x%x (call after Zigbee.begin())", _endpoint, ret);
+    return false;
+  }
+  _time_server_registered = true;
   return true;
 }
 
 bool ZigbeeEP::setTime(tm time) {
+  // Writing the Time attribute (0x0000) goes through the SDK write hook, which requires the time
+  // server interface to be registered. Guard here so a missing registerTimeServer() reports an error
+  // instead of triggering an SDK assert (also protects getTime()'s internal self-update).
+  if (!_time_server_registered) {
+    log_e("Time server not registered, call registerTimeServer() after Zigbee.begin() first");
+    return false;
+  }
   ezb_zcl_status_t ret = EZB_ZCL_STATUS_SUCCESS;
   time_t unix_ts = mktime(&time);
   if (unix_ts == (time_t)-1) {
