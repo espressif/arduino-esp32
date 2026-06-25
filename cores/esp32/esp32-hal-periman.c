@@ -112,7 +112,7 @@ const char *perimanGetTypeName(peripheral_bus_type_t type) {
     case ESP32_BUS_TYPE_PPP_RTS: return "PPP_MODEM_RTS";
     case ESP32_BUS_TYPE_PPP_CTS: return "PPP_MODEM_CTS";
 #endif
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
     case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK: return "ESP_HOSTED_SDIO_CLK";
     case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD: return "ESP_HOSTED_SDIO_CMD";
     case ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0:  return "ESP_HOSTED_SDIO_D0";

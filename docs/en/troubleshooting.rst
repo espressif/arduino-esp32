@@ -111,7 +111,7 @@ What works on IDE 1.x (reference patterns)
 
 These patterns are known to expand correctly:
 
-* **Board-scoped** names from ``boards.txt``: ``{upload.speed}``, ``{upload.flags}``, ``{build.mcu}``, ``{upload.erase_cmd}``, etc.
+* **Board-scoped** names from ``boards.txt``: ``{upload.speed}``, ``{upload.flags}``, ``{upload.erase_cmd}``, ``{build.mcu}``, etc. Each ``esptool_py`` board must define ``upload.erase_cmd=`` at board level (empty by default); the EraseFlash menu overrides it with ``-e``.
 * **Runtime** keys set when you select the board/port: ``{runtime.platform.path}``, ``{serial.port}``, ``{build.path}`` (set on upload).
 * **Tool shorthands** for the **selected** ``upload.tool`` only, e.g. ``{path}``, ``{cmd}``, ``{upload.pattern_args}``, ``{network_cmd}`` (from ``tools.esptool_py.network_cmd``).
 

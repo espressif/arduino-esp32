@@ -36,7 +36,16 @@
 #include "driver/rtc_io.h"
 #include "driver/lp_io.h"
 #include "soc/uart_pins.h"
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 1, 0)
 #include "esp_private/uart_share_hw_ctrl.h"
+#else
+#include "esp_private/periph_ctrl.h"
+#if SOC_PERIPH_CLK_CTRL_SHARED
+#define HP_UART_SRC_CLK_ATOMIC()       PERIPH_RCC_ATOMIC()
+#else
+#define HP_UART_SRC_CLK_ATOMIC()
+#endif
+#endif
 #include "esp_private/esp_clk_tree_common.h"
 
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
