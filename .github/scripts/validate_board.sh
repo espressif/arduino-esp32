@@ -74,7 +74,7 @@ validate_build_board_format() {
 
     # Get the build.board value
     local build_board_value
-    build_board_value=$(grep "^$board_name.build.board=" "$boards_file" | cut -d'=' -f2)
+    build_board_value=$(grep "^$board_name.build.board=" "$boards_file" | cut -d'=' -f2 || true)
 
     if [ -z "$build_board_value" ]; then
         print_error "build.board property not found for '$board_name'"
@@ -128,13 +128,13 @@ validate_partition_schemes() {
 
     # Get all available flash sizes for this board
     local flash_sizes
-    flash_sizes=$(grep "^$board_name.menu.FlashSize\." "$boards_file" | grep "\.build\.flash_size=" | cut -d'=' -f2 | sort -V)
+    flash_sizes=$(grep "^$board_name.menu.FlashSize\." "$boards_file" | grep "\.build\.flash_size=" | cut -d'=' -f2 | sort -V || true)
 
     # Check if board has menu.FlashSize entries
     if [ -z "$flash_sizes" ]; then
         # If no menu.FlashSize entries, check if board has build.flash_size entry at least
         local has_flash_size
-        has_flash_size=$(grep "^$board_name\." "$boards_file" | grep "\.build\.flash_size=" | head -1)
+        has_flash_size=$(grep "^$board_name\." "$boards_file" | grep "\.build\.flash_size=" | head -1 || true)
 
         if [ -z "$has_flash_size" ]; then
             print_error "No flash size options found for board '$board_name' (needs build.flash_size entry at least)"
@@ -167,7 +167,7 @@ validate_partition_schemes() {
 
     # Find all partition schemes for this board
     local partition_schemes
-    partition_schemes=$(grep "^$board_name.menu.PartitionScheme\." "$boards_file" | grep -v "\.build\." | grep -v "\.upload\." | sed 's/.*\.PartitionScheme\.\([^=]*\)=.*/\1/' | sort -u)
+    partition_schemes=$(grep "^$board_name.menu.PartitionScheme\." "$boards_file" | grep -v "\.build\." | grep -v "\.upload\." | sed 's/.*\.PartitionScheme\.\([^=]*\)=.*/\1/' | sort -u || true)
 
     if [ -n "$partition_schemes" ]; then
         # Validate each partition scheme against the maximum flash size
@@ -340,7 +340,7 @@ validate_scheme_upload_size() {
 
     # Get upload maximum size for this specific scheme
     local upload_size
-    upload_size=$(grep "^$board_name.menu.PartitionScheme\.$scheme\." "$boards_file" | grep "\.upload\.maximum_size=" | head -1 | cut -d'=' -f2)
+    upload_size=$(grep "^$board_name.menu.PartitionScheme\.$scheme\." "$boards_file" | grep "\.upload\.maximum_size=" | head -1 | cut -d'=' -f2 || true)
 
     if [ -z "$upload_size" ]; then
         echo "    ✓ Partition scheme '$scheme' is valid for ${max_flash_mb}MB flash (no upload size limit)"
@@ -370,15 +370,15 @@ validate_vid_pid_consistency() {
     local vid_entries
     local pid_entries
 
-    vid_entries=$(grep "^$board_name\.vid\." "$boards_file" | sort)
-    pid_entries=$(grep "^$board_name\.pid\." "$boards_file" | sort)
+    vid_entries=$(grep "^$board_name\.vid\." "$boards_file" | sort || true)
+    pid_entries=$(grep "^$board_name\.pid\." "$boards_file" | sort || true)
 
     # Also get upload_port VID and PID entries
     local upload_port_vid_entries
     local upload_port_pid_entries
 
-    upload_port_vid_entries=$(grep "^$board_name\.upload_port\..*\.vid=" "$boards_file" | sort)
-    upload_port_pid_entries=$(grep "^$board_name\.upload_port\..*\.pid=" "$boards_file" | sort)
+    upload_port_vid_entries=$(grep "^$board_name\.upload_port\..*\.vid=" "$boards_file" | sort || true)
+    upload_port_pid_entries=$(grep "^$board_name\.upload_port\..*\.pid=" "$boards_file" | sort || true)
 
     # Check for duplicate VID entries with same index but different values
     local all_vid_entries="$vid_entries"
@@ -458,7 +458,7 @@ $upload_pid_indices"
 
                 # Find corresponding PID
                 local pid_value
-                pid_value=$(grep "^$board_name\.pid\.$vid_index=" "$boards_file" | cut -d'=' -f2)
+                pid_value=$(grep "^$board_name\.pid\.$vid_index=" "$boards_file" | cut -d'=' -f2 || true)
 
                 if [ "$vid_value" = "$esp32_family_vid" ] && [ "$pid_value" = "$esp32_family_pid" ]; then
                     print_error "Board '$board_name' VID/PID combination ($vid_value/$pid_value) matches esp32_family VID/PID (0x303a/0x1001) - this is not allowed"
@@ -477,7 +477,7 @@ $upload_pid_indices"
 
                 # Find corresponding PID
                 local pid_value
-                pid_value=$(grep "^$board_name\.upload_port\.$vid_index\.pid=" "$boards_file" | cut -d'=' -f2)
+                pid_value=$(grep "^$board_name\.upload_port\.$vid_index\.pid=" "$boards_file" | cut -d'=' -f2 || true)
 
                 if [ "$vid_value" = "$esp32_family_vid" ] && [ "$pid_value" = "$esp32_family_pid" ]; then
                     print_error "Board '$board_name' upload_port VID/PID combination ($vid_value/$pid_value) matches esp32_family VID/PID (0x303a/0x1001) - this is not allowed"
@@ -525,7 +525,7 @@ validate_debug_level_menu() {
     for level in "${required_debug_levels[@]}"; do
         local expected_value="${code_debug_values[$debug_level_index]}"
         local actual_value
-        actual_value=$(grep "^$board_name.menu.DebugLevel.$level.build.code_debug=" "$boards_file" | cut -d'=' -f2)
+        actual_value=$(grep "^$board_name.menu.DebugLevel.$level.build.code_debug=" "$boards_file" | cut -d'=' -f2 || true)
 
         if [ "$actual_value" != "$expected_value" ]; then
             print_error "Invalid code_debug value for DebugLevel '$level' in board '$board_name': expected '$expected_value', found '$actual_value'"
