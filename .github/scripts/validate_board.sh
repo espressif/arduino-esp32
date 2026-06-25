@@ -267,7 +267,7 @@ validate_partition_scheme_size() {
         else
             # No size in main description, check bracket content
             local bracket_content
-            bracket_content=$(echo "$description_text" | grep -oE '\([^)]+\)' | head -1)
+            bracket_content=$(echo "$description_text" | grep -oE '\([^)]+\)' | head -1 || true)
 
             if [ -n "$bracket_content" ]; then
                 # Calculate total size from all components in brackets
