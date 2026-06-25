@@ -4,9 +4,9 @@
 #include <stdint.h>
 
 // RGB LED
-static const uint8_t LED_BUILTIN   = 1;
-#define BUILTIN_LED  LED_BUILTIN
-#define LED_BUILTIN  LED_BUILTIN
+static const uint8_t LED_BUILTIN = 1;
+#define BUILTIN_LED LED_BUILTIN
+#define LED_BUILTIN LED_BUILTIN
 
 static const uint8_t LED_BUILTIN_R = 1;
 static const uint8_t LED_BUILTIN_G = 2;
@@ -21,11 +21,11 @@ static const uint8_t SDA = 4;
 static const uint8_t SCL = 5;
 
 // SPI / TFT
-static const uint8_t SS   = 16;
+static const uint8_t SS = 16;
 static const uint8_t MOSI = 11;
-static const uint8_t SCK  = 12;
+static const uint8_t SCK = 12;
 
-static const uint8_t TFT_DC  = 15;
+static const uint8_t TFT_DC = 15;
 static const uint8_t TFT_RST = 14;
 
 // ADC / RGB (shared pins)
@@ -36,10 +36,10 @@ static const uint8_t A3 = 3;
 // SD_MMC
 static const uint8_t SD_MMC_CMD = 35;
 static const uint8_t SD_MMC_CLK = 36;
-static const uint8_t SD_MMC_D0  = 37;
-static const uint8_t SD_MMC_D1  = 38;
-static const uint8_t SD_MMC_D2  = 39;
-static const uint8_t SD_MMC_D3  = 40;
+static const uint8_t SD_MMC_D0 = 37;
+static const uint8_t SD_MMC_D1 = 38;
+static const uint8_t SD_MMC_D2 = 39;
+static const uint8_t SD_MMC_D3 = 40;
 
 // Boot
 static const uint8_t D0 = 0;
