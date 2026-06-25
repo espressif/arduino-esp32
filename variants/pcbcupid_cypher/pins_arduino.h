@@ -35,12 +35,13 @@ static const uint8_t A2 = 2;
 static const uint8_t A3 = 3;
 
 // SD_MMC
-static const uint8_t SD_MMC_CMD = 35;
-static const uint8_t SD_MMC_CLK = 36;
-static const uint8_t SD_MMC_D0 = 37;
-static const uint8_t SD_MMC_D1 = 38;
-static const uint8_t SD_MMC_D2 = 39;
-static const uint8_t SD_MMC_D3 = 40;
+#define BOARD_HAS_SDMMC
+static const uint8_t SDMMC_CMD = 35;
+static const uint8_t SDMMC_CLK = 36;
+static const uint8_t SDMMC_D0 = 37;
+static const uint8_t SDMMC_D1 = 38;
+static const uint8_t SDMMC_D2 = 39;
+static const uint8_t SDMMC_D3 = 40;
 
 // Boot
 static const uint8_t D0 = 0;
