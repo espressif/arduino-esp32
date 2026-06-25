@@ -30,16 +30,20 @@ void setUp(void) {}
 void tearDown(void) {}
 
 static bool connectWiFi() {
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.STA.status() == WL_CONNECTED) {
     return true;
   }
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
+  if (!WiFi.STA.begin()) {
+    return false;
+  }
+  if (!WiFi.STA.connect(wifi_ssid.c_str(), wifi_pass.c_str())) {
+    return false;
+  }
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
+  while (WiFi.STA.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
     delay(100);
   }
-  return WiFi.status() == WL_CONNECTED;
+  return WiFi.STA.status() == WL_CONNECTED;
 }
 
 // ==================== Update API Tests ====================
