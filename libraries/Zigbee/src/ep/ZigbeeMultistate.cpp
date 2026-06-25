@@ -50,19 +50,13 @@ bool ZigbeeMultistate::addMultistateInput() {
 
   ezb_zcl_cluster_desc_t multistate_input_cluster = ezb_zcl_multistate_input_create_cluster_desc(&multistate_input_cfg, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Multistate Input
-  char default_description[] = "\x10"                                              // Size of the description text
-                             "Multistate Input";                                 // Description text
+  // The optional Description attribute is added lazily by setMultistateInputDescription(). The SDK
+  // sizes a string attribute's storage to the first value's length and never grows it, so adding a
+  // short default here would overflow the heap if a longer description is set later.
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_INPUT_GROUP_ID << 24);  // Application type
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
-  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to add description attribute: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_multistate_input_cluster_desc_add_attr(multistate_input_cluster, EZB_ZCL_ATTR_MULTISTATE_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
@@ -94,19 +88,13 @@ bool ZigbeeMultistate::addMultistateOutput() {
 
   ezb_zcl_cluster_desc_t multistate_output_cluster = ezb_zcl_multistate_output_create_cluster_desc(&multistate_output_cfg, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Multistate Output
-  char default_description[] = "\x11"                                           // Size of the description text
-                             "Multistate Output";                             // Description text
+  // The optional Description attribute is added lazily by setMultistateOutputDescription(). The SDK
+  // sizes a string attribute's storage to the first value's length and never grows it, so adding a
+  // short default here would overflow the heap if a longer description is set later.
   uint32_t application_type = 0x00000000 | (ZB_MULTISTATE_OUTPUT_GROUP_ID << 24);
   // const char* state_text[] = { "Off", "On", "Auto" }; // State text array
 
-  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to add description attribute: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_multistate_output_cluster_desc_add_attr(multistate_output_cluster, EZB_ZCL_ATTR_MULTISTATE_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
