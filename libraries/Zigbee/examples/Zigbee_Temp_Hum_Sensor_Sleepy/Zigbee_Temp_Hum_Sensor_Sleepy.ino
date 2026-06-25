@@ -131,7 +131,7 @@ void setup() {
   esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
 
   esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ED_CONFIG();
-  zigbeeConfig.nwk_cfg.zed_cfg.keep_alive = 10000;
+  zigbeeConfig.zed_config.keep_alive = 10000;
   Zigbee.setTimeout(10000);  // Set timeout for Zigbee Begin to 10s (default is 30s)
 
   // Initialize Zigbee stack as end device with custom config

@@ -72,7 +72,7 @@ void setup() {
   // Initialize Zigbee stack as router
 #if USE_CUSTOM_ZIGBEE_CONFIG
   esp_zigbee_device_config_t zigbeeConfig = ZIGBEE_DEFAULT_ROUTER_CONFIG();
-  zigbeeConfig.nwk_cfg.zczr_cfg.max_children = 20;  // 10 is default
+  zigbeeConfig.zczr_config.max_children = 20;  // 10 is default
   if (!Zigbee.role(&zigbeeConfig)) {
 #else
   if (!Zigbee.role(ZIGBEE_ROUTER)) {
