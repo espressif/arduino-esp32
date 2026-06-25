@@ -29,16 +29,20 @@ void setUp(void) {}
 void tearDown(void) {}
 
 static bool connectWiFi() {
-  if (WiFi.status() == WL_CONNECTED) {
+  if (WiFi.STA.status() == WL_CONNECTED) {
     return true;
   }
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(wifi_ssid.c_str(), wifi_pass.c_str());
+  if (!WiFi.STA.begin()) {
+    return false;
+  }
+  if (!WiFi.STA.connect(wifi_ssid.c_str(), wifi_pass.c_str())) {
+    return false;
+  }
   unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
+  while (WiFi.STA.status() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
     delay(100);
   }
-  return WiFi.status() == WL_CONNECTED;
+  return WiFi.STA.status() == WL_CONNECTED;
 }
 
 // ==================== DNS Resolution ====================
@@ -65,36 +69,45 @@ void test_dns_resolve_invalid(void) {
 void test_tcp_connect(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
   NetworkClient client;
-  TEST_ASSERT_TRUE_MESSAGE(client.connect("httpbin.org", 80), "TCP connect failed");
+  TEST_ASSERT_TRUE_MESSAGE(client.connect("example.com", 80), "TCP connect failed");
   TEST_ASSERT_TRUE(client.connected());
   client.stop();
 }
 
 void test_tcp_send_receive(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
-  NetworkClient client;
-  TEST_ASSERT_TRUE_MESSAGE(client.connect("httpbin.org", 80), "TCP connect failed");
 
-  client.print("GET /get HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n");
+  NetworkServer server(8891);
+  server.begin();
+
+  NetworkClient client;
+  TEST_ASSERT_TRUE_MESSAGE(client.connect(IPAddress(127, 0, 0, 1), 8891), "TCP connect failed");
+
+  NetworkClient remote = server.accept();
+  TEST_ASSERT_TRUE_MESSAGE((bool)remote, "Server accept failed");
+
+  const char *msg = "SEND_RECEIVE_TEST";
+  client.print(msg);
+  delay(50);
+
+  String received = remote.readString();
+  TEST_ASSERT_TRUE(received.indexOf(msg) >= 0);
+
+  const char *reply = "SEND_RECEIVE_REPLY";
+  remote.print(reply);
+  remote.stop();
 
   unsigned long start = millis();
-  while (!client.available() && millis() - start < 10000) {
+  while (!client.available() && millis() - start < 5000) {
     delay(10);
   }
   TEST_ASSERT_TRUE(client.available());
 
-  String line = client.readStringUntil('\n');
-  TEST_ASSERT_TRUE(line.startsWith("HTTP/1.1"));
-
-  // Read enough to verify we got a substantial response
-  size_t totalRead = line.length();
-  while (client.available() && totalRead < 512) {
-    client.read();
-    totalRead++;
-  }
-  TEST_ASSERT_GREATER_THAN(100, totalRead);
+  String response = client.readString();
+  TEST_ASSERT_TRUE(response.indexOf(reply) >= 0);
 
   client.stop();
+  server.end();
 }
 
 void test_tcp_timeout(void) {
@@ -107,15 +120,30 @@ void test_tcp_timeout(void) {
 
 void test_tcp_large_payload(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
-  NetworkClient client;
-  TEST_ASSERT_TRUE_MESSAGE(client.connect("httpbin.org", 80), "TCP connect failed");
 
-  // Request a response with a known payload size
-  client.print("GET /bytes/1024 HTTP/1.1\r\nHost: httpbin.org\r\nConnection: close\r\n\r\n");
+  const size_t PAYLOAD_SIZE = 2048;
+  NetworkServer server(8890);
+  server.begin();
+
+  NetworkClient client;
+  TEST_ASSERT_TRUE_MESSAGE(client.connect(IPAddress(127, 0, 0, 1), 8890), "TCP connect failed");
+
+  NetworkClient remote = server.accept();
+  TEST_ASSERT_TRUE_MESSAGE((bool)remote, "Server accept failed");
+
+  uint8_t buf[64];
+  memset(buf, 0xAA, sizeof(buf));
+  size_t sent = 0;
+  while (sent < PAYLOAD_SIZE) {
+    size_t chunk = min(sizeof(buf), PAYLOAD_SIZE - sent);
+    remote.write(buf, chunk);
+    sent += chunk;
+  }
+  remote.stop();
 
   unsigned long start = millis();
   size_t totalRead = 0;
-  while (millis() - start < 15000) {
+  while (millis() - start < 10000) {
     while (client.available()) {
       client.read();
       totalRead++;
@@ -125,9 +153,10 @@ void test_tcp_large_payload(void) {
     }
     delay(10);
   }
-  // Headers + 1024 bytes body should be well over 1024
-  TEST_ASSERT_GREATER_THAN(1024, totalRead);
+  TEST_ASSERT_GREATER_OR_EQUAL(PAYLOAD_SIZE, totalRead);
+
   client.stop();
+  server.end();
 }
 
 // ==================== TCP Server ====================
@@ -257,17 +286,17 @@ void test_udp_remote_info(void) {
 void test_dns_server_captive(void) {
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
-  WiFi.softAP("ESP32_DNS_Test", "12345678");
+  TEST_ASSERT_TRUE(WiFi.AP.create("ESP32_DNS_Test", "12345678"));
   delay(500);
 
   DNSServer dnsServer;
-  IPAddress apIP = WiFi.softAPIP();
+  IPAddress apIP = WiFi.AP.localIP();
   TEST_ASSERT_TRUE(dnsServer.start(53, "*", apIP));
 
   dnsServer.processNextRequest();
 
   dnsServer.stop();
-  WiFi.softAPdisconnect(true);
+  WiFi.AP.end();
   delay(100);
 }
 
