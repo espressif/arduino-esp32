@@ -36,6 +36,7 @@ static const uint8_t A3 = 3;
 
 // SD_MMC
 #define BOARD_HAS_SDMMC
+
 static const uint8_t SDMMC_CMD = 35;
 static const uint8_t SDMMC_CLK = 36;
 static const uint8_t SDMMC_D0 = 37;

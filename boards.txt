@@ -52986,6 +52986,7 @@ pcbcupid_cypher.upload.tool.network=esp_ota
 pcbcupid_cypher.upload.maximum_size=8388608
 pcbcupid_cypher.upload.maximum_data_size=327680
 pcbcupid_cypher.upload.flags=
+pcbcupid_cypher.upload.erase_cmd=
 pcbcupid_cypher.upload.extra_flags=
 pcbcupid_cypher.upload.use_1200bps_touch=false
 pcbcupid_cypher.upload.wait_for_upload_port=false
@@ -53129,7 +53130,6 @@ pcbcupid_cypher.menu.DebugLevel.verbose=Verbose
 pcbcupid_cypher.menu.DebugLevel.verbose.build.code_debug=5
 
 pcbcupid_cypher.menu.EraseFlash.none=Disabled
-pcbcupid_cypher.menu.EraseFlash.none.upload.erase_cmd=
 pcbcupid_cypher.menu.EraseFlash.all=Enabled
 pcbcupid_cypher.menu.EraseFlash.all.upload.erase_cmd=-e
 
