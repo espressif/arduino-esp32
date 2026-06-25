@@ -47,18 +47,12 @@ bool ZigbeeBinary::addBinaryInput() {
   }
   ezb_zcl_cluster_desc_t binary_input_cluster = ezb_zcl_binary_input_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Binary Input
-  char default_description[] = "\x0C"
-                             "Binary Input";
+  // The optional Description attribute is added lazily by setBinaryInputDescription(). The SDK sizes a
+  // string attribute's storage to the first value's length and never grows it, so adding a short
+  // default here would overflow the heap if a longer description is set later.
   uint32_t application_type = 0x00000000 | (ZB_BINARY_INPUT_GROUP_ID << 24);  // Group ID 0x03
 
-  ezb_err_t ret = ezb_zcl_binary_input_cluster_desc_add_attr(binary_input_cluster, EZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to add description attribute: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_binary_input_cluster_desc_add_attr(binary_input_cluster, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_binary_input_cluster_desc_add_attr(binary_input_cluster, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
@@ -79,18 +73,12 @@ bool ZigbeeBinary::addBinaryOutput() {
   }
   ezb_zcl_cluster_desc_t binary_output_cluster = ezb_zcl_binary_output_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Binary Output
-  char default_description[] = "\x0D"
-                             "Binary Output";
+  // The optional Description attribute is added lazily by setBinaryOutputDescription(). The SDK sizes a
+  // string attribute's storage to the first value's length and never grows it, so adding a short
+  // default here would overflow the heap if a longer description is set later.
   uint32_t application_type = 0x00000000 | (ZB_BINARY_OUTPUT_GROUP_ID << 24);  // Group ID 0x04
 
-  ezb_err_t ret = ezb_zcl_binary_output_cluster_desc_add_attr(binary_output_cluster, EZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != EZB_ERR_NONE) {
-    log_e("Failed to add description attribute: 0x%x", ret);
-    return false;
-  }
-
-  ret = ezb_zcl_binary_output_cluster_desc_add_attr(binary_output_cluster, EZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  ezb_err_t ret = ezb_zcl_binary_output_cluster_desc_add_attr(binary_output_cluster, EZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
   if (ret != EZB_ERR_NONE) {
     log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
