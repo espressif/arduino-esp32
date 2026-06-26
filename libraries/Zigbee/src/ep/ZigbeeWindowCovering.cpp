@@ -302,8 +302,10 @@ bool ZigbeeWindowCovering::setLiftPosition(uint16_t lift_position) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, &_current_lift_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED lift limits
+    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_LIFT is rejected with 0x87.
+    // Non-fatal: the lift percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
+    log_w("Failed to set lift position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, &_current_lift_percentage,
@@ -325,8 +327,10 @@ bool ZigbeeWindowCovering::setLiftPercentage(uint8_t lift_percentage) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_ID, &_current_lift_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set lift position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED lift limits
+    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_LIFT is rejected with 0x87.
+    // Non-fatal: the lift percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
+    log_w("Failed to set lift position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_LIFT_PERCENTAGE_ID, &_current_lift_percentage,
@@ -348,8 +352,10 @@ bool ZigbeeWindowCovering::setTiltPosition(uint16_t tilt_position) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, &_current_tilt_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED tilt limits
+    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_TILT is rejected with 0x87.
+    // Non-fatal: the tilt percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
+    log_w("Failed to set tilt position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID, &_current_tilt_percentage,
@@ -371,8 +377,10 @@ bool ZigbeeWindowCovering::setTiltPercentage(uint8_t tilt_percentage) {
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_ID, &_current_tilt_position, false
   );
   if (ret != EZB_ZCL_STATUS_SUCCESS) {
-    log_e("Failed to set tilt position: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
-    return false;
+    // NOTE(zb-v2): the SDK window covering check_value_handler has the INSTALLED_OPEN/CLOSED tilt limits
+    // swapped (open used as max, closed as min), so a valid CURRENT_POSITION_TILT is rejected with 0x87.
+    // Non-fatal: the tilt percentage attribute (used by HA) is still updated below. Remove once SDK fixed.
+    log_w("Failed to set tilt position (SDK limit-check bug): 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
   }
   ret = setClusterAttribute(
     EZB_ZCL_CLUSTER_ID_WINDOW_COVERING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_WINDOW_COVERING_CURRENT_POSITION_TILT_PERCENTAGE_ID, &_current_tilt_percentage,
