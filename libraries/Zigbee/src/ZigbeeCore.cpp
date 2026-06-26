@@ -153,7 +153,8 @@ bool ZigbeeCore::begin() {
   }
 
   // Attach each endpoint descriptor to the device descriptor (deferred from addEndpoint()).
-  if (!_endpoints_registered) {
+  // No endpoints is allowed: the stack can still run with no data model (e.g. network scan).
+  if (!_endpoints_registered && !ep_objects.empty()) {
     for (ZigbeeEP *ep : ep_objects) {
       ezb_err_t ret = ezb_af_device_add_endpoint_desc(_zb_dev_desc, ep->_ep_desc);
       if (ret != EZB_ERR_NONE) {
@@ -165,6 +166,8 @@ bool ZigbeeCore::begin() {
       log_e("ZigbeeCore begin failed to register endpoints");
       return false;
     }
+  } else if (ep_objects.empty()) {
+    log_i("No endpoints added — starting Zigbee stack without a data model (e.g. network scan)");
   }
   if (!zigbeeStartStack()) {
     log_e("ZigbeeCore begin failed to start stack");
@@ -386,6 +389,14 @@ bool zb_app_signal_handler(const ezb_app_signal_t *signal) {
       bool ok = (bdb != nullptr) && (bdb->status == EZB_BDB_STATUS_SUCCESS);
       if (ok) {
         log_i("Device started up in %s factory-reset mode", ezb_bdb_is_factory_new() ? "" : "non");
+        // Scan-only mode (no endpoints): the stack is up but we must not commission, otherwise the
+        // continuous network steering would monopolize the radio and starve manual network scans.
+        if (Zigbee.ep_objects.empty()) {
+          log_i("No endpoints (scan-only mode) — skipping commissioning, stack ready for network scan");
+          Zigbee._started = true;
+          xSemaphoreGive(Zigbee.lock);
+          break;
+        }
         if (ezb_bdb_is_factory_new()) {
           if ((zigbee_role_t)Zigbee.getRole() == ZIGBEE_COORDINATOR) {
             log_i("Start network formation");
@@ -604,6 +615,14 @@ void ZigbeeCore::scanCompleteCallback(ezb_nwk_active_scan_result_t *result, void
     log_v("Zigbee network scan complete, found %u networks", Zigbee._scan_count);
     Zigbee._scan_status = (int16_t)Zigbee._scan_count;
     return;
+  }
+
+  // An active scan returns one beacon per responding device, so a network with multiple routers
+  // would appear several times. De-duplicate by extended PAN ID so each network is reported once.
+  for (uint16_t i = 0; i < Zigbee._scan_count; i++) {
+    if (memcmp(Zigbee._scan_result[i].extpanid.u8, result->extpanid.u8, sizeof(result->extpanid.u8)) == 0) {
+      return;
+    }
   }
 
   // Append this beacon to the result buffer
