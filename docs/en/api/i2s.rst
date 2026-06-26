@@ -541,24 +541,62 @@ This function will return the next available byte or ``-1`` if no data is availa
 or an error occurred.
 
 write
+^^^^^
 
-There are two versions of the write function:
+PCM data must be written in **sample-aligned** chunks. The minimum number of bytes per
+call depends on the data bit width configured in ``begin()`` or ``configureTX()``:
 
-The first version writes a certain amount of data bytes to the I2S interface.
+* ``I2S_DATA_BIT_WIDTH_8BIT`` — 1 byte per sample
+* ``I2S_DATA_BIT_WIDTH_16BIT`` — 2 bytes per sample
+* ``I2S_DATA_BIT_WIDTH_32BIT`` — 4 bytes per sample
+
+For stereo, samples must reach the driver in **interleaved order** (left, then right).
+Each ``write()`` call must contain at least one full sample (2 bytes for 16-bit), but a
+complete stereo frame may be sent in one call or as separate per-channel calls.
+
+Writes smaller than one sample are ignored: the function returns ``0`` and does not set
+``lastError()``. Enable debug logging to see a message when this happens.
+
+Per-channel writes — clear when learning or generating one sample at a time:
 
 .. code-block:: arduino
 
-  size_t write(uint8_t *buffer, size_t size)
+  // 16-bit stereo — left then right
+  int16_t left = ...;
+  int16_t right = ...;
+  i2s.write(&left, sizeof(left));
+  i2s.write(&right, sizeof(right));
+
+Frame buffer — preferred for streaming or bulk PCM:
+
+.. code-block:: arduino
+
+  // 16-bit stereo — one interleaved frame (4 bytes)
+  int16_t frame[2] = {left, right};
+  i2s.write(frame, sizeof(frame));
+
+There are two versions of the write function:
+
+The first version writes a buffer of PCM bytes to the I2S interface.
+
+.. code-block:: arduino
+
+  size_t write(const void *buffer, size_t size)
 
 Parameters:
 
 * [in] ``buffer`` is the buffer containing the data to be written.
 
-* [in] ``size`` is the number of bytes to write from the buffer.
+* [in] ``size`` is the number of bytes to write from the buffer. Must be at least the
+  per-sample minimum above. For streaming, ``size`` should be a multiple of the full
+  frame size (sample size × number of active channels).
 
-This function will return the number of bytes written.
+This function will return the number of bytes written, or ``0`` if the buffer is empty,
+the TX channel is not initialized, or ``size`` is smaller than one sample.
 
-The second version writes a single byte to the I2S interface.
+The second version is inherited from ``Print`` and forwards a single byte to the buffer
+version above. For bit widths greater than 8, a one-byte write is below the sample
+minimum and is therefore ignored (returns ``0`` without setting an error).
 
 .. code-block:: arduino
 
@@ -568,7 +606,8 @@ Parameters:
 
 * [in] ``d`` is the byte to be written.
 
-This function will return ``1`` if the byte was written or ``0`` if an error occurred.
+This function returns ``1`` only when the byte is accepted (8-bit mode). For 16-bit and
+wider formats it returns ``0`` because a single byte is not a complete sample.
 
 available
 ^^^^^^^^^

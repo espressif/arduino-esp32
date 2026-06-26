@@ -2,6 +2,10 @@
 #include <unity.h>
 #include <cstring>
 
+#ifndef ARDUINO_ARCH_ESP32
+#error "FS lock validation requires ARDUINO_ARCH_ESP32"
+#endif
+
 #include <FS.h>
 #include <SPIFFS.h>
 #include <FFat.h>
@@ -736,6 +740,87 @@ void test_directory_operations_edge_cases() {
   V.rmdir("/test_dir");
 }
 
+void test_arduino_arch_esp32() {
+  TEST_ASSERT_TRUE(true);
+}
+
+// open(..., create=true) holds the FS lock while calling mkdir() for each path
+// segment. A non-recursive mutex deadlocks here; the call must finish promptly.
+void test_fs_recursive_lock_nested_create() {
+#if !defined(ARDUINO_ARCH_ESP32)
+  TEST_IGNORE_MESSAGE("FS locks require ARDUINO_ARCH_ESP32");
+  return;
+#endif
+
+  auto &V = gFS->vfs();
+  const char *path = "/lock_recursive/a/b/c/d.txt";
+
+  uint32_t start = millis();
+  File f = V.open(path, FILE_WRITE, true);
+  uint32_t elapsed = millis() - start;
+  TEST_ASSERT_TRUE_MESSAGE(f, "nested create open failed");
+  TEST_ASSERT_LESS_THAN(10000, (int)elapsed);
+  f.print("x");
+  f.close();
+
+  File check = V.open(path, FILE_READ);
+  TEST_ASSERT_TRUE(check);
+  TEST_ASSERT_EQUAL_STRING("x", check.readString().c_str());
+  check.close();
+
+  TEST_ASSERT_TRUE(V.remove(path));
+  if (strcmp(gFS->name(), "spiffs") != 0) {
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a/b/c"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a/b"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive"));
+  }
+}
+
+static TaskHandle_t g_fs_lock_parent = NULL;
+
+// mkdir() only — exists() opens a VFSFileImpl and can exhaust the 3 FD limit
+// (maxOpenFiles) when the main thread and two workers contend on FFat.
+static void fs_lock_worker_task(void *param) {
+  (void)param;
+  fs::FS &V = gFS->vfs();
+
+  for (int i = 0; i < 30; ++i) {
+    V.mkdir("/__lk_shared__");
+    taskYIELD();
+  }
+
+  xTaskNotifyGive(g_fs_lock_parent);
+  vTaskDelete(NULL);
+}
+
+void test_fs_concurrent_locking() {
+#if !defined(ARDUINO_ARCH_ESP32)
+  TEST_IGNORE_MESSAGE("FS locks require ARDUINO_ARCH_ESP32");
+  return;
+#endif
+
+  auto &V = gFS->vfs();
+  g_fs_lock_parent = xTaskGetCurrentTaskHandle();
+
+  TEST_ASSERT_EQUAL(pdPASS, xTaskCreatePinnedToCore(fs_lock_worker_task, "fs_lk0", 8192, NULL, 1, NULL, 0));
+  TEST_ASSERT_EQUAL(pdPASS, xTaskCreatePinnedToCore(fs_lock_worker_task, "fs_lk1", 8192, NULL, 1, NULL, 0));
+
+  int completed = 0;
+  const uint32_t deadline = millis() + 20000;
+  while (completed < 2 && millis() < deadline) {
+    V.mkdir("/__lk_main__");
+    completed += ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
+  }
+
+  if (strcmp(gFS->name(), "spiffs") != 0) {
+    V.rmdir("/__lk_main__");
+    V.rmdir("/__lk_shared__");
+  }
+
+  TEST_ASSERT_EQUAL(2, completed);
+}
+
 void test_max_open_files_limit() {
   if (strcmp(gFS->name(), "littlefs") == 0) {
     TEST_MESSAGE("Skipping: LittleFS does not have a max open files limit");
@@ -806,6 +891,12 @@ static void run_suite_for(IFileSystem &fs) {
   Serial.print("=== FS: ");
   Serial.println(fs.name());
 
+  static bool arch_esp32_checked = false;
+  if (!arch_esp32_checked) {
+    RUN_TEST(test_arduino_arch_esp32);
+    arch_esp32_checked = true;
+  }
+
   RUN_TEST(test_info_sanity);
   RUN_TEST(test_basic_write_and_read);
   RUN_TEST(test_append_behavior);
@@ -822,6 +913,8 @@ static void run_suite_for(IFileSystem &fs) {
   RUN_TEST(test_large_file_operations);
   RUN_TEST(test_write_read_patterns);
   RUN_TEST(test_directory_operations_edge_cases);
+  RUN_TEST(test_fs_recursive_lock_nested_create);
+  RUN_TEST(test_fs_concurrent_locking);
   RUN_TEST(test_max_open_files_limit);
   RUN_TEST(test_open_read_mode_type_detection);
   gFS = nullptr;

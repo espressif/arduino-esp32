@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import re
 import yaml
 import os
 import sys
@@ -124,11 +125,13 @@ def test_enabled_for_target(ci_json: dict, chip: str) -> bool:
     return True
 
 
-def platform_allowed(ci_json: dict, platform: str = "hardware") -> bool:
+def platform_allowed(ci_json: dict, platform: str = "hardware", chip: str = "") -> bool:
     platforms = ci_json.get("platforms")
     if isinstance(platforms, dict):
         v = platforms.get(platform)
         if v is False:
+            return False
+        if chip and isinstance(v, dict) and v.get(chip) is False:
             return False
     return True
 
@@ -153,10 +156,28 @@ def sdkconfig_path_for(chip: str, sketch: str, ci_json: dict) -> Path:
     # {test_name}/{first_device}/build[0].tmp/ (see tests_build.sh build_multi_device_test).
     multi_device = ci_json.get("multi_device") if isinstance(ci_json, dict) else None
     if isinstance(multi_device, dict) and multi_device:
-        first_device = str(next(iter(multi_device.values())))
+        first_val = next(iter(multi_device.values()))
+        # multi_device values can be a scalar (sketch name) or a map with a "sketch" key
+        if isinstance(first_val, dict):
+            first_device = str(first_val.get("sketch", ""))
+        else:
+            first_device = str(first_val)
         return Path.home() / f".arduino/tests/{chip}/{sketch}/{first_device}/{build_suffix}/sdkconfig"
 
     return Path.home() / f".arduino/tests/{chip}/{sketch}/{build_suffix}/sdkconfig"
+
+
+def compile_requirement(req: str) -> re.Pattern | None:
+    # Mirror grep -E "^$requirement" in sketch_utils.sh
+    try:
+        return re.compile(req)
+    except re.error as e:
+        sys.stderr.write(f"[WARN] Invalid requirement regex '{req}': {e}\n")
+        return None
+
+
+def any_line_matches(lines: list[str], pattern: re.Pattern) -> bool:
+    return any(pattern.match(line) for line in lines)
 
 
 def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
@@ -168,19 +189,30 @@ def sdk_meets_requirements(sdkconfig: Path, ci_json: dict) -> bool:
         requires = ci_json.get("requires") or []
         requires_any = ci_json.get("requires_any") or []
         content = sdkconfig.read_text(encoding="utf-8", errors="ignore")
+        lines = content.splitlines()
         # AND requirements
         for req in requires:
             if not isinstance(req, str):
                 continue
-            if not any(line.startswith(req) for line in content.splitlines()):
+            req = req.strip()
+            if not req:
+                continue
+            pattern = compile_requirement(req)
+            if pattern is None or not any_line_matches(lines, pattern):
                 return False
         # OR requirements
         if requires_any:
-            ok = any(
-                any(line.startswith(req) for line in content.splitlines())
-                for req in requires_any
-                if isinstance(req, str)
-            )
+            ok = False
+            for req in requires_any:
+                if not isinstance(req, str):
+                    continue
+                req = req.strip()
+                if not req:
+                    continue
+                pattern = compile_requirement(req)
+                if pattern is not None and any_line_matches(lines, pattern):
+                    ok = True
+                    break
             if not ok:
                 return False
         return True
@@ -389,7 +421,7 @@ def main():
             if not test_enabled_for_target(ci, chip):
                 continue
             # Skip tests that explicitly disable the hardware platform
-            if not platform_allowed(ci, "hardware"):
+            if not platform_allowed(ci, "hardware", chip):
                 continue
             sdk = sdkconfig_path_for(chip, sketch, ci)
             if not args.dry_run and not sdk_meets_requirements(sdk, ci):

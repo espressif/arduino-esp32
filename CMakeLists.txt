@@ -6,7 +6,7 @@
 #   idf.py build
 
 set(min_supported_idf_version "5.3.0")
-set(max_supported_idf_version "6.0.99")
+set(max_supported_idf_version "6.1.99")
 set(idf_version "${IDF_VERSION_MAJOR}.${IDF_VERSION_MINOR}.${IDF_VERSION_PATCH}")
 
 if ("${idf_version}" AND NOT "$ENV{ARDUINO_SKIP_IDF_VERSION_CHECK}")
@@ -188,6 +188,7 @@ set(ARDUINO_LIBRARY_NetBIOS_SRCS libraries/NetBIOS/src/NetBIOS.cpp)
 set(ARDUINO_LIBRARY_OpenThread_SRCS
   libraries/OpenThread/src/OThread.cpp
   libraries/OpenThread/src/OThreadCLI.cpp
+  libraries/OpenThread/src/OThreadUDP.cpp
   libraries/OpenThread/src/OThreadCLI_Util.cpp)
 
 set(ARDUINO_LIBRARY_Matter_SRCS
