@@ -98,7 +98,6 @@ static void checkButton() {
   static uint32_t lastPress = 0;
   const uint32_t debounceMs = 500;
 
-  pinMode(USER_BUTTON, INPUT_PULLUP);
   if (digitalRead(USER_BUTTON) == HIGH) {
     return;
   }
@@ -118,6 +117,7 @@ static void checkButton() {
 
 void setup() {
   Serial.begin(115200);
+  pinMode(USER_BUTTON, INPUT_PULLUP);
   rgbLedWrite(RGB_BUILTIN, 64, 0, 0);
 
   Serial.println("=== CoAP Switch (client) ===");

@@ -31,6 +31,7 @@
 
 #include "Arduino.h"
 #include "OThread.h"
+#include <functional>
 
 /** @brief Callback type invoked on each complete line of OpenThread CLI output. */
 typedef std::function<void(void)> OnReceiveCb_t;

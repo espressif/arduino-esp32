@@ -102,7 +102,7 @@ The ``OpenThread`` class is the main entry point for Thread operations using the
 * **Device Role Management**: Getting and monitoring device role (Leader, Router, Child, Detached, Disabled).
 * **Dataset Management**: Setting and getting operational dataset parameters (offline via ``DataSet`` + ``commitDataSet`` or live via per-parameter setters).
 * **Joiner Role**: Synchronously attach a brand-new device to a Thread network using only a PSKd (Pre-Shared Key for Device).
-* **Commissioner Role**: Authorise remote Joiners on the network side using a PSKd.
+* **Commissioner Role**: Authorize remote Joiners on the network side using a PSKd.
 * **Address Management**: Getting mesh-local addresses, RLOC, and multicast addresses. Multicast join/leave: :doc:`Multicast guide <Multicasting>`.
 * **Network Information**: Getting network name, channel, PAN ID, EUI-64, Thread version, TX power, and other network parameters.
 
