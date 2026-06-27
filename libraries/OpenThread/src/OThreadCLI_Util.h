@@ -8,8 +8,6 @@
 
 // You may obtain a copy of the License at
 
-
-
 //     http://www.apache.org/licenses/LICENSE-2.0
 
 //
@@ -24,8 +22,6 @@
 
 // limitations under the License.
 
-
-
 #pragma once
 
 #include "Arduino.h"
@@ -35,8 +31,6 @@
 #if SOC_IEEE802154_SUPPORTED
 
 #if CONFIG_OPENTHREAD_ENABLED
-
-
 
 /**
 
@@ -54,8 +48,6 @@
 
  */
 
-
-
 /**
 
  * @brief Result of a CLI command execution.
@@ -64,13 +56,11 @@
 
 typedef struct {
 
-  int errorCode;        ///< OpenThread error code (0 on success).
+  int errorCode;  ///< OpenThread error code (0 on success).
 
   String errorMessage;  ///< Human-readable error text, or empty on success.
 
 } ot_cmd_return_t;
-
-
 
 /**
 
@@ -186,11 +176,9 @@ bool otGetRespCmd(const char *cmd, char *resp = NULL, size_t respBufSize = 0, ui
 
  */
 
-template <size_t N>
-inline bool otGetRespCmd(const char *cmd, char (&resp)[N], uint32_t respTimeout = 5000) {
+template<size_t N> inline bool otGetRespCmd(const char *cmd, char (&resp)[N], uint32_t respTimeout = 5000) {
   return otGetRespCmd(cmd, resp, N, respTimeout);
 }
-
 
 /**
 
@@ -210,8 +198,6 @@ inline bool otGetRespCmd(const char *cmd, char (&resp)[N], uint32_t respTimeout 
 
 bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode = NULL, uint32_t respTimeout = 5000);
 
-
-
 /**
 
  * @brief Run a CLI command and stream its full response to an output stream.
@@ -228,9 +214,6 @@ bool otExecCommand(const char *cmd, const char *arg, ot_cmd_return_t *returnCode
 
 bool otPrintRespCLI(const char *cmd, Stream &output, uint32_t respTimeout);
 
-
-
 #endif /* CONFIG_OPENTHREAD_ENABLED */
 
 #endif /* SOC_IEEE802154_SUPPORTED */
-

@@ -25,25 +25,25 @@
 #include "OThreadUDP.h"
 
 // Must match collector side.
-const char    PSKD[]                 = "J01NME";
-const uint8_t CHANNEL_HINT           = 15;
+const char PSKD[] = "J01NME";
+const uint8_t CHANNEL_HINT = 15;
 // Keep this away from Thread reserved ports. 61631 is used by Thread TMF CoAP
 // and can make application sockets receive binary management traffic.
-const uint16_t COLLECTOR_PORT        = 5050;
-const uint32_t JOIN_TIMEOUT_MS       = 60000;
+const uint16_t COLLECTOR_PORT = 5050;
+const uint32_t JOIN_TIMEOUT_MS = 60000;
 const uint32_t RESUME_ATTACH_TIMEOUT_MS = 30000;
 
 // App behavior.
-const uint32_t SAMPLE_PERIOD_MS      = 30000;  // Read + send every 30 s.
-const uint32_t ACK_TIMEOUT_MS        = 1200;
-const uint8_t  TX_RETRIES            = 2;
-const uint8_t  REATTACH_AFTER_MISSED = 3;
-const uint32_t DETACHED_REATTACH_MS  = 15000;
-const bool     ENABLE_SLEEPY_END_DEV = true;
+const uint32_t SAMPLE_PERIOD_MS = 30000;  // Read + send every 30 s.
+const uint32_t ACK_TIMEOUT_MS = 1200;
+const uint8_t TX_RETRIES = 2;
+const uint8_t REATTACH_AFTER_MISSED = 3;
+const uint32_t DETACHED_REATTACH_MS = 15000;
+const bool ENABLE_SLEEPY_END_DEV = true;
 
 // Sleepy End Device settings.
-const uint32_t SED_POLL_PERIOD_MS    = 1000;
-const uint32_t CHILD_TIMEOUT_SEC     = 300;
+const uint32_t SED_POLL_PERIOD_MS = 1000;
+const uint32_t CHILD_TIMEOUT_SEC = 300;
 
 OThreadUDP OtUdp;
 static IPAddress s_collectorIp;
@@ -148,11 +148,9 @@ static void configureSleepyEndDevice() {
   otError e2 = otLinkSetRxOnWhenIdle(inst, false);
   esp_openthread_lock_release();
 
-  Serial.printf("SED cfg poll=%lums childTimeout=%lus rxOnIdle=0 (errs poll=%d rx=%d)\n",
-                (unsigned long)SED_POLL_PERIOD_MS,
-                (unsigned long)CHILD_TIMEOUT_SEC,
-                e1,
-                e2);
+  Serial.printf(
+    "SED cfg poll=%lums childTimeout=%lus rxOnIdle=0 (errs poll=%d rx=%d)\n", (unsigned long)SED_POLL_PERIOD_MS, (unsigned long)CHILD_TIMEOUT_SEC, e1, e2
+  );
 }
 
 static void readFakeSensor(int32_t &tempCenti, uint16_t &battMv) {
@@ -205,8 +203,7 @@ static void forceReattach() {
 
 static long sendFrameAndWaitAck(uint32_t seq, int32_t tempCenti, uint16_t battMv) {
   char frame[120];
-  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u",
-           s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
+  snprintf(frame, sizeof(frame), "id=%s,seq=%lu,temp_centi=%ld,batt_mv=%u", s_nodeId, (unsigned long)seq, (long)tempCenti, battMv);
 
   long bestAcked = -1;
   for (uint8_t attempt = 0; attempt <= TX_RETRIES; attempt++) {
@@ -311,11 +308,10 @@ void loop() {
   if (ok) {
     s_seq = (uint32_t)ackedSeq;
   }
-  Serial.printf("sample=%lu temp=%.2fC batt=%umV status=%s\n",
-                (unsigned long)seqToSend,
-                (float)tempCenti / 100.0f,
-                battMv,
-                ok ? ((ackedSeq == (long)seqToSend) ? "ACKED" : "RESYNC") : "NO_ACK");
+  Serial.printf(
+    "sample=%lu temp=%.2fC batt=%umV status=%s\n", (unsigned long)seqToSend, (float)tempCenti / 100.0f, battMv,
+    ok ? ((ackedSeq == (long)seqToSend) ? "ACKED" : "RESYNC") : "NO_ACK"
+  );
 
   if (ok) {
     s_consecutiveNoAck = 0;

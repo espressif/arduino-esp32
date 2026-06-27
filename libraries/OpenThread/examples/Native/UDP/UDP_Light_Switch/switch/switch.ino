@@ -37,20 +37,19 @@
 #endif
 
 // Must match the light's PSKD and channel.
-const char    PSKD[]  = "J01NME";
+const char PSKD[] = "J01NME";
 const uint8_t CHANNEL = 15;
 
-const uint8_t   LIGHT_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
+const uint8_t LIGHT_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
 const IPAddress LIGHT_GROUP(IPv6, LIGHT_GROUP_BYTES);
 // Use an application port that does not collide with OpenThread internals.
 // 5683/5684 are CoAP/CoAPs ports and 61631 is Thread TMF CoAP.
-const uint16_t  LIGHT_PORT      = 5051;
-const uint32_t  ACK_TIMEOUT_MS  = 1000;
-const uint32_t  JOIN_TIMEOUT_MS = 60000;
-const uint32_t  RESUME_ATTACH_TIMEOUT_MS = 30000;
-const uint8_t   REATTACH_AFTER_MISSED = 3;
-const uint32_t  DETACHED_REATTACH_MS  = 15000;
+const uint16_t LIGHT_PORT = 5051;
+const uint32_t ACK_TIMEOUT_MS = 1000;
+const uint32_t JOIN_TIMEOUT_MS = 60000;
+const uint32_t RESUME_ATTACH_TIMEOUT_MS = 30000;
+const uint8_t REATTACH_AFTER_MISSED = 3;
+const uint32_t DETACHED_REATTACH_MS = 15000;
 
 OThreadUDP OtUdp;
 static uint8_t s_consecutiveNoAck = 0;
@@ -216,7 +215,7 @@ static bool sendCommand(const char *cmd) {
     int n = OtUdp.parsePacket();
     if (n > 0) {
       char buf[32];
-      int  got = OtUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
+      int got = OtUdp.read(buf, (n < (int)sizeof(buf) - 1) ? n : (int)sizeof(buf) - 1);
       buf[got] = '\0';
       IPAddress remote = OtUdp.remoteIP();
       Serial.printf("ACK from [%s]:%u <- '%s'\n", remote.toString().c_str(), OtUdp.remotePort(), buf);

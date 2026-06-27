@@ -267,8 +267,8 @@ public:
    * @return OT_ERROR_NONE on success, otherwise an OpenThread error.
    */
   otError startJoiner(
-    const char *pskd, uint32_t timeoutMs = 30000, const char *provisioningUrl = nullptr, const char *vendorName = nullptr,
-    const char *vendorModel = nullptr, const char *vendorSwVersion = nullptr, const char *vendorData = nullptr
+    const char *pskd, uint32_t timeoutMs = 30000, const char *provisioningUrl = nullptr, const char *vendorName = nullptr, const char *vendorModel = nullptr,
+    const char *vendorSwVersion = nullptr, const char *vendorData = nullptr
   );
   /** @brief Abort an in-progress Joiner operation. */
   void stopJoiner();

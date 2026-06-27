@@ -26,25 +26,19 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char     PSKD[]            = "J01NME";
+const char PSKD[] = "J01NME";
 const uint32_t JOINER_WINDOW_SEC = 600;
-const uint8_t  CHANNEL           = 15;
-const uint16_t PAN_ID            = 0xABCD;
-const uint8_t  EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xDE, 0xAD, 0x00, 0xBE, 0xEF, 0x00, 0xCA, 0xFE};
-const uint8_t  NETKEY[OT_NETWORK_KEY_SIZE]  = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-  0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
-const char     NETWORK_NAME[] = "ESP_OT_CoAP_Lamp";
+const uint8_t CHANNEL = 15;
+const uint16_t PAN_ID = 0xABCD;
+const uint8_t EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xDE, 0xAD, 0x00, 0xBE, 0xEF, 0x00, 0xCA, 0xFE};
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+const char NETWORK_NAME[] = "ESP_OT_CoAP_Lamp";
 
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
 // Realm-local multicast — switches can PUT here without knowing unicast address
-const uint8_t   LAMP_GROUP_BYTES[16] = {
-  0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd
-};
+const uint8_t LAMP_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
 const IPAddress LAMP_GROUP(IPv6, LAMP_GROUP_BYTES);
 
 // lampTarget is the commanded state, written by the CoAP handler on the
@@ -107,8 +101,9 @@ static void onLamp(OThreadCoAPRequest &req, OThreadCoAPResponse &resp, void *ctx
       return;
     }
     lampTarget = (cmd == '1');  // loop() picks this up and drives the LED
-    Serial.printf("CoAP PUT from %s -> %s%s\n", req.remoteIP().toString().c_str(), lampTarget ? "ON" : "OFF",
-                  req.isMulticast() ? " (multicast, no reply)" : "");
+    Serial.printf(
+      "CoAP PUT from %s -> %s%s\n", req.remoteIP().toString().c_str(), lampTarget ? "ON" : "OFF", req.isMulticast() ? " (multicast, no reply)" : ""
+    );
     if (replyAllowed) {
       resp.setCode(OT_COAP_RESP_CHANGED);
       resp.setPayload(lampTarget ? "1" : "0");
@@ -194,14 +189,18 @@ void setup() {
   OThreadCoAPServer.on("Lamp", OT_COAP_METHOD_GET | OT_COAP_METHOD_PUT, onLamp);
   if (!OThreadCoAPServer.begin()) {
     Serial.println("CoAP server failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   // Subscribe the interface to the lamp group; without this the node never
   // receives datagrams addressed to the custom realm-local group ff03::abcd.
   if (!OThreadCoAPServer.joinMulticastGroup(LAMP_GROUP)) {
     Serial.println("Failed to join multicast group.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   Serial.printf("Ready. CoAP resource 'Lamp' (multicast group %s)\n", LAMP_GROUP.toString().c_str());

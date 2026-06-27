@@ -79,7 +79,7 @@ static void gracefulShutdown() {
   OThread.end();
 
   Serial.println("OpenThread ended. Running setup() to start again.");
-  setup(); // Run setup() again to start the stack again
+  setup();  // Run setup() again to start the stack again
 }
 
 void setup() {

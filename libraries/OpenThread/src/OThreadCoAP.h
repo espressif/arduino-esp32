@@ -55,74 +55,74 @@
 
 // Response codes (class*100+detail). Do not use OT_COAP_CODE_* enum names here —
 // they are defined in OpenThread coap.h and break compilation if redefined as macros.
-#define OT_COAP_RESP_OK              205
-#define OT_COAP_RESP_CREATED         201
-#define OT_COAP_RESP_CHANGED         204
-#define OT_COAP_RESP_DELETED         202
-#define OT_COAP_RESP_BAD_REQUEST     400
-#define OT_COAP_RESP_NOT_FOUND       404
-#define OT_COAP_RESP_METHOD_NA       405
-#define OT_COAP_RESP_INTERNAL_ERROR  500
+#define OT_COAP_RESP_OK             205
+#define OT_COAP_RESP_CREATED        201
+#define OT_COAP_RESP_CHANGED        204
+#define OT_COAP_RESP_DELETED        202
+#define OT_COAP_RESP_BAD_REQUEST    400
+#define OT_COAP_RESP_NOT_FOUND      404
+#define OT_COAP_RESP_METHOD_NA      405
+#define OT_COAP_RESP_INTERNAL_ERROR 500
 
-#define OT_COAP_ERROR_TIMEOUT        (-11)
-#define OT_COAP_ERROR_NO_RESPONSE    (-12)
-#define OT_COAP_ERROR_NOT_ATTACHED   (-13)
-#define OT_COAP_ERROR_NO_BUFS        (-14)
-#define OT_COAP_ERROR_INVALID_ARGS   (-15)
-#define OT_COAP_ERROR_NOT_CONNECTED  (-16)
-#define OT_COAP_ERROR_TLS_FAILED     (-17)
-#define OT_COAP_ERROR_INVALID_STATE  (-18)  // CoAP service or OT lock not ready (not role attachment)
+#define OT_COAP_ERROR_TIMEOUT       (-11)
+#define OT_COAP_ERROR_NO_RESPONSE   (-12)
+#define OT_COAP_ERROR_NOT_ATTACHED  (-13)
+#define OT_COAP_ERROR_NO_BUFS       (-14)
+#define OT_COAP_ERROR_INVALID_ARGS  (-15)
+#define OT_COAP_ERROR_NOT_CONNECTED (-16)
+#define OT_COAP_ERROR_TLS_FAILED    (-17)
+#define OT_COAP_ERROR_INVALID_STATE (-18)  // CoAP service or OT lock not ready (not role attachment)
 
-#define OT_COAP_SECURE_CONNECTED                   0
-#define OT_COAP_SECURE_DISCONNECTED_PEER           1
-#define OT_COAP_SECURE_DISCONNECTED_LOCAL          2
-#define OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS   3
-#define OT_COAP_SECURE_DISCONNECTED_ERROR          4
-#define OT_COAP_SECURE_DISCONNECTED_TIMEOUT        5
+#define OT_COAP_SECURE_CONNECTED                 0
+#define OT_COAP_SECURE_DISCONNECTED_PEER         1
+#define OT_COAP_SECURE_DISCONNECTED_LOCAL        2
+#define OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS 3
+#define OT_COAP_SECURE_DISCONNECTED_ERROR        4
+#define OT_COAP_SECURE_DISCONNECTED_TIMEOUT      5
 
-#define OT_COAP_METHOD_GET           (1 << 0)
-#define OT_COAP_METHOD_POST          (1 << 1)
-#define OT_COAP_METHOD_PUT           (1 << 2)
-#define OT_COAP_METHOD_DELETE        (1 << 3)
+#define OT_COAP_METHOD_GET    (1 << 0)
+#define OT_COAP_METHOD_POST   (1 << 1)
+#define OT_COAP_METHOD_PUT    (1 << 2)
+#define OT_COAP_METHOD_DELETE (1 << 3)
 
 // Request method values returned by OThreadCoAPRequest::method().
-#define OT_COAP_REQ_GET              1
-#define OT_COAP_REQ_POST             2
-#define OT_COAP_REQ_PUT              3
-#define OT_COAP_REQ_DELETE           4
+#define OT_COAP_REQ_GET    1
+#define OT_COAP_REQ_POST   2
+#define OT_COAP_REQ_PUT    3
+#define OT_COAP_REQ_DELETE 4
 
-#define OT_COAP_CONFIRMABLE          1
-#define OT_COAP_NON_CONFIRMABLE      0
+#define OT_COAP_CONFIRMABLE     1
+#define OT_COAP_NON_CONFIRMABLE 0
 
 // IANA CoAP Content-Format codes (mirrors otCoapOptionContentFormat in ESP-IDF coap.h).
 // Full registry: https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#content-formats
-#define OT_COAP_FORMAT_TEXT                    0    // text/plain; charset=utf-8
-#define OT_COAP_FORMAT_COSE_ENCRYPT0           16   // application/cose; cose-type="cose-encrypt0"
-#define OT_COAP_FORMAT_COSE_MAC0               17   // application/cose; cose-type="cose-mac0"
-#define OT_COAP_FORMAT_COSE_SIGN1              18   // application/cose; cose-type="cose-sign1"
-#define OT_COAP_FORMAT_LINK                   40   // application/link-format
-#define OT_COAP_FORMAT_XML                    41   // application/xml
-#define OT_COAP_FORMAT_OCTET_STREAM           42   // application/octet-stream
-#define OT_COAP_FORMAT_EXI                    47   // application/exi
-#define OT_COAP_FORMAT_JSON                   50   // application/json
-#define OT_COAP_FORMAT_JSON_PATCH             51   // application/json-patch+json
-#define OT_COAP_FORMAT_MERGE_PATCH_JSON       52   // application/merge-patch+json
-#define OT_COAP_FORMAT_CBOR                   60   // application/cbor
-#define OT_COAP_FORMAT_CWT                    61   // application/cwt
-#define OT_COAP_FORMAT_COSE_ENCRYPT           96   // application/cose; cose-type="cose-encrypt"
-#define OT_COAP_FORMAT_COSE_MAC               97   // application/cose; cose-type="cose-mac"
-#define OT_COAP_FORMAT_COSE_SIGN              98   // application/cose; cose-type="cose-sign"
-#define OT_COAP_FORMAT_COSE_KEY              101   // application/cose-key
-#define OT_COAP_FORMAT_COSE_KEY_SET          102   // application/cose-key-set
-#define OT_COAP_FORMAT_SENML_JSON            110   // application/senml+json
-#define OT_COAP_FORMAT_SENSML_JSON           111   // application/sensml+json
-#define OT_COAP_FORMAT_SENML_CBOR            112   // application/senml+cbor
-#define OT_COAP_FORMAT_SENSML_CBOR           113   // application/sensml+cbor
-#define OT_COAP_FORMAT_SENML_EXI             114   // application/senml-exi
-#define OT_COAP_FORMAT_SENSML_EXI            115   // application/sensml-exi
-#define OT_COAP_FORMAT_COAP_GROUP_JSON       256   // application/coap-group+json
-#define OT_COAP_FORMAT_SENML_XML             310   // application/senml+xml
-#define OT_COAP_FORMAT_SENSML_XML            311   // application/sensml+xml
+#define OT_COAP_FORMAT_TEXT             0    // text/plain; charset=utf-8
+#define OT_COAP_FORMAT_COSE_ENCRYPT0    16   // application/cose; cose-type="cose-encrypt0"
+#define OT_COAP_FORMAT_COSE_MAC0        17   // application/cose; cose-type="cose-mac0"
+#define OT_COAP_FORMAT_COSE_SIGN1       18   // application/cose; cose-type="cose-sign1"
+#define OT_COAP_FORMAT_LINK             40   // application/link-format
+#define OT_COAP_FORMAT_XML              41   // application/xml
+#define OT_COAP_FORMAT_OCTET_STREAM     42   // application/octet-stream
+#define OT_COAP_FORMAT_EXI              47   // application/exi
+#define OT_COAP_FORMAT_JSON             50   // application/json
+#define OT_COAP_FORMAT_JSON_PATCH       51   // application/json-patch+json
+#define OT_COAP_FORMAT_MERGE_PATCH_JSON 52   // application/merge-patch+json
+#define OT_COAP_FORMAT_CBOR             60   // application/cbor
+#define OT_COAP_FORMAT_CWT              61   // application/cwt
+#define OT_COAP_FORMAT_COSE_ENCRYPT     96   // application/cose; cose-type="cose-encrypt"
+#define OT_COAP_FORMAT_COSE_MAC         97   // application/cose; cose-type="cose-mac"
+#define OT_COAP_FORMAT_COSE_SIGN        98   // application/cose; cose-type="cose-sign"
+#define OT_COAP_FORMAT_COSE_KEY         101  // application/cose-key
+#define OT_COAP_FORMAT_COSE_KEY_SET     102  // application/cose-key-set
+#define OT_COAP_FORMAT_SENML_JSON       110  // application/senml+json
+#define OT_COAP_FORMAT_SENSML_JSON      111  // application/sensml+json
+#define OT_COAP_FORMAT_SENML_CBOR       112  // application/senml+cbor
+#define OT_COAP_FORMAT_SENSML_CBOR      113  // application/sensml+cbor
+#define OT_COAP_FORMAT_SENML_EXI        114  // application/senml-exi
+#define OT_COAP_FORMAT_SENSML_EXI       115  // application/sensml-exi
+#define OT_COAP_FORMAT_COAP_GROUP_JSON  256  // application/coap-group+json
+#define OT_COAP_FORMAT_SENML_XML        310  // application/senml+xml
+#define OT_COAP_FORMAT_SENSML_XML       311  // application/sensml+xml
 
 class OThreadCoAPRequest;
 class OThreadCoAPResponse;
@@ -183,13 +183,13 @@ public:
    * @brief The singleton plain CoAP resource server (port 5683).
    * @return Same object as the global OThreadCoAPServer.
    */
-  static OThreadCoAPServerClass& plainServer();
+  static OThreadCoAPServerClass &plainServer();
 
   /**
    * @brief The singleton CoAPS resource server (port 5684).
    * @return Same object as the global OThreadCoAPSecureServer.
    */
-  static OThreadCoAPSecureServerClass& secureServer();
+  static OThreadCoAPSecureServerClass &secureServer();
 
 private:
   // Internal: reclaim blocking-request contexts that were left in flight when the
@@ -669,8 +669,7 @@ public:
    * @param caPem   Optional CA certificate (PEM) to verify the peer.
    * @param caLen   Length of @p caPem.
    */
-  void setCertificate(const char *certPem, size_t certLen, const char *keyPem, size_t keyLen,
-                      const char *caPem = nullptr, size_t caLen = 0);
+  void setCertificate(const char *certPem, size_t certLen, const char *keyPem, size_t keyLen, const char *caPem = nullptr, size_t caLen = 0);
 
   /**
    * @brief Enable or disable verification of the peer certificate.
@@ -828,8 +827,7 @@ public:
    * @param caPem   Optional CA certificate (PEM) to verify clients.
    * @param caLen   Length of @p caPem.
    */
-  void setCertificate(const char *certPem, size_t certLen, const char *keyPem, size_t keyLen,
-                      const char *caPem = nullptr, size_t caLen = 0);
+  void setCertificate(const char *certPem, size_t certLen, const char *keyPem, size_t keyLen, const char *caPem = nullptr, size_t caLen = 0);
 
   /**
    * @brief Limit the number of DTLS handshake attempts.

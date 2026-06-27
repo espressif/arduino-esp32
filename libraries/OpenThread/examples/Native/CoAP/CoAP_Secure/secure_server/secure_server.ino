@@ -27,23 +27,17 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char     PSKD[]            = "J01NME";
+const char PSKD[] = "J01NME";
 const uint32_t JOINER_WINDOW_SEC = 600;
-const uint8_t  CHANNEL           = 15;
-const uint16_t PAN_ID            = 0x5EC0;
-const uint8_t  NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-  0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+const uint8_t CHANNEL = 15;
+const uint16_t PAN_ID = 0x5EC0;
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
 // Shared PSK for demo — same bytes on client and server
-static const uint8_t COAP_PSK[] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+static const uint8_t COAP_PSK[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 static const char COAP_PSK_ID[] = "esp-coap-demo";
 
 static void onStatus(OThreadCoAPRequest &req, OThreadCoAPResponse &resp, void *ctx) {
@@ -113,7 +107,9 @@ void setup() {
 
   if (!OThreadCoAP::secureApiEnabled()) {
     Serial.println("CoAPS is not enabled in this build. This sketch will not run.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   OThread.begin(false);
@@ -129,11 +125,12 @@ void setup() {
 
   if (!OThreadCoAPSecureServer.begin()) {
     Serial.println("CoAPS server start failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
-  Serial.printf("Ready. CoAPS listening on port %u (PSK id \"%s\")\n",
-                (unsigned)OT_COAP_SECURE_DEFAULT_PORT, COAP_PSK_ID);
+  Serial.printf("Ready. CoAPS listening on port %u (PSK id \"%s\")\n", (unsigned)OT_COAP_SECURE_DEFAULT_PORT, COAP_PSK_ID);
   Serial.printf("Mesh-local: %s\n", OThread.getMeshLocalEid().toString().c_str());
 }
 

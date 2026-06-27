@@ -29,11 +29,11 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char    PSKD[]           = "J01NME";
-const uint8_t CHANNEL_HINT     = 15;
+const char PSKD[] = "J01NME";
+const uint8_t CHANNEL_HINT = 15;
 const uint32_t JOIN_TIMEOUT_MS = 60000;
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
 OThreadCoAPClient CoapClient;
 static IPAddress serverIp;
@@ -81,8 +81,7 @@ static bool joinNetwork() {
   }
 
   serverIp = OThread.getLeaderRloc();
-  Serial.printf("Attached as %s. Notes server: %s\n",
-                OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
+  Serial.printf("Attached as %s. Notes server: %s\n", OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
   return true;
 }
 

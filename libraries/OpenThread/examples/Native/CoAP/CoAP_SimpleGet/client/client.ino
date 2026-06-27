@@ -28,13 +28,10 @@
 #include "OThreadCoAP.h"
 
 // Must match server.ino
-const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-  0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
-};
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
 
 const uint32_t ATTACH_TIMEOUT_MS = 20000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
 OThreadCoAPClient CoapClient;
 static IPAddress serverIp;
@@ -79,8 +76,7 @@ static bool joinNetwork() {
     return false;
   }
   serverIp = OThread.getLeaderRloc();
-  Serial.printf("Attached as %s. Server (Leader RLOC): %s\n",
-                OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
+  Serial.printf("Attached as %s. Server (Leader RLOC): %s\n", OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
   return true;
 }
 
@@ -94,7 +90,9 @@ void setup() {
 
   if (!joinNetwork()) {
     Serial.println("Thread attach failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   delay(500);  // let server CoAP settle

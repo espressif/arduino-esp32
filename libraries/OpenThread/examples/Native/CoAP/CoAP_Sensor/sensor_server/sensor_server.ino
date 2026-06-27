@@ -25,17 +25,12 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const uint8_t  CHANNEL = 15;
-const uint16_t PAN_ID  = 0xBEEF;
-const uint8_t  EXTPANID[OT_EXT_PAN_ID_SIZE] = {
-  0xBE, 0xEF, 0x00, 0x00, 0x53, 0xE5, 0xC0, 0x01
-};
+const uint8_t CHANNEL = 15;
+const uint16_t PAN_ID = 0xBEEF;
+const uint8_t EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xBE, 0xEF, 0x00, 0x00, 0x53, 0xE5, 0xC0, 0x01};
 const uint32_t ATTACH_TIMEOUT_MS = 20000;
-const uint32_t ATTACH_DOT_MS     = 2000;
-const uint8_t  NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+const uint32_t ATTACH_DOT_MS = 2000;
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 
 // Backing String for the serve()-bound resource. After begin(), only update it
 // via OThreadCoAPServer.setResourceValue() — never assign it directly here, because the
@@ -96,13 +91,17 @@ void setup() {
   OThread.begin(false);
   if (!startNetwork()) {
     Serial.println("Attach failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   OThreadCoAPServer.serve("sensor/temp", &temperature);
   if (!OThreadCoAPServer.begin()) {
     Serial.println("CoAP server failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
   Serial.println("Ready. Serving GET sensor/temp");
 }

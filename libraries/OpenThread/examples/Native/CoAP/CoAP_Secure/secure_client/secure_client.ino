@@ -22,16 +22,13 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char    PSKD[]           = "J01NME";
-const uint8_t CHANNEL_HINT     = 15;
+const char PSKD[] = "J01NME";
+const uint8_t CHANNEL_HINT = 15;
 const uint32_t JOIN_TIMEOUT_MS = 60000;
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
-static const uint8_t COAP_PSK[] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+static const uint8_t COAP_PSK[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 static const char COAP_PSK_ID[] = "esp-coap-demo";
 
 OThreadCoAPSecureClient SecureClient;
@@ -40,18 +37,10 @@ static IPAddress serverIp;
 static void onSecureEvent(int event, void *ctx) {
   (void)ctx;
   switch (event) {
-    case OT_COAP_SECURE_CONNECTED:
-      Serial.println("DTLS connected");
-      break;
-    case OT_COAP_SECURE_DISCONNECTED_PEER:
-      Serial.println("DTLS closed by peer");
-      break;
-    case OT_COAP_SECURE_DISCONNECTED_ERROR:
-      Serial.println("DTLS error");
-      break;
-    default:
-      Serial.printf("DTLS event %d\n", event);
-      break;
+    case OT_COAP_SECURE_CONNECTED:          Serial.println("DTLS connected"); break;
+    case OT_COAP_SECURE_DISCONNECTED_PEER:  Serial.println("DTLS closed by peer"); break;
+    case OT_COAP_SECURE_DISCONNECTED_ERROR: Serial.println("DTLS error"); break;
+    default:                                Serial.printf("DTLS event %d\n", event); break;
   }
 }
 
@@ -93,8 +82,7 @@ static bool joinNetwork() {
     return false;
   }
   serverIp = OThread.getLeaderRloc();
-  Serial.printf("Attached as %s. Server: %s\n",
-                OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
+  Serial.printf("Attached as %s. Server: %s\n", OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
   return true;
 }
 
@@ -104,7 +92,9 @@ void setup() {
 
   if (!OThreadCoAP::secureApiEnabled()) {
     Serial.println("CoAPS is not enabled in this build. This sketch will not run.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   OThread.begin(false);
@@ -129,8 +119,7 @@ void setup() {
   }
 
   int code = SecureClient.GET("status");
-  Serial.printf("GET status -> %d (%s)\n", code,
-                code >= 0 ? OThreadCoAP::responseCodeToString(code) : OThreadCoAP::errorToString(code));
+  Serial.printf("GET status -> %d (%s)\n", code, code >= 0 ? OThreadCoAP::responseCodeToString(code) : OThreadCoAP::errorToString(code));
   if (code >= 0) {
     Serial.printf("Payload: %s\n", SecureClient.getString().c_str());
   }

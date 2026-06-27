@@ -30,30 +30,27 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char     PSKD[]           = "J01NME";
-const uint8_t  CHANNEL_HINT     = 15;
-const uint32_t JOIN_TIMEOUT_MS  = 60000;
+const char PSKD[] = "J01NME";
+const uint8_t CHANNEL_HINT = 15;
+const uint32_t JOIN_TIMEOUT_MS = 60000;
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
-const uint32_t TELEMETRY_MS     = 8000;
-const uint32_t CONTROL_MS       = 24000;
-const float    TEMP_FAN_ON_C    = 26.0f;
-const float    LIGHT_VALVE_LUX  = 8000.0f;
+const uint32_t ATTACH_DOT_MS = 2000;
+const uint32_t TELEMETRY_MS = 8000;
+const uint32_t CONTROL_MS = 24000;
+const float TEMP_FAN_ON_C = 26.0f;
+const float LIGHT_VALVE_LUX = 8000.0f;
 
-static const uint8_t COAP_PSK[] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+static const uint8_t COAP_PSK[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 static const char COAP_PSK_ID[] = "esp-coap-demo";
 
-OThreadCoAPClient       PlainClient;
+OThreadCoAPClient PlainClient;
 OThreadCoAPSecureClient SecureClient;
 
 static IPAddress serverIp;
-static uint32_t  lastTelemetryMs = 0;
-static uint32_t  lastControlMs   = 0;
-static float     lastTempC         = 0.0f;
-static float     lastLightLux      = 0.0f;
+static uint32_t lastTelemetryMs = 0;
+static uint32_t lastControlMs = 0;
+static float lastTempC = 0.0f;
+static float lastLightLux = 0.0f;
 
 static bool waitForAttach(uint32_t timeoutMs, uint32_t dotMs) {
   uint32_t start = millis();
@@ -93,8 +90,7 @@ static bool joinNetwork() {
     return false;
   }
   serverIp = OThread.getLeaderRloc();
-  Serial.printf("Attached as %s. Greenhouse server: %s\n",
-                OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
+  Serial.printf("Attached as %s. Greenhouse server: %s\n", OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
   return true;
 }
 
@@ -127,8 +123,7 @@ static bool sendSecurePut(const char *path, uint8_t percent) {
     Serial.printf("CON PUT %s failed: %s\n", path, OThreadCoAP::errorToString(code));
     return false;
   }
-  Serial.printf("[CoAPS CON] PUT %s=%u -> %s\n",
-                path, (unsigned)percent, OThreadCoAP::responseCodeToString(code));
+  Serial.printf("[CoAPS CON] PUT %s=%u -> %s\n", path, (unsigned)percent, OThreadCoAP::responseCodeToString(code));
   return true;
 }
 
@@ -137,11 +132,10 @@ static bool runControlLoop() {
     return false;
   }
 
-  uint8_t fanSpeed   = (lastTempC > TEMP_FAN_ON_C) ? 75 : 15;
-  uint8_t valveOpen  = (lastLightLux < LIGHT_VALVE_LUX) ? 60 : 10;
+  uint8_t fanSpeed = (lastTempC > TEMP_FAN_ON_C) ? 75 : 15;
+  uint8_t valveOpen = (lastLightLux < LIGHT_VALVE_LUX) ? 60 : 10;
 
-  Serial.printf("Control: temp=%.1f fan=%u%% light=%.0f valve=%u%%\n",
-                lastTempC, (unsigned)fanSpeed, lastLightLux, (unsigned)valveOpen);
+  Serial.printf("Control: temp=%.1f fan=%u%% light=%.0f valve=%u%%\n", lastTempC, (unsigned)fanSpeed, lastLightLux, (unsigned)valveOpen);
 
   if (!SecureClient.connect(serverIp)) {
     Serial.println("DTLS connect failed.");
@@ -181,7 +175,7 @@ void setup() {
 
   Serial.println("Ready. Polling telemetry and running control loop.");
   lastTelemetryMs = millis();
-  lastControlMs   = millis();
+  lastControlMs = millis();
 }
 
 void loop() {
