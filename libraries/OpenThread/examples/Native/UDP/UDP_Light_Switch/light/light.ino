@@ -23,7 +23,7 @@
  *   4. Joins the realm-local multicast group ff03::abcd and listens on
  *      UDP port LIGHT_PORT for "ON" / "OFF" / "TOGGLE" commands coming
  *      from any number of switches on the mesh.
- *   5. For every recognised command it updates the on-board RGB LED
+ *   5. For every recognized command it updates the on-board RGB LED
  *      ("lamp") and sends an "ACK ON" / "ACK OFF" packet back to the
  *      sender, giving the switch a confirmation of the new lamp state.
  *

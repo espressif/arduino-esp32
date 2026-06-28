@@ -958,7 +958,7 @@ private:
 /**
  * @brief Singleton plain CoAP resource server for this device (port 5683).
  *
- * Like ``OThread`` for Thread or ``WiFi`` for Wi-Fi: include ``OThreadCoAP.h`` and
+ * Like ``OThread`` for Thread or ``Wi-Fi`` for Wi-Fi: include ``OThreadCoAP.h`` and
  * use this global directly. Do not construct ``OThreadCoAPServerClass`` — register
  * many URI paths with ``on()`` on this one object. Same instance as
  * ``OThreadCoAP::plainServer()``.

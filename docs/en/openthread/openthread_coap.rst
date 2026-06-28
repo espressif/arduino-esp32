@@ -353,7 +353,7 @@ WebServer-style resource server. Handlers run when a matching request arrives
 (on the OpenThread task); call ``resp.send()`` before returning. No ``loop()``
 polling is required.
 
-**Like ``OThread`` or ``WiFi``:** OpenThread binds **one plain CoAP UDP service**
+**Like ``OThread`` or ``Wi-Fi``:** OpenThread binds **one plain CoAP UDP service**
 per device (default port **5683**). The library exposes a single global
 ``OThreadCoAPServer`` — do **not** construct ``OThreadCoAPServerClass`` or declare
 a local server variable. Register many URI paths on that global with ``on()``,

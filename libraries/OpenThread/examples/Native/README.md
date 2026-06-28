@@ -224,7 +224,7 @@ Some examples also require:
   instead of carrying the network key in source code.
 - Use [UDP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch) if you want a compact command/ACK example over UDP.
 - Use [UDP Sensor Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork) if you want a more robust telemetry pattern with
-  application-level acknowledgements and node liveness tracking.
+  application-level acknowledgments and node liveness tracking.
 - Use [CoAP SimpleGet](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet) for the smallest introduction to `OThreadCoAPClient` and
   `OThreadCoAPServer`.
 - Use [CoAP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch) for multicast command/response patterns over CoAP port 5683.

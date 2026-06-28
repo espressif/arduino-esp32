@@ -538,7 +538,7 @@ UDP port **5683**; CoAPS (DTLS) uses port **5684** when enabled at build time.
 | `OThreadCoAPResourceStore` | REST CRUD helper — attaches to `OThreadCoAPServer` only |
 | `OThreadCoAPRequest` / `OThreadCoAPResponse` | Handler arguments |
 
-**Singleton servers (like `OThread` / `WiFi`).** OpenThread exposes one plain CoAP UDP
+**Singleton servers (like `OThread` / `Wi-Fi`).** OpenThread exposes one plain CoAP UDP
 bind and one CoAPS bind per device. The library provides **`OThreadCoAPServer`** and
 **`OThreadCoAPSecureServer`** as pre-defined globals — include `OThreadCoAP.h` and call
 `OThreadCoAPServer.on(...)` / `OThreadCoAPServer.begin()` directly. Do not declare a
