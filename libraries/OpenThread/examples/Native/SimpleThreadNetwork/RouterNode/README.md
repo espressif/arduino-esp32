@@ -77,7 +77,7 @@ Before attach:
 Thread Node Status: Detached - Waiting for thread network start...
 ```
 
-## Customisation
+## Customization
 
 The only required local configuration is the **network key** in `setup()`:
 

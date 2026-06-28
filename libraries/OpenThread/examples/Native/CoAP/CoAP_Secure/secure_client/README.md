@@ -102,7 +102,7 @@ Attached. Server: fdde:ad00:beef:0:0:ff:fe00:0
 DTLS connect failed.
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

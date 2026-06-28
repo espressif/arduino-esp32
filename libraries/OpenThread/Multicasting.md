@@ -132,7 +132,7 @@ OThreadCoAPServer.joinMulticastGroup(LAMP_GROUP);  // e.g. ff03::abcd
 - `leaveMulticastGroup(group)` removes one reference at runtime.
 - `stop()` leaves all groups recorded by the server.
 
-### CoAP multicast behaviour (RFC 7252)
+### CoAP multicast behavior (RFC 7252)
 
 - **Clients** sending to a multicast address should use **non-confirmable** (NON)
   requests (§8.1). Use `sendNonBlocking()` for fire-and-forget.

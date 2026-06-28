@@ -96,7 +96,7 @@ Joiner window OPEN: PSKd "J01NME" accepted for 120 s.
 Bring up the JoinerNode sketch now.
 ```
 
-## Customisation
+## Customization
 
 Build-time macros at the top of the sketch (override with `-D` flags):
 

@@ -78,7 +78,7 @@ Attach timeout.
 Attach failed.
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

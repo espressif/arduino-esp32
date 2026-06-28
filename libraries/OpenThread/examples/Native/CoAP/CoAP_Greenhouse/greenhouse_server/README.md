@@ -113,7 +113,7 @@ Plain CoAP telemetry continues.
 Mesh-local: fdde:ad00:beef:0:....
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

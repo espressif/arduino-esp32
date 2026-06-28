@@ -103,7 +103,7 @@ TX ACK -> 'OK,3CAAB123,1'
 Fleet: known=1 online=1 total_rx=1 dropped=0
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

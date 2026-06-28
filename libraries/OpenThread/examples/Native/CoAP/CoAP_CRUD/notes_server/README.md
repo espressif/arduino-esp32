@@ -115,7 +115,7 @@ Attach timeout.
 Network failed, retrying in 2s...
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

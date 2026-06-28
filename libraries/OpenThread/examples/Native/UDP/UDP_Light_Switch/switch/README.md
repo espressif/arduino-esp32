@@ -118,7 +118,7 @@ Use Serial Monitor to see `TOGGLE`, ACK, and timeout details.
 | Solid red | Not connected yet, reattaching, or setup failed. |
 | Solid green | Attached to Thread and UDP socket is ready. |
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

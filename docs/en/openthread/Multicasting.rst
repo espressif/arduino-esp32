@@ -142,7 +142,7 @@ Servers that **receive** multicast CoAP requests must join the group **after**
 * ``leaveMulticastGroup(group)`` drops one reference at runtime.
 * ``stop()`` leaves all groups recorded by the server.
 
-CoAP multicast behaviour (RFC 7252)
+CoAP multicast behavior (RFC 7252)
 ***********************************
 
 * Clients: use **non-confirmable** (NON) multicast requests (§8.1);
@@ -163,7 +163,7 @@ retransmission and ``setTimeout()`` tuning **do not apply** to multicast sends.
    :widths: 34 66
 
    * - Client call
-     - Multicast behaviour
+     - Multicast behavior
    * - Blocking method + ``setConfirmable(true)``
      - Forced **NON**; may block for first reply only
    * - ``sendNonBlocking()``

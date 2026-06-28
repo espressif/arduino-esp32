@@ -90,7 +90,7 @@ If CoAPS fails to start (secure API enabled):
 CoAPS server start failed.
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

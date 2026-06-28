@@ -17,7 +17,7 @@
  *
  *   1. Brings up the Thread stack and commits a local Operational DataSet.
  *   2. Becomes the network Leader.
- *   3. Petitions the Commissioner role and authorises any joiner that uses
+ *   3. Petitions the Commissioner role and authorizes any joiner that uses
  *      the shared PSKd. Companion switch sketches can then attach
  *      without knowing the network key.
  *   4. Joins the realm-local multicast group ff03::abcd and listens on

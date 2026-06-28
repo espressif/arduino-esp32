@@ -95,7 +95,7 @@ If no valid ACK:
 sample=3 temp=24.01C batt=3795mV status=NO_ACK (sequence held)
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

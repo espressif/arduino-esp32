@@ -84,7 +84,7 @@ Before attach:
 Thread Node Status: Detached - Waiting for thread network start...
 ```
 
-## Customisation
+## Customization
 
 Edit the dataset in `setup()` before `commitDataSet()`:
 

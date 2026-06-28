@@ -103,7 +103,7 @@ Confirmable vs non-confirmable (CON / NON)
 ------------------------------------------
 
 CoAP (RFC 7252) labels every message **confirmable (CON)** or **non-confirmable
-(NON)**. The choice affects reliability, blocking behaviour, and whether the
+(NON)**. The choice affects reliability, blocking behavior, and whether the
 stack retransmits when no answer arrives.
 
 What CON and NON mean
@@ -115,7 +115,7 @@ What CON and NON mean
 
    * - Type
      - CLI keyword
-     - Behaviour
+     - Behavior
    * - **CON**
      - ``con``
      - The sender expects an **ACK** at the CoAP message layer. If no ACK or
@@ -171,7 +171,7 @@ For **confirmable** plain CoAP requests only:
   raised automatically.
 * ``useDefaultCoapRetransmit()`` (call **before** ``setTimeout()``) keeps RFC
   7252 fixed wire retries (~93 s) while the sketch still blocks only for
-  ``setTimeout(ms)``. A timeout return does not mean the request was cancelled
+  ``setTimeout(ms)``. A timeout return does not mean the request was canceled
   on the wire.
 
 **NON** requests do not use CON retransmission tuning — they are sent once
@@ -221,8 +221,8 @@ The CLI ``coap_switch`` example sends CON to a multicast group for demonstration
 the Native ``CoAP_Light_Switch`` switch uses ``sendNonBlocking()`` (NON) instead.
 See :doc:`Multicast guide <Multicasting>` for group join/leave and example paths.
 
-Server behaviour
-****************
+Server behavior
+***************
 
 Handlers receive ``OThreadCoAPRequest`` and reply with ``OThreadCoAPResponse``:
 

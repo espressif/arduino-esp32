@@ -102,7 +102,7 @@ or
 Joiner: no joinable network found. Is the CommissionerNode running?
 ```
 
-## Customisation
+## Customization
 
 Build-time macros at the top of the sketch (override with `-D` flags):
 

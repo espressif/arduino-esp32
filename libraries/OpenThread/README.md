@@ -572,8 +572,8 @@ request arrives — no `loop()` polling). Call `resp.send()` before returning.
 CoAP (RFC 7252) tags every message as **confirmable (CON)** or **non-confirmable
 (NON)**. That choice drives reliability, blocking, and retransmission.
 
-| Type | CLI | Behaviour |
-|------|-----|-----------|
+| Type | CLI | Behavior |
+|------|-----|----------|
 | **CON** | `con` | Expects a CoAP-layer **ACK**. Plain client: OpenThread **retransmits** if no response within the timeout window. Blocking `GET`/`PUT`/`POST`/`DELETE` wait for a reply or `OT_COAP_ERROR_TIMEOUT`. |
 | **NON** | `non-con` | Fire-and-forget at the message layer (no ACK for the request). Lower overhead; fine when a missed sample is acceptable. The server may still answer. |
 
@@ -618,8 +618,8 @@ client.sendNonBlocking(group, OT_COAP_REQ_PUT, "Lamp", (const uint8_t *)"1", 1);
 Multicast CoAP and confirmable (CON) messages **do not combine**. The library
 enforces RFC 7252 when sending:
 
-| Situation | Library behaviour |
-|-----------|-------------------|
+| Situation | Library behavior |
+|-----------|------------------|
 | `setConfirmable(true)` + destination `0xFF…` | Sent as **NON** anyway (§8.1). Confirmable is ignored for multicast. |
 | CON retransmission / `setTimeout()` tuning | **Never applies** to multicast — those sends are always NON, not CON-retried. |
 | Blocking `GET`/`PUT`/`POST`/`DELETE` to a group | Still **NON** on the wire; may block for the first reply or timeout. Prefer `sendNonBlocking()` for group commands. |

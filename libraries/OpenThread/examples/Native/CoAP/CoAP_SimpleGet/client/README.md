@@ -84,7 +84,7 @@ Error: timeout
 
 (`OT_COAP_ERROR_TIMEOUT` is **-11**; the second line uses `OThreadCoAP::errorToString(code)`.)
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

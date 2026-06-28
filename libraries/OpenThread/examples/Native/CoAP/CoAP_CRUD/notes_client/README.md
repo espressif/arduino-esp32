@@ -97,7 +97,7 @@ Joiner failed: 7
 Join failed, retry in 3s...
 ```
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

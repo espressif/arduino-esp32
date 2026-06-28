@@ -107,7 +107,7 @@ the lamp output.
 | Smooth fade down | Lamp is turning OFF after a switch command.                 |
 | Off              | Lamp OFF after a switch command.                            |
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

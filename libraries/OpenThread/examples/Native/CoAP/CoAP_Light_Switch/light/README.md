@@ -102,7 +102,7 @@ Network setup failed, retrying in 2s...
 | White fade | Lamp ON (CoAP PUT `"1"`). |
 | Off | Lamp OFF (CoAP PUT `"0"`). |
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 

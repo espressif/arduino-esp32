@@ -99,7 +99,7 @@ Join failed, retrying in 3s...
 The LED does **not** mirror the remote lamp state — check the light board or
 Serial output on the light for lamp changes.
 
-## Customisation
+## Customization
 
 All tunables are at the top of the `.ino` file:
 
