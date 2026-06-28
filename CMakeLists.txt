@@ -96,6 +96,7 @@ set(ARDUINO_ALL_LIBRARIES
   ESP_NOW
   ESP_SR
   ESP_HostedOTA
+  ESP_Video
   ESPmDNS
   Ethernet
   FFat
@@ -157,6 +158,8 @@ set(ARDUINO_LIBRARY_ESP_SR_SRCS
 
 set(ARDUINO_LIBRARY_ESP_HostedOTA_SRCS
   libraries/ESP_HostedOTA/src/ESP_HostedOTA.cpp)
+
+set(ARDUINO_LIBRARY_ESP_Video_SRCS libraries/ESP_Video/src/ESP_Video.cpp)
 
 set(ARDUINO_LIBRARY_ESPmDNS_SRCS libraries/ESPmDNS/src/ESPmDNS.cpp)
 
@@ -518,4 +521,9 @@ if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_LittleFS
 endif()
 if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_WiFiProv)
     maybe_add_component(espressif__network_provisioning)
+endif()
+if(NOT CONFIG_ARDUINO_SELECTIVE_COMPILATION OR CONFIG_ARDUINO_SELECTIVE_ESP_Video)
+    if(IDF_TARGET STREQUAL "esp32s3" OR IDF_TARGET STREQUAL "esp32p4")
+        maybe_add_component(espressif__esp_video)
+    endif()
 endif()
