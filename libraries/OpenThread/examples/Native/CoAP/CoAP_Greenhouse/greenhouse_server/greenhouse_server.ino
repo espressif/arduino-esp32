@@ -28,27 +28,21 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char     PSKD[]            = "J01NME";
+const char PSKD[] = "J01NME";
 const uint32_t JOINER_WINDOW_SEC = 600;
-const uint8_t  CHANNEL           = 15;
-const uint16_t PAN_ID            = 0xBEE5;
-const uint8_t  NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x05
-};
+const uint8_t CHANNEL = 15;
+const uint16_t PAN_ID = 0xBEE5;
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x05};
 
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
-static const uint8_t COAP_PSK[] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+static const uint8_t COAP_PSK[] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 static const char COAP_PSK_ID[] = "esp-coap-demo";
 
 struct GreenhouseState {
-  float   tempC;
-  float   lightLux;
+  float tempC;
+  float lightLux;
   uint8_t valvePercent;
   uint8_t fanSpeed;
 };
@@ -56,10 +50,7 @@ struct GreenhouseState {
 static GreenhouseState s_state = {24.0f, 12000.0f, 0, 0};
 
 static void logRequestKind(const char *path, OThreadCoAPRequest &req) {
-  Serial.printf("[%s] %s from %s\n",
-                req.isConfirmable() ? "CON" : "NON",
-                path,
-                req.remoteIP().toString().c_str());
+  Serial.printf("[%s] %s from %s\n", req.isConfirmable() ? "CON" : "NON", path, req.remoteIP().toString().c_str());
 }
 
 static void onGreenhouseTemp(OThreadCoAPRequest &req, OThreadCoAPResponse &resp, void *ctx) {
@@ -206,26 +197,28 @@ void setup() {
   }
 
   Serial.println("Starting CoAP servers...");
-  OThreadCoAPServer.on("greenhouse/temp",  OT_COAP_METHOD_GET, onGreenhouseTemp,  &s_state);
+  OThreadCoAPServer.on("greenhouse/temp", OT_COAP_METHOD_GET, onGreenhouseTemp, &s_state);
   OThreadCoAPServer.on("greenhouse/light", OT_COAP_METHOD_GET, onGreenhouseLight, &s_state);
   if (!OThreadCoAPServer.begin()) {
     Serial.println("Plain CoAP server start failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
   Serial.println("Ready.");
-  Serial.printf("Plain CoAP on port %u: GET greenhouse/temp, greenhouse/light\n",
-                (unsigned)OT_COAP_DEFAULT_PORT);
+  Serial.printf("Plain CoAP on port %u: GET greenhouse/temp, greenhouse/light\n", (unsigned)OT_COAP_DEFAULT_PORT);
 
   if (OThreadCoAP::secureApiEnabled()) {
     OThreadCoAPSecureServer.setPSK(COAP_PSK, sizeof(COAP_PSK), COAP_PSK_ID);
     OThreadCoAPSecureServer.on("valve/water", OT_COAP_METHOD_PUT, onValveWater, &s_state);
-    OThreadCoAPSecureServer.on("fan/speed",   OT_COAP_METHOD_PUT, onFanSpeed,   &s_state);
+    OThreadCoAPSecureServer.on("fan/speed", OT_COAP_METHOD_PUT, onFanSpeed, &s_state);
     if (!OThreadCoAPSecureServer.begin()) {
       Serial.println("CoAPS server start failed.");
-      while (1) { delay(1000); }
+      while (1) {
+        delay(1000);
+      }
     }
-    Serial.printf("CoAPS on port %u: PUT valve/water, fan/speed (PSK id \"%s\")\n",
-                  (unsigned)OT_COAP_SECURE_DEFAULT_PORT, COAP_PSK_ID);
+    Serial.printf("CoAPS on port %u: PUT valve/water, fan/speed (PSK id \"%s\")\n", (unsigned)OT_COAP_SECURE_DEFAULT_PORT, COAP_PSK_ID);
   } else {
     Serial.println("CoAPS is not enabled in this build. Secure actuators will not run.");
     Serial.println("Plain CoAP telemetry continues.");

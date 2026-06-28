@@ -23,19 +23,16 @@
 #include "OThread.h"
 #include "OThreadCoAP.h"
 
-const char     PSKD[]            = "J01NME";
+const char PSKD[] = "J01NME";
 const uint32_t JOINER_WINDOW_SEC = 600;
-const uint8_t  CHANNEL           = 15;
-const uint16_t PAN_ID            = 0xC0DE;
-const uint8_t  NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11,
-  0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99
-};
+const uint8_t CHANNEL = 15;
+const uint16_t PAN_ID = 0xC0DE;
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99};
 
 OThreadCoAPResourceStore Notes;
 
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
 static void onNotesChanged(const char *basePath, void *ctx) {
   (void)ctx;
@@ -104,13 +101,17 @@ void setup() {
   Serial.println("Starting CoAP server...");
   if (!OThreadCoAPServer.begin()) {
     Serial.println("CoAP server failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   Notes.onChange(onNotesChanged);
   if (!Notes.attach(OThreadCoAPServer, "notes", 8)) {
     Serial.println("ResourceStore attach failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
 
   Serial.println("Ready. REST endpoints:");

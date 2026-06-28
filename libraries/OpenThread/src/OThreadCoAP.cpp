@@ -100,48 +100,32 @@ inline otCoapCode reqMethodToOt(int method) {
 
 inline int methodFromOt(otCoapCode code) {
   switch (static_cast<uint8_t>(code)) {
-    case OT_COAP_REQ_GET:
-      return OT_COAP_REQ_GET;
-    case OT_COAP_REQ_POST:
-      return OT_COAP_REQ_POST;
-    case OT_COAP_REQ_PUT:
-      return OT_COAP_REQ_PUT;
-    case OT_COAP_REQ_DELETE:
-      return OT_COAP_REQ_DELETE;
-    default:
-      return 0;
+    case OT_COAP_REQ_GET:    return OT_COAP_REQ_GET;
+    case OT_COAP_REQ_POST:   return OT_COAP_REQ_POST;
+    case OT_COAP_REQ_PUT:    return OT_COAP_REQ_PUT;
+    case OT_COAP_REQ_DELETE: return OT_COAP_REQ_DELETE;
+    default:                 return 0;
   }
 }
 
 inline uint8_t methodMaskFromMethod(int method) {
   switch (method) {
-    case OT_COAP_REQ_GET:
-      return OT_COAP_METHOD_GET;
-    case OT_COAP_REQ_POST:
-      return OT_COAP_METHOD_POST;
-    case OT_COAP_REQ_PUT:
-      return OT_COAP_METHOD_PUT;
-    case OT_COAP_REQ_DELETE:
-      return OT_COAP_METHOD_DELETE;
-    default:
-      return 0;
+    case OT_COAP_REQ_GET:    return OT_COAP_METHOD_GET;
+    case OT_COAP_REQ_POST:   return OT_COAP_METHOD_POST;
+    case OT_COAP_REQ_PUT:    return OT_COAP_METHOD_PUT;
+    case OT_COAP_REQ_DELETE: return OT_COAP_METHOD_DELETE;
+    default:                 return 0;
   }
 }
 
 inline int errorFromOt(otError err, int invalidStateCode = OT_COAP_ERROR_INVALID_STATE) {
   switch (err) {
-    case OT_ERROR_NONE:
-      return 0;
-    case OT_ERROR_RESPONSE_TIMEOUT:
-      return OT_COAP_ERROR_TIMEOUT;
-    case OT_ERROR_NO_BUFS:
-      return OT_COAP_ERROR_NO_BUFS;
-    case OT_ERROR_INVALID_ARGS:
-      return OT_COAP_ERROR_INVALID_ARGS;
-    case OT_ERROR_INVALID_STATE:
-      return invalidStateCode;
-    default:
-      return OT_COAP_ERROR_NO_RESPONSE;
+    case OT_ERROR_NONE:             return 0;
+    case OT_ERROR_RESPONSE_TIMEOUT: return OT_COAP_ERROR_TIMEOUT;
+    case OT_ERROR_NO_BUFS:          return OT_COAP_ERROR_NO_BUFS;
+    case OT_ERROR_INVALID_ARGS:     return OT_COAP_ERROR_INVALID_ARGS;
+    case OT_ERROR_INVALID_STATE:    return invalidStateCode;
+    default:                        return OT_COAP_ERROR_NO_RESPONSE;
   }
 }
 
@@ -179,13 +163,11 @@ struct ResponseState {
 // log_i: expected silence (handler chose not to reply, or onNotFound on a group miss).
 // log_w: likely misconfiguration (wrong method, missing handler, wrong API for multicast).
 static void logMulticastExpected(const char *context, const char *path, bool confirmable, const char *reason) {
-  log_i("OThreadCoAP: %s — not replying to multicast %s on '%s' (%s; RFC 7252 §8.2)",
-        context, confirmable ? "CON" : "NON", path ? path : "", reason);
+  log_i("OThreadCoAP: %s — not replying to multicast %s on '%s' (%s; RFC 7252 §8.2)", context, confirmable ? "CON" : "NON", path ? path : "", reason);
 }
 
 static void logMulticastWarn(const char *context, const char *path, bool confirmable, const char *reason) {
-  log_w("OThreadCoAP: %s — not replying to multicast %s on '%s' (%s; RFC 7252 §8.2)",
-        context, confirmable ? "CON" : "NON", path ? path : "", reason);
+  log_w("OThreadCoAP: %s — not replying to multicast %s on '%s' (%s; RFC 7252 §8.2)", context, confirmable ? "CON" : "NON", path ? path : "", reason);
 }
 
 struct ServerImpl;
@@ -558,24 +540,12 @@ static String jsonEscape(const String &in) {
   for (size_t i = 0; i < in.length(); ++i) {
     char c = in[i];
     switch (c) {
-      case '\\':
-        out += "\\\\";
-        break;
-      case '"':
-        out += "\\\"";
-        break;
-      case '\n':
-        out += "\\n";
-        break;
-      case '\r':
-        out += "\\r";
-        break;
-      case '\t':
-        out += "\\t";
-        break;
-      default:
-        out += c;
-        break;
+      case '\\': out += "\\\\"; break;
+      case '"':  out += "\\\""; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      case '\t': out += "\\t"; break;
+      default:   out += c; break;
     }
   }
   return out;
@@ -688,8 +658,7 @@ void defaultRequestCb(void *context, otMessage *message, const otMessageInfo *me
       responseState.code = OT_COAP_RESP_NOT_FOUND;
       response.send();
     } else if (!responseState.sent && requestState.multicast) {
-      logMulticastExpected("onNotFound()", requestState.path.c_str(), requestState.confirmable,
-                           "path not handled (onNotFound did not reply)");
+      logMulticastExpected("onNotFound()", requestState.path.c_str(), requestState.confirmable, "path not handled (onNotFound did not reply)");
     }
     return;
   }
@@ -922,8 +891,9 @@ static void markSecureServerInactiveAfterResyncFailure(ServerImpl *impl, otInsta
 }
 #endif
 
-static void applyServerSlotRegistration(ServerResourceSlot *slot, ServerImpl *impl, const String &normalized, uint8_t methodMask,
-                                        OThreadCoAPHandler handler, void *context) {
+static void applyServerSlotRegistration(
+  ServerResourceSlot *slot, ServerImpl *impl, const String &normalized, uint8_t methodMask, OThreadCoAPHandler handler, void *context
+) {
   slot->path = normalized;
   slot->owner = impl;
   slot->methodMask = methodMask;
@@ -1019,8 +989,7 @@ static void resetSecureClientSessionFlags() {
 
 // Shared by plain and secure singleton servers. Pass handler=nullptr to unregister a path
 // (WebServer uses removeRoute(); CoAP uses the same on() entry point with a null handler).
-static bool registerServerPath(ServerImpl *impl, const char *logPrefix, const char *path, uint8_t methodMask, OThreadCoAPHandler handler,
-                               void *context) {
+static bool registerServerPath(ServerImpl *impl, const char *logPrefix, const char *path, uint8_t methodMask, OThreadCoAPHandler handler, void *context) {
   if (!impl) {
     log_w("%s: on() failed (invalid server object)", logPrefix);
     return false;
@@ -1050,8 +1019,7 @@ static bool registerServerPath(ServerImpl *impl, const char *logPrefix, const ch
         clearServerSlot(slot);
         return true;
       }
-      log_w("%s: on() failed to unregister '%s' (could not acquire OpenThread lock; OT registration unchanged — retry)", logPrefix,
-            normalized.c_str());
+      log_w("%s: on() failed to unregister '%s' (could not acquire OpenThread lock; OT registration unchanged — retry)", logPrefix, normalized.c_str());
       return false;
     }
     clearServerSlot(slot);
@@ -1093,8 +1061,10 @@ static bool registerServerPath(ServerImpl *impl, const char *logPrefix, const ch
           applyServerSlotRegistration(slot, impl, prevPath, prevMask, prevHandler, prevCtx);
           otError restoreErr = addSlotToOt(slot, impl, inst);
           if (restoreErr != OT_ERROR_NONE) {
-            log_e("%s: on() rollback re-add failed for '%s' (otError=%d); re-register with on() and call begin()", logPrefix,
-                  prevPath.c_str(), static_cast<int>(restoreErr));
+            log_e(
+              "%s: on() rollback re-add failed for '%s' (otError=%d); re-register with on() and call begin()", logPrefix, prevPath.c_str(),
+              static_cast<int>(restoreErr)
+            );
             ensureSlotRemovedFromOt(slot, impl, inst);
             clearServerSlot(slot);
           }
@@ -1108,8 +1078,10 @@ static bool registerServerPath(ServerImpl *impl, const char *logPrefix, const ch
       }
       return true;
     }
-    log_w("%s: on() failed for '%s' (could not acquire OpenThread lock%s)", logPrefix, normalized.c_str(),
-          isNewSlot ? "" : "; existing registration unchanged — retry");
+    log_w(
+      "%s: on() failed for '%s' (could not acquire OpenThread lock%s)", logPrefix, normalized.c_str(),
+      isNewSlot ? "" : "; existing registration unchanged — retry"
+    );
     if (isNewSlot) {
       clearServerSlot(slot);
     }
@@ -1201,9 +1173,10 @@ static void fillCoapTxParameters(uint32_t timeoutMs, bool useRfcDefaults, otCoap
   tx.mMaxRetransmit = 0;
 }
 
-static otError sendClientRequest(otInstance *instance, bool secure, bool confirmable, const IPAddress &host, uint16_t port, const char *path, int methodCode,
-                                 const uint8_t *payload, size_t payloadLen, uint16_t contentFormat, otCoapResponseHandler responseHandler, void *context,
-                                 uint32_t timeoutMs, bool useRfcRetransmit) {
+static otError sendClientRequest(
+  otInstance *instance, bool secure, bool confirmable, const IPAddress &host, uint16_t port, const char *path, int methodCode, const uint8_t *payload,
+  size_t payloadLen, uint16_t contentFormat, otCoapResponseHandler responseHandler, void *context, uint32_t timeoutMs, bool useRfcRetransmit
+) {
   // Opportunistically reclaim abandoned contexts left over from a previous stack
   // lifecycle before issuing a new request (runs under the OT lock held by callers).
   reapStalePending(instance);
@@ -1313,8 +1286,9 @@ static void clientResponseCb(void *context, otMessage *message, const otMessageI
 // then releases its share. Whichever party is last — this function, or the
 // handler's final callback — frees `ctx`. This makes both the wrapper timeout and
 // multicast multi-callbacks safe: neither side ever frees memory the other uses.
-static int waitBlockingClient(ClientBlockingContext *ctx, otError sendErr, uint32_t timeoutMs, bool useRfcRetransmit, uint8_t *outPayload, size_t *outLen,
-                              IPAddress *outIp) {
+static int waitBlockingClient(
+  ClientBlockingContext *ctx, otError sendErr, uint32_t timeoutMs, bool useRfcRetransmit, uint8_t *outPayload, size_t *outLen, IPAddress *outIp
+) {
   if (outLen) {
     *outLen = 0;
   }
@@ -1444,9 +1418,8 @@ static void secureConnectEventCb(otCoapSecureConnectEvent event, void *context) 
   state->connected = (event == OT_COAP_SECURE_CONNECTED);
   if (event == OT_COAP_SECURE_CONNECTED) {
     state->active = true;
-  } else if (event == OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED || event == OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED ||
-             event == OT_COAP_SECURE_DISCONNECTED_ERROR || event == OT_COAP_SECURE_DISCONNECTED_TIMEOUT ||
-             event == OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS) {
+  } else if (event == OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED || event == OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED || event == OT_COAP_SECURE_DISCONNECTED_ERROR
+             || event == OT_COAP_SECURE_DISCONNECTED_TIMEOUT || event == OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS) {
     state->active = false;
     state->connected = false;
     if (sSecureClientOwner == owner) {
@@ -1456,24 +1429,12 @@ static void secureConnectEventCb(otCoapSecureConnectEvent event, void *context) 
   if (state->connectCb) {
     int wrapped = OT_COAP_SECURE_DISCONNECTED_ERROR;
     switch (event) {
-      case OT_COAP_SECURE_CONNECTED:
-        wrapped = OT_COAP_SECURE_CONNECTED;
-        break;
-      case OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED:
-        wrapped = OT_COAP_SECURE_DISCONNECTED_PEER;
-        break;
-      case OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED:
-        wrapped = OT_COAP_SECURE_DISCONNECTED_LOCAL;
-        break;
-      case OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS:
-        wrapped = OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS;
-        break;
-      case OT_COAP_SECURE_DISCONNECTED_TIMEOUT:
-        wrapped = OT_COAP_SECURE_DISCONNECTED_TIMEOUT;
-        break;
-      default:
-        wrapped = OT_COAP_SECURE_DISCONNECTED_ERROR;
-        break;
+      case OT_COAP_SECURE_CONNECTED:                 wrapped = OT_COAP_SECURE_CONNECTED; break;
+      case OT_COAP_SECURE_DISCONNECTED_PEER_CLOSED:  wrapped = OT_COAP_SECURE_DISCONNECTED_PEER; break;
+      case OT_COAP_SECURE_DISCONNECTED_LOCAL_CLOSED: wrapped = OT_COAP_SECURE_DISCONNECTED_LOCAL; break;
+      case OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS: wrapped = OT_COAP_SECURE_DISCONNECTED_MAX_ATTEMPTS; break;
+      case OT_COAP_SECURE_DISCONNECTED_TIMEOUT:      wrapped = OT_COAP_SECURE_DISCONNECTED_TIMEOUT; break;
+      default:                                       wrapped = OT_COAP_SECURE_DISCONNECTED_ERROR; break;
     }
     state->connectCb(wrapped, state->connectCtx);
   }
@@ -1912,9 +1873,11 @@ void OThreadCoAP::releaseAllPending(otInstance *stackInstance) {
       break;
     }
     if (!coapStopped) {
-      log_e("OThreadCoAP: releaseAllPending could not acquire OpenThread lock after %d attempts; "
-            "clearing wrapper state (esp_openthread_deinit follows)",
-            kOtLockStopAttempts + 2);
+      log_e(
+        "OThreadCoAP: releaseAllPending could not acquire OpenThread lock after %d attempts; "
+        "clearing wrapper state (esp_openthread_deinit follows)",
+        kOtLockStopAttempts + 2
+      );
       delay(100);
       OtLock finalLock(portMAX_DELAY);
       if (finalLock) {
@@ -1951,53 +1914,35 @@ void OThreadCoAP::releaseAllPending(otInstance *stackInstance) {
 
 const char *OThreadCoAP::responseCodeToString(int code) {
   switch (code) {
-    case OT_COAP_RESP_CREATED:
-      return "2.01 Created";
-    case OT_COAP_RESP_DELETED:
-      return "2.02 Deleted";
-    case OT_COAP_RESP_CHANGED:
-      return "2.04 Changed";
-    case OT_COAP_RESP_OK:
-      return "2.05 Content";
-    case OT_COAP_RESP_BAD_REQUEST:
-      return "4.00 Bad Request";
-    case OT_COAP_RESP_NOT_FOUND:
-      return "4.04 Not Found";
-    case OT_COAP_RESP_METHOD_NA:
-      return "4.05 Method Not Allowed";
-    case OT_COAP_RESP_INTERNAL_ERROR:
-      return "5.00 Internal Server Error";
-    default:
-      return "unknown";
+    case OT_COAP_RESP_CREATED:        return "2.01 Created";
+    case OT_COAP_RESP_DELETED:        return "2.02 Deleted";
+    case OT_COAP_RESP_CHANGED:        return "2.04 Changed";
+    case OT_COAP_RESP_OK:             return "2.05 Content";
+    case OT_COAP_RESP_BAD_REQUEST:    return "4.00 Bad Request";
+    case OT_COAP_RESP_NOT_FOUND:      return "4.04 Not Found";
+    case OT_COAP_RESP_METHOD_NA:      return "4.05 Method Not Allowed";
+    case OT_COAP_RESP_INTERNAL_ERROR: return "5.00 Internal Server Error";
+    default:                          return "unknown";
   }
 }
 
 const char *OThreadCoAP::errorToString(int error) {
   switch (error) {
-    case OT_COAP_ERROR_TIMEOUT:
-      return "timeout";
-    case OT_COAP_ERROR_NO_RESPONSE:
-      return "no response";
-    case OT_COAP_ERROR_NOT_ATTACHED:
-      return "not attached";
-    case OT_COAP_ERROR_NO_BUFS:
-      return "no bufs";
-    case OT_COAP_ERROR_INVALID_ARGS:
-      return "invalid args";
-    case OT_COAP_ERROR_NOT_CONNECTED:
-      return "not connected";
-    case OT_COAP_ERROR_TLS_FAILED:
-      return "tls failed";
-    case OT_COAP_ERROR_INVALID_STATE:
-      return "invalid state";
-    default:
-      return "unknown";
+    case OT_COAP_ERROR_TIMEOUT:       return "timeout";
+    case OT_COAP_ERROR_NO_RESPONSE:   return "no response";
+    case OT_COAP_ERROR_NOT_ATTACHED:  return "not attached";
+    case OT_COAP_ERROR_NO_BUFS:       return "no bufs";
+    case OT_COAP_ERROR_INVALID_ARGS:  return "invalid args";
+    case OT_COAP_ERROR_NOT_CONNECTED: return "not connected";
+    case OT_COAP_ERROR_TLS_FAILED:    return "tls failed";
+    case OT_COAP_ERROR_INVALID_STATE: return "invalid state";
+    default:                          return "unknown";
   }
 }
 
 OThreadCoAPClient::OThreadCoAPClient()
-  : _timeoutMs(OT_COAP_DEFAULT_TIMEOUT_MS), _port(OT_COAP_DEFAULT_PORT), _confirmable(true), _useRfcRetransmit(false),
-    _contentFormat(OT_COAP_FORMAT_TEXT), _lastCode(OT_COAP_ERROR_NO_RESPONSE), _remoteIp(IPv6), _payloadLen(0) {
+  : _timeoutMs(OT_COAP_DEFAULT_TIMEOUT_MS), _port(OT_COAP_DEFAULT_PORT), _confirmable(true), _useRfcRetransmit(false), _contentFormat(OT_COAP_FORMAT_TEXT),
+    _lastCode(OT_COAP_ERROR_NO_RESPONSE), _remoteIp(IPv6), _payloadLen(0) {
   memset(_payload, 0, sizeof(_payload));
   if (sCoapClientInstanceCount < UINT16_MAX) {
     ++sCoapClientInstanceCount;
@@ -2077,8 +2022,10 @@ int OThreadCoAPClient::GET(const IPAddress &host, const char *path) {
     if (!lock) {
       return abortPlainBlockingClient("GET", ctx);
     }
-    err = sendClientRequest(instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_GET, nullptr, 0, _contentFormat,
-                            clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit);
+    err = sendClientRequest(
+      instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_GET, nullptr, 0, _contentFormat,
+      clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit
+    );
   }
   _lastCode = waitBlockingClient(ctx, err, _timeoutMs, _useRfcRetransmit, _payload, &_payloadLen, &_remoteIp);
   return _lastCode;
@@ -2116,8 +2063,10 @@ int OThreadCoAPClient::PUT(const IPAddress &host, const char *path, const uint8_
     if (!lock) {
       return abortPlainBlockingClient("PUT", ctx);
     }
-    err = sendClientRequest(instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_PUT, payload, length, _contentFormat,
-                            clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit);
+    err = sendClientRequest(
+      instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_PUT, payload, length, _contentFormat,
+      clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit
+    );
   }
   _lastCode = waitBlockingClient(ctx, err, _timeoutMs, _useRfcRetransmit, _payload, &_payloadLen, &_remoteIp);
   return _lastCode;
@@ -2147,8 +2096,10 @@ int OThreadCoAPClient::POST(const IPAddress &host, const char *path, const uint8
     if (!lock) {
       return abortPlainBlockingClient("POST", ctx);
     }
-    err = sendClientRequest(instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_POST, payload, length, _contentFormat,
-                            clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit);
+    err = sendClientRequest(
+      instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_POST, payload, length, _contentFormat,
+      clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit
+    );
   }
   _lastCode = waitBlockingClient(ctx, err, _timeoutMs, _useRfcRetransmit, _payload, &_payloadLen, &_remoteIp);
   return _lastCode;
@@ -2174,8 +2125,10 @@ int OThreadCoAPClient::DELETE(const IPAddress &host, const char *path) {
     if (!lock) {
       return abortPlainBlockingClient("DELETE", ctx);
     }
-    err = sendClientRequest(instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_DELETE, nullptr, 0, _contentFormat,
-                            clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit);
+    err = sendClientRequest(
+      instance, false, (_confirmable && !ctx->multicast), host, _port, sanitizePath(path).c_str(), OT_COAP_REQ_DELETE, nullptr, 0, _contentFormat,
+      clientResponseCb, ctx, _timeoutMs, _useRfcRetransmit
+    );
   }
   _lastCode = waitBlockingClient(ctx, err, _timeoutMs, _useRfcRetransmit, _payload, &_payloadLen, &_remoteIp);
   return _lastCode;
@@ -2194,8 +2147,9 @@ bool OThreadCoAPClient::sendNonBlocking(const IPAddress &host, uint8_t method, c
   }
   // NON message with no response handler => OpenThread tracks no transaction, so
   // this truly returns once the datagram is queued (correct for multicast).
-  otError err = sendClientRequest(instance, false, false, host, _port, sanitizePath(path).c_str(), method, payload, length, _contentFormat, nullptr, nullptr,
-                                  _timeoutMs, _useRfcRetransmit);
+  otError err = sendClientRequest(
+    instance, false, false, host, _port, sanitizePath(path).c_str(), method, payload, length, _contentFormat, nullptr, nullptr, _timeoutMs, _useRfcRetransmit
+  );
   if (err != OT_ERROR_NONE) {
     log_w("OThreadCoAPClient: sendNonBlocking() failed (otError=%d)", static_cast<int>(err));
     return false;
@@ -2505,8 +2459,7 @@ bool OThreadCoAPServerClass::serve(const char *path, String *valuePointer) {
     }
     slot->serveSnapshot = *valuePointer;
   }
-  const bool ok =
-    registerServerPath(impl, "OThreadCoAPServer", path, OT_COAP_METHOD_GET | OT_COAP_METHOD_PUT, serveSlotHandler, slot);
+  const bool ok = registerServerPath(impl, "OThreadCoAPServer", path, OT_COAP_METHOD_GET | OT_COAP_METHOD_PUT, serveSlotHandler, slot);
   if (!ok && isNewSlot) {
     clearServerSlot(slot);
   }
@@ -2529,8 +2482,7 @@ bool OThreadCoAPServerClass::setResourceValue(const char *path, const String &va
     // handlerContext; casting that to String* and writing it would corrupt the
     // caller's object. Act only on serve()-backed slots.
     if (slot.handler != serveSlotHandler) {
-      log_w("OThreadCoAPServer: setResourceValue() failed for '%s' (path not registered via serve())",
-            normalized.c_str());
+      log_w("OThreadCoAPServer: setResourceValue() failed for '%s' (path not registered via serve())", normalized.c_str());
       return false;
     }
     String *bound = slot.serveValuePtr;
@@ -2585,8 +2537,10 @@ void OThreadCoAPSecureServerClass::setPSK(const uint8_t *psk, size_t pskLength, 
       if (!lock) {
         continue;
       }
-      otCoapSecureSetPsk(inst, impl->psk.data(), static_cast<uint16_t>(impl->psk.size()),
-                         reinterpret_cast<const uint8_t *>(impl->pskIdentity.c_str()), static_cast<uint16_t>(impl->pskIdentity.length()));
+      otCoapSecureSetPsk(
+        inst, impl->psk.data(), static_cast<uint16_t>(impl->psk.size()), reinterpret_cast<const uint8_t *>(impl->pskIdentity.c_str()),
+        static_cast<uint16_t>(impl->pskIdentity.length())
+      );
       return;
     }
     log_w("OThreadCoAPSecureServer: setPSK() stored locally but could not push to stack (OpenThread lock busy)");
@@ -2612,8 +2566,10 @@ void OThreadCoAPSecureServerClass::setCertificate(const char *certPem, size_t ce
       if (!lock) {
         continue;
       }
-      otCoapSecureSetCertificate(inst, reinterpret_cast<const uint8_t *>(impl->certPem.c_str()), impl->certPem.length(),
-                                 reinterpret_cast<const uint8_t *>(impl->keyPem.c_str()), impl->keyPem.length());
+      otCoapSecureSetCertificate(
+        inst, reinterpret_cast<const uint8_t *>(impl->certPem.c_str()), impl->certPem.length(), reinterpret_cast<const uint8_t *>(impl->keyPem.c_str()),
+        impl->keyPem.length()
+      );
       if (impl->caPem.length()) {
         otCoapSecureSetCaCertificateChain(inst, reinterpret_cast<const uint8_t *>(impl->caPem.c_str()), impl->caPem.length());
       }
@@ -2663,12 +2619,16 @@ bool OThreadCoAPSecureServerClass::begin() {
     }
     forceUnregisterAllResourcesFromOt(impl, inst);
     if (!impl->psk.empty() && impl->pskIdentity.length()) {
-      otCoapSecureSetPsk(inst, impl->psk.data(), static_cast<uint16_t>(impl->psk.size()), reinterpret_cast<const uint8_t *>(impl->pskIdentity.c_str()),
-                         static_cast<uint16_t>(impl->pskIdentity.length()));
+      otCoapSecureSetPsk(
+        inst, impl->psk.data(), static_cast<uint16_t>(impl->psk.size()), reinterpret_cast<const uint8_t *>(impl->pskIdentity.c_str()),
+        static_cast<uint16_t>(impl->pskIdentity.length())
+      );
     }
     if (impl->certPem.length() && impl->keyPem.length()) {
-      otCoapSecureSetCertificate(inst, reinterpret_cast<const uint8_t *>(impl->certPem.c_str()), impl->certPem.length(),
-                                 reinterpret_cast<const uint8_t *>(impl->keyPem.c_str()), impl->keyPem.length());
+      otCoapSecureSetCertificate(
+        inst, reinterpret_cast<const uint8_t *>(impl->certPem.c_str()), impl->certPem.length(), reinterpret_cast<const uint8_t *>(impl->keyPem.c_str()),
+        impl->keyPem.length()
+      );
       if (impl->caPem.length()) {
         otCoapSecureSetCaCertificateChain(inst, reinterpret_cast<const uint8_t *>(impl->caPem.c_str()), impl->caPem.length());
       }
@@ -3023,7 +2983,8 @@ static bool storeHandleRequest(OThreadCoAPResourceStore *store, RequestState &re
   };
 
   switch (request.method) {
-    case OT_COAP_REQ_GET: {
+    case OT_COAP_REQ_GET:
+    {
       if (id.isEmpty()) {
         String json = "[";
         for (size_t i = 0; i < impl->items.size(); ++i) {
@@ -3053,7 +3014,8 @@ static bool storeHandleRequest(OThreadCoAPResourceStore *store, RequestState &re
       }
       return true;
     }
-    case OT_COAP_REQ_POST: {
+    case OT_COAP_REQ_POST:
+    {
       if (!id.isEmpty()) {
         sendJson(OT_COAP_RESP_BAD_REQUEST, "{\"error\":\"post on collection only\"}");
         return true;
@@ -3079,7 +3041,8 @@ static bool storeHandleRequest(OThreadCoAPResourceStore *store, RequestState &re
       response.send();
       return true;
     }
-    case OT_COAP_REQ_PUT: {
+    case OT_COAP_REQ_PUT:
+    {
       if (id.isEmpty()) {
         sendJson(OT_COAP_RESP_BAD_REQUEST, "{\"error\":\"missing id\"}");
         return true;
@@ -3096,7 +3059,8 @@ static bool storeHandleRequest(OThreadCoAPResourceStore *store, RequestState &re
       sendJson(OT_COAP_RESP_CHANGED, "{\"status\":\"updated\"}");
       return true;
     }
-    case OT_COAP_REQ_DELETE: {
+    case OT_COAP_REQ_DELETE:
+    {
       if (id.isEmpty()) {
         sendJson(OT_COAP_RESP_BAD_REQUEST, "{\"error\":\"missing id\"}");
         return true;
@@ -3108,9 +3072,7 @@ static bool storeHandleRequest(OThreadCoAPResourceStore *store, RequestState &re
       sendJson(OT_COAP_RESP_DELETED, "{\"status\":\"deleted\"}");
       return true;
     }
-    default:
-      sendJson(OT_COAP_RESP_METHOD_NA, "{\"error\":\"method not allowed\"}");
-      return true;
+    default: sendJson(OT_COAP_RESP_METHOD_NA, "{\"error\":\"method not allowed\"}"); return true;
   }
 }
 
@@ -3239,8 +3201,7 @@ bool OThreadCoAPSecureClient::connect(const IPAddress &host, uint16_t port) {
     if (state->peer == host && state->peerPort == port) {
       return true;
     }
-    log_w("OThreadCoAPSecureClient: connect() failed (already connected to %s:%u; disconnect() first)", state->peer.toString().c_str(),
-          state->peerPort);
+    log_w("OThreadCoAPSecureClient: connect() failed (already connected to %s:%u; disconnect() first)", state->peer.toString().c_str(), state->peerPort);
     return false;
   }
   if (state->active && !state->connected) {
@@ -3259,12 +3220,16 @@ bool OThreadCoAPSecureClient::connect(const IPAddress &host, uint16_t port) {
     }
     otCoapSecureSetSslAuthMode(inst, state->verifyPeer);
     if (!state->psk.empty() && state->identity.length()) {
-      otCoapSecureSetPsk(inst, state->psk.data(), static_cast<uint16_t>(state->psk.size()), reinterpret_cast<const uint8_t *>(state->identity.c_str()),
-                         static_cast<uint16_t>(state->identity.length()));
+      otCoapSecureSetPsk(
+        inst, state->psk.data(), static_cast<uint16_t>(state->psk.size()), reinterpret_cast<const uint8_t *>(state->identity.c_str()),
+        static_cast<uint16_t>(state->identity.length())
+      );
     }
     if (state->certPem.length() && state->keyPem.length()) {
-      otCoapSecureSetCertificate(inst, reinterpret_cast<const uint8_t *>(state->certPem.c_str()), state->certPem.length(),
-                                 reinterpret_cast<const uint8_t *>(state->keyPem.c_str()), state->keyPem.length());
+      otCoapSecureSetCertificate(
+        inst, reinterpret_cast<const uint8_t *>(state->certPem.c_str()), state->certPem.length(), reinterpret_cast<const uint8_t *>(state->keyPem.c_str()),
+        state->keyPem.length()
+      );
       if (state->caPem.length()) {
         otCoapSecureSetCaCertificateChain(inst, reinterpret_cast<const uint8_t *>(state->caPem.c_str()), state->caPem.length());
       }
@@ -3414,8 +3379,10 @@ int OThreadCoAPSecureClient::GET(const char *path) {
     if (!lock) {
       return abortSecureBlockingClient("GET", ctx);
     }
-    err = sendClientRequest(inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_GET, nullptr, 0, state->contentFormat,
-                            secureResponseCb, ctx, state->timeoutMs, true);
+    err = sendClientRequest(
+      inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_GET, nullptr, 0, state->contentFormat,
+      secureResponseCb, ctx, state->timeoutMs, true
+    );
   }
   return waitBlockingSecure(ctx, err, state->timeoutMs);
 #else
@@ -3448,8 +3415,10 @@ int OThreadCoAPSecureClient::PUT(const char *path, const uint8_t *payload, size_
     if (!lock) {
       return abortSecureBlockingClient("PUT", ctx);
     }
-    err = sendClientRequest(inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_PUT, payload, length, state->contentFormat,
-                            secureResponseCb, ctx, state->timeoutMs, true);
+    err = sendClientRequest(
+      inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_PUT, payload, length, state->contentFormat,
+      secureResponseCb, ctx, state->timeoutMs, true
+    );
   }
   return waitBlockingSecure(ctx, err, state->timeoutMs);
 #else
@@ -3482,8 +3451,10 @@ int OThreadCoAPSecureClient::POST(const char *path, const char *payload) {
     if (!lock) {
       return abortSecureBlockingClient("POST", ctx);
     }
-    err = sendClientRequest(inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_POST, bytes, len, state->contentFormat,
-                            secureResponseCb, ctx, state->timeoutMs, true);
+    err = sendClientRequest(
+      inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_POST, bytes, len, state->contentFormat,
+      secureResponseCb, ctx, state->timeoutMs, true
+    );
   }
   return waitBlockingSecure(ctx, err, state->timeoutMs);
 #else
@@ -3513,8 +3484,10 @@ int OThreadCoAPSecureClient::DELETE(const char *path) {
     if (!lock) {
       return abortSecureBlockingClient("DELETE", ctx);
     }
-    err = sendClientRequest(inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_DELETE, nullptr, 0, state->contentFormat,
-                            secureResponseCb, ctx, state->timeoutMs, true);
+    err = sendClientRequest(
+      inst, true, state->confirmable, state->peer, state->peerPort, sanitizePath(path).c_str(), OT_COAP_REQ_DELETE, nullptr, 0, state->contentFormat,
+      secureResponseCb, ctx, state->timeoutMs, true
+    );
   }
   return waitBlockingSecure(ctx, err, state->timeoutMs);
 #else

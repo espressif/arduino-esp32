@@ -25,37 +25,36 @@
 #include "OThreadUDP.h"
 
 // ---------------- Thread network parameters ----------------
-const char     PSKD[]            = "J01NME";
-const uint8_t  OT_CHANNEL        = 15;
-const uint16_t OT_PAN_ID         = 0xABCE;
-const uint8_t  OT_EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xCE, 0x01, 0x00, 0x00, 0xDE, 0xAD, 0xBE, 0xEF};
-const uint8_t  OT_NETKEY[OT_NETWORK_KEY_SIZE]  = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-                                                   0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x01};
-const char     OT_NETWORK_NAME[]               = "ESP_OT_SENSOR_NET";
+const char PSKD[] = "J01NME";
+const uint8_t OT_CHANNEL = 15;
+const uint16_t OT_PAN_ID = 0xABCE;
+const uint8_t OT_EXTPANID[OT_EXT_PAN_ID_SIZE] = {0xCE, 0x01, 0x00, 0x00, 0xDE, 0xAD, 0xBE, 0xEF};
+const uint8_t OT_NETKEY[OT_NETWORK_KEY_SIZE] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x01};
+const char OT_NETWORK_NAME[] = "ESP_OT_SENSOR_NET";
 const uint32_t JOINER_WINDOW_SEC = 3600;  // Keep join window open for 1 hour.
 
 // ---------------- UDP + application parameters ----------------
 // Use an application port that does not collide with OpenThread internals.
 // 61631 is reserved by Thread TMF CoAP; binding an application socket there may
 // receive binary management traffic that looks like malformed sensor packets.
-const uint16_t COLLECTOR_PORT     = 5050;
-const uint16_t MAX_SENSORS        = 256;
-const uint32_t REPORT_PERIOD_MS   = 30000;
-const uint32_t NODE_OFFLINE_MS    = 95000;               // ~3 missed 30 s samples
-const uint32_t NODE_EVICT_MS      = 30UL * 60UL * 1000UL;  // free slots after 30 min
+const uint16_t COLLECTOR_PORT = 5050;
+const uint16_t MAX_SENSORS = 256;
+const uint32_t REPORT_PERIOD_MS = 30000;
+const uint32_t NODE_OFFLINE_MS = 95000;               // ~3 missed 30 s samples
+const uint32_t NODE_EVICT_MS = 30UL * 60UL * 1000UL;  // free slots after 30 min
 
 OThreadUDP OtUdp;
 
 struct SensorRecord {
-  bool      used;
-  bool      online;
-  char      nodeId[16];
-  uint32_t  lastSeq;
-  int32_t   lastTempCenti;
-  uint16_t  lastBatteryMv;
-  uint32_t  packetCount;
-  uint32_t  duplicateCount;
-  uint32_t  lastSeenMs;
+  bool used;
+  bool online;
+  char nodeId[16];
+  uint32_t lastSeq;
+  int32_t lastTempCenti;
+  uint16_t lastBatteryMv;
+  uint32_t packetCount;
+  uint32_t duplicateCount;
+  uint32_t lastSeenMs;
   IPAddress lastIp;
 };
 
@@ -178,12 +177,10 @@ static void printCompactReport() {
       online++;
     }
   }
-  Serial.printf("[collector] role=%s nodes=%u online=%u packets=%lu dropped=%lu\n",
-                OThread.otGetStringDeviceRole(),
-                known,
-                online,
-                (unsigned long)s_totalPackets,
-                (unsigned long)s_droppedPackets);
+  Serial.printf(
+    "[collector] role=%s nodes=%u online=%u packets=%lu dropped=%lu\n", OThread.otGetStringDeviceRole(), known, online, (unsigned long)s_totalPackets,
+    (unsigned long)s_droppedPackets
+  );
 }
 
 static void auditNodes() {
@@ -270,16 +267,10 @@ static void processPacket(const char *payload, const IPAddress &srcIp, uint16_t 
     Serial.printf("node %s -> ONLINE\n", r.nodeId);
   }
 
-  Serial.printf("RX node=%s seq=%lu temp=%.2fC batt=%umV from [%s]:%u%s%s%s\n",
-                r.nodeId,
-                (unsigned long)seq,
-                (float)tempCenti / 100.0f,
-                battMv,
-                srcIp.toString().c_str(),
-                srcPort,
-                isDuplicate ? " (dup)" : "",
-                isRestart ? " (node restarted)" : "",
-                isStale ? " (stale ignored)" : "");
+  Serial.printf(
+    "RX node=%s seq=%lu temp=%.2fC batt=%umV from [%s]:%u%s%s%s\n", r.nodeId, (unsigned long)seq, (float)tempCenti / 100.0f, battMv, srcIp.toString().c_str(),
+    srcPort, isDuplicate ? " (dup)" : "", isRestart ? " (node restarted)" : "", isStale ? " (stale ignored)" : ""
+  );
 
   // ACK the collector's stored sequence, not necessarily the received one. This
   // makes the collector authoritative and lets a node roll forward/back to the

@@ -27,16 +27,13 @@
 #define USER_BUTTON BOOT_PIN  // BOOT button GPIO provided by Arduino.h
 #endif
 
-const char    PSKD[]             = "J01NME";
-const uint8_t CHANNEL_HINT       = 15;
-const uint32_t JOIN_TIMEOUT_MS   = 60000;
+const char PSKD[] = "J01NME";
+const uint8_t CHANNEL_HINT = 15;
+const uint32_t JOIN_TIMEOUT_MS = 60000;
 const uint32_t ATTACH_TIMEOUT_MS = 30000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 
-const uint8_t   LAMP_GROUP_BYTES[16] = {
-  0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd
-};
+const uint8_t LAMP_GROUP_BYTES[16] = {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd};
 const IPAddress LAMP_GROUP(IPv6, LAMP_GROUP_BYTES);
 
 OThreadCoAPClient CoapClient;

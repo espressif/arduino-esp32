@@ -27,13 +27,10 @@
 #include "OThreadCoAP.h"
 
 // Must match sensor_server.ino
-const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {
-  0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-  0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00
-};
+const uint8_t NETKEY[OT_NETWORK_KEY_SIZE] = {0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0, 0x00};
 
 const uint32_t ATTACH_TIMEOUT_MS = 20000;
-const uint32_t ATTACH_DOT_MS     = 2000;
+const uint32_t ATTACH_DOT_MS = 2000;
 const uint32_t POLL_MS = 10000;
 
 OThreadCoAPClient CoapClient;
@@ -79,8 +76,7 @@ static bool joinNetwork() {
     return false;
   }
   serverIp = OThread.getLeaderRloc();
-  Serial.printf("Attached as %s. Sensor server: %s\n",
-                OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
+  Serial.printf("Attached as %s. Sensor server: %s\n", OThread.otGetStringDeviceRole(), serverIp.toString().c_str());
   return true;
 }
 
@@ -95,7 +91,9 @@ void setup() {
 
   if (!joinNetwork()) {
     Serial.println("Attach failed.");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
   Serial.println("Ready. Polling GET sensor/temp every 10 s");
 }
