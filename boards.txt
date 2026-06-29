@@ -61,6 +61,7 @@ esp32s31.upload.tool.network=esp_ota
 esp32s31.upload.maximum_size=1310720
 esp32s31.upload.maximum_data_size=327680
 esp32s31.upload.flags=
+esp32s31.upload.erase_cmd=
 esp32s31.upload.extra_flags=
 esp32s31.upload.use_1200bps_touch=false
 esp32s31.upload.wait_for_upload_port=false
