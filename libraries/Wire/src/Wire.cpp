@@ -490,6 +490,10 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
     log_e("NULL buffer pointer");
     return 0;
   }
+  if (size > bufferSize) {
+    log_w("Requested size is greater than buffer size. %lu > %lu", size, bufferSize);
+    size = bufferSize;
+  }
   esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
