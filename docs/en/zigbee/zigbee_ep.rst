@@ -89,7 +89,7 @@ Gets the list of devices bound to this endpoint.
 
 .. code-block:: arduino
 
-    std::vector<esp_zb_binding_info_t> getBoundDevices();
+    std::list<zb_device_params_t *> getBoundDevices() const;
 
 This function will return list of bound device parameters.
 
@@ -266,11 +266,11 @@ Gets the current network time.
 
 .. code-block:: arduino
 
-    struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {});
+    struct tm getTime(uint8_t endpoint = 1, int32_t short_addr = 0x0000, const uint8_t *ieee_addr = nullptr);
 
 * ``endpoint`` - Target endpoint (default: 1)
 * ``short_addr`` - Target device short address (default: 0x0000)
-* ``ieee_addr`` - Target device IEEE address (default: empty)
+* ``ieee_addr`` - Target device IEEE address (default: ``nullptr``)
 
 This function will return network time structure.
 
@@ -281,11 +281,11 @@ Gets the timezone offset.
 
 .. code-block:: arduino
 
-    int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, esp_zb_ieee_addr_t ieee_addr = {});
+    int32_t getTimezone(uint8_t endpoint = 1, int32_t short_addr = 0x0000, const uint8_t *ieee_addr = nullptr);
 
 * ``endpoint`` - Target endpoint (default: 1)
 * ``short_addr`` - Target device short address (default: 0x0000)
-* ``ieee_addr`` - Target device IEEE address (default: empty)
+* ``ieee_addr`` - Target device IEEE address (default: ``nullptr``)
 
 This function will return GMT offset in seconds.
 
@@ -329,7 +329,7 @@ Reads the manufacturer name from a remote device.
 
 .. code-block:: arduino
 
-    char *readManufacturer(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
+    char *readManufacturer(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``short_addr`` - Target device short address
@@ -344,7 +344,7 @@ Reads the model identifier from a remote device.
 
 .. code-block:: arduino
 
-    char *readModel(uint8_t endpoint, uint16_t short_addr, esp_zb_ieee_addr_t ieee_addr);
+    char *readModel(uint8_t endpoint, uint16_t short_addr, const uint8_t *ieee_addr);
 
 * ``endpoint`` - Target endpoint number
 * ``short_addr`` - Target device short address
@@ -374,7 +374,7 @@ Sets a callback for default response messages for this endpoint.
 
 .. code-block:: arduino
 
-    void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status));
+    void onDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status));
 
 * ``callback`` - Function pointer to the callback function
 
