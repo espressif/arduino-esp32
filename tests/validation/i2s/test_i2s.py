@@ -30,7 +30,8 @@ def _assert_ramp(result, phase, min_matches=48, min_full_ramps=1, max_zeros_pct=
     total = result["total"]
 
     LOGGER.info(
-        f"{phase}: matches={matches}/64 full_ramps={full_ramps} " f"zeros={zeros}/{total} ({100*zeros//max(total,1)}%)"
+        f"{phase}: matches={matches}/64 full_ramps={full_ramps} "
+        f"zeros={zeros}/{total} ({100 * zeros // max(total, 1)}%)"
     )
 
     assert total > 0, f"{phase}: receiver got no data"

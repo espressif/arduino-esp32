@@ -631,7 +631,7 @@ void test_i2s_tdm_slave_begin_end(void) {
 static const size_t TX_SAMPLES = 64;
 static const int TX_REPEAT = 128;
 // DMA has 6 descriptors × 240 frames; pre-fill enough ramp writes to flush
-// the auto-clear zeros before signalling the slave to start reading.
+// the auto-clear zeros before signaling the slave to start reading.
 static const int TX_PREFILL = 32;
 
 static int32_t expectedVal(size_t j, int bits) {

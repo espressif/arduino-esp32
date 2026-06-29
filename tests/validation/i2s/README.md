@@ -72,10 +72,10 @@ Each loopback phase reports four metrics for data-integrity verification:
 
 | Phase | Config | What it validates |
 |---|---|---|
-| 1 | mono, 16kHz, 16-bit, default slot | Basic mono data integrity |
-| 2 | stereo TX → mono RX (right-slot), 16kHz, 16-bit | `i2s_channel_read_16_stereo_to_mono_right` (HW v1) / native slot_mask |
-| 3 | stereo TX → mono RX (left-slot), 16kHz, 16-bit | `i2s_channel_read_16_stereo_to_mono_left` (HW v1) / native slot_mask |
-| 4 | mono RIGHT TX → RIGHT RX, 16kHz, 16-bit | TX-side slot_mask correctness |
+| 1 | mono, 16 kHz, 16-bit, default slot | Basic mono data integrity |
+| 2 | stereo TX → mono RX (right-slot), 16 kHz, 16-bit | `i2s_channel_read_16_stereo_to_mono_right` (HW v1) / native slot_mask |
+| 3 | stereo TX → mono RX (left-slot), 16 kHz, 16-bit | `i2s_channel_read_16_stereo_to_mono_left` (HW v1) / native slot_mask |
+| 4 | mono RIGHT TX → RIGHT RX, 16 kHz, 16-bit | TX-side slot_mask correctness |
 | 5–16 | rate × width × mode bounds matrix (see below) | Data integrity at all boundary combinations |
 | 17–20 | mono slot_mask matrix (see below) | Explicit LEFT, RIGHT slot selection with data verification |
 | 21–22 | stereo slot_mask TX (see below) | Stereo + LEFT/RIGHT TX routing with data verification |
@@ -83,7 +83,7 @@ Each loopback phase reports four metrics for data-integrity verification:
 | 25–27 | `configureRX` slot change (see below) | Runtime slot reconfiguration via `configureRX(... slot_mask)` |
 | 28 | `configureRX` default slot preservation (see below) | Default `slot_mask` preserves current slot across rate changes |
 | 29–30 ² | HW v1 BOTH averaging (see below) | `_both` function selection in workaround path (ESP32 only) |
-| 31 ¹ | TDM mono, SLOT0, 16kHz, 16-bit | TDM mode data integrity (skipped on non-TDM targets) |
+| 31 ¹ | TDM mono, SLOT0, 16 kHz, 16-bit | TDM mode data integrity (skipped on non-TDM targets) |
 
 #### Phases 5–16: bounds matrix
 
@@ -252,7 +252,7 @@ All ramps are 64 frames long. The sender adapts the repeat count to the sample r
 ## Notes
 
 - **Physical wiring is mandatory** for the loopback phases (see pin table above). Without BCLK/WS/DOUT↔DIN and common GND, the receiver reads only zeros.
-- The IDF I2S TX DMA has 6 × 240 = 1440 zero-frames in its auto-clear pipeline after `begin()`. The sender pre-fills the DMA by writing 32 ramp repetitions **before** signalling `TX_CLOCKING`, ensuring the bus carries real data when the slave starts reading.
+- The IDF I2S TX DMA has 6 × 240 = 1440 zero-frames in its auto-clear pipeline after `begin()`. The sender pre-fills the DMA by writing 32 ramp repetitions **before** signaling `TX_CLOCKING`, ensuring the bus carries real data when the slave starts reading.
 - For slot-specific phases (1–4), the sender repeats the ramp 128–256 times. For parameterized phases (5–30), the repeat count adapts to the sample rate (`rate/64 + 32`, minimum 128) to ensure ~1 second of data. The receiver reads up to 8 KB and uses a sliding-window search to find the ramp pattern.
 - The sender runs as I2S master, the receiver as I2S slave, since both share the same BCLK/WS lines.
 - Single-device Unity tests on the sender use TX-only mode (`DIN=-1`) to avoid needing a loopback connection during that phase.
