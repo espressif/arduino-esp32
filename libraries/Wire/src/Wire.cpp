@@ -491,7 +491,7 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
     return 0;
   }
   if (size > bufferSize) {
-    log_w("Requested size is greater than buffer size. %lu > %lu", size, bufferSize);
+    log_w("Requested size is greater than buffer size: %zu > %zu", size, bufferSize);
     size = bufferSize;
   }
   esp_err_t err = ESP_OK;
