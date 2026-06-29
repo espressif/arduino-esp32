@@ -40,7 +40,7 @@
 using namespace fs;
 
 SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
-#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
   _pin_clk = SDMMC_CLK;
   _pin_cmd = SDMMC_CMD;
   _pin_d0 = SDMMC_D0;
@@ -61,7 +61,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
 #endif  // BOARD_HAS_1BIT_SDMMC
 
 // ESP32-P4 can use either IOMUX or GPIO matrix
-#elif defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32P4)
+#elif defined(BOARD_HAS_SDMMC) && (defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31))
 #if defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   _pin_clk = SDMMC_SLOT0_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT0_IOMUX_PIN_NUM_CMD;
