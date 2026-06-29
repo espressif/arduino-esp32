@@ -28,8 +28,8 @@
  */
 
 #include <Arduino.h>
+#include "OThread.h"
 #include "OThreadCLI.h"
-#include "OThreadCLI_Util.h"
 
 // The first device to start Thread will be the Leader
 // Next devices will be Router or Child

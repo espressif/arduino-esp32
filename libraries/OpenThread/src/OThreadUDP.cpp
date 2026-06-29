@@ -92,11 +92,15 @@ void OThreadUDP::udpReceiveCallback(void *aContext, otMessage *aMessage, const o
   // transferred to us (caller will free it), so we just snapshot it.
   OThreadUDP *self = static_cast<OThreadUDP *>(aContext);
   if (self == nullptr || self->_rxQueue == nullptr) {
+    log_w("OThreadUDP: receive callback ignored (invalid context or RX queue)");
     return;
   }
 
   RxPacket pkt;
   uint16_t len = otMessageGetLength(aMessage);
+  if (len > OT_UDP_MAX_PACKET_SIZE) {
+    log_w("OThreadUDP: datagram truncated from %u to %u bytes", static_cast<unsigned>(len), static_cast<unsigned>(OT_UDP_MAX_PACKET_SIZE));
+  }
   uint16_t toCopy = (len > OT_UDP_MAX_PACKET_SIZE) ? OT_UDP_MAX_PACKET_SIZE : len;
   uint16_t got = otMessageRead(aMessage, 0, pkt.data, toCopy);
   pkt.len = got;
@@ -109,6 +113,7 @@ void OThreadUDP::udpReceiveCallback(void *aContext, otMessage *aMessage, const o
     RxPacket discard;
     (void)xQueueReceive(self->_rxQueue, &discard, 0);
     (void)xQueueSend(self->_rxQueue, &pkt, 0);
+    log_d("OThreadUDP: RX queue full; dropped oldest datagram (%u bytes)", static_cast<unsigned>(discard.len));
   }
 }
 
@@ -137,6 +142,7 @@ uint8_t OThreadUDP::begin(IPAddress addr, uint16_t port) {
 
   OtLock lock;
   if (!lock) {
+    log_w("OThreadUDP::begin: failed to acquire OpenThread lock");
     return 0;
   }
   memset(&_sock, 0, sizeof(_sock));
@@ -168,57 +174,49 @@ uint8_t OThreadUDP::begin(uint16_t port) {
 }
 
 uint8_t OThreadUDP::beginMulticast(IPAddress group, uint16_t port) {
-  if (group.type() != IPv6) {
+  if (group.type() != IPv6 || group[0] != 0xFF) {
     log_e("OThreadUDP::beginMulticast: IPv6 multicast address required");
     return 0;
   }
   if (!begin(OT_IN6ADDR_ANY, port)) {
     return 0;
   }
-  otInstance *inst = OThread.getInstance();
-  if (!inst) {
+  if (!OThread.subscribeMulticast(group)) {
+    log_e("OThreadUDP::beginMulticast: subscribeMulticast failed for %s", group.toString().c_str());
     stop();
     return 0;
   }
-  otIp6Address grp;
-  ipToOt(group, grp);
-
-  OtLock lock;
-  if (!lock) {
-    stop();
-    return 0;
-  }
-  otError err = otIp6SubscribeMulticastAddress(inst, &grp);
-  if (err != OT_ERROR_NONE && err != OT_ERROR_ALREADY) {
-    log_e("otIp6SubscribeMulticastAddress failed: %d", err);
-    stop();
-    return 0;
-  }
-  _multicastGroup = grp;
+  ipToOt(group, _multicastGroup);
   _hasMulticast = true;
   return 1;
 }
 
 void OThreadUDP::stop() {
   if (_txMessage) {
-    OtLock lock;
-    if (lock) {
-      otMessageFree(_txMessage);
-      _txMessage = nullptr;
-    } else {
+    for (int attempt = 0; attempt < 3 && _txMessage; ++attempt) {
+      OtLock lock;
+      if (lock) {
+        otMessageFree(_txMessage);
+        _txMessage = nullptr;
+        break;
+      }
+      delay(10);
+    }
+    if (_txMessage) {
       log_e("OThreadUDP::stop: failed to acquire OpenThread lock; pending TX message not freed");
     }
   }
   if (!_open) {
     return;
   }
+  if (_hasMulticast) {
+    OThread.unsubscribeMulticast(otToIp(_multicastGroup));
+    _hasMulticast = false;
+  }
   otInstance *inst = OThread.getInstance();
   if (inst) {
     OtLock lock;
     if (lock) {
-      if (_hasMulticast) {
-        otIp6UnsubscribeMulticastAddress(inst, &_multicastGroup);
-      }
       if (otUdpIsOpen(inst, &_sock)) {
         otUdpClose(inst, &_sock);
       }
@@ -232,7 +230,6 @@ void OThreadUDP::stop() {
       log_e("OThreadUDP::stop: failed to acquire OpenThread lock; socket not cleanly closed");
     }
   }
-  _hasMulticast = false;
   _open = false;
   _hasCurrent = false;
 }
@@ -250,15 +247,21 @@ int OThreadUDP::beginPacket(IPAddress ip, uint16_t port) {
   }
   otInstance *inst = OThread.getInstance();
   if (!inst) {
+    log_w("OThreadUDP::beginPacket: OpenThread not initialized");
     return 0;
   }
   // Discard any half-built previous message
   if (_txMessage) {
-    OtLock lock;
-    if (lock) {
-      otMessageFree(_txMessage);
-      _txMessage = nullptr;
-    } else {
+    for (int attempt = 0; attempt < 3 && _txMessage; ++attempt) {
+      OtLock lock;
+      if (lock) {
+        otMessageFree(_txMessage);
+        _txMessage = nullptr;
+        break;
+      }
+      delay(10);
+    }
+    if (_txMessage) {
       log_e("OThreadUDP::beginPacket: failed to acquire OpenThread lock; pending TX message not freed");
       return 0;
     }
@@ -266,6 +269,7 @@ int OThreadUDP::beginPacket(IPAddress ip, uint16_t port) {
 
   OtLock lock;
   if (!lock) {
+    log_e("OThreadUDP::beginPacket: failed to acquire OpenThread lock");
     return 0;
   }
   _txMessage = otUdpNewMessage(inst, nullptr);
@@ -296,7 +300,13 @@ size_t OThreadUDP::write(uint8_t b) {
 }
 
 size_t OThreadUDP::write(const uint8_t *buf, size_t size) {
-  if (_txMessage == nullptr || size == 0 || buf == nullptr) {
+  if (_txMessage == nullptr) {
+    if (size > 0) {
+      log_w("OThreadUDP::write: no packet in progress (call beginPacket() first)");
+    }
+    return 0;
+  }
+  if (size == 0 || buf == nullptr) {
     return 0;
   }
   if (size > UINT16_MAX) {
@@ -305,6 +315,7 @@ size_t OThreadUDP::write(const uint8_t *buf, size_t size) {
   }
   OtLock lock;
   if (!lock) {
+    log_w("OThreadUDP::write: failed to acquire OpenThread lock");
     return 0;
   }
   otError err = otMessageAppend(_txMessage, buf, (uint16_t)size);
@@ -317,15 +328,22 @@ size_t OThreadUDP::write(const uint8_t *buf, size_t size) {
 
 int OThreadUDP::endPacket() {
   if (_txMessage == nullptr) {
+    log_w("OThreadUDP::endPacket: no packet in progress (call beginPacket() first)");
     return 0;
   }
   otInstance *inst = OThread.getInstance();
   if (!inst) {
-    OtLock lock;
-    if (lock) {
-      otMessageFree(_txMessage);
-      _txMessage = nullptr;
-    } else {
+    log_w("OThreadUDP::endPacket: OpenThread not initialized");
+    for (int attempt = 0; attempt < 3 && _txMessage; ++attempt) {
+      OtLock lock;
+      if (lock) {
+        otMessageFree(_txMessage);
+        _txMessage = nullptr;
+        break;
+      }
+      delay(10);
+    }
+    if (_txMessage) {
       log_e("OThreadUDP::endPacket: failed to acquire OpenThread lock; pending TX message not freed");
     }
     return 0;

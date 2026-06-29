@@ -35,6 +35,10 @@
 #include "lwip/netif.h"
 
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
+
+#include "OThreadCoAP.h"
+#include "OThreadCLI.h"
 
 static esp_openthread_platform_config_t ot_native_config;
 static esp_netif_t *openthread_netif = NULL;
@@ -79,6 +83,127 @@ static TaskHandle_t s_ot_task = NULL;
 // Signaled by ot_task_worker() once the stack finished (or failed) initializing.
 // Mirrors the s_ot_syn_semaphore handshake done by IDF's esp_openthread_start().
 static SemaphoreHandle_t s_ot_init_done = NULL;
+// Signaled when esp_openthread_launch_mainloop() returns after mainloop_exit().
+static SemaphoreHandle_t s_ot_mainloop_exited = NULL;
+
+struct OtMulticastRef {
+  otIp6Address addr;
+  uint8_t refCount;
+};
+
+static std::vector<OtMulticastRef> s_multicastRefs;
+static SemaphoreHandle_t s_multicastRefsMutex = NULL;
+
+static bool multicastRefsLock() {
+  if (s_multicastRefsMutex == NULL) {
+    return false;
+  }
+  return xSemaphoreTake(s_multicastRefsMutex, portMAX_DELAY) == pdTRUE;
+}
+
+static void multicastRefsUnlock() {
+  if (s_multicastRefsMutex != NULL) {
+    xSemaphoreGive(s_multicastRefsMutex);
+  }
+}
+
+static bool multicastRefAcquire(const otIp6Address &grp, bool *needsOtSubscribe) {
+  if (!needsOtSubscribe) {
+    return false;
+  }
+  if (!multicastRefsLock()) {
+    log_e("subscribeMulticast: multicast ref lock unavailable");
+    return false;
+  }
+  for (auto &entry : s_multicastRefs) {
+    if (memcmp(entry.addr.mFields.m8, grp.mFields.m8, OT_IP6_ADDRESS_SIZE) == 0) {
+      if (entry.refCount >= 255) {
+        multicastRefsUnlock();
+        log_e("subscribeMulticast: reference count overflow for multicast group");
+        return false;
+      }
+      entry.refCount++;
+      *needsOtSubscribe = (entry.refCount == 1);
+      multicastRefsUnlock();
+      return true;
+    }
+  }
+  OtMulticastRef entry;
+  entry.addr = grp;
+  entry.refCount = 1;
+  s_multicastRefs.push_back(entry);
+  *needsOtSubscribe = true;
+  multicastRefsUnlock();
+  return true;
+}
+
+static void multicastRefRollback(const otIp6Address &grp) {
+  if (!multicastRefsLock()) {
+    return;
+  }
+  for (size_t i = 0; i < s_multicastRefs.size(); ++i) {
+    if (memcmp(s_multicastRefs[i].addr.mFields.m8, grp.mFields.m8, OT_IP6_ADDRESS_SIZE) != 0) {
+      continue;
+    }
+    if (s_multicastRefs[i].refCount > 1) {
+      s_multicastRefs[i].refCount--;
+    } else {
+      s_multicastRefs.erase(s_multicastRefs.begin() + static_cast<long>(i));
+    }
+    multicastRefsUnlock();
+    return;
+  }
+  multicastRefsUnlock();
+}
+
+static void multicastRefRestore(const otIp6Address &grp) {
+  if (!multicastRefsLock()) {
+    return;
+  }
+  for (auto &entry : s_multicastRefs) {
+    if (memcmp(entry.addr.mFields.m8, grp.mFields.m8, OT_IP6_ADDRESS_SIZE) == 0) {
+      if (entry.refCount < 255) {
+        entry.refCount++;
+      } else {
+        log_w("multicastRefRestore: ref count already at maximum (255) for group");
+      }
+      multicastRefsUnlock();
+      return;
+    }
+  }
+  OtMulticastRef entry;
+  entry.addr = grp;
+  entry.refCount = 1;
+  s_multicastRefs.push_back(entry);
+  multicastRefsUnlock();
+}
+
+static bool multicastRefRelease(const otIp6Address &grp, bool *needsOtUnsubscribe) {
+  if (!needsOtUnsubscribe) {
+    return false;
+  }
+  *needsOtUnsubscribe = false;
+  if (!multicastRefsLock()) {
+    log_e("unsubscribeMulticast: multicast ref lock unavailable");
+    return false;
+  }
+  for (size_t i = 0; i < s_multicastRefs.size(); ++i) {
+    if (memcmp(s_multicastRefs[i].addr.mFields.m8, grp.mFields.m8, OT_IP6_ADDRESS_SIZE) != 0) {
+      continue;
+    }
+    if (s_multicastRefs[i].refCount > 1) {
+      s_multicastRefs[i].refCount--;
+      multicastRefsUnlock();
+      return true;
+    }
+    s_multicastRefs.erase(s_multicastRefs.begin() + static_cast<long>(i));
+    *needsOtUnsubscribe = true;
+    multicastRefsUnlock();
+    return true;
+  }
+  multicastRefsUnlock();
+  return false;
+}
 // Result of that initialization, written by ot_task_worker() BEFORE it gives
 // s_ot_init_done. The semaphore only says "init finished"; this says whether it
 // succeeded, so begin() can abort if a later init step failed (in which case the
@@ -167,6 +292,10 @@ static void ot_task_worker(void *aContext) {
     esp_openthread_launch_mainloop();
   }
 
+  if (s_ot_mainloop_exited != NULL) {
+    xSemaphoreGive(s_ot_mainloop_exited);
+  }
+
   // We only get here on an init failure, or if the mainloop returned because of
   // a stack failure. Do NOT tear down the netif/glue/eventfd or self-delete from
   // this task: teardown and deletion of this task handle are owned exclusively
@@ -213,8 +342,8 @@ void DataSet::setNetworkName(const char *name) {
     log_w("Network name is null");
     return;
   }
-  // char m8[OT_NETWORK_KEY_SIZE + 1] bytes space by definition
-  strncpy(mDataset.mNetworkName.m8, name, OT_NETWORK_KEY_SIZE);
+  strncpy(mDataset.mNetworkName.m8, name, OT_NETWORK_NAME_MAX_SIZE);
+  mDataset.mNetworkName.m8[OT_NETWORK_NAME_MAX_SIZE] = '\0';
   mDataset.mComponents.mIsNetworkNamePresent = true;
 }
 
@@ -272,7 +401,10 @@ void DataSet::apply(otInstance *instance) {
     log_e("Error: Failed to acquire OpenThread lock for dataset apply");
     return;
   }
-  otDatasetSetActive(instance, &mDataset);
+  otError err = otDatasetSetActive(instance, &mDataset);
+  if (err != OT_ERROR_NONE) {
+    log_e("otDatasetSetActive failed: %d", err);
+  }
 }
 
 // OpenThread Implementation
@@ -328,16 +460,38 @@ void OpenThread::begin(bool OThreadAutoStart) {
       return;
     }
   }
+  if (s_ot_mainloop_exited == NULL) {
+    s_ot_mainloop_exited = xSemaphoreCreateBinary();
+    if (s_ot_mainloop_exited == NULL) {
+      log_e("Error: Failed to create OpenThread mainloop-exit semaphore");
+      vSemaphoreDelete(s_ot_init_done);
+      s_ot_init_done = NULL;
+      return;
+    }
+  }
+
+  if (s_multicastRefsMutex == NULL) {
+    s_multicastRefsMutex = xSemaphoreCreateMutex();
+    if (s_multicastRefsMutex == NULL) {
+      log_e("Error: Failed to create OpenThread multicast ref mutex");
+      return;
+    }
+  }
 
   // Initialize OpenThread stack
   xTaskCreate(ot_task_worker, "ot_main_loop", 10240, NULL, 20, &s_ot_task);
   if (s_ot_task == NULL) {
     log_e("Error: Failed to create OpenThread task");
-    // otStarted is still false, so end() will not run to clean this up. Delete
-    // the handshake semaphore here so its handle is not leaked and a later
-    // begin() starts from a clean state.
     vSemaphoreDelete(s_ot_init_done);
     s_ot_init_done = NULL;
+    if (s_ot_mainloop_exited != NULL) {
+      vSemaphoreDelete(s_ot_mainloop_exited);
+      s_ot_mainloop_exited = NULL;
+    }
+    if (s_multicastRefsMutex != NULL) {
+      vSemaphoreDelete(s_multicastRefsMutex);
+      s_multicastRefsMutex = NULL;
+    }
     return;
   }
   log_d("OpenThread task created successfully");
@@ -409,7 +563,52 @@ void OpenThread::end() {
     return;
   }
 
+  otInstance *inst = mInstance;
+
+  // Application teardown before stopping the worker (live OT callbacks must not
+  // target freed sketch objects). Order: CLI → CoAP servers → pending clients.
+  if (OThreadCLI) {
+    OThreadCLI.end();
+  }
+  // Always stop (idempotent): leaves multicast groups even when running=false.
+  OThreadCoAPServer.stop();
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+  OThreadCoAPSecureServer.stop();
+#endif
+  OThreadCoAP::releaseAllPending(inst);
+
   if (s_ot_task != NULL) {
+    if (inst != nullptr) {
+      if (esp_openthread_lock_acquire(portMAX_DELAY)) {
+        if (otThreadGetDeviceRole(inst) != OT_DEVICE_ROLE_DISABLED) {
+          otError err = otThreadSetEnabled(inst, false);
+          if (err != OT_ERROR_NONE) {
+            log_w("OpenThread end(): otThreadSetEnabled(false) failed (%d)", err);
+          }
+        }
+        if (otIp6IsEnabled(inst)) {
+          otError err = otIp6SetEnabled(inst, false);
+          if (err != OT_ERROR_NONE) {
+            log_w("OpenThread end(): otIp6SetEnabled(false) failed (%d)", err);
+          }
+        }
+        esp_openthread_lock_release();
+      } else {
+        log_w("OpenThread end(): could not acquire lock to disable Thread/IPv6");
+      }
+
+      if (esp_openthread_mainloop_exit() != ESP_OK) {
+        log_w("OpenThread end(): esp_openthread_mainloop_exit failed");
+      }
+      if (s_ot_mainloop_exited != NULL) {
+        if (xSemaphoreTake(s_ot_mainloop_exited, pdMS_TO_TICKS(15000)) != pdTRUE) {
+          log_w("OpenThread end(): timed out waiting for mainloop exit");
+        }
+      }
+    } else {
+      // begin() failed before mInstance was assigned; worker is parked on vTaskSuspend.
+      log_d("OpenThread end(): deleting worker after failed initialization");
+    }
     vTaskDelete(s_ot_task);
     s_ot_task = NULL;
   }
@@ -421,8 +620,12 @@ void OpenThread::end() {
     vSemaphoreDelete(s_ot_init_done);
     s_ot_init_done = NULL;
   }
+  if (s_ot_mainloop_exited != NULL) {
+    vSemaphoreDelete(s_ot_mainloop_exited);
+    s_ot_mainloop_exited = NULL;
+  }
 
-  // Clean up in reverse order of initialization
+  // Clean up in reverse order of initialization (event loop was created on the worker).
   if (openthread_netif != NULL) {
     esp_netif_destroy(openthread_netif);
     openthread_netif = NULL;
@@ -431,13 +634,20 @@ void OpenThread::end() {
   esp_openthread_netif_glue_deinit();
   esp_openthread_deinit();
   esp_vfs_eventfd_unregister();
+  esp_event_loop_delete_default();
 
 #if CONFIG_LWIP_HOOK_IP6_INPUT_CUSTOM
   ot_lwip_netif = NULL;
 #endif
 
+  s_multicastRefs.clear();
+  if (s_multicastRefsMutex != NULL) {
+    vSemaphoreDelete(s_multicastRefsMutex);
+    s_multicastRefsMutex = NULL;
+  }
   mInstance = nullptr;
   otStarted = false;
+
   log_d("OpenThread ended successfully");
 }
 
@@ -452,7 +662,11 @@ void OpenThread::start() {
     return;
   }
   clearAllAddressCache();  // Clear cache when starting network
-  otThreadSetEnabled(mInstance, true);
+  otError err = otThreadSetEnabled(mInstance, true);
+  if (err != OT_ERROR_NONE) {
+    log_e("otThreadSetEnabled(true) failed: %d", err);
+    return;
+  }
   log_d("Thread network started");
 }
 
@@ -467,7 +681,11 @@ void OpenThread::stop() {
     return;
   }
   clearAllAddressCache();  // Clear cache when stopping network
-  otThreadSetEnabled(mInstance, false);
+  otError err = otThreadSetEnabled(mInstance, false);
+  if (err != OT_ERROR_NONE) {
+    log_e("otThreadSetEnabled(false) failed: %d", err);
+    return;
+  }
   log_d("Thread network stopped");
 }
 
@@ -505,6 +723,7 @@ void OpenThread::networkInterfaceDown() {
   if (error != OT_ERROR_NONE) {
     log_e("Error: Failed to disable Thread interface (error code: %d)\n", error);
   }
+  clearAllAddressCache();  // Clear cache when interface goes down
   log_d("OpenThread Network Interface is down");
 }
 
@@ -974,6 +1193,82 @@ std::vector<IPAddress> OpenThread::getAllMulticastAddresses() const {
   return mCachedMulticastAddresses;  // Return copy of cached vector
 }
 
+// Subscribe the interface to an IPv6 multicast group
+bool OpenThread::subscribeMulticast(const IPAddress &group) {
+  if (group.type() != IPv6 || group[0] != 0xFF) {
+    log_e("subscribeMulticast: IPv6 multicast address required");
+    return false;
+  }
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return false;
+  }
+  otIp6Address grp;
+  for (int i = 0; i < 16; ++i) {
+    grp.mFields.m8[i] = group[i];
+  }
+  bool needsSubscribe = false;
+  if (!multicastRefAcquire(grp, &needsSubscribe)) {
+    return false;
+  }
+  if (!needsSubscribe) {
+    clearMulticastAddressCache();
+    return true;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    multicastRefRollback(grp);
+    return false;
+  }
+  otError err = otIp6SubscribeMulticastAddress(mInstance, &grp);
+  if (err != OT_ERROR_NONE && err != OT_ERROR_ALREADY) {
+    log_e("otIp6SubscribeMulticastAddress failed: %d", err);
+    multicastRefRollback(grp);
+    return false;
+  }
+  clearMulticastAddressCache();  // membership changed; force re-resolution
+  return true;
+}
+
+// Unsubscribe the interface from an IPv6 multicast group
+bool OpenThread::unsubscribeMulticast(const IPAddress &group) {
+  if (group.type() != IPv6) {
+    log_e("unsubscribeMulticast: IPv6 multicast address required");
+    return false;
+  }
+  if (!mInstance) {
+    log_w("Error: OpenThread instance not initialized");
+    return false;
+  }
+  otIp6Address grp;
+  for (int i = 0; i < 16; ++i) {
+    grp.mFields.m8[i] = group[i];
+  }
+  bool needsUnsubscribe = false;
+  if (!multicastRefRelease(grp, &needsUnsubscribe)) {
+    return false;
+  }
+  if (!needsUnsubscribe) {
+    clearMulticastAddressCache();
+    return true;
+  }
+  OtLock lock;
+  if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
+    multicastRefRestore(grp);
+    return false;
+  }
+  otError err = otIp6UnsubscribeMulticastAddress(mInstance, &grp);
+  if (err != OT_ERROR_NONE) {
+    log_e("otIp6UnsubscribeMulticastAddress failed: %d", err);
+    multicastRefRestore(grp);
+    return false;
+  }
+  clearMulticastAddressCache();  // membership changed; force re-resolution
+  return true;
+}
+
 // =====================================================================
 // Live setters (apply directly to the running instance)
 // =====================================================================
@@ -985,6 +1280,7 @@ otError OpenThread::setChannel(uint8_t channel) {
   }
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otLinkSetChannel(mInstance, channel);
@@ -1001,6 +1297,7 @@ otError OpenThread::setPanId(uint16_t panid) {
   }
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otLinkSetPanId(mInstance, panid);
@@ -1023,6 +1320,7 @@ otError OpenThread::setExtendedPanId(const uint8_t *extpanid) {
   memcpy(xpid.m8, extpanid, OT_EXT_PAN_ID_SIZE);
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otThreadSetExtendedPanId(mInstance, &xpid);
@@ -1045,6 +1343,7 @@ otError OpenThread::setNetworkKey(const uint8_t *key) {
   memcpy(nk.m8, key, OT_NETWORK_KEY_SIZE);
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otThreadSetNetworkKey(mInstance, &nk);
@@ -1065,6 +1364,7 @@ otError OpenThread::setNetworkName(const char *name) {
   }
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otThreadSetNetworkName(mInstance, name);
@@ -1089,6 +1389,7 @@ bool OpenThread::getEui64(uint8_t out[8]) const {
   }
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return false;
   }
   otLinkGetFactoryAssignedIeeeEui64(mInstance, &mFactoryEui64);
@@ -1142,10 +1443,12 @@ int8_t OpenThread::getTxPower() const {
   int8_t power = INT8_MIN;
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return INT8_MIN;
   }
   otError err = otPlatRadioGetTransmitPower(mInstance, &power);
   if (err != OT_ERROR_NONE) {
+    log_w("otPlatRadioGetTransmitPower failed: %d", err);
     return INT8_MIN;
   }
   return power;
@@ -1181,14 +1484,15 @@ void OpenThread::joinerCallback(otError aError, void *aContext) {
 }
 
 otError OpenThread::startJoiner(
-  const char *pskd, const char *provisioningUrl, const char *vendorName, const char *vendorModel, const char *vendorSwVersion, const char *vendorData,
-  uint32_t timeoutMs
+  const char *pskd, uint32_t timeoutMs, const char *provisioningUrl, const char *vendorName, const char *vendorModel, const char *vendorSwVersion,
+  const char *vendorData
 ) {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     return OT_ERROR_INVALID_STATE;
   }
   if (!pskd) {
+    log_w("startJoiner: PSKd is null");
     return OT_ERROR_INVALID_ARGS;
   }
 
@@ -1209,6 +1513,7 @@ otError OpenThread::startJoiner(
   {
     OtLock lock;
     if (!lock) {
+      log_e("Error: Failed to acquire OpenThread lock");
       return OT_ERROR_FAILED;
     }
     err = otJoinerStart(mInstance, pskd, provisioningUrl, vendorName, vendorModel, vendorSwVersion, vendorData, joinerCallback, nullptr);
@@ -1305,6 +1610,7 @@ otError OpenThread::startCommissioner(uint32_t timeoutMs) {
   {
     OtLock lock;
     if (!lock) {
+      log_e("Error: Failed to acquire OpenThread lock");
       return OT_ERROR_FAILED;
     }
     err = otCommissionerStart(mInstance, commissionerStateCallback, nullptr, nullptr);
@@ -1334,16 +1640,18 @@ otError OpenThread::startCommissioner(uint32_t timeoutMs) {
   return OT_ERROR_NONE;
 }
 
-otError OpenThread::addJoiner(const char *pskd, const otExtAddress *eui64, uint32_t timeoutSec) {
+otError OpenThread::addJoiner(const char *pskd, uint32_t timeoutSec, const otExtAddress *eui64) {
   if (!mInstance) {
     log_w("Error: OpenThread instance not initialized");
     return OT_ERROR_INVALID_STATE;
   }
   if (!pskd) {
+    log_w("addJoiner: PSKd is null");
     return OT_ERROR_INVALID_ARGS;
   }
   OtLock lock;
   if (!lock) {
+    log_e("Error: Failed to acquire OpenThread lock");
     return OT_ERROR_FAILED;
   }
   otError err = otCommissionerAddJoiner(mInstance, eui64, pskd, timeoutSec);

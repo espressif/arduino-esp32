@@ -218,7 +218,7 @@ env.Append(
             (
                 "0x1000"
                 if build_mcu in ["esp32", "esp32s2"]
-                else ("0x2000" if build_mcu in ["esp32p4", "esp32c5"] else "0x0000")
+                else ("0x2000" if build_mcu in ["esp32p4", "esp32c5", "esp32s31"] else "0x0000")
             ),
             get_bootloader_image(variants_dir),
         ),
