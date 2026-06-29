@@ -81,6 +81,12 @@ static const uint8_t T13 = 19;
 #define ETH_RMII_RX0    19
 #define ETH_CLK_MODE    EMAC_CLK_EXT_IN
 
+// ESP32-S31 EV Function board pin header for SDMMC
+#define BOARD_HAS_SDMMC
+#define BOARD_SDMMC_SLOT           0
+//#define BOARD_SDMMC_POWER_PIN      39   //Korvo board power pin
+//#define BOARD_SDMMC_POWER_ON_LEVEL LOW  //Korvo board power level
+
 //I2S (ES8311)
 #define SCL1     50
 #define SDA1     51
