@@ -230,6 +230,24 @@ void change_clock() {
   TEST_ASSERT_EQUAL(start_year, read_year);
 }
 
+void request_from_undersized_buffer() {
+  // The RX/TX buffer cannot be shrunk below 32 bytes (the I2C hardware FIFO
+  // length): setBufferSize() rejects anything smaller and leaves the size as-is.
+  TEST_ASSERT_EQUAL(0, Wire.setBufferSize(31));
+  TEST_ASSERT_EQUAL(32, Wire.setBufferSize(32));
+
+  // Start from a known-empty RX state so available() is deterministic.
+  Wire.flush();
+
+  // Requesting even one byte more than the buffer holds
+  // must be rejected up front.
+  // returns 0 without touching the bus or the buffer.
+  TEST_ASSERT_EQUAL(32, Wire.requestFrom(DS1307_ADDR, (size_t)33));
+  TEST_ASSERT_EQUAL(32, Wire.available());
+
+  // Restore the default buffer size for the remaining tests.
+  TEST_ASSERT_EQUAL(I2C_BUFFER_LENGTH, Wire.setBufferSize(I2C_BUFFER_LENGTH));
+}
 void swap_pins() {
   Wire.setPins(SCL, SDA);
   Wire.begin();
@@ -325,6 +343,7 @@ void setup() {
   RUN_TEST(rtc_set_time);
   RUN_TEST(rtc_run_clock);
   RUN_TEST(change_clock);
+  RUN_TEST(request_from_undersized_buffer);
   RUN_TEST(swap_pins);
   RUN_TEST(test_api);
   UNITY_END();
