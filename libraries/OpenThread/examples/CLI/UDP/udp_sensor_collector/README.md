@@ -130,6 +130,14 @@ node 3CAAB123 -> OFFLINE (silent 96s)
 
 ## Troubleshooting
 
+**Startup order:** Flash this collector sketch first and wait for `Attached as Leader`, Commissioner active, and `Collector listening on UDP ff03::abcd:5050`. Then flash [CLI UDP sensor node (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node) boards. Reset any sensor that booted before the collector was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| No sensors attaching | Collector not Leader yet or join window closed — wait for Commissioner active before starting sensor nodes. |
+| Collector reset loses node table | Expected — table is RAM-only; sensors rebuild it by resuming transmission after collector reattaches from NVS. |
+| Sensor `NO_ACK` but collector running | Matching dataset constants (`NETKEY`, channel, PAN) must be identical on collector and node sketches. |
+
 ### `DROP malformed` from RLOC addresses (e.g. `...:0:ff:fe00:f801`)
 
 If the collector logs a stream of `DROP malformed` packets whose source is an

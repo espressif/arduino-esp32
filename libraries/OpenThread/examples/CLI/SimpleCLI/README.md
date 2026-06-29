@@ -150,10 +150,12 @@ The SimpleCLI example consists of the following main components:
 
 ## Troubleshooting
 
-- **CLI not responding**: Ensure Serial Monitor is set to 115200 baud and "Both NL & CR" line ending
-- **Commands not working**: Make sure OpenThread stack is initialized (check for "OpenThread CLI started" message)
-- **Network not starting**: Verify that you've committed the dataset and started the interface before starting Thread
-- **No serial output**: Check baudrate (115200) and USB connection
+| Symptom | Likely cause |
+| --- | --- |
+| CLI not responding | Serial Monitor not at **115200** baud or line ending not set to **Both NL & CR**. |
+| Commands not working | OpenThread stack not initialized — wait for `OpenThread CLI started` before typing commands. |
+| Network not starting | Dataset not committed or interface not up — run `dataset commit active`, `ifconfig up`, then `thread start`. |
+| No serial output | Wrong baud rate (**115200**) or USB cable/port issue. |
 
 ## Related Documentation
 
