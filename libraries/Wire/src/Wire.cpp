@@ -486,14 +486,6 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
     return 0;
   }
 #endif /* SOC_I2C_SUPPORT_SLAVE */
-  if (rxBuffer == NULL || txBuffer == NULL) {
-    log_e("NULL buffer pointer");
-    return 0;
-  }
-  if (size > bufferSize) {
-    log_w("Requested size is greater than buffer size: %zu > %zu", size, bufferSize);
-    size = bufferSize;
-  }
   esp_err_t err = ESP_OK;
 #if !CONFIG_DISABLE_HAL_LOCKS
   TaskHandle_t task = xTaskGetCurrentTaskHandle();
@@ -506,6 +498,14 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
     currentTaskHandle = task;
   }
 #endif
+  if (rxBuffer == NULL || txBuffer == NULL) {
+    log_e("NULL buffer pointer");
+    return 0;
+  }
+  if (size > bufferSize) {
+    log_w("Requested size is greater than buffer size: %zu > %zu", size, bufferSize);
+    size = bufferSize;
+  }
   if (nonStop) {
     if (address != txAddress) {
       log_e("Unfinished Repeated Start transaction! Expected address do not match! %u != %u", address, txAddress);
