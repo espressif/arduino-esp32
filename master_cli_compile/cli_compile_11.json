@@ -294,6 +294,30 @@
                 "sketches": [
 {"name": "libraries/WebServer/examples",
                 "sizes": [{
+                        "flash_bytes": 1131473,
+                        "flash_percentage": 86,
+                        "ram_bytes": 51980,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
+                        "flash_bytes": 1096037,
+                        "flash_percentage": 84,
+                        "ram_bytes": 51848,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
+                        "flash_bytes": 1093723,
+                        "flash_percentage": 83,
+                        "ram_bytes": 51840,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
                         "flash_bytes": 1122447,
                         "flash_percentage": 86,
                         "ram_bytes": 54176,
@@ -427,28 +451,36 @@
                         "ram_bytes": 49024,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/WiFi/examples",
-                "sizes": [{
-                        "flash_bytes": 1012539,
-                        "flash_percentage": 77,
-                        "ram_bytes": 47876,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/WiFi/examples",
-                "sizes": [{
-                        "flash_bytes": 1030863,
-                        "flash_percentage": 79,
-                        "ram_bytes": 49024,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
+                        "flash_bytes": 1052542,
+                        "flash_percentage": 80,
+                        "ram_bytes": 45672,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
+                        "flash_bytes": 1030462,
+                        "flash_percentage": 79,
+                        "ram_bytes": 44892,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/WebServer/examples",
+                "sizes": [{
+                        "flash_bytes": 1088764,
+                        "flash_percentage": 83,
+                        "ram_bytes": 45228,
+                        "ram_percentage": 14
+                        }]
+                },
 {"name": "libraries/WebServer/examples",
                 "sizes": [{
                         "flash_bytes": 1053632,
@@ -584,33 +616,41 @@
                         "ram_bytes": 40772,
                         "ram_percentage": 12
                         }]
-                },
-{"name": "libraries/WiFi/examples/FTM",
-                "sizes": [{
-                        "flash_bytes": 945848,
-                        "flash_percentage": 72,
-                        "ram_bytes": 40772,
-                        "ram_percentage": 12
-                        }]
-                },
-{"name": "libraries/WiFi/examples",
-                "sizes": [{
-                        "flash_bytes": 987738,
-                        "flash_percentage": 75,
-                        "ram_bytes": 42848,
-                        "ram_percentage": 13
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
                 "sizes": [{
-                        "flash_bytes": 1034663,
+                        "flash_bytes": 1043449,
+                        "flash_percentage": 80,
+                        "ram_bytes": 50152,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
+                "sizes": [{
+                        "flash_bytes": 1049551,
+                        "flash_percentage": 80,
+                        "ram_bytes": 50168,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
+                "sizes": [{
+                        "flash_bytes": 1041673,
                         "flash_percentage": 79,
-                        "ram_bytes": 49004,
+                        "ram_bytes": 67468,
+                        "ram_percentage": 21
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
+                "sizes": [{
+                        "flash_bytes": 1044679,
+                        "flash_percentage": 80,
+                        "ram_bytes": 49092,
                         "ram_percentage": 15
                         }]
                 },
@@ -691,22 +731,6 @@
                         "flash_bytes": 378952,
                         "flash_percentage": 29,
                         "ram_bytes": 15412,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/Wire/examples",
-                "sizes": [{
-                        "flash_bytes": 306426,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15104,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/Wire/examples",
-                "sizes": [{
-                        "flash_bytes": 306146,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15096,
                         "ram_percentage": 5
                         }]
                 }

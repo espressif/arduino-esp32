@@ -294,62 +294,6 @@
                 "sketches": [
 {"name": "libraries/Matter/examples",
                 "sizes": [{
-                        "flash_bytes": 2630649,
-                        "flash_percentage": 84,
-                        "ram_bytes": 122032,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2628027,
-                        "flash_percentage": 84,
-                        "ram_bytes": 121704,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2647239,
-                        "flash_percentage": 84,
-                        "ram_bytes": 121900,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2623051,
-                        "flash_percentage": 83,
-                        "ram_bytes": 121720,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2626017,
-                        "flash_percentage": 83,
-                        "ram_bytes": 121736,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2649065,
-                        "flash_percentage": 84,
-                        "ram_bytes": 121900,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2649665,
-                        "flash_percentage": 84,
-                        "ram_bytes": 121916,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
                         "flash_bytes": 2649787,
                         "flash_percentage": 84,
                         "ram_bytes": 121916,
@@ -443,68 +387,76 @@
                         "ram_bytes": 121884,
                         "ram_percentage": 37
                         }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2637509,
+                        "flash_percentage": 84,
+                        "ram_bytes": 121884,
+                        "ram_percentage": 37
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2659171,
+                        "flash_percentage": 85,
+                        "ram_bytes": 122012,
+                        "ram_percentage": 37
+                        }]
+                },
+{"name": "libraries/NetBIOS/examples",
+                "sizes": [{
+                        "flash_bytes": 995207,
+                        "flash_percentage": 76,
+                        "ram_bytes": 47612,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1106421,
+                        "flash_percentage": 84,
+                        "ram_bytes": 49404,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1106449,
+                        "flash_percentage": 84,
+                        "ram_bytes": 49436,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1108287,
+                        "flash_percentage": 35,
+                        "ram_bytes": 49404,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1172479,
+                        "flash_percentage": 37,
+                        "ram_bytes": 50916,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1107439,
+                        "flash_percentage": 84,
+                        "ram_bytes": 49404,
+                        "ram_percentage": 15
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2614650,
-                        "flash_percentage": 83,
-                        "ram_bytes": 139204,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2576894,
-                        "flash_percentage": 82,
-                        "ram_bytes": 137976,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2586452,
-                        "flash_percentage": 82,
-                        "ram_bytes": 138304,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2586278,
-                        "flash_percentage": 82,
-                        "ram_bytes": 137976,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2604210,
-                        "flash_percentage": 83,
-                        "ram_bytes": 138772,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2578944,
-                        "flash_percentage": 82,
-                        "ram_bytes": 137984,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2581900,
-                        "flash_percentage": 82,
-                        "ram_bytes": 138008,
-                        "ram_percentage": 42
-                        }]
-                },
 {"name": "libraries/Matter/examples",
                 "sizes": [{
                         "flash_bytes": 2606026,
@@ -600,68 +552,76 @@
                         "ram_bytes": 137976,
                         "ram_percentage": 42
                         }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2606832,
+                        "flash_percentage": 83,
+                        "ram_bytes": 138112,
+                        "ram_percentage": 42
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2594544,
+                        "flash_percentage": 82,
+                        "ram_bytes": 138756,
+                        "ram_percentage": 42
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2594544,
+                        "flash_percentage": 82,
+                        "ram_bytes": 138756,
+                        "ram_percentage": 42
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2616100,
+                        "flash_percentage": 83,
+                        "ram_bytes": 138996,
+                        "ram_percentage": 42
+                        }]
+                },
+{"name": "libraries/NetBIOS/examples",
+                "sizes": [{
+                        "flash_bytes": 951466,
+                        "flash_percentage": 73,
+                        "ram_bytes": 40844,
+                        "ram_percentage": 12
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1062966,
+                        "flash_percentage": 81,
+                        "ram_bytes": 42628,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1062992,
+                        "flash_percentage": 81,
+                        "ram_bytes": 42644,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/NetworkClientSecure/examples",
+                "sizes": [{
+                        "flash_bytes": 1064840,
+                        "flash_percentage": 34,
+                        "ram_bytes": 42628,
+                        "ram_percentage": 13
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Hash/examples",
-                "sizes": [{
-                        "flash_bytes": 281814,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Hash/examples",
-                "sizes": [{
-                        "flash_bytes": 283054,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/LittleFS/examples",
-                "sizes": [{
-                        "flash_bytes": 328724,
-                        "flash_percentage": 25,
-                        "ram_bytes": 14344,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2211359,
-                        "flash_percentage": 70,
-                        "ram_bytes": 99656,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2156477,
-                        "flash_percentage": 69,
-                        "ram_bytes": 98836,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2192603,
-                        "flash_percentage": 70,
-                        "ram_bytes": 99012,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2168455,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99600,
-                        "ram_percentage": 30
-                        }]
-                },
 {"name": "libraries/Matter/examples",
                 "sizes": [{
                         "flash_bytes": 2188429,
@@ -707,6 +667,70 @@
                         "flash_bytes": 2149679,
                         "flash_percentage": 68,
                         "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2159195,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99172,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2159015,
+                        "flash_percentage": 69,
+                        "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2178099,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99624,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2151733,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98860,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2154683,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98876,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2179919,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99624,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2180505,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99640,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2180629,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99640,
                         "ram_percentage": 30
                         }]
                 }

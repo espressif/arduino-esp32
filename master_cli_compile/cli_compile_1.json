@@ -294,14 +294,6 @@
                 "sketches": [
 {"name": "libraries/BLE/examples",
                 "sizes": [{
-                        "flash_bytes": 757755,
-                        "flash_percentage": 24,
-                        "ram_bytes": 22668,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/BLE/examples",
-                "sizes": [{
                         "flash_bytes": 753897,
                         "flash_percentage": 24,
                         "ram_bytes": 22668,
@@ -443,20 +435,28 @@
                         "ram_bytes": 17428,
                         "ram_percentage": 5
                         }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut",
+                "sizes": [{
+                        "flash_bytes": 284820,
+                        "flash_percentage": 22,
+                        "ram_bytes": 17428,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut",
+                "sizes": [{
+                        "flash_bytes": 279100,
+                        "flash_percentage": 21,
+                        "ram_bytes": 17288,
+                        "ram_percentage": 5
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/BLE/examples",
-                "sizes": [{
-                        "flash_bytes": 694306,
-                        "flash_percentage": 22,
-                        "ram_bytes": 18000,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/BLE/examples",
                 "sizes": [{
                         "flash_bytes": 690442,
@@ -600,20 +600,28 @@
                         "ram_bytes": 13936,
                         "ram_percentage": 4
                         }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut",
+                "sizes": [{
+                        "flash_bytes": 243850,
+                        "flash_percentage": 19,
+                        "ram_bytes": 13936,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/AnalogOut",
+                "sizes": [{
+                        "flash_bytes": 238324,
+                        "flash_percentage": 18,
+                        "ram_bytes": 13768,
+                        "ram_percentage": 4
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/BLE/examples",
-                "sizes": [{
-                        "flash_bytes": 711529,
-                        "flash_percentage": 23,
-                        "ram_bytes": 16940,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/BLE/examples",
                 "sizes": [{
                         "flash_bytes": 710421,
@@ -707,6 +715,22 @@
                         "flash_bytes": 288976,
                         "flash_percentage": 9,
                         "ram_bytes": 13784,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/EEPROM/examples",
+                "sizes": [{
+                        "flash_bytes": 291978,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13736,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/EEPROM/examples",
+                "sizes": [{
+                        "flash_bytes": 287600,
+                        "flash_percentage": 9,
+                        "ram_bytes": 13744,
                         "ram_percentage": 4
                         }]
                 }

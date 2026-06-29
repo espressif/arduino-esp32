@@ -292,70 +292,6 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2637509,
-                        "flash_percentage": 84,
-                        "ram_bytes": 121884,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2659171,
-                        "flash_percentage": 85,
-                        "ram_bytes": 122012,
-                        "ram_percentage": 37
-                        }]
-                },
-{"name": "libraries/NetBIOS/examples",
-                "sizes": [{
-                        "flash_bytes": 995207,
-                        "flash_percentage": 76,
-                        "ram_bytes": 47612,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1106421,
-                        "flash_percentage": 84,
-                        "ram_bytes": 49404,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1106449,
-                        "flash_percentage": 84,
-                        "ram_bytes": 49436,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1108287,
-                        "flash_percentage": 35,
-                        "ram_bytes": 49404,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1172479,
-                        "flash_percentage": 37,
-                        "ram_bytes": 50916,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1107439,
-                        "flash_percentage": 84,
-                        "ram_bytes": 49404,
-                        "ram_percentage": 15
-                        }]
-                },
 {"name": "libraries/NetworkClientSecure/examples",
                 "sizes": [{
                         "flash_bytes": 1148675,
@@ -374,74 +310,146 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP",
                 "sizes": [{
-                        "flash_bytes": 1182243,
-                        "flash_percentage": 90,
-                        "ram_bytes": 47128,
+                        "flash_bytes": 1191449,
+                        "flash_percentage": 91,
+                        "ram_bytes": 47224,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP",
                 "sizes": [{
-                        "flash_bytes": 1184225,
-                        "flash_percentage": 90,
-                        "ram_bytes": 47112,
+                        "flash_bytes": 1193343,
+                        "flash_percentage": 91,
+                        "ram_bytes": 47208,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1160157,
+                        "flash_bytes": 1169099,
                         "flash_percentage": 89,
-                        "ram_bytes": 46508,
+                        "ram_bytes": 46596,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1160577,
+                        "flash_bytes": 1169539,
                         "flash_percentage": 89,
-                        "ram_bytes": 46532,
+                        "ram_bytes": 46620,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1163649,
+                        "flash_bytes": 1172837,
                         "flash_percentage": 89,
-                        "ram_bytes": 46540,
+                        "ram_bytes": 46628,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1160821,
+                        "flash_bytes": 1169785,
                         "flash_percentage": 89,
-                        "ram_bytes": 46532,
+                        "ram_bytes": 46628,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1160885,
+                        "flash_bytes": 1169853,
                         "flash_percentage": 89,
-                        "ram_bytes": 46532,
+                        "ram_bytes": 46628,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1160543,
+                        "flash_bytes": 1170611,
                         "flash_percentage": 89,
-                        "ram_bytes": 46508,
+                        "ram_bytes": 46628,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1169617,
+                        "flash_percentage": 89,
+                        "ram_bytes": 46596,
                         "ram_percentage": 14
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/UDP",
                 "sizes": [{
-                        "flash_bytes": 1185049,
-                        "flash_percentage": 90,
-                        "ram_bytes": 68308,
+                        "flash_bytes": 1193949,
+                        "flash_percentage": 91,
+                        "ram_bytes": 68396,
                         "ram_percentage": 21
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP",
+                "sizes": [{
+                        "flash_bytes": 1195635,
+                        "flash_percentage": 91,
+                        "ram_bytes": 46916,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1169001,
+                        "flash_percentage": 89,
+                        "ram_bytes": 46596,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1074301,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46684,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1073381,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46100,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse",
+                "sizes": [{
+                        "flash_bytes": 1078081,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46700,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse",
+                "sizes": [{
+                        "flash_bytes": 1078293,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46116,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch",
+                "sizes": [{
+                        "flash_bytes": 1095687,
+                        "flash_percentage": 84,
+                        "ram_bytes": 46616,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch",
+                "sizes": [{
+                        "flash_bytes": 1088033,
+                        "flash_percentage": 83,
+                        "ram_bytes": 47176,
+                        "ram_percentage": 14
                         }]
                 }
 ]
@@ -449,70 +457,6 @@
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2606832,
-                        "flash_percentage": 83,
-                        "ram_bytes": 138112,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2594544,
-                        "flash_percentage": 82,
-                        "ram_bytes": 138756,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2594544,
-                        "flash_percentage": 82,
-                        "ram_bytes": 138756,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2616100,
-                        "flash_percentage": 83,
-                        "ram_bytes": 138996,
-                        "ram_percentage": 42
-                        }]
-                },
-{"name": "libraries/NetBIOS/examples",
-                "sizes": [{
-                        "flash_bytes": 951466,
-                        "flash_percentage": 73,
-                        "ram_bytes": 40844,
-                        "ram_percentage": 12
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1062966,
-                        "flash_percentage": 81,
-                        "ram_bytes": 42628,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1062992,
-                        "flash_percentage": 81,
-                        "ram_bytes": 42644,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/NetworkClientSecure/examples",
-                "sizes": [{
-                        "flash_bytes": 1064840,
-                        "flash_percentage": 34,
-                        "ram_bytes": 42628,
-                        "ram_percentage": 13
-                        }]
-                },
 {"name": "libraries/NetworkClientSecure/examples",
                 "sizes": [{
                         "flash_bytes": 1129074,
@@ -547,57 +491,129 @@
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP",
                 "sizes": [{
-                        "flash_bytes": 1127524,
-                        "flash_percentage": 86,
-                        "ram_bytes": 51468,
+                        "flash_bytes": 1136732,
+                        "flash_percentage": 87,
+                        "ram_bytes": 51556,
                         "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/COAP",
                 "sizes": [{
-                        "flash_bytes": 1129420,
-                        "flash_percentage": 86,
-                        "ram_bytes": 51444,
+                        "flash_bytes": 1138544,
+                        "flash_percentage": 87,
+                        "ram_bytes": 51540,
                         "ram_percentage": 16
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1104286,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50240,
+                        "flash_bytes": 1113226,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50336,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1104698,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50264,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
-                "sizes": [{
-                        "flash_bytes": 1107768,
+                        "flash_bytes": 1113656,
                         "flash_percentage": 85,
-                        "ram_bytes": 50272,
+                        "ram_bytes": 50360,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1104904,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50272,
+                        "flash_bytes": 1116962,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50368,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1104968,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50272,
+                        "flash_bytes": 1113862,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50360,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1113928,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50360,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1114734,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50368,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1113726,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50336,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP",
+                "sizes": [{
+                        "flash_bytes": 1119908,
+                        "flash_percentage": 85,
+                        "ram_bytes": 72136,
+                        "ram_percentage": 22
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP",
+                "sizes": [{
+                        "flash_bytes": 1121590,
+                        "flash_percentage": 86,
+                        "ram_bytes": 50648,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1113112,
+                        "flash_percentage": 85,
+                        "ram_bytes": 50336,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1018144,
+                        "flash_percentage": 78,
+                        "ram_bytes": 50424,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1017240,
+                        "flash_percentage": 78,
+                        "ram_bytes": 49840,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse",
+                "sizes": [{
+                        "flash_bytes": 1025032,
+                        "flash_percentage": 78,
+                        "ram_bytes": 50456,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse",
+                "sizes": [{
+                        "flash_bytes": 1022176,
+                        "flash_percentage": 78,
+                        "ram_bytes": 49864,
                         "ram_percentage": 15
                         }]
                 }
@@ -606,70 +622,6 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2159195,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99172,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2159015,
-                        "flash_percentage": 69,
-                        "ram_bytes": 98836,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2178099,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99624,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2151733,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98860,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2154683,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98876,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2179919,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99624,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2180505,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99640,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2180629,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99640,
-                        "ram_percentage": 30
-                        }]
-                },
 {"name": "libraries/Matter/examples",
                 "sizes": [{
                         "flash_bytes": 2149663,
@@ -708,6 +660,78 @@
                         "flash_percentage": 69,
                         "ram_bytes": 99616,
                         "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2151905,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98884,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2150871,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98868,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2218975,
+                        "flash_percentage": 71,
+                        "ram_bytes": 99680,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2149701,
+                        "flash_percentage": 68,
+                        "ram_bytes": 98836,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2176469,
+                        "flash_percentage": 69,
+                        "ram_bytes": 98964,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2168451,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99600,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2168443,
+                        "flash_percentage": 69,
+                        "ram_bytes": 99600,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/Matter/examples",
+                "sizes": [{
+                        "flash_bytes": 2189959,
+                        "flash_percentage": 70,
+                        "ram_bytes": 99744,
+                        "ram_percentage": 30
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/COAP",
+                "sizes": [{
+                        "flash_bytes": 1144897,
+                        "flash_percentage": 87,
+                        "ram_bytes": 50104,
+                        "ram_percentage": 15
                         }]
                 }
 ]
@@ -890,7 +914,7 @@
                 },
 {"name": "libraries/NetBIOS/examples",
                 "sizes": [{
-                        "flash_bytes": 828739,
+                        "flash_bytes": 828731,
                         "flash_percentage": 63,
                         "ram_bytes": 40332,
                         "ram_percentage": 12
@@ -906,7 +930,7 @@
                 },
 {"name": "libraries/NetworkClientSecure/examples",
                 "sizes": [{
-                        "flash_bytes": 928823,
+                        "flash_bytes": 928815,
                         "flash_percentage": 71,
                         "ram_bytes": 42164,
                         "ram_percentage": 13
@@ -930,7 +954,7 @@
                 },
 {"name": "libraries/NetworkClientSecure/examples",
                 "sizes": [{
-                        "flash_bytes": 929499,
+                        "flash_bytes": 929491,
                         "flash_percentage": 71,
                         "ram_bytes": 42140,
                         "ram_percentage": 13
@@ -962,7 +986,7 @@
                 },
 {"name": "libraries/PPP/examples",
                 "sizes": [{
-                        "flash_bytes": 918392,
+                        "flash_bytes": 918384,
                         "flash_percentage": 70,
                         "ram_bytes": 40684,
                         "ram_percentage": 12

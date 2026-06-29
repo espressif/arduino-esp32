@@ -292,6 +292,14 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
+{"name": "libraries/WiFi/examples",
+                "sizes": [{
+                        "flash_bytes": 1002489,
+                        "flash_percentage": 76,
+                        "ram_bytes": 49212,
+                        "ram_percentage": 15
+                        }]
+                },
 {"name": "libraries/WiFiProv/examples",
                 "sizes": [{
                         "flash_bytes": 1487991,
@@ -451,6 +459,14 @@
                 "sketches": [
 {"name": "libraries/WiFi/examples",
                 "sizes": [{
+                        "flash_bytes": 986762,
+                        "flash_percentage": 75,
+                        "ram_bytes": 41100,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/WiFi/examples",
+                "sizes": [{
                         "flash_bytes": 1077308,
                         "flash_percentage": 82,
                         "ram_bytes": 42836,
@@ -606,6 +622,14 @@
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Zigbee/examples",
+                "sizes": [{
+                        "flash_bytes": 711789,
+                        "flash_percentage": 54,
+                        "ram_bytes": 34908,
+                        "ram_percentage": 11
+                        }]
+                },
 {"name": "libraries/Zigbee/examples",
                 "sizes": [{
                         "flash_bytes": 599005,

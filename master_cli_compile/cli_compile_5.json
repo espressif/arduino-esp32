@@ -292,46 +292,6 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/ESPmDNS/examples",
-                "sizes": [{
-                        "flash_bytes": 1050295,
-                        "flash_percentage": 80,
-                        "ram_bytes": 51292,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/Ethernet/examples",
-                "sizes": [{
-                        "flash_bytes": 598472,
-                        "flash_percentage": 46,
-                        "ram_bytes": 22896,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples",
-                "sizes": [{
-                        "flash_bytes": 596766,
-                        "flash_percentage": 46,
-                        "ram_bytes": 22896,
-                        "ram_percentage": 7
-                        }]
-                },
-{"name": "libraries/Ethernet/examples",
-                "sizes": [{
-                        "flash_bytes": 1113539,
-                        "flash_percentage": 85,
-                        "ram_bytes": 48208,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/FFat/examples",
-                "sizes": [{
-                        "flash_bytes": 357150,
-                        "flash_percentage": 27,
-                        "ram_bytes": 18064,
-                        "ram_percentage": 6
-                        }]
-                },
 {"name": "libraries/FFat/examples",
                 "sizes": [{
                         "flash_bytes": 1062037,
@@ -443,52 +403,60 @@
                         "ram_bytes": 17280,
                         "ram_percentage": 5
                         }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 309894,
+                        "flash_percentage": 24,
+                        "ram_bytes": 17280,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 300680,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17280,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 299110,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17296,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 296802,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17296,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 298042,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17296,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Insights/examples",
+                "sizes": [{
+                        "flash_bytes": 1149755,
+                        "flash_percentage": 88,
+                        "ram_bytes": 51012,
+                        "ram_percentage": 16
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/ESP_NOW/examples",
-                "sizes": [{
-                        "flash_bytes": 963826,
-                        "flash_percentage": 74,
-                        "ram_bytes": 41076,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples",
-                "sizes": [{
-                        "flash_bytes": 984042,
-                        "flash_percentage": 75,
-                        "ram_bytes": 43220,
-                        "ram_percentage": 13
-                        }]
-                },
-{"name": "libraries/ESPmDNS/examples",
-                "sizes": [{
-                        "flash_bytes": 1006828,
-                        "flash_percentage": 77,
-                        "ram_bytes": 44508,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/Ethernet/examples",
-                "sizes": [{
-                        "flash_bytes": 559264,
-                        "flash_percentage": 43,
-                        "ram_bytes": 19908,
-                        "ram_percentage": 6
-                        }]
-                },
-{"name": "libraries/Ethernet/examples",
-                "sizes": [{
-                        "flash_bytes": 557582,
-                        "flash_percentage": 43,
-                        "ram_bytes": 19908,
-                        "ram_percentage": 6
-                        }]
-                },
 {"name": "libraries/Ethernet/examples",
                 "sizes": [{
                         "flash_bytes": 1071082,
@@ -600,52 +568,60 @@
                         "ram_bytes": 45944,
                         "ram_percentage": 14
                         }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 253452,
+                        "flash_percentage": 19,
+                        "ram_bytes": 13760,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 253684,
+                        "flash_percentage": 19,
+                        "ram_bytes": 13760,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 269208,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13760,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 260002,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13760,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 258380,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13776,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Hash/examples",
+                "sizes": [{
+                        "flash_bytes": 256070,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13776,
+                        "ram_percentage": 4
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 280354,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13704,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 280348,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13720,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 278854,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13696,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 277734,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13680,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 278264,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13688,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/Serial",
                 "sizes": [{
                         "flash_bytes": 278104,
@@ -708,6 +684,54 @@
                         "flash_percentage": 20,
                         "ram_bytes": 13680,
                         "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Timer",
+                "sizes": [{
+                        "flash_bytes": 288170,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14056,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Timer",
+                "sizes": [{
+                        "flash_bytes": 287976,
+                        "flash_percentage": 22,
+                        "ram_bytes": 14048,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples",
+                "sizes": [{
+                        "flash_bytes": 366890,
+                        "flash_percentage": 28,
+                        "ram_bytes": 16204,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples",
+                "sizes": [{
+                        "flash_bytes": 309772,
+                        "flash_percentage": 24,
+                        "ram_bytes": 13816,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP_I2S/examples",
+                "sizes": [{
+                        "flash_bytes": 308912,
+                        "flash_percentage": 24,
+                        "ram_bytes": 13832,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 583696,
+                        "flash_percentage": 45,
+                        "ram_bytes": 19812,
+                        "ram_percentage": 6
                         }]
                 }
 ]

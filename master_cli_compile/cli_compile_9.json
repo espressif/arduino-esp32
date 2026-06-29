@@ -292,83 +292,123 @@
 { "board": "espressif:esp32:esp32c5",
                 "target": "esp32c5",
                 "sketches": [
-{"name": "libraries/OpenThread/examples/CLI/UDP",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure",
                 "sizes": [{
-                        "flash_bytes": 1186773,
-                        "flash_percentage": 91,
-                        "ram_bytes": 46820,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI",
-                "sizes": [{
-                        "flash_bytes": 1160057,
-                        "flash_percentage": 89,
-                        "ram_bytes": 46508,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
-                "sizes": [{
-                        "flash_bytes": 1054527,
-                        "flash_percentage": 80,
-                        "ram_bytes": 46148,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
-                "sizes": [{
-                        "flash_bytes": 1051205,
-                        "flash_percentage": 80,
-                        "ram_bytes": 46148,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
-                "sizes": [{
-                        "flash_bytes": 1059969,
+                        "flash_bytes": 1065947,
                         "flash_percentage": 81,
-                        "ram_bytes": 46476,
+                        "ram_bytes": 46124,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure",
                 "sizes": [{
-                        "flash_bytes": 1057661,
+                        "flash_bytes": 1064245,
                         "flash_percentage": 81,
-                        "ram_bytes": 46044,
+                        "ram_bytes": 46084,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor",
                 "sizes": [{
-                        "flash_bytes": 1080213,
+                        "flash_bytes": 1064341,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46676,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor",
+                "sizes": [{
+                        "flash_bytes": 1072895,
                         "flash_percentage": 82,
-                        "ram_bytes": 47184,
+                        "ram_bytes": 46116,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet",
                 "sizes": [{
-                        "flash_bytes": 1086099,
+                        "flash_bytes": 1064475,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46676,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet",
+                "sizes": [{
+                        "flash_bytes": 1070325,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46084,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1063789,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46244,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1060573,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46236,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native",
+                "sizes": [{
+                        "flash_bytes": 1074421,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46748,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
+                "sizes": [{
+                        "flash_bytes": 1069321,
+                        "flash_percentage": 82,
+                        "ram_bytes": 46572,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
+                "sizes": [{
+                        "flash_bytes": 1066987,
+                        "flash_percentage": 81,
+                        "ram_bytes": 46132,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
+                "sizes": [{
+                        "flash_bytes": 1090261,
                         "flash_percentage": 83,
-                        "ram_bytes": 47192,
+                        "ram_bytes": 47272,
                         "ram_percentage": 14
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
                 "sizes": [{
-                        "flash_bytes": 1079619,
-                        "flash_percentage": 82,
-                        "ram_bytes": 65100,
+                        "flash_bytes": 1096069,
+                        "flash_percentage": 84,
+                        "ram_bytes": 47288,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
+                "sizes": [{
+                        "flash_bytes": 1089649,
+                        "flash_percentage": 83,
+                        "ram_bytes": 65196,
                         "ram_percentage": 20
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
                 "sizes": [{
-                        "flash_bytes": 1082535,
+                        "flash_bytes": 1092547,
                         "flash_percentage": 83,
-                        "ram_bytes": 46732,
+                        "ram_bytes": 46820,
                         "ram_percentage": 14
                         }]
                 },
@@ -411,137 +451,145 @@
                         "ram_bytes": 53408,
                         "ram_percentage": 16
                         }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1847179,
-                        "flash_percentage": 46,
-                        "ram_bytes": 53540,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1865915,
-                        "flash_percentage": 46,
-                        "ram_bytes": 53760,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1876741,
-                        "flash_percentage": 46,
-                        "ram_bytes": 53496,
-                        "ram_percentage": 16
-                        }]
-                },
-{"name": "libraries/SD/examples",
-                "sizes": [{
-                        "flash_bytes": 381868,
-                        "flash_percentage": 9,
-                        "ram_bytes": 18540,
-                        "ram_percentage": 6
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/OpenThread/examples/CLI",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch",
                 "sizes": [{
-                        "flash_bytes": 1104656,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50240,
-                        "ram_percentage": 15
+                        "flash_bytes": 1040718,
+                        "flash_percentage": 79,
+                        "ram_bytes": 50964,
+                        "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/CLI/UDP",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch",
                 "sizes": [{
-                        "flash_bytes": 1111010,
-                        "flash_percentage": 85,
-                        "ram_bytes": 72040,
-                        "ram_percentage": 22
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI/UDP",
-                "sizes": [{
-                        "flash_bytes": 1112740,
-                        "flash_percentage": 85,
-                        "ram_bytes": 50560,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI",
-                "sizes": [{
-                        "flash_bytes": 1104170,
-                        "flash_percentage": 84,
-                        "ram_bytes": 50240,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
-                "sizes": [{
-                        "flash_bytes": 998380,
-                        "flash_percentage": 76,
-                        "ram_bytes": 49896,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
-                "sizes": [{
-                        "flash_bytes": 995046,
-                        "flash_percentage": 76,
-                        "ram_bytes": 49888,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
-                "sizes": [{
-                        "flash_bytes": 1003718,
-                        "flash_percentage": 77,
-                        "ram_bytes": 50232,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
-                "sizes": [{
-                        "flash_bytes": 1001508,
-                        "flash_percentage": 76,
-                        "ram_bytes": 49784,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
-                "sizes": [{
-                        "flash_bytes": 1025248,
-                        "flash_percentage": 78,
+                        "flash_bytes": 1032964,
+                        "flash_percentage": 79,
                         "ram_bytes": 51524,
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_Light_Switch",
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure",
                 "sizes": [{
-                        "flash_bytes": 1031064,
+                        "flash_bytes": 1009790,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49864,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Secure",
+                "sizes": [{
+                        "flash_bytes": 1008080,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49832,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor",
+                "sizes": [{
+                        "flash_bytes": 1008180,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50416,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor",
+                "sizes": [{
+                        "flash_bytes": 1016790,
+                        "flash_percentage": 78,
+                        "ram_bytes": 49856,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet",
+                "sizes": [{
+                        "flash_bytes": 1008314,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50416,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet",
+                "sizes": [{
+                        "flash_bytes": 1014188,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49832,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1007636,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49984,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1004412,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49984,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native",
+                "sizes": [{
+                        "flash_bytes": 1018310,
+                        "flash_percentage": 78,
+                        "ram_bytes": 50496,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
+                "sizes": [{
+                        "flash_bytes": 1013068,
+                        "flash_percentage": 77,
+                        "ram_bytes": 50328,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/ThreadCommissioning",
+                "sizes": [{
+                        "flash_bytes": 1010832,
+                        "flash_percentage": 77,
+                        "ram_bytes": 49880,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
+                "sizes": [{
+                        "flash_bytes": 1035294,
                         "flash_percentage": 79,
-                        "ram_bytes": 51532,
+                        "ram_bytes": 51620,
                         "ram_percentage": 16
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch",
                 "sizes": [{
-                        "flash_bytes": 1005298,
+                        "flash_bytes": 1041034,
+                        "flash_percentage": 79,
+                        "ram_bytes": 51628,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
+                "sizes": [{
+                        "flash_bytes": 1015324,
                         "flash_percentage": 77,
-                        "ram_bytes": 68848,
+                        "ram_bytes": 68936,
                         "ram_percentage": 21
                         }]
                 },
-{"name": "libraries/OpenThread/examples/Native/UDP_SensorNetwork",
+{"name": "libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork",
                 "sizes": [{
-                        "flash_bytes": 1008224,
-                        "flash_percentage": 77,
-                        "ram_bytes": 50472,
+                        "flash_bytes": 1018240,
+                        "flash_percentage": 78,
+                        "ram_bytes": 50568,
                         "ram_percentage": 15
                         }]
                 },
@@ -568,145 +616,121 @@
                         "ram_bytes": 13776,
                         "ram_percentage": 4
                         }]
-                },
-{"name": "libraries/Preferences/examples",
-                "sizes": [{
-                        "flash_bytes": 260766,
-                        "flash_percentage": 20,
-                        "ram_bytes": 13776,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1809212,
-                        "flash_percentage": 45,
-                        "ram_bytes": 47136,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1792494,
-                        "flash_percentage": 44,
-                        "ram_bytes": 47296,
-                        "ram_percentage": 14
-                        }]
-                },
-{"name": "libraries/RainMaker/examples",
-                "sizes": [{
-                        "flash_bytes": 1811648,
-                        "flash_percentage": 45,
-                        "ram_bytes": 47536,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2151905,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98884,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2150871,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98868,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2218975,
-                        "flash_percentage": 71,
-                        "ram_bytes": 99680,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2149701,
-                        "flash_percentage": 68,
-                        "ram_bytes": 98836,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2176469,
-                        "flash_percentage": 69,
-                        "ram_bytes": 98964,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2168451,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99600,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2168443,
-                        "flash_percentage": 69,
-                        "ram_bytes": 99600,
-                        "ram_percentage": 30
-                        }]
-                },
-{"name": "libraries/Matter/examples",
-                "sizes": [{
-                        "flash_bytes": 2189959,
-                        "flash_percentage": 70,
-                        "ram_bytes": 99744,
-                        "ram_percentage": 30
-                        }]
-                },
 {"name": "libraries/OpenThread/examples/CLI/COAP",
                 "sizes": [{
-                        "flash_bytes": 1135691,
-                        "flash_percentage": 87,
-                        "ram_bytes": 50008,
-                        "ram_percentage": 15
-                        }]
-                },
-{"name": "libraries/OpenThread/examples/CLI/COAP",
-                "sizes": [{
-                        "flash_bytes": 1137885,
-                        "flash_percentage": 87,
-                        "ram_bytes": 49992,
+                        "flash_bytes": 1147007,
+                        "flash_percentage": 88,
+                        "ram_bytes": 50088,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1112359,
-                        "flash_percentage": 85,
-                        "ram_bytes": 48780,
+                        "flash_bytes": 1121299,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48868,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI",
                 "sizes": [{
-                        "flash_bytes": 1112781,
-                        "flash_percentage": 85,
-                        "ram_bytes": 48804,
+                        "flash_bytes": 1121739,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48892,
                         "ram_percentage": 15
                         }]
                 },
 {"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
                 "sizes": [{
-                        "flash_bytes": 1115849,
-                        "flash_percentage": 85,
-                        "ram_bytes": 48812,
+                        "flash_bytes": 1125045,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48900,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1121993,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48900,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/SimpleThreadNetwork",
+                "sizes": [{
+                        "flash_bytes": 1122057,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48900,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1122815,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48900,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1121811,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48868,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP",
+                "sizes": [{
+                        "flash_bytes": 1146253,
+                        "flash_percentage": 87,
+                        "ram_bytes": 70668,
+                        "ram_percentage": 22
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI/UDP",
+                "sizes": [{
+                        "flash_bytes": 1148029,
+                        "flash_percentage": 88,
+                        "ram_bytes": 49188,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/CLI",
+                "sizes": [{
+                        "flash_bytes": 1121197,
+                        "flash_percentage": 86,
+                        "ram_bytes": 48868,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1026223,
+                        "flash_percentage": 78,
+                        "ram_bytes": 48956,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD",
+                "sizes": [{
+                        "flash_bytes": 1025295,
+                        "flash_percentage": 78,
+                        "ram_bytes": 48372,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse",
+                "sizes": [{
+                        "flash_bytes": 1030003,
+                        "flash_percentage": 79,
+                        "ram_bytes": 48972,
                         "ram_percentage": 15
                         }]
                 }

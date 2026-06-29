@@ -294,38 +294,6 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/Serial",
                 "sizes": [{
-                        "flash_bytes": 292836,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17280,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 293264,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17288,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 293098,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17288,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 292864,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17304,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
                         "flash_bytes": 293588,
                         "flash_percentage": 22,
                         "ram_bytes": 17288,
@@ -443,44 +411,52 @@
                         "ram_bytes": 49996,
                         "ram_percentage": 15
                         }]
+                },
+{"name": "libraries/ESPmDNS/examples",
+                "sizes": [{
+                        "flash_bytes": 1050295,
+                        "flash_percentage": 80,
+                        "ram_bytes": 51292,
+                        "ram_percentage": 16
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 598472,
+                        "flash_percentage": 46,
+                        "ram_bytes": 22896,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 596766,
+                        "flash_percentage": 46,
+                        "ram_bytes": 22896,
+                        "ram_percentage": 7
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 1113539,
+                        "flash_percentage": 85,
+                        "ram_bytes": 48208,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/FFat/examples",
+                "sizes": [{
+                        "flash_bytes": 357150,
+                        "flash_percentage": 27,
+                        "ram_bytes": 18064,
+                        "ram_percentage": 6
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 252274,
-                        "flash_percentage": 19,
-                        "ram_bytes": 13760,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 252710,
-                        "flash_percentage": 19,
-                        "ram_bytes": 13768,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 252544,
-                        "flash_percentage": 19,
-                        "ram_bytes": 13768,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/Serial",
-                "sizes": [{
-                        "flash_bytes": 252274,
-                        "flash_percentage": 19,
-                        "ram_bytes": 13784,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/Serial",
                 "sizes": [{
                         "flash_bytes": 253034,
@@ -600,44 +576,52 @@
                         "ram_bytes": 41076,
                         "ram_percentage": 13
                         }]
+                },
+{"name": "libraries/ESP_NOW/examples",
+                "sizes": [{
+                        "flash_bytes": 963826,
+                        "flash_percentage": 74,
+                        "ram_bytes": 41076,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/ESPmDNS/examples",
+                "sizes": [{
+                        "flash_bytes": 984042,
+                        "flash_percentage": 75,
+                        "ram_bytes": 43220,
+                        "ram_percentage": 13
+                        }]
+                },
+{"name": "libraries/ESPmDNS/examples",
+                "sizes": [{
+                        "flash_bytes": 1006828,
+                        "flash_percentage": 77,
+                        "ram_bytes": 44508,
+                        "ram_percentage": 14
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 559264,
+                        "flash_percentage": 43,
+                        "ram_bytes": 19908,
+                        "ram_percentage": 6
+                        }]
+                },
+{"name": "libraries/Ethernet/examples",
+                "sizes": [{
+                        "flash_bytes": 557582,
+                        "flash_percentage": 43,
+                        "ram_bytes": 19908,
+                        "ram_percentage": 6
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/ESP32/examples/RMT",
-                "sizes": [{
-                        "flash_bytes": 280408,
-                        "flash_percentage": 21,
-                        "ram_bytes": 13824,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT",
-                "sizes": [{
-                        "flash_bytes": 298496,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15388,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT",
-                "sizes": [{
-                        "flash_bytes": 300182,
-                        "flash_percentage": 23,
-                        "ram_bytes": 16812,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/RMT",
-                "sizes": [{
-                        "flash_bytes": 299094,
-                        "flash_percentage": 23,
-                        "ram_bytes": 15260,
-                        "ram_percentage": 5
-                        }]
-                },
 {"name": "libraries/ESP32/examples/RMT",
                 "sizes": [{
                         "flash_bytes": 297606,
@@ -707,6 +691,46 @@
                         "flash_bytes": 276820,
                         "flash_percentage": 21,
                         "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial",
+                "sizes": [{
+                        "flash_bytes": 280354,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13704,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial",
+                "sizes": [{
+                        "flash_bytes": 280348,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13720,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial",
+                "sizes": [{
+                        "flash_bytes": 278854,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13696,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial",
+                "sizes": [{
+                        "flash_bytes": 277734,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13680,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/Serial",
+                "sizes": [{
+                        "flash_bytes": 278264,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13688,
                         "ram_percentage": 4
                         }]
                 }

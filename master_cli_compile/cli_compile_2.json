@@ -302,22 +302,6 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/AnalogOut",
                 "sizes": [{
-                        "flash_bytes": 284820,
-                        "flash_percentage": 22,
-                        "ram_bytes": 17428,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut",
-                "sizes": [{
-                        "flash_bytes": 279100,
-                        "flash_percentage": 21,
-                        "ram_bytes": 17288,
-                        "ram_percentage": 5
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut",
-                "sizes": [{
                         "flash_bytes": 286932,
                         "flash_percentage": 22,
                         "ram_bytes": 17420,
@@ -451,28 +435,36 @@
                         "ram_bytes": 17976,
                         "ram_percentage": 5
                         }]
+                },
+{"name": "libraries/ESP32/examples/GPIO",
+                "sizes": [{
+                        "flash_bytes": 299208,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17976,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples",
+                "sizes": [{
+                        "flash_bytes": 324818,
+                        "flash_percentage": 25,
+                        "ram_bytes": 17980,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/MacAddress",
+                "sizes": [{
+                        "flash_bytes": 296644,
+                        "flash_percentage": 23,
+                        "ram_bytes": 17432,
+                        "ram_percentage": 5
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
-{"name": "libraries/ESP32/examples/AnalogOut",
-                "sizes": [{
-                        "flash_bytes": 243850,
-                        "flash_percentage": 19,
-                        "ram_bytes": 13936,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/ESP32/examples/AnalogOut",
-                "sizes": [{
-                        "flash_bytes": 238324,
-                        "flash_percentage": 18,
-                        "ram_bytes": 13768,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/AnalogOut",
                 "sizes": [{
                         "flash_bytes": 245954,
@@ -608,28 +600,36 @@
                         "ram_bytes": 14472,
                         "ram_percentage": 4
                         }]
+                },
+{"name": "libraries/ESP32/examples/GPIO",
+                "sizes": [{
+                        "flash_bytes": 258528,
+                        "flash_percentage": 20,
+                        "ram_bytes": 14472,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples",
+                "sizes": [{
+                        "flash_bytes": 285292,
+                        "flash_percentage": 22,
+                        "ram_bytes": 15060,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/MacAddress",
+                "sizes": [{
+                        "flash_bytes": 255970,
+                        "flash_percentage": 20,
+                        "ram_bytes": 13912,
+                        "ram_percentage": 4
+                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
-{"name": "libraries/EEPROM/examples",
-                "sizes": [{
-                        "flash_bytes": 291954,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13736,
-                        "ram_percentage": 4
-                        }]
-                },
-{"name": "libraries/EEPROM/examples",
-                "sizes": [{
-                        "flash_bytes": 287568,
-                        "flash_percentage": 22,
-                        "ram_bytes": 13744,
-                        "ram_percentage": 4
-                        }]
-                },
 {"name": "libraries/ESP32/examples/AnalogOut",
                 "sizes": [{
                         "flash_bytes": 291490,
@@ -716,6 +716,30 @@
                         "flash_percentage": 21,
                         "ram_bytes": 13680,
                         "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/CI",
+                "sizes": [{
+                        "flash_bytes": 331024,
+                        "flash_percentage": 25,
+                        "ram_bytes": 16236,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/ESP32/examples/ChipID",
+                "sizes": [{
+                        "flash_bytes": 278350,
+                        "flash_percentage": 21,
+                        "ram_bytes": 13728,
+                        "ram_percentage": 4
+                        }]
+                },
+{"name": "libraries/ESP32/examples/FreeRTOS",
+                "sizes": [{
+                        "flash_bytes": 312310,
+                        "flash_percentage": 24,
+                        "ram_bytes": 15040,
+                        "ram_percentage": 5
                         }]
                 }
 ]

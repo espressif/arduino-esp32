@@ -294,6 +294,22 @@
                 "sketches": [
 {"name": "libraries/WiFi/examples",
                 "sizes": [{
+                        "flash_bytes": 1012539,
+                        "flash_percentage": 77,
+                        "ram_bytes": 47876,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WiFi/examples",
+                "sizes": [{
+                        "flash_bytes": 1030863,
+                        "flash_percentage": 79,
+                        "ram_bytes": 49024,
+                        "ram_percentage": 15
+                        }]
+                },
+{"name": "libraries/WiFi/examples",
+                "sizes": [{
                         "flash_bytes": 1250737,
                         "flash_percentage": 95,
                         "ram_bytes": 48620,
@@ -435,20 +451,28 @@
                         "ram_bytes": 49604,
                         "ram_percentage": 15
                         }]
-                },
-{"name": "libraries/WiFi/examples",
-                "sizes": [{
-                        "flash_bytes": 1002489,
-                        "flash_percentage": 76,
-                        "ram_bytes": 49212,
-                        "ram_percentage": 15
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32c6",
                 "target": "esp32c6",
                 "sketches": [
+{"name": "libraries/WiFi/examples/FTM",
+                "sizes": [{
+                        "flash_bytes": 945848,
+                        "flash_percentage": 72,
+                        "ram_bytes": 40772,
+                        "ram_percentage": 12
+                        }]
+                },
+{"name": "libraries/WiFi/examples",
+                "sizes": [{
+                        "flash_bytes": 987738,
+                        "flash_percentage": 75,
+                        "ram_bytes": 42848,
+                        "ram_percentage": 13
+                        }]
+                },
 {"name": "libraries/WiFi/examples",
                 "sizes": [{
                         "flash_bytes": 968878,
@@ -592,20 +616,28 @@
                         "ram_bytes": 40780,
                         "ram_percentage": 12
                         }]
-                },
-{"name": "libraries/WiFi/examples",
-                "sizes": [{
-                        "flash_bytes": 986762,
-                        "flash_percentage": 75,
-                        "ram_bytes": 41100,
-                        "ram_percentage": 13
-                        }]
                 }
 ]
 },
 { "board": "espressif:esp32:esp32h2",
                 "target": "esp32h2",
                 "sketches": [
+{"name": "libraries/Wire/examples",
+                "sizes": [{
+                        "flash_bytes": 306426,
+                        "flash_percentage": 23,
+                        "ram_bytes": 15104,
+                        "ram_percentage": 5
+                        }]
+                },
+{"name": "libraries/Wire/examples",
+                "sizes": [{
+                        "flash_bytes": 306146,
+                        "flash_percentage": 23,
+                        "ram_bytes": 15096,
+                        "ram_percentage": 5
+                        }]
+                },
 {"name": "libraries/Wire/examples",
                 "sizes": [{
                         "flash_bytes": 306748,
@@ -700,14 +732,6 @@
                         "flash_percentage": 45,
                         "ram_bytes": 30944,
                         "ram_percentage": 9
-                        }]
-                },
-{"name": "libraries/Zigbee/examples",
-                "sizes": [{
-                        "flash_bytes": 711789,
-                        "flash_percentage": 54,
-                        "ram_bytes": 34908,
-                        "ram_percentage": 11
                         }]
                 }
 ]
