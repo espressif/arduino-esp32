@@ -3,9 +3,7 @@ import re
 
 LOGGER = logging.getLogger(__name__)
 
-RX_RESULT_RE = re.compile(
-    r"\[RECEIVER\] (\S+) matches=(\d+) full_ramps=(\d+) zeros=(\d+) total=(\d+)"
-)
+RX_RESULT_RE = re.compile(r"\[RECEIVER\] (\S+) matches=(\d+) full_ramps=(\d+) zeros=(\d+) total=(\d+)")
 
 
 def _g(match, n=0):
@@ -32,17 +30,14 @@ def _assert_ramp(result, phase, min_matches=48, min_full_ramps=1, max_zeros_pct=
     total = result["total"]
 
     LOGGER.info(
-        f"{phase}: matches={matches}/64 full_ramps={full_ramps} "
-        f"zeros={zeros}/{total} ({100*zeros//max(total,1)}%)"
+        f"{phase}: matches={matches}/64 full_ramps={full_ramps} " f"zeros={zeros}/{total} ({100*zeros//max(total,1)}%)"
     )
 
     assert total > 0, f"{phase}: receiver got no data"
-    assert matches >= min_matches, (
-        f"{phase}: best window too low: {matches}/64 (need >= {min_matches})"
-    )
-    assert full_ramps >= min_full_ramps, (
-        f"{phase}: no complete ramp found (full_ramps={full_ramps}, need >= {min_full_ramps})"
-    )
+    assert matches >= min_matches, f"{phase}: best window too low: {matches}/64 (need >= {min_matches})"
+    assert (
+        full_ramps >= min_full_ramps
+    ), f"{phase}: no complete ramp found (full_ramps={full_ramps}, need >= {min_full_ramps})"
     if total > 0:
         zeros_pct = 100 * zeros // total
         assert zeros_pct <= max_zeros_pct, (
@@ -51,10 +46,9 @@ def _assert_ramp(result, phase, min_matches=48, min_full_ramps=1, max_zeros_pct=
         )
 
 
-def _run_loopback(sender, receiver, phase_name,
-                  tx_cmd, tx_clocking, tx_done,
-                  rx_cmd, rx_listening, rx_done_tag,
-                  **assert_kwargs):
+def _run_loopback(
+    sender, receiver, phase_name, tx_cmd, tx_clocking, tx_done, rx_cmd, rx_listening, rx_done_tag, **assert_kwargs
+):
     """Run a single loopback phase with master-first startup."""
     LOGGER.info(f"{phase_name}...")
     sender.write(tx_cmd)
@@ -90,30 +84,54 @@ def test_i2s(dut):
 
     # --- Phase 1: mono loopback (default slot, 16kHz, 16-bit) ---
     _run_loopback(
-        sender, receiver, "Phase 1: mono 16kHz/16-bit (default slot)",
-        "START_TX", "[SENDER] TX_CLOCKING", "[SENDER] TX_DONE",
-        "START_RX", "[RECEIVER] RX_LISTENING", "RX_DONE",
+        sender,
+        receiver,
+        "Phase 1: mono 16kHz/16-bit (default slot)",
+        "START_TX",
+        "[SENDER] TX_CLOCKING",
+        "[SENDER] TX_DONE",
+        "START_RX",
+        "[RECEIVER] RX_LISTENING",
+        "RX_DONE",
     )
 
     # --- Phase 2: stereo → mono right-slot (16kHz, 16-bit) ---
     _run_loopback(
-        sender, receiver, "Phase 2: stereo→mono right-slot",
-        "START_TX_STEREO_RAMP", "[SENDER] TX_STEREO_CLOCKING", "[SENDER] TX_STEREO_DONE",
-        "START_RX_RIGHT", "[RECEIVER] RX_RIGHT_LISTENING", "RX_RIGHT_DONE",
+        sender,
+        receiver,
+        "Phase 2: stereo→mono right-slot",
+        "START_TX_STEREO_RAMP",
+        "[SENDER] TX_STEREO_CLOCKING",
+        "[SENDER] TX_STEREO_DONE",
+        "START_RX_RIGHT",
+        "[RECEIVER] RX_RIGHT_LISTENING",
+        "RX_RIGHT_DONE",
     )
 
     # --- Phase 3: stereo → mono left-slot (16kHz, 16-bit) ---
     _run_loopback(
-        sender, receiver, "Phase 3: stereo→mono left-slot",
-        "START_TX_LEFT_RAMP", "[SENDER] TX_LEFT_CLOCKING", "[SENDER] TX_LEFT_DONE",
-        "START_RX_LEFT", "[RECEIVER] RX_LEFT_LISTENING", "RX_LEFT_DONE",
+        sender,
+        receiver,
+        "Phase 3: stereo→mono left-slot",
+        "START_TX_LEFT_RAMP",
+        "[SENDER] TX_LEFT_CLOCKING",
+        "[SENDER] TX_LEFT_DONE",
+        "START_RX_LEFT",
+        "[RECEIVER] RX_LEFT_LISTENING",
+        "RX_LEFT_DONE",
     )
 
     # --- Phase 4: mono RIGHT TX → RIGHT RX (16kHz, 16-bit) ---
     _run_loopback(
-        sender, receiver, "Phase 4: mono RIGHT TX→RIGHT RX",
-        "START_TX_MONO_RIGHT", "[SENDER] TX_MONO_RIGHT_CLOCKING", "[SENDER] TX_MONO_RIGHT_DONE",
-        "START_RX_RIGHT", "[RECEIVER] RX_RIGHT_LISTENING", "RX_RIGHT_DONE",
+        sender,
+        receiver,
+        "Phase 4: mono RIGHT TX→RIGHT RX",
+        "START_TX_MONO_RIGHT",
+        "[SENDER] TX_MONO_RIGHT_CLOCKING",
+        "[SENDER] TX_MONO_RIGHT_DONE",
+        "START_RX_RIGHT",
+        "[RECEIVER] RX_RIGHT_LISTENING",
+        "RX_RIGHT_DONE",
     )
 
     # --- Parameterized rate x width x mode bounds matrix ---
@@ -129,7 +147,9 @@ def test_i2s(dut):
             for ch, ch_name in modes:
                 name = f"Phase {phase}: {ch_name} {rate}Hz/{width}-bit"
                 _run_loopback(
-                    sender, receiver, name,
+                    sender,
+                    receiver,
+                    name,
                     f"TX {rate} {width} {ch}",
                     "[SENDER] TX_PARAM_CLOCKING",
                     "[SENDER] TX_PARAM_DONE",
@@ -150,7 +170,9 @@ def test_i2s(dut):
         for slot_val, slot_name in slots:
             name = f"Phase {phase}: mono {width}-bit slot={slot_name}"
             _run_loopback(
-                sender, receiver, name,
+                sender,
+                receiver,
+                name,
                 f"TX 16000 {width} 1 {slot_val}",
                 "[SENDER] TX_PARAM_CLOCKING",
                 "[SENDER] TX_PARAM_DONE",
@@ -165,7 +187,9 @@ def test_i2s(dut):
     # RX mono LEFT reads the L ramp (ramp_type=0).
     name = f"Phase {phase}: stereo 16-bit TX=LEFT → mono RX=LEFT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 2 1",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -179,7 +203,9 @@ def test_i2s(dut):
     # RX mono RIGHT reads the R ramp (ramp_type=1).
     name = f"Phase {phase}: stereo 16-bit TX=RIGHT → mono RX=RIGHT (R ramp)"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 2 2",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -193,7 +219,9 @@ def test_i2s(dut):
     # TX sends mono with BOTH (data on L and R), RX receives with LEFT only.
     name = f"Phase {phase}: mono 16-bit TX=BOTH RX=LEFT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 1 3",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -206,7 +234,9 @@ def test_i2s(dut):
     # --- Cross-slot loopback: TX mono BOTH → RX mono RIGHT ---
     name = f"Phase {phase}: mono 16-bit TX=BOTH RX=RIGHT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 1 3",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -220,7 +250,9 @@ def test_i2s(dut):
     # Verifies the new configureRX slot_mask parameter in a live loopback.
     name = f"Phase {phase}: configureRX 16-bit LEFT→RIGHT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 1 2",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -233,7 +265,9 @@ def test_i2s(dut):
     # --- configureRX slot change: begin RIGHT → configureRX LEFT ---
     name = f"Phase {phase}: configureRX 16-bit RIGHT→LEFT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 1 1",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -246,7 +280,9 @@ def test_i2s(dut):
     # --- configureRX slot change at 32-bit (no HW v1 workaround) ---
     name = f"Phase {phase}: configureRX 32-bit LEFT→RIGHT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 32 1 2",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -262,7 +298,9 @@ def test_i2s(dut):
     # is received. If the old bug resets to LEFT, it would see the muted channel.
     name = f"Phase {phase}: configureRX default slot preserves RIGHT"
     _run_loopback(
-        sender, receiver, name,
+        sender,
+        receiver,
+        name,
         "TX 16000 16 1 2",
         "[SENDER] TX_PARAM_CLOCKING",
         "[SENDER] TX_PARAM_DONE",
@@ -314,9 +352,7 @@ def test_i2s(dut):
         sender.expect_exact("[SENDER] TX_TDM_CLOCKING", timeout=10)
 
         receiver.write("START_RX_TDM")
-        m_rx = receiver.expect(
-            r"\[RECEIVER\] RX_TDM_(LISTENING|SKIP|FAIL.*)", timeout=10
-        )
+        m_rx = receiver.expect(r"\[RECEIVER\] RX_TDM_(LISTENING|SKIP|FAIL.*)", timeout=10)
         if "LISTENING" in _g(m_rx):
             sender.expect_exact("[SENDER] TX_TDM_DONE", timeout=30)
             r = _expect_rx(receiver, "RX_TDM_DONE")

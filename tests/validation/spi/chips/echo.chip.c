@@ -20,13 +20,13 @@
 #define MAX_BUF 512
 
 typedef struct {
-  pin_t    cs_pin;
+  pin_t cs_pin;
   uint32_t spi;
-  uint8_t  spi_buf[1];   // 1-byte window used for continuous byte-by-byte operation
-  uint8_t  rx_buf[MAX_BUF]; // bytes received during current CS transaction
-  uint8_t  tx_buf[MAX_BUF]; // bytes to send during next CS transaction (echo of previous RX)
-  uint32_t rx_idx;           // write cursor for rx_buf during a transaction
-  uint32_t tx_idx;           // read cursor for tx_buf during a transaction
+  uint8_t spi_buf[1];       // 1-byte window used for continuous byte-by-byte operation
+  uint8_t rx_buf[MAX_BUF];  // bytes received during current CS transaction
+  uint8_t tx_buf[MAX_BUF];  // bytes to send during next CS transaction (echo of previous RX)
+  uint32_t rx_idx;          // write cursor for rx_buf during a transaction
+  uint32_t tx_idx;          // read cursor for tx_buf during a transaction
 } chip_state_t;
 
 static void chip_pin_change(void *user_data, pin_t pin, uint32_t value);
@@ -42,17 +42,17 @@ void chip_init(void) {
   chip->cs_pin = pin_init("CS", INPUT_PULLUP);
 
   const pin_watch_config_t watch_config = {
-    .edge      = BOTH,
+    .edge = BOTH,
     .pin_change = chip_pin_change,
-    .user_data  = chip,
+    .user_data = chip,
   };
   pin_watch(chip->cs_pin, &watch_config);
 
   const spi_config_t spi_config = {
-    .sck      = pin_init("SCK",  INPUT),
-    .miso     = pin_init("MISO", INPUT),
-    .mosi     = pin_init("MOSI", INPUT),
-    .done     = chip_spi_done,
+    .sck = pin_init("SCK", INPUT),
+    .miso = pin_init("MISO", INPUT),
+    .mosi = pin_init("MOSI", INPUT),
+    .done = chip_spi_done,
     .user_data = chip,
   };
   chip->spi = spi_init(&spi_config);

@@ -17,7 +17,7 @@
 #elif CONFIG_IDF_TARGET_ESP32S2
 #define I2S_BCLK 4
 #define I2S_WS   5
-#define I2S_DOUT 19   /* not GPIO18 (LED_BUILTIN / DAC2) */
+#define I2S_DOUT 19 /* not GPIO18 (LED_BUILTIN / DAC2) */
 #elif CONFIG_IDF_TARGET_ESP32S3
 #define I2S_BCLK 4
 #define I2S_WS   5

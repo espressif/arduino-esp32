@@ -36,23 +36,30 @@ struct RxVerifyResult {
 };
 
 static void reportResult(const char *tag, const RxVerifyResult &r) {
-  Serial.printf("[RECEIVER] %s matches=%d full_ramps=%d zeros=%d total=%u\n",
-                tag, r.best_matches, r.full_ramps, r.zeros, (unsigned)r.total);
+  Serial.printf("[RECEIVER] %s matches=%d full_ramps=%d zeros=%d total=%u\n", tag, r.best_matches, r.full_ramps, r.zeros, (unsigned)r.total);
 }
 
 // --- Mono 16-bit ramp: sample[j] = j * 100 ---
 static RxVerifyResult verifyRamp16(const int16_t *buf, size_t n) {
   RxVerifyResult r = {0, 0, 0, n};
   for (size_t i = 0; i < n; i++) {
-    if (buf[i] == 0) r.zeros++;
+    if (buf[i] == 0) {
+      r.zeros++;
+    }
   }
   for (size_t f = 0; f + RAMP_LEN <= n; f++) {
     int m = 0;
     for (size_t j = 0; j < RAMP_LEN; j++) {
-      if (buf[f + j] == (int16_t)(j * 100)) m++;
+      if (buf[f + j] == (int16_t)(j * 100)) {
+        m++;
+      }
     }
-    if (m == (int)RAMP_LEN) r.full_ramps++;
-    if (m > r.best_matches) r.best_matches = m;
+    if (m == (int)RAMP_LEN) {
+      r.full_ramps++;
+    }
+    if (m > r.best_matches) {
+      r.best_matches = m;
+    }
   }
   return r;
 }
@@ -102,7 +109,9 @@ static RxVerifyResult verifyRampGeneric(const void *buf, size_t n_bytes, int bit
   RxVerifyResult r = {0, 0, 0, n_frames};
 
   for (size_t i = 0; i < n_samples; i++) {
-    if (getSample(buf, i, bits) == 0) r.zeros++;
+    if (getSample(buf, i, bits) == 0) {
+      r.zeros++;
+    }
   }
 
   for (size_t f = 0; f + RAMP_LEN <= n_frames; f++) {
@@ -112,26 +121,37 @@ static RxVerifyResult verifyRampGeneric(const void *buf, size_t n_bytes, int bit
 
       if (ch == 1) {
         int32_t exp;
-        if (ramp_type == 2) exp = expectedValAvg(j, bits);
-        else if (ramp_type == 1) exp = expectedValR(j, bits);
-        else exp = expectedVal(j, bits);
-        if (getSample(buf, idx, bits) == exp) m++;
+        if (ramp_type == 2) {
+          exp = expectedValAvg(j, bits);
+        } else if (ramp_type == 1) {
+          exp = expectedValR(j, bits);
+        } else {
+          exp = expectedVal(j, bits);
+        }
+        if (getSample(buf, idx, bits) == exp) {
+          m++;
+        }
       } else {
         int32_t exp_l = expectedVal(j, bits);
         int32_t exp_r = expectedValR(j, bits);
-        if (getSample(buf, idx, bits) == exp_l && getSample(buf, idx + 1, bits) == exp_r) m++;
+        if (getSample(buf, idx, bits) == exp_l && getSample(buf, idx + 1, bits) == exp_r) {
+          m++;
+        }
       }
     }
-    if (m == (int)RAMP_LEN) r.full_ramps++;
-    if (m > r.best_matches) r.best_matches = m;
+    if (m == (int)RAMP_LEN) {
+      r.full_ramps++;
+    }
+    if (m > r.best_matches) {
+      r.best_matches = m;
+    }
   }
 
   return r;
 }
 
 // Helper: run a mono 16-bit RX phase and report.
-static void rxMono16(const char *done_tag, const char *fail_tag, const char *listen_tag,
-                     uint32_t rate, int8_t slot_mask) {
+static void rxMono16(const char *done_tag, const char *fail_tag, const char *listen_tag, uint32_t rate, int8_t slot_mask) {
   i2s.setPins(I2S_BCLK, I2S_WS, -1, I2S_DIN);
   if (!i2s.begin(I2S_MODE_STD, rate, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, slot_mask, I2S_ROLE_SLAVE)) {
     Serial.printf("[RECEIVER] %s begin failed\n", fail_tag);
@@ -345,8 +365,7 @@ void loop() {
     } else if (cmd == "START_RX_TDM") {
 #if SOC_I2S_SUPPORTS_TDM
       i2s.setPins(I2S_BCLK, I2S_WS, -1, I2S_DIN);
-      if (!i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, I2S_TDM_SLOT0,
-                     I2S_ROLE_SLAVE)) {
+      if (!i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, I2S_TDM_SLOT0, I2S_ROLE_SLAVE)) {
         Serial.println("[RECEIVER] RX_TDM_FAIL begin failed");
         return;
       }

@@ -570,15 +570,13 @@ void test_i2s_configure_tx_mono_left_to_right(void) {
 
 void test_i2s_tdm_begin_end(void) {
   i2s.setPins(I2S_BCLK, I2S_WS, I2S_DOUT, -1);
-  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO,
-                             I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
+  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO, I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
   i2s.end();
 }
 
 void test_i2s_tdm_stereo_write(void) {
   i2s.setPins(I2S_BCLK, I2S_WS, I2S_DOUT, -1);
-  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO,
-                             I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
+  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO, I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
 
   // Interleaved stereo samples: even index = slot0, odd index = slot1
   int16_t buf[64];
@@ -593,8 +591,7 @@ void test_i2s_tdm_stereo_write(void) {
 
 void test_i2s_tdm_mono_write(void) {
   i2s.setPins(I2S_BCLK, I2S_WS, I2S_DOUT, -1);
-  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO,
-                             I2S_TDM_SLOT0));
+  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO, I2S_TDM_SLOT0));
 
   int16_t buf[32];
   for (int i = 0; i < 32; i++) {
@@ -609,8 +606,7 @@ void test_i2s_tdm_mono_write(void) {
 
 void test_i2s_tdm_32bit_write(void) {
   i2s.setPins(I2S_BCLK, I2S_WS, I2S_DOUT, -1);
-  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO,
-                             I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
+  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO, I2S_TDM_SLOT0 | I2S_TDM_SLOT1));
 
   int32_t buf[32];
   for (int i = 0; i < 32; i++) {
@@ -624,8 +620,7 @@ void test_i2s_tdm_32bit_write(void) {
 
 void test_i2s_tdm_slave_begin_end(void) {
   i2s.setPins(I2S_BCLK, I2S_WS, I2S_DOUT, -1);
-  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO,
-                             I2S_TDM_SLOT0 | I2S_TDM_SLOT1, I2S_ROLE_SLAVE));
+  TEST_ASSERT_TRUE(i2s.begin(I2S_MODE_TDM, 16000, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO, I2S_TDM_SLOT0 | I2S_TDM_SLOT1, I2S_ROLE_SLAVE));
   i2s.end();
 }
 
@@ -736,7 +731,7 @@ void handleSerialCommands(void) {
 
         int16_t stereo_buf[TX_SAMPLES * 2];
         for (size_t i = 0; i < TX_SAMPLES; i++) {
-          stereo_buf[i * 2]     = 0;
+          stereo_buf[i * 2] = 0;
           stereo_buf[i * 2 + 1] = (int16_t)(i * 100);
         }
 
@@ -793,7 +788,7 @@ void handleSerialCommands(void) {
 
         int16_t stereo_buf[TX_SAMPLES * 2];
         for (size_t i = 0; i < TX_SAMPLES; i++) {
-          stereo_buf[i * 2]     = (int16_t)(i * 100);
+          stereo_buf[i * 2] = (int16_t)(i * 100);
           stereo_buf[i * 2 + 1] = 0;
         }
 
