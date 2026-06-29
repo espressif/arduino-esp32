@@ -586,8 +586,15 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
       log_e("ledc_set_duty_and_update failed");
       return false;
     }
-    // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms)
-    while (ledc_get_duty(group, channel) != start_duty);
+    // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms) with timeout to prevent WDT
+    uint32_t timeout_ms = 100;
+    uint32_t start_time = millis();
+    while (ledc_get_duty(group, channel) != start_duty) {
+      if (millis() - start_time > timeout_ms) {
+        log_w("Timeout waiting for duty update on pin %u, duty may not match start_duty", pin);
+        break;
+      }
+    }
 
     if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
       log_e("ledc_set_fade_time_and_start failed");
