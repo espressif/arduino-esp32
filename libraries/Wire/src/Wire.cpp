@@ -510,13 +510,8 @@ size_t TwoWire::requestFrom(uint8_t address, size_t size, bool sendStop) {
   }
   if (size > bufferSize) {
     log_e("Requested %zu bytes but the buffer holds only %zu", size, bufferSize);
-    log_e("Set the buffer size with TwoWire.setBufferSize() before begin().");
-#if !CONFIG_DISABLE_HAL_LOCKS
-    currentTaskHandle = NULL;
-    //release lock
-    xSemaphoreGive(lock);
-#endif
-    return 0;
+    log_e("Either use TwoWire::setBufferSize() or Wire.setBufferSize()");
+    size = bufferSize;  // limit to the buffer size
   }
   if (nonStop) {
     if (address != txAddress) {
