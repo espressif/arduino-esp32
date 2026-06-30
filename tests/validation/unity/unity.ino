@@ -12,18 +12,22 @@
 // Workaround for C++ until bundled Unity picks up esp-idf cast fix
 // (Unity*ToPtr returns const void*; C++ rejects implicit conversion to float*/double*).
 #undef UNITY_TEST_ASSERT_EACH_EQUAL_FLOAT
-#define UNITY_TEST_ASSERT_EACH_EQUAL_FLOAT(expected, actual, num_elements, line, message) \
-  UnityAssertWithinFloatArray((UNITY_FLOAT)0, (const UNITY_FLOAT *)UnityFloatToPtr(expected), (const UNITY_FLOAT *)(actual), (UNITY_UINT32)(num_elements), (message), (UNITY_LINE_TYPE)(line), UNITY_ARRAY_TO_VAL)
+#define UNITY_TEST_ASSERT_EACH_EQUAL_FLOAT(expected, actual, num_elements, line, message)                                                   \
+  UnityAssertWithinFloatArray(                                                                                                              \
+    (UNITY_FLOAT)0, (const UNITY_FLOAT *)UnityFloatToPtr(expected), (const UNITY_FLOAT *)(actual), (UNITY_UINT32)(num_elements), (message), \
+    (UNITY_LINE_TYPE)(line), UNITY_ARRAY_TO_VAL                                                                                             \
+  )
 #undef TEST_ASSERT_EACH_EQUAL_FLOAT
-#define TEST_ASSERT_EACH_EQUAL_FLOAT(expected, actual, num_elements) \
-  UNITY_TEST_ASSERT_EACH_EQUAL_FLOAT((expected), (actual), (num_elements), __LINE__, NULL)
+#define TEST_ASSERT_EACH_EQUAL_FLOAT(expected, actual, num_elements) UNITY_TEST_ASSERT_EACH_EQUAL_FLOAT((expected), (actual), (num_elements), __LINE__, NULL)
 
 #undef UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE
-#define UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements, line, message) \
-  UnityAssertWithinDoubleArray((UNITY_DOUBLE)0, (const UNITY_DOUBLE *)UnityDoubleToPtr(expected), (const UNITY_DOUBLE *)(actual), (UNITY_UINT32)(num_elements), (message), (UNITY_LINE_TYPE)(line), UNITY_ARRAY_TO_VAL)
+#define UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements, line, message)                                                      \
+  UnityAssertWithinDoubleArray(                                                                                                                 \
+    (UNITY_DOUBLE)0, (const UNITY_DOUBLE *)UnityDoubleToPtr(expected), (const UNITY_DOUBLE *)(actual), (UNITY_UINT32)(num_elements), (message), \
+    (UNITY_LINE_TYPE)(line), UNITY_ARRAY_TO_VAL                                                                                                 \
+  )
 #undef TEST_ASSERT_EACH_EQUAL_DOUBLE
-#define TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements) \
-  UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE((expected), (actual), (num_elements), __LINE__, NULL)
+#define TEST_ASSERT_EACH_EQUAL_DOUBLE(expected, actual, num_elements) UNITY_TEST_ASSERT_EACH_EQUAL_DOUBLE((expected), (actual), (num_elements), __LINE__, NULL)
 
 static int setUpCallCount;
 static int tearDownCallCount;
