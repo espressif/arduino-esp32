@@ -9,6 +9,7 @@
   - The last one powered on should now find the other.
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 

@@ -5,6 +5,7 @@
 
 */
 
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 
@@ -77,7 +78,7 @@ void setup() {
   Serial.println();
 
   for (uint8_t t = 4; t > 0; t--) {
-    Serial.printf("[SETUP] WAIT %d...\n", t);
+    Serial.printf("[SETUP] WAIT %u...\n", t);
     Serial.flush();
     delay(1000);
   }

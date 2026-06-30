@@ -19,11 +19,8 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/event_groups.h"
-#if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
-#include <mutex>
-#endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
 
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 #include "esp_wifi_types.h"
 #include "esp_smartconfig.h"
 #if CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI
@@ -31,7 +28,7 @@
 #endif
 #endif
 
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 constexpr int WIFI_SCANNING_BIT = BIT0;
 constexpr int WIFI_SCAN_DONE_BIT = BIT1;
 #endif
@@ -49,7 +46,7 @@ typedef enum {
   ARDUINO_EVENT_ETH_GOT_IP,
   ARDUINO_EVENT_ETH_LOST_IP,
   ARDUINO_EVENT_ETH_GOT_IP6,
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
   ARDUINO_EVENT_WIFI_OFF = 100,
   ARDUINO_EVENT_WIFI_READY,
   ARDUINO_EVENT_WIFI_SCAN_DONE,
@@ -96,6 +93,11 @@ typedef enum {
   ARDUINO_EVENT_MAX
 } arduino_event_id_t;
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define ip_event_ap_staipassigned_t ip_event_assigned_ip_to_client_t
+#define IP_EVENT_AP_STAIPASSIGNED   IP_EVENT_ASSIGNED_IP_TO_CLIENT
+#endif
+
 typedef union {
   ip_event_ap_staipassigned_t wifi_ap_staipassigned;
   ip_event_got_ip_t got_ip;
@@ -107,7 +109,7 @@ typedef union {
   esp_eth_handle_t eth_connected;
   esp_eth_handle_t eth_disconnected;
 #endif
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
   wifi_event_sta_scan_done_t wifi_scan_done;
   wifi_event_sta_authmode_change_t wifi_sta_authmode_change;
   wifi_event_sta_connected_t wifi_sta_connected;
@@ -252,7 +254,7 @@ public:
   friend class ESP_NetworkInterface;
   friend class ETHClass;
   friend class PPPClass;
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
   friend class STAClass;
   friend class APClass;
   friend class WiFiGenericClass;
@@ -299,10 +301,30 @@ private:
   // registered events callbacks container
   std::vector<NetworkEventCbList_t> _cbEventList;
 
-#if defined NETWORK_EVENTS_MUTEX && SOC_CPU_CORES_NUM > 1
-  // container access mutex
-  std::mutex _mtx;
-#endif  // defined NETWORK_EVENTS_MUTEX &&  SOC_CPU_CORES_NUM > 1
+  // Protects _cbEventList from concurrent access. The event dispatch task
+  // (higher priority) can preempt the Arduino task during vector modifications,
+  // leading to corrupted reads. Created in initNetworkEvents() alongside the
+  // event task; NULL before that, which is safe because without the event task
+  // there is no concurrent access.
+  SemaphoreHandle_t _mtx = NULL;
+
+  /**
+   * @brief Lock the _mtx mutex
+   */
+  inline void _lock() {
+    if (_mtx) {
+      xSemaphoreTake(_mtx, portMAX_DELAY);
+    }
+  }
+
+  /**
+   * @brief Unlock the _mtx mutex
+   */
+  inline void _unlock() {
+    if (_mtx) {
+      xSemaphoreGive(_mtx);
+    }
+  }
 
   /**
    * @brief task function that picks events from an event queue and calls registered callbacks

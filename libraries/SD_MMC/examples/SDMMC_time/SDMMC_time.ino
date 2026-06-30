@@ -29,6 +29,7 @@
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD_MMC
  */
 
+#include <Arduino.h>
 #include "FS.h"
 #include "SD_MMC.h"
 #include "SPI.h"
@@ -268,7 +269,9 @@ void setup() {
   }
 
   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.print("SD Card Size: ");
+  Serial.print(cardSize);
+  Serial.println("MB");
 
   listDir(SD_MMC, "/", 0);
   removeDir(SD_MMC, "/mydir");

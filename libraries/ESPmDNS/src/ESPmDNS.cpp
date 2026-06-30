@@ -132,16 +132,25 @@ void MDNSResponder::disableArduino() {
   }
 }
 
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
 void MDNSResponder::enableWorkstation(esp_interface_t interface) {
+#else
+void MDNSResponder::enableWorkstation(wifi_interface_t interface) {
+#endif
   char winstance[21 + _hostname.length()];
   uint8_t mac[6];
 
   esp_mac_type_t mtype = ESP_MAC_ETH;
 #if SOC_WIFI_SUPPORTED
   switch (interface) {
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
     case ESP_IF_WIFI_STA: mtype = ESP_MAC_WIFI_STA; break;
     case ESP_IF_WIFI_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
-    default:              break;
+#else
+    case WIFI_IF_STA: mtype = ESP_MAC_WIFI_STA; break;
+    case WIFI_IF_AP:  mtype = ESP_MAC_WIFI_SOFTAP; break;
+#endif
+    default: break;
   }
 #endif
   if (esp_read_mac(mac, mtype) != ESP_OK) {
@@ -149,7 +158,7 @@ void MDNSResponder::enableWorkstation(esp_interface_t interface) {
     return;
   }
 
-  sprintf(winstance, "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(winstance, sizeof(winstance), "%s [%02x:%02x:%02x:%02x:%02x:%02x]", _hostname.c_str(), mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
   if (mdns_service_add(NULL, "_workstation", "_tcp", 9, NULL, 0)) {
     log_e("Failed adding Workstation service");
@@ -168,14 +177,14 @@ bool MDNSResponder::addService(char *name, char *proto, uint16_t port) {
   char _name[strlen(name) + 2];
   char _proto[strlen(proto) + 2];
   if (name[0] == '_') {
-    sprintf(_name, "%s", name);
+    snprintf(_name, sizeof(_name), "%s", name);
   } else {
-    sprintf(_name, "_%s", name);
+    snprintf(_name, sizeof(_name), "_%s", name);
   }
   if (proto[0] == '_') {
-    sprintf(_proto, "%s", proto);
+    snprintf(_proto, sizeof(_proto), "%s", proto);
   } else {
-    sprintf(_proto, "_%s", proto);
+    snprintf(_proto, sizeof(_proto), "_%s", proto);
   }
 
   if (mdns_service_add(NULL, _name, _proto, port, NULL, 0)) {
@@ -189,14 +198,14 @@ bool MDNSResponder::addServiceTxt(char *name, char *proto, char *key, char *valu
   char _name[strlen(name) + 2];
   char _proto[strlen(proto) + 2];
   if (name[0] == '_') {
-    sprintf(_name, "%s", name);
+    snprintf(_name, sizeof(_name), "%s", name);
   } else {
-    sprintf(_name, "_%s", name);
+    snprintf(_name, sizeof(_name), "_%s", name);
   }
   if (proto[0] == '_') {
-    sprintf(_proto, "%s", proto);
+    snprintf(_proto, sizeof(_proto), "%s", proto);
   } else {
-    sprintf(_proto, "_%s", proto);
+    snprintf(_proto, sizeof(_proto), "_%s", proto);
   }
 
   if (mdns_service_txt_item_set(_name, _proto, key, value)) {
@@ -236,14 +245,14 @@ int MDNSResponder::queryService(char *service, char *proto) {
   char srv[strlen(service) + 2];
   char prt[strlen(proto) + 2];
   if (service[0] == '_') {
-    sprintf(srv, "%s", service);
+    snprintf(srv, sizeof(srv), "%s", service);
   } else {
-    sprintf(srv, "_%s", service);
+    snprintf(srv, sizeof(srv), "_%s", service);
   }
   if (proto[0] == '_') {
-    sprintf(prt, "%s", proto);
+    snprintf(prt, sizeof(prt), "%s", proto);
   } else {
-    sprintf(prt, "_%s", proto);
+    snprintf(prt, sizeof(prt), "_%s", proto);
   }
 
   esp_err_t err = mdns_query_ptr(srv, prt, 3000, 20, &results);

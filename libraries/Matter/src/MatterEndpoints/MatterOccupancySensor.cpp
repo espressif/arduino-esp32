@@ -180,7 +180,7 @@ bool MatterOccupancySensor::attributeChangeCB(uint16_t endpoint_id, uint32_t clu
     return false;
   }
 
-  log_d("Occupancy Sensor Attr update callback: endpoint: %u, cluster: %u, attribute: %u", endpoint_id, cluster_id, attribute_id);
+  log_d("Occupancy Sensor Attr update callback: endpoint: %u, cluster: %" PRIu32 ", attribute: %" PRIu32, endpoint_id, cluster_id, attribute_id);
 
   // Note: HoldTime writes are handled by OccupancySensingAttrAccessWrapper::Write()
   // since HoldTime is MANAGED_INTERNALLY and doesn't go through the normal esp-matter callback path
@@ -206,7 +206,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   // Initial HoldTime value is 0 (can be set later via setHoldTime() or setHoldTimeLimits())
   holdTime_seconds = 0;
   if (getEndPointId() != 0) {
-    log_e("Matter Occupancy Sensor with Endpoint Id %d device has already been created.", getEndPointId());
+    log_e("Matter Occupancy Sensor with Endpoint Id %u device has already been created.", getEndPointId());
     return false;
   }
   occupancy_sensor::config_t occupancy_sensor_config;
@@ -281,7 +281,7 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
     log_e("Failed to get Occupancy Sensing cluster");
   }
 
-  log_i("Occupancy Sensor created with endpoint_id %d", getEndPointId());
+  log_i("Occupancy Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;
   return true;
@@ -407,11 +407,6 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
     return false;
   }
 
-  // Update member variables immediately
-  holdTimeMin_seconds = _holdTimeMin_seconds;
-  holdTimeMax_seconds = _holdTimeMax_seconds;
-  holdTimeDefault_seconds = _holdTimeDefault_seconds;
-
   // Check if current HoldTime is outside the new limits and adjust if necessary
   uint16_t adjustedHoldTime = holdTime_seconds;
   bool holdTimeAdjusted = false;
@@ -429,13 +424,14 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   uint16_t endpoint_id = getEndPointId();
   CHIP_ERROR schedule_err;
 
+  // Schedule the attribute store update on the Matter event loop.
+  // Lambdas capture all values by copy, so they don't depend on member state.
   if (holdTimeAdjusted) {
     // Schedule both limits and HoldTime updates together
     schedule_err = chip::DeviceLayer::SystemLayer().ScheduleLambda([endpoint_id, min = _holdTimeMin_seconds, max = _holdTimeMax_seconds,
                                                                     def = _holdTimeDefault_seconds, holdTime = adjustedHoldTime]() {
       SetHoldTimeLimitsAndHoldTimeInEventLoop(endpoint_id, min, max, def, holdTime);
     });
-    holdTime_seconds = adjustedHoldTime;
   } else {
     // No adjustment needed, just schedule the limits update
     schedule_err =
@@ -447,6 +443,15 @@ bool MatterOccupancySensor::setHoldTimeLimits(uint16_t _holdTimeMin_seconds, uin
   if (schedule_err != CHIP_NO_ERROR) {
     log_e("Failed to schedule HoldTimeLimits update: %" CHIP_ERROR_FORMAT, schedule_err.Format());
     return false;
+  }
+
+  // Commit to internal state only after scheduling succeeds,
+  // so that on failure the member variables remain unchanged (Ember pattern).
+  holdTimeMin_seconds = _holdTimeMin_seconds;
+  holdTimeMax_seconds = _holdTimeMax_seconds;
+  holdTimeDefault_seconds = _holdTimeDefault_seconds;
+  if (holdTimeAdjusted) {
+    holdTime_seconds = adjustedHoldTime;
   }
 
   log_v("HoldTimeLimits scheduled for update: Min=%u, Max=%u, Default=%u seconds", _holdTimeMin_seconds, _holdTimeMax_seconds, _holdTimeDefault_seconds);

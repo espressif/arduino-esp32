@@ -22,22 +22,23 @@
  * Note:  The SPI pins can be manually configured by using `SPI.begin(sck, miso, mosi, cs).`
  *        Alternatively, you can change the CS pin and use the other default settings by using `SD.begin(cs)`.
  *
- * +--------------+---------+-------+----------+----------+----------+----------+----------+
- * | SPI Pin Name | ESP8266 | ESP32 | ESP32‑S2 | ESP32‑S3 | ESP32‑C3 | ESP32‑C6 | ESP32‑H2 |
- * +==============+=========+=======+==========+==========+==========+==========+==========+
- * | CS (SS)      | GPIO15  | GPIO5 | GPIO34   | GPIO10   | GPIO7    | GPIO18   | GPIO0    |
- * +--------------+---------+-------+----------+----------+----------+----------+----------+
- * | DI (MOSI)    | GPIO13  | GPIO23| GPIO35   | GPIO11   | GPIO6    | GPIO19   | GPIO25   |
- * +--------------+---------+-------+----------+----------+----------+----------+----------+
- * | DO (MISO)    | GPIO12  | GPIO19| GPIO37   | GPIO13   | GPIO5    | GPIO20   | GPIO11   |
- * +--------------+---------+-------+----------+----------+----------+----------+----------+
- * | SCK (SCLK)   | GPIO14  | GPIO18| GPIO36   | GPIO12   | GPIO4    | GPIO21   | GPIO10   |
- * +--------------+---------+-------+----------+----------+----------+----------+----------+
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+----------+
+ * | SPI Pin Name | ESP8266 | ESP32 | ESP32‑S2 | ESP32‑S3 | ESP32‑C3 | ESP32‑C6 | ESP32‑H2 | ESP32‑C5 |
+ * +==============+=========+=======+==========+==========+==========+==========+==========+==========+
+ * | CS (SS)      | GPIO15  | GPIO5 | GPIO34   | GPIO10   | GPIO7    | GPIO18   | GPIO0    | GPIO6    |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+----------+
+ * | DI (MOSI)    | GPIO13  | GPIO23| GPIO35   | GPIO11   | GPIO6    | GPIO19   | GPIO25   | GPIO8    |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+----------+
+ * | DO (MISO)    | GPIO12  | GPIO19| GPIO37   | GPIO13   | GPIO5    | GPIO20   | GPIO11   | GPIO9    |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+----------+
+ * | SCK (SCLK)   | GPIO14  | GPIO18| GPIO36   | GPIO12   | GPIO4    | GPIO21   | GPIO10   | GPIO10   |
+ * +--------------+---------+-------+----------+----------+----------+----------+----------+----------+
  *
  * For more info see file README.md in this library or on URL:
  * https://github.com/espressif/arduino-esp32/tree/master/libraries/SD
  */
 
+#include <Arduino.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
@@ -185,7 +186,7 @@ void testFileIO(fs::FS &fs, const char *path) {
       len -= toRead;
     }
     end = millis() - start;
-    Serial.printf("%zu bytes read for %lu ms\n", flen, end);
+    Serial.printf("%lu bytes read for %" PRIu32 " ms\n", (unsigned long)flen, end);
     file.close();
   } else {
     Serial.println("Failed to open file for reading");
@@ -203,7 +204,7 @@ void testFileIO(fs::FS &fs, const char *path) {
     file.write(buf, 512);
   }
   end = millis() - start;
-  Serial.printf("%u bytes written for %lu ms\n", 2048 * 512, end);
+  Serial.printf("%u bytes written for %" PRIu32 " ms\n", 2048 * 512, end);
   file.close();
 }
 
@@ -238,7 +239,9 @@ void setup() {
   }
 
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+  Serial.print("SD Card Size: ");
+  Serial.print(cardSize);
+  Serial.println("MB");
 
   listDir(SD, "/", 0);
   createDir(SD, "/mydir");
@@ -252,8 +255,13 @@ void setup() {
   renameFile(SD, "/hello.txt", "/foo.txt");
   readFile(SD, "/foo.txt");
   testFileIO(SD, "/test.txt");
-  Serial.printf("Total space: %lluMB\n", SD.totalBytes() / (1024 * 1024));
-  Serial.printf("Used space: %lluMB\n", SD.usedBytes() / (1024 * 1024));
+
+  Serial.print("Total space: ");
+  Serial.print(SD.totalBytes() / (1024 * 1024));
+  Serial.println("MB");
+  Serial.print("Used space: ");
+  Serial.print(SD.usedBytes() / (1024 * 1024));
+  Serial.println("MB");
 }
 
 void loop() {}

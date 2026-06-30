@@ -74,7 +74,7 @@ jobs:
         if: ${{ steps.check-tests.outputs.enabled == 'true' }}
         run: |
           pip install -U pip
-          pip install -r tests/requirements.txt --extra-index-url https://dl.espressif.com/pypi
+          pip install -r tests/requirements.txt
 
       - name: Install APT dependencies
         uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40 # v1.4.3

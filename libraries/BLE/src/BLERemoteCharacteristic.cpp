@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLERemoteCharacteristic.cpp
  *
  *  Created on: Jul 8, 2017
@@ -19,6 +38,7 @@
  ***************************************************************************/
 
 #include <esp_err.h>
+#include <inttypes.h>
 
 #include <sstream>
 #include "WString.h"
@@ -126,7 +146,7 @@ std::map<std::string, BLERemoteDescriptor *> *BLERemoteCharacteristic::getDescri
  */
 uint16_t BLERemoteCharacteristic::getHandle() {
   //log_v(">> getHandle: Characteristic: %s", getUUID().toString().c_str());
-  //log_v("<< getHandle: %d 0x%.2x", m_handle, m_handle);
+  //log_v("<< getHandle: %u 0x%.2x", m_handle, m_handle);
   return m_handle;
 }  // getHandle
 
@@ -308,7 +328,7 @@ String BLERemoteCharacteristic::toString() {
   String res = "Characteristic: uuid: " + m_uuid.toString();
   char val[6];
   res += ", handle: ";
-  snprintf(val, sizeof(val), "%d", getHandle());
+  snprintf(val, sizeof(val), "%u", getHandle());
   res += val;
   res += " 0x";
   snprintf(val, sizeof(val), "%04x", getHandle());
@@ -369,7 +389,7 @@ void BLERemoteCharacteristic::setAuth(uint8_t auth) {
  * @param [in] pRemoteService A reference to the remote service to which this remote characteristic pertains.
  */
 BLERemoteCharacteristic::BLERemoteCharacteristic(uint16_t handle, BLEUUID uuid, esp_gatt_char_prop_t charProp, BLERemoteService *pRemoteService) {
-  log_v(">> BLERemoteCharacteristic: handle: %d 0x%d, uuid: %s", handle, handle, uuid.toString().c_str());
+  log_v(">> BLERemoteCharacteristic: handle: %u 0x%04x, uuid: %s", handle, handle, uuid.toString().c_str());
   m_handle = handle;
   m_uuid = uuid;
   m_charProp = charProp;
@@ -448,7 +468,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
         m_value = "";
       }
 
-      m_semaphoreReadCharEvt.give();
+      m_semaphoreReadCharEvt.give(evtParam->read.status);
       break;
     }  // ESP_GATTC_READ_CHAR_EVT
 
@@ -499,7 +519,7 @@ void BLERemoteCharacteristic::gattClientEventHandler(esp_gattc_cb_event_t event,
 
       // There is nothing further we need to do here.  This is merely an indication
       // that the write has completed and we can unlock the caller.
-      m_semaphoreWriteCharEvt.give();
+      m_semaphoreWriteCharEvt.give(evtParam->write.status);
       break;
     }  // ESP_GATTC_WRITE_CHAR_EVT
 
@@ -551,7 +571,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
       break;
     }
 
-    log_d("Found a descriptor: Handle: %d, UUID: %s", result.handle, BLEUUID(result.uuid).toString().c_str());
+    log_d("Found a descriptor: Handle: %u, UUID: %s", result.handle, BLEUUID(result.uuid).toString().c_str());
 
     // We now have a new characteristic ... let us add that to our set of known characteristics
     BLERemoteDescriptor *pNewRemoteDescriptor = new BLERemoteDescriptor(result.handle, BLEUUID(result.uuid), this);
@@ -562,7 +582,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
   }  // while true
   //m_haveCharacteristics = true; // Remember that we have received the characteristics.
   m_descriptorsRetrieved = true;
-  log_v("<< retrieveDescriptors(): Found %d descriptors.", offset);
+  log_v("<< retrieveDescriptors(): Found %u descriptors.", offset);
 }  // getDescriptors
 
 /**
@@ -570,7 +590,7 @@ void BLERemoteCharacteristic::retrieveDescriptors() {
  * @return The value of the remote characteristic.
  */
 String BLERemoteCharacteristic::readValue() {
-  log_v(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
+  log_v(">> readValue(): uuid: %s, handle: %u 0x%04x", getUUID().toString().c_str(), getHandle(), getHandle());
 
   // Check to see that we are connected.
   if (!getRemoteService()->getClient()->isConnected()) {
@@ -578,32 +598,49 @@ String BLERemoteCharacteristic::readValue() {
     return String();
   }
 
-  // Wait for authentication to complete if bonding is enabled
-  // This prevents the read request from being made while pairing is in progress
+  // Wait for authentication to complete if security was started on connection
   BLESecurity::waitForAuthenticationComplete();
 
-  m_semaphoreReadCharEvt.take("readValue");
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
-  // This is an asynchronous request which means that we must block waiting for the response
-  // to become available.
-  esp_err_t errRc = ::esp_ble_gattc_read_char(
-    m_pRemoteService->getClient()->getGattcIf(),
-    m_pRemoteService->getClient()->getConnId(),  // The connection ID to the BLE server
-    getHandle(),                                 // The handle of this characteristic
-    (esp_gatt_auth_req_t)m_auth
-  );  // Security
+  do {
+    m_semaphoreReadCharEvt.take("readValue");
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return "";
-  }
+    // Ask the BLE subsystem to retrieve the value for the remote hosted characteristic.
+    // This is an asynchronous request which means that we must block waiting for the response
+    // to become available.
+    esp_err_t errRc = ::esp_ble_gattc_read_char(
+      m_pRemoteService->getClient()->getGattcIf(),
+      m_pRemoteService->getClient()->getConnId(),  // The connection ID to the BLE server
+      getHandle(),                                 // The handle of this characteristic
+      (esp_gatt_auth_req_t)m_auth
+    );  // Security
 
-  // Block waiting for the event that indicates that the read has completed.  When it has, the String found
-  // in m_value will contain our data.
-  m_semaphoreReadCharEvt.wait("readValue");
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_read_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreReadCharEvt.give();
+      return "";
+    }
 
-  log_v("<< readValue(): length: %d", m_value.length());
+    // Block waiting for the event that indicates that the read has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreReadCharEvt.wait("readValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && getRemoteService()->getClient()->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("readValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
+
+  log_v("<< readValue(): length: %u", m_value.length());
   return m_value;
 }  // readValue
 
@@ -616,7 +653,7 @@ String BLERemoteCharacteristic::readValue() {
  */
 bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool response) {
   // writeValue(String((char*)data, length), response);
-  log_v(">> writeValue(), length: %d", length);
+  log_v(">> writeValue(), length: %lu", (unsigned long)length);
 
   // Check to see that we are connected.
   if (!getRemoteService()->getClient()->isConnected()) {
@@ -624,26 +661,46 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
     return false;
   }
 
-  // Wait for authentication to complete if bonding is enabled
-  // This prevents the write request from being made while pairing is in progress
+  // Wait for authentication to complete if security was started on connection
   BLESecurity::waitForAuthenticationComplete();
 
-  m_semaphoreWriteCharEvt.take("writeValue");
-  // Invoke the ESP-IDF API to perform the write.
-  esp_err_t errRc = ::esp_ble_gattc_write_char(
-    m_pRemoteService->getClient()->getGattcIf(), m_pRemoteService->getClient()->getConnId(), getHandle(), length, data,
-    response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
-  );
+  int retryCount = 1;
+  uint32_t status = ESP_GATT_OK;
 
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return false;
-  }
+  do {
+    m_semaphoreWriteCharEvt.take("writeValue");
 
-  m_semaphoreWriteCharEvt.wait("writeValue");
+    // Invoke the ESP-IDF API to perform the write.
+    esp_err_t errRc = ::esp_ble_gattc_write_char(
+      m_pRemoteService->getClient()->getGattcIf(), m_pRemoteService->getClient()->getConnId(), getHandle(), length, data,
+      response ? ESP_GATT_WRITE_TYPE_RSP : ESP_GATT_WRITE_TYPE_NO_RSP, (esp_gatt_auth_req_t)m_auth
+    );
+
+    if (errRc != ESP_OK) {
+      log_e("esp_ble_gattc_write_char: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
+      m_semaphoreWriteCharEvt.give();
+      return false;
+    }
+
+    // Block waiting for the event that indicates that the write has completed.
+    // The GATT status is passed through the semaphore value.
+    status = m_semaphoreWriteCharEvt.wait("writeValue");
+
+    switch (status) {
+      case ESP_GATT_OK: break;
+      case ESP_GATT_INSUF_AUTHENTICATION:
+      case ESP_GATT_INSUF_AUTHORIZATION:
+      case ESP_GATT_INSUF_ENCRYPTION:
+        if (BLESecurity::m_securityEnabled && retryCount && getRemoteService()->getClient()->secureConnection()) {
+          break;
+        }
+      /* Else falls through. */
+      default: log_e("writeValue: status=%d", status); break;
+    }
+  } while (status != ESP_GATT_OK && retryCount--);
 
   log_v("<< writeValue");
-  return true;
+  return (status == ESP_GATT_OK);
 }  // writeValue
 
 #endif
@@ -742,7 +799,7 @@ int BLERemoteCharacteristic::onReadCB(uint16_t conn_handle, const struct ble_gat
   }
 
   int rc = error->status;
-  log_i("Read complete; status=%d conn_handle=%d", rc, conn_handle);
+  log_i("Read complete; status=%d conn_handle=%u", rc, conn_handle);
 
   String *strBuf = (String *)pTaskData->m_pBuf;
 
@@ -752,7 +809,7 @@ int BLERemoteCharacteristic::onReadCB(uint16_t conn_handle, const struct ble_gat
       if (((*strBuf).length() + data_len) > BLE_ATT_ATTR_MAX_LEN) {
         rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
       } else {
-        log_i("Got %d bytes", data_len);
+        log_i("Got %" PRIu32 " bytes", data_len);
         (*strBuf) += String((char *)attr->om->om_data, data_len);
         return 0;
       }
@@ -781,7 +838,7 @@ int BLERemoteCharacteristic::onWriteCB(uint16_t conn_handle, const struct ble_ga
     return 0;
   }
 
-  log_i("Write complete; status=%d conn_handle=%d", error->status, conn_handle);
+  log_i("Write complete; status=%u conn_handle=%u", error->status, conn_handle);
   BLEUtils::taskRelease(*pTaskData, error->status);
   return 0;
 }
@@ -824,7 +881,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
   }
 
   m_descriptorsRetrieved = true;
-  log_d("<< retrieveDescriptors(): Found %d descriptors.", m_descriptorMap.size() - prevDscCount);
+  log_d("<< retrieveDescriptors(): Found %lu descriptors.", (unsigned long)m_descriptorMap.size() - prevDscCount);
   return true;
 }  // retrieveDescriptors
 
@@ -833,7 +890,7 @@ bool BLERemoteCharacteristic::retrieveDescriptors(const BLEUUID *uuid_filter) {
  * @return The value of the remote characteristic.
  */
 String BLERemoteCharacteristic::readValue() {
-  log_d(">> readValue(): uuid: %s, handle: %d 0x%.2x", getUUID().toString().c_str(), getHandle(), getHandle());
+  log_d(">> readValue(): uuid: %s, handle: %u 0x%04x", getUUID().toString().c_str(), getHandle(), getHandle());
 
   BLEClient *pClient = getRemoteService()->getClient();
   String value{};
@@ -881,6 +938,7 @@ String BLERemoteCharacteristic::readValue() {
 
   m_semaphoreReadCharEvt.take("readValue");
   m_value = value;
+  free(m_rawData);
   m_rawData = (uint8_t *)calloc(value.length(), sizeof(uint8_t));
   for (size_t i = 0; i < value.length(); i++) {
     m_rawData[i] = value[i];
@@ -891,7 +949,7 @@ exit:
   if (rc != 0) {
     log_e("<< readValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< readValue length: %d rc=%d", value.length(), rc);
+    log_d("<< readValue length: %u rc=%d", value.length(), rc);
   }
 
   return value;
@@ -905,7 +963,7 @@ exit:
  * @return false if not connected or cant perform write for some reason.
  */
 bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool response) {
-  log_d(">> writeValue(), length: %d", length);
+  log_d(">> writeValue(), length: %lu", (unsigned long)length);
 
   BLEClient *pClient = getRemoteService()->getClient();
 
@@ -928,7 +986,7 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
 
   do {
     if (length > mtu) {
-      log_i("long write %d bytes", length);
+      log_i("long write %lu bytes", (unsigned long)length);
       os_mbuf *om = ble_hs_mbuf_from_flat(data, length);
       rc = ble_gattc_write_long(pClient->getConnId(), m_handle, 0, om, BLERemoteCharacteristic::onWriteCB, &taskData);
     } else {
@@ -945,7 +1003,7 @@ bool BLERemoteCharacteristic::writeValue(uint8_t *data, size_t length, bool resp
       case 0:
       case BLE_HS_EDONE: rc = 0; break;
       case BLE_HS_ATT_ERR(BLE_ATT_ERR_ATTR_NOT_LONG):
-        log_e("Long write not supported by peer; Truncating length to %d", mtu);
+        log_e("Long write not supported by peer; Truncating length to %u", mtu);
         retryCount++;
         length = mtu;
         break;
@@ -965,7 +1023,7 @@ exit:
   if (rc != 0) {
     log_e("<< writeValue failed rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
   } else {
-    log_d("<< writeValue success. length: %d rc=%d", length, rc);
+    log_d("<< writeValue success. length: %lu rc=%d", (unsigned long)length, rc);
   }
 
   return (rc == 0);

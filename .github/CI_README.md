@@ -8,7 +8,9 @@ This document explains how the Continuous Integration and Continuous Deployment 
 - [Centralized SoC Configuration](#centralized-soc-configuration)
 - [Workflows](#workflows)
   - [Compilation Tests](#compilation-tests-pushyml)
+  - [Mock Upload Tests](#mock-upload-tests-upload-testsyml)
   - [Runtime Tests](#runtime-tests)
+  - [Multi-Device (Multi-DUT) Tests](#multi-device-multi-dut-tests)
   - [IDF Component Build](#idf-component-build-build_componentyml)
   - [Board Validation](#board-validation-boardsyml)
   - [Library Tests](#library-tests-libyml)
@@ -19,6 +21,7 @@ This document explains how the Continuous Integration and Continuous Deployment 
   - [Pre-commit](#pre-commit-pre-commityml-pre-commit-statusyml)
   - [CodeQL Security](#codeql-security-codeqlyml)
   - [Build Python Tools](#build-python-tools-build_py_toolsyml)
+  - [Backlog Bot](#backlog-bot-backlog-botyml)
 - [Scripts](#scripts)
 - [Adding a New SoC](#adding-a-new-soc)
 - [Official Variants Filter](#official-variants-filter)
@@ -73,7 +76,16 @@ The configuration defines several target lists for different purposes:
 #### Special Lists
 
 - **`ALL_SOCS`** - Complete list of all supported SoCs
+- **`CORE_VARIANTS`** - SoC variants used for packaging/release flows (includes variant-specific entries)
 - **`SKIP_LIB_BUILD_SOCS`** - SoCs without pre-built libraries (e.g., esp32c2, esp32c61)
+- **`CORE_SOCS`** - Computed list of buildable SoCs (ALL_SOCS minus SKIP_LIB_BUILD_SOCS)
+
+#### Exported CSV Helpers
+
+For compatibility with scripts and workflows that consume CSV strings, the config exports:
+- **`ALL_SOCS_CSV`**, **`CORE_SOCS_CSV`**, **`CORE_VARIANTS_CSV`**
+- **`HW_TEST_TARGETS_CSV`**, **`WOKWI_TEST_TARGETS_CSV`**, **`QEMU_TEST_TARGETS_CSV`**
+- **`BUILD_TEST_TARGETS_CSV`**, **`IDF_COMPONENT_TARGETS_CSV`**
 
 ### Helper Functions
 
@@ -110,12 +122,26 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 - Push to `master` or `release/*` branches
 - Pull requests modifying:
   - `cores/**`
-  - `libraries/**/*.{cpp,c,h,ino}`
+  - `libraries/**/*.cpp`
+  - `libraries/**/*.c`
+  - `libraries/**/*.h`
+  - `libraries/**/*.ino`
   - `libraries/**/ci.yml`
   - `package/**`
+  - `tools/get.*`
+  - `package.json`
+  - `platform.txt`
+  - `programmers.txt`
   - `variants/**`
   - `.github/workflows/push.yml`
-  - `.github/scripts/install-*`, `on-push.sh`, `sketch_utils.sh`, `get_affected.py`, `socs_config.sh`
+  - `.github/scripts/install-*`
+  - `.github/scripts/on-push.sh`
+  - `.github/scripts/sketch_utils.sh`
+  - `.github/scripts/get_affected.py`
+  - `.github/scripts/socs_config.sh`
+  - `!*.md`
+  - `!*.txt`
+  - `!*.properties`
 - Schedule: Every Sunday at 2:00 UTC (verbose logging)
 - Manual workflow dispatch (with configurable log level)
 
@@ -147,6 +173,66 @@ Workflows source the configuration in their setup steps and use the arrays to dy
 **SoC Config Usage:**
 The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine which variants are considered official.
 
+### Mock Upload Tests (`upload-tests.yml`)
+
+**Trigger:**
+- Push to `master` or `release/*` branches
+- Pull requests modifying upload-related paths (`platform.txt`, `boards.txt`, `tools/flasher.py`, mock upload scripts, `CIBoardsTest/**`, etc.)
+- Manual workflow dispatch
+
+**Purpose:** Validate `upload.pattern` → `flasher.py` → esptool on every supported SoC, using a mock bootloader. Each tool uploads the same sketch **twice** per SoC (second flash exercises `--diff-with`).
+
+| Tool | Underlying | Install script |
+|------|------------|----------------|
+| `cli` | `arduino-cli` | `install-arduino-cli.sh` |
+| `builder` | arduino-nightly `processing.app.Base --upload` | `install-arduino-builder.sh` |
+
+The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink + `get.py`), not Board Manager.
+
+**Jobs:**
+
+#### `mock-upload`
+**Matrix:** `ubuntu-latest`, `windows-latest`, `macos-26-intel` (3 parallel jobs)
+
+Each job loops all `CORE_SOCS` (8 chips): `start_mock_bootloader` (chip auto-detect by default) → cli twice → builder twice → `stop_mock_bootloader`.
+
+**Per-job setup:** Python + pyserial, `pip install esp32-mock-bootloader==$(cat .github/esp32-mock-bootloader-version)` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), libs cache (same key as `push.yml`), xvfb on Linux, `pip install esptool` + `MOCK_ESPTOOL_OVERRIDE=1` on all matrix OSes until bundled esptool supports `socket://`.
+
+The mock listens on TCP and upload tools use `socket://127.0.0.1:9876` on every OS (same as `test_mock_bootloader.py`). Older bundled esptool builds may lack `socket://` in vendored pyserial; `MOCK_ESPTOOL_OVERRIDE` routes `flasher.py` through pip esptool until the esptool packaging fix is released and picked up by the core.
+
+**CI entry script:** `.github/scripts/test-mock-upload.sh` (sources `mock_upload_lib.sh`; no args in GHA).
+
+**Libraries:** `mock_upload_lib.sh` (bootloader, esptool override, twice-upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
+
+**Local commands:**
+
+```bash
+# Install mock bootloader (see https://github.com/espressif/esp32-mock-bootloader):
+pip install esp32-mock-bootloader
+
+# flasher.py integration only (protocol tests live in esp32-mock-bootloader repo):
+python3 .github/scripts/ci_testing/test_mock_bootloader.py
+
+# Full upload pipeline locally (requires pip esptool until bundled fix lands):
+MOCK_ESPTOOL_OVERRIDE=1 bash .github/scripts/test-mock-upload.sh cli esp32
+
+# Full matrix locally (all SoCs, cli + builder):
+bash .github/scripts/test-mock-upload.sh
+
+# Filter by tool and/or SoC:
+bash .github/scripts/test-mock-upload.sh cli esp32c3
+bash .github/scripts/test-mock-upload.sh builder esp32s3
+
+# Thin local wrapper (not used by GHA):
+bash .github/scripts/ci_testing/mock_upload_validation.sh
+```
+
+`MOCK_ESPTOOL_OVERRIDE=1` replaces bundled `tools/esptool/esptool` with pip `esptool` for the duration of the run (restored on exit). GHA sets this on all matrix OSes; remove that workflow step once bundled esptool supports `socket://`.
+
+FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.sh` (compile CI defaults + `UploadSpeed=115200`).
+
+**Note:** Scripts under `.github/scripts/ci_testing/` are for local validation only; GHA does not run them.
+
 #### 2. `build-arduino-linux`
 **Runs on:** Ubuntu-latest (matrix of chunks)
 
@@ -168,7 +254,7 @@ The script sources `socs_config.sh` and uses `BUILD_TEST_TARGETS` to determine w
 7. Upload compile results JSON
 
 **SoC Config Usage:**
-The build script sources `socs_config.sh` and iterates through all targets in `BUILD_TEST_TARGETS`, building sketches for each SoC variant.
+The build script sources `socs_config.sh` and iterates through `CORE_SOCS` (ALL_SOCS minus SKIP_LIB_BUILD_SOCS), building sketches for each supported SoC.
 
 **Environment Variables:**
 - `MAX_CHUNKS=15` - Maximum parallel build jobs
@@ -234,8 +320,8 @@ The build script sources `socs_config.sh` and iterates through all targets in `B
 The runtime test system is a multi-stage pipeline that builds test sketches once and then executes them across multiple platforms (QEMU emulator, physical hardware, and Wokwi simulator). The system uses GitHub Actions for orchestration and building, while actual hardware tests run in GitLab CI for access to the internal test lab.
 
 **Trigger:**
-- Pull requests affecting test code, cores, libraries, or infrastructure
-- Daily schedule for comprehensive testing
+- Pull requests that touch tests, cores, libraries, or CI scripts/workflows
+- Daily schedule (00:00 UTC)
 - Manual workflow dispatch
 
 **Purpose:**
@@ -318,8 +404,12 @@ The main workflow coordinates the initial testing stages using GitHub Actions wo
 
 **Test Type Logic:**
 - **PRs**: Only validation tests (fast feedback)
-- **Scheduled runs**: Both validation and performance tests
-- **PR with `perf_test` label**: Both validation and performance tests
+- **Scheduled runs**: Validation + performance builds (hardware-only execution)
+- **PR with `perf_test` label**: Validation + performance builds (hardware-only execution)
+
+**Platform Gates:**
+- **Hardware tests** require `GITLAB_ACCESS_TOKEN`; on PRs they also require the `hil_test` label
+- **Wokwi tests** require `WOKWI_CLI_TOKEN`
 
 **Concurrency**: Cancels in-progress runs for same PR to save resources
 
@@ -537,15 +627,42 @@ Tests are organized in the repository under `tests/` directory:
 - `tests/performance/` - Performance benchmarks (conditional)
 
 Each test directory contains:
-- `{test_name}.ino` - Arduino sketch with test code
+- `{test_name}.ino` - Arduino sketch with test code (or subdirectories for multi-device tests)
 - `test_{test_name}.py` - pytest test file
 - `ci.yml` - Test requirements and configuration
 - `diagram.{chip}.json` - Optional Wokwi hardware diagram
+- `README.md` - Test documentation
+
+#### Pytest Fixtures and Test Authoring
+
+Tests use the [pytest-embedded](https://github.com/espressif/pytest-embedded) framework. Common fixtures are defined in `tests/conftest.py`:
+
+| Fixture | Source | Description |
+|---------|--------|-------------|
+| `dut` | pytest-embedded | Device-Under-Test serial interface. For multi-DUT tests, `dut[0]` and `dut[1]` access individual devices. |
+| `wifi_ssid` | `conftest.py` | WiFi SSID from `--wifi-ssid` CLI arg or `WIFI_SSID` env var |
+| `wifi_pass` | `conftest.py` | WiFi password from `--wifi-pass` CLI arg or `WIFI_PASS` env var |
+| `ci_job_id` | `conftest.py` | CI job identifier for unique naming |
+
+**Common DUT methods:**
+- `dut.expect_exact("string", timeout=N)` - Wait for exact serial output
+- `dut.expect(r"regex_pattern", timeout=N)` - Wait for regex match (returns match object)
+- `dut.write("command\n")` - Send data to device serial
+- `dut.expect_unity_test_output(timeout=N)` - Wait for Unity test framework results
+
+**Writing a new test:**
+1. Create the `.ino` sketch with Unity test framework (`#include <unity.h>`)
+2. Create `test_{name}.py` with a function `def test_{name}(dut):` (or `dut, wifi_ssid, wifi_pass` for WiFi tests)
+3. Create `ci.yml` with platform/tag/requirement configuration
+4. For multi-DUT: create subdirectories with separate sketches and add `multi_device` mapping to `ci.yml`
 
 **Test Configuration (`ci.yml`):**
 Defines test requirements and platform support:
 - `targets: {chip: true/false}` - Which SoCs support this test
 - `platforms: {platform: true/false}` - Which platforms can run it
+- `tags: [tag1, tag2]` - Hardware runner tags applied to all targets (see below)
+- `soc_tags: {chip: [tag1]}` - Per-SoC hardware runner tags (see below)
+- `multi_device: {device0: sketchA, device1: sketchB}` - Multi-DUT test mapping
 - `requires: [CONFIG_X=y]` - Required sdkconfig settings
 - `requires_or: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements
 - `libs: [Library1, Library2]` - Required libraries
@@ -567,6 +684,122 @@ platforms:
 requires:
   - CONFIG_SOC_WIFI_SUPPORTED=y
 ```
+
+#### Hardware Runner Tags
+
+The `tags` field in `ci.yml` specifies which GitLab CI hardware runner a test requires. Tags only affect **hardware** tests — Wokwi and QEMU tests ignore them. When no `tags` field is present, the test runs on a default generic runner with a single device and serial access (no special peripherals).
+
+| Tag | Description | Setup |
+|---|---|---|
+| `wifi_router` | Single device with WiFi router/AP access. For tests that need internet or LAN connectivity. | One ESP32 + WiFi network |
+| `two_duts` | Two wirelessly-paired devices. For over-the-air multi-DUT tests (BLE, ESP-NOW, WiFi AP+STA, Zigbee, etc.). Coordinated by pytest via two serial ports. | Two ESP32s on the same runner, no wired connection between them |
+| `generic_multi_device` | Two devices **physically wired together** (GPIO-to-GPIO). For peripheral loopback tests that need a direct electrical connection (I2S, analog DAC→ADC, etc.). | Two ESP32s with jumper wires between specific pins |
+| `ethernet` | Single device with an Ethernet PHY/module (e.g. LAN8720) connected. | One ESP32 + Ethernet hardware |
+| `psram` | Single device with SPI PSRAM. Used for targets where PSRAM is not standard. | One ESP32/S2/C5 board with PSRAM |
+| `octal_psram` | Single device with **octal** SPI PSRAM (higher bandwidth). ESP32-S3 WROOM-1 modules use octal PSRAM. | One ESP32-S3 board with octal PSRAM |
+| *(none)* | Default — generic runner with a single device and serial access. No special peripherals, WiFi, or multi-device setup. | One ESP32 + USB serial |
+
+**`tags` vs `soc_tags`:**
+
+There are two ways to assign runner tags in `ci.yml`:
+
+- **`tags`** (list) — Applied to **every** target uniformly. Use when the runner requirement is the same for all SoCs (e.g., all need WiFi or all need two devices).
+
+```yaml
+tags:
+  - wifi_router
+```
+
+- **`soc_tags`** (dict keyed by SoC) — Applied **per target**. Use when different SoCs need different runner capabilities. SoCs not listed get no extra tags (default runner).
+
+```yaml
+soc_tags:
+  esp32:
+    - psram
+  esp32s3:
+    - octal_psram
+```
+
+Both fields can coexist in the same `ci.yml`. The job generator (`gen_hw_jobs.py`) merges them into a single tag set per target — global `tags` are combined with any matching `soc_tags` entry for that SoC. For example, if a test has `tags: [wifi_router]` and `soc_tags: {esp32s3: [octal_psram]}`, then ESP32-S3 jobs get both `wifi_router` and `octal_psram` tags, while other SoCs get only `wifi_router`.
+
+Notes:
+- Multi-device tests (`two_duts`, `generic_multi_device`) require `ESPPORT1` and `ESPPORT2` environment variables for the two serial ports.
+
+#### Performance test result format
+
+Performance tests under `tests/performance/` write result JSON files that the report generator (in `tests_results.yml`) aggregates and displays. All result files must use this format so CPU, memory, LoRa, BLE, WiFi throughput, etc. can be shown in one report.
+
+**Required format:** A single JSON object:
+
+```json
+{
+  "test_name": "string",
+  "runs": 123,
+  "settings": "key1=value1,key2=value2",
+  "metrics": [
+    { "name": "metric_id", "value": 123.45, "unit": "Unit" }
+  ]
+}
+```
+
+| Field       | Required | Description |
+|------------|----------|-------------|
+| `test_name`| Yes      | Short identifier (e.g. `coremark`, `wifi_throughput`). |
+| `runs`     | Yes      | Number of runs used to compute averages. |
+| `settings` | No       | Optional. String encoding test configuration. Use `key=value` pairs separated by commas. Examples: `cores=2`, `digits=16384`, `copies=50000,max_test_size=65536`. No spaces. If omitted or empty, the report shows only "N runs:" under the chip. |
+| `metrics`  | Yes      | Array of metric objects. Each has `name` (string), `value` (number). `unit` is optional (string, e.g. `points`, `KB/s`, `ms`, `Mbps`); default `""`. |
+
+Pass/fail/error status is determined from the JUnit XML results (same as validation tests), not from the result JSON. The report shows :white_check_mark: (success), :x: (failure), or :fire: (error) next to each target. If a test fails before producing a result JSON, it still appears in the report with the appropriate failure/error symbol.
+
+- **Simple tests** (one main number): one element in `metrics` (e.g. score or time).
+- **Multi-metric tests** (e.g. memory bandwidth at several sizes): one element per (operation, size, variant); use a `name` like `memcpy_32_system_avg_rate` or `throughput_tx_1024_avg_rate`.
+
+The report generator only accepts this format.
+
+**File location and naming:** Result files must be named `result_<test_name><optional_index>.json` (e.g. `result_coremark0.json`, `result_ramspeed1.json`) and placed under a path that includes the **target** (e.g. `esp32`, `esp32c5`), e.g. `tests/performance/<test_name>/<target>/result_*.json`, so the report can group by target and test.
+
+**Examples:** CoreMark → `{"test_name":"coremark","runs":3,"settings":"cores=2","metrics":[{"name":"avg_score","value":746.97}]}`. Memory tests → multiple metrics with `name`, `value`, and optional `unit` (e.g. `KB/s`, `ms`). The report generator aggregates multiple result files by target and test: it sums `runs` and computes the average of each metric.
+
+### Multi-Device (Multi-DUT) Tests
+
+Some tests require two physical devices (e.g., BLE server/client, WiFi AP/client). These are defined using the `multi_device` field in `ci.yml`, where each entry points to a sketch directory for that device.
+
+> **Important:** Each DUT **must** have its own sketch in a separate subdirectory. The CI does not support multi-DUT tests with a single sketch. The `multi_device` mapping in `ci.yml` is mandatory and each value must correspond to a subdirectory containing `<name>/<name>.ino`. Without this, `build_multi_device_test` in `tests_build.sh` will fail. The `two_duts` or `generic_multi_device` tags alone only select a runner with two devices — they do NOT handle building or flashing firmware.
+
+**Example `ci.yml` for a two-device test:**
+```yaml
+tags:
+  - two_duts
+
+multi_device:
+  device0:
+    sketch: coordinator
+    fqbn_append: PartitionScheme=zigbee,ZigbeeMode=zigbee_zczr
+  device1:
+    sketch: end_device
+    fqbn_append: PartitionScheme=zigbee,ZigbeeMode=zigbee_ed
+
+platforms:
+  wokwi: false
+  qemu: false
+```
+
+This expects `coordinator/coordinator.ino` and `end_device/end_device.ino` to exist as subdirectories of the test.
+
+**`multi_device` value format:**
+
+Each device entry can be either:
+- A **scalar** (just the sketch directory name): `device0: sender`
+- A **map** with `sketch` (required) and `fqbn_append` (optional): useful when devices need different compile-time options (e.g., different Zigbee roles or partition schemes)
+
+When `fqbn_append` is specified per device, it overrides the parent `ci.yml`'s `fqbn_append` for that device's build only.
+
+**How it works:**
+- `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>/<sketch>/build.tmp`.
+- `tests_run.sh` assembles multiple build directories and ports using `|` separators, then runs pytest with `--count` and `--embedded-services` for each DUT.
+- Only **2 devices** are supported currently.
+- **Hardware only**: multi-device tests are blocked for Wokwi and QEMU.
+- Set ports via `ESPPORT1` and `ESPPORT2` (single-device tests can use `ESPPORT`).
 
 **Test Execution:**
 The test runner (`tests_run.sh`) automatically:
@@ -601,12 +834,23 @@ This multi-platform approach ensures comprehensive testing while maintaining rea
 - Push to `master` or `release/*` branches
 - Pull requests modifying:
   - `cores/**`
-  - `libraries/**/*.{cpp,c,h}`
+  - `libraries/**/*.cpp`
+  - `libraries/**/*.c`
+  - `libraries/**/*.h`
   - `idf_component_examples/**`
-  - `idf_component.yml`, `Kconfig.projbuild`, `CMakeLists.txt`
+  - `idf_component.yml`
+  - `Kconfig.projbuild`
+  - `CMakeLists.txt`
   - `variants/**`
+  - `.github/workflows/build_component.yml`
+  - `.github/scripts/check-cmakelists.sh`
+  - `.github/scripts/on-push-idf.sh`
+  - `.github/scripts/sketch_utils.sh`
+  - `.github/scripts/get_affected.py`
   - `.github/scripts/socs_config.sh`
-  - Workflow and script files
+  - `!*.md`
+  - `!*.txt`
+  - `!*.properties`
 - Manual workflow dispatch with customizable IDF versions/targets
 
 **Purpose:** Ensure Arduino core works correctly as an ESP-IDF component
@@ -614,6 +858,10 @@ This multi-platform approach ensures comprehensive testing while maintaining rea
 **Inputs (Manual Dispatch):**
 - `idf_ver`: Comma-separated IDF branches (default: "release-v5.5")
 - `idf_targets`: Comma-separated targets (default: empty = use version-specific defaults)
+
+**Default Matrix (PRs/Pushes):**
+- Versions: `release-v5.3`, `release-v5.4`, `release-v5.5`
+- Targets: derived from `get_targets_for_idf_version()` unless overridden
 
 **Jobs:**
 
@@ -635,7 +883,16 @@ The script compares source files found in the repository against files listed in
 **Why Important:**
 ESP-IDF's CMake-based build system requires explicit source file listing. Missing files won't compile, extra files indicate stale CMakeLists.txt. This check prevents both issues.
 
-##### 2. `set-matrix`
+##### 2. `check-examples`
+**Runs on:** Ubuntu-latest
+
+**Purpose:** Ensure `idf_component_examples/` matches `idf_component.yml` declarations
+
+**Steps:**
+1. Checkout repository
+2. Compare folders in `idf_component_examples/` with `idf_component.yml` entries
+
+##### 3. `set-matrix`
 **Runs on:** Ubuntu-latest
 
 **Purpose:** Generate IDF version × target matrix
@@ -659,7 +916,7 @@ The script sources `socs_config.sh` and creates combinations of IDF versions and
 
 The resulting matrix includes all combinations of supported IDF versions and their respective targets. For example, v5.3 might have 8 targets while v5.5 has 10 (including esp32c5 and esp32c61).
 
-##### 3. `build-esp-idf-component`
+##### 4. `build-esp-idf-component`
 **Runs on:** Ubuntu-latest
 
 **Conditions:**
@@ -884,10 +1141,14 @@ The file lists popular Arduino libraries with their names, which examples to tes
 ### Documentation (`docs_build.yml`, `docs_deploy.yml`)
 
 **Trigger:**
-- Push to `master` or `release/*`
-- Pull requests modifying `docs/**`
+- `docs_build.yml`:
+  - Push to `master` or `release/v2.x` (docs or workflow file changes)
+  - Pull requests modifying `docs/**` or the workflow file
+- `docs_deploy.yml`:
+  - `workflow_run` after **ESP32 Arduino Release**
+  - Push to `master` or `release/v2.x` when docs change
 
-**Purpose:** Build and deploy Sphinx documentation to GitHub Pages
+**Purpose:** Build and deploy Sphinx documentation to the production docs server
 
 **Jobs:**
 
@@ -896,57 +1157,60 @@ The file lists popular Arduino libraries with their names, which examples to tes
 2. Install documentation dependencies
 3. Build HTML from RST files
 4. Check for warnings/errors
-5. Upload built docs
+5. Upload built docs as an artifact
 
 ##### `docs_deploy.yml`
-**Conditions:** Only on push to master
+**Conditions:** Only runs in `espressif/arduino-esp32`
 
-1. Download built docs
-2. Deploy to gh-pages branch
-3. Available at `espressif.github.io/arduino-esp32`
+1. Build docs
+2. Deploy to production server using `DOCS_*` secrets
+3. Publishes to the configured docs URL
 
 ### Release (`release.yml`)
 
 **Trigger:**
-- Manual workflow dispatch with:
-  - `release_tag` - Version to release (e.g., "3.0.0")
-  - `git_ref` - Branch/tag to release from
-- Push of tags matching version pattern
+- GitHub release event (`published`)
 
 **Purpose:** Create GitHub releases and publish packages
 
 **Jobs:**
 
-##### 1. `validate-release`
+##### 1. `build`
 **Steps:**
-- Check tag format
-- Verify package.json version matches
-- Ensure changelog is updated
+1. Checkout release target commit
+2. Run `on-release.sh` to:
+   - Build ZIP/XZ core package
+   - Download and repackage libs into per-SoC archives
+   - Update `package_esp32_*` JSONs (including CN variants)
+   - Stage hosted binaries extracted from libs
+3. Upload `build/` output and `hosted/` artifacts
 
-##### 2. `build-package`
-**Steps:**
-1. Checkout at release tag
-2. Run `tools/get.py` to download all platform tools
-3. Package libraries, cores, variants, tools
-4. Generate `package_esp32_index.json`
-5. Calculate checksums
+##### 2. `test-package`
+**Runs on:** Windows, macOS, Ubuntu
 
-##### 3. `create-release`
 **Steps:**
-1. Create GitHub release with tag
-2. Upload package artifacts
-3. Generate release notes from changelog
-4. Mark as pre-release if beta/rc version
+- Download `build/` artifacts
+- Run `test-package-json.sh` to validate package installation
 
-##### 4. `upload-idf-component`
+##### 3. `upload-and-finalize`
 **Steps:**
-- Upload to ESP-IDF component registry
-- Uses `upload-idf-component.yml` workflow
-- Published at `components.espressif.com`
+- Upload package JSONs to GitHub Releases and GitHub Pages
+- Use `upload-release-assets.sh` to update version commit and retag if needed
+
+##### 4. `upload-hosted-binaries`
+**Steps:**
+- Copy new `esp-hosted` binaries to `gh-pages/hosted`
+- Commit and push if new binaries are present
+
+**Optional S3 Upload:**
+- `ENABLE_S3=true` with `S3_BUCKET_*` vars uploads per-SoC libs ZIPs to S3
+- Otherwise libs are attached to the GitHub release
 
 ### Size Reporting (`publishsizes.yml`, `publishsizes-2.x.yml`)
 
-**Trigger:** Completion of `push.yml` on PRs
+**Trigger:**
+- `publishsizes.yml`: `workflow_run` after **Compilation Tests** (PRs), plus manual dispatch
+- `publishsizes-2.x.yml`: manual dispatch (master vs `v2.x` comparison)
 
 **Purpose:** Post compile size comparison comment to PR
 
@@ -962,7 +1226,10 @@ The file lists popular Arduino libraries with their names, which examples to tes
 
 ### Pre-commit (`pre-commit.yml`, `pre-commit-status.yml`)
 
-**Trigger:** Pull requests
+**Trigger:**
+- Push to `master`
+- Pull requests (opened/reopened/synchronize/labeled)
+- Manual workflow dispatch
 
 **Purpose:** Run code quality checks
 
@@ -971,6 +1238,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
 - Checks code formatting
 - Validates file structure
 - Ensures style guidelines
+- PRs only run when labeled `Status: Pending Merge` or `Re-trigger Pre-commit Hooks`
 
 **pre-commit-status.yml:**
 - Reports pre-commit status to PR
@@ -979,9 +1247,9 @@ The file lists popular Arduino libraries with their names, which examples to tes
 ### CodeQL Security (`codeql.yml`)
 
 **Trigger:**
-- Schedule: Weekly
-- Push to master
-- Pull requests to master
+- Manual workflow dispatch
+- Push to `master`
+- Pull requests that touch source or workflow files (`**/*.{c,cpp,h,ino,py}` and `.github/workflows/*`)
 
 **Purpose:** Security vulnerability scanning
 
@@ -1115,6 +1383,10 @@ ubuntu-24.04-arm: TARGET: arm,        EXTEN: (none), SEPARATOR: :
    - Commits and pushes to PR branch
    - Only Windows binaries are committed (Linux/macOS built on user machines)
 
+**Windows Signing Notes:**
+- Signing runs only on the Windows matrix job and uses Azure Key Vault credentials.
+- Signed `.exe` artifacts are uploaded and the Windows binaries are committed back to the PR branch.
+
 9. **Archive artifact**:
    - Uploads built binaries as GitHub Actions artifacts
    - Artifact name: `pytools-{TARGET}`
@@ -1138,6 +1410,22 @@ When a developer modifies `tools/espota.py` and creates a PR, this workflow auto
 6. Uploads all platform binaries as artifacts
 
 This ensures the pre-compiled tools stay in sync with source code, and Windows users get properly signed executables that won't trigger security warnings.
+
+### Backlog Bot (`backlog-bot.yml`)
+
+**Trigger:**
+- Manual workflow dispatch (supports `dry-run` input)
+
+**Purpose:** Manage stale issues and keep the backlog tidy
+
+**Behavior (backlog-cleanup.js):**
+- Processes **issues only** (pull requests are skipped)
+- Skips issues with exempt labels
+- Adds **Move to Discussion** label to `Type: Question`
+- Closes issues with `Status: Awaiting Response` or no assignees after 90+ days of inactivity
+- Posts a friendly reminder on stale assigned issues (at most once every 7 days)
+
+**Permissions:** `issues: write`, `discussions: write`, `contents: read`
 
 ---
 
@@ -1206,7 +1494,7 @@ bash .github/scripts/check_official_variants.sh \
 
 **Features:**
 - Sources `socs_config.sh` for targets
-- Builds tests with Arduino CLI
+- Builds tests with `arduino_cmake.py` by default, or Arduino CLI with `--arduino-cli`
 - Supports multiple test types
 
 #### `tests_run.sh`
@@ -1248,6 +1536,12 @@ bash .github/scripts/check_official_variants.sh \
 
 #### `install-*.sh`
 **Purpose:** Install Arduino CLI, IDE, and core
+
+#### Release Scripts
+- **`on-release.sh`** - Builds release packages and generates package JSONs
+- **`upload-release-assets.sh`** - Uploads JSONs to release/Pages and updates version commit
+- **`lib-github-release.sh`** - Helper functions for upload and GH API operations
+- **`release_append_cn.py`** - Adds CN mirror metadata to package JSONs
 
 ---
 
@@ -1393,10 +1687,183 @@ Test the official variant filter script with different scenarios:
 
 Individual scripts can be tested locally:
 - Build scripts can run with Arduino CLI installed
-- Test scripts require appropriate runtime environment (QEMU/hardware/Wokwi)
+- Test scripts require Python **3.13+** and appropriate runtime environment (QEMU/hardware/Wokwi)
 - Matrix generation scripts can be run to verify JSON output
 
 Note: GitHub Actions workflows cannot run locally, but the bash scripts they call can be.
+
+---
+
+## DevKit GPIO Reference
+
+This section documents the GPIO availability for each standard devkit board. Use this when writing tests that need specific pins (e.g., button input, LED output, ADC reads, touch reads, pulldown verification).
+
+Strapping pins have external pull resistors that interfere with internal pull-up/pull-down tests and should be avoided for GPIO input testing.
+
+Pins with aliases are listed in the form `alias`→`GPIO`. This means that, for example, calling `pinMode(A0, INPUT)` will set GPIO36 as an input pin.
+
+### Pin Safety Categories
+
+Not all "safe" pins are equally safe — it depends on which peripherals your test uses. Each board's safe pins are split into two categories:
+
+- **Always safe**: Broken out on the devkit header with no default peripheral bus assignment. Free to use in any test regardless of which peripherals it exercises.
+- **Peripheral-dependent**: Safe for general GPIO use, but serve as default pins for a specific peripheral bus (I2C, SPI, DAC, etc.). If your test initializes that peripheral with default settings, these pins are claimed by it — pick other safe pins for auxiliary GPIO needs.
+
+Pins that are never safe (flash, UART serial monitor, USB-JTAG, strapping, input-only) are already excluded from both categories.
+
+**Example:** On ESP32, GPIO 21 and 22 are the default I2C pins (`SDA` and `SCL`). If you are writing a GPIO test that just toggles pins high and low, you can include 21 and 22 in your pin list without any problem — no I2C driver is running, so the pins behave as regular GPIOs. Now imagine you are writing an I2C test instead. The test will call `Wire.begin()`, which takes over GPIO 21 and 22 for the I2C bus. If that same test also needs a couple of extra GPIOs for something else (say, to wire an interrupt line or a loopback), it must pick those extra pins from elsewhere in the safe list — 21 and 22 are no longer available because I2C is using them.
+
+### ESP32 — `board-esp32-devkit-c-v4`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–5, 12–19, 21–23, 25–27, 32–33, 34–36, 39 |
+| **Strapping** | 0, 2, 5, 12, 15 |
+| **SPI flash (do not use)** | 6–11 |
+| **Input-only** | 34, 35, 36, 39 |
+| **UART** | `TX`→1, `RX`→3 |
+| **I2C** | `SDA`→21, `SCL`→22 |
+| **SPI** | `SS`→5, `MOSI`→23, `MISO`→19, `SCK`→18 |
+| **ADC1** [^adc1] | `A0`→36, `A3`→39, `A4`→32, `A5`→33, `A6`→34, `A7`→35 (input-only) |
+| **ADC2** [^adc2] | `A10`→4, `A11`→0, `A12`→2, `A13`→15, `A14`→13, `A15`→12, `A16`→14, `A17`→27, `A18`→25, `A19`→26 |
+| **Touch** [^touch] | `T0`→4, `T1`→0, `T2`→2, `T3`→15, `T4`→13, `T5`→12, `T6`→14, `T7`→27, `T8`→33, `T9`→32 |
+| **DAC** | `DAC1`→25, `DAC2`→26 |
+| **Always safe** | 16, 17 |
+| **Peripheral-dependent** | 4, 13, 14, 27, 32, 33 (Touch) · 18, 19, 23 (SPI) · 21, 22 (I2C) · 25, 26 (DAC) |
+
+[^adc1]: `analogContinuous()` accepts **ADC1 only**. Do not use ADC2 pins for continuous mode even though `analogRead()` works on them. `analogContinuous()` clears requested pins via periman but fails if ADC1 oneshot is still in use on *other* pins. On all other targets (S2, S3, C3, C6, H2, C5, P4) the ADC is a single unit and this split does not apply. Ref: `cores/esp32/esp32-hal-adc.c`.
+
+[^adc2]: `analogRead()` on ADC2 pins can fail or return incorrect values when the Wi-Fi radio is active. ADC2 pins **cannot** be used with `analogContinuous()`.
+
+[^touch]: Prefer pins that are not touch pads (`T0`–`T9`) for `ledcAttach()`. Touch and LEDC on the same GPIO is unreliable — e.g. avoid GPIO4 (`T0` / `A10`); use GPIO 16 or 17 instead.
+
+### ESP32-S2 — `board-esp32-s2-devkitm-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–21, 33–46 |
+| **Strapping** | 0, 45, 46 |
+| **SPI flash (reserved)** | 26–32 |
+| **Input-only** | 46 |
+| **LED** | `LED_BUILTIN`→18 |
+| **UART** | `TX`→43, `RX`→44 |
+| **I2C** | `SDA`→8, `SCL`→9 |
+| **SPI** | `SS`→34, `MOSI`→35, `MISO`→37, `SCK`→36 |
+| **ADC** | `A0`→1 … `A19`→20 |
+| **Touch** | `T1`→1 … `T14`→14 |
+| **DAC** | `DAC1`→17, `DAC2`→18 |
+| **Always safe** | 15, 16, 19, 20, 21, 33, 38–42 |
+| **Peripheral-dependent** | 1–7, 10–14 (Touch) · 8, 9 (I2C, Touch) · 17 (DAC) · 18 (DAC, LED) · 34–37 (SPI) |
+
+### ESP32-S3 — `board-esp32-s3-devkitc-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–21, 35–48 |
+| **Strapping** | 0, 3, 45, 46 |
+| **Octal SPI flash (reserved on WROOM-1)** | 35–37 |
+| **USB** | 19, 20 |
+| **LED** | `LED_BUILTIN`→48 |
+| **UART** | `TX`→43, `RX`→44 |
+| **I2C** | `SDA`→8, `SCL`→9 |
+| **SPI** | `SS`→10, `MOSI`→11, `MISO`→13, `SCK`→12 |
+| **ADC** | `A0`→1 … `A19`→20 |
+| **Touch** | `T1`→1 … `T14`→14 |
+| **Always safe** | 15–18, 21, 38–42, 47 |
+| **Peripheral-dependent** | 1, 2, 4–7, 14 (Touch) · 8, 9 (I2C, Touch) · 10–13 (SPI, Touch) |
+
+### ESP32-C3 — `board-esp32-c3-devkitm-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–10, 18–21 |
+| **Strapping** | 2, 8, 9 |
+| **USB** | 18, 19 |
+| **LED** | `LED_BUILTIN`→8 |
+| **UART** | `TX`→21, `RX`→20 |
+| **I2C** | `SDA`→8, `SCL`→9 |
+| **SPI** | `SS`→7, `MOSI`→6, `MISO`→5, `SCK`→4 |
+| **ADC** | `A0`→0, `A1`→1, `A2`→2, `A3`→3, `A4`→4, `A5`→5 |
+| **Always safe** | 0, 1, 3, 10 |
+| **Peripheral-dependent** | 4–7 (SPI) |
+
+### ESP32-C5 — `board-esp32-c5-devkitc-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–14, 23–28 (15 only without PSRAM) |
+| **Strapping** | 2, 3, 7, 25, 26, 27, 28 |
+| **USB** | 13, 14 |
+| **LED** | `LED_BUILTIN`→27 |
+| **UART** | `TX`→11, `RX`→12 |
+| **UART (LP)** | `LP_TX`→5, `LP_RX`→4 |
+| **I2C** | `SDA`→0, `SCL`→1 |
+| **I2C (LP)** | `LP_SDA`→2, `LP_SCL`→3 |
+| **SPI** | `SS`→6, `MOSI`→8, `MISO`→9, `SCK`→10 |
+| **ADC** | `A0`→1, `A1`→2, `A2`→3, `A3`→4, `A4`→5, `A5`→6 |
+| **Always safe** | 23, 24 |
+| **Peripheral-dependent** | 0, 1 (I2C) · 4, 5 (LP UART) · 6, 8, 9, 10 (SPI) |
+
+### ESP32-C6 — `board-esp32-c6-devkitc-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–23 |
+| **Strapping** | 4, 5, 8, 9, 15 |
+| **SPI flash (reserved)** | 24–30 |
+| **LED** | `LED_BUILTIN`→8 |
+| **USB-JTAG** | 12, 13 |
+| **UART** | `TX`→16, `RX`→17 |
+| **I2C** | `SDA`→23, `SCL`→22 |
+| **I2C (Wire1)** | `SDA1`→6, `SCL1`→7 |
+| **SPI** | `SS`→18, `MOSI`→19, `MISO`→20, `SCK`→21 |
+| **ADC** | `A0`→0, `A1`→1, `A2`→2, `A3`→3, `A4`→4, `A5`→5, `A6`→6 |
+| **Always safe** | 0, 1, 2, 3, 10, 11, 14 |
+| **Peripheral-dependent** | 6, 7 (I2C Wire1) · 18–21 (SPI) · 22, 23 (I2C) |
+
+### ESP32-H2 — `board-esp32-h2-devkitm-1`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out** | 0–5, 8–14, 22–27 |
+| **Strapping** | 2, 3, 8, 9, 25 |
+| **32K crystal** | 13, 14 |
+| **USB** | 26, 27 |
+| **LED** | `LED_BUILTIN`→8 |
+| **UART** | `TX`→24, `RX`→23 |
+| **I2C** | `SDA`→12, `SCL`→22 |
+| **SPI** | `SS`→0, `MOSI`→25, `MISO`→11, `SCK`→10 |
+| **ADC** | `A0`→1, `A1`→2, `A2`→3, `A3`→4, `A4`→5 |
+| **Always safe** | 1, 4, 5 |
+| **Peripheral-dependent** | 0, 10, 11 (SPI) · 12, 22 (I2C) |
+
+### ESP32-P4 — `board-esp32-p4-function-ev`
+
+| Property | GPIOs |
+|---|---|
+| **Broken out (J1 header)** | 2–8, 20–23, 32–33, 36–38, 46–48, 53–54 |
+| **ESP-Hosted SDIO** | `CLK`→18, `CMD`→19, `D0`→14, `D1`→15, `D2`→16, `D3`→17, `RESET`→54 |
+| **Ethernet (RMII)** | `MDC`→31, `MDIO`→52, `POWER`→51, `TX_EN`→49, `TX0`→34, `TX1`→35, `RX0`→29, `RX1_EN`→30, `CRS_DV`→28, `CLK`→50 |
+| **SDMMC** | `POWER`→45 |
+| **Strapping** | 34–38 |
+| **Disabled by default** | 0, 1, 45 |
+| **USB-JTAG** | 24, 25 |
+| **UART** | `TX`→37, `RX`→38 |
+| **I2C** | `SDA`→7, `SCL`→8 |
+| **SPI** | `SS`→26, `MOSI`→32, `MISO`→33, `SCK`→36 |
+| **ADC** | `A0`→16, `A1`→17, `A2`→18, `A3`→19, `A4`→20, `A5`→21, `A6`→22, `A7`→23, `A8`→49, `A9`→50, `A10`→51, `A11`→52, `A12`→53, `A13`→54 |
+| **Touch** | `T0`→2, `T1`→3, `T2`→4, `T3`→5, `T4`→6, `T5`→7, `T6`→8, `T7`→9, `T8`→10, `T9`→11, `T10`→12, `T11`→13, `T12`→14, `T13`→15 |
+| **Always safe** | 20–23, 27, 46–48, 53 |
+| **Peripheral-dependent** | 2–6 (Touch) · 7, 8 (I2C, Touch) · 26, 32, 33 (SPI) · 54 (ESP-Hosted RESET) |
+
+### Quick Reference: Choosing Test Pins
+
+When writing tests that need GPIO pins:
+
+1. Start with the **Always safe** row for the target — these pins have no peripheral conflicts.
+2. If you need more pins, use **Peripheral-dependent** pins that don't conflict with the peripherals your test uses.
+3. Check the footnotes on the ESP32 pin table (ADC1/ADC2, LEDC+Touch) when the test calls `analogContinuous()`, DAC, LEDC, or other drivers — alias tables alone are not enough on ESP32.
+4. There is no single GPIO that is safe across all targets — use per-target `#ifdef` in the sketch and per-target `diagram.{chip}.json` wiring.
 
 ---
 

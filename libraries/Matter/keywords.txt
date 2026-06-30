@@ -56,6 +56,7 @@ matterEventCB	KEYWORD1
 attrOperation_t	KEYWORD1
 OccupancySensorType_t	KEYWORD1
 HoldTimeChangeCB	KEYWORD1
+MatterLightSensor	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -193,6 +194,8 @@ getSecondaryNetworkEndPointId	KEYWORD2
 createSecondaryNetworkInterface	KEYWORD2
 onIdentify	KEYWORD2
 endpointIdentifyCB	KEYWORD2
+setIlluminance	KEYWORD2
+getIlluminance	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

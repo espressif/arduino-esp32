@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #ifndef ARDUINO_USB_MODE
 #error This ESP32 SoC has no Native USB interface
 #elif ARDUINO_USB_MODE == 1
@@ -60,7 +61,7 @@ static void usbEventCallback(void *arg, esp_event_base_t event_base, int32_t eve
 static const char *strRequestDirections[] = {"OUT", "IN"};
 static const char *strRequestTypes[] = {"STANDARD", "CLASS", "VENDOR", "INVALID"};
 static const char *strRequestRecipients[] = {"DEVICE", "INTERFACE", "ENDPOINT", "OTHER"};
-static const char *strRequestStages[] = {"SETUP", "DATA", "ACK"};
+static const char *strRequestStages[] = {"IDLE", "SETUP", "DATA", "ACK"};
 
 //Handle USB requests to the vendor interface
 bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_control_request_t const *request) {
@@ -96,8 +97,8 @@ bool vendorRequestCallback(uint8_t rhport, uint8_t requestStage, arduino_usb_con
           } else if (requestStage == REQUEST_STAGE_ACK) {
             //In the ACK stage the response is complete
             Serial.printf(
-              "Vendor Line Coding: bit_rate: %lu, data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate, vendor_line_coding.data_bits,
-              vendor_line_coding.stop_bits, vendor_line_coding.parity
+              "Vendor Line Coding: bit_rate: %" PRIu32 ", data_bits: %u, stop_bits: %u, parity: %u\n", vendor_line_coding.bit_rate,
+              vendor_line_coding.data_bits, vendor_line_coding.stop_bits, vendor_line_coding.parity
             );
           }
           result = true;

@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLERemoteService.cpp
  *
  *  Created on: Jul 8, 2017
@@ -23,6 +42,7 @@
 #include "BLEUtils.h"
 #include "GeneralUtils.h"
 #include <esp_err.h>
+#include <inttypes.h>
 #include "esp32-hal-log.h"
 
 /***************************************************************************
@@ -133,7 +153,7 @@ uint16_t BLERemoteService::getStartHandle() {
 
 uint16_t BLERemoteService::getHandle() {
   log_v(">> getHandle: service: %s", getUUID().toString().c_str());
-  log_v("<< getHandle: %d 0x%.2x", getStartHandle(), getStartHandle());
+  log_v("<< getHandle: %u 0x%04x", getStartHandle(), getStartHandle());
   return getStartHandle();
 }  // getHandle
 
@@ -187,13 +207,13 @@ String BLERemoteService::toString() {
   String res = "Service: uuid: " + m_uuid.toString();
   char val[6];
   res += ", start_handle: ";
-  snprintf(val, sizeof(val), "%d", m_startHandle);
+  snprintf(val, sizeof(val), "%u", m_startHandle);
   res += val;
   snprintf(val, sizeof(val), "%04x", m_startHandle);
   res += " 0x";
   res += val;
   res += ", end_handle: ";
-  snprintf(val, sizeof(val), "%d", m_endHandle);
+  snprintf(val, sizeof(val), "%u", m_endHandle);
   res += val;
   snprintf(val, sizeof(val), "%04x", m_endHandle);
   res += " 0x";
@@ -257,7 +277,7 @@ void BLERemoteService::retrieveCharacteristics() {
       break;
     }
 
-    log_d("Found a characteristic: Handle: %d, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
+    log_d("Found a characteristic: Handle: %u, UUID: %s", result.char_handle, BLEUUID(result.uuid).toString().c_str());
 
     // We now have a new characteristic ... let us add that to our set of known characteristics
     BLERemoteCharacteristic *pNewRemoteCharacteristic = new BLERemoteCharacteristic(result.char_handle, BLEUUID(result.uuid), result.properties, this);
@@ -388,7 +408,7 @@ void BLERemoteService::retrieveCharacteristics() {
  * @return success == 0 or error code.
  */
 int BLERemoteService::characteristicDiscCB(uint16_t conn_handle, const struct ble_gatt_error *error, const struct ble_gatt_chr *chr, void *arg) {
-  log_d("Characteristic Discovered >> status: %d handle: %d", error->status, (error->status == 0) ? chr->val_handle : -1);
+  log_d("Characteristic Discovered >> status: %u handle: %u", error->status, (error->status == 0) ? chr->val_handle : -1);
 
   BLETaskData *pTaskData = (BLETaskData *)arg;
   BLERemoteService *service = (BLERemoteService *)pTaskData->m_pInstance;

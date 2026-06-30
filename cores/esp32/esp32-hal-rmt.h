@@ -18,6 +18,11 @@
 #include "soc/soc_caps.h"
 #if SOC_RMT_SUPPORTED
 
+// Definition of SOC_RMT_TX_CANDIDATES_PER_GROUP is removed in ESP-IDF 6
+#ifndef SOC_RMT_TX_CANDIDATES_PER_GROUP
+#define SOC_RMT_TX_CANDIDATES_PER_GROUP 5
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif

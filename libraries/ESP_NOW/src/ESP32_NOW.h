@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #warning "ESP-NOW is only supported in SoCs with native Wi-Fi support"
 #else
 
@@ -95,7 +95,7 @@ public:
 
   //optional callbacks to be implemented by the upper class
   virtual void onReceive(const uint8_t *data, size_t len, bool broadcast) {
-    log_i("Received %d bytes from " MACSTR " %s", len, MAC2STR(mac), broadcast ? "(broadcast)" : "");
+    log_i("Received %lu bytes from " MACSTR " %s", (unsigned long)len, MAC2STR(mac), broadcast ? "(broadcast)" : "");
   }
 
   virtual void onSent(bool success) {

@@ -2,6 +2,10 @@
 #include <unity.h>
 #include <cstring>
 
+#ifndef ARDUINO_ARCH_ESP32
+#error "FS lock validation requires ARDUINO_ARCH_ESP32"
+#endif
+
 #include <FS.h>
 #include <SPIFFS.h>
 #include <FFat.h>
@@ -655,6 +659,72 @@ void test_write_read_patterns() {
   V.remove(path);
 }
 
+// Regression test for the TOCTOU fix in VFSFileImpl::VFSFileImpl (libraries/FS/src/vfs_api.cpp).
+//
+// The original code used stat() to determine the file type and then called fopen() or opendir()
+// based on the result, creating a race window between the check and the open.  The fix removes
+// that window by attempting fopen() first and falling back to opendir() on failure.
+//
+// We cannot reproduce the race deterministically on embedded hardware, but we can verify that
+// the fixed code path correctly identifies both files and directories when opened in read mode,
+// which would catch any regression in the type-detection logic.
+void test_open_read_mode_type_detection() {
+  auto &V = gFS->vfs();
+
+  // --- regular file opened in read mode ---
+  const char *filePath = "/toctou_file.txt";
+  {
+    File w = V.open(filePath, FILE_WRITE);
+    TEST_ASSERT_TRUE_MESSAGE(w, "setup: could not create file");
+    w.print("toctou");
+    w.close();
+  }
+
+  {
+    // Open the same path in read mode: must be detected as a file, not a directory
+    File f = V.open(filePath, FILE_READ);
+    TEST_ASSERT_TRUE_MESSAGE(f, "open(file, FILE_READ) failed");
+    TEST_ASSERT_FALSE_MESSAGE(f.isDirectory(), "regular file incorrectly detected as directory");
+    String content = f.readString();
+    TEST_ASSERT_EQUAL_STRING("toctou", content.c_str());
+    f.close();
+  }
+
+  V.remove(filePath);
+
+  // --- directory opened with default (read) mode ---
+  if (strcmp(gFS->name(), "spiffs") == 0) {
+    // SPIFFS does not have real directories; skip directory portion
+    TEST_MESSAGE("Skipping directory portion for SPIFFS");
+    return;
+  }
+
+  const char *dirPath = "/toctou_dir";
+  const char *childPath = "/toctou_dir/child.txt";
+  {
+    TEST_ASSERT_TRUE_MESSAGE(V.mkdir(dirPath), "setup: could not create directory");
+    File w = V.open(childPath, FILE_WRITE);
+    TEST_ASSERT_TRUE_MESSAGE(w, "setup: could not create child file");
+    w.print("child");
+    w.close();
+  }
+
+  {
+    // Open the directory path without an explicit mode (defaults to read).
+    // Must be detected as a directory so that openNextFile() works.
+    File d = V.open(dirPath);
+    TEST_ASSERT_TRUE_MESSAGE(d, "open(dir) failed");
+    TEST_ASSERT_TRUE_MESSAGE(d.isDirectory(), "directory incorrectly detected as file");
+    File child = d.openNextFile();
+    TEST_ASSERT_TRUE_MESSAGE(child, "openNextFile() returned no entry in non-empty directory");
+    child.close();
+    d.close();
+  }
+
+  V.remove(childPath);
+  V.rmdir(dirPath);
+}
+
 void test_directory_operations_edge_cases() {
   auto &V = gFS->vfs();
   TEST_ASSERT_TRUE(V.mkdir("/test_dir"));
@@ -668,6 +738,87 @@ void test_directory_operations_edge_cases() {
     TEST_ASSERT_FALSE(V.rmdir("/nonexistent_dir"));
   }
   V.rmdir("/test_dir");
+}
+
+void test_arduino_arch_esp32() {
+  TEST_ASSERT_TRUE(true);
+}
+
+// open(..., create=true) holds the FS lock while calling mkdir() for each path
+// segment. A non-recursive mutex deadlocks here; the call must finish promptly.
+void test_fs_recursive_lock_nested_create() {
+#if !defined(ARDUINO_ARCH_ESP32)
+  TEST_IGNORE_MESSAGE("FS locks require ARDUINO_ARCH_ESP32");
+  return;
+#endif
+
+  auto &V = gFS->vfs();
+  const char *path = "/lock_recursive/a/b/c/d.txt";
+
+  uint32_t start = millis();
+  File f = V.open(path, FILE_WRITE, true);
+  uint32_t elapsed = millis() - start;
+  TEST_ASSERT_TRUE_MESSAGE(f, "nested create open failed");
+  TEST_ASSERT_LESS_THAN(10000, (int)elapsed);
+  f.print("x");
+  f.close();
+
+  File check = V.open(path, FILE_READ);
+  TEST_ASSERT_TRUE(check);
+  TEST_ASSERT_EQUAL_STRING("x", check.readString().c_str());
+  check.close();
+
+  TEST_ASSERT_TRUE(V.remove(path));
+  if (strcmp(gFS->name(), "spiffs") != 0) {
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a/b/c"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a/b"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive/a"));
+    TEST_ASSERT_TRUE(V.rmdir("/lock_recursive"));
+  }
+}
+
+static TaskHandle_t g_fs_lock_parent = NULL;
+
+// mkdir() only — exists() opens a VFSFileImpl and can exhaust the 3 FD limit
+// (maxOpenFiles) when the main thread and two workers contend on FFat.
+static void fs_lock_worker_task(void *param) {
+  (void)param;
+  fs::FS &V = gFS->vfs();
+
+  for (int i = 0; i < 30; ++i) {
+    V.mkdir("/__lk_shared__");
+    taskYIELD();
+  }
+
+  xTaskNotifyGive(g_fs_lock_parent);
+  vTaskDelete(NULL);
+}
+
+void test_fs_concurrent_locking() {
+#if !defined(ARDUINO_ARCH_ESP32)
+  TEST_IGNORE_MESSAGE("FS locks require ARDUINO_ARCH_ESP32");
+  return;
+#endif
+
+  auto &V = gFS->vfs();
+  g_fs_lock_parent = xTaskGetCurrentTaskHandle();
+
+  TEST_ASSERT_EQUAL(pdPASS, xTaskCreatePinnedToCore(fs_lock_worker_task, "fs_lk0", 8192, NULL, 1, NULL, 0));
+  TEST_ASSERT_EQUAL(pdPASS, xTaskCreatePinnedToCore(fs_lock_worker_task, "fs_lk1", 8192, NULL, 1, NULL, 0));
+
+  int completed = 0;
+  const uint32_t deadline = millis() + 20000;
+  while (completed < 2 && millis() < deadline) {
+    V.mkdir("/__lk_main__");
+    completed += ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(50));
+  }
+
+  if (strcmp(gFS->name(), "spiffs") != 0) {
+    V.rmdir("/__lk_main__");
+    V.rmdir("/__lk_shared__");
+  }
+
+  TEST_ASSERT_EQUAL(2, completed);
 }
 
 void test_max_open_files_limit() {
@@ -740,6 +891,12 @@ static void run_suite_for(IFileSystem &fs) {
   Serial.print("=== FS: ");
   Serial.println(fs.name());
 
+  static bool arch_esp32_checked = false;
+  if (!arch_esp32_checked) {
+    RUN_TEST(test_arduino_arch_esp32);
+    arch_esp32_checked = true;
+  }
+
   RUN_TEST(test_info_sanity);
   RUN_TEST(test_basic_write_and_read);
   RUN_TEST(test_append_behavior);
@@ -756,7 +913,10 @@ static void run_suite_for(IFileSystem &fs) {
   RUN_TEST(test_large_file_operations);
   RUN_TEST(test_write_read_patterns);
   RUN_TEST(test_directory_operations_edge_cases);
+  RUN_TEST(test_fs_recursive_lock_nested_create);
+  RUN_TEST(test_fs_concurrent_locking);
   RUN_TEST(test_max_open_files_limit);
+  RUN_TEST(test_open_read_mode_type_detection);
   gFS = nullptr;
 }
 

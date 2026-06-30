@@ -17,6 +17,10 @@
 #include "driver/i2s_pdm.h"
 #endif
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define i2s_port_t int
+#endif
+
 typedef esp_err_t (*i2s_channel_read_fn)(i2s_chan_handle_t handle, char *tmp_buf, void *dest, size_t size, size_t *bytes_read, uint32_t timeout_ms);
 
 typedef enum {
@@ -37,13 +41,17 @@ typedef enum {
   I2S_RX_TRANSFORM_NONE,
   I2S_RX_TRANSFORM_32_TO_16,
   I2S_RX_TRANSFORM_16_STEREO_TO_MONO,
+  I2S_RX_TRANSFORM_8_UNPACK,
   I2S_RX_TRANSFORM_MAX
 } i2s_rx_transform_t;
 
 class I2SClass : public Stream {
 public:
-  I2SClass();
+  explicit I2SClass(i2s_port_t port = I2S_NUM_AUTO);
   ~I2SClass();
+
+  bool setPort(i2s_port_t port);
+  i2s_port_t getPort();
 
   //STD + TDM mode
   void setPins(int8_t bclk, int8_t ws, int8_t dout, int8_t din = -1, int8_t mclk = -1);
@@ -60,13 +68,15 @@ public:
   void setInvertedPdm(bool clk);
 #endif
 
-  bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1);
+  bool begin(i2s_mode_t mode, uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1, i2s_role_t role = I2S_ROLE_MASTER);
   bool configureTX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, int8_t slot_mask = -1);
-  bool configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform = I2S_RX_TRANSFORM_NONE);
+  bool
+    configureRX(uint32_t rate, i2s_data_bit_width_t bits_cfg, i2s_slot_mode_t ch, i2s_rx_transform_t transform = I2S_RX_TRANSFORM_NONE, int8_t slot_mask = -1);
   bool end();
 
   size_t readBytes(char *buffer, size_t size);
-  size_t write(const uint8_t *buffer, size_t size);
+  size_t write(const void *buffer, size_t size);
+  size_t write(const uint8_t *buffer, size_t size) override;
 
   i2s_chan_handle_t txChan();
   uint32_t txSampleRate();
@@ -88,15 +98,16 @@ public:
   // Record short PCM WAV to memory with current RX settings. Returns buffer that must be freed by the user.
   uint8_t *recordWAV(size_t rec_seconds, size_t *out_size);
   // Play short PCM WAV from memory
-  void playWAV(uint8_t *data, size_t len);
+  void playWAV(const uint8_t *data, size_t len);
 #if ARDUINO_HAS_MP3_DECODER
   // Play short MP3 from memory
-  bool playMP3(uint8_t *src, size_t src_len);
+  bool playMP3(const uint8_t *src, size_t src_len);
 #endif
 
 private:
   esp_err_t last_error;
   i2s_mode_t _mode;
+  i2s_port_t _port;
 
   i2s_chan_handle_t tx_chan;
   uint32_t tx_sample_rate;
@@ -112,6 +123,13 @@ private:
   uint32_t rx_sample_rate;
   i2s_data_bit_width_t rx_data_bit_width;
   i2s_slot_mode_t rx_slot_mode;
+
+  i2s_role_t _role;
+  i2s_std_slot_mask_t _rx_slot_mask;
+#if SOC_I2S_HW_VERSION_1
+  bool _mono_hw_workaround;
+  bool _8bit_hw_packing;
+#endif
 
   //STD and TDM mode
   int8_t _mclk, _bclk, _ws, _dout, _din;

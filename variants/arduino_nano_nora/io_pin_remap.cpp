@@ -47,8 +47,10 @@ static const int8_t TO_GPIO_NUMBER[] = {
 
 #if defined(BOARD_HAS_PIN_REMAP) && !defined(BOARD_USES_HW_GPIO_NUMBERS)
 
+static const unsigned REMAP_TABLE_ENTRIES = sizeof(TO_GPIO_NUMBER) / sizeof(TO_GPIO_NUMBER[0]);
+
 int8_t digitalPinToGPIONumber(int8_t digitalPin) {
-  if ((digitalPin < 0) || (digitalPin >= NUM_DIGITAL_PINS)) {
+  if ((digitalPin < 0) || (digitalPin >= REMAP_TABLE_ENTRIES)) {
     return -1;
   }
   return TO_GPIO_NUMBER[digitalPin];
@@ -60,7 +62,7 @@ int8_t gpioNumberToDigitalPin(int8_t gpioNumber) {
   }
 
   // slow linear table lookup
-  for (int8_t digitalPin = 0; digitalPin < NUM_DIGITAL_PINS; ++digitalPin) {
+  for (int8_t digitalPin = 0; digitalPin < REMAP_TABLE_ENTRIES; ++digitalPin) {
     if (TO_GPIO_NUMBER[digitalPin] == gpioNumber) {
       return digitalPin;
     }

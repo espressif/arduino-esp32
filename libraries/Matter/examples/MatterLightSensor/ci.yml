@@ -1,0 +1,4 @@
+fqbn_append: PartitionScheme=huge_app
+
+requires:
+  - CONFIG_ESP_MATTER_ENABLE_DATA_MODEL=y

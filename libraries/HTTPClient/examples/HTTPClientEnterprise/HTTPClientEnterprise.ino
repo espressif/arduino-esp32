@@ -4,8 +4,9 @@
 /*|CORE: June 2018                                           |*/
 /*|----------------------------------------------------------|*/
 
+#include <Arduino.h>
 #include "sdkconfig.h"
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 #error "WPA-Enterprise is only supported in SoCs with native Wi-Fi support"
 #endif
 

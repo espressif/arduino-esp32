@@ -27,6 +27,7 @@
  * Created by [FaBjE](https://github.com/FaBjE) based on examples by [Jan Procházka](https://github.com/P-R-O-C-H-Y/)
  */
 
+#include <Arduino.h>
 #ifndef ZIGBEE_MODE_ED
 #error "Zigbee end device mode is not selected in Tools->Zigbee mode"
 #endif
@@ -52,7 +53,7 @@ void setLight(bool state, uint8_t level) {
 // Create a task on identify call to handle the identify function
 void identify(uint16_t time) {
   static uint8_t blink = 1;
-  log_d("Identify called for %d seconds", time);
+  log_d("Identify called for %u seconds", time);
   if (time == 0) {
     // If identify time is 0, stop blinking and restore light as it was used for identify
     zbDimmableLight.restoreLight();

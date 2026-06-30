@@ -448,7 +448,7 @@ begin
 
 .. code-block:: arduino
 
-    wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+    wl_status_t begin(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
 
 Where:
 
@@ -456,11 +456,11 @@ Where:
 * ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
 * ``channel`` sets the Wi-Fi channel.
 * ``uint8_t* bssid`` sets the AP BSSID.
-* ``connect`` sets ``true`` to connect to the configured network automatically.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
 
 .. code-block:: arduino
 
-    wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool connect = true);
+    wl_status_t begin(char* ssid, char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
 
 Where:
 
@@ -468,13 +468,38 @@ Where:
 * ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
 * ``channel`` sets the Wi-Fi channel.
 * ``bssid`` sets the AP BSSID.
-* ``connect`` sets ``true`` to connect to the configured network automatically.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
+
+.. note::
+
+    The ``begin`` function also accepts ``String`` types for the ``ssid`` and ``passphrase`` parameters, providing convenient overloads for use with Arduino ``String`` objects.
 
 Function to start the connection after being configured.
 
 .. code-block:: arduino
 
     wl_status_t begin();
+
+connect
+*******
+
+Function to connect to a Wi-Fi network. This is called internally by ``begin`` but can also be used directly for more control.
+
+.. code-block:: arduino
+
+    bool connect(const char* ssid, const char *passphrase = NULL, int32_t channel = 0, const uint8_t* bssid = NULL, bool tryConnect = true);
+
+Where:
+
+* ``ssid`` sets the AP SSID.
+* ``passphrase`` sets the AP password. Set as ``NULL`` for open networks.
+* ``channel`` sets the Wi-Fi channel.
+* ``bssid`` sets the AP BSSID.
+* ``tryConnect`` sets ``true`` to connect to the configured network automatically.
+
+.. note::
+
+    The ``connect`` function also accepts ``String`` types for the ``ssid`` and ``passphrase`` parameters, providing convenient overloads for use with Arduino ``String`` objects.
 
 config
 ******
@@ -604,7 +629,19 @@ To add the AP, use the following function. You can add multiple AP's and this li
 
 .. code-block:: arduino
 
-    bool addAP(const char* ssid, const char *passphrase = NULL);
+    bool addAP(const char *ssid, const char *passphrase = NULL);
+
+Or, if you have WPA2-Enterprise support enabled (``CONFIG_ESP_WIFI_ENTERPRISE_SUPPORT``):
+
+.. code-block:: arduino
+
+    bool addAP(const char *ssid, const char *passphrase = NULL, const char *username = NULL, const char *identity = NULL);
+
+For:
+
+* Open networks, ``ssid`` must be set.
+* Networks using a passphrase, e.g. WPA2-PSK, ``passphrase`` must be set.
+* Networks using WPA2-Enterprise with PEAPv0/EAP-MSCHAPv2, ``username`` and ``passphrase`` must be set to the username and password required for inner authentication (MSCHAPv2), respectively. ``identity`` must be set to the "anonymous identity" used for PEAP, if required by the network, or must be set to an empty string otherwise. Note that WPA2-Enterprise networks using certificate-based authentication (e.g. EAP-TLS) are currently not supported. It is also currently not possible to supply a CA certificate to validate the server certificate for PEAP. Given these limitations, you should consider whether this is secure enough for your needs.
 
 After adding the AP's, run by the following function.
 
@@ -612,7 +649,7 @@ After adding the AP's, run by the following function.
 
     uint8_t run(uint32_t connectTimeout=5000);
 
-To see how to use the ``WiFiMulti``, take a look at the ``WiFiMulti.ino`` example available.
+To see how to use the ``WiFiMulti``, take a look at the ``WiFiMulti.ino``, ``WiFiMultiAdvanced.ino`` and ``WiFiMultiEnterprise.ino`` examples available.
 
 WiFiScan
 --------

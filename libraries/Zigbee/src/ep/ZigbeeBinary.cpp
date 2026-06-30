@@ -127,17 +127,13 @@ bool ZigbeeBinary::setBinaryOutputApplication(uint32_t application_type) {
 }
 
 bool ZigbeeBinary::setBinaryInput(bool input) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   if (!(_binary_clusters & BINARY_INPUT)) {
     log_e("Binary Input cluster not added");
     return false;
   }
   log_d("Setting binary input to %d", input);
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false
-  );
-  esp_zb_lock_release();
+  esp_zb_zcl_status_t ret =
+    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false);
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
@@ -153,13 +149,11 @@ bool ZigbeeBinary::reportBinaryInput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Binary Input report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Binary Input report: 0x%x: %s");
     return false;
   }
   log_v("Binary Input report sent");
@@ -253,10 +247,10 @@ void ZigbeeBinary::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *mes
       _output_state = *(bool *)message->attribute.data.value;
       binaryOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %d not supported for Binary Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Binary Output", message->attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %d not supported for Binary endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Binary endpoint", message->info.cluster);
   }
 }
 
@@ -269,17 +263,14 @@ void ZigbeeBinary::binaryOutputChanged() {
 }
 
 bool ZigbeeBinary::setBinaryOutput(bool output) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
   _output_state = output;
   binaryOutputChanged();
 
   log_v("Updating binary output to %d", output);
   /* Update binary output */
-  esp_zb_lock_acquire(portMAX_DELAY);
-  ret = esp_zb_zcl_set_attribute_val(
-    _endpoint, ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
+  esp_zb_zcl_status_t ret = setClusterAttribute(
+    ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
   );
-  esp_zb_lock_release();
 
   if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
@@ -296,13 +287,11 @@ bool ZigbeeBinary::reportBinaryOutput() {
   report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
   report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT;
   report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
+  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
+  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
 
-  esp_zb_lock_acquire(portMAX_DELAY);
-  esp_err_t ret = esp_zb_zcl_report_attr_cmd_req(&report_attr_cmd);
-  esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to send Binary Output report: 0x%x: %s", ret, esp_err_to_name(ret));
+  if (!reportClusterAttribute(&report_attr_cmd)) {
+    log_e("Failed to send Binary Output report: 0x%x: %s");
     return false;
   }
   log_v("Binary Output report sent");

@@ -1,4 +1,4 @@
-// Copyright 2024 Espressif Systems (Shanghai) PTE LTD
+// Copyright 2026 Espressif Systems (Shanghai) PTE LTD
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,24 +20,29 @@
 #include "OThreadCLI.h"
 
 #include "esp_err.h"
-#include "esp_event.h"
-#include "esp_netif.h"
-#include "esp_netif_types.h"
-#include "esp_vfs_eventfd.h"
+#include "esp_openthread_lock.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
-#include "esp_netif_net_stack.h"
-#include "lwip/netif.h"
-
 bool OpenThreadCLI::otCLIStarted = false;
 static TaskHandle_t s_cli_task = NULL;
 static TaskHandle_t s_console_cli_task = NULL;
 static QueueHandle_t rx_queue = NULL;
 static QueueHandle_t tx_queue = NULL;
+
+static bool s_txQueueWasFull = false;
+static uint32_t s_txDroppedSinceFull = 0;
+
+static void resetTxDropState(bool logPendingSummary = false) {
+  if (logPendingSummary && s_txQueueWasFull && s_txDroppedSinceFull > 0) {
+    log_w("OpenThreadCLI: TX queue torn down; %u byte(s) dropped while full", (unsigned)s_txDroppedSinceFull);
+  }
+  s_txQueueWasFull = false;
+  s_txDroppedSinceFull = 0;
+}
 
 #define OT_CLI_MAX_LINE_LENGTH 512
 
@@ -54,24 +59,26 @@ static void ot_cli_loop(void *context) {
   String sTxString("");
 
   while (true) {
-    if (tx_queue != NULL) {
-      uint8_t c;
-      if (xQueueReceive(tx_queue, &c, portMAX_DELAY)) {
-        // avoids sending a empty command, specially when the terminal send "\r\n" together
-        if (sTxString.length() > 0 && (c == '\r' || c == '\n')) {
-          esp_openthread_cli_input(sTxString.c_str());
-          xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
-          sTxString = "";
+    if (tx_queue == NULL) {
+      delay(1);
+      continue;
+    }
+    uint8_t c;
+    if (xQueueReceive(tx_queue, &c, portMAX_DELAY)) {
+      // avoids sending a empty command, specially when the terminal send "\r\n" together
+      if (sTxString.length() > 0 && (c == '\r' || c == '\n')) {
+        esp_openthread_cli_input(sTxString.c_str());
+        xTaskNotifyWait(0, 0, NULL, portMAX_DELAY);
+        sTxString = "";
+      } else {
+        if (c == '\b' || c == 127) {
+          if (sTxString.length() > 0) {
+            sTxString.remove(sTxString.length() - 1);
+          }
         } else {
-          if (c == '\b' || c == 127) {
-            if (sTxString.length() > 0) {
-              sTxString.remove(sTxString.length() - 1);
-            }
-          } else {
-            // only allow printable characters
-            if (c > 31 && c < 127) {
-              sTxString += (char)c;
-            }
+          // only allow printable characters
+          if (c > 31 && c < 127) {
+            sTxString += (char)c;
           }
         }
       }
@@ -81,11 +88,13 @@ static void ot_cli_loop(void *context) {
 
 // process the CLI responses received from the OpenThread stack
 static int ot_cli_output_callback(void *context, const char *format, va_list args) {
-  char prompt_check[3];
-  int ret = 0;
+  char buf[OT_CLI_MAX_LINE_LENGTH];
+  int ret = vsnprintf(buf, sizeof(buf), format, args);
+  if (ret <= 0) {
+    return ret;
+  }
 
-  vsnprintf(prompt_check, sizeof(prompt_check), format, args);
-  if (!strncmp(prompt_check, "> ", sizeof(prompt_check))) {
+  if (!strncmp(buf, "> ", 2)) {
     if (s_cli_task) {
       xTaskNotifyGive(s_cli_task);
     }
@@ -93,27 +102,24 @@ static int ot_cli_output_callback(void *context, const char *format, va_list arg
       xTaskNotifyGive(s_console_cli_task);
     }
   } else {
-    char buf[OT_CLI_MAX_LINE_LENGTH];
-    ret = vsnprintf(buf, sizeof(buf), format, args);
-    if (ret) {
-      // store received data in the RX buffer
-      if (rx_queue != NULL) {
-        size_t freeSpace = uxQueueSpacesAvailable(rx_queue);
-        if (freeSpace < ret) {
-          // Drop the oldest data to make room for the new data
-          for (int i = 0; i < (ret - freeSpace); i++) {
-            uint8_t c;
-            xQueueReceive(rx_queue, &c, 0);
-          }
-        }
-        for (int i = 0; i < ret; i++) {
-          xQueueSend(rx_queue, &buf[i], 0);
-        }
-        // if there is a user callback function in place, it shall have the priority
-        // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
-        if (otConsole.responseCallBack != nullptr) {
-          otConsole.responseCallBack();
-        }
+    // store received data in the RX buffer
+    if (rx_queue != NULL) {
+      const size_t capacity = uxQueueMessagesWaiting(rx_queue) + uxQueueSpacesAvailable(rx_queue);
+      size_t len = (ret < (int)sizeof(buf)) ? (size_t)ret : sizeof(buf) - 1;
+      if (len > capacity) {
+        len = capacity;
+      }
+      while (uxQueueSpacesAvailable(rx_queue) < len) {
+        uint8_t c;
+        xQueueReceive(rx_queue, &c, 0);
+      }
+      for (size_t i = 0; i < len; i++) {
+        xQueueSend(rx_queue, &buf[i], 0);
+      }
+      // if there is a user callback function in place, it shall have the priority
+      // to process/consume the Stream data received from OpenThread CLI, which is available in its RX Buffer
+      if (otConsole.responseCallBack != nullptr) {
+        otConsole.responseCallBack();
       }
     }
   }
@@ -176,6 +182,8 @@ static void ot_cli_console_worker(void *context) {
           cli->cliStream->printf(cli->prompt.c_str());
         }
       }
+    } else {
+      delay(1);
     }
   }
 }
@@ -247,19 +255,42 @@ void OpenThreadCLI::begin() {
   //RX Buffer default has 1024 bytes if not preset
   if (rx_queue == NULL) {
     if (!setRxBufferSize(1024)) {
-      log_e("HW CDC RX Buffer error");
+      log_e("OpenThread CLI: failed to allocate RX queue");
+      return;
     }
   }
   //TX Buffer default has 256 bytes if not preset
   if (tx_queue == NULL) {
     if (!setTxBufferSize(256)) {
-      log_e("HW CDC RX Buffer error");
+      log_e("OpenThread CLI: failed to allocate TX queue");
+      setRxBufferSize(0);
+      return;
     }
   }
 
-  xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task);
-  // Initialize the OpenThread cli
+  if (xTaskCreate(ot_cli_loop, "ot_cli", 4096, xTaskGetCurrentTaskHandle(), 2, &s_cli_task) != pdPASS || s_cli_task == NULL) {
+    log_e("Error: Failed to create OpenThread CLI task");
+    setRxBufferSize(0);
+    setTxBufferSize(0);
+    return;
+  }
+  // Initialize the OpenThread CLI. The OpenThread mainloop is already running on
+  // its worker task (begin() is only allowed after OpenThread::otStarted), so
+  // this direct otCliInit() call must hold the stack lock to avoid racing the
+  // mainloop. Note: CLI command *input* later flows through
+  // esp_openthread_cli_input(), which is already thread-safe on its own (it
+  // marshals the line onto the OpenThread task queue), so it needs no lock here.
+  if (!esp_openthread_lock_acquire(portMAX_DELAY)) {
+    log_e("Failed to acquire OpenThread lock to initialize the CLI");
+    vTaskDelete(s_cli_task);
+    s_cli_task = NULL;
+    setRxBufferSize(0);
+    setTxBufferSize(0);
+    return;
+  }
+
   otCliInit(esp_openthread_get_instance(), ot_cli_output_callback, NULL);
+  esp_openthread_lock_release();
 
   otCLIStarted = true;
   return;
@@ -267,15 +298,17 @@ void OpenThreadCLI::begin() {
 
 void OpenThreadCLI::end() {
   if (!otCLIStarted) {
-    log_w("OpenThread CLI already stopped. Please begin() it before stopping again.");
+    log_w("OpenThread CLI already stopped.");
     return;
   }
+  stopConsole();
+  flush();
+  // OpenThread provides otCliInit() but no otCliDeinit(); stop feeding commands
+  // and delete the marshaling task while the stack is still live.
   if (s_cli_task != NULL) {
     vTaskDelete(s_cli_task);
     s_cli_task = NULL;
   }
-  stopConsole();
-  esp_event_loop_delete_default();
   setRxBufferSize(0);
   setTxBufferSize(0);
   otCLIStarted = false;
@@ -286,13 +319,27 @@ size_t OpenThreadCLI::write(uint8_t c) {
     return 0;
   }
   if (xQueueSend(tx_queue, &c, 0) != pdPASS) {
+    if (!s_txQueueWasFull) {
+      log_w("OpenThreadCLI: TX queue full; bytes will be dropped until it drains");
+      s_txQueueWasFull = true;
+      s_txDroppedSinceFull = 0;
+    }
+    ++s_txDroppedSinceFull;
     return 0;
+  }
+  if (s_txQueueWasFull) {
+    log_w("OpenThreadCLI: TX queue recovered; %u byte(s) dropped while full", (unsigned)s_txDroppedSinceFull);
+    resetTxDropState(false);
   }
   return 1;
 }
 
 size_t OpenThreadCLI::setBuffer(QueueHandle_t &queue, size_t queue_len) {
+  const bool isTxQueue = (&queue == &tx_queue);
   if (queue) {
+    if (isTxQueue) {
+      resetTxDropState(true);
+    }
     vQueueDelete(queue);
     queue = NULL;
   }
@@ -302,6 +349,9 @@ size_t OpenThreadCLI::setBuffer(QueueHandle_t &queue, size_t queue_len) {
   queue = xQueueCreate(queue_len, sizeof(uint8_t));
   if (!queue) {
     return 0;
+  }
+  if (isTxQueue) {
+    resetTxDropState(false);
   }
   return queue_len;
 }
@@ -348,7 +398,9 @@ void OpenThreadCLI::flush() {
     return;
   }
   // wait for the TX Queue to be empty
-  while (uxQueueMessagesWaiting(tx_queue));
+  while (uxQueueMessagesWaiting(tx_queue)) {
+    delay(1);
+  }
 }
 
 OpenThreadCLI OThreadCLI;

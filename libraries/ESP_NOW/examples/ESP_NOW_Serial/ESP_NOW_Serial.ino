@@ -17,6 +17,7 @@
     To properly visualize the data being sent, set the line ending in the Serial Monitor to "Both NL & CR".
 */
 
+#include <Arduino.h>
 #include "ESP32_NOW_Serial.h"
 #include "MacAddress.h"
 #include "WiFi.h"

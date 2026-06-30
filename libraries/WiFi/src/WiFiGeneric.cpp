@@ -24,7 +24,7 @@
 
 #include "WiFi.h"
 #include "WiFiGeneric.h"
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
 
 extern "C" {
 #include <stdint.h>
@@ -56,6 +56,13 @@ extern "C" {
 #include <vector>
 #include "sdkconfig.h"
 
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#define esp_interface_t wifi_interface_t
+#define ESP_IF_WIFI_AP  WIFI_IF_AP
+#define ESP_IF_WIFI_STA WIFI_IF_STA
+#define ESP_IF_MAX      3
+#endif
+
 ESP_EVENT_DEFINE_BASE(ARDUINO_EVENTS);
 
 static esp_netif_t *esp_netifs[ESP_IF_MAX] = {NULL, NULL, NULL};
@@ -78,7 +85,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_SCAN_DONE) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     wifi_event_sta_scan_done_t *event = (wifi_event_sta_scan_done_t *)event_data;
-    log_v("SCAN Done: ID: %u, Status: %u, Results: %u", event->scan_id, event->status, event->number);
+    log_v("SCAN Done: ID: %u, Status: %" PRIu32 ", Results: %u", event->scan_id, event->status, event->number);
 #endif
     arduino_event.event_id = ARDUINO_EVENT_WIFI_SCAN_DONE;
     memcpy(&arduino_event.event_info.wifi_scan_done, event_data, sizeof(wifi_event_sta_scan_done_t));
@@ -106,7 +113,7 @@ static void _arduino_event_cb(void *arg, esp_event_base_t event_base, int32_t ev
     arduino_event.event_id = ARDUINO_EVENT_WIFI_FTM_REPORT;
     memcpy(&arduino_event.event_info.wifi_ftm_report, event_data, sizeof(wifi_event_ftm_report_t));
 
-#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if !CONFIG_ESP_HOSTED_ENABLED
     /*
 	 * SMART CONFIG
 	 * */
@@ -177,7 +184,7 @@ static bool initWiFiEvents() {
     return false;
   }
 
-#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if !CONFIG_ESP_HOSTED_ENABLED
   if (esp_event_handler_instance_register(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb, NULL, NULL)) {
     log_e("event_handler_instance_register for SC_EVENT Failed!");
     return false;
@@ -200,7 +207,7 @@ static bool deinitWiFiEvents() {
     return false;
   }
 
-#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if !CONFIG_ESP_HOSTED_ENABLED
   if (esp_event_handler_unregister(SC_EVENT, ESP_EVENT_ANY_ID, &_arduino_event_cb)) {
     log_e("esp_event_handler_unregister for SC_EVENT Failed!");
     return false;
@@ -240,7 +247,7 @@ void WiFiGenericClass::useStaticBuffers(bool bufferMode) {
 extern "C" void phy_bbpll_en_usb(bool en);
 #endif
 
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
 
 bool WiFiGenericClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int8_t d2, int8_t d3, int8_t rst) {
   return hostedSetPins(clk, cmd, d0, d1, d2, d3, rst);
@@ -251,7 +258,7 @@ bool WiFiGenericClass::setPins(int8_t clk, int8_t cmd, int8_t d0, int8_t d1, int
 bool wifiLowLevelInit(bool persistent) {
   if (!lowLevelInitDone) {
     lowLevelInitDone = true;
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
     if (!hostedInitWiFi()) {
       lowLevelInitDone = false;
       return lowLevelInitDone;
@@ -264,7 +271,7 @@ bool wifiLowLevelInit(bool persistent) {
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
     // required for proper work when esp-hosted is used.
     cfg.nvs_enable = false;
     persistent = false;
@@ -326,7 +333,7 @@ static bool wifiLowLevelDeinit() {
       arduino_event_t arduino_event;
       arduino_event.event_id = ARDUINO_EVENT_WIFI_OFF;
       Network.postEvent(&arduino_event);
-#if CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if CONFIG_ESP_HOSTED_ENABLED
       hostedDeinitWiFi();
 #endif
     }
@@ -411,7 +418,7 @@ void WiFiGenericClass::_eventCallback(arduino_event_t *event) {
   // log_d("Arduino Event: %d - %s", event->event_id, WiFi.eventName(event->event_id));
   if (event->event_id == ARDUINO_EVENT_WIFI_SCAN_DONE) {
     WiFiScanClass::_scanDone();
-#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if !CONFIG_ESP_HOSTED_ENABLED
   } else if (event->event_id == ARDUINO_EVENT_SC_GOT_SSID_PSWD) {
     WiFi.begin(
       (const char *)event->event_info.sc_got_ssid_pswd.ssid, (const char *)event->event_info.sc_got_ssid_pswd.password, 0,
@@ -458,7 +465,7 @@ int WiFiGenericClass::setChannel(uint8_t primary, wifi_second_chan_t secondary) 
   uint8_t max_chan = min_chan + country.nchan - 1;
 
   if (primary < min_chan || primary > max_chan) {
-    log_e("Invalid primary channel: %d. Valid range is %d-%d for country %s", primary, min_chan, max_chan, country.cc);
+    log_e("Invalid primary channel: %u. Valid range is %u-%u for country %s", primary, min_chan, max_chan, country.cc);
     return ESP_ERR_INVALID_ARG;
   }
 
@@ -779,7 +786,7 @@ bool WiFiGenericClass::setSleep(wifi_ps_type_t sleepType) {
     return true;
   }
 
-  esp_err_t err = esp_wifi_set_ps(_sleepEnabled);
+  esp_err_t err = esp_wifi_set_ps(sleepType);
   if (err != ESP_OK) {
     log_e("esp_wifi_set_ps failed!: 0x%x: %s", err, esp_err_to_name(err));
     return false;
@@ -924,7 +931,14 @@ wifi_power_t WiFiGenericClass::getTxPower() {
  */
 bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uint8_t channel, const uint8_t *mac) {
   wifi_ftm_initiator_cfg_t ftmi_cfg = {
-    .resp_mac = {0, 0, 0, 0, 0, 0}, .channel = channel, .frm_count = frm_count, .burst_period = burst_period, .use_get_report_api = true
+    .resp_mac = {0, 0, 0, 0, 0, 0},
+    .channel = channel,
+    .frm_count = frm_count,
+    .burst_period = burst_period
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(6, 0, 0)
+    ,
+    .use_get_report_api = true
+#endif
   };
   if (mac != NULL) {
     memcpy(ftmi_cfg.resp_mac, mac, 6);
@@ -947,7 +961,7 @@ bool WiFiGenericClass::initiateFTM(uint8_t frm_count, uint16_t burst_period, uin
  * @return true on success
  */
 bool WiFiGenericClass::setDualAntennaConfig(uint8_t gpio_ant1, uint8_t gpio_ant2, wifi_rx_ant_t rx_mode, wifi_tx_ant_t tx_mode) {
-#if !CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if !CONFIG_ESP_HOSTED_ENABLED
 
   esp_phy_ant_gpio_config_t wifi_ant_io;
 
