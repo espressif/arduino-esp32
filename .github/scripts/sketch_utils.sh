@@ -378,9 +378,8 @@ function build_sketch { # build_sketch <ide_path> <user_path> <path-to-ino> [ext
             ram_bytes=$(grep -oE 'Global variables use ([0-9]+) bytes' "$output_file" | awk '{print $4}')
             ram_percentage=$(grep -oE 'Global variables use ([0-9]+) bytes \(([0-9]+)%\)' "$output_file" | awk '{print $6}' | tr -d '(%)')
 
-            directory_path=$(dirname "$sketchdir")
             constant_part="/home/runner/Arduino/hardware/espressif/esp32/libraries/"
-            lib_sketch_name="${directory_path#"$constant_part"}"
+            lib_sketch_name="${sketchdir#"$constant_part"}"
             echo "{\"name\": \"$lib_sketch_name\",
                 \"sizes\": [{
                         \"flash_bytes\": $flash_bytes,
