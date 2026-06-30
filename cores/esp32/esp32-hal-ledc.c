@@ -584,20 +584,42 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
 
     if (ledc_set_duty_and_update(group, channel, start_duty, 0) != ESP_OK) {
       log_e("ledc_set_duty_and_update failed");
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+      if (bus->lock != NULL) {
+        xSemaphoreGive(bus->lock);
+      }
+#endif
+#endif
       return false;
     }
-    // Wait for LEDCs next PWM cycle to update duty (~ 1-2 ms) with timeout to prevent WDT
-    uint32_t timeout_ms = 100;
-    uint32_t start_time = millis();
-    while (ledc_get_duty(group, channel) != start_duty) {
-      if (millis() - start_time > timeout_ms) {
-        log_w("Timeout waiting for duty update on pin %u, duty may not match start_duty", pin);
+
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+    // ESP32-classic: wait (interrupts enabled) for the start duty to latch
+    // before starting the fade. ledc_set_fade_time_and_start() and its ISR
+    // busy-wait on duty_start with interrupts disabled, so an unlatched start
+    // duty corrupts the fade and trips the interrupt watchdog. The timeout is a
+    // safety net for a stopped timer.
+    uint32_t fade_freq = ledc_get_freq(group, bus->timer_num);
+    uint32_t settle_timeout_ms = (fade_freq ? ((2000U + fade_freq - 1U) / fade_freq) : 0U) + 5U;
+    uint32_t settle_start = millis();
+    while ((LEDC_LL_GET_HW())->channel_group[group].channel[channel].conf1.duty_start) {
+      if (millis() - settle_start > settle_timeout_ms) {
+        log_w("LEDC pin %u: start duty did not latch within %u ms, starting fade anyway", pin, settle_timeout_ms);
         break;
       }
     }
+#endif
 
     if (ledc_set_fade_time_and_start(group, channel, target_duty, max_fade_time_ms, LEDC_FADE_NO_WAIT) != ESP_OK) {
       log_e("ledc_set_fade_time_and_start failed");
+#ifndef SOC_LEDC_SUPPORT_FADE_STOP
+#if !CONFIG_DISABLE_HAL_LOCKS
+      if (bus->lock != NULL) {
+        xSemaphoreGive(bus->lock);
+      }
+#endif
+#endif
       return false;
     }
   } else {
