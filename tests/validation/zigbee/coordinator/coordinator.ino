@@ -22,10 +22,16 @@
 #include "zigbee_endpoint_matrix.h"
 #include "zigbee_endpoint_deep_tests.h"
 
-#define ZB_TIMEOUT_MS 30000
+#define ZB_TIMEOUT_MS      30000
 #define ZB_INTEROP_BIND_MS 60000
 
-enum ZbInteropState { ZB_INTEROP_IDLE, ZB_INTEROP_WAIT_BIND, ZB_INTEROP_LIGHT_ON, ZB_INTEROP_LIGHT_OFF, ZB_INTEROP_DONE };
+enum ZbInteropState {
+  ZB_INTEROP_IDLE,
+  ZB_INTEROP_WAIT_BIND,
+  ZB_INTEROP_LIGHT_ON,
+  ZB_INTEROP_LIGHT_OFF,
+  ZB_INTEROP_DONE
+};
 
 static ZbInteropState interop_state = ZB_INTEROP_IDLE;
 static unsigned long interop_phase_ms = 0;
@@ -204,8 +210,7 @@ void loop() {
       }
       break;
 
-    default:
-      break;
+    default: break;
   }
 
   delay(50);

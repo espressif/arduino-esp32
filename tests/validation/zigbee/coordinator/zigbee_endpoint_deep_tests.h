@@ -198,9 +198,7 @@ static void fake_ias_zone_enroll_attrs(uint8_t endpoint) {
   esp_zb_zcl_set_attribute_val(
     endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_IAS_CIE_ADDRESS_ID, &fake_cie, false
   );
-  esp_zb_zcl_set_attribute_val(
-    endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &zone_id, false
-  );
+  esp_zb_zcl_set_attribute_val(endpoint, ESP_ZB_ZCL_CLUSTER_ID_IAS_ZONE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_IAS_ZONE_ZONEID_ID, &zone_id, false);
   esp_zb_lock_release();
 }
 

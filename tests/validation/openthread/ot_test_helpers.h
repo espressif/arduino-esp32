@@ -11,7 +11,7 @@
 #include <OThreadCLI_Util.h>
 #include <StreamString.h>
 
-#define OT_TEST_CLI_BUF_SIZE 512
+#define OT_TEST_CLI_BUF_SIZE   512
 #define OT_TEST_EXT_PAN_ID_LEN 8
 
 struct ot_test_netinfo_t {

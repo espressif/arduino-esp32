@@ -10,32 +10,32 @@
 
 #include <Zigbee.h>
 
-#define ZB_EP_LIGHT 1
-#define ZB_EP_DIMMABLE 2
-#define ZB_EP_COLOR_DIM 3
-#define ZB_EP_SWITCH 4
+#define ZB_EP_LIGHT           1
+#define ZB_EP_DIMMABLE        2
+#define ZB_EP_COLOR_DIM       3
+#define ZB_EP_SWITCH          4
 #define ZB_EP_COLOR_DIMMER_SW 5
-#define ZB_EP_OUTLET 6
-#define ZB_EP_FAN 7
-#define ZB_EP_THERMOSTAT 8
-#define ZB_EP_COVERING 9
-#define ZB_EP_ANALOG 10
-#define ZB_EP_BINARY 11
-#define ZB_EP_MULTISTATE 12
-#define ZB_EP_TEMP 13
-#define ZB_EP_PRESSURE 14
-#define ZB_EP_FLOW 15
-#define ZB_EP_ILLUMINANCE 16
-#define ZB_EP_OCCUPANCY 17
-#define ZB_EP_CO2 18
-#define ZB_EP_PM25 19
-#define ZB_EP_WIND 20
-#define ZB_EP_CONTACT 21
-#define ZB_EP_VIBRATION 22
-#define ZB_EP_DOOR_HANDLE 23
-#define ZB_EP_ELECTRICAL 24
-#define ZB_EP_GATEWAY 25
-#define ZB_EP_RANGE_EXT 26
+#define ZB_EP_OUTLET          6
+#define ZB_EP_FAN             7
+#define ZB_EP_THERMOSTAT      8
+#define ZB_EP_COVERING        9
+#define ZB_EP_ANALOG          10
+#define ZB_EP_BINARY          11
+#define ZB_EP_MULTISTATE      12
+#define ZB_EP_TEMP            13
+#define ZB_EP_PRESSURE        14
+#define ZB_EP_FLOW            15
+#define ZB_EP_ILLUMINANCE     16
+#define ZB_EP_OCCUPANCY       17
+#define ZB_EP_CO2             18
+#define ZB_EP_PM25            19
+#define ZB_EP_WIND            20
+#define ZB_EP_CONTACT         21
+#define ZB_EP_VIBRATION       22
+#define ZB_EP_DOOR_HANDLE     23
+#define ZB_EP_ELECTRICAL      24
+#define ZB_EP_GATEWAY         25
+#define ZB_EP_RANGE_EXT       26
 
 static ZigbeeLight epLight(ZB_EP_LIGHT);
 static ZigbeeDimmableLight epDimmable(ZB_EP_DIMMABLE);
@@ -75,9 +75,7 @@ static bool register_all_zigbee_endpoints(void) {
     return false;
   }
 
-  epColorDim.setLightColorCapabilities(
-    ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION | ZIGBEE_COLOR_CAPABILITY_X_Y | ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP
-  );
+  epColorDim.setLightColorCapabilities(ZIGBEE_COLOR_CAPABILITY_HUE_SATURATION | ZIGBEE_COLOR_CAPABILITY_X_Y | ZIGBEE_COLOR_CAPABILITY_COLOR_TEMP);
   epColorDim.setManufacturerAndModel("Espressif", "ZBValColor");
   if (!Zigbee.addEndpoint(&epColorDim)) {
     return false;
@@ -217,8 +215,7 @@ static bool register_all_zigbee_endpoints(void) {
     return false;
   }
 
-  if (!epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE)
-      || !epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT)) {
+  if (!epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE) || !epElectrical.addDCMeasurement(ZIGBEE_DC_MEASUREMENT_TYPE_CURRENT)) {
     return false;
   }
   epElectrical.setDCMinMaxValue(ZIGBEE_DC_MEASUREMENT_TYPE_VOLTAGE, 0, 250);

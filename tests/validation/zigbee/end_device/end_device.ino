@@ -19,11 +19,11 @@
 #include <Zigbee.h>
 #include <unity.h>
 
-#define ZB_TIMEOUT_MS 30000
+#define ZB_TIMEOUT_MS      30000
 #define ZB_INTEROP_WAIT_MS 60000
 
 #define ZB_EP_LIGHT 1
-#define ZB_EP_TEMP 2
+#define ZB_EP_TEMP  2
 
 static ZigbeeLight zbLight(ZB_EP_LIGHT);
 static ZigbeeTempSensor zbTemp(ZB_EP_TEMP);

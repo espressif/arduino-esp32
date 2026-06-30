@@ -55,17 +55,11 @@ def test_openthread(dut):
     assert re.fullmatch(r"[0-9a-fA-F]{16}", net_extpanid), f"Invalid extpanid: {net_extpanid}"
 
     LOGGER.info(f"Leader dataset: {dataset_hex[:32]}... ({len(dataset_hex)} chars)")
-    LOGGER.info(
-        f"Leader netinfo: name={net_name} channel={net_channel} "
-        f"panid={net_panid} extpanid={net_extpanid}"
-    )
+    LOGGER.info(f"Leader netinfo: name={net_name} channel={net_channel} " f"panid={net_panid} extpanid={net_extpanid}")
 
     LOGGER.info("Sending dataset and network info to child...")
     child.write(f"DATASET {dataset_hex}\n")
-    child.write(
-        f"NETINFO name={net_name} channel={net_channel} "
-        f"panid={net_panid} extpanid={net_extpanid}\n"
-    )
+    child.write(f"NETINFO name={net_name} channel={net_channel} " f"panid={net_panid} extpanid={net_extpanid}\n")
 
     LOGGER.info("Waiting for child to join network...")
     child.expect_exact("[CHILD] JOINED", timeout=60)
