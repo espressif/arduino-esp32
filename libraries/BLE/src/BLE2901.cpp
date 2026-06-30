@@ -1,4 +1,20 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
   BLE2901.h
 
   GATT Descriptor 0x2901 Characteristic User Description
@@ -48,7 +64,7 @@ BLE2901::BLE2901() : BLEDescriptor(BLEUUID((uint16_t)BLE2901_UUID)) {}
  */
 void BLE2901::setDescription(const String &userDesc) {
   if (userDesc.length() > ESP_GATT_MAX_ATTR_LEN) {
-    log_e("Size %d too large, must be no bigger than %d", userDesc.length(), ESP_GATT_MAX_ATTR_LEN);
+    log_e("Size %u too large, must be no bigger than %u", userDesc.length(), ESP_GATT_MAX_ATTR_LEN);
     return;
   }
   setValue(userDesc);

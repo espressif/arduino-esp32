@@ -82,7 +82,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
     );
 #endif
     memcpy(&arduino_event.event_info.got_ip, event_data, sizeof(ip_event_got_ip_t));
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
     if (_interface_id == ESP_NETIF_ID_STA) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP;
     } else
@@ -98,7 +98,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
     log_v("%s Lost IP", desc());
 #endif
     memcpy(&arduino_event.event_info.lost_ip, event_data, sizeof(ip_event_got_ip_t));
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
     if (_interface_id == ESP_NETIF_ID_STA) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_LOST_IP;
     } else
@@ -120,12 +120,12 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
     static const char *addr_types[] = {"UNKNOWN", "GLOBAL", "LINK_LOCAL", "SITE_LOCAL", "UNIQUE_LOCAL", "IPV4_MAPPED_IPV6"};
     log_v(
-      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %d, Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
+      "IF %s Got IPv6: Interface: %d, IP Index: %d, Type: %s, Zone: %u, Address: " IPV6STR, desc(), _interface_id, event->ip_index, addr_types[addr_type],
       event->ip6_info.ip.zone, IPV62STR(event->ip6_info.ip)
     );
 #endif
     memcpy(&arduino_event.event_info.got_ip6, event_data, sizeof(ip_event_got_ip6_t));
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
     if (_interface_id == ESP_NETIF_ID_STA) {
       arduino_event.event_id = ARDUINO_EVENT_WIFI_STA_GOT_IP6;
     } else if (_interface_id == ESP_NETIF_ID_AP) {
@@ -138,7 +138,7 @@ void NetworkInterface::_onIpEvent(int32_t event_id, void *event_data) {
       arduino_event.event_id = ARDUINO_EVENT_ETH_GOT_IP6;
     }
 #endif /* CONFIG_LWIP_IPV6 */
-#if SOC_WIFI_SUPPORTED || CONFIG_ESP_WIFI_REMOTE_ENABLED
+#if SOC_WIFI_SUPPORTED || CONFIG_ESP_HOSTED_ENABLED
   } else if (event_id == IP_EVENT_AP_STAIPASSIGNED && _interface_id == ESP_NETIF_ID_AP) {
     setStatusBits(ESP_NETIF_HAS_IP_BIT);
 #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_VERBOSE
@@ -670,7 +670,7 @@ String NetworkInterface::macAddress(void) const {
   uint8_t mac[6] = {0, 0, 0, 0, 0, 0};
   char macStr[18] = {0};
   macAddress(mac);
-  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return String(macStr);
 }
 

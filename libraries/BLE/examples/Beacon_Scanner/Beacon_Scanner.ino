@@ -50,19 +50,19 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           oBeacon.setData(strManufacturerData);
           Serial.printf("iBeacon Frame\n");
           Serial.printf(
-            "ID: %04X Major: %d Minor: %d UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()),
+            "ID: %04X Major: %u Minor: %u UUID: %s Power: %d\n", oBeacon.getManufacturerId(), ENDIAN_CHANGE_U16(oBeacon.getMajor()),
             ENDIAN_CHANGE_U16(oBeacon.getMinor()), oBeacon.getProximityUUID().toString().c_str(), oBeacon.getSignalPower()
           );
         } else {
           Serial.println("Found another manufacturers beacon!");
-          Serial.printf("strManufacturerData: %zu ", dataLength);
+          Serial.printf("strManufacturerData: %lu ", (unsigned long)dataLength);
           for (int i = 0; i < dataLength; i++) {
-            Serial.printf("[%X]", cManufacturerData[i]);
+            Serial.printf("[%02X]", cManufacturerData[i]);
           }
           Serial.printf("\n");
         }
       } else {
-        Serial.printf("Manufacturer data too large (%zu bytes), skipping\n", dataLength);
+        Serial.printf("Manufacturer data too large (%lu bytes), skipping\n", (unsigned long)dataLength);
       }
     }
 
@@ -84,10 +84,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     if (advertisedDevice.getFrameType() == BLE_EDDYSTONE_TLM_FRAME) {
       Serial.println("Found an EddystoneTLM beacon!");
       BLEEddystoneTLM EddystoneTLM(&advertisedDevice);
-      Serial.printf("Reported battery voltage: %dmV\n", EddystoneTLM.getVolt());
+      Serial.printf("Reported battery voltage: %umV\n", EddystoneTLM.getVolt());
       Serial.printf("Reported temperature: %.2f°C (raw data=0x%04X)\n", EddystoneTLM.getTemp(), EddystoneTLM.getRawTemp());
-      Serial.printf("Reported advertise count: %lu\n", EddystoneTLM.getCount());
-      Serial.printf("Reported time since last reboot: %lus\n", EddystoneTLM.getTime());
+      Serial.printf("Reported advertise count: %" PRIu32 "\n", EddystoneTLM.getCount());
+      Serial.printf("Reported time since last reboot: %" PRIu32 "s\n", EddystoneTLM.getTime());
       Serial.println("\n");
       Serial.print(EddystoneTLM.toString().c_str());
       Serial.println("\n");

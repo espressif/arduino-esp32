@@ -24,6 +24,8 @@
    GPIO ---> resistor 270 ohms ---> + LED - ---> GND
 */
 
+#include <Arduino.h>
+
 #define BLINK_GPIO 2
 
 // RMT is at 400KHz with a 2.5us tick

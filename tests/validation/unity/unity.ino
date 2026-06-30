@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <unity.h>
 
 /* These functions are intended to be called before and after each test. */

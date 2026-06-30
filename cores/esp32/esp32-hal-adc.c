@@ -305,7 +305,7 @@ uint16_t __analogRead(uint8_t pin) {
   }
 
   if (perimanGetPinBus(pin, ESP32_BUS_TYPE_ADC_ONESHOT) == NULL) {
-    log_d("Calling __analogInit! pin = %d", pin);
+    log_d("Calling __analogInit! pin = %u", pin);
     err = __analogInit(pin, channel, adc_unit);
     if (err != ESP_OK) {
       log_e("Analog initialization failed!");
@@ -513,11 +513,6 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
     }
   }
 
-  //Check if Oneshot and Continuous handle exists
-  if (adc_handle[adc_unit].adc_oneshot_handle != NULL) {
-    log_e("ADC%d is running in oneshot mode. Aborting.", adc_unit + 1);
-    return false;
-  }
   if (adc_handle[adc_unit].adc_continuous_handle != NULL) {
     log_e("ADC%d continuous is already initialized. To reconfigure call analogContinuousDeinit() first.", adc_unit + 1);
     return false;
@@ -529,12 +524,17 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
     return false;
   }
 
-  //Set periman deinit function and reset all pins to init state.
+  // Release pins from any prior bus (e.g. ADC oneshot from analogRead) via periman before continuous init.
   perimanSetBusDeinit(ESP32_BUS_TYPE_ADC_CONT, adcContinuousDetachBus);
   for (int j = 0; j < pins_count; j++) {
     if (!perimanClearPinBus(pins[j])) {
       return false;
     }
+  }
+
+  if (adc_handle[adc_unit].adc_oneshot_handle != NULL) {
+    log_e("ADC%d oneshot is still active on other pin(s). Release those pins first.", adc_unit + 1);
+    return false;
   }
 
   //Set conversion frame and buffer size (conversion frame must be in multiples of SOC_ADC_DIGI_DATA_BYTES_PER_CONV)
@@ -547,13 +547,19 @@ bool analogContinuous(const uint8_t pins[], size_t pins_count, uint32_t conversi
   }
 #endif
 
-#if CONFIG_IDF_TARGET_ESP32P4
-  // Align conversion frame size to cache line size (required for DMA on targets with cache)
-  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % CONFIG_CACHE_L1_CACHE_LINE_SIZE;
+  // Align the conversion frame size to the DMA alignment boundary so that
+  // cache-coherency is maintained (e.g. L2 cache on ESP32-P4 = CONFIG_CACHE_L2_CACHE_LINE_SIZE).
+  uint32_t alignment_remainder = adc_handle[adc_unit].conversion_frame_size % ESP_ARDUINO_DMA_BUF_ALIGN;
   if (alignment_remainder != 0) {
-    adc_handle[adc_unit].conversion_frame_size += (CONFIG_CACHE_L1_CACHE_LINE_SIZE - alignment_remainder);
+    __attribute__((unused)) uint32_t original_size = adc_handle[adc_unit].conversion_frame_size;
+    adc_handle[adc_unit].conversion_frame_size += (ESP_ARDUINO_DMA_BUF_ALIGN - alignment_remainder);
+    log_w(
+      "ADC conversion frame size rounded up from %" PRIu32 " to %" PRIu32 " bytes to meet DMA alignment (%u bytes). "
+      "Effective conversions per frame may differ from requested. "
+      "Consider using a frame size that is a multiple of %u bytes to avoid automatic rounding.",
+      original_size, adc_handle[adc_unit].conversion_frame_size, ESP_ARDUINO_DMA_BUF_ALIGN, ESP_ARDUINO_DMA_BUF_ALIGN
+    );
   }
-#endif
 
   adc_handle[adc_unit].buffer_size = adc_handle[adc_unit].conversion_frame_size * 2;
 
@@ -633,13 +639,8 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
     uint32_t read_raw[used_adc_channels];
     uint32_t read_count[used_adc_channels];
 
-    // Allocate DMA buffer with cache line alignment (required for ESP32-P4 and other targets with cache)
     size_t buffer_size = adc_handle[ADC_UNIT_1].conversion_frame_size;
-#if CONFIG_IDF_TARGET_ESP32P4
-    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(CONFIG_CACHE_L1_CACHE_LINE_SIZE, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#else
-    uint8_t *adc_read = (uint8_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#endif
+    uint8_t *adc_read = (uint8_t *)heap_caps_aligned_alloc(ESP_ARDUINO_DMA_BUF_ALIGN, buffer_size, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     if (adc_read == NULL) {
       log_e("Failed to allocate DMA buffer");
       *buffer = NULL;
@@ -670,7 +671,7 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
 
       /* Check the channel number validation, the data is invalid if the channel num exceed the maximum channel */
       if (chan_num >= SOC_ADC_CHANNEL_NUM(0)) {
-        log_e("Invalid data [%d_%d]", chan_num, data);
+        log_e("Invalid data [%" PRIu32 "_%" PRIu32 "]", chan_num, data);
         *buffer = NULL;
         return false;
       }
@@ -693,7 +694,7 @@ bool analogContinuousRead(adc_continuous_result_t **buffer, uint32_t timeout_ms)
         adc_result[j].avg_read_raw = read_raw[j] / read_count[j];
         adc_cali_raw_to_voltage(adc_handle[ADC_UNIT_1].adc_cali_handle, adc_result[j].avg_read_raw, &adc_result[j].avg_read_mvolts);
       } else {
-        log_w("No data read for pin %d", adc_result[j].pin);
+        log_w("No data read for pin %u", adc_result[j].pin);
       }
     }
 
@@ -763,7 +764,7 @@ void analogContinuousSetAtten(adc_attenuation_t attenuation) {
 
 void analogContinuousSetWidth(uint8_t bits) {
   if ((bits < SOC_ADC_DIGI_MIN_BITWIDTH) || (bits > SOC_ADC_DIGI_MAX_BITWIDTH)) {
-    log_e("Selected width cannot be set. Range is from %d to %d", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
+    log_e("Selected width cannot be set. Range is from %u to %u", SOC_ADC_DIGI_MIN_BITWIDTH, SOC_ADC_DIGI_MAX_BITWIDTH);
     return;
   }
   __adcContinuousWidth = bits;

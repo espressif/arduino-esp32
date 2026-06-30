@@ -39,6 +39,7 @@ extern "C" {
 
 // Include HAL layer for flash clock access
 #include "hal/spi_flash_ll.h"
+
 #if CONFIG_IDF_TARGET_ESP32
 #include "soc/spi_struct.h"
 #else

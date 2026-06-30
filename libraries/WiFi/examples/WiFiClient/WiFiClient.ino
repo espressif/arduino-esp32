@@ -14,6 +14,7 @@
     Please note that this public channel can be accessed by anyone and it is possible that more people will write their values.
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 
 const char *ssid = "your-ssid";          // Change this to your WiFi SSID

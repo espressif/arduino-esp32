@@ -1,0 +1,51 @@
+Arduino ESP32 BLE Library — third-party notices and attribution
+================================================================
+
+This library is distributed under the Apache License, Version 2.0.
+See the LICENSE file in this directory for the full license text.
+
+Copyright notices (summary)
+---------------------------
+
+Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+
+Copyright 2017 Neil Kolban
+
+Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+esp-nimble-cpp, NimBLE-Arduino contributors.
+
+This library is based on, and contains code derived from or inspired by,
+the following projects. Upstream repositories remain the authoritative
+source for their respective license and notice files:
+
+1. esp32-snippets
+   - Copyright 2017 Neil Kolban
+   - https://github.com/nkolban/esp32-snippets
+   - License: Apache License 2.0 (see upstream repository)
+
+2. NimBLE-Arduino / esp-nimble-cpp
+   - Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+     esp-nimble-cpp, NimBLE-Arduino contributors
+   - https://github.com/h2zero/NimBLE-Arduino
+   - License: Apache License 2.0 (see upstream repository)
+
+When adding or porting code from other projects, add a new numbered
+entry to the list above with project name, copyright holder(s), source
+URL, and license; and include any required NOTICE text from that
+project below.
+
+---
+
+The following is the NOTICE from NimBLE-Arduino (reproduced to satisfy
+upstream NOTICE and attribution requirements under Apache License 2.0):
+
+esp-nimble-cpp
+NimBLE-Arduino
+Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+esp-nimble-cpp, NimBLE-Arduino contributors.
+
+The Initial Developer of some parts of this library, which are copied from,
+derived from, or inspired by is, esp32-snippets, Copyright 2017 Neil Kolban.
+
+If this library is used for commercial purposes, it is requested that the user consider
+making a donation and/or sponsoring this project to support it's ongoing development.

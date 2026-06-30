@@ -23,7 +23,65 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(ARDUINO_ARCH_ESP32)
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+using FSMutexHandle = SemaphoreHandle_t;
+inline void fsLockTake(FSMutexHandle mtx) {
+  if (mtx) {
+    xSemaphoreTakeRecursive(mtx, portMAX_DELAY);
+  }
+}
+inline void fsLockGive(FSMutexHandle mtx) {
+  if (mtx) {
+    xSemaphoreGiveRecursive(mtx);
+  }
+}
+inline void fsLockDelete(FSMutexHandle mtx) {
+  if (mtx) {
+    vSemaphoreDelete(mtx);
+  }
+}
+inline FSMutexHandle fsMutexCreate() {
+  return xSemaphoreCreateRecursiveMutex();
+}
+inline bool fsMutexEnabled() {
+  return true;
+}
+#else
+using FSMutexHandle = void *;
+inline void fsLockTake(FSMutexHandle) {}
+inline void fsLockGive(FSMutexHandle) {}
+inline void fsLockDelete(FSMutexHandle) {}
+inline FSMutexHandle fsMutexCreate() {
+  return nullptr;
+}
+inline bool fsMutexEnabled() {
+  return false;
+}
+#endif
+
 namespace fs {
+
+// RAII lock guard for the per-filesystem recursive mutex (no-op when _mtx is null).
+class FSLockGuard {
+public:
+  explicit FSLockGuard(FSMutexHandle mtx = nullptr) : _mtx(mtx) {
+    fsLockTake(_mtx);
+  }
+  ~FSLockGuard() {
+    fsLockGive(_mtx);
+  }
+  FSLockGuard(const FSLockGuard &) = delete;
+  FSLockGuard &operator=(const FSLockGuard &) = delete;
+  FSLockGuard(FSLockGuard &&other) noexcept : _mtx(other._mtx) {
+    other._mtx = nullptr;
+  }
+  FSLockGuard &operator=(FSLockGuard &&) = delete;
+
+private:
+  FSMutexHandle _mtx;
+};
 
 class FileImpl {
 public:
@@ -51,10 +109,17 @@ public:
 class FSImpl {
 protected:
   const char *_mountpoint;
+  FSMutexHandle _mtx;
+  FSLockGuard fsLock() {
+    return FSLockGuard(_mtx);
+  }
 
 public:
-  FSImpl() : _mountpoint(NULL) {}
-  virtual ~FSImpl() {}
+  FSImpl() : _mountpoint(NULL), _mtx(nullptr) {}
+  virtual ~FSImpl() {
+    fsLockDelete(_mtx);
+  }
+
   virtual FileImplPtr open(const char *path, const char *mode, const bool create) = 0;
   virtual bool exists(const char *path) = 0;
   virtual bool rename(const char *pathFrom, const char *pathTo) = 0;

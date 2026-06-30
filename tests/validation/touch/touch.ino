@@ -1,6 +1,10 @@
+#include <Arduino.h>
 #include <unity.h>
 #include "soc/soc_caps.h"
 #include "hal/touch_sensor_ll.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "hal/touch_sensor_legacy_types.h"
+#endif
 
 #if CONFIG_IDF_TARGET_ESP32
 
@@ -119,7 +123,7 @@ void test_touch_read(void) {
   // COMPARE PRESSED <-> UNPRESSED
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
     //log_i("Touch %d: %d -> %d", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
-    Serial.printf("Touch %d: %lu -> %lu\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
+    Serial.printf("Touch %u: %" PRIu32 " -> %" PRIu32 "\n", TOUCH_GPIOS[l], touch_unpressed[l], touch_pressed[l]);
   }
   for (int l = 0; l < sizeof(TOUCH_GPIOS); l++) {
 #if CONFIG_IDF_TARGET_ESP32

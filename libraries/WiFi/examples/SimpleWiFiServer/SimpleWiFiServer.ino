@@ -25,6 +25,7 @@ ported for sparkfun esp32
 
  */
 
+#include <Arduino.h>
 #include <WiFi.h>
 
 const char *ssid = "yourssid";

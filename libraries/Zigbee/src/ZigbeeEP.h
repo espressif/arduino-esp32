@@ -71,7 +71,10 @@ public:
     _cluster_list = cluster_list;
   }
 
+  // Set application version and hardware version
   void setVersion(uint8_t version);
+  void setHardwareVersion(uint8_t version);
+
   uint8_t getEndpoint() {
     return _endpoint;
   }
@@ -143,6 +146,9 @@ public:
   */
   void requestOTAUpdate();
 
+  // Register a privilege command to intercept standard cluster commands before the stack processes them
+  void addPrivilegeCommand(uint16_t cluster_id, uint16_t command_id);
+
   // findEndpoint may be implemented by EPs to find and bind devices
   virtual void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req) {};
 
@@ -159,6 +165,8 @@ public:
   virtual void zbIASZoneStatusChangeNotification(const esp_zb_zcl_ias_zone_status_change_notification_message_t *message) {};
   virtual void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) {};
   virtual void zbDefaultResponse(const esp_zb_zcl_cmd_default_resp_message_t *message);  //already implemented
+  virtual void zbPrivilegeCommand(const esp_zb_zcl_privilege_command_message_t *message);
+  virtual void zbCustomClusterCommand(const esp_zb_zcl_custom_cluster_command_message_t *message);
 
   virtual void addBoundDevice(zb_device_params_t *device) {
     _bound_devices.push_back(device);
@@ -185,6 +193,14 @@ public:
     _on_default_response = callback;
   }
 
+  void onPrivilegeCommand(void (*callback)(const esp_zb_zcl_privilege_command_message_t *message)) {
+    _on_privilege_command = callback;
+  }
+
+  void onCustomClusterCommand(void (*callback)(const esp_zb_zcl_custom_cluster_command_message_t *message)) {
+    _on_custom_cluster_command = callback;
+  }
+
   // Convert ZCL status to name
 
 private:
@@ -193,6 +209,8 @@ private:
   void (*_on_identify)(uint16_t time);
   void (*_on_ota_state_change)(bool state);
   void (*_on_default_response)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status);
+  void (*_on_privilege_command)(const esp_zb_zcl_privilege_command_message_t *message);
+  void (*_on_custom_cluster_command)(const esp_zb_zcl_custom_cluster_command_message_t *message);
   time_t _read_time;
   int32_t _read_timezone;
 
@@ -208,6 +226,18 @@ protected:
   SemaphoreHandle_t lock;
   zb_power_source_t _power_source;
   uint8_t _time_status;
+
+  // Thread-safe outgoing ZCL helpers (not related to stack callbacks).
+  esp_zb_zcl_status_t setClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, bool check = false);
+  bool getClusterAttribute(uint16_t cluster_id, uint8_t cluster_role, uint16_t attr_id, void *value, uint16_t value_size);
+  bool reportClusterAttribute(esp_zb_zcl_report_attr_cmd_t *report_attr_cmd);
+  bool readClusterAttribute(esp_zb_zcl_read_attr_cmd_t *read_req);
+  bool setClusterReporting(esp_zb_zcl_reporting_info_t *reporting_info);
+  bool configureClusterReporting(esp_zb_zcl_config_report_cmd_t *report_cmd);
+
+  // Acquire/release pair for outgoing ZCL/ZDO commands (caller invokes SDK between them).
+  bool acquireCommandLock();
+  void releaseCommandLock();
 
   // Friend class declaration to allow access to protected members
   friend class ZigbeeCore;

@@ -1,4 +1,5 @@
 /* HW Timer test */
+#include <Arduino.h>
 #include <unity.h>
 
 #define TIMER_FREQUENCY          4000000

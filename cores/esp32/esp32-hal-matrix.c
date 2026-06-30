@@ -14,6 +14,7 @@
 
 #include "esp32-hal-matrix.h"
 #include "esp_attr.h"
+#include "esp_idf_version.h"
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -45,6 +46,11 @@
 #include "rom/gpio.h"
 #define GPIO_MATRIX_CONST_ZERO_INPUT GPIO_FUNC_IN_LOW
 #define GPIO_MATRIX_CONST_ONE_INPUT  GPIO_FUNC_IN_HIGH
+#endif
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+#include "esp_rom_gpio.h"
+#define gpio_matrix_out esp_rom_gpio_connect_out_signal
+#define gpio_matrix_in  esp_rom_gpio_connect_in_signal
 #endif
 
 void ARDUINO_ISR_ATTR pinMatrixOutAttach(uint8_t pin, uint8_t function, bool invertOut, bool invertEnable) {

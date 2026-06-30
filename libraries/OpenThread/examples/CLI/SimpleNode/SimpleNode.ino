@@ -27,8 +27,9 @@
  * If NVS has already a dataset information, it will load it from there.
  */
 
+#include <Arduino.h>
+#include "OThread.h"
 #include "OThreadCLI.h"
-#include "OThreadCLI_Util.h"
 
 // The first device to start Thread will be the Leader
 // Next devices will be Router or Child

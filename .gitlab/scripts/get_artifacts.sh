@@ -18,9 +18,27 @@ fi
 
 # First, get the artifacts list and save it for debugging
 echo "Fetching artifacts list from GitHub API..."
-artifacts_response=$(curl -s -H "Authorization: token $GITHUB_DOWNLOAD_PAT" \
+set +e
+artifacts_response=$(curl -s \
+    --fail-with-body \
+    --http1.1 \
+    --retry 5 \
+    --retry-delay 5 \
+    --retry-connrefused \
+    --retry-all-errors \
+    --connect-timeout 120 \
+    --max-time 0 \
+    -H "Authorization: token $GITHUB_DOWNLOAD_PAT" \
     -H "Accept: application/vnd.github.v3+json" \
     "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$BINARIES_RUN_ID/artifacts")
+
+curl_exit=$?
+set -e
+if [ "$curl_exit" -ne 0 ]; then
+    echo "ERROR: GitHub API request failed (HTTP error after retries)"
+    echo "Response: $artifacts_response"
+    exit 1
+fi
 
 # Check if we got a valid response
 if [ -z "$artifacts_response" ]; then
@@ -28,16 +46,12 @@ if [ -z "$artifacts_response" ]; then
     exit 1
 fi
 
-# Check for API errors
+# Check for API errors (defense-in-depth for non-HTTP-error failures)
 error_message=$(echo "$artifacts_response" | jq -r '.message // empty' 2>/dev/null)
 if [ -n "$error_message" ]; then
     echo "ERROR: GitHub API returned error: $error_message"
     exit 1
 fi
-
-# List all available artifacts for debugging
-echo "Available artifacts:"
-echo "$artifacts_response" | jq -r '.artifacts[]?.name // "No artifacts found"' 2>/dev/null || echo "Could not parse artifacts"
 
 # Find the download URL for our specific artifact
 download_url=$(echo "$artifacts_response" | jq -r ".artifacts[] | select(.name==\"test-bin-$TEST_CHIP-$TEST_TYPE\") | .archive_download_url" 2>/dev/null)
@@ -55,9 +69,22 @@ echo "Found download URL: $download_url"
 
 # Download the artifact
 echo "Downloading artifact..."
-curl -H "Authorization: token $GITHUB_DOWNLOAD_PAT" -L "$download_url" -o test-binaries.zip
+set +e
+curl --fail-with-body \
+    --http1.1 \
+    --retry 5 \
+    --retry-delay 5 \
+    --retry-connrefused \
+    --retry-all-errors \
+    --connect-timeout 120 \
+    --max-time 0 \
+    -H "Authorization: token $GITHUB_DOWNLOAD_PAT" \
+    -L "$download_url" \
+    -o test-binaries.zip
 
-if [ $? -ne 0 ] || [ ! -f test-binaries.zip ]; then
+curl_exit=$?
+set -e
+if [ "$curl_exit" -ne 0 ] || [ ! -f test-binaries.zip ]; then
     echo "ERROR: Failed to download artifact"
     exit 1
 fi

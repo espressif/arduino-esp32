@@ -10,6 +10,7 @@ if the ESP32 is the only MIDI device attached.
 
 View this sketch in action on YouTube: https://youtu.be/JFrc-wSmcus
 */
+#include <Arduino.h>
 #if ARDUINO_USB_MODE
 #warning This sketch should be used when USB is in OTG mode
 void setup() {}

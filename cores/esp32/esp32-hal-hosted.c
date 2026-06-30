@@ -13,12 +13,14 @@
 // limitations under the License.
 
 #include "sdkconfig.h"
-#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED)
+#if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED)
 
 #include "esp32-hal-hosted.h"
 #include "esp32-hal-log.h"
+#include "esp32-hal-periman.h"
 #include "esp32-hal.h"
 #include "pins_arduino.h"
+#include "soc/soc_caps.h"
 
 #include "esp_hosted.h"
 #include "esp_hosted_transport_config.h"
@@ -56,6 +58,9 @@ static esp_hosted_coprocessor_fwver_t host_version_struct = {
 
 static bool hostedInit();
 static bool hostedDeinit();
+static bool hostedDetachBus(void *bus_pointer);
+static bool hostedClearPinBuses(void);
+static bool hostedAssignPinBuses(void);
 
 void hostedGetHostVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = host_version_struct.major1;
@@ -67,6 +72,38 @@ void hostedGetSlaveVersion(uint32_t *major, uint32_t *minor, uint32_t *patch) {
   *major = slave_version_struct.major1;
   *minor = slave_version_struct.minor1;
   *patch = slave_version_struct.patch1;
+}
+
+const char *hostedGetSlaveTargetName() {
+#if ESP_HOSTED_VERSION_VAL(ESP_HOSTED_VERSION_MAJOR_1, ESP_HOSTED_VERSION_MINOR_1, ESP_HOSTED_VERSION_PATCH_1) < ESP_HOSTED_VERSION_VAL(2, 12, 2)
+  return CONFIG_IDF_SLAVE_TARGET;
+#else
+  if (!hosted_initialized) {
+    log_e("ESP-Hosted is not initialized");
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  if (slave_version == 0) {
+    esp_err_t ret = esp_hosted_get_coprocessor_fwversion(&slave_version_struct);
+    if (ret != ESP_OK) {
+      log_e("Could not get slave firmware version: %s", esp_err_to_name(ret));
+    } else {
+      slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+    }
+  }
+  if (slave_version < ESP_HOSTED_VERSION_VAL(2, 12, 2)) {
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
+  uint32_t chip_id = 0;
+  static char target_name[20] = {0};
+  size_t target_name_len = sizeof(target_name);
+  esp_err_t ret = esp_hosted_get_cp_info(&chip_id, target_name, target_name_len);
+  if (ret != ESP_OK) {
+    log_e("Could not get slave target name: %s", esp_err_to_name(ret));
+    return CONFIG_IDF_SLAVE_TARGET;
+  }
+  return target_name;
+#endif
 }
 
 bool hostedHasUpdate() {
@@ -104,12 +141,13 @@ bool hostedHasUpdate() {
   return false;
 }
 
-char *hostedGetUpdateURL() {
+const char *hostedGetUpdateURL() {
   // https://espressif.github.io/arduino-esp32/hosted/esp32c6-v1.2.3.bin
   static char url[92] = {0};
+  const char *target_name = hostedGetSlaveTargetName();
   snprintf(
-    url, 92, "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET,
-    host_version_struct.major1, host_version_struct.minor1, host_version_struct.patch1
+    url, sizeof(url), "https://espressif.github.io/arduino-esp32/hosted/%s-v%" PRIu32 ".%" PRIu32 ".%" PRIu32 ".bin", target_name, host_version_struct.major1,
+    host_version_struct.minor1, host_version_struct.patch1
   );
   return url;
 }
@@ -181,54 +219,132 @@ bool hostedActivateUpdate() {
   return true;
 }
 
+static bool hostedClearPinBuses(void) {
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_clk)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_cmd)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d0)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d1)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d2)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_d3)) {
+    return false;
+  }
+  if (!perimanClearPinBus((uint8_t)sdio_pin_config.pin_reset)) {
+    return false;
+  }
+  return true;
+}
+
+static bool hostedAssignPinBuses(void) {
+  void *const bus = (void *)&sdio_pin_config;
+
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_clk, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_cmd, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d0, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d1, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d2, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_d3, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3, bus, 0, -1)) {
+    return false;
+  }
+  if (!perimanSetPinBus((uint8_t)sdio_pin_config.pin_reset, ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST, bus, 0, -1)) {
+    return false;
+  }
+  return true;
+}
+
+static bool hostedDetachBus(void *bus_pointer) {
+  if (bus_pointer != (void *)&sdio_pin_config) {
+    return false;
+  }
+  if (hosted_initialized) {
+    log_e("ESP-Hosted: stop WiFi/BLE before removing SDIO pins from periman");
+    return false;
+  }
+  return true;
+}
+
 static bool hostedInit() {
-  if (!hosted_initialized) {
-    log_i("Initializing ESP-Hosted");
-    log_d(
-      "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
-      sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset
-    );
-    hosted_initialized = true;
-    struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
-    conf.pin_clk.pin = sdio_pin_config.pin_clk;
-    conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
-    conf.pin_d0.pin = sdio_pin_config.pin_d0;
-    conf.pin_d1.pin = sdio_pin_config.pin_d1;
-    conf.pin_d2.pin = sdio_pin_config.pin_d2;
-    conf.pin_d3.pin = sdio_pin_config.pin_d3;
-    conf.pin_reset.pin = sdio_pin_config.pin_reset;
-    esp_err_t err = esp_hosted_sdio_set_config(&conf);
-    if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
-      log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
-      return false;
-    }
-    err = esp_hosted_init();
-    if (err != ESP_OK) {
-      log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
-      hosted_initialized = false;
-      return false;
-    }
-    log_i("ESP-Hosted initialized!");
-    err = esp_hosted_connect_to_slave();
-    if (err != ESP_OK) {
-      log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
-      hosted_initialized = false;
-      return false;
-    }
-    hostedHasUpdate();
+  if (hosted_initialized) {
     return true;
   }
 
-  // Attach pins to PeriMan here
-  // Slave chip model is CONFIG_IDF_SLAVE_TARGET
-  // sdio_pin_config.pin_clk
-  // sdio_pin_config.pin_cmd
-  // sdio_pin_config.pin_d0
-  // sdio_pin_config.pin_d1
-  // sdio_pin_config.pin_d2
-  // sdio_pin_config.pin_d3
-  // sdio_pin_config.pin_reset
+  log_i("Initializing ESP-Hosted");
+  log_d(
+    "SDIO pins: clk=%d, cmd=%d, d0=%d, d1=%d, d2=%d, d3=%d, rst=%d", sdio_pin_config.pin_clk, sdio_pin_config.pin_cmd, sdio_pin_config.pin_d0,
+    sdio_pin_config.pin_d1, sdio_pin_config.pin_d2, sdio_pin_config.pin_d3, sdio_pin_config.pin_reset
+  );
 
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CLK, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_CMD, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D0, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D1, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D2, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_D3, hostedDetachBus);
+  perimanSetBusDeinit(ESP32_BUS_TYPE_ESP_HOSTED_SDIO_RST, hostedDetachBus);
+
+  if (!hostedClearPinBuses()) {
+    log_e("ESP-Hosted: failed to clear SDIO pins from peripheral manager");
+    return false;
+  }
+
+  // Assign before SDIO pins before configuration to turn on LDO when needed
+  if (!hostedAssignPinBuses()) {
+    log_e("ESP-Hosted: failed to assign SDIO pins to peripheral manager");
+    hostedClearPinBuses();
+    return false;
+  }
+
+  struct esp_hosted_sdio_config conf = INIT_DEFAULT_HOST_SDIO_CONFIG();
+  conf.pin_clk.pin = sdio_pin_config.pin_clk;
+  conf.pin_cmd.pin = sdio_pin_config.pin_cmd;
+  conf.pin_d0.pin = sdio_pin_config.pin_d0;
+  conf.pin_d1.pin = sdio_pin_config.pin_d1;
+  conf.pin_d2.pin = sdio_pin_config.pin_d2;
+  conf.pin_d3.pin = sdio_pin_config.pin_d3;
+  conf.pin_reset.pin = sdio_pin_config.pin_reset;
+
+  esp_err_t err = esp_hosted_sdio_set_config(&conf);
+  if (err != ESP_OK) {  //&& err != ESP_ERR_NOT_ALLOWED) { // uncomment when second init is fixed
+    log_e("esp_hosted_sdio_set_config failed: %s", esp_err_to_name(err));
+    hostedClearPinBuses();
+    return false;
+  }
+
+  err = esp_hosted_init();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_init failed: %s", esp_err_to_name(err));
+    hostedClearPinBuses();
+    return false;
+  }
+  err = esp_hosted_connect_to_slave();
+  if (err != ESP_OK) {
+    log_e("esp_hosted_connect_to_slave failed: %s", esp_err_to_name(err));
+    esp_hosted_deinit();
+    hostedClearPinBuses();
+    return false;
+  }
+
+  hosted_initialized = true;
+  hostedHasUpdate();
   return true;
 }
 
@@ -242,8 +358,8 @@ static bool hostedDeinit() {
     log_e("esp_hosted_deinit failed!");
     return false;
   }
-
   hosted_initialized = false;
+  hostedClearPinBuses();
   return true;
 }
 
@@ -252,15 +368,20 @@ bool hostedInitBLE() {
   if (!hostedInit()) {
     return false;
   }
-  esp_err_t err = esp_hosted_bt_controller_init();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
-    return false;
-  }
-  err = esp_hosted_bt_controller_enable();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
-    return false;
+
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_init();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_init failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_enable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_enable failed: %s", esp_err_to_name(err));
+      return false;
+    }
   }
   hosted_ble_active = true;
   return true;
@@ -274,15 +395,19 @@ bool hostedInitWiFi() {
 
 bool hostedDeinitBLE() {
   log_i("Deinitializing ESP-Hosted for BLE");
-  esp_err_t err = esp_hosted_bt_controller_disable();
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
-    return false;
-  }
-  err = esp_hosted_bt_controller_deinit(false);
-  if (err != ESP_OK) {
-    log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
-    return false;
+  uint32_t slave_version = ESP_HOSTED_VERSION_VAL(slave_version_struct.major1, slave_version_struct.minor1, slave_version_struct.patch1);
+  uint32_t min_version = ESP_HOSTED_VERSION_VAL(2, 6, 0);
+  if (slave_version >= min_version) {
+    esp_err_t err = esp_hosted_bt_controller_disable();
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_disable failed: %s", esp_err_to_name(err));
+      return false;
+    }
+    err = esp_hosted_bt_controller_deinit(false);
+    if (err != ESP_OK) {
+      log_e("esp_hosted_bt_controller_deinit failed: %s", esp_err_to_name(err));
+      return false;
+    }
   }
   hosted_ble_active = false;
   if (!hosted_wifi_active) {
@@ -353,4 +478,4 @@ bool hostedIsInitialized() {
   return hosted_initialized;
 }
 
-#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_WIFI_REMOTE_ENABLED) */
+#endif /* defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE) || defined(CONFIG_ESP_HOSTED_ENABLED) */

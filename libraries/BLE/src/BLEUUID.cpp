@@ -1,4 +1,23 @@
 /*
+ * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
+ * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
+ * esp-nimble-cpp, NimBLE-Arduino contributors.
+ * Copyright 2017 Neil Kolban
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * BLEUUID.cpp
  *
  *  Created on: Jun 21, 2017
@@ -18,6 +37,7 @@
  *                             Common includes                               *
  *****************************************************************************/
 
+#include "Arduino.h"
 #include <string.h>
 #include <sstream>
 #include <iomanip>
@@ -151,7 +171,7 @@ uint8_t BLEUUID::bitSize() {
     case BLE_UUID_16_BITS:  return 16;
     case BLE_UUID_32_BITS:  return 32;
     case BLE_UUID_128_BITS: return 128;
-    default:                log_e("Unknown UUID length: %d", UUID_LEN(m_uuid)); return 0;
+    default:                log_e("Unknown UUID length: %u", UUID_LEN(m_uuid)); return 0;
   }  // End of switch
 }  // bitSize
 
@@ -258,7 +278,7 @@ String BLEUUID::toString() const {
 
   if (UUID_LEN(m_uuid) == BLE_UUID_32_BITS) {  // If the UUID is 32bit, pad correctly.
     char hex[9];
-    snprintf(hex, sizeof(hex), "%08lx", UUID_VAL_32(m_uuid));
+    snprintf(hex, sizeof(hex), "%08" PRIx32, UUID_VAL_32(m_uuid));
     return String(hex) + "-0000-1000-8000-00805f9b34fb";
   }  // End 32bit UUID
 

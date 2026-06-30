@@ -26,8 +26,12 @@
 #include "soc/efuse_reg.h"
 #include "esp32-hal.h"
 #include "esp32-hal-cpu.h"
+#include <inttypes.h>
 #include "hal/timer_ll.h"
 #include "esp_private/systimer.h"
+#if __has_include("hal/lact_ll.h")
+#include "hal/lact_ll.h"
+#endif
 
 #include "esp_system.h"
 #ifdef ESP_IDF_VERSION_MAJOR  // IDF 4+
@@ -234,12 +238,12 @@ const char *getSupportedCpuFrequencyMhz(uint8_t xtal) {
   // Append xtal and its dividers only if xtal is nonzero
   if (xtal != 0) {
     // We'll show as: , <xtal>, <xtal/2>[, <xtal/4>] MHz
-    pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u, %u", xtal, xtal / 2);
+    pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u, %u", xtal, (uint8_t)(xtal / 2));
 
 #if CONFIG_IDF_TARGET_ESP32
     // Only append xtal/4 if it's > 0 and meaningful for higher-frequency chips (e.g., ESP32 40MHz/4=10)
     if (xtal >= RTC_XTAL_FREQ_40M) {
-      pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u", xtal / 4);
+      pos += snprintf(supported_frequencies + pos, 256 - pos, ", %u", (uint8_t)(xtal / 4));
     }
 #endif
   }
@@ -267,7 +271,7 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
 
   // ===== Get configuration for new frequency =====
   if (!rtc_clk_cpu_freq_mhz_to_config(cpu_freq_mhz, &conf)) {
-    log_e("CPU clock could not be set to %u MHz. Supported frequencies: %s", cpu_freq_mhz, getSupportedCpuFrequencyMhz(xtal));
+    log_e("CPU clock could not be set to %" PRIu32 " MHz. Supported frequencies: %s", cpu_freq_mhz, getSupportedCpuFrequencyMhz(xtal));
     return false;
   }
 
@@ -294,7 +298,11 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
     // ESP32-specific: Update esp_timer divisor
 #if CONFIG_IDF_TARGET_ESP32
 #if defined(LACT_MODULE) && defined(LACT_TICKS_PER_US)
+#if __has_include("hal/lact_ll.h")
+    lact_ll_set_clock_prescale(LACT_LL_GET_HW(LACT_MODULE), apb / MHZ / LACT_TICKS_PER_US);
+#else
     timer_ll_set_lact_clock_prescale(TIMER_LL_GET_HW(LACT_MODULE), apb / MHZ / LACT_TICKS_PER_US);
+#endif
 #else
     esp_timer_impl_update_apb_freq(apb / MHZ);
 #endif
@@ -313,7 +321,9 @@ bool setCpuFrequencyMhz(uint32_t cpu_freq_mhz) {
   }
 
   // ===== Debug logging =====
-  log_d("%s: %u / %u = %u Mhz, APB: %u Hz", getClockSourceName(conf.source), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb);
+  log_d(
+    "%s: %" PRIu32 " / %" PRIu32 " = %" PRIu32 " Mhz, APB: %" PRIu32 " Hz", getClockSourceName(conf.source), conf.source_freq_mhz, conf.div, conf.freq_mhz, apb
+  );
 
   return true;
 }

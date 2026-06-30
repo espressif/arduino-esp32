@@ -111,7 +111,7 @@ The ThreadScan example consists of the following main components:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin(true)` (auto-start required for discovery)
    - Initializes OpenThread CLI
-   - Sets CLI timeout to 100 ms using `OThreadCLI.setTimeout()`
+   - Sets CLI read timeout to 100 ms using `OThreadCLI.setTimeout()` (inherited from Arduino `Stream`, not a CLI-specific method)
 
 2. **`loop()`**:
    - Performs IEEE 802.15.4 scan using `otPrintRespCLI("scan", Serial, 3000)`
@@ -121,10 +121,14 @@ The ThreadScan example consists of the following main components:
 
 ## Troubleshooting
 
-- **No scan results**: Ensure there are Thread devices nearby. Check that other devices are running and on the same channel.
-- **Discovery scan not working**: Wait for the device to join a Thread network (should become Child, Router, or Leader)
-- **Scan timeout**: Increase the timeout value in `otPrintRespCLI()` if scans are taking longer
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order:** Other Thread devices must be running and attached **before** scanning — start a Leader or Router sketch on at least one other board first, then run this scan sketch on a second board.
+
+| Symptom | Likely cause |
+| --- | --- |
+| No scan results | No Thread devices nearby, devices not attached yet, or devices on a different channel — start other nodes first. |
+| Discovery scan not working | Device must be Child, Router, or Leader — wait for attach (`OThread.begin(true)` auto-starts Thread). |
+| Scan timeout | Increase timeout in `otPrintRespCLI()` if RF environment is noisy or distant. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 

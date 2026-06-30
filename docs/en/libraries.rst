@@ -33,6 +33,8 @@ Here is a matrix of the library support status for the main features and periphe
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | BLE [2]_             | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |yes| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
+| Console              | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| |
++----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | DAC                  | |yes| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |n/a| | |yes| | |n/a| |
 +----------------------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
 | ESP-NOW [3]_         | |yes| | |yes| | |yes| | |yes| | |yes| | |yes| | |n/a| | |n/a| | |yes| | |yes| |
@@ -153,8 +155,12 @@ OpenThread APIs
 
     openthread/openthread
     openthread/openthread_cli
+    openthread/openthread_helper_functions
+    openthread/Multicasting
     openthread/openthread_core
     openthread/openthread_dataset
+    openthread/openthread_udp
+    openthread/openthread_coap
 
 Zigbee APIs
 -----------
