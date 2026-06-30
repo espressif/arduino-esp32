@@ -548,6 +548,9 @@ void setup() {
   RUN_TEST(test_sd_large_file_operations);
 
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 
   Serial.println("SPI test END");
 }

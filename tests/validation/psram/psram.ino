@@ -106,6 +106,9 @@ void setup() {
 
   if (psram_size == 0) {
     UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
     return;
   }
 
@@ -123,6 +126,9 @@ void setup() {
   RUN_TEST(test_memcpy);
 #endif
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}

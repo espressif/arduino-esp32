@@ -193,6 +193,8 @@ void set_arduino_panic_handler(arduino_panic_handler_t handler, void *arg);
 arduino_panic_handler_t get_arduino_panic_handler(void);
 void *get_arduino_panic_handler_arg(void);
 
+void gcov_dump_serial(void);
+
 #ifdef __cplusplus
 }
 #endif

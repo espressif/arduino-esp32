@@ -3,7 +3,7 @@
 Local test script for runtime_table_generator.py
 
 Usage:
-    python3 .github/scripts/test_runtime_table_generator.py
+    python3 .github/scripts/ci_testing/test_runtime_table_generator.py
 
 Each test case sets up input fixtures in a temporary directory, runs the
 generator, and asserts expected patterns in the markdown output and in the
@@ -30,6 +30,14 @@ Edge cases covered:
   18. Performance test – runner unavailable, cache miss  → "Error :fire:", no asterisk
   19. Wokwi-only target not in HW list                   → not shown under Hardware section
   20. Target in env but not in results                   → shown as "-" (dash)
+  21. --coverage 85.0 → brightgreen badge
+  22. --coverage 70.0 → yellow badge
+  23. --coverage 45.5 → red badge
+  24. --coverage 80.0 → brightgreen (boundary)
+  25. --coverage 60.0 → yellow (boundary)
+  26. --coverage 59.9 → red (just below 60)
+  27. No --coverage → no badge, no coverage_pct in JSON
+  28. --coverage 79.666 → rounded in JSON, 1 decimal in URL
 """
 
 import json
@@ -41,7 +49,7 @@ import shutil
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-SCRIPT = Path(__file__).parent / "runtime_table_generator.py"
+SCRIPT = Path(__file__).resolve().parent.parent / "runtime_table_generator.py"
 PASS = "\033[32mPASS\033[0m"
 FAIL = "\033[31mFAIL\033[0m"
 _failures = []
@@ -90,7 +98,7 @@ def _test_results(cache=None, perf_cache=None, commit_sha="prev"):
     }
 
 
-def run_generator(tmpdir, unity, env_extra=None, prev_results=None, sha="abc123", perf_dir=None):
+def run_generator(tmpdir, unity, env_extra=None, prev_results=None, sha="abc123", perf_dir=None, coverage=None):
     """
     Run runtime_table_generator.py inside *tmpdir*.
     Returns (stdout, stderr, returncode, saved_cache).
@@ -114,6 +122,8 @@ def run_generator(tmpdir, unity, env_extra=None, prev_results=None, sha="abc123"
         cmd += ["--previous-results", prev_path]
     if perf_dir:
         cmd += ["--perf-dir", perf_dir]
+    if coverage is not None:
+        cmd += ["--coverage", str(coverage)]
 
     env = {**os.environ, "HW_TARGETS": "[]", "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
     if env_extra:
@@ -128,13 +138,14 @@ def run_generator(tmpdir, unity, env_extra=None, prev_results=None, sha="abc123"
     )
 
     saved_cache = {}
+    saved_full = {}
     out_path = os.path.join(tmpdir, "test_results.json")
     if os.path.exists(out_path):
         with open(out_path) as f:
-            saved = json.load(f)
-        saved_cache = saved.get("cache", {})
+            saved_full = json.load(f)
+        saved_cache = saved_full.get("cache", {})
 
-    return result.stdout, result.stderr, result.returncode, saved_cache
+    return result.stdout, result.stderr, result.returncode, saved_cache, saved_full
 
 
 def assert_test(name, condition, detail=""):
@@ -167,7 +178,7 @@ def test_01_first_run_all_pass():
             _suite("validation_hardware_esp32s3_Blink", tests=2),
         ])
         env = {"HW_TARGETS": '["esp32","esp32s3","esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("shows ESP32 3/3 pass", "3/3 :white_check_mark:" in out)
@@ -187,7 +198,7 @@ def test_02_first_run_some_fail():
             _suite("validation_hardware_esp32s3_Blink", tests=2, failures=2),
         ])
         env = {"HW_TARGETS": '["esp32","esp32s3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("shows failure symbol for esp32", ":x:" in out)
@@ -206,7 +217,7 @@ def test_03_first_run_runner_error():
             _suite("validation_hardware_esp32c3_Blink", tests=0, errors=1),  # runner unavailable
         ])
         env = {"HW_TARGETS": '["esp32","esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("shows Error :fire: for esp32c3", "Error :fire:" in out)
@@ -231,7 +242,7 @@ def test_04_cache_hit_runner_unavailable():
             _suite("validation_hardware_esp32s3_Blink", tests=2, failures=1),
         ])
         env = {"HW_TARGETS": '["esp32","esp32s3","esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("esp32c3 shows cached 3/3 with asterisk", "3/3 :white_check_mark:\\*" in out)
@@ -259,7 +270,7 @@ def test_05_cache_miss_runner_was_already_unavailable():
             _suite("validation_hardware_esp32s3_Blink", tests=2),
         ])
         env = {"HW_TARGETS": '["esp32","esp32s3","esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("esp32c3 shows Error :fire: (no cached result)", "Error :fire:" in out)
@@ -281,7 +292,7 @@ def test_06_result_changed_no_asterisk():
             _suite("validation_hardware_esp32s3_Blink", tests=2, failures=1),  # now 1/2
         ])
         env = {"HW_TARGETS": '["esp32","esp32s3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("esp32s3 shows 1/2 :x:", "1/2 :x:" in out)
@@ -304,7 +315,7 @@ def test_07_stale_cache():
             _suite("validation_hardware_esp32c3_Blink", tests=0, errors=1),
         ])
         env = {"HW_TARGETS": '["esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("shows Error :fire: (stale cache ignored)", "Error :fire:" in out)
@@ -330,14 +341,14 @@ def test_08_cache_propagation_three_runs():
         unity_errors = _unity([
             _suite("validation_hardware_esp32c3_Blink", tests=0, errors=1),
         ])
-        out_b, _, _, cache_b = run_generator(d, unity_errors, env_extra=env, prev_results=results_a, sha="runB")
+        out_b, _, _, cache_b, _ = run_generator(d, unity_errors, env_extra=env, prev_results=results_a, sha="runB")
         assert_test("Run B: shows asterisk (cache from A)", "\\*" in out_b)
         assert_test("Run B: esp32c3 cache propagated", "esp32c3" in cache_b.get("hardware", {}).get("Blink", {}))
 
         # Run C: esp32c3 still errors → reads Run B cache → still shows asterisk
         with open(os.path.join(d, "test_results.json")) as f:
             results_b = json.load(f)
-        out_c, _, _, _ = run_generator(d, unity_errors, env_extra=env, prev_results=results_b, sha="runC")
+        out_c, _, _, _, _ = run_generator(d, unity_errors, env_extra=env, prev_results=results_b, sha="runC")
         assert_test("Run C: asterisk still shown (cache from A via B)", "\\*" in out_c)
 
 
@@ -367,7 +378,7 @@ def test_10_corrupt_previous_results():
     with tempfile.TemporaryDirectory() as d:
         unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env, prev_results="{not valid json!!!")
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env, prev_results="{not valid json!!!")
         assert_test("exit code 0 (no crash on corrupt file)", rc == 0)
         assert_test("output contains Hardware section", "Hardware" in out)
         assert_test("no asterisk in output", "\\*" not in out)
@@ -379,7 +390,7 @@ def test_11_previous_results_not_a_dict():
         unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
         # Write a valid JSON list (not a dict)
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results="[1, 2, 3]")
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results="[1, 2, 3]")
         assert_test("exit code 0 (no crash)", rc == 0)
         assert_test("no asterisk", "\\*" not in out)
 
@@ -398,7 +409,7 @@ def test_12_multiple_sketches():
             _suite("validation_hardware_esp32c3_UART",  tests=0, errors=1),
         ])
         env = {"HW_TARGETS": '["esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("Blink cached result shown with asterisk", "3/3 :white_check_mark:\\*" in out)
@@ -415,7 +426,7 @@ def test_13_multi_fqbn_builds():
             _suite("validation_hardware_esp32_Blink1", tests=3, failures=1),
         ])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, cache = run_generator(d, unity, env_extra=env)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("Blink shows accumulated 5/6", "5/6 :x:" in out)
@@ -436,7 +447,7 @@ def test_14_multi_fqbn_partial_error():
             _suite("validation_hardware_esp32_Blink1", tests=0, failures=0, errors=1),
         ])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         # Accumulated: total=3, failures=0, errors=1 → errors>0 → use cache
@@ -455,7 +466,7 @@ def test_15_multiple_platforms():
             "WOKWI_TARGETS": '["esp32s3"]',
             "QEMU_TARGETS":  "[]",
         }
-        out, _, rc, cache = run_generator(d, unity, env_extra=env)
+        out, _, rc, cache, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("Hardware section present", "#### Hardware" in out)
@@ -483,7 +494,7 @@ def test_16_perf_runner_ok():
             json.dump(perf_data, f)
 
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env,
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env,
                                       perf_dir=os.path.join(d, "perf_artifacts"))
 
         assert_test("exit code 0", rc == 0)
@@ -511,7 +522,7 @@ def test_17_perf_cache_hit_runner_unavailable():
             _suite("performance_hardware_esp32_SpeedTest", tests=0, errors=1),
         ])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         assert_test("Performance Tests section present", "### Performance Tests" in out)
@@ -528,7 +539,7 @@ def test_18_perf_cache_miss_runner_unavailable():
             _suite("performance_hardware_esp32_SpeedTest", tests=0, errors=1),
         ])
         env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, prev_results=prev)
 
         assert_test("exit code 0", rc == 0)
         # Performance error format is "Error - :fire:" (list item, not table cell)
@@ -548,7 +559,7 @@ def test_19_wokwi_target_not_in_hw_list():
             "WOKWI_TARGETS": '["esp32s2"]',
             "QEMU_TARGETS":  "[]",
         }
-        out, _, rc, _ = run_generator(d, unity, env_extra=env)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         hw_section = out.split("#### Wokwi")[0] if "#### Wokwi" in out else out
@@ -565,10 +576,107 @@ def test_20_target_in_env_but_not_in_results():
             _suite("validation_hardware_esp32_Blink", tests=3),
         ])
         env = {"HW_TARGETS": '["esp32","esp32c3"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
-        out, _, rc, _ = run_generator(d, unity, env_extra=env)
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env)
 
         assert_test("exit code 0", rc == 0)
         assert_test("dash shown for missing esp32c3", "|-" in out)
+
+
+def test_21_coverage_badge_green():
+    section("Test 21 – --coverage 85.0 → brightgreen badge")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, full = run_generator(d, unity, env_extra=env, coverage=85.0)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("badge URL contains brightgreen", "brightgreen" in out)
+        assert_test("badge URL contains 85.0%25", "85.0%25" in out)
+        assert_test("badge rendered as markdown image", "![Code Coverage]" in out)
+        assert_test("coverage_pct in JSON", full.get("coverage_pct") == 85.0)
+
+
+def test_22_coverage_badge_yellow():
+    section("Test 22 – --coverage 70.0 → yellow badge")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, full = run_generator(d, unity, env_extra=env, coverage=70.0)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("badge URL contains yellow", "yellow" in out)
+        assert_test("badge URL contains 70.0%25", "70.0%25" in out)
+        assert_test("coverage_pct in JSON is 70.0", full.get("coverage_pct") == 70.0)
+
+
+def test_23_coverage_badge_red():
+    section("Test 23 – --coverage 45.5 → red badge")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, full = run_generator(d, unity, env_extra=env, coverage=45.5)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("badge URL contains red", "-red)" in out)
+        assert_test("badge URL contains 45.5%25", "45.5%25" in out)
+        assert_test("coverage_pct in JSON is 45.5", full.get("coverage_pct") == 45.5)
+
+
+def test_24_coverage_boundary_80():
+    section("Test 24 – --coverage 80.0 → brightgreen (boundary)")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, coverage=80.0)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("80.0 is brightgreen", "brightgreen" in out)
+
+
+def test_25_coverage_boundary_60():
+    section("Test 25 – --coverage 60.0 → yellow (boundary)")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, coverage=60.0)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("60.0 is yellow", "yellow" in out)
+
+
+def test_26_coverage_boundary_59_9():
+    section("Test 26 – --coverage 59.9 → red (just below 60)")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, _ = run_generator(d, unity, env_extra=env, coverage=59.9)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("59.9 is red", "-red)" in out)
+
+
+def test_27_no_coverage_flag():
+    section("Test 27 – No --coverage → no badge, no coverage_pct in JSON")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, full = run_generator(d, unity, env_extra=env)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("no badge in output", "![Code Coverage]" not in out)
+        assert_test("no coverage_pct in JSON", "coverage_pct" not in full)
+
+
+def test_28_coverage_pct_rounded():
+    section("Test 28 – --coverage 79.666 → rounded to 79.67 in JSON")
+    with tempfile.TemporaryDirectory() as d:
+        unity = _unity([_suite("validation_hardware_esp32_Blink", tests=3)])
+        env = {"HW_TARGETS": '["esp32"]', "WOKWI_TARGETS": "[]", "QEMU_TARGETS": "[]"}
+        out, _, rc, _, full = run_generator(d, unity, env_extra=env, coverage=79.666)
+
+        assert_test("exit code 0", rc == 0)
+        assert_test("coverage_pct rounded to 79.67", full.get("coverage_pct") == 79.67)
+        assert_test("badge shows 79.7 (1 decimal in URL)", "79.7%25" in out)
 
 
 # ---------------------------------------------------------------------------
@@ -598,9 +706,17 @@ if __name__ == "__main__":
     test_18_perf_cache_miss_runner_unavailable()
     test_19_wokwi_target_not_in_hw_list()
     test_20_target_in_env_but_not_in_results()
+    test_21_coverage_badge_green()
+    test_22_coverage_badge_yellow()
+    test_23_coverage_badge_red()
+    test_24_coverage_boundary_80()
+    test_25_coverage_boundary_60()
+    test_26_coverage_boundary_59_9()
+    test_27_no_coverage_flag()
+    test_28_coverage_pct_rounded()
 
     print(f"\n{'='*60}")
-    total = 20
+    total = 28
     failed = len(set(_failures))  # deduplicate section names
     passed_count = total - failed
 

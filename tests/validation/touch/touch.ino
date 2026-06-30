@@ -171,6 +171,9 @@ void setup() {
   RUN_TEST(test_touch_interrtupt);
   RUN_TEST(test_touch_errors);
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {

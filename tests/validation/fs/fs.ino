@@ -933,6 +933,9 @@ void setup() {
   run_suite_for(FS_LFS);
 
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}

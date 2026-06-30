@@ -227,6 +227,9 @@ void setup() {
   RUN_TEST(test_digits_mapped);
   RUN_TEST(test_unique_letter_scancodes);
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}

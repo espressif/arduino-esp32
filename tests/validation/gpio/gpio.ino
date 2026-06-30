@@ -225,6 +225,9 @@ void setup() {
   RUN_TEST(test_interrupt_with_arg);
 
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
   Serial.println("GPIO test END");
 }
 

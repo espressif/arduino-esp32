@@ -226,6 +226,12 @@ parser.add_argument(
     default=None,
     help="Path to build_failure_cells.json (cells with no build artifact; show errors, not cache)",
 )
+parser.add_argument(
+    "--coverage",
+    type=float,
+    default=None,
+    help="Code coverage percentage from runtime tests (displayed as a badge)",
+)
 args = parser.parse_args()
 
 with open(args.results, "r") as f:
@@ -249,6 +255,18 @@ build_failure_cells = _load_build_failure_cells(args.build_failure_cells)
 
 print("## Runtime Test Results")
 print("")
+
+if args.coverage is not None:
+    cov = args.coverage
+    if cov >= 80:
+        color = "brightgreen"
+    elif cov >= 60:
+        color = "yellow"
+    else:
+        color = "red"
+    badge_url = f"https://img.shields.io/badge/coverage-{cov:.1f}%25-{color}"
+    print(f"![Code Coverage]({badge_url})")
+    print("")
 
 try:
     if os.environ["IS_FAILING"] == "true":
@@ -475,6 +493,8 @@ results_data = {
     "cache": result_cache,
     "perf_cache": perf_cache,
 }
+if args.coverage is not None:
+    results_data["coverage_pct"] = round(args.coverage, 2)
 if tests_with_targets:
     perf_out = {}
     for test_name, targets in tests_with_targets.items():

@@ -24,6 +24,9 @@ void setup() {
   RUN_TEST(test_pass);
   RUN_TEST(test_fail);
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}

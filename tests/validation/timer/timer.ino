@@ -128,6 +128,9 @@ void setup() {
   RUN_TEST(timer_clock_select_test);
 #endif
   UNITY_END();
+#ifdef COVERAGE_ENABLED
+  gcov_dump_serial();
+#endif
 }
 
 void loop() {}
