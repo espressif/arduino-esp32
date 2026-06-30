@@ -26,7 +26,7 @@ Validates signed OTA firmware updates using the `Update` library with RSA-PSS an
 
 ## Requirements
 
-- **Hardware**: One board with WiFi support (e.g. ESP32, ESP32-S3)
+- **Hardware**: One board with Wi-Fi support (e.g. ESP32, ESP32-S3)
 - **Wokwi/QEMU**: Not supported
 - **CI Runner**: `wifi_router` (requires LAN access between host and DUT)
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
@@ -36,7 +36,7 @@ Validates signed OTA firmware updates using the `Update` library with RSA-PSS an
 ## Serial Protocol
 
 1. DUT prints `Device ready for signed OTA test`
-2. pytest sends WiFi SSID and password; DUT connects to WiFi
+2. pytest sends Wi-Fi SSID and password; DUT connects to Wi-Fi
 3. pytest sends HTTP server base URL (host-side file server)
 4. For each case:
    - DUT prints `READY_FOR_CASE`

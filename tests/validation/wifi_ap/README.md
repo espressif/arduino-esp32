@@ -1,11 +1,11 @@
-# WiFi AP Validation Test
+# Wi-Fi AP Validation Test
 
-Validates WiFi Access Point creation and station connection using the Arduino WiFi API. This is a **multi-DUT** test: device0 creates a softAP and device1 connects to it as a station.
+Validates Wi-Fi Access Point creation and station connection using the Arduino Wi-Fi API. This is a **multi-DUT** test: device0 creates a softAP and device1 connects to it as a station.
 
 ## Architecture
 
 ```
- ┌──────────────┐         WiFi              ┌──────────────┐
+ ┌──────────────┐         Wi-Fi             ┌──────────────┐
  │  Access Point│◄──── association ─────────│    Client    │
  │  (device0)   │                           │  (device1)   │
  └──────┬───────┘                           └──────┬───────┘
@@ -28,7 +28,7 @@ Validates WiFi Access Point creation and station connection using the Arduino Wi
 
 ## Requirements
 
-- **Hardware**: Two boards with WiFi support (e.g. ESP32, ESP32-S3, ESP32-C6)
+- **Hardware**: Two boards with Wi-Fi support (e.g. ESP32, ESP32-S3, ESP32-C6)
 - **Wokwi/QEMU**: Not supported (multi-device test)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
@@ -36,7 +36,7 @@ Validates WiFi Access Point creation and station connection using the Arduino Wi
 
 ## Serial Protocol
 
-1. Both devices print `Device ready for WiFi credentials`
+1. Both devices print `Device ready for Wi-Fi credentials`
 2. pytest generates a unique SSID and password, sends them to both devices
 3. AP starts and prints its IP address
 4. Client scans, connects, and prints its IP address

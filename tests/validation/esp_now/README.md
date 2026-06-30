@@ -34,7 +34,7 @@ Comprehensive validation of the ESP-NOW Arduino API covering broadcast, unicast,
 
 ## Requirements
 
-- **Hardware**: Two boards with WiFi support (e.g. ESP32, ESP32-S3, ESP32-C6)
+- **Hardware**: Two boards with Wi-Fi support (e.g. ESP32, ESP32-S3, ESP32-C6)
 - **Wokwi/QEMU**: Not supported (multi-device test)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
@@ -50,4 +50,4 @@ Comprehensive validation of the ESP-NOW Arduino API covering broadcast, unicast,
 
 - The slave always receives `START` before the master to avoid race conditions where the master sends before the slave is ready.
 - PMK and LMK are hardcoded 16-byte strings for test reproducibility.
-- All devices use WiFi channel 1 in STA mode (no AP or internet connection needed).
+- All devices use Wi-Fi channel 1 in STA mode (no AP or internet connection needed).

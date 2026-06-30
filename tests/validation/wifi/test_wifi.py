@@ -16,7 +16,7 @@ def test_wifi(dut, wifi_ssid, wifi_pass):
     dut.write(f"{wifi_ssid}\n")
 
     dut.expect_exact("Send Password:")
-    LOGGER.info(f"Sending WiFi password")
+    LOGGER.info("Sending WiFi password")
     dut.write(f"{wifi_pass or ''}\n")
 
     LOGGER.info("Running WiFi Unity tests")

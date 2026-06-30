@@ -1,6 +1,6 @@
 # NetworkClient Validation Test
 
-Validates the `NetworkClient` API using localhost TCP loopback sockets. No WiFi or external network is required.
+Validates the `NetworkClient` API using localhost TCP loopback sockets. No Wi-Fi or external network is required.
 
 ## Test Cases
 

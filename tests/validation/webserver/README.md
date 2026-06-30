@@ -5,7 +5,7 @@ Validates the `WebServer::send(code, content_type, Stream&)` overload by running
 ## Architecture
 
 ```
- ┌──────────────┐      WiFi + HTTP          ┌──────────────┐
+ ┌──────────────┐      Wi-Fi + HTTP         ┌──────────────┐
  │   Server     │◄──── GET requests ────────│    Client    │
  │  (device0)   │    (softAP + WebServer)   │  (device1)   │
  └──────┬───────┘                           └──────┬───────┘
@@ -28,14 +28,14 @@ Validates the `WebServer::send(code, content_type, Stream&)` overload by running
 
 ## Requirements
 
-- **Hardware**: Two boards with WiFi support (e.g. ESP32)
+- **Hardware**: Two boards with Wi-Fi support (e.g. ESP32)
 - **Wokwi/QEMU**: Not supported (multi-device test)
 - **CI Runner**: `two_duts`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
 
 ## Serial Protocol
 
-1. Both devices print `Device ready for WiFi credentials`
+1. Both devices print `Device ready for Wi-Fi credentials`
 2. pytest generates unique SSID/password, sends to server first
 3. Server starts softAP and WebServer, prints its IP
 4. pytest sends SSID, password, and server IP to client

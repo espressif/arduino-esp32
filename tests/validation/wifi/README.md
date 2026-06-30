@@ -1,6 +1,6 @@
-# WiFi Validation Test
+# Wi-Fi Validation Test
 
-Validates WiFi STA and AP functionality: connection, IP/SSID/MAC/RSSI/channel/BSSID/gateway/DNS verification, hostname, disconnect/reconnect, auto-reconnect, network scan, static IP, soft AP mode, event callbacks, and mode switching.
+Validates Wi-Fi STA and AP functionality: connection, IP/SSID/MAC/RSSI/channel/BSSID/gateway/DNS verification, hostname, disconnect/reconnect, auto-reconnect, network scan, static IP, soft AP mode, event callbacks, and mode switching.
 
 ## Test Cases
 
@@ -26,19 +26,19 @@ Validates WiFi STA and AP functionality: connection, IP/SSID/MAC/RSSI/channel/BS
 
 ## Requirements
 
-- **Hardware**: Any ESP32 with WiFi
+- **Hardware**: Any ESP32 with Wi-Fi
 - **Wokwi**: Supported (uses `Wokwi-GUEST` network)
 - **CI Runner**: `wifi_router` (for hardware)
 
 ## Serial Protocol
 
 1. Device prints `WIFI_READY`
-2. Device prints `Send SSID:` — pytest sends WiFi SSID
-3. Device prints `Send Password:` — pytest sends WiFi password
+2. Device prints `Send SSID:` — pytest sends Wi-Fi SSID
+3. Device prints `Send Password:` — pytest sends Wi-Fi password
 4. Unity test output follows
 
 ## Notes
 
-- WiFi credentials are provided by the `wifi_ssid` / `wifi_pass` pytest fixtures.
+- Wi-Fi credentials are provided by the `wifi_ssid` / `wifi_pass` pytest fixtures.
 - `test_event_fires_on_connect` replaced the old `test_event_registration` which only verified registration without triggering the event.
 - Static IP test uses `192.168.4.100` — may not work on all network topologies.

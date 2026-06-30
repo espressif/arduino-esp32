@@ -7,18 +7,18 @@ Validates external PSRAM (SPI RAM) functionality: detection, allocation APIs (ma
 | Test Function | Description |
 |---|---|
 | `psram_found` | Verify PSRAM is detected and size > 0 |
-| `test_malloc_success` | `ps_malloc` 512KB succeeds |
+| `test_malloc_success` | `ps_malloc` 512 kB succeeds |
 | `test_malloc_fail` | `ps_malloc` with impossibly large size returns NULL |
-| `test_calloc_success` | `ps_calloc` 512KB succeeds |
-| `test_realloc_success` | `ps_realloc` from 512KB to 513KB succeeds |
+| `test_calloc_success` | `ps_calloc` 512 kB succeeds |
+| `test_realloc_success` | `ps_realloc` from 512 kB to 513 kB succeeds |
 | `test_heap_caps_spiram` | Verify `heap_caps_get_free_size(MALLOC_CAP_SPIRAM)` > 0 |
 | `test_heap_caps_alloc` | Allocate via `heap_caps_malloc`, verify pointer is in external RAM |
-| `test_large_allocation` | Allocate up to 2MB, write first/last pages, verify |
-| `test_memset_all_zeroes` | Fill 512KB with 0x00, verify every byte |
-| `test_memset_all_ones` | Fill 512KB with 0xFF, verify every byte |
+| `test_large_allocation` | Allocate up to 2 MB, write first/last pages, verify |
+| `test_memset_all_zeroes` | Fill 512 kB with 0x00, verify every byte |
+| `test_memset_all_ones` | Fill 512 kB with 0xFF, verify every byte |
 | `test_memset_alternating` | Fill with 0xAA pattern, verify |
 | `test_memset_random` | Overwrite random data with 0x55, verify |
-| `test_memcpy` | Copy 1KB pattern across 512KB buffer, verify with memcmp |
+| `test_memcpy` | Copy 1 kB pattern across 512 kB buffer, verify with memcmp |
 | `test_concurrent_access` | Two tasks read/write shared PSRAM buffer simultaneously |
 
 ## Requirements
