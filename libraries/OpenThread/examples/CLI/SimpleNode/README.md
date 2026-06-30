@@ -20,7 +20,8 @@ The application automatically initializes a Thread network with default paramete
 
 - Automatic Thread network initialization with default settings
 - Automatic device role assignment (first device becomes Leader, subsequent devices become Router or Child)
-- Network information display using CLI Helper Functions API
+- Network information display using the **Native `OThread` API** (`otPrintNetworkInformation`, `otGetStringDeviceRole`)
+- OpenThread CLI started for optional interactive use (this sketch does not call `otGetRespCmd()` or other CLI helper functions)
 - Periodic device role monitoring
 - Support for persistent network configuration via NVS
 
@@ -106,24 +107,27 @@ The SimpleNode example consists of the following main components:
 1. **`setup()`**:
    - Initializes Serial communication
    - Starts OpenThread stack with `OpenThread.begin()` (auto-start with default settings)
-   - Initializes OpenThread CLI
-   - Prints current Thread network information using `OpenThread.otPrintNetworkInformation()`
+   - Initializes OpenThread CLI (`OThreadCLI.begin()` — optional for interactive CLI; network info uses Native API)
+   - Prints current Thread network information using **`OThread.otPrintNetworkInformation(Serial)`** (Native API)
 
 2. **`loop()`**:
-   - Periodically displays the current device role using `OpenThread.otGetStringDeviceRole()`
+   - Periodically displays the current device role using **`OThread.otGetStringDeviceRole()`** (Native API)
    - Updates every 5 seconds
 
 ## Troubleshooting
 
-- **Device not joining network**: Ensure all devices use the same network key and channel. Check that the Leader node is running first.
-- **Role stuck as "Detached"**: Wait a few seconds for the device to join the network. Verify network key and channel match the Leader.
-- **No network information displayed**: Check that OpenThread stack initialized successfully (look for network information in setup)
-- **No serial output**: Check baudrate (115200) and USB connection
+**Startup order (multi-board):** Flash the **first board** first — it becomes Leader. Flash additional boards only after the first is attached. All boards must share the same network key and channel; reset any board that booted before the Leader was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| Device not joining network | All devices must share the same network key and channel; **start the first board (Leader) before others**. |
+| Role stuck as Detached | Wait a few seconds for attach; verify Leader is running and defaults/NVS dataset match. |
+| No network information displayed | OpenThread stack failed to initialize — check setup() Serial for errors. |
+| No serial output | Serial Monitor not at **115200** or USB disconnected. |
 
 ## Related Documentation
 
 - [OpenThread Core API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_core.html)
-- [OpenThread CLI Helper Functions API](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_cli.html)
 - [OpenThread Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread.html)
 
 ## License
