@@ -6,7 +6,7 @@ Validates Ethernet connectivity on boards with a physical PHY (RMII or SPI). Tes
 
 | Test Function | Description |
 |---|---|
-| `test_eth_link_up` | Wait for link up event and DHCP IP within 30s timeout |
+| `test_eth_link_up` | Wait for link up event and DHCP IP within 30 s timeout |
 | `test_eth_ip_valid` | Verify assigned IP is non-zero |
 | `test_eth_mac_address` | Verify MAC address format (17 chars, 5 colons) |
 | `test_eth_link_speed` | Verify link speed is 10 or 100 Mbps |

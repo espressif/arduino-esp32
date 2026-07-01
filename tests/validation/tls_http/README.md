@@ -17,7 +17,7 @@ Validates `NetworkClientSecure` TLS connections (CA cert, insecure mode, send/re
 
 ## Requirements
 
-- **Hardware**: Any ESP32 variant with WiFi support (except ESP32-C6 — insufficient RAM)
+- **Hardware**: Any ESP32 variant with Wi-Fi support (except ESP32-C6 — insufficient RAM)
 - **Wokwi/QEMU**: QEMU not supported
 - **CI Runner**: `wifi_router`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
