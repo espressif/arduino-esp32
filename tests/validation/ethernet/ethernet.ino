@@ -24,12 +24,13 @@ void tearDown(void) {}
 
 static void onEvent(arduino_event_id_t event) {
   switch (event) {
-    case ARDUINO_EVENT_ETH_CONNECTED:    eth_connected = true; break;
-    case ARDUINO_EVENT_ETH_GOT_IP:
-      eth_got_ip = true;
+    case ARDUINO_EVENT_ETH_CONNECTED: eth_connected = true; break;
+    case ARDUINO_EVENT_ETH_GOT_IP:    eth_got_ip = true; break;
+    case ARDUINO_EVENT_ETH_DISCONNECTED:
+      eth_connected = false;
+      eth_got_ip = false;
       break;
-    case ARDUINO_EVENT_ETH_DISCONNECTED: eth_connected = false; eth_got_ip = false; break;
-    default:                             break;
+    default: break;
   }
 }
 
