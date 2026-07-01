@@ -343,7 +343,7 @@ bool ledcWrite(uint8_t pin, uint32_t duty) {
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << bus->channel_resolution) - 1;
 
-    if ((duty == max_duty) && (max_duty != 1)) {
+    if ((duty >= max_duty) && (max_duty != 1)) {
       duty = max_duty + 1;
     }
 
@@ -379,7 +379,7 @@ bool ledcWriteChannel(uint8_t channel, uint32_t duty) {
 
   uint32_t max_duty = (1 << resolution) - 1;
 
-  if ((duty == max_duty) && (max_duty != 1)) {
+  if ((duty >= max_duty) && (max_duty != 1)) {
     duty = max_duty + 1;
   }
 
@@ -582,9 +582,9 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     //Fixing if all bits in resolution is set = LEDC FULL ON
     uint32_t max_duty = (1 << bus->channel_resolution) - 1;
 
-    if ((target_duty == max_duty) && (max_duty != 1)) {
+    if ((target_duty >= max_duty) && (max_duty != 1)) {
       target_duty = max_duty + 1;
-    } else if ((start_duty == max_duty) && (max_duty != 1)) {
+    } else if ((start_duty >= max_duty) && (max_duty != 1)) {
       start_duty = max_duty + 1;
     }
 
