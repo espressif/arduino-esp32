@@ -56,16 +56,11 @@ dependencies:
     require: public
   espressif/esp_modem:
     version: "^2.0.2"
-  espressif/esp-zboss-lib:
-    version: "==1.6.4" # compatible with esp-zigbee-lib 1.6.8
+  espressif/esp-zigbee-lib:
+    version: "^2.0.2"
     require: public
     rules:
       - if: "target not in [esp32c2, esp32c61, esp32p4]"
-  espressif/esp-zigbee-lib:
-    version: "==1.6.8"
-    require: public
-    rules:
-      - if: "target not in [esp32c2, esp32c61, esp32p4, esp32s31]"
   espressif/esp-dsp:
     version: "^1.8.0"
     rules:
