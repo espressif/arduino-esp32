@@ -68,6 +68,24 @@ def _fqbn_counts_from_yaml(ci: dict) -> dict[str, int]:
     return counts
 
 
+def _test_enabled_for_target(ci_cfg: dict, target: str) -> bool:
+    targets = ci_cfg.get("targets") if isinstance(ci_cfg, dict) else None
+    if isinstance(targets, dict) and targets.get(target) is False:
+        return False
+    return True
+
+
+def _platform_allowed(ci_cfg: dict, platform: str, target: str = "") -> bool:
+    platforms = ci_cfg.get("platforms") if isinstance(ci_cfg, dict) else None
+    if isinstance(platforms, dict):
+        v = platforms.get(platform)
+        if v is False:
+            return False
+        if target and isinstance(v, dict) and v.get(target) is False:
+            return False
+    return True
+
+
 def _sdkconfig_meets(ci_cfg: dict, sdk_text: str) -> bool:
     if not sdk_text:
         return True
@@ -147,20 +165,21 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
             ci = _parse_ci_yml(ci_text)
             fqbn_counts = _fqbn_counts_from_yaml(ci)
 
+            if not _test_enabled_for_target(ci, target):
+                print(
+                    f"[DEBUG]   Skip (target disabled in ci.yml): target={target} type={test_type} sketch={effective_sketch}",
+                    file=sys.stderr,
+                )
+                continue
+
             # Determine allowed platforms for this test
             # Performance tests are only run on hardware
             if test_type == "performance":
-                allowed_platforms = ["hardware"]
+                allowed_platforms = ["hardware"] if _platform_allowed(ci, "hardware", target) else []
             else:
-                allowed_platforms = []
-                platforms_cfg = ci.get("platforms") if isinstance(ci, dict) else None
-                for plat in ("hardware", "wokwi", "qemu"):
-                    dis = None
-                    if isinstance(platforms_cfg, dict):
-                        dis = platforms_cfg.get(plat)
-                    if dis is False:
-                        continue
-                    allowed_platforms.append(plat)
+                allowed_platforms = [
+                    plat for plat in ("hardware", "wokwi", "qemu") if _platform_allowed(ci, plat, target)
+                ]
 
             # Requirements check
             minimal = {
