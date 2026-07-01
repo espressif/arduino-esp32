@@ -98,7 +98,7 @@ Sets the network name.
 
     void setNetworkName(const char *name);
 
-* ``name`` - The network name string (maximum 16 characters)
+* ``name`` - The network name string (maximum 16 characters).
 
 This function sets the network name for the Thread network. The network name is a human-readable identifier for the network.
 
@@ -117,7 +117,7 @@ Sets the extended PAN ID.
 
     void setExtendedPanId(const uint8_t *extPanId);
 
-* ``extPanId`` - Pointer to an 8-byte array containing the extended PAN ID
+* ``extPanId`` - Pointer to an 8-byte array containing the extended PAN ID.
 
 This function sets the extended PAN ID, which uniquely identifies the Thread network partition.
 

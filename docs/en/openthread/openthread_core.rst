@@ -9,18 +9,18 @@ The ``OpenThread`` class provides direct access to OpenThread API functions for 
 
 **Key Features:**
 * Direct OpenThread API access.
-* Network management. (start, stop, interface control)
+* Network management (start, stop, interface control).
 * Dataset management.
-* Live setters that act directly on the running instance. (no DataSet required)
-* Thread Joiner role. (synchronous commissioning of a new device using a PSKd)
-* Thread Commissioner role. (let new devices attach with just a PSKd)
+* Live setters that act directly on the running instance (no DataSet required).
+* Thread Joiner role (synchronous commissioning of a new device using a PSKd).
+* Thread Commissioner role (let new devices attach with just a PSKd).
 * Address management with caching.
 * Network information retrieval.
 * Device role monitoring.
 
 **Use Cases:**
 * Thread network configuration and management.
-* Direct control over Thread operations
+* Direct control over Thread operations.
 * Programmatic network setup.
 * Commissioning new devices over-the-air with a PSKd.
 * Address and routing information access.
@@ -40,7 +40,7 @@ Initializes the OpenThread stack.
 
     static void begin(bool OThreadAutoStart = true);
 
-* ``OThreadAutoStart`` - If ``true``, automatically starts Thread with default dataset from NVS or ESP-IDF settings (default: ``true``)
+* ``OThreadAutoStart`` - If ``true``, automatically starts Thread with default dataset from NVS or ESP-IDF settings (default: ``true``).
 
 This function initializes the OpenThread stack and creates the OpenThread task. If ``OThreadAutoStart`` is ``true``, it will attempt to start Thread using the active dataset from NVS or ESP-IDF default settings.
 
@@ -108,7 +108,7 @@ Brings the Thread network interface down.
 
     void networkInterfaceDown();
 
-This function disables the Thread IPv6 interface (equivalent to CLI command ``ifconfig down``). The device will stop sending and receiving IPv6 packets.
+This function disables the Thread IPv6 interface (equivalent to CLI command ``ifconfig down``). The device will stop sending and receiving IPv6 packets. Clears the cached unicast/multicast address lists (same as ``networkInterfaceUp()`` and ``start()`` / ``stop()``).
 
 Dataset Management
 ******************
@@ -122,7 +122,7 @@ Commits an operational dataset to the Thread network.
 
     void commitDataSet(const DataSet &dataset);
 
-* ``dataset`` - The ``DataSet`` object containing the operational dataset parameters
+* ``dataset`` - The ``DataSet`` object containing the operational dataset parameters.
 
 This function sets the active operational dataset for the Thread network. The dataset must be properly configured before committing.
 
@@ -455,12 +455,12 @@ Starts the Joiner role and synchronously waits for completion.
 .. code-block:: arduino
 
     otError startJoiner(const char *pskd,
+                        uint32_t    timeoutMs       = 30000,
                         const char *provisioningUrl = nullptr,
                         const char *vendorName      = nullptr,
                         const char *vendorModel     = nullptr,
                         const char *vendorSwVersion = nullptr,
-                        const char *vendorData      = nullptr,
-                        uint32_t    timeoutMs       = 30000);
+                        const char *vendorData      = nullptr);
 
 * ``pskd`` - Pre-Shared Key for Device. ASCII, 6..32 characters, must
   match the value the commissioner accepted via ``addJoiner()``. Must not
@@ -593,8 +593,8 @@ Authorizes a remote joiner that presents the given PSKd.
 .. code-block:: arduino
 
     otError addJoiner(const char *pskd,
-                      const otExtAddress *eui64 = nullptr,
-                      uint32_t timeoutSec       = 120);
+                      uint32_t timeoutSec       = 120,
+                      const otExtAddress *eui64 = nullptr);
 
 * ``pskd`` - PSKd that the joiner must present (must match the joiner
   side's ``startJoiner`` argument).
@@ -645,8 +645,7 @@ Wraps ``otCommissionerGetState``.
     otError err = OThread.startCommissioner();
     if (err == OT_ERROR_NONE) {
         OThread.addJoiner("J01NME",      // PSKd
-                          nullptr,       // accept any joiner (wildcard)
-                          120);          // window: 120 s
+                          120);          // window: 120 s (accepts any joiner)
     }
 
 Timeouts at a glance
@@ -713,7 +712,7 @@ Prints network information to a Stream.
 
     static void otPrintNetworkInformation(Stream &output);
 
-* ``output`` - The Stream object to print to (e.g., ``Serial``)
+* ``output`` - The Stream object to print to (e.g., ``Serial``).
 
 This function prints comprehensive network information including:
 * Device role.
@@ -807,7 +806,7 @@ Gets a unicast address by index.
 
     IPAddress getUnicastAddress(size_t index) const;
 
-* ``index`` - The index of the address (0-based)
+* ``index`` - The index of the address (0-based).
 
 This function returns the unicast IPv6 address at the specified index as an ``IPAddress`` object.
 
@@ -847,7 +846,7 @@ Gets a multicast address by index.
 
     IPAddress getMulticastAddress(size_t index) const;
 
-* ``index`` - The index of the address (0-based)
+* ``index`` - The index of the address (0-based).
 
 This function returns the multicast IPv6 address at the specified index as an ``IPAddress`` object.
 
@@ -863,6 +862,34 @@ Gets all multicast addresses.
     std::vector<IPAddress> getAllMulticastAddresses() const;
 
 This function returns a vector containing all multicast IPv6 addresses subscribed by this node.
+
+subscribeMulticast
+^^^^^^^^^^^^^^^^^^
+
+Join an IPv6 multicast group on the Thread interface so the node receives
+datagrams sent to that group. Reference-counted: multiple callers (for example
+``OThreadUDP.beginMulticast()`` and ``OThreadCoAPServer.joinMulticastGroup()``)
+can share the same group; ``unsubscribeMulticast()`` removes one reference.
+The refcount table is mutex-protected, so concurrent subscribe/unsubscribe from
+``loop()`` and the CLI console task is safe.
+
+See :doc:`Multicast guide <Multicasting>` for send vs receive, UDP/CoAP patterns,
+scopes, shutdown order, and examples.
+
+.. code-block:: arduino
+
+    bool subscribeMulticast(const IPAddress &group);
+
+* ``group`` — IPv6 multicast address (first byte ``0xFF``).
+
+unsubscribeMulticast
+^^^^^^^^^^^^^^^^^^^^
+
+Leave an IPv6 multicast group previously joined with ``subscribeMulticast()``.
+
+.. code-block:: arduino
+
+    bool unsubscribeMulticast(const IPAddress &group);
 
 Cache Management
 ****************

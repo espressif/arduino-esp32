@@ -31,55 +31,153 @@
 
 #include "OThread.h"
 
-// Maximum payload size (bytes) of a single received UDP datagram that this
-// class will queue. Datagrams larger than this are truncated. Can be
-// overridden at build time.
+/**
+ * @def OT_UDP_MAX_PACKET_SIZE
+ * @brief Maximum payload size (bytes) of a single received UDP datagram that
+ *        this class will queue. Larger datagrams are truncated. Overridable at
+ *        build time.
+ */
 #ifndef OT_UDP_MAX_PACKET_SIZE
 #define OT_UDP_MAX_PACKET_SIZE 512
 #endif
 
-// Number of received datagrams that may sit in the RX queue between
-// parsePacket() calls. Older datagrams are dropped when the queue is full.
+/**
+ * @def OT_UDP_RX_QUEUE_DEPTH
+ * @brief Number of received datagrams that may sit in the RX queue between
+ *        parsePacket() calls. Older datagrams are dropped when the queue is
+ *        full. Overridable at build time.
+ */
 #ifndef OT_UDP_RX_QUEUE_DEPTH
 #define OT_UDP_RX_QUEUE_DEPTH 4
 #endif
 
-// IPv6 "any" address (::), suitable for binding to all interfaces on a port.
-// IPAddress(IPv6) already constructs an all-zero IPv6 address; this alias
-// exists for code readability.
+/**
+ * @brief IPv6 "any" address (`::`), suitable for binding to all interfaces on a
+ *        port. Equivalent to `IPAddress(IPv6)`; this alias exists for readability.
+ */
 extern const IPAddress OT_IN6ADDR_ANY;
 
+/**
+ * @brief Arduino `UDP` implementation backed directly by the `otUdpSocket` API.
+ *
+ * Sends and receives IPv6 UDP datagrams over the Thread mesh without going
+ * through lwIP, making it the lightest UDP path on Thread. Usable as a drop-in
+ * Arduino `UDP` object.
+ */
 class OThreadUDP : public UDP {
 public:
   OThreadUDP();
   ~OThreadUDP();
 
-  // True when the underlying otUdpSocket is open.
+  /** @brief true when the underlying otUdpSocket is open. */
   operator bool() const {
     return _open;
   }
 
   // ---- Arduino UDP interface ------------------------------------------
+
+  /**
+   * @brief Open a socket bound to a specific local address and port.
+   * @param addr Local IPv6 address to bind to.
+   * @param port Local UDP port.
+   * @return 1 on success, 0 on failure.
+   */
   uint8_t begin(IPAddress addr, uint16_t port);
+
+  /**
+   * @brief Open a socket bound to all interfaces (OT_IN6ADDR_ANY) on a port.
+   * @param port Local UDP port.
+   * @return 1 on success, 0 on failure.
+   */
   uint8_t begin(uint16_t port);
+
+  /**
+   * @brief Open a socket and subscribe to an IPv6 multicast group.
+   * @param group Multicast group to join (e.g. ff03::abcd).
+   * @param port  Local UDP port.
+   * @return 1 on success, 0 on failure.
+   */
   uint8_t beginMulticast(IPAddress group, uint16_t port);
+
+  /** @brief Close the socket. Multicast membership is reference-counted via
+   *         OThread.subscribeMulticast() / unsubscribeMulticast(). */
   void stop();
 
+  /**
+   * @brief Begin composing an outgoing datagram to an address.
+   * @param ip   Destination IPv6 address.
+   * @param port Destination UDP port.
+   * @return 1 on success, 0 on failure.
+   */
   int beginPacket(IPAddress ip, uint16_t port);
-  int beginPacket(const char *host, uint16_t port);  // IPv6 textual form
+
+  /**
+   * @brief Begin composing an outgoing datagram to a textual IPv6 host.
+   * @param host Destination IPv6 address in textual form.
+   * @param port Destination UDP port.
+   * @return 1 on success, 0 on failure.
+   */
+  int beginPacket(const char *host, uint16_t port);
+
+  /**
+   * @brief Send the datagram composed since the last beginPacket().
+   * @return 1 on success, 0 on failure.
+   */
   int endPacket();
+
+  /**
+   * @brief Append one byte to the outgoing datagram.
+   * @param b Byte to append.
+   * @return Number of bytes written (1 on success).
+   */
   size_t write(uint8_t b);
+
+  /**
+   * @brief Append a buffer to the outgoing datagram.
+   * @param buf  Source bytes.
+   * @param size Number of bytes from @p buf.
+   * @return Number of bytes written.
+   */
   size_t write(const uint8_t *buf, size_t size);
 
+  /**
+   * @brief Dequeue the next received datagram for reading.
+   * @return Size in bytes of the datagram, or 0 if none is available.
+   */
   int parsePacket();
+
+  /** @brief Number of unread bytes in the current received datagram. */
   int available();
+
+  /** @brief Read one byte from the current datagram, or -1 if none. */
   int read();
+
+  /**
+   * @brief Read bytes from the current datagram into a buffer.
+   * @param buf Destination buffer.
+   * @param len Capacity of @p buf.
+   * @return Number of bytes read, or -1 if none.
+   */
   int read(unsigned char *buf, size_t len);
+
+  /**
+   * @brief Read bytes from the current datagram into a char buffer.
+   * @param buf Destination buffer.
+   * @param len Capacity of @p buf.
+   * @return Number of bytes read, or -1 if none.
+   */
   int read(char *buf, size_t len);
+
+  /** @brief Peek at the next byte without consuming it, or -1 if none. */
   int peek();
+
+  /** @brief Discard the current received datagram. */
   void flush();
 
+  /** @brief Source IPv6 address of the datagram returned by parsePacket(). */
   IPAddress remoteIP();
+
+  /** @brief Source UDP port of the datagram returned by parsePacket(). */
   uint16_t remotePort();
 
 private:

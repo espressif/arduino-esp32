@@ -11,6 +11,8 @@ go through lwIP, so it is the lightest path to send and receive IPv6
 UDP datagrams over the Thread mesh and avoids duplicate IP stacks on
 small SoCs (ESP32-H2, ESP32-C6, ESP32-C5).
 
+For multicast receivers, senders, scopes, and examples see :doc:`Multicast guide <Multicasting>`.
+
 **Key Features:**
 
 * Full Arduino ``UDP`` interface (``begin``, ``beginMulticast``,
@@ -99,7 +101,7 @@ beginMulticast
 
 Internally calls ``begin(port)`` first and then
 ``otIp6SubscribeMulticastAddress`` for ``group``. The subscription is
-released symmetrically by ``stop()``.
+released symmetrically by ``stop()``. See :doc:`Multicast guide <Multicasting>`.
 
 stop
 ^^^^
@@ -393,7 +395,18 @@ Best Practices
   preferably much smaller for reliability.
 * **Multicast scope**: ``ff02::`` is link-local (single Thread hop),
   ``ff03::`` is realm-local (entire Thread partition). Choose
-  according to how far the message must propagate.
+  according to how far the message must propagate. Details: :doc:`Multicast guide <Multicasting>`.
 * **Application ports**: avoid OpenThread-reserved ports for application
   sockets. ``5683`` / ``5684`` are CoAP/CoAPs ports and ``61631`` is
   Thread TMF CoAP. The Native UDP examples use ``5050`` and ``5051``.
+
+Shutdown
+--------
+
+``OpenThread::end()`` does **not** close application UDP sockets for you.
+If your sketch called ``OThreadUDP.begin()`` or ``beginMulticast()``, call
+``OThreadUDP.stop()`` **before** ``OThread.end()`` so the underlying
+``otUdp`` socket and RX queue are released in the documented order (CoAP
+stop/destroy first when CoAP is used, then UDP, then stack deinit). See
+:doc:`openthread` (Shutdown Order) and the Native
+`StackShutdown example <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/StackShutdown>`_.
