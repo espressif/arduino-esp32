@@ -458,6 +458,32 @@ def get_tool(tool, force_download, force_extract):
     return unpack(local_path, ".", force_extract, checksum)
 
 
+def clean_dist(tools_to_download):
+    """Remove files from dist/ that are not required by the current tools list."""
+    if not os.path.isdir(dist_dir):
+        print("dist/ directory does not exist, nothing to clean.")
+        return
+
+    required_archives = {tool["archiveFileName"] for tool in tools_to_download}
+    removed = 0
+    for entry in os.listdir(dist_dir):
+        if entry in required_archives:
+            continue
+        full_path = os.path.join(dist_dir, entry)
+        if os.path.isfile(full_path):
+            if verbose:
+                print(f"Removing unused archive: {entry}")
+            else:
+                print(f"Removing {entry}")
+            os.remove(full_path)
+            removed += 1
+
+    if removed:
+        print(f"\nCleaned {removed} unused file(s) from dist/")
+    else:
+        print("\ndist/ is already clean, no unused files found.")
+
+
 def load_tools_list(filename, platform):
     with open(filename, "r") as f:
         tools_info = json.load(f)["packages"][0]["tools"]
@@ -515,12 +541,20 @@ if __name__ == "__main__":
 
     parser.add_argument("-v", "--verbose", action="store_true", required=False, help="Print verbose output")
 
-    parser.add_argument("-d", "--force_download", action="store_true", required=False, help="Force download of tools")
+    parser.add_argument("-d", "--force-download", action="store_true", required=False, help="Force download of tools")
 
-    parser.add_argument("-e", "--force_extract", action="store_true", required=False, help="Force extraction of tools")
+    parser.add_argument("-e", "--force-extract", action="store_true", required=False, help="Force extraction of tools")
 
     parser.add_argument(
-        "-f", "--force_all", action="store_true", required=False, help="Force download and extraction of tools"
+        "-f", "--force-all", action="store_true", required=False, help="Force download and extraction of tools"
+    )
+
+    parser.add_argument(
+        "-c",
+        "--clean-unused",
+        action="store_true",
+        required=False,
+        help="Remove files from the dist/ folder that are not required by the current tools list",
     )
 
     parser.add_argument("-t", "--test", action="store_true", required=False, help=argparse.SUPPRESS)
@@ -531,6 +565,7 @@ if __name__ == "__main__":
     force_download = args.force_download
     force_extract = args.force_extract
     force_all = args.force_all
+    should_clean_unused = args.clean_unused
     is_test = args.test
 
     # Set current directory to the script location
@@ -570,5 +605,9 @@ if __name__ == "__main__":
                 if not get_tool(tool, True, force_extract):
                     print(f"Tool {tool['archiveFileName']} was corrupted, but re-downloading did not help!\n")
                     sys.exit(1)
+
+    if should_clean_unused:
+        print("\nCleaning unused files from dist/...")
+        clean_dist(tools_to_download)
 
     print("\nPlatform Tools Installed")
