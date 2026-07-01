@@ -29,7 +29,7 @@ you cannot add core support without first completing component support.
 Component Support
 -----------------
 
-The minimum level. The SoC can be used when Arduino is included as an ESP-IDF component
+This is the minimum level of component support. The SoC can be used when Arduino is included as an ESP-IDF component
 (``idf.py build`` with Arduino in the component list). It involves:
 
 - Handling all ``#error`` guards in core source files so the code compiles for the new target.
@@ -42,7 +42,7 @@ The minimum level. The SoC can be used when Arduino is included as an ESP-IDF co
 Full Support (Component + Core)
 -------------------------------
 
-Everything from component support, plus:
+This level includes everything from component support, plus:
 
 - Prebuilt static libraries ship with the Arduino core package.
 - The board appears in Arduino IDE / CLI and can compile and upload sketches directly.
@@ -64,7 +64,7 @@ Before starting, ensure you have access to:
 3. Confirmation that ``esptool`` supports the new chip (check
    `esptool releases <https://github.com/espressif/esptool/releases>`_ for the ROM class at
    ``esptool/targets/{soc}.py``).
-4. The ``openocd-esp32`` package includes a debug config (``board/{soc}-builtin.cfg``), if
+4. The ``openocd-esp32`` package includes a debug config (``board/{soc}-builtin.cfg``) if
    debugging support is needed at launch.
 
 Step 1: Gather SoC Information from ESP-IDF [component]
@@ -382,7 +382,7 @@ Key properties to set (source of truth noted for each):
    * - ``build.flash_freq``
      - Default flash frequency string (from ``spi_flash/{soc}/Kconfig.flash_freq``)
    * - ``build.img_freq``
-     - Frequency written to image header. May differ from ``flash_freq`` for SoCs with
+     - Frequency written to image header. This may differ from ``flash_freq`` for SoCs with
        non-40 MHz XTALs (check ``esptool_py/Kconfig.projbuild`` for mapping)
    * - ``build.usb_mode``
      - ``0`` for USB-OTG (TinyUSB), ``1`` for HW CDC/JTAG. Only if USB supported.
@@ -474,7 +474,7 @@ for the new SoC:
    * - ``cores/esp32/Esp.cpp``
      - ``ESP_FLASH_IMAGE_BASE`` (same as ``build.bootloader_addr``) and chip model string
 
-3.6 Core Source Files Needing Review [component]
+3.6 Core Source Files That Need Review [component]
 --------------------------------------------------
 
 These files may compile without changes but can produce incorrect behavior if the new SoC
