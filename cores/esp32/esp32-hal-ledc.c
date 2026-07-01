@@ -608,7 +608,7 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     // ESP32-classic: wait for the start duty to latch before starting the fade.
     // ledc_set_fade_time_and_start() and its ISR busy-wait on duty_start with
     // interrupts disabled; an unlatched start duty corrupts the fade and trips
-    // the interrupt watchdog. The timeout is a safety net for a stopped timer.
+    // interrupt watchdog. Abort if duty_start does not clear within the timeout.
     uint32_t fade_freq = ledc_get_freq(group, bus->timer_num);
     if (fade_freq == 0) {
       log_e("LEDC timer not running on pin %u", pin);
@@ -625,8 +625,13 @@ static bool ledcFadeConfig(uint8_t pin, uint32_t start_duty, uint32_t target_dut
     uint32_t settle_start = millis();
     while ((LEDC_LL_GET_HW_FN())->channel_group[group].channel[channel].conf1.duty_start) {
       if (millis() - settle_start > settle_timeout_ms) {
-        log_w("LEDC pin %u: start duty did not latch within %u ms, starting fade anyway", pin, settle_timeout_ms);
-        break;
+        log_e("LEDC pin %u: start duty did not latch within %u ms, aborting fade", pin, settle_timeout_ms);
+#if !CONFIG_DISABLE_HAL_LOCKS
+        if (bus->lock != NULL) {
+          xSemaphoreGive(bus->lock);
+        }
+#endif
+        return false;
       }
       delay(1);
     }
