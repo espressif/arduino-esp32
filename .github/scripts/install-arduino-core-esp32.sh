@@ -28,9 +28,9 @@ if [ ! -d "$ARDUINO_ESP32_PATH" ]; then
     cd esp32 || exit
     echo "Installing Platform Tools ..."
     if [ "${OS_IS_WINDOWS:-0}" == "1" ]; then
-        (cd tools && ./get.exe)
+        (cd tools && ./get.exe --clean-unused)
     else
-        (cd tools && python get.py)
+        (cd tools && python get.py --clean-unused)
     fi
     cd "$script_init_path" || exit
 
@@ -41,9 +41,9 @@ elif [ ! -d "$ARDUINO_ESP32_PATH/tools/xtensa-esp-elf" ] && \
     echo "ESP32 core linked but toolchains missing; running get.py ..."
     script_init_path="$PWD"
     if [ "${OS_IS_WINDOWS:-0}" == "1" ]; then
-        (cd "$ARDUINO_ESP32_PATH/tools" && ./get.exe)
+        (cd "$ARDUINO_ESP32_PATH/tools" && ./get.exe --clean-unused)
     else
-        (cd "$ARDUINO_ESP32_PATH/tools" && python get.py)
+        (cd "$ARDUINO_ESP32_PATH/tools" && python get.py --clean-unused)
     fi
     cd "$script_init_path" || exit
 fi
