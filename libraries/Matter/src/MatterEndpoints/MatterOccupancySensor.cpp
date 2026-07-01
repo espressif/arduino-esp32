@@ -34,6 +34,16 @@ using namespace esp_matter::cluster;
 using namespace esp_matter::cluster::occupancy_sensing::attribute;
 using namespace chip::app::Clusters;
 
+// HoldTime / HoldTimeLimits (Occupancy Sensing cluster, Matter 1.4+)
+//
+// These attributes let a controller configure how long occupancy stays "true" after the
+// sensor clears. They are MANAGED_INTERNALLY by the CHIP server — there is no Occupancy
+// Sensing feature flag and occupancy_sensor::create() does not add them automatically.
+// ESP-Matter exposes create_hold_time() / create_hold_time_limits() in esp_matter_attribute.h;
+// this class post-creates both attributes and registers a custom AttributeAccessInterface so
+// HoldTime writes invoke the user callback (onHoldTimeChange) while still using the official
+// server validation (HoldTimeLimits min/max/default).
+//
 // Custom AttributeAccessInterface wrapper that intercepts HoldTime writes to call user callbacks
 // This wraps the standard OccupancySensing::Instance to add callback support
 class OccupancySensingAttrAccessWrapper : public chip::app::AttributeAccessInterface {
@@ -219,15 +229,15 @@ bool MatterOccupancySensor::begin(bool _occupancyState, OccupancySensorType_t _o
   using namespace esp_matter::cluster::occupancy_sensing::feature;
 
   switch (_occupancySensorType) {
-    case OCCUPANCY_SENSOR_TYPE_PIR:        occupancy_sensor_config.occupancy_sensing.features = passive_infrared::get_id(); break;
-    case OCCUPANCY_SENSOR_TYPE_ULTRASONIC: occupancy_sensor_config.occupancy_sensing.features = ultrasonic::get_id(); break;
+    case OCCUPANCY_SENSOR_TYPE_PIR:        occupancy_sensor_config.occupancy_sensing.feature_flags = passive_infrared::get_id(); break;
+    case OCCUPANCY_SENSOR_TYPE_ULTRASONIC: occupancy_sensor_config.occupancy_sensing.feature_flags = ultrasonic::get_id(); break;
     case OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC:
-      occupancy_sensor_config.occupancy_sensing.features = passive_infrared::get_id() | ultrasonic::get_id();
+      occupancy_sensor_config.occupancy_sensing.feature_flags = passive_infrared::get_id() | ultrasonic::get_id();
       break;
-    case OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT: occupancy_sensor_config.occupancy_sensing.features = physical_contact::get_id(); break;
+    case OCCUPANCY_SENSOR_TYPE_PHYSICAL_CONTACT: occupancy_sensor_config.occupancy_sensing.feature_flags = physical_contact::get_id(); break;
     default:
       // For unknown types, use "other" feature
-      occupancy_sensor_config.occupancy_sensing.features = other::get_id();
+      occupancy_sensor_config.occupancy_sensing.feature_flags = other::get_id();
       break;
   }
   // endpoint handles can be used to add/modify clusters.

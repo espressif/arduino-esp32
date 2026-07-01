@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Simple Matter smart button — short click only (InitialPress + ShortRelease).
+// For long-press and multi-press gestures see MatterEnhancedSmartButton example.
+
 // Matter Manager
 #include <Arduino.h>
 #include <Matter.h>
@@ -66,6 +69,7 @@ void setup() {
 #endif
 
   // Initialize the Matter EndPoint
+  // FEATURE_SIMPLE (default): momentary switch + short release for a single click
   SmartButton.begin();
 
   // Matter beginning - Last step, after all EndPoints are initialized
@@ -102,16 +106,19 @@ void loop() {
     // deals with button debouncing
     button_time_stamp = millis();  // record the time while the button is pressed.
     button_state = true;           // pressed.
+    Serial.println("User button pressed. Sending InitialPress to the Matter Controller!");
+    // Matter Controller will receive an InitialPress event and, if programmed, it will trigger an action
+    SmartButton.press();
   }
 
   // Onboard User Button is used as a smart button or to decommission it
   uint32_t time_diff = millis() - button_time_stamp;
   if (button_state && time_diff > debouceTime && digitalRead(buttonPin) == HIGH) {
     button_state = false;  // released
-    // builtin button is released - send a click event to the Matter Controller
-    Serial.println("User button released. Sending Click to the Matter Controller!");
+    // builtin button is released - send a ShortRelease event to the Matter Controller
+    Serial.println("User button released. Sending ShortRelease to the Matter Controller!");
     // Matter Controller will receive an event and, if programmed, it will trigger an action
-    SmartButton.click();
+    SmartButton.release();
   }
 
   // Onboard User Button is kept pressed for longer than 5 seconds in order to decommission matter node
