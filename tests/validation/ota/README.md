@@ -14,7 +14,7 @@ Validates the `Update` API and `HTTPUpdate` library for unsigned OTA workflows: 
 
 ## Requirements
 
-- **Hardware**: Any ESP32 variant with WiFi support
+- **Hardware**: Any ESP32 variant with Wi-Fi support
 - **Wokwi/QEMU**: Not supported
 - **CI Runner**: `wifi_router`
 - **SoC Config**: `CONFIG_SOC_WIFI_SUPPORTED=y`
