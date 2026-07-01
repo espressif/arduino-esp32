@@ -50,9 +50,7 @@ jobs:
             echo "ERROR: ref must be a branch name, not a commit SHA ($ref)" >&2
             exit 1
           fi
-          if ! git ls-remote --heads \
-            "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "refs/heads/${ref}" | grep -q .; then
+          if ! gh api "repos/${GITHUB_REPOSITORY}/branches/${ref}" --silent 2>/dev/null; then
             echo "ERROR: ref is not a remote branch: $ref" >&2
             exit 1
           fi

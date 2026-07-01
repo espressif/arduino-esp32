@@ -117,7 +117,8 @@ sed 's/{runtime\.platform\.path}.tools.esptool/\{runtime.tools.esptool_py.path\}
 sed 's/{runtime\.platform\.path}.tools.openocd-esp32/\{runtime.tools.openocd-esp32.path\}/g' > "$PKG_DIR/platform.txt"
 
 if [ -n "${VENDOR}" ]; then
-    sed -i  "/^name=.*/s/$/ ($VENDOR)/" "$PKG_DIR/platform.txt"
+    sed -i.bak "/^name=.*/s/$/ ($VENDOR)/" "$PKG_DIR/platform.txt"
+    rm -f "$PKG_DIR/platform.txt.bak"
 fi
 
 echo "Generating core_version.h ..."

@@ -206,7 +206,7 @@ function merge_package_json {
     local old_json="$output_dir/oldJson.json"
     local merged_json="$output_dir/mergedJson.json"
 
-    curl -L -o "$old_json" "https://github.com/$GITHUB_REPOSITORY/releases/download/$jsonLink?access_token=$GITHUB_TOKEN" 2>/dev/null
+    curl -L -H "Authorization: token $GITHUB_TOKEN" -o "$old_json" "https://github.com/$GITHUB_REPOSITORY/releases/download/$jsonLink" 2>/dev/null
     set +e
     stdbuf -oL python "$PACKAGE_JSON_MERGE" "$jsonOut" "$old_json" > "$merged_json"
     set -e
