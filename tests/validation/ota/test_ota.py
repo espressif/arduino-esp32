@@ -22,9 +22,7 @@ def _lan_ip() -> str:
         pass
     finally:
         s.close()
-    for _, _, _, _, sockaddr in socket.getaddrinfo(
-        socket.gethostname(), None, socket.AF_INET, socket.SOCK_DGRAM
-    ):
+    for _, _, _, _, sockaddr in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET, socket.SOCK_DGRAM):
         candidate = sockaddr[0]
         if candidate and not candidate.startswith("127."):
             return candidate
@@ -86,9 +84,11 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
     handler_class = type(
         "Handler",
         (SimpleHTTPRequestHandler,),
-        {"__init__": lambda self, *a, **kw: SimpleHTTPRequestHandler.__init__(
-            self, *a, directory=str(serve_dir), **kw
-        )},
+        {
+            "__init__": lambda self, *a, **kw: SimpleHTTPRequestHandler.__init__(
+                self, *a, directory=str(serve_dir), **kw
+            )
+        },
     )
 
     port = 8766

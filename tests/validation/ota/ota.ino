@@ -87,10 +87,7 @@ void test_httpupdate_download(void) {
   String url = server_url + "/ota.ino.bin";
   HTTPUpdateResult ret = httpUpdate.update(client, url);
 
-  TEST_ASSERT_TRUE_MESSAGE(
-    ret == HTTP_UPDATE_OK || ret == HTTP_UPDATE_NO_UPDATES,
-    "HTTPUpdate could not connect to server or download failed"
-  );
+  TEST_ASSERT_TRUE_MESSAGE(ret == HTTP_UPDATE_OK || ret == HTTP_UPDATE_NO_UPDATES, "HTTPUpdate could not connect to server or download failed");
 }
 
 // ==================== Setup ====================
