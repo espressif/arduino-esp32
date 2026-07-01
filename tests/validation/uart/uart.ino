@@ -618,6 +618,12 @@ void irda_mode_test(void) {
     UARTTestConfig &uartA = *uart_test_configs[0];
     UARTTestConfig &uartB = *uart_test_configs[1];
 
+    // IrDA uses narrow pulses (3/16 of bit period); at high baud rates
+    // the pulses are too short for reliable cross-UART GPIO matrix loopback.
+    uartA.serial.updateBaudRate(9600);
+    uartB.serial.updateBaudRate(9600);
+    delay(500);
+
     // Set both UARTs to IRDA mode
     bool mode_set = uartA.serial.setMode(UART_MODE_IRDA);
     TEST_ASSERT_TRUE(mode_set);
