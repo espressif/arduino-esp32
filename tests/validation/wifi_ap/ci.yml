@@ -21,6 +21,10 @@ platforms:
   # Wokwi and QEMU do not support multi-device tests
   wokwi: false
   qemu: false
+  hardware:
+    esp32p4: false # No two_duts runners using ESP-Hosted
 
-requires:
+# No two_duts runners using ESP-Hosted
+requires_any:
+  - CONFIG_ESP_HOSTED_ENABLED=y
   - CONFIG_SOC_WIFI_SUPPORTED=y

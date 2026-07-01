@@ -10,5 +10,6 @@ platforms:
   wokwi: false
   qemu: false
 
+# Currently, ESP-NOW is only supported on native Wi-Fi SoCs
 requires:
   - CONFIG_SOC_WIFI_SUPPORTED=y
