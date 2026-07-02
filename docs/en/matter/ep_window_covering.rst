@@ -10,7 +10,7 @@ The ``MatterWindowCovering`` class provides a window covering endpoint for Matte
 **Features:**
 * Lift position and percentage control (0-100%, Matter: 0 = open, 100 = closed)
 * Lift and tilt percent100ths control (0-10000, direct Matter attribute mapping)
-* Local motor calibration for physical-unit to percent conversion
+* Local motor calibration for physical-unit to percentage conversion
 * Multiple window covering types support
 * Callback support for open, close, lift, tilt, and stop commands
 * Integration with Apple HomeKit, Amazon Alexa, and Google Home
@@ -76,12 +76,12 @@ Initializes the Matter window covering endpoint with optional initial positions,
 
 This function will return ``true`` if successful, ``false`` otherwise.
 
-**Note:** Matter percent semantics apply throughout this API: **0 = fully open**, **100 = fully closed**. The covering type must be specified during initialization to ensure the correct features (lift and/or tilt) are enabled.
+**Note:** Matter percentage semantics apply throughout this API: **0 = fully open**, **100 = fully closed**. The covering type must be specified during initialization to ensure the correct features (lift and/or tilt) are enabled.
 
 PositionCalibration
 ^^^^^^^^^^^^^^^^^^^
 
-Local motor range used to convert between physical motor units and Matter percent. This is stored in firmware only and is **not** published as a Matter cluster attribute in ESP-Matter 1.5.
+Local motor range used to convert between physical motor units and Matter percentages. This is stored in firmware only and is **not** published as a Matter cluster attribute in ESP-Matter 1.5.
 
 .. code-block:: arduino
 
@@ -273,7 +273,7 @@ This function will return the current window covering type.
 Installed Limit Control
 ***********************
 
-These methods configure **local motor calibration** for converting between physical motor units and Matter percent. They are **not** exposed as Matter cluster attributes in ESP-Matter 1.5. Prefer ``setLiftCalibration()`` / ``setTiltCalibration()`` or pass ``PositionCalibration`` to ``begin()``.
+These methods configure **local motor calibration** for converting between physical motor units and Matter percentages. They are **not** exposed as Matter cluster attributes in ESP-Matter 1.5. Prefer ``setLiftCalibration()`` / ``setTiltCalibration()`` or pass ``PositionCalibration`` to ``begin()``.
 
 setLiftCalibration
 ^^^^^^^^^^^^^^^^^^
