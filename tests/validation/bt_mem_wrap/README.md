@@ -15,7 +15,6 @@ Validates the `--wrap` linker intercepts on `esp_bt_mem_release` and `esp_bt_con
 | 7 | `btStartMode(BLE)` fails after `btMemRelease(BLE)` — freed memory cannot be reclaimed |
 | 8 | Full lifecycle: `btStart()` → `btMemRelease()` rejected while running → `btStop()` → `btMemRelease()` succeeds |
 | 9 | Matter-style release: `esp_bt_controller_mem_release(CLASSIC_BT)` frees Classic BT only, BLE remains usable (skipped on non-BTDM chips) |
-| 10 | `btInUse()` pointer comparison: default weak alias detected, memory governed by sub-functions (`bleInUse`/`btClassicInUse`) |
 
 ## Requirements
 
