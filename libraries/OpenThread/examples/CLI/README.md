@@ -31,7 +31,7 @@ Because it behaves like a stream, sketches can:
 
 - write commands with `print/println/write`,
 - read responses with `available/read/readBytesUntil`,
-- control blocking behavior with `setTimeout`,
+- control blocking behavior with `setTimeout()` (inherited from Arduino `Stream`, not a CLI-specific method),
 - register asynchronous handling with `onReceive(...)`.
 
 In practice, this turns OpenThread CLI into an automation channel for your
@@ -66,6 +66,7 @@ The Native API is the typed C++ API exposed by Arduino wrappers such as:
 - `OThread`
 - `DataSet`
 - `OThreadUDP` (when available/enabled)
+- `OThreadCoAP` (`OThreadCoAPClient`, `OThreadCoAPServer`, …)
 
 Typical Native usage is function-based, for example:
 
@@ -140,7 +141,6 @@ static bool runCli(const char *cmd) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}
 
   // Start OpenThread stack without auto-start.
   // This lets us define exactly how the network is configured.
@@ -191,13 +191,28 @@ Why this is a good starter pattern:
 
 ## Related examples in this folder
 
-- `SimpleCLI` - basic CLI console pass-through.
-- `SimpleNode` - minimal OpenThread stack startup through the CLI wrapper.
-- `ThreadScan` - active Thread network scanning through CLI commands.
-- `onReceive` - asynchronous CLI response callback usage.
-- `SimpleThreadNetwork/*` - CLI-driven network bring-up examples.
-- `COAP/*` - command-driven CoAP workflows via CLI.
-- `UDP/*` - command-driven UDP telemetry workflow via CLI.
+- [CLI SimpleCLI (console pass-through)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleCLI) — basic CLI console pass-through.
+- [CLI SimpleNode (minimal stack startup)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleNode) — minimal OpenThread stack startup (Native API for network info).
+- [CLI StackShutdown (graceful teardown)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/StackShutdown) — graceful `OThread.end()` teardown after 30 s (template for CoAP/UDP stop order).
+- [CLI ThreadScan (network scanning)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) — active Thread network scanning through CLI commands.
+- [CLI onReceive (async CLI callback)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/onReceive) — asynchronous CLI response callback usage.
+- [CLI Simple Thread Network examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork) — CLI-driven network bring-up ([CLI LeaderNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/LeaderNode), [CLI RouterNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/RouterNode), [CLI ExtendedRouterNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/SimpleThreadNetwork/ExtendedRouterNode)).
+- [CLI CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP) — command-driven CoAP workflows via CLI ([CLI CoAP lamp (server)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_lamp), [CLI CoAP switch (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP/coap_switch)).
+- [CLI UDP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP) — command-driven UDP telemetry via CLI ([CLI UDP sensor collector](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector), [CLI UDP sensor node](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_node)).
+
+For the same CoAP scenarios using the Native API (typed methods, no CLI parsing),
+see [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) and the overview in [Native examples README](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/README.md).
+
+## Troubleshooting
+
+Multi-board CLI demos (SimpleThreadNetwork, COAP, UDP) require the **Leader / lamp / collector** sketch to run first. Wait until Serial reports the expected role, then flash or **reset** joiner / switch / sensor boards.
+
+| Symptom | Likely cause |
+| --- | --- |
+| CLI commands return `Error ...` | Wrong command order, Thread not started, or interface down — run `state` and verify `child`/`router`/`leader`. |
+| Single-node sketch has no output | Serial Monitor not at **115200**, wrong line ending (use **Both NL & CR** for interactive CLI), or USB disconnected. |
+| Client cannot attach to Leader network | Leader not running, or network key/channel mismatch — start Leader first, then reset client. |
+| Mixed CLI + Native sketch behaves oddly | Document which layer owns each operation; avoid duplicating dataset setup in both paths. |
 
 ## License
 
