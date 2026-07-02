@@ -61,12 +61,7 @@ function _filter_arduino_headless_log_noise {
         -e '^[[:space:]]*\[[[:space:]]*DNSQuestion@' \
         -e '^[[:space:]]*[0-9a-fA-F]+: [0-9a-fA-F ]' \
         -e '\]\]' \
-    | python3 -u -c 'import sys
-for raw in sys.stdin.buffer:
-    try:
-        sys.stdout.write(raw.decode("ascii"))
-    except UnicodeDecodeError:
-        pass'
+    | LC_ALL=C grep -a '^[[:print:][:space:]]*$'
 }
 
 function _run_arduino_headless_filtered {
@@ -111,13 +106,9 @@ function _run_arduino_headless {
     [ -d "$appdir" ] || { echo "ERROR: Arduino tree not found at $appdir" >&2; return 1; }
 
     jul_config="$(_arduino_headless_jul_config || true)"
-    if [ -n "$jul_config" ]; then
-        export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true -Djava.util.logging.config.file=$jul_config"
-        java_props=(-Djava.awt.headless=true "-Djava.util.logging.config.file=$jul_config")
-    else
-        export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true"
-        java_props=(-Djava.awt.headless=true)
-    fi
+    java_props=(-Djava.awt.headless=true)
+    [ -n "$jul_config" ] && java_props+=("-Djava.util.logging.config.file=$jul_config")
+    export JAVA_TOOL_OPTIONS="${java_props[*]}"
 
     if [[ "${OS_IS_WINDOWS:-0}" == "1" ]]; then
         MSYS2_ARG_CONV_EXCL="*" MSYS_NO_PATHCONV=1 \
@@ -130,11 +121,8 @@ function _run_arduino_headless {
         app_bundle="$(cd "$appdir/../.." && pwd)"
         launcher="$app_bundle/Contents/MacOS/Arduino"
         [ -x "$launcher" ] || { echo "ERROR: Arduino launcher not found at $launcher" >&2; return 1; }
-        if [ -n "$jul_config" ]; then
-            export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true -Dapple.awt.UIElement=true -Djava.util.logging.config.file=$jul_config"
-        else
-            export JAVA_TOOL_OPTIONS="-Djava.awt.headless=true -Dapple.awt.UIElement=true"
-        fi
+        java_props+=(-Dapple.awt.UIElement=true)
+        export JAVA_TOOL_OPTIONS="${java_props[*]}"
         if [[ "$(uname -m)" == "arm64" ]]; then
             _run_arduino_headless_filtered arch -x86_64 "$launcher" "$@"
         else

@@ -6,8 +6,6 @@
 set -eo pipefail
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Mock uploads always need pip esptool (socket://); default on so local runs work too.
-export MOCK_ESPTOOL_OVERRIDE="${MOCK_ESPTOOL_OVERRIDE:-1}"
 source "${SCRIPTS_DIR}/socs_config.sh"
 source "${SCRIPTS_DIR}/mock_upload_lib.sh"
 
@@ -40,7 +38,6 @@ echo "Installing arduino-nightly builder ..."
 source "${SCRIPTS_DIR}/install-arduino-builder.sh"
 echo "Installing ESP32 core (symlink + tools) ..."
 source "${SCRIPTS_DIR}/install-arduino-core-esp32.sh"
-install_mock_esptool_override || exit 1
 echo "Setup complete. Sketch: $SKETCH"
 
 record_test() {
@@ -136,7 +133,6 @@ else
 fi
 
 finish_tests() {
-    restore_mock_esptool_override
     print_summary
     exit $((TEST_FAILURES > 0 ? 1 : 0))
 }
