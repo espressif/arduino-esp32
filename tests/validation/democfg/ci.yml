@@ -1,3 +1,53 @@
+# Example ci.yml configuration file
+
+# Runner Configuration
+
+# Hardware runner tags
+# --------------------
+# Tags specify which GitLab CI hardware runner a test requires.
+# Tags only affect hardware tests — Wokwi and QEMU ignore them.
+# When no tags are specified, the test runs on a default generic runner.
+#
+# There are two fields, and they can be used together:
+#
+# `tags` (list) — Applied to ALL targets uniformly.
+#   Use when every SoC needs the same runner setup.
+#
+# `soc_tags` (dict keyed by SoC) — Applied per target.
+#   Use when different SoCs need different runner capabilities.
+#   SoCs not listed get no extra tags (default runner).
+#
+# When both are present, gen_hw_jobs.py merges them: each target gets
+# the global tags PLUS any soc_tags entry for that SoC.
+# For example, with tags: [wifi_router] and soc_tags: {esp32s3: [octal_psram]},
+# ESP32-S3 jobs get both wifi_router and octal_psram, other SoCs get only wifi_router.
+#
+# Available tags: wifi_router, two_duts, generic_multi_device,
+#                 ethernet, psram, octal_psram
+#
+# tags:
+#   - wifi_router
+#
+# soc_tags:
+#   esp32:
+#     - psram
+#   esp32s3:
+#     - octal_psram
+
+# FQBN configuration
+
+# FQBN append
+# -----------
+# This is the setting that will be appended to the default FQBNs.
+fqbn_append: DebugLevel=verbose
+
+# FQBN list
+# ---------
+# This is the configuration for the FQBNs that will be used to compile the test.
+# The FQBNs are specified as a dictionary where the key is the target name and the value is a list
+# of FQBNs that will be used to compile the test. All of the FQBNs will be compiled and tested.
+# If no FQBNs are specified, the default FQBNs will be used.
+# Note that this will override the fqbn_append configuration for the specified targets.
 fqbn:
   esp32:
     - espressif:esp32:esp32:PSRAM=enabled,PartitionScheme=huge_app,FlashMode=dio
@@ -7,14 +57,53 @@ fqbn:
   esp32s3:
     - espressif:esp32:esp32s3:PSRAM=opi,USBMode=default,PartitionScheme=huge_app
 
+# Platforms configuration
+# -----------------------
+# This is the configuration for the platforms that will be used to run the test.
+# The platforms are specified as a dictionary where the key is the platform name
+# and the value is either:
+#   - A boolean: enables/disables the platform for all targets.
+#   - A dict of targets: selectively disables specific targets on that platform.
+# By default, all platforms are assumed to be supported.
+#
+# Examples:
+#   platforms:
+#     qemu: false                # Disable all targets on qemu
+#     hardware:
+#       esp32p4: false           # Disable esp32p4 on hardware only
 platforms:
   hardware: true
   qemu: false
   wokwi: false
 
+# Sdkconfig requirements
+# ----------------------
+# CI reads the sketch build's sdkconfig for each chip and decides whether the
+# sketch is eligible to run there. The lists below describe required sdkconfig
+# lines using extended regular expressions (ERE), the same flavor as grep -E.
+#
+# `requires`
+# ----------
+# Each string must match from the start of some sdkconfig line (as if the
+# pattern were prefixed with ^). A literal Kconfig assignment is the usual
+# case and is itself a valid regex. Use bracket expressions, quantifiers, and
+# other ERE syntax when the value changes between targets (e.g. numeric options).
+# Every item in this list must match the same sdkconfig (logical AND).
 requires:
   - CONFIG_SOC_UART_SUPPORTED=y
 
+# `requires_any`
+# --------------
+# Same as `requires`, but at least one of the strings in this list must match the sdkconfig (logical OR).
+requires_any:
+  - CONFIG_SOC_UART_SUPPORTED=y
+  - CONFIG_SOC_I2C_SUPPORTED=y
+
+# Targets configuration
+# ---------------------
+# This is the configuration for the targets that will be used to run the test.
+# The targets are specified as a dictionary where the key is the target name and the value is a boolean
+# that specifies if the target is supported. By default, all targets are assumed to be supported.
 targets:
   esp32: true
   esp32c3: false

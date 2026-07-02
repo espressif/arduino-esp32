@@ -68,6 +68,24 @@ def _fqbn_counts_from_yaml(ci: dict) -> dict[str, int]:
     return counts
 
 
+def _test_enabled_for_target(ci_cfg: dict, target: str) -> bool:
+    targets = ci_cfg.get("targets") if isinstance(ci_cfg, dict) else None
+    if isinstance(targets, dict) and targets.get(target) is False:
+        return False
+    return True
+
+
+def _platform_allowed(ci_cfg: dict, platform: str, target: str = "") -> bool:
+    platforms = ci_cfg.get("platforms") if isinstance(ci_cfg, dict) else None
+    if isinstance(platforms, dict):
+        v = platforms.get(platform)
+        if v is False:
+            return False
+        if target and isinstance(v, dict) and v.get(target) is False:
+            return False
+    return True
+
+
 def _sdkconfig_meets(ci_cfg: dict, sdk_text: str) -> bool:
     if not sdk_text:
         return True
@@ -83,13 +101,16 @@ def _sdkconfig_meets(ci_cfg: dict, sdk_text: str) -> bool:
     return True
 
 
-def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str], int]:
+def expected_from_artifacts(build_root: Path) -> tuple[dict[tuple[str, str, str, str], int], set[tuple[str, str, str]]]:
     """Compute expected runs using ci.yml and sdkconfig found in build artifacts.
-    Returns mapping (platform, target, type, sketch) -> expected_count
+    Returns:
+        expected: mapping (platform, target, type, sketch) -> expected_count
+        built_tests: set of (target, type, sketch) that had build artifacts
     """
     expected: dict[tuple[str, str, str, str], int] = {}
+    built_tests: set[tuple[str, str, str]] = set()
     if not build_root.exists():
-        return expected
+        return expected, built_tests
     print(f"[DEBUG] Scanning build artifacts in: {build_root}", file=sys.stderr)
     for artifact_dir in build_root.iterdir():
         if not artifact_dir.is_dir():
@@ -147,20 +168,23 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
             ci = _parse_ci_yml(ci_text)
             fqbn_counts = _fqbn_counts_from_yaml(ci)
 
+            built_tests.add((target, test_type, effective_sketch))
+
+            if not _test_enabled_for_target(ci, target):
+                print(
+                    f"[DEBUG]   Skip (target disabled in ci.yml): target={target} type={test_type} sketch={effective_sketch}",
+                    file=sys.stderr,
+                )
+                continue
+
             # Determine allowed platforms for this test
             # Performance tests are only run on hardware
             if test_type == "performance":
-                allowed_platforms = ["hardware"]
+                allowed_platforms = ["hardware"] if _platform_allowed(ci, "hardware", target) else []
             else:
-                allowed_platforms = []
-                platforms_cfg = ci.get("platforms") if isinstance(ci, dict) else None
-                for plat in ("hardware", "wokwi", "qemu"):
-                    dis = None
-                    if isinstance(platforms_cfg, dict):
-                        dis = platforms_cfg.get(plat)
-                    if dis is False:
-                        continue
-                    allowed_platforms.append(plat)
+                allowed_platforms = [
+                    plat for plat in ("hardware", "wokwi", "qemu") if _platform_allowed(ci, plat, target)
+                ]
 
             # Requirements check
             minimal = {
@@ -181,7 +205,7 @@ def expected_from_artifacts(build_root: Path) -> dict[tuple[str, str, str, str],
 
         if len(tests_processed) == 0:
             print(f"[DEBUG]  No sketches found in this artifact group", file=sys.stderr)
-    return expected
+    return expected, built_tests
 
 
 def scan_executed_xml(xml_root: Path, valid_types: set[str]) -> dict[tuple[str, str, str, str], int]:
@@ -370,10 +394,11 @@ def main():
         "qemu": set(qemu_types),
     }
 
-    expected_from_build = expected_from_artifacts(build_root)  # (platform, target, type, sketch) -> expected_count
+    expected_from_build, built_tests = expected_from_artifacts(build_root)
     executed_types = set(hw_types + wokwi_types + qemu_types)
     executed = scan_executed_xml(results_root, executed_types)      # (platform, target, type, sketch) -> count
     print(f"[DEBUG] Expected entries from build artifacts: {len(expected_from_build)}", file=sys.stderr)
+    print(f"[DEBUG] Built test combos (target, type, sketch): {len(built_tests)}", file=sys.stderr)
 
     expected = dict(expected_from_build)
     build_failure_cells = set()
@@ -385,6 +410,13 @@ def main():
         print(f"[DEBUG] Expected entries from previous results cache: {len(expected_from_cache)}", file=sys.stderr)
         for key, count in expected_from_cache.items():
             if key not in expected_from_build:
+                plat, target, test_type, sketch = key
+                if (target, test_type, sketch) in built_tests:
+                    logging.debug(
+                        f"Skip cache entry (build artifact exists, platform/target disabled in ci.yml): "
+                        f"plat={plat} target={target} type={test_type} sketch={sketch}"
+                    )
+                    continue
                 build_failure_cells.add(key)
                 expected[key] = max(expected.get(key, 0), count)
                 logging.debug(
