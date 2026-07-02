@@ -49,7 +49,7 @@ void syncHsvToColorCluster(uint16_t endpoint_id, espHsvColor_t hsv) {
   updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentX::Id, val);
 
   val.val.u16 = xy.y;
-  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentY::Id, val); // codespell:ignore
+  updateColorControlAttribute(endpoint_id, ColorControl::Attributes::CurrentY::Id, val);  // codespell:ignore
 
   val.type = ESP_MATTER_VAL_TYPE_UINT8;
   val.val.u8 = hsv.v;
@@ -107,11 +107,11 @@ bool MatterColorLight::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_
         } else if (attribute_id == ColorControl::Attributes::CurrentSaturation::Id) {
           log_d("RGB Light Saturation changed to %u", val->val.u8);
           colorHSV.s = val->val.u8;
-        } else if (attribute_id == ColorControl::Attributes::CurrentX::Id || attribute_id == ColorControl::Attributes::CurrentY::Id) { // codespell:ignore
+        } else if (attribute_id == ColorControl::Attributes::CurrentX::Id || attribute_id == ColorControl::Attributes::CurrentY::Id) {  // codespell:ignore
           esp_matter_attr_val_t xVal = esp_matter_invalid(NULL);
           esp_matter_attr_val_t yVal = esp_matter_invalid(NULL);
           getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentX::Id, &xVal);
-          getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentY::Id, &yVal); // codespell:ignore
+          getAttributeVal(ColorControl::Id, ColorControl::Attributes::CurrentY::Id, &yVal);  // codespell:ignore
           espRgbColor_t rgb = espXYToRgbColor(colorHSV.v, xVal.val.u16, yVal.val.u16, true);
           colorHSV = espRgbColorToHsvColor(rgb);
           log_d("RGB Light XY changed — HSV updated to h=%u s=%u", colorHSV.h, colorHSV.s);
