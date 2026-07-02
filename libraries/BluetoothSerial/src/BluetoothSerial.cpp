@@ -594,7 +594,7 @@ void BluetoothSerial::end(bool releaseMemory) {
   btStop();
 
   if (releaseMemory) {
-    esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+    btMemRelease(BT_MODE_CLASSIC_BT);
   }
 
   _impl->destroyResources();

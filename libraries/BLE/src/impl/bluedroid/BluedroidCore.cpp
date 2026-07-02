@@ -38,7 +38,7 @@
 #endif
 #include "impl/BLEImplHelpers.h"
 #include "esp32-hal-bt.h"
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
 
 #include <esp_bt.h>

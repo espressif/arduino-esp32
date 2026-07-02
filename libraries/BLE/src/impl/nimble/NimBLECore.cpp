@@ -29,7 +29,7 @@
 #include "impl/BLEImplHelpers.h"
 #include "impl/BLESecurityBackend.h"
 #include "esp32-hal-bt.h"
-#include "esp32-hal-bt-mem.h"
+#include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
@@ -289,7 +289,7 @@ void BLEClass::end(bool releaseMemory) {
 
   if (releaseMemory) {
 #if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
-    esp_bt_controller_mem_release(ESP_BT_MODE_BTDM);
+    btMemRelease(BT_MODE_BLE);
 #endif
   }
 
