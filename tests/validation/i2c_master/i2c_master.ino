@@ -291,6 +291,24 @@ void scan_bus() {
   TEST_ASSERT_TRUE(device_found());
 }
 
+void request_from_undersized_buffer() {
+  // The RX/TX buffer cannot be shrunk below 32 bytes (the I2C hardware FIFO
+  // length): setBufferSize() rejects anything smaller and leaves the size as-is.
+  TEST_ASSERT_EQUAL(32, Wire.setBufferSize(32));
+
+  // Start from a known-empty RX state so available() is deterministic.
+  Wire.flush();
+
+  // Requesting more bytes than the buffer holds is clamped to the buffer
+  // size (matching the Arduino Wire API) rather than rejected: the read is
+  // performed for buffer-size bytes and that clamped count is returned.
+  TEST_ASSERT_EQUAL(32, Wire.requestFrom(DS1307_ADDR, (size_t)33));
+  TEST_ASSERT_EQUAL(32, Wire.available());
+
+  // Restore the default buffer size for the remaining tests.
+  TEST_ASSERT_EQUAL(I2C_BUFFER_LENGTH, Wire.setBufferSize(I2C_BUFFER_LENGTH));
+}
+
 #if SOC_WIFI_SUPPORTED
 void scan_bus_with_wifi() {
   // delete old config
@@ -327,6 +345,7 @@ void setup() {
   RUN_TEST(change_clock);
   RUN_TEST(swap_pins);
   RUN_TEST(test_api);
+  RUN_TEST(request_from_undersized_buffer);
   UNITY_END();
 }
 
