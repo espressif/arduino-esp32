@@ -65,7 +65,7 @@ dependencies:
     rules:
       - if: "target not in [esp32c2, esp32c61, esp32p4]"
   espressif/esp-dsp:
-    version: "^1.8.2"
+    version: "^1.8.0"
     rules:
       - if: "target not in [esp32c2, esp32c61]"
   # RainMaker Start (Fixed versions, because Matter supports only Insights 1.0.1)
@@ -115,7 +115,7 @@ dependencies:
       - if: idf_version < 6.0
   # RainMaker End
   espressif/esp-sr:
-    version: "^2.1.5"
+    version: "^2.4.5"
     rules:
       - if: "target in [esp32s3, esp32p4]"
       - if: idf_version < 6.0
