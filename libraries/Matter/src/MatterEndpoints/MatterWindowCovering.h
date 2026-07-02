@@ -64,8 +64,8 @@ public:
   MatterWindowCovering();
   ~MatterWindowCovering();
   virtual bool begin(
-    uint8_t liftPercent = 0, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE,
-    const PositionCalibration *liftCalibration = nullptr, const PositionCalibration *tiltCalibration = nullptr
+    uint8_t liftPercent = 0, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE, const PositionCalibration *liftCalibration = nullptr,
+    const PositionCalibration *tiltCalibration = nullptr
   );
   void end();  // this will just stop processing Matter events.
 

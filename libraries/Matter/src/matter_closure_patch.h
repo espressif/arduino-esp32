@@ -17,20 +17,17 @@ namespace app {
 namespace Clusters {
 namespace ClosureControl {
 
-inline bool operator==(const GenericOverallCurrentState & a, const GenericOverallCurrentState & b)
-{
-    return a.position == b.position && a.latch == b.latch &&
-           a.speed == b.speed && a.secureState == b.secureState;
+inline bool operator==(const GenericOverallCurrentState &a, const GenericOverallCurrentState &b) {
+  return a.position == b.position && a.latch == b.latch && a.speed == b.speed && a.secureState == b.secureState;
 }
 
-inline bool operator==(const GenericOverallTargetState & a, const GenericOverallTargetState & b)
-{
-    return a.position == b.position && a.latch == b.latch && a.speed == b.speed;
+inline bool operator==(const GenericOverallTargetState &a, const GenericOverallTargetState &b) {
+  return a.position == b.position && a.latch == b.latch && a.speed == b.speed;
 }
 
-} // namespace ClosureControl
-} // namespace Clusters
-} // namespace app
-} // namespace chip
+}  // namespace ClosureControl
+}  // namespace Clusters
+}  // namespace app
+}  // namespace chip
 
-#endif // __cplusplus
+#endif  // __cplusplus

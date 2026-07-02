@@ -78,17 +78,13 @@ bool MatterWindowCovering::begin(
   window_covering_config.window_covering.operational_status = 0;
 
   window_covering_config.window_covering.feature_flags = lift::get_id() | position_aware_lift::get_id();
-  window_covering_config.window_covering.features.position_aware_lift.target_position_lift_percent_100ths =
-    nullable<uint16_t>(currentLiftPercent100ths);
-  window_covering_config.window_covering.features.position_aware_lift.current_position_lift_percent_100ths =
-    nullable<uint16_t>(currentLiftPercent100ths);
+  window_covering_config.window_covering.features.position_aware_lift.target_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
+  window_covering_config.window_covering.features.position_aware_lift.current_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
 
   if (supportsTilt) {
     window_covering_config.window_covering.feature_flags |= tilt::get_id() | position_aware_tilt::get_id();
-    window_covering_config.window_covering.features.position_aware_tilt.target_position_tilt_percent_100ths =
-      nullable<uint16_t>(currentTiltPercent100ths);
-    window_covering_config.window_covering.features.position_aware_tilt.current_position_tilt_percent_100ths =
-      nullable<uint16_t>(currentTiltPercent100ths);
+    window_covering_config.window_covering.features.position_aware_tilt.target_position_tilt_percent_100ths = nullable<uint16_t>(currentTiltPercent100ths);
+    window_covering_config.window_covering.features.position_aware_tilt.current_position_tilt_percent_100ths = nullable<uint16_t>(currentTiltPercent100ths);
   }
 
   endpoint_t *endpoint = wc_endpoint::create(node::get(), &window_covering_config, ENDPOINT_FLAG_NONE, (void *)this);

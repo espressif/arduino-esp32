@@ -43,11 +43,11 @@ public:
   bool hasFeature(uint32_t feature) const;
 
   // Matter Switch cluster events — call from your button driver
-  void press();                              // InitialPress
-  void release();                            // ShortRelease
-  void longPress();                          // LongPress
-  void longRelease();                        // LongRelease
-  void multiPressOngoing(uint8_t count);     // MultiPressOngoing
+  void press();                            // InitialPress
+  void release();                          // ShortRelease
+  void longPress();                        // LongPress
+  void longRelease();                      // LongRelease
+  void multiPressOngoing(uint8_t count);   // MultiPressOngoing
   void multiPressComplete(uint8_t count);  // MultiPressComplete
 
   // Convenience: sends InitialPress and ShortRelease when release feature is enabled

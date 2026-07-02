@@ -39,18 +39,18 @@ const char *password = "your-password";  // Change this to your WiFi password
 const uint8_t buttonPin = BOOT_PIN;  // Set your pin here. Using BOOT Button.
 
 // Timing (adjust to match your hub / use case)
-const uint32_t debounceMs = 50;              // button debouncing time (ms)
-const uint32_t longPressMs = 1000;           // hold duration to trigger LongPress event (ms)
-const uint32_t multiPressWindowMs = 300;   // max gap between clicks for multi-press (ms)
+const uint32_t debounceMs = 50;                // button debouncing time (ms)
+const uint32_t longPressMs = 1000;             // hold duration to trigger LongPress event (ms)
+const uint32_t multiPressWindowMs = 300;       // max gap between clicks for multi-press (ms)
 const uint32_t decommissioningTimeout = 5000;  // keep the button pressed for 5s, or longer, to decommission
-const uint8_t multiPressMax = 5;             // maximum press count reported to Matter (2–255)
+const uint8_t multiPressMax = 5;               // maximum press count reported to Matter (2–255)
 
 // Button state
-bool buttonPressed = false;   // raw debounced state: false = released | true = pressed
-bool stablePressed = false;   // stable press state after debounce
-uint32_t lastChangeMs = 0;    // debouncing control
-uint32_t pressStartMs = 0;    // time when the current press started
-bool longPressSent = false;   // true after LongPress has been sent for the current hold
+bool buttonPressed = false;  // raw debounced state: false = released | true = pressed
+bool stablePressed = false;  // stable press state after debounce
+uint32_t lastChangeMs = 0;   // debouncing control
+uint32_t pressStartMs = 0;   // time when the current press started
+bool longPressSent = false;  // true after LongPress has been sent for the current hold
 
 // Multi-press sequence state (mirrors esp-matter generic_switch example)
 bool inMultiPressSequence = false;  // true while a multi-press sequence is in progress

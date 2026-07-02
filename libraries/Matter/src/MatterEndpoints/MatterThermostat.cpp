@@ -30,13 +30,12 @@ uint32_t thermostatFeatureFlagsFromControlSequence(uint8_t controlSequence) {
   using namespace esp_matter::cluster::thermostat::feature;
   switch (controlSequence) {
     case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_REHEAT: return cooling::get_id();
+    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_REHEAT:         return cooling::get_id();
     case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING_REHEAT: return heating::get_id();
+    case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING_REHEAT:         return heating::get_id();
     case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT:
-      return cooling::get_id() | heating::get_id();
-    default: return 0;
+    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT: return cooling::get_id() | heating::get_id();
+    default:                                                         return 0;
   }
 }
 }  // namespace
