@@ -6451,6 +6451,16 @@ lilygo_t_display_s3.menu.PartitionScheme.rainmaker_4MB.upload.maximum_size=40386
 lilygo_t_display_s3.menu.PartitionScheme.rainmaker_8MB=RainMaker 8MB
 lilygo_t_display_s3.menu.PartitionScheme.rainmaker_8MB.build.partitions=rainmaker_8MB
 lilygo_t_display_s3.menu.PartitionScheme.rainmaker_8MB.upload.maximum_size=4096000
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2=TinyUF2 16MB (2MB APP/11.6MB FATFS)
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2.build.custom_bootloader=bootloader-tinyuf2
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2.build.partitions=tinyuf2-partitions-16MB
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2.upload.maximum_size=2097152
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2_noota=TinyUF2 16MB No OTA(4MB APP/11.6MB FATFS)
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2_noota.build.custom_bootloader=bootloader-tinyuf2
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2_noota.build.partitions=tinyuf2-partitions-16MB-noota
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2_noota.upload.maximum_size=4194304
+lilygo_t_display_s3.menu.PartitionScheme.tinyuf2_noota.upload.extra_flags=0x410000 "{runtime.platform.path}/variants/{build.variant}/tinyuf2.bin"
 
 lilygo_t_display_s3.menu.DebugLevel.none=None
 lilygo_t_display_s3.menu.DebugLevel.none.build.code_debug=0
