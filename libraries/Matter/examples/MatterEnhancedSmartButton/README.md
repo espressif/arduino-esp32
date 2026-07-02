@@ -51,7 +51,7 @@ const uint8_t multiPressMax = 5;          // max presses reported to Matter
 Same steps as MatterSmartButton:
 
 1. Open `MatterEnhancedSmartButton.ino` in the Arduino IDE
-2. Select your board and **Huge APP (3MB No OTA/1MB SPIFFS)** partition scheme
+2. Select your board and **Huge APP (3 MB No OTA / 1 MB SPIFFS)** partition scheme
 3. Enable **Erase All Flash Before Sketch Upload**
 4. Upload
 
