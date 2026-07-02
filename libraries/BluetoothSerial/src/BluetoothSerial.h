@@ -29,7 +29,7 @@
 #include <memory>
 #include <vector>
 
-class [[deprecated("BluetoothSerial won't be supported in version 4.0.0 by default")]] BluetoothSerial : public Stream {
+class BluetoothSerial : public Stream {
 public:
   BluetoothSerial();
   ~BluetoothSerial();

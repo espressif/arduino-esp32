@@ -11,10 +11,6 @@ The BluetoothSerial library provides a UART-like interface over Bluetooth Classi
 
     Bluetooth Classic is only supported on the original ESP32. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
 
-.. warning::
-
-    The ``BluetoothSerial`` class is annotated with ``[[deprecated]]`` and will not be supported by default in version 4.0.0.
-
 Key features:
 
 * Stream-compatible API (``read()``, ``write()``, ``available()``, ``print()``, ``println()``)
@@ -55,7 +51,6 @@ SPP callbacks (data received, authentication events) execute on the Bluetooth co
 Design notes
 ------------
 
-* **Deprecated** -- The class is annotated with ``[[deprecated("BluetoothSerial won't be supported in version 4.0.0 by default")]]``. Compiler warnings are expected; this is intentional.
 * **ESP32 only** -- Bluetooth Classic (BR/EDR) hardware is present only on the original ESP32 SoC.
 * **SPP profile** -- Communication uses the Serial Port Profile, which provides a virtual serial link over L2CAP/RFCOMM.
 * **Security** -- Both server (acceptor) and client (initiator) modes use ``ESP_SPP_SEC_AUTHENTICATE``. Incoming and outgoing connections require authentication.

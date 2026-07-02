@@ -2,9 +2,7 @@
 
 A simple Serial-compatible library using ESP32 Classic Bluetooth Serial Port Profile (SPP).
 
-> **Note:** The `BluetoothSerial` class is marked `[[deprecated]]` and will not be supported by default in version 4.0.0.
->
-> Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
+> **Note:** Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC. It is not available on ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H2, or ESP32-P4.
 
 ### How to use it?
 

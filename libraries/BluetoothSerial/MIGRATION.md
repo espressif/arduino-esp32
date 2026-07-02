@@ -3,7 +3,6 @@
 This guide helps you migrate existing sketches that use the `BluetoothSerial` library from the v3.x API to the v4.0 API. It covers every breaking change with before/after examples.
 
 > **Note:** Bluetooth Classic (BR/EDR) is only available on the **original ESP32** SoC.
-> The `BluetoothSerial` class is marked `[[deprecated]]` and will not be supported by default in version 4.0.0.
 
 ---
 
