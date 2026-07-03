@@ -38,8 +38,9 @@ function run_multi_device_test {
     if [ -f "$test_dir/ci.yml" ]; then
         is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
         selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
+        platform_target=$(yq eval ".platforms.${platform}.${target}" "$test_dir/ci.yml" 2>/dev/null)
 
-        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]] || [[ $platform_target == "false" ]]; then
             printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
             printf "\n\n\n"
             return 0
@@ -122,7 +123,14 @@ function run_multi_device_test {
         local sdkconfig_path
         local compiled_target
         for device in $devices; do
-            sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+            # multi_device values can be a scalar (sketch name) or a map with a "sketch" key
+            local device_type
+            device_type=$(yq eval ".multi_device.$device | type" "$test_dir/ci.yml" 2>/dev/null)
+            if [ "$device_type" == "!!map" ]; then
+                sketch_name=$(yq eval ".multi_device.$device.sketch" "$test_dir/ci.yml" 2>/dev/null)
+            else
+                sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
+            fi
             if [ "$fqbn_len" -eq 1 ]; then
                 build_dir="$HOME/.arduino/tests/$target/${test_name}/${sketch_name}/build.tmp"
             else
@@ -213,6 +221,36 @@ function run_multi_device_test {
     return $error
 }
 
+function generate_wokwi_toml {
+    local sketchdir=$1
+    local build_dir=$2
+    local sketchname=$3
+    local toml_file="$sketchdir/wokwi.toml"
+
+    local rel_build_dir
+    rel_build_dir=$(python3 -c "import os.path; print(os.path.relpath('$build_dir', '$sketchdir'))")
+
+    {
+        echo "[wokwi]"
+        echo "version = 1"
+        echo "elf = '$rel_build_dir/$sketchname.ino.elf'"
+        echo "firmware = '$rel_build_dir/$sketchname.ino.merged.bin'"
+    } > "$toml_file"
+
+    if [ -d "$sketchdir/chips" ]; then
+        for chip_json in "$sketchdir/chips/"*.chip.json; do
+            [ -f "$chip_json" ] || continue
+            chip_name=$(basename "$chip_json" .chip.json)
+            {
+                echo ""
+                echo "[[chip]]"
+                echo "name = '$chip_name'"
+                echo "binary = 'chips/$chip_name.chip.wasm'"
+            } >> "$toml_file"
+        done
+    fi
+}
+
 function run_test {
     local target=$1
     local sketch=$2
@@ -249,8 +287,9 @@ function run_test {
         # If the target or platform is listed as false, skip the sketch. Otherwise, include it.
         is_target=$(yq eval ".targets.${target}" "$sketchdir"/ci.yml 2>/dev/null)
         selected_platform=$(yq eval ".platforms.${platform}" "$sketchdir"/ci.yml 2>/dev/null)
+        platform_target=$(yq eval ".platforms.${platform}.${target}" "$sketchdir"/ci.yml 2>/dev/null)
 
-        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]]; then
+        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]] || [[ $platform_target == "false" ]]; then
             printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$sketchname" "$target" "$platform"
             printf "\n\n\n"
             return 0
@@ -301,10 +340,18 @@ function run_test {
         fi
 
         if [ $platform == "wokwi" ]; then
+            # Check if target is supported by Wokwi
+            if ! is_wokwi_supported "$target"; then
+                printf "\033[93mSkipping %s: unsupported Wokwi target %s\033[0m\n" "$sketchname" "$target"
+                printf "\n\n\n"
+                return 0
+            fi
+
             extra_args=("--target" "$target" "--embedded-services" "arduino,wokwi")
             if [[ -f "$sketchdir/diagram.$target.json" ]]; then
                 extra_args+=("--wokwi-diagram" "$sketchdir/diagram.$target.json")
             fi
+            generate_wokwi_toml "$sketchdir" "$build_dir" "$sketchname"
         elif [ $platform == "qemu" ]; then
             PATH=$HOME/qemu/bin:$PATH
             extra_args=("--embedded-services" "qemu" "--qemu-image-path" "$build_dir/$sketchname.ino.merged.bin")
@@ -483,6 +530,13 @@ if [ -n "$sketch" ]; then
     IFS=',' read -ra sketches_to_run <<< "$sketch"
 fi
 
+# Select the appropriate default target list based on platform
+case "$platform" in
+    wokwi)   default_targets=("${WOKWI_TEST_TARGETS[@]}") ;;
+    qemu)    default_targets=("${QEMU_TEST_TARGETS[@]}") ;;
+    *)       default_targets=("${BUILD_TEST_TARGETS[@]}") ;;
+esac
+
 # Handle default target and sketch logic
 if [ -z "$target" ] && [ -z "$sketch" ]; then
     # No target or sketch specified - run all sketches for all targets
@@ -495,12 +549,12 @@ if [ -z "$target" ] && [ -z "$sketch" ]; then
     if [ -z "$chunk_max" ]; then
         chunk_max=1
     fi
-    targets_to_run=("${BUILD_TEST_TARGETS[@]}")
+    targets_to_run=("${default_targets[@]}")
     sketches_to_run=()
 elif [ -z "$target" ]; then
     # No target specified, but sketch(es) specified - run sketches for all targets
     echo "No target specified, running sketch(es) '${sketches_to_run[*]}' for all targets"
-    targets_to_run=("${BUILD_TEST_TARGETS[@]}")
+    targets_to_run=("${default_targets[@]}")
 elif [ -z "$sketch" ]; then
     # No sketch specified, but target(s) specified - run all sketches for targets
     echo "No sketch specified, running all sketches for target(s) '${targets_to_run[*]}'"

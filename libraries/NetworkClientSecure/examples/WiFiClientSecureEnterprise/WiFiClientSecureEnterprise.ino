@@ -26,7 +26,6 @@
 #else
 #include "esp_wpa2.h"
 #endif
-#include <Wire.h>
 #define EAP_ANONYMOUS_IDENTITY "anonymous@example.com"  //anonymous identity
 #define EAP_IDENTITY           "id@example.com"         //user identity
 #define EAP_PASSWORD           "password"               //eduroam user password

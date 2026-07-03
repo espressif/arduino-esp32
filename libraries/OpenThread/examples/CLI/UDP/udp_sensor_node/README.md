@@ -285,6 +285,21 @@ Tune these constants in `udp_sensor_node.ino`:
 - `SED_POLL_MS`
 - `CHILD_TIMEOUT_S`
 
+## Troubleshooting
+
+**Startup order:** Flash [CLI UDP sensor collector (Leader)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/UDP/udp_sensor_collector) first and wait for `Attached as Leader` and `Collector listening on UDP ff03::abcd:5050`. Then flash this sensor sketch. Reset the sensor if it booted before the collector was ready.
+
+| Symptom | Likely cause |
+| --- | --- |
+| No ACK on sensor (`NO_ACK`) | Collector not running or not bound — start collector first; verify matching dataset constants on both sketches. |
+| `status=ACKED` with collector unplugged | Board still powered over USB or second collector on bench — truly unpower collector or hold in reset. |
+| ACK from own address (loopback) | Sketch ignores self-sourced datagrams — check `My own addresses` at startup; ACK source must be remote. |
+| Sleepy node never reconnects after collector reboot | Parent gone until child timeout — sketch forces re-attach after `REATTACH_AFTER_MISSED` consecutive misses; lower `CHILD_TIMEOUT_S` for faster recovery. |
+| Sleepy mode not active | Missing sdkconfig flags (`CONFIG_OPENTHREAD_MTD`, `CONFIG_IEEE802154_SLEEP_ENABLE`, `CONFIG_PM_ENABLE`) — sketch continues as regular child. |
+| Collector reboot, node table empty | Expected — collector rebuilds from incoming frames; sensor keeps multicasting same sequence until ACKed. |
+| `Error ...` after `udp open/bind/send` | Thread not attached (`state` not child/router) or wrong CLI command order. |
+| Node reset, collector logs `(restart)` | Normal — node id stable (EUI-64), sequence resets to 1; collector follows restart. |
+
 ## License
 
 Apache License 2.0.

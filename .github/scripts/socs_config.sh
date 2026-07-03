@@ -223,6 +223,19 @@ is_qemu_supported() {
     return 1
 }
 
+# Check if SoC is supported by Wokwi
+# Usage: is_wokwi_supported "esp32c3"
+# Returns: 0 if supported, 1 otherwise
+is_wokwi_supported() {
+    local soc="$1"
+    for target in "${WOKWI_TEST_TARGETS[@]}"; do
+        if [ "$target" = "$soc" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 # ==============================================================================
 # IDF Specific Configuration
 # ==============================================================================

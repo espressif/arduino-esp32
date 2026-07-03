@@ -1,0 +1,73 @@
+name: Upload Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - release/*
+  pull_request:
+    paths:
+      - "platform.txt"
+      - "programmers.txt"
+      - "boards.txt"
+      - "tools/flasher.py"
+      - "package/package_esp32_index.template.json"
+      - ".github/esp32-mock-bootloader-version"
+      - ".github/scripts/arduino_headless.sh"
+      - ".github/scripts/mock_upload_lib.sh"
+      - ".github/scripts/test-mock-upload.sh"
+      - ".github/scripts/install-arduino-builder.sh"
+      - ".github/scripts/sketch_utils.sh"
+      - ".github/scripts/socs_config.sh"
+      - ".github/workflows/upload-tests.yml"
+
+concurrency:
+  group: mock-upload-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  mock-upload:
+    name: Mock upload on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-26-intel]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.0.4
+        with:
+          python-version: "3.x"
+
+      - name: Install python dependencies
+        run: pip install pyserial esp32-mock-bootloader
+
+      - name: Install xvfb (Linux builder upload)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Get libs cache
+        if: runner.os == 'Linux'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          key: libs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package/package_esp32_index.template.json', 'tools/get.py') }}
+          path: |
+            ./tools/dist
+            ./tools/esp32-arduino-libs
+            ./tools/esptool
+            ./tools/mk*
+            ./tools/openocd-esp32
+            ./tools/riscv32-*
+            ./tools/xtensa-*
+
+      - name: Run mock upload tests
+        shell: bash
+        run: bash ./.github/scripts/test-mock-upload.sh

@@ -72,7 +72,6 @@ bool joinButtonPressed() {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}
 
   Serial.println("=== Joiner Demo - Commissioner Node ===");
 
@@ -129,7 +128,7 @@ void loop() {
   // Start the "Joiner Listener" on demand: pressing the button opens (or
   // re-opens, after it expires) the joiner window for JOINER_WINDOW_SEC.
   if (commissionerStarted && joinButtonPressed()) {
-    otError err = threadCommissionerNode.addJoiner(PSKD, /*eui64=*/nullptr, JOINER_WINDOW_SEC);
+    otError err = threadCommissionerNode.addJoiner(PSKD, JOINER_WINDOW_SEC);
     if (err == OT_ERROR_NONE) {
       Serial.printf("Joiner window OPEN: PSKd \"%s\" accepted for %lu s.\r\n", PSKD, (unsigned long)JOINER_WINDOW_SEC);
       Serial.println("Bring up the JoinerNode sketch now.");

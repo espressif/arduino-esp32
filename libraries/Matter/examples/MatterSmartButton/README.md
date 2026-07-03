@@ -25,11 +25,13 @@ The application showcases Matter commissioning, sending button click events to s
 
 - Matter protocol implementation for a smart button (generic switch) device
 - Support for both Wi-Fi and Thread(*) connectivity
-- Button click event reporting to Matter controller
+- **Simple short-click** gesture: `InitialPress` on press, `ShortRelease` on release
 - Button control for triggering events and factory reset
 - Matter commissioning via QR code or manual pairing code
 - Integration with Apple HomeKit, Amazon Alexa, and Google Home
 - Automation trigger support - button presses can trigger actions in smart home apps
+
+For long-press and multi-press gestures, see the [MatterEnhancedSmartButton](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton) example.
 (*) It is necessary to compile the project using Arduino as IDF Component.
 
 ## Hardware Requirements
@@ -97,27 +99,32 @@ Matter Node not commissioned yet. Waiting for commissioning.
 Matter Node not commissioned yet. Waiting for commissioning.
 ...
 Matter Node is commissioned and connected to the network. Ready for use.
-User button released. Sending Click to the Matter Controller!
-User button released. Sending Click to the Matter Controller!
+Button pressed — sending InitialPress
+Button released — sending ShortRelease
+Button pressed — sending InitialPress
+Button released — sending ShortRelease
 ```
 
 ## Using the Device
 
 ### Manual Control
 
-The user button (BOOT button by default) provides the following functionality:
+This is a **simple implementation** — short click only. The button sends Matter events on press and release:
 
-- **Short press and release**: Sends a click event to the Matter controller (triggers automations)
-- **Long press (>5 seconds)**: Factory reset the device (decommission)
+- **Press down**: sends `InitialPress` to the Matter controller
+- **Release**: sends `ShortRelease` to the Matter controller
+- **Long press (>5 seconds)**: Factory reset the device (decommission) — this is not a Matter gesture
+
+For long-press and multi-press Matter gestures, use the [MatterEnhancedSmartButton](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton) example.
 
 ### Button Click Events
 
 When you press and release the button:
 
-1. The button press is detected and debounced
-2. A click event is sent to the Matter controller via the Generic Switch cluster
-3. The Matter controller receives the event and can trigger programmed automations
-4. The event is logged to Serial Monitor for debugging
+1. On press (after debounce): `SmartButton.press()` sends `InitialPress`
+2. On release (after debounce): `SmartButton.release()` sends `ShortRelease`
+3. The Matter controller receives both events and can trigger automations
+4. Each event is logged to Serial Monitor for debugging
 
 ### Smart Home Integration
 
@@ -160,14 +167,14 @@ The MatterSmartButton example consists of the following main components:
 2. **`loop()`**: Checks the Matter commissioning state, handles button input for sending click events and factory reset, and allows the Matter stack to process events.
 
 3. **Button Event Handling**:
-   - Detects button press and release with debouncing (250 ms)
-   - Sends click event to Matter controller using `SmartButton.click()` when button is released
-   - Handles long press (>5 seconds) for factory reset
+   - Detects button press and release with debouncing (50 ms)
+   - Sends `InitialPress` on press down and `ShortRelease` on release
+   - Handles long press (>5 seconds) for factory reset (decommission)
 
 ## Troubleshooting
 
 - **Device not visible during commissioning**: Ensure Wi-Fi or Thread connectivity is properly configured
-- **Button clicks not registering**: Check Serial Monitor for "User button released" messages. Verify button wiring and that debounce time is appropriate
+- **Button clicks not registering**: Check Serial Monitor for "Button pressed" and "Button released" messages. Verify button wiring and debounce time
 - **Automations not triggering**: Ensure the device is commissioned and that automations are properly configured in your Matter app. The button sends events, but automations must be set up in the app
 - **Button not responding**: Verify button pin configuration and connections. Check that the button is properly connected with pull-up resistor (INPUT_PULLUP mode)
 - **Failed to commission**: Try factory resetting the device by long-pressing the button. Other option would be to erase the SoC Flash Memory by using `Arduino IDE Menu` -> `Tools` -> `Erase All Flash Before Sketch Upload: "Enabled"` or directly with `esptool.py --port <PORT> erase_flash`
@@ -179,6 +186,7 @@ The MatterSmartButton example consists of the following main components:
 - [Matter Overview](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter.html)
 - [Matter Endpoint Base Class](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/matter_ep.html)
 - [Matter Generic Switch Endpoint](https://docs.espressif.com/projects/arduino-esp32/en/latest/matter/ep_generic_switch.html)
+- [Matter Enhanced Smart Button](https://github.com/espressif/arduino-esp32/tree/master/libraries/Matter/examples/MatterEnhancedSmartButton) — long press and multi-press example
 
 ## License
 
