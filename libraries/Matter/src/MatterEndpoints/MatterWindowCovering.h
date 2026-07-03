@@ -55,38 +55,55 @@ public:
     TILT = (uint8_t)WindowCovering::OperationalStatus::kTilt,      // Tilt operational state field 0x30 (bits 4-5)
   };
 
+  // Local motor range for position-to-percent conversion (not a Matter cluster attribute in ESP-Matter 1.5)
+  struct PositionCalibration {
+    uint16_t open = 0;
+    uint16_t closed = 65534;
+  };
+
   MatterWindowCovering();
   ~MatterWindowCovering();
-  virtual bool begin(uint8_t liftPercent = 100, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE);
+  virtual bool begin(
+    uint8_t liftPercent = 0, uint8_t tiltPercent = 0, WindowCoveringType_t coveringType = ROLLERSHADE, const PositionCalibration *liftCalibration = nullptr,
+    const PositionCalibration *tiltCalibration = nullptr
+  );
   void end();  // this will just stop processing Matter events.
 
-  // Lift position control
+  // Lift position control (Matter percent: 0 = fully open, 100 = fully closed)
   bool setLiftPosition(uint16_t liftPosition);
   uint16_t getLiftPosition();
   bool setLiftPercentage(uint8_t liftPercent);
   uint8_t getLiftPercentage();
+  bool setCurrentLiftPercent100ths(uint16_t liftPercent100ths);
+  uint16_t getCurrentLiftPercent100ths();
   bool setTargetLiftPercent100ths(uint16_t liftPercent100ths);
   uint16_t getTargetLiftPercent100ths();
 
-  // Lift limit control
+  // Local motor calibration for lift (maps physical units to Matter percent)
   bool setInstalledOpenLimitLift(uint16_t openLimit);
   uint16_t getInstalledOpenLimitLift();
   bool setInstalledClosedLimitLift(uint16_t closedLimit);
   uint16_t getInstalledClosedLimitLift();
+  bool setLiftCalibration(const PositionCalibration &calibration);
+  PositionCalibration getLiftCalibration();
 
-  // Tilt position control
+  // Tilt position control (Matter percent: 0 = fully open, 100 = fully closed)
   bool setTiltPosition(uint16_t tiltPosition);
   uint16_t getTiltPosition();
   bool setTiltPercentage(uint8_t tiltPercent);
   uint8_t getTiltPercentage();
+  bool setCurrentTiltPercent100ths(uint16_t tiltPercent100ths);
+  uint16_t getCurrentTiltPercent100ths();
   bool setTargetTiltPercent100ths(uint16_t tiltPercent100ths);
   uint16_t getTargetTiltPercent100ths();
 
-  // Tilt limit control
+  // Local motor calibration for tilt (maps physical units to Matter percent)
   bool setInstalledOpenLimitTilt(uint16_t openLimit);
   uint16_t getInstalledOpenLimitTilt();
   bool setInstalledClosedLimitTilt(uint16_t closedLimit);
   uint16_t getInstalledClosedLimitTilt();
+  bool setTiltCalibration(const PositionCalibration &calibration);
+  PositionCalibration getTiltCalibration();
 
   // Window covering type
   bool setCoveringType(WindowCoveringType_t coveringType);
@@ -146,9 +163,15 @@ public:
 protected:
   bool started = false;
   uint8_t currentLiftPercent = 0;
+  uint16_t currentLiftPercent100ths = 0;
   uint16_t currentLiftPosition = 0;
   uint8_t currentTiltPercent = 0;
+  uint16_t currentTiltPercent100ths = 0;
   uint16_t currentTiltPosition = 0;
+  uint16_t installedOpenLimitLift = 0;
+  uint16_t installedClosedLimitLift = 65534;
+  uint16_t installedOpenLimitTilt = 0;
+  uint16_t installedClosedLimitTilt = 65534;
   WindowCoveringType_t coveringType = ROLLERSHADE;
 
   EndPointOpenCB _onOpenCB = NULL;

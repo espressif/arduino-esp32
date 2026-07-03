@@ -25,64 +25,20 @@ using namespace chip::app::Clusters;
 // string helper for the THERMOSTAT MODE
 const char *MatterThermostat::thermostatModeString[5] = {"OFF", "AUTO", "UNKNOWN", "COOL", "HEAT"};
 
-// endpoint for color light device
-namespace esp_matter {
-using namespace cluster;
-namespace endpoint {
-namespace multi_mode_thermostat {
-typedef struct config {
-  cluster::descriptor::config_t descriptor;
-  cluster::identify::config_t identify;
-  cluster::scenes_management::config_t scenes_management;
-  cluster::groups::config_t groups;
-  cluster::thermostat::config_t thermostat;
-} config_t;
-
-uint32_t get_device_type_id() {
-  return ESP_MATTER_THERMOSTAT_DEVICE_TYPE_ID;
-}
-
-uint8_t get_device_type_version() {
-  return ESP_MATTER_THERMOSTAT_DEVICE_TYPE_VERSION;
-}
-
-esp_err_t add(endpoint_t *endpoint, config_t *config) {
-  if (!endpoint) {
-    log_e("Endpoint cannot be NULL");
-    return ESP_ERR_INVALID_ARG;
-  }
-  esp_err_t err = add_device_type(endpoint, get_device_type_id(), get_device_type_version());
-  if (err != ESP_OK) {
-    log_e("Failed to add device type id:%" PRIu32 ",err: %d", get_device_type_id(), err);
-    return err;
-  }
-
-  descriptor::create(endpoint, &(config->descriptor), CLUSTER_FLAG_SERVER);
-  identify::create(endpoint, &(config->identify), CLUSTER_FLAG_SERVER);
-  groups::create(endpoint, &(config->groups), CLUSTER_FLAG_SERVER);
-  uint32_t thermostatFeatures = 0;
-  switch (config->thermostat.control_sequence_of_operation) {
+namespace {
+uint32_t thermostatFeatureFlagsFromControlSequence(uint8_t controlSequence) {
+  using namespace esp_matter::cluster::thermostat::feature;
+  switch (controlSequence) {
     case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_REHEAT: thermostatFeatures = cluster::thermostat::feature::cooling::get_id(); break;
+    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_REHEAT:         return cooling::get_id();
     case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING_REHEAT: thermostatFeatures = cluster::thermostat::feature::heating::get_id(); break;
+    case MatterThermostat::THERMOSTAT_SEQ_OP_HEATING_REHEAT:         return heating::get_id();
     case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING:
-    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT:
-      thermostatFeatures = cluster::thermostat::feature::cooling::get_id() | cluster::thermostat::feature::heating::get_id();
-      break;
+    case MatterThermostat::THERMOSTAT_SEQ_OP_COOLING_HEATING_REHEAT: return cooling::get_id() | heating::get_id();
+    default:                                                         return 0;
   }
-  cluster::thermostat::create(endpoint, &(config->thermostat), CLUSTER_FLAG_SERVER, thermostatFeatures);
-  return ESP_OK;
 }
-
-endpoint_t *create(node_t *node, config_t *config, uint8_t flags, void *priv_data) {
-  endpoint_t *endpoint = endpoint::create(node, flags, priv_data);
-  add(endpoint, config);
-  return endpoint;
-}
-}  // namespace multi_mode_thermostat
-}  // namespace endpoint
-}  // namespace esp_matter
+}  // namespace
 
 bool MatterThermostat::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
@@ -177,23 +133,24 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
   const int16_t _heatingSetpointTemperature = 1600;  // 16C heating setpoint
   const ThermostatMode_t _currentMode = THERMOSTAT_MODE_OFF;
 
-  multi_mode_thermostat::config_t thermostat_config;
+  thermostat::config_t thermostat_config;
   thermostat_config.thermostat.control_sequence_of_operation = (uint8_t)_controlSequence;
-  thermostat_config.thermostat.cooling.occupied_cooling_setpoint = _coolingSetpointTemperature;
-  thermostat_config.thermostat.heating.occupied_heating_setpoint = _heatingSetpointTemperature;
+  thermostat_config.thermostat.features.cooling.occupied_cooling_setpoint = _coolingSetpointTemperature;
+  thermostat_config.thermostat.features.heating.occupied_heating_setpoint = _heatingSetpointTemperature;
   thermostat_config.thermostat.system_mode = (uint8_t)_currentMode;
   thermostat_config.thermostat.local_temperature = _localTemperature;
+  thermostat_config.thermostat.feature_flags = thermostatFeatureFlagsFromControlSequence((uint8_t)_controlSequence);
+
+  if (_autoMode == THERMOSTAT_AUTO_MODE_ENABLED) {
+    thermostat_config.thermostat.features.auto_mode.min_setpoint_dead_band = kDefaultDeadBand;
+    thermostat_config.thermostat.feature_flags |= esp_matter::cluster::thermostat::feature::auto_mode::get_id();
+  }
 
   // endpoint handles can be used to add/modify clusters
-  endpoint_t *endpoint = multi_mode_thermostat::create(node::get(), &thermostat_config, ENDPOINT_FLAG_NONE, (void *)this);
+  endpoint_t *endpoint = thermostat::create(node::get(), &thermostat_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Thermostat endpoint");
     return false;
-  }
-  if (_autoMode == THERMOSTAT_AUTO_MODE_ENABLED) {
-    cluster_t *cluster = cluster::get(endpoint, Thermostat::Id);
-    thermostat_config.thermostat.auto_mode.min_setpoint_dead_band = kDefaultDeadBand;  // fixed by default to 2.5C
-    cluster::thermostat::feature::auto_mode::add(cluster, &thermostat_config.thermostat.auto_mode);
   }
 
   controlSequence = _controlSequence;
