@@ -2,8 +2,7 @@ tags:
   - wifi_router
 
 platforms:
-  wokwi:
-    esp32p4: false # For some reason some test cases fail on Wokwi with P4
+  wokwi: false # TLS tests are unreliable on Wokwi and frequently can't connect to the server
   qemu: false
   hardware:
     esp32p4: false # No wifi_router runners for SoCs that use ESP-Hosted
