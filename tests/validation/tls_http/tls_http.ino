@@ -17,16 +17,17 @@
 #include <HTTPClient.h>
 #include <unity.h>
 
-#define WIFI_TIMEOUT_MS  15000
-#define MAX_CERT_SIZE    2048
+#define WIFI_TIMEOUT_MS   15000
+#define MAX_CERT_SIZE     2048
 #define TLS_CONNECT_TRIES 3
 #define TLS_DATA_WAIT_MS  30000
+#define HANDSHAKE_TIMEOUT 30
+#define HTTP_TIMEOUT      30000
 
 static String wifi_ssid;
 static String wifi_pass;
 static char ca_cert[MAX_CERT_SIZE];
 static size_t ca_cert_len = 0;
-
 void setUp(void) {}
 void tearDown(void) {}
 
@@ -57,6 +58,18 @@ static bool tlsConnect(NetworkClientSecure &client, const char *host, uint16_t p
   return false;
 }
 
+/* Best-effort warmup: prime the network path to postman-echo.com so that
+   subsequent test connections are more likely to succeed on first try. */
+static void warmupGateway() {
+  if (!connectWiFi()) {
+    return;
+  }
+  NetworkClientSecure client;
+  client.setInsecure();
+  tlsConnect(client, "postman-echo.com", 443);
+  client.stop();
+}
+
 // ==================== TLS Tests ====================
 
 void test_tls_with_ca(void) {
@@ -65,9 +78,11 @@ void test_tls_with_ca(void) {
 
   NetworkClientSecure client;
   client.setCACert(ca_cert);
-  TEST_ASSERT_TRUE_MESSAGE(tlsConnect(client, "postman-echo.com", 443), "TLS connect with CA failed");
-  TEST_ASSERT_TRUE(client.connected());
+  bool ok = tlsConnect(client, "postman-echo.com", 443);
+  bool connected = ok && client.connected();
   client.stop();
+  TEST_ASSERT_TRUE_MESSAGE(ok, "TLS connect with CA failed");
+  TEST_ASSERT_TRUE(connected);
 }
 
 void test_tls_insecure(void) {
@@ -75,9 +90,11 @@ void test_tls_insecure(void) {
 
   NetworkClientSecure client;
   client.setInsecure();
-  TEST_ASSERT_TRUE_MESSAGE(tlsConnect(client, "postman-echo.com", 443), "TLS insecure connect failed");
-  TEST_ASSERT_TRUE(client.connected());
+  bool ok = tlsConnect(client, "postman-echo.com", 443);
+  bool connected = ok && client.connected();
   client.stop();
+  TEST_ASSERT_TRUE_MESSAGE(ok, "TLS insecure connect failed");
+  TEST_ASSERT_TRUE(connected);
 }
 
 void test_tls_send_receive(void) {
@@ -86,7 +103,12 @@ void test_tls_send_receive(void) {
 
   NetworkClientSecure client;
   client.setCACert(ca_cert);
-  TEST_ASSERT_TRUE(tlsConnect(client, "postman-echo.com", 443));
+  bool connected = tlsConnect(client, "postman-echo.com", 443);
+  if (!connected) {
+    client.stop();
+    TEST_FAIL_MESSAGE("TLS connect failed");
+    return;
+  }
 
   client.print("GET /get HTTP/1.1\r\nHost: postman-echo.com\r\nConnection: close\r\n\r\n");
 
@@ -94,12 +116,16 @@ void test_tls_send_receive(void) {
   while (!client.available() && millis() - start < TLS_DATA_WAIT_MS) {
     delay(10);
   }
-  TEST_ASSERT_TRUE(client.available());
+  bool has_data = client.available();
 
-  String line = client.readStringUntil('\n');
-  TEST_ASSERT_TRUE(line.startsWith("HTTP/1.1 200"));
-
+  String line;
+  if (has_data) {
+    line = client.readStringUntil('\n');
+  }
   client.stop();
+
+  TEST_ASSERT_TRUE_MESSAGE(has_data, "No response data received");
+  TEST_ASSERT_TRUE(line.startsWith("HTTP/1.1 200"));
 }
 
 // ==================== HTTP Client Tests ====================
@@ -110,19 +136,18 @@ void test_http_get(void) {
 
   NetworkClientSecure sslClient;
   sslClient.setCACert(ca_cert);
-  sslClient.setHandshakeTimeout(30);
+  sslClient.setHandshakeTimeout(HANDSHAKE_TIMEOUT);
 
   HTTPClient http;
-  http.setConnectTimeout(30000);
-  http.setTimeout(30000);
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
   TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/get"));
   int code = http.GET();
-  TEST_ASSERT_EQUAL(200, code);
-
   String body = http.getString();
-  TEST_ASSERT_TRUE(body.indexOf("postman-echo.com") >= 0);
-
   http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
+  TEST_ASSERT_TRUE(body.indexOf("postman-echo.com") >= 0);
 }
 
 void test_http_post(void) {
@@ -131,20 +156,19 @@ void test_http_post(void) {
 
   NetworkClientSecure sslClient;
   sslClient.setCACert(ca_cert);
-  sslClient.setHandshakeTimeout(30);
+  sslClient.setHandshakeTimeout(HANDSHAKE_TIMEOUT);
 
   HTTPClient http;
-  http.setConnectTimeout(30000);
-  http.setTimeout(30000);
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
   TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/post"));
   http.addHeader("Content-Type", "application/json");
   int code = http.POST("{\"key\":\"value\"}");
-  TEST_ASSERT_EQUAL(200, code);
-
   String body = http.getString();
-  TEST_ASSERT_TRUE(body.indexOf("\"key\"") >= 0);
-
   http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
+  TEST_ASSERT_TRUE(body.indexOf("\"key\"") >= 0);
 }
 
 void test_http_custom_header(void) {
@@ -153,20 +177,19 @@ void test_http_custom_header(void) {
 
   NetworkClientSecure sslClient;
   sslClient.setCACert(ca_cert);
-  sslClient.setHandshakeTimeout(30);
+  sslClient.setHandshakeTimeout(HANDSHAKE_TIMEOUT);
 
   HTTPClient http;
-  http.setConnectTimeout(30000);
-  http.setTimeout(30000);
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
   TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/headers"));
   http.addHeader("X-Custom-Test", "Arduino123");
   int code = http.GET();
-  TEST_ASSERT_EQUAL(200, code);
-
   String body = http.getString();
-  TEST_ASSERT_TRUE(body.indexOf("Arduino123") >= 0);
-
   http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
+  TEST_ASSERT_TRUE(body.indexOf("Arduino123") >= 0);
 }
 
 void test_https_get(void) {
@@ -175,16 +198,16 @@ void test_https_get(void) {
 
   NetworkClientSecure sslClient;
   sslClient.setCACert(ca_cert);
-  sslClient.setHandshakeTimeout(30);
+  sslClient.setHandshakeTimeout(HANDSHAKE_TIMEOUT);
 
   HTTPClient http;
-  http.setConnectTimeout(30000);
-  http.setTimeout(30000);
+  http.setConnectTimeout(HTTP_TIMEOUT);
+  http.setTimeout(HTTP_TIMEOUT);
   TEST_ASSERT_TRUE(http.begin(sslClient, "https://postman-echo.com/get"));
   int code = http.GET();
-  TEST_ASSERT_EQUAL(200, code);
-
   http.end();
+
+  TEST_ASSERT_EQUAL(200, code);
 }
 
 void test_http_timeout(void) {
@@ -196,9 +219,11 @@ void test_http_timeout(void) {
   bool ok = http.begin("http://192.0.2.1/timeout");
   if (ok) {
     int code = http.GET();
+    http.end();
     TEST_ASSERT_LESS_THAN(0, code);
+  } else {
+    http.end();
   }
-  http.end();
 }
 
 // ==================== Setup ====================
@@ -284,6 +309,7 @@ void setup() {
   }
 
   readCredentialsAndCert();
+  warmupGateway();
 
   UNITY_BEGIN();
 
