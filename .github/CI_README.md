@@ -196,13 +196,13 @@ The checked-out core is installed via `install-arduino-core-esp32.sh` (symlink +
 
 Each job loops all `CORE_SOCS` (8 chips): `start_mock_bootloader` (chip auto-detect by default) → cli twice → builder twice → `stop_mock_bootloader`.
 
-**Per-job setup:** Python + pyserial, `pip install esp32-mock-bootloader==$(cat .github/esp32-mock-bootloader-version)` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), libs cache (same key as `push.yml`), xvfb on Linux, `pip install esptool` + `MOCK_ESPTOOL_OVERRIDE=1` on all matrix OSes until bundled esptool supports `socket://`.
+**Per-job setup:** Python + pyserial, `pip install esp32-mock-bootloader==$(cat .github/esp32-mock-bootloader-version)` ([PyPI package](https://pypi.org/project/esp32-mock-bootloader/)), libs cache (same key as `push.yml`), xvfb on Linux.
 
-The mock listens on TCP and upload tools use `socket://127.0.0.1:9876` on every OS (same as `test_mock_bootloader.py`). Older bundled esptool builds may lack `socket://` in vendored pyserial; `MOCK_ESPTOOL_OVERRIDE` routes `flasher.py` through pip esptool until the esptool packaging fix is released and picked up by the core.
+The mock listens on TCP and upload tools use `socket://127.0.0.1:9876` on every OS (same as `test_mock_bootloader.py`).
 
 **CI entry script:** `.github/scripts/test-mock-upload.sh` (sources `mock_upload_lib.sh`; no args in GHA).
 
-**Libraries:** `mock_upload_lib.sh` (bootloader, esptool override, twice-upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
+**Libraries:** `mock_upload_lib.sh` (bootloader, twice-upload helpers) and `arduino_headless.sh` (headless IDE 1.x / arduino-nightly builder). Headless JVM noise (log4j StatusLogger, macOS launcher dumps, jmdns `dns[query]`/`dns[response]` spam on cloud hostnames) is suppressed via `arduino-headless-logging.properties` plus a grep filter on all OSes (default on; set `ARDUINO_HEADLESS_LOG_FILTER=0` for raw IDE output).
 
 **Local commands:**
 
@@ -213,8 +213,8 @@ pip install esp32-mock-bootloader
 # flasher.py integration only (protocol tests live in esp32-mock-bootloader repo):
 python3 .github/scripts/ci_testing/test_mock_bootloader.py
 
-# Full upload pipeline locally (requires pip esptool until bundled fix lands):
-MOCK_ESPTOOL_OVERRIDE=1 bash .github/scripts/test-mock-upload.sh cli esp32
+# Full upload pipeline locally:
+bash .github/scripts/test-mock-upload.sh cli esp32
 
 # Full matrix locally (all SoCs, cli + builder):
 bash .github/scripts/test-mock-upload.sh
@@ -226,8 +226,6 @@ bash .github/scripts/test-mock-upload.sh builder esp32s3
 # Thin local wrapper (not used by GHA):
 bash .github/scripts/ci_testing/mock_upload_validation.sh
 ```
-
-`MOCK_ESPTOOL_OVERRIDE=1` replaces bundled `tools/esptool/esptool` with pip `esptool` for the duration of the run (restored on exit). GHA sets this on all matrix OSes; remove that workflow step once bundled esptool supports `socket://`.
 
 FQBNs are resolved at runtime via `default_upload_test_fqbn()` in `sketch_utils.sh` (compile CI defaults + `UploadSpeed=115200`).
 
@@ -1168,43 +1166,97 @@ The file lists popular Arduino libraries with their names, which examples to tes
 
 ### Release (`release.yml`)
 
-**Trigger:**
-- GitHub release event (`published`)
+**Trigger:** `workflow_dispatch` only (manual)
 
-**Purpose:** Create GitHub releases and publish packages
+**Inputs:**
 
-**Jobs:**
+| Input | Description | Default |
+|-------|-------------|---------|
+| `version` | Release version, bare semver (e.g. `3.3.10`, no `v` prefix) | required |
+| `prerelease` | Mark release as prerelease | `false` |
+| `ref` | Git branch to build and tag from (not a SHA or tag) | `master` |
+| `dry-run` | Build, upload to a temporary draft release, run tests, then delete the draft; skip tag/publish/promote | `true` |
 
-##### 1. `build`
-**Steps:**
-1. Checkout release target commit
-2. Run `on-release.sh` to:
-   - Build ZIP/XZ core package
-   - Download and repackage libs into per-SoC archives
-   - Update `package_esp32_*` JSONs (including CN variants)
-   - Stage hosted binaries extracted from libs
-3. Upload `build/` output and `hosted/` artifacts
+**Tag naming:** Git tags and GitHub `tag_name` use bare versions (`3.3.10`), not `v3.3.10`.
 
-##### 2. `test-package`
-**Runs on:** Windows, macOS, Ubuntu
+**Purpose:** Build packages, validate installs, then create tag + release and publish package JSONs.
 
-**Steps:**
-- Download `build/` artifacts
-- Run `test-package-json.sh` to validate package installation
+#### Job graph
 
-##### 3. `upload-and-finalize`
-**Steps:**
-- Upload package JSONs to GitHub Releases and GitHub Pages
-- Use `upload-release-assets.sh` to update version commit and retag if needed
+| Job | dry-run `true` | dry-run `false` |
+|-----|----------------|-----------------|
+| `build` | yes | yes |
+| `create-draft-release` | yes (unique `VERSION-dry-run-RUN_ID` tag) | yes |
+| `generate-test-json` | yes | yes |
+| `test-pre-release` | yes (install from draft release when JSON has GitHub URLs) | yes |
+| `cleanup-draft-release` | yes (always deletes draft) | only if pre-release tests fail |
+| `publish-release` | no | yes |
+| `upload-candidate-json` | no | yes (one gh-pages commit to `release-staging/`) |
+| `test-post-release` | no | yes (install from `release-staging/`) |
+| `promote-release` | no | yes (staging → root, hosted bins; one gh-pages commit) |
+| `rollback-release` | no | only if post-release tests fail |
+| `notify-discord` | no | yes (after promote) |
 
-##### 4. `upload-hosted-binaries`
-**Steps:**
-- Copy new `esp-hosted` binaries to `gh-pages/hosted`
-- Commit and push if new binaries are present
+#### Pipeline (full release, `dry-run: false`)
 
-**Optional S3 Upload:**
-- `ENABLE_S3=true` with `S3_BUCKET_*` vars uploads per-SoC libs ZIPs to S3
-- Otherwise libs are attached to the GitHub release
+1. **`build`** — `release/build-packages.sh`: core ZIP/XZ, per-SoC lib ZIPs, `manifest.json`, hosted bins → workflow artifacts
+2. **`create-draft-release`** — `release/github-release.sh draft`: upload assets to a draft GitHub release
+3. **`generate-test-json`** — `release/generate-package-json.sh` (`JSON_MODE=final`, merged index)
+4. **`test-pre-release`** — matrix: install merged JSON from draft release + compile + mock upload (arduino-cli + IDE v1)
+5. **`publish-release`** — `release/github-release.sh tag` + `publish` (creates git tag)
+6. **`upload-candidate-json`** — regenerate final JSONs, `github-release.sh candidate` → one gh-pages commit to `release-staging/`
+7. **`test-post-release`** — matrix: install-only from `release-staging/` gh-pages URLs
+8. **`promote-release`** — `github-release.sh promote`: one gh-pages commit (root JSONs, remove `release-staging/`, new hosted bins)
+9. **`notify-discord`** — post GitHub-style release card to Discord (`DISCORD_WEBHOOK_URL` secret, `/github` suffix)
+
+On pre-release test failure, `cleanup-draft-release` deletes the draft release (no tag created). On post-release test failure, `rollback-release` deletes `release-staging/`, the published release, and the git tag.
+
+#### Scripts (`.github/scripts/release/`)
+
+| Script | Role |
+|--------|------|
+| `common.sh` | Shared helpers (version, merge, GitHub API, test utilities) |
+| `build-packages.sh` | Build archives + `manifest.json` (no GitHub upload) |
+| `generate-package-json.sh` | Package JSON (`JSON_MODE=test\|final`, `DRY_RUN`) |
+| `github-release.sh` | Subcommands: `draft`, `publish`, `candidate`, `promote`, `rollback`, `delete` |
+| `notify-discord.sh` | Post release notification to Discord after promote |
+| `test-package-install.sh` | Subcommands: `pre`, `post` |
+
+#### Local validation (one script)
+
+Equivalent to workflow `dry-run: true`:
+
+```bash
+# Next patch after latest tag (e.g. 3.3.9 → 3.3.10)
+bash .github/scripts/ci_testing/release_validation.sh
+
+# Explicit version
+bash .github/scripts/ci_testing/release_validation.sh 3.3.10
+```
+
+**Prerequisites:** git, python3, curl, zip, jq, arduino-cli (installed by script), network for lib-builder download.
+
+#### Other manual test scripts
+
+| Script | Purpose |
+|--------|---------|
+| `ci_testing/test_ide_v1_docker.sh` | IDE v1 install/compile via Docker (linux/windows containers) |
+| `ci_testing/test_mock_bootloader.py` | flasher.py + socket:// integration (protocol tests in [esp32-mock-bootloader](https://github.com/espressif/esp32-mock-bootloader)) |
+| `ci_testing/mock_upload_validation.sh` | Local wrapper for `test-mock-upload.sh` |
+| `test-mock-upload.sh` | PR/push mock upload CI entry (cli + builder) |
+| `mock_upload_lib.sh` | Mock upload helpers (bootloader, twice-upload, logging) |
+| `arduino_headless.sh` | Headless arduino-nightly / IDE 1.x runner for CI |
+| `install-arduino-builder.sh` | arduino-nightly tree for headless builder upload |
+| [esp32-mock-bootloader](https://github.com/espressif/esp32-mock-bootloader) | PyPI package: mock ROM bootloader (`esp32-mock-bootloader` CLI) |
+
+#### Failure handling
+
+- **Dry-run:** draft release is always deleted after pre-release tests (pass or fail); no tag is created
+- **Pre-release test fails (full release):** draft release deleted; no tag
+- **Publish/promote fails:** manual cleanup of tag/release may be needed
+- **Post-release test fails:** `rollback-release` deletes `release-staging/`, release, and tag; version-bump commit on `master` is not reverted
+
+**Optional S3 Upload:** `ENABLE_S3=true` with `S3_BUCKET_*` vars (not wired in current workflow; libs go to GitHub release)
 
 ### Size Reporting (`publishsizes.yml`, `publishsizes-2.x.yml`)
 
@@ -1537,10 +1589,15 @@ bash .github/scripts/check_official_variants.sh \
 #### `install-*.sh`
 **Purpose:** Install Arduino CLI, IDE, and core
 
-#### Release Scripts
-- **`on-release.sh`** - Builds release packages and generates package JSONs
-- **`upload-release-assets.sh`** - Uploads JSONs to release/Pages and updates version commit
-- **`lib-github-release.sh`** - Helper functions for upload and GH API operations
+#### Release Scripts (`.github/scripts/release/`)
+- **`common.sh`** - Shared helpers (version, merge, GitHub API, test utilities)
+- **`build-packages.sh`** - Build archives and `manifest.json` (no GitHub upload)
+- **`generate-package-json.sh`** - Generate test or final package JSONs
+- **`github-release.sh`** - Draft/publish/candidate/promote/rollback/delete release subcommands
+- **`notify-discord.sh`** - Discord release notification after promote
+- **`test-package-install.sh`** - Pre/post release validation (`pre` / `post`)
+- **`ci_testing/release_validation.sh`** - One-script local build + validate
+- **`ci_testing/test_ide_v1_docker.sh`** - Docker-based IDE v1 multi-platform tests
 - **`release_append_cn.py`** - Adds CN mirror metadata to package JSONs
 
 ---

@@ -284,6 +284,9 @@ void test_udp_remote_info(void) {
 // ==================== DNS Server ====================
 
 void test_dns_server_captive(void) {
+#if !SOC_WIFI_SUPPORTED
+  TEST_IGNORE_MESSAGE("SoftAP requires native WiFi (not available on this SoC)");
+#else
   TEST_ASSERT_TRUE_MESSAGE(connectWiFi(), "WiFi connect failed");
 
   TEST_ASSERT_TRUE(WiFi.AP.create("ESP32_DNS_Test", "12345678"));
@@ -298,6 +301,7 @@ void test_dns_server_captive(void) {
   dnsServer.stop();
   WiFi.AP.end();
   delay(100);
+#endif
 }
 
 // ==================== mDNS ====================
