@@ -113,7 +113,7 @@ bool MyEndpoint::begin(bool initialState, uint8_t brightness) {
 | `MatterOnOffPlugin` | On/Off Plug-in Unit |
 | `MatterDimmablePlugin` | Dimmable Plug-in Unit |
 | `MatterFan` | Fan |
-| `MatterGenericSwitch` | Generic Switch |
+| `MatterGenericSwitch` | Generic Switch (smart button — short click, long press, multi-press) |
 | `MatterTemperatureSensor` | Temperature Sensor |
 | `MatterHumiditySensor` | Humidity Sensor |
 | `MatterPressureSensor` | Pressure Sensor |

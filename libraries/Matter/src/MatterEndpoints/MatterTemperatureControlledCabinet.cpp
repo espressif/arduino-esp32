@@ -26,52 +26,6 @@ using namespace esp_matter::endpoint;
 using namespace esp_matter::cluster;
 using namespace chip::app::Clusters;
 
-// Custom endpoint for temperature_level_controlled_cabinet device
-// This endpoint uses temperature_level feature instead of temperature_number
-namespace esp_matter {
-using namespace cluster;
-namespace endpoint {
-namespace temperature_level_controlled_cabinet {
-typedef struct config {
-  cluster::descriptor::config_t descriptor;
-  cluster::temperature_control::config_t temperature_control;
-} config_t;
-
-uint32_t get_device_type_id() {
-  return ESP_MATTER_TEMPERATURE_CONTROLLED_CABINET_DEVICE_TYPE_ID;
-}
-
-uint8_t get_device_type_version() {
-  return ESP_MATTER_TEMPERATURE_CONTROLLED_CABINET_DEVICE_TYPE_VERSION;
-}
-
-esp_err_t add(endpoint_t *endpoint, config_t *config) {
-  if (!endpoint) {
-    log_e("Endpoint cannot be NULL");
-    return ESP_ERR_INVALID_ARG;
-  }
-  esp_err_t err = add_device_type(endpoint, get_device_type_id(), get_device_type_version());
-  if (err != ESP_OK) {
-    log_e("Failed to add device type id:%" PRIu32 ",err: %d", get_device_type_id(), err);
-    return err;
-  }
-
-  // Create temperature_control cluster with temperature_level feature
-  // Note: temperature_number and temperature_level are mutually exclusive
-  temperature_control::create(endpoint, &(config->temperature_control), CLUSTER_FLAG_SERVER, temperature_control::feature::temperature_level::get_id());
-
-  return ESP_OK;
-}
-
-endpoint_t *create(node_t *node, config_t *config, uint8_t flags, void *priv_data) {
-  endpoint_t *endpoint = endpoint::create(node, flags, priv_data);
-  add(endpoint, config);
-  return endpoint;
-}
-}  // namespace temperature_level_controlled_cabinet
-}  // namespace endpoint
-}  // namespace esp_matter
-
 bool MatterTemperatureControlledCabinet::attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val) {
   bool ret = true;
   if (!started) {
@@ -170,21 +124,21 @@ bool MatterTemperatureControlledCabinet::begin(int16_t _rawTempSetpoint, int16_t
   // No need to manually set attributes here as they are already created with the config values
 
   temperature_controlled_cabinet::config_t cabinet_config;
-  cabinet_config.temperature_control.temperature_number.temp_setpoint = _rawTempSetpoint;
-  cabinet_config.temperature_control.temperature_number.min_temperature = _rawMinTemperature;
-  cabinet_config.temperature_control.temperature_number.max_temperature = _rawMaxTemperature;
-  cabinet_config.temperature_control.temperature_step.step = _rawStep;
-  cabinet_config.temperature_control.temperature_level.selected_temp_level = 0;
+  cabinet_config.temperature_control.features.temperature_number.temp_setpoint = _rawTempSetpoint;
+  cabinet_config.temperature_control.features.temperature_number.min_temperature = _rawMinTemperature;
+  cabinet_config.temperature_control.features.temperature_number.max_temperature = _rawMaxTemperature;
+  cabinet_config.temperature_control.features.temperature_step.step = _rawStep;
+  cabinet_config.temperature_control.features.temperature_level.selected_temp_level = 0;
 
   // Enable temperature_number feature (required)
   // Note: temperature_number and temperature_level are mutually exclusive.
   // Only one of them can be enabled at a time.
-  cabinet_config.temperature_control.features = temperature_control::feature::temperature_number::get_id();
+  cabinet_config.temperature_control.feature_flags = temperature_control::feature::temperature_number::get_id();
 
   // Always enable temperature_step feature to allow setStep() to be called later
   // Note: temperature_step requires temperature_number feature (which is always enabled for this mode)
   // The step value can be set initially via begin() or later via setStep()
-  cabinet_config.temperature_control.features |= temperature_control::feature::temperature_step::get_id();
+  cabinet_config.temperature_control.feature_flags |= temperature_control::feature::temperature_step::get_id();
 
   // endpoint handles can be used to add/modify clusters
   endpoint_t *endpoint = temperature_controlled_cabinet::create(node::get(), &cabinet_config, ENDPOINT_FLAG_NONE, (void *)this);
@@ -269,22 +223,22 @@ bool MatterTemperatureControlledCabinet::beginInternal(uint8_t *supportedLevels,
     return false;
   }
 
-  // Use custom temperature_level_controlled_cabinet endpoint that supports temperature_level feature
-  temperature_level_controlled_cabinet::config_t cabinet_config;
+  // Use official temperature_controlled_cabinet endpoint with temperature_level feature
+  temperature_controlled_cabinet::config_t cabinet_config;
   // Initialize temperature_number config (not used but required for struct)
-  cabinet_config.temperature_control.temperature_number.temp_setpoint = 0;
-  cabinet_config.temperature_control.temperature_number.min_temperature = 0;
-  cabinet_config.temperature_control.temperature_number.max_temperature = 0;
-  cabinet_config.temperature_control.temperature_step.step = 0;
-  cabinet_config.temperature_control.temperature_level.selected_temp_level = selectedLevel;
+  cabinet_config.temperature_control.features.temperature_number.temp_setpoint = 0;
+  cabinet_config.temperature_control.features.temperature_number.min_temperature = 0;
+  cabinet_config.temperature_control.features.temperature_number.max_temperature = 0;
+  cabinet_config.temperature_control.features.temperature_step.step = 0;
+  cabinet_config.temperature_control.features.temperature_level.selected_temp_level = selectedLevel;
 
   // Enable temperature_level feature
   // Note: temperature_number and temperature_level are mutually exclusive.
   // Only one of them can be enabled at a time.
-  cabinet_config.temperature_control.features = temperature_control::feature::temperature_level::get_id();
+  cabinet_config.temperature_control.feature_flags = temperature_control::feature::temperature_level::get_id();
 
   // endpoint handles can be used to add/modify clusters
-  endpoint_t *endpoint = temperature_level_controlled_cabinet::create(node::get(), &cabinet_config, ENDPOINT_FLAG_NONE, (void *)this);
+  endpoint_t *endpoint = temperature_controlled_cabinet::create(node::get(), &cabinet_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create Temperature Level Controlled Cabinet endpoint");
     return false;
