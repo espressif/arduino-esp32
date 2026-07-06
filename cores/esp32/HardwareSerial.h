@@ -406,6 +406,8 @@ public:
   // UART_CLK_SRC_REF_TICK     :: ESP32 and ESP32-S2
   // Note: CLK_SRC_PLL Freq depends on the SoC - ESP32-C2 has 40MHz, ESP32-H2 has 48MHz and ESP32-C5, C6, C61 and P4 has 80MHz
   // Note: ESP32-C6, C61, ESP32-P4 and ESP32-C5 have LP UART that will use only RTC_FAST or XTAL/2 as Clock Source
+  bool enableRxInternalPull(bool enable = true);
+  bool enableOneWireMode(bool enable = true);
   bool setClockSource(SerialClkSrc clkSrc);
   size_t setRxBufferSize(size_t new_size);
   size_t setTxBufferSize(size_t new_size);
