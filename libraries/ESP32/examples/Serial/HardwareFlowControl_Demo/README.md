@@ -15,17 +15,17 @@ The sketch supports two configuration options:
 
 ### USE_INTERNAL_MATRIX_PIN_LOOPBACK
 
-**Location in code:** Line 55 in `HardwareFlowControl_Demo.ino`
+**Location in code:** Line 57 in `HardwareFlowControl_Demo.ino`
 ```cpp
 #define USE_INTERNAL_MATRIX_PIN_LOOPBACK 1  // Set to 1 for internal loopback, 0 for external wires
 ```
 
-- **`USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`** (Default): Uses ESP32's internal GPIO matrix to create loopback connections. **No external wires needed!**
+- **`USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`** (Default): Uses internal loopback helpers (`uart_internal_loopback`, `uart_internal_hw_flow_ctrl_loopback`). **No external wires needed!**
 - **`USE_INTERNAL_MATRIX_PIN_LOOPBACK = 0`**: Requires external wire connections (see Pin Connections section below)
 
 ### USE_GPIO_CONTROL
 
-**Location in code:** Line 72 in `HardwareFlowControl_Demo.ino`
+**Location in code:** Line 74 in `HardwareFlowControl_Demo.ino`
 ```cpp
 #define USE_GPIO_CONTROL false  // Set to true or false
 ```
@@ -150,11 +150,11 @@ ESP32 Pin Connections:
    - Note: The order `begin()` then `setPins()` is important for proper initialization
 
 3. **`uart_internal_loopback(uartNum, rxPin)`** (when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`)
-   - Creates internal GPIO matrix connection for TX→RX loopback
+   - Creates internal TX→RX loopback (peripheral loopback on native IOMUX RX pins, or GPIO-matrix routing otherwise)
    - No external wires needed
 
 4. **`uart_internal_hw_flow_ctrl_loopback(uartNum, ctsPin)`** (when `USE_INTERNAL_MATRIX_PIN_LOOPBACK = 1`)
-   - Creates internal GPIO matrix connection for RTS→CTS flow control loopback
+   - Creates internal GPIO-matrix connection for RTS→CTS flow-control loopback
    - No external wires needed
 
 5. **`setHwFlowCtrlMode(mode, threshold)`**

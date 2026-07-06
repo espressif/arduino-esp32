@@ -36,6 +36,8 @@ This example demonstrates **real infrared communication** between **two separate
 - **User selects mode** at startup via Serial Monitor (press 'T' or 'R')
 - **Real hardware required**: IR LED on TX board, IR receiver on RX board
 
+**Note:** IrDA requires **separate** TX and RX GPIO pins on each board. One-wire UART (`enableOneWireMode`) is **not** supported in IrDA mode.
+
 The communication pattern:
 ```
 Board 1 (TX)  --[IR LED]--→ [IR Space] --[IR Receiver]--  Board 2 (RX)
@@ -133,9 +135,8 @@ UART1 configured in IRDA TX mode
 Transmitting IrDA frames...
 
 TX -> Sending frame 0
-   (Waiting for response from peer RX mode)
 TX -> Sending frame 1
-   (Waiting for response from peer RX mode)
+TX -> Sending frame 2
 ```
 
 **RX Board Serial Monitor:**

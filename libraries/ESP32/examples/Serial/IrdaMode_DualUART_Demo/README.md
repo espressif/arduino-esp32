@@ -31,6 +31,8 @@ This example demonstrates IrDA communication on a **single ESP32 board** by usin
 - **UART2**: Configured in IrDA RX mode (receiver)
 - **Internal loopback**: UART1 TX pin internally connected to UART2 RX pin via GPIO matrix
 
+**Note:** IrDA requires **separate** TX and RX GPIO pins (IR LED vs receiver). One-wire UART (`enableOneWireMode`) is **not** supported in IrDA mode.
+
 The demo continuously:
 1. UART1 transmits "PING {counter}" in IrDA TX mode
 2. UART2 receives the same message in IrDA RX mode
