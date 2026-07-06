@@ -412,7 +412,7 @@ Mode and Pin Compatibility
 | ``UART_MODE_UART``   | If enabled  | Yes (unless one-wire)  |
 | RS485 modes          | No          | Yes (split pins)       |
 | ``UART_MODE_IRDA``   | No          | Yes (split pins)       |
-| LP UART (C5/C6/C61)   | No          | Fixed RX pad only      |
+| LP UART (C5/C6/C61)  | No          | Fixed RX pad only      |
 | LP UART (P4 matrix)  | If enabled  | Yes (unless one-wire)  |
 +----------------------+-------------+------------------------+
 
