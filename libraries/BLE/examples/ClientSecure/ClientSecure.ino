@@ -28,7 +28,9 @@ void setup() {
   BTStatus initStatus = BLE.begin("ESP32-SecureClient");
   if (!initStatus) {
     Serial.printf("BLE init failed! (%s)\n", initStatus.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLESecurity sec = BLE.getSecurity();
@@ -59,27 +61,35 @@ void setup() {
 
   if (!found) {
     Serial.println("Secure server not found. Run the ServerSecure example on another device.");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEClient client = BLE.createClient();
   BTStatus status = client.connect(targetAddr);
   if (!status) {
     Serial.printf("Connect failed: %s\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("Connected!");
 
   BLERemoteService svc = client.getService(SVC_UUID);
   if (!svc) {
     Serial.println("Service not found");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
   if (!chr) {
     Serial.println("Characteristic not found");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   String val = chr.readValue();

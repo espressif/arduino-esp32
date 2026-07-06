@@ -18,32 +18,49 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
 #include "BLEScan.h"
-#include "impl/BLESync.h"
-#include "impl/BLEMutex.h"
+#include "impl/common/BLESync.h"
+#include "impl/common/BLEMutex.h"
 
 #include <host/ble_gap.h>
 
+#include <atomic>
+#include <vector>
+
+// BLEScan is entirely NimBLE-specific (no cross-backend shared state), so
+// BLEScan::Impl is defined directly here in impl/nimble/ with no common base.
 struct BLEScan::Impl {
   uint16_t interval = BLE_GAP_SCAN_FAST_INTERVAL_MIN;
   uint16_t window = BLE_GAP_SCAN_FAST_WINDOW;
   bool activeScan = true;
   bool filterDuplicates = true;
-  bool scanning = false;
+  // Set on the user task (startScan/stopScan) and cleared on the NimBLE host
+  // task (DISC_COMPLETE); atomic so the public isScanning() getter and the
+  // start/stop guards observe it without locking across callbacks.
+  std::atomic<bool> isScanning{false};
 
   BLEScan::ResultHandler onResultCb = nullptr;
   BLEScan::CompleteHandler onCompleteCb = nullptr;
 
-  BLEScanResults results;
+  BLEScan::Results results;
   BLESync scanSync;
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   BLEScan::PeriodicSyncHandler periodicSyncCb = nullptr;
   BLEScan::PeriodicReportHandler periodicReportCb = nullptr;
   BLEScan::PeriodicLostHandler periodicLostCb = nullptr;
+
+#if BLE5_SUPPORTED
+  // Established periodic-sync handles the library is currently tracking so
+  // BLE.end() can terminate them while the host is still enabled (see
+  // BLEScan::terminateAllPeriodicSyncs). Populated on BLE_GAP_EVENT_PERIODIC_SYNC,
+  // pruned on _SYNC_LOST and on an explicit terminatePeriodicSync(). Guarded by
+  // the scan mutex (mtx).
+  std::vector<uint16_t> periodicSyncs;
+#endif
 
   ~Impl() {
     if (mtx) {

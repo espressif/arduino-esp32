@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <functional>
@@ -34,7 +34,6 @@
 #include "BLEScan.h"
 #include "BLESecurity.h"
 #include "BLEAdvertisedDevice.h"
-#include "BLEScanResults.h"
 #include "BLERemoteService.h"
 #include "BLERemoteCharacteristic.h"
 #include "BLERemoteDescriptor.h"
@@ -220,15 +219,18 @@ public:
   /**
    * @brief Set the BLE transmit power.
    *
-   * @param txPowerDbm  Transmit power in dBm. The stack clamps to the
-   *                    nearest supported value.
+   * @param txPowerDbm  Transmit power in dBm. Quantized to the nearest supported
+   *                    level: -12, -9, -6, -3, 0, +3, +6, or +9 dBm.
+   * @note No-op if the BLE stack has not been initialized. On hosted-HCI platforms
+   *       (e.g. ESP32-P4) this is unsupported and logs a warning.
    */
   void setPower(int8_t txPowerDbm);
 
   /**
    * @brief Get the current BLE transmit power.
    *
-   * @return Transmit power in dBm.
+   * @return Transmit power in dBm, or -128 if the stack is not initialized.
+   * @note On hosted-HCI platforms the power level is not queryable and this returns 0.
    */
   int8_t getPower() const;
 
@@ -338,6 +340,7 @@ public:
    *
    * @param address  The peer address to add.
    * @return BTStatus indicating success or failure.
+   * @note Blocks until the controller whitelist update completes.
    */
   BTStatus whiteListAdd(const BTAddress &address);
 
@@ -346,6 +349,7 @@ public:
    *
    * @param address  The peer address to remove.
    * @return BTStatus indicating success or failure.
+   * @note Blocks until the controller whitelist update completes.
    */
   BTStatus whiteListRemove(const BTAddress &address);
 
@@ -463,6 +467,8 @@ public:
   BLEClass &operator=(BLEClass &&) = delete;
 
 private:
+  // BLEClass::Impl is a nested member type, so its static stack callbacks can reach
+  // this singleton's private state (_impl, _deviceName) directly -- no friend needed.
   struct Impl;
   Impl *_impl;
 

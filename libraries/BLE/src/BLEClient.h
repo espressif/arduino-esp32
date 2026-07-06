@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -73,7 +73,7 @@ public:
    * @param client  The BLEClient that connected.
    * @param conn    Connection information for the new link.
    */
-  using ConnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
+  using ConnectHandler = std::function<void(const BLEClient &client, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a connection is terminated.
@@ -82,7 +82,7 @@ public:
    * @param conn    Connection information for the terminated link.
    * @param reason  BLE HCI disconnect reason code.
    */
-  using DisconnectHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint8_t reason)>;
+  using DisconnectHandler = std::function<void(const BLEClient &client, const BLEConnInfo &conn, uint8_t reason)>;
 
   /**
    * @brief Callback invoked when a connection attempt fails.
@@ -90,7 +90,7 @@ public:
    * @param client  The BLEClient whose connection attempt failed.
    * @param reason  Backend-specific error code.
    */
-  using ConnectFailHandler = std::function<void(BLEClient client, int reason)>;
+  using ConnectFailHandler = std::function<void(const BLEClient &client, int reason)>;
 
   /**
    * @brief Callback invoked when the ATT MTU changes after negotiation.
@@ -99,7 +99,7 @@ public:
    * @param conn    Connection information for the link.
    * @param mtu     The new effective MTU size.
    */
-  using MtuChangedHandler = std::function<void(BLEClient client, const BLEConnInfo &conn, uint16_t mtu)>;
+  using MtuChangedHandler = std::function<void(const BLEClient &client, const BLEConnInfo &conn, uint16_t mtu)>;
 
   /**
    * @brief Callback invoked when the remote peer requests a connection parameter update.
@@ -108,7 +108,7 @@ public:
    * @param params  The requested connection parameters.
    * @return true to accept the parameters; false to reject.
    */
-  using ConnParamsReqHandler = std::function<bool(BLEClient client, const BLEConnParams &params)>;
+  using ConnParamsReqHandler = std::function<bool(const BLEClient &client, const BLEConnParams &params)>;
 
   /**
    * @brief Callback invoked when the peer's identity is resolved (after bonding/pairing).
@@ -116,7 +116,7 @@ public:
    * @param client  The BLEClient whose peer identity was resolved.
    * @param conn    Updated connection information including the resolved address.
    */
-  using IdentityHandler = std::function<void(BLEClient client, const BLEConnInfo &conn)>;
+  using IdentityHandler = std::function<void(const BLEClient &client, const BLEConnInfo &conn)>;
 
   /**
    * @brief Connect to a peripheral by address (blocking).
@@ -242,6 +242,8 @@ public:
    * @param serviceUUID  UUID of the containing service.
    * @param charUUID     UUID of the characteristic to read.
    * @return The characteristic value as a String, or an empty String on failure.
+   * @note getService() may run service discovery if the cache is empty, so the
+   *       first call can block longer than a simple read.
    */
   String getValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID);
 
@@ -251,7 +253,9 @@ public:
    * @param serviceUUID  UUID of the containing service.
    * @param charUUID     UUID of the characteristic to write.
    * @param value        The value to write.
-   * @return BTStatus indicating success or failure.
+   * @return BTStatus::NotFound if the service is not in the discovered cache,
+   *         otherwise the status of the underlying write.
+   * @note Same lazy-discovery behavior as getValue().
    */
   BTStatus setValue(const BLEUUID &serviceUUID, const BLEUUID &charUUID, const String &value);
 
@@ -287,6 +291,11 @@ public:
    * @brief Set the callback for remote connection-parameter update requests.
    *
    * @param handler  ConnParamsReqHandler callback, or nullptr to clear.
+   * @note Backend asymmetry: NimBLE surfaces the peer's L2CAP Connection Parameter
+   *       Update Request and lets this handler accept or reject it before it is
+   *       applied. Bluedroid has no pre-acceptance hook -- the controller applies the
+   *       update and only reports completion, so on Bluedroid this handler is never
+   *       invoked and its return value has no effect. Register it for NimBLE gating.
    */
   void onConnParamsUpdateRequest(ConnParamsReqHandler handler);
 
@@ -342,7 +351,7 @@ public:
    *
    * @return A BLEConnInfo snapshot of the current connection state.
    */
-  BLEConnInfo getConnection() const;
+  BLEConnInfo getConnInfo() const;
 
   /**
    * @brief Request a connection parameter update.
@@ -395,6 +404,7 @@ private:
   friend class BLERemoteService;
   friend class BLERemoteCharacteristic;
   friend class BLERemoteDescriptor;
+  friend struct BLEClientImplCommon;
 };
 
 #endif /* BLE_ENABLED */

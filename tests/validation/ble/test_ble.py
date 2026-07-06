@@ -40,7 +40,15 @@ PHASE_LABELS = {
     23: "error_paths_and_misc",
     24: "ble5_advanced",
     25: "hid_smoke",
-    26: "memory_release",
+    26: "ble5_legacy_over_ext",
+    27: "ble5_legacy_plus_ext",
+    28: "l2cap_bulk_reconnect",
+    29: "conn_params_reject",
+    30: "deletebond_roundtrip",
+    31: "nc_reject",
+    32: "passkey_entry",
+    33: "periodic_adv_lifecycle",
+    34: "memory_release",
 }
 
 
@@ -185,6 +193,23 @@ def _phase_security(server, client):
     server.expect_exact("[SERVER] Authentication complete", timeout=30)
     client.expect_exact("[CLIENT] Authentication complete", timeout=30)
     client.expect_exact("[CLIENT] Secure read: Secure Data!", timeout=10)
+    # onIdentity dedupe: the peer identity is surfaced exactly once per
+    # connection on both backends. NimBLE receives identity from both
+    # IDENTITY_RESOLVED and ENC_CHANGE and dedupes it in the library; Bluedroid
+    # fires it once from AUTH_CMPL. A count != 1 means the dedupe regressed.
+    m_id = client.expect(r"\[CLIENT\] Phase10 onIdentity count=(\d+)", timeout=10)
+    assert int(m_id.group(1)) == 1, f"onIdentity fired {m_id.group(1)} times, expected exactly 1 (dedupe regressed)"
+
+    # Cross-stack event-order parity: the client lifecycle callbacks for a fresh
+    # pairing connection must fire in the SAME order on NimBLE (esp32s3) and
+    # Bluedroid (esp32). The golden order per impl/CONTRACT.md is
+    # onConnect -> onMtuChanged -> onIdentity. Asserting the identical sequence on
+    # both backends is what proves parity (the same test runs on both targets).
+    #
+    # Use expect_exact on the full golden string — not a greedy ([A-Z,]+) capture.
+    # Serial arrives in arbitrary chunks; a prefix-matching regex can succeed on
+    # "CONNE" before "CT,MTU,IDENTITY" arrives. An exact full-line payload cannot.
+    client.expect_exact("[CLIENT] Phase10 ORDER=CONNECT,MTU,IDENTITY", timeout=10)
 
 
 def _phase_ble5_phy_dle(client):
@@ -229,7 +254,18 @@ def _phase_blestream(server, client):
     client.expect_exact("[CLIENT] BLEStream init OK", timeout=30)
     server.expect_exact("[SERVER] BLEStream onConnect fired", timeout=15)
     server.expect_exact("[SERVER] BLEStream connected OK", timeout=10)
+    server.expect_exact("[SERVER] BLEStream peerCount=1", timeout=10)
+    server.expect_exact("[SERVER] BLEStream peers=1", timeout=10)
+    server.expect(r"\[SERVER\] BLEStream peerAddr=[0-9a-fA-F:]+", timeout=10)
     client.expect_exact("[CLIENT] BLEStream connected OK", timeout=10)
+    client.expect_exact("[CLIENT] BLEStream peers=1", timeout=10)
+    client.expect(r"\[CLIENT\] BLEStream peerAddr=[0-9a-fA-F:]+", timeout=10)
+
+    # writeTo + onData round-trip
+    client.expect_exact("[CLIENT] BLEStream writeTo probe sent", timeout=10)
+    server.expect_exact("[SERVER] BLEStream onPeerData:", timeout=15)
+    server.expect_exact("[SERVER] BLEStream writeTo ack sent", timeout=10)
+    client.expect_exact("[CLIENT] BLEStream writeTo ack OK", timeout=15)
 
     # Basic ping/pong (client → server → client)
     client.expect_exact("[CLIENT] BLEStream sent", timeout=10)
@@ -360,7 +396,19 @@ def _phase_conninfo_and_params(server, client):
     client.expect(r"\[CLIENT\] ConnInfo phy tx=\d+ rx=\d+", timeout=10)
     client.expect(r"\[CLIENT\] ConnInfo rssi=-?\d+", timeout=10)
     client.expect(r"\[CLIENT\] UpdateConnParams ok=[01]", timeout=10)
-    client.expect(r"\[CLIENT\] MtuChanged seen=[01] last=\d+", timeout=10)
+    # The client calls setMTU(247) before connecting and the server setMTU(512),
+    # so an ATT MTU exchange MUST happen on every connection and the client's
+    # onMtuChanged MUST fire with a negotiated MTU above the 23-byte default.
+    # (Regression guard: on Bluedroid the request used to be issued from a GATTC
+    # event callback and silently never delivered CFG_MTU_EVT.)
+    m_mtu = client.expect(r"\[CLIENT\] MtuChanged seen=([01]) last=(\d+)", timeout=10)
+    assert int(m_mtu.group(1)) == 1, "client onMtuChanged never fired — MTU exchange did not complete"
+    assert int(m_mtu.group(2)) > 23, f"client negotiated MTU {m_mtu.group(2)} not above the 23-byte default"
+    # Ordering contract (impl/CONTRACT.md "Client MTU exchange"): onMtuChanged
+    # must fire after onConnect on both backends.
+    m_order = client.expect(r"\[CLIENT\] MtuOrder afterConnect=([01]) mtuSeen=([01])", timeout=10)
+    assert int(m_order.group(2)) == 1, "client onMtuChanged never fired — MTU exchange did not complete"
+    assert int(m_order.group(1)) == 1, "onMtuChanged fired before onConnect — MTU exchange ordering contract violated"
     client.expect_exact("[CLIENT] Phase16 done", timeout=10)
 
     server.expect_exact("[SERVER] Phase16 waiting for peer", timeout=15)
@@ -370,8 +418,20 @@ def _phase_conninfo_and_params(server, client):
     server.expect(r"\[SERVER\] ConnInfo role central=[01] peripheral=[01]", timeout=10)
     server.expect(r"\[SERVER\] ConnInfo params interval=\d+ latency=\d+ timeout=\d+", timeout=10)
     server.expect(r"\[SERVER\] ConnInfo addr ota=\S+ id=\S+", timeout=10)
-    server.expect(r"\[SERVER\] MtuChanged seen=[01] last=\d+", timeout=15)
+    m_smtu = server.expect(r"\[SERVER\] MtuChanged seen=([01]) last=(\d+)", timeout=15)
+    assert int(m_smtu.group(1)) == 1, "server onMtuChanged never fired — MTU exchange did not complete"
+    assert int(m_smtu.group(2)) > 23, f"server negotiated MTU {m_smtu.group(2)} not above the 23-byte default"
     server.expect(r"\[SERVER\] ConnParamsUpdate seen=[01] interval=\d+ latency=\d+ timeout=\d+", timeout=10)
+    # getConnInfo(handle) must return a fresh snapshot reflecting the post-exchange
+    # MTU/conn-params, reject a bogus handle, and behave the same on both stacks.
+    m_gci = server.expect(
+        r"\[SERVER\] Phase16 getConnInfo valid=([01]) mtu=(\d+) timeout=(\d+) bogusValid=([01]) refreshedMtu=([01]) refreshedParams=([01])",
+        timeout=10,
+    )
+    assert int(m_gci.group(1)) == 1, "getConnInfo(handle) returned an invalid snapshot for a live connection"
+    assert int(m_gci.group(4)) == 0, "getConnInfo(bogus handle) unexpectedly returned a valid snapshot"
+    assert int(m_gci.group(5)) == 1, "getConnInfo did not reflect the refreshed (post-exchange) MTU"
+    assert int(m_gci.group(6)) == 1, "getConnInfo did not reflect the refreshed connection parameters"
     server.expect_exact("[SERVER] Phase16 done", timeout=10)
 
 
@@ -450,11 +510,13 @@ def _phase_encrypted_perm(server, client):
     """Phase 19 — encrypted characteristic reads/writes succeed over paired link."""
     client.expect_exact("[CLIENT] Phase19 connected", timeout=30)
     client.expect(r"\[CLIENT\] Enc read: \S+", timeout=10)
-    client.expect(r"\[CLIENT\] Enc write ok=[01]", timeout=10)
-    client.expect(r"\[CLIENT\] Phase19 sec enc=[01] auth=[01] bond=[01]", timeout=10)
+    client.expect_exact("[CLIENT] Enc write ok=1", timeout=10)
+    # Post-pairing positive control: the link must be encrypted, authenticated
+    # and bonded on both sides. Anything less means encryption/bonding regressed.
+    client.expect_exact("[CLIENT] Phase19 sec enc=1 auth=1 bond=1", timeout=10)
     client.expect_exact("[CLIENT] Phase19 done", timeout=10)
 
-    server.expect(r"\[SERVER\] Phase19 encSec enc=[01] auth=[01] bond=[01]", timeout=15)
+    server.expect_exact("[SERVER] Phase19 encSec enc=1 auth=1 bond=1", timeout=15)
     server.expect_exact("[SERVER] Phase19 done", timeout=10)
 
 
@@ -462,6 +524,30 @@ def _phase_adv_data_and_scan(server, client):
     """Phase 20 — full BLEAdvertisementData payload + scan tuning parsers."""
     server.expect(r"\[SERVER\] Phase20 advReady ok=[01] isAdv=[01]", timeout=30)
     client.expect(r"\[CLIENT\] Phase20 results=\d+ isScanning=[01]", timeout=30)
+    # AD payload-limit regression: legacy 31-octet cap must be enforced (name
+    # degrades to a Shortened Local Name, an oversized field is dropped whole),
+    # while an extended payload accepts the full name.
+    m_cap = server.expect(
+        r"\[SERVER\] Phase20 adCap nameFit=([01]) oversizeRejected=([01]) extFullName=([01])",
+        timeout=25,
+    )
+    assert int(m_cap.group(1)) == 1, "legacy AD overflowed the 31-octet cap on a too-long name"
+    assert int(m_cap.group(2)) == 1, "an oversized AD field was not rejected whole (legacy cap)"
+    assert int(m_cap.group(3)) == 1, "extended AD payload did not accept the full name"
+    # Slave Connection Interval Range AD (0x12): encoding guard on the server
+    # (setPreferredParams / setMinPreferred / setMaxPreferred) plus the
+    # over-the-air round trip parsed back by the client. The client emits the
+    # prefInterval line *before* sawAdv, so match it first (a later expect would
+    # consume past it and never find it).
+    m_pref = server.expect(r"\[SERVER\] Phase20 prefIntervalAD ok=([01])", timeout=10)
+    assert int(m_pref.group(1)) == 1, "setPreferredParams did not emit a correct Slave Connection Interval Range AD (0x12)"
+    m_cpref = client.expect(
+        r"\[CLIENT\] Phase20 prefInterval have=([01]) min=0x([0-9A-Fa-f]+) max=0x([0-9A-Fa-f]+)",
+        timeout=10,
+    )
+    assert int(m_cpref.group(1)) == 1, "client did not receive the Slave Connection Interval Range AD (0x12)"
+    assert int(m_cpref.group(2), 16) == 0x0006, f"preferred min interval mismatch: got 0x{m_cpref.group(2)}"
+    assert int(m_cpref.group(3), 16) == 0x0012, f"preferred max interval mismatch: got 0x{m_cpref.group(3)}"
     m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
     assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
     client.expect_exact("[CLIENT] Phase20 done", timeout=10)
@@ -571,13 +657,12 @@ def _phase_ble5_advanced(server, client):
     )
     server_ok = b"getDefaultPhy" in m_s.group(0)
     if server_ok:
-        server.expect(r"\[SERVER\] Phase24 setDefaultPhy ok=[01]", timeout=5)
-        # setPhy / getPhy / setDataLen are only emitted when a peer is connected.
-        # Be tolerant: match either the success branch or the "no peer" branch.
-        server.expect(
-            r"\[SERVER\] (Phase24 setPhy\(2M\) ok=[01]|Phase24 no peer for setPhy)",
-            timeout=10,
-        )
+        server.expect(r"\[SERVER\] Phase24 setDefaultPhy ok=1", timeout=5)
+        # The client now holds a dedicated connection for this phase, so the
+        # per-connection PHY/DLE path must run and succeed every run.
+        server.expect_exact("[SERVER] Phase24 setPhy(2M) ok=1", timeout=15)
+        server.expect(r"\[SERVER\] Phase24 getPhy ok=1 tx=\d+ rx=\d+", timeout=5)
+        server.expect_exact("[SERVER] Phase24 setDataLen ok=1", timeout=5)
     server.expect_exact("[SERVER] Phase24 done", timeout=15)
 
     m_c = client.expect(
@@ -586,8 +671,9 @@ def _phase_ble5_advanced(server, client):
     )
     client_ok = b"getDefaultPhy" in m_c.group(0)
     if client_ok:
-        client.expect(r"\[CLIENT\] Phase24 setDefaultPhy ok=[01]", timeout=5)
-        client.expect(r"\[CLIENT\] Phase24 startExtendedCoded ok=[01]", timeout=10)
+        client.expect(r"\[CLIENT\] Phase24 setDefaultPhy ok=1", timeout=5)
+        client.expect(r"\[CLIENT\] Phase24 startExtendedCoded ok=1", timeout=10)
+        client.expect_exact("[CLIENT] Phase24 phyConn ok=1", timeout=20)
     client.expect_exact("[CLIENT] Phase24 done", timeout=15)
 
     return server_ok and client_ok
@@ -654,6 +740,260 @@ def _phase_hid_smoke(server, client):
     server.expect_exact("[SERVER] Phase25 done", timeout=30)
 
 
+def _phase_ble5_legacy_over_ext(server, client):
+    """Phase 26 — the public legacy advertising API stays discoverable and is
+    surfaced as a *legacy*, connectable advertisement on a BLE5 ext-adv
+    controller, where it is routed over the extended engine (DECISIONS.md D26).
+
+    Returns True if the phase ran, False if BLE5 is unavailable (skip).
+    """
+    m_s = server.expect(
+        r"\[SERVER\] (Phase26 BLE5 not supported, skipping|Phase26 legacyAdv ok=([01]) isAdv=([01]))",
+        timeout=30,
+    )
+    if b"not supported" in m_s.group(0):
+        server.expect_exact("[SERVER] Phase26 done", timeout=10)
+        client.expect_exact("[CLIENT] Phase26 done", timeout=30)
+        return False
+    assert int(m_s.group(2)) == 1, "server legacy-over-ext advertising failed to start"
+
+    m_c = client.expect(
+        r"\[CLIENT\] Phase26 sawLegacy=([01]) legacy=([01]) connectable=([01])",
+        timeout=30,
+    )
+    assert int(m_c.group(1)) == 1, "client did not discover the legacy-over-ext advertisement"
+    assert int(m_c.group(2)) == 1, "legacy-over-ext adv was not flagged as a legacy advertisement"
+    assert int(m_c.group(3)) == 1, "legacy-over-ext adv was not flagged connectable"
+    server.expect_exact("[SERVER] Phase26 done", timeout=20)
+    client.expect_exact("[CLIENT] Phase26 done", timeout=10)
+    return True
+
+
+def _phase_ble5_legacy_plus_ext(server, client):
+    """Phase 27 — a legacy set (reserved top instance) and a user extended set
+    (instance 0) advertise concurrently. The server must start BOTH, and the
+    client must observe BOTH the legacy name (LEG_<name>, carried in the legacy
+    scan response) and the extended-set name (EXT_<name>, only present in the
+    extended PDU) — proving the reserved-instance concurrency of the unified
+    engine (DECISIONS.md D26).
+
+    Both sets share the peripheral's identity address, so on the scanner they
+    collapse into a single address-keyed result whose per-report flags reflect
+    whichever report arrived last; the LEG_/EXT_ names are therefore the
+    reliable discriminator here. PDU-type flags are covered separately by
+    phase 26 (legacy) and phase 2 (extended).
+
+    Returns True if the phase ran, False if BLE5 is unavailable (skip).
+    """
+    m_s = server.expect(
+        r"\[SERVER\] (Phase27 BLE5 not supported, skipping|Phase27 legacyAdv ok=([01]))",
+        timeout=30,
+    )
+    if b"not supported" in m_s.group(0):
+        server.expect_exact("[SERVER] Phase27 done", timeout=10)
+        client.expect_exact("[CLIENT] Phase27 done", timeout=30)
+        return False
+    assert int(m_s.group(2)) == 1, "server legacy set failed to start"
+    m_ext = server.expect(r"\[SERVER\] Phase27 extAdv ok=([01]) data=([01])", timeout=15)
+    assert int(m_ext.group(2)) == 1, "server failed to set extended adv data"
+    assert int(m_ext.group(1)) == 1, "server failed to start the concurrent extended set (reserved-instance concurrency broken)"
+
+    m_c = client.expect(
+        r"\[CLIENT\] Phase27 sawLegacy=([01]) sawExt=([01]) legacyIsLegacy=([01]) extIsLegacy=([01])",
+        timeout=30,
+    )
+    assert int(m_c.group(1)) == 1, "client did not see the concurrent legacy set (LEG_ name)"
+    assert int(m_c.group(2)) == 1, "client did not see the concurrent extended set (EXT_ name)"
+    server.expect_exact("[SERVER] Phase27 done", timeout=20)
+    client.expect_exact("[CLIENT] Phase27 done", timeout=10)
+    return True
+
+
+def _phase_l2cap_bulk(server, client):
+    """Phase 28 — L2CAP CoC bulk transfer across the credit-stall boundary +
+    channel reconnect. Self-skips when L2CAP is unavailable.
+
+    Returns True if the phase ran, False if skipped.
+    """
+    m_s = server.expect(
+        r"\[SERVER\] Phase28 (L2CAP init OK|L2CAP not supported, skipping)",
+        timeout=40,
+    )
+    if b"not supported" in m_s.group(0):
+        server.expect_exact("[SERVER] Phase28 done", timeout=15)
+        client.expect_exact("[CLIENT] Phase28 done", timeout=40)
+        return False
+
+    m_c = client.expect(
+        r"\[CLIENT\] Phase28 (L2CAP not supported, skipping|rescan found=[01])",
+        timeout=40,
+    )
+    if b"not supported" in m_c.group(0):
+        client.expect_exact("[CLIENT] Phase28 done", timeout=15)
+        server.expect_exact("[SERVER] Phase28 done", timeout=40)
+        return False
+
+    client.expect_exact("[CLIENT] Phase28 L2CAP channel connected", timeout=30)
+    # Bulk SDU must arrive intact (server echoes the accumulated byte count once
+    # it reaches the target, proving credit replenishment mid transfer worked).
+    m_ack = client.expect(r"\[CLIENT\] Phase28 bulkAck ok=([01]) total=(\d+)", timeout=60)
+    assert int(m_ack.group(1)) == 1, f"L2CAP bulk transfer size mismatch (server acked {m_ack.group(2).decode()} bytes)"
+    server.expect(r"\[SERVER\] Phase28 bulk got=\d+", timeout=30)
+    # Fresh channel after teardown must ping/pong — the accept path recovered.
+    m_re = client.expect(r"\[CLIENT\] Phase28 reconnect ok=([01])", timeout=40)
+    assert int(m_re.group(1)) == 1, "L2CAP channel reconnect ping/pong failed"
+
+    client.expect_exact("[CLIENT] Phase28 done", timeout=15)
+    server.expect_exact("[SERVER] Phase28 done", timeout=40)
+    return True
+
+
+def _phase_conn_params_reject(server, client):
+    """Phase 29 — the central rejects the peripheral's connection-parameter
+    update from its pre-accept hook. NimBLE-only: Bluedroid negotiates conn
+    params inside L2CAP with no pre-accept surface, so the client self-skips.
+
+    Returns True if the phase ran (hook fired), False if skipped (Bluedroid).
+    """
+    # If the client never (re)discovered the server there is nothing to
+    # exercise — treat it as a skip rather than a hard failure.
+    m_f = client.expect(r"\[CLIENT\] Phase29 rescan found=([01])", timeout=45)
+    if int(m_f.group(1)) == 0:
+        client.expect_exact("[CLIENT] Phase29 done", timeout=15)
+        server.expect(r"\[SERVER\] Phase29 (requestSent ok=[01]|no peer connected|rebuild FAILED)", timeout=30)
+        server.expect_exact("[SERVER] Phase29 done", timeout=20)
+        return False
+
+    server.expect(r"\[SERVER\] Phase29 (requestSent ok=[01]|no peer connected)", timeout=30)
+    m_c = client.expect(
+        r"\[CLIENT\] Phase29 hookFired=([01]) beforeInterval=(\d+) afterInterval=(\d+) held=([01])",
+        timeout=40,
+    )
+    client.expect_exact("[CLIENT] Phase29 done", timeout=10)
+    server.expect_exact("[SERVER] Phase29 done", timeout=20)
+
+    if int(m_c.group(1)) == 0:
+        # No pre-accept hook on this backend (Bluedroid) — nothing to assert.
+        return False
+    assert int(m_c.group(4)) == 1, (
+        f"a rejected conn-param update still changed the live interval "
+        f"({m_c.group(2).decode()} -> {m_c.group(3).decode()})"
+    )
+    return True
+
+
+def _phase_deletebond_roundtrip(server, client):
+    """Phase 30 — deleteBond fully round-trips: an existing bond is deleted on
+    both ends, the store is confirmed empty, then reading the authenticated
+    characteristic forces a fresh pairing that re-establishes the bond.
+    """
+    server.expect(r"\[SERVER\] Phase30 bondsBefore=\d+", timeout=45)
+    server.expect(r"\[SERVER\] Phase30 bondsAfterDelete=\d+", timeout=15)
+
+    m_cb = client.expect(r"\[CLIENT\] Phase30 bondsBefore=(\d+)", timeout=45)
+    m_cd = client.expect(r"\[CLIENT\] Phase30 bondsAfterDelete=(\d+)", timeout=15)
+    assert int(m_cb.group(1)) >= 1, "client had no bond to delete (phase 10 pairing missing?)"
+    assert int(m_cd.group(1)) == 0, "client bond store not empty after deleteAllBonds"
+
+    m_cr = client.expect(
+        r"\[CLIENT\] Phase30 reEnc=([01]) reBond=([01]) bondsAfterRepair=(\d+)",
+        timeout=45,
+    )
+    assert int(m_cr.group(1)) == 1, "link not encrypted after deleteBond re-pair"
+    assert int(m_cr.group(2)) == 1, "link not bonded after deleteBond re-pair"
+    assert int(m_cr.group(3)) >= 1, "bond store still empty after re-pair (deleteBond round-trip failed)"
+
+    m_sr = server.expect(r"\[SERVER\] Phase30 rebonded=([01]) bondsAfterRepair=(\d+)", timeout=45)
+    assert int(m_sr.group(1)) == 1, "server did not observe a bonded re-pair"
+
+    client.expect_exact("[CLIENT] Phase30 done", timeout=15)
+    server.expect_exact("[SERVER] Phase30 done", timeout=15)
+
+
+def _phase_nc_reject(server, client):
+    """Phase 31 — an explicit Numeric-Comparison reject must abort pairing: the
+    client returns false from its confirm handler, so the authenticated read
+    fails and neither end ends up encrypted or bonded. Runs on both stacks.
+    """
+    m_c = client.expect(
+        r"\[CLIENT\] Phase31 ncReject readOk=([01]) enc=([01]) bond=([01]) bonds=(\d+) authFired=([01]) authSuccess=([01])",
+        timeout=60,
+    )
+    assert int(m_c.group(1)) == 0, "secure read succeeded despite the numeric-comparison reject"
+    assert int(m_c.group(2)) == 0, "link encrypted despite the numeric-comparison reject"
+    assert int(m_c.group(3)) == 0, "link bonded despite the numeric-comparison reject"
+    assert int(m_c.group(4)) == 0, "a bond persisted despite the numeric-comparison reject"
+    # If auth-complete surfaced at all, it must report failure.
+    if int(m_c.group(5)) == 1:
+        assert int(m_c.group(6)) == 0, "auth-complete reported success despite the reject"
+
+    m_s = server.expect(r"\[SERVER\] Phase31 ncReject sawPeer=([01]) bonds=(\d+)", timeout=60)
+    assert int(m_s.group(2)) == 0, "server retained a bond despite the numeric-comparison reject"
+
+    client.expect_exact("[CLIENT] Phase31 done", timeout=15)
+    server.expect_exact("[SERVER] Phase31 done", timeout=15)
+
+
+def _phase_passkey_entry(server, client):
+    """Phase 32 — passkey-entry pairing: the peripheral is DisplayOnly with a
+    fixed static passkey and the central is KeyboardOnly and supplies the same
+    value, forcing the SMP Passkey Entry method. The authenticated read must
+    succeed and both ends must end up encrypted + bonded.
+    """
+    m_c = client.expect(
+        r"\[CLIENT\] Phase32 passkeyEntry enc=([01]) bond=([01]) bonds=(\d+) authFired=([01]) authSuccess=([01])",
+        timeout=75,
+    )
+    assert int(m_c.group(1)) == 1, "passkey-entry pairing did not encrypt the link"
+    assert int(m_c.group(2)) == 1, "passkey-entry pairing did not bond"
+    assert int(m_c.group(3)) >= 1, "no bond stored after passkey-entry pairing"
+
+    m_s = server.expect(r"\[SERVER\] Phase32 passkeyEntry rebonded=([01]) bonds=(\d+)", timeout=75)
+    assert int(m_s.group(1)) == 1, "server did not observe a bonded passkey-entry pairing"
+    assert int(m_s.group(2)) >= 1, "server stored no bond after passkey-entry pairing"
+
+    client.expect_exact("[CLIENT] Phase32 done", timeout=15)
+    server.expect_exact("[SERVER] Phase32 done", timeout=15)
+
+
+def _phase_periodic_adv_lifecycle(server, client):
+    """Phase 33 — periodic-advertising teardown transitions the happy path never
+    reached: an explicit terminatePeriodicSync and an onPeriodicLost after the
+    server stops the train. Self-skips without BLE5.
+
+    Returns True if the phase ran, False if skipped.
+    """
+    m_s = server.expect(
+        r"\[SERVER\] Phase33 (periodic started|BLE5 not supported, skipping)",
+        timeout=30,
+    )
+    if b"not supported" in m_s.group(0):
+        server.expect_exact("[SERVER] Phase33 done", timeout=15)
+        client.expect_exact("[CLIENT] Phase33 done", timeout=40)
+        return False
+
+    m_c = client.expect(
+        r"\[CLIENT\] Phase33 (synced=([01]) dataRx=([01])|BLE5 not supported, skipping)",
+        timeout=45,
+    )
+    if b"not supported" in m_c.group(0):
+        client.expect_exact("[CLIENT] Phase33 done", timeout=15)
+        server.expect_exact("[SERVER] Phase33 done", timeout=45)
+        return False
+    assert int(m_c.group(2)) == 1, "periodic sync not established"
+    assert int(m_c.group(3)) == 1, "periodic report not received"
+
+    # At least one teardown transition must be observed: an explicit terminate
+    # (deterministic) or a supervision-timeout sync-lost (timing dependent).
+    m_t = client.expect(r"\[CLIENT\] Phase33 lost=([01]) terminateOk=([01])", timeout=45)
+    assert (int(m_t.group(1)) == 1) or (int(m_t.group(2)) == 1), "neither sync-lost nor explicit terminate observed (periodic teardown uncovered)"
+
+    server.expect_exact("[SERVER] Phase33 periodic stopped", timeout=45)
+    client.expect_exact("[CLIENT] Phase33 done", timeout=20)
+    server.expect_exact("[SERVER] Phase33 done", timeout=20)
+    return True
+
+
 def _phase_memory_release(server, client):
     MIN_FREED = 10240
 
@@ -716,7 +1056,15 @@ def test_ble(dut, ci_job_id, record_property):
         23: (_phase_error_paths_and_misc, server, client),
         24: (_phase_ble5_advanced, server, client),  # skip if falsy
         25: (_phase_hid_smoke, server, client),
-        26: (_phase_memory_release, server, client),
+        26: (_phase_ble5_legacy_over_ext, server, client),  # skip if falsy
+        27: (_phase_ble5_legacy_plus_ext, server, client),  # skip if falsy
+        28: (_phase_l2cap_bulk, server, client),  # skip if falsy
+        29: (_phase_conn_params_reject, server, client),  # skip if falsy
+        30: (_phase_deletebond_roundtrip, server, client),
+        31: (_phase_nc_reject, server, client),
+        32: (_phase_passkey_entry, server, client),
+        33: (_phase_periodic_adv_lifecycle, server, client),  # skip if falsy
+        34: (_phase_memory_release, server, client),
     }
 
     SKIP_REASONS = {
@@ -724,6 +1072,11 @@ def test_ble(dut, ci_job_id, record_property):
         11: "BLE5 not supported",
         14: "L2CAP not supported",
         24: "BLE5 not supported",
+        26: "BLE5 not supported",
+        27: "BLE5 not supported",
+        28: "L2CAP not supported",
+        29: "conn-params pre-accept hook not supported (Bluedroid)",
+        33: "BLE5 not supported",
     }
 
     passed, failed = [], []

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BTStatus.h"
@@ -72,14 +72,14 @@ public:
    * @param desc The descriptor being read.
    * @param conn Information about the connected client.
    */
-  using ReadHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this descriptor.
    * @param desc The descriptor being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(BLEDescriptor desc, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(const BLEDescriptor &desc, const BLEConnInfo &conn)>;
 
   /**
    * @brief Register a callback invoked when a client reads this descriptor.
@@ -102,14 +102,17 @@ public:
    * @brief Set the descriptor value from a raw byte buffer.
    * @param data Pointer to the data bytes.
    * @param length Number of bytes to copy.
+   * @note Thread-safe: the internal value buffer is guarded by a mutex. The
+   *       String overload copies the raw bytes and stores no null terminator.
    */
   void setValue(const uint8_t *data, size_t length);
   void setValue(const String &value);
 
   /**
    * @brief Get a pointer to the raw descriptor value.
-   * @param length If non-null, receives the length of the value in bytes.
-   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid.
+   * @param length If non-null, receives the length of the value in bytes (0 when invalid).
+   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid or empty.
+   * @note Thread-safe. The returned pointer is invalidated by a concurrent setValue().
    */
   const uint8_t *getValue(size_t *length = nullptr) const;
 
@@ -162,7 +165,8 @@ public:
    * @brief Create a Client Characteristic Configuration Descriptor (UUID 0x2902).
    * @return A new BLEDescriptor configured as a CCCD.
    * @note A CCCD is auto-created for characteristics with Notify or Indicate properties;
-   *       use this factory only when manual control is needed.
+   *       use this factory only when manual control is needed. On NimBLE, manually adding
+   *       a CCCD to a NOTIFY/INDICATE characteristic causes a validation error.
    */
   static BLEDescriptor createCCCD();
 
@@ -177,12 +181,14 @@ public:
   /**
    * @brief Set the User Description string (0x2901).
    * @param description Human-readable description text.
+   * @note No-op unless this descriptor is a 0x2901 User Description.
    */
   void setUserDescription(const String &description);
 
   /**
    * @brief Get the User Description string (0x2901).
-   * @return The stored description text.
+   * @return The stored description text, or an empty string if this is not a
+   *         0x2901 descriptor or the handle is invalid.
    */
   String getUserDescription() const;
 
@@ -203,44 +209,53 @@ public:
   /**
    * @brief Enable or disable notifications in this CCCD.
    * @param enable true to set the notifications bit, false to clear it.
+   * @note No-op unless this descriptor is a CCCD (0x2902); auto-resizes the value to 2 bytes.
    */
   void setNotifications(bool enable);
 
   /**
    * @brief Enable or disable indications in this CCCD.
    * @param enable true to set the indications bit, false to clear it.
+   * @note No-op unless this descriptor is a CCCD (0x2902); auto-resizes the value to 2 bytes.
    */
   void setIndications(bool enable);
 
-  // 0x2904 Presentation Format convenience
+  // 0x2904 Presentation Format convenience.
+  // All setters below are no-ops unless this descriptor is a 0x2904 Presentation
+  // Format with a value of at least 7 bytes (as created by createPresentationFormat()).
 
   /**
    * @brief Set the format field of a Presentation Format descriptor.
    * @param format One of the FORMAT_* constants.
+   * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setFormat(uint8_t format);
 
   /**
    * @brief Set the exponent field of a Presentation Format descriptor.
    * @param exponent Signed exponent applied to the characteristic value.
+   * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setExponent(int8_t exponent);
 
   /**
    * @brief Set the unit field of a Presentation Format descriptor.
    * @param unit Bluetooth Assigned Number for the unit (e.g., 0x2700 for unitless).
+   * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setUnit(uint16_t unit);
 
   /**
    * @brief Set the namespace field of a Presentation Format descriptor.
    * @param ns Bluetooth namespace (typically 0x01 for Bluetooth SIG).
+   * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setNamespace(uint8_t ns);
 
   /**
    * @brief Set the description field of a Presentation Format descriptor.
    * @param description Bluetooth SIG-defined description enumeration value.
+   * @note No-op unless this is a 0x2904 descriptor with a value of at least 7 bytes.
    */
   void setFormatDescription(uint16_t description);
 
@@ -284,6 +299,7 @@ private:
   std::shared_ptr<Impl> _impl;
   friend class BLECharacteristic;
   friend class BLEServer;
+  friend struct BLEDescriptorImplCommon;
 };
 
 #endif /* BLE_ENABLED */

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED && !BLE_L2CAP_SUPPORTED
 
 #include "BLEL2CAP.h"

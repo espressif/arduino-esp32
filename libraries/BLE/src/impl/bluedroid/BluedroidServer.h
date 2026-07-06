@@ -16,50 +16,60 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_BLUEDROID
 
-#include "BLEServer.h"
-#include "impl/BLESync.h"
+#include "impl/common/BLEServerImpl.h"
+#include "impl/common/BLESync.h"
 
 #include <esp_gatts_api.h>
 #include <esp_gap_ble_api.h>
 #include <esp_timer.h>
-#include "impl/BLEMutex.h"
-#include <unordered_map>
 #include <vector>
+#include <utility>
 #include <memory>
 
-struct BLEServer::Impl : std::enable_shared_from_this<BLEServer::Impl> {
-  bool started = false;
-  bool advertiseOnDisconnect = true;
+/**
+ * @brief Bluedroid GATT-server implementation (@c BLEServer::Impl).
+ *
+ * Defined in @c impl/bluedroid/, so everything here is Bluedroid-specific; it inherits the
+ * stack-agnostic @c BLEServerImplCommon, giving one uniform @c impl.member type. Layer is
+ * disclosed by file/type: members on @c BLEServer::Impl are Bluedroid, members on
+ * @c BLEServerImplCommon are shared.
+ */
+struct BLEServer::Impl : BLEServerImplCommon {
   esp_gatt_if_t gattsIf = ESP_GATT_IF_NONE;
   uint16_t appId = 0;
 
-  std::vector<std::shared_ptr<BLEService::Impl>> services;
-
-  BLEServer::ConnectHandler onConnectCb = nullptr;
-  BLEServer::DisconnectHandler onDisconnectCb = nullptr;
-  BLEServer::MtuChangedHandler onMtuChangedCb = nullptr;
-  BLEServer::ConnParamsHandler onConnParamsCb = nullptr;
-  BLEServer::IdentityHandler onIdentityCb = nullptr;
-
-  std::vector<std::pair<uint16_t, BLEConnInfo>> connections;
-
   // Prepared (long) write buffer per ATT bearer (keyed by conn_id).
-  // BT Core Spec requires prepared writes to be maintained per-connection.
+  // BT Core Spec requires prepared writes to be maintained per-connection. A flat
+  // vector keyed by conn_id (mirrors BLEServerImplCommon::connections) avoids
+  // pulling the <unordered_map> template into every Bluedroid build; the number of
+  // concurrent connections is small so the linear scan is cheap.
   struct PrepWrite {
     uint16_t handle;
     uint16_t offset;
     std::vector<uint8_t> data;
   };
-  std::unordered_map<uint16_t, std::vector<PrepWrite>> prepWrites;
+  std::vector<std::pair<uint16_t, std::vector<PrepWrite>>> prepWrites;
 
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  // Return the fragment list for connId, creating an empty one if absent.
+  std::vector<PrepWrite> &prepWritesFor(uint16_t connId);
+  // Return the fragment list for connId, or nullptr if none is buffered.
+  std::vector<PrepWrite> *findPrepWrites(uint16_t connId);
+  // Drop any buffered fragments for connId (no-op if absent).
+  void erasePrepWrites(uint16_t connId);
 
   BLESync regSync;
   BLESync createSync;
   BLESync connectSync;
+#if BLE5_SUPPORTED
+  // Bridges async GAP PHY/DLE completions to the blocking public setPhy/getPhy/setDataLen APIs.
+  BLESync phySync;
+  BLESync dataLenSync;
+  BLEPhy pendingTxPhy = BLEPhy::PHY_1M;
+  BLEPhy pendingRxPhy = BLEPhy::PHY_1M;
+#endif
 
   // Used during start() to pass handle results from async GATTS events
   uint16_t *pendingHandle = nullptr;
@@ -71,20 +81,18 @@ struct BLEServer::Impl : std::enable_shared_from_this<BLEServer::Impl> {
     if (advRestartTimer) {
       esp_timer_delete(advRestartTimer);
     }
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
   }
-
-  void connSet(uint16_t connHandle, const BLEConnInfo &connInfo);
-  void connErase(uint16_t connHandle);
-  BLEConnInfo *connFind(uint16_t connHandle);
 
   static BLEServer::Impl *s_instance;
   static void invalidate();
   static void handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-  static BLEServer makeHandle(Impl *impl);
 };
+
+/**
+ * @brief Register the GATTS application with Bluedroid for @p server.
+ * @return true on successful registration; false on registration failure or timeout.
+ */
+bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server);
 
 #endif /* BLE_BLUEDROID */

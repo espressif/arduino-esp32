@@ -113,8 +113,39 @@ void setup() {
     }
   }
   Serial.println("[CLIENT] Connected");
+  Serial.printf("[CLIENT] peerCount=%u\n", SerialBT.peerCount());
+  {
+    auto peerList = SerialBT.peers();
+    Serial.printf("[CLIENT] peers=%u\n", (unsigned)peerList.size());
+    if (!peerList.empty()) {
+      Serial.printf("[CLIENT] peerAddr=%s\n", peerList[0].toString().c_str());
+    }
+  }
 
-  // Send data to server
+  // Targeted writeTo round-trip
+  SerialBT.print("SPP_WRITE_TO_PROBE");
+  Serial.println("[CLIENT] Sent: SPP_WRITE_TO_PROBE");
+
+  {
+    String rx;
+    uint32_t deadline = millis() + 15000;
+    while (millis() < deadline) {
+      while (SerialBT.available()) {
+        rx += (char)SerialBT.read();
+      }
+      if (rx.indexOf("SPP_WRITE_TO_ACK") >= 0) {
+        break;
+      }
+      delay(10);
+    }
+    if (rx.indexOf("SPP_WRITE_TO_ACK") >= 0) {
+      Serial.println("[CLIENT] Received: SPP_WRITE_TO_ACK");
+    } else {
+      Serial.println("[CLIENT] writeTo ack timeout");
+    }
+  }
+
+  // Broadcast path
   SerialBT.print("HELLO_FROM_CLIENT");
   Serial.println("[CLIENT] Sent: HELLO_FROM_CLIENT");
 
@@ -136,9 +167,20 @@ void setup() {
     Serial.println("[CLIENT] Receive timeout");
   }
 
-  // Disconnect
-  SerialBT.disconnect();
-  Serial.println("[CLIENT] Disconnected");
+  // Ask server to disconnect this peer by address
+  SerialBT.print("DISCONNECT_ME");
+  Serial.println("[CLIENT] Sent: DISCONNECT_ME");
+
+  deadline = millis() + 15000;
+  while (SerialBT.connected() && millis() < deadline) {
+    delay(20);
+  }
+  if (!SerialBT.connected()) {
+    Serial.println("[CLIENT] Disconnected by server");
+  } else {
+    SerialBT.disconnect();
+    Serial.println("[CLIENT] Disconnected");
+  }
 
   // -------------------------------------------------------------------------
   // Phase 3: bond management

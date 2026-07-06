@@ -37,7 +37,9 @@ void setup() {
   BTStatus status = BLE.begin("BLE5-Server");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEServer server = BLE.createServer();
@@ -64,7 +66,14 @@ void setup() {
 
   adv.onComplete(onAdvComplete);
 
-  adv.startExtended(ADV_INSTANCE);
+  BTStatus advStatus = adv.startExtended(ADV_INSTANCE);
+  if (!advStatus) {
+    // NotSupported here means this build/SoC lacks BLE 5 extended advertising.
+    Serial.printf("Extended advertising did not start (%s)\n", advStatus.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
   Serial.println("Extended advertising started on 2M PHY");
 }
 

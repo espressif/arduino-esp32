@@ -18,17 +18,19 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
 #include "BLEAdvertising.h"
 
 #include <host/ble_gap.h>
-#include "impl/BLEMutex.h"
+#include "impl/common/BLEMutex.h"
 #include <vector>
 
+// BLEAdvertising is entirely NimBLE-specific (no cross-backend shared state), so
+// BLEAdvertising::Impl is defined directly here in impl/nimble/ with no common base.
 struct BLEAdvertising::Impl {
-  bool advertising = false;
+  bool isAdvertising = false;
   bool scanResponseEnabled = true;
   bool includeTxPower = false;
   uint16_t appearance = 0;
@@ -56,6 +58,47 @@ struct BLEAdvertising::Impl {
   }
 
   static int gapEventCallback(struct ble_gap_event *event, void *arg);
+
+#if BLE5_SUPPORTED
+  // --- BLE5 extended / periodic advertising (TX) per-instance state ---
+  // Setters accumulate parameters here; the controller instance is (re)configured
+  // lazily on the first data/start call after a parameter change, because NimBLE
+  // requires ble_gap_ext_adv_configure() to run before set_data()/start().
+  struct ExtInstance {
+    bool slotInitialized = false;
+    bool extAdvRegistered = false;
+    struct ble_gap_ext_adv_params params {};
+#if BLE_PERIODIC_ADV_SUPPORTED
+    bool periodicAdvRegistered = false;
+    struct ble_gap_periodic_adv_params periodicParams {};
+#endif
+  };
+#if defined(CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES)
+  static constexpr uint8_t kMaxExtInstances = CONFIG_BT_NIMBLE_MAX_EXT_ADV_INSTANCES + 1;
+#else
+  static constexpr uint8_t kMaxExtInstances = 2;  // instance 0 + one extended set
+#endif
+  // On BLE5 builds the public "legacy" start()/stop() run over the extended
+  // controller (the only path the ext-adv-enabled controller actually radiates).
+  // The top controller instance is reserved for that
+  // legacy-PDU set so it can broadcast concurrently with user extended sets
+  // (setExt*/startExtended, which are clamped to instances below it). On S3
+  // (kMaxExtInstances == 2) this leaves instance 0 for one user extended set.
+  static constexpr uint8_t kLegacyInstance = kMaxExtInstances - 1;
+  ExtInstance extInstances[kMaxExtInstances];
+
+  // Returns the per-instance slot (lazily initialised with sane defaults), or
+  // nullptr when @p instance is out of range (>= kLegacyInstance, the reserved
+  // legacy set). Marks the slot dirty so the next data/start call reconfigures
+  // the controller.
+  ExtInstance *extInstanceAt(uint8_t instance);
+  // Pushes the accumulated params to the controller (ble_gap_ext_adv_configure).
+  // Returns a NimBLE rc (0 == success). Idempotent: skips when already configured.
+  int extEnsureConfigured(uint8_t instance);
+  // Configure + set data + start the reserved legacy-PDU instance over the
+  // extended controller API. Returns a NimBLE rc (0 == success).
+  int startLegacyViaExtAdv(uint32_t durationMs);
+#endif
 };
 
 #endif /* BLE_NIMBLE */

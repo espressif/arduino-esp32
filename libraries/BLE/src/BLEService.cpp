@@ -17,40 +17,20 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
-#include "impl/BLEServiceBackend.h"
-#include "impl/BLEServerBackend.h"
-#include "impl/BLECharacteristicBackend.h"
-#include "impl/BLECharacteristicValidation.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLECharacteristicValidation.h"
+#include "impl/common/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
 
-// --------------------------------------------------------------------------
-// BLEService common API (stack-agnostic)
-// --------------------------------------------------------------------------
-
-/**
- * @brief Construct a default (invalid) BLEService handle.
- * @note The handle must be initialized via BLEServer::createService() before use.
- */
 BLEService::BLEService() : _impl(nullptr) {}
 
-/**
- * @brief Check whether this handle references a valid service implementation.
- * @return true if the internal Impl pointer is non-null; false otherwise.
- */
 BLEService::operator bool() const {
   return _impl != nullptr;
 }
 
-/**
- * @brief Declare another service as included by this service.
- * @param service The service to include.
- * @note The included service must be created on the same server. The include
- *       declaration is registered when the server is started.
- */
 void BLEService::addIncludedService(const BLEService &service) {
   if (!_impl || !service._impl) {
     return;
@@ -64,12 +44,6 @@ void BLEService::addIncludedService(const BLEService &service) {
   _impl->includedServices.push_back(service._impl);
 }
 
-/**
- * @brief Look up a characteristic in this service by UUID.
- * @param uuid UUID of the characteristic to find.
- * @return The first matching BLECharacteristic handle, or an invalid handle if not found.
- * @note Performs a linear search over the characteristic list.
- */
 BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) {
   BLE_CHECK_IMPL(BLECharacteristic());
   for (auto &chr : impl.characteristics) {
@@ -81,10 +55,6 @@ BLECharacteristic BLEService::getCharacteristic(const BLEUUID &uuid) {
   return BLECharacteristic();
 }
 
-/**
- * @brief Get all characteristics belonging to this service.
- * @return A vector of BLECharacteristic handles (shared-ownership copies).
- */
 std::vector<BLECharacteristic> BLEService::getCharacteristics() const {
   std::vector<BLECharacteristic> result;
   BLE_CHECK_IMPL(result);
@@ -95,12 +65,6 @@ std::vector<BLECharacteristic> BLEService::getCharacteristics() const {
   return result;
 }
 
-/**
- * @brief Remove a characteristic from this service.
- * @param chr The characteristic to remove.
- * @note No-ops silently if either this service handle or the characteristic
- *       handle is invalid. Only the first matching shared_ptr is erased.
- */
 void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
   if (!_impl || !chr._impl) {
     return;
@@ -115,52 +79,22 @@ void BLEService::removeCharacteristic(const BLECharacteristic &chr) {
   }
 }
 
-/**
- * @brief Check whether this service has been started.
- * @return true after the service is registered in the GATT database; false otherwise.
- */
 bool BLEService::isStarted() const {
   return _impl && _impl->started;
 }
 
-/**
- * @brief Get the UUID of this service.
- * @return The service UUID, or a default-constructed BLEUUID if the handle is invalid.
- */
 BLEUUID BLEService::getUUID() const {
   return _impl ? _impl->uuid : BLEUUID();
 }
 
-/**
- * @brief Get the attribute handle assigned to this service.
- * @return The GATT attribute handle, or 0 if the handle is invalid.
- */
 uint16_t BLEService::getHandle() const {
   return _impl ? _impl->handle : 0;
 }
 
-/**
- * @brief Get the server that owns this service.
- * @return A BLEServer handle backed by the parent server's shared_ptr, or an invalid
- *         handle if this service is not attached to a server.
- */
 BLEServer BLEService::getServer() const {
   return _impl && _impl->server ? BLEServer(_impl->server->shared_from_this()) : BLEServer();
 }
 
-/**
- * @brief Add a characteristic to this service.
- * @param uuid        UUID of the characteristic to create.
- * @param properties  Characteristic properties (read, write, notify, etc.).
- * @param permissions ATT permission flags controlling access security.
- * @return A BLECharacteristic handle, or an invalid handle on validation failure.
- * @note Multiple characteristics with the same UUID are allowed per the GATT
- *       spec (Core Spec Vol 3, Part G, §3.3) and are differentiated by handle.
- *       HID Report characteristics (all UUID 0x2A4D) require this.
- *       Property/permission combinations are validated at construction time via
- *       bleValidateCharProps(); hard errors (e.g. empty properties, mismatched
- *       read/write permissions) cause the call to return an invalid handle.
- */
 BLECharacteristic BLEService::createCharacteristic(const BLEUUID &uuid, BLEProperty properties, BLEPermission permissions) {
   BLE_CHECK_IMPL(BLECharacteristic());
 

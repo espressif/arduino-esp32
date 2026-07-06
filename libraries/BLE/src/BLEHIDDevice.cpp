@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLE.h"
@@ -40,19 +40,6 @@ static const BLEUUID kBootOutputUUID(static_cast<uint16_t>(0x2A32));
 static const BLEUUID kReportRefDescUUID(static_cast<uint16_t>(0x2908));
 static const BLEUUID kExtReportRefDescUUID(static_cast<uint16_t>(0x2907));
 
-/**
- * @brief Construct a HID device and create all required GATT services and characteristics.
- * @param server The BLE server to host the HID, Device Information, and Battery services on.
- * @note Creates Device Information (0x180A), HID (0x1812), and Battery (0x180F) services.
- *       The HID Service includes the Battery Service via an Include Declaration
- *       (HIDS 1.0 §3) and an External Report Reference descriptor on the
- *       Report Map pointing to the Battery Level UUID (HIDS 1.0 §3.6).
- *       All characteristics default to open (unencrypted) permissions; for HoGP
- *       compliance, configure BLEServer-level security or re-create with
- *       encrypted permissions. Protocol Mode is initialized to Report Protocol
- *       Mode (1). The HID Service UUID is automatically added to the
- *       advertising payload.
- */
 BLEHIDDevice::BLEHIDDevice(BLEServer server) : _server(server) {
   _devInfoSvc = _server.createService(kDevInfoSvcUUID);
   _batterySvc = _server.createService(kBatterySvcUUID);
@@ -91,63 +78,30 @@ BLEHIDDevice::BLEHIDDevice(BLEServer server) : _server(server) {
   adv.addServiceUUID(kHIDSvcUUID);
 }
 
-/**
- * @brief Set the HID Report Map (report descriptor) characteristic value.
- * @param map Pointer to the HID report descriptor byte array.
- * @param size Length of the report descriptor in bytes.
- */
 void BLEHIDDevice::reportMap(const uint8_t *map, uint16_t size) {
   _reportMapChar.setValue(map, size);
 }
 
-/**
- * @brief Expose the Device Information service (UUID 0x180A) created in the constructor.
- * @return Handle to that service.
- */
 BLEService BLEHIDDevice::deviceInfoService() {
   return _devInfoSvc;
 }
 
-/**
- * @brief Expose the HID service (UUID 0x1812) created in the constructor.
- * @return Handle to that service.
- */
 BLEService BLEHIDDevice::hidService() {
   return _hidSvc;
 }
 
-/**
- * @brief Expose the Battery service (UUID 0x180F) created in the constructor.
- * @return Handle to that service.
- */
 BLEService BLEHIDDevice::batteryService() {
   return _batterySvc;
 }
 
-/**
- * @brief Expose the Manufacturer Name String characteristic.
- * @return Handle to the characteristic; use the String overload of
- *         @c manufacturer to set the value.
- */
 BLECharacteristic BLEHIDDevice::manufacturer() {
   return _mfgChar;
 }
 
-/**
- * @brief Set the Manufacturer Name String characteristic value.
- * @param name Manufacturer name to write into the Device Information Service.
- */
 void BLEHIDDevice::manufacturer(const String &name) {
   _mfgChar.setValue(name);
 }
 
-/**
- * @brief Set the PnP ID characteristic (7 bytes: sig + vendorId + productId + version).
- * @param sig Vendor ID source (0x01 = Bluetooth SIG, 0x02 = USB IF).
- * @param vendorId Vendor ID (stored little-endian).
- * @param productId Product ID (stored little-endian).
- * @param version Product version in BCD (stored little-endian).
- */
 void BLEHIDDevice::pnp(uint8_t sig, uint16_t vendorId, uint16_t productId, uint16_t version) {
   uint8_t pnpData[7];
   pnpData[0] = sig;
@@ -160,12 +114,6 @@ void BLEHIDDevice::pnp(uint8_t sig, uint16_t vendorId, uint16_t productId, uint1
   _pnpChar.setValue(pnpData, sizeof(pnpData));
 }
 
-/**
- * @brief Set the HID Information characteristic (4 bytes: bcdHID + country + flags).
- * @param country HID country code (0x00 = not localized).
- * @param flags HID information flags (bit 0: RemoteWake, bit 1: NormallyConnectable).
- * @note bcdHID is hardcoded to 0x0111 (HID version 1.11).
- */
 void BLEHIDDevice::hidInfo(uint8_t country, uint8_t flags) {
   uint8_t info[4];
   info[0] = 0x11;  // bcdHID low byte (1.11)
@@ -175,42 +123,26 @@ void BLEHIDDevice::hidInfo(uint8_t country, uint8_t flags) {
   _hidInfoChar.setValue(info, sizeof(info));
 }
 
-/**
- * @brief Update the battery level and send a notification to subscribed clients.
- * @param level Battery percentage (0-100).
- * @note Delivery requires an enabled Client Characteristic Configuration
- *       (notification) on the battery level attribute; that step is a normal
- *       GATT client operation and may occur before the link is fully encrypted
- *       depending on your permission model.
- */
 void BLEHIDDevice::setBatteryLevel(uint8_t level) {
   _batteryLevelChar.setValue(&level, 1);
   _batteryLevelChar.notify();
 }
 
-/**
- * @brief Expose the HID Control Point characteristic (0x2A4C).
- * @return Handle to the characteristic.
- */
 BLECharacteristic BLEHIDDevice::hidControl() {
   return _hidControlChar;
 }
 
-/**
- * @brief Expose the Protocol Mode characteristic (0x2A4E).
- * @return Handle to the characteristic.
- */
 BLECharacteristic BLEHIDDevice::protocolMode() {
   return _protocolModeChar;
 }
 
-// Derive the minimal open permission set that covers the requested
-// properties. Keeps HID report characteristics backwards-compatible with the
-// pre-refactor auto-fill behavior.
 /**
  * @brief Derive the minimal open permission set from requested properties.
  * @param props The BLE property flags for the characteristic.
  * @return The corresponding open (unencrypted) BLEPermission bitmask.
+ * @note HID report characteristics get open permissions matching their declared
+ *       properties, so a readable/writable report is accessible without callers
+ *       having to set permission flags explicitly.
  */
 static BLEPermission openPermsFor(BLEProperty props) {
   BLEPermission p = BLEPermission::None;
@@ -243,39 +175,18 @@ static BLECharacteristic createReportChar(BLEService &svc, BLEProperty props, ui
   return chr;
 }
 
-/**
- * @brief Create an Input Report characteristic (Read + Notify) with the given report ID.
- * @param reportId HID Report ID for the Report Reference descriptor.
- * @return Handle to the new characteristic.
- */
 BLECharacteristic BLEHIDDevice::inputReport(uint8_t reportId) {
   return createReportChar(_hidSvc, BLEProperty::Read | BLEProperty::Notify, reportId, HID_REPORT_TYPE_INPUT);
 }
 
-/**
- * @brief Create an Output Report characteristic (Read + Write + WriteNR) with the given report ID.
- * @param reportId HID Report ID for the Report Reference descriptor.
- * @return Handle to the new characteristic.
- */
 BLECharacteristic BLEHIDDevice::outputReport(uint8_t reportId) {
   return createReportChar(_hidSvc, BLEProperty::Read | BLEProperty::Write | BLEProperty::WriteNR, reportId, HID_REPORT_TYPE_OUTPUT);
 }
 
-/**
- * @brief Create a Feature Report characteristic (Read + Write) with the given report ID.
- * @param reportId HID Report ID for the Report Reference descriptor.
- * @return Handle to the new characteristic.
- */
 BLECharacteristic BLEHIDDevice::featureReport(uint8_t reportId) {
   return createReportChar(_hidSvc, BLEProperty::Read | BLEProperty::Write, reportId, HID_REPORT_TYPE_FEATURE);
 }
 
-/**
- * @brief Get or create the Boot Keyboard Input Report characteristic (Read + Notify).
- * @return Handle to the Boot Keyboard Input Report characteristic.
- * @note HIDS 1.0 §3.4 requires Read and Notify properties. Created lazily
- *       on first call; subsequent calls return the cached handle.
- */
 BLECharacteristic BLEHIDDevice::bootInput() {
   if (!_bootInputChar) {
     _bootInputChar = _hidSvc.createCharacteristic(kBootInputUUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
@@ -283,11 +194,6 @@ BLECharacteristic BLEHIDDevice::bootInput() {
   return _bootInputChar;
 }
 
-/**
- * @brief Get or create the Boot Keyboard Output Report characteristic (Read + Write + WriteNR).
- * @return Handle to the Boot Keyboard Output Report characteristic.
- * @note Created lazily on first call; subsequent calls return the cached handle.
- */
 BLECharacteristic BLEHIDDevice::bootOutput() {
   if (!_bootOutputChar) {
     _bootOutputChar =

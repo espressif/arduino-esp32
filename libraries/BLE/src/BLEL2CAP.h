@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BTStatus.h"
@@ -60,20 +60,22 @@ public:
    * @param data    Pointer to the received bytes.
    * @param len     Number of bytes received.
    */
-  using DataHandler = std::function<void(BLEL2CAPChannel channel, const uint8_t *data, size_t len)>;
+  using DataHandler = std::function<void(const BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
 
   /**
    * @brief Callback invoked when the channel is disconnected.
    * @param channel The channel that was disconnected.
    */
-  using DisconnectHandler = std::function<void(BLEL2CAPChannel channel)>;
+  using DisconnectHandler = std::function<void(const BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Send data over the L2CAP channel.
    * @param data Pointer to the bytes to send.
    * @param len  Number of bytes to send.
    * @return BTStatus::OK on success.
-   * @note Data larger than getMTU() will be segmented by the stack.
+   * @note Payloads larger than the peer CoC MTU are split into MTU-sized SDUs.
+   *       Multi-SDU writes may block briefly while waiting for peer credits
+   *       between chunks (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
    */
   BTStatus write(const uint8_t *data, size_t len);
 
@@ -134,6 +136,9 @@ private:
   std::shared_ptr<Impl> _impl;
   friend class BLEL2CAPServer;
   friend class BLEClass;
+  // Backend-agnostic factory (defined in impl/common/BLEL2CAPImpl.h) so backend
+  // server code can mint channel handles from an Impl without a backend-named friend.
+  friend struct BLEL2CAPChannelImplCommon;
 };
 
 /**
@@ -162,7 +167,7 @@ public:
    * @brief Callback invoked when a new L2CAP channel is accepted.
    * @param channel The newly accepted channel handle.
    */
-  using AcceptHandler = std::function<void(BLEL2CAPChannel channel)>;
+  using AcceptHandler = std::function<void(const BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Callback invoked when data arrives on any channel owned by this server.
@@ -170,13 +175,13 @@ public:
    * @param data    Pointer to the received bytes.
    * @param len     Number of bytes received.
    */
-  using DataHandler = std::function<void(BLEL2CAPChannel channel, const uint8_t *data, size_t len)>;
+  using DataHandler = std::function<void(const BLEL2CAPChannel &channel, const uint8_t *data, size_t len)>;
 
   /**
    * @brief Callback invoked when a channel owned by this server disconnects.
    * @param channel The channel that was disconnected.
    */
-  using DisconnectHandler = std::function<void(BLEL2CAPChannel channel)>;
+  using DisconnectHandler = std::function<void(const BLEL2CAPChannel &channel)>;
 
   /**
    * @brief Register a handler for incoming channel connections.

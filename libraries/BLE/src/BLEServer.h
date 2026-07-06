@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -37,6 +37,7 @@ class BLEClass;
 class BLECharacteristic;
 class BLEDescriptor;
 class BLEAdvertising;
+struct BLEServerImplCommon;
 
 /**
  * @brief GATT Server handle.
@@ -56,6 +57,9 @@ class BLEAdvertising;
  */
 class BLEServer {
 public:
+  /**
+   * @brief Construct an empty (invalid) handle; obtain a live one via BLE.createServer().
+   */
   BLEServer();
   ~BLEServer() = default;
   BLEServer(const BLEServer &) = default;
@@ -74,7 +78,7 @@ public:
    * @param server The server handle that accepted the connection.
    * @param conn   Connection information for the new link.
    */
-  using ConnectHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+  using ConnectHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a central disconnects.
@@ -82,7 +86,7 @@ public:
    * @param conn   Connection information for the terminated link.
    * @param reason HCI disconnect reason code (e.g. 0x13 = Remote User Terminated).
    */
-  using DisconnectHandler = std::function<void(BLEServer server, const BLEConnInfo &conn, uint8_t reason)>;
+  using DisconnectHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn, uint8_t reason)>;
 
   /**
    * @brief Callback invoked when the ATT MTU is negotiated or changed.
@@ -90,21 +94,21 @@ public:
    * @param conn   Connection information.
    * @param mtu    The newly agreed ATT MTU size in bytes.
    */
-  using MtuChangedHandler = std::function<void(BLEServer server, const BLEConnInfo &conn, uint16_t mtu)>;
+  using MtuChangedHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn, uint16_t mtu)>;
 
   /**
    * @brief Callback invoked when connection parameters are updated.
    * @param server The server handle.
    * @param conn   Connection information reflecting the updated parameters.
    */
-  using ConnParamsHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+  using ConnParamsHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when identity resolution completes for a peer.
    * @param server The server handle.
    * @param conn   Connection information with resolved identity address.
    */
-  using IdentityHandler = std::function<void(BLEServer server, const BLEConnInfo &conn)>;
+  using IdentityHandler = std::function<void(const BLEServer &server, const BLEConnInfo &conn)>;
 
   /**
    * @brief Create a new GATT service and register it on this server.
@@ -113,6 +117,8 @@ public:
    *                   (includes the service declaration, characteristics, and descriptors).
    * @param instId     Instance ID to distinguish multiple services with the same UUID.
    * @return A BLEService handle, or an invalid handle on failure.
+   * @note If a service with the same UUID and instId already exists, the existing
+   *       handle is returned instead of creating a duplicate.
    */
   BLEService createService(const BLEUUID &uuid, uint32_t numHandles = 15, uint8_t instId = 0);
 
@@ -225,6 +231,17 @@ public:
   std::vector<BLEConnInfo> getConnections() const;
 
   /**
+   * @brief Get a fresh connection-info snapshot for a specific link.
+   * @param connHandle Connection handle to look up.
+   * @return A valid BLEConnInfo for the link, or an invalid one (evaluates to
+   *         false) if no connection with that handle exists.
+   * @note BLEConnInfo is a value snapshot. Re-call this to observe state that
+   *       changed via a stack event (MTU exchange, connection-parameter update,
+   *       encryption/bonding).
+   */
+  BLEConnInfo getConnInfo(uint16_t connHandle) const;
+
+  /**
    * @brief Disconnect a connected peer.
    * @param connHandle Connection handle of the peer to disconnect.
    * @param reason     HCI reason code (default 0x13 = Remote User Terminated Connection).
@@ -281,20 +298,25 @@ public:
    */
   BTStatus setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t txTime);
 
-  /**
-   * @brief Forward an internal GAP event to the server (used by advertising).
-   * @param event Opaque pointer to the backend-specific GAP event structure.
-   * @return 0 on success, or a non-zero error code.
-   */
-  int handleGapEvent(void *event);
-
   struct Impl;
 
 private:
   explicit BLEServer(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
+
+  /**
+   * @brief Forward an internal GAP event to the server (used by advertising).
+   * @param event Opaque pointer to the backend-specific GAP event structure.
+   * @return 0 on success, or a non-zero error code.
+   * @note Internal backend bridge, not part of the public API. Only the
+   *       advertising backend forwards connect events here.
+   */
+  int handleGapEvent(void *event);
+
   friend class BLEClass;
   friend class BLEService;
+  friend class BLEAdvertising;
+  friend struct BLEServerImplCommon;
 };
 
 #endif /* BLE_ENABLED */

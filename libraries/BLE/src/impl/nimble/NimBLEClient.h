@@ -18,45 +18,42 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
-#include "BLEClient.h"
+#include "impl/common/BLEClientImpl.h"
 #include "NimBLEConnInfo.h"
-#include "impl/BLESync.h"
+#include "impl/common/BLESync.h"
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
 #include <host/ble_gatt.h>
-#include "impl/BLEMutex.h"
 #include <vector>
 #include <memory>
 
-struct BLEClient::Impl : std::enable_shared_from_this<BLEClient::Impl> {
+/**
+ * @brief NimBLE GATT-client implementation (@c BLEClient::Impl).
+ *
+ * Defined in @c impl/nimble/, so everything here is NimBLE-specific; it inherits the
+ * stack-agnostic @c BLEClientImplCommon, giving one uniform @c impl.member type.
+ */
+struct BLEClient::Impl : BLEClientImplCommon {
   uint16_t connHandle = BLE_HS_CONN_HANDLE_NONE;
-  BTAddress peerAddress;
-  bool connected = false;
   uint16_t preferredMTU = 0;
+  // NimBLE can surface peer identity twice per connection (IDENTITY_RESOLVED and
+  // ENC_CHANGE); this latches after the first onIdentity dispatch so the callback
+  // fires at most once per connection. Reset on each CONNECT event. Guarded by mtx.
+  bool identityDispatched = false;
   BLESync connectSync;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  // Lets the blocking connect() wait for the initial ATT MTU exchange to finish
+  // so getMTU() is accurate as soon as connect() returns (ordering contract in
+  // DESIGN.md). Signalled by mtuExchangeCb.
+  BLESync mtuSync;
 
   // Prevent destruction while NimBLE holds our raw pointer.
   // Set before ble_gap_connect(); cleared in gapEventHandler after the
   // terminal event (DISCONNECT or CONNECT-failure) has been fully dispatched.
-  std::shared_ptr<Impl> nimbleRef;
-
-  ~Impl() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
-
-  BLEClient::ConnectHandler onConnectCb = nullptr;
-  BLEClient::DisconnectHandler onDisconnectCb = nullptr;
-  BLEClient::ConnectFailHandler onConnectFailCb = nullptr;
-  BLEClient::MtuChangedHandler onMtuChangedCb = nullptr;
-  BLEClient::ConnParamsReqHandler onConnParamsReqCb = nullptr;
-  BLEClient::IdentityHandler onIdentityCb = nullptr;
+  std::shared_ptr<BLEClient::Impl> nimbleRef;
 
   struct RemoteServiceEntry {
     BLEUUID uuid;
@@ -68,7 +65,6 @@ struct BLEClient::Impl : std::enable_shared_from_this<BLEClient::Impl> {
   BLESync discoverSync;
 
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
-  static BLEClient makeHandle(Impl *impl);
   static int serviceDiscoveryCb(uint16_t connHandle, const struct ble_gatt_error *error, const struct ble_gatt_svc *service, void *arg);
   static int mtuExchangeCb(uint16_t connHandle, const struct ble_gatt_error *error, uint16_t mtu, void *arg);
 };

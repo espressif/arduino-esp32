@@ -87,6 +87,7 @@ the device that accepts the pairing request (usually the server).
 ### Bluedroid vs NimBLE
 
 Bluedroid and NimBLE are two different Bluetooth stack implementations.
+In Arduino Core 4.0, both stacks share one public API (`#include <BLE.h>`). The active host is selected by the board/sdkconfig (`BLE_NIMBLE` / `BLE_BLUEDROID` in `BLEGuards.h`); sketches do not need `#ifdef` for stack differences. Unsupported features return `BTStatus::NotSupported`.
 
 #### Bluedroid
 
@@ -96,13 +97,11 @@ Bluedroid requires more flash and RAM than NimBLE. In the refactored API, securi
 
 The original source of the Bluedroid project, **which is not maintained anymore**, can be found here: https://github.com/nkolban/esp32-snippets
 
-**Bluedroid will be replaced by NimBLE in version 4.0.0 of the Arduino Core. Bluetooth Classic and Bluedroid will no longer be supported but can be used by using Arduino as an ESP-IDF component.**
-
 #### NimBLE
 
-NimBLE is a lightweight Bluetooth stack for Bluetooth LE only. It is used by all SoCs that are not the ESP32.
+NimBLE is a lightweight Bluetooth stack for Bluetooth LE only. It is the default on SoCs other than classic ESP32, and also runs on ESP32-P4 via esp-hosted (`BLE.isHostedBLE()` / `BLE.setPins()`).
 
-NimBLE requires less flash and RAM than Bluedroid. Access permissions for characteristics and descriptors are configured through property and permission flags using the unified `BLEProperty` and `BLEPermission` enum classes.
+NimBLE requires less flash and RAM than Bluedroid. Access permissions for characteristics and descriptors are configured through property and permission flags using the unified `BLEProperty` and `BLEPermission` enum classes. L2CAP CoC and full BLE5 extended/periodic advertising TX are NimBLE-capable when enabled in Kconfig.
 
 Some parts of the NimBLE implementation are based on the work of h2zero, which can be found here: https://github.com/h2zero/NimBLE-Arduino. For a more customizable and feature-rich implementation of the NimBLE stack, you can use the [NimBLE-Arduino](https://github.com/h2zero/NimBLE-Arduino) library.
 
@@ -395,6 +394,15 @@ BLECharacteristic chr = svc.createCharacteristic(
 - **Bluetooth Core Specification v5.4**: Volume 3, Part H (Security Manager)
 - **Bluetooth Assigned Numbers**: IO Capability values
 - **FIPS-140-2**: Cryptographic standards for Secure Connections
+
+---
+
+## Related docs
+
+- [MIGRATION.md](MIGRATION.md) — v3.x → v4.0 API mapping
+- [DESIGN.md](DESIGN.md) — architecture, backend contract, ordering invariants (maintainers)
+- [BLEStream](src/BLEStream.h) — Nordic UART over Arduino `Stream`; multi-central server APIs (`peerCount`, `writeTo`, `onPeerData`); see `examples/MultiClientUART`
+- Backend notes: [NimBLE](src/impl/nimble/README.md) · [Bluedroid](src/impl/bluedroid/README.md)
 
 ---
 

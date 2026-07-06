@@ -47,6 +47,18 @@
 #include <esp_spp_api.h>
 #include <cstring>
 
+// CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF: controller ceiling on simultaneous
+// BR/EDR ACL links (=2 in the shipped esp32 sdkconfig).
+#if defined(CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF)
+static constexpr size_t kMaxSppPeers = CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF;
+#elif defined(CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_ACL_CONN_EFF)
+static constexpr size_t kMaxSppPeers = CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_ACL_CONN_EFF;
+#elif defined(CONFIG_BT_ACL_CONNECTIONS)
+static constexpr size_t kMaxSppPeers = CONFIG_BT_ACL_CONNECTIONS;
+#else
+static constexpr size_t kMaxSppPeers = 2;
+#endif
+
 // Per-byte rx ring; 512 is a practical default that fits typical SPP workloads.
 static constexpr uint16_t RX_QUEUE_SIZE = 512;
 // Packet-pointer tx ring; each slot holds a malloc'd spp_packet_t*.
@@ -62,8 +74,7 @@ static constexpr const char *DEFAULT_SPP_NAME = "ESP32SPP";
 // Event group bits for SPP state
 static constexpr EventBits_t SPP_RUNNING = BIT0;
 static constexpr EventBits_t SPP_CONNECTED = BIT1;
-static constexpr EventBits_t SPP_CONGESTED = BIT2;
-static constexpr EventBits_t SPP_DISCONNECTED = BIT3;
+static constexpr EventBits_t SPP_DISCONNECTED = BIT2;
 
 // Event group bits for BT discovery state and bond removal
 static constexpr EventBits_t BT_DISCOVERY_RUNNING = BIT0;
@@ -72,7 +83,15 @@ static constexpr EventBits_t BT_BOND_REMOVE_COMPLETED = BIT2;
 
 struct spp_packet_t {
   size_t len;
+  bool broadcast;
+  uint8_t targetAddr[6];
   uint8_t data[];
+};
+
+struct PeerState {
+  uint32_t handle = 0;
+  BTAddress address;
+  bool congested = false;
 };
 
 // --------------------------------------------------------------------------
@@ -81,7 +100,8 @@ struct spp_packet_t {
 
 struct BluetoothSerial::Impl {
   // SPP state
-  uint32_t sppClient = 0;
+  std::vector<PeerState> peers;
+  SemaphoreHandle_t peersMtx = nullptr;
   QueueHandle_t rxQueue = nullptr;
   QueueHandle_t txQueue = nullptr;
   SemaphoreHandle_t txDone = nullptr;
@@ -104,6 +124,9 @@ struct BluetoothSerial::Impl {
 
   // Callbacks
   DataHandler dataCb;
+  PeerDataHandler peerDataCb;
+  PeerConnectHandler connectCb;
+  PeerDisconnectHandler disconnectCb;
   ConfirmRequestHandler confirmRequestCb;
   AuthCompleteHandler authCompleteCb;
   DiscoveryHandler discoveryCb;
@@ -119,6 +142,9 @@ struct BluetoothSerial::Impl {
 
   bool createResources();
   void destroyResources();
+  void updateConnectionEventGroup();
+  PeerState *findPeerByHandle(uint32_t handle);
+  const PeerState *findPeerByHandle(uint32_t handle) const;
 
   static void sppCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
   static void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
@@ -132,14 +158,53 @@ struct BluetoothSerial::Impl {
 
 BluetoothSerial::Impl *BluetoothSerial::Impl::s_impl = nullptr;
 
+void BluetoothSerial::Impl::updateConnectionEventGroup() {
+  if (!sppEventGroup || !peersMtx) {
+    return;
+  }
+
+  bool hasPeers = false;
+  if (xSemaphoreTake(peersMtx, portMAX_DELAY) == pdTRUE) {
+    hasPeers = !peers.empty();
+    xSemaphoreGive(peersMtx);
+  }
+
+  if (hasPeers) {
+    xEventGroupClearBits(sppEventGroup, SPP_DISCONNECTED);
+    xEventGroupSetBits(sppEventGroup, SPP_CONNECTED);
+  } else {
+    xEventGroupClearBits(sppEventGroup, SPP_CONNECTED);
+    xEventGroupSetBits(sppEventGroup, SPP_DISCONNECTED);
+  }
+}
+
+PeerState *BluetoothSerial::Impl::findPeerByHandle(uint32_t handle) {
+  for (auto &peer : peers) {
+    if (peer.handle == handle) {
+      return &peer;
+    }
+  }
+  return nullptr;
+}
+
+const PeerState *BluetoothSerial::Impl::findPeerByHandle(uint32_t handle) const {
+  for (const auto &peer : peers) {
+    if (peer.handle == handle) {
+      return &peer;
+    }
+  }
+  return nullptr;
+}
+
 bool BluetoothSerial::Impl::createResources() {
+  peersMtx = xSemaphoreCreateMutex();
   rxQueue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t));
   txQueue = xQueueCreate(TX_QUEUE_SIZE, sizeof(spp_packet_t *));
   txDone = xSemaphoreCreateBinary();
   sppEventGroup = xEventGroupCreate();
   btEventGroup = xEventGroupCreate();
 
-  if (!rxQueue || !txQueue || !txDone || !sppEventGroup || !btEventGroup) {
+  if (!peersMtx || !rxQueue || !txQueue || !txDone || !sppEventGroup || !btEventGroup) {
     destroyResources();
     return false;
   }
@@ -156,6 +221,15 @@ void BluetoothSerial::Impl::destroyResources() {
   if (txTaskHandle) {
     vTaskDelete(txTaskHandle);
     txTaskHandle = nullptr;
+  }
+
+  if (peersMtx) {
+    if (xSemaphoreTake(peersMtx, portMAX_DELAY) == pdTRUE) {
+      peers.clear();
+      xSemaphoreGive(peersMtx);
+    }
+    vSemaphoreDelete(peersMtx);
+    peersMtx = nullptr;
   }
 
   if (rxQueue) {
@@ -191,7 +265,6 @@ void BluetoothSerial::Impl::destroyResources() {
 void BluetoothSerial::Impl::txTask(void *arg) {
   auto *impl = static_cast<Impl *>(arg);
   spp_packet_t *pkt = nullptr;
-  size_t len;
 
   for (;;) {
     if (!impl->sppEventGroup || !(xEventGroupGetBits(impl->sppEventGroup) & SPP_RUNNING)) {
@@ -203,31 +276,65 @@ void BluetoothSerial::Impl::txTask(void *arg) {
       continue;
     }
 
-    EventBits_t bits = xEventGroupWaitBits(impl->sppEventGroup, SPP_CONNECTED | SPP_CONGESTED, pdFALSE, pdFALSE, portMAX_DELAY);
+    EventBits_t bits = xEventGroupWaitBits(impl->sppEventGroup, SPP_CONNECTED, pdFALSE, pdFALSE, portMAX_DELAY);
     if (!(bits & SPP_CONNECTED)) {
       free(pkt);
       continue;
     }
 
-    if (bits & SPP_CONGESTED) {
-      xEventGroupWaitBits(impl->sppEventGroup, SPP_CONGESTED, pdTRUE, pdFALSE, portMAX_DELAY);
+    std::vector<uint32_t> handles;
+    if (impl->peersMtx && xSemaphoreTake(impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+      if (pkt->broadcast) {
+        handles.reserve(impl->peers.size());
+        for (const auto &peer : impl->peers) {
+          handles.push_back(peer.handle);
+        }
+      } else {
+        for (const auto &peer : impl->peers) {
+          if (memcmp(peer.address.data(), pkt->targetAddr, 6) == 0) {
+            handles.push_back(peer.handle);
+            break;
+          }
+        }
+      }
+      xSemaphoreGive(impl->peersMtx);
     }
 
-    uint8_t *data = pkt->data;
-    len = pkt->len;
+    for (uint32_t handle : handles) {
+      uint8_t *data = pkt->data;
+      size_t len = pkt->len;
 
-    uint32_t handle = impl->sppClient;
-    while (len > 0 && handle != 0) {
-      size_t chunk = (len > SPP_TX_MAX) ? SPP_TX_MAX : len;
-      esp_err_t err = esp_spp_write(handle, chunk, data);
-      if (err != ESP_OK) {
-        log_e("esp_spp_write: %s", esp_err_to_name(err));
-        break;
+      while (len > 0) {
+        bool peerActive = false;
+        bool congested = false;
+
+        if (impl->peersMtx && xSemaphoreTake(impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+          if (PeerState *peer = impl->findPeerByHandle(handle)) {
+            peerActive = true;
+            congested = peer->congested;
+          }
+          xSemaphoreGive(impl->peersMtx);
+        }
+
+        if (!peerActive) {
+          break;
+        }
+
+        if (congested) {
+          vTaskDelay(pdMS_TO_TICKS(5));
+          continue;
+        }
+
+        size_t chunk = (len > SPP_TX_MAX) ? SPP_TX_MAX : len;
+        esp_err_t err = esp_spp_write(handle, chunk, data);
+        if (err != ESP_OK) {
+          log_e("esp_spp_write: %s", esp_err_to_name(err));
+          break;
+        }
+        xSemaphoreTake(impl->txDone, portMAX_DELAY);
+        data += chunk;
+        len -= chunk;
       }
-      xSemaphoreTake(impl->txDone, portMAX_DELAY);
-      data += chunk;
-      len -= chunk;
-      handle = impl->sppClient;
     }
 
     free(pkt);
@@ -279,25 +386,79 @@ void BluetoothSerial::Impl::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_par
 
     case ESP_SPP_SRV_OPEN_EVT:
     case ESP_SPP_OPEN_EVT:
-      log_i("SPP connected, handle=%d", param->open.handle);
-      if (event == ESP_SPP_OPEN_EVT) {
-        s_impl->sppClient = param->open.handle;
-      } else {
-        s_impl->sppClient = param->srv_open.handle;
+    {
+      uint32_t handle = (event == ESP_SPP_OPEN_EVT) ? param->open.handle : param->srv_open.handle;
+      const uint8_t *bda = (event == ESP_SPP_OPEN_EVT) ? param->open.rem_bda : param->srv_open.rem_bda;
+      log_i("SPP connected, handle=%u", handle);
+
+      BTAddress address(bda, BTAddress::Type::Public);
+      bool accepted = false;
+
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (s_impl->peers.size() < kMaxSppPeers) {
+          PeerState peer;
+          peer.handle = handle;
+          peer.address = address;
+          s_impl->peers.push_back(peer);
+          accepted = true;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
       }
-      xEventGroupClearBits(s_impl->sppEventGroup, SPP_DISCONNECTED);
-      xEventGroupSetBits(s_impl->sppEventGroup, SPP_CONNECTED);
+
+      if (!accepted) {
+        log_w("SPP peer limit reached, rejecting handle=%u", handle);
+        esp_spp_disconnect(handle);
+        break;
+      }
+
+      s_impl->updateConnectionEventGroup();
+      if (s_impl->connectCb) {
+        s_impl->connectCb(address);
+      }
       break;
+    }
 
     case ESP_SPP_CLOSE_EVT:
-      log_i("SPP disconnected");
-      s_impl->sppClient = 0;
-      xEventGroupClearBits(s_impl->sppEventGroup, SPP_CONNECTED);
-      xEventGroupSetBits(s_impl->sppEventGroup, SPP_DISCONNECTED);
+    {
+      uint32_t handle = param->close.handle;
+      log_i("SPP disconnected, handle=%u", handle);
+      BTAddress disconnectedAddr;
+      bool found = false;
+
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        for (auto it = s_impl->peers.begin(); it != s_impl->peers.end(); ++it) {
+          if (it->handle == handle) {
+            disconnectedAddr = it->address;
+            s_impl->peers.erase(it);
+            found = true;
+            break;
+          }
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+
+      if (found) {
+        s_impl->updateConnectionEventGroup();
+        if (s_impl->disconnectCb) {
+          s_impl->disconnectCb(disconnectedAddr);
+        }
+      }
       break;
+    }
 
     case ESP_SPP_DATA_IND_EVT:
-      if (s_impl->dataCb) {
+    {
+      BTAddress senderAddr;
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (const PeerState *peer = s_impl->findPeerByHandle(param->data_ind.handle)) {
+          senderAddr = peer->address;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+
+      if (s_impl->peerDataCb && senderAddr) {
+        s_impl->peerDataCb(senderAddr, param->data_ind.data, param->data_ind.len);
+      } else if (s_impl->dataCb) {
         s_impl->dataCb(param->data_ind.data, param->data_ind.len);
       } else if (s_impl->rxQueue) {
         for (uint16_t i = 0; i < param->data_ind.len; i++) {
@@ -308,15 +469,14 @@ void BluetoothSerial::Impl::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_par
         }
       }
       break;
+    }
 
     case ESP_SPP_CONG_EVT:
-      // RFCOMM credit-based flow control: when the remote side withdraws
-      // credits the channel is congested; transmission must pause until
-      // credits are granted again (BT Core Spec v5.x, Vol 4, Part E, §6.5).
-      if (param->cong.cong) {
-        xEventGroupSetBits(s_impl->sppEventGroup, SPP_CONGESTED);
-      } else {
-        xEventGroupClearBits(s_impl->sppEventGroup, SPP_CONGESTED);
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (PeerState *peer = s_impl->findPeerByHandle(param->cong.handle)) {
+          peer->congested = param->cong.cong;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
       }
       break;
 
@@ -649,6 +809,31 @@ size_t BluetoothSerial::write(const uint8_t *buf, size_t len) {
   }
 
   pkt->len = len;
+  pkt->broadcast = true;
+  memset(pkt->targetAddr, 0, sizeof(pkt->targetAddr));
+  memcpy(pkt->data, buf, len);
+
+  if (xQueueSend(_impl->txQueue, &pkt, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    free(pkt);
+    return 0;
+  }
+
+  return len;
+}
+
+size_t BluetoothSerial::writeTo(const BTAddress &address, const uint8_t *buf, size_t len) {
+  if (!_impl || !_impl->txQueue || !_impl->initialized || !buf || len == 0 || !address) {
+    return 0;
+  }
+
+  auto *pkt = static_cast<spp_packet_t *>(malloc(sizeof(spp_packet_t) + len));
+  if (!pkt) {
+    return 0;
+  }
+
+  pkt->len = len;
+  pkt->broadcast = false;
+  memcpy(pkt->targetAddr, address.data(), sizeof(pkt->targetAddr));
   memcpy(pkt->data, buf, len);
 
   if (xQueueSend(_impl->txQueue, &pkt, pdMS_TO_TICKS(1000)) != pdTRUE) {
@@ -727,16 +912,75 @@ BTStatus BluetoothSerial::disconnect() {
     return BTStatus::NotInitialized;
   }
 
-  if (_impl->sppClient == 0) {
+  std::vector<uint32_t> handles;
+  if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    handles.reserve(_impl->peers.size());
+    for (const auto &peer : _impl->peers) {
+      handles.push_back(peer.handle);
+    }
+    xSemaphoreGive(_impl->peersMtx);
+  }
+
+  if (handles.empty()) {
     return BTStatus::OK;
   }
 
-  esp_spp_disconnect(_impl->sppClient);
-  EventBits_t bits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_DISCONNECTED, pdTRUE, pdTRUE, pdMS_TO_TICKS(5000));
-  if (!(bits & SPP_DISCONNECTED)) {
-    return BTStatus::Timeout;
+  for (uint32_t handle : handles) {
+    esp_spp_disconnect(handle);
   }
-  return BTStatus::OK;
+
+  uint32_t deadline = millis() + 5000;
+  while (peerCount() > 0 && static_cast<int32_t>(millis() - deadline) < 0) {
+    delay(10);
+  }
+
+  return peerCount() == 0 ? BTStatus::OK : BTStatus::Timeout;
+}
+
+BTStatus BluetoothSerial::disconnect(const BTAddress &address) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+  if (!address) {
+    return BTStatus::InvalidParam;
+  }
+
+  uint32_t handle = 0;
+  if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    for (const auto &peer : _impl->peers) {
+      if (peer.address == address) {
+        handle = peer.handle;
+        break;
+      }
+    }
+    xSemaphoreGive(_impl->peersMtx);
+  }
+
+  if (handle == 0) {
+    return BTStatus::NotFound;
+  }
+
+  esp_spp_disconnect(handle);
+
+  uint32_t deadline = millis() + 5000;
+  while (static_cast<int32_t>(millis() - deadline) < 0) {
+    bool stillConnected = false;
+    if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+      for (const auto &peer : _impl->peers) {
+        if (peer.address == address) {
+          stillConnected = true;
+          break;
+        }
+      }
+      xSemaphoreGive(_impl->peersMtx);
+    }
+    if (!stillConnected) {
+      return BTStatus::OK;
+    }
+    delay(10);
+  }
+
+  return BTStatus::Timeout;
 }
 
 bool BluetoothSerial::connected() const {
@@ -748,7 +992,36 @@ bool BluetoothSerial::connected() const {
 }
 
 bool BluetoothSerial::hasClient() const {
-  return connected();
+  return peerCount() > 0;
+}
+
+size_t BluetoothSerial::peerCount() const {
+  if (!_impl || !_impl->peersMtx) {
+    return 0;
+  }
+
+  size_t count = 0;
+  if (xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    count = _impl->peers.size();
+    xSemaphoreGive(_impl->peersMtx);
+  }
+  return count;
+}
+
+std::vector<BTAddress> BluetoothSerial::peers() const {
+  std::vector<BTAddress> result;
+  if (!_impl || !_impl->peersMtx) {
+    return result;
+  }
+
+  if (xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    result.reserve(_impl->peers.size());
+    for (const auto &peer : _impl->peers) {
+      result.push_back(peer.address);
+    }
+    xSemaphoreGive(_impl->peersMtx);
+  }
+  return result;
 }
 
 std::vector<BluetoothSerial::DiscoveryResult> BluetoothSerial::discover(uint32_t timeoutMs) {
@@ -897,6 +1170,33 @@ BTStatus BluetoothSerial::onData(DataHandler callback) {
   }
 
   _impl->dataCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onConnect(PeerConnectHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->connectCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onDisconnect(PeerDisconnectHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->disconnectCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onPeerData(PeerDataHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->peerDataCb = std::move(callback);
   return BTStatus::OK;
 }
 

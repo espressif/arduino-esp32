@@ -479,7 +479,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | N/A | `client.setPhy(tx, rx)` | New: BLE5 PHY |
 | N/A | `client.setDataLen(octets, time)` | New: DLE |
 | N/A | `client.updateConnParams(params)` | New: request connection parameter update |
-| N/A | `client.getConnection()` | New: returns `BLEConnInfo` |
+| N/A | `client.getConnInfo()` | New: returns `BLEConnInfo` |
 
 ### Client Callbacks
 
@@ -530,7 +530,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `pScan->setActiveScan(active)` | `scan.setActiveScan(active)` | |
 | `pScan->setFilterDuplicates(f)` | `scan.setFilterDuplicates(f)` | |
 | `pScan->clearDuplicateCache()` | `scan.clearDuplicateCache()` | |
-| `pScan->getResults()` | `scan.getResults()` | Returns `BLEScanResults` value |
+| `pScan->getResults()` | `scan.getResults()` | Returns `BLEScan::Results` value |
 | `pScan->clearResults()` | `scan.clearResults()` | |
 | `pScan->erase(addr)` | `scan.erase(addr)` | |
 | N/A | `scan.startExtended(dur, coded, uncoded)` | New: BLE5 extended scan |
@@ -1153,7 +1153,7 @@ These features are new and were not available in v3.x:
 | Periodic advertising sync | `scan.createPeriodicSync(addr, sid)`, `scan.cancelPeriodicSync()`, `scan.terminatePeriodicSync(handle)` |
 | `BLEConnInfo` connection descriptor | Stack-agnostic connection info in all callbacks |
 | L2CAP CoC channels | `BLE.createL2CAPServer(psm, mtu)`, `BLE.connectL2CAP(connHandle, psm, mtu)` |
-| BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
+| BLEStream (NUS over Stream) | `BLEStream bleStream; bleStream.begin("name")` — Arduino `Stream` API over Nordic UART Service. Server mode accepts multiple centrals; `write()` broadcasts, `read()` merges RX. Per-peer: `peerCount()`, `peers()`, `writeTo()`, `onPeerData()`. Connect/disconnect callbacks receive `BLEConnInfo` and disconnect reason. |
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
 | Boot Protocol characteristics | `hid.bootInput()`, `hid.bootOutput()` — singleton, lazy-created |
@@ -1183,6 +1183,10 @@ These features are new and were not available in v3.x:
 
 10. **Device name in scan response** -- When scan response is enabled (default), the device name is placed in the scan response per CSS Part A §1.2, keeping the primary advertising data free for flags and service UUIDs. This is consistent across both NimBLE and Bluedroid.
 
+11. **Callback / MTU ordering** -- Blocking `client.connect()` delivers `onConnect` before it returns. ATT MTU exchange completes before `connect()` returns on Bluedroid (and is waited on NimBLE) so a follow-up GATT/GAP call cannot race it; `onMtuChanged` still fires after `onConnect`. Do not read the negotiated MTU inside `onConnect` — use `onMtuChanged` / `getMTU()` after connect returns. `connectAsync()` does not auto-exchange MTU.
+
+12. **BLEStream multi-central** -- Server-mode `BLEStream` accepts multiple centrals. Plain `write()`/`read()` stay broadcast/merged for `Stream` compatibility; use `peerCount()`, `peers()`, `writeTo()`, and `onPeerData()` when you need per-peer routing. See `examples/MultiClientUART`.
+
 ---
 
 ## NimBLE-Specific Migration Notes
@@ -1195,7 +1199,9 @@ If your v3.x code used the NimBLE backend (via `CONFIG_BT_NIMBLE_ENABLED`):
 - **`NimBLEConnInfo` → `BLEConnInfo`** -- The connection descriptor is now stack-agnostic.
 - **`NimBLEAddress` → `BTAddress`** -- Unified address type.
 - **`NimBLEUUID` → `BLEUUID`** -- Already the same in most cases.
-- **Features like `cancelConnect()` remain available** -- They return `BTStatus::NotSupported` if the backend doesn't support them (e.g., on Bluedroid).
+- **`cancelConnect()` is available on both backends** -- it aborts a pending connection (NimBLE `ble_gap_conn_cancel`, Bluedroid `esp_ble_gap_disconnect`). Only genuinely backend/SoC-limited BLE 5 features -- e.g. `getPhy()`/`setPhy()`/`getDefaultPhy()`/`setDataLen()` -- return `BTStatus::NotSupported` when unavailable.
+- **`onConnParamsUpdateRequest`** is NimBLE-only (Bluedroid has no pre-accept hook).
+- When BLE5 is enabled in the NimBLE lib, legacy advertising/scanning is routed over the extended controller API with legacy PDUs so discovery still works; public `start()`/`stop()` APIs are unchanged.
 
 ## Bluedroid-Specific Migration Notes
 
@@ -1207,7 +1213,7 @@ If your v3.x code used the Bluedroid backend (via `CONFIG_BT_BLUEDROID_ENABLED`)
 - **Replace `ESP_IO_CAP_*` constants** -- Use `BLESecurity::IOCapability` enum members.
 - **Replace `ESP_LE_AUTH_*` auth mode constants** -- Use `sec.setAuthenticationMode(bonding, mitm, sc)` with three booleans.
 - **`BLEAddress` → `BTAddress`** -- The old `BLEAddress` wrapping `esp_bd_addr_t` is replaced.
-- **BLE5 features are now available on Bluedroid too** -- Extended advertising, periodic advertising, etc. are supported on both stacks.
+- **BLE5 features** -- Extended advertising/scanning APIs exist on both stacks; on classic ESP32 Bluedroid builds with BLE5 off they return `NotSupported`. Periodic-adv TX remains NimBLE-only. `BLEConnInfo` may report PHY `PHY_1M` until BLE5 silicon surfaces the real values; peer address type comes from connect/`AUTH_CMPL` events. `getIdAddress()` returns the OTA address (Bluedroid has no resolved-identity field on connect).
 
 ---
 

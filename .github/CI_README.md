@@ -799,6 +799,25 @@ When `fqbn_append` is specified per device, it overrides the parent `ci.yml`'s `
 - **Hardware only**: multi-device tests are blocked for Wokwi and QEMU.
 - Set ports via `ESPPORT1` and `ESPPORT2` (single-device tests can use `ESPPORT`).
 
+**Mixed-target multi-DUT (`-t a|b`):**
+
+Pipe-separated `-t` assigns a different SoC to each DUT (device0|device1). Comma still means independent same-target jobs.
+
+| `-t` value | Meaning |
+|---|---|
+| `esp32s31` | Same-target: both DUTs use esp32s31 |
+| `esp32s31,esp32c6` | Two independent same-target jobs |
+| `esp32s31\|esp32c6` | One mixed job: dut0=esp32s31, dut1=esp32c6 |
+
+Binaries stay under the existing per-SoC paths — there is no new layout. Building with `-t esp32s31,esp32c6` or `-t esp32s31|esp32c6` both produce:
+
+```
+~/.arduino/tests/esp32s31/<test>/<sketch>/build.tmp
+~/.arduino/tests/esp32c6/<test>/<sketch>/build.tmp
+```
+
+Running with `-t esp32s31|esp32c6` picks those artifacts and passes `--target esp32s31|esp32c6` to pytest-embedded. Pipe is only valid for multi-device tests.
+
 **Test Execution:**
 The test runner (`tests_run.sh`) automatically:
 - Checks requirements against built sdkconfig

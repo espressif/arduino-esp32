@@ -123,7 +123,9 @@ void setup() {
   BTStatus initStatus = BLE.begin("ESP32-HID-Client");
   if (!initStatus) {
     Serial.printf("BLE init failed! (%s)\n", initStatus.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLESecurity sec = BLE.getSecurity();

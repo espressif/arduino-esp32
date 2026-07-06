@@ -17,122 +17,67 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
-#include "impl/BLERemoteTypesBackend.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEImplHelpers.h"
 
-// --------------------------------------------------------------------------
-// BLERemoteDescriptor common API (stack-agnostic)
-// --------------------------------------------------------------------------
-
-/**
- * @brief Construct an invalid (empty) remote descriptor handle.
- * @note The handle must be populated via BLERemoteCharacteristic before use.
- */
 BLERemoteDescriptor::BLERemoteDescriptor() : _impl(nullptr) {}
 
-/**
- * @brief Check whether this handle refers to a valid remote descriptor.
- * @return True if the underlying implementation is present, false otherwise.
- */
 BLERemoteDescriptor::operator bool() const {
   return _impl != nullptr;
 }
 
-/**
- * @brief Get the UUID of this descriptor.
- * @return The descriptor UUID, or a default-constructed (empty) BLEUUID if the handle is invalid.
- */
 BLEUUID BLERemoteDescriptor::getUUID() const {
   return _impl ? _impl->uuid : BLEUUID();
 }
 
-/**
- * @brief Get the attribute handle of this descriptor.
- * @return The GATT attribute handle, or 0 if the handle is invalid.
- */
 uint16_t BLERemoteDescriptor::getHandle() const {
   return _impl ? _impl->handle : 0;
 }
 
-/**
- * @brief Get the parent characteristic of this descriptor.
- * @return A BLERemoteCharacteristic handle wrapping the parent, or an invalid handle
- *         if the descriptor or its parent characteristic is invalid.
- * @note Returns a non-owning handle; the parent characteristic's lifetime is managed
- *       by the BLERemoteService that discovered it.
- */
 BLERemoteCharacteristic BLERemoteDescriptor::getRemoteCharacteristic() const {
+  // Non-owning handle: the parent characteristic is owned by the discovering service.
   return (_impl && _impl->chr) ? BLERemoteCharacteristic(_impl->chr->shared_from_this()) : BLERemoteCharacteristic();
 }
 
-/**
- * @brief Read the descriptor value and interpret the first byte as uint8_t.
- * @param timeoutMs Maximum time in milliseconds to wait for the GATT read response.
- * @return The first byte of the value, or 0 if the read fails, times out,
- *         or the response is empty.
- * @note Blocks until the remote device responds or @p timeoutMs elapses.
- */
+String BLERemoteDescriptor::readValue(uint32_t timeoutMs) {
+  if (!readInto(timeoutMs)) {
+    return String();
+  }
+  return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
+}
+
 uint8_t BLERemoteDescriptor::readUInt8(uint32_t timeoutMs) {
-  String v = readValue(timeoutMs);
-  return v.length() >= 1 ? static_cast<uint8_t>(v[0]) : 0;
+  if (!readInto(timeoutMs)) {
+    return 0;
+  }
+  return static_cast<uint8_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 1));
 }
 
-/**
- * @brief Read the descriptor value and interpret the first two bytes as uint16_t.
- * @param timeoutMs Maximum time in milliseconds to wait for the GATT read response.
- * @return The little-endian 16-bit value, or 0 if the response contains fewer than 2 bytes.
- * @note Blocks until the remote device responds or @p timeoutMs elapses.
- */
 uint16_t BLERemoteDescriptor::readUInt16(uint32_t timeoutMs) {
-  String v = readValue(timeoutMs);
-  if (v.length() < 2) {
+  if (!readInto(timeoutMs)) {
     return 0;
   }
-  return static_cast<uint16_t>(static_cast<uint8_t>(v[0])) | (static_cast<uint16_t>(static_cast<uint8_t>(v[1])) << 8);
+  return static_cast<uint16_t>(bleReadLEUint(_impl->value.data(), _impl->value.size(), 2));
 }
 
-/**
- * @brief Read the descriptor value and interpret the first four bytes as uint32_t.
- * @param timeoutMs Maximum time in milliseconds to wait for the GATT read response.
- * @return The little-endian 32-bit value, or 0 if the response contains fewer than 4 bytes.
- * @note Blocks until the remote device responds or @p timeoutMs elapses.
- */
 uint32_t BLERemoteDescriptor::readUInt32(uint32_t timeoutMs) {
-  String v = readValue(timeoutMs);
-  if (v.length() < 4) {
+  if (!readInto(timeoutMs)) {
     return 0;
   }
-  return static_cast<uint32_t>(static_cast<uint8_t>(v[0])) | (static_cast<uint32_t>(static_cast<uint8_t>(v[1])) << 8)
-         | (static_cast<uint32_t>(static_cast<uint8_t>(v[2])) << 16) | (static_cast<uint32_t>(static_cast<uint8_t>(v[3])) << 24);
+  return bleReadLEUint(_impl->value.data(), _impl->value.size(), 4);
 }
 
-/**
- * @brief Write a String value to the remote descriptor.
- * @param value        The String whose raw bytes are written.
- * @param withResponse If true, use Write Request (ATT); if false, use Write Command (no ACK).
- * @return BTStatus indicating success or failure.
- */
 BTStatus BLERemoteDescriptor::writeValue(const String &value, bool withResponse) {
   return writeValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length(), withResponse);
 }
 
-/**
- * @brief Write a single byte value to the remote descriptor.
- * @param value        The byte to write.
- * @param withResponse If true, use Write Request (ATT); if false, use Write Command (no ACK).
- * @return BTStatus indicating success or failure.
- */
 BTStatus BLERemoteDescriptor::writeValue(uint8_t value, bool withResponse) {
   return writeValue(&value, 1, withResponse);
 }
 
-/**
- * @brief Get a human-readable representation of this descriptor.
- * @return A String describing the descriptor UUID, or a placeholder if the handle is invalid.
- */
 String BLERemoteDescriptor::toString() const {
   BLE_CHECK_IMPL("BLERemoteDescriptor(empty)");
   return "BLERemoteDescriptor(uuid=" + impl.uuid.toString() + ")";

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BTStatus.h"
@@ -28,6 +28,7 @@
 #include "BLEAdvertisedDevice.h"
 #include <memory>
 #include <functional>
+#include <vector>
 
 /**
  * @brief BLE scanner -- legacy and BLE5 extended/periodic scanning.
@@ -42,6 +43,77 @@ public:
   BLEScan &operator=(const BLEScan &) = default;
   BLEScan(BLEScan &&) = default;
   BLEScan &operator=(BLEScan &&) = default;
+
+  /**
+   * @brief Container for a snapshot of BLE scan results.
+   *
+   * Supports range-based for loops. Obtained from @ref startBlocking / @ref getResults
+   * or passed to the @ref CompleteHandler callback.
+   */
+  class Results {
+  public:
+    /**
+     * @brief Get the number of devices in the results.
+     * @return The device count.
+     */
+    size_t size() const {
+      return _devices.size();
+    }
+
+    /**
+     * @brief Get a device by index.
+     * @param index Zero-based index into the results.
+     * @return The advertised device at the given index, or an invalid handle if out of range.
+     */
+    BLEAdvertisedDevice getDevice(size_t index) const {
+      return (index < _devices.size()) ? _devices[index] : BLEAdvertisedDevice();
+    }
+
+    /**
+     * @brief Check whether the results contain any devices.
+     * @return true if at least one device was found.
+     */
+    explicit operator bool() const {
+      return !_devices.empty();
+    }
+
+    /**
+     * @brief Print all scan results to the log output.
+     */
+    void dump() const;
+
+    /**
+     * @brief Insert a device or replace an existing entry with the same (address, SID).
+     * @param device The advertised device to add or update.
+     * @note If the existing entry already has a name (merged from a prior scan response)
+     *       and the incoming device has none, the existing entry is kept to avoid losing
+     *       the scan-response data.
+     */
+    void appendOrReplace(const BLEAdvertisedDevice &device);
+
+    /**
+     * @brief Iterator begin for range-based for loops.
+     * @return Pointer to the first device.
+     */
+    const BLEAdvertisedDevice *begin() const {
+      return _devices.data();
+    }
+
+    /**
+     * @brief Iterator end for range-based for loops.
+     * @return Pointer past the last device.
+     */
+    const BLEAdvertisedDevice *end() const {
+      return _devices.data() + _devices.size();
+    }
+
+  private:
+    std::vector<BLEAdvertisedDevice> _devices;
+    friend class BLEScan;
+    // Backend-agnostic scan helper (impl/common/BLEScanImpl.h) that merges scan
+    // responses into the result list for the backend scan parsers.
+    friend struct BLEScanImplCommon;
+  };
 
   /**
    * @brief Check whether this handle references a valid scanner instance.
@@ -87,17 +159,17 @@ public:
   /**
    * @brief Start scanning asynchronously.
    * @param durationMs How long to scan, in milliseconds. 0 = scan indefinitely.
-   * @param continueExisting If true, append to the existing result set rather than clearing it.
+   * @param appendToExistingResults If true, append to the existing result set rather than clearing it.
    * @return BTStatus indicating success or error.
    */
-  BTStatus start(uint32_t durationMs, bool continueExisting = false);
+  BTStatus start(uint32_t durationMs, bool appendToExistingResults = false);
 
   /**
    * @brief Start scanning and block until the duration expires.
    * @param durationMs How long to scan, in milliseconds.
    * @return Snapshot of all discovered devices.
    */
-  BLEScanResults startBlocking(uint32_t durationMs);
+  Results startBlocking(uint32_t durationMs);
 
   /**
    * @brief Stop an in-progress scan.
@@ -117,13 +189,13 @@ public:
    * @brief Callback invoked for each advertisement received during a scan.
    * @param device The advertised device that was discovered.
    */
-  using ResultHandler = std::function<void(BLEAdvertisedDevice)>;
+  using ResultHandler = std::function<void(const BLEAdvertisedDevice &)>;
 
   /**
    * @brief Callback invoked when a scan completes (duration expires or manually stopped).
    * @param results Reference to the accumulated scan results.
    */
-  using CompleteHandler = std::function<void(BLEScanResults &)>;
+  using CompleteHandler = std::function<void(Results &)>;
 
   /**
    * @brief Register a handler called for every advertisement received.
@@ -148,7 +220,7 @@ public:
    * @brief Retrieve a snapshot of the current scan results.
    * @return Copy of the accumulated scan results.
    */
-  BLEScanResults getResults();
+  Results getResults();
 
   /**
    * @brief Discard all accumulated scan results.
@@ -168,8 +240,8 @@ public:
    */
   struct ExtScanConfig {
     BLEPhy phy = BLEPhy::PHY_1M;  ///< PHY to scan on.
-    uint16_t interval = 0;        ///< Scan interval (controller units).
-    uint16_t window = 0;          ///< Scan window (controller units).
+    uint16_t interval = 0;        ///< Scan interval in milliseconds (0 = use the value from setInterval()).
+    uint16_t window = 0;          ///< Scan window in milliseconds (0 = use the value from setWindow()).
   };
 
   /**
@@ -262,6 +334,15 @@ public:
 private:
   explicit BLEScan(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
+
+  /**
+   * @brief Internal teardown hook: terminate every periodic sync the library is
+   *        tracking. Called by BLEClass::end() while the stack is still up so
+   *        applications are not required to call terminatePeriodicSync() before
+   *        BLE.end(). No-op on backends without BLE5 periodic-sync support.
+   */
+  void terminateAllPeriodicSyncs();
+
   friend class BLEClass;
 };
 

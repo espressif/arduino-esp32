@@ -17,67 +17,59 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEAdvertisementData.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/common/BLEImplHelpers.h"
 #include "esp32-hal-log.h"
 
-// --------------------------------------------------------------------------
-// BLEAdvertisementData implementation (stack-agnostic)
-//
-// All AD type codes and structure formats are defined in the Bluetooth
-// Supplement to the Core Specification (CSS), Part A.
-// The overall AD structure format (Length | Type | Value) is defined in
-// BT Core Spec v5.x, Vol 3, Part C, §11.
-// --------------------------------------------------------------------------
+// A single AD structure carries a 1-octet Length field covering Type + Value, so
+// its value can be at most 254 octets regardless of the payload budget
+// (BT Core Spec v5.x, Vol 3, Part C, §11).
+static constexpr size_t BLE_AD_FIELD_VALUE_MAX = 254;
 
-/**
- * @brief Append an AD structure (length + type + value) to the payload.
- * @param type The AD type code (CSS Part A assigned value, e.g. 0x01 for Flags).
- * @param data Pointer to the AD value bytes.
- * @param len Length of @p data in bytes.
- * @note Legacy advertising PDUs (ADV_IND, ADV_SCAN_IND, ADV_NONCONN_IND) are limited
- *       to 31 octets of advertising data per BT Core Spec v5.x, Vol 6, Part B, §2.3.1.2.
- *       Extended advertising (BLE 5) allows up to 254 octets per PDU.
- */
-void BLEAdvertisementData::addField(uint8_t type, const uint8_t *data, size_t len) {
-  if (len + 2 + _payload.size() > 31) {
-    log_w("Ad field would exceed 31 bytes, skipping type=0x%02x", type);
-    return;
+// AD wire layout: a repeated Length|Type|Value structure (BT Core Spec v5.x,
+// Vol 3, Part C, §11; AD type codes per CSS Part A).
+
+BLEAdvertisementData::BLEAdvertisementData(size_t maxPayloadLen) {
+  if (maxPayloadLen < LEGACY_MAX_PAYLOAD) {
+    maxPayloadLen = LEGACY_MAX_PAYLOAD;
+  } else if (maxPayloadLen > EXTENDED_MAX_PAYLOAD) {
+    maxPayloadLen = EXTENDED_MAX_PAYLOAD;
   }
-  _payload.push_back(static_cast<uint8_t>(len + 1));
-  _payload.push_back(type);
-  _payload.insert(_payload.end(), data, data + len);
+  _maxLen = maxPayloadLen;
 }
 
-/**
- * @brief Set the AD Flags field (AD type 0x01).
- * @param flags Bitmask of AD flag values.
- * @note CSS Part A, §1.3.  Standard values:
- *       - Bit 0: LE Limited Discoverable Mode
- *       - Bit 1: LE General Discoverable Mode
- *       - Bit 2: BR/EDR Not Supported
- *       - Bit 3: Simultaneous LE+BR/EDR (Controller)
- *       - Bit 4: Simultaneous LE+BR/EDR (Host)
- *       LE-only devices should set bits 1 and 2
- *       (BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP).
- */
+// Append an AD structure, optionally from two value segments (e.g. a UUID
+// prefix + payload). Skips the field if its value exceeds the single-structure
+// limit or would push the payload past the active cap.
+void BLEAdvertisementData::appendField(uint8_t type, const uint8_t *head, size_t headLen, const uint8_t *tail, size_t tailLen) {
+  const size_t valueLen = headLen + tailLen;
+  if (valueLen > BLE_AD_FIELD_VALUE_MAX || valueLen + 2 + _payload.size() > _maxLen) {
+    log_e("Ad field (type=0x%02x, %u B) would exceed the %u-byte payload limit, dropping (data lost)", type, (unsigned)valueLen, (unsigned)_maxLen);
+    return;
+  }
+  _payload.push_back(static_cast<uint8_t>(valueLen + 1));
+  _payload.push_back(type);
+  _payload.insert(_payload.end(), head, head + headLen);
+  if (tail && tailLen) {
+    _payload.insert(_payload.end(), tail, tail + tailLen);
+  }
+}
+
+void BLEAdvertisementData::addField(uint8_t type, const uint8_t *data, size_t len) {
+  appendField(type, data, len);
+}
+
+// AD type 0x01 (Flags), CSS Part A §1.3. LE-only devices set GeneralDisc | BrEdrNotSupported.
 void BLEAdvertisementData::setFlags(BLEAdvFlag flags) {
   uint8_t raw = static_cast<uint8_t>(flags);
   addField(0x01, &raw, 1);
 }
 
-/**
- * @brief Add a Complete List of Service UUIDs AD field.
- * @param uuid The service UUID to advertise.
- * @note AD types: 0x03 (Complete 16-bit UUID List), 0x05 (Complete 32-bit),
- *       0x07 (Complete 128-bit) — CSS Part A, §1.1.
- *       All UUID values on the wire are in little-endian byte order as
- *       required by BT Core Spec v5.x, Vol 3, Part B, §2.5.1.
- */
-void BLEAdvertisementData::setCompleteServices(const BLEUUID &uuid) {
+// Complete Service UUID List: 0x03 (16-bit), 0x05 (32-bit), 0x07 (128-bit); little-endian.
+void BLEAdvertisementData::addServiceUUID(const BLEUUID &uuid) {
   uint8_t type;
   uint8_t buf[16];
   size_t len;
@@ -111,14 +103,7 @@ void BLEAdvertisementData::setCompleteServices(const BLEUUID &uuid) {
   addField(type, buf, len);
 }
 
-/**
- * @brief Add an Incomplete List of Service UUIDs AD field.
- * @param uuid The service UUID to advertise.
- * @note AD types: 0x02 (Incomplete 16-bit UUID List), 0x04 (32-bit),
- *       0x06 (128-bit) — CSS Part A, §1.1.
- *       "Incomplete" indicates that more UUIDs exist than can fit in the AD payload.
- *       UUID bytes are in little-endian wire order (BT Core Spec v5.x, Vol 3, Part B, §2.5.1).
- */
+// Incomplete Service UUID List: 0x02 (16-bit), 0x04 (32-bit), 0x06 (128-bit); little-endian.
 void BLEAdvertisementData::setPartialServices(const BLEUUID &uuid) {
   uint8_t type;
   uint8_t buf[16];
@@ -153,99 +138,75 @@ void BLEAdvertisementData::setPartialServices(const BLEUUID &uuid) {
   addField(type, buf, len);
 }
 
-/**
- * @brief Append a service UUID via a Complete List AD field.
- * @param uuid The service UUID to add.
- */
-void BLEAdvertisementData::addServiceUUID(const BLEUUID &uuid) {
-  setCompleteServices(uuid);
-}
-
-/**
- * @brief Set a Service Data AD field.
- * @param uuid The service UUID this data belongs to (16-bit or 128-bit).
- * @param data Pointer to the service data payload.
- * @param len Length of @p data in bytes.
- * @note AD types: 0x16 (Service Data — 16-bit UUID), 0x20 (32-bit), 0x21 (128-bit)
- *       — CSS Part A, §1.11.
- *       Format: [UUID (LE)] [service-specific data].
- *       UUID bytes are in little-endian wire order.
- */
+// Service Data: 0x16 (16-bit UUID), 0x20 (32-bit), 0x21 (128-bit), CSS Part A §1.11.
+// The AD type follows the UUID's native width (a 32-bit UUID emits 0x20, not the
+// 16-byte 0x21 form). BLEUUID::data() holds the full 128-bit big-endian value, so
+// the low bytes are read directly without a to128() promotion.
 void BLEAdvertisementData::setServiceData(const BLEUUID &uuid, const uint8_t *data, size_t len) {
-  std::vector<uint8_t> buf;
-  if (uuid.bitSize() == 16) {
-    buf.push_back(uuid.data()[3]);
-    buf.push_back(uuid.data()[2]);
-  } else {
-    BLEUUID u128 = uuid.to128();
-    const uint8_t *be = u128.data();
-    for (int i = 15; i >= 0; i--) {
-      buf.push_back(be[i]);
-    }
+  uint8_t uuidBuf[16];
+  uint8_t type;
+  size_t uuidLen;
+  switch (uuid.bitSize()) {
+    case 16:
+      type = 0x16;
+      uuidBuf[0] = uuid.data()[3];
+      uuidBuf[1] = uuid.data()[2];
+      uuidLen = 2;
+      break;
+    case 32:
+      type = 0x20;
+      uuidBuf[0] = uuid.data()[3];
+      uuidBuf[1] = uuid.data()[2];
+      uuidBuf[2] = uuid.data()[1];
+      uuidBuf[3] = uuid.data()[0];
+      uuidLen = 4;
+      break;
+    default:
+      type = 0x21;
+      for (int i = 0; i < 16; i++) {
+        uuidBuf[i] = uuid.data()[15 - i];
+      }
+      uuidLen = 16;
+      break;
   }
-  buf.insert(buf.end(), data, data + len);
-  uint8_t type = (uuid.bitSize() == 16) ? 0x16 : 0x21;
-  addField(type, buf.data(), buf.size());
+  // appendField assembles [UUID][data] directly into the payload and enforces
+  // both the single-structure and the active payload-size limits.
+  appendField(type, uuidBuf, uuidLen, data, len);
 }
 
-/**
- * @brief Set a Manufacturer Specific Data AD field (type 0xFF).
- * @param companyId Bluetooth SIG-assigned company identifier (little-endian on wire).
- * @param data Pointer to the manufacturer-specific payload (after the company ID).
- * @param len Length of @p data in bytes.
- * @note CSS Part A, §1.4.  Format: [Company ID low byte] [Company ID high byte] [data...].
- *       Company identifiers are assigned in the Bluetooth Assigned Numbers document.
- */
+// Manufacturer Specific Data (0xFF), CSS Part A §1.4: [company ID (LE)] [data...].
 void BLEAdvertisementData::setManufacturerData(uint16_t companyId, const uint8_t *data, size_t len) {
-  std::vector<uint8_t> buf;
-  buf.push_back(companyId & 0xFF);
-  buf.push_back((companyId >> 8) & 0xFF);
-  buf.insert(buf.end(), data, data + len);
-  addField(0xFF, buf.data(), buf.size());
+  const uint8_t company[2] = {static_cast<uint8_t>(companyId & 0xFF), static_cast<uint8_t>(companyId >> 8)};
+  appendField(0xFF, company, sizeof(company), data, len);
 }
 
-/**
- * @brief Set the local name AD field.
- * @param name The device name string (UTF-8).
- * @param complete If true, emits Complete Local Name (0x09); if false, Shortened Local Name (0x08).
- * @note CSS Part A, §1.2.  The "Shortened" name is used when the full name does not fit
- *       in the 31-byte legacy AD payload; it must be a prefix of the complete name.
- *       The complete name is the definitive name returned by the GAP Device Name
- *       characteristic (BT Core Spec v5.x, Vol 3, Part C, §12.1).
- */
+// Local name: 0x09 (Complete) or 0x08 (Shortened), CSS Part A §1.2. If the full
+// name does not fit in the remaining AD space, emit a Shortened Local Name
+// (0x08) truncated to what fits rather than dropping the field entirely.
 void BLEAdvertisementData::setName(const String &name, bool complete) {
-  addField(complete ? 0x09 : 0x08, reinterpret_cast<const uint8_t *>(name.c_str()), name.length());
+  const size_t nameLen = name.length();
+  const size_t used = _payload.size() + 2;  // + AD header (length + type)
+  const size_t avail = (used < _maxLen) ? (_maxLen - used) : 0;
+  if (avail == 0) {
+    log_w("No room for local name in AD payload, skipping");
+    return;
+  }
+  const auto *bytes = reinterpret_cast<const uint8_t *>(name.c_str());
+  if (complete && nameLen <= avail) {
+    addField(0x09, bytes, nameLen);
+  } else {
+    addField(0x08, bytes, nameLen < avail ? nameLen : avail);
+  }
 }
 
-/**
- * @brief Set a Shortened Local Name AD field.
- * @param name The shortened device name string (must be a prefix of the complete name).
- */
-void BLEAdvertisementData::setShortName(const String &name) {
-  setName(name, false);
-}
-
-/**
- * @brief Set the Appearance AD field (AD type 0x19).
- * @param appearance GAP appearance value (16-bit, stored little-endian on wire).
- * @note CSS Part A, §1.12.  Appearance values are defined in the Bluetooth Assigned
- *       Numbers document (GAP Appearance Values).  Examples: 0x0000 = Unknown,
- *       0x0180 = Generic Heart Rate Sensor, 0x0340 = Generic Remote Control.
- */
+// Appearance (0x19), CSS Part A §1.12; 16-bit little-endian GAP appearance value.
 void BLEAdvertisementData::setAppearance(uint16_t appearance) {
   uint8_t buf[2] = {static_cast<uint8_t>(appearance & 0xFF), static_cast<uint8_t>(appearance >> 8)};
   addField(0x19, buf, 2);
 }
 
-/**
- * @brief Set the Peripheral Preferred Connection Parameters AD field (AD type 0x12).
- * @param minInterval Minimum connection interval in units of 1.25 ms (range 6–3200).
- * @param maxInterval Maximum connection interval in units of 1.25 ms (range 6–3200).
- * @note CSS Part A, §1.13.  Stored as four little-endian bytes: [minInt_lo, minInt_hi,
- *       maxInt_lo, maxInt_hi].  The slave latency and supervision timeout fields of the
- *       full PPCP structure are omitted here; use the Connection Parameter Update
- *       procedure after connection for those (BT Core Spec v5.x, Vol 3, Part A, §4.20).
- */
+// Slave Connection Interval Range (0x12), CSS Part A §1.9:
+// [minInt_lo, minInt_hi, maxInt_lo, maxInt_hi] in units of 1.25 ms.
 void BLEAdvertisementData::setPreferredParams(uint16_t minInterval, uint16_t maxInterval) {
   uint8_t buf[4] = {
     static_cast<uint8_t>(minInterval & 0xFF),
@@ -256,45 +217,30 @@ void BLEAdvertisementData::setPreferredParams(uint16_t minInterval, uint16_t max
   addField(0x12, buf, 4);
 }
 
-/**
- * @brief Set the TX Power Level AD field (AD type 0x0A).
- * @param txPower Transmit power in dBm (signed, range typically -70..+20 dBm).
- * @note CSS Part A, §1.5.  One signed byte.  Scanners use this together with RSSI
- *       to estimate path loss: Path Loss = TX Power - RSSI.
- */
+// TX Power Level (0x0A), CSS Part A §1.5; one signed byte in dBm.
 void BLEAdvertisementData::setTxPower(int8_t txPower) {
   addField(0x0A, reinterpret_cast<uint8_t *>(&txPower), 1);
 }
 
-/**
- * @brief Append raw bytes directly to the payload without wrapping in an AD structure.
- * @param data Pointer to a pre-formed AD structure (length + type + value).
- * @param len Total length of the data in bytes.
- * @note Does not enforce the 31-byte limit; caller is responsible for validity.
- */
+// Appends pre-formed AD structure(s) verbatim. Enforces the active payload limit
+// (31 octets by default; larger when constructed extended) so the controller is
+// never handed an oversized PDU.
 void BLEAdvertisementData::addRaw(const uint8_t *data, size_t len) {
+  if (_payload.size() + len > _maxLen) {
+    log_e("Raw AD data (%u B) would exceed the %u-byte payload limit, dropping (data lost)", (unsigned)len, (unsigned)_maxLen);
+    return;
+  }
   _payload.insert(_payload.end(), data, data + len);
 }
 
-/**
- * @brief Clear all previously set AD structures, resetting the payload to empty.
- */
 void BLEAdvertisementData::clear() {
   _payload.clear();
 }
 
-/**
- * @brief Get a pointer to the assembled advertisement payload.
- * @return Pointer to the raw payload bytes.
- */
 const uint8_t *BLEAdvertisementData::data() const {
   return _payload.data();
 }
 
-/**
- * @brief Get the total length of the assembled advertisement payload.
- * @return Length in bytes.
- */
 size_t BLEAdvertisementData::length() const {
   return _payload.size();
 }

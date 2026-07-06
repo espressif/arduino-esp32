@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -38,6 +38,9 @@ class BLECharacteristic;
  */
 class BLEService {
 public:
+  /**
+   * @brief Construct an empty (invalid) handle; obtain a live one via BLEServer::createService().
+   */
   BLEService();
   ~BLEService() = default;
   BLEService(const BLEService &) = default;
@@ -67,7 +70,10 @@ public:
    * @param uuid        UUID of the characteristic to create.
    * @param properties  Characteristic properties (read, write, notify, etc.).
    * @param permissions ATT permission flags controlling access security.
-   * @return A BLECharacteristic handle for the new characteristic.
+   * @return A BLECharacteristic handle for the new characteristic, or an invalid handle on failure.
+   * @note Multiple characteristics may share a UUID (differentiated by handle; HID Report
+   *       characteristics rely on this). Property/permission combinations are validated at
+   *       construction; invalid combinations return an invalid handle.
    */
   BLECharacteristic createCharacteristic(const BLEUUID &uuid, BLEProperty properties, BLEPermission permissions);
 
@@ -79,6 +85,8 @@ public:
    * this service. HIDS requires this for the Battery Service.
    *
    * @param service The service to include.
+   * @note The included service must be created on the same server; the include
+   *       declaration is registered when the server is started.
    */
   void addIncludedService(const BLEService &service);
 
@@ -98,6 +106,7 @@ public:
   /**
    * @brief Remove a characteristic from this service.
    * @param chr The characteristic to remove.
+   * @note Only the first matching characteristic is removed; no-op if not present.
    */
   void removeCharacteristic(const BLECharacteristic &chr);
 
@@ -122,7 +131,8 @@ public:
 
   /**
    * @brief Get the server that owns this service.
-   * @return A BLEServer handle for the parent server.
+   * @return A BLEServer handle for the parent server, or an invalid handle if this
+   *         service is not attached to a server.
    */
   BLEServer getServer() const;
 
@@ -133,6 +143,7 @@ private:
   std::shared_ptr<Impl> _impl;
   friend class BLEServer;
   friend class BLECharacteristic;
+  friend struct BLEServiceImplCommon;
 };
 
 #endif /* BLE_ENABLED */

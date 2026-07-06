@@ -18,11 +18,13 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_L2CAP_SUPPORTED && BLE_NIMBLE
 
 #include "BLEL2CAP.h"
-#include "impl/BLEMutex.h"
+#include "impl/common/BLEMutex.h"
+#include "impl/common/BLESync.h"
+#include <host/ble_hs.h>
 #include <host/ble_l2cap.h>
 #include <os/os_mbuf.h>
 #include <vector>
@@ -37,6 +39,10 @@ struct BLEL2CAPChannel::Impl {
   BLEL2CAPChannel::DataHandler onDataCb = nullptr;
   BLEL2CAPChannel::DisconnectHandler onDisconnectCb = nullptr;
 
+  /// Wakes a multi-SDU @c write() that hit @c BLE_HS_ESTALLED / @c BLE_HS_EBUSY
+  /// waiting for peer credits (@c BLE_L2CAP_EVENT_COC_TX_UNSTALLED).
+  BLESync txSync;
+
   SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
 
   ~Impl() {
@@ -46,6 +52,8 @@ struct BLEL2CAPChannel::Impl {
   }
 };
 
+// BLEL2CAPServer is NimBLE-only (no cross-backend shared state), so
+// BLEL2CAPServer::Impl is defined directly here in impl/nimble/ with no common base.
 struct BLEL2CAPServer::Impl {
   uint16_t psm = 0;
   uint16_t mtu = 0;
@@ -72,5 +80,17 @@ struct BLEL2CAPServer::Impl {
   static int l2capEvent(struct ble_l2cap_event *event, void *arg);
   struct os_mbuf *allocSdu();
 };
+
+/**
+ * @brief Configure and register a NimBLE L2CAP CoC server on @p server.
+ * @return true on success; false on allocation or stack registration failure.
+ */
+bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server, uint16_t psm, uint16_t mtu);
+
+/**
+ * @brief Open an outgoing L2CAP CoC channel on @p chanImpl.
+ * @return true on success; false on allocation or connect failure.
+ */
+bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu);
 
 #endif /* BLE_L2CAP_SUPPORTED && BLE_NIMBLE */

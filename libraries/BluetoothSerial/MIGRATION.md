@@ -20,6 +20,7 @@ This guide helps you migrate existing sketches that use the `BluetoothSerial` li
   - [9. Data Callback](#9-data-callback)
   - [10. PIMPL Ownership Model](#10-pimpl-ownership-model)
   - [11. Removed Methods](#11-removed-methods)
+  - [12. Multi-Client Acceptor APIs](#12-multi-client-acceptor-apis)
 - [Complete API Mapping](#complete-api-mapping)
 - [Before/After Examples](#beforeafter-examples)
   - [Basic Serial Bridge](#basic-serial-bridge)
@@ -270,6 +271,25 @@ FreeRTOS resources (queues, semaphores, task) are allocated in `begin()` and rel
 | `SerialBT.register_callback(BTCallback)` | `BTStatus SerialBT.onData(std::function<void(const uint8_t*, size_t)>)` |
 | `SerialBT.setPin(const char*, uint8_t len)` | `void SerialBT.setPin(const char*)` — length not needed |
 
+### 12. Multi-Client Acceptor APIs
+
+v4.0 acceptor mode can keep several SPP clients connected. Existing `write()`/`read()` keep
+broadcast-out / merged-in `Stream` semantics so single-peer sketches stay valid. New methods:
+
+```cpp
+SerialBT.onConnect([](const BTAddress &addr) { /* ... */ });
+SerialBT.onDisconnect([](const BTAddress &addr) { /* ... */ });
+SerialBT.onPeerData([](const BTAddress &addr, const uint8_t *data, size_t len) {
+    SerialBT.writeTo(addr, data, len);  // echo to that peer only
+});
+
+size_t n = SerialBT.peerCount();
+auto peers = SerialBT.peers();  // std::vector<BTAddress>
+SerialBT.disconnect(peers[0]);  // drop one client
+```
+
+See `examples/MultiClientSerial`. BLE NUS equivalent: `BLEStream` (`libraries/BLE`).
+
 ---
 
 ## Complete API Mapping
@@ -330,6 +350,17 @@ Unchanged: `available()`, `read()`, `write()`, `peek()`, `flush()`, `print()`, `
 | Old (v3.x) | New (v4.0) | Notes |
 |---|---|---|
 | `void register_callback(BTCallback cb)` | `BTStatus onData(std::function<void(const uint8_t*, size_t)>)` | `std::function`, returns `BTStatus` |
+
+### Multi-Client (acceptor)
+
+| Old (v3.x) | New (v4.0) | Notes |
+|---|---|---|
+| N/A (single peer) | `size_t peerCount() const` | Connected client count |
+| N/A | `std::vector<BTAddress> peers() const` | Snapshot of connected addresses |
+| N/A | `size_t writeTo(const BTAddress &, const uint8_t *, size_t)` | Unicast to one peer |
+| N/A | `BTStatus onPeerData(PeerDataHandler)` | RX with source address |
+| N/A | `BTStatus onConnect` / `onDisconnect` | Per-peer connect/disconnect |
+| N/A | `BTStatus disconnect(const BTAddress &)` | Drop one peer |
 
 ### Info
 

@@ -15,6 +15,7 @@ Key features:
 
 * Stream-compatible API (``read()``, ``write()``, ``available()``, ``print()``, ``println()``)
 * Initiator (master) and acceptor (slave) modes
+* **Multi-client acceptor**: several SPP clients at once, with per-peer ``writeTo()`` / ``onPeerData()``
 * Secure Simple Pairing (SSP) with ``std::function`` callbacks
 * Legacy PIN pairing via ``setPin()``
 * Device discovery (synchronous and asynchronous)
@@ -137,6 +138,12 @@ All standard ``print()`` and ``println()`` methods from ``Print``/``Stream`` are
     ``flush()`` waits until the TX queue drains but does NOT wait for data to be acknowledged
     on the wire. Bytes may still be in-flight when ``flush()`` returns.
 
+.. note::
+
+    In acceptor multi-client mode, ``write()`` / ``print()`` send to **every** connected peer.
+    Use ``writeTo(address, ...)`` to target one client. Incoming bytes from all peers are merged
+    into the single ``Stream`` receive buffer; use ``onPeerData`` when you need the source address.
+
 Connection
 **********
 
@@ -161,9 +168,13 @@ disconnect
 .. code-block:: cpp
 
     BTStatus SerialBT.disconnect();
+    BTStatus SerialBT.disconnect(const BTAddress &address);
 
-Disconnects the active SPP session. Returns ``BTStatus::OK`` on success, ``BTStatus::Timeout`` if the
-disconnection did not complete within the internal timeout.
+* ``disconnect()`` -- disconnects all active SPP sessions (or the single initiator link).
+* ``disconnect(address)`` -- drops one connected peer in acceptor (multi-client) mode.
+
+Returns ``BTStatus::OK`` on success, ``BTStatus::Timeout`` if the disconnection did not complete
+within the internal timeout, or ``BTStatus::NotFound`` if the address is not connected.
 
 connected
 ^^^^^^^^^
@@ -172,7 +183,7 @@ connected
 
     bool SerialBT.connected() const;
 
-Returns ``true`` when an SPP link is established.
+Returns ``true`` when at least one SPP link is established.
 
 hasClient
 ^^^^^^^^^
@@ -182,6 +193,38 @@ hasClient
     bool SerialBT.hasClient() const;
 
 Equivalent to ``connected()`` in the current implementation; provided for readability in server-style sketches.
+
+Multi-client (acceptor)
+***********************
+
+In acceptor (slave) mode, multiple SPP clients may connect at once. As a single Arduino ``Stream``,
+``write()`` / ``print()`` broadcast to every connected peer and ``read()`` / ``available()`` drain
+one merged RX buffer. Additive APIs attribute traffic per peer. Initiator (master) ``connect()``
+remains one link.
+
+See the ``MultiClientSerial`` example. The BLE Nordic-UART equivalent is ``BLEStream``
+(``libraries/BLE``, ``MultiClientUART`` example).
+
+peerCount / peers
+^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    size_t SerialBT.peerCount() const;
+    std::vector<BTAddress> SerialBT.peers() const;
+
+* ``peerCount()`` -- number of currently connected clients.
+* ``peers()`` -- snapshot of connected peer addresses.
+
+writeTo
+^^^^^^^
+
+.. code-block:: cpp
+
+    size_t SerialBT.writeTo(const BTAddress &address, const uint8_t *buf, size_t len);
+
+Sends ``len`` bytes to a single connected peer. Returns the number of bytes queued, or ``0`` if the
+peer is not connected or the write fails.
 
 Device discovery
 ****************
@@ -272,7 +315,36 @@ onData
 
     BTStatus SerialBT.onData(std::function<void(const uint8_t *, size_t)> callback);
 
-Registers a callback invoked on the BT task whenever SPP data arrives. Returns ``BTStatus::OK`` on success.
+Registers a callback invoked on the BT task whenever SPP data arrives (no source address). Prefer
+``onPeerData`` when multiple clients may be connected. Returns ``BTStatus::OK`` on success.
+
+onConnect / onDisconnect
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    BTStatus SerialBT.onConnect(std::function<void(const BTAddress &)> callback);
+    BTStatus SerialBT.onDisconnect(std::function<void(const BTAddress &)> callback);
+
+Per-peer connect and disconnect notifications. The ``BTAddress`` identifies which client joined or left.
+
+onPeerData
+^^^^^^^^^^
+
+.. code-block:: cpp
+
+    BTStatus SerialBT.onPeerData(
+        std::function<void(const BTAddress &, const uint8_t *, size_t)> callback
+    );
+
+Attributed RX callback: invoked with the source peer address and payload. Fired in addition to the
+merged receive buffer used by ``read()`` / ``available()``.
+
+.. code-block:: cpp
+
+    SerialBT.onPeerData([](const BTAddress &addr, const uint8_t *data, size_t len) {
+        SerialBT.writeTo(addr, data, len);  // echo to that peer only
+    });
 
 onConfirmRequest
 ^^^^^^^^^^^^^^^^

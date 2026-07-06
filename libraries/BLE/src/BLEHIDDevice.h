@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEServer.h"
@@ -49,6 +49,14 @@ public:
   /**
    * @brief Construct a HID device and create all required GATT services.
    * @param server The BLE server to host the HID, Device Information, and Battery services on.
+   * @note Creates Device Information (0x180A), HID (0x1812), and Battery (0x180F) services.
+   *       The HID Service includes the Battery Service via an Include Declaration
+   *       (HIDS 1.0 §3) and an External Report Reference descriptor on the Report Map
+   *       pointing to the Battery Level UUID (HIDS 1.0 §3.6). All characteristics default
+   *       to open (unencrypted) permissions; for HOGP compliance configure BLEServer-level
+   *       security. Protocol Mode is initialized to Report Protocol Mode (1). The HID
+   *       Service UUID (0x1812) is automatically added to the advertising payload
+   *       (HOGP §4.3.1 / HIDS 1.0 §3) so hosts can discover the device by service class.
    */
   explicit BLEHIDDevice(BLEServer server);
   ~BLEHIDDevice() = default;
@@ -104,6 +112,7 @@ public:
    * @param vendorId Vendor ID assigned by the source indicated by @p sig.
    * @param productId Product ID assigned by the vendor.
    * @param version Product version (BCD, e.g. 0x0100 = 1.0.0).
+   * @note vendorId, productId, and version are stored little-endian per the PnP ID format.
    */
   void pnp(uint8_t sig, uint16_t vendorId, uint16_t productId, uint16_t version);
 
@@ -111,12 +120,15 @@ public:
    * @brief Set the HID Information characteristic.
    * @param country HID country code (0x00 = not localized).
    * @param flags HID information flags (bit 0: RemoteWake, bit 1: NormallyConnectable).
+   * @note bcdHID is fixed at 0x0111 (HID version 1.11).
    */
   void hidInfo(uint8_t country, uint8_t flags);
 
   /**
    * @brief Update the battery level characteristic and notify subscribed clients.
    * @param level Battery percentage (0–100).
+   * @note Notification is only delivered to clients that enabled the Battery Level
+   *       CCCD; without it the value is updated but no notification is sent.
    */
   void setBatteryLevel(uint8_t level);
 
@@ -133,35 +145,40 @@ public:
   BLECharacteristic protocolMode();
 
   /**
-   * @brief Create and return an Input Report characteristic.
+   * @brief Create and return an Input Report characteristic (Read + Notify).
    * @param reportId HID Report ID to assign via the Report Reference descriptor.
    * @return Handle to the new Input Report characteristic.
+   * @note Uses open (unencrypted) permissions so HOGP hosts can enumerate before encryption.
    */
   BLECharacteristic inputReport(uint8_t reportId);
 
   /**
-   * @brief Create and return an Output Report characteristic.
+   * @brief Create and return an Output Report characteristic (Read + Write + WriteNR).
    * @param reportId HID Report ID to assign via the Report Reference descriptor.
    * @return Handle to the new Output Report characteristic.
+   * @note Uses open (unencrypted) permissions so HOGP hosts can enumerate before encryption.
    */
   BLECharacteristic outputReport(uint8_t reportId);
 
   /**
-   * @brief Create and return a Feature Report characteristic.
+   * @brief Create and return a Feature Report characteristic (Read + Write).
    * @param reportId HID Report ID to assign via the Report Reference descriptor.
    * @return Handle to the new Feature Report characteristic.
+   * @note Uses open (unencrypted) permissions so HOGP hosts can enumerate before encryption.
    */
   BLECharacteristic featureReport(uint8_t reportId);
 
   /**
-   * @brief Get the Boot Keyboard Input Report characteristic.
+   * @brief Get the Boot Keyboard Input Report characteristic (Read + Notify).
    * @return Handle to the Boot Keyboard Input Report characteristic.
+   * @note Created lazily on first call (HIDS 1.0 §3.4); subsequent calls return the cached handle.
    */
   BLECharacteristic bootInput();
 
   /**
-   * @brief Get the Boot Keyboard Output Report characteristic.
+   * @brief Get the Boot Keyboard Output Report characteristic (Read + Write + WriteNR).
    * @return Handle to the Boot Keyboard Output Report characteristic.
+   * @note Created lazily on first call; subsequent calls return the cached handle.
    */
   BLECharacteristic bootOutput();
 

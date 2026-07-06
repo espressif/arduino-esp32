@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <stdint.h>
@@ -101,6 +101,11 @@ inline constexpr bool operator&(BLEPermission a, BLEPermission b) {
  *
  * Authenticated presets include the Encrypted bit as well, matching the
  * GATT security hierarchy (authenticated pairing implies encryption).
+ *
+ * Kept as a namespace (not folded into @c BLEPermission) because these are
+ * OR-combinations of the enum's bits, not new distinct enum values; a namespace
+ * of @c constexpr constants keeps them strongly typed and clearly scoped
+ * (@c BLEPermissions::OpenReadWrite) without polluting the bitmask enum.
  */
 namespace BLEPermissions {
 
@@ -125,5 +130,28 @@ inline constexpr BLEPermission AuthorizedWrite = BLEPermission::WriteAuthorized;
 inline constexpr BLEPermission AuthorizedReadWrite = BLEPermission::ReadAuthorized | BLEPermission::WriteAuthorized;
 
 }  // namespace BLEPermissions
+
+// ---------------------------------------------------------------------------
+// GATT characteristic descriptors: 16-bit UUIDs and value bit-fields.
+// Bluetooth Core Spec v5.x, Vol 3, Part G, §3.3.3 (characteristic descriptors)
+// and §3.3.3.3 (Client Characteristic Configuration Descriptor value). Shared by
+// both backends and the characteristic validator so there is one source instead
+// of scattered magic numbers.
+// ---------------------------------------------------------------------------
+
+// GATT characteristic descriptor UUIDs (16-bit). §3.3.3.1-.4.
+constexpr uint16_t BLE_DSC_UUID16_EXT_PROPS = 0x2900;  // Characteristic Extended Properties
+constexpr uint16_t BLE_DSC_UUID16_USER_DESC = 0x2901;  // Characteristic User Description
+constexpr uint16_t BLE_DSC_UUID16_CCCD = 0x2902;       // Client Characteristic Configuration
+constexpr uint16_t BLE_DSC_UUID16_SCCD = 0x2903;       // Server Characteristic Configuration
+constexpr uint16_t BLE_DSC_UUID16_PRES_FMT = 0x2904;   // Characteristic Presentation Format
+
+// Extended Properties (0x2900) value bit-field. §3.3.3.1.
+constexpr uint16_t BLE_EXT_PROP_RELIABLE_WRITE = 0x0001;  // Bit 0: reliable write
+constexpr uint16_t BLE_EXT_PROP_WRITABLE_AUX = 0x0002;    // Bit 1: writable auxiliaries
+
+// CCCD (0x2902) value bit-field. §3.3.3.3.
+constexpr uint16_t BLE_CCCD_NOTIFY = 0x0001;    // Bit 0: notifications enabled
+constexpr uint16_t BLE_CCCD_INDICATE = 0x0002;  // Bit 1: indications enabled
 
 #endif /* BLE_ENABLED */

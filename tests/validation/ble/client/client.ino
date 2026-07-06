@@ -40,9 +40,65 @@ volatile int currentPhase = 0;
 volatile bool clientMtuChanged = false;
 volatile uint16_t clientMtuLast = 0;
 volatile bool clientConnParamsUpdated = false;
+// Phase 16 — event-ordering guard: onMtuChanged must fire AFTER onConnect on
+// both backends (see DESIGN.md backend contract: Client MTU exchange). clientConnectFired
+// is set in onConnect; clientMtuAfterConnect snapshots it inside onMtuChanged so
+// the harness can catch a regression where the MTU request precedes onConnect
+// (the historical Bluedroid CONNECT_EVT behavior).
+volatile bool clientConnectFired = false;
+volatile bool clientMtuAfterConnect = false;
+// Phase 10 — onIdentity must fire exactly once per connection on both backends
+// (NimBLE surfaces identity on both IDENTITY_RESOLVED and ENC_CHANGE and is
+// deduped in the library; Bluedroid fires it once from AUTH_CMPL). Reset before
+// the phase-10 pairing connect; asserted == 1 after pairing.
+volatile int clientIdentityCount = 0;
 volatile uint16_t clientConnParamsReqInterval = 0;
 volatile uint16_t clientConnParamsReqLatency = 0;
 volatile uint16_t clientConnParamsReqTimeout = 0;
+// Phase 29 — when armed, the onConnParamsUpdateRequest pre-accept hook rejects
+// the peripheral's request (returns false) instead of accepting it. Also latches
+// whether the hook fired at all so the phase can self-skip on Bluedroid, which
+// has no pre-accept hook.
+volatile bool clientRejectConnParams = false;
+volatile bool clientConnParamsReqFired = false;
+// Phase 31 (NC reject) / Phase 32 (passkey entry). When clientRejectPairing is
+// armed the numeric-comparison confirm handler returns false to reject the
+// pairing. clientLastAuthSuccess latches the success flag reported by
+// onAuthenticationComplete so the phases can assert failure/success.
+volatile bool clientRejectPairing = false;
+volatile bool clientAuthCompleteFired = false;
+volatile bool clientLastAuthSuccess = false;
+// Phase 32 — the central is KeyboardOnly and supplies this fixed passkey (shown
+// by the DisplayOnly peripheral via a matching static passkey) so passkey-entry
+// pairing succeeds deterministically without a human in the loop.
+static const uint32_t PASSKEY_ENTRY_STATIC = 398215;
+
+// Cross-stack event-order parity trace. Each client lifecycle callback appends a
+// short tag to a fixed-size in-RAM sequence; the phase-10 pairing lifecycle emits
+// it as "ORDER=<tag,tag,...>" so test_ble.py can assert the same golden order on
+// NimBLE (esp32s3) and Bluedroid (esp32). Allocation-free and callback-safe: tags
+// are string literals and appends happen on the single BLE host task; the trace is
+// reset from the Arduino task before the phase-10 connect (no callback in flight).
+static const char *clientOrderTags[16];
+volatile int clientOrderN = 0;
+static void recordClientEvent(const char *tag) {
+  int n = clientOrderN;
+  if (n < (int)(sizeof(clientOrderTags) / sizeof(clientOrderTags[0]))) {
+    clientOrderTags[n] = tag;
+    clientOrderN = n + 1;
+  }
+}
+static void reportClientOrder(const char *label) {
+  String seq;
+  int n = clientOrderN;
+  for (int i = 0; i < n; i++) {
+    if (i) {
+      seq += ",";
+    }
+    seq += clientOrderTags[i];
+  }
+  Serial.printf("[CLIENT] %s ORDER=%s\n", label, seq.c_str());
+}
 
 // ========================= Phase coordination ================================
 
@@ -145,7 +201,7 @@ bool phase_ble5_scan() {
     }
   });
 
-  scan.onPeriodicSync([&](uint16_t syncHandle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
+  scan.onPeriodicSync([&](uint16_t handle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
     syncPhaseFromHost();
     Serial.println("[CLIENT] Synced to periodic adv!");
     synced = true;
@@ -164,13 +220,29 @@ bool phase_ble5_scan() {
   Serial.println("[CLIENT] Scanning for periodic adv...");
   scan.startExtended(15000);
 
+  // startExtended() is non-blocking (like start(); only startBlocking() waits),
+  // so spin here while the background ext-scan + periodic-sync/report callbacks
+  // fire. Bail out early once periodic data has arrived. Up to ~15 s, which
+  // overlaps the server's 20 s BLE5 adv window.
+  for (int i = 0; i < 150 && !dataReceived; i++) {
+    delay(100);
+  }
+
   if (found) {
     Serial.println("[CLIENT] Extended scan found target");
+  }
+  if (synced) {
+    Serial.println("[CLIENT] Periodic sync confirmed");
   }
   if (dataReceived) {
     Serial.println("[CLIENT] Periodic test complete");
   }
 
+  // No explicit periodic-sync teardown here: BLE.end() terminates any syncs the
+  // library is tracking while the host is still enabled (see
+  // BLEScan::terminateAllPeriodicSyncs). Leaving one active must NOT produce the
+  // "failed to terminate periodic sync ... rc=30" (BLE_HS_EDISABLED) log.
+  scan.stop();
   BLE.end(false);
   Serial.println("[CLIENT] BLE5 scan phase done");
   return true;
@@ -257,19 +329,37 @@ void setup() {
   });
   sec.onConfirmPassKey([](const BLEConnInfo &conn, uint32_t passkey) -> bool {
     Serial.printf("[CLIENT] Passkey: %06lu\n", (unsigned long)passkey);
-    return true;
+    // Phase 31 arms a numeric-comparison reject; every other phase confirms.
+    return !clientRejectPairing;
+  });
+  // Passkey-entry (phase 32): as the KeyboardOnly central, supply the same fixed
+  // passkey the DisplayOnly peripheral shows. Harmless in other phases (only
+  // invoked when the negotiated method is Passkey Entry).
+  sec.onPassKeyRequest([](const BLEConnInfo &conn) -> uint32_t {
+    Serial.printf("[CLIENT] PassKeyRequest -> %06lu\n", (unsigned long)PASSKEY_ENTRY_STATIC);
+    return PASSKEY_ENTRY_STATIC;
   });
   sec.onAuthenticationComplete([](const BLEConnInfo &conn, bool success) {
-    Serial.println("[CLIENT] Authentication complete");
+    Serial.printf("[CLIENT] Authentication complete success=%d\n", (int)success);
+    clientAuthCompleteFired = true;
+    clientLastAuthSuccess = success;
   });
 
   // Callback helpers installed on every BLEClient we create so phase 16
   // can assert MTU + conn-params events fired on the client side too.
   auto installClientCallbacks = [](BLEClient c) {
+    c.onConnect([](BLEClient, const BLEConnInfo &) {
+      syncPhaseFromHost();
+      clientConnectFired = true;
+      recordClientEvent("CONNECT");
+    });
     c.onMtuChanged([](BLEClient, const BLEConnInfo &, uint16_t mtu) {
       syncPhaseFromHost();
+      // Snapshot connect-fired state to enforce onConnect-before-onMtuChanged.
+      clientMtuAfterConnect = clientConnectFired;
       clientMtuLast = mtu;
       clientMtuChanged = true;
+      recordClientEvent("MTU");
     });
     c.onConnParamsUpdateRequest([](BLEClient, const BLEConnParams &p) -> bool {
       syncPhaseFromHost();
@@ -277,7 +367,14 @@ void setup() {
       clientConnParamsReqLatency = p.latency;
       clientConnParamsReqTimeout = p.timeout;
       clientConnParamsUpdated = true;
-      return true;
+      clientConnParamsReqFired = true;
+      // Phase 29 arms a rejection; every other phase accepts.
+      return !clientRejectConnParams;
+    });
+    c.onIdentity([](const BLEClient &, const BLEConnInfo &) {
+      syncPhaseFromHost();
+      clientIdentityCount = clientIdentityCount + 1;
+      recordClientEvent("IDENTITY");
     });
   };
 
@@ -516,9 +613,14 @@ void setup() {
     if (status) {
       Serial.println("[CLIENT] Reconnected after server disconnect");
 
-      // Re-discover services
+      // Best-effort service rediscovery. The next phase deliberately tears this
+      // link down to start fresh pairing, so only flag a genuine failure while
+      // the link is still up; otherwise this races the phase-10 teardown and
+      // prints a misleading "not found".
       svc = client.getService(serviceUUID);
-      if (!svc) {
+      if (svc) {
+        Serial.println("[CLIENT] Services rediscovered after reconnect");
+      } else if (client.isConnected()) {
         Serial.println("[CLIENT] Service not found after reconnect");
       }
     } else {
@@ -545,6 +647,12 @@ void setup() {
       (void)secWipe.deleteAllBonds();
     }
 
+    // Fresh connection resets the per-connection onIdentity latch; count how
+    // many times onIdentity fires for this pairing (must be exactly 1). The
+    // event-order trace is reset here too so ORDER captures exactly this
+    // pairing lifecycle (CONNECT -> MTU -> IDENTITY) for cross-stack parity.
+    clientIdentityCount = 0;
+    clientOrderN = 0;
     client = BLE.createClient();
     installClientCallbacks(client);
     status = client.connect(targetAddr);
@@ -566,6 +674,11 @@ void setup() {
         Serial.printf("[CLIENT] Secure read: %s\n", sval.c_str());
       }
     }
+    // Let any trailing identity callbacks settle, then report the dedupe count
+    // and the recorded event order for cross-stack parity assertions.
+    delay(500);
+    Serial.printf("[CLIENT] Phase10 onIdentity count=%d\n", clientIdentityCount);
+    reportClientOrder("Phase10");
   }
 
   // ===== Phase 11: BLE5 PHY + DLE =====
@@ -669,6 +782,24 @@ void setup() {
 
       if (stream.connected()) {
         Serial.println("[CLIENT] BLEStream connected OK");
+        auto peerList = stream.peers();
+        Serial.printf("[CLIENT] BLEStream peers=%u\n", (unsigned)peerList.size());
+        if (!peerList.empty()) {
+          Serial.printf("[CLIENT] BLEStream peerAddr=%s\n", peerList[0].getAddress().toString().c_str());
+        }
+      }
+
+      // writeTo round-trip
+      stream.println("stream_write_to_probe");
+      Serial.println("[CLIENT] BLEStream writeTo probe sent");
+      {
+        String rx = stream.readStringUntil('\n');
+        rx.trim();
+        if (rx == "STREAM_WRITE_TO_ACK") {
+          Serial.println("[CLIENT] BLEStream writeTo ack OK");
+        } else {
+          Serial.printf("[CLIENT] BLEStream writeTo ack FAILED: %s\n", rx.c_str());
+        }
       }
 
       // Basic ping/pong
@@ -771,6 +902,14 @@ void setup() {
         }
       }
       l2capClient.disconnect();
+      // disconnect() issues an async GAP terminate; wait for the link to
+      // actually drop before the next phase reconnects to the same peer.
+      // Otherwise NimBLE rejects the new connect with BLE_HS_EALREADY (a
+      // second link to a peer that is still terminating is not allowed).
+      unsigned long discStart = millis();
+      while (l2capClient.isConnected() && (millis() - discStart < 5000)) {
+        delay(20);
+      }
     }
 #endif
     if (!l2cap_supported) {
@@ -789,10 +928,19 @@ void setup() {
   // without the Write property (fail-closed masking) and must reject writes.
   waitForPhase(15);
   {
-    // Reconnect with a fresh client — phase 14's client was disposed.
+    // Reconnect with a fresh client — phase 14's client was disposed. Retry a
+    // few times: right after the L2CAP teardown the peer may still be finishing
+    // its disconnect / re-advertise cycle, so the first attempt can bounce.
     BLEClient ic = BLE.createClient();
     installClientCallbacks(ic);
-    BTStatus s = ic.connect(targetAddr);
+    BTStatus s = BTStatus::Fail;
+    for (int attempt = 0; attempt < 5; attempt++) {
+      s = ic.connect(targetAddr);
+      if (s) {
+        break;
+      }
+      delay(500);
+    }
     if (!s) {
       Serial.printf("[CLIENT] Introspect connect FAILED: %s\n", s.toString());
     } else {
@@ -903,6 +1051,10 @@ void setup() {
     clientMtuChanged = false;
     clientMtuLast = 0;
     clientConnParamsUpdated = false;
+    // Reset ordering guard BEFORE connect: onConnect fires during connect(),
+    // so clientConnectFired must start false to prove the callback order.
+    clientConnectFired = false;
+    clientMtuAfterConnect = false;
 
     BLEClient pc = BLE.createClient();
     installClientCallbacks(pc);
@@ -912,7 +1064,7 @@ void setup() {
       Serial.printf("[CLIENT] Phase16 connect FAILED: %s\n", s.toString());
     } else {
       Serial.println("[CLIENT] Phase16 connected");
-      BLEConnInfo c = pc.getConnection();
+      BLEConnInfo c = pc.getConnInfo();
       uint16_t mtu = pc.getMTU();
       BTAddress peer = pc.getPeerAddress();
       uint16_t h = pc.getHandle();
@@ -942,6 +1094,10 @@ void setup() {
       delay(2500);  // allow the controller to apply the new params
 
       Serial.printf("[CLIENT] MtuChanged seen=%d last=%u\n", (int)clientMtuChanged, (unsigned)clientMtuLast);
+      // Ordering contract: when the MTU callback fired, onConnect must already
+      // have fired (afterConnect=1). afterConnect=0 with mtuSeen=1 signals the
+      // regression this test guards against.
+      Serial.printf("[CLIENT] MtuOrder afterConnect=%d mtuSeen=%d\n", (int)clientMtuAfterConnect, (int)clientMtuChanged);
 
       pc.disconnect();
       delay(1000);
@@ -993,7 +1149,7 @@ void setup() {
       bool hit = false;
       unsigned long deadline = millis() + 10000;
       while (!hit && millis() < deadline) {
-        BLEScanResults res = scn.startBlocking(3000);
+        BLEScan::Results res = scn.startBlocking(3000);
         for (const auto &dev : res) {
           BLEAdvertisedDevice d = dev;
           if (d.getName() == hitName) {
@@ -1047,7 +1203,7 @@ void setup() {
       scn.setFilterDuplicates(false);
       unsigned long deadline = millis() + 6000;
       while (millis() < deadline) {
-        BLEScanResults res = scn.startBlocking(2000);
+        BLEScan::Results res = scn.startBlocking(2000);
         bool found = false;
         for (const auto &dev : res) {
           BLEAdvertisedDevice d = dev;
@@ -1111,7 +1267,7 @@ void setup() {
       scn.setFilterDuplicates(false);
       unsigned long deadline = millis() + 6000;
       while (millis() < deadline) {
-        BLEScanResults res = scn.startBlocking(2000);
+        BLEScan::Results res = scn.startBlocking(2000);
         bool found = false;
         for (const auto &dev : res) {
           BLEAdvertisedDevice d = dev;
@@ -1141,7 +1297,7 @@ void setup() {
       BTStatus ws = ech.writeValue(String("enc_ok"));
       Serial.printf("[CLIENT] Enc write ok=%d\n", (int)(bool)ws);
       delay(200);
-      BLEConnInfo c = ec.getConnection();
+      BLEConnInfo c = ec.getConnInfo();
       Serial.printf("[CLIENT] Phase19 sec enc=%d auth=%d bond=%d\n", (int)c.isEncrypted(), (int)c.isAuthenticated(), (int)c.isBonded());
       ec.disconnect();
       delay(500);
@@ -1173,8 +1329,8 @@ void setup() {
     scn.setWindow(96);     // 60 ms
     bool sawAdv = false;
     String wantName = String("ADV_") + targetName;
-    BLEScanResults results = scn.startBlocking(8000);
-    Serial.printf("[CLIENT] Phase20 results=%u isScanning=%d want=%s\n", (unsigned)results.getCount(), (int)scn.isScanning(), wantName.c_str());
+    BLEScan::Results results = scn.startBlocking(8000);
+    Serial.printf("[CLIENT] Phase20 results=%u isScanning=%d want=%s\n", (unsigned)results.size(), (int)scn.isScanning(), wantName.c_str());
     for (const auto &dev : results) {
       BLEAdvertisedDevice d = dev;
       String n = d.getName();
@@ -1202,6 +1358,27 @@ void setup() {
           (unsigned)d.getPayloadLength()
         );
         (void)svcRaw;
+        // Slave Connection Interval Range AD (0x12): parse it back out of the
+        // merged adv+scan-response payload and confirm the min/max the server
+        // set via setPreferredParams survived the round trip.
+        const uint8_t *pl = d.getPayload();
+        size_t plLen = d.getPayloadLength();
+        bool havePref = false;
+        uint16_t prefMin = 0, prefMax = 0;
+        for (size_t i = 0; pl && i + 1 < plLen;) {
+          uint8_t flen = pl[i];
+          if (flen == 0) {
+            break;
+          }
+          if (pl[i + 1] == 0x12 && flen >= 5 && (i + 1 + flen) <= plLen) {
+            prefMin = (uint16_t)pl[i + 2] | ((uint16_t)pl[i + 3] << 8);
+            prefMax = (uint16_t)pl[i + 4] | ((uint16_t)pl[i + 5] << 8);
+            havePref = true;
+            break;
+          }
+          i += flen + 1;
+        }
+        Serial.printf("[CLIENT] Phase20 prefInterval have=%d min=0x%04X max=0x%04X\n", (int)havePref, (unsigned)prefMin, (unsigned)prefMax);
         break;
       }
     }
@@ -1230,7 +1407,7 @@ void setup() {
     const BLEUUID eddyUUID((uint16_t)0xFEAA);
     unsigned long deadline = millis() + 18000;
     while (millis() < deadline && (!sawIBeacon || !sawEddyUrl || !sawEddyTlm)) {
-      BLEScanResults res = scn.startBlocking(3000);
+      BLEScan::Results res = scn.startBlocking(3000);
       for (const auto &dev : res) {
         BLEAdvertisedDevice d = dev;
         switch (d.getFrameType()) {
@@ -1384,7 +1561,7 @@ void setup() {
       scn.setFilterDuplicates(false);
       unsigned long deadline = millis() + 10000;
       while (millis() < deadline) {
-        BLEScanResults res = scn.startBlocking(3000);
+        BLEScan::Results res = scn.startBlocking(3000);
         for (const auto &dev : res) {
           BLEAdvertisedDevice d = dev;
           if (d.getName() == targetName) {
@@ -1473,6 +1650,15 @@ void setup() {
       delay(100);
       BTStatus cancel = ac.cancelConnect();
       Serial.printf("[CLIENT] Phase23 cancelConnect ok=%d\n", (int)(bool)cancel);
+      // The async connect often completes before the cancel lands (cancel then
+      // reports failure). Settle and tear down any resulting link so it does not
+      // leak into later phases — a lingering connection here previously blocked
+      // phase 24's dedicated connect.
+      delay(500);
+      if (ac.isConnected()) {
+        ac.disconnect();
+        delay(500);
+      }
     }
     Serial.printf("[CLIENT] StrConv pass=%d fail=%d\n", strPass, strFail);
     Serial.println("[CLIENT] Phase23 done");
@@ -1503,6 +1689,29 @@ void setup() {
     Serial.printf("[CLIENT] Phase24 startExtendedCoded ok=%d\n", (int)(bool)es);
     delay(2000);
     scn.stopExtended();
+    delay(200);
+
+    // Establish and hold a GATT connection so the SERVER can deterministically
+    // exercise its per-connection setPhy/getPhy/setDataLen every run, instead of
+    // relying on a link left over from phase 23. Retry while the server settles
+    // back into advertising after that phase's async-connect churn.
+    BLEClient pc = BLE.createClient();
+    installClientCallbacks(pc);
+    BTStatus cs = BTStatus::Fail;
+    for (int attempt = 0; attempt < 6; attempt++) {
+      cs = pc.connect(targetAddr);
+      if (cs) {
+        break;
+      }
+      delay(500);
+    }
+    Serial.printf("[CLIENT] Phase24 phyConn ok=%d\n", (int)(bool)cs);
+    // Hold the link long enough for the server's PHY/DLE ops to complete.
+    delay(3000);
+    if (pc.isConnected()) {
+      pc.disconnect();
+    }
+    delay(300);
     Serial.println("[CLIENT] Phase24 done");
 #else
     Serial.println("[CLIENT] Phase24 BLE5 not supported, skipping");
@@ -1533,7 +1742,7 @@ void setup() {
     BTAddress hidAddr;
     unsigned long deadline = millis() + 15000;
     while (!found && millis() < deadline) {
-      BLEScanResults res = scn.startBlocking(3000);
+      BLEScan::Results res = scn.startBlocking(3000);
       for (const auto &dev : res) {
         BLEAdvertisedDevice d = dev;
         if (d.getName() == hidName) {
@@ -1617,8 +1826,512 @@ void setup() {
     Serial.println("[CLIENT] Phase25 done");
   }
 
-  // ===== Phase 26: Memory release + reinit guard =====
+  // ===========================================================================
+  // Phase 26: Legacy advertising over the BLE5 extended engine
+  // ===========================================================================
+  // The server advertises a connectable legacy ADV_IND (name LEG_<name>) via
+  // the public legacy API, which on an ext-adv controller is routed over the
+  // extended engine (legacy-over-ext when BLE5). Confirm it is discoverable AND surfaces
+  // as a *legacy*, connectable advertisement (the core regression this fixed).
   waitForPhase(26);
+  {
+#if BLE5_SUPPORTED
+    BLEScan scn = BLE.getScan();
+    scn.resetCallbacks();
+    scn.clearResults();
+    scn.setActiveScan(true);
+    scn.setFilterDuplicates(false);
+    String legName = String("LEG_") + targetName;
+    bool sawLegacy = false;
+    bool legacyFlag = false;
+    bool connectableFlag = false;
+    unsigned long deadline = millis() + 10000;
+    while (!sawLegacy && millis() < deadline) {
+      BLEScan::Results res = scn.startBlocking(2000);
+      for (const auto &dev : res) {
+        BLEAdvertisedDevice d = dev;
+        if (d.getName() == legName) {
+          sawLegacy = true;
+          legacyFlag = d.isLegacyAdvertisement();
+          connectableFlag = d.isConnectable();
+          break;
+        }
+      }
+      scn.clearResults();
+    }
+    Serial.printf("[CLIENT] Phase26 sawLegacy=%d legacy=%d connectable=%d\n", (int)sawLegacy, (int)legacyFlag, (int)connectableFlag);
+#else
+    Serial.println("[CLIENT] Phase26 BLE5 not supported, skipping");
+#endif
+    Serial.println("[CLIENT] Phase26 done");
+  }
+
+  // ===========================================================================
+  // Phase 27: Legacy + extended advertising concurrently
+  // ===========================================================================
+  // The server broadcasts a connectable legacy set (LEG_<name>) on the reserved
+  // instance AND a non-connectable extended set (EXT_<name>) on instance 0 at
+  // the same time. A single scan must surface BOTH, with the legacy set flagged
+  // legacy=1 and the extended set legacy=0 — proving the reserved-instance
+  // concurrency (legacy-over-ext when BLE5).
+  waitForPhase(27);
+  {
+#if BLE5_SUPPORTED
+    BLEScan scn = BLE.getScan();
+    scn.resetCallbacks();
+    scn.clearResults();
+    scn.setActiveScan(true);
+    scn.setFilterDuplicates(false);
+    String legName = String("LEG_") + targetName;
+    String extName = String("EXT_") + targetName;
+    bool sawLegacy = false, sawExt = false;
+    bool legacyIsLegacy = false, extIsLegacy = true;
+    unsigned long deadline = millis() + 12000;
+    while ((!sawLegacy || !sawExt) && millis() < deadline) {
+      BLEScan::Results res = scn.startBlocking(2000);
+      for (const auto &dev : res) {
+        BLEAdvertisedDevice d = dev;
+        if (d.getName() == legName) {
+          sawLegacy = true;
+          legacyIsLegacy = d.isLegacyAdvertisement();
+        } else if (d.getName() == extName) {
+          sawExt = true;
+          extIsLegacy = d.isLegacyAdvertisement();
+        }
+      }
+      scn.clearResults();
+    }
+    Serial.printf(
+      "[CLIENT] Phase27 sawLegacy=%d sawExt=%d legacyIsLegacy=%d extIsLegacy=%d\n", (int)sawLegacy, (int)sawExt, (int)legacyIsLegacy, (int)extIsLegacy
+    );
+#else
+    Serial.println("[CLIENT] Phase27 BLE5 not supported, skipping");
+#endif
+    Serial.println("[CLIENT] Phase27 done");
+  }
+
+  // ===========================================================================
+  // Phase 28: L2CAP CoC bulk across the credit-stall boundary + reconnect
+  // ===========================================================================
+  // The server rebuilt a fresh connectable stack with an L2CAP listener. Open a
+  // channel, push a bulk buffer larger than the peer CoC MTU (write() splits it
+  // into MTU-sized SDUs and waits for credits between chunks), verify the server
+  // echoed the full byte count, then tear the channel down and open a fresh one
+  // to prove the accept path recovers.
+  waitForPhase(28);
+  {
+    bool l2cap_supported = false;
+#if BLE_L2CAP_SUPPORTED
+    l2cap_supported = true;
+    // Server re-init in phase 28 may have rotated its address; rescan by name.
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase28 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient bc = BLE.createClient();
+      installClientCallbacks(bc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = bc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase28 connect FAILED: %s\n", cs.toString());
+      } else {
+        BLEL2CAPChannel channel = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+        if (!channel) {
+          Serial.println("[CLIENT] Phase28 L2CAP open FAILED");
+        } else {
+          volatile bool got = false;
+          String rx;
+          channel.onData([&](BLEL2CAPChannel ch, const uint8_t *data, size_t len) {
+            syncPhaseFromHost();
+            rx = String((const char *)data, len);
+            got = true;
+          });
+          unsigned long cstart = millis();
+          while (!channel.isConnected() && (millis() - cstart < 10000)) {
+            delay(20);
+          }
+          if (!channel.isConnected()) {
+            Serial.println("[CLIENT] Phase28 channel connect timeout");
+          } else {
+            Serial.println("[CLIENT] Phase28 L2CAP channel connected");
+            // Bulk payload exceeds the peer CoC MTU (256); write() segments it
+            // and waits for COC_TX_UNSTALLED between chunks.
+            static uint8_t bulk[2000];
+            for (size_t i = 0; i < sizeof(bulk); i++) {
+              bulk[i] = (uint8_t)('A' + (i % 26));
+            }
+            BTStatus ws = channel.write(bulk, sizeof(bulk));
+            Serial.printf("[CLIENT] Phase28 bulk sent ok=%d bytes=%u\n", (int)(bool)ws, (unsigned)sizeof(bulk));
+            unsigned long rstart = millis();
+            while (!got && (millis() - rstart < 15000)) {
+              delay(20);
+            }
+            unsigned long ackTotal = 0;
+            bool bulkAck = false;
+            if (got) {
+              rx.trim();
+              if (rx.startsWith("P28BULK:")) {
+                ackTotal = (unsigned long)rx.substring(8).toInt();
+                bulkAck = (ackTotal == sizeof(bulk));
+              }
+            }
+            Serial.printf("[CLIENT] Phase28 bulkAck ok=%d total=%lu\n", (int)bulkAck, ackTotal);
+
+            // Reconnect: drop this channel and open a fresh one, then ping/pong.
+            channel.disconnect();
+            delay(1000);
+            got = false;
+            rx = "";
+            bool reconnectOk = false;
+            BLEL2CAPChannel ch2 = BLE.connectL2CAP(bc.getHandle(), 0x0080, 256);
+            if (ch2) {
+              ch2.onData([&](BLEL2CAPChannel ch, const uint8_t *data, size_t len) {
+                syncPhaseFromHost();
+                rx = String((const char *)data, len);
+                got = true;
+              });
+              unsigned long r2 = millis();
+              while (!ch2.isConnected() && (millis() - r2 < 10000)) {
+                delay(20);
+              }
+              if (ch2.isConnected()) {
+                ch2.write((const uint8_t *)"PING", 4);
+                unsigned long p = millis();
+                while (!got && (millis() - p < 10000)) {
+                  delay(20);
+                }
+                rx.trim();
+                reconnectOk = got && (rx == "P28PONG");
+                ch2.disconnect();
+              }
+            }
+            Serial.printf("[CLIENT] Phase28 reconnect ok=%d\n", (int)reconnectOk);
+          }
+        }
+        bc.disconnect();
+        unsigned long dstart = millis();
+        while (bc.isConnected() && (millis() - dstart < 5000)) {
+          delay(20);
+        }
+      }
+    }
+#endif
+    if (!l2cap_supported) {
+      Serial.println("[CLIENT] Phase28 L2CAP not supported, skipping");
+    }
+    Serial.println("[CLIENT] Phase28 done");
+  }
+
+  // ===========================================================================
+  // Phase 29: Connection-parameter update request denial (NimBLE-only)
+  // ===========================================================================
+  // Arm the pre-accept hook to REJECT the peripheral's conn-param update, then
+  // let the server request one. On NimBLE the hook fires and returns false, so
+  // the live interval must stay put; on Bluedroid the hook never fires (no
+  // pre-accept surface) and the phase self-skips.
+  waitForPhase(29);
+  {
+    clientRejectConnParams = true;
+    clientConnParamsReqFired = false;
+    // Give the server time to rebuild its stack and re-advertise serverName.
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase29 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient pc = BLE.createClient();
+      installClientCallbacks(pc);
+      BTStatus s = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        s = pc.connect(targetAddr);
+        if (s) {
+          break;
+        }
+        delay(500);
+      }
+      if (!s) {
+        Serial.printf("[CLIENT] Phase29 connect FAILED: %s\n", s.toString());
+      } else {
+        delay(500);
+        uint16_t beforeInterval = pc.getConnInfo().getInterval();
+        // The server issues the update request ~1 s in; wait for it to land and
+        // for our rejection (or Bluedroid's silent accept) to settle.
+        delay(5000);
+        uint16_t afterInterval = pc.getConnInfo().getInterval();
+        bool fired = clientConnParamsReqFired;
+        bool held = (afterInterval == beforeInterval);
+        Serial.printf(
+          "[CLIENT] Phase29 hookFired=%d beforeInterval=%u afterInterval=%u held=%d\n", (int)fired, (unsigned)beforeInterval, (unsigned)afterInterval, (int)held
+        );
+        pc.disconnect();
+        delay(500);
+      }
+    }
+    clientRejectConnParams = false;
+    Serial.println("[CLIENT] Phase29 done");
+  }
+
+  // ===========================================================================
+  // Phase 30: deleteBond round-trip (delete -> verify gone -> re-pair)
+  // ===========================================================================
+  // The server rebuilt the full secured stack. Delete the client bond, confirm
+  // the store shrank, then reconnect and read the authenticated characteristic
+  // to force a fresh pairing — proving deleteBond fully round-trips and a new
+  // bond is re-established on both stacks.
+  waitForPhase(30);
+  {
+    BLESecurity sec = BLE.getSecurity();
+    auto bondsBefore = sec.getBondedDevices();
+    Serial.printf("[CLIENT] Phase30 bondsBefore=%u\n", (unsigned)bondsBefore.size());
+    (void)sec.deleteAllBonds();
+    auto bondsAfterDelete = sec.getBondedDevices();
+    Serial.printf("[CLIENT] Phase30 bondsAfterDelete=%u\n", (unsigned)bondsAfterDelete.size());
+
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase30 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient rc = BLE.createClient();
+      installClientCallbacks(rc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = rc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase30 reconnect FAILED: %s\n", cs.toString());
+      } else {
+        BLERemoteService svc30 = rc.getService(serviceUUID);
+        if (!svc30) {
+          Serial.println("[CLIENT] Phase30 service not found");
+        } else {
+          BLERemoteCharacteristic sc = svc30.getCharacteristic(secureCharUUID);
+          if (!sc) {
+            Serial.println("[CLIENT] Phase30 secure char not found");
+          } else {
+            // Reading an AuthenticatedRead characteristic forces a fresh pairing
+            // now that the bond was deleted on both ends.
+            String v = sc.readValue();
+            Serial.printf("[CLIENT] Phase30 secureRead=%s\n", v.c_str());
+          }
+        }
+        delay(1500);
+        BLEConnInfo ci = rc.getConnInfo();
+        auto bondsAfterRepair = sec.getBondedDevices();
+        Serial.printf(
+          "[CLIENT] Phase30 reEnc=%d reBond=%d bondsAfterRepair=%u\n", (int)ci.isEncrypted(), (int)ci.isBonded(), (unsigned)bondsAfterRepair.size()
+        );
+        rc.disconnect();
+        delay(500);
+      }
+    }
+    Serial.println("[CLIENT] Phase30 done");
+  }
+
+  // ===========================================================================
+  // Phase 31: Numeric-Comparison reject
+  // ===========================================================================
+  // Arm a reject in the numeric-comparison confirm handler, then reconnect and
+  // read the authenticated characteristic to force a fresh pairing. The reject
+  // must abort pairing: the link stays unencrypted/unbonded, the secure read
+  // fails, and no bond is stored. Runs on both stacks (NC is the default method
+  // when both ends are DisplayYesNo).
+  waitForPhase(31);
+  {
+    clientRejectPairing = true;
+    clientAuthCompleteFired = false;
+    clientLastAuthSuccess = false;
+    BLESecurity sec = BLE.getSecurity();
+    (void)sec.deleteAllBonds();
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase31 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient rc = BLE.createClient();
+      installClientCallbacks(rc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = rc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase31 connect FAILED: %s\n", cs.toString());
+      } else {
+        bool readOk = false;
+        BLERemoteService svc = rc.getService(serviceUUID);
+        if (svc) {
+          BLERemoteCharacteristic sc = svc.getCharacteristic(secureCharUUID);
+          if (sc) {
+            // Reading the AuthenticatedRead characteristic starts pairing, which
+            // we reject; the read must therefore fail (empty result).
+            String v = sc.readValue();
+            readOk = (v.length() > 0);
+          }
+        }
+        delay(2000);
+        BLEConnInfo ci = rc.getConnInfo();
+        auto bonds = sec.getBondedDevices();
+        Serial.printf(
+          "[CLIENT] Phase31 ncReject readOk=%d enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d\n", (int)readOk, (int)ci.isEncrypted(), (int)ci.isBonded(),
+          (unsigned)bonds.size(), (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
+        );
+        rc.disconnect();
+        delay(500);
+      }
+    }
+    clientRejectPairing = false;
+    Serial.println("[CLIENT] Phase31 done");
+  }
+
+  // ===========================================================================
+  // Phase 32: Passkey-entry pairing (central KeyboardOnly, peripheral DisplayOnly)
+  // ===========================================================================
+  // Switch the central to KeyboardOnly so the SMP method negotiates Passkey
+  // Entry against the DisplayOnly peripheral. Supply the fixed passkey from the
+  // onPassKeyRequest handler; the authenticated read must succeed and the link
+  // must end up encrypted + bonded.
+  waitForPhase(32);
+  {
+    clientRejectPairing = false;
+    clientAuthCompleteFired = false;
+    clientLastAuthSuccess = false;
+    BLESecurity sec = BLE.getSecurity();
+    (void)sec.deleteAllBonds();
+    sec.setIOCapability(BLESecurity::KeyboardOnly);
+    delay(1500);
+    bool found = scanForServer();
+    Serial.printf("[CLIENT] Phase32 rescan found=%d\n", (int)found);
+    if (found) {
+      BLEClient pc = BLE.createClient();
+      installClientCallbacks(pc);
+      BTStatus cs = BTStatus::Fail;
+      for (int attempt = 0; attempt < 6; attempt++) {
+        cs = pc.connect(targetAddr);
+        if (cs) {
+          break;
+        }
+        delay(500);
+      }
+      if (!cs) {
+        Serial.printf("[CLIENT] Phase32 connect FAILED: %s\n", cs.toString());
+      } else {
+        BLERemoteService svc = pc.getService(serviceUUID);
+        if (!svc) {
+          Serial.println("[CLIENT] Phase32 service not found");
+        } else {
+          BLERemoteCharacteristic sc = svc.getCharacteristic(secureCharUUID);
+          if (!sc) {
+            Serial.println("[CLIENT] Phase32 secure char not found");
+          } else {
+            String v = sc.readValue();
+            Serial.printf("[CLIENT] Phase32 secureRead=%s\n", v.c_str());
+          }
+        }
+        delay(2000);
+        BLEConnInfo ci = pc.getConnInfo();
+        auto bonds = sec.getBondedDevices();
+        Serial.printf(
+          "[CLIENT] Phase32 passkeyEntry enc=%d bond=%d bonds=%u authFired=%d authSuccess=%d\n", (int)ci.isEncrypted(), (int)ci.isBonded(), (unsigned)bonds.size(),
+          (int)clientAuthCompleteFired, (int)clientLastAuthSuccess
+        );
+        pc.disconnect();
+        delay(500);
+      }
+    }
+    // Restore the numeric-comparison default for any later work.
+    sec.setIOCapability(BLESecurity::DisplayYesNo);
+    Serial.println("[CLIENT] Phase32 done");
+  }
+
+  // ===========================================================================
+  // Phase 33: Periodic advertising lifecycle — sync, terminate, sync-lost (BLE5)
+  // ===========================================================================
+  // Re-sync to the server's periodic train (as in phase 2), then exercise the
+  // teardown transitions the happy path never reached: an explicit
+  // terminatePeriodicSync and an onPeriodicLost after the server stops the
+  // train. Restores a normal stack afterward so memory_release still measures a
+  // meaningful free. Self-skips without BLE5.
+  waitForPhase(33);
+  {
+    bool ble5_ok = false;
+#if BLE5_SUPPORTED
+    BLE.end(false);
+    delay(500);
+    BTStatus st = BLE.begin("BLE_CLT_P33");
+    if (st) {
+      volatile bool found = false;
+      volatile bool synced = false;
+      volatile bool dataRx = false;
+      volatile bool lost = false;
+      volatile uint16_t syncHandle = 0;
+      BLEScan scan = BLE.getScan();
+      scan.onResult([&](BLEAdvertisedDevice dev) {
+        syncPhaseFromHost();
+        if (!found && dev.getName() == targetName) {
+          found = true;
+          targetAddr = dev.getAddress();
+          scan.createPeriodicSync(targetAddr, 1);
+        }
+      });
+      scan.onPeriodicSync([&](uint16_t handle, uint8_t sid, const BTAddress &addr, BLEPhy phy, uint16_t interval) {
+        syncPhaseFromHost();
+        synced = true;
+        syncHandle = handle;
+      });
+      scan.onPeriodicReport([&](uint16_t h, int8_t rssi, int8_t txPower, const uint8_t *data, size_t len) {
+        syncPhaseFromHost();
+        dataRx = true;
+      });
+      scan.onPeriodicLost([&](uint16_t h) {
+        syncPhaseFromHost();
+        lost = true;
+      });
+      scan.startExtended(26000);
+      // Wait for sync + first report.
+      for (int i = 0; i < 150 && !(synced && dataRx); i++) {
+        delay(100);
+      }
+      Serial.printf("[CLIENT] Phase33 synced=%d dataRx=%d\n", (int)synced, (int)dataRx);
+      ble5_ok = synced && dataRx;
+
+      // Observe supervision-timeout sync-lost once the server stops the train.
+      for (int i = 0; i < 120 && !lost; i++) {
+        delay(100);
+      }
+      // Explicit terminate transition (returns fail if the sync was already
+      // lost above; both outcomes are reported for the teardown-coverage gate).
+      BTStatus tt = BTStatus::Fail;
+      if (synced) {
+        tt = scan.terminatePeriodicSync(syncHandle);
+      }
+      Serial.printf("[CLIENT] Phase33 lost=%d terminateOk=%d\n", (int)lost, (int)(bool)tt);
+      scan.stop();
+
+      // Restore a normal stack so memory_release measures a meaningful free.
+      BLE.end(false);
+      delay(500);
+      (void)BLE.begin("BLE_CLT");
+    }
+#endif
+    if (!ble5_ok) {
+      Serial.println("[CLIENT] Phase33 BLE5 not supported, skipping");
+    }
+    Serial.println("[CLIENT] Phase33 done");
+  }
+
+  // ===== Phase 34: Memory release + reinit guard =====
+  waitForPhase(34);
 
   size_t heapBeforeRelease = heap_caps_get_free_size(MALLOC_CAP_8BIT);
   Serial.printf("[CLIENT] Heap before release: %u\n", (unsigned)heapBeforeRelease);

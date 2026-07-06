@@ -34,7 +34,9 @@ void setup() {
   BTStatus status = BLE.begin("Periodic-Sync");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEScan scan = BLE.getScan();

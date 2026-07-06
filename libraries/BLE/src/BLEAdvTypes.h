@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <stdint.h>
@@ -34,9 +34,8 @@ enum class BLEPhy : uint8_t {
  * @brief Legacy and extended advertising PDU / event categories.
  */
 enum class BLEAdvType : uint8_t {
-  Connectable,           ///< Connectable undirected (legacy ADV_IND without scan response)
   ConnectableScannable,  ///< Connectable and scannable undirected (legacy ADV_IND)
-  ConnectableDirected,   ///< Connectable directed (legacy ADV_DIRECT_IND)
+  ConnectableDirected,   ///< Connectable directed, low duty cycle (legacy ADV_DIRECT_IND)
   ScannableUndirected,   ///< Scannable undirected (legacy ADV_SCAN_IND)
   NonConnectable,        ///< Non-connectable undirected (legacy ADV_NONCONN_IND)
   DirectedHighDuty,      ///< Directed high-duty-cycle (< 3.75 ms interval, max 1.28 s)
@@ -56,7 +55,8 @@ struct BLEConnParams {
 
   /**
    * @brief Validates parameters against Bluetooth Core Spec Vol 6, Part B, Section 4.5.1.
-   * @return true if all parameters are within spec-mandated ranges.
+   * @return true if all fields are within their spec-mandated ranges (above) and the
+   *         supervision timeout satisfies timeout > (1 + latency) × maxInterval × 2.
    */
   bool isValid() const;
 };

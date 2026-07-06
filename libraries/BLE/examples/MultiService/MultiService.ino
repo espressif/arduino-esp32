@@ -78,7 +78,9 @@ void setup() {
   BTStatus initStatus = BLE.begin("MultiService");
   if (!initStatus) {
     Serial.printf("FAILED! (%s)\n", initStatus.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -87,7 +89,9 @@ void setup() {
   BLEServer server = BLE.createServer();
   if (!server) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -102,7 +106,9 @@ void setup() {
   BLEService envSvc = server.createService(ENV_SVC_UUID);
   if (!envSvc) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -111,7 +117,9 @@ void setup() {
   tempChr = envSvc.createCharacteristic(TEMP_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
   if (!tempChr) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
   tempChr.setValue("0.00");
@@ -122,7 +130,9 @@ void setup() {
   humChr = envSvc.createCharacteristic(HUM_CHR_UUID, BLEProperty::Read | BLEProperty::Notify, BLEPermissions::OpenRead);
   if (!humChr) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
   humChr.setValue("0.00");
@@ -136,7 +146,9 @@ void setup() {
   BLEService devSvc = server.createService(DEV_SVC_UUID);
   if (!devSvc) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -145,7 +157,9 @@ void setup() {
   BLECharacteristic fwChr = devSvc.createCharacteristic(FW_CHR_UUID, BLEProperty::Read, BLEPermissions::OpenRead);
   if (!fwChr) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
   fwChr.setValue(FIRMWARE_VERSION);
@@ -156,7 +170,9 @@ void setup() {
   BLECharacteristic nameChr = devSvc.createCharacteristic(NAME_CHR_UUID, BLEProperty::Read | BLEProperty::Write, BLEPermissions::OpenReadWrite);
   if (!nameChr) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
   nameChr.setValue("MultiService");
@@ -173,7 +189,9 @@ void setup() {
   BTStatus status = server.start();
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -188,7 +206,9 @@ void setup() {
   status = adv.start();
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 

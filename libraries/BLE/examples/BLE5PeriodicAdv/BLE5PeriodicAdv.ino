@@ -31,7 +31,9 @@ void setup() {
   BTStatus status = BLE.begin("Periodic-ADV");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEAdvertising adv = BLE.getAdvertising();
@@ -49,8 +51,21 @@ void setup() {
   // Interval is in 1.25 ms units: 24 * 1.25 ms = 30 ms
   adv.setPeriodicAdvInterval(ADV_INSTANCE, 24, 24);
 
-  adv.startExtended(ADV_INSTANCE);
-  adv.startPeriodicAdv(ADV_INSTANCE);
+  BTStatus extStatus = adv.startExtended(ADV_INSTANCE);
+  if (!extStatus) {
+    // NotSupported here means this build/SoC lacks BLE 5 extended advertising.
+    Serial.printf("Extended advertising did not start (%s)\n", extStatus.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  BTStatus perStatus = adv.startPeriodicAdv(ADV_INSTANCE);
+  if (!perStatus) {
+    Serial.printf("Periodic advertising did not start (%s)\n", perStatus.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
   Serial.println("Periodic advertising started");
 }
 

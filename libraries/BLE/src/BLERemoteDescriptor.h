@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "WString.h"
@@ -36,6 +36,9 @@ class BLERemoteCharacteristic;
  */
 class BLERemoteDescriptor {
 public:
+  /**
+   * @brief Construct an empty (invalid) handle; obtain a live one via BLERemoteCharacteristic::getDescriptor().
+   */
   BLERemoteDescriptor();
   ~BLERemoteDescriptor() = default;
   BLERemoteDescriptor(const BLERemoteDescriptor &) = default;
@@ -116,6 +119,11 @@ public:
 
 private:
   explicit BLERemoteDescriptor(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+
+  // Performs a GATT read into _impl->value; returns true on success. Backend-defined;
+  // the String/numeric readers above are shared wrappers over it (no extra copy).
+  bool readInto(uint32_t timeoutMs);
+
   std::shared_ptr<Impl> _impl;
   friend class BLERemoteCharacteristic;
 };

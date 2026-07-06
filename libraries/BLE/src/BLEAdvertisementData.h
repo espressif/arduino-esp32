@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <stdint.h>
@@ -45,10 +45,32 @@ inline constexpr BLEAdvFlag operator|(BLEAdvFlag a, BLEAdvFlag b) {
 /**
  * @brief Builder for raw BLE advertisement data payloads.
  *
- * Constructs AD structures per Core Spec Vol 3, Part C, Section 11.
+ * Constructs AD structures per Core Spec Vol 3, Part C, Section 11. By default a
+ * payload targets the 31-octet legacy advertising/scan-response limit; construct
+ * with @ref BLEAdvertisementData(size_t) to build a larger extended-advertising
+ * payload. A field that would overflow the active limit is skipped with a
+ * warning. setName() falls back to a Shortened Local Name (0x08) when the full
+ * name does not fit. UUID and multi-byte values are emitted in little-endian wire
+ * order.
  */
 class BLEAdvertisementData {
 public:
+  /// Maximum AD bytes in a legacy advertising / scan-response PDU (Vol 6, Part B, §2.3.1.2).
+  static constexpr size_t LEGACY_MAX_PAYLOAD = 31;
+  /// Maximum AD bytes the host can stage for one extended advertising set (Vol 4, Part E, §7.8.54).
+  static constexpr size_t EXTENDED_MAX_PAYLOAD = 1650;
+
+  /// Construct a legacy (31-octet) advertisement payload.
+  BLEAdvertisementData() = default;
+
+  /**
+   * @brief Construct an extended-advertising payload with a larger byte budget.
+   * @param maxPayloadLen Payload cap in bytes; clamped to
+   *        [@ref LEGACY_MAX_PAYLOAD, @ref EXTENDED_MAX_PAYLOAD]. Use this only for
+   *        data fed to the BLE5 `setExt*`/`setPeriodicAdvData` paths.
+   */
+  explicit BLEAdvertisementData(size_t maxPayloadLen);
+
   /**
    * @brief Set the AD Flags field (typically GeneralDisc | BrEdrNotSupported).
    * @param flags Bitmask of BLEAdvFlag values.
@@ -56,22 +78,16 @@ public:
   void setFlags(BLEAdvFlag flags);
 
   /**
-   * @brief Set a Complete List of Service UUIDs field.
+   * @brief Add a service UUID to the Complete List of Service UUIDs field.
    * @param uuid The service UUID to advertise.
    */
-  void setCompleteServices(const BLEUUID &uuid);
+  void addServiceUUID(const BLEUUID &uuid);
 
   /**
    * @brief Set a Partial (Incomplete) List of Service UUIDs field.
    * @param uuid The service UUID to advertise.
    */
   void setPartialServices(const BLEUUID &uuid);
-
-  /**
-   * @brief Append a service UUID to the existing service list.
-   * @param uuid The service UUID to add.
-   */
-  void addServiceUUID(const BLEUUID &uuid);
 
   /**
    * @brief Set a Service Data field.
@@ -97,19 +113,13 @@ public:
   void setName(const String &name, bool complete = true);
 
   /**
-   * @brief Set the short name field.
-   * @param name The device short name string.
-   */
-  void setShortName(const String &name);
-
-  /**
    * @brief Set the Appearance field.
    * @param appearance GAP appearance value (e.g., 0x0340 for Generic Remote Control).
    */
   void setAppearance(uint16_t appearance);
 
   /**
-   * @brief Set the Peripheral Preferred Connection Parameters field.
+   * @brief Set the Slave Connection Interval Range AD field (0x12).
    * @param minInterval Minimum connection interval in units of 1.25 ms.
    * @param maxInterval Maximum connection interval in units of 1.25 ms.
    */
@@ -125,6 +135,8 @@ public:
    * @brief Append a raw AD structure to the payload.
    * @param data Pointer to a complete AD structure (length + type + value).
    * @param len  Total length of the AD structure in bytes.
+   * @note Rejected with a warning if it would push the payload past the active
+   *       payload limit (31 octets by default; larger when constructed extended).
    */
   void addRaw(const uint8_t *data, size_t len);
 
@@ -147,6 +159,12 @@ public:
 
 private:
   std::vector<uint8_t> _payload;
+  size_t _maxLen = LEGACY_MAX_PAYLOAD;
+
+  // Append one AD structure: [length][type][head...][tail...]. `tail` may be
+  // null for single-segment fields. Rejects the field if its value exceeds the
+  // 254-octet single-structure limit or would overflow the active payload cap.
+  void appendField(uint8_t type, const uint8_t *head, size_t headLen, const uint8_t *tail = nullptr, size_t tailLen = 0);
   void addField(uint8_t type, const uint8_t *data, size_t len);
 };
 

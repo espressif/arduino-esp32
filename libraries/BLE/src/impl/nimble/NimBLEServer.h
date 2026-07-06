@@ -18,43 +18,24 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
-#include "BLEServer.h"
+#include "impl/common/BLEServerImpl.h"
 
 #include <host/ble_gap.h>
-#include "impl/BLEMutex.h"
-#include <vector>
 #include <memory>
 
-struct BLEServer::Impl : std::enable_shared_from_this<BLEServer::Impl> {
-  bool started = false;
-  bool advertiseOnDisconnect = true;
-
-  std::vector<std::shared_ptr<BLEService::Impl>> services;
-
-  BLEServer::ConnectHandler onConnectCb = nullptr;
-  BLEServer::DisconnectHandler onDisconnectCb = nullptr;
-  BLEServer::MtuChangedHandler onMtuChangedCb = nullptr;
-  BLEServer::ConnParamsHandler onConnParamsCb = nullptr;
-  BLEServer::IdentityHandler onIdentityCb = nullptr;
-
-  std::vector<std::pair<uint16_t, BLEConnInfo>> connections;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
-
-  ~Impl() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
-
-  void connSet(uint16_t connHandle, const BLEConnInfo &connInfo);
-  void connErase(uint16_t connHandle);
-  BLEConnInfo *connFind(uint16_t connHandle);
-
+/**
+ * @brief NimBLE GATT-server implementation (@c BLEServer::Impl).
+ *
+ * Defined in @c impl/nimble/, so everything here is NimBLE-specific; it inherits the
+ * stack-agnostic @c BLEServerImplCommon, giving one uniform @c impl.member type. Layer is
+ * disclosed by file/type: members on @c BLEServer::Impl are NimBLE, members on
+ * @c BLEServerImplCommon are shared.
+ */
+struct BLEServer::Impl : BLEServerImplCommon {
   static int gapEventHandler(struct ble_gap_event *event, void *arg);
-  static BLEServer makeHandle(Impl *impl);
 };
 
 #endif /* BLE_NIMBLE */

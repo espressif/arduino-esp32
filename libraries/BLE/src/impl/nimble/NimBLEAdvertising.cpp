@@ -32,19 +32,23 @@
  *    for legacy advertising PDUs.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
 #include "BLE.h"
 #include "NimBLEAdvertising.h"
 
-#include "impl/BLEImplHelpers.h"
+#include "impl/common/BLEServerImpl.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLEAdvScanHelpers.h"
+#include "impl/common/BLEAdvertisingData.h"
 #include "esp32-hal-log.h"
 
 #if BLE_ADVERTISING_SUPPORTED
 
 #include <host/ble_hs.h>
 #include <host/ble_gap.h>
+#include <cstring>
 
 /**
  * @brief NimBLE GAP callback for advertising: completion, connect, and server forwarding.
@@ -55,25 +59,33 @@
 int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *arg) {
   auto *impl = static_cast<BLEAdvertising::Impl *>(arg);
   if (event->type == BLE_GAP_EVENT_ADV_COMPLETE) {
-    impl->advertising = false;
+    impl->isAdvertising = false;
     BLEAdvertising::CompleteHandler cb;
     {
       BLELockGuard lock(impl->mtx);
       cb = impl->onCompleteCb;
     }
     if (cb) {
+      // Legacy advertising reports instance 0; extended advertising reports the
+      // set that completed (BT Core Spec v5.x, Vol 4, Part E, §7.7.65.18). The
+      // adv_complete.instance field only exists when extended advertising is
+      // compiled in.
+#if BLE5_SUPPORTED
+      cb(event->adv_complete.instance);
+#else
       cb(0);
+#endif
     }
     return 0;
   }
 
   if (event->type == BLE_GAP_EVENT_CONNECT) {
-    impl->advertising = false;
+    impl->isAdvertising = false;
   }
 
   BLEServer server = BLE.createServer();
   if (server) {
-    return server.handleGapEvent(event);
+    return BLEServerImplCommon::forwardGapEvent(server, event);
   }
   return 0;
 }
@@ -82,88 +94,49 @@ int BLEAdvertising::Impl::gapEventCallback(struct ble_gap_event *event, void *ar
 // BLEAdvertising public API (stack-specific)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Sets the device name used when building default advertisement fields.
- * @param name Name string to encode in AD data.
- */
+// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
+
 void BLEAdvertising::setName(const String &name) {
   BLE_CHECK_IMPL();
   impl.deviceName = name;
 }
 
-/**
- * @brief Enables or disables use of a scan response payload (when not using only custom data paths).
- * @param enable True to allow scan response data to be set.
- */
 void BLEAdvertising::setScanResponse(bool enable) {
   BLE_CHECK_IMPL();
   impl.scanResponseEnabled = enable;
 }
 
-/**
- * @brief Sets the high-level advertising PDU type to apply when starting advertising.
- * @param type Connectable, scannable, directed, etc.
- */
 void BLEAdvertising::setType(BLEAdvType type) {
   BLE_CHECK_IMPL();
   impl.advType = type;
 }
 
-/**
- * @brief Sets advertising interval range in milliseconds (converted to 0.625 ms units internally).
- * @param minMs Minimum interval in ms.
- * @param maxMs Maximum interval in ms.
- * @note BT Core Spec v5.x, Vol 6, Part B, §4.4.2.2:
- *       Controller timing units are 0.625 ms; range 0x0020 (20 ms) – 0x4000 (10.24 s).
- *       Conversion: units = (ms × 1000) / 625.
- */
 void BLEAdvertising::setInterval(uint16_t minMs, uint16_t maxMs) {
   BLE_CHECK_IMPL();
-  impl.minInterval = (minMs * 1000) / 625;
-  impl.maxInterval = (maxMs * 1000) / 625;
+  impl.minInterval = bleMsToUnits0625(minMs);
+  impl.maxInterval = bleMsToUnits0625(maxMs);
 }
 
-/**
- * @brief Sets the preferred connection interval minimum (as used in AD fields when applicable).
- * @param v Preferred minimum connection interval.
- */
 void BLEAdvertising::setMinPreferred(uint16_t v) {
   BLE_CHECK_IMPL();
   impl.minPreferred = v;
 }
 
-/**
- * @brief Sets the preferred connection interval maximum (as used in AD fields when applicable).
- * @param v Preferred maximum connection interval.
- */
 void BLEAdvertising::setMaxPreferred(uint16_t v) {
   BLE_CHECK_IMPL();
   impl.maxPreferred = v;
 }
 
-/**
- * @brief Whether to include TX power in built-in advertisement/scan response fields.
- * @param include True to include the current radio TX power.
- */
 void BLEAdvertising::setTxPower(bool include) {
   BLE_CHECK_IMPL();
   impl.includeTxPower = include;
 }
 
-/**
- * @brief Sets the GAP appearance value for default advertisement data.
- * @param appearance 16-bit appearance constant.
- */
 void BLEAdvertising::setAppearance(uint16_t appearance) {
   BLE_CHECK_IMPL();
   impl.appearance = appearance;
 }
 
-/**
- * @brief Sets the white-list / filter policy bits for scan and connection requests.
- * @param scanWl If true, restrict scan requests to the whitelist.
- * @param connWl If true, restrict connection requests to the whitelist.
- */
 void BLEAdvertising::setScanFilter(bool scanWl, bool connWl) {
   BLE_CHECK_IMPL();
   impl.filterPolicy = 0;
@@ -175,12 +148,9 @@ void BLEAdvertising::setScanFilter(bool scanWl, bool connWl) {
   }
 }
 
-/**
- * @brief Restores all advertising options and buffers to a default empty state.
- */
 void BLEAdvertising::reset() {
   BLE_CHECK_IMPL();
-  if (impl.advertising) {
+  if (impl.isAdvertising) {
     stop();
   }
   impl.serviceUUIDs.clear();
@@ -198,42 +168,70 @@ void BLEAdvertising::reset() {
   impl.advType = BLEAdvType::ConnectableScannable;
   impl.scanResponseEnabled = true;
   impl.filterPolicy = 0;
+#if BLE5_SUPPORTED
+  // The BLEAdvertising::Impl behind getAdvertising() is a process-wide static
+  // that outlives BLE.end()/begin(); clear the extended/periodic per-instance
+  // state (and the controller's configured sets, best-effort) so a fresh begin()
+  // — including the reserved legacy set — starts from a clean slate. reset() runs
+  // from BLEClass::end() while the host is still enabled (see NimBLECore.cpp).
+  //
+  // Stop every instance first: ble_gap_ext_adv_clear() returns BLE_HS_EBUSY (and
+  // logs an error) if any instance still has an active advertising op. That can
+  // happen when the legacy start()/stop() and extended startExtended()/
+  // stopExtended() paths are mixed, because they share a single `advertising`
+  // flag — e.g. stopExtended() clears the flag, so a following stop() no-ops and
+  // leaves the reserved legacy set enabled. Disabling each instance up-front is
+  // quiet for configured-but-inactive and unconfigured instances (indices stay
+  // within BLE_ADV_INSTANCES) and guarantees the clear succeeds cleanly.
+  for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
+#if BLE_PERIODIC_ADV_SUPPORTED
+    if (impl.extInstances[i].periodicAdvRegistered) {
+      (void)ble_gap_periodic_adv_stop(i);
+    }
+#endif
+    (void)ble_gap_ext_adv_stop(i);
+  }
+  impl.isAdvertising = false;
+  (void)ble_gap_ext_adv_clear();
+  for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
+    impl.extInstances[i] = Impl::ExtInstance{};
+  }
+#endif
 }
 
-/**
- * @brief Uses caller-supplied raw advertisement bytes instead of fields built from UUIDs/name.
- * @param data Encoded AD payload.
- */
 void BLEAdvertising::setAdvertisementData(const BLEAdvertisementData &data) {
   BLE_CHECK_IMPL();
   impl.customAdvData = data;
   impl.useCustomAdvData = true;
 }
 
-/**
- * @brief Sets custom raw scan response bytes; implies custom scan response mode.
- * @param data Encoded scan response payload.
- */
 void BLEAdvertising::setScanResponseData(const BLEAdvertisementData &data) {
   BLE_CHECK_IMPL();
   impl.customScanRspData = data;
   impl.useCustomScanRsp = true;
 }
 
-/**
- * @brief Builds AD/scan response, then starts GAP advertising for a duration or indefinitely.
- * @param durationMs Duration in ms (0 = forever, scaled to stack units in the call).
- * @return Outcome of stack calls and data setup.
- */
 BTStatus BLEAdvertising::start(uint32_t durationMs) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (impl.advertising) {
+  if (impl.isAdvertising) {
     return BTStatus::OK;
   }
 
+#if BLE5_SUPPORTED
+  // On ext-adv-enabled controllers the native-legacy ble_gap_adv_* path does not
+  // radiate; run the public "legacy" advertising over the extended API using a
+  // legacy PDU on the reserved instance.
+  int rc = impl.startLegacyViaExtAdv(durationMs);
+  if (rc != 0) {
+    log_e("startLegacyViaExtAdv: rc=%d", rc);
+    return BTStatus::Fail;
+  }
+  impl.isAdvertising = true;
+  log_i("Advertising: started (legacy over ext instance %u, duration=%u ms, %u service UUID(s))", Impl::kLegacyInstance, durationMs, (unsigned)impl.serviceUUIDs.size());
+  return BTStatus::OK;
+#else
   struct ble_gap_adv_params advParams = {};
   switch (impl.advType) {
-    case BLEAdvType::Connectable:
     case BLEAdvType::ConnectableScannable:
       advParams.conn_mode = BLE_GAP_CONN_MODE_UND;
       advParams.disc_mode = BLE_GAP_DISC_MODE_GEN;
@@ -293,6 +291,18 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   if (impl.appearance > 0) {
     fields.appearance = impl.appearance;
     fields.appearance_is_present = 1;
+  }
+
+  // Slave Connection Interval Range (0x12) — same semantics as BLEAdvDataBuilder.
+  uint8_t slaveItvl[4];
+  if (impl.minPreferred != 0 || impl.maxPreferred != 0) {
+    const uint16_t minInt = impl.minPreferred != 0 ? impl.minPreferred : impl.maxPreferred;
+    const uint16_t maxInt = impl.maxPreferred != 0 ? impl.maxPreferred : impl.minPreferred;
+    slaveItvl[0] = static_cast<uint8_t>(minInt & 0xFF);
+    slaveItvl[1] = static_cast<uint8_t>(minInt >> 8);
+    slaveItvl[2] = static_cast<uint8_t>(maxInt & 0xFF);
+    slaveItvl[3] = static_cast<uint8_t>(maxInt >> 8);
+    fields.slave_itvl_range = slaveItvl;
   }
 
   if (impl.useCustomAdvData) {
@@ -388,41 +398,38 @@ BTStatus BLEAdvertising::start(uint32_t durationMs) {
   }
 
   int32_t duration = (durationMs == 0) ? BLE_HS_FOREVER : (durationMs / 10);
-  int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), NULL, duration, &advParams, Impl::gapEventCallback, &impl);
+  int rc = ble_gap_adv_start(static_cast<uint8_t>(BLE.getOwnAddressType()), NULL, duration, &advParams, BLEAdvertising::Impl::gapEventCallback, &impl);
   if (rc != 0) {
     log_e("ble_gap_adv_start: rc=%d", rc);
     return BTStatus::Fail;
   }
 
   log_i("Advertising: started (duration=%u ms, %u service UUID(s))", durationMs, (unsigned)impl.serviceUUIDs.size());
-  impl.advertising = true;
+  impl.isAdvertising = true;
   return BTStatus::OK;
+#endif /* BLE5_SUPPORTED */
 }
 
-/**
- * @brief Stops active advertising.
- *
- * The @c advertising flag is always cleared on return, even when
- * @c ble_gap_adv_stop() reports @c BLE_HS_EALREADY (advertising was not
- * running — e.g. after a @c BLE.end() / @c BLE.begin() stack restart).
- * Not clearing the flag on @c EALREADY would leave @c advertising == true,
- * causing a subsequent @c start() to return immediately as a no-op
- * (it guards with @c if (impl.advertising) return OK;).  This matches the
- * pattern used by @c BLEScan::stop() and Bluedroid's @c BLEAdvertising::stop().
- *
- * @return OK on success or when already stopped; Fail on unexpected errors.
- */
+// The advertising flag is always cleared on return, even when ble_gap_adv_stop()
+// reports BLE_HS_EALREADY (advertising was not running, e.g. after a BLE.end() /
+// BLE.begin() stack restart). Leaving the flag set would make a subsequent start()
+// return immediately as a no-op. Matches BLEScan::stop() and Bluedroid's
+// BLEAdvertising::stop().
 BTStatus BLEAdvertising::stop() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.advertising) {
+  if (!impl.isAdvertising) {
     return BTStatus::OK;
   }
   log_d("Advertising: stop");
+#if BLE5_SUPPORTED
+  int rc = ble_gap_ext_adv_stop(Impl::kLegacyInstance);
+#else
   int rc = ble_gap_adv_stop();
+#endif
   // Always clear the flag — the stack has stopped (or was already stopped).
   // BLE_HS_EALREADY means "not currently advertising" which is our target
   // state; treat it as success, not an error.
-  impl.advertising = false;
+  impl.isAdvertising = false;
   if (rc != 0 && rc != BLE_HS_EALREADY) {
     log_e("Advertising: ble_gap_adv_stop rc=%d", rc);
     return BTStatus::Fail;
@@ -431,19 +438,12 @@ BTStatus BLEAdvertising::stop() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Registers a callback invoked when an advertising session completes.
- * @param handler Callback (may be null to clear).
- */
 void BLEAdvertising::onComplete(CompleteHandler handler) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
   impl.onCompleteCb = handler;
 }
 
-/**
- * @brief Clears the on-complete callback.
- */
 void BLEAdvertising::resetCallbacks() {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
@@ -451,40 +451,480 @@ void BLEAdvertising::resetCallbacks() {
 }
 
 // --------------------------------------------------------------------------
-// BLEClass::getAdvertising() + advertising shortcuts
+// Extended advertising (BLE5 TX)
+//
+// Spec: BT Core Spec v5.x, Vol 6, Part B, §4.4.2 (extended advertising events).
+// NimBLE requires ble_gap_ext_adv_configure() to run before ext_adv_set_data()
+// and ext_adv_start(); the per-setter public API therefore accumulates the
+// params in Impl::extInstances[] and (re)configures the controller lazily the
+// first time data/start is issued after a parameter change.
 // --------------------------------------------------------------------------
 
-/**
- * @brief Returns a BLEAdvertising object backed by a static shared implementation.
- * @return Valid object if BLE is initialized; otherwise empty.
- */
-BLEAdvertising BLEClass::getAdvertising() {
-  if (!isInitialized()) {
-    log_e("getAdvertising: BLE not initialized");
-    return BLEAdvertising();
+#if BLE5_SUPPORTED
+
+BLEAdvertising::Impl::ExtInstance *BLEAdvertising::Impl::extInstanceAt(uint8_t instance) {
+  // The top instance (kLegacyInstance) is reserved for the public legacy
+  // start()/stop() path, so user-addressable extended sets stop below it.
+  if (instance >= kLegacyInstance) {
+    return nullptr;
   }
-  static std::shared_ptr<BLEAdvertising::Impl> advImpl;
-  if (!advImpl) {
-    advImpl = std::make_shared<BLEAdvertising::Impl>();
+  ExtInstance *extInst = &extInstances[instance];
+  if (!extInst->slotInitialized) {
+    extInst->slotInitialized = true;
+    extInst->params.itvl_min = 0x30;  // 30 ms in 0.625 ms units
+    extInst->params.itvl_max = 0x60;  // 60 ms
+    extInst->params.primary_phy = BLE_HCI_LE_PHY_1M;
+    extInst->params.secondary_phy = BLE_HCI_LE_PHY_1M;
+    extInst->params.tx_power = 127;   // 127 = no preference
+    extInst->params.connectable = 1;  // default: connectable extended (non-scannable)
   }
-  return BLEAdvertising(advImpl);
+  return extInst;
 }
 
-/**
- * @brief Starts advertising on the process-wide default BLEAdvertising instance.
- * @return Result of Advertisement start on that instance.
- */
-BTStatus BLEClass::startAdvertising() {
-  return getAdvertising().start();
+int BLEAdvertising::Impl::extEnsureConfigured(uint8_t instance) {
+  ExtInstance *extInst = extInstanceAt(instance);
+  if (!extInst) {
+    return BLE_HS_EINVAL;
+  }
+  if (extInst->extAdvRegistered) {
+    return 0;
+  }
+  extInst->params.own_addr_type = static_cast<uint8_t>(BLE.getOwnAddressType());
+  int rc = ble_gap_ext_adv_configure(instance, &extInst->params, nullptr, BLEAdvertising::Impl::gapEventCallback, this);
+  if (rc == 0) {
+    extInst->extAdvRegistered = true;
+  }
+  return rc;
 }
 
-/**
- * @brief Stops advertising for the default advertising instance.
- * @return Result of stop().
- */
-BTStatus BLEClass::stopAdvertising() {
-  return getAdvertising().stop();
+// Fills a legacy-PDU extended params block from the shared advertising-type
+// mapping (BT Core Spec v5.x, Vol 6, Part B, §4.4.2.4 legacy PDU combinations).
+static void fillLegacyPduExtAdvParams(BLEAdvType type, struct ble_gap_ext_adv_params &params) {
+  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/true);
+  params.legacy_pdu = 1;
+  params.connectable = props.connectable;
+  params.scannable = props.scannable;
+  params.directed = props.directed;
+  params.high_duty_directed = props.highDutyDirected;
 }
+
+int BLEAdvertising::Impl::startLegacyViaExtAdv(uint32_t durationMs) {
+  // Build the legacy-PDU params fresh on every start(): the controller instance
+  // is torn down on BLE.end() (and reset()), so we always reconfigure.
+  struct ble_gap_ext_adv_params params = {};
+  fillLegacyPduExtAdvParams(advType, params);
+  params.own_addr_type = static_cast<uint8_t>(BLE.getOwnAddressType());
+  params.primary_phy = BLE_HCI_LE_PHY_1M;    // legacy PDUs are 1M only
+  params.secondary_phy = BLE_HCI_LE_PHY_1M;
+  params.itvl_min = minInterval;
+  params.itvl_max = maxInterval;
+  params.tx_power = 127;  // no preference
+  params.sid = 0;
+
+  int rc = ble_gap_ext_adv_configure(kLegacyInstance, &params, nullptr, BLEAdvertising::Impl::gapEventCallback, this);
+  if (rc != 0) {
+    return rc;
+  }
+
+  const bool scannable = params.scannable != 0;
+  String name = deviceName.length() > 0 ? deviceName : BLE.getDeviceName();
+
+  // Primary advertisement data. The name is carried in the scan response when
+  // scan response is enabled and the PDU is scannable (CSS Part A §1.2).
+  const bool nameInScanRsp = scanResponseEnabled && scannable;
+  if (useCustomAdvData) {
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(customAdvData.data(), customAdvData.length());
+    if (!om) {
+      return BLE_HS_ENOMEM;
+    }
+    rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
+  } else {
+    BLEAdvertisementData adv = BLEAdvDataBuilder::buildLegacyAdvData(
+      name, serviceUUIDs, appearance, includeTxPower, BLE.getPower(), nameInScanRsp, minPreferred, maxPreferred
+    );
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(adv.data(), adv.length());
+    if (!om) {
+      return BLE_HS_ENOMEM;
+    }
+    rc = ble_gap_ext_adv_set_data(kLegacyInstance, om);
+  }
+  if (rc != 0) {
+    return rc;
+  }
+
+  // Scan response (only valid for scannable PDUs).
+  if (scannable && scanResponseEnabled) {
+    struct os_mbuf *om;
+    if (useCustomScanRsp) {
+      om = ble_hs_mbuf_from_flat(customScanRspData.data(), customScanRspData.length());
+    } else {
+      BLEAdvertisementData rsp = BLEAdvDataBuilder::buildLegacyScanRespData(name);
+      om = ble_hs_mbuf_from_flat(rsp.data(), rsp.length());
+    }
+    if (!om) {
+      return BLE_HS_ENOMEM;
+    }
+    rc = ble_gap_ext_adv_rsp_set_data(kLegacyInstance, om);
+    if (rc != 0) {
+      return rc;
+    }
+  }
+
+  // Extended advertising duration is in 10 ms units; 0 == no expiration.
+  int duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  return ble_gap_ext_adv_start(kLegacyInstance, duration, 0);
+}
+
+void BLEAdvertising::setExtType(uint8_t instance, BLEAdvType type) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtType: instance %u out of range", instance);
+    return;
+  }
+  // Extended PDU: a connectable set cannot also be scannable (Vol 6, Part B, §4.4.2.4).
+  const BLEExtAdvProps props = advTypeToExtAdvProps(type, /*legacyPdu=*/false);
+  extInst->params.legacy_pdu = 0;
+  extInst->params.connectable = props.connectable;
+  extInst->params.scannable = props.scannable;
+  extInst->params.directed = props.directed;
+  extInst->params.high_duty_directed = props.highDutyDirected;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtPhy(uint8_t instance, BLEPhy primaryPhy, BLEPhy secondaryPhy) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtPhy: instance %u out of range", instance);
+    return;
+  }
+  // BLEPhy enum values match BLE_HCI_LE_PHY_* codes (1M=1, 2M=2, Coded=3).
+  extInst->params.primary_phy = static_cast<uint8_t>(primaryPhy);
+  extInst->params.secondary_phy = static_cast<uint8_t>(secondaryPhy);
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtTxPower(uint8_t instance, int8_t txPower) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtTxPower: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.tx_power = txPower;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtInterval: instance %u out of range", instance);
+    return;
+  }
+  // Extended advertising intervals are in 0.625 ms controller units.
+  extInst->params.itvl_min = minInterval;
+  extInst->params.itvl_max = maxInterval;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtChannelMap(uint8_t instance, uint8_t channelMap) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtChannelMap: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.channel_map = channelMap;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtSID(uint8_t instance, uint8_t sid) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtSID: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.sid = sid;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtAnonymous(uint8_t instance, bool anonymous) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtAnonymous: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.anonymous = anonymous ? 1 : 0;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtIncludeTxPower(uint8_t instance, bool include) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtIncludeTxPower: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.include_tx_power = include ? 1 : 0;
+  extInst->extAdvRegistered = false;
+}
+
+void BLEAdvertising::setExtScanReqNotify(uint8_t instance, bool enable) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setExtScanReqNotify: instance %u out of range", instance);
+    return;
+  }
+  extInst->params.scan_req_notif = enable ? 1 : 0;
+  extInst->extAdvRegistered = false;
+}
+
+BTStatus BLEAdvertising::setExtAdvertisementData(uint8_t instance, const BLEAdvertisementData &data) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!impl.extInstanceAt(instance)) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.length());
+  if (!om) {
+    return BTStatus::NoMemory;
+  }
+  // ble_gap_ext_adv_set_data takes ownership of the mbuf (frees on success/error).
+  rc = ble_gap_ext_adv_set_data(instance, om);
+  if (rc != 0) {
+    log_e("ext_adv_set_data inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::setExtScanResponseData(uint8_t instance, const BLEAdvertisementData &data) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!impl.extInstanceAt(instance)) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.length());
+  if (!om) {
+    return BTStatus::NoMemory;
+  }
+  rc = ble_gap_ext_adv_rsp_set_data(instance, om);
+  if (rc != 0) {
+    log_e("ext_adv_rsp_set_data inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t instance, const BTAddress &addr) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!impl.extInstanceAt(instance)) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  ble_addr_t a;
+  a.type = static_cast<uint8_t>(addr.type());
+  memcpy(a.val, addr.data(), 6);
+  rc = ble_gap_ext_adv_set_addr(instance, &a);
+  if (rc != 0) {
+    log_e("ext_adv_set_addr inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::startExtended(uint8_t instance, uint32_t durationMs, uint8_t maxEvents) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  if (!impl.extInstanceAt(instance)) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  // Extended advertising duration is in 10 ms units; 0 == no expiration.
+  int duration = (durationMs == 0) ? 0 : static_cast<int>(durationMs / 10);
+  rc = ble_gap_ext_adv_start(instance, duration, maxEvents);
+  if (rc != 0) {
+    log_e("ext_adv_start inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  impl.isAdvertising = true;
+  log_i("Advertising: extended started (instance=%u)", instance);
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::stopExtended(uint8_t instance) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  int rc = ble_gap_ext_adv_stop(instance);
+  impl.isAdvertising = false;
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    log_e("ext_adv_stop inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::removeExtended(uint8_t instance) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  int rc = ble_gap_ext_adv_remove(instance);
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    log_e("ext_adv_remove inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  if (instance < Impl::kMaxExtInstances) {
+    impl.extInstances[instance] = Impl::ExtInstance{};
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::clearExtended() {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  int rc = ble_gap_ext_adv_clear();
+  if (rc != 0) {
+    log_e("ext_adv_clear: rc=%d", rc);
+    return BTStatus::Fail;
+  }
+  for (uint8_t i = 0; i < Impl::kMaxExtInstances; i++) {
+    impl.extInstances[i] = Impl::ExtInstance{};
+  }
+  return BTStatus::OK;
+}
+
+// --------------------------------------------------------------------------
+// Periodic advertising (BLE5 TX)
+//
+// Periodic advertising runs on top of an extended, non-connectable,
+// non-scannable, non-anonymous instance (Vol 6, Part B, §4.4.2.9). Requires
+// CONFIG_BT_NIMBLE_ENABLE_PERIODIC_ADV in addition to CONFIG_BT_NIMBLE_EXT_ADV;
+// otherwise these entry points report NotSupported.
+// --------------------------------------------------------------------------
+
+#if BLE_PERIODIC_ADV_SUPPORTED
+
+void BLEAdvertising::setPeriodicAdvInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setPeriodicAdvInterval: instance %u out of range", instance);
+    return;
+  }
+  extInst->periodicParams.itvl_min = minInterval;
+  extInst->periodicParams.itvl_max = maxInterval;
+  extInst->periodicAdvRegistered = false;
+}
+
+void BLEAdvertising::setPeriodicAdvTxPower(uint8_t instance, bool include) {
+  BLE_CHECK_IMPL();
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    log_e("setPeriodicAdvTxPower: instance %u out of range", instance);
+    return;
+  }
+  extInst->periodicParams.include_tx_power = include ? 1 : 0;
+  extInst->periodicAdvRegistered = false;
+}
+
+BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t instance, const BLEAdvertisementData &data) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  if (!extInst->periodicAdvRegistered) {
+    rc = ble_gap_periodic_adv_configure(instance, &extInst->periodicParams);
+    if (rc != 0) {
+      log_e("periodic_adv_configure inst %u: rc=%d", instance, rc);
+      return BTStatus::Fail;
+    }
+    extInst->periodicAdvRegistered = true;
+  }
+  struct os_mbuf *om = ble_hs_mbuf_from_flat(data.data(), data.length());
+  if (!om) {
+    return BTStatus::NoMemory;
+  }
+#if defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)
+  struct ble_gap_periodic_adv_set_data_params params = {};
+  rc = ble_gap_periodic_adv_set_data(instance, om, &params);
+#else
+  rc = ble_gap_periodic_adv_set_data(instance, om);
+#endif
+  if (rc != 0) {
+    log_e("periodic_adv_set_data inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::startPeriodicAdv(uint8_t instance) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  auto *extInst = impl.extInstanceAt(instance);
+  if (!extInst) {
+    return BTStatus::InvalidParam;
+  }
+  int rc = impl.extEnsureConfigured(instance);
+  if (rc != 0) {
+    log_e("ext_adv_configure inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  if (!extInst->periodicAdvRegistered) {
+    rc = ble_gap_periodic_adv_configure(instance, &extInst->periodicParams);
+    if (rc != 0) {
+      log_e("periodic_adv_configure inst %u: rc=%d", instance, rc);
+      return BTStatus::Fail;
+    }
+    extInst->periodicAdvRegistered = true;
+  }
+#if defined(CONFIG_BT_NIMBLE_PERIODIC_ADV_ENH)
+  struct ble_gap_periodic_adv_start_params params = {};
+  rc = ble_gap_periodic_adv_start(instance, &params);
+#else
+  rc = ble_gap_periodic_adv_start(instance);
+#endif
+  if (rc != 0) {
+    log_e("periodic_adv_start inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t instance) {
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  (void)impl;
+  int rc = ble_gap_periodic_adv_stop(instance);
+  if (rc != 0 && rc != BLE_HS_EALREADY) {
+    log_e("periodic_adv_stop inst %u: rc=%d", instance, rc);
+    return BTStatus::Fail;
+  }
+  return BTStatus::OK;
+}
+
+#endif /* BLE_PERIODIC_ADV_SUPPORTED */
+
+#endif /* BLE5_SUPPORTED */
 
 #else /* !BLE_ADVERTISING_SUPPORTED -- stubs */
 
@@ -556,20 +996,9 @@ void BLEAdvertising::resetCallbacks() {
   log_w("Advertising not supported");
 }
 
-BLEAdvertising BLEClass::getAdvertising() {
-  log_w("Advertising not supported");
-  return BLEAdvertising();
-}
-
-BTStatus BLEClass::startAdvertising() {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
-
-BTStatus BLEClass::stopAdvertising() {
-  log_w("Advertising not supported");
-  return BTStatus::NotSupported;
-}
+// BLE5 extended/periodic advertising need no stubs here: the advertising role is
+// unavailable, so BLE5_ADV_TX_SUPPORTED / BLE_PERIODIC_ADV_TX_SUPPORTED are 0 and
+// the shared NotSupported fallback in BLEAdvertising.cpp defines those methods.
 
 #endif /* BLE_ADVERTISING_SUPPORTED */
 

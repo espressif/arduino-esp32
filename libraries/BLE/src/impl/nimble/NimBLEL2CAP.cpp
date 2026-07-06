@@ -21,66 +21,123 @@
  * @brief NimBLE Connection-Oriented Channels (CoC) L2CAP: server, client connect, and channel I/O.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_L2CAP_SUPPORTED && BLE_NIMBLE
 
 #include "NimBLEL2CAP.h"
 #include "BLE.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/common/BLEL2CAPImpl.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLESync.h"
 #include "esp32-hal-log.h"
+
+#include <algorithm>
+
+// RX flatten hot-path threshold — NOT the channel CoC MTU. Channel MTU is
+// whatever the caller passed to createL2CAPServer / connectL2CAP (commonly
+// 128, 256, 512, …). Most SDUs fit in a small stack buffer; larger ones spill
+// to a heap vector in flattenRxSdu(). Keeping this fixed avoids a VLA / per-
+// packet MTU-sized stack allocation on the NimBLE host task.
+static const size_t kL2capRxStackBuf = 256;
+
+// Flatten a received SDU into contiguous bytes for the data callback. Prefers
+// the caller-provided stack buffer, spilling to @p heapBuf only when the SDU is
+// larger than the stack buffer, which avoids a heap allocation on the RX hot
+// path for typical payloads. The returned pointer stays valid while both
+// buffers are in scope.
+static const uint8_t *flattenRxSdu(struct os_mbuf *rxBuf, uint8_t *stackBuf, size_t stackCap, std::vector<uint8_t> &heapBuf, uint16_t &outLen) {
+  outLen = OS_MBUF_PKTLEN(rxBuf);
+  uint8_t *dst = stackBuf;
+  if (outLen > stackCap) {
+    heapBuf.resize(outLen);
+    dst = heapBuf.data();
+  }
+  os_mbuf_copydata(rxBuf, 0, outLen, dst);
+  return dst;
+}
 
 // --------------------------------------------------------------------------
 // BLEL2CAPChannel
 // --------------------------------------------------------------------------
 
-/**
- * @brief Constructs an empty L2CAP channel handle (not connected).
- */
+// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
+
 BLEL2CAPChannel::BLEL2CAPChannel() : _impl(nullptr) {}
 
-/**
- * @brief Tests whether the channel object holds a valid implementation pointer.
- * @return True if bound to an implementation; false otherwise.
- */
 BLEL2CAPChannel::operator bool() const {
   return _impl != nullptr;
 }
 
-/**
- * @brief Queues an SDU for transmission on the L2CAP channel.
- * @param data Pointer to the payload to send.
- * @param len Byte length of the payload.
- * @return @c OK if queued or stalled with flow control; @c NoMemory or @c Fail on hard errors.
- */
 BTStatus BLEL2CAPChannel::write(const uint8_t *data, size_t len) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
-  if (!impl.connected || !impl.chan) {
+  if (!impl.connected || !impl.chan || !data) {
     return BTStatus::InvalidState;
   }
-
-  struct os_mbuf *om = ble_hs_mbuf_from_flat(data, len);
-  if (!om) {
-    log_e("Failed to allocate mbuf for L2CAP write");
-    return BTStatus::NoMemory;
-  }
-
-  int rc = ble_l2cap_send(impl.chan, om);
-  if (rc == BLE_HS_ESTALLED) {
-    // Flow control stall — data is queued and will be sent when un-stalled
+  if (len == 0) {
     return BTStatus::OK;
   }
-  if (rc != 0) {
-    log_e("ble_l2cap_send failed: rc=%d", rc);
-    os_mbuf_free_chain(om);
+
+  // NimBLE does not segment oversized SDUs — each ble_l2cap_send must be
+  // ≤ peer_coc_mtu. Chunk here so the public API matches its documented
+  // "larger than getMTU() will be segmented" contract.
+  struct ble_l2cap_chan_info info;
+  if (ble_l2cap_get_chan_info(impl.chan, &info) != 0 || info.peer_coc_mtu == 0) {
+    log_e("L2CAP write: failed to read peer CoC MTU");
     return BTStatus::Fail;
+  }
+  const size_t chunkMax = info.peer_coc_mtu;
+
+  size_t offset = 0;
+  while (offset < len) {
+    if (!impl.connected || !impl.chan) {
+      return BTStatus::InvalidState;
+    }
+    const size_t chunk = std::min(chunkMax, len - offset);
+    struct os_mbuf *om = ble_hs_mbuf_from_flat(data + offset, chunk);
+    if (!om) {
+      log_e("Failed to allocate mbuf for L2CAP write");
+      return BTStatus::NoMemory;
+    }
+
+    // Retry on ESTALLED / EBUSY: the stack owns at most one in-flight SDU, so
+    // a multi-chunk write must wait for COC_TX_UNSTALLED between chunks.
+    for (;;) {
+      impl.txSync.take();
+      int rc = ble_l2cap_send(impl.chan, om);
+      if (rc == 0) {
+        // Sent immediately — no unstall event will arrive for this SDU.
+        impl.txSync.give(BTStatus::OK);
+        break;
+      }
+      if (rc == BLE_HS_ESTALLED) {
+        // Controller took ownership; wait for credits before the next chunk.
+        BTStatus st = impl.txSync.wait(10000);
+        if (st != BTStatus::OK) {
+          log_e("L2CAP write: timed out waiting for TX unstall");
+          return st == BTStatus::Timeout ? BTStatus::Timeout : st;
+        }
+        break;
+      }
+      if (rc == BLE_HS_EBUSY) {
+        // Previous SDU still draining — wait and retry the same mbuf.
+        BTStatus st = impl.txSync.wait(10000);
+        if (st != BTStatus::OK) {
+          log_e("L2CAP write: timed out waiting for TX unstall (EBUSY)");
+          os_mbuf_free_chain(om);
+          return st == BTStatus::Timeout ? BTStatus::Timeout : st;
+        }
+        continue;
+      }
+      log_e("ble_l2cap_send failed: rc=%d", rc);
+      impl.txSync.give(BTStatus::Fail);
+      os_mbuf_free_chain(om);
+      return BTStatus::Fail;
+    }
+    offset += chunk;
   }
   return BTStatus::OK;
 }
 
-/**
- * @brief Closes the underlying NimBLE L2CAP channel.
- * @return @c OK on success, or @c InvalidState / @c Fail when not connected.
- */
 BTStatus BLEL2CAPChannel::disconnect() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   if (!impl.connected || !impl.chan) {
@@ -96,11 +153,6 @@ BTStatus BLEL2CAPChannel::disconnect() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Registers a callback for received CoC data on this channel.
- * @param handler User handler; replaces any previous data handler.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPChannel::onData(DataHandler handler) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -108,11 +160,6 @@ BTStatus BLEL2CAPChannel::onData(DataHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Registers a callback for channel disconnect events.
- * @param handler User handler; replaces any previous disconnect handler.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPChannel::onDisconnect(DisconnectHandler handler) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -120,10 +167,6 @@ BTStatus BLEL2CAPChannel::onDisconnect(DisconnectHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Clears the data and disconnect handlers on the channel.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPChannel::resetCallbacks() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -132,63 +175,41 @@ BTStatus BLEL2CAPChannel::resetCallbacks() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Reports whether the channel is connected.
- * @return True when the implementation is present and connected.
- */
 bool BLEL2CAPChannel::isConnected() const {
   return _impl && _impl->connected;
 }
 
-/**
- * @brief Returns the PSM the channel is using.
- * @return Protocol/Service Multiplexer value, or 0 if no implementation.
- */
 uint16_t BLEL2CAPChannel::getPSM() const {
   return _impl ? _impl->psm : 0;
 }
 
-/**
- * @brief Returns the GAP connection handle for the underlying link.
- * @return Connection handle, or @c BLE_HS_CONN_HANDLE_NONE if unknown.
- */
 uint16_t BLEL2CAPChannel::getConnHandle() const {
   return _impl ? _impl->connHandle : BLE_HS_CONN_HANDLE_NONE;
 }
 
-/**
- * @brief Returns the negotiated/observed L2CAP MTU for the channel.
- * @return Our MTU in bytes, or 0 if the channel is not available.
- */
 uint16_t BLEL2CAPChannel::getMTU() const {
   if (!_impl || !_impl->chan) {
     return 0;
   }
-  return ble_l2cap_get_our_mtu(_impl->chan);
+  // NimBLE dropped ble_l2cap_get_our_mtu(); the effective CoC MTU is now read
+  // from the channel info struct (our_coc_mtu is the local SDU limit).
+  struct ble_l2cap_chan_info info;
+  if (ble_l2cap_get_chan_info(_impl->chan, &info) != 0) {
+    return 0;
+  }
+  return info.our_coc_mtu;
 }
 
 // --------------------------------------------------------------------------
 // BLEL2CAPServer
 // --------------------------------------------------------------------------
 
-/**
- * @brief Constructs an empty L2CAP server object (not registered with the stack).
- */
 BLEL2CAPServer::BLEL2CAPServer() : _impl(nullptr) {}
 
-/**
- * @brief Tests whether the server object is bound to an implementation.
- * @return True if an implementation exists; false otherwise.
- */
 BLEL2CAPServer::operator bool() const {
   return _impl != nullptr;
 }
 
-/**
- * @brief Registers a callback for accepted incoming L2CAP channels.
- * @param handler Invoked for each new channel after connect succeeds.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPServer::onAccept(AcceptHandler handler) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -196,11 +217,6 @@ BTStatus BLEL2CAPServer::onAccept(AcceptHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Sets a default data handler for channels accepted from this server (inherited on connect).
- * @param handler Receives data for new channels; per-channel override may be set on the client side after accept.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPServer::onData(DataHandler handler) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -208,11 +224,6 @@ BTStatus BLEL2CAPServer::onData(DataHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Sets a default disconnect handler for channels from this server.
- * @param handler User callback; inherited by new channels.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPServer::onDisconnect(DisconnectHandler handler) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -220,10 +231,6 @@ BTStatus BLEL2CAPServer::onDisconnect(DisconnectHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Clears the accept, data, and disconnect server-level callbacks.
- * @return @c OK if the implementation is valid, otherwise @c InvalidState.
- */
 BTStatus BLEL2CAPServer::resetCallbacks() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   BLELockGuard lock(impl.mtx);
@@ -233,18 +240,10 @@ BTStatus BLEL2CAPServer::resetCallbacks() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Returns the PSM registered for this L2CAP server.
- * @return PSM, or 0 if no server implementation.
- */
 uint16_t BLEL2CAPServer::getPSM() const {
   return _impl ? _impl->psm : 0;
 }
 
-/**
- * @brief Returns the configured CoC/SDU size for the server.
- * @return Configured MTU, or 0 if no server implementation.
- */
 uint16_t BLEL2CAPServer::getMTU() const {
   return _impl ? _impl->mtu : 0;
 }
@@ -302,7 +301,7 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         cb = server->onAcceptCb;
       }
       if (cb) {
-        cb(BLEL2CAPChannel(chanImpl));
+        cb(BLEL2CAPChannelImplCommon::makeHandle(chanImpl));
       }
       break;
     }
@@ -317,9 +316,11 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
           if ((*it)->chan == event->disconnect.chan) {
             (*it)->connected = false;
             (*it)->chan = nullptr;
+            // Unblock any write() waiting between SDUs.
+            (*it)->txSync.give(BTStatus::Fail);
 
             cb = (*it)->onDisconnectCb;
-            handle = BLEL2CAPChannel(*it);
+            handle = BLEL2CAPChannelImplCommon::makeHandle(*it);
             server->channels.erase(it);
             break;
           }
@@ -338,9 +339,13 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         break;
       }
 
-      uint16_t dataLen = OS_MBUF_PKTLEN(rxBuf);
-      std::vector<uint8_t> data(dataLen);
-      os_mbuf_copydata(rxBuf, 0, dataLen, data.data());
+      uint8_t stackBuf[kL2capRxStackBuf];
+      std::vector<uint8_t> heapBuf;
+      uint16_t dataLen;
+      const uint8_t *data = flattenRxSdu(rxBuf, stackBuf, sizeof(stackBuf), heapBuf, dataLen);
+      // App owns the SDU after DATA_RECEIVED — free it or the CoC pool drains
+      // and peer credits stop (multi-SDU write then stalls on TX_UNSTALLED).
+      os_mbuf_free_chain(rxBuf);
 
       // Provide a new SDU buffer for the next receive
       struct os_mbuf *nextBuf = server->allocSdu();
@@ -362,7 +367,7 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
         }
       }
       if (cb && chanImpl) {
-        cb(BLEL2CAPChannel(chanImpl), data.data(), data.size());
+        cb(BLEL2CAPChannelImplCommon::makeHandle(chanImpl), data, dataLen);
       }
       break;
     }
@@ -382,8 +387,19 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
     }
 
     case BLE_L2CAP_EVENT_COC_TX_UNSTALLED:
-      // Could signal a waiting writer; for now just log
-      log_d("L2CAP TX un-stalled");
+      // Peer credits replenished; wake any multi-chunk write() waiting between
+      // SDUs. A single-chunk write that returned ESTALLED also waits here so the
+      // next write() does not race the single-SDU tx buffer.
+      log_d("L2CAP TX un-stalled status=%d", event->tx_unstalled.status);
+      {
+        BLELockGuard lock(server->mtx);
+        for (auto &ch : server->channels) {
+          if (ch->chan == event->tx_unstalled.chan) {
+            ch->txSync.give(event->tx_unstalled.status == 0 ? BTStatus::OK : BTStatus::Fail);
+            break;
+          }
+        }
+      }
       break;
   }
 
@@ -391,34 +407,21 @@ int BLEL2CAPServer::Impl::l2capEvent(struct ble_l2cap_event *event, void *arg) {
 }
 
 // --------------------------------------------------------------------------
-// BLEClass factory methods -- L2CAP
+// L2CAP setup helpers (used by BLEClass factories in NimBLECore.cpp)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Creates and registers an L2CAP CoC server with a dedicated SDU pool and callbacks.
- * @param psm Protocol/Service Multiplexer to listen on.
- * @param mtu Configured local SDU/MTU size.
- * @return A server handle, or an empty @c BLEL2CAPServer on memory or stack errors.
- */
-BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
-  if (!_initialized) {
-    return BLEL2CAPServer();
-  }
-
-  auto server = std::make_shared<BLEL2CAPServer::Impl>();
+bool nimbleSetupL2CAPServer(const std::shared_ptr<BLEL2CAPServer::Impl> &server, uint16_t psm, uint16_t mtu) {
   server->psm = psm;
   server->mtu = mtu;
 
-  // Allocate SDU memory pool
-  // Each buffer = mtu + BLE L2CAP SDU header. Allocate enough for a few concurrent channels.
   const int numBufs = CONFIG_BT_NIMBLE_L2CAP_COC_MAX_NUM + 1;
-  const uint16_t bufSize = OS_ALIGN(mtu + 4, OS_ALIGNMENT);  // +4 for L2CAP header overhead
+  const uint16_t bufSize = OS_ALIGN(mtu + 4, OS_ALIGNMENT);
   const size_t memSize = OS_MEMPOOL_SIZE(numBufs, bufSize) * sizeof(os_membuf_t);
 
   server->sduMem = static_cast<uint8_t *>(malloc(memSize));
   if (!server->sduMem) {
     log_e("Failed to allocate L2CAP SDU memory pool");
-    return BLEL2CAPServer();
+    return false;
   }
 
   int rc = os_mempool_init(&server->sduMemPool, numBufs, bufSize, server->sduMem, "l2cap_sdu");
@@ -426,7 +429,7 @@ BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
     log_e("os_mempool_init failed: rc=%d", rc);
     free(server->sduMem);
     server->sduMem = nullptr;
-    return BLEL2CAPServer();
+    return false;
   }
 
   rc = os_mbuf_pool_init(&server->sduPool, &server->sduMemPool, bufSize, numBufs);
@@ -434,7 +437,7 @@ BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
     log_e("os_mbuf_pool_init failed: rc=%d", rc);
     free(server->sduMem);
     server->sduMem = nullptr;
-    return BLEL2CAPServer();
+    return false;
   }
 
   rc = ble_l2cap_create_server(psm, mtu, BLEL2CAPServer::Impl::l2capEvent, server.get());
@@ -442,52 +445,31 @@ BLEL2CAPServer BLEClass::createL2CAPServer(uint16_t psm, uint16_t mtu) {
     log_e("ble_l2cap_create_server failed: rc=%d", rc);
     free(server->sduMem);
     server->sduMem = nullptr;
-    return BLEL2CAPServer();
+    return false;
   }
 
-  return BLEL2CAPServer(server);
+  return true;
 }
 
-/**
- * @brief Initiates a client L2CAP CoC connection to a PSM on an active ACL link.
- * @param connHandle GAP connection handle to the peer.
- * @param psm Target PSM on the peer.
- * @param mtu Requested/used SDU size.
- * @return A channel object; may be non-connected until @c COC_CONNECTED fires asynchronously.
- */
-BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16_t mtu) {
-  if (!_initialized) {
-    return BLEL2CAPChannel();
-  }
-
-  auto chanImpl = std::make_shared<BLEL2CAPChannel::Impl>();
+bool nimbleSetupL2CAPChannel(const std::shared_ptr<BLEL2CAPChannel::Impl> &chanImpl, uint16_t connHandle, uint16_t psm, uint16_t mtu) {
   chanImpl->psm = psm;
   chanImpl->connHandle = connHandle;
 
-  // Allocate an SDU buffer for receive
   struct os_mbuf *sdu = ble_hs_mbuf_from_flat(nullptr, 0);
   if (!sdu) {
     sdu = os_msys_get_pkthdr(mtu, 0);
   }
   if (!sdu) {
     log_e("Failed to allocate SDU for L2CAP connect");
-    return BLEL2CAPChannel();
+    return false;
   }
 
-  // Static event handler for client-side L2CAP channel
   struct ClientCtx {
     std::shared_ptr<BLEL2CAPChannel::Impl> impl;
   };
 
-  // We use a persistent allocation for the callback context
   auto *ctx = new ClientCtx{chanImpl};
 
-  /**
-   * @brief Client-side L2CAP CoC event handler: connect, disconnect, receive, and TX-unstall.
-   * @param event NimBLE L2CAP event.
-   * @param arg Opaque @c ClientCtx (owns shared channel impl; deleted on terminal events).
-   * @return Zero (NimBLE callback convention).
-   */
   auto clientEventFn = [](struct ble_l2cap_event *event, void *arg) -> int {
     auto *ctx = static_cast<ClientCtx *>(arg);
     if (!ctx) {
@@ -511,13 +493,14 @@ BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16
       {
         impl->connected = false;
         impl->chan = nullptr;
+        impl->txSync.give(BTStatus::Fail);
         BLEL2CAPChannel::DisconnectHandler cb;
         {
           BLELockGuard lock(impl->mtx);
           cb = impl->onDisconnectCb;
         }
         if (cb) {
-          cb(BLEL2CAPChannel(impl));
+          cb(BLEL2CAPChannelImplCommon::makeHandle(impl));
         }
         delete ctx;
         break;
@@ -529,11 +512,12 @@ BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16
         if (!rxBuf) {
           break;
         }
-        uint16_t dataLen = OS_MBUF_PKTLEN(rxBuf);
-        std::vector<uint8_t> data(dataLen);
-        os_mbuf_copydata(rxBuf, 0, dataLen, data.data());
+        uint8_t stackBuf[kL2capRxStackBuf];
+        std::vector<uint8_t> heapBuf;
+        uint16_t dataLen;
+        const uint8_t *data = flattenRxSdu(rxBuf, stackBuf, sizeof(stackBuf), heapBuf, dataLen);
+        os_mbuf_free_chain(rxBuf);
 
-        // Re-provide receive buffer
         struct os_mbuf *nextBuf = os_msys_get_pkthdr(impl->mtu, 0);
         if (nextBuf) {
           ble_l2cap_recv_ready(event->receive.chan, nextBuf);
@@ -545,12 +529,14 @@ BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16
           cb = impl->onDataCb;
         }
         if (cb) {
-          cb(BLEL2CAPChannel(impl), data.data(), data.size());
+          cb(BLEL2CAPChannelImplCommon::makeHandle(impl), data, dataLen);
         }
         break;
       }
 
-      case BLE_L2CAP_EVENT_COC_TX_UNSTALLED: break;
+      case BLE_L2CAP_EVENT_COC_TX_UNSTALLED:
+        impl->txSync.give(event->tx_unstalled.status == 0 ? BTStatus::OK : BTStatus::Fail);
+        break;
     }
     return 0;
   };
@@ -559,11 +545,11 @@ BLEL2CAPChannel BLEClass::connectL2CAP(uint16_t connHandle, uint16_t psm, uint16
   if (rc != 0) {
     log_e("ble_l2cap_connect failed: rc=%d", rc);
     delete ctx;
-    return BLEL2CAPChannel();
+    return false;
   }
 
   chanImpl->mtu = mtu;
-  return BLEL2CAPChannel(chanImpl);
+  return true;
 }
 
 #endif /* BLE_L2CAP_SUPPORTED && BLE_NIMBLE */

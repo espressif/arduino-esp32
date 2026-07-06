@@ -23,34 +23,40 @@ void setup() {
   BTStatus status = BLE.begin("MultiClient");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEScan scan = BLE.getScan();
   scan.setActiveScan(true);
 
-  BLEScanResults results = scan.startBlocking(5000);
-  Serial.printf("Found %d devices\n", results.getCount());
+  BLEScan::Results results = scan.startBlocking(5000);
+  Serial.printf("Found %d devices\n", results.size());
 
   std::vector<BLEClient> clients;
 
-  for (size_t i = 0; i < std::min(results.getCount(), (size_t)3); i++) {
-    BLEAdvertisedDevice dev = results.getDevice(i);
+  size_t i = 0;
+  for (const BLEAdvertisedDevice &dev : results) {
+    if (i >= 3) {
+      break;
+    }
+    size_t index = i++;
     if (!dev.isAdvertisingService(SVC_UUID)) {
       continue;
     }
 
     BLEClient client = BLE.createClient();
     client.onDisconnect(onClientDisconnected);
-    client.onConnect([i](BLEClient c, const BLEConnInfo &conn) {
-      Serial.printf("Client[%d] connected to %s\n", i, conn.getAddress().toString().c_str());
+    client.onConnect([index](BLEClient c, const BLEConnInfo &conn) {
+      Serial.printf("Client[%d] connected to %s\n", index, conn.getAddress().toString().c_str());
     });
 
     if (client.connect(dev)) {
       if (client.discoverServices()) {
         BLERemoteService svc = client.getService(SVC_UUID);
         if (svc) {
-          Serial.printf("Client[%d] found Heart Rate service\n", i);
+          Serial.printf("Client[%d] found Heart Rate service\n", index);
         }
       }
       clients.push_back(client);

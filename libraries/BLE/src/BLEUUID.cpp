@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEUUID.h"
@@ -67,16 +67,8 @@ static bool hexToByte(const char *hex, uint8_t &out) {
   return true;
 }
 
-/**
- * @brief Construct an invalid (empty) UUID with bitSize 0.
- */
 BLEUUID::BLEUUID() {}
 
-/**
- * @brief Construct a UUID from a C-string representation.
- * @param uuid Null-terminated string; accepts an optional "0x"/"0X" prefix.
- * @note A null pointer leaves the UUID in the invalid state.
- */
 BLEUUID::BLEUUID(const char *uuid) {
   if (uuid == nullptr) {
     return;
@@ -89,10 +81,8 @@ BLEUUID::BLEUUID(const char *uuid) {
   parseString(uuid, len);
 }
 
-/**
- * @brief Construct a 16-bit UUID, pre-filling the Bluetooth Base UUID template.
- * @param uuid16 The 16-bit UUID value, placed at bytes [2..3] of the base UUID.
- */
+// 16/32-bit constructors pre-fill the Bluetooth Base UUID template so the full
+// 128-bit value is always stored; only the leading bytes are overwritten.
 BLEUUID::BLEUUID(uint16_t uuid16) {
   memcpy(_uuid, kBaseUUID, 16);
   _uuid[2] = (uuid16 >> 8) & 0xFF;
@@ -100,10 +90,6 @@ BLEUUID::BLEUUID(uint16_t uuid16) {
   _bitSize = 16;
 }
 
-/**
- * @brief Construct a 32-bit UUID, pre-filling the Bluetooth Base UUID template.
- * @param uuid32 The 32-bit UUID value, placed at bytes [0..3] of the base UUID.
- */
 BLEUUID::BLEUUID(uint32_t uuid32) {
   memcpy(_uuid, kBaseUUID, 16);
   _uuid[0] = (uuid32 >> 24) & 0xFF;
@@ -113,22 +99,13 @@ BLEUUID::BLEUUID(uint32_t uuid32) {
   _bitSize = 32;
 }
 
-/**
- * @brief Construct a 128-bit UUID from a big-endian 16-byte array.
- * @param uuid128 Pointer to 16 bytes in big-endian (display) order.
- */
 BLEUUID::BLEUUID(const uint8_t uuid128[16]) {
   memcpy(_uuid, uuid128, 16);
   _bitSize = 128;
 }
 
-/**
- * @brief Construct a 128-bit UUID from raw bytes with optional byte-order reversal.
- * @param data Pointer to 16 bytes of UUID data.
- * @param len Must be exactly 16; any other value leaves the UUID invalid.
- * @param reverse If true, bytes are reversed from little-endian to big-endian storage.
- */
 BLEUUID::BLEUUID(const uint8_t *data, size_t len, bool reverse) {
+  // A null pointer or len != 16 leaves the UUID invalid.
   if (data == nullptr || len != 16) {
     return;
   }
@@ -142,13 +119,6 @@ BLEUUID::BLEUUID(const uint8_t *data, size_t len, bool reverse) {
   _bitSize = 128;
 }
 
-/**
- * @brief Parse a hex string (without "0x" prefix) into the internal UUID buffer.
- * @param str Pointer to the hex characters.
- * @param len Length of the string: 4 (16-bit), 8 (32-bit), 32 or 36 (128-bit).
- * @note Invalid lengths or malformed hex characters are logged via log_e and
- *       leave the UUID in its prior (typically invalid) state.
- */
 void BLEUUID::parseString(const char *str, size_t len) {
   if (len == 4) {
     // 16-bit: "180D"
@@ -208,12 +178,6 @@ void BLEUUID::parseString(const char *str, size_t len) {
   }
 }
 
-/**
- * @brief Test equality by comparing the full 16-byte internal arrays.
- * @param other The UUID to compare with.
- * @return True if both are valid and represent the same 128-bit value.
- * @note Two invalid UUIDs are not considered equal.
- */
 bool BLEUUID::operator==(const BLEUUID &other) const {
   if (!isValid() || !other.isValid()) {
     return false;
@@ -221,21 +185,10 @@ bool BLEUUID::operator==(const BLEUUID &other) const {
   return memcmp(_uuid, other._uuid, sizeof(_uuid)) == 0;
 }
 
-/**
- * @brief Test inequality against another UUID.
- * @param other The UUID to compare with.
- * @return True if the UUIDs differ or either is invalid.
- */
 bool BLEUUID::operator!=(const BLEUUID &other) const {
   return !(*this == other);
 }
 
-/**
- * @brief Lexicographic less-than for use in ordered containers (std::map, std::set).
- * @param other The UUID to compare with.
- * @return True if this UUID is lexicographically less than @p other.
- * @note Returns false if either UUID is invalid.
- */
 bool BLEUUID::operator<(const BLEUUID &other) const {
   if (!isValid() || !other.isValid()) {
     return false;
@@ -243,11 +196,6 @@ bool BLEUUID::operator<(const BLEUUID &other) const {
   return memcmp(_uuid, other._uuid, sizeof(_uuid)) < 0;
 }
 
-/**
- * @brief Convert to a lowercase hex string whose format reflects the native bit size.
- * @return "180d" (16-bit), "0000180d" (32-bit),
- *         "0000180d-0000-1000-8000-00805f9b34fb" (128-bit), or "<invalid>".
- */
 String BLEUUID::toString() const {
   if (!isValid()) {
     return "<invalid>";
@@ -274,21 +222,10 @@ String BLEUUID::toString() const {
   return String(buf);
 }
 
-/**
- * @brief Get the native bit size (16, 32, or 128).
- * @return The bit size, or 0 if the UUID is invalid/unset.
- */
 uint8_t BLEUUID::bitSize() const {
   return _bitSize;
 }
 
-/**
- * @brief Return a 128-bit version of this UUID.
- * @return A copy with bitSize() == 128. Returns *this unchanged if already 128-bit
- *         or invalid.
- * @note 16/32-bit constructors already embed the Bluetooth Base UUID, so this
- *       only flips the bitSize field without modifying the stored bytes.
- */
 BLEUUID BLEUUID::to128() const {
   if (!isValid() || _bitSize == 128) {
     return *this;
@@ -300,28 +237,14 @@ BLEUUID BLEUUID::to128() const {
   return result;
 }
 
-/**
- * @brief Check if the UUID has been set to a valid value.
- * @return True if bitSize is non-zero.
- */
 bool BLEUUID::isValid() const {
   return _bitSize != 0;
 }
 
-/**
- * @brief Extract the 16-bit UUID value from the internal big-endian buffer.
- * @return The 16-bit value from bytes [2..3].
- * @note Only meaningful when bitSize() == 16; otherwise returns an arbitrary value.
- */
 uint16_t BLEUUID::toUint16() const {
   return (static_cast<uint16_t>(_uuid[2]) << 8) | _uuid[3];
 }
 
-/**
- * @brief Extract the 32-bit UUID value from the internal big-endian buffer.
- * @return The 32-bit value from bytes [0..3].
- * @note Only meaningful when bitSize() == 32; otherwise returns an arbitrary value.
- */
 uint32_t BLEUUID::toUint32() const {
   return (static_cast<uint32_t>(_uuid[0]) << 24) | (static_cast<uint32_t>(_uuid[1]) << 16) | (static_cast<uint32_t>(_uuid[2]) << 8) | _uuid[3];
 }

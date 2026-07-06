@@ -106,7 +106,9 @@ void setup() {
   BTStatus initStatus = BLE.begin("MyClient");
   if (!initStatus) {
     Serial.printf("FAILED! (%s)\n", initStatus.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 

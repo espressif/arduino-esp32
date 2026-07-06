@@ -20,10 +20,11 @@
  * @brief Bluedroid backend for `BLEClass`: stack init/teardown, identity, MTU, IRK, whitelist, and GAP/GATT callback dispatch.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_BLUEDROID
 
 #include "BLE.h"
+#include "BluedroidCore.h"
 #if BLE_GATT_SERVER_SUPPORTED
 #include "BluedroidServer.h"
 #endif
@@ -36,7 +37,10 @@
 #if BLE_SCANNING_SUPPORTED
 #include "BluedroidScan.h"
 #endif
-#include "impl/BLEImplHelpers.h"
+#if BLE_SMP_SUPPORTED
+#include "BluedroidSecurity.h"
+#endif
+#include "impl/common/BLEImplHelpers.h"
 #include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-ble-mem.h"
 #include "esp32-hal-log.h"
@@ -53,33 +57,16 @@
 #include <esp_gatt_common_api.h>
 #include <esp_bt_device.h>
 
-#include "impl/BLESync.h"
+#include "impl/common/BLESync.h"
 
 #if BLE_SMP_SUPPORTED
 // Defined in BluedroidSecurity.cpp
 void bluedroidSecurityHandleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 #endif
 
-// --------------------------------------------------------------------------
-// BLEClass::Impl -- Bluedroid backend state
-// --------------------------------------------------------------------------
+// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
 
-struct BLEClass::Impl {
-  uint16_t localMTU = 23;
-  uint8_t ownAddrType = BLE_ADDR_TYPE_PUBLIC;
-  BLESync privacySync;
-  BLEClass::RawEventHandler customGapHandler = nullptr;
-  BLEClass::RawEventHandler customGattcHandler = nullptr;
-  BLEClass::RawEventHandler customGattsHandler = nullptr;
-
-  static void gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
-#if BLE_GATT_SERVER_SUPPORTED
-  static void gattsCallback(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
-#endif
-#if BLE_GATT_CLIENT_SUPPORTED
-  static void gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param);
-#endif
-};
+// BLEClass::Impl (Bluedroid backend state) is declared in BluedroidCore.h.
 
 /**
  * @brief Dispatches GAP events to advertising, scan, GATT, security, and custom handlers; signals local privacy completion.
@@ -95,6 +82,14 @@ void BLEClass::Impl::gapCallback(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_pa
   if (event == ESP_GAP_BLE_SET_LOCAL_PRIVACY_COMPLETE_EVT) {
     BTStatus st = (param->local_privacy_cmpl.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
     impl->privacySync.give(st);
+  }
+
+  if (event == ESP_GAP_BLE_UPDATE_WHITELIST_COMPLETE_EVT) {
+    BTStatus st = (param->update_whitelist_cmpl.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
+    if (st != BTStatus::OK) {
+      log_w("Whitelist update complete status=%d op=%d", param->update_whitelist_cmpl.status, param->update_whitelist_cmpl.wl_operation);
+    }
+    impl->whitelistSync.give(st);
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
@@ -164,14 +159,8 @@ void BLEClass::Impl::gattcCallback(esp_gattc_cb_event_t event, esp_gatt_if_t gat
 // BLEClass lifecycle
 // --------------------------------------------------------------------------
 
-/**
- * @brief Allocates the Bluedroid `Impl` state; `begin()` later enables the host.
- */
 BLEClass::BLEClass() : _impl(new Impl()) {}
 
-/**
- * @brief Calls `end(false)` if initialized, then deletes `Impl`.
- */
 BLEClass::~BLEClass() {
   if (_initialized) {
     end(false);
@@ -180,12 +169,7 @@ BLEClass::~BLEClass() {
   _impl = nullptr;
 }
 
-/**
- * @brief Starts the BT controller and Bluedroid, registers GAP and optional GATTS/GATTC callbacks, and sets name and MTU.
- * @param deviceName Optional name passed to `esp_ble_gap_set_device_name` when non-empty.
- * @return `BTStatus::OK` on success, or a failure/invalid state when the stack cannot be brought up.
- * @note Fails with `InvalidState` if a prior `end(true)` already released controller memory; that state blocks re-`begin` in-process.
- */
+// Fails with InvalidState if a prior end(true) already released controller memory; that state blocks re-begin in-process.
 BTStatus BLEClass::begin(const String &deviceName) {
   if (_initialized) {
     return BTStatus::OK;
@@ -218,14 +202,14 @@ BTStatus BLEClass::begin(const String &deviceName) {
     return BTStatus::Fail;
   }
 
-  err = esp_ble_gap_register_callback(Impl::gapCallback);
+  err = esp_ble_gap_register_callback(BLEClass::Impl::gapCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gap_register_callback: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
 
 #if BLE_GATT_SERVER_SUPPORTED
-  err = esp_ble_gatts_register_callback(Impl::gattsCallback);
+  err = esp_ble_gatts_register_callback(BLEClass::Impl::gattsCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gatts_register_callback: %s", esp_err_to_name(err));
     return BTStatus::Fail;
@@ -233,7 +217,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
 #endif
 
 #if BLE_GATT_CLIENT_SUPPORTED
-  err = esp_ble_gattc_register_callback(Impl::gattcCallback);
+  err = esp_ble_gattc_register_callback(BLEClass::Impl::gattcCallback);
   if (err != ESP_OK) {
     log_e("esp_ble_gattc_register_callback: %s", esp_err_to_name(err));
     return BTStatus::Fail;
@@ -254,11 +238,7 @@ BTStatus BLEClass::begin(const String &deviceName) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Disables Bluedroid and the controller, optionally releasing BLE memory.
- * @param releaseMemory When true, BLE memory is freed via `btMemRelease()` and cannot be reclaimed without a reset.
- * @note Irreversible: after `end(true)` you cannot call `begin()` again without a hardware reset.
- */
+// Irreversible: after end(true) BLE memory is freed via btMemRelease() and begin() cannot succeed again without a hardware reset.
 void BLEClass::end(bool releaseMemory) {
   if (!_initialized) {
     return;
@@ -270,10 +250,18 @@ void BLEClass::end(bool releaseMemory) {
   // Reset advertising state before tearing down the stack.  The Bluedroid
   // stack is still running here, so the public reset() can call stop() through
   // the normal async path (esp_ble_gap_stop_advertising + wait), then wipe all
-  // accumulated configuration (serviceUUIDs, appearance, etc.).  This is the
-  // same pattern used by the NimBLE backend and makes both consistent.
+  // accumulated configuration (serviceUUIDs, appearance, etc.).
 #if BLE_ADVERTISING_SUPPORTED
   getAdvertising().reset();
+#endif
+  // Stop any active scan while the stack is still enabled so a late scan-result
+  // callback cannot fire into the scan handler after esp_bluedroid_disable().
+#if BLE_SCANNING_SUPPORTED
+  if (getScan().isScanning()) {
+    getScan().stop();
+  }
+  // Tear down periodic syncs while the host is still enabled (DESIGN.md contract).
+  getScan().terminateAllPeriodicSyncs();
 #endif
 
   esp_bluedroid_disable();
@@ -293,10 +281,6 @@ void BLEClass::end(bool releaseMemory) {
 // Identity
 // --------------------------------------------------------------------------
 
-/**
- * @brief Returns the public controller address from `esp_bt_dev_get_address`.
- * @return A public `BTAddress` when initialized, or an empty address when not ready or the pointer is null.
- */
 BTAddress BLEClass::getAddress() const {
   if (!_initialized) {
     return BTAddress();
@@ -308,12 +292,7 @@ BTAddress BLEClass::getAddress() const {
   return BTAddress(addr, BTAddress::Type::Public);
 }
 
-/**
- * @brief Reconfigures local random/private addressing via GAP and waits for privacy callback completion.
- * @param type Desired public vs privacy-oriented address type for the class cache.
- * @return `BTStatus::OK` on success, not-initialized, fail on `esp_ble_gap_config_local_privacy` error, or a timeout/invalid status from `BLESync::wait`.
- * @note Toggles `esp_ble_gap_config_local_privacy` only when the desired privacy level differs from the current state; uses a 2 s `privacySync` wait.
- */
+// Toggles esp_ble_gap_config_local_privacy only when the desired privacy level differs from the current state; uses a 2 s privacySync wait.
 BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
@@ -338,11 +317,7 @@ BTStatus BLEClass::setOwnAddressType(BTAddress::Type type) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Random static set-address is not available on the Bluedroid path in this API.
- * @param addr Ignored; setting a random static identity is not implemented here.
- * @return `BTStatus::NotSupported` always.
- */
+// Setting a random static identity is not implemented on the Bluedroid path; always returns NotSupported.
 BTStatus BLEClass::setOwnAddress(const BTAddress & /*addr*/) {
   log_w("setOwnAddress not supported on Bluedroid");
   return BTStatus::NotSupported;
@@ -352,11 +327,6 @@ BTStatus BLEClass::setOwnAddress(const BTAddress & /*addr*/) {
 // MTU
 // --------------------------------------------------------------------------
 
-/**
- * @brief Sets the local GATT MTU in Bluedroid and caches the value in `Impl`.
- * @param mtu Requested local MTU in bytes.
- * @return `BTStatus::OK` on success, or not-initialized/invalid-param on `esp_ble_gatt_set_local_mtu` error.
- */
 BTStatus BLEClass::setMTU(uint16_t mtu) {
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
@@ -370,10 +340,6 @@ BTStatus BLEClass::setMTU(uint16_t mtu) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Returns the last successfully set local MTU or 23 as default.
- * @return Cached `localMTU` or 23 if there is no implementation.
- */
 uint16_t BLEClass::getMTU() const {
   return _impl ? _impl->localMTU : 23;
 }
@@ -382,12 +348,7 @@ uint16_t BLEClass::getMTU() const {
 // IRK (Bluedroid uses different bond storage API)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Retrieves the local IRK from the GAP/Bluedroid bond key interface.
- * @param irk 16-byte output for the identity key.
- * @return True on `ESP_OK` from `esp_ble_gap_get_local_irk`; false on null buffer, not initialized, or API error.
- * @note This path uses the Espressif Bluedroid helper rather than NimBLE store iteration.
- */
+// Uses the Espressif Bluedroid helper esp_ble_gap_get_local_irk rather than NimBLE store iteration.
 bool BLEClass::getLocalIRK(uint8_t irk[16]) const {
   if (!_impl || !_initialized || !irk) {
     return false;
@@ -400,13 +361,7 @@ bool BLEClass::getLocalIRK(uint8_t irk[16]) const {
   return true;
 }
 
-/**
- * @brief Looks up a bonded device by public or static identity and copies its PID key IRK when `ESP_LE_KEY_PID` and IRK are non-zero.
- * @param peer Address to match against the bond `bd_addr` or the PID static identity.
- * @param irk 16-byte output for the first matching peer.
- * @return True when a non-zero IRK is found; false for empty list, no PID key, or failed list fetch.
- * @note Skips entries with an all-zero IRK; compares both connection address and `pid_key.static_addr` to `peer` as public addresses.
- */
+// Skips entries with an all-zero IRK; compares both the bond connection address and pid_key.static_addr to peer as public addresses.
 bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
   if (!_impl || !_initialized || !irk) {
     return false;
@@ -453,18 +408,18 @@ bool BLEClass::getPeerIRK(const BTAddress &peer, uint8_t irk[16]) const {
 // Default PHY (BLE 5.0)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Configures the default preferred LE PHY when `BLE5_SUPPORTED` is on.
- * @param txPhy Preferred default transmit PHY flags.
- * @param rxPhy Preferred default receive PHY flags.
- * @return `BTStatus::OK` in the supported path, or not-initialized, or not-supported on older targets.
- */
+// Only available when BLE5_SUPPORTED is on; older targets return NotSupported.
+// Bluedroid takes preferred-PHY *masks* (not the single-PHY enum values NimBLE uses).
 BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #if BLE5_SUPPORTED
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
   }
-  esp_ble_gap_set_prefered_default_le_phy(static_cast<uint8_t>(txPhy), static_cast<uint8_t>(rxPhy));
+  esp_err_t err = esp_ble_gap_set_preferred_default_phy(blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy));
+  if (err != ESP_OK) {
+    log_e("setDefaultPhy: esp_ble_gap_set_preferred_default_phy: %s", esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
   return BTStatus::OK;
 #else
   log_w("setDefaultPhy not supported (BLE 5.0 unavailable)");
@@ -472,13 +427,10 @@ BTStatus BLEClass::setDefaultPhy(BLEPhy txPhy, BLEPhy rxPhy) {
 #endif
 }
 
-/**
- * @brief Get-default-PHY is not implemented on the Bluedroid path.
- * @param txPhy Out parameter not written.
- * @param rxPhy Out parameter not written.
- * @return Always `BTStatus::NotSupported` here.
- */
-BTStatus BLEClass::getDefaultPhy(BLEPhy & /*txPhy*/, BLEPhy & /*rxPhy*/) const {
+// Not implemented on the Bluedroid path; out-parameters are still initialized to PHY_1M so callers that ignore the NotSupported return never read uninitialized data.
+BTStatus BLEClass::getDefaultPhy(BLEPhy &txPhy, BLEPhy &rxPhy) const {
+  txPhy = BLEPhy::PHY_1M;
+  rxPhy = BLEPhy::PHY_1M;
   log_w("getDefaultPhy not supported on Bluedroid");
   return BTStatus::NotSupported;
 }
@@ -487,87 +439,84 @@ BTStatus BLEClass::getDefaultPhy(BLEPhy & /*txPhy*/, BLEPhy & /*rxPhy*/) const {
 // Whitelist
 // --------------------------------------------------------------------------
 
-/**
- * @brief Adds a device to the GAP filter whitelist and mirrors it in the class vector on success.
- * @param address Six-byte and type to pass to `esp_ble_gap_update_whitelist` with add=true.
- * @return `BTStatus::OK` on success, not-initialized, or fail on the stack error path.
- * @note The driver update must succeed before `_whiteList` is updated; a failed call leaves the in-memory list unchanged.
- */
+// The GAP update must succeed (and complete) before _whiteList is updated; a
+// failed call leaves the in-memory list unchanged. esp_ble_gap_update_whitelist
+// is async — wait on UPDATE_WHITELIST_COMPLETE_EVT so the public API is
+// synchronous (matching NimBLE's ble_gap_wl_set).
 BTStatus BLEClass::whiteListAdd(const BTAddress &address) {
   if (!_initialized) {
     return BTStatus::NotInitialized;
   }
-  esp_bd_addr_t bda;
-  memcpy(bda, address.data(), 6);
-  esp_err_t err = esp_ble_gap_update_whitelist(true, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
-  if (err == ESP_OK) {
-    _whiteList.push_back(address);
-    return BTStatus::OK;
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
-  log_e("whiteListAdd: esp_ble_gap_update_whitelist: %s", esp_err_to_name(err));
-  return BTStatus::Fail;
+  esp_bd_addr_t bda;
+  address.toEspBdAddr(bda);
+  _impl->whitelistSync.take();
+  esp_err_t err = esp_ble_gap_update_whitelist(true, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
+  if (err != ESP_OK) {
+    log_e("whiteListAdd: esp_ble_gap_update_whitelist: %s", esp_err_to_name(err));
+    _impl->whitelistSync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  BTStatus st = _impl->whitelistSync.wait(5000);
+  if (st != BTStatus::OK) {
+    log_e("whiteListAdd: whitelist update did not complete: %s", st.toString());
+    return st;
+  }
+  _whiteList.push_back(address);
+  return BTStatus::OK;
 }
 
-/**
- * @brief Removes a device from the controller filter and, on success, erases it from the tracked list.
- * @param address The same address+type that was whitelisted.
- * @return `BTStatus::OK` on success, not-initialized, or fail when `esp_ble_gap_update_whitelist` rejects the removal.
- * @note Local `_whiteList` is pruned only after a successful GAP call.
- */
+// Local _whiteList is pruned only after a successful GAP completion.
 BTStatus BLEClass::whiteListRemove(const BTAddress &address) {
   if (!_initialized) {
     return BTStatus::NotInitialized;
   }
-  esp_bd_addr_t bda;
-  memcpy(bda, address.data(), 6);
-  esp_err_t err = esp_ble_gap_update_whitelist(false, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
-  if (err == ESP_OK) {
-    for (auto it = _whiteList.begin(); it != _whiteList.end(); ++it) {
-      if (*it == address) {
-        _whiteList.erase(it);
-        break;
-      }
-    }
-    return BTStatus::OK;
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
-  log_e("whiteListRemove: esp_ble_gap_update_whitelist: %s", esp_err_to_name(err));
-  return BTStatus::Fail;
+  esp_bd_addr_t bda;
+  address.toEspBdAddr(bda);
+  _impl->whitelistSync.take();
+  esp_err_t err = esp_ble_gap_update_whitelist(false, bda, static_cast<esp_ble_wl_addr_type_t>(address.type()));
+  if (err != ESP_OK) {
+    log_e("whiteListRemove: esp_ble_gap_update_whitelist: %s", esp_err_to_name(err));
+    _impl->whitelistSync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  BTStatus st = _impl->whitelistSync.wait(5000);
+  if (st != BTStatus::OK) {
+    log_e("whiteListRemove: whitelist update did not complete: %s", st.toString());
+    return st;
+  }
+  for (auto it = _whiteList.begin(); it != _whiteList.end(); ++it) {
+    if (*it == address) {
+      _whiteList.erase(it);
+      break;
+    }
+  }
+  return BTStatus::OK;
 }
 
 // --------------------------------------------------------------------------
 // Stack info
 // --------------------------------------------------------------------------
 
-/**
- * @brief Returns the Bluedroid stack id enum.
- * @return `Stack::Bluedroid`.
- */
 BLEClass::Stack BLEClass::getStack() const {
   return Stack::Bluedroid;
 }
 
-/**
- * @brief Human-readable name for the active stack.
- * @return The literal "Bluedroid".
- */
 const char *BLEClass::getStackName() const {
   return "Bluedroid";
 }
 
-/**
- * @brief Indicates whether the stack runs on ESP-Hosted; always false in this file.
- * @return Always false: Bluedroid in this build uses the local controller, not the hosted co-pro path.
- * @note Contrasts with NimBLE hosted builds; pin wiring via `setPins` is a no-op here.
- */
+// Always false: Bluedroid in this build uses the local controller, not the hosted co-processor path (contrast with NimBLE hosted builds, where setPins matters).
 bool BLEClass::isHostedBLE() const {
   return false;
 }
 
-/**
- * @brief SPI/reset pin setup for co-proc BLE is not used on the Bluedroid in-tree path.
- * @return `BTStatus::NotSupported` always; parameters are ignored.
- * @note Present for API symmetry with hosted NimBLE; this backend always returns not-supported.
- */
+// Present only for API symmetry with hosted NimBLE; the Bluedroid in-tree path ignores the pins and always returns NotSupported.
 BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_t) {
   log_w("setPins not supported on Bluedroid");
   return BTStatus::NotSupported;
@@ -577,11 +526,7 @@ BTStatus BLEClass::setPins(int8_t, int8_t, int8_t, int8_t, int8_t, int8_t, int8_
 // Custom event handlers
 // --------------------------------------------------------------------------
 
-/**
- * @brief Stores a pointer invoked from `gapCallback` after the built-in GAP subsystems and security.
- * @param handler Custom handler, or null to clear.
- * @return `BTStatus::OK` or not-initialized; signature matches other stacks for compatibility.
- */
+// The handler is invoked from gapCallback after the built-in GAP subsystems and security handling.
 BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
@@ -590,11 +535,7 @@ BTStatus BLEClass::setCustomGapHandler(RawEventHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Registers a raw callback invoked from `gattcCallback` after the client `handleGATTC` logic.
- * @param handler GATTC raw handler, or null to clear.
- * @return `BTStatus::OK` or not-initialized.
- */
+// The handler is invoked from gattcCallback after the client handleGATTC logic.
 BTStatus BLEClass::setCustomGattcHandler(RawEventHandler handler) {
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
@@ -603,11 +544,7 @@ BTStatus BLEClass::setCustomGattcHandler(RawEventHandler handler) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Registers a raw callback invoked from `gattsCallback` after the server `handleGATTS` logic.
- * @param handler GATTS raw handler, or null to clear.
- * @return `BTStatus::OK` or not-initialized.
- */
+// The handler is invoked from gattsCallback after the server handleGATTS logic.
 BTStatus BLEClass::setCustomGattsHandler(RawEventHandler handler) {
   if (!_impl || !_initialized) {
     return BTStatus::NotInitialized;
@@ -615,5 +552,146 @@ BTStatus BLEClass::setCustomGattsHandler(RawEventHandler handler) {
   _impl->customGattsHandler = handler;
   return BTStatus::OK;
 }
+
+// --------------------------------------------------------------------------
+// BLEClass factory methods
+// --------------------------------------------------------------------------
+
+#if BLE_SCANNING_SUPPORTED
+BLEScan BLEClass::getScan() {
+  static std::shared_ptr<BLEScan::Impl> slot;
+  if (!isInitialized()) {
+    log_e("getScan: BLE not initialized");
+    return BLEScan();
+  }
+  if (!slot) {
+    slot = std::make_shared<BLEScan::Impl>();
+    BLEScan::Impl::s_instance = slot.get();
+  }
+  return BLEScan(slot);
+}
+#else
+BLEScan BLEClass::getScan() {
+  log_w("Scanning not supported");
+  return BLEScan();
+}
+#endif
+
+#if BLE_ADVERTISING_SUPPORTED
+BLEAdvertising BLEClass::getAdvertising() {
+  static std::shared_ptr<BLEAdvertising::Impl> slot;
+  if (!isInitialized()) {
+    log_e("getAdvertising: BLE not initialized");
+    return BLEAdvertising();
+  }
+  if (!slot) {
+    slot = std::make_shared<BLEAdvertising::Impl>();
+    BLEAdvertising::Impl::s_instance = slot.get();
+  }
+  return BLEAdvertising(slot);
+}
+
+BTStatus BLEClass::startAdvertising() {
+  return getAdvertising().start();
+}
+
+BTStatus BLEClass::stopAdvertising() {
+  return getAdvertising().stop();
+}
+#else
+BLEAdvertising BLEClass::getAdvertising() {
+  log_w("Advertising not supported");
+  return BLEAdvertising();
+}
+
+BTStatus BLEClass::startAdvertising() {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+
+BTStatus BLEClass::stopAdvertising() {
+  log_w("Advertising not supported");
+  return BTStatus::NotSupported;
+}
+#endif
+
+#if BLE_GATT_SERVER_SUPPORTED
+// A successful create isn't the end of the story here -- GATTS app registration
+// with the stack is asynchronous, so an existing slot may still be waiting on
+// its `gattsIf`. Every call re-checks that and retries registration (and drops
+// the slot on repeated failure) instead of a strict once-and-done create.
+BLEServer BLEClass::createServer() {
+  static std::shared_ptr<BLEServer::Impl> slot;
+  if (!isInitialized()) {
+    log_e("createServer: BLE not initialized");
+    return BLEServer();
+  }
+  if (!slot) {
+    auto fresh = std::make_shared<BLEServer::Impl>();
+    BLEServer::Impl::s_instance = fresh.get();
+    esp_timer_create_args_t timerArgs = {};
+    timerArgs.callback = [](void *) { BLE.startAdvertising(); };
+    timerArgs.name = "ble_adv_restart";
+    esp_timer_create(&timerArgs, &fresh->advRestartTimer);
+    if (!bluedroidRegisterGattsApp(fresh)) {
+      BLEServer::Impl::s_instance = nullptr;
+      return BLEServer();
+    }
+    slot = fresh;
+  } else if (slot->gattsIf == ESP_GATT_IF_NONE) {
+    if (!bluedroidRegisterGattsApp(slot)) {
+      BLEServer::Impl::s_instance = nullptr;
+      slot.reset();
+      return BLEServer();
+    }
+  }
+  return BLEServer(slot);
+}
+#else
+BLEServer BLEClass::createServer() {
+  log_w("GATT server not supported");
+  return BLEServer();
+}
+#endif
+
+#if BLE_GATT_CLIENT_SUPPORTED
+BLEClient BLEClass::createClient() {
+  if (!isInitialized()) {
+    log_e("createClient: BLE not initialized");
+    return BLEClient();
+  }
+  auto impl = std::make_shared<BLEClient::Impl>();
+  if (!bluedroidRegisterClient(impl)) {
+    return BLEClient();
+  }
+  return BLEClient(impl);
+}
+#else
+BLEClient BLEClass::createClient() {
+  log_w("GATT client not supported");
+  return BLEClient();
+}
+#endif
+
+#if BLE_SMP_SUPPORTED
+BLESecurity BLEClass::getSecurity() {
+  static std::shared_ptr<BLESecurity::Impl> slot;
+  if (!isInitialized()) {
+    log_e("getSecurity: BLE not initialized");
+    return BLESecurity();
+  }
+  if (!slot) {
+    slot = std::make_shared<BLESecurity::Impl>();
+    BLESecurity::Impl::s_instance = slot.get();
+    slot->applySecurityParams();
+  }
+  return BLESecurity(slot);
+}
+#else
+BLESecurity BLEClass::getSecurity() {
+  log_w("SMP not supported");
+  return BLESecurity();
+}
+#endif
 
 #endif /* BLE_BLUEDROID */

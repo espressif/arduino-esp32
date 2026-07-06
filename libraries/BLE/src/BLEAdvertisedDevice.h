@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -34,7 +34,7 @@ class BLEScan;
 /**
  * @brief Represents a single advertised BLE device discovered during scanning.
  *
- * Shared handle. Obtained via BLEScan callbacks or BLEScanResults.
+ * Shared handle. Obtained via BLEScan callbacks or BLEScan::Results.
  * Contains parsed advertisement data (name, UUIDs, manufacturer data, etc.).
  */
 class BLEAdvertisedDevice {
@@ -72,13 +72,13 @@ public:
 
   /**
    * @brief Get the received signal strength.
-   * @return RSSI in dBm, or 0 if unavailable.
+   * @return RSSI in dBm, or -128 if unavailable.
    */
   int8_t getRSSI() const;
 
   /**
    * @brief Get the advertised TX power level.
-   * @return TX power in dBm, or 0 if not present.
+   * @return TX power in dBm, or -128 if not present.
    */
   int8_t getTXPower() const;
 
@@ -286,23 +286,28 @@ public:
    */
   String toString() const;
 
-  /**
-   * @brief Merge a SCAN_RSP payload into this device's existing ADV_IND data.
-   * @param data Pointer to the scan response payload.
-   * @param len  Length of the scan response data in bytes.
-   * @param rssi RSSI of the scan response.
-   * @note Concatenates the raw bytes, re-parses all AD structures, and updates RSSI.
-   */
-  void mergeScanResponse(const uint8_t *data, size_t len, int8_t rssi);
-
   struct Impl;
 
 private:
   explicit BLEAdvertisedDevice(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
-  friend class BLEScan;
-};
 
-#include "BLEScanResults.h"
+  /**
+   * @brief Merge a SCAN_RSP payload into this device's existing ADV_IND data.
+   * @param data Pointer to the scan response payload.
+   * @param len  Length of the scan response data in bytes.
+   * @param rssi RSSI of the scan response.
+   * @note Concatenates the raw bytes, re-parses all AD structures, updates RSSI, then
+   *       deduplicates service UUIDs and service data (keeping the SCAN_RSP value for
+   *       duplicate service-data UUIDs).
+   * @note Internal scan bridge, not part of the public API.
+   */
+  void mergeScanResponse(const uint8_t *data, size_t len, int8_t rssi);
+
+  friend class BLEScan;
+  // Backend-agnostic scan helper (impl/common/BLEScanImpl.h) that mints device
+  // handles and merges scan responses for the backend scan parsers.
+  friend struct BLEScanImplCommon;
+};
 
 #endif /* BLE_ENABLED */

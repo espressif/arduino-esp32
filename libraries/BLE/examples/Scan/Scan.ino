@@ -19,14 +19,18 @@ void setup() {
   BTStatus status = BLE.begin("Scanner");
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
   BLEScan scan = BLE.getScan();
   if (!scan) {
     Serial.println("Failed to get scan object!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   scan.setActiveScan(true);  // Request scan response data from advertisers
@@ -36,9 +40,9 @@ void setup() {
 
   Serial.println("Starting scan for 5 seconds...");
   Serial.println();
-  BLEScanResults results = scan.startBlocking(5000);
+  BLEScan::Results results = scan.startBlocking(5000);
 
-  Serial.printf("Scan complete! Found %d device(s):\n", results.getCount());
+  Serial.printf("Scan complete! Found %d device(s):\n", results.size());
   Serial.println("---------------------------------------------");
   for (const BLEAdvertisedDevice &dev : results) {
     Serial.printf("  Address: %s", dev.getAddress().toString().c_str());
@@ -64,9 +68,9 @@ void loop() {
   Serial.println("Rescanning...");
 
   BLEScan scan = BLE.getScan();
-  BLEScanResults results = scan.startBlocking(5000);
+  BLEScan::Results results = scan.startBlocking(5000);
 
-  Serial.printf("Found %d device(s):\n", results.getCount());
+  Serial.printf("Found %d device(s):\n", results.size());
   for (const BLEAdvertisedDevice &dev : results) {
     Serial.printf("  %s", dev.getAddress().toString().c_str());
     if (dev.haveName()) {

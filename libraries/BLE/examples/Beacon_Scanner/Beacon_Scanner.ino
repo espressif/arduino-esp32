@@ -109,7 +109,9 @@ void setup() {
   BTStatus status = BLE.begin("BeaconScanner");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   BLEScan scan = BLE.getScan();
@@ -122,8 +124,8 @@ void setup() {
 
 void loop() {
   Serial.println("--- Scanning ---");
-  BLEScanResults results = BLE.getScan().startBlocking(SCAN_DURATION_MS);
-  Serial.printf("Scan complete: %d device(s) found\n\n", results.getCount());
+  BLEScan::Results results = BLE.getScan().startBlocking(SCAN_DURATION_MS);
+  Serial.printf("Scan complete: %d device(s) found\n\n", results.size());
   BLE.getScan().clearResults();
   delay(2000);
 }

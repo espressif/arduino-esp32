@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -39,6 +39,9 @@ class BLERemoteDescriptor;
  */
 class BLERemoteCharacteristic {
 public:
+  /**
+   * @brief Construct an empty (invalid) handle; obtain a live one via BLERemoteService::getCharacteristic().
+   */
   BLERemoteCharacteristic();
   ~BLERemoteCharacteristic() = default;
   BLERemoteCharacteristic(const BLERemoteCharacteristic &) = default;
@@ -164,7 +167,7 @@ public:
    * @param length       Length of the payload in bytes.
    * @param isNotification True for a notification, false for an indication.
    */
-  using NotifyCallback = std::function<void(BLERemoteCharacteristic chr, const uint8_t *, size_t, bool)>;
+  using NotifyCallback = std::function<void(const BLERemoteCharacteristic &chr, const uint8_t *, size_t, bool)>;
 
   /**
    * @brief Subscribe to notifications or indications from this characteristic.
@@ -224,10 +227,16 @@ public:
 
 private:
   explicit BLERemoteCharacteristic(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
+
+  // Performs a GATT read into _impl->value; returns true on success. Backend-defined;
+  // the String/numeric/buffer readers above are shared wrappers over it (no extra copy).
+  bool readInto(uint32_t timeoutMs);
+
   std::shared_ptr<Impl> _impl;
   friend class BLEClient;
   friend class BLERemoteService;
   friend class BLERemoteDescriptor;
+  friend struct BLERemoteCharacteristicImplCommon;
 };
 
 #endif /* BLE_ENABLED */

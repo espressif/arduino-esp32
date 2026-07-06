@@ -41,7 +41,9 @@ void setup() {
   BTStatus initStatus = BLE.begin("MyServer");
   if (!initStatus) {
     Serial.printf("FAILED! (%s)\n", initStatus.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -49,7 +51,9 @@ void setup() {
   BLEServer server = BLE.createServer();
   if (!server) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -62,7 +66,9 @@ void setup() {
   BLEService svc = server.createService(SVC_UUID);
   if (!svc) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -72,7 +78,9 @@ void setup() {
   notifyChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
   if (!notifyChr) {
     Serial.println("FAILED!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -86,7 +94,9 @@ void setup() {
   BTStatus status = server.start();
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -99,7 +109,9 @@ void setup() {
   status = adv.start();
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 

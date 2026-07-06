@@ -33,7 +33,9 @@ void setup() {
   BTStatus status = bleSerial.begin("UART Service");
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 

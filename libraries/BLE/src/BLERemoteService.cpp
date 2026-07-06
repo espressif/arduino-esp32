@@ -17,54 +17,32 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
-#include "impl/BLERemoteTypesBackend.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEImplHelpers.h"
 
-// --------------------------------------------------------------------------
-// BLERemoteService common API (stack-agnostic)
-// --------------------------------------------------------------------------
-
-/**
- * @brief Construct an invalid (empty) remote service handle.
- * @note The handle must be populated via BLEClient before use.
- */
 BLERemoteService::BLERemoteService() : _impl(nullptr) {}
 
-/**
- * @brief Check whether this handle refers to a valid remote service.
- * @return True if the underlying implementation is present, false otherwise.
- */
 BLERemoteService::operator bool() const {
   return _impl != nullptr;
 }
 
-/**
- * @brief Get the UUID of this service.
- * @return The service UUID, or a default-constructed (empty) BLEUUID if the handle is invalid.
- */
 BLEUUID BLERemoteService::getUUID() const {
   return _impl ? _impl->uuid : BLEUUID();
 }
 
-/**
- * @brief Get the starting attribute handle of this service.
- * @return The GATT start handle, or 0 if the handle is invalid.
- */
 uint16_t BLERemoteService::getHandle() const {
   return _impl ? _impl->startHandle : 0;
 }
 
-/**
- * @brief Read a characteristic value by its UUID within this service.
- * @param charUUID UUID of the characteristic to read.
- * @return The characteristic value as a String, or an empty String if the
- *         characteristic is not found or the read fails.
- * @note Performs characteristic discovery via getCharacteristic() before reading.
- *       This is a blocking call that waits for the GATT read response.
- */
+BLEClient BLERemoteService::getClient() const {
+  // makeHandle rebuilds the owning shared_ptr from the raw BLEClient::Impl* via
+  // shared_from_this(); the client is owned by whoever established the connection.
+  return (_impl && _impl->client) ? BLEClient::Impl::makeHandle(_impl->client) : BLEClient();
+}
+
 String BLERemoteService::getValue(const BLEUUID &charUUID) {
   BLERemoteCharacteristic chr = getCharacteristic(charUUID);
   if (!chr) {
@@ -73,14 +51,6 @@ String BLERemoteService::getValue(const BLEUUID &charUUID) {
   return chr.readValue();
 }
 
-/**
- * @brief Write a characteristic value by its UUID within this service.
- * @param charUUID UUID of the characteristic to write.
- * @param value    The value to write.
- * @return BTStatus::NotFound if the characteristic does not exist in this service,
- *         otherwise the status returned by the underlying write operation.
- * @note Performs characteristic discovery via getCharacteristic() before writing.
- */
 BTStatus BLERemoteService::setValue(const BLEUUID &charUUID, const String &value) {
   BLERemoteCharacteristic chr = getCharacteristic(charUUID);
   if (!chr) {
@@ -89,10 +59,6 @@ BTStatus BLERemoteService::setValue(const BLEUUID &charUUID, const String &value
   return chr.writeValue(value);
 }
 
-/**
- * @brief Get a human-readable representation of this service.
- * @return A String describing the service UUID, or a placeholder if the handle is invalid.
- */
 String BLERemoteService::toString() const {
   BLE_CHECK_IMPL("BLERemoteService(empty)");
   return "BLERemoteService(uuid=" + impl.uuid.toString() + ")";

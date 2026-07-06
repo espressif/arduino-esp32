@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <stdint.h>
@@ -154,6 +154,11 @@ private:
   alignas(8) uint8_t _storage[kStorageSize]{};
   bool _valid = false;
 
+  /**
+   * @brief Access the Data overlay within the inline storage buffer.
+   * @return Pointer to the Data view of @c _storage.
+   * @note A static_assert guarantees Data fits within kStorageSize.
+   */
   Data *data();
   const Data *data() const;
 };

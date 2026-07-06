@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEUUID.h"
@@ -67,8 +67,10 @@ public:
 
   /**
    * @brief Parse Eddystone-URL fields from raw service data.
-   * @param data Pointer to the Eddystone service data bytes (after the UUID).
+   * @param data Pointer to the Eddystone service data bytes (byte 0 = frame type).
    * @param len  Length of the service data in bytes.
+   * @note No-op unless len >= 3 and the frame type is 0x10 (URL). Suffix codes < 14
+   *       are expanded; other bytes are treated as literal ASCII.
    */
   void setFromServiceData(const uint8_t *data, size_t len);
 
@@ -82,9 +84,35 @@ private:
   int8_t _txPower = -20;
   String _url;
 
+  /**
+   * @brief Encode a URL prefix into an Eddystone prefix code.
+   * @param url      Full URL string to match against known prefixes.
+   * @param consumed Receives the number of characters consumed by the match.
+   * @return Prefix code (0-3), or 0 with consumed=0 if no known prefix matches.
+   */
   static uint8_t encodePrefix(const String &url, size_t &consumed);
+
+  /**
+   * @brief Encode a URL suffix at the given position into an Eddystone suffix code.
+   * @param url      Full URL string.
+   * @param pos      Starting position to attempt suffix matching.
+   * @param consumed Receives the number of characters consumed by the match.
+   * @return Suffix code (0-13), or 0xFF with consumed=0 if no known suffix matches.
+   */
   static uint8_t encodeSuffix(const String &url, size_t pos, size_t &consumed);
+
+  /**
+   * @brief Decode an Eddystone prefix code back to its URL prefix string.
+   * @param code Prefix code (0-3).
+   * @return The URL prefix string, or an empty String if code is out of range.
+   */
   static String decodePrefix(uint8_t code);
+
+  /**
+   * @brief Decode an Eddystone suffix code back to its URL suffix string.
+   * @param code Suffix code (0-13).
+   * @return The URL suffix string, or an empty String if code is out of range.
+   */
   static String decodeSuffix(uint8_t code);
 };
 
@@ -154,8 +182,10 @@ public:
 
   /**
    * @brief Parse Eddystone-TLM fields from raw service data.
-   * @param data Pointer to the Eddystone service data bytes (after the UUID).
+   * @param data Pointer to the Eddystone service data bytes (byte 0 = frame type).
    * @param len  Length of the service data in bytes.
+   * @note No-op unless len >= 14 and the frame type is 0x20 (TLM). Multi-byte fields
+   *       are decoded from big-endian wire format.
    */
   void setFromServiceData(const uint8_t *data, size_t len);
 

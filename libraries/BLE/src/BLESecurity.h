@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -269,12 +269,16 @@ public:
    * @brief Delete the bond for a specific device.
    * @param address Address of the bonded device to remove.
    * @return BTStatus indicating success or error.
+   * @note Blocks until the bond store update completes. On success,
+   *       @ref getBondedDevices no longer includes @p address.
    */
   BTStatus deleteBond(const BTAddress &address);
 
   /**
    * @brief Delete all stored bonds.
    * @return BTStatus indicating success or error.
+   * @note Blocks until every bond has been removed from the store. On
+   *       success, @ref getBondedDevices returns an empty list.
    */
   BTStatus deleteAllBonds();
 
@@ -318,15 +322,11 @@ private:
   explicit BLESecurity(std::shared_ptr<Impl> impl) : _impl(std::move(impl)) {}
   std::shared_ptr<Impl> _impl;
 
-  void notifyAuthComplete(const BLEConnInfo &conn, bool success);
-  bool notifyAuthorization(const BLEConnInfo &conn, uint16_t attrHandle, bool isRead);
-  uint32_t resolvePasskeyForDisplay(const BLEConnInfo &conn);
-  uint32_t resolvePasskeyForInput(const BLEConnInfo &conn);
-  bool resolveNumericComparison(const BLEConnInfo &conn, uint32_t numcmp);
-  bool notifyBondOverflow(const BTAddress &oldest);
-
+  // The internal pairing hooks (notifyAuthComplete/notifyAuthorization/
+  // resolvePasskey.../resolveNumericComparison/notifyBondOverflow) live on
+  // BLESecurityImplCommon / BLESecurity::Impl, so backend event handlers invoke
+  // them directly on the singleton (BLESecurity::Impl::instance()) without a bridge.
   friend class BLEClass;
-  friend class BLESecurityBackend;
 };
 
 #endif /* BLE_ENABLED */

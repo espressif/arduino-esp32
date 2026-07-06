@@ -17,52 +17,36 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
-#include "impl/BLEAdvertisingBackend.h"
-#include "impl/BLEImplHelpers.h"
-#include "impl/BLEMutex.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLEMutex.h"
+#include "impl/common/BLEAdvertisingData.h"
 #include "esp32-hal-log.h"
 
 #include <algorithm>
 
 /**
  * @file
- * @brief Common @ref BLEAdvertising helpers (UUID list, flags, stub BLE5 entry points).
- * @note Interval conversion, AD assembly, and on-air start/stop are implemented
- *       in the active backend; keep total AD length within controller limits
- *       (31 bytes per legacy AD payload segment unless using extended adv).
+ * @brief Stack-agnostic @ref BLEAdvertising helpers (service-UUID list + isAdvertising).
+ * @note Interval conversion, AD assembly, on-air start/stop, and all BLE5
+ *       extended/periodic advertising live in the active backend; keep total AD
+ *       length within controller limits (31 bytes per legacy AD payload segment
+ *       unless using extended adv).
  */
 
-// --------------------------------------------------------------------------
-// BLEAdvertising common API (stack-agnostic)
-// --------------------------------------------------------------------------
-
-/**
- * @brief Construct a BLEAdvertising handle with no backend.
- *
- * @note The handle is invalid until initialized by BLEClass. Use operator bool() to check.
- */
 BLEAdvertising::BLEAdvertising() : _impl(nullptr) {}
 
-/**
- * @brief Check whether this handle references a valid advertising backend.
- * @return true if the implementation pointer is non-null, false otherwise.
- */
 BLEAdvertising::operator bool() const {
   return _impl != nullptr;
 }
 
 // --------------------------------------------------------------------------
-// Service UUID management
+// Service UUID management (guarded by impl.mtx)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Append a service UUID to the advertisement payload.
- * @param uuid Service UUID to advertise.
- * @note Duplicates are not checked; the same UUID can be added multiple times.
- */
 void BLEAdvertising::addServiceUUID(const BLEUUID &uuid) {
   BLE_CHECK_IMPL();
   log_d("Advertising: addServiceUUID %s", uuid.toString().c_str());
@@ -70,11 +54,6 @@ void BLEAdvertising::addServiceUUID(const BLEUUID &uuid) {
   impl.serviceUUIDs.push_back(uuid);
 }
 
-/**
- * @brief Remove a service UUID from the advertisement payload.
- * @param uuid Service UUID to remove.
- * @note Uses the erase-remove idiom; all occurrences of @p uuid are removed in O(n) time.
- */
 void BLEAdvertising::removeServiceUUID(const BLEUUID &uuid) {
   BLE_CHECK_IMPL();
   log_d("Advertising: removeServiceUUID %s", uuid.toString().c_str());
@@ -83,9 +62,6 @@ void BLEAdvertising::removeServiceUUID(const BLEUUID &uuid) {
   v.erase(std::remove(v.begin(), v.end(), uuid), v.end());
 }
 
-/**
- * @brief Remove all service UUIDs from the advertisement payload.
- */
 void BLEAdvertising::clearServiceUUIDs() {
   BLE_CHECK_IMPL();
   log_d("Advertising: clearServiceUUIDs");
@@ -97,115 +73,151 @@ void BLEAdvertising::clearServiceUUIDs() {
 // isAdvertising
 // --------------------------------------------------------------------------
 
-/**
- * @brief Check whether legacy advertising is currently active.
- * @return true if advertising is running, false if stopped or handle is invalid.
- * @note Null-safe: returns false when _impl is nullptr.
- */
 bool BLEAdvertising::isAdvertising() const {
-  return _impl && _impl->advertising;
+  return _impl && _impl->isAdvertising;
 }
 
 // --------------------------------------------------------------------------
-// Extended advertising setters (BLE5 -- not yet supported)
+// Raw AD payload builder (stack-agnostic) -- see BLEAdvertisingData.h
+//
+// Legacy AD placement follows CSS Part A §1.2/§1.3: LE-only Flags in the
+// primary AD, and the Local Name in the scan response (leaving the primary AD
+// free for service UUIDs) unless scan response is disabled.
 // --------------------------------------------------------------------------
+
+BLEAdvertisementData BLEAdvDataBuilder::buildLegacyAdvData(
+  const String &name, const std::vector<BLEUUID> &serviceUUIDs, uint16_t appearance, bool includeTxPower, int8_t txPower, bool nameInScanResponse,
+  uint16_t minPreferred, uint16_t maxPreferred
+) {
+  BLEAdvertisementData data;
+  // Flags (0x01): LE General Discoverable + BR/EDR Not Supported for LE-only devices.
+  data.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
+  if (!nameInScanResponse && name.length() > 0) {
+    data.setName(name, true);
+  }
+  if (includeTxPower) {
+    data.setTxPower(txPower);
+  }
+  if (appearance > 0) {
+    data.setAppearance(appearance);
+  }
+  // Slave Connection Interval Range (0x12), CSS Part A §1.9 — emit when either
+  // bound was set via setMinPreferred / setMaxPreferred; a zero side copies the other.
+  if (minPreferred != 0 || maxPreferred != 0) {
+    const uint16_t minInt = minPreferred != 0 ? minPreferred : maxPreferred;
+    const uint16_t maxInt = maxPreferred != 0 ? maxPreferred : minPreferred;
+    data.setPreferredParams(minInt, maxInt);
+  }
+  for (const auto &uuid : serviceUUIDs) {
+    data.addServiceUUID(uuid);
+  }
+  return data;
+}
+
+BLEAdvertisementData BLEAdvDataBuilder::buildLegacyScanRespData(const String &name) {
+  BLEAdvertisementData data;
+  if (name.length() > 0) {
+    data.setName(name, true);
+  }
+  return data;
+}
+
+// --------------------------------------------------------------------------
+// BLE5 extended / periodic advertising (TX) -- shared NotSupported fallback
+//
+// The real transmit implementation is backend-specific and lives under a
+// capability guard in the active backend (NimBLE: impl/nimble/NimBLEAdvertising.cpp
+// under BLE5_ADV_TX_SUPPORTED / BLE_PERIODIC_ADV_SUPPORTED). "NotSupported" is a
+// backend-agnostic default, not a Bluedroid trait, so the fallback is defined
+// once here rather than copied into each backend. It compiles only when no active
+// backend implements the feature -- including a Bluedroid build on BLE5-capable
+// silicon (BLE5_SUPPORTED == 1 but BLE5_ADV_TX_SUPPORTED == 0). Exactly one
+// definition of each method exists in every build configuration.
+// --------------------------------------------------------------------------
+
+#if !BLE5_ADV_TX_SUPPORTED || !BLE_PERIODIC_ADV_TX_SUPPORTED
+namespace {
+// Single fallback body for every BLE5 TX entry point the active backend does
+// not implement. Logs the caller's name and yields NotSupported for the
+// BTStatus-returning entry points; void entry points discard the result.
+BTStatus advTxNotSupported(const char *fn) {
+  log_w("%s not supported in this build (no BLE 5.0 extended/periodic advertising TX backend)", fn);
+  return BTStatus::NotSupported;
+}
+}  // namespace
+#endif
+
+#if !BLE5_ADV_TX_SUPPORTED
 
 void BLEAdvertising::setExtType(uint8_t, BLEAdvType) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtPhy(uint8_t, BLEPhy, BLEPhy) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtTxPower(uint8_t, int8_t) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtInterval(uint8_t, uint16_t, uint16_t) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtChannelMap(uint8_t, uint8_t) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtSID(uint8_t, uint8_t) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtAnonymous(uint8_t, bool) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtIncludeTxPower(uint8_t, bool) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setExtScanReqNotify(uint8_t, bool) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::setExtAdvertisementData(uint8_t, const BLEAdvertisementData &) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::setExtScanResponseData(uint8_t, const BLEAdvertisementData &) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::setExtInstanceAddress(uint8_t, const BTAddress &) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::startExtended(uint8_t, uint32_t, uint8_t) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::stopExtended(uint8_t) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::removeExtended(uint8_t) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::clearExtended() {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
 
-// --------------------------------------------------------------------------
-// Periodic advertising setters (BLE5 -- not yet supported)
-// --------------------------------------------------------------------------
+#endif /* !BLE5_ADV_TX_SUPPORTED */
+
+#if !BLE_PERIODIC_ADV_TX_SUPPORTED
 
 void BLEAdvertising::setPeriodicAdvInterval(uint8_t, uint16_t, uint16_t) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 void BLEAdvertising::setPeriodicAdvTxPower(uint8_t, bool) {
-  log_w("%s not supported", __func__);
+  advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::setPeriodicAdvData(uint8_t, const BLEAdvertisementData &) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
 }
-
 BTStatus BLEAdvertising::startPeriodicAdv(uint8_t) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
+  return advTxNotSupported(__func__);
+}
+BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t) {
+  return advTxNotSupported(__func__);
 }
 
-BTStatus BLEAdvertising::stopPeriodicAdv(uint8_t) {
-  log_w("%s not supported", __func__);
-  return BTStatus::NotSupported;
-}
+#endif /* !BLE_PERIODIC_ADV_TX_SUPPORTED */
 
 #endif /* BLE_ENABLED */

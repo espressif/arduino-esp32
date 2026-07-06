@@ -19,36 +19,35 @@
 #pragma once
 
 #include "BLESecurity.h"
-#include "impl/BLESync.h"
+#include "impl/common/BLESecurityImpl.h"
 
 #if BLE_NIMBLE
 
 #include <host/ble_hs.h>
 
-struct BLESecurity::Impl {
-  BLESync authSync;
-  SemaphoreHandle_t mtx = nullptr;
-  IOCapability ioCap = NoInputNoOutput;
-  bool bonding = false;
-  bool mitm = false;
+/**
+ * @brief NimBLE security implementation (@c BLESecurity::Impl).
+ *
+ * Defined in @c impl/nimble/, so everything here is NimBLE-specific; it inherits the
+ * stack-agnostic @c BLESecurityImplCommon (shared config + pairing hooks), giving one uniform
+ * @c impl.member type. Layer is disclosed by file/type: members on @c BLESecurity::Impl are
+ * NimBLE, members on @c BLESecurityImplCommon are shared.
+ */
+struct BLESecurity::Impl : BLESecurityImplCommon {
+  bool bonding = true;
   bool sc = true;
-  bool forceAuth = false;
-  bool staticPassKey = false;
-  bool regenOnConnect = false;
-  uint32_t passKey = 0;
-  uint8_t keySize = 16;
-  uint8_t initKeyDist = BLE_SM_PAIR_KEY_DIST_ENC;
-  uint8_t respKeyDist = BLE_SM_PAIR_KEY_DIST_ENC;
+  // Distribute both the LTK (ENC) and the IRK (ID) so a bond supports identity
+  // resolution / RPA.
+  uint8_t initKeyDist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
+  uint8_t respKeyDist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
 
-  PassKeyRequestHandler passKeyRequestCb = nullptr;
-  PassKeyDisplayHandler passKeyDisplayCb = nullptr;
-  ConfirmPassKeyHandler confirmPassKeyCb = nullptr;
-  SecurityRequestHandler securityRequestCb = nullptr;
-  AuthorizationHandler authorizationCb = nullptr;
-  AuthCompleteHandler authCompleteCb = nullptr;
-  BondStoreOverflowHandler bondOverflowCb = nullptr;
-
+  /// @brief NimBLE-specific: push the current SMP settings into the NimBLE host (@c ble_hs_cfg).
   void applyToHost() const;
+
+  /// @brief NimBLE-specific: Passkey Entry display role -- NimBLE asks the app to *supply* the
+  /// passkey to show, so this computes/regens the shared @c passKey and dispatches it. (The input
+  /// role and the display-callback dispatch are shared; see @c BLESecurityImplCommon.)
+  uint32_t resolvePasskeyForDisplay(const BLEConnInfo &conn);
 };
 
 #endif /* BLE_NIMBLE */

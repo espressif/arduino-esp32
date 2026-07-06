@@ -136,7 +136,9 @@ void setup() {
   BTStatus status = BLE.begin("DeviceExplorer");
   if (!status) {
     Serial.printf("FAILED! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
   Serial.println("OK");
 
@@ -144,7 +146,9 @@ void setup() {
   BLEScan scan = BLE.getScan();
   if (!scan) {
     Serial.println("Failed to get scan object!");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   scan.setActiveScan(true);
@@ -154,9 +158,9 @@ void setup() {
 
   Serial.printf("Scanning for %d seconds...\n", (int)(SCAN_DURATION_MS / 1000));
   Serial.println();
-  BLEScanResults results = scan.startBlocking(SCAN_DURATION_MS);
+  BLEScan::Results results = scan.startBlocking(SCAN_DURATION_MS);
 
-  int count = results.getCount();
+  int count = results.size();
   Serial.printf("Scan complete! Found %d device(s):\n", count);
   Serial.println("---------------------------------------------");
 
@@ -171,7 +175,9 @@ void setup() {
 
   if (count == 0) {
     Serial.println("No devices found. Reset to try again.");
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   // Auto-connect to the first discovered device

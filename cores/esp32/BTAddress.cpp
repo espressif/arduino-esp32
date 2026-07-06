@@ -18,8 +18,8 @@
  */
 
 #include "BTAddress.h"
+#include "HEXBuilder.h"
 #include <stdio.h>
-#include <ctype.h>
 
 BTAddress::BTAddress() {
   memset(_addr, 0, sizeof(_addr));
@@ -48,30 +48,22 @@ void BTAddress::parseString(const char *str) {
   if (!str) {
     return;
   }
+  // Accept "AA:BB:CC:DD:EE:FF" (17 chars) or "AABBCCDDEEFF" (12 chars). Both are
+  // MSB-first in the string; we store LSB-first. HEXBuilder::hex2bytes parses the
+  // hex nibbles and silently skips the ':' separators, so one call covers both
+  // forms and reuses the core hex parser instead of pulling in the ~9 KB newlib
+  // scanf engine. A length that is neither, or any non-hex junk, yields a byte
+  // count other than 6 and is rejected.
   size_t len = strlen(str);
-
-  if (len == 17 && str[2] == ':') {
-    // "AA:BB:CC:DD:EE:FF" format -- MSB first in string, stored LSB first
-    unsigned int d[6];
-    if (sscanf(str, "%x:%x:%x:%x:%x:%x", &d[0], &d[1], &d[2], &d[3], &d[4], &d[5]) == 6) {
-      _addr[0] = (uint8_t)d[5];
-      _addr[1] = (uint8_t)d[4];
-      _addr[2] = (uint8_t)d[3];
-      _addr[3] = (uint8_t)d[2];
-      _addr[4] = (uint8_t)d[1];
-      _addr[5] = (uint8_t)d[0];
-    }
-  } else if (len == 12) {
-    // "AABBCCDDEEFF" format (no separators) -- MSB first in string
-    unsigned int d[6];
-    if (sscanf(str, "%2x%2x%2x%2x%2x%2x", &d[0], &d[1], &d[2], &d[3], &d[4], &d[5]) == 6) {
-      _addr[0] = (uint8_t)d[5];
-      _addr[1] = (uint8_t)d[4];
-      _addr[2] = (uint8_t)d[3];
-      _addr[3] = (uint8_t)d[2];
-      _addr[4] = (uint8_t)d[1];
-      _addr[5] = (uint8_t)d[0];
-    }
+  if (len != 17 && len != 12) {
+    return;
+  }
+  uint8_t msb[6];
+  if (HEXBuilder::hex2bytes(msb, sizeof(msb), str) != 6) {
+    return;
+  }
+  for (int i = 0; i < 6; i++) {
+    _addr[i] = msb[5 - i];
   }
 }
 
@@ -97,6 +89,10 @@ BTAddress::operator bool() const {
 
 const uint8_t *BTAddress::data() const {
   return _addr;
+}
+
+void BTAddress::toEspBdAddr(uint8_t out[6]) const {
+  memcpy(out, _addr, 6);
 }
 
 BTAddress::Type BTAddress::type() const {

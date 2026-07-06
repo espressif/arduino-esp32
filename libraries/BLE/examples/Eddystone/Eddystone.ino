@@ -20,7 +20,9 @@ void setup() {
   BTStatus status = BLE.begin("ESP32-Eddystone");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   // Eddystone URL
@@ -32,7 +34,7 @@ void setup() {
   BLEAdvertisementData advData = eddystoneUrl.getAdvertisementData();
   // GeneralDisc: device is always discoverable; BrEdrNotSupported: BLE-only, no Classic Bluetooth
   advData.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
-  advData.setCompleteServices(BLEEddystoneURL::serviceUUID());
+  advData.addServiceUUID(BLEEddystoneURL::serviceUUID());
   adv.setAdvertisementData(advData);
   adv.setType(BLEAdvType::NonConnectable);
   adv.start();

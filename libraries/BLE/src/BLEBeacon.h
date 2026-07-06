@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEUUID.h"
@@ -44,7 +44,7 @@ public:
 
   /**
    * @brief Set the 128-bit Proximity UUID.
-   * @param uuid The proximity UUID identifying this beacon group.
+   * @param uuid The proximity UUID identifying this beacon group (promoted to 128-bit via to128()).
    */
   void setProximityUUID(const BLEUUID &uuid);
 
@@ -104,8 +104,10 @@ public:
 
   /**
    * @brief Parse iBeacon fields from a raw manufacturer-specific payload.
-   * @param payload Pointer to the manufacturer-specific data bytes.
+   * @param payload Pointer to the manufacturer-specific data bytes (starting at the
+   *                iBeacon type byte, i.e. after the company ID).
    * @param len     Length of the payload in bytes.
+   * @note No-op unless len >= 23 and the header is the iBeacon type/length (0x02 0x15).
    */
   void setFromPayload(const uint8_t *payload, size_t len);
 

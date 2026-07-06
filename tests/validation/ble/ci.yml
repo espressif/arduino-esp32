@@ -1,6 +1,8 @@
 tags:
   - two_duts
 
+fqbn_append: PartitionScheme=huge_app
+
 multi_device:
   device0: server
   device1: client

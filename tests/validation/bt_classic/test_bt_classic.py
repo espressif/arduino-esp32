@@ -84,15 +84,34 @@ def test_bt_classic(dut, ci_job_id, record_property):
 
     # BT inquiry + SPP connect may take up to ~30 s
     client.expect_exact("[CLIENT] Connected", timeout=60)
-    server.expect_exact("[SERVER] Client connected", timeout=60)
+    # onConnect fires from callback as soon as the link is up (may precede Client connected)
+    server.expect_exact("[SERVER] onConnect:", timeout=60)
+    server.expect_exact("[SERVER] Client connected", timeout=10)
+    server.expect_exact("[SERVER] peerCount=1", timeout=10)
+    server.expect_exact("[SERVER] peers=1", timeout=10)
+    server.expect(r"\[SERVER\] peerAddr=[0-9a-fA-F:]+", timeout=10)
+
+    client.expect_exact("[CLIENT] peerCount=1", timeout=10)
+    client.expect_exact("[CLIENT] peers=1", timeout=10)
+    client.expect(r"\[CLIENT\] peerAddr=[0-9a-fA-F:]+", timeout=10)
+
+    client.expect_exact("[CLIENT] Sent: SPP_WRITE_TO_PROBE", timeout=10)
+    server.expect_exact("[SERVER] onPeerData:", timeout=15)
+    server.expect_exact("[SERVER] writeTo ack sent", timeout=10)
+    client.expect_exact("[CLIENT] Received: SPP_WRITE_TO_ACK", timeout=15)
 
     client.expect_exact("[CLIENT] Sent: HELLO_FROM_CLIENT", timeout=10)
     server.expect_exact("[SERVER] Received: HELLO_FROM_CLIENT", timeout=15)
     server.expect_exact("[SERVER] Sent: HELLO_FROM_SERVER", timeout=10)
     client.expect_exact("[CLIENT] Received: HELLO_FROM_SERVER", timeout=15)
 
-    client.expect_exact("[CLIENT] Disconnected", timeout=10)
-    server.expect_exact("[SERVER] Client disconnected", timeout=15)
+    client.expect_exact("[CLIENT] Sent: DISCONNECT_ME", timeout=10)
+    # onDisconnect callback may log before disconnect(addr) returns
+    server.expect_exact("[SERVER] onDisconnect:", timeout=15)
+    server.expect_exact("[SERVER] disconnect(addr): OK", timeout=15)
+    server.expect_exact("[SERVER] peerCount=0", timeout=10)
+    client.expect_exact("[CLIENT] Disconnected by server", timeout=15)
+    server.expect_exact("[SERVER] Client disconnected", timeout=10)
 
     record_property(f"phase_2_{PHASE_LABELS[2]}", "PASS")
     LOGGER.info("Phase 2 (%s) passed", PHASE_LABELS[2])

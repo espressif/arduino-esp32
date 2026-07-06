@@ -35,13 +35,14 @@
  *               BLE 4.2+ peers.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_NIMBLE
 
 #include "BLE.h"
 
 #include "NimBLESecurity.h"
-#include "impl/BLEImplHelpers.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLEMutex.h"
 #include "esp32-hal-log.h"
 
 #if BLE_SMP_SUPPORTED
@@ -59,6 +60,7 @@
  *       (Vol 3, Part H, §3.6.1, Table 3.8).
  */
 void BLESecurity::Impl::applyToHost() const {
+  // ioCap/mitm come from the BLESecurityImplCommon base; bonding/sc/*KeyDist are NimBLE's.
   ble_hs_cfg.sm_io_cap = static_cast<uint8_t>(ioCap);
   ble_hs_cfg.sm_bonding = bonding ? 1 : 0;
   ble_hs_cfg.sm_mitm = mitm ? 1 : 0;
@@ -71,31 +73,14 @@ void BLESecurity::Impl::applyToHost() const {
 // Stack-specific BLESecurity methods
 // --------------------------------------------------------------------------
 
-/**
- * @brief Configures the SMP I/O capability used for pairing and passkey/confirm flows.
- * @param cap I/O capability value applied to the NimBLE host.
- * @note The I/O capability determines which association model (Just Works, Passkey,
- *       Numeric Comparison, OOB) is used during SMP pairing.
- *       BT Core Spec v5.x, Vol 3, Part H, §2.3.2 (I/O Capabilities) and
- *       §2.3.3 (Mapping of I/O Capabilities to Key Generation Method).
- */
+// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
+
 void BLESecurity::setIOCapability(IOCapability cap) {
   BLE_CHECK_IMPL();
   impl.ioCap = cap;
   impl.applyToHost();
 }
 
-/**
- * @brief Enables or disables bonding, MITM, and secure connections, then updates the host SMP config.
- * @param bonding When true, bonding is allowed (Bonding_Flags bits 0:1 in the
- *                AuthReq field = 0b01; BT Core Spec v5.x, Vol 3, Part H, §3.5.1, Table 3.5).
- * @param mitm When true, MITM protection is required
- *             (MITM bit 2 of the AuthReq field; Vol 3, Part H, §3.5.1).
- * @param secureConnection When true, LE Secure Connections are enabled
- *                         (SC bit 3 of the AuthReq field; Vol 3, Part H, §3.5.1).
- *                         Secure Connections use ECDH key exchange and are required
- *                         for Numeric Comparison (Vol 3, Part H, §2.4.1).
- */
 void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConnection) {
   BLE_CHECK_IMPL();
   impl.bonding = bonding;
@@ -104,72 +89,45 @@ void BLESecurity::setAuthenticationMode(bool bonding, bool mitm, bool secureConn
   impl.applyToHost();
 }
 
-/**
- * @brief Sets a static 6-digit passkey or generates a random one, depending on @a isStatic.
- * @param isStatic When true, @a passkey is reduced modulo 1000000 and stored. When false, a random key is generated.
- * @param passkey Raw passkey value; only used when @a isStatic is true.
- * @note The passkey is a 6-digit decimal value in the range 0–999999.
- *       Values are reduced modulo 1,000,000 to enforce this constraint.
- *       BT Core Spec v5.x, Vol 3, Part H, §2.3.5.2 (Passkey Entry protocol).
- */
+// A static passkey is reduced modulo 1000000 to enforce the 6-digit (0–999999) range.
 void BLESecurity::setPassKey(bool isStatic, uint32_t passkey) {
   BLE_CHECK_IMPL();
-  impl.staticPassKey = isStatic;
+  // passKey is read on the host task during pairing (resolvePasskeyForInput/
+  // resolvePasskeyForDisplay, both under mtx), so the writer takes the same lock.
+  BLELockGuard lock(impl.mtx);
+  impl.passKeyIsStatic = isStatic;
   impl.passKey = isStatic ? (passkey % 1000000) : generateRandomPassKey();
 }
 
-/**
- * @brief Sets a fixed 6-digit passkey used when the stack requires a static value.
- * @param passkey Passkey reduced modulo 1000000 when applied.
- */
 void BLESecurity::setStaticPassKey(uint32_t passkey) {
   setPassKey(true, passkey);
 }
 
-/**
- * @brief Generates and stores a new random 6-digit passkey for pairing.
- */
 void BLESecurity::setRandomPassKey() {
   setPassKey(false);
 }
 
-/**
- * @brief Returns the current passkey held by the implementation, or 0 if no implementation exists.
- * @return The stored passkey, or 0.
- */
 uint32_t BLESecurity::getPassKey() const {
-  return _impl ? _impl->passKey : 0;
+  if (!_impl) {
+    return 0;
+  }
+  BLELockGuard lock(_impl->mtx);
+  return _impl->passKey;
 }
 
-/**
- * @brief Sets the initiator (local) key distribution mask and reapplies the host SMP configuration.
- * @param keys Key distribution flags for the pairing initiator role.
- * @note Key distribution field bits: EncKey=0x01 (LTK+Rand+EDIV), IdKey=0x02 (IRK+BD_ADDR),
- *       SignKey=0x04 (CSRK), LinkKey=0x08 (BR/EDR link key derived from LTK).
- *       BT Core Spec v5.x, Vol 3, Part H, §3.6.1 (Table 3.8).
- */
 void BLESecurity::setInitiatorKeys(KeyDist keys) {
   BLE_CHECK_IMPL();
   impl.initKeyDist = static_cast<uint8_t>(keys);
   impl.applyToHost();
 }
 
-/**
- * @brief Sets the responder (remote) key distribution mask and reapplies the host SMP configuration.
- * @param keys Key distribution flags for the pairing responder role.
- * @note Same bit definitions as for the initiator (see setInitiatorKeys).
- *       BT Core Spec v5.x, Vol 3, Part H, §3.6.1 (Table 3.8).
- */
 void BLESecurity::setResponderKeys(KeyDist keys) {
   BLE_CHECK_IMPL();
   impl.respKeyDist = static_cast<uint8_t>(keys);
   impl.applyToHost();
 }
 
-/**
- * @brief Enumerates bonded peer addresses from the NimBLE store (bounded scan).
- * @return List of addresses read from the security database; empty if unimplemented or none found.
- */
+// Bounded scan: stops after 100 stored bonds to avoid unbounded store iteration.
 std::vector<BTAddress> BLESecurity::getBondedDevices() const {
   std::vector<BTAddress> result;
   if (!_impl) {
@@ -190,11 +148,6 @@ std::vector<BTAddress> BLESecurity::getBondedDevices() const {
   return result;
 }
 
-/**
- * @brief Removes the bond and pairing data for a single address.
- * @param address Address of the peer to unpair.
- * @return Status indicating success, failure, or invalid state.
- */
 BTStatus BLESecurity::deleteBond(const BTAddress &address) {
   if (!_impl) {
     log_w("Security: deleteBond called with no security impl");
@@ -211,10 +164,6 @@ BTStatus BLESecurity::deleteBond(const BTAddress &address) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Clears the entire local bonding store.
- * @return @c OK on success, or @c InvalidState if no security implementation is present.
- */
 BTStatus BLESecurity::deleteAllBonds() {
   if (!_impl) {
     log_w("Security: deleteAllBonds called with no security impl");
@@ -224,11 +173,6 @@ BTStatus BLESecurity::deleteAllBonds() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Starts the SMP security procedure on an existing connection.
- * @param connHandle NimBLE connection handle for the link.
- * @return Status from @c ble_gap_security_initiate, or @c InvalidState if unimplemented.
- */
 BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   if (!_impl) {
     log_w("Security: startSecurity called with no security impl");
@@ -242,13 +186,10 @@ BTStatus BLESecurity::startSecurity(uint16_t connHandle) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Resets SMP options to a conservative default and re-applies them to the host.
- */
 void BLESecurity::resetSecurity() {
   BLE_CHECK_IMPL();
   impl.ioCap = NoInputNoOutput;
-  impl.bonding = false;
+  impl.bonding = true;
   impl.mitm = false;
   impl.sc = true;
   impl.forceAuth = false;
@@ -259,54 +200,22 @@ void BLESecurity::resetSecurity() {
 // Stack event dispatch methods
 // --------------------------------------------------------------------------
 
-/**
- * @brief Supplies the passkey the stack should use or display, optionally regenerating it and invoking the display callback.
- * @param conn Connection information for the pairing peer.
- * @return Passkey value for the display step (0 if implementation is missing).
- */
-uint32_t BLESecurity::resolvePasskeyForDisplay(const BLEConnInfo &conn) {
-  BLE_CHECK_IMPL(0);
-  uint32_t pk = impl.passKey;
-  if (impl.regenOnConnect) {
-    pk = generateRandomPassKey();
-    impl.passKey = pk;
+uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &conn) {
+  // passKey/regenOnConnect/notifyPasskeyDisplay come from the BLESecurityImplCommon base.
+  // Read/regenerate passKey under mtx (matching the setters and
+  // resolvePasskeyForInput), then dispatch the display callback with the lock
+  // released (notifyPasskeyDisplay snapshots its handler under mtx internally).
+  uint32_t pk;
+  {
+    BLELockGuard lock(mtx);
+    pk = passKey;
+    if (regenOnConnect) {
+      pk = BLESecurity::generateRandomPassKey();
+      passKey = pk;
+    }
   }
-  if (impl.passKeyDisplayCb) {
-    impl.passKeyDisplayCb(conn, pk);
-  }
+  notifyPasskeyDisplay(conn, pk);
   return pk;
-}
-
-/**
- * @brief Resolves the passkey for the input/entry role, preferring a user callback if set.
- * @param conn Connection information for the pairing peer.
- * @return User-entered or default passkey (0 if no implementation is present and checks fail).
- */
-uint32_t BLESecurity::resolvePasskeyForInput(const BLEConnInfo &conn) {
-  BLE_CHECK_IMPL(0);
-  if (impl.passKeyRequestCb) {
-    return impl.passKeyRequestCb(conn);
-  }
-  return impl.passKey;
-}
-
-// --------------------------------------------------------------------------
-// BLEClass::getSecurity() factory
-// --------------------------------------------------------------------------
-
-/**
- * @brief Returns a @c BLESecurity facade backed by a process-wide shared NimBLE implementation, or an empty object if BLE is not initialized.
- * @return A @c BLESecurity instance, possibly default-constructed when BLE is not ready.
- */
-BLESecurity BLEClass::getSecurity() {
-  if (!isInitialized()) {
-    return BLESecurity();
-  }
-  static std::shared_ptr<BLESecurity::Impl> secImpl;
-  if (!secImpl) {
-    secImpl = std::make_shared<BLESecurity::Impl>();
-  }
-  return BLESecurity(secImpl);
 }
 
 #else /* !BLE_SMP_SUPPORTED -- stubs */
@@ -369,17 +278,8 @@ void BLESecurity::resetSecurity() {
   log_w("SMP not supported");
 }
 
-uint32_t BLESecurity::resolvePasskeyForDisplay(const BLEConnInfo &) {
+uint32_t BLESecurity::Impl::resolvePasskeyForDisplay(const BLEConnInfo &) {
   return 0;
-}
-
-uint32_t BLESecurity::resolvePasskeyForInput(const BLEConnInfo &) {
-  return 0;
-}
-
-BLESecurity BLEClass::getSecurity() {
-  log_w("SMP not supported");
-  return BLESecurity();
 }
 
 #endif /* BLE_SMP_SUPPORTED */

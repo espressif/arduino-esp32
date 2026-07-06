@@ -19,7 +19,7 @@ Key Features:
 * **Beacon support**: Apple iBeacon and Google Eddystone (URL + TLM)
 * **Hosted BLE** for ESP32-P4 via *esp-hosted* (runs NimBLE on a co-processor)
 * **L2CAP CoC** channels for high-throughput bulk data transfer (NimBLE, ``BLE_L2CAP_SUPPORTED``)
-* **BLEStream**: Arduino ``Stream`` interface over BLE using the Nordic UART Service (NUS)
+* **BLEStream**: Arduino ``Stream`` interface over BLE using the Nordic UART Service (NUS), including multi-central server mode
 * **Modern C++17 API**: ``std::function`` callbacks, RAII handles, ``BTStatus`` error handling
 
 Supported SoCs
@@ -65,7 +65,7 @@ Not every class uses the PIMPL pattern. The following are **value types** -- the
 * ``BLEConnInfo`` -- connection descriptor (inline storage)
 * ``BLEConnParams`` -- connection parameters struct
 * ``BLEAdvertisementData`` -- advertisement payload builder
-* ``BLEScanResults`` -- vector of ``BLEAdvertisedDevice``
+* ``BLEScan::Results`` -- vector of ``BLEAdvertisedDevice``
 * ``BTStatus`` -- 1-byte error code with boolean conversion
 
 Stack Selection
@@ -133,7 +133,7 @@ BLE 5.0 Features
 
 Extended advertising, periodic advertising, PHY selection, and Data Length Extension are available on
 SoCs with ``SOC_BLE_50_SUPPORTED`` (or via hosted BLE). These features are compile-time guarded by the
-``BLE5_SUPPORTED`` macro defined in ``impl/BLEGuards.h``.
+``BLE5_SUPPORTED`` macro defined in ``impl/common/BLEGuards.h``.
 
 Getting Started
 ---------------
@@ -404,6 +404,9 @@ Whitelist
     BTStatus whiteListAdd(const BTAddress &address);
     BTStatus whiteListRemove(const BTAddress &address);
     bool isOnWhiteList(const BTAddress &address) const;
+
+``whiteListAdd()`` and ``whiteListRemove()`` block until the controller whitelist
+update completes. On success, ``isOnWhiteList()`` reflects the new membership.
 
 Advertising Shortcuts
 *********************
@@ -1197,6 +1200,15 @@ connect
 Synchronous connect. Blocks until the connection is established or the timeout expires.
 The PHY-aware overloads (BLE 5.0) specify the preferred PHY for the initial connection.
 
+.. note::
+
+    ``onConnect`` is delivered **before** a blocking ``connect()`` returns. The ATT MTU exchange
+    also completes before ``connect()`` returns (required on Bluedroid so a follow-up GATT/GAP call
+    cannot race the pending exchange). ``onMtuChanged`` still fires after ``onConnect``. Do not read
+    the negotiated MTU inside ``onConnect`` -- use ``onMtuChanged`` or ``getMTU()`` after
+    ``connect()`` returns. ``connectAsync()`` does **not** auto-exchange MTU; call ``setMTU()``
+    after you observe ``onConnect``.
+
 connectAsync
 """""""""""""
 
@@ -1206,7 +1218,7 @@ connectAsync
     BTStatus connectAsync(const BLEAdvertisedDevice &device, BLEPhy phy = BLEPhy::PHY_1M);
 
 Initiate a connection without blocking. Use the ``onConnect`` callback to know when the connection
-is established.
+is established. Unlike blocking ``connect()``, this path does not automatically exchange MTU.
 
 cancelConnect
 """""""""""""
@@ -1313,7 +1325,8 @@ Clear all registered callbacks.
 .. note::
 
     ``onConnParamsUpdateRequest`` returns ``bool`` -- return ``true`` to accept the parameters, ``false``
-    to reject.
+    to reject. This callback is **NimBLE-only**; Bluedroid has no pre-accept hook for connection-parameter
+    updates, so the handler is never invoked on that backend.
 
 MTU and Connection Info
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1325,7 +1338,7 @@ MTU and Connection Info
     int8_t getRSSI() const;
     BTAddress getPeerAddress() const;
     uint16_t getHandle() const;
-    BLEConnInfo getConnection() const;
+    BLEConnInfo getConnInfo() const;
 
 Connection Parameters and PHY
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1586,7 +1599,7 @@ startBlocking
 
 .. code-block:: cpp
 
-    BLEScanResults startBlocking(uint32_t durationMs);
+    BLEScan::Results startBlocking(uint32_t durationMs);
 
 Start scanning and block until complete. Returns the scan results directly.
 
@@ -1623,7 +1636,7 @@ onComplete
 
 .. code-block:: cpp
 
-    void onComplete(std::function<void(BLEScanResults &)> callback);
+    void onComplete(std::function<void(BLEScan::Results &)> callback);
 
 Called when a scan completes (duration expired).
 
@@ -1641,7 +1654,7 @@ Results Management
 
 .. code-block:: cpp
 
-    BLEScanResults getResults();
+    BLEScan::Results getResults();
     void clearResults();
     void erase(const BTAddress &address);
 
@@ -1802,17 +1815,17 @@ toString
 
     String toString() const;
 
-BLEScanResults
-**************
+BLEScan::Results
+****************
 
-Container for BLE scan results. Supports range-based ``for`` loops.
+Container for BLE scan results, nested in ``BLEScan``. Supports range-based ``for`` loops.
 
 .. code-block:: cpp
 
     explicit operator bool() const;         // true if non-empty
-    size_t getCount() const;
+    size_t size() const;
     BLEAdvertisedDevice getDevice(size_t index) const;
-    void dump() const;
+    void dump() const;                      // log all results
 
     const BLEAdvertisedDevice *begin() const;
     const BLEAdvertisedDevice *end() const;
@@ -1821,7 +1834,7 @@ Example:
 
 .. code-block:: cpp
 
-    BLEScanResults results = scan.startBlocking(5000);
+    BLEScan::Results results = scan.startBlocking(5000);
     for (const auto &device : results) {
         Serial.printf("Found: %s RSSI=%d\n",
                        device.getName().c_str(),
@@ -1881,6 +1894,13 @@ Configuration
     ``setScanResponse(false)``, the name is included in the primary advertising data instead.
     This behavior is consistent across both NimBLE and Bluedroid backends.
 
+.. note::
+
+    ``setMinPreferred`` / ``setMaxPreferred`` emit the Slave Connection Interval Range AD
+    structure (0x12) in the primary advertising payload when either bound is non-zero
+    (a zero side copies the other). Connection parameters are still negotiated
+    post-connect via L2CAP; the AD is only a hint to centrals.
+
 Custom Advertisement Data
 """""""""""""""""""""""""
 
@@ -1903,32 +1923,40 @@ Pass ``durationMs = 0`` for indefinite advertising.
 Extended Advertising (BLE 5.0)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-ExtAdvConfig
-""""""""""""
+Extended advertising is configured **per instance** with individual setters
+(mirroring the legacy setter style) rather than a single config struct. Each
+advertising set is identified by an ``instance`` index (0, 1, 2, …), so several
+sets can run in parallel. Configure the instance, set its data, then start it.
 
-.. code-block:: cpp
+.. note::
 
-    struct ExtAdvConfig {
-        uint8_t instance = 0;
-        BLEAdvType type = BLEAdvType::ConnectableScannable;
-        BLEPhy primaryPhy = BLEPhy::PHY_1M;
-        BLEPhy secondaryPhy = BLEPhy::PHY_1M;
-        int8_t txPower = 127;
-        uint16_t intervalMin = 0x30;
-        uint16_t intervalMax = 0x30;
-        uint8_t channelMap = 0x07;
-        uint8_t sid = 0;
-        bool anonymous = false;
-        bool includeTxPower = false;
-        bool scanReqNotify = false;
-    };
+    These APIs require a BLE 5.0-capable SoC (ESP32-C3, S3, C6, H2, …) with
+    extended advertising enabled in the backend (``CONFIG_BT_NIMBLE_EXT_ADV`` for
+    NimBLE, ``CONFIG_BT_BLE_50_FEATURES_SUPPORTED`` for Bluedroid). On builds
+    without BLE 5 support every method logs a warning and returns
+    ``BTStatus::NotSupported``; the ``void`` setters are no-ops. Always check the
+    returned :cpp:class:`BTStatus`.
 
-Methods
+Setters
 """""""
 
 .. code-block:: cpp
 
-    BTStatus configureExtended(const ExtAdvConfig &config);
+    void setExtType(uint8_t instance, BLEAdvType type);
+    void setExtPhy(uint8_t instance, BLEPhy primaryPhy, BLEPhy secondaryPhy);
+    void setExtTxPower(uint8_t instance, int8_t txPower);       // 127 = controller default
+    void setExtInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval);
+    void setExtChannelMap(uint8_t instance, uint8_t channelMap);
+    void setExtSID(uint8_t instance, uint8_t sid);
+    void setExtAnonymous(uint8_t instance, bool anonymous);
+    void setExtIncludeTxPower(uint8_t instance, bool include);
+    void setExtScanReqNotify(uint8_t instance, bool enable);
+
+Data and lifecycle
+""""""""""""""""""
+
+.. code-block:: cpp
+
     BTStatus setExtAdvertisementData(uint8_t instance, const BLEAdvertisementData &data);
     BTStatus setExtScanResponseData(uint8_t instance, const BLEAdvertisementData &data);
     BTStatus setExtInstanceAddress(uint8_t instance, const BTAddress &addr);
@@ -1940,24 +1968,15 @@ Methods
 Periodic Advertising (BLE 5.0)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PeriodicAdvConfig
-"""""""""""""""""
+Periodic advertising attaches to an existing extended advertising ``instance``.
+Configure the extended instance first, then set the periodic parameters and data
+and start it. As with extended advertising, these methods are per instance and
+return ``BTStatus::NotSupported`` on non-BLE-5 builds.
 
 .. code-block:: cpp
 
-    struct PeriodicAdvConfig {
-        uint8_t instance = 0;
-        uint16_t intervalMin = 0;
-        uint16_t intervalMax = 0;
-        bool includeTxPower = false;
-    };
-
-Methods
-"""""""
-
-.. code-block:: cpp
-
-    BTStatus configurePeriodicAdv(const PeriodicAdvConfig &config);
+    void setPeriodicAdvInterval(uint8_t instance, uint16_t minInterval, uint16_t maxInterval);
+    void setPeriodicAdvTxPower(uint8_t instance, bool include);
     BTStatus setPeriodicAdvData(uint8_t instance, const BLEAdvertisementData &data);
     BTStatus startPeriodicAdv(uint8_t instance);
     BTStatus stopPeriodicAdv(uint8_t instance);
@@ -1990,13 +2009,11 @@ Vol 3, Part C, Section 11.
 .. code-block:: cpp
 
     void setFlags(uint8_t flags);
-    void setCompleteServices(const BLEUUID &uuid);
-    void setPartialServices(const BLEUUID &uuid);
     void addServiceUUID(const BLEUUID &uuid);
+    void setPartialServices(const BLEUUID &uuid);
     void setServiceData(const BLEUUID &uuid, const uint8_t *data, size_t len);
     void setManufacturerData(uint16_t companyId, const uint8_t *data, size_t len);
     void setName(const String &name, bool complete = true);
-    void setShortName(const String &name);
     void setAppearance(uint16_t appearance);
     void setPreferredParams(uint16_t minInterval, uint16_t maxInterval);
     void setTxPower(int8_t txPower);
@@ -2199,6 +2216,10 @@ Bond Management
     std::vector<BTAddress> getBondedDevices() const;
     BTStatus deleteBond(const BTAddress &address);
     BTStatus deleteAllBonds();
+
+``deleteBond()`` and ``deleteAllBonds()`` block until the bond store update
+completes. On success, ``getBondedDevices()`` no longer includes the removed
+peer(s).
 
 Bond Store Overflow
 """""""""""""""""""
@@ -2455,7 +2476,7 @@ Stack-agnostic connection descriptor. Pure value type with inline storage (no he
 
     uint16_t getHandle() const;             // connection handle
     BTAddress getAddress() const;           // OTA peer address
-    BTAddress getIdAddress() const;         // identity address (after IRK resolution)
+    BTAddress getIdAddress() const;         // identity address when available, else OTA
     uint16_t getMTU() const;                // negotiated ATT MTU
     bool isEncrypted() const;
     bool isAuthenticated() const;
@@ -2469,6 +2490,14 @@ Stack-agnostic connection descriptor. Pure value type with inline storage (no he
     bool isCentral() const;
     bool isPeripheral() const;
     int8_t getRSSI() const;                 // -127 to +20 dBm
+
+.. note::
+
+    On NimBLE, ``getIdAddress()`` returns the resolved identity address when the stack provides one
+    (``peer_id_addr``); otherwise the OTA address. Bluedroid has no resolved-identity field on the
+    connect event, so ``getIdAddress()`` always returns the OTA address (never empty). Peer address
+    type comes from GATTS/GATTC connect and ``AUTH_CMPL`` on Bluedroid; real PHY may still report as
+    ``PHY_1M`` until BLE 5.0 silicon surfaces those fields.
 
 BLEConnParams
 *************
@@ -2492,7 +2521,6 @@ BLEAdvType
 .. code-block:: cpp
 
     enum class BLEAdvType : uint8_t {
-        Connectable,
         ConnectableScannable,
         ConnectableDirected,
         ScannableUndirected,
@@ -2747,6 +2775,10 @@ Data Transfer
     uint16_t getMTU() const;
     uint16_t getConnHandle() const;
 
+``write()`` splits payloads larger than the peer CoC MTU into MTU-sized SDUs and
+may block briefly between chunks while waiting for peer credits. ``getMTU()``
+returns the local (receive) CoC MTU negotiated for the channel.
+
 Callbacks
 """""""""
 
@@ -2809,6 +2841,13 @@ Nordic UART Service (NUS) UUID conventions. It is interoperable with standard BL
 
 ``BLEStream`` is **non-copyable** and owns its server/client resources internally.
 
+In **server mode**, multiple centrals may connect at once. As a single Arduino ``Stream``,
+``write()`` / ``print()`` broadcast to every subscribed peer and ``read()`` / ``available()``
+drain one merged RX buffer. Use the additive per-peer APIs when you need to attribute traffic.
+**Client mode** remains one ESP32 central to one remote NUS server.
+
+See the ``MultiClientUART`` example for a multi-central server sketch.
+
 Server Mode
 ^^^^^^^^^^^
 
@@ -2817,9 +2856,9 @@ Server Mode
     BLEStream bleStream;
     bleStream.begin("MyDevice");
     if (bleStream.connected()) {
-        bleStream.println("Hello World!");
+        bleStream.println("Hello World!");  // broadcast to all peers
         if (bleStream.available()) {
-            String s = bleStream.readStringUntil('\n');
+            String s = bleStream.readStringUntil('\n');  // merged RX
         }
     }
 
@@ -2841,7 +2880,28 @@ Lifecycle
     BTStatus begin(const String &deviceName = "BLE_Stream");
     BTStatus beginClient(const BTAddress &address, uint32_t timeoutMs = 5000);
     void end();
-    bool connected() const;
+    bool connected() const;                 // true while any peer is connected
+    explicit operator bool() const;         // true after begin / beginClient
+
+Multi-peer (server mode)
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: cpp
+
+    size_t peerCount() const;
+    std::vector<BLEConnInfo> peers() const;
+    size_t writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size);
+
+* ``peerCount()`` -- number of connected centrals (0 or 1 in client mode).
+* ``peers()`` -- snapshot of connected peers (``BLEConnInfo`` values).
+* ``writeTo()`` -- notify only the given peer's TX subscription (server mode).
+
+.. code-block:: cpp
+
+    bleStream.onPeerData([](const BLEConnInfo &peer, const uint8_t *data, size_t len) {
+        bleStream.writeTo(peer, data, len);  // echo to that peer only
+    });
+    Serial.printf("peers=%u\n", (unsigned)bleStream.peerCount());
 
 Arduino Stream Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2853,9 +2913,11 @@ Arduino Stream Interface
     int available() override;
     int read() override;
     int peek() override;
-    size_t write(uint8_t c) override;
-    size_t write(const uint8_t *buffer, size_t size) override;
-    void flush() override;
+    size_t write(uint8_t c) override;                          // broadcast (server) / write (client)
+    size_t write(const uint8_t *buffer, size_t size) override; // same
+    void flush() override;                                     // no-op for BLE
+
+Each ``write()`` chunk is limited to (MTU - 3) bytes to fit the ATT header.
 
 Callbacks
 ^^^^^^^^^
@@ -2864,8 +2926,11 @@ Callbacks
 
     using ConnectHandler = std::function<void(const BLEConnInfo &connInfo)>;
     using DisconnectHandler = std::function<void(const BLEConnInfo &connInfo, uint8_t reason)>;
+    using PeerDataHandler = std::function<void(const BLEConnInfo &connInfo, const uint8_t *data, size_t len)>;
+
     void onConnect(ConnectHandler handler);
     void onDisconnect(DisconnectHandler handler);
+    void onPeerData(PeerDataHandler handler);  // attributed RX; also fills the merged buffer
     void resetCallbacks();
 
 NUS UUIDs

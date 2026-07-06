@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BTStatus.h"
@@ -55,12 +55,14 @@ public:
   /**
    * @brief Append a service UUID to the advertisement payload.
    * @param uuid Service UUID to advertise.
+   * @note Duplicates are not checked; the same UUID may be added more than once.
    */
   void addServiceUUID(const BLEUUID &uuid);
 
   /**
    * @brief Remove a service UUID from the advertisement payload.
    * @param uuid Service UUID to remove.
+   * @note Removes all occurrences of @p uuid.
    */
   void removeServiceUUID(const BLEUUID &uuid);
 
@@ -101,12 +103,14 @@ public:
   /**
    * @brief Set the minimum preferred connection interval advertised to centrals.
    * @param minPreferred Minimum preferred interval value (in 1.25 ms units).
+   * @note Emits Slave Connection Interval Range AD (0x12) when either bound is non-zero.
    */
   void setMinPreferred(uint16_t minPreferred);
 
   /**
    * @brief Set the maximum preferred connection interval advertised to centrals.
    * @param maxPreferred Maximum preferred interval value (in 1.25 ms units).
+   * @note Emits Slave Connection Interval Range AD (0x12) when either bound is non-zero.
    */
   void setMaxPreferred(uint16_t maxPreferred);
 

@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -38,6 +38,9 @@ class BLERemoteCharacteristic;
  */
 class BLERemoteService {
 public:
+  /**
+   * @brief Construct an empty (invalid) handle; obtain a live one via BLEClient::getService().
+   */
   BLERemoteService();
   ~BLERemoteService() = default;
   BLERemoteService(const BLERemoteService &) = default;
@@ -88,6 +91,7 @@ public:
    * @brief Shorthand: read a characteristic value by UUID.
    * @param charUUID UUID of the characteristic to read.
    * @return The characteristic value as a String, or an empty String on failure.
+   * @note Discovers the characteristic first; blocks until the GATT read completes.
    */
   String getValue(const BLEUUID &charUUID);
 
@@ -95,7 +99,8 @@ public:
    * @brief Shorthand: write a characteristic value by UUID.
    * @param charUUID UUID of the characteristic to write.
    * @param value    The value to write.
-   * @return BTStatus indicating success or failure.
+   * @return BTStatus::NotFound if the characteristic is not in this service,
+   *         otherwise the status of the underlying write.
    */
   BTStatus setValue(const BLEUUID &charUUID, const String &value);
 

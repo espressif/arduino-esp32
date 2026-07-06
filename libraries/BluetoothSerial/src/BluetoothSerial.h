@@ -50,6 +50,9 @@ public:
   using ConfirmRequestHandler = std::function<bool(uint32_t)>;
   using AuthCompleteHandler = std::function<void(bool)>;
   using DataHandler = std::function<void(const uint8_t *, size_t)>;
+  using PeerConnectHandler = std::function<void(const BTAddress &)>;
+  using PeerDisconnectHandler = std::function<void(const BTAddress &)>;
+  using PeerDataHandler = std::function<void(const BTAddress &, const uint8_t *, size_t)>;
 
   BTStatus begin(const String &localName = "ESP32", bool isInitiator = false);
   void end(bool releaseMemory = false);
@@ -71,8 +74,12 @@ public:
   BTStatus connect(const String &remoteName, uint32_t timeoutMs = 10000);
   BTStatus connect(const BTAddress &address, uint8_t channel = 0);
   BTStatus disconnect();
+  BTStatus disconnect(const BTAddress &address);
   bool connected() const;
   bool hasClient() const;
+  size_t peerCount() const;
+  std::vector<BTAddress> peers() const;
+  size_t writeTo(const BTAddress &address, const uint8_t *buf, size_t len);
 
   // Discovery
   std::vector<DiscoveryResult> discover(uint32_t timeoutMs = 10000);
@@ -93,6 +100,9 @@ public:
 
   // Data callback
   BTStatus onData(DataHandler callback);
+  BTStatus onConnect(PeerConnectHandler callback);
+  BTStatus onDisconnect(PeerDisconnectHandler callback);
+  BTStatus onPeerData(PeerDataHandler callback);
 
   // Info
   BTAddress getAddress() const;

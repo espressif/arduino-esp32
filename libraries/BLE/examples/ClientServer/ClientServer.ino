@@ -29,7 +29,9 @@ void setup() {
   BTStatus status = BLE.begin("ESP32-DualRole");
   if (!status) {
     Serial.printf("BLE init failed! (%s)\n", status.toString());
-    return;
+    while (true) {
+      delay(1000);
+    }
   }
 
   // --- Server side ---

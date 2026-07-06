@@ -72,6 +72,16 @@ public:
   /** @brief Returns pointer to the internal 6-byte array (LSB-first). */
   const uint8_t *data() const;
 
+  /**
+   * @brief Copy the address into a mutable 6-byte buffer (LSB-first).
+   *
+   * Convenience for the many ESP-IDF Bluetooth APIs that take a non-const
+   * esp_bd_addr_t (a uint8_t[6]) by pointer. Avoids scattering
+   * `esp_bd_addr_t x; memcpy(x, addr.data(), 6);` at every call site.
+   * @param out Destination 6-byte array (e.g. an esp_bd_addr_t).
+   */
+  void toEspBdAddr(uint8_t out[6]) const;
+
   /** @brief Returns the address type. */
   Type type() const;
 

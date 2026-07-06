@@ -16,6 +16,11 @@ BluetoothSerial SerialBT;
 String serverName;
 volatile int currentPhase = 0;
 
+static String peerRx;
+static volatile bool onConnectFired = false;
+static volatile bool writeToProbeDone = false;
+static BTAddress connectedPeer;
+
 // ---------------------------------------------------------------------------
 // Phase coordination (same pattern as BLE validation tests)
 // ---------------------------------------------------------------------------
@@ -95,6 +100,29 @@ void setup() {
     }
   }
   Serial.println("[SERVER] Reinit OK");
+
+  SerialBT.onConnect([](const BTAddress &addr) {
+    onConnectFired = true;
+    connectedPeer = addr;
+    Serial.printf("[SERVER] onConnect: %s\n", addr.toString().c_str());
+  });
+
+  SerialBT.onDisconnect([](const BTAddress &addr) {
+    Serial.printf("[SERVER] onDisconnect: %s\n", addr.toString().c_str());
+  });
+
+  SerialBT.onPeerData([](const BTAddress &addr, const uint8_t *data, size_t len) {
+    if (len >= 18 && memcmp(data, "SPP_WRITE_TO_PROBE", 18) == 0) {
+      Serial.printf("[SERVER] onPeerData: %s\n", addr.toString().c_str());
+      SerialBT.writeTo(addr, (const uint8_t *)"SPP_WRITE_TO_ACK", 16);
+      writeToProbeDone = true;
+      return;
+    }
+    for (size_t i = 0; i < len; i++) {
+      peerRx += (char)data[i];
+    }
+  });
+
   // Stay initialized; the SPP server is now accepting connections.
 
   // -------------------------------------------------------------------------
@@ -116,36 +144,79 @@ void setup() {
     }
   }
   Serial.println("[SERVER] Client connected");
+  Serial.printf("[SERVER] peerCount=%u\n", SerialBT.peerCount());
 
-  // Receive data from client
-  String rx;
+  deadline = millis() + 5000;
+  while (!onConnectFired && millis() < deadline) {
+    checkSerial();
+    delay(10);
+  }
+  if (!onConnectFired) {
+    Serial.println("[SERVER] onConnect timeout");
+  }
+
+  {
+    auto peerList = SerialBT.peers();
+    Serial.printf("[SERVER] peers=%u\n", (unsigned)peerList.size());
+    if (!peerList.empty()) {
+      Serial.printf("[SERVER] peerAddr=%s\n", peerList[0].toString().c_str());
+    }
+  }
+
+  // Wait for writeTo probe handled in onPeerData
+  deadline = millis() + 15000;
+  while (!writeToProbeDone && millis() < deadline) {
+    checkSerial();
+    delay(10);
+  }
+  if (writeToProbeDone) {
+    Serial.println("[SERVER] writeTo ack sent");
+  } else {
+    Serial.println("[SERVER] writeTo probe timeout");
+  }
+
+  // Receive data from client (HELLO and disconnect request via onPeerData)
+  peerRx = "";
   deadline = millis() + 15000;
   while (millis() < deadline) {
-    while (SerialBT.available()) {
-      rx += (char)SerialBT.read();
-    }
-    if (rx.indexOf("HELLO_FROM_CLIENT") >= 0) {
+    if (peerRx.indexOf("HELLO_FROM_CLIENT") >= 0) {
       break;
     }
     checkSerial();
     delay(10);
   }
-  if (rx.indexOf("HELLO_FROM_CLIENT") >= 0) {
+  if (peerRx.indexOf("HELLO_FROM_CLIENT") >= 0) {
     Serial.println("[SERVER] Received: HELLO_FROM_CLIENT");
   } else {
     Serial.println("[SERVER] Receive timeout");
   }
 
-  // Send response
+  // Send response (broadcast write)
   SerialBT.print("HELLO_FROM_SERVER");
   Serial.println("[SERVER] Sent: HELLO_FROM_SERVER");
 
-  // Wait for client to disconnect
+  // Server-initiated per-peer disconnect
   deadline = millis() + 15000;
-  while (SerialBT.connected() && millis() < deadline) {
+  while (millis() < deadline) {
+    if (peerRx.indexOf("DISCONNECT_ME") >= 0) {
+      break;
+    }
     checkSerial();
-    delay(20);
+    delay(10);
   }
+  if (peerRx.indexOf("DISCONNECT_ME") >= 0) {
+    BTStatus disc = SerialBT.disconnect(connectedPeer);
+    Serial.printf("[SERVER] disconnect(addr): %s\n", disc ? "OK" : "FAILED");
+    deadline = millis() + 5000;
+    while (SerialBT.peerCount() > 0 && millis() < deadline) {
+      checkSerial();
+      delay(10);
+    }
+    Serial.printf("[SERVER] peerCount=%u\n", SerialBT.peerCount());
+  } else {
+    Serial.println("[SERVER] disconnect request timeout");
+  }
+
   Serial.println("[SERVER] Client disconnected");
 
   // -------------------------------------------------------------------------

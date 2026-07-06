@@ -14,67 +14,48 @@
  * limitations under the License.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLEScan.h"
-#include "impl/BLEImplHelpers.h"
-#include "impl/BLEScanBackend.h"
-#include "impl/BLEMutex.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLEAdvScanHelpers.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEMutex.h"
 #include "esp32-hal-log.h"
 
 #include <utility>
 
 /**
- * @brief Construct a BLEScan handle with no backend.
- *
- * @note The handle is invalid until initialized by BLEClass. Use operator bool() to check.
+ * @file
+ * @brief Stack-agnostic @ref BLEScan implementation.
  */
+
 BLEScan::BLEScan() : _impl(nullptr) {}
 
-/**
- * @brief Check whether this handle references a valid scanner backend.
- * @return true if the implementation pointer is non-null and initialized, false otherwise.
- */
 BLEScan::operator bool() const {
-  BLE_CHECK_IMPL(false);
-  (void)impl;
-  return true;
+  return _impl != nullptr;
 }
 
-/**
- * @brief Set the scan interval by converting milliseconds to BLE controller units.
- * @param intervalMs Interval between scan windows, in milliseconds.
- * @note Internally converts to controller units using the formula (ms * 1000) / 625.
- *       No-op when BLE_SCANNING_SUPPORTED is not defined.
- */
+// Scan-parameter setters convert milliseconds to controller units ((ms * 1000)
+// / 625) and no-op when BLE_SCANNING_SUPPORTED is not defined.
+
 void BLEScan::setInterval(uint16_t intervalMs) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setInterval %u ms", intervalMs);
-  impl.interval = (intervalMs * 1000) / 625;
+  impl.interval = bleMsToUnits0625(intervalMs);
 #endif
 }
 
-/**
- * @brief Set the scan window by converting milliseconds to BLE controller units.
- * @param windowMs Duration of each scan window, in milliseconds.
- * @note Internally converts to controller units using the formula (ms * 1000) / 625.
- *       No-op when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::setWindow(uint16_t windowMs) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
   log_d("Scan: setWindow %u ms", windowMs);
-  impl.window = (windowMs * 1000) / 625;
+  impl.window = bleMsToUnits0625(windowMs);
 #endif
 }
 
-/**
- * @brief Enable or disable active scanning.
- * @param active If true, the scanner sends scan-request PDUs to obtain scan-response data.
- * @note No-op when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::setActiveScan(bool active) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -83,11 +64,6 @@ void BLEScan::setActiveScan(bool active) {
 #endif
 }
 
-/**
- * @brief Enable or disable duplicate filtering.
- * @param filter If true, the stack suppresses repeated advertisements from the same device.
- * @note No-op when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::setFilterDuplicates(bool filter) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -96,20 +72,13 @@ void BLEScan::setFilterDuplicates(bool filter) {
 #endif
 }
 
-/**
- * @brief Check whether a scan is currently running.
- * @return true if scanning is active, false if stopped or handle is invalid.
- * @note Null-safe: returns false when _impl is nullptr.
- */
 bool BLEScan::isScanning() const {
-  return _impl && _impl->scanning;
+  return _impl && _impl->isScanning;
 }
 
-/**
- * @brief Register a handler called for every advertisement received.
- * @param callback The handler to invoke, or nullptr to clear.
- * @note Logs a warning and discards the callback when BLE_SCANNING_SUPPORTED is not defined.
- */
+// Callback setters store the handler and no-op with a warning when scanning is
+// compiled out (BLE_SCANNING_SUPPORTED).
+
 void BLEScan::onResult(ResultHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -120,11 +89,6 @@ void BLEScan::onResult(ResultHandler callback) {
 #endif
 }
 
-/**
- * @brief Register a handler called when the scan completes.
- * @param callback The handler to invoke, or nullptr to clear.
- * @note Logs a warning and discards the callback when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::onComplete(CompleteHandler callback) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -135,10 +99,6 @@ void BLEScan::onComplete(CompleteHandler callback) {
 #endif
 }
 
-/**
- * @brief Remove all registered scan callbacks, including periodic sync handlers.
- * @note Clears onResult, onComplete, periodicSync, periodicReport, and periodicLost handlers.
- */
 void BLEScan::resetCallbacks() {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -150,11 +110,6 @@ void BLEScan::resetCallbacks() {
 #endif
 }
 
-/**
- * @brief Register a handler for periodic sync establishment events.
- * @param handler The handler to invoke, or nullptr to clear.
- * @note Logs a warning and discards the handler when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -165,11 +120,6 @@ void BLEScan::onPeriodicSync(PeriodicSyncHandler handler) {
 #endif
 }
 
-/**
- * @brief Register a handler for periodic advertising report events.
- * @param handler The handler to invoke, or nullptr to clear.
- * @note Logs a warning and discards the handler when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -180,11 +130,6 @@ void BLEScan::onPeriodicReport(PeriodicReportHandler handler) {
 #endif
 }
 
-/**
- * @brief Register a handler for periodic sync lost events.
- * @param handler The handler to invoke, or nullptr to clear.
- * @note Logs a warning and discards the handler when BLE_SCANNING_SUPPORTED is not defined.
- */
 void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 #if BLE_SCANNING_SUPPORTED
   BLE_CHECK_IMPL();
@@ -197,44 +142,58 @@ void BLEScan::onPeriodicLost(PeriodicLostHandler handler) {
 
 #if BLE_SCANNING_SUPPORTED
 
-/**
- * @brief Retrieve a snapshot of the current scan results.
- * @return Copy of the accumulated scan results, or an empty BLEScanResults if the handle is invalid.
- * @note Thread-safe: acquires the implementation mutex before copying.
- */
-BLEScanResults BLEScan::getResults() {
-  if (!_impl) {
-    return BLEScanResults();
-  }
-  BLELockGuard lock(_impl->mtx);
-  return _impl->results;
+// Result-management helpers are thread-safe: each acquires impl.mtx before
+// touching the shared results set.
+
+BLEScan::Results BLEScan::getResults() {
+  BLE_CHECK_IMPL(BLEScan::Results());
+  BLELockGuard lock(impl.mtx);
+  return impl.results;
 }
 
-/**
- * @brief Discard all accumulated scan results.
- * @note Thread-safe: acquires the implementation mutex before clearing.
- */
 void BLEScan::clearResults() {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
-  impl.results = BLEScanResults();
+  impl.results = BLEScan::Results();
 }
 
-/**
- * @brief Remove a specific device from the result set by address.
- * @param address BLE address of the device to erase.
- * @note Thread-safe: acquires the implementation mutex. Performs a linear search
- *       and removes only the first matching entry.
- */
 void BLEScan::erase(const BTAddress &address) {
   BLE_CHECK_IMPL();
   BLELockGuard lock(impl.mtx);
+  // Linear search; removes only the first matching entry.
   auto &devs = impl.results._devices;
   for (auto it = devs.begin(); it != devs.end(); ++it) {
     if (it->getAddress() == address) {
       devs.erase(it);
       return;
     }
+  }
+}
+
+void BLEScan::Results::appendOrReplace(const BLEAdvertisedDevice &device) {
+  for (auto &existing : _devices) {
+    // BLE 5 lets one advertiser run several advertising sets concurrently from a
+    // single address, distinguished by the Advertising SID (ADI). Key results on
+    // (address, SID) so those sets do not overwrite each other. Legacy PDUs carry
+    // no ADI and report SID 0xFF, so same-address legacy reports still collapse to
+    // a single entry exactly as before.
+    if (existing.getAddress() == device.getAddress() && existing.getAdvSID() == device.getAdvSID()) {
+      // Preserve an existing entry that has a name from a merged scan response
+      // when the incoming duplicate primary ADV carries no name. Overwriting
+      // would silently erase the name, causing getName() to return "".
+      if (existing.haveName() && !device.haveName()) {
+        return;
+      }
+      existing = device;
+      return;
+    }
+  }
+  _devices.push_back(device);
+}
+
+void BLEScan::Results::dump() const {
+  for (size_t i = 0; i < _devices.size(); i++) {
+    log_i("[%d] %s", i, _devices[i].toString().c_str());
   }
 }
 

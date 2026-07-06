@@ -21,7 +21,7 @@
  *        ESP-IDF Bluedroid GATTS stack.
  */
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_BLUEDROID
 
 #if BLE_GATT_SERVER_SUPPORTED
@@ -29,22 +29,56 @@
 #include "BLE.h"
 
 #include "BluedroidServer.h"
-#include "BluedroidService.h"
-#include "BluedroidCharacteristic.h"
+#include "BluedroidCore.h"
+#include "BluedroidGattAttributes.h"
 #include "BluedroidUUID.h"
-#include "impl/BLESync.h"
-#include "impl/BLEImplHelpers.h"
-#include "impl/BLECharacteristicValidation.h"
-#include "impl/BLEConnInfoData.h"
-#include "impl/BLEMutex.h"
-#include "impl/BLEServerBackend.h"
-#include "impl/BLESecurityBackend.h"
+#include "impl/common/BLESync.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLECharacteristicValidation.h"
+#include "impl/common/BLEConnInfoData.h"
+#include "BluedroidConnInfo.h"
+#include "impl/common/BLEMutex.h"
+#include "impl/BLEBackend.h"
 #include "esp32-hal-log.h"
 
 #include <esp_gap_ble_api.h>
 #include <esp_gatts_api.h>
 #include <esp_bt_device.h>
 #include <string.h>
+
+// API contract is documented on the declarations in the public BLE*.h headers; the definitions below carry implementation notes only.
+
+// --------------------------------------------------------------------------
+// Prepared (long) write buffers -- per ATT bearer, keyed by conn_id
+// --------------------------------------------------------------------------
+
+std::vector<BLEServer::Impl::PrepWrite> &BLEServer::Impl::prepWritesFor(uint16_t connId) {
+  for (auto &entry : prepWrites) {
+    if (entry.first == connId) {
+      return entry.second;
+    }
+  }
+  prepWrites.emplace_back(connId, std::vector<PrepWrite>{});
+  return prepWrites.back().second;
+}
+
+std::vector<BLEServer::Impl::PrepWrite> *BLEServer::Impl::findPrepWrites(uint16_t connId) {
+  for (auto &entry : prepWrites) {
+    if (entry.first == connId) {
+      return &entry.second;
+    }
+  }
+  return nullptr;
+}
+
+void BLEServer::Impl::erasePrepWrites(uint16_t connId) {
+  for (auto it = prepWrites.begin(); it != prepWrites.end(); ++it) {
+    if (it->first == connId) {
+      prepWrites.erase(it);
+      return;
+    }
+  }
+}
 
 // --------------------------------------------------------------------------
 // Helpers
@@ -53,7 +87,7 @@
 namespace {
 
 // Pure mapping from user-declared permissions to Bluedroid's esp_gatt_perm_t;
-// read @ref permToEsp documentation for the authorize-bit behavior.
+// read @ref toEspGattPermissions documentation for the authorize-bit behavior.
 
 /**
  * @brief Maps @ref BLEPermission to Bluedroid @c esp_gatt_perm_t for GATT registration.
@@ -62,7 +96,7 @@ namespace {
  * @note Unlike NimBLE, there are no separate read/write authorize perm bits; authorized
  *       access is implemented in software in @ref BLEServer::Impl::handleGATTS.
  */
-esp_gatt_perm_t permToEsp(BLEPermission perm) {
+esp_gatt_perm_t toEspGattPermissions(BLEPermission perm) {
   esp_gatt_perm_t result = 0;
   if (perm & BLEPermission::Read) {
     result |= ESP_GATT_PERM_READ;
@@ -91,7 +125,7 @@ esp_gatt_perm_t permToEsp(BLEPermission perm) {
   return result;
 }
 
-// Fail-closed property mapping: see @ref propToEsp.
+// Fail-closed property mapping: see @ref toEspGattProperties.
 
 /**
  * @brief Maps @ref BLEProperty and @ref BLEPermission to Bluedroid characteristic properties.
@@ -99,7 +133,7 @@ esp_gatt_perm_t permToEsp(BLEPermission perm) {
  * @param perms Attribute permissions; read/write GATT property bits are gated on these.
  * @return @c esp_gatt_char_prop_t for @c esp_ble_gatts_add_char.
  */
-esp_gatt_char_prop_t propToEsp(BLEProperty props, BLEPermission perms) {
+esp_gatt_char_prop_t toEspGattProperties(BLEProperty props, BLEPermission perms) {
   const bool anyReadPerm = (perms & BLEPermission::Read) || (perms & BLEPermission::ReadEncrypted) || (perms & BLEPermission::ReadAuthenticated)
                            || (perms & BLEPermission::ReadAuthorized);
   const bool anyWritePerm = (perms & BLEPermission::Write) || (perms & BLEPermission::WriteEncrypted) || (perms & BLEPermission::WriteAuthenticated)
@@ -133,71 +167,9 @@ esp_gatt_char_prop_t propToEsp(BLEProperty props, BLEPermission perms) {
   return r;
 }
 
-constexpr uint16_t CCCD_UUID16 = 0x2902;
+constexpr uint16_t CCCD_UUID16 = BLE_DSC_UUID16_CCCD;
 
 }  // namespace
-
-// --------------------------------------------------------------------------
-// BLEConnInfoImpl -- Bluedroid bridge
-// --------------------------------------------------------------------------
-
-struct BLEConnInfoImpl {
-  /**
-   * @brief Constructs a @ref BLEConnInfo for a Bluedroid GATTS connection.
-   * @param connId GATTS connection ID.
-   * @param bda Remote device address (6 bytes, little-endian BDA order as from stack).
-   * @param mtu Initial ATT MTU; default 23.
-   * @return Populated @ref BLEConnInfo marked valid.
-   */
-  static BLEConnInfo make(uint16_t connId, const uint8_t bda[6], uint16_t mtu = 23) {
-    BLEConnInfo info;
-    info._valid = true;
-    auto *d = info.data();
-    d->handle = connId;
-    d->address = BTAddress(bda, BTAddress::Type::Public);
-    d->mtu = mtu;
-    d->central = false;
-    d->encrypted = false;
-    d->authenticated = false;
-    d->bonded = false;
-    d->keySize = 0;
-    d->interval = 0;
-    d->latency = 0;
-    d->supervisionTimeout = 0;
-    d->txPhy = 1;
-    d->rxPhy = 1;
-    d->rssi = 0;
-    return info;
-  }
-
-  /**
-   * @brief Updates stored MTU in a @ref BLEConnInfo when valid.
-   * @param info Connection info to update in place.
-   * @param mtu New negotiated MTU.
-   */
-  static void setMTU(BLEConnInfo &info, uint16_t mtu) {
-    if (info) {
-      info.data()->mtu = mtu;
-    }
-  }
-
-  /**
-   * @brief Updates connection interval, latency, and supervision timeout when valid.
-   * @param info Connection info to update in place.
-   * @param interval Connection interval in 1.25ms units.
-   * @param latency Slave latency in connection events.
-   * @param timeout Supervision timeout in 10ms units.
-   */
-  static void setConnParams(BLEConnInfo &info, uint16_t interval, uint16_t latency, uint16_t timeout) {
-    if (!info) {
-      return;
-    }
-    auto *d = info.data();
-    d->interval = interval;
-    d->latency = latency;
-    d->supervisionTimeout = timeout;
-  }
-};
 
 // --------------------------------------------------------------------------
 // Static instance & makeHandle
@@ -272,12 +244,8 @@ BLECharacteristic::Impl *findCharForDesc(BLEServer::Impl *impl, uint16_t descHan
 // BLEServer public API -- Bluedroid backend
 // --------------------------------------------------------------------------
 
-/**
- * @brief Registers and starts GATT services that are not yet @c started on the GATTS interface.
- * @return @c BTStatus::OK when all new services are created and started, or an error status.
- * @note Bluedroid registers incrementally: @c create_service, @c add_char, @c add_char_descr, @c
- *       start_service per service, unlike NimBLE full @c ble_gatts_reset and bulk re-register.
- */
+// Bluedroid registers incrementally (create_service, add_char, add_char_descr, start_service
+// per service), unlike NimBLE's full ble_gatts_reset and bulk re-register.
 BTStatus BLEServer::start() {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
@@ -302,7 +270,7 @@ BTStatus BLEServer::start() {
     services = impl.services;
   }
 
-  // Pass 1: Create all unstarted services so every service obtains a GATT
+  // First pass: create all unstarted services so every service obtains a GATT
   // handle. This is required before adding Included Service declarations
   // because the included service's handle must already be known.
   for (auto &svc : services) {
@@ -344,7 +312,7 @@ BTStatus BLEServer::start() {
     esp_gatt_srvc_id_t srvc_id = {};
     srvc_id.is_primary = true;
     srvc_id.id.inst_id = svc->instId;
-    uuidToEsp(svc->uuid, srvc_id.id.uuid);
+    bluedroidUuidFromPublic(svc->uuid, srvc_id.id.uuid);
 
     impl.pendingHandle = &svc->handle;
     impl.createSync.take();
@@ -362,7 +330,7 @@ BTStatus BLEServer::start() {
     }
   }
 
-  // Pass 2: Add included services, characteristics, descriptors, and start.
+  // Second pass: add included services, characteristics, descriptors, and start.
   for (auto &svc : services) {
     if (svc->started) {
       continue;
@@ -393,15 +361,15 @@ BTStatus BLEServer::start() {
 
     // 2. Add characteristics
     for (auto &chr : svc->characteristics) {
-      if (!bleValidateCharFinal(*chr, /*stackIsNimble=*/false)) {
+      if (!bleValidateCharForRegistration(*chr, /*stackIsNimble=*/false)) {
         log_e("Server: characteristic %s rejected by validation", chr->uuid.toString().c_str());
         return BTStatus::InvalidState;
       }
 
       esp_bt_uuid_t char_uuid;
-      uuidToEsp(chr->uuid, char_uuid);
-      esp_gatt_perm_t perm = permToEsp(chr->permissions);
-      esp_gatt_char_prop_t prop = propToEsp(chr->properties, chr->permissions);
+      bluedroidUuidFromPublic(chr->uuid, char_uuid);
+      esp_gatt_perm_t perm = toEspGattPermissions(chr->permissions);
+      esp_gatt_char_prop_t prop = toEspGattProperties(chr->properties, chr->permissions);
 
       impl.pendingHandle = &chr->handle;
       impl.createSync.take();
@@ -421,8 +389,8 @@ BTStatus BLEServer::start() {
       // 3. Add descriptors for this characteristic
       for (auto &desc : chr->descriptors) {
         esp_bt_uuid_t desc_uuid;
-        uuidToEsp(desc->uuid, desc_uuid);
-        esp_gatt_perm_t descPerm = permToEsp(desc->permissions);
+        bluedroidUuidFromPublic(desc->uuid, desc_uuid);
+        esp_gatt_perm_t descPerm = toEspGattPermissions(desc->permissions);
 
         impl.pendingHandle = &desc->handle;
         impl.createSync.take();
@@ -464,12 +432,6 @@ BTStatus BLEServer::start() {
   return BTStatus::OK;
 }
 
-/**
- * @brief Closes a GATTS connection by connection ID.
- * @param connHandle GATTS connection id (not necessarily same encoding as all stacks).
- * @param reason Reserved/unused; Bluedroid path uses GATTS close.
- * @return @c OK on success, or @c InvalidState / @c Fail on error.
- */
 BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   esp_err_t err = esp_ble_gatts_close(impl.gattsIf, connHandle);
@@ -480,29 +442,22 @@ BTStatus BLEServer::disconnect(uint16_t connHandle, uint8_t /*reason*/) {
   return BTStatus::OK;
 }
 
-/**
- * @brief Opens an outgoing GATTS connection to a central (blocking on sync object).
- * @param address Target Bluetooth address.
- * @return @c OK on success from @c OPEN_EVT, or failure if open API or wait fails.
- */
+// Blocks on connectSync until OPEN_EVT reports the result of esp_ble_gatts_open.
 BTStatus BLEServer::connect(const BTAddress &address) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
   esp_bd_addr_t bda;
-  memcpy(bda, address.data(), 6);
+  address.toEspBdAddr(bda);
   impl.connectSync.take();
   esp_err_t err = esp_ble_gatts_open(impl.gattsIf, bda, true);
   if (err != ESP_OK) {
+    // Release the sync we just took: no OPEN_EVT will arrive to give() it.
+    impl.connectSync.give(BTStatus::Fail);
     log_e("Server: esp_ble_gatts_open: %s", esp_err_to_name(err));
     return BTStatus::Fail;
   }
   return impl.connectSync.wait(10000);
 }
 
-/**
- * @brief Returns the negotiated per-connection MTU from tracked connection state.
- * @param connHandle GATTS connection id.
- * @return MTU in octets, or 23 if the connection is unknown and defaulting.
- */
 uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   BLE_CHECK_IMPL(0);
   BLELockGuard lock(impl.mtx);
@@ -510,15 +465,6 @@ uint16_t BLEServer::getPeerMTU(uint16_t connHandle) const {
   return info ? info->getMTU() : 23;
 }
 
-/**
- * @brief Requests a connection parameter update using the known peer address.
- * @param connHandle GATTS connection id used to look up the BDA.
- * @param params Desired min/max interval, latency, and supervision timeout.
- * @return @c OK, @c InvalidState if the connection is unknown, @c InvalidParam if out of spec, or @c Fail.
- * @note Connection parameter constraints per BT Core Spec v5.x, Vol 6, Part B, §4.5.1:
- *       interval 6–3200 (1.25 ms units), latency 0–499, timeout 10–3200 (10 ms units),
- *       timeout > (1 + latency) × maxInterval × 2.
- */
 BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &params) {
   BLE_CHECK_IMPL(BTStatus::InvalidState);
 
@@ -539,7 +485,7 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   }
 
   esp_ble_conn_update_params_t connParams = {};
-  memcpy(connParams.bda, addr.data(), 6);
+  addr.toEspBdAddr(connParams.bda);
   connParams.min_int = params.minInterval;
   connParams.max_int = params.maxInterval;
   connParams.latency = params.latency;
@@ -553,47 +499,107 @@ BTStatus BLEServer::updateConnParams(uint16_t connHandle, const BLEConnParams &p
   return BTStatus::OK;
 }
 
-/**
- * @brief LE PHY selection is not implemented on the Bluedroid GATTS path in this build.
- * @param connHandle Unused.
- * @param txPhy Unused.
- * @param rxPhy Unused.
- * @return Always @c BTStatus::NotSupported.
- */
-BTStatus BLEServer::setPhy(uint16_t /*connHandle*/, BLEPhy /*txPhy*/, BLEPhy /*rxPhy*/) {
-  log_w("%s not supported on Bluedroid", __func__);
+BTStatus BLEServer::setPhy(uint16_t connHandle, BLEPhy txPhy, BLEPhy rxPhy) {
+#if BLE5_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  esp_bd_addr_t bda;
+  {
+    BLELockGuard lock(impl.mtx);
+    BLEConnInfo *conn = impl.connFind(connHandle);
+    if (!conn) {
+      log_w("Server: setPhy - unknown connHandle %u", connHandle);
+      return BTStatus::NotConnected;
+    }
+    conn->getAddress().toEspBdAddr(bda);
+  }
+  impl.phySync.take();
+  esp_err_t err = esp_ble_gap_set_preferred_phy(
+    bda, 0, blePhyToPrefMask(txPhy), blePhyToPrefMask(rxPhy), ESP_BLE_GAP_PHY_OPTIONS_NO_PREF
+  );
+  if (err != ESP_OK) {
+    log_e("Server: esp_ble_gap_set_preferred_phy: %s", esp_err_to_name(err));
+    impl.phySync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  return impl.phySync.wait(2000);
+#else
+  (void)connHandle;
+  (void)txPhy;
+  (void)rxPhy;
+  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
   return BTStatus::NotSupported;
+#endif
 }
 
-/**
- * @brief LE PHY read is not implemented on the Bluedroid GATTS path in this build.
- * @param connHandle Unused.
- * @param txPhy Unused.
- * @param rxPhy Unused.
- * @return Always @c BTStatus::NotSupported.
- */
-BTStatus BLEServer::getPhy(uint16_t /*connHandle*/, BLEPhy & /*txPhy*/, BLEPhy & /*rxPhy*/) const {
-  log_w("%s not supported on Bluedroid", __func__);
+BTStatus BLEServer::getPhy(uint16_t connHandle, BLEPhy &txPhy, BLEPhy &rxPhy) const {
+  txPhy = BLEPhy::PHY_1M;
+  rxPhy = BLEPhy::PHY_1M;
+#if BLE5_SUPPORTED
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+  auto &impl = *_impl;
+  esp_bd_addr_t bda;
+  {
+    BLELockGuard lock(impl.mtx);
+    BLEConnInfo *conn = impl.connFind(connHandle);
+    if (!conn) {
+      log_w("Server: getPhy - unknown connHandle %u", connHandle);
+      return BTStatus::NotConnected;
+    }
+    conn->getAddress().toEspBdAddr(bda);
+  }
+  impl.phySync.take();
+  esp_err_t err = esp_ble_gap_read_phy(bda);
+  if (err != ESP_OK) {
+    log_e("Server: esp_ble_gap_read_phy: %s", esp_err_to_name(err));
+    impl.phySync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  BTStatus st = impl.phySync.wait(2000);
+  if (st == BTStatus::OK) {
+    txPhy = impl.pendingTxPhy;
+    rxPhy = impl.pendingRxPhy;
+  }
+  return st;
+#else
+  (void)connHandle;
+  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
   return BTStatus::NotSupported;
+#endif
 }
 
-/**
- * @brief Data length extension is not implemented on the Bluedroid GATTS path in this build.
- * @param connHandle Unused.
- * @param txOctets Unused.
- * @param txTime Unused.
- * @return Always @c BTStatus::NotSupported.
- */
-BTStatus BLEServer::setDataLen(uint16_t /*connHandle*/, uint16_t /*txOctets*/, uint16_t /*txTime*/) {
-  log_w("%s not supported on Bluedroid", __func__);
+// Bluedroid's set_pkt_data_len takes only tx octets; txTime is accepted for API parity and ignored.
+BTStatus BLEServer::setDataLen(uint16_t connHandle, uint16_t txOctets, uint16_t /*txTime*/) {
+#if BLE5_SUPPORTED
+  BLE_CHECK_IMPL(BTStatus::InvalidState);
+  esp_bd_addr_t bda;
+  {
+    BLELockGuard lock(impl.mtx);
+    BLEConnInfo *conn = impl.connFind(connHandle);
+    if (!conn) {
+      log_w("Server: setDataLen - unknown connHandle %u", connHandle);
+      return BTStatus::NotConnected;
+    }
+    conn->getAddress().toEspBdAddr(bda);
+  }
+  impl.dataLenSync.take();
+  esp_err_t err = esp_ble_gap_set_pkt_data_len(bda, txOctets);
+  if (err != ESP_OK) {
+    log_e("Server: esp_ble_gap_set_pkt_data_len: %s", esp_err_to_name(err));
+    impl.dataLenSync.give(BTStatus::Fail);
+    return BTStatus::Fail;
+  }
+  return impl.dataLenSync.wait(2000);
+#else
+  (void)connHandle;
+  (void)txOctets;
+  log_w("%s not supported on Bluedroid (BLE 5.0 unavailable)", __func__);
   return BTStatus::NotSupported;
+#endif
 }
 
-/**
- * @brief Gap event hook for API symmetry; GATTS uses @ref handleGATTS and @ref handleGAP.
- * @param event Unused in Bluedroid server.
- * @return Always 0.
- */
+// Unused on the GATTS path: server GAP events are handled via handleGAP. Present for API symmetry.
 int BLEServer::handleGapEvent(void * /*event*/) {
   return 0;
 }
@@ -641,12 +647,14 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
     {
       uint16_t connId = param->connect.conn_id;
       log_i("Server: client connected, connId=%u", connId);
-      BLEConnInfo connInfo = BLEConnInfoImpl::make(connId, param->connect.remote_bda);
+      BLEConnInfo connInfo = BLEConnInfoImpl::make(
+        connId, param->connect.remote_bda, 23, false, static_cast<BTAddress::Type>(param->connect.ble_addr_type)
+      );
       {
         BLELockGuard lock(impl->mtx);
         impl->connSet(connId, connInfo);
       }
-      ble_server_dispatch::dispatchConnect(impl, connInfo);
+      impl->dispatchConnect(connInfo);
       break;
     }
 
@@ -655,11 +663,15 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       uint16_t connId = param->disconnect.conn_id;
       uint8_t reason = static_cast<uint8_t>(param->disconnect.reason);
       log_i("Server: client disconnected, connId=%u reason=0x%02x", connId, reason);
-      BLEConnInfo connInfo = BLEConnInfoImpl::make(connId, param->disconnect.remote_bda);
-
+      BLEConnInfo connInfo;
       bool shouldAdvertise = false;
       {
         BLELockGuard lock(impl->mtx);
+        if (const BLEConnInfo *existing = impl->connFind(connId)) {
+          connInfo = *existing;
+        } else {
+          connInfo = BLEConnInfoImpl::make(connId, param->disconnect.remote_bda);
+        }
         // Clean up subscriber state for this connection
         for (auto &svc : impl->services) {
           for (auto &chr : svc->characteristics) {
@@ -675,7 +687,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         impl->connErase(connId);
         shouldAdvertise = impl->advertiseOnDisconnect;
       }
-      ble_server_dispatch::dispatchDisconnect(impl, connInfo, reason);
+      impl->dispatchDisconnect(connInfo, reason);
       if (shouldAdvertise && impl->advRestartTimer) {
         // Defer to esp_timer task — calling BLE.startAdvertising() directly
         // from the BTC callback would deadlock (BLESync blocks for GAP
@@ -701,7 +713,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
         }
       }
       if (connInfo) {
-        ble_server_dispatch::dispatchMtuChanged(impl, connInfo, mtu);
+        impl->dispatchMtuChanged(connInfo, mtu);
       }
       break;
     }
@@ -787,8 +799,8 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
               connInfo = *ci;
             }
           }
-          BLESecurity sec = BLE.getSecurity();
-          if (!BLESecurityBackend::notifyAuthorization(sec, connInfo, handle, true)) {
+          auto *sec = BLESecurity::Impl::instance();
+          if (!(sec && sec->notifyAuthorization(connInfo, handle, true))) {
             if (param->read.need_rsp) {
               if (esp_ble_gatts_send_response(gatts_if, connId, transId, ESP_GATT_INSUF_AUTHORIZATION, nullptr) != ESP_OK) {
                 log_e("esp_ble_gatts_send_response failed");
@@ -810,7 +822,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
           if (readCb) {
-            auto chrHandle = BLECharacteristic(chr->shared_from_this());
+            auto chrHandle = BLECharacteristicImplCommon::makeHandle(chr->shared_from_this());
             readCb(chrHandle, connInfo);
           }
         }
@@ -819,14 +831,19 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
           esp_gatt_rsp_t rsp = {};
           rsp.attr_value.handle = handle;
           rsp.attr_value.offset = offset;
-          size_t len = chr->value.size();
-          if (offset < len) {
-            size_t sendLen = len - offset;
-            if (sendLen > ESP_GATT_MAX_ATTR_LEN) {
-              sendLen = ESP_GATT_MAX_ATTR_LEN;
+          {
+            // value is guarded by the per-characteristic mtx (same lock as the
+            // public getValue/setValue), not the server mtx.
+            BLELockGuard lock(chr->mtx);
+            size_t len = chr->value.size();
+            if (offset < len) {
+              size_t sendLen = len - offset;
+              if (sendLen > ESP_GATT_MAX_ATTR_LEN) {
+                sendLen = ESP_GATT_MAX_ATTR_LEN;
+              }
+              rsp.attr_value.len = sendLen;
+              memcpy(rsp.attr_value.value, chr->value.data() + offset, sendLen);
             }
-            rsp.attr_value.len = sendLen;
-            memcpy(rsp.attr_value.value, chr->value.data() + offset, sendLen);
           }
           if (esp_ble_gatts_send_response(gatts_if, connId, transId, ESP_GATT_OK, &rsp) != ESP_OK) {
             log_e("esp_ble_gatts_send_response failed");
@@ -845,7 +862,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
           if (readCb) {
-            auto descHandle = BLEDescriptor(desc->shared_from_this());
+            auto descHandle = BLEDescriptorImplCommon::makeHandle(desc->shared_from_this());
             readCb(descHandle, connInfo);
           }
         }
@@ -854,14 +871,17 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
           esp_gatt_rsp_t rsp = {};
           rsp.attr_value.handle = handle;
           rsp.attr_value.offset = offset;
-          size_t len = desc->value.size();
-          if (offset < len) {
-            size_t sendLen = len - offset;
-            if (sendLen > ESP_GATT_MAX_ATTR_LEN) {
-              sendLen = ESP_GATT_MAX_ATTR_LEN;
+          {
+            BLELockGuard lock(desc->mtx);
+            size_t len = desc->value.size();
+            if (offset < len) {
+              size_t sendLen = len - offset;
+              if (sendLen > ESP_GATT_MAX_ATTR_LEN) {
+                sendLen = ESP_GATT_MAX_ATTR_LEN;
+              }
+              rsp.attr_value.len = sendLen;
+              memcpy(rsp.attr_value.value, desc->value.data() + offset, sendLen);
             }
-            rsp.attr_value.len = sendLen;
-            memcpy(rsp.attr_value.value, desc->value.data() + offset, sendLen);
           }
           if (esp_ble_gatts_send_response(gatts_if, connId, transId, ESP_GATT_OK, &rsp) != ESP_OK) {
             log_e("esp_ble_gatts_send_response failed");
@@ -887,11 +907,11 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       log_d("Server: write handle=0x%04x connId=%u len=%u needRsp=%d isPrep=%d", handle, connId, param->write.len, needRsp, isPrep);
 
       if (isPrep) {
-        Impl::PrepWrite pw;
+        PrepWrite pw;
         pw.handle = handle;
         pw.offset = param->write.offset;
         pw.data.assign(param->write.value, param->write.value + param->write.len);
-        impl->prepWrites[connId].push_back(std::move(pw));
+        impl->prepWritesFor(connId).push_back(std::move(pw));
         if (needRsp) {
           esp_gatt_rsp_t rsp = {};
           rsp.attr_value.handle = handle;
@@ -921,8 +941,8 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
               connInfo = *ci;
             }
           }
-          BLESecurity sec = BLE.getSecurity();
-          if (!BLESecurityBackend::notifyAuthorization(sec, connInfo, handle, false)) {
+          auto *sec = BLESecurity::Impl::instance();
+          if (!(sec && sec->notifyAuthorization(connInfo, handle, false))) {
             if (needRsp) {
               if (esp_ble_gatts_send_response(gatts_if, connId, transId, ESP_GATT_INSUF_AUTHORIZATION, nullptr) != ESP_OK) {
                 log_e("esp_ble_gatts_send_response failed");
@@ -932,11 +952,15 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
           }
         }
 
-        chr->value.assign(param->write.value, param->write.value + param->write.len);
-
         {
           BLECharacteristic::WriteHandler writeCb;
           BLEConnInfo connInfo;
+          {
+            // value is guarded by the per-characteristic mtx (same lock as the
+            // public getValue/setValue and the read/notify paths).
+            BLELockGuard lock(chr->mtx);
+            chr->value.assign(param->write.value, param->write.value + param->write.len);
+          }
           {
             BLELockGuard lock(impl->mtx);
             writeCb = chr->onWriteCb;
@@ -946,7 +970,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
           if (writeCb) {
-            auto chrHandle = BLECharacteristic(chr->shared_from_this());
+            auto chrHandle = BLECharacteristicImplCommon::makeHandle(chr->shared_from_this());
             writeCb(chrHandle, connInfo);
           }
         }
@@ -956,7 +980,10 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
           }
         }
       } else if (desc) {
-        desc->value.assign(param->write.value, param->write.value + param->write.len);
+        {
+          BLELockGuard lock(desc->mtx);
+          desc->value.assign(param->write.value, param->write.value + param->write.len);
+        }
 
         // Handle CCCD writes (subscription state)
         if (desc->uuid == BLEUUID(CCCD_UUID16) && param->write.len >= 2) {
@@ -994,7 +1021,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
               }
             }
             if (subCb) {
-              auto chrHandle = BLECharacteristic(ownerChr->shared_from_this());
+              auto chrHandle = BLECharacteristicImplCommon::makeHandle(ownerChr->shared_from_this());
               subCb(chrHandle, connInfo, subVal);
             }
           }
@@ -1010,7 +1037,7 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
           if (writeCb) {
-            auto descHandle = BLEDescriptor(desc->shared_from_this());
+            auto descHandle = BLEDescriptorImplCommon::makeHandle(desc->shared_from_this());
             writeCb(descHandle, connInfo);
           }
         }
@@ -1034,11 +1061,11 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
       uint16_t connId = param->exec_write.conn_id;
       bool execute = (param->exec_write.exec_write_flag == ESP_GATT_PREP_WRITE_EXEC);
 
-      auto it = impl->prepWrites.find(connId);
-      if (execute && it != impl->prepWrites.end() && !it->second.empty()) {
+      auto *pending = impl->findPrepWrites(connId);
+      if (execute && pending != nullptr && !pending->empty()) {
         // Assemble all fragments per handle into a contiguous buffer.
         // Fragments arrive in offset order so we can simply resize and copy.
-        auto &connPrepWrites = it->second;
+        auto &connPrepWrites = *pending;
         uint16_t targetHandle = connPrepWrites[0].handle;
         std::vector<uint8_t> assembled;
         for (auto &pw : connPrepWrites) {
@@ -1051,7 +1078,10 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
 
         BLECharacteristic::Impl *chr = findCharByHandle(impl, targetHandle);
         if (chr) {
-          chr->value = std::move(assembled);
+          {
+            BLELockGuard lock(chr->mtx);
+            chr->value = std::move(assembled);
+          }
           BLECharacteristic::WriteHandler writeCb;
           BLEConnInfo connInfo;
           {
@@ -1063,12 +1093,12 @@ void BLEServer::Impl::handleGATTS(esp_gatts_cb_event_t event, esp_gatt_if_t gatt
             }
           }
           if (writeCb) {
-            auto chrHandle = BLECharacteristic(chr->shared_from_this());
+            auto chrHandle = BLECharacteristicImplCommon::makeHandle(chr->shared_from_this());
             writeCb(chrHandle, connInfo);
           }
         }
       }
-      impl->prepWrites.erase(connId);
+      impl->erasePrepWrites(connId);
 
       if (esp_ble_gatts_send_response(gatts_if, connId, param->exec_write.trans_id, ESP_GATT_OK, nullptr) != ESP_OK) {
         log_e("esp_ble_gatts_send_response failed");
@@ -1132,60 +1162,97 @@ void BLEServer::Impl::handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_par
         }
       }
       if (connInfo) {
-        ble_server_dispatch::dispatchConnParamsUpdate(impl, connInfo);
+        impl->dispatchConnParamsUpdate(connInfo);
       }
       break;
     }
+#if BLE5_SUPPORTED
+    case ESP_GAP_BLE_READ_PHY_COMPLETE_EVT:
+    {
+      BTStatus st = (param->read_phy.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
+      if (st == BTStatus::OK) {
+        BLELockGuard lock(impl->mtx);
+        for (auto &entry : impl->connections) {
+          if (memcmp(entry.second.getAddress().data(), param->read_phy.bda, 6) == 0) {
+            BLEConnInfoImpl::setPhy(entry.second, param->read_phy.tx_phy, param->read_phy.rx_phy);
+            impl->pendingTxPhy = static_cast<BLEPhy>(param->read_phy.tx_phy);
+            impl->pendingRxPhy = static_cast<BLEPhy>(param->read_phy.rx_phy);
+            break;
+          }
+        }
+      }
+      impl->phySync.give(st);
+      break;
+    }
+    case ESP_GAP_BLE_PHY_UPDATE_COMPLETE_EVT:
+    {
+      BTStatus st = (param->phy_update.status == ESP_BT_STATUS_SUCCESS) ? BTStatus::OK : BTStatus::Fail;
+      if (st == BTStatus::OK) {
+        BLELockGuard lock(impl->mtx);
+        for (auto &entry : impl->connections) {
+          if (memcmp(entry.second.getAddress().data(), param->phy_update.bda, 6) == 0) {
+            BLEConnInfoImpl::setPhy(entry.second, param->phy_update.tx_phy, param->phy_update.rx_phy);
+            break;
+          }
+        }
+      }
+      impl->phySync.give(st);
+      break;
+    }
+    case ESP_GAP_BLE_SET_PKT_LENGTH_COMPLETE_EVT:
+      // Completion has no BDA; only one dataLenSync waiter is in flight at a time.
+      impl->dataLenSync.give(
+        param->pkt_data_length_cmpl.status == ESP_BT_STATUS_SUCCESS ? BTStatus::OK : BTStatus::Fail
+      );
+      break;
+#endif /* BLE5_SUPPORTED */
+#if BLE_SMP_SUPPORTED
+    // The peer's identity is known once pairing/encryption completes, reported
+    // here as AUTH_CMPL. Fire onIdentity for the matching link on success.
+    case ESP_GAP_BLE_AUTH_CMPL_EVT:
+    {
+      if (!param->ble_security.auth_cmpl.success) {
+        break;
+      }
+      BLEConnInfo connInfo;
+      {
+        BLELockGuard lock(impl->mtx);
+        for (auto &entry : impl->connections) {
+          if (memcmp(entry.second.getAddress().data(), param->ble_security.auth_cmpl.bd_addr, 6) == 0) {
+            BLEConnInfoImpl::setAddressType(entry.second, static_cast<BTAddress::Type>(param->ble_security.auth_cmpl.addr_type));
+            BLEConnInfoImpl::updateSecurityFromAuthComplete(entry.second, param->ble_security.auth_cmpl.auth_mode);
+            connInfo = entry.second;
+            break;
+          }
+        }
+      }
+      if (connInfo) {
+        impl->dispatchIdentityResolved(connInfo);
+      }
+      break;
+    }
+#endif /* BLE_SMP_SUPPORTED */
     default: break;
   }
 }
 
 // --------------------------------------------------------------------------
-// BLEClass::createServer() -- Bluedroid factory
+// GATTS app registration (used by BLEClass::createServer in BluedroidCore.cpp)
 // --------------------------------------------------------------------------
 
-/**
- * @brief Returns a singleton @ref BLEServer, registering the GATTS app on first or stale use.
- * @return A valid @ref BLEServer, or an invalid one if BLE is not ready or registration fails.
- * @note GATTS registration via @c esp_ble_gatts_app_register is specific to this stack; NimBLE
- *       does not use the same GATTS app + interface bootstrap pattern.
- */
-BLEServer BLEClass::createServer() {
-  if (!isInitialized()) {
-    return BLEServer();
+bool bluedroidRegisterGattsApp(const std::shared_ptr<BLEServer::Impl> &server) {
+  server->regSync.take();
+  esp_err_t err = esp_ble_gatts_app_register(server->appId);
+  if (err != ESP_OK) {
+    log_e("esp_ble_gatts_app_register: %s", esp_err_to_name(err));
+    return false;
   }
-
-  static std::shared_ptr<BLEServer::Impl> server;
-  bool needRegister = !server || server->gattsIf == ESP_GATT_IF_NONE;
-  if (!server) {
-    server = std::make_shared<BLEServer::Impl>();
-    BLEServer::Impl::s_instance = server.get();
-
-    esp_timer_create_args_t timerArgs = {};
-    timerArgs.callback = [](void *) {
-      BLE.startAdvertising();
-    };
-    timerArgs.name = "ble_adv_restart";
-    esp_timer_create(&timerArgs, &server->advRestartTimer);
+  BTStatus st = server->regSync.wait(5000);
+  if (st != BTStatus::OK) {
+    log_e("GATTS app registration failed/timeout");
+    return false;
   }
-  if (needRegister) {
-    server->regSync.take();
-    esp_err_t err = esp_ble_gatts_app_register(server->appId);
-    if (err != ESP_OK) {
-      log_e("esp_ble_gatts_app_register: %s", esp_err_to_name(err));
-      BLEServer::Impl::s_instance = nullptr;
-      server.reset();
-      return BLEServer();
-    }
-    BTStatus st = server->regSync.wait(5000);
-    if (st != BTStatus::OK) {
-      log_e("GATTS app registration failed/timeout");
-      BLEServer::Impl::s_instance = nullptr;
-      server.reset();
-      return BLEServer();
-    }
-  }
-  return BLEServer(server);
+  return true;
 }
 
 // --------------------------------------------------------------------------
@@ -1228,14 +1295,8 @@ void BLEServer::Impl::invalidate() {
   }
 }
 
-/**
- * @brief Removes a GATT service from the stack and list, or only from the list if not started.
- * @param impl Server owning @c gattsIf and the service list.
- * @param svc Service to delete; must be a member of @a impl.
- * @return @c OK on success, or @c InvalidState or @c Fail on validation or @c delete_service errors.
- * @note Uses @c esp_ble_gatts_delete_service and clears local handles, instead of a NimBLE-wide
- *       @c ble_gatts_reset and full re-register of every service.
- */
+// Uses esp_ble_gatts_delete_service and clears local handles, instead of a NimBLE-wide
+// ble_gatts_reset and full re-register of every service.
 BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEService::Impl> svc) {
   if (!impl || !svc) {
     return BTStatus::InvalidState;
@@ -1295,7 +1356,7 @@ BTStatus bleServerRemoveService(BLEServer::Impl *impl, std::shared_ptr<BLEServic
 #else /* !BLE_GATT_SERVER_SUPPORTED -- stubs */
 
 #include "BLE.h"
-#include "impl/BLEServerBackend.h"
+#include "impl/BLEBackend.h"
 #include "esp32-hal-log.h"
 
 // Stubs for BLE_GATT_SERVER_SUPPORTED == 0: log; return NotSupported, 0, or empty. getPhy() may not
@@ -1342,11 +1403,6 @@ BTStatus BLEServer::setDataLen(uint16_t, uint16_t, uint16_t) {
 
 int BLEServer::handleGapEvent(void *) {
   return 0;
-}
-
-BLEServer BLEClass::createServer() {
-  log_w("GATT server not supported");
-  return BLEServer();
 }
 
 BTStatus bleServerRemoveService(BLEServer::Impl *, std::shared_ptr<BLEService::Impl>) {

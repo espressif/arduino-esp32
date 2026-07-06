@@ -81,3 +81,25 @@ Save & quit menuconfig then run `idf.py monitor flash`.
 
 > **Note:** When using PIN pairing with smartphones and computers, pass the PIN as a string:
 > `SerialBT.setPin("1234");` — not as a number.
+
+### Multi-client (acceptor)
+
+In acceptor (slave) mode, multiple SPP clients may connect at once. As a single Arduino `Stream`,
+`write()`/`print()` broadcast to every connected peer and `read()`/`available()` drain one merged
+RX buffer. Additive APIs attribute traffic per peer:
+
+| API | Role |
+| --- | --- |
+| `peerCount()` / `peers()` | How many / which clients are connected |
+| `writeTo(address, buf, len)` | Send to one peer |
+| `onPeerData(handler)` | RX callback with source `BTAddress` |
+| `onConnect` / `onDisconnect` | Per-peer connect/disconnect (`BTAddress`) |
+| `disconnect(address)` | Drop one peer |
+
+See [MultiClientSerial](examples/MultiClientSerial/MultiClientSerial.ino). Initiator (master)
+`connect()` remains 1:1.
+
+### Related docs
+
+- [MIGRATION.md](MIGRATION.md) — v3.x → v4.0 API mapping
+- BLE Nordic-UART equivalent: `libraries/BLE` `BLEStream` / `examples/MultiClientUART`

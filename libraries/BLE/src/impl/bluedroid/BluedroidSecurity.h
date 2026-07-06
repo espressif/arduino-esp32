@@ -18,47 +18,43 @@
 #pragma once
 
 #include "BLESecurity.h"
-#include "impl/BLESync.h"
+#include "impl/common/BLESecurityImpl.h"
 
 #if BLE_BLUEDROID
 
 #include <esp_gap_ble_api.h>
-#include <freertos/semphr.h>
 
-struct BLESecurity::Impl {
-  IOCapability ioCap = NoInputNoOutput;
+/**
+ * @brief Bluedroid security implementation (@c BLESecurity::Impl).
+ *
+ * Defined in @c impl/bluedroid/, so everything here is Bluedroid-specific; it inherits the
+ * stack-agnostic @c BLESecurityImplCommon (shared config + pairing hooks), giving one uniform
+ * @c impl.member type. Layer is disclosed by file/type: members on @c BLESecurity::Impl are
+ * Bluedroid, members on @c BLESecurityImplCommon are shared.
+ *
+ * Passkey Entry (both roles) uses the shared BLESecurityImplCommon helpers
+ * (resolvePasskeyForInput / notifyPasskeyDisplay); the Bluedroid stack supplies the
+ * displayed value, so there is no backend-specific display resolver here.
+ */
+struct BLESecurity::Impl : BLESecurityImplCommon {
+  using KeyDist = BLESecurity::KeyDist;
+
   bool bonding = true;
-  bool mitm = false;
-  bool secureConnection = false;
-  uint32_t staticPassKey = 0;
-  bool passKeySet = false;
-  bool regenOnConnect = false;
-  bool forceAuth = false;
+  bool secureConnection = true;
   KeyDist initiatorKeys = KeyDist::EncKey | KeyDist::IdKey;
   KeyDist responderKeys = KeyDist::EncKey | KeyDist::IdKey;
-  uint8_t keySize = 16;
 
-  BLESync authSync;
-  SemaphoreHandle_t mtx = xSemaphoreCreateRecursiveMutex();
+  /// Bridges @c esp_ble_remove_bond_device (async) to the blocking public
+  /// @c deleteBond / @c deleteAllBonds APIs. Signaled from
+  /// @c ESP_GAP_BLE_REMOVE_BOND_DEV_COMPLETE_EVT.
+  BLESync bondSync;
 
-  PassKeyRequestHandler passKeyRequestCb;
-  PassKeyDisplayHandler passKeyDisplayCb;
-  ConfirmPassKeyHandler confirmPassKeyCb;
-  SecurityRequestHandler securityRequestCb;
-  AuthorizationHandler authorizationCb;
-  AuthCompleteHandler authCompleteCb;
-  BondStoreOverflowHandler bondOverflowCb;
-
-  ~Impl() {
-    if (mtx) {
-      vSemaphoreDelete(mtx);
-    }
-  }
-
-  static Impl *s_instance;
-
+  /// @brief Bluedroid-specific: GAP security event dispatch (routed from BluedroidCore via
+  /// @c bluedroidSecurityHandleGAP). Static because the stack calls it by function pointer.
   static void handleGAP(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param);
 
+  /// @brief Bluedroid-specific: push the current config into the Bluedroid stack
+  /// (@c esp_ble_gap_set_security_param).
   void applySecurityParams();
 };
 

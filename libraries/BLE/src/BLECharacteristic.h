@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <vector>
@@ -77,20 +77,20 @@ public:
    * @param chr The characteristic being read.
    * @param conn Information about the connected client.
    */
-  using ReadHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
+  using ReadHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked when a client writes to this characteristic.
    * @param chr The characteristic being written (value already updated).
    * @param conn Information about the connected client.
    */
-  using WriteHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn)>;
+  using WriteHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn)>;
 
   /**
    * @brief Callback invoked after a notification is queued.
    * @param chr The characteristic whose notification was queued.
    */
-  using NotifyHandler = std::function<void(BLECharacteristic chr)>;
+  using NotifyHandler = std::function<void(const BLECharacteristic &chr)>;
 
   /**
    * @brief Callback invoked when a client subscribes to or unsubscribes from
@@ -100,7 +100,7 @@ public:
    * @param subValue Bitmask: bit 0 = notifications, bit 1 = indications.
    *                 0 means the client unsubscribed.
    */
-  using SubscribeHandler = std::function<void(BLECharacteristic chr, const BLEConnInfo &conn, uint16_t subValue)>;
+  using SubscribeHandler = std::function<void(const BLECharacteristic &chr, const BLEConnInfo &conn, uint16_t subValue)>;
 
   /**
    * @brief Callback invoked with the delivery status of a notification or indication.
@@ -108,7 +108,7 @@ public:
    * @param status Outcome of the operation.
    * @param code Backend-specific error code (0 on success).
    */
-  using StatusHandler = std::function<void(BLECharacteristic chr, NotifyStatus status, uint32_t code)>;
+  using StatusHandler = std::function<void(const BLECharacteristic &chr, NotifyStatus status, uint32_t code)>;
 
   /**
    * @brief Register a callback invoked when a client reads this characteristic.
@@ -153,6 +153,10 @@ public:
    * @brief Set the characteristic value from a raw byte buffer.
    * @param data Pointer to the data bytes.
    * @param length Number of bytes to copy.
+   * @note Thread-safe: the internal value buffer is guarded by a mutex.
+   *       The convenience overloads store their argument in host (little-endian)
+   *       byte order with no endian conversion; the String overload copies the
+   *       raw bytes and does not store a null terminator.
    */
   void setValue(const uint8_t *data, size_t length);
   void setValue(const String &value);
@@ -173,8 +177,9 @@ public:
 
   /**
    * @brief Get a pointer to the raw characteristic value.
-   * @param length If non-null, receives the length of the value in bytes.
-   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid.
+   * @param length If non-null, receives the length of the value in bytes (0 when invalid or empty).
+   * @return Pointer to the internal value buffer, or nullptr if the handle is invalid or the value is empty.
+   * @note Thread-safe. The returned pointer is invalidated by a concurrent setValue().
    */
   const uint8_t *getValue(size_t *length = nullptr) const;
 
@@ -347,6 +352,7 @@ private:
   friend class BLEServer;
   friend class BLEService;
   friend class BLEDescriptor;
+  friend struct BLECharacteristicImplCommon;
 };
 
 #endif /* BLE_ENABLED */

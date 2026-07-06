@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "impl/BLEGuards.h"
+#include "impl/common/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <Stream.h>
@@ -32,6 +32,7 @@
 #include "BLEUUID.h"
 #include <memory>
 #include <functional>
+#include <vector>
 
 /**
  * @brief Arduino Stream interface over BLE using the Nordic UART Service (NUS).
@@ -40,6 +41,11 @@
  * It uses the Nordic UART Service (NUS) UUID conventions for maximum
  * interoperability with BLE serial apps (nRF Connect, Serial Bluetooth
  * Terminal, etc.).
+ *
+ * Multiple centrals can be connected at once in server mode: as a single Stream,
+ * writes are broadcast to every connected peer and incoming bytes from all peers
+ * are merged into one receive buffer (see @ref peerCount). Client mode is a single
+ * peer.
  *
  * **Server mode** — the ESP32 advertises a NUS service and accepts connections:
  * @code
@@ -59,8 +65,6 @@
  * bleStream.beginClient(remoteAddr);    // connects to the remote device
  * bleStream.println("Hello Server!");
  * @endcode
- *
- * Stack-agnostic: works with both NimBLE and Bluedroid backends.
  */
 class BLEStream : public Stream {
 public:
@@ -78,7 +82,10 @@ public:
   /**
    * @brief Start as a NUS server with advertising.
    * @param deviceName BLE device name (used for BLE.begin and advertising)
-   * @return BTStatus::OK on success
+   * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
+   *         or a backend error status on failure.
+   * @note Initializes BLE if not already done, reconfigures advertising to include
+   *       the NUS service UUID, and enables auto-advertise on disconnect.
    */
   BTStatus begin(const String &deviceName = "BLE_Stream");
 
@@ -86,7 +93,11 @@ public:
    * @brief Start as a NUS client and connect to a remote NUS server.
    * @param address BLE address of the remote NUS server
    * @param timeoutMs Connection timeout in milliseconds
-   * @return BTStatus::OK on success
+   * @return BTStatus::OK on success, BTStatus::InvalidState if already started,
+   *         BTStatus::NotFound if the NUS service or characteristics are missing,
+   *         or a backend error status on connection failure.
+   * @note Blocks until the connection completes or times out, then discovers the
+   *       NUS service and subscribes to TX notifications.
    */
   BTStatus beginClient(const BTAddress &address, uint32_t timeoutMs = 5000);
 
@@ -96,9 +107,29 @@ public:
   void end();
 
   /**
-   * @brief Check if a remote device is connected.
+   * @brief Check if at least one remote device is connected.
+   * @return true if one or more peers are connected.
+   * @note In server mode multiple centrals may be connected simultaneously;
+   *       this returns true while any of them remain connected. See @ref peerCount.
    */
   bool connected() const;
+
+  /**
+   * @brief Number of currently connected peers.
+   * @return Peer count: 0 or 1 in client mode; 0..N in server mode.
+   * @note As a single Arduino Stream, writes are broadcast to all connected peers
+   *       (GATT notifications) and received bytes from all peers are merged into the
+   *       one receive buffer. Use the per-connection @ref BLEServer callbacks if you
+   *       need to distinguish individual peers.
+   */
+  size_t peerCount() const;
+
+  /**
+   * @brief Snapshot of currently connected peers.
+   * @return In server mode, all connected centrals; in client mode, a single
+   *         entry when connected, otherwise empty.
+   */
+  std::vector<BLEConnInfo> peers() const;
 
   /**
    * @brief Check whether the stream has been started (begin or beginClient).
@@ -137,9 +168,21 @@ public:
    * @brief Write a buffer of bytes to the remote device.
    * @param buffer Pointer to the data to send.
    * @param size Number of bytes to send.
-   * @return Number of bytes actually sent.
+   * @return Number of bytes actually sent; stops on the first failed chunk.
+   * @note Server mode sends via TX characteristic notifications; client mode writes
+   *       to the remote RX characteristic. Each chunk is limited to (MTU - 3) bytes
+   *       to fit the ATT header.
    */
   size_t write(const uint8_t *buffer, size_t size) override;
+
+  /**
+   * @brief Send data to a single connected peer (server mode only).
+   * @param peer Connection metadata for the target peer.
+   * @param buffer Data to send.
+   * @param size Number of bytes to send.
+   * @return Number of bytes sent, or 0 on failure or if not connected.
+   */
+  size_t writeTo(const BLEConnInfo &peer, const uint8_t *buffer, size_t size);
 
   /**
    * @brief Flush pending writes (currently a no-op for BLE).
@@ -171,6 +214,22 @@ public:
    * @param handler Function to call when the peer disconnects.
    */
   void onDisconnect(DisconnectHandler handler);
+
+  /**
+   * @brief Notified when data is received from a peer, with source attribution.
+   * @param connInfo Connection metadata for the peer that sent the data.
+   * @param data Received bytes.
+   * @param len Length of @p data.
+   */
+  using PeerDataHandler = std::function<void(const BLEConnInfo &connInfo, const uint8_t *data, size_t len)>;
+
+  /**
+   * @brief Register a callback for attributed RX data (per peer).
+   * @param handler Function to call when a peer writes to the RX characteristic.
+   * @note Fired in addition to the merged receive buffer; use this when you need
+   *       to distinguish which peer sent each payload.
+   */
+  void onPeerData(PeerDataHandler handler);
 
   /**
    * @brief Remove all registered callbacks.
