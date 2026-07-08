@@ -202,6 +202,12 @@ esp32s31.menu.PartitionScheme.esp_sr_16=ESP SR 16M (3MB APP/6MB SPIFFS/3.9MB MOD
 esp32s31.menu.PartitionScheme.esp_sr_16.upload.maximum_size=3145728
 esp32s31.menu.PartitionScheme.esp_sr_16.upload.extra_flags=0xC10000 {build.path}/srmodels.bin
 esp32s31.menu.PartitionScheme.esp_sr_16.build.partitions=esp_sr_16
+esp32s31.menu.PartitionScheme.zigbee=Zigbee 4MB with spiffs
+esp32s31.menu.PartitionScheme.zigbee.build.partitions=zigbee
+esp32s31.menu.PartitionScheme.zigbee.upload.maximum_size=1310720
+esp32s31.menu.PartitionScheme.zigbee_8MB=Zigbee 8MB with spiffs
+esp32s31.menu.PartitionScheme.zigbee_8MB.build.partitions=zigbee_8MB
+esp32s31.menu.PartitionScheme.zigbee_8MB.upload.maximum_size=3407872
 esp32s31.menu.PartitionScheme.zigbee_zczr=Zigbee ZCZR 4MB with spiffs
 esp32s31.menu.PartitionScheme.zigbee_zczr.build.partitions=zigbee_zczr
 esp32s31.menu.PartitionScheme.zigbee_zczr.upload.maximum_size=1310720
@@ -248,9 +254,18 @@ esp32s31.menu.EraseFlash.all.upload.erase_cmd=-e
 esp32s31.menu.ZigbeeMode.default=Disabled
 esp32s31.menu.ZigbeeMode.default.build.zigbee_mode=
 esp32s31.menu.ZigbeeMode.default.build.zigbee_libs=
+esp32s31.menu.ZigbeeMode.ed=Zigbee ED (end device)
+esp32s31.menu.ZigbeeMode.ed.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32s31.menu.ZigbeeMode.ed.build.zigbee_libs=-lesp-zigbee-core.zed.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
 esp32s31.menu.ZigbeeMode.zczr=Zigbee ZCZR (coordinator/router)
 esp32s31.menu.ZigbeeMode.zczr.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
-esp32s31.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp_zb_api.zczr -lzboss_stack.zczr -lzboss_port.remote
+esp32s31.menu.ZigbeeMode.zczr.build.zigbee_libs=-lesp-zigbee-core.zczr.release -lesp-zigbee-idf.native.release -lesp-zigbee.release
+esp32s31.menu.ZigbeeMode.ed_debug=Zigbee ED (end device) - Debug
+esp32s31.menu.ZigbeeMode.ed_debug.build.zigbee_mode=-DZIGBEE_MODE_ED
+esp32s31.menu.ZigbeeMode.ed_debug.build.zigbee_libs=-lesp-zigbee-core.zed.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
+esp32s31.menu.ZigbeeMode.zczr_debug=Zigbee ZCZR (coordinator/router) - Debug
+esp32s31.menu.ZigbeeMode.zczr_debug.build.zigbee_mode=-DZIGBEE_MODE_ZCZR
+esp32s31.menu.ZigbeeMode.zczr_debug.build.zigbee_libs=-lesp-zigbee-core.zczr.debug -lesp-zigbee-idf.native.debug -lesp-zigbee.debug
 
 ##############################################################
 
