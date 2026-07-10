@@ -241,7 +241,6 @@ esp32s31.menu.DebugLevel.verbose=Verbose
 esp32s31.menu.DebugLevel.verbose.build.code_debug=5
 
 esp32s31.menu.EraseFlash.none=Disabled
-esp32s31.menu.EraseFlash.none.upload.erase_cmd=
 esp32s31.menu.EraseFlash.all=Enabled
 esp32s31.menu.EraseFlash.all.upload.erase_cmd=-e
 
