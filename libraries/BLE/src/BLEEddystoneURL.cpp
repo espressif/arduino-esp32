@@ -77,8 +77,8 @@ BLEEddystoneURL::BLEEddystoneURL(BLEAdvertisedDevice *advertisedDevice) {
   lengthURL = 0;
   m_eddystoneData.advertisedTxPower = 0;
   for (int i = 0; i < advertisedDevice->getPayloadLength(); ++i) {
-    if (payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA && payload[i + 2] == 0xFE
-        && payload[i + 3] == 0x10) {
+    if (i >= 1 && payload[i] == 0x16 && advertisedDevice->getPayloadLength() >= i + 2 + sizeof(m_eddystoneData) && payload[i + 1] == 0xAA
+        && payload[i + 2] == 0xFE && payload[i + 3] == 0x10) {
       lengthURL = payload[i - 1] - 5;  // Subtracting 5 Bytes containing header and other data which are not actual URL data
       m_eddystoneData.advertisedTxPower = payload[i + 1];
       if (lengthURL <= 18) {
