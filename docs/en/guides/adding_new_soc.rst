@@ -229,7 +229,7 @@ Use the closest existing SoC as a template. Common options to set:
 - Bluetooth stack (``CONFIG_BT_NIMBLE_ENABLED``, ``CONFIG_BT_BLUEDROID_ENABLED``)
 - PSRAM (``CONFIG_SPIRAM=y``) if supported
 - OpenThread / IEEE 802.15.4 settings if ``SOC_IEEE802154_SUPPORTED``
-- WiFi settings if ``SOC_WIFI_SUPPORTED``
+- Wi-Fi settings if ``SOC_WIFI_SUPPORTED``
 - Zigbee: set ``CONFIG_ZB_ENABLED=n`` if prebuilt Zigbee libraries are not available yet
 - TinyUSB / USB settings if ``SOC_USB_OTG_SUPPORTED``
 - CPU frequency default
@@ -519,7 +519,7 @@ has different peripheral layouts:
 
 - **``libraries/SPI/src/SPI.cpp``**: Almost always needs updating for SPI pin/bus
   configuration differences.
-- **Library ``ci.yml`` / ``ci.json`` files**: Update target lists or requirement conditions
+- **Library ``ci.yml`` files**: Update target lists or requirement conditions
   in example directories to include or exclude the new SoC based on capabilities.
 
 3.8 CMakeLists.txt (IDF Component) [component]
@@ -594,8 +594,8 @@ Define a ``{soc}_opts`` variable with appropriate defaults (e.g. PSRAM enabled, 
 3.14 Example Gating [component]
 ---------------------------------
 
-Examples that don't work on the new SoC (e.g. WiFi examples on a non-WiFi chip) need to be
-excluded. The modern approach uses ``ci.json`` or ``ci.yml`` files in example directories
+Examples that don't work on the new SoC (e.g. Wi-Fi examples on a chip without Wi-Fi) need to be
+excluded. The modern approach uses ``ci.yml`` files in example directories
 with explicit ``targets`` or ``requires`` fields.
 
 Check existing examples and add exclusions where the SoC lacks required capabilities.
@@ -702,7 +702,7 @@ Full Support Checklist (in addition to above)
    [ ] pioarduino-build.py: bootloader offset group updated
    [ ] package_esp32_index.template.json: board entry added, tool versions verified
    [ ] Bootloader ELF files generated with correct names
-   [ ] Libraries in out/tools/esp32-arduino-libs/{soc}/
+   [ ] Libraries built in <lib-builder>/out/tools/esp32-arduino-libs/{soc}/ and copied to <arduino-repo>/tools/esp32-arduino-libs/{soc}/
    [ ] .github/CI_README.md: DevKit GPIO reference table added
    [ ] Sketch compiles and uploads via Arduino IDE/CLI
    [ ] USB Serial/JTAG (if applicable) works for upload and monitor
