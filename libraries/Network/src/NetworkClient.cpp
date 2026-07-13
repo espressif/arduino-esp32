@@ -575,15 +575,8 @@ uint8_t NetworkClient::connected() {
   if (_connected) {
     uint8_t dummy;
     int res = recv(fd(), &dummy, 1, MSG_DONTWAIT | MSG_PEEK);
-    if (res == 0) {
-      // The peer performed an orderly shutdown (FIN received, e.g. via shutdown(SHUT_WR)).
-      // This is a *successful* recv() call, not an error, so errno is not set by it and
-      // must not be inspected here (it may still hold a stale value from an unrelated,
-      // earlier syscall). A half-closed connection can still be perfectly writable, so
-      // do not tear it down based on leftover errno.
-      _connected = true;
-    } else if (res < 0) {
-      // recv only sets errno if res is < 0
+    // recv only sets errno when it returns -1
+    if (res < 0) {
       switch (errno) {
         case EWOULDBLOCK:
         case ENOENT:  //caused by vfs
