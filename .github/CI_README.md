@@ -1604,75 +1604,9 @@ bash .github/scripts/check_official_variants.sh \
 
 ## Adding a New SoC
 
-When adding support for a new ESP32 SoC variant, follow these steps:
+For the complete guide on adding support for a new ESP32 SoC (both the Arduino core and the lib-builder), see [`docs/en/guides/adding_new_soc.rst`](../docs/en/guides/adding_new_soc.rst).
 
-### 1. Update Core Configuration
-
-Edit `.github/scripts/socs_config.sh`:
-
-```bash
-# Add to ALL_SOCS (alphabetically)
-ALL_SOCS=(
-    "esp32"
-    "esp32c3"
-    "esp32-new"  # ← Add here
-    # ...
-)
-
-# Add to platform-specific arrays based on capabilities
-HW_TEST_TARGETS=(
-    # ...
-    "esp32-new"  # If physical hardware available
-)
-
-WOKWI_TEST_TARGETS=(
-    # ...
-    "esp32-new"  # If supported by Wokwi
-)
-
-QEMU_TEST_TARGETS=(
-    # ...
-    "esp32-new"  # If supported by QEMU
-)
-# BUILD_TEST_TARGETS is auto-computed from above
-```
-
-### 2. Update IDF Version Targets
-
-```bash
-# Add to appropriate IDF version arrays
-IDF_V5_5_TARGETS=(
-    # ...
-    "esp32-new"
-)
-
-# Update default if this is the latest
-IDF_COMPONENT_TARGETS=("${IDF_V5_5_TARGETS[@]}")
-```
-
-### 3. Update Skip List (if applicable)
-
-```bash
-# If no pre-built libraries available
-SKIP_LIB_BUILD_SOCS=(
-    "esp32c2"
-    "esp32c61"
-    "esp32-new"  # ← Add if needed
-)
-```
-
-### 4. That's It!
-
-All workflows and scripts will automatically:
-- Include the new SoC in builds
-- Test on appropriate platforms
-- Generate correct matrices
-- Use correct QEMU architecture
-
-**No need to modify:**
-- Any workflow files
-- Any other scripts
-- Any test configurations
+The CI-specific steps are summarized here: after following the full guide, all workflows and scripts will automatically include the new SoC in builds, test on appropriate platforms, generate correct matrices, and use the correct architecture — as long as `socs_config.sh` is updated correctly.
 
 ---
 
