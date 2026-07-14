@@ -260,15 +260,15 @@ void BLEClass::end(bool releaseMemory) {
   getScan().terminateAllPeriodicSyncs();
 #endif
 
-  nimble_port_stop();
-  nimble_port_deinit();
-
 #if BLE_GATT_SERVER_SUPPORTED
   // nimble_port_deinit() just freed the npl event pool; drop the deferred
   // re-advertise event's now-dangling backing pointer so a later begin()
   // re-initializes it instead of dispatching a stale/NULL callback.
   nimbleResetReAdvertiseEvent();
 #endif
+
+  nimble_port_stop();
+  nimble_port_deinit();
 
 #if defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
   hostedDeinitBLE();

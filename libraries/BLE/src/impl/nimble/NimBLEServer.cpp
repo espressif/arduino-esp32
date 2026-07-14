@@ -79,7 +79,14 @@ void scheduleReAdvertise() {
 // session re-initializes a fresh event; the freed pool block needs no explicit
 // return because deinit reclaims the whole buffer.
 void nimbleResetReAdvertiseEvent() {
-  sReAdvEvent.event = nullptr;
+  log_d("resetting sReAdvEvent, inited=%d", sReAdvEventInited);
+  if (sReAdvEventInited) {
+    // ble_npl_event_deinit() releases the backend-specific backing storage
+    // (e.g. returns the block to S31's btdm_osal event pool) instead of just
+    // clearing the struct in place, so the event lifecycle stays balanced
+    // across an end()/begin() cycle regardless of SoC.
+    ble_npl_event_deinit(&sReAdvEvent);
+  }
   sReAdvEventInited = false;
 }
 
