@@ -1,48 +1,146 @@
 /*
-    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
-    Ported to Arduino ESP32 by Evandro Copercini
-    updates by chegewara
-*/
+ * BLE Server Example -- New API
+ *
+ * Creates a GATT server with a single service containing a read/write/notify
+ * characteristic. Demonstrates connection callbacks, value writes from a
+ * client, and periodic notifications.
+ *
+ * Test with a BLE scanner app (e.g. nRF Connect):
+ * 1. Scan for "MyServer"
+ * 2. Connect and explore the service
+ * 3. Write a value to the characteristic
+ * 4. Enable notifications to receive the incrementing counter
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
 
 #include <Arduino.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
-#include <BLEServer.h>
+#include <BLE.h>
 
-// See the following for generating UUIDs:
-// https://www.uuidgenerator.net/
+// Custom UUIDs generated for this example (use https://www.uuidgenerator.net/ to create your own)
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+BLECharacteristic notifyChr;
 
-#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+void onClientConnect(BLEServer server, const BLEConnInfo &conn) {
+  Serial.printf("Client connected: %s (MTU %d)\n", conn.getAddress().toString().c_str(), conn.getMTU());
+}
+
+void onClientDisconnect(BLEServer server, const BLEConnInfo &conn, uint8_t reason) {
+  Serial.printf("Client disconnected (reason 0x%02X), restarting advertising...\n", reason);
+  server.startAdvertising();
+  Serial.println("Advertising restarted");
+}
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Starting BLE work!");
+  Serial.println();
+  Serial.println("=== BLE Server Example ===");
 
-  if (!BLEDevice::init("BLE Server Example")) {
-    Serial.println("BLE initialization failed!");
-    return;
+  Serial.print("Initializing BLE... ");
+  BTStatus initStatus = BLE.begin("MyServer");
+  if (!initStatus) {
+    Serial.printf("FAILED! (%s)\n", initStatus.toString());
+    while (true) {
+      delay(1000);
+    }
   }
+  Serial.println("OK");
 
-  BLEServer *pServer = BLEDevice::createServer();
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  pServer->advertiseOnDisconnect(true);
-  BLECharacteristic *pCharacteristic =
-    pService->createCharacteristic(CHARACTERISTIC_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+  Serial.print("Creating server... ");
+  BLEServer server = BLE.createServer();
+  if (!server) {
+    Serial.println("FAILED!");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
 
-  pCharacteristic->setValue("Hello World says Neil");
-  pService->start();
-  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
-  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-  pAdvertising->addServiceUUID(SERVICE_UUID);
-  pAdvertising->setScanResponse(true);
-  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
-  pAdvertising->setMaxPreferred(0x12);
-  BLEDevice::startAdvertising();
-  Serial.println("Characteristic defined! Now you can read it in your phone!");
+  server.onConnect(onClientConnect);
+  server.onDisconnect(onClientDisconnect);
+
+  Serial.print("Creating service (UUID: ");
+  Serial.print(SVC_UUID.toString());
+  Serial.print(")... ");
+  BLEService svc = server.createService(SVC_UUID);
+  if (!svc) {
+    Serial.println("FAILED!");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
+
+  Serial.print("Creating characteristic (UUID: ");
+  Serial.print(CHR_UUID.toString());
+  Serial.print(")... ");
+  notifyChr = svc.createCharacteristic(CHR_UUID, BLEProperty::Read | BLEProperty::Write | BLEProperty::Notify, BLEPermissions::OpenReadWrite);
+  if (!notifyChr) {
+    Serial.println("FAILED!");
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
+
+  notifyChr.setValue("Hello World");
+  notifyChr.setDescription("My Characteristic");
+  notifyChr.onWrite([](BLECharacteristic c, const BLEConnInfo &conn) {
+    Serial.printf("Written by %s: %s\n", conn.getAddress().toString().c_str(), c.getStringValue().c_str());
+  });
+
+  Serial.print("Starting server... ");
+  BTStatus status = server.start();
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
+
+  Serial.print("Configuring advertising... ");
+  BLEAdvertising adv = BLE.getAdvertising();
+  adv.addServiceUUID(SVC_UUID);
+  Serial.println("OK");
+
+  Serial.print("Starting advertising... ");
+  status = adv.start();
+  if (!status) {
+    Serial.printf("FAILED! (%s)\n", status.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("OK");
+
+  Serial.println();
+  Serial.println("Server is ready! Waiting for connections...");
+  Serial.printf("Device name: %s\n", BLE.getDeviceName().c_str());
+  Serial.println();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  delay(2000);
+  static uint32_t count = 0;
+  static bool wasSubscribed = false;
+
+  if (notifyChr && notifyChr.getSubscribedCount() > 0) {
+    if (!wasSubscribed) {
+      Serial.println("Client subscribed to notifications!");
+      Serial.println("Sending notifications every second");
+      wasSubscribed = true;
+    }
+    notifyChr.setValue(count + (uint32_t)'0');
+    notifyChr.notify();
+    if (count % 10 == 0) {
+      Serial.printf("[%lus] Notification #%lu sent\n", millis() / 1000, (unsigned long)count);
+    }
+    count++;
+  } else if (wasSubscribed) {
+    Serial.println("No more subscribers.");
+    wasSubscribed = false;
+  }
+
+  delay(1000);
 }

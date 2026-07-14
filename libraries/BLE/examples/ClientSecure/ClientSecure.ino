@@ -1,0 +1,105 @@
+/*
+ * Secure BLE Client Example -- New API
+ *
+ * Scans for a secure BLE server, connects with authenticated pairing,
+ * and reads a protected characteristic. Demonstrates BLESecurity
+ * configuration on the client side: IO capability, passkey confirmation,
+ * and authentication callbacks.
+ *
+ * Pair with the ServerSecure example on another ESP32.
+ *
+ * Licensed under the Apache License, Version 2.0
+ */
+
+#include <Arduino.h>
+#include <BLE.h>
+
+// Custom UUIDs -- must match the ServerSecure example
+static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
+static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
+
+BTAddress targetAddr;
+bool found = false;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("BLE Secure Client Example");
+
+  BTStatus initStatus = BLE.begin("ESP32-SecureClient");
+  if (!initStatus) {
+    Serial.printf("BLE init failed! (%s)\n", initStatus.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  BLESecurity sec = BLE.getSecurity();
+  sec.setIOCapability(BLESecurity::DisplayYesNo);
+  // bonding = true, MITM protection = true, Secure Connections = true
+  sec.setAuthenticationMode(true, true, true);
+  sec.onConfirmPassKey([](const BLEConnInfo &conn, uint32_t passkey) -> bool {
+    Serial.printf("Confirm passkey: %06lu (y/n)? Auto-accepting.\n", (unsigned long)passkey);
+    return true;
+  });
+  sec.onAuthenticationComplete([](const BLEConnInfo &conn, bool success) {
+    Serial.printf("Authentication %s\n", success ? "complete" : "failed");
+  });
+
+  BLEScan scan = BLE.getScan();
+  scan.onResult([](const BLEAdvertisedDevice &dev) {
+    Serial.printf("Found: %s (%s)\n", dev.getName().c_str(), dev.getAddress().toString().c_str());
+    if (dev.isAdvertisingService(SVC_UUID)) {
+      Serial.println("Found target server!");
+      targetAddr = dev.getAddress();
+      found = true;
+      BLE.getScan().stop();
+    }
+  });
+
+  Serial.println("Scanning...");
+  scan.startBlocking(15000);
+
+  if (!found) {
+    Serial.println("Secure server not found. Run the ServerSecure example on another device.");
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  BLEClient client = BLE.createClient();
+  BTStatus status = client.connect(targetAddr);
+  if (!status) {
+    Serial.printf("Connect failed: %s\n", status.toString());
+    while (true) {
+      delay(1000);
+    }
+  }
+  Serial.println("Connected!");
+
+  BLERemoteService svc = client.getService(SVC_UUID);
+  if (!svc) {
+    Serial.println("Service not found");
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  BLERemoteCharacteristic chr = svc.getCharacteristic(CHR_UUID);
+  if (!chr) {
+    Serial.println("Characteristic not found");
+    while (true) {
+      delay(1000);
+    }
+  }
+
+  String val = chr.readValue();
+  Serial.printf("Read secure value: %s\n", val.c_str());
+
+  delay(5000);
+  client.disconnect();
+  Serial.println("Disconnected");
+}
+
+void loop() {
+  delay(1000);
+}

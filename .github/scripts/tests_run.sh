@@ -28,24 +28,23 @@ function run_multi_device_test {
     local result=0
     local error=0
     local devices
+    local dut_targets=()
+    local is_mixed=0
+    local report_target
+    local pytest_target
 
     test_name=$(basename "$test_dir")
     test_type=$(basename "$(dirname "$test_dir")")
 
-    printf "\033[95mRunning multi-device test: %s\033[0m\n" "$test_name"
-
-    # Check platform support
-    if [ -f "$test_dir/ci.yml" ]; then
-        is_target=$(yq eval ".targets.${target}" "$test_dir/ci.yml" 2>/dev/null)
-        selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
-        platform_target=$(yq eval ".platforms.${platform}.${target}" "$test_dir/ci.yml" 2>/dev/null)
-
-        if [[ $is_target == "false" ]] || [[ $selected_platform == "false" ]] || [[ $platform_target == "false" ]]; then
-            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
-            printf "\n\n\n"
-            return 0
-        fi
+    IFS='|' read -ra dut_targets <<< "$target"
+    if [ ${#dut_targets[@]} -gt 1 ]; then
+        is_mixed=1
     fi
+
+    # Filesystem-safe join for report paths / junit names (esp32s31_esp32c6)
+    report_target="${target//|/_}"
+
+    printf "\033[95mRunning multi-device test: %s\033[0m\n" "$test_name"
 
     if [ $platform == "wokwi" ]; then
         echo "ERROR: Wokwi platform not supported for multi-device tests"
@@ -61,15 +60,6 @@ function run_multi_device_test {
     if [[ -z "$devices" ]]; then
         echo "ERROR: No devices found in multi_device configuration for $test_name"
         return 1
-    fi
-
-    # Determine number of FQBN configurations (same logic as build side)
-    local fqbn_len=0
-    if [ "$options" -eq 0 ] && [ -f "$test_dir/ci.yml" ]; then
-        fqbn_len=$(yq eval ".fqbn.${target} | length" "$test_dir/ci.yml" 2>/dev/null || echo 0)
-    fi
-    if [ "$fqbn_len" -eq 0 ]; then
-        fqbn_len=1
     fi
 
     # Verify ports are set for multi-device tests
@@ -93,36 +83,90 @@ function run_multi_device_test {
         return 1
     fi
 
-    # Build embedded-services argument
+    if [ $is_mixed -eq 1 ] && [ ${#dut_targets[@]} -ne "$device_count" ]; then
+        echo "ERROR: Mixed target '$target' has ${#dut_targets[@]} SoCs but $test_name has $device_count devices"
+        return 1
+    fi
+
+    # Same-target: duplicate the single SoC for every device
+    if [ $is_mixed -eq 0 ]; then
+        local single="${dut_targets[0]}"
+        dut_targets=()
+        for ((i=0; i<device_count; i++)); do
+            dut_targets+=("$single")
+        done
+    fi
+
+    # Skip if any DUT SoC is disabled for this test/platform
+    if [ -f "$test_dir/ci.yml" ]; then
+        local selected_platform
+        selected_platform=$(yq eval ".platforms.${platform}" "$test_dir/ci.yml" 2>/dev/null)
+        if [[ $selected_platform == "false" ]]; then
+            printf "\033[93mSkipping %s test for %s, platform: %s\033[0m\n" "$test_name" "$target" "$platform"
+            printf "\n\n\n"
+            return 0
+        fi
+
+        local soc
+        for soc in "${dut_targets[@]}"; do
+            local is_target
+            local platform_target
+            is_target=$(yq eval ".targets.${soc}" "$test_dir/ci.yml" 2>/dev/null)
+            platform_target=$(yq eval ".platforms.${platform}.${soc}" "$test_dir/ci.yml" 2>/dev/null)
+            if [[ $is_target == "false" ]] || [[ $platform_target == "false" ]]; then
+                printf "\033[93mSkipping %s test for %s, platform: %s (disabled for %s)\033[0m\n" "$test_name" "$target" "$platform" "$soc"
+                printf "\n\n\n"
+                return 0
+            fi
+        done
+    fi
+
+    # FQBN matrix: same-target keeps multi-FQBN; mixed uses a single default config
+    local fqbn_len=0
+    local fqbn_lookup="${dut_targets[0]}"
+    if [ $is_mixed -eq 0 ] && [ "$options" -eq 0 ] && [ -f "$test_dir/ci.yml" ]; then
+        fqbn_len=$(yq eval ".fqbn.${fqbn_lookup} | length" "$test_dir/ci.yml" 2>/dev/null || echo 0)
+    fi
+    if [ "$fqbn_len" -eq 0 ]; then
+        fqbn_len=1
+    fi
+
+    # Build embedded-services and pytest --target (pipe-separated per DUT)
     local services="esp,arduino"
+    pytest_target="${dut_targets[0]}"
     for ((s=1; s<device_count; s++)); do
         services="$services|esp,arduino"
+        pytest_target="$pytest_target|${dut_targets[$s]}"
     done
     local extra_args=("--embedded-services" "$services")
 
-    # Loop over FQBN configurations (one run per FQBN)
+    local ports=("${ESPPORT1}" "${ESPPORT2}")
+
+    # Loop over FQBN configurations (one run per FQBN; mixed always fqbn_len=1)
     for fqbn_idx in $(seq 0 $((fqbn_len - 1))); do
         local fqbn="Default"
         if [ "$fqbn_len" -ne 1 ]; then
-            fqbn=$(yq eval ".fqbn.${target} | sort | .[${fqbn_idx}]" "$test_dir/ci.yml" 2>/dev/null)
+            fqbn=$(yq eval ".fqbn.${fqbn_lookup} | sort | .[${fqbn_idx}]" "$test_dir/ci.yml" 2>/dev/null)
         elif [ -f "$test_dir/ci.yml" ]; then
             local has_fqbn
-            has_fqbn=$(yq eval ".fqbn.${target}" "$test_dir/ci.yml" 2>/dev/null)
+            has_fqbn=$(yq eval ".fqbn.${fqbn_lookup}" "$test_dir/ci.yml" 2>/dev/null)
             if [ "$has_fqbn" != "null" ]; then
-                fqbn=$(yq eval ".fqbn.${target} | .[0]" "$test_dir/ci.yml" 2>/dev/null)
+                fqbn=$(yq eval ".fqbn.${fqbn_lookup} | .[0]" "$test_dir/ci.yml" 2>/dev/null)
             fi
         fi
 
-        printf "\033[95mRunning multi-device test: %s -- Config: %s\033[0m\n" "$test_name" "$fqbn"
+        printf "\033[95mRunning multi-device test: %s -- Config: %s -- Targets: %s\033[0m\n" "$test_name" "$fqbn" "$pytest_target"
 
-        # Build the build-dir argument for pytest-embedded
+        # Build the build-dir argument for pytest-embedded (per-DUT SoC path)
         local build_dirs=""
         local dev_idx=0
         local sketch_name
         local build_dir
         local sdkconfig_path
         local compiled_target
+        local device_target
         for device in $devices; do
+            device_target="${dut_targets[$dev_idx]}"
             # multi_device values can be a scalar (sketch name) or a map with a "sketch" key
             local device_type
             device_type=$(yq eval ".multi_device.$device | type" "$test_dir/ci.yml" 2>/dev/null)
@@ -132,9 +176,9 @@ function run_multi_device_test {
                 sketch_name=$(yq eval ".multi_device.$device" "$test_dir/ci.yml" 2>/dev/null)
             fi
             if [ "$fqbn_len" -eq 1 ]; then
-                build_dir="$HOME/.arduino/tests/$target/${test_name}/${sketch_name}/build.tmp"
+                build_dir="$HOME/.arduino/tests/$device_target/${test_name}/${sketch_name}/build.tmp"
             else
-                build_dir="$HOME/.arduino/tests/$target/${test_name}/${sketch_name}/build${fqbn_idx}.tmp"
+                build_dir="$HOME/.arduino/tests/$device_target/${test_name}/${sketch_name}/build${fqbn_idx}.tmp"
             fi
 
             if [ ! -d "$build_dir" ]; then
@@ -146,8 +190,8 @@ function run_multi_device_test {
             sdkconfig_path="$build_dir/sdkconfig"
             if [ -f "$sdkconfig_path" ]; then
                 compiled_target=$(grep -E "CONFIG_IDF_TARGET=" "$sdkconfig_path" | cut -d'"' -f2)
-                if [ "$compiled_target" != "$target" ]; then
-                    printf "\033[91mError: Device %s compiled for %s, expected %s\033[0m\n" "$device" "$compiled_target" "$target"
+                if [ "$compiled_target" != "$device_target" ]; then
+                    printf "\033[91mError: Device %s compiled for %s, expected %s\033[0m\n" "$device" "$compiled_target" "$device_target"
                     return 1
                 fi
             fi
@@ -161,16 +205,19 @@ function run_multi_device_test {
         done
 
         if [ "$erase_flash" -eq 1 ]; then
-            esptool -c "$target" erase-flash
+            for ((e=0; e<device_count; e++)); do
+                esptool -c "${dut_targets[$e]}" -p "${ports[$e]}" erase-flash
+            done
         fi
 
         # Report file: for multi-FQBN use indexed name like regular tests
         local report_file
         if [ "$fqbn_len" -eq 1 ]; then
-            report_file="$test_dir/$target/$test_name.xml"
+            report_file="$test_dir/$report_target/$test_name.xml"
         else
-            report_file="$test_dir/$target/$test_name${fqbn_idx}.xml"
+            report_file="$test_dir/$report_target/$test_name${fqbn_idx}.xml"
         fi
+        mkdir -p "$(dirname "$report_file")"
 
         # Build pytest command as an array to properly handle arguments
         local pytest_cmd=(
@@ -178,9 +225,9 @@ function run_multi_device_test {
             --count "$device_count"
             --build-dir "$build_dirs"
             --port "${ESPPORT1}|${ESPPORT2}"
-            --target "$target"
+            --target "$pytest_target"
             --junit-xml="$report_file"
-            -o "junit_suite_name=${test_type}_${platform}_${target}_${test_name}${fqbn_idx}"
+            -o "junit_suite_name=${test_type}_${platform}_${report_target}_${test_name}${fqbn_idx}"
             "${extra_args[@]}"
         )
 
@@ -189,6 +236,9 @@ function run_multi_device_test {
         fi
         if [ -n "$wifi_password" ]; then
             pytest_cmd+=(--wifi-password "$wifi_password")
+        fi
+        if [ "$skip_autoflash" -eq 1 ]; then
+            pytest_cmd+=(--skip-autoflash y)
         fi
 
         result=0
@@ -393,6 +443,9 @@ function run_test {
         if [ -n "$wifi_password" ]; then
             pytest_cmd+=(--wifi-password "$wifi_password")
         fi
+        if [ "$skip_autoflash" -eq 1 ]; then
+            pytest_cmd+=(--skip-autoflash y)
+        fi
 
         result=0
         printf "\033[95m%s\033[0m\n" "${pytest_cmd[*]}"
@@ -426,6 +479,7 @@ platform="hardware"
 chunk_run=0
 options=0
 erase=0
+skip_autoflash=0
 wifi_ssid=""
 wifi_password=""
 
@@ -496,6 +550,9 @@ while [ -n "$1" ]; do
         ;;
     -e )
         erase=1
+        ;;
+    --skip-autoflash )
+        skip_autoflash=1
         ;;
     -h )
         echo "$USAGE"
@@ -586,10 +643,14 @@ else
     test_folder="$PWD/tests/$test_type"
 fi
 
-# Loop through all targets to run
+# Loop through all targets to run (each entry may be a SoC or a pipe-separated mixed pair)
 error_code=0
 for current_target in "${targets_to_run[@]}"; do
     echo "Running for target: $current_target"
+    is_mixed_target=0
+    if [[ "$current_target" == *"|"* ]]; then
+        is_mixed_target=1
+    fi
 
     if [ $chunk_run -eq 0 ]; then
         # Run specific sketches
@@ -611,6 +672,9 @@ for current_target in "${targets_to_run[@]}"; do
             if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
                 run_multi_device_test "$current_target" "$test_dir" $options $erase
                 current_exit_code=$?
+            elif [ $is_mixed_target -eq 1 ]; then
+                echo "ERROR: Mixed target '$current_target' is only valid for multi-device tests (got: $current_sketch)"
+                current_exit_code=1
             else
                 run_test "$current_target" "$sketch_test_folder"/"$current_sketch"/"$current_sketch".ino $options $erase
                 current_exit_code=$?
@@ -620,6 +684,26 @@ for current_target in "${targets_to_run[@]}"; do
             fi
         done
     else
+        if [ $is_mixed_target -eq 1 ]; then
+            # Mixed-target chunk mode: only multi-device tests
+            target_error=0
+            if [ -d "$test_folder" ]; then
+                for test_dir in "$test_folder"/*; do
+                    if [ -d "$test_dir" ] && [ "$(is_multi_device_test "$test_dir")" -eq 1 ]; then
+                        exit_code=0
+                        run_multi_device_test "$current_target" "$test_dir" $options $erase || exit_code=$?
+                        if [ $exit_code -ne 0 ]; then
+                            target_error=$exit_code
+                        fi
+                    fi
+                done
+            fi
+            if [ $target_error -ne 0 ]; then
+                error_code=$target_error
+            fi
+            continue
+        fi
+
         if [ "$chunk_max" -le 0 ]; then
             echo "ERROR: Chunks count must be positive number"
             exit 1

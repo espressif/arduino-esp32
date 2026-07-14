@@ -31,16 +31,6 @@ static bool _classicMemReleased = false;
 static bool _classicMemReleased = true;  // No Classic BT on this chip
 #endif
 
-// DEPRECATED: Remove this function in v4.0. Use btClassicInUse() and bleInUse() instead.
-// Only for backwards compatibility with existing code.
-bool _btInUse_default(void) {
-  return false;
-}
-
-// DEPRECATED: Remove this function in v4.0. Use btClassicInUse() and bleInUse() instead.
-// Only for backwards compatibility with existing code.
-__attribute__((weak, alias("_btInUse_default"))) bool btInUse(void);
-
 // Default behavior: release BTDM memory (~36KB) unless a BT library is used or user overrides.
 // BT libraries include esp32-hal-alloc-ble-mem.h and esp32-hal-alloc-bt-classic-mem.h which set
 // _bleLibraryInUse and _btClassicLibraryInUse to true via constructor.
@@ -77,6 +67,17 @@ static esp_bt_mode_t _btModeToEspMode(bt_mode mode) {
   }
 }
 
+static __attribute__((unused)) const char *btModeStr(esp_bt_mode_t mode) {
+  switch (mode) {
+    case ESP_BT_MODE_BLE:        return "BLE";
+    case ESP_BT_MODE_CLASSIC_BT: return "Classic BT";
+    case ESP_BT_MODE_BTDM:       return "BT Dual Mode";
+    default:                     return "Unknown";
+  }
+}
+
+static esp_bt_mode_t _btActiveMode = 0;
+
 bool btStarted() {
   return (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
 }
@@ -95,13 +96,11 @@ bool btStartMode(bt_mode mode) {
     case BT_MODE_BTDM:       esp_bt_mode = ESP_BT_MODE_BTDM; break;
     default:                 esp_bt_mode = BT_MODE; break;
   }
-  // esp_bt_controller_enable(MODE) This mode must be equal as the mode in “cfg” of esp_bt_controller_init().
   cfg.mode = esp_bt_mode;
   if (cfg.mode == ESP_BT_MODE_CLASSIC_BT) {
     btMemRelease(BT_MODE_BLE);
   }
 #else
-  // other esp variants dont support BT-classic / DM.
   esp_bt_mode = BT_MODE;
 #endif
 
@@ -128,47 +127,53 @@ bool btStartMode(bt_mode mode) {
   esp_err_t ret;
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
     if ((ret = esp_bt_controller_init(&cfg)) != ESP_OK) {
-      log_e("initialize controller failed: %s", esp_err_to_name(ret));
+      log_e("BT controller init failed: %s (mode=%s)", esp_err_to_name(ret), btModeStr(esp_bt_mode));
       return false;
     }
     while (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {}
   }
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED) {
     if ((ret = esp_bt_controller_enable(esp_bt_mode)) != ESP_OK) {
-      log_e("BT Enable mode=%d failed %s", BT_MODE, esp_err_to_name(ret));
+      log_e("BT controller enable failed: %s (mode=%s)", esp_err_to_name(ret), btModeStr(esp_bt_mode));
       return false;
     }
   }
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) {
+    _btActiveMode = esp_bt_mode;
     return true;
   }
-  log_e("BT Start failed");
+  log_e("BT start failed: controller in unexpected state");
   return false;
 }
 
 bool btStop() {
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
+    _btActiveMode = 0;
     return true;
   }
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED) {
-    if (esp_bt_controller_disable()) {
-      log_e("BT Disable failed");
+    esp_err_t ret = esp_bt_controller_disable();
+    if (ret != ESP_OK) {
+      log_e("BT controller disable failed: %s", esp_err_to_name(ret));
       return false;
     }
     while (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED);
   }
   if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_INITED) {
-    if (esp_bt_controller_deinit()) {
-      log_e("BT deint failed");
+    esp_err_t ret = esp_bt_controller_deinit();
+    if (ret != ESP_OK) {
+      log_e("BT controller deinit failed: %s", esp_err_to_name(ret));
       return false;
     }
     vTaskDelay(1);
     if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_IDLE) {
+      log_e("BT stop failed: controller did not reach idle state");
       return false;
     }
+    _btActiveMode = 0;
     return true;
   }
-  log_e("BT Stop failed");
+  log_e("BT stop failed: controller in unexpected state");
   return false;
 }
 
@@ -348,6 +353,18 @@ bool btMemRelease(bt_mode mode) {
 #endif
 }
 
+bt_mode btGetMode(void) {
+  if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_ENABLED) {
+    return BT_MODE_DEFAULT;
+  }
+  switch (_btActiveMode) {
+    case ESP_BT_MODE_BLE:        return BT_MODE_BLE;
+    case ESP_BT_MODE_CLASSIC_BT: return BT_MODE_CLASSIC_BT;
+    case ESP_BT_MODE_BTDM:       return BT_MODE_BTDM;
+    default:                     return BT_MODE_DEFAULT;
+  }
+}
+
 #else  // !__has_include("esp_bt.h") || !(defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED))
 bool btStarted() {
   return false;
@@ -370,6 +387,10 @@ bool btMemReleased(bt_mode mode) {
 }
 
 void btMarkMemReleased(bt_mode mode) {}
+
+bt_mode btGetMode(void) {
+  return BT_MODE_DEFAULT;
+}
 
 #endif /* !__has_include("esp_bt.h") || !(defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)) */
 

@@ -21,12 +21,33 @@
 #ifndef KEYBOARD_DEFS_H
 #define KEYBOARD_DEFS_H
 
+/**
+ * @file HIDKeyboardTypes.h
+ * @brief HID keyboard and media key definitions.
+ *
+ * Defines modifier key bitmasks, media key codes, function/navigation key
+ * codes, and the ASCII-to-HID-usage keymap tables for US and UK keyboard
+ * layouts. Include this header and define @c US_KEYBOARD before inclusion
+ * to select the US layout; otherwise the UK layout is used.
+ */
+
 #include "esp_bit_defs.h"
 
+/**
+ * @brief Default HID report ID for the boot/keyboard report.
+ */
 #define REPORT_ID_KEYBOARD 1
-#define REPORT_ID_VOLUME   3
+/**
+ * @brief HID report ID for consumer control (e.g. media volume).
+ */
+#define REPORT_ID_VOLUME 3
 
-/* Modifiers */
+/**
+ * @brief Keyboard modifier key bitmask values.
+ *
+ * Each value is a single bit in the modifier byte of an HID keyboard
+ * report. Combine with bitwise OR to press multiple modifiers.
+ */
 enum MODIFIER_KEY {
   /* Aliases for the left modifiers */
   KEY_CTRL = BIT(0),
@@ -45,9 +66,15 @@ enum MODIFIER_KEY {
   KEY_RIGHT_GUI = BIT(7),
 };
 
+/**
+ * @brief HID Consumer Control (media) key codes.
+ *
+ * These map to HID Usage Page 0x0C (Consumer) usages for media playback
+ * and volume control.
+ */
 enum MEDIA_KEY {
-  KEY_NEXT_TRACK,     /*!< next Track Button */
-  KEY_PREVIOUS_TRACK, /*!< Previous track Button */
+  KEY_NEXT_TRACK,     /*!< Next Track Button */
+  KEY_PREVIOUS_TRACK, /*!< Previous Track Button */
   KEY_STOP,           /*!< Stop Button */
   KEY_PLAY_PAUSE,     /*!< Play/Pause Button */
   KEY_MUTE,           /*!< Mute Button */
@@ -55,6 +82,12 @@ enum MEDIA_KEY {
   KEY_VOLUME_DOWN,    /*!< Volume Down Button */
 };
 
+/**
+ * @brief Function, navigation, and lock key codes.
+ *
+ * Values start at 128 to avoid collision with printable ASCII codes in
+ * the KEYMAP table.
+ */
 enum FUNCTION_KEY {
   KEY_F1 = 128, /* F1 key */
   KEY_F2,       /* F2 key */
@@ -84,9 +117,12 @@ enum FUNCTION_KEY {
   UP_ARROW,    /* Up arrow */
 };
 
+/**
+ * @brief Mapping from an ASCII character to its HID usage code and modifier bitmask.
+ */
 typedef struct {
-  unsigned char usage;
-  unsigned char modifier;
+  unsigned char usage;     ///< HID usage ID (Keyboard/Keypad page 0x07).
+  unsigned char modifier;  ///< Modifier bitmask (see @ref MODIFIER_KEY).
 } KEYMAP;
 
 #ifdef US_KEYBOARD

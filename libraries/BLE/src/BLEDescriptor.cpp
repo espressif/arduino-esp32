@@ -8,7 +8,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,427 +17,209 @@
  * limitations under the License.
  */
 
-/*
- * BLEDescriptor.cpp
- *
- *  Created on: Jun 22, 2017
- *      Author: kolban
- *
- *  Modified on: Apr 3, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#include "impl/common/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                           Common includes                               *
- ***************************************************************************/
-
-#include <sstream>
-#include <string.h>
-#include <iomanip>
-#include <stdlib.h>
-#include "sdkconfig.h"
-#include <esp_err.h>
-#include <inttypes.h>
-#include "BLE2904.h"
-#include "BLEService.h"
-#include "BLEDescriptor.h"
-#include "GeneralUtils.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/common/BLEMutex.h"
 #include "esp32-hal-log.h"
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include "BLE2902.h"
-#include "BLEDevice.h"
-#endif
+BLEDescriptor::BLEDescriptor() : _impl(nullptr) {}
 
-/***************************************************************************
- *                           Common definitions                            *
- ***************************************************************************/
+BLEDescriptor::operator bool() const {
+  return _impl != nullptr;
+}
 
-#define NULL_HANDLE (0xffff)
-
-/***************************************************************************
- *                         Common global variables                         *
- ***************************************************************************/
-
-static BLEDescriptorCallbacks defaultCallbacks;
-
-/***************************************************************************
- *                           Common functions                              *
- ***************************************************************************/
-
-/**
- * @brief BLEDescriptor constructor.
- */
-BLEDescriptor::BLEDescriptor(const char *uuid, uint16_t len) : BLEDescriptor(BLEUUID(uuid), len) {}
-
-/**
- * @brief BLEDescriptor constructor.
- */
-BLEDescriptor::BLEDescriptor(BLEUUID uuid, uint16_t max_len) {
-  m_bleUUID = uuid;
-  m_handle = NULL_HANDLE;                           // Handle is initially unknown.
-  m_pCharacteristic = nullptr;                      // No initial characteristic.
-  m_pCallback = nullptr;                            // No initial callback.
-  m_value.attr_len = 0;                             // Initial length is 0.
-  m_value.attr_max_len = max_len;                   // Maximum length of the data.
-  m_value.attr_value = (uint8_t *)malloc(max_len);  // Allocate storage for the value.
-#if CONFIG_NIMBLE_ENABLED
-  m_removed = 0;
-#endif
-}  // BLEDescriptor
-
-/**
- * @brief BLEDescriptor destructor.
- */
-BLEDescriptor::~BLEDescriptor() {
-  free(m_value.attr_value);  // Release the storage we created in the constructor.
-}  // ~BLEDescriptor
-
-/**
- * @brief Execute the creation of the descriptor with the BLE runtime in ESP.
- * @param [in] pCharacteristic The characteristic to which to register this descriptor.
- */
-void BLEDescriptor::executeCreate(BLECharacteristic *pCharacteristic) {
-  log_v(">> executeCreate(): %s", toString().c_str());
-
-  if (m_handle != NULL_HANDLE) {
-    log_e("Descriptor already has a handle.");
-    return;
-  }
-
-  m_pCharacteristic = pCharacteristic;  // Save the characteristic associated with this service.
-
-#if CONFIG_BLUEDROID_ENABLED
-  esp_attr_control_t control;
-  control.auto_rsp = ESP_GATT_AUTO_RSP;
-  m_semaphoreCreateEvt.take("executeCreate");
-  esp_err_t errRc =
-    ::esp_ble_gatts_add_char_descr(pCharacteristic->getService()->getHandle(), getUUID().getNative(), (esp_gatt_perm_t)m_permissions, &m_value, &control);
-  if (errRc != ESP_OK) {
-    log_e("<< esp_ble_gatts_add_char_descr: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return;
-  }
-
-  m_semaphoreCreateEvt.wait("executeCreate");
-#endif
-  log_v("<< executeCreate");
-}  // executeCreate
-
-/**
- * @brief Get the BLE handle for this descriptor.
- * @return The handle for this descriptor.
- */
-uint16_t BLEDescriptor::getHandle() const {
-  return m_handle;
-}  // getHandle
-
-/**
- * @brief Get the length of the value of this descriptor.
- * @return The length (in bytes) of the value of this descriptor.
- */
-size_t BLEDescriptor::getLength() const {
-  return m_value.attr_len;
-}  // getLength
-
-/**
- * @brief Get the UUID of the descriptor.
- */
 BLEUUID BLEDescriptor::getUUID() const {
-  return m_bleUUID;
-}  // getUUID
+  return _impl ? _impl->uuid : BLEUUID();
+}
 
-/**
- * @brief Get the value of this descriptor.
- * @return A pointer to the value of this descriptor.
- */
-uint8_t *BLEDescriptor::getValue() const {
-  return m_value.attr_value;
-}  // getValue
+uint16_t BLEDescriptor::getHandle() const {
+  return _impl ? _impl->handle : 0;
+}
 
-/**
- * @brief Get the characteristic this descriptor belongs to.
- * @return A pointer to the characteristic this descriptor belongs to.
- */
-BLECharacteristic *BLEDescriptor::getCharacteristic() const {
-  return m_pCharacteristic;
-}  // getCharacteristic
+BLECharacteristic BLEDescriptor::getCharacteristic() const {
+  // Non-owning handle: the characteristic lifetime is owned by the service, so
+  // the returned handle must not outlive it.
+  return _impl && _impl->chr ? BLECharacteristic(_impl->chr->shared_from_this()) : BLECharacteristic();
+}
 
-/**
- * @brief Set the callback handlers for this descriptor.
- * @param [in] pCallbacks An instance of a callback structure used to define any callbacks for the descriptor.
- */
-void BLEDescriptor::setCallbacks(BLEDescriptorCallbacks *pCallback) {
-  log_v(">> setCallbacks: %p", pCallback);
-  if (pCallback != nullptr) {
-    m_pCallback = pCallback;
-  } else {
-    m_pCallback = &defaultCallbacks;
-  }
-  log_v("<< setCallbacks");
-}  // setCallbacks
+String BLEDescriptor::toString() const {
+  BLE_CHECK_IMPL("BLEDescriptor(null)");
+  return "BLEDescriptor(uuid=" + impl.uuid.toString() + ")";
+}
 
-/**
- * @brief Set the handle of this descriptor.
- * Set the handle of this descriptor to be the supplied value.
- * @param [in] handle The handle to be associated with this descriptor.
- * @return N/A.
- */
-void BLEDescriptor::setHandle(uint16_t handle) {
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  log_v(">> setHandle(0x%.2x): Setting descriptor handle to be 0x%.2x", handle, handle);
-  m_handle = handle;
-  log_v("<< setHandle()");
-#endif
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  log_w("NimBLE does not support manually setting the handle of a descriptor. Ignoring request.");
-#endif
-}  // setHandle
-
-/**
- * @brief Set the value of the descriptor.
- * @param [in] data The data to set for the descriptor.
- * @param [in] length The length of the data in bytes.
- */
-void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
-  if (length > m_value.attr_max_len) {
-    log_e("Size %lu too large, must be no bigger than %u", (unsigned long)length, m_value.attr_max_len);
-    return;
-  }
-
-  m_semaphoreSetValue.take();
-  m_value.attr_len = length;
-  memcpy(m_value.attr_value, data, length);
-#if CONFIG_BLUEDROID_ENABLED
-  if (m_handle != NULL_HANDLE) {
-    esp_ble_gatts_set_attr_value(m_handle, length, (const uint8_t *)data);
-    log_d("Set the value in the GATTS database using handle 0x%.2x", m_handle);
-  }
-#endif
-  m_semaphoreSetValue.give();
-}  // setValue
-
-/**
- * @brief Set the value of the descriptor.
- * @param [in] value The value of the descriptor in string form.
- */
 void BLEDescriptor::setValue(const String &value) {
   setValue(reinterpret_cast<const uint8_t *>(value.c_str()), value.length());
-}  // setValue
-
-void BLEDescriptor::setAccessPermissions(uint16_t perm) {
-  m_permissions = perm;
 }
 
-/**
- * @brief Return a string representation of the descriptor.
- * @return A string representation of the descriptor.
- */
-String BLEDescriptor::toString() const {
-  char hex[5];
-  snprintf(hex, sizeof(hex), "%04x", m_handle);
-  String res = "UUID: " + m_bleUUID.toString() + ", handle: 0x" + hex;
-  return res;
-}  // toString
+size_t BLEDescriptor::getLength() const {
+  return _impl ? _impl->value.size() : 0;
+}
 
-BLEDescriptorCallbacks::~BLEDescriptorCallbacks() = default;
+bool BLEDescriptor::isUserDescription() const {
+  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2901));
+}
 
-/**
- * @brief Callback function to support a read request.
- * @param [in] pDescriptor The descriptor that is the source of the event.
- */
-void BLEDescriptorCallbacks::onRead(BLEDescriptor *pDescriptor) {
-  log_d("BLEDescriptorCallbacks", ">> onRead: default");
-  log_d("BLEDescriptorCallbacks", "<< onRead");
-}  // onRead
+bool BLEDescriptor::isCCCD() const {
+  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2902));
+}
 
-/**
- * @brief Callback function to support a write request.
- * @param [in] pDescriptor The descriptor that is the source of the event.
- */
-void BLEDescriptorCallbacks::onWrite(BLEDescriptor *pDescriptor) {
-  log_d("BLEDescriptorCallbacks", ">> onWrite: default");
-  log_d("BLEDescriptorCallbacks", "<< onWrite");
-}  // onWrite
+bool BLEDescriptor::isPresentationFormat() const {
+  return _impl && _impl->uuid == BLEUUID(static_cast<uint16_t>(0x2904));
+}
 
-/***************************************************************************
- *                           Bluedroid functions                           *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-
-/**
- * @brief Handle GATT server events for the descripttor.
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- */
-void BLEDescriptor::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  switch (event) {
-    // ESP_GATTS_ADD_CHAR_DESCR_EVT
-    //
-    // add_char_descr:
-    // - esp_gatt_status_t status
-    // - uint16_t          attr_handle
-    // - uint16_t          service_handle
-    // - esp_bt_uuid_t     char_uuid
-    case ESP_GATTS_ADD_CHAR_DESCR_EVT:
-    {
-      if (m_pCharacteristic != nullptr && m_bleUUID.equals(BLEUUID(param->add_char_descr.descr_uuid))
-          && m_pCharacteristic->getService()->getHandle() == param->add_char_descr.service_handle
-          && m_pCharacteristic == m_pCharacteristic->getService()->getLastCreatedCharacteristic()) {
-        setHandle(param->add_char_descr.attr_handle);
-        m_semaphoreCreateEvt.give();
-      }
-      break;
-    }  // ESP_GATTS_ADD_CHAR_DESCR_EVT
-
-    // ESP_GATTS_WRITE_EVT - A request to write the value of a descriptor has arrived.
-    //
-    // write:
-    // - uint16_t conn_id
-    // - uint16_t trans_id
-    // - esp_bd_addr_t bda
-    // - uint16_t handle
-    // - uint16_t offset
-    // - bool need_rsp
-    // - bool is_prep
-    // - uint16_t len
-    // - uint8_t *value
-    case ESP_GATTS_WRITE_EVT:
-    {
-      if (param->write.handle == m_handle) {
-        setValue(param->write.value, param->write.len);  // Set the value of the descriptor.
-
-        // If this is a CCCD (0x2902), persist the value for bonded device reconnection
-        if (m_bleUUID.equals(BLEUUID((uint16_t)0x2902)) && m_pCharacteristic != nullptr) {
-          BLE2902 *pCCCD = (BLE2902 *)this;
-          BLEAddress peerAddr(param->write.bda);
-          uint16_t charHandle = m_pCharacteristic->getHandle();
-          pCCCD->persistValue(peerAddr, charHandle);
-          log_d(
-            "CCCD write from %s: notifications=%s, indications=%s", peerAddr.toString().c_str(), pCCCD->getNotifications() ? "enabled" : "disabled",
-            pCCCD->getIndications() ? "enabled" : "disabled"
-          );
-        }
-
-        if (m_pCallback != nullptr) {  // We have completed the write, if there is a user supplied callback handler, invoke it now.
-          m_pCallback->onWrite(this);  // Invoke the onWrite callback handler.
-        }
-      }  // End of ... this is our handle.
-
-      break;
-    }  // ESP_GATTS_WRITE_EVT
-
-    // ESP_GATTS_READ_EVT - A request to read the value of a descriptor has arrived.
-    //
-    // read:
-    // - uint16_t conn_id
-    // - uint32_t trans_id
-    // - esp_bd_addr_t bda
-    // - uint16_t handle
-    // - uint16_t offset
-    // - bool is_long
-    // - bool need_rsp
-    //
-    case ESP_GATTS_READ_EVT:
-    {
-      if (param->read.handle == m_handle) {  // If this event is for this descriptor ... process it
-
-        if (m_pCallback != nullptr) {  // If we have a user supplied callback, invoke it now.
-          m_pCallback->onRead(this);   // Invoke the onRead callback method in the callback handler.
-        }
-
-      }  // End of this is our handle
-      break;
-    }  // ESP_GATTS_READ_EVT
-
-    default: break;
-  }  // switch event
-}  // handleGATTServerEvent
-
-#endif
-
-/***************************************************************************
- *                           NimBLE functions                             *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-
-/**
- * @brief Handle GATT server events for the descriptor.
- * @param [in] conn_handle The connection handle.
- * @param [in] attr_handle The attribute handle.
- * @param [in] ctxt The GATT access context.
- * @param [in] arg The argument.
- */
-int BLEDescriptor::handleGATTServerEvent(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg) {
-  const ble_uuid_t *uuid;
-  int rc;
-  BLEDescriptor *pDescriptor = (BLEDescriptor *)arg;
-
-  log_d("Descriptor %s %s event", pDescriptor->getUUID().toString().c_str(), ctxt->op == BLE_GATT_ACCESS_OP_READ_DSC ? "Read" : "Write");
-
-  uuid = ctxt->chr->uuid;
-  if (ble_uuid_cmp(uuid, &pDescriptor->getUUID().getNative()->u) == 0) {
-    switch (ctxt->op) {
-      case BLE_GATT_ACCESS_OP_READ_DSC:
-      {
-        // Only call the onRead() callback if the buffer length is greater than 0 and conn_handle is not NONE
-        // For long reads, follow-up requests will have om_len == 0
-        if (ctxt->om->om_len > 0 && conn_handle != BLE_HS_CONN_HANDLE_NONE && pDescriptor->m_pCallback != nullptr) {
-          pDescriptor->m_pCallback->onRead(pDescriptor);
-        }
-
-        ble_npl_hw_enter_critical();
-        rc = os_mbuf_append(ctxt->om, pDescriptor->m_value.attr_value, pDescriptor->m_value.attr_len);
-        ble_npl_hw_exit_critical(0);
-        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
-      }
-
-      case BLE_GATT_ACCESS_OP_WRITE_DSC:
-      {
-        uint16_t att_max_len = pDescriptor->m_value.attr_max_len;
-
-        if (ctxt->om->om_len > att_max_len) {
-          return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-        }
-
-        uint8_t buf[att_max_len];
-        size_t len = ctxt->om->om_len;
-        memcpy(buf, ctxt->om->om_data, len);
-        os_mbuf *next;
-        next = SLIST_NEXT(ctxt->om, om_next);
-        while (next != NULL) {
-          if ((len + next->om_len) > att_max_len) {
-            return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
-          }
-          memcpy(&buf[len], next->om_data, next->om_len);
-          len += next->om_len;
-          next = SLIST_NEXT(next, om_next);
-        }
-
-        pDescriptor->setValue(buf, len);
-        if (pDescriptor->m_pCallback != nullptr) {
-          pDescriptor->m_pCallback->onWrite(pDescriptor);
-        }
-        return 0;
-      }
-
-      default: break;
-    }
+void BLEDescriptor::setUserDescription(const String &description) {
+  if (isUserDescription()) {
+    setValue(description);
   }
-
-  return BLE_ATT_ERR_UNLIKELY;
 }
 
-#endif
+String BLEDescriptor::getUserDescription() const {
+  if (!isUserDescription() || !_impl) {
+    return "";
+  }
+  return String(reinterpret_cast<const char *>(_impl->value.data()), _impl->value.size());
+}
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+bool BLEDescriptor::getNotifications() const {
+  return isCCCD() && _impl && _impl->value.size() >= 2 && (_impl->value[0] & 0x01);
+}
+
+bool BLEDescriptor::getIndications() const {
+  return isCCCD() && _impl && _impl->value.size() >= 2 && (_impl->value[0] & 0x02);
+}
+
+void BLEDescriptor::setNotifications(bool enable) {
+  if (!isCCCD() || !_impl) {
+    return;
+  }
+  if (_impl->value.size() < 2) {
+    _impl->value.resize(2, 0);
+  }
+  if (enable) {
+    _impl->value[0] |= 0x01;
+  } else {
+    _impl->value[0] &= ~0x01;
+  }
+}
+
+void BLEDescriptor::setIndications(bool enable) {
+  if (!isCCCD() || !_impl) {
+    return;
+  }
+  if (_impl->value.size() < 2) {
+    _impl->value.resize(2, 0);
+  }
+  if (enable) {
+    _impl->value[0] |= 0x02;
+  } else {
+    _impl->value[0] &= ~0x02;
+  }
+}
+
+// Presentation Format layout (0x2904): [0]=format, [1]=exponent, [2..3]=unit,
+// [4]=namespace, [5..6]=description; multi-byte fields are little-endian.
+
+void BLEDescriptor::setFormat(uint8_t format) {
+  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
+    _impl->value[0] = format;
+  }
+}
+
+void BLEDescriptor::setExponent(int8_t exponent) {
+  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
+    _impl->value[1] = static_cast<uint8_t>(exponent);
+  }
+}
+
+void BLEDescriptor::setUnit(uint16_t unit) {
+  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
+    _impl->value[2] = unit & 0xFF;
+    _impl->value[3] = unit >> 8;
+  }
+}
+
+void BLEDescriptor::setNamespace(uint8_t ns) {
+  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
+    _impl->value[4] = ns;
+  }
+}
+
+void BLEDescriptor::setFormatDescription(uint16_t description) {
+  if (isPresentationFormat() && _impl && _impl->value.size() >= 7) {
+    _impl->value[5] = description & 0xFF;
+    _impl->value[6] = description >> 8;
+  }
+}
+
+void BLEDescriptor::onRead(ReadHandler handler) {
+  BLE_CHECK_IMPL();
+  impl.onReadCb = handler;
+}
+
+void BLEDescriptor::onWrite(WriteHandler handler) {
+  BLE_CHECK_IMPL();
+  impl.onWriteCb = handler;
+}
+
+void BLEDescriptor::resetCallbacks() {
+  BLE_CHECK_IMPL();
+  impl.onReadCb = nullptr;
+  impl.onWriteCb = nullptr;
+}
+
+BLEDescriptor::BLEDescriptor(const BLEUUID &uuid, uint16_t maxLength) : _impl(nullptr) {
+  // Creates an unattached Impl; the buffer is reserved to maxLength but empty.
+  auto d = std::make_shared<BLEDescriptor::Impl>();
+  d->uuid = uuid;
+  d->value.reserve(maxLength);
+  _impl = d;
+}
+
+void BLEDescriptor::setValue(const uint8_t *data, size_t length) {
+  BLE_CHECK_IMPL();
+  log_d("Descriptor %s: setValue len=%u", impl.uuid.toString().c_str(), length);
+  BLELockGuard lock(impl.mtx);
+  impl.value.assign(data, data + length);
+}
+
+const uint8_t *BLEDescriptor::getValue(size_t *length) const {
+  if (!_impl) {
+    if (length) {
+      *length = 0;
+    }
+    return nullptr;
+  }
+  BLELockGuard lock(_impl->mtx);
+  if (length) {
+    *length = _impl->value.size();
+  }
+  return _impl->value.empty() ? nullptr : _impl->value.data();
+}
+
+BLEDescriptor BLEDescriptor::createUserDescription(const String &text) {
+  auto d = std::make_shared<BLEDescriptor::Impl>();
+  d->uuid = BLEUUID(static_cast<uint16_t>(0x2901));
+  d->value.assign(text.c_str(), text.c_str() + text.length());
+  return BLEDescriptor(d);
+}
+
+BLEDescriptor BLEDescriptor::createPresentationFormat() {
+  // 7-byte zero-initialized value: format, exponent, unit, namespace, description.
+  auto d = std::make_shared<BLEDescriptor::Impl>();
+  d->uuid = BLEUUID(static_cast<uint16_t>(0x2904));
+  d->value.resize(7, 0);
+  return BLEDescriptor(d);
+}
+
+BLEDescriptor BLEDescriptor::createCCCD() {
+  // 2-byte zero-initialized value: notifications and indications both disabled.
+  auto d = std::make_shared<BLEDescriptor::Impl>();
+  d->uuid = BLEUUID(static_cast<uint16_t>(0x2902));
+  d->value.resize(2, 0);
+  return BLEDescriptor(d);
+}
+
+#endif /* BLE_ENABLED */

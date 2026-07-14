@@ -1,14 +1,11 @@
 /*
  * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
- * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
- * esp-nimble-cpp, NimBLE-Arduino contributors.
- * Copyright 2017 Neil Kolban
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,1239 +14,214 @@
  * limitations under the License.
  */
 
-/*
- * BLEServer.cpp
- *
- *  Created on: Apr 16, 2017
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
+#include "impl/common/BLEGuards.h"
+#if BLE_ENABLED
 
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                       Common includes                                   *
- ***************************************************************************/
-
-#if SOC_BLE_SUPPORTED
-#include <esp_bt.h>
-#endif
-#include "Arduino.h"
-#include "GeneralUtils.h"
-#include "BLEDevice.h"
+#include "BLE.h"
 #include "BLEServer.h"
-#include "BLEService.h"
-#include "BLEUtils.h"
-#include <string.h>
-#include <string>
-#include <unordered_set>
+#include "impl/common/BLEImplHelpers.h"
+#include "impl/BLEBackend.h"
+#include "impl/common/BLEMutex.h"
 #include "esp32-hal-log.h"
 
-/***************************************************************************
- *                       Bluedroid includes                                *
- ***************************************************************************/
+BLEServer::BLEServer() : _impl(nullptr) {}
 
-#if defined(CONFIG_BLUEDROID_ENABLED)
-#include <esp_bt_main.h>
-#include "BLE2902.h"
-#endif
-
-/***************************************************************************
- *                       NimBLE includes                                   *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-#include <services/gap/ble_svc_gap.h>
-#include <services/gatt/ble_svc_gatt.h>
-#endif
-
-/***************************************************************************
- *                        Common functions                                 *
- ***************************************************************************/
-
-/**
- * @brief Construct a %BLE Server
- *
- * This class is not designed to be individually instantiated.  Instead one should create a server by asking
- * the BLEDevice class.
- */
-BLEServer::BLEServer() {
-#ifdef CONFIG_BLUEDROID_ENABLED
-  m_gatts_if = ESP_GATT_IF_NONE;
-#endif
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  memset(m_indWait, BLE_HS_CONN_HANDLE_NONE, sizeof(m_indWait));
-  m_svcChanged = false;
-#endif
-
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
-  m_advertiseOnDisconnect = false;
-#endif
-
-  m_gattAppId = ESP_GATT_IF_NONE;
-  m_gattsStarted = false;
-  m_connectedCount = 0;
-  m_connId = ESP_GATT_IF_NONE;
-  m_pServerCallbacks = nullptr;
-}  // BLEServer
-
-void BLEServer::createApp(uint16_t appId) {
-  m_gattAppId = appId;
-#ifdef CONFIG_BLUEDROID_ENABLED
-  registerApp(appId);
-#endif
-}  // createApp
-
-/**
- * @brief Create a %BLE Service.
- *
- * With a %BLE server, we can host one or more services.  Invoking this function causes the creation of a definition
- * of a new service.  Every service must have a unique UUID.
- * @param [in] uuid The UUID of the new service.
- * @return A reference to the new service object.
- */
-BLEService *BLEServer::createService(const char *uuid) {
-  return createService(BLEUUID(uuid));
+BLEServer::operator bool() const {
+  return _impl != nullptr;
 }
 
-/**
- * @brief Create a %BLE Service.
- *
- * With a %BLE server, we can host one or more services.  Invoking this function causes the creation of a definition
- * of a new service.  Every service must have a unique UUID.
- * @param [in] uuid The UUID of the new service.
- * @param [in] numHandles The maximum number of handles associated with this service.
- * @param [in] inst_id With multiple services with the same UUID we need to provide inst_id value different for each service.
- * @return A reference to the new service object.
- */
-BLEService *BLEServer::createService(BLEUUID uuid, uint32_t numHandles, uint8_t inst_id) {
-  log_v(">> createService - %s", uuid.toString().c_str());
-#ifdef CONFIG_BLUEDROID_ENABLED
-  m_semaphoreCreateEvt.take("createService");
+// Callback setters and resetCallbacks store handlers under mtx, and no-op with a
+// warning when GATT server support is compiled out.
+
+void BLEServer::onConnect(ConnectHandler handler) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnectCb = handler;
+#else
+  (void)handler;
+  log_w("%s not supported (GATT server disabled)", __func__);
 #endif
+}
 
-  // Check that a service with the supplied UUID does not already exist.
-  if (m_serviceMap.getByUUID(uuid) != nullptr) {
-    log_w("<< Attempt to create a new service with uuid %s but a service with that UUID already exists.", uuid.toString().c_str());
-  }
-
-  BLEService *pService = new BLEService(uuid, numHandles);
-  pService->m_instId = inst_id;
-  m_serviceMap.setByUUID(uuid, pService);  // Save a reference to this service being on this server.
-  pService->executeCreate(this);           // Perform the API calls to actually create the service.
-
-#ifdef CONFIG_BLUEDROID_ENABLED
-  m_semaphoreCreateEvt.wait("createService");
+void BLEServer::onDisconnect(DisconnectHandler handler) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onDisconnectCb = handler;
+#else
+  (void)handler;
+  log_w("%s not supported (GATT server disabled)", __func__);
 #endif
+}
 
-#ifdef CONFIG_NIMBLE_ENABLED
-  m_semaphoreCreateEvt.give();
-  serviceChanged();
+void BLEServer::onMtuChanged(MtuChangedHandler handler) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onMtuChangedCb = handler;
+#else
+  (void)handler;
+  log_w("%s not supported (GATT server disabled)", __func__);
 #endif
-
-  log_v("<< createService");
-  return pService;
-}  // createService
-
-/**
- * @brief Get a %BLE Service by its UUID
- * @param [in] uuid The UUID of the new service.
- * @return A reference to the service object.
- */
-BLEService *BLEServer::getServiceByUUID(const char *uuid) {
-  return m_serviceMap.getByUUID(uuid);
 }
 
-/**
- * @brief Get a %BLE Service by its UUID
- * @param [in] uuid The UUID of the new service.
- * @return A reference to the service object.
- */
-BLEService *BLEServer::getServiceByUUID(BLEUUID uuid) {
-  return m_serviceMap.getByUUID(uuid);
+void BLEServer::onConnParamsUpdate(ConnParamsHandler handler) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnParamsCb = handler;
+#else
+  (void)handler;
+  log_w("%s not supported (GATT server disabled)", __func__);
+#endif
 }
 
-/**
- * @brief Retrieve the advertising object that can be used to advertise the existence of the server.
- *
- * @return An advertising object.
- */
-BLEAdvertising *BLEServer::getAdvertising() {
-  return BLEDevice::getAdvertising();
+void BLEServer::onIdentity(IdentityHandler handler) {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onIdentityCb = handler;
+#else
+  (void)handler;
+  log_w("%s not supported (GATT server disabled)", __func__);
+#endif
 }
 
-uint16_t BLEServer::getConnId() {
-  return m_connId;
+void BLEServer::resetCallbacks() {
+#if BLE_GATT_SERVER_SUPPORTED
+  BLE_CHECK_IMPL();
+  BLELockGuard lock(impl.mtx);
+  impl.onConnectCb = nullptr;
+  impl.onDisconnectCb = nullptr;
+  impl.onMtuChangedCb = nullptr;
+  impl.onConnParamsCb = nullptr;
+  impl.onIdentityCb = nullptr;
+#endif
 }
 
-/**
- * @brief Return the number of connected clients.
- * @return The number of connected clients.
- */
-uint32_t BLEServer::getConnectedCount() {
-  return m_connectedCount;
-}  // getConnectedCount
+#if BLE_GATT_SERVER_SUPPORTED
 
-void BLEServer::start() {
-  if (m_gattsStarted) {
-    return;
-  }
+// Shared Impl helpers (connection table + callback dispatch) live in the
+// implementation layer: impl/common/BLEServerImpl.cpp.
 
-#ifdef CONFIG_NIMBLE_ENABLED
-  int rc = ble_gatts_start();
-  if (rc != 0) {
-    log_e("ble_gatts_start; rc=%d, %s", rc, BLEUtils::returnCodeToString(rc));
-    return;
-  }
+// --------------------------------------------------------------------------
+// BLEServer public API (stack-agnostic)
+// --------------------------------------------------------------------------
 
-  // Re-set the device name after ble_gatts_start() because ble_svc_gap_init()
-  // (called in createServer) resets it to the default "nimble" from sdkconfig.
-  // The GAP service device name must be set after the GATT server is started.
-  String deviceName = BLEDevice::getDeviceName();
-  if (deviceName.length() > 0) {
-    rc = ble_svc_gap_device_name_set(deviceName.c_str());
-    if (rc != 0) {
-      log_e("ble_svc_gap_device_name_set: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
+void BLEServer::advertiseOnDisconnect(bool enable) {
+  BLE_CHECK_IMPL();
+  log_d("Server: advertiseOnDisconnect=%d", enable);
+  impl.advertiseOnDisconnect = enable;
+}
+
+BLEService BLEServer::createService(const BLEUUID &uuid, uint32_t numHandles, uint8_t instId) {
+  BLE_CHECK_IMPL(BLEService());
+  BLELockGuard lock(impl.mtx);
+
+  // Return the existing service if this UUID+instId was already created.
+  for (auto &svc : impl.services) {
+    if (svc->uuid == uuid && svc->instId == instId) {
+      log_d("Server: createService %s - returning existing", uuid.toString().c_str());
+      return BLEService(svc);
     }
   }
 
-#if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG
-  ble_gatts_show_local();
-#endif
+  log_d("Server: createService %s numHandles=%u instId=%u", uuid.toString().c_str(), numHandles, instId);
+  auto svc = std::make_shared<BLEService::Impl>();
+  svc->uuid = uuid;
+  svc->numHandles = numHandles;
+  svc->instId = instId;
+  svc->server = _impl.get();
+  impl.services.push_back(svc);
 
-  BLEService *svc = m_serviceMap.getFirst();
-  while (svc != nullptr) {
-    if (svc->m_removed == 0) {
-      rc = ble_gatts_find_svc(&svc->getUUID().getNative()->u, &svc->m_handle);
-      if (rc != 0) {
-        abort();
-      }
+  return BLEService(svc);
+}
+
+BLEService BLEServer::getService(const BLEUUID &uuid) {
+  BLE_CHECK_IMPL(BLEService());
+  BLELockGuard lock(impl.mtx);
+  // First match wins when several services share a UUID (different instId).
+  for (auto &svc : impl.services) {
+    if (svc->uuid == uuid) {
+      return BLEService(svc);
     }
-
-    BLECharacteristic *chr = svc->m_characteristicMap.getFirst();
-    while (chr != nullptr) {
-      if ((chr->m_properties & BLE_GATT_CHR_F_INDICATE) || (chr->m_properties & BLE_GATT_CHR_F_NOTIFY)) {
-        m_notifyChrVec.push_back(chr);
-      }
-      chr = svc->m_characteristicMap.getNext();
-    }
-
-    svc = m_serviceMap.getNext();
   }
-
-#endif
-
-  m_gattsStarted = true;
+  log_d("Server: getService %s - not found", uuid.toString().c_str());
+  return BLEService();
 }
 
-/**
- * @brief Check if the GATT server has been started.
- *
- * This method indicates whether the GATT server is ready to handle
- * operations like notifications and indications.
- *
- * @return true if the server is started and ready, false otherwise.
- */
-bool BLEServer::isStarted() {
-  return m_gattsStarted;
-}
-
-/**
- * @brief Set the server callbacks.
- *
- * As a %BLE server operates, it will generate server level events such as a new client connecting or a previous client
- * disconnecting.  This function can be called to register a callback handler that will be invoked when these
- * events are detected.
- *
- * @param [in] pCallbacks The callbacks to be invoked.
- */
-void BLEServer::setCallbacks(BLEServerCallbacks *pCallbacks) {
-  m_pServerCallbacks = pCallbacks;
-}  // setCallbacks
-
-/*
- * Remove service
- */
-void BLEServer::removeService(BLEService *service) {
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  service->stop();
-  service->executeDelete();
-  m_serviceMap.removeService(service);
-#endif
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  if (service->m_removed == 0) {
-    int rc = ble_gatts_svc_set_visibility(service->getHandle(), 0);
-    if (rc != 0) {
-      return;
-    }
-    service->m_removed = NIMBLE_ATT_REMOVE_DELETE;
-    serviceChanged();
-    m_serviceMap.removeService(service);
-    BLEDevice::getAdvertising()->removeServiceUUID(service->getUUID());
+std::vector<BLEService> BLEServer::getServices() const {
+  std::vector<BLEService> result;
+  BLE_CHECK_IMPL(result);
+  BLELockGuard lock(impl.mtx);
+  result.reserve(impl.services.size());
+  for (auto &svc : impl.services) {
+    result.push_back(BLEService(svc));
   }
-#endif
-}
-
-/**
- * @brief Start advertising.
- *
- * Start the server advertising its existence.  This is a convenience function and is equivalent to
- * retrieving the advertising object and invoking start upon it.
- */
-void BLEServer::startAdvertising() {
-  log_v(">> startAdvertising");
-  BLEDevice::startAdvertising();
-  log_v("<< startAdvertising");
-}  // startAdvertising
-
-/* multi connect support */
-/* TODO do some more tweaks */
-void BLEServer::updatePeerMTU(uint16_t conn_id, uint16_t mtu) {
-  // set mtu in conn_status_t
-  m_semaphoreMapAccess.take("updatePeerMTU");
-  const std::map<uint16_t, conn_status_t>::iterator it = m_connectedServersMap.find(conn_id);
-  if (it != m_connectedServersMap.end()) {
-    it->second.mtu = mtu;
-  }
-  m_semaphoreMapAccess.give();
-}
-
-std::map<uint16_t, conn_status_t> BLEServer::getPeerDevices(bool _client) {
-  m_semaphoreMapAccess.take("getPeerDevices");
-  auto copy = m_connectedServersMap;
-  m_semaphoreMapAccess.give();
-  return copy;
-}
-
-uint16_t BLEServer::getPeerMTU(uint16_t conn_id) {
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  uint16_t mtu = 23;
-  m_semaphoreMapAccess.take("getPeerMTU");
-  auto it = m_connectedServersMap.find(conn_id);
-  if (it != m_connectedServersMap.end()) {
-    mtu = it->second.mtu;
-  } else {
-    log_w("getPeerMTU: conn_id %u not found, using default MTU %u", conn_id, mtu);
-  }
-  m_semaphoreMapAccess.give();
-  return mtu;
-#endif
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-  return ble_att_mtu(conn_id);
-#endif
-}
-
-void BLEServer::addPeerDevice(void *peer, bool _client, uint16_t conn_id) {
-  conn_status_t status = {.peer_device = peer, .connected = true, .mtu = 23};
-
-  m_semaphoreMapAccess.take("addPeerDevice");
-  m_connectedServersMap.insert(std::pair<uint16_t, conn_status_t>(conn_id, status));
-  m_semaphoreMapAccess.give();
-}
-
-bool BLEServer::removePeerDevice(uint16_t conn_id, bool _client) {
-  m_semaphoreMapAccess.take("removePeerDevice");
-  bool result = m_connectedServersMap.erase(conn_id) > 0;
-  m_semaphoreMapAccess.give();
   return result;
 }
 
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
-void BLEServer::advertiseOnDisconnect(bool enable) {
-  m_advertiseOnDisconnect = enable;
-}
+BTStatus BLEServer::removeService(const BLEService &service) {
+#if BLE_GATT_SERVER_SUPPORTED
+  if (!_impl || !service._impl) {
+    return BTStatus::InvalidState;
+  }
+  // Backend-specific: Bluedroid deletes the service; NimBLE rebuilds the GATT table.
+  return bleServerRemoveService(_impl.get(), service._impl);
+#else
+  (void)service;
+  return BTStatus::NotSupported;
 #endif
-
-void BLEServerCallbacks::onConnect(BLEServer *pServer) {
-  log_d("BLEServerCallbacks", ">> onConnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onConnect()");
-}  // onConnect
-
-void BLEServerCallbacks::onDisconnect(BLEServer *pServer) {
-  log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onDisconnect()");
-}  // onDisconnect
-
-/***************************************************************************
- *                       Bluedroid functions                               *
- ***************************************************************************/
-
-#if defined(CONFIG_BLUEDROID_ENABLED)
-
-/**
- * Allow to connect GATT server to peer device
- * Probably can be used in ANCS for iPhone
- */
-bool BLEServer::connect(BLEAddress address) {
-  esp_bd_addr_t addr;
-  memcpy(&addr, address.getNative(), 6);
-  // Perform the open connection request against the target BLE Server.
-  m_semaphoreOpenEvt.take("connect");
-  esp_err_t errRc = ::esp_ble_gatts_open(
-    getGattsIf(),
-    addr,  // address
-    1      // direct connection
-  );
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gattc_open: rc=%d %s", errRc, GeneralUtils::errorToString(errRc));
-    return false;
-  }
-
-  uint32_t rc = m_semaphoreOpenEvt.wait("connect");  // Wait for the connection to complete.
-  log_v("<< connect(), rc=%d", rc == ESP_GATT_OK);
-  return rc == ESP_GATT_OK;
-}  // connect
-
-/**
- * @brief Request an update to the connection parameters.
- *
- * As the BLE Peripheral (server), this device can request connection parameter
- * changes from the central. However, the central (client) makes the final decision
- * and may accept, reject, or negotiate different parameters.
- *
- * Can only be called after a connection has been established.
- *
- * @param [in] remote_bda The Bluetooth device address of the peer.
- * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
- * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
- * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
- *                     Higher values save power but increase response latency.
- * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
- *                     Must be > (1 + latency) * maxInterval * 2.
- * @return True on success, false on failure.
- */
-bool BLEServer::requestConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
-  esp_ble_conn_update_params_t conn_params;
-  memcpy(conn_params.bda, remote_bda, sizeof(esp_bd_addr_t));
-  conn_params.latency = latency;
-  conn_params.max_int = maxInterval;  // max_int = 0x20*1.25ms = 40ms
-  conn_params.min_int = minInterval;  // min_int = 0x10*1.25ms = 20ms
-  conn_params.timeout = timeout;      // timeout = 400*10ms = 4000ms
-
-  esp_err_t errRc = esp_ble_gap_update_conn_params(&conn_params);
-  if (errRc != ESP_OK) {
-    log_e("esp_ble_gap_update_conn_params: rc=%d", errRc);
-    return false;
-  }
-  return true;
 }
 
-/**
- * @brief Request an update to the connection parameters.
- * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
- */
-void BLEServer::updateConnParams(esp_bd_addr_t remote_bda, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
-  requestConnParams(remote_bda, minInterval, maxInterval, latency, timeout);
+bool BLEServer::isStarted() const {
+  return _impl && _impl->started;
 }
 
-void BLEServer::disconnect(uint16_t connId) {
-  esp_ble_gatts_close(m_gatts_if, connId);
+size_t BLEServer::getConnectedCount() const {
+  BLE_CHECK_IMPL(0);
+  BLELockGuard lock(impl.mtx);
+  return impl.connections.size();
 }
 
-/**
- * @brief Handle a received GAP event for the server.
- * @param [in] event The GAP event type.
- * @param [in] param The GAP event parameter.
- */
-void BLEServer::handleGAPEvent(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
-  log_v(">> BLEServer::handleGAPEvent");
-
-  switch (event) {
-    case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
-    {
-      if (m_pServerCallbacks != nullptr) {
-        m_pServerCallbacks->onConnParamsUpdate(
-          param->update_conn_params.bda, param->update_conn_params.conn_int, param->update_conn_params.latency, param->update_conn_params.timeout,
-          param->update_conn_params.status
-        );
-      }
-      break;
-    }
-    default: break;
+std::vector<BLEConnInfo> BLEServer::getConnections() const {
+  std::vector<BLEConnInfo> result;
+  BLE_CHECK_IMPL(result);
+  BLELockGuard lock(impl.mtx);
+  // Snapshot under the lock; later connects/disconnects are not reflected.
+  for (const auto &entry : impl.connections) {
+    result.push_back(entry.second);
   }
-
-  log_v("<< BLEServer::handleGAPEvent");
+  return result;
 }
 
-uint16_t BLEServer::getGattsIf() {
-  return m_gatts_if;
-}
-
-/**
- * @brief Handle a GATT Server Event.
- *
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- *
- */
-void BLEServer::handleGATTServerEvent(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
-  log_v(">> handleGATTServerEvent: %s", BLEUtils::gattServerEventTypeToString(event).c_str());
-
-  switch (event) {
-    // ESP_GATTS_ADD_CHAR_EVT - Indicate that a characteristic was added to the service.
-    // add_char:
-    // - esp_gatt_status_t status
-    // - uint16_t          attr_handle
-    // - uint16_t          service_handle
-    // - esp_bt_uuid_t     char_uuid
-    //
-    case ESP_GATTS_ADD_CHAR_EVT:
-    {
-      break;
-    }  // ESP_GATTS_ADD_CHAR_EVT
-
-    case ESP_GATTS_MTU_EVT:
-      updatePeerMTU(param->mtu.conn_id, param->mtu.mtu);
-      if (m_pServerCallbacks != nullptr) {
-        m_pServerCallbacks->onMtuChanged(this, param);
-      }
-      break;
-
-    // ESP_GATTS_CONNECT_EVT
-    // connect:
-    // - uint16_t      conn_id
-    // - esp_bd_addr_t remote_bda
-    //
-    case ESP_GATTS_CONNECT_EVT:
-    {
-      log_i("Client connected, conn_id=%u", param->connect.conn_id);
-      m_connId = param->connect.conn_id;
-      addPeerDevice((void *)this, false, m_connId);
-      if (m_pServerCallbacks != nullptr) {
-        m_pServerCallbacks->onConnect(this);
-        m_pServerCallbacks->onConnect(this, param);
-      }
-      m_connectedCount++;  // Increment the number of connected devices count.
-      break;
-    }  // ESP_GATTS_CONNECT_EVT
-
-    // ESP_GATTS_CREATE_EVT
-    // Called when a new service is registered as having been created.
-    //
-    // create:
-    // * esp_gatt_status_t  status
-    // * uint16_t           service_handle
-    // * esp_gatt_srvc_id_t service_id
-    //
-    case ESP_GATTS_CREATE_EVT:
-    {
-      BLEService *pService = m_serviceMap.getByUUID(
-        param->create.service_id.id.uuid, param->create.service_id.id.inst_id
-      );  // <--- very big bug for multi services with the same uuid
-      m_serviceMap.setByHandle(param->create.service_handle, pService);
-      m_semaphoreCreateEvt.give();
-      break;
-    }  // ESP_GATTS_CREATE_EVT
-
-    // ESP_GATTS_DISCONNECT_EVT
-    //
-    // disconnect
-    // - uint16_t      					conn_id
-    // - esp_bd_addr_t 					remote_bda
-    // - esp_gatt_conn_reason_t         reason
-    //
-    // If we receive a disconnect event then invoke the callback for disconnects (if one is present).
-    // we also want to start advertising again.
-    case ESP_GATTS_DISCONNECT_EVT:
-    {
-      log_i("Client disconnected, conn_id=%u, reason=%d", param->disconnect.conn_id, param->disconnect.reason);
-      if (m_pServerCallbacks != nullptr) {  // If we have callbacks, call now.
-        m_pServerCallbacks->onDisconnect(this);
-        m_pServerCallbacks->onDisconnect(this, param);
-      }
-      if (m_connId == ESP_GATT_IF_NONE) {
-        return;
-      }
-
-      // only decrement if connection is found in map and removed
-      // sometimes this event triggers w/o a valid connection
-      if (removePeerDevice(param->disconnect.conn_id, false)) {
-        m_connectedCount--;  // Decrement the number of connected devices count.
-      }
-
-      // Reset security state on disconnect
-      BLESecurity::resetSecurity();
-
-      // Start advertising again if enabled
-      if (m_advertiseOnDisconnect) {
-        log_i("Start advertising again after disconnect");
-        startAdvertising();
-      }
-
-      break;
-    }  // ESP_GATTS_DISCONNECT_EVT
-
-    // ESP_GATTS_READ_EVT - A request to read the value of a characteristic has arrived.
-    //
-    // read:
-    // - uint16_t      conn_id
-    // - uint32_t      trans_id
-    // - esp_bd_addr_t bda
-    // - uint16_t      handle
-    // - uint16_t      offset
-    // - bool          is_long
-    // - bool          need_rsp
-    //
-    case ESP_GATTS_READ_EVT:
-    {
-      break;
-    }  // ESP_GATTS_READ_EVT
-
-    // ESP_GATTS_REG_EVT
-    // reg:
-    // - esp_gatt_status_t status
-    // - uint16_t app_id
-    //
-    case ESP_GATTS_REG_EVT:
-    {
-      log_i("GATT server registered, status=%d, app_id=%u, gatts_if=%u", param->reg.status, param->reg.app_id, gatts_if);
-      m_gatts_if = gatts_if;
-      m_semaphoreRegisterAppEvt.give();  // Unlock the mutex waiting for the registration of the app.
-      break;
-    }  // ESP_GATTS_REG_EVT
-
-    // ESP_GATTS_WRITE_EVT - A request to write the value of a characteristic has arrived.
-    //
-    // write:
-    // - uint16_t      conn_id
-    // - uint16_t      trans_id
-    // - esp_bd_addr_t bda
-    // - uint16_t      handle
-    // - uint16_t      offset
-    // - bool          need_rsp
-    // - bool          is_prep
-    // - uint16_t      len
-    // - uint8_t*      value
-    //
-    case ESP_GATTS_WRITE_EVT:
-    {
-      break;
-    }
-
-    case ESP_GATTS_OPEN_EVT: m_semaphoreOpenEvt.give(param->open.status); break;
-
-    default: break;
-  }
-
-  // Invoke the handler for every Service we have.
-  m_serviceMap.handleGATTServerEvent(event, gatts_if, param);
-
-  log_v("<< handleGATTServerEvent");
-}  // handleGATTServerEvent
-
-/**
- * @brief Register the app.
- *
- * @return N/A
- */
-void BLEServer::registerApp(uint16_t appId) {
-  log_v(">> registerApp - %u", appId);
-  m_semaphoreRegisterAppEvt.take("registerApp");  // Take the mutex, will be released by ESP_GATTS_REG_EVT event.
-  ::esp_ble_gatts_app_register(appId);
-  m_semaphoreRegisterAppEvt.wait("registerApp");
-  log_v("<< registerApp");
-}  // registerApp
-
-// Bluedroid callbacks
-
-void BLEServerCallbacks::onConnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
-  log_d("BLEServerCallbacks", ">> onConnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onConnect()");
-}  // onConnect
-
-void BLEServerCallbacks::onDisconnect(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
-  log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onDisconnect()");
-}  // onDisconnect
-
-void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, esp_ble_gatts_cb_param_t *param) {
-  [[maybe_unused]]
-  uint16_t mtu = param->mtu.mtu;
-  log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
-  log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
-  log_d("BLEServerCallbacks", "<< onMtuChanged()");
-}  // onMtuChanged
-
-/**
- * @brief Restore CCCD values for a bonded device from NVS.
- *
- * Iterates through all services and their characteristics, restoring any
- * persisted CCCD values for the given peer address. This enables notifications
- * and indications to work correctly after a bonded device reconnects.
- *
- * @param [in] peerAddress The address of the bonded peer device.
- */
-void BLEServer::restoreCCCDValues(const BLEAddress &peerAddress) {
-  log_i("Restoring CCCD values for bonded device: %s", peerAddress.toString().c_str());
-
-  int restoredCount = 0;
-
-  // Iterate through all services
-  BLEService *pService = m_serviceMap.getFirst();
-  while (pService != nullptr) {
-    // Get the characteristic map from the service
-    BLECharacteristic *pChar = pService->m_characteristicMap.getFirst();
-    while (pChar != nullptr) {
-      // Check if this characteristic has a CCCD descriptor
-      BLEDescriptor *pDesc = pChar->getDescriptorByUUID(BLEUUID((uint16_t)0x2902));
-      if (pDesc != nullptr) {
-        BLE2902 *pCCCD = (BLE2902 *)pDesc;
-        uint16_t charHandle = pChar->getHandle();
-
-        // Try to restore the CCCD value from NVS
-        if (pCCCD->restoreValue(peerAddress, charHandle)) {
-          restoredCount++;
-          log_d("Restored CCCD for characteristic handle 0x%04x: notify=%d, indicate=%d", charHandle, pCCCD->getNotifications(), pCCCD->getIndications());
-        }
-      }
-      pChar = pService->m_characteristicMap.getNext();
-    }
-    pService = m_serviceMap.getNext();
-  }
-
-  log_i("Restored %d CCCD value(s) for peer %s", restoredCount, peerAddress.toString().c_str());
-}
-
-void BLEServerCallbacks::onConnParamsUpdate(esp_bd_addr_t remote_bda, uint16_t interval, uint16_t latency, uint16_t timeout, esp_bt_status_t status) {
-  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
-  log_d(
-    "BLEServerCallbacks", "Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d", interval, interval * 1.25, latency, timeout, timeout * 10,
-    status
-  );
-  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
-}  // onConnParamsUpdate
-
-#endif
-
-/***************************************************************************
- *                       NimBLE functions                                  *
- ***************************************************************************/
-
-#if defined(CONFIG_NIMBLE_ENABLED)
-
-uint16_t BLEServer::getHandle() {
-  return getConnId();
-}
-
-/**
- * @brief Resets the GATT server, used when services are added/removed after initialization.
- */
-void BLEServer::resetGATT() {
-  if (getConnectedCount() > 0) {
-    return;
-  }
-
-  BLEDevice::stopAdvertising();
-  ble_gatts_reset();
-  ble_svc_gap_init();
-  ble_svc_gatt_init();
-
-  BLEService *svc = m_serviceMap.getFirst();
-  while (svc != nullptr) {
-    if (svc->m_removed > 0) {
-      if (svc->m_removed == NIMBLE_ATT_REMOVE_DELETE) {
-        m_serviceMap.removeService(svc);
-        delete svc;
-      }
-    } else {
-      svc->start();
-    }
-
-    svc = m_serviceMap.getNext();
-  }
-
-  m_svcChanged = false;
-  m_gattsStarted = false;
-}
-
-/**
- * @brief Handle a GATT Server Event.
- *
- * @param [in] event
- * @param [in] gatts_if
- * @param [in] param
- *
- */
-int BLEServer::handleGATTServerEvent(struct ble_gap_event *event, void *arg) {
-  BLEServer *server = (BLEServer *)arg;
-  log_v(">> handleGAPEvent: %s", BLEUtils::gapEventToString(event->type));
-  int rc = 0;
-  struct ble_gap_conn_desc desc;
-
-  switch (event->type) {
-    case BLE_GAP_EVENT_CONNECT:
-    {
-      if (event->connect.status != 0) {
-        /* Connection failed; resume advertising */
-        log_e("Connection failed");
-        BLEDevice::startAdvertising();
-      } else {
-        server->m_connId = event->connect.conn_handle;
-        server->addPeerDevice((void *)server, false, event->connect.conn_handle);
-        rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
-        if (rc != 0) {
-          return 0;
-        }
-
-        if (server->m_pServerCallbacks != nullptr) {
-          server->m_pServerCallbacks->onConnect(server);
-          server->m_pServerCallbacks->onConnect(server, &desc);
-        }
-
-        if (BLESecurity::m_securityEnabled && BLESecurity::m_forceSecurity) {
-          BLESecurity::startSecurity(event->connect.conn_handle);
-        }
-
-        server->m_connectedCount++;
-      }
-
-      return 0;
-    }  // BLE_GAP_EVENT_CONNECT
-
-    case BLE_GAP_EVENT_DISCONNECT:
-    {
-      // If Host reset tell the device now before returning to prevent
-      // any errors caused by calling host functions before resyncing.
-      switch (event->disconnect.reason) {
-        case BLE_HS_ETIMEOUT_HCI:
-        case BLE_HS_EOS:
-        case BLE_HS_ECONTROLLER:
-        case BLE_HS_ENOTSYNCED:
-          log_d("Disconnect - host reset, rc=%d", event->disconnect.reason);
-          BLEDevice::onReset(event->disconnect.reason);
-          break;
-        default: break;
-      }
-
-      if (server->removePeerDevice(event->disconnect.conn.conn_handle, false)) {
-        server->m_connectedCount--;
-      }
-
-      if (server->m_svcChanged) {
-        server->resetGATT();
-      }
-
-      if (server->m_pServerCallbacks != nullptr) {
-        server->m_pServerCallbacks->onDisconnect(server);
-        server->m_pServerCallbacks->onDisconnect(server, &event->disconnect.conn);
-      }
-
-      // Reset security state on disconnect
-      BLESecurity::resetSecurity();
-
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV)
-      if (server->m_advertiseOnDisconnect) {
-        log_i("Start advertising again after disconnect");
-        server->startAdvertising();
-      }
-#endif
-
-      return 0;
-    }  // BLE_GAP_EVENT_DISCONNECT
-
-    case BLE_GAP_EVENT_SUBSCRIBE:
-    {
-      log_i("subscribe event; attr_handle=%u, subscribed: %s", event->subscribe.attr_handle, (event->subscribe.cur_notify ? "true" : "false"));
-
-      for (auto &it : server->m_notifyChrVec) {
-        if (it->getHandle() == event->subscribe.attr_handle) {
-          uint16_t properties = it->getProperties();
-          if ((properties & BLE_GATT_CHR_F_READ_AUTHEN) || (properties & BLE_GATT_CHR_F_READ_AUTHOR) || (properties & BLE_GATT_CHR_F_READ_ENC)) {
-            rc = ble_gap_conn_find(event->subscribe.conn_handle, &desc);
-            if (rc != 0) {
-              break;
-            }
-
-            if (!desc.sec_state.encrypted) {
-              BLESecurity::startSecurity(event->subscribe.conn_handle);
-            }
-          }
-
-          it->setSubscribe(event);
-          break;
-        }
-      }
-
-      return 0;
-    }  // BLE_GAP_EVENT_SUBSCRIBE
-
-    case BLE_GAP_EVENT_MTU:
-    {
-      log_i("mtu update event; conn_handle=%u mtu=%u", event->mtu.conn_handle, event->mtu.value);
-      rc = ble_gap_conn_find(event->mtu.conn_handle, &desc);
-      if (rc != 0) {
-        return 0;
-      }
-
-      if (server->m_pServerCallbacks != nullptr) {
-        server->m_pServerCallbacks->onMtuChanged(server, &desc, event->mtu.value);
-      }
-      return 0;
-    }  // BLE_GAP_EVENT_MTU
-
-    case BLE_GAP_EVENT_NOTIFY_TX:
-    {
-      BLECharacteristic *pChar = nullptr;
-
-      for (auto &it : server->m_notifyChrVec) {
-        if (it->getHandle() == event->notify_tx.attr_handle) {
-          pChar = it;
-        }
-      }
-
-      if (pChar == nullptr) {
-        return 0;
-      }
-
-      BLECharacteristicCallbacks::Status statusRC;
-
-      if (event->notify_tx.indication) {
-        if (event->notify_tx.status != 0) {
-          if (event->notify_tx.status == BLE_HS_EDONE) {
-            statusRC = BLECharacteristicCallbacks::Status::SUCCESS_INDICATE;
-          } else if (rc == BLE_HS_ETIMEOUT) {
-            statusRC = BLECharacteristicCallbacks::Status::ERROR_INDICATE_TIMEOUT;
-          } else {
-            statusRC = BLECharacteristicCallbacks::Status::ERROR_INDICATE_FAILURE;
-          }
-        } else {
-          return 0;
-        }
-
-        server->clearIndicateWait(event->notify_tx.conn_handle);
-      } else {
-        if (event->notify_tx.status == 0) {
-          statusRC = BLECharacteristicCallbacks::Status::SUCCESS_NOTIFY;
-        } else {
-          statusRC = BLECharacteristicCallbacks::Status::ERROR_GATT;
-        }
-      }
-
-      pChar->m_pCallbacks->onStatus(pChar, statusRC, event->notify_tx.status);
-
-      return 0;
-    }  // BLE_GAP_EVENT_NOTIFY_TX
-
-    case BLE_GAP_EVENT_ADV_COMPLETE:
-    {
-      log_d("Advertising Complete");
-      BLEDevice::getAdvertising()->advCompleteCB();
-      return 0;
-    }
-
-    case BLE_GAP_EVENT_CONN_UPDATE:
-    {
-      log_d("Connection parameters updated.");
-      if (server->m_pServerCallbacks != nullptr) {
-        rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
-        if (rc == 0) {
-          server->m_pServerCallbacks->onConnParamsUpdate(
-            event->conn_update.conn_handle, desc.conn_itvl, desc.conn_latency, desc.supervision_timeout, event->conn_update.status
-          );
-        }
-      }
-      return 0;
-    }  // BLE_GAP_EVENT_CONN_UPDATE
-
-    case BLE_GAP_EVENT_REPEAT_PAIRING:
-    {
-      /* We already have a bond with the peer, but it is attempting to
-       * establish a new secure link.  This app sacrifices security for
-       * convenience: just throw away the old bond and accept the new link.
-       */
-
-      /* Delete the old bond. */
-      rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
-      if (rc != 0) {
-        return BLE_GAP_REPEAT_PAIRING_IGNORE;
-      }
-
-      ble_store_util_delete_peer(&desc.peer_id_addr);
-
-      /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
-       * continue with the pairing operation.
-       */
-      return BLE_GAP_REPEAT_PAIRING_RETRY;
-    }  // BLE_GAP_EVENT_REPEAT_PAIRING
-
-    case BLE_GAP_EVENT_ENC_CHANGE:
-    {
-      rc = ble_gap_conn_find(event->enc_change.conn_handle, &desc);
-      if (rc != 0) {
-        return BLE_ATT_ERR_INVALID_HANDLE;
-      }
-
-      if (BLEDevice::m_securityCallbacks != nullptr) {
-        BLEDevice::m_securityCallbacks->onAuthenticationComplete(&desc);
-      }
-
-      return 0;
-    }  // BLE_GAP_EVENT_ENC_CHANGE
-
-    case BLE_GAP_EVENT_PASSKEY_ACTION:
-    {
-      struct ble_sm_io pkey = {0, 0};
-
-      if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
-        // Display the passkey on this device
-        log_d("BLE_SM_IOACT_DISP");
-
-        pkey.action = event->passkey.params.action;
-        pkey.passkey = BLESecurity::getPassKey();
-
-        if (!BLESecurity::m_passkeySet) {
-          log_w("No passkey set");
-        }
-
-        if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
-          log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
-        } else {
-          log_i("Passkey: %06" PRIu32, pkey.passkey);
-        }
-
-        if (BLEDevice::m_securityCallbacks != nullptr) {
-          BLEDevice::m_securityCallbacks->onPassKeyNotify(pkey.passkey);
-        }
-
-        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
-        log_d("BLE_SM_IOACT_DISP; ble_sm_inject_io result: %d", rc);
-
-      } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
-        // Check if the passkey on the peer device is correct
-        log_d("BLE_SM_IOACT_NUMCMP");
-
-        log_d("Passkey on device's display: %06" PRIu32, event->passkey.params.numcmp);
-        pkey.action = event->passkey.params.action;
-
-        if (BLEDevice::m_securityCallbacks != nullptr) {
-          pkey.numcmp_accept = BLEDevice::m_securityCallbacks->onConfirmPIN(event->passkey.params.numcmp);
-        } else {
-          log_e("onConfirmPIN not implemented. Rejecting connection");
-          pkey.numcmp_accept = 0;
-        }
-
-        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
-        log_d("BLE_SM_IOACT_NUMCMP; ble_sm_inject_io result: %d", rc);
-
-      } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
-        // Out of band pairing
-        // TODO: Handle out of band pairing
-        log_w("BLE_SM_IOACT_OOB: Not implemented");
-
-        static uint8_t tem_oob[16] = {0};
-        pkey.action = event->passkey.params.action;
-        for (int i = 0; i < 16; i++) {
-          pkey.oob[i] = tem_oob[i];
-        }
-
-        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
-        log_d("BLE_SM_IOACT_OOB; ble_sm_inject_io result: %d", rc);
-      } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
-        // Input passkey from peer device
-        log_d("BLE_SM_IOACT_INPUT");
-
-        pkey.action = event->passkey.params.action;
-        pkey.passkey = BLESecurity::getPassKey();
-
-        if (!BLESecurity::m_passkeySet) {
-          if (BLEDevice::m_securityCallbacks != nullptr) {
-            log_i("No passkey set, getting passkey from onPassKeyRequest");
-            pkey.passkey = BLEDevice::m_securityCallbacks->onPassKeyRequest();
-          } else {
-            log_w("*ATTENTION* onPassKeyRequest not implemented and no static passkey set.");
-          }
-        }
-
-        if (BLESecurity::m_staticPasskey && pkey.passkey == BLE_SM_DEFAULT_PASSKEY) {
-          log_w("*ATTENTION* Using default passkey: %06u", BLE_SM_DEFAULT_PASSKEY);
-          log_w("*ATTENTION* Please use a random passkey or set a different static passkey");
-        } else {
-          log_i("Passkey: %06" PRIu32, pkey.passkey);
-        }
-
-        rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
-        log_d("BLE_SM_IOACT_INPUT; ble_sm_inject_io result: %d", rc);
-
-      } else if (event->passkey.params.action == BLE_SM_IOACT_NONE) {
-        log_d("BLE_SM_IOACT_NONE");
-        log_i("No passkey action required");
-      }
-
-      log_d("<< handleGATTServerEvent");
-      return 0;
-    }  // BLE_GAP_EVENT_PASSKEY_ACTION
-
-    case BLE_GAP_EVENT_AUTHORIZE:
-    {
-      log_d("BLE_GAP_EVENT_AUTHORIZE");
-
-      log_i(
-        "Authorization request: conn_handle=%u attr_handle=%u is_read=%d", event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read
-      );
-
-      bool authorized = false;
-
-      if (BLEDevice::m_securityCallbacks != nullptr) {
-        log_i("Asking for authorization from onAuthorizationRequest");
-        authorized =
-          BLEDevice::m_securityCallbacks->onAuthorizationRequest(event->authorize.conn_handle, event->authorize.attr_handle, event->authorize.is_read);
-      } else {
-        log_w("onAuthorizationRequest not implemented. Rejecting authorization request");
-      }
-
-      if (authorized) {
-        log_i("Authorization granted");
-        event->authorize.out_response = BLE_GAP_AUTHORIZE_ACCEPT;
-      } else {
-        log_i("Authorization rejected");
-        event->authorize.out_response = BLE_GAP_AUTHORIZE_REJECT;
-      }
-
-      return 0;
-    }  // BLE_GAP_EVENT_AUTHORIZE
-
-    default: break;
-  }
-
-  log_d("<< handleGATTServerEvent");
-  return 0;
-}
-
-/**
- * @brief Request an update to the connection parameters.
- *
- * As the BLE Peripheral (server), this device can request connection parameter
- * changes from the central. However, the central (client) makes the final decision
- * and may accept, reject, or negotiate different parameters.
- *
- * Can only be called after a connection has been established.
- *
- * @param [in] conn_handle The connection handle of the peer to send the request to.
- * @param [in] minInterval The minimum connection interval in 1.25ms units (e.g., 80 = 100ms).
- * @param [in] maxInterval The maximum connection interval in 1.25ms units (e.g., 800 = 1000ms).
- * @param [in] latency Number of consecutive connection events the peripheral can skip (0-499).
- *                     Higher values save power but increase response latency.
- * @param [in] timeout The supervision timeout in 10ms units (e.g., 400 = 4000ms).
- *                     Must be > (1 + latency) * maxInterval * 2.
- * @return True on success, false on failure.
- */
-bool BLEServer::requestConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
-  ble_gap_upd_params params;
-
-  params.latency = latency;
-  params.itvl_max = maxInterval;                        // max_int = 0x20*1.25ms = 40ms
-  params.itvl_min = minInterval;                        // min_int = 0x10*1.25ms = 20ms
-  params.supervision_timeout = timeout;                 // timeout = 400*10ms = 4000ms
-  params.min_ce_len = BLE_GAP_INITIAL_CONN_MIN_CE_LEN;  // Minimum length of connection event in 0.625ms units
-  params.max_ce_len = BLE_GAP_INITIAL_CONN_MAX_CE_LEN;  // Maximum length of connection event in 0.625ms units
-
-  int rc = ble_gap_update_params(conn_handle, &params);
-  if (rc != 0) {
-    log_e("Request params error: %d, %s", rc, BLEUtils::returnCodeToString(rc));
-    return false;
-  }
-  return true;
-}  // requestConnParams
-
-/**
- * @brief Request an update to the connection parameters.
- * @deprecated Use requestConnParams() instead. This method is kept for backward compatibility.
- */
-void BLEServer::updateConnParams(uint16_t conn_handle, uint16_t minInterval, uint16_t maxInterval, uint16_t latency, uint16_t timeout) {
-  requestConnParams(conn_handle, minInterval, maxInterval, latency, timeout);
-}  // updateConnParams
-
-bool BLEServer::setIndicateWait(uint16_t conn_handle) {
-  for (auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-    if (m_indWait[i] == conn_handle) {
-      return false;
+BLEConnInfo BLEServer::getConnInfo(uint16_t connHandle) const {
+  BLE_CHECK_IMPL(BLEConnInfo());
+  BLELockGuard lock(impl.mtx);
+  // Returns the latest snapshot for the handle -- MTU / conn-params / security
+  // are refreshed from GAP/GATT events -- or an invalid BLEConnInfo when the
+  // handle is gone.
+  for (const auto &entry : impl.connections) {
+    if (entry.first == connHandle) {
+      return entry.second;
     }
   }
-
-  return true;
+  return BLEConnInfo();
 }
 
-void BLEServer::clearIndicateWait(uint16_t conn_handle) {
-  for (auto i = 0; i < CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-    if (m_indWait[i] == conn_handle) {
-      m_indWait[i] = BLE_HS_CONN_HANDLE_NONE;
-      return;
-    }
-  }
+BLEAdvertising BLEServer::getAdvertising() {
+  return BLE.getAdvertising();
 }
 
-/**
- * @brief Disconnect the specified client with optional reason.
- * @param [in] connId Connection Id of the client to disconnect.
- * @param [in] reason code for disconnecting.
- * @return NimBLE host return code.
- */
-int BLEServer::disconnect(uint16_t connId, uint8_t reason) {
-  log_d(">> disconnect()");
+BTStatus BLEServer::startAdvertising() {
+  return BLE.startAdvertising();
+}
 
-  int rc = ble_gap_terminate(connId, reason);
-  if (rc != 0) {
-    log_e("ble_gap_terminate failed: rc=%d %s", rc, BLEUtils::returnCodeToString(rc));
-  }
+BTStatus BLEServer::stopAdvertising() {
+  return BLE.stopAdvertising();
+}
 
-  log_d("<< disconnect()");
-  return rc;
-}  // disconnect
+#endif /* BLE_GATT_SERVER_SUPPORTED */
 
-/**
- * @brief Set the service changed flag
- */
-void BLEServer::serviceChanged() {
-  if (m_gattsStarted) {
-    m_svcChanged = true;
-  }
-}  // serviceChanged
-
-// NimBLE callbacks
-
-void BLEServerCallbacks::onConnect(BLEServer *pServer, struct ble_gap_conn_desc *desc) {
-  log_d("BLEServerCallbacks", ">> onConnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onConnect()");
-}  // onConnect
-
-void BLEServerCallbacks::onDisconnect(BLEServer *pServer, struct ble_gap_conn_desc *desc) {
-  log_d("BLEServerCallbacks", ">> onDisconnect(): Default");
-  log_d("BLEServerCallbacks", "Device: %s", BLEDevice::toString().c_str());
-  log_d("BLEServerCallbacks", "<< onDisconnect()");
-}  // onDisconnect
-
-void BLEServerCallbacks::onMtuChanged(BLEServer *pServer, ble_gap_conn_desc *desc, uint16_t mtu) {
-  log_d("BLEServerCallbacks", ">> onMtuChanged(): Default");
-  log_d("BLEServerCallbacks", "Device: %s MTU: %d", BLEDevice::toString().c_str(), mtu);
-  log_d("BLEServerCallbacks", "<< onMtuChanged()");
-}  // onMtuChanged
-
-void BLEServerCallbacks::onConnParamsUpdate(uint16_t conn_handle, uint16_t interval, uint16_t latency, uint16_t timeout, uint8_t status) {
-  log_d("BLEServerCallbacks", ">> onConnParamsUpdate(): Default");
-  log_d(
-    "BLEServerCallbacks", "Conn Handle: %d, Interval: %d (%.2f ms), Latency: %d, Timeout: %d (%d ms), Status: %d", conn_handle, interval, interval * 1.25,
-    latency, timeout, timeout * 10, status
-  );
-  log_d("BLEServerCallbacks", "<< onConnParamsUpdate()");
-}  // onConnParamsUpdate
-
-#endif  // CONFIG_NIMBLE_ENABLED
-
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+#endif /* BLE_ENABLED */

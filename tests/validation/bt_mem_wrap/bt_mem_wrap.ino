@@ -46,13 +46,6 @@
 //     during its BLE initialization to free the unused Classic BT controller memory before
 //     starting BLE commissioning.
 //
-//   Phase 10 — btInUse() pointer comparison
-//     Verifies that when btInUse resolves to the default weak alias (_btInUse_default),
-//     the pointer comparison correctly identifies it as NOT a user override, and
-//     memory release is governed solely by the sub-functions (bleInUse / btClassicInUse).
-//     Since this sketch includes both alloc headers, both flags are true and
-//     memory should NOT be released by initArduino().
-//
 // The Python test sends "PHASE N\n" over serial after each hard reset and
 // checks the pass/fail output.
 
@@ -297,30 +290,6 @@ static void phase_9() {
 }
 #endif
 
-// Phase 10: btInUse() pointer comparison — no user override in this sketch.
-// Verifies that when btInUse resolves to the default weak alias (_btInUse_default),
-// the pointer comparison correctly identifies it as NOT a user override, and
-// memory release is governed solely by the sub-functions (bleInUse / btClassicInUse).
-// Since this sketch includes both alloc headers, both flags are true and
-// memory should NOT be released by initArduino().
-static void phase_10() {
-  Serial.println("[BT_MEM_WRAP] Phase 10: btInUse pointer comparison (no strong override)");
-
-  extern bool _btInUse_default(void);
-  bool isDefault = ((void *)btInUse == (void *)_btInUse_default);
-  check(isDefault, "btInUse points to default (no strong user override)");
-
-  // Both alloc headers are included in this sketch, so sub-functions return true
-  // and initArduino() must NOT have released any memory.
-  check(!btMemReleased(BT_MODE_BLE), "BLE mem not released (bleInUse was true)");
-
-#if CONFIG_BT_CLASSIC_ENABLED
-  check(!btMemReleased(BT_MODE_CLASSIC_BT), "Classic BT mem not released (btClassicInUse was true)");
-#else
-  check(btMemReleased(BT_MODE_CLASSIC_BT), "Classic BT mem reported released (not supported on this chip)");
-#endif
-}
-
 static void run_phase(int phase) {
   pass_count = 0;
   fail_count = 0;
@@ -335,7 +304,6 @@ static void run_phase(int phase) {
     case 7:  phase_7(); break;
     case 8:  phase_8(); break;
     case 9:  phase_9(); break;
-    case 10: phase_10(); break;
     default: Serial.printf("[BT_MEM_WRAP] ERROR: unknown phase %d\n", phase); return;
   }
 

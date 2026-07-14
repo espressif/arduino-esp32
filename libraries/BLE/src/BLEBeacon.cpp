@@ -1,14 +1,12 @@
 /*
  * Copyright 2017-2026 Espressif Systems (Shanghai) PTE LTD
- * Copyright 2020-2025 Ryan Powell <ryan@nable-embedded.io> and
- * esp-nimble-cpp, NimBLE-Arduino contributors.
  * Copyright 2017 Neil Kolban
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,101 +15,92 @@
  * limitations under the License.
  */
 
-/*
- * BLEBeacon.cpp
- *
- *  Created on: Jan 4, 2018
- *      Author: kolban
- *
- *  Modified on: Feb 18, 2025
- *      Author: lucasssvaz (based on kolban's and h2zero's work)
- *      Description: Added support for NimBLE
- */
-
-#include "soc/soc_caps.h"
-#include "sdkconfig.h"
-#if defined(SOC_BLE_SUPPORTED) || defined(CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE)
-#if defined(CONFIG_BLUEDROID_ENABLED) || defined(CONFIG_NIMBLE_ENABLED)
-
-/***************************************************************************
- *                       Common includes and definitions                   *
- ***************************************************************************/
+#include "impl/common/BLEGuards.h"
+#if BLE_ENABLED
 
 #include "BLEBeacon.h"
-#include "esp32-hal-log.h"
+#include <cstring>
 
-#define ENDIAN_CHANGE_U16(x) ((((x) & 0xFF00) >> 8) + (((x) & 0xFF) << 8))
+BLEBeacon::BLEBeacon() {}
 
-/***************************************************************************
- *                              Common functions                           *
- ***************************************************************************/
-
-BLEBeacon::BLEBeacon() {
-  m_beaconData.manufacturerId = 0x4c00;
-  m_beaconData.subType = 0x02;
-  m_beaconData.subTypeLength = 0x15;
-  m_beaconData.major = 0;
-  m_beaconData.minor = 0;
-  m_beaconData.signalPower = 0;
-  memset(m_beaconData.proximityUUID, 0, sizeof(m_beaconData.proximityUUID));
+BLEUUID BLEBeacon::getProximityUUID() const {
+  return _proximityUUID;
 }
 
-String BLEBeacon::getData() {
-  return String((char *)&m_beaconData, sizeof(m_beaconData));
+void BLEBeacon::setProximityUUID(const BLEUUID &uuid) {
+  _proximityUUID = uuid.to128();
 }
 
-uint16_t BLEBeacon::getMajor() {
-  return m_beaconData.major;
-}
-
-uint16_t BLEBeacon::getManufacturerId() {
-  return m_beaconData.manufacturerId;
-}
-
-uint16_t BLEBeacon::getMinor() {
-  return m_beaconData.minor;
-}
-
-BLEUUID BLEBeacon::getProximityUUID() {
-  return BLEUUID(m_beaconData.proximityUUID, 16, true);
-}
-
-int8_t BLEBeacon::getSignalPower() {
-  return m_beaconData.signalPower;
-}
-
-void BLEBeacon::setData(const String &data) {
-  if (data.length() != sizeof(m_beaconData)) {
-    log_e("Unable to set the data ... length passed in was %u and expected %lu", data.length(), (unsigned long)sizeof(m_beaconData));
-    return;
-  }
-  memcpy(&m_beaconData, data.c_str(), sizeof(m_beaconData));
+uint16_t BLEBeacon::getMajor() const {
+  return _major;
 }
 
 void BLEBeacon::setMajor(uint16_t major) {
-  m_beaconData.major = ENDIAN_CHANGE_U16(major);
+  _major = major;
 }
 
-void BLEBeacon::setManufacturerId(uint16_t manufacturerId) {
-  m_beaconData.manufacturerId = ENDIAN_CHANGE_U16(manufacturerId);
+uint16_t BLEBeacon::getMinor() const {
+  return _minor;
 }
 
 void BLEBeacon::setMinor(uint16_t minor) {
-  m_beaconData.minor = ENDIAN_CHANGE_U16(minor);
+  _minor = minor;
 }
 
-void BLEBeacon::setSignalPower(int8_t signalPower) {
-  m_beaconData.signalPower = signalPower;
+uint16_t BLEBeacon::getManufacturerId() const {
+  return _manufacturerId;
 }
 
-void BLEBeacon::setProximityUUID(BLEUUID uuid) {
-  uuid = uuid.to128();
-#if defined(CONFIG_BLUEDROID_ENABLED)
-  memcpy(m_beaconData.proximityUUID, uuid.getNative()->uuid.uuid128, 16);
-#elif defined(CONFIG_NIMBLE_ENABLED)
-  memcpy(m_beaconData.proximityUUID, uuid.getNative()->u128.value, 16);
-#endif
+void BLEBeacon::setManufacturerId(uint16_t id) {
+  _manufacturerId = id;
 }
 
-#endif /* CONFIG_BLUEDROID_ENABLED || CONFIG_NIMBLE_ENABLED */
-#endif /* SOC_BLE_SUPPORTED || CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE */
+int8_t BLEBeacon::getSignalPower() const {
+  return _signalPower;
+}
+
+void BLEBeacon::setSignalPower(int8_t power) {
+  _signalPower = power;
+}
+
+BLEAdvertisementData BLEBeacon::getAdvertisementData() const {
+  BLEAdvertisementData advData;
+
+  // iBeacon format: 0xFF (manufacturer specific) + company ID (2) + type (0x02) + length (0x15)
+  // + UUID (16 big-endian) + major (2 big-endian) + minor (2 big-endian) + TX power (1)
+  uint8_t payload[23];
+  payload[0] = 0x02;  // iBeacon type
+  payload[1] = 0x15;  // iBeacon length (21 bytes)
+
+  BLEUUID uuid128 = _proximityUUID.to128();
+  const uint8_t *uuidData = uuid128.data();
+  memcpy(payload + 2, uuidData, 16);
+
+  payload[18] = (_major >> 8) & 0xFF;
+  payload[19] = _major & 0xFF;
+  payload[20] = (_minor >> 8) & 0xFF;
+  payload[21] = _minor & 0xFF;
+  payload[22] = static_cast<uint8_t>(_signalPower);
+
+  advData.setManufacturerData(_manufacturerId, payload, sizeof(payload));
+  return advData;
+}
+
+void BLEBeacon::setFromPayload(const uint8_t *payload, size_t len) {
+  // Expects manufacturer-specific data (after company ID):
+  // type(1) + length(1) + UUID(16) + major(2) + minor(2) + power(1) = 23 bytes.
+  if (len < 23) {
+    return;
+  }
+  if (payload[0] != 0x02 || payload[1] != 0x15) {
+    return;
+  }
+
+  // iBeacon UUIDs are big-endian, so store directly (no byte reversal).
+  _proximityUUID = BLEUUID(payload + 2, 16, false);
+  _major = (payload[18] << 8) | payload[19];
+  _minor = (payload[20] << 8) | payload[21];
+  _signalPower = static_cast<int8_t>(payload[22]);
+}
+
+#endif /* BLE_ENABLED */

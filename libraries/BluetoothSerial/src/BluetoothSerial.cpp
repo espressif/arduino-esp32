@@ -1,3 +1,4 @@
+// Copyright 2018-2026 Espressif Systems (Shanghai) PTE LTD
 // Copyright 2018 Evandro Luis Copercini
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,1353 +13,1208 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "sdkconfig.h"
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <inttypes.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "soc/soc_caps.h"
-#include "esp_mac.h"
+/**
+ * @file BluetoothSerial.cpp
+ * @brief BR/EDR Serial Port Profile (SPP) implementation.
+ *
+ * Spec references:
+ *  - Serial Port Profile (SPP) v1.2 — defines service record, RFCOMM channel
+ *    negotiation, and data transport over RFCOMM.
+ *  - RFCOMM with TS 07.10 — BT Core Spec v5.x, Vol 4, Part E (transport layer
+ *    that SPP relies on for framing and flow control).
+ *  - BR/EDR Generic Access Profile (GAP) — BT Core Spec v5.x, Vol 3, Part C
+ *    (inquiry/discovery, device name, scan modes).
+ *  - Secure Simple Pairing (SSP) — BT Core Spec v5.x, Vol 2, Part C, Section 4
+ *    (numeric comparison, passkey entry, OOB, Just Works; replaces legacy PIN
+ *    pairing for devices advertising SSP support).
+ *  - Legacy Pairing — BT Core Spec v5.x, Vol 2, Part C, Section 4.1
+ *    (PIN-code-based authentication for BR/EDR devices that do not support SSP).
+ */
 
+#include "sdkconfig.h"
+#include "soc/soc_caps.h"
 #if SOC_BT_SUPPORTED && defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
 
-#ifdef ARDUINO_ARCH_ESP32
-#include "esp32-hal-log.h"
+#include "BluetoothSerial.h"
+#include "esp32-hal-bt.h"
 #include "esp32-hal-alloc-bt-classic-mem.h"
+#include "esp32-hal-log.h"
+
+#include <esp_bt.h>
+#include <esp_bt_main.h>
+#include <esp_bt_device.h>
+#include <esp_gap_bt_api.h>
+#include <esp_spp_api.h>
+#include <cstring>
+
+// CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF: controller ceiling on simultaneous
+// BR/EDR ACL links (=2 in the shipped esp32 sdkconfig).
+#if defined(CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF)
+static constexpr size_t kMaxSppPeers = CONFIG_BTDM_CTRL_BR_EDR_MAX_ACL_CONN_EFF;
+#elif defined(CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_ACL_CONN_EFF)
+static constexpr size_t kMaxSppPeers = CONFIG_BTDM_CONTROLLER_BR_EDR_MAX_ACL_CONN_EFF;
+#elif defined(CONFIG_BT_ACL_CONNECTIONS)
+static constexpr size_t kMaxSppPeers = CONFIG_BT_ACL_CONNECTIONS;
+#else
+static constexpr size_t kMaxSppPeers = 2;
 #endif
 
-#include "BluetoothSerial.h"
-#include "BTAdvertisedDevice.h"
+// Per-byte rx ring; 512 is a practical default that fits typical SPP workloads.
+static constexpr uint16_t RX_QUEUE_SIZE = 512;
+// Packet-pointer tx ring; each slot holds a malloc'd spp_packet_t*.
+static constexpr uint16_t TX_QUEUE_SIZE = 32;
+// Maximum payload bytes per esp_spp_write() call.  RFCOMM with TS 07.10
+// supports N1 (frame size) up to 32767 octets; the default negotiated N1 is
+// 127 bytes but ESP-IDF's SPP layer accepts up to ~600+ bytes per write.
+// 330 bytes is a conservative limit that fits within a few RFCOMM DH5 frames.
+// SPP v1.2, §5.2; BT Core Spec v5.x, Vol 4, Part E (RFCOMM), §5.5.3
+static constexpr uint16_t SPP_TX_MAX = 330;
+static constexpr const char *DEFAULT_SPP_NAME = "ESP32SPP";
 
-#include "esp_bt.h"
-#include "esp_bt_main.h"
-#include "esp_gap_bt_api.h"
-#include "esp_bt_device.h"
-#include "esp_spp_api.h"
-#include <esp_log.h>
+// Event group bits for SPP state
+static constexpr EventBits_t SPP_RUNNING = BIT0;
+static constexpr EventBits_t SPP_CONNECTED = BIT1;
+static constexpr EventBits_t SPP_DISCONNECTED = BIT2;
 
-#include "esp32-hal-log.h"
+// Event group bits for BT discovery state and bond removal
+static constexpr EventBits_t BT_DISCOVERY_RUNNING = BIT0;
+static constexpr EventBits_t BT_DISCOVERY_COMPLETED = BIT1;
+static constexpr EventBits_t BT_BOND_REMOVE_COMPLETED = BIT2;
 
-const char *_spp_server_name = "ESP32SPP";
-
-#define RX_QUEUE_SIZE         512
-#define TX_QUEUE_SIZE         32
-#define SPP_TX_QUEUE_TIMEOUT  1000
-#define SPP_TX_DONE_TIMEOUT   1000
-#define SPP_CONGESTED_TIMEOUT 1000
-
-static uint32_t _spp_client = 0;
-static QueueHandle_t _spp_rx_queue = NULL;
-static QueueHandle_t _spp_tx_queue = NULL;
-static SemaphoreHandle_t _spp_tx_done = NULL;
-static TaskHandle_t _spp_task_handle = NULL;
-static EventGroupHandle_t _spp_event_group = NULL;
-static EventGroupHandle_t _bt_event_group = NULL;
-static boolean secondConnectionAttempt;
-static esp_spp_cb_t custom_spp_callback = NULL;
-static BluetoothSerialDataCb custom_data_callback = NULL;
-static esp_bd_addr_t current_bd_addr;
-static ConfirmRequestCb confirm_request_callback = NULL;
-static KeyRequestCb key_request_callback = NULL;
-static AuthCompleteCb auth_complete_callback = NULL;
-static bool _rmt_name_valid = false;
-static uint8_t _rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = {0};
-
-#define INQ_LEN       0x10
-#define INQ_NUM_RSPS  20
-#define READY_TIMEOUT (10 * 1000)
-#define SCAN_TIMEOUT  (INQ_LEN * 2 * 1000)
-static esp_bd_addr_t _peer_bd_addr;
-static char _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
-static bool _isRemoteAddressSet;
-static bool _isMaster;
-static bool _enableSSP;
-static bool _IO_CAP_INPUT;
-static bool _IO_CAP_OUTPUT;
-esp_bt_pin_code_t _pin_code = {0};
-uint8_t _pin_code_len = 0;  // Number of valid Bytes in the esp_bt_pin_code_t array
-static esp_spp_sec_t _sec_mask;
-static esp_spp_role_t _role;
-// start connect on ESP_SPP_DISCOVERY_COMP_EVT or save entry for getChannels
-static bool _doConnect;
-static std::map<int, std::string> sdpRecords;
-
-static BTScanResultsSet scanResults;
-static BTAdvertisedDeviceCb advertisedDeviceCb = nullptr;
-
-// _spp_event_group
-#define SPP_RUNNING   0x01
-#define SPP_CONNECTED 0x02
-#define SPP_CONGESTED 0x04
-// true until OPEN successful, changes to false on CLOSE
-#define SPP_DISCONNECTED 0x08
-// true until connect(), changes to true on CLOSE
-#define SPP_CLOSED 0x10
-
-// _bt_event_group
-#define BT_DISCOVERY_RUNNING   0x01
-#define BT_DISCOVERY_COMPLETED 0x02
-
-#define BT_SDP_RUNNING   0x04
-#define BT_SDP_COMPLETED 0x08
-
-typedef struct {
+struct spp_packet_t {
   size_t len;
+  bool broadcast;
+  uint8_t targetAddr[6];
   uint8_t data[];
-} spp_packet_t;
+};
 
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
-static char *bda2str(esp_bd_addr_t bda, char *str, size_t size) {
-  if (bda == NULL || str == NULL || size < 18) {
-    return NULL;
+struct PeerState {
+  uint32_t handle = 0;
+  BTAddress address;
+  bool congested = false;
+};
+
+// --------------------------------------------------------------------------
+// BluetoothSerial::Impl -- all state is instance-owned
+// --------------------------------------------------------------------------
+
+struct BluetoothSerial::Impl {
+  // SPP state
+  std::vector<PeerState> peers;
+  SemaphoreHandle_t peersMtx = nullptr;
+  QueueHandle_t rxQueue = nullptr;
+  QueueHandle_t txQueue = nullptr;
+  SemaphoreHandle_t txDone = nullptr;
+  EventGroupHandle_t sppEventGroup = nullptr;
+  EventGroupHandle_t btEventGroup = nullptr;
+  TaskHandle_t txTaskHandle = nullptr;
+
+  String localName;
+  bool isInitiator = false;
+  bool initialized = false;
+  bool sspEnabled = false;
+  bool ioCapInput = false;
+  bool ioCapOutput = false;
+
+  uint8_t pinCode[16] = {};
+  uint8_t pinCodeLen = 0;
+
+  uint8_t txBuffer[SPP_TX_MAX] = {};
+  size_t txBufferLen = 0;
+
+  // Callbacks
+  DataHandler dataCb;
+  PeerDataHandler peerDataCb;
+  PeerConnectHandler connectCb;
+  PeerDisconnectHandler disconnectCb;
+  ConfirmRequestHandler confirmRequestCb;
+  AuthCompleteHandler authCompleteCb;
+  DiscoveryHandler discoveryCb;
+
+  // Discovery results
+  std::vector<BluetoothSerial::DiscoveryResult> discoveryResults;
+
+  // Connection target for name-based connect
+  String targetName;
+  uint8_t peerAddr[6] = {};
+  bool isRemoteAddressSet = false;
+  bool doConnect = false;
+
+  bool createResources();
+  void destroyResources();
+  void updateConnectionEventGroup();
+  PeerState *findPeerByHandle(uint32_t handle);
+  const PeerState *findPeerByHandle(uint32_t handle) const;
+
+  static void sppCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param);
+  static void gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
+  static void txTask(void *arg);
+  static bool getNameFromEIR(const uint8_t *eir, char *bdname, uint8_t *bdname_len);
+
+  // Non-owning pointer to the active instance; set during begin() and cleared
+  // in end(). Ownership always stays with the per-instance _impl unique_ptr.
+  static Impl *s_impl;
+};
+
+BluetoothSerial::Impl *BluetoothSerial::Impl::s_impl = nullptr;
+
+void BluetoothSerial::Impl::updateConnectionEventGroup() {
+  if (!sppEventGroup || !peersMtx) {
+    return;
   }
 
-  uint8_t *p = bda;
-  snprintf(str, size, MACSTR, MAC2STR(p));
-  return str;
-}
-#endif
+  bool hasPeers = false;
+  if (xSemaphoreTake(peersMtx, portMAX_DELAY) == pdTRUE) {
+    hasPeers = !peers.empty();
+    xSemaphoreGive(peersMtx);
+  }
 
-static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len) {
-  if (!eir || !bdname || !bdname_len) {
+  if (hasPeers) {
+    xEventGroupClearBits(sppEventGroup, SPP_DISCONNECTED);
+    xEventGroupSetBits(sppEventGroup, SPP_CONNECTED);
+  } else {
+    xEventGroupClearBits(sppEventGroup, SPP_CONNECTED);
+    xEventGroupSetBits(sppEventGroup, SPP_DISCONNECTED);
+  }
+}
+
+PeerState *BluetoothSerial::Impl::findPeerByHandle(uint32_t handle) {
+  for (auto &peer : peers) {
+    if (peer.handle == handle) {
+      return &peer;
+    }
+  }
+  return nullptr;
+}
+
+const PeerState *BluetoothSerial::Impl::findPeerByHandle(uint32_t handle) const {
+  for (const auto &peer : peers) {
+    if (peer.handle == handle) {
+      return &peer;
+    }
+  }
+  return nullptr;
+}
+
+bool BluetoothSerial::Impl::createResources() {
+  peersMtx = xSemaphoreCreateMutex();
+  rxQueue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t));
+  txQueue = xQueueCreate(TX_QUEUE_SIZE, sizeof(spp_packet_t *));
+  txDone = xSemaphoreCreateBinary();
+  sppEventGroup = xEventGroupCreate();
+  btEventGroup = xEventGroupCreate();
+
+  if (!peersMtx || !rxQueue || !txQueue || !txDone || !sppEventGroup || !btEventGroup) {
+    destroyResources();
     return false;
   }
 
-  uint8_t *rmt_bdname, rmt_bdname_len;
-  *bdname = *bdname_len = rmt_bdname_len = 0;
-
-  rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &rmt_bdname_len);
-  if (!rmt_bdname) {
-    rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, &rmt_bdname_len);
+  BaseType_t ret = xTaskCreatePinnedToCore(txTask, "spp_tx", 4096, this, configMAX_PRIORITIES - 1, &txTaskHandle, 0);
+  if (ret != pdPASS) {
+    destroyResources();
+    return false;
   }
-  if (rmt_bdname) {
-    rmt_bdname_len = rmt_bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN ? ESP_BT_GAP_MAX_BDNAME_LEN : rmt_bdname_len;
-    memcpy(bdname, rmt_bdname, rmt_bdname_len);
-    bdname[rmt_bdname_len] = 0;
-    *bdname_len = rmt_bdname_len;
-    return true;
-  }
-  return false;
+  return true;
 }
 
-static esp_err_t _spp_queue_packet(uint8_t *data, size_t len) {
-  if (!data || !len) {
-    log_w("No data provided");
-    return ESP_OK;
+void BluetoothSerial::Impl::destroyResources() {
+  if (txTaskHandle) {
+    vTaskDelete(txTaskHandle);
+    txTaskHandle = nullptr;
   }
-  spp_packet_t *packet = (spp_packet_t *)malloc(sizeof(spp_packet_t) + len);
-  if (!packet) {
-    log_e("SPP TX Packet Malloc Failed!");
-    return ESP_FAIL;
+
+  if (peersMtx) {
+    if (xSemaphoreTake(peersMtx, portMAX_DELAY) == pdTRUE) {
+      peers.clear();
+      xSemaphoreGive(peersMtx);
+    }
+    vSemaphoreDelete(peersMtx);
+    peersMtx = nullptr;
   }
-  packet->len = len;
-  memcpy(packet->data, data, len);
-  if (!_spp_tx_queue || xQueueSend(_spp_tx_queue, &packet, SPP_TX_QUEUE_TIMEOUT) != pdPASS) {
-    log_e("SPP TX Queue Send Failed!");
-    free(packet);
-    return ESP_FAIL;
+
+  if (rxQueue) {
+    vQueueDelete(rxQueue);
+    rxQueue = nullptr;
   }
-  return ESP_OK;
+
+  if (txQueue) {
+    spp_packet_t *pkt = nullptr;
+    while (xQueueReceive(txQueue, &pkt, 0) == pdTRUE) {
+      free(pkt);
+    }
+    vQueueDelete(txQueue);
+    txQueue = nullptr;
+  }
+
+  if (txDone) {
+    vSemaphoreDelete(txDone);
+    txDone = nullptr;
+  }
+
+  if (sppEventGroup) {
+    vEventGroupDelete(sppEventGroup);
+    sppEventGroup = nullptr;
+  }
+
+  if (btEventGroup) {
+    vEventGroupDelete(btEventGroup);
+    btEventGroup = nullptr;
+  }
 }
 
-const uint16_t SPP_TX_MAX = 330;
-static uint8_t _spp_tx_buffer[SPP_TX_MAX];
-static uint16_t _spp_tx_buffer_len = 0;
+void BluetoothSerial::Impl::txTask(void *arg) {
+  auto *impl = static_cast<Impl *>(arg);
+  spp_packet_t *pkt = nullptr;
 
-static bool _spp_send_buffer() {
-  if ((xEventGroupWaitBits(_spp_event_group, SPP_CONGESTED, pdFALSE, pdTRUE, SPP_CONGESTED_TIMEOUT) & SPP_CONGESTED) != 0) {
-    if (!_spp_client) {
-      log_v("SPP Client Gone!");
-      return false;
-    }
-    log_v("SPP Write %u", _spp_tx_buffer_len);
-    esp_err_t err = esp_spp_write(_spp_client, _spp_tx_buffer_len, _spp_tx_buffer);
-    if (err != ESP_OK) {
-      log_e("SPP Write Failed! [0x%X]", err);
-      return false;
-    }
-    _spp_tx_buffer_len = 0;
-    if (xSemaphoreTake(_spp_tx_done, SPP_TX_DONE_TIMEOUT) != pdTRUE) {
-      log_e("SPP Ack Failed!");
-      return false;
-    }
-    return true;
-  }
-  log_e("SPP Write Congested!");
-  return false;
-}
-
-static void _spp_tx_task(void *arg) {
-  spp_packet_t *packet = NULL;
-  size_t len = 0, to_send = 0;
-  uint8_t *data = NULL;
   for (;;) {
-    if (_spp_tx_queue && xQueueReceive(_spp_tx_queue, &packet, portMAX_DELAY) == pdTRUE && packet) {
-      if (packet->len <= (SPP_TX_MAX - _spp_tx_buffer_len)) {
-        memcpy(_spp_tx_buffer + _spp_tx_buffer_len, packet->data, packet->len);
-        _spp_tx_buffer_len += packet->len;
-        free(packet);
-        packet = NULL;
-        if (SPP_TX_MAX == _spp_tx_buffer_len || uxQueueMessagesWaiting(_spp_tx_queue) == 0) {
-          _spp_send_buffer();
-        }
-      } else {
-        len = packet->len;
-        data = packet->data;
-        to_send = SPP_TX_MAX - _spp_tx_buffer_len;
-        memcpy(_spp_tx_buffer + _spp_tx_buffer_len, data, to_send);
-        _spp_tx_buffer_len = SPP_TX_MAX;
-        data += to_send;
-        len -= to_send;
-        if (!_spp_send_buffer()) {
-          len = 0;
-        }
-        while (len >= SPP_TX_MAX) {
-          memcpy(_spp_tx_buffer, data, SPP_TX_MAX);
-          _spp_tx_buffer_len = SPP_TX_MAX;
-          data += SPP_TX_MAX;
-          len -= SPP_TX_MAX;
-          if (!_spp_send_buffer()) {
-            len = 0;
-            break;
-          }
-        }
-        if (len) {
-          memcpy(_spp_tx_buffer, data, len);
-          _spp_tx_buffer_len += len;
-          if (uxQueueMessagesWaiting(_spp_tx_queue) == 0) {
-            _spp_send_buffer();
-          }
-        }
-        free(packet);
-        packet = NULL;
-      }
-    } else {
-      log_e("Something went horribly wrong");
+    if (!impl->sppEventGroup || !(xEventGroupGetBits(impl->sppEventGroup) & SPP_RUNNING)) {
+      vTaskDelay(pdMS_TO_TICKS(100));
+      continue;
     }
-  }
-  vTaskDelete(NULL);
-  _spp_task_handle = NULL;
-}
 
-static void esp_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
-  switch (event) {
-    case ESP_SPP_INIT_EVT:  // Enum 0 - When SPP is initialized
-      log_i("ESP_SPP_INIT_EVT");
-#ifdef ESP_IDF_VERSION_MAJOR
-      esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-#else
-      esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
-#endif
-      log_i("ESP_SPP_INIT_EVT: %s: start", _isMaster ? "master" : "slave");
-      esp_spp_start_srv(ESP_SPP_SEC_NONE, _isMaster ? ESP_SPP_ROLE_MASTER : ESP_SPP_ROLE_SLAVE, 0, _spp_server_name);
-      xEventGroupSetBits(_spp_event_group, SPP_RUNNING);
-      break;
+    if (xQueueReceive(impl->txQueue, &pkt, portMAX_DELAY) != pdTRUE || !pkt) {
+      continue;
+    }
 
-    case ESP_SPP_UNINIT_EVT:  // Enum 1 - When SPP is deinitialized
-      log_i("ESP_SPP_UNINIT_EVT: SPP is deinitialized");
-      break;
+    EventBits_t bits = xEventGroupWaitBits(impl->sppEventGroup, SPP_CONNECTED, pdFALSE, pdFALSE, portMAX_DELAY);
+    if (!(bits & SPP_CONNECTED)) {
+      free(pkt);
+      continue;
+    }
 
-    case ESP_SPP_DISCOVERY_COMP_EVT:  // Enum 8 - When SDP discovery complete
-      log_i("ESP_SPP_DISCOVERY_COMP_EVT num=%u", param->disc_comp.scn_num);
-      if (param->disc_comp.status == ESP_SPP_SUCCESS) {
-        for (int i = 0; i < param->disc_comp.scn_num; i++) {
-          log_d("ESP_SPP_DISCOVERY_COMP_EVT: spp [%d] channel: %u service name:%s", i, param->disc_comp.scn[i], param->disc_comp.service_name[0]);
-        }
-        if (_doConnect) {
-          if (param->disc_comp.scn_num > 0) {
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
-            char bda_str[18];
-            log_i("ESP_SPP_DISCOVERY_COMP_EVT: spp connect to remote %s channel %u", bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)), param->disc_comp.scn[0]);
-#endif
-            xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
-            if (esp_spp_connect(_sec_mask, _role, param->disc_comp.scn[0], _peer_bd_addr) != ESP_OK) {
-              log_e("ESP_SPP_DISCOVERY_COMP_EVT connect failed");
-              xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
-            }
-          } else {
-            log_e("ESP_SPP_DISCOVERY_COMP_EVT remote doesn't offer an SPP channel");
-            xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
-          }
-        } else {
-          for (int i = 0; i < param->disc_comp.scn_num; i++) {
-            sdpRecords[param->disc_comp.scn[i]] = param->disc_comp.service_name[0];
-          }
+    std::vector<uint32_t> handles;
+    if (impl->peersMtx && xSemaphoreTake(impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+      if (pkt->broadcast) {
+        handles.reserve(impl->peers.size());
+        for (const auto &peer : impl->peers) {
+          handles.push_back(peer.handle);
         }
       } else {
-        log_e("ESP_SPP_DISCOVERY_COMP_EVT failed!, status:%d", param->disc_comp.status);
-      }
-      xEventGroupSetBits(_bt_event_group, BT_SDP_COMPLETED);
-      break;
-
-    case ESP_SPP_OPEN_EVT:  // Enum 26 - When SPP Client connection open
-      log_i("ESP_SPP_OPEN_EVT");
-      if (!_spp_client) {
-        _spp_client = param->open.handle;
-      } else {
-        secondConnectionAttempt = true;
-        esp_spp_disconnect(param->open.handle);
-      }
-      xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-      xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-      xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-      break;
-
-    case ESP_SPP_CLOSE_EVT:  // Enum 27 - When SPP connection closed
-      if ((param->close.async == false && param->close.status == ESP_SPP_SUCCESS) || param->close.async) {
-        log_i(
-          "ESP_SPP_CLOSE_EVT status:%d handle:%" PRIu32 " close_by_remote:%d attempt %u", param->close.status, param->close.handle, param->close.async,
-          secondConnectionAttempt
-        );
-        if (secondConnectionAttempt) {
-          secondConnectionAttempt = false;
-        } else {
-          _spp_client = 0;
-          xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
-          xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-          xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
-          xEventGroupClearBits(_spp_event_group, SPP_CONNECTED);
-        }
-      } else {
-        log_e("ESP_SPP_CLOSE_EVT failed!, status:%d", param->close.status);
-      }
-      break;
-
-    case ESP_SPP_START_EVT:  // Enum 28 - When SPP server started
-      log_i("ESP_SPP_START_EVT");
-      break;
-
-    case ESP_SPP_CL_INIT_EVT:  // Enum 29 - When SPP client initiated a connection
-      if (param->cl_init.status == ESP_SPP_SUCCESS) {
-        log_i("ESP_SPP_CL_INIT_EVT handle:%" PRIu32 " sec_id:%u", param->cl_init.handle, param->cl_init.sec_id);
-      } else {
-        log_i("ESP_SPP_CL_INIT_EVT status:%d", param->cl_init.status);
-      }
-      break;
-
-    case ESP_SPP_DATA_IND_EVT:  // Enum 30 - When SPP connection received data, only for ESP_SPP_MODE_CB
-      log_v("ESP_SPP_DATA_IND_EVT len=%u handle=%" PRIu32, param->data_ind.len, param->data_ind.handle);
-      //esp_log_buffer_hex("",param->data_ind.data,param->data_ind.len); //for low level debug
-      //ets_printf("r:%u\n", param->data_ind.len);
-
-      if (custom_data_callback) {
-        custom_data_callback(param->data_ind.data, param->data_ind.len);
-      } else if (_spp_rx_queue != NULL) {
-        for (int i = 0; i < param->data_ind.len; i++) {
-          if (xQueueSend(_spp_rx_queue, param->data_ind.data + i, (TickType_t)0) != pdTRUE) {
-            log_e("RX Full! Discarding %u bytes", param->data_ind.len - i);
+        for (const auto &peer : impl->peers) {
+          if (memcmp(peer.address.data(), pkt->targetAddr, 6) == 0) {
+            handles.push_back(peer.handle);
             break;
           }
         }
       }
-      break;
+      xSemaphoreGive(impl->peersMtx);
+    }
 
-    case ESP_SPP_CONG_EVT:  // Enum 31 - When SPP connection congestion status changed, only for ESP_SPP_MODE_CB
-      if (param->cong.cong) {
-        xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
-      } else {
-        xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-      }
-      log_v("ESP_SPP_CONG_EVT: %s", param->cong.cong ? "CONGESTED" : "FREE");
-      break;
+    for (uint32_t handle : handles) {
+      uint8_t *data = pkt->data;
+      size_t len = pkt->len;
 
-    case ESP_SPP_WRITE_EVT:  // Enum 33 - When SPP write operation completes, only for ESP_SPP_MODE_CB
-      if (param->write.status == ESP_SPP_SUCCESS) {
-        if (param->write.cong) {
-          xEventGroupClearBits(_spp_event_group, SPP_CONGESTED);
+      while (len > 0) {
+        bool peerActive = false;
+        bool congested = false;
+
+        if (impl->peersMtx && xSemaphoreTake(impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+          if (PeerState *peer = impl->findPeerByHandle(handle)) {
+            peerActive = true;
+            congested = peer->congested;
+          }
+          xSemaphoreGive(impl->peersMtx);
         }
-        log_v("ESP_SPP_WRITE_EVT: %d %s", param->write.len, param->write.cong ? "CONGESTED" : "");
-      } else {
-        log_e("ESP_SPP_WRITE_EVT failed!, status:%d", param->write.status);
-      }
-      xSemaphoreGive(_spp_tx_done);  //we can try to send another packet
-      break;
 
-    case ESP_SPP_SRV_OPEN_EVT:  // Enum 34 - When SPP Server connection open
-      if (param->srv_open.status == ESP_SPP_SUCCESS) {
-        log_i("ESP_SPP_SRV_OPEN_EVT: %" PRIu32, _spp_client);
-        if (!_spp_client) {
-          _spp_client = param->srv_open.handle;
-          _spp_tx_buffer_len = 0;
-        } else {
-          secondConnectionAttempt = true;
-          esp_spp_disconnect(param->srv_open.handle);
-        }
-        xEventGroupClearBits(_spp_event_group, SPP_DISCONNECTED);
-        xEventGroupSetBits(_spp_event_group, SPP_CONNECTED);
-      } else {
-        log_e("ESP_SPP_SRV_OPEN_EVT Failed!, status:%d", param->srv_open.status);
-      }
-      break;
-
-    case ESP_SPP_SRV_STOP_EVT:  // Enum 35 - When SPP server stopped
-      log_i("ESP_SPP_SRV_STOP_EVT");
-      break;
-
-    case ESP_SPP_VFS_REGISTER_EVT:  // Enum 36 - When SPP VFS register
-      log_i("ESP_SPP_VFS_REGISTER_EVT");
-      break;
-
-    case ESP_SPP_VFS_UNREGISTER_EVT:  // Enum 37 - When SPP VFS unregister
-      log_i("ESP_SPP_VFS_UNREGISTER_EVT");
-      break;
-
-    default: log_i("ESP_SPP_* event #%d unhandled", event); break;
-  }
-  if (custom_spp_callback) {
-    (*custom_spp_callback)(event, param);
-  }
-}
-
-void BluetoothSerial::onData(BluetoothSerialDataCb cb) {
-  custom_data_callback = cb;
-}
-
-static void esp_bt_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
-  switch (event) {
-    case ESP_BT_GAP_DISC_RES_EVT:
-    {  // Enum 0 - Device discovery result event
-      log_i("ESP_BT_GAP_DISC_RES_EVT properties=%d", param->disc_res.num_prop);
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
-      char bda_str[18];
-      log_i("Scanned device: %s", bda2str(param->disc_res.bda, bda_str, 18));
-#endif
-      BTAdvertisedDeviceSet advertisedDevice;
-      uint8_t peer_bdname_len = 0;
-      char peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
-      for (int i = 0; i < param->disc_res.num_prop; i++) {
-        switch (param->disc_res.prop[i].type) {
-          case ESP_BT_GAP_DEV_PROP_BDNAME:  // Enum 1 - Bluetooth device name, value type is int8_t []
-            peer_bdname_len = param->disc_res.prop[i].len;
-            memcpy(peer_bdname, param->disc_res.prop[i].val, peer_bdname_len);
-            peer_bdname_len--;  // len includes 0 terminator
-            log_v("ESP_BT_GAP_DISC_RES_EVT : BDNAME :  %s : %u", peer_bdname, peer_bdname_len);
-            if (strlen(_remote_name) == peer_bdname_len && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-              log_i("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_BDNAME : %s", peer_bdname);
-              _isRemoteAddressSet = true;
-              memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-              esp_bt_gap_cancel_discovery();
-              esp_spp_start_discovery(_peer_bd_addr);
-            }
-            break;
-
-          case ESP_BT_GAP_DEV_PROP_COD:  // Enum 2 - Class of Device, value type is uint32_t
-            if (param->disc_res.prop[i].len <= sizeof(int)) {
-              uint32_t cod = 0;
-              memcpy(&cod, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-              advertisedDevice.setCOD(cod);
-              log_d("ESP_BT_GAP_DEV_PROP_COD 0x%" PRIx32, cod);
-            } else {
-              log_d("ESP_BT_GAP_DEV_PROP_COD invalid COD: Value size larger than integer");
-            }
-            break;
-
-          case ESP_BT_GAP_DEV_PROP_RSSI:  // Enum 3 - Received Signal strength Indication, value type is int8_t, ranging from -128 to 127
-            if (param->disc_res.prop[i].len <= sizeof(int)) {
-              uint8_t rssi = 0;
-              memcpy(&rssi, param->disc_res.prop[i].val, param->disc_res.prop[i].len);
-              log_d("ESP_BT_GAP_DEV_PROP_RSSI %u", rssi);
-              advertisedDevice.setRSSI(rssi);
-            } else {
-              log_d("ESP_BT_GAP_DEV_PROP_RSSI invalid RSSI: Value size larger than integer");
-            }
-            break;
-
-          case ESP_BT_GAP_DEV_PROP_EIR:  // Enum 4 - Extended Inquiry Response, value type is uint8_t []
-            if (get_name_from_eir((uint8_t *)param->disc_res.prop[i].val, peer_bdname, &peer_bdname_len)) {
-              log_i("ESP_BT_GAP_DISC_RES_EVT : EIR : %s : %u", peer_bdname, peer_bdname_len);
-              if (strlen(_remote_name) == peer_bdname_len && strncmp(peer_bdname, _remote_name, peer_bdname_len) == 0) {
-                log_v("ESP_BT_GAP_DISC_RES_EVT : SPP_START_DISCOVERY_EIR : %s : %u", peer_bdname, peer_bdname_len);
-                _isRemoteAddressSet = true;
-                memcpy(_peer_bd_addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-                esp_bt_gap_cancel_discovery();
-                esp_spp_start_discovery(_peer_bd_addr);
-              }
-            }
-            break;
-
-          default: log_i("ESP_BT_GAP_DISC_RES_EVT unknown property [%d]:type:%d", i, param->disc_res.prop[i].type); break;
-        }
-        if (_isRemoteAddressSet) {
+        if (!peerActive) {
           break;
         }
-      }
-      if (peer_bdname_len) {
-        advertisedDevice.setName(peer_bdname);
-      }
-      esp_bd_addr_t addr;
-      memcpy(addr, param->disc_res.bda, ESP_BD_ADDR_LEN);
-      advertisedDevice.setAddress(BTAddress(addr));
-      if (scanResults.add(advertisedDevice) && advertisedDeviceCb) {
-        advertisedDeviceCb(&advertisedDevice);
-      }
-    } break;
 
-    case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:  // Enum 1 - Discovery state changed event
-      if (param->disc_st_chg.state == ESP_BT_GAP_DISCOVERY_STOPPED) {
-        log_i("ESP_BT_GAP_DISC_STATE_CHANGED_EVT stopped");
-        xEventGroupClearBits(_bt_event_group, BT_DISCOVERY_RUNNING);
-        xEventGroupSetBits(_bt_event_group, BT_DISCOVERY_COMPLETED);
-      } else {  // ESP_BT_GAP_DISCOVERY_STARTED
-        log_i("ESP_BT_GAP_DISC_STATE_CHANGED_EVT started");
-        xEventGroupClearBits(_bt_event_group, BT_DISCOVERY_COMPLETED);
-        xEventGroupSetBits(_bt_event_group, BT_DISCOVERY_RUNNING);
-      }
-      break;
-
-    case ESP_BT_GAP_RMT_SRVCS_EVT:  // Enum 2 - Get remote services event
-      log_i("ESP_BT_GAP_RMT_SRVCS_EVT: status = %d, num_uuids = %d", param->rmt_srvcs.stat, param->rmt_srvcs.num_uuids);
-      break;
-
-    case ESP_BT_GAP_RMT_SRVC_REC_EVT:  // Enum 3 - Get remote service record event
-      log_i("ESP_BT_GAP_RMT_SRVC_REC_EVT: status = %d", param->rmt_srvc_rec.stat);
-      break;
-
-    case ESP_BT_GAP_AUTH_CMPL_EVT:  // Enum 4 - Authentication complete event
-      if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {
-        log_v("authentication success: %s", param->auth_cmpl.device_name);
-        if (auth_complete_callback) {
-          auth_complete_callback(true);
+        if (congested) {
+          vTaskDelay(pdMS_TO_TICKS(5));
+          continue;
         }
-      } else {
-        log_e("authentication failed, status:%d", param->auth_cmpl.stat);
-        if (auth_complete_callback) {
-          auth_complete_callback(false);
+
+        size_t chunk = (len > SPP_TX_MAX) ? SPP_TX_MAX : len;
+        esp_err_t err = esp_spp_write(handle, chunk, data);
+        if (err != ESP_OK) {
+          log_e("esp_spp_write: %s", esp_err_to_name(err));
+          break;
         }
+        xSemaphoreTake(impl->txDone, portMAX_DELAY);
+        data += chunk;
+        len -= chunk;
       }
-      break;
-    case ESP_BT_GAP_PIN_REQ_EVT:  // Enum 5 - Legacy Pairing Pin code request
-      log_i("ESP_BT_GAP_PIN_REQ_EVT (min_16_digit=%d)", param->pin_req.min_16_digit);
-      if (param->pin_req.min_16_digit && _pin_code_len < 16) {
-        esp_bt_gap_pin_reply(param->pin_req.bda, false, 0, NULL);
-      } else {
-        log_i("Input pin code: \"%.*s\"=0x%x", _pin_code_len, _pin_code, *(int *)_pin_code);
-        esp_bt_gap_pin_reply(param->pin_req.bda, true, _pin_code_len, _pin_code);
-      }
-      break;
-    case ESP_BT_GAP_CFM_REQ_EVT:  // Enum 6 - Security Simple Pairing User Confirmation request.
-      log_i("ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %06" PRIu32, param->cfm_req.num_val);
-      if (confirm_request_callback) {
-        memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
-        confirm_request_callback(param->cfm_req.num_val);
-      } else {
-        log_w("ESP_BT_GAP_CFM_REQ_EVT: confirm_request_callback does not exist - refusing pairing");
-        esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
-      }
-      break;
+    }
 
-    case ESP_BT_GAP_KEY_NOTIF_EVT:  // Enum 7 - Security Simple Pairing Passkey Notification
-      log_i("ESP_BT_GAP_KEY_NOTIF_EVT passkey:%06" PRIu32, param->key_notif.passkey);
-      break;
-    case ESP_BT_GAP_KEY_REQ_EVT:  // Enum 8 - Security Simple Pairing Passkey request
-      log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
-      if (key_request_callback) {
-        memcpy(current_bd_addr, param->cfm_req.bda, sizeof(esp_bd_addr_t));
-        key_request_callback();
-      } else {
-        log_w("ESP_BT_GAP_KEY_REQ_EVT: key_request_callback does not exist - refuseing pairing");
-        esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, false);
-      }
-      break;
-
-    case ESP_BT_GAP_READ_RSSI_DELTA_EVT:  // Enum 9 - Read rssi event
-      log_i("ESP_BT_GAP_READ_RSSI_DELTA_EVT Read rssi event");
-      break;
-    case ESP_BT_GAP_CONFIG_EIR_DATA_EVT:  // Enum 10 - Config EIR data event
-      log_i("ESP_BT_GAP_CONFIG_EIR_DATA_EVT: stat:%d num:%d", param->config_eir_data.stat, param->config_eir_data.eir_type_num);
-      break;
-
-    case ESP_BT_GAP_SET_AFH_CHANNELS_EVT:  // Enum 11 - Set AFH channels event
-      log_i("ESP_BT_GAP_SET_AFH_CHANNELS_EVT Set AFH channels event");
-      break;
-
-    case ESP_BT_GAP_READ_REMOTE_NAME_EVT:  // Enum 12 - Read Remote Name event
-      if (param->read_rmt_name.stat == ESP_BT_STATUS_SUCCESS) {
-        log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT: %s", param->read_rmt_name.rmt_name);
-        memcpy(_rmt_name, param->read_rmt_name.rmt_name, ESP_BT_GAP_MAX_BDNAME_LEN + 1);
-        _rmt_name_valid = true;
-      } else {
-        log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT: no success stat:%d", param->read_rmt_name.stat);
-      }
-      break;
-
-    case ESP_BT_GAP_MODE_CHG_EVT:  // Enum 13
-      log_i("ESP_BT_GAP_MODE_CHG_EVT: mode: %d", param->mode_chg.mode);
-      break;
-
-    case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:  // Enum - 14 remove bond device complete event
-      log_i("ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT remove bond device complete event");
-      break;
-
-    case ESP_BT_GAP_QOS_CMPL_EVT:  // Enum 15 - QOS complete event
-      log_i("ESP_BT_GAP_QOS_CMPL_EVT QOS complete event");
-      break;
-
-    case ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT:  // Enum 16 - ACL connection complete status event
-      log_i("ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT ACL connection complete status event");
-      break;
-
-    case ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT:  // Enum 17 - ACL disconnection complete status event
-      log_i(
-        "ESP_BT_GAP_ACL_DISCONN_CMPL_STAT_EVT ACL disconnection complete status event: reason %d, handle %u", param->acl_disconn_cmpl_stat.reason,
-        param->acl_disconn_cmpl_stat.handle
-      );
-      break;
-
-    default: log_i("ESP-BT_GAP_* unknown message: %d", event); break;
+    free(pkt);
   }
 }
 
-static bool _init_bt(const char *deviceName, bt_mode mode) {
-  if (!_bt_event_group) {
-    _bt_event_group = xEventGroupCreate();
-    if (!_bt_event_group) {
-      log_e("BT Event Group Create Failed!");
-      return false;
-    }
-    xEventGroupClearBits(_bt_event_group, 0xFFFFFF);
-  }
-  if (!_spp_event_group) {
-    _spp_event_group = xEventGroupCreate();
-    if (!_spp_event_group) {
-      log_e("SPP Event Group Create Failed!");
-      return false;
-    }
-    xEventGroupClearBits(_spp_event_group, 0xFFFFFF);
-    xEventGroupSetBits(_spp_event_group, SPP_CONGESTED);
-    xEventGroupSetBits(_spp_event_group, SPP_DISCONNECTED);
-    xEventGroupSetBits(_spp_event_group, SPP_CLOSED);
-  }
-  if (_spp_rx_queue == NULL) {
-    _spp_rx_queue = xQueueCreate(RX_QUEUE_SIZE, sizeof(uint8_t));  //initialize the queue
-    if (_spp_rx_queue == NULL) {
-      log_e("RX Queue Create Failed");
-      return false;
-    }
-  }
-  if (_spp_tx_queue == NULL) {
-    _spp_tx_queue = xQueueCreate(TX_QUEUE_SIZE, sizeof(spp_packet_t *));  //initialize the queue
-    if (_spp_tx_queue == NULL) {
-      log_e("TX Queue Create Failed");
-      return false;
-    }
-  }
-  if (_spp_tx_done == NULL) {
-    _spp_tx_done = xSemaphoreCreateBinary();
-    if (_spp_tx_done == NULL) {
-      log_e("TX Semaphore Create Failed");
-      return false;
-    }
-    xSemaphoreTake(_spp_tx_done, 0);
-  }
-
-  if (!_spp_task_handle) {
-    xTaskCreatePinnedToCore(_spp_tx_task, "spp_tx", 4096, NULL, configMAX_PRIORITIES - 1, &_spp_task_handle, 0);
-    if (!_spp_task_handle) {
-      log_e("Network Event Task Start Failed!");
-      return false;
-    }
-  }
-
-  if (!btStarted() && !btStartMode(mode)) {
-    log_e("initialize controller failed");
+bool BluetoothSerial::Impl::getNameFromEIR(const uint8_t *eir, char *bdname, uint8_t *bdname_len) {
+  if (!eir) {
     return false;
   }
 
-  esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
-  if (bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED) {
-    if (esp_bluedroid_init()) {
-      log_e("initialize bluedroid failed");
-      return false;
+  const uint8_t *rmt_bdname = esp_bt_gap_resolve_eir_data(const_cast<uint8_t *>(eir), ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, bdname_len);
+  if (!rmt_bdname) {
+    rmt_bdname = esp_bt_gap_resolve_eir_data(const_cast<uint8_t *>(eir), ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, bdname_len);
+  }
+
+  if (rmt_bdname) {
+    if (*bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN) {
+      *bdname_len = ESP_BT_GAP_MAX_BDNAME_LEN;
     }
+    memcpy(bdname, rmt_bdname, *bdname_len);
+    bdname[*bdname_len] = '\0';
+    return true;
   }
 
-  if (bt_state != ESP_BLUEDROID_STATUS_ENABLED) {
-    if (esp_bluedroid_enable()) {
-      log_e("enable bluedroid failed");
-      return false;
+  return false;
+}
+
+void BluetoothSerial::Impl::sppCallback(esp_spp_cb_event_t event, esp_spp_cb_param_t *param) {
+  if (!s_impl) {
+    return;
+  }
+
+  switch (event) {
+    case ESP_SPP_INIT_EVT:
+      log_i("SPP initialized");
+      // Make the device connectable and put it in General Discoverable Mode so
+      // remote devices can find it during an inquiry scan.
+      // GAP scan modes: BT Core Spec v5.x, Vol 3, Part C, §4.2.2.
+      esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+      if (!s_impl->isInitiator) {
+        // Register an SPP server record in the local SDP database with
+        // ESP_SPP_SEC_AUTHENTICATE security so the connection requires pairing.
+        // SPP v1.2, §5.1 (service record); RFCOMM channel negotiation via SDP.
+        esp_spp_start_srv(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_SLAVE, 0, DEFAULT_SPP_NAME);
+      }
+      xEventGroupSetBits(s_impl->sppEventGroup, SPP_RUNNING);
+      break;
+
+    case ESP_SPP_SRV_OPEN_EVT:
+    case ESP_SPP_OPEN_EVT:
+    {
+      uint32_t handle = (event == ESP_SPP_OPEN_EVT) ? param->open.handle : param->srv_open.handle;
+      const uint8_t *bda = (event == ESP_SPP_OPEN_EVT) ? param->open.rem_bda : param->srv_open.rem_bda;
+      log_i("SPP connected, handle=%u", handle);
+
+      BTAddress address(bda, BTAddress::Type::Public);
+      bool accepted = false;
+
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (s_impl->peers.size() < kMaxSppPeers) {
+          PeerState peer;
+          peer.handle = handle;
+          peer.address = address;
+          s_impl->peers.push_back(peer);
+          accepted = true;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+
+      if (!accepted) {
+        log_w("SPP peer limit reached, rejecting handle=%u", handle);
+        esp_spp_disconnect(handle);
+        break;
+      }
+
+      s_impl->updateConnectionEventGroup();
+      if (s_impl->connectCb) {
+        s_impl->connectCb(address);
+      }
+      break;
     }
+
+    case ESP_SPP_CLOSE_EVT:
+    {
+      uint32_t handle = param->close.handle;
+      log_i("SPP disconnected, handle=%u", handle);
+      BTAddress disconnectedAddr;
+      bool found = false;
+
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        for (auto it = s_impl->peers.begin(); it != s_impl->peers.end(); ++it) {
+          if (it->handle == handle) {
+            disconnectedAddr = it->address;
+            s_impl->peers.erase(it);
+            found = true;
+            break;
+          }
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+
+      if (found) {
+        s_impl->updateConnectionEventGroup();
+        if (s_impl->disconnectCb) {
+          s_impl->disconnectCb(disconnectedAddr);
+        }
+      }
+      break;
+    }
+
+    case ESP_SPP_DATA_IND_EVT:
+    {
+      BTAddress senderAddr;
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (const PeerState *peer = s_impl->findPeerByHandle(param->data_ind.handle)) {
+          senderAddr = peer->address;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+
+      if (s_impl->peerDataCb && senderAddr) {
+        s_impl->peerDataCb(senderAddr, param->data_ind.data, param->data_ind.len);
+      } else if (s_impl->dataCb) {
+        s_impl->dataCb(param->data_ind.data, param->data_ind.len);
+      } else if (s_impl->rxQueue) {
+        for (uint16_t i = 0; i < param->data_ind.len; i++) {
+          if (xQueueSend(s_impl->rxQueue, &param->data_ind.data[i], 0) != pdTRUE) {
+            log_w("RX queue full, dropping byte");
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    case ESP_SPP_CONG_EVT:
+      if (s_impl->peersMtx && xSemaphoreTake(s_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+        if (PeerState *peer = s_impl->findPeerByHandle(param->cong.handle)) {
+          peer->congested = param->cong.cong;
+        }
+        xSemaphoreGive(s_impl->peersMtx);
+      }
+      break;
+
+    case ESP_SPP_WRITE_EVT:
+      if (s_impl->txDone) {
+        xSemaphoreGive(s_impl->txDone);
+      }
+      break;
+
+    case ESP_SPP_DISCOVERY_COMP_EVT:
+      // SDP ServiceSearchAttribute response for the SPP UUID has completed;
+      // scn[0] is the RFCOMM channel number to connect on.
+      // SPP v1.2, §5.1; SDP spec BT Core Spec v5.x, Vol 3, Part B.
+      if (param->disc_comp.status == ESP_SPP_SUCCESS && s_impl->doConnect) {
+        if (param->disc_comp.scn_num > 0) {
+          esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, param->disc_comp.scn[0], s_impl->peerAddr);
+        }
+        s_impl->doConnect = false;
+      }
+      break;
+
+    default: break;
+  }
+}
+
+void BluetoothSerial::Impl::gapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) {
+  if (!s_impl) {
+    return;
   }
 
-  if (esp_bt_gap_register_callback(esp_bt_gap_cb) != ESP_OK) {
-    log_e("gap register failed");
-    return false;
+  switch (event) {
+    case ESP_BT_GAP_DISC_RES_EVT:
+    {
+      // Inquiry result: one device found during the inquiry (discovery) scan.
+      // The EIR (Extended Inquiry Response) may include the remote device's name
+      // when supported by the peer.
+      // GAP Inquiry procedure: BT Core Spec v5.x, Vol 3, Part C, §4.4.2.
+      // EIR data types: BT Core Spec v5.x, Vol 3, Part C, §8.1.
+      BluetoothSerial::DiscoveryResult result;
+      result.address = BTAddress(param->disc_res.bda, BTAddress::Type::Public);
+
+      char bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1] = {};
+      uint8_t bdname_len = 0;
+      for (int i = 0; i < param->disc_res.num_prop; i++) {
+        auto &prop = param->disc_res.prop[i];
+        switch (prop.type) {
+          case ESP_BT_GAP_DEV_PROP_BDNAME:
+            if (prop.len <= ESP_BT_GAP_MAX_BDNAME_LEN) {
+              memcpy(bdname, prop.val, prop.len);
+              bdname[prop.len] = '\0';
+            }
+            break;
+          case ESP_BT_GAP_DEV_PROP_COD:
+            if (prop.len >= 4) {
+              result.cod = *reinterpret_cast<uint32_t *>(prop.val);
+            }
+            break;
+          case ESP_BT_GAP_DEV_PROP_RSSI:
+            if (prop.len >= 1) {
+              result.rssi = *reinterpret_cast<int8_t *>(prop.val);
+            }
+            break;
+          case ESP_BT_GAP_DEV_PROP_EIR: getNameFromEIR(reinterpret_cast<uint8_t *>(prop.val), bdname, &bdname_len); break;
+          default:                      break;
+        }
+      }
+      result.name = String(bdname);
+
+      if (s_impl->targetName.length() > 0 && result.name == s_impl->targetName) {
+        memcpy(s_impl->peerAddr, param->disc_res.bda, 6);
+        s_impl->isRemoteAddressSet = true;
+        esp_bt_gap_cancel_discovery();
+      }
+
+      s_impl->discoveryResults.push_back(result);
+
+      if (s_impl->discoveryCb) {
+        s_impl->discoveryCb(result);
+      }
+      break;
+    }
+
+    case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:
+      if (param->disc_st_chg.state == ESP_BT_GAP_DISCOVERY_STOPPED) {
+        xEventGroupSetBits(s_impl->btEventGroup, BT_DISCOVERY_COMPLETED);
+        xEventGroupClearBits(s_impl->btEventGroup, BT_DISCOVERY_RUNNING);
+      } else if (param->disc_st_chg.state == ESP_BT_GAP_DISCOVERY_STARTED) {
+        xEventGroupSetBits(s_impl->btEventGroup, BT_DISCOVERY_RUNNING);
+        xEventGroupClearBits(s_impl->btEventGroup, BT_DISCOVERY_COMPLETED);
+      }
+      break;
+
+    case ESP_BT_GAP_PIN_REQ_EVT:
+      // Legacy PIN pairing request from the remote device.
+      // Per BT Core Spec v5.x, Vol 2, Part C, §4.1.7 (Authentication),
+      // the local device MUST reply with either a PIN or an explicit reject;
+      // leaving the request unanswered causes the remote side to time out.
+      if (s_impl->pinCodeLen > 0) {
+        esp_bt_gap_pin_reply(param->pin_req.bda, true, s_impl->pinCodeLen, s_impl->pinCode);
+      } else {
+        // No PIN configured: send an explicit negative reply so the peer gets
+        // an immediate pairing-rejected indication rather than waiting for the
+        // authentication timeout (typically 30 s).
+        esp_bt_gap_pin_reply(param->pin_req.bda, false, 0, nullptr);
+      }
+      break;
+
+    case ESP_BT_GAP_CFM_REQ_EVT:
+    {
+      // Secure Simple Pairing — Numeric Comparison model.
+      // Both devices display param->cfm_req.num_val; the user must confirm that
+      // both values match before authentication proceeds.
+      // BT Core Spec v5.x, Vol 2, Part C, §4.2.4.1 (Numeric Comparison protocol).
+      //
+      // When no confirm callback is installed, the pairing is auto-accepted.
+      // This is equivalent to the "Just Works" association model and provides no
+      // MitM protection.  Install a ConfirmRequestHandler via onConfirmRequest()
+      // to enforce out-of-band value confirmation.
+      bool accept = true;
+      if (s_impl->confirmRequestCb) {
+        accept = s_impl->confirmRequestCb(param->cfm_req.num_val);
+      } else {
+        log_w("No confirm request callback, accepting pairing (Just Works — no MitM protection)");
+      }
+      esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, accept);
+      break;
+    }
+
+    case ESP_BT_GAP_AUTH_CMPL_EVT:
+      // Authentication complete: indicates whether pairing (legacy or SSP) succeeded.
+      // BT Core Spec v5.x, Vol 2, Part C, §4.2.5 (Authentication and Pairing Complete).
+      if (s_impl->authCompleteCb) {
+        s_impl->authCompleteCb(param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS);
+      }
+      break;
+
+    case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT: xEventGroupSetBits(s_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED); break;
+
+    default: break;
+  }
+}
+
+// --------------------------------------------------------------------------
+// BluetoothSerial public API
+// --------------------------------------------------------------------------
+
+BluetoothSerial::BluetoothSerial() : _impl(std::make_unique<Impl>()) {}
+
+BluetoothSerial::~BluetoothSerial() {
+  if (_impl && _impl->initialized) {
+    end(false);
+  }
+}
+
+BTStatus BluetoothSerial::begin(const String &localName, bool isInitiator) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
 
-  if (esp_spp_register_callback(esp_spp_cb) != ESP_OK) {
-    log_e("spp register failed");
-    return false;
+  if (_impl->initialized) {
+    return BTStatus::OK;
+  }
+
+  if (Impl::s_impl) {
+    return BTStatus::Busy;
+  }
+
+  _impl->localName = localName;
+  _impl->isInitiator = isInitiator;
+
+  if (!btStarted() && !btStart()) {
+    log_e("btStart() failed");
+    return BTStatus::Fail;
+  }
+
+  esp_err_t err = esp_bluedroid_init();
+  if (err != ESP_OK) {
+    log_e("esp_bluedroid_init: %s", esp_err_to_name(err));
+    return BTStatus::Fail;
+  }
+
+  err = esp_bluedroid_enable();
+  if (err != ESP_OK) {
+    log_e("esp_bluedroid_enable: %s", esp_err_to_name(err));
+    esp_bluedroid_deinit();
+    return BTStatus::Fail;
+  }
+
+  err = esp_bt_gap_register_callback(Impl::gapCallback);
+  if (err != ESP_OK) {
+    log_e("esp_bt_gap_register_callback: %s", esp_err_to_name(err));
+    esp_bluedroid_disable();
+    esp_bluedroid_deinit();
+    return BTStatus::Fail;
+  }
+
+  err = esp_spp_register_callback(Impl::sppCallback);
+  if (err != ESP_OK) {
+    log_e("esp_spp_register_callback: %s", esp_err_to_name(err));
+    esp_bluedroid_disable();
+    esp_bluedroid_deinit();
+    return BTStatus::Fail;
   }
 
   esp_spp_cfg_t cfg = BT_SPP_DEFAULT_CONFIG();
   cfg.mode = ESP_SPP_MODE_CB;
-  if (esp_spp_enhanced_init(&cfg) != ESP_OK) {
-    log_e("spp init failed");
-    return false;
-  }
-
-  log_i("device name set");
-  esp_bt_gap_set_device_name(deviceName);
-
-  if (_enableSSP) {
-    log_i("Simple Secure Pairing");
-    esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
-    esp_bt_io_cap_t iocap;
-    if (_IO_CAP_INPUT && _IO_CAP_OUTPUT) {
-      iocap = ESP_BT_IO_CAP_IO;  // Display with prompt
-    } else if (!_IO_CAP_INPUT && _IO_CAP_OUTPUT) {
-      iocap = ESP_BT_IO_CAP_OUT;  // DisplayOnly
-    } else if (_IO_CAP_INPUT && !_IO_CAP_OUTPUT) {
-      iocap = ESP_BT_IO_CAP_IN;  // Input only
-    } else if (!_IO_CAP_INPUT && !_IO_CAP_OUTPUT) {
-      iocap = ESP_BT_IO_CAP_NONE;  // No input/output
-    }
-    esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t));
-  }
-
-  // the default BTA_DM_COD_LOUDSPEAKER does not work with the macOS BT stack
-  esp_bt_cod_t cod;
-  cod.major = 0b00001;
-  cod.minor = 0b000100;
-  cod.service = 0b00000010110;
-  if (esp_bt_gap_set_cod(cod, ESP_BT_INIT_COD) != ESP_OK) {
-    log_e("set cod failed");
-    return false;
-  }
-  return true;
-}
-
-static bool _stop_bt() {
-  if (btStarted()) {
-    if (_spp_client) {
-      esp_spp_disconnect(_spp_client);
-    }
-    esp_spp_deinit();
+  err = esp_spp_enhanced_init(&cfg);
+  if (err != ESP_OK) {
+    log_e("esp_spp_enhanced_init: %s", esp_err_to_name(err));
     esp_bluedroid_disable();
     esp_bluedroid_deinit();
-    btStop();
+    return BTStatus::Fail;
   }
-  _spp_client = 0;
-  if (_spp_task_handle) {
-    vTaskDelete(_spp_task_handle);
-    _spp_task_handle = NULL;
+
+  if (localName.length() > 0) {
+    esp_bt_gap_set_device_name(localName.c_str());
   }
-  if (_spp_event_group) {
-    vEventGroupDelete(_spp_event_group);
-    _spp_event_group = NULL;
-  }
-  if (_spp_rx_queue) {
-    vQueueDelete(_spp_rx_queue);
-    //ToDo: clear RX queue when in packet mode
-    _spp_rx_queue = NULL;
-  }
-  if (_spp_tx_queue) {
-    spp_packet_t *packet = NULL;
-    while (xQueueReceive(_spp_tx_queue, &packet, 0) == pdTRUE) {
-      free(packet);
+
+  if (_impl->sspEnabled) {
+    // Secure Simple Pairing I/O capability announcement.
+    // The local device's IO capability determines which SSP association model
+    // is selected (Numeric Comparison, Passkey Entry, Just Works, or OOB).
+    // IO capability definitions and association model selection table:
+    // BT Core Spec v5.x, Vol 2, Part C, §4.2.1 (IO Capabilities) and
+    // §4.2.2.3 (Mapping IO Capabilities to Authentication Stage 1).
+    esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
+    esp_bt_io_cap_t iocap;
+    if (_impl->ioCapInput && _impl->ioCapOutput) {
+      iocap = ESP_BT_IO_CAP_IO;
+    } else if (_impl->ioCapInput) {
+      iocap = ESP_BT_IO_CAP_IN;
+    } else if (_impl->ioCapOutput) {
+      iocap = ESP_BT_IO_CAP_OUT;
+    } else {
+      iocap = ESP_BT_IO_CAP_NONE;
     }
-    vQueueDelete(_spp_tx_queue);
-    _spp_tx_queue = NULL;
+    esp_bt_gap_set_security_param(param_type, &iocap, sizeof(esp_bt_io_cap_t));
+  } else if (_impl->pinCodeLen > 0) {
+    esp_bt_pin_type_t pinType = ESP_BT_PIN_TYPE_FIXED;
+    esp_bt_gap_set_pin(pinType, _impl->pinCodeLen, _impl->pinCode);
   }
-  if (_spp_tx_done) {
-    vSemaphoreDelete(_spp_tx_done);
-    _spp_tx_done = NULL;
+
+  if (!_impl->createResources()) {
+    log_e("Failed to allocate BluetoothSerial resources");
+    return BTStatus::NoMemory;
   }
-  if (_bt_event_group) {
-    vEventGroupDelete(_bt_event_group);
-    _bt_event_group = NULL;
+
+  Impl::s_impl = _impl.get();
+  _impl->initialized = true;
+
+  EventBits_t bits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_RUNNING, pdFALSE, pdTRUE, pdMS_TO_TICKS(5000));
+  if (!(bits & SPP_RUNNING)) {
+    log_e("SPP server failed to start within timeout");
+    _impl->initialized = false;
+    Impl::s_impl = nullptr;
+    _impl->destroyResources();
+    return BTStatus::Timeout;
   }
-  return true;
+
+  return BTStatus::OK;
 }
 
-static bool waitForConnect(int timeout) {
-  TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-  // wait for connected or closed
-  EventBits_t rc = xEventGroupWaitBits(_spp_event_group, SPP_CONNECTED | SPP_CLOSED, pdFALSE, pdFALSE, xTicksToWait);
-  if ((rc & SPP_CONNECTED) != 0) {
-    return true;
-  } else if ((rc & SPP_CLOSED) != 0) {
-    log_d("connection closed!");
-    return false;
+void BluetoothSerial::end(bool releaseMemory) {
+  if (!_impl || !_impl->initialized) {
+    return;
   }
-  log_d("timeout");
-  return false;
-}
 
-static bool waitForDiscovered(int timeout) {
-  TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-  return (xEventGroupWaitBits(_spp_event_group, BT_DISCOVERY_COMPLETED, pdFALSE, pdTRUE, xTicksToWait) & BT_DISCOVERY_COMPLETED) != 0;
-}
+  _impl->initialized = false;
+  Impl::s_impl = nullptr;
 
-static bool waitForSDPRecord(int timeout) {
-  TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-  return (xEventGroupWaitBits(_bt_event_group, BT_SDP_COMPLETED, pdFALSE, pdTRUE, xTicksToWait) & BT_SDP_COMPLETED) != 0;
-}
+  esp_spp_deinit();
+  esp_bluedroid_disable();
+  esp_bluedroid_deinit();
 
-/**
- * Serial Bluetooth Arduino
- *
- */
-BluetoothSerial::BluetoothSerial() {
-  local_name = "ESP32";  //default bluetooth name
-}
+  btStop();
 
-BluetoothSerial::~BluetoothSerial(void) {
-  _stop_bt();
-}
-
-/**
- * @param isMaster set to true if you want to connect to an other device
- * @param disableBLE if BLE is not used, its ram can be freed to get +10kB free ram
- */
-bool BluetoothSerial::begin(String localName, bool isMaster, bool disableBLE) {
-  _isMaster = isMaster;
-  if (localName.length()) {
-    local_name = localName;
+  if (releaseMemory) {
+    btMemRelease(BT_MODE_CLASSIC_BT);
   }
-  return _init_bt(local_name.c_str(), disableBLE ? BT_MODE_CLASSIC_BT : BT_MODE_BTDM);
+
+  _impl->destroyResources();
 }
 
-int BluetoothSerial::available(void) {
-  if (_spp_rx_queue == NULL) {
+int BluetoothSerial::available() {
+  if (!_impl || !_impl->rxQueue) {
     return 0;
   }
-  return uxQueueMessagesWaiting(_spp_rx_queue);
+
+  return uxQueueMessagesWaiting(_impl->rxQueue);
 }
 
-int BluetoothSerial::peek(void) {
+int BluetoothSerial::peek() {
+  if (!_impl || !_impl->rxQueue) {
+    return -1;
+  }
+
   uint8_t c;
-  if (_spp_rx_queue && xQueuePeek(_spp_rx_queue, &c, this->timeoutTicks)) {
+  if (xQueuePeek(_impl->rxQueue, &c, 0) == pdTRUE) {
     return c;
   }
-  return -1;
-}
 
-bool BluetoothSerial::hasClient(void) {
-  return _spp_client > 0;
+  return -1;
 }
 
 int BluetoothSerial::read() {
+  if (!_impl || !_impl->rxQueue) {
+    return -1;
+  }
 
-  uint8_t c = 0;
-  if (_spp_rx_queue && xQueueReceive(_spp_rx_queue, &c, this->timeoutTicks)) {
+  uint8_t c;
+  if (xQueueReceive(_impl->rxQueue, &c, 0) == pdTRUE) {
     return c;
   }
-  return -1;
-}
 
-/**
- * Set timeout for read / peek
- */
-void BluetoothSerial::setTimeout(int timeoutMS) {
-  Stream::setTimeout(timeoutMS);
-  this->timeoutTicks = timeoutMS / portTICK_PERIOD_MS;
+  return -1;
 }
 
 size_t BluetoothSerial::write(uint8_t c) {
   return write(&c, 1);
 }
 
-size_t BluetoothSerial::write(const uint8_t *buffer, size_t size) {
-  if (!_spp_client) {
+size_t BluetoothSerial::write(const uint8_t *buf, size_t len) {
+  if (!_impl || !_impl->txQueue || !_impl->initialized || len == 0) {
     return 0;
   }
-  return (_spp_queue_packet((uint8_t *)buffer, size) == ESP_OK) ? size : 0;
+
+  auto *pkt = static_cast<spp_packet_t *>(malloc(sizeof(spp_packet_t) + len));
+  if (!pkt) {
+    return 0;
+  }
+
+  pkt->len = len;
+  pkt->broadcast = true;
+  memset(pkt->targetAddr, 0, sizeof(pkt->targetAddr));
+  memcpy(pkt->data, buf, len);
+
+  if (xQueueSend(_impl->txQueue, &pkt, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    free(pkt);
+    return 0;
+  }
+
+  return len;
+}
+
+size_t BluetoothSerial::writeTo(const BTAddress &address, const uint8_t *buf, size_t len) {
+  if (!_impl || !_impl->txQueue || !_impl->initialized || !buf || len == 0 || !address) {
+    return 0;
+  }
+
+  auto *pkt = static_cast<spp_packet_t *>(malloc(sizeof(spp_packet_t) + len));
+  if (!pkt) {
+    return 0;
+  }
+
+  pkt->len = len;
+  pkt->broadcast = false;
+  memcpy(pkt->targetAddr, address.data(), sizeof(pkt->targetAddr));
+  memcpy(pkt->data, buf, len);
+
+  if (xQueueSend(_impl->txQueue, &pkt, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    free(pkt);
+    return 0;
+  }
+
+  return len;
 }
 
 void BluetoothSerial::flush() {
-  if (_spp_tx_queue != NULL) {
-    while (uxQueueMessagesWaiting(_spp_tx_queue) > 0) {
-      delay(2);
-    }
-  }
-}
-
-void BluetoothSerial::end() {
-  _stop_bt();
-}
-
-/**
- * free additional ~30kB ram, reset is required to enable BT Classic again
- */
-void BluetoothSerial::memrelease() {
-#if defined(CONFIG_BT_CONTROLLER_ENABLED)
-  btMemRelease(BT_MODE_CLASSIC_BT);
-#endif
-}
-
-void BluetoothSerial::onConfirmRequest(ConfirmRequestCb cb) {
-  confirm_request_callback = cb;
-}
-
-void BluetoothSerial::onKeyRequest(KeyRequestCb cb) {
-  key_request_callback = cb;
-}
-
-void BluetoothSerial::respondPasskey(uint32_t passkey) {
-  esp_bt_gap_ssp_passkey_reply(current_bd_addr, true, passkey);
-}
-
-void BluetoothSerial::onAuthComplete(AuthCompleteCb cb) {
-  auth_complete_callback = cb;
-}
-
-void BluetoothSerial::confirmReply(boolean confirm) {
-  esp_bt_gap_ssp_confirm_reply(current_bd_addr, confirm);
-}
-
-esp_err_t BluetoothSerial::register_callback(esp_spp_cb_t callback) {
-  custom_spp_callback = callback;
-  return ESP_OK;
-}
-
-// Enable Simple Secure Pairing (using generated PIN)
-// This must be called before calling begin, otherwise has no effect!
-void BluetoothSerial::enableSSP() {
-  if (isReady(false, READY_TIMEOUT)) {
-    log_i("Attempted to enable SSP for already initialized driver. Restart to take effect with end() followed by begin()");
+  if (!_impl || !_impl->txQueue) {
     return;
   }
-  _enableSSP = true;
-  _IO_CAP_INPUT = true;
-  _IO_CAP_OUTPUT = true;
+
+  while (uxQueueMessagesWaiting(_impl->txQueue) > 0) {
+    delay(5);
+  }
 }
 
-// Enable Simple Secure Pairing (using generated PIN)
-// This must be called before calling begin, otherwise has no effect!
-// Behavior description:
-// When both Input and Output are false only the other device authenticates pairing without any pin.
-// When Output is true and Input is false only the other device authenticates pairing without any pin.
-// When both Input and Output are true both devices display randomly generated code and if they match authenticate pairing on both devices
-//   - This must be implemented by registering callback via onConfirmRequest() and in this callback request user input and call confirmReply(true); if the authenticated
-//      otherwise call `confirmReply(false)` to reject the pairing.
-// When Input is true and Output is false User will be required to input the passkey to the ESP32 device to authenticate.
-//   - This must be implemented by registering callback via onKeyRequest() and in this callback the entered passkey will be responded via respondPasskey(passkey);
-void BluetoothSerial::enableSSP(bool inputCpability, bool outputCapability) {
-  log_i("Enabling SSP: input capability=%d; output capability=%d", inputCpability, outputCapability);
-  _enableSSP = true;
-  _IO_CAP_INPUT = inputCpability;
-  _IO_CAP_OUTPUT = outputCapability;
+BTStatus BluetoothSerial::connect(const String &remoteName, uint32_t timeoutMs) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+
+  _impl->targetName = remoteName;
+  _impl->isRemoteAddressSet = false;
+  _impl->doConnect = true;
+
+  xEventGroupClearBits(_impl->btEventGroup, BT_DISCOVERY_COMPLETED);
+  esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, (timeoutMs / 1280) + 1, 0);
+
+  EventBits_t bits = xEventGroupWaitBits(_impl->btEventGroup, BT_DISCOVERY_COMPLETED, pdTRUE, pdTRUE, pdMS_TO_TICKS(timeoutMs + 2000));
+
+  if (!_impl->isRemoteAddressSet) {
+    _impl->targetName = "";
+    return BTStatus::Fail;
+  }
+
+  esp_spp_start_discovery(_impl->peerAddr);
+
+  bits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_CONNECTED, pdFALSE, pdTRUE, pdMS_TO_TICKS(timeoutMs));
+  if (!(bits & SPP_CONNECTED)) {
+    return BTStatus::Timeout;
+  }
+
+  _impl->targetName = "";
+  return BTStatus::OK;
 }
 
-// Disable Simple Secure Pairing (using generated PIN)
-// This must be called before calling begin, otherwise has no effect!
-void BluetoothSerial::disableSSP() {
-  _enableSSP = false;
-}
+BTStatus BluetoothSerial::connect(const BTAddress &address, uint8_t channel) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
 
-bool BluetoothSerial::setPin(const char *pin, uint8_t pin_code_len) {
-  if (pin_code_len == 0 || pin_code_len > 16) {
-    log_e("PIN code must be 1-16 Bytes long! Called with length %u", pin_code_len);
-    return false;
-  }
-  _pin_code_len = pin_code_len;
-  memcpy(_pin_code, pin, pin_code_len);
-  return (esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, _pin_code_len, _pin_code) == ESP_OK);
-}
+  memcpy(_impl->peerAddr, address.data(), 6);
+  _impl->isRemoteAddressSet = true;
+  _impl->doConnect = true;
 
-bool BluetoothSerial::connect(String remoteName) {
-  bool retval = false;
-
-  if (!isReady(true, READY_TIMEOUT)) {
-    return false;
-  }
-  if (remoteName && remoteName.length() < 1) {
-    log_e("No remote name is provided");
-    return false;
-  }
-  disconnect();
-  _doConnect = true;
-  _isRemoteAddressSet = false;
-  _sec_mask = ESP_SPP_SEC_ENCRYPT | ESP_SPP_SEC_AUTHENTICATE;
-  _role = ESP_SPP_ROLE_MASTER;
-  strncpy(_remote_name, remoteName.c_str(), ESP_BT_GAP_MAX_BDNAME_LEN);
-  _remote_name[ESP_BT_GAP_MAX_BDNAME_LEN] = 0;
-  log_i("master : remoteName");
-  // will first resolve name to address
-#ifdef ESP_IDF_VERSION_MAJOR
-  esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-#else
-  esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
-#endif
-  xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
-  if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
-    retval = waitForConnect(SCAN_TIMEOUT);
-  }
-  if (retval == false) {
-    _isRemoteAddressSet = false;
-  }
-  return retval;
-}
-
-/**
- * Connect to an other bluetooth device
- *
- * @param channel specify channel or 0 for auto-detect
- * @param sec_mask
- *           ESP_SPP_SEC_ENCRYPT|ESP_SPP_SEC_AUTHENTICATE
- *           ESP_SPP_SEC_NONE
- * @param role
- *           ESP_SPP_ROLE_MASTER   master can handle up to 7 connections to slaves
- *           ESP_SPP_ROLE_SLAVE    can only have one connection to a master
- */
-bool BluetoothSerial::connect(uint8_t remoteAddress[], int channel, esp_spp_sec_t sec_mask, esp_spp_role_t role) {
-  bool retval = false;
-  if (!isReady(true, READY_TIMEOUT)) {
-    return false;
-  }
-  if (!remoteAddress) {
-    log_e("No remote address is provided");
-    return false;
-  }
-  disconnect();
-  _doConnect = true;
-  _remote_name[0] = 0;
-  _isRemoteAddressSet = true;
-  _sec_mask = sec_mask;
-  _role = role;
-  memcpy(_peer_bd_addr, remoteAddress, ESP_BD_ADDR_LEN);
-  log_i("master : remoteAddress");
-  xEventGroupClearBits(_spp_event_group, SPP_CLOSED);
   if (channel > 0) {
-#if (ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO)
-    char bda_str[18];
-    log_i("spp connect to remote %s channel %d", bda2str(_peer_bd_addr, bda_str, sizeof(bda_str)), channel);
-#endif
-    if (esp_spp_connect(sec_mask, role, channel, _peer_bd_addr) != ESP_OK) {
-      log_e("spp connect failed");
-      retval = false;
-    } else {
-      retval = waitForConnect(READY_TIMEOUT);
-      if (retval) {
-        log_i("connected");
-      } else {
-        if (this->isClosed()) {
-          log_e("connect failed");
-        } else {
-          log_e("connect timed out after %ums", READY_TIMEOUT);
-        }
+    esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_MASTER, channel, _impl->peerAddr);
+  } else {
+    esp_spp_start_discovery(_impl->peerAddr);
+  }
+
+  EventBits_t bits = xEventGroupWaitBits(_impl->sppEventGroup, SPP_CONNECTED, pdFALSE, pdTRUE, pdMS_TO_TICKS(10000));
+  if (!(bits & SPP_CONNECTED)) {
+    return BTStatus::Timeout;
+  }
+
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::disconnect() {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+
+  std::vector<uint32_t> handles;
+  if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    handles.reserve(_impl->peers.size());
+    for (const auto &peer : _impl->peers) {
+      handles.push_back(peer.handle);
+    }
+    xSemaphoreGive(_impl->peersMtx);
+  }
+
+  if (handles.empty()) {
+    return BTStatus::OK;
+  }
+
+  for (uint32_t handle : handles) {
+    esp_spp_disconnect(handle);
+  }
+
+  uint32_t deadline = millis() + 5000;
+  while (peerCount() > 0 && static_cast<int32_t>(millis() - deadline) < 0) {
+    delay(10);
+  }
+
+  return peerCount() == 0 ? BTStatus::OK : BTStatus::Timeout;
+}
+
+BTStatus BluetoothSerial::disconnect(const BTAddress &address) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+  if (!address) {
+    return BTStatus::InvalidParam;
+  }
+
+  uint32_t handle = 0;
+  if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    for (const auto &peer : _impl->peers) {
+      if (peer.address == address) {
+        handle = peer.handle;
+        break;
       }
     }
-  } else if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
-    retval = waitForConnect(READY_TIMEOUT);
+    xSemaphoreGive(_impl->peersMtx);
   }
 
-  if (!retval) {
-    _isRemoteAddressSet = false;
+  if (handle == 0) {
+    return BTStatus::NotFound;
   }
-  return retval;
-}
 
-bool BluetoothSerial::connect() {
-  if (!isReady(true, READY_TIMEOUT)) {
-    return false;
-  }
-  _doConnect = true;
-  if (_isRemoteAddressSet) {
-    disconnect();
-    // use resolved or set address first
-    log_i("master : remoteAddress");
-    if (esp_spp_start_discovery(_peer_bd_addr) == ESP_OK) {
-      return waitForConnect(READY_TIMEOUT);
+  esp_spp_disconnect(handle);
+
+  uint32_t deadline = millis() + 5000;
+  while (static_cast<int32_t>(millis() - deadline) < 0) {
+    bool stillConnected = false;
+    if (_impl->peersMtx && xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+      for (const auto &peer : _impl->peers) {
+        if (peer.address == address) {
+          stillConnected = true;
+          break;
+        }
+      }
+      xSemaphoreGive(_impl->peersMtx);
     }
-    return false;
-  } else if (_remote_name[0]) {
-    disconnect();
-    log_i("master : remoteName");
-    // will resolve name to address first - it may take a while
-#ifdef ESP_IDF_VERSION_MAJOR
-    esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-#else
-    esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE);
-#endif
-    if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, INQ_LEN, INQ_NUM_RSPS) == ESP_OK) {
-      return waitForConnect(SCAN_TIMEOUT);
+    if (!stillConnected) {
+      return BTStatus::OK;
     }
-    return false;
+    delay(10);
   }
-  log_e("Neither Remote name nor address was provided");
-  return false;
+
+  return BTStatus::Timeout;
 }
 
-bool BluetoothSerial::disconnect() {
-  if (_spp_client) {
-    flush();
-    log_i("disconnecting");
-    if (esp_spp_disconnect(_spp_client) == ESP_OK) {
-      TickType_t xTicksToWait = READY_TIMEOUT / portTICK_PERIOD_MS;
-      return (xEventGroupWaitBits(_spp_event_group, SPP_DISCONNECTED, pdFALSE, pdTRUE, xTicksToWait) & SPP_DISCONNECTED) != 0;
+bool BluetoothSerial::connected() const {
+  if (!_impl || !_impl->sppEventGroup) {
+    return false;
+  }
+
+  return (xEventGroupGetBits(_impl->sppEventGroup) & SPP_CONNECTED) != 0;
+}
+
+bool BluetoothSerial::hasClient() const {
+  return peerCount() > 0;
+}
+
+size_t BluetoothSerial::peerCount() const {
+  if (!_impl || !_impl->peersMtx) {
+    return 0;
+  }
+
+  size_t count = 0;
+  if (xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    count = _impl->peers.size();
+    xSemaphoreGive(_impl->peersMtx);
+  }
+  return count;
+}
+
+std::vector<BTAddress> BluetoothSerial::peers() const {
+  std::vector<BTAddress> result;
+  if (!_impl || !_impl->peersMtx) {
+    return result;
+  }
+
+  if (xSemaphoreTake(_impl->peersMtx, portMAX_DELAY) == pdTRUE) {
+    result.reserve(_impl->peers.size());
+    for (const auto &peer : _impl->peers) {
+      result.push_back(peer.address);
+    }
+    xSemaphoreGive(_impl->peersMtx);
+  }
+  return result;
+}
+
+std::vector<BluetoothSerial::DiscoveryResult> BluetoothSerial::discover(uint32_t timeoutMs) {
+  if (!_impl || !_impl->initialized) {
+    return {};
+  }
+
+  _impl->discoveryResults.clear();
+  _impl->targetName = "";
+
+  xEventGroupClearBits(_impl->btEventGroup, BT_DISCOVERY_COMPLETED);
+  esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, (timeoutMs / 1280) + 1, 0);
+  xEventGroupWaitBits(_impl->btEventGroup, BT_DISCOVERY_COMPLETED, pdTRUE, pdTRUE, pdMS_TO_TICKS(timeoutMs + 2000));
+
+  return _impl->discoveryResults;
+}
+
+BTStatus BluetoothSerial::discoverAsync(DiscoveryHandler callback, uint32_t timeoutMs) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+
+  _impl->discoveryCb = std::move(callback);
+  _impl->discoveryResults.clear();
+  _impl->targetName = "";
+
+  xEventGroupClearBits(_impl->btEventGroup, BT_DISCOVERY_COMPLETED);
+  esp_err_t err = esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, (timeoutMs / 1280) + 1, 0);
+  return (err == ESP_OK) ? BTStatus::OK : BTStatus::Fail;
+}
+
+BTStatus BluetoothSerial::discoverStop() {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::NotInitialized;
+  }
+
+  _impl->discoveryCb = nullptr;
+  esp_err_t err = esp_bt_gap_cancel_discovery();
+  return (err == ESP_OK) ? BTStatus::OK : BTStatus::Fail;
+}
+
+void BluetoothSerial::enableSSP(bool input, bool output) {
+  if (!_impl) {
+    return;
+  }
+
+  _impl->sspEnabled = true;
+  _impl->ioCapInput = input;
+  _impl->ioCapOutput = output;
+}
+
+void BluetoothSerial::disableSSP() {
+  if (_impl) {
+    _impl->sspEnabled = false;
+  }
+}
+
+void BluetoothSerial::setPin(const char *pin) {
+  if (!_impl || !pin) {
+    return;
+  }
+
+  size_t len = strlen(pin);
+  if (len > 16) {
+    len = 16;
+  }
+
+  memcpy(_impl->pinCode, pin, len);
+  _impl->pinCodeLen = len;
+}
+
+BTStatus BluetoothSerial::onConfirmRequest(ConfirmRequestHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->confirmRequestCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onAuthComplete(AuthCompleteHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->authCompleteCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+std::vector<BTAddress> BluetoothSerial::getBondedDevices() {
+  std::vector<BTAddress> result;
+  int count = esp_bt_gap_get_bond_device_num();
+  if (count <= 0) {
+    return result;
+  }
+
+  auto *list = static_cast<esp_bd_addr_t *>(malloc(count * sizeof(esp_bd_addr_t)));
+  if (!list) {
+    return result;
+  }
+
+  esp_err_t err = esp_bt_gap_get_bond_device_list(&count, list);
+  if (err == ESP_OK) {
+    for (int i = 0; i < count; i++) {
+      result.push_back(BTAddress(list[i], BTAddress::Type::Public));
     }
   }
-  return false;
+
+  free(list);
+  return result;
 }
 
-bool BluetoothSerial::unpairDevice(uint8_t remoteAddress[]) {
-  if (isReady(false, READY_TIMEOUT)) {
-    log_i("removing bonded device");
-    return (esp_bt_gap_remove_bond_device(remoteAddress) == ESP_OK);
+BTStatus BluetoothSerial::deleteBond(const BTAddress &address) {
+  if (!_impl || !_impl->initialized) {
+    return BTStatus::InvalidState;
   }
-  return false;
-}
-
-bool BluetoothSerial::connected(int timeout) {
-  return waitForConnect(timeout);
-}
-
-/**
- * true if a connection terminated or a connection attempt failed
- */
-bool BluetoothSerial::isClosed() {
-  return xEventGroupGetBits(_spp_event_group) & SPP_CLOSED;
-}
-
-bool BluetoothSerial::isReady(bool checkMaster, int timeout) {
-  if (checkMaster && !_isMaster) {
-    log_e("Master mode is not active. Call begin(localName, true) to enable Master mode");
-    return false;
+  esp_bd_addr_t bda;
+  memcpy(bda, address.data(), 6);
+  xEventGroupClearBits(_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED);
+  esp_err_t err = esp_bt_gap_remove_bond_device(bda);
+  if (err != ESP_OK) {
+    return BTStatus::Fail;
   }
-  if (!btStarted()) {
-    log_e("BT is not initialized. Call begin() first");
-    return false;
+  EventBits_t bits = xEventGroupWaitBits(_impl->btEventGroup, BT_BOND_REMOVE_COMPLETED, pdTRUE, pdTRUE, pdMS_TO_TICKS(2000));
+  if (!(bits & BT_BOND_REMOVE_COMPLETED)) {
+    log_w("deleteBond: timeout waiting for removal confirmation");
   }
-  TickType_t xTicksToWait = timeout / portTICK_PERIOD_MS;
-  return (xEventGroupWaitBits(_spp_event_group, SPP_RUNNING, pdFALSE, pdTRUE, xTicksToWait) & SPP_RUNNING) != 0;
+  return BTStatus::OK;
 }
 
-/**
- * @brief           RemoteName or address are not allowed to be set during discovery
- *                  (otherwise it might connect automatically and stop discovery)
- * @param[in]       timeoutMs can range from MIN_INQ_TIME to MAX_INQ_TIME
- * @return          in case of Error immediately Empty ScanResults.
- */
-BTScanResults *BluetoothSerial::discover(int timeoutMs) {
-  scanResults.clear();
-  if (timeoutMs < MIN_INQ_TIME || timeoutMs > MAX_INQ_TIME) {
-    log_e("Timeout out of bounds: MIN=%d; MAX=%d; requested=%d", MIN_INQ_TIME, MAX_INQ_TIME, timeoutMs);
-    return nullptr;
+BTStatus BluetoothSerial::deleteAllBonds() {
+  auto devices = getBondedDevices();
+  for (const auto &addr : devices) {
+    BTStatus status = deleteBond(addr);
+    if (!status) {
+      return status;
+    }
   }
-  int timeout = timeoutMs / INQ_TIME;
-  log_i("discover::disconnect");
-  disconnect();
-  log_i("discovering");
-  // will resolve name to address first - it may take a while
-  esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-  if (esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, timeout, 0) == ESP_OK) {
-    waitForDiscovered(timeoutMs);
-    log_i("gap_cancel_discovery()");
-    esp_bt_gap_cancel_discovery();
-  }
-  return &scanResults;
+
+  return BTStatus::OK;
 }
 
-/**
- * @brief           RemoteName or address are not allowed to be set during discovery
- *                  (otherwise it might connect automatically and stop discovery)
- * @param[in]       cb called when a [b]new[/b] device has been discovered
- * @param[in]       timeoutMs can be 0 or range from MIN_INQ_TIME to MAX_INQ_TIME
- *
- * @return          Whether start was successful or problems with params
- */
-bool BluetoothSerial::discoverAsync(BTAdvertisedDeviceCb cb, int timeoutMs) {
-  scanResults.clear();
-  if (strlen(_remote_name) || _isRemoteAddressSet) {
-    return false;
+BTStatus BluetoothSerial::onData(DataHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
-  int timeout = timeoutMs / INQ_TIME;
-  disconnect();
-  advertisedDeviceCb = cb;
-  log_i("discovering");
-  // will resolve name to address first - it may take a while
-  esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-  if (timeout > 0) {
-    return esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, timeout, 0) == ESP_OK;
-  } else {
-    return esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, ESP_BT_GAP_MAX_INQ_LEN, 0) == ESP_OK;
+
+  _impl->dataCb = std::move(callback);
+  return BTStatus::OK;
+}
+
+BTStatus BluetoothSerial::onConnect(PeerConnectHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
   }
+
+  _impl->connectCb = std::move(callback);
+  return BTStatus::OK;
 }
 
-/** @brief      Stops the asynchronous discovery and clears the callback */
-void BluetoothSerial::discoverAsyncStop() {
-  esp_bt_gap_cancel_discovery();
-  advertisedDeviceCb = nullptr;
+BTStatus BluetoothSerial::onDisconnect(PeerDisconnectHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->disconnectCb = std::move(callback);
+  return BTStatus::OK;
 }
 
-/** @brief      Clears scanResult entries */
-void BluetoothSerial::discoverClear() {
-  scanResults.clear();
+BTStatus BluetoothSerial::onPeerData(PeerDataHandler callback) {
+  if (!_impl) {
+    return BTStatus::InvalidState;
+  }
+
+  _impl->peerDataCb = std::move(callback);
+  return BTStatus::OK;
 }
 
-/** @brief      Can be used while discovering asynchronously
- *              Will be returned also on synchronous discovery.
- *
- * @return      BTScanResults contains several information of found devices
- */
-BTScanResults *BluetoothSerial::getScanResults() {
-  return &scanResults;
+BTAddress BluetoothSerial::getAddress() const {
+  if (!_impl || !_impl->initialized) {
+    return BTAddress();
+  }
+
+  const uint8_t *addr = esp_bt_dev_get_address();
+  if (!addr) {
+    return BTAddress();
+  }
+
+  return BTAddress(addr, BTAddress::Type::Public);
 }
 
 BluetoothSerial::operator bool() const {
-  return true;
+  return _impl && _impl->initialized;
 }
 
-/**
- * SDP scan address
- * esp_spp_start_discovery doesn't tell us the btAddress in the callback, so we have to wait until it's finished
- */
-std::map<int, std::string> BluetoothSerial::getChannels(const BTAddress &remoteAddress) {
-  if (xEventGroupGetBits(_bt_event_group) & BT_SDP_RUNNING) {
-    log_e("getChannels failed - already running");
-  }
-  xEventGroupSetBits(_bt_event_group, BT_SDP_RUNNING);
-  xEventGroupClearBits(_bt_event_group, BT_SDP_COMPLETED);
-  _doConnect = false;
-  sdpRecords.clear();
-  log_d("esp_spp_start_discovery");
-  if (esp_spp_start_discovery(*remoteAddress.getNative()) != ESP_OK) {
-    log_e("esp_spp_start_discovery failed");
-  } else {
-    if (!waitForSDPRecord(READY_TIMEOUT)) {
-      log_e("getChannels failed timeout");
-    }
-    log_d("esp_spp_start_discovery wait for BT_SDP_COMPLETED done (%ums)", READY_TIMEOUT);
-  }
-  log_d("esp_spp_start_discovery done, found %lu services", (unsigned long)sdpRecords.size());
-  xEventGroupClearBits(_bt_event_group, BT_SDP_RUNNING);
-  return sdpRecords;
-}
-
-/**
- * @brief      Gets the MAC address of local BT device in byte array.
- *
- * @param      mac [out]  The mac
- */
-void BluetoothSerial::getBtAddress(uint8_t *mac) {
-  const uint8_t *dev_mac = esp_bt_dev_get_address();
-  memcpy(mac, dev_mac, ESP_BD_ADDR_LEN);
-}
-/**
- * @brief      Gets the MAC address of local BT device as BTAddress object.
- *
- * @return     The BTAddress object.
- */
-BTAddress BluetoothSerial::getBtAddressObject() {
-  uint8_t mac_arr[ESP_BD_ADDR_LEN];
-  getBtAddress(mac_arr);
-  return BTAddress(mac_arr);
-}
-/**
- * @brief      Gets the MAC address of local BT device as string.
- *
- * @return     The BT MAC address string.
- */
-String BluetoothSerial::getBtAddressString() {
-  return getBtAddressObject().toString(true);
-}
-
-// Send a request to the remote device defined by the remoteAddress to send back its name.
-// The name will be read by background task and stored. It can be later read with radRemoteName()
-void BluetoothSerial::requestRemoteName(uint8_t remoteAddress[]) {
-  if (isReady(false, READY_TIMEOUT)) {
-    esp_bt_gap_read_remote_name(remoteAddress);
-  }
-}
-
-// If remote name is valid (was already received) this function will copy the name to the aprameter rmt_name
-// The buffer must have size at least ESP_BT_GAP_MAX_BDNAME_LEN + 1
-// If the name is valid the function will return true
-// If the name is not valid (was not read yet) returns false
-bool BluetoothSerial::readRemoteName(char rmt_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1]) {
-  if (_rmt_name_valid) {
-    memcpy(rmt_name, _rmt_name, ESP_BT_GAP_MAX_BDNAME_LEN + 1);
-    return true;
-  }
-  return false;
-}
-
-// Set validity of remote name before reading name from different device
-void BluetoothSerial::invalidateRemoteName() {
-  _rmt_name_valid = false;
-}
-
-int BluetoothSerial::getNumberOfBondedDevices() {
-  return esp_bt_gap_get_bond_device_num();
-}
-
-// Accepts the maximum number of devices that can fit in given array dev_list.
-// Create you list this way: esp_bd_addr_t dev_list[dev_num];
-// Returns number of retrieved devices (on error returns 0)
-int BluetoothSerial::getBondedDevices(uint dev_num, esp_bd_addr_t *dev_list) {
-  // typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN]
-  if (dev_list == NULL) {
-    log_e("Device list is NULL");
-    return 0;
-  }
-  if (dev_num == 0) {
-    log_e("Device number must be larger than 0!");
-    return 0;
-  }
-  int _dev_num = dev_num;
-  esp_bt_gap_get_bond_device_list(&_dev_num, dev_list);
-  return _dev_num;
-}
-
-bool BluetoothSerial::deleteBondedDevice(uint8_t *remoteAddress) {
-  esp_err_t ret = esp_bt_gap_remove_bond_device(remoteAddress);
-  if (ret == ESP_OK) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void BluetoothSerial::deleteAllBondedDevices() {
-  if (!isReady(false, READY_TIMEOUT)) {
-    log_w("Attempted to drop cache for uninitialized driver. First call begin()");
-    return;
-  }
-
-  int expected_dev_num = esp_bt_gap_get_bond_device_num();
-  if (expected_dev_num == 0) {
-    log_i("No devices in cache.");
-    return;
-  } else {
-    log_d("Found %d bonded devices", expected_dev_num);
-  }
-  esp_err_t ret;
-
-  // typedef uint8_t esp_bd_addr_t[ESP_BD_ADDR_LEN] // ESP_BD_ADDR_LEN = 6
-  esp_bd_addr_t *dev_list = NULL;
-  log_d("Allocate buffer: sizeof(esp_bd_addr_t)=%lu * expected_dev_num=%d", (unsigned long)sizeof(esp_bd_addr_t), expected_dev_num);
-  dev_list = (esp_bd_addr_t *)malloc(sizeof(esp_bd_addr_t) * expected_dev_num);
-  if (dev_list == NULL) {
-    log_e("Could not allocated BT device buffer!");
-    return;
-  }
-  //uint8_t dev_list [20][6];
-
-  int dev_num;
-  ret = esp_bt_gap_get_bond_device_list(&dev_num, dev_list);
-  log_d("esp_bt_gap_get_bond_device_list ret = %d", ret);
-  if (ret == ESP_OK) {
-    if (dev_num != expected_dev_num) {
-      log_w("Inconsistent number of bonded devices. Expected %d; returned %d", expected_dev_num, dev_num);
-    }
-    for (int i = 0; i < dev_num; ++i) {
-      ret = esp_bt_gap_remove_bond_device(dev_list[i]);
-      log_d("esp_bt_gap_remove_bond_device ret = %d", ret);
-      if (ret == ESP_OK) {
-        log_d("Removed bonded device #%d", i);
-      } else {
-        log_w("Failed to removed bonded device #%d", i);
-      }
-      //btc_storage_remove_bonded_device(dev_list[i]);
-    }
-    log_d("device num after delete = %d", esp_bt_gap_get_bond_device_num());
-  } else {
-    log_w("Function esp_bt_gap_get_bond_device_list() returned code %d", ret);
-  }
-}
-#endif  // defined(CONFIG_BT_ENABLED) && defined(CONFIG_BLUEDROID_ENABLED)
+#endif /* SOC_BT_SUPPORTED && CONFIG_BT_ENABLED && CONFIG_BLUEDROID_ENABLED */
