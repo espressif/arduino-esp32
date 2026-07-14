@@ -84,20 +84,27 @@ void NetworkServer::begin(uint16_t port, int enable) {
   }
 #if CONFIG_LWIP_IPV6
   struct sockaddr_in6 server;
+  memset(&server, 0x0, sizeof(server));
   sockfd = socket(AF_INET6, SOCK_STREAM, 0);
   if (sockfd < 0) {
     return;
   }
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int));
   server.sin6_family = AF_INET6;
-  if (_addr.type() == IPv4) {
-    memcpy(server.sin6_addr.s6_addr + 11, (uint8_t *)&_addr[0], 4);
-    server.sin6_addr.s6_addr[10] = 0xFF;
-    server.sin6_addr.s6_addr[11] = 0xFF;
-  } else {
-    memcpy(server.sin6_addr.s6_addr, (uint8_t *)&_addr[0], 16);
+  // Only fill in sin6_addr when an explicit bind address was requested; otherwise leave it
+  // all-zero so the socket binds to the "::" wildcard (listen on every interface), which is
+  // also what a plain `NetworkServer(port)` / `WiFiServer(port)` (no address argument) expects.
+  if (_addr != IPAddress()) {
+    if (_addr.type() == IPv4) {
+      // Build an IPv4-mapped IPv6 address (::ffff:a.b.c.d) per RFC 4291: the 0xFF markers go
+      // in bytes 10-11 and the 4-byte IPv4 payload goes in bytes 12-15.
+      server.sin6_addr.s6_addr[10] = 0xFF;
+      server.sin6_addr.s6_addr[11] = 0xFF;
+      memcpy(server.sin6_addr.s6_addr + 12, (uint8_t *)&_addr[0], 4);
+    } else {
+      memcpy(server.sin6_addr.s6_addr, (uint8_t *)&_addr[0], 16);
+    }
   }
-  memset(server.sin6_addr.s6_addr, 0x0, 16);
   server.sin6_port = htons(_port);
 #else
   struct sockaddr_in server;
