@@ -36,7 +36,7 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
                 "sizes": [{
-                        "flash_bytes": 954764,
+                        "flash_bytes": 954824,
                         "flash_percentage": 73,
                         "ram_bytes": 49088,
                         "ram_percentage": 15
@@ -233,7 +233,7 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 1045817,
+                        "flash_bytes": 1045979,
                         "flash_percentage": 80,
                         "ram_bytes": 40084,
                         "ram_percentage": 12
@@ -741,7 +741,7 @@
                 "sketches": [
 {"name": "libraries/ESP32/examples/Touch/TouchInterrupt",
                 "sizes": [{
-                        "flash_bytes": 339522,
+                        "flash_bytes": 339524,
                         "flash_percentage": 26,
                         "ram_bytes": 23896,
                         "ram_percentage": 7
@@ -749,7 +749,7 @@
                 },
 {"name": "libraries/ESP32/examples/Touch/TouchRead",
                 "sizes": [{
-                        "flash_bytes": 339374,
+                        "flash_bytes": 339376,
                         "flash_percentage": 26,
                         "ram_bytes": 23888,
                         "ram_percentage": 7
@@ -757,15 +757,15 @@
                 },
 {"name": "libraries/ESP_HostedOTA/examples/ESP_HostedOTA",
                 "sizes": [{
-                        "flash_bytes": 1035456,
+                        "flash_bytes": 1036200,
                         "flash_percentage": 79,
-                        "ram_bytes": 32208,
+                        "ram_bytes": 32272,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/ESP_I2S/examples/ES8388_loopback",
                 "sizes": [{
-                        "flash_bytes": 397100,
+                        "flash_bytes": 397102,
                         "flash_percentage": 30,
                         "ram_bytes": 25724,
                         "ram_percentage": 8
@@ -773,7 +773,7 @@
                 },
 {"name": "libraries/ESP_I2S/examples/Port_selection",
                 "sizes": [{
-                        "flash_bytes": 358520,
+                        "flash_bytes": 358522,
                         "flash_percentage": 27,
                         "ram_bytes": 23892,
                         "ram_percentage": 7
@@ -781,7 +781,7 @@
                 },
 {"name": "libraries/ESP_I2S/examples/Record_to_WAV",
                 "sizes": [{
-                        "flash_bytes": 457408,
+                        "flash_bytes": 457410,
                         "flash_percentage": 35,
                         "ram_bytes": 24604,
                         "ram_percentage": 8
@@ -789,7 +789,7 @@
                 },
 {"name": "libraries/ESP_I2S/examples/Simple_tone",
                 "sizes": [{
-                        "flash_bytes": 357664,
+                        "flash_bytes": 357666,
                         "flash_percentage": 27,
                         "ram_bytes": 23908,
                         "ram_percentage": 7
@@ -821,23 +821,23 @@
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS-SD_Extended",
                 "sizes": [{
-                        "flash_bytes": 834802,
+                        "flash_bytes": 835550,
                         "flash_percentage": 64,
-                        "ram_bytes": 32368,
+                        "ram_bytes": 32432,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/ESPmDNS/examples/mDNS_Web_Server",
                 "sizes": [{
-                        "flash_bytes": 863610,
+                        "flash_bytes": 864512,
                         "flash_percentage": 66,
-                        "ram_bytes": 33676,
+                        "ram_bytes": 33740,
                         "ram_percentage": 10
                         }]
                 },
 {"name": "libraries/Ethernet/examples/ETH_TLK110",
                 "sizes": [{
-                        "flash_bytes": 569546,
+                        "flash_bytes": 569548,
                         "flash_percentage": 43,
                         "ram_bytes": 28760,
                         "ram_percentage": 9
@@ -845,7 +845,7 @@
                 },
 {"name": "libraries/Ethernet/examples/ETH_W5500_Arduino_SPI",
                 "sizes": [{
-                        "flash_bytes": 611404,
+                        "flash_bytes": 611406,
                         "flash_percentage": 47,
                         "ram_bytes": 28976,
                         "ram_percentage": 9
@@ -853,7 +853,7 @@
                 },
 {"name": "libraries/Ethernet/examples/ETH_W5500_IDF_SPI",
                 "sizes": [{
-                        "flash_bytes": 609374,
+                        "flash_bytes": 609376,
                         "flash_percentage": 46,
                         "ram_bytes": 28976,
                         "ram_percentage": 9
@@ -1063,7 +1063,7 @@
                 },
 {"name": "libraries/HTTPUpdateServer/examples/WebUpdater",
                 "sizes": [{
-                        "flash_bytes": 974017,
+                        "flash_bytes": 974085,
                         "flash_percentage": 74,
                         "ram_bytes": 49068,
                         "ram_percentage": 15
