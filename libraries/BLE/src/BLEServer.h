@@ -151,9 +151,7 @@ public:
   BLEService *getServiceByUUID(BLEUUID uuid);
   void start();
   bool isStarted();
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
   void advertiseOnDisconnect(bool enable);
-#endif
 
   // Connection management functions
   std::map<uint16_t, conn_status_t> getPeerDevices(bool client);
@@ -216,9 +214,7 @@ private:
   uint32_t m_connectedCount;
   bool m_gattsStarted;
   std::map<uint16_t, conn_status_t> m_connectedServersMap;
-#if !defined(CONFIG_BT_NIMBLE_EXT_ADV) || defined(CONFIG_BLUEDROID_ENABLED)
   bool m_advertiseOnDisconnect;
-#endif
   FreeRTOS::Semaphore m_semaphoreRegisterAppEvt = FreeRTOS::Semaphore("RegisterAppEvt");
   FreeRTOS::Semaphore m_semaphoreCreateEvt = FreeRTOS::Semaphore("CreateEvt");
   FreeRTOS::Semaphore m_semaphoreOpenEvt = FreeRTOS::Semaphore("OpenEvt");
