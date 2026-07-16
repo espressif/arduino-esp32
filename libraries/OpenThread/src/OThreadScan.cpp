@@ -64,13 +64,25 @@ OThreadScanClass::OThreadScanClass()
     _done(false),
     _startedMs(0),
     _startError(OT_ERROR_NONE),
-    _doneSem(xSemaphoreCreateBinary()) {}
+    _doneSem(nullptr) {}
 
 OThreadScanClass::~OThreadScanClass() {
   if (_doneSem) {
     vSemaphoreDelete(_doneSem);
     _doneSem = nullptr;
   }
+}
+
+bool OThreadScanClass::ensureDoneSem() {
+  if (_doneSem) {
+    return true;
+  }
+  _doneSem = xSemaphoreCreateBinary();
+  if (_doneSem == nullptr) {
+    log_e("OThreadScan: failed to create done semaphore");
+    return false;
+  }
+  return true;
 }
 
 void OThreadScanClass::setScanTimeout(uint32_t ms) {
@@ -110,6 +122,11 @@ bool OThreadScanClass::discoverChannelMask(uint32_t &mask) const {
 int16_t OThreadScanClass::discoverNetworks(bool async) {
   otError error = OT_ERROR_NONE;
   uint32_t channelMask = 0;
+
+  // Create outside OtLock: heap alloc must not run while holding the OT API lock.
+  if (!ensureDoneSem()) {
+    return OT_DISCOVER_FAILED;
+  }
 
   {
     OtLock lock;

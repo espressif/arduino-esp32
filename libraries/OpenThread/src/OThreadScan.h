@@ -316,6 +316,8 @@ private:
   void onDiscoverResult(otActiveScanResult *aResult);
   static OThreadNetworkInfo fromActiveScanResult(const otActiveScanResult &in);
   bool discoverChannelMask(uint32_t &mask) const;
+  /** Allocates `_doneSem` on first use (not in the global ctor / static init). */
+  bool ensureDoneSem();
 
   uint32_t _timeoutMs;
   uint8_t _channel;
