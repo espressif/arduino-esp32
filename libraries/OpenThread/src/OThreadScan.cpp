@@ -202,16 +202,11 @@ int16_t OThreadScanClass::scanComplete() {
     return (int16_t)_results.size();
   }
 
-  {
-    OtLock lock;
-    otInstance *inst = OThread.getInstance();
-    if (lock && inst && !otThreadIsDiscoverInProgress(inst) && !_done) {
-      _inProgress = false;
-      _done = true;
-      return (int16_t)_results.size();
-    }
-  }
-
+  // _done is set only in onDiscoverResult(nullptr). Do not infer completion from
+  // otThreadIsDiscoverInProgress(): OT may be idle before the final callback runs.
+  // Completion is signaled by the final discover callback (aResult == nullptr),
+  // which sets _done and releases _doneSem.
+  
   if (_inProgress && (millis() - _startedMs) > _timeoutMs) {
     _inProgress = false;
     return OT_DISCOVER_FAILED;
@@ -274,20 +269,23 @@ bool OThreadScanClass::isDiscoverInProgress() const {
 }
 
 uint16_t OThreadScanClass::getResultCount() const {
+  if (!resultsAvailable()) {
+    return 0;
+  }
   const size_t n = _results.size();
   return (n > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(n);
 }
 
 const OThreadNetworkInfo &OThreadScanClass::getResult(uint8_t index) const {
   static const OThreadNetworkInfo kEmpty{};
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return kEmpty;
   }
   return _results[index];
 }
 
 bool OThreadScanClass::getResult(uint8_t index, OThreadNetworkInfo &info) const {
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   info = _results[index];
@@ -311,7 +309,7 @@ String OThreadScanClass::extAddressStr(uint8_t index) {
 }
 
 bool OThreadScanClass::extAddress(uint8_t index, uint8_t address[OT_EXT_ADDRESS_SIZE]) {
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   memcpy(address, _results[index].extAddress, OT_EXT_ADDRESS_SIZE);
@@ -319,7 +317,7 @@ bool OThreadScanClass::extAddress(uint8_t index, uint8_t address[OT_EXT_ADDRESS_
 }
 
 bool OThreadScanClass::extendedPanId(uint8_t index, uint8_t extPanId[OT_EXT_PAN_ID_SIZE]) {
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   memcpy(extPanId, _results[index].extendedPanId, OT_EXT_PAN_ID_SIZE);
@@ -339,7 +337,7 @@ uint8_t OThreadScanClass::lqi(uint8_t index) {
 }
 
 bool OThreadScanClass::isJoinable(uint8_t index) {
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   return _results[index].joinable;
@@ -350,14 +348,14 @@ uint8_t OThreadScanClass::threadVersion(uint8_t index) {
 }
 
 bool OThreadScanClass::isNativeCommissioner(uint8_t index) {
-  if (index >= _results.size()) {
+  if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   return _results[index].nativeCommissioner;
 }
 
 const otActiveScanResult *OThreadScanClass::getActiveScanResult(uint8_t index) const {
-  if (index >= _rawResults.size()) {
+  if (!resultsAvailable() || index >= _rawResults.size()) {
     return nullptr;
   }
   return &_rawResults[index];

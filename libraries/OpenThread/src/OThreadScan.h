@@ -136,6 +136,13 @@ typedef void (*OThreadDiscoverCompleteCallback)(int16_t resultCount, otError err
  * });
  * OThreadScan.discoverNetworks(true);
  * @endcode
+ *
+ * @note Result indexing (`getResult()`, `getResultCount()`, and related getters)
+ *       is available only after discovery completes (blocking return value >= 0,
+ *       `scanComplete()` >= 0, or `onComplete()`). While a scan is running, use
+ *       `onResult()` for streaming. Do not call other `OThreadScan` methods from
+ *       inside `onResult()` / `onComplete()` callbacks (they run on the OpenThread
+ *       task with the API lock held).
  */
 class OThreadScanClass {
 public:
@@ -154,10 +161,16 @@ public:
   /** @brief Configure PAN / joiner / EUI-64 filters for the next discovery. */
   void setDiscoverFilters(const OThreadDiscoverFilters &filters);
 
-  /** @brief Register a per-network callback (optional; OpenThread streams results). */
+  /**
+   * @brief Register a per-network callback (optional; OpenThread streams results).
+   * @note Do not call other `OThreadScan` methods from this callback.
+   */
   void onResult(OThreadDiscoverResultCallback callback, void *context = nullptr);
 
-  /** @brief Register a completion callback (optional). */
+  /**
+   * @brief Register a completion callback (optional).
+   * @note Do not call other `OThreadScan` methods from this callback.
+   */
   void onComplete(OThreadDiscoverCompleteCallback callback, void *context = nullptr);
 
   /**
@@ -196,18 +209,23 @@ public:
   /** @brief @c true while an MLE discovery scan is in progress. */
   bool isDiscoverInProgress() const;
 
-  /** @brief Number of entries from the last completed discovery. */
+  /**
+   * @brief Number of entries from the last completed discovery.
+   * @return @c 0 while discovery is still in progress.
+   */
   uint16_t getResultCount() const;
 
   /**
    * @brief Access one collected result by index.
-   * @return Reference to internal storage (valid until @ref scanDelete()).
+   * @return Reference to internal storage (valid until @ref scanDelete()). Returns
+   *         a static empty entry while discovery is still in progress or if
+   *         @p index is out of range.
    */
   const OThreadNetworkInfo &getResult(uint8_t index) const;
 
   /**
    * @brief Copy one result into @p info.
-   * @return @c false if @p index is out of range.
+   * @return @c false if discovery is still in progress or @p index is out of range.
    */
   bool getResult(uint8_t index, OThreadNetworkInfo &info) const;
 
@@ -215,8 +233,9 @@ public:
    * @name Index-based convenience getters
    * @brief Per-field accessors for a discovery result at @p index.
    *
-   * Each method delegates to @ref getResult(). Valid after a completed
-   * discovery until @ref scanDelete(). Out-of-range @p index yields empty
+   * Each method delegates to @ref getResult(). Valid only after discovery
+   * completes (same rules as @ref getResultCount()) until @ref scanDelete().
+   * Out-of-range @p index or access while discovery is in progress yields empty
    * strings, zero values, or @c false as documented per method.
    * @{
    */
@@ -313,8 +332,8 @@ public:
 
   /**
    * @brief Raw OpenThread result for advanced use.
-   * @return Pointer into internal storage, or @c nullptr if out of range.
-   *         Valid until @ref scanDelete().
+   * @return Pointer into internal storage, or @c nullptr if discovery is still
+   *         in progress or @p index is out of range. Valid until @ref scanDelete().
    */
   const otActiveScanResult *getActiveScanResult(uint8_t index) const;
 
@@ -325,6 +344,10 @@ private:
   bool discoverChannelMask(uint32_t &mask) const;
   /** Allocates `_doneSem` on first use (not in the global ctor / static init). */
   bool ensureDoneSem();
+  /** @c true once the final discovery callback has run (indexed reads allowed). */
+  bool resultsAvailable() const {
+    return _done;
+  }
 
   uint32_t _timeoutMs;
   uint8_t _channel;

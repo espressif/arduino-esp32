@@ -166,6 +166,9 @@ for (int i = 0; i < n; ++i) {
 OThreadScan.scanDelete();
 ```
 
+Indexed accessors (`getResult()`, `getResultCount()`, …) are valid only after
+discovery completes; use `onResult()` while a scan is still running.
+
 See [Native ThreadScan examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan) for blocking, async, and callback
 patterns. Raw 802.15.4 beacon scan remains available via
 [CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) if needed.

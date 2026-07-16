@@ -20,6 +20,10 @@ the same primitive Matter uses to list Thread networks during commissioning.
 Thread does **not** need to be started for discovery — only
 `OThread.networkInterfaceUp()` is required after `OThread.begin(false)`.
 
+**Result access:** use `getResult()` / `getResultCount()` only after discovery
+completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`).
+While a scan is running, use `onResult()` for streaming.
+
 ## How to Run
 
 1. Flash [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) on one ESP32-H2 / ESP32-C6 /

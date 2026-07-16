@@ -508,6 +508,8 @@ Return codes (WiFi-scan convention): `OT_DISCOVER_RUNNING` (-1), `OT_DISCOVER_FA
 
 `scanDelete()` frees stored results. It is a no-op while discovery is still in progress (or if the OpenThread lock cannot be acquired); call it again after the scan completes.
 
+**Result access** (WiFiScan-style): use `getResult()` / `getResultCount()` only after discovery completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`). While a scan is running, use `onResult()` for streaming. Do not call other `OThreadScan` methods from inside `onResult()` / `onComplete()` callbacks.
+
 ## Usage patterns
 
 **Blocking** (WiFiScan-style):

@@ -182,7 +182,9 @@ scanComplete
     int16_t scanComplete();
 
 Poll async discovery state from ``loop()``. Same return semantics as
-``discoverNetworks()`` in blocking/async modes.
+``discoverNetworks()`` in blocking/async modes. Completion is reported only
+after the final discovery callback sets internal state; do not treat
+``otThreadIsDiscoverInProgress()`` as a substitute for ``scanComplete()``.
 
 scanDelete
 ^^^^^^^^^^
@@ -207,6 +209,22 @@ Returns ``true`` while an MLE discovery scan is in progress.
 Results
 *******
 
+Result access (WiFiScan-style)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Indexed result APIs (`getResult()`, `getResultCount()`, field getters, and
+``getActiveScanResult()``) are available **only after discovery completes**:
+
+* Blocking: ``discoverNetworks()`` return value ``>= 0``
+* Async: ``scanComplete()`` return value ``>= 0``
+* Callbacks: ``onComplete()`` has fired
+
+While a scan is still running, these methods return empty values (count ``0``,
+``false``, ``nullptr``). Use ``onResult()`` to handle networks as they are
+discovered. Do not call other ``OThreadScan`` methods from inside
+``onResult()`` or ``onComplete()`` (they run on the OpenThread task with the
+API lock held).
+
 getResultCount
 ^^^^^^^^^^^^^^
 
@@ -215,7 +233,8 @@ getResultCount
     uint16_t getResultCount() const;
 
 Number of entries from the last completed discovery (saturated at
-``UINT16_MAX`` if the internal list is larger).
+``UINT16_MAX`` if the internal list is larger). Returns ``0`` while discovery
+is still in progress.
 
 getResult
 ^^^^^^^^^
@@ -226,7 +245,8 @@ getResult
     bool getResult(uint8_t index, OThreadNetworkInfo &info) const;
 
 Access one result by index (0 .. count-1). Internal storage is valid until
-``scanDelete()``.
+``scanDelete()``. Returns a static empty entry while discovery is still in
+progress or if the index is out of range.
 
 Index-based convenience getters (``networkName()``, ``panId()``,
 ``extendedPanIdStr()``, ``extAddressStr()``, ``channel()``, ``rssi()``,
@@ -240,7 +260,8 @@ getActiveScanResult
 
     const otActiveScanResult *getActiveScanResult(uint8_t index) const;
 
-Raw OpenThread result for advanced use. Valid until ``scanDelete()``.
+Raw OpenThread result for advanced use. Valid until ``scanDelete()``. Returns
+``nullptr`` while discovery is still in progress or if the index is out of range.
 
 Usage Patterns
 --------------
