@@ -41,7 +41,9 @@
 
 static const uint32_t BAUD = 115200;
 static const uint32_t FLOAT_SAMPLE_MS = 500;
+#if HAS_UART2
 static const char *TEST_MSG = "RxPull loopback";
+#endif
 
 static volatile uint32_t g_rxErrors = 0;
 
@@ -56,7 +58,8 @@ static const char *pullModeName(gpio_pull_mode_t mode) {
 
 static void onRxError(hardwareSerial_error_t err) {
   if (err != UART_NO_ERROR) {
-    g_rxErrors++;
+    uint32_t errors = g_rxErrors;
+    g_rxErrors = errors + 1;
   }
 }
 
