@@ -223,6 +223,24 @@ int16_t OThreadScanClass::scanComplete() {
 }
 
 void OThreadScanClass::scanDelete() {
+  // Discovery callbacks run on the OpenThread task with the OT API lock held.
+  // Acquire the same lock to confirm no scan is active before freeing the
+  // vectors, otherwise onDiscoverResult() could push while we clear.
+  if (_triggered && !_done) {
+    OtLock lock;  // blocking; only contends with the OT task briefly
+    if (!lock) {
+      // Lock layer unavailable: do not risk a concurrent clear.
+      return;
+    }
+    otInstance *inst = OThread.getInstance();
+    if (inst && otThreadIsDiscoverInProgress(inst)) {
+      log_d("OThreadScan: scanDelete() deferred (discovery in progress)");
+      return;  // keep results; let the scan finish
+    }
+    // Not in progress: the final callback already ran under this lock,
+    // so no further callback will touch the vectors.
+  }
+
   _results.clear();
   _rawResults.clear();
   _triggered = false;

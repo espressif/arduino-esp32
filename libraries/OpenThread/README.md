@@ -506,6 +506,8 @@ extern OThreadScanClass OThreadScan;
 
 Return codes (WiFi-scan convention): `OT_DISCOVER_RUNNING` (-1), `OT_DISCOVER_FAILED` (-2).
 
+`scanDelete()` frees stored results. It is a no-op while discovery is still in progress (or if the OpenThread lock cannot be acquired); call it again after the scan completes.
+
 ## Usage patterns
 
 **Blocking** (WiFiScan-style):

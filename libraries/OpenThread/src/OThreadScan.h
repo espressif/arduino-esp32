@@ -183,7 +183,14 @@ public:
    */
   int16_t scanComplete();
 
-  /** @brief Release stored results and free associated memory. */
+  /**
+   * @brief Release stored results and free associated memory.
+   *
+   * No-op while an MLE discovery is still in progress (or if the OpenThread
+   * lock cannot be acquired), so the OpenThread task cannot push into the
+   * result vectors while they are being cleared. Call again after the scan
+   * completes.
+   */
   void scanDelete();
 
   /** @brief @c true while an MLE discovery scan is in progress. */

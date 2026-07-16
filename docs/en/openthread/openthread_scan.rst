@@ -192,7 +192,8 @@ scanDelete
     void scanDelete();
 
 Release stored results and free associated memory. Call after processing
-results.
+results. This is a no-op while discovery is still in progress (or if the
+OpenThread lock cannot be acquired); call again after the scan completes.
 
 isDiscoverInProgress
 ^^^^^^^^^^^^^^^^^^^^
