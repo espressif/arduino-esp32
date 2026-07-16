@@ -55,8 +55,9 @@
  *
  * Result vectors are pre-reserved to this capacity before each scan (outside the
  * OpenThread API lock). Duplicate responses (same network name and PAN ID) are
- * merged; only the strongest RSSI is kept. Additional unique networks beyond this
- * cap are still delivered via @ref onResult() but are not stored.
+ * merged in storage; only the strongest RSSI is kept. @ref onResult() is still
+ * invoked for every Discovery Response. Additional unique networks beyond this
+ * cap are delivered via @ref onResult() but are not stored.
  */
 #ifndef OT_DISCOVER_MAX_RESULTS
 #define OT_DISCOVER_MAX_RESULTS 16

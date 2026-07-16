@@ -400,7 +400,8 @@ Common Issues
 **OThreadScan discovery fails or finds no networks**
   * Call ``OThread.networkInterfaceUp()`` before ``discoverNetworks()``; Thread does not need to be started.
   * Start a Leader or Router on another board first for meaningful results.
-  * ``OT_DISCOVER_FAILED`` — scan already running, timeout, or interface down; increase ``setScanTimeout()`` or call ``scanDelete()`` before retrying.
+  * ``OT_DISCOVER_FAILED`` — timeout, interface down, or internal resource failure; confirm the interface is up and increase ``setScanTimeout()`` if needed.
+  * ``OT_DISCOVER_RUNNING`` — discovery is already in progress; wait for ``scanComplete()`` before starting another scan or calling ``scanDelete()``.
   * For CLI-based 802.15.4 beacon scan, use `CLI ThreadScan <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan>`_.
 
 **OThreadCoAP requests fail or time out**

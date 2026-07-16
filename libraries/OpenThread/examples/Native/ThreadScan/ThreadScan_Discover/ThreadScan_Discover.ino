@@ -59,9 +59,9 @@ static void discoverBlocking() {
   Serial.println("Thread discovery done");
 
   if (n == OT_DISCOVER_FAILED) {
-    Serial.println("discovery failed (interface down, busy, or timeout)");
+    Serial.println("discovery failed (interface down, lock failure, or timeout)");
   } else if (n == OT_DISCOVER_RUNNING) {
-    Serial.println("unexpected: discovery still running");
+    Serial.println("discovery already in progress (OT_DISCOVER_RUNNING)");
   } else if (n == 0) {
     Serial.println("no Thread networks found");
   } else {

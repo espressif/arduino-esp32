@@ -76,7 +76,16 @@ On failure:
 ```text
 Thread discovery start
 Thread discovery done
-discovery failed (interface down, busy, or timeout)
+discovery failed (interface down, lock failure, or timeout)
+-------------------------------------
+```
+
+If a previous scan is still running:
+
+```text
+Thread discovery start
+Thread discovery done
+discovery already in progress (OT_DISCOVER_RUNNING)
 -------------------------------------
 ```
 
@@ -115,7 +124,8 @@ supported channels.
 | Symptom | Likely cause |
 | --- | --- |
 | `no Thread networks found` | Leader not running or out of range — start Leader on another board. |
-| `discovery failed` | Previous scan still running, interface down, or timeout — ensure `networkInterfaceUp()` was called. |
+| `discovery failed` | Interface down, lock failure, or timeout — ensure `networkInterfaceUp()` was called; try a longer `setScanTimeout()`. |
+| `discovery already in progress` | Previous scan still running (`OT_DISCOVER_RUNNING`) — wait for it to finish or call `scanDelete()` after completion. |
 | Wrong network name / XPAN | Multiple Thread networks nearby — compare Extended PAN ID with the Leader. |
 | No serial output | Serial Monitor not at **115200**. |
 

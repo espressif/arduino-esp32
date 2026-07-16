@@ -395,6 +395,10 @@ void OThreadScanClass::onDiscoverResult(otActiveScanResult *aResult) {
         _results[static_cast<size_t>(existing)] = info;
         _rawResults[static_cast<size_t>(existing)] = *aResult;
       }
+      // Still stream every Discovery Response (Matter / OpenThread model).
+      if (_resultCb) {
+        _resultCb(info, _resultCtx);
+      }
       return;
     }
 
@@ -409,7 +413,7 @@ void OThreadScanClass::onDiscoverResult(otActiveScanResult *aResult) {
     _results.push_back(info);
     _rawResults.push_back(*aResult);
     if (_resultCb) {
-      _resultCb(_results.back(), _resultCtx);
+      _resultCb(info, _resultCtx);
     }
     return;
   }

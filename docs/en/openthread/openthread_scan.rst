@@ -196,7 +196,8 @@ Return values:
 At most ``OT_DISCOVER_MAX_RESULTS`` unique networks (default 16) are stored. Vectors are
 pre-reserved before the scan starts so the OpenThread callback does not allocate
 while the API lock is held. Multiple discovery responses for the same network name
-and PAN ID are merged (strongest RSSI kept). Additional unique networks beyond the
+and PAN ID are merged in storage (strongest RSSI kept). ``onResult()`` is still
+invoked for every Discovery Response. Additional unique networks beyond the
 cap are still delivered through ``onResult()`` but are omitted from
 ``getResult()`` / ``getResultCount()``.
 
@@ -379,8 +380,12 @@ Troubleshooting
     ``discoverNetworks()``.
 
 **``OT_DISCOVER_FAILED``**
-  * Discovery already in progress, IPv6 interface down, or timeout — increase
-    ``setScanTimeout()`` or call ``scanDelete()`` before restarting.
+  * IPv6 interface down, lock/allocation failure, or timeout — confirm
+    ``networkInterfaceUp()`` and increase ``setScanTimeout()`` if needed.
+
+**``OT_DISCOVER_RUNNING``**
+  * Discovery is already in progress — wait for ``scanComplete()`` to report
+    completion before starting another scan or calling ``scanDelete()``.
 
 **Wrong network listed**
   * Multiple partitions nearby — compare ``extendedPanId`` with the target
