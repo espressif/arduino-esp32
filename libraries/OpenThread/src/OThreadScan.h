@@ -54,8 +54,8 @@
  * @brief Maximum unique networks stored per discovery scan.
  *
  * Result vectors are pre-reserved to this capacity before each scan (outside the
- * OpenThread API lock). Duplicate responses (same network name and PAN ID) are
- * merged in storage; only the strongest RSSI is kept. @ref onResult() is still
+ * OpenThread API lock). Duplicate responses (same Extended PAN ID) are merged
+ * in storage; only the strongest RSSI is kept. @ref onResult() is still
  * invoked for every Discovery Response. Additional unique networks beyond this
  * cap are delivered via @ref onResult() but are not stored.
  */
@@ -367,8 +367,8 @@ private:
   bool ensureDoneSem();
   /** Pre-reserves result vectors (heap alloc; call outside the OT API lock). */
   void prepareResultStorage();
-  /** Index of an existing entry with the same network name and PAN ID, or -1. */
-  int findResultByNetwork(const OThreadNetworkInfo &info) const;
+  /** Index of an existing entry with the same Extended PAN ID, or -1. */
+  int findResultByExtendedPanId(const OThreadNetworkInfo &info) const;
   /** @c true once the final discovery callback has run (indexed reads allowed). */
   bool resultsAvailable() const {
     return _done;

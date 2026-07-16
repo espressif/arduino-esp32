@@ -195,8 +195,8 @@ Return values:
 
 At most ``OT_DISCOVER_MAX_RESULTS`` unique networks (default 16) are stored. Vectors are
 pre-reserved before the scan starts so the OpenThread callback does not allocate
-while the API lock is held. Multiple discovery responses for the same network name
-and PAN ID are merged in storage (strongest RSSI kept). ``onResult()`` is still
+while the API lock is held. Multiple discovery responses with the same Extended
+PAN ID are merged in storage (strongest RSSI kept). ``onResult()`` is still
 invoked for every Discovery Response. Additional unique networks beyond the
 cap are still delivered through ``onResult()`` but are omitted from
 ``getResult()`` / ``getResultCount()``.

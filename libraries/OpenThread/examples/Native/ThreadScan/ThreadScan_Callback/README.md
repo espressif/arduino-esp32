@@ -103,7 +103,7 @@ OThreadScan.setDiscoverFilters(filters);
 | No `found:` lines | Leader not running or out of range — start Leader on another board. |
 | `discovery failed to start` | Interface not up or scan already in progress. |
 | `discovery complete: failed` | Timeout or internal error — increase `setScanTimeout()`. |
-| Live count differs from final count | `onResult()` fires for every Discovery Response (including duplicate name+PAN); stored list merges by name + PAN ID (strongest RSSI kept). |
+| Live count differs from final count | `onResult()` fires for every Discovery Response (including duplicate responders); stored list merges by Extended PAN ID (strongest RSSI kept). |
 
 ## See also
 

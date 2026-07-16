@@ -96,9 +96,9 @@ void OThreadScanClass::prepareResultStorage() {
   }
 }
 
-int OThreadScanClass::findResultByNetwork(const OThreadNetworkInfo &info) const {
+int OThreadScanClass::findResultByExtendedPanId(const OThreadNetworkInfo &info) const {
   for (size_t i = 0; i < _results.size(); ++i) {
-    if (_results[i].panId == info.panId && strcmp(_results[i].networkName, info.networkName) == 0) {
+    if (memcmp(_results[i].extendedPanId, info.extendedPanId, OT_EXT_PAN_ID_SIZE) == 0) {
       return static_cast<int>(i);
     }
   }
@@ -388,7 +388,7 @@ void OThreadScanClass::onDiscoverResult(otActiveScanResult *aResult) {
   if (aResult != nullptr) {
     const OThreadNetworkInfo info = fromActiveScanResult(*aResult);
 
-    const int existing = findResultByNetwork(info);
+    const int existing = findResultByExtendedPanId(info);
     if (existing >= 0) {
       // Same Thread network from another router/beacon; keep the strongest RSSI.
       if (info.rssi > _results[static_cast<size_t>(existing)].rssi) {
