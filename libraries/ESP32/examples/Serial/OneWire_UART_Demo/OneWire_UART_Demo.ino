@@ -46,10 +46,12 @@
 
 static const uint32_t BAUD = 115200;
 static const char *TEST_MSG = "ONEWIRE";
+
+#if HAS_UART2
 static const char *PEER_REQUEST = "UART1_TO_UART2";
 static const char *PEER_REPLY = "UART2_TO_UART1";
-
 static bool g_dualPeerReady = false;
+#endif
 
 static void beginOneWire(HardwareSerial &uart, int8_t pin) {
   uart.end();
