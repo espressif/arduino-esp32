@@ -87,6 +87,24 @@ bool OThreadScanClass::ensureDoneSem() {
   return true;
 }
 
+void OThreadScanClass::prepareResultStorage() {
+  if (_results.capacity() < OT_DISCOVER_MAX_RESULTS) {
+    _results.reserve(OT_DISCOVER_MAX_RESULTS);
+  }
+  if (_rawResults.capacity() < OT_DISCOVER_MAX_RESULTS) {
+    _rawResults.reserve(OT_DISCOVER_MAX_RESULTS);
+  }
+}
+
+int OThreadScanClass::findResultByNetwork(const OThreadNetworkInfo &info) const {
+  for (size_t i = 0; i < _results.size(); ++i) {
+    if (_results[i].panId == info.panId && strcmp(_results[i].networkName, info.networkName) == 0) {
+      return static_cast<int>(i);
+    }
+  }
+  return -1;
+}
+
 void OThreadScanClass::setScanTimeout(uint32_t ms) {
   _timeoutMs = ms;
 }
@@ -129,6 +147,7 @@ int16_t OThreadScanClass::discoverNetworks(bool async) {
   if (!ensureDoneSem()) {
     return OT_DISCOVER_FAILED;
   }
+  prepareResultStorage();
 
   {
     OtLock lock;
@@ -367,7 +386,27 @@ void OThreadScanClass::handleDiscoverResult(otActiveScanResult *aResult, void *a
 
 void OThreadScanClass::onDiscoverResult(otActiveScanResult *aResult) {
   if (aResult != nullptr) {
-    _results.push_back(fromActiveScanResult(*aResult));
+    const OThreadNetworkInfo info = fromActiveScanResult(*aResult);
+
+    const int existing = findResultByNetwork(info);
+    if (existing >= 0) {
+      // Same Thread network from another router/beacon; keep the strongest RSSI.
+      if (info.rssi > _results[static_cast<size_t>(existing)].rssi) {
+        _results[static_cast<size_t>(existing)] = info;
+        _rawResults[static_cast<size_t>(existing)] = *aResult;
+      }
+      return;
+    }
+
+    if (_results.size() >= OT_DISCOVER_MAX_RESULTS) {
+      log_w("OThreadScan: result storage full (%u); streaming only", (unsigned)OT_DISCOVER_MAX_RESULTS);
+      if (_resultCb) {
+        _resultCb(info, _resultCtx);
+      }
+      return;
+    }
+    // Vectors were pre-reserved in discoverNetworks(); push_back must not realloc here.
+    _results.push_back(info);
     _rawResults.push_back(*aResult);
     if (_resultCb) {
       _resultCb(_results.back(), _resultCtx);

@@ -506,6 +506,10 @@ extern OThreadScanClass OThreadScan;
 
 Return codes (WiFi-scan convention): `OT_DISCOVER_RUNNING` (-1), `OT_DISCOVER_FAILED` (-2).
 
+Result vectors are pre-reserved to `OT_DISCOVER_MAX_RESULTS` (default 16) before each scan so discovery callbacks do not heap-allocate while the OpenThread API lock is held. Duplicate responses (same network name and PAN ID) are merged; only the strongest RSSI is kept. Extra unique networks beyond the cap are still delivered via `onResult()` but are not stored for `getResult()`.
+
+To store more unique networks, define `OT_DISCOVER_MAX_RESULTS` **before** including `OThreadScan.h` (see `ThreadScan_Discover` example).
+
 `scanDelete()` frees stored results and releases vector capacity. It is a no-op while discovery is still in progress (or if the OpenThread lock cannot be acquired); call it again after the scan completes.
 
 **Result access** (WiFiScan-style): use `getResult()` / `getResultCount()` only after discovery completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`). While a scan is running, use `onResult()` for streaming. Do not call other `OThreadScan` methods from inside `onResult()` / `onComplete()` callbacks.

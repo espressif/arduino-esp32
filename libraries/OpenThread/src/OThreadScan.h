@@ -51,6 +51,18 @@
 #endif
 
 /**
+ * @brief Maximum unique networks stored per discovery scan.
+ *
+ * Result vectors are pre-reserved to this capacity before each scan (outside the
+ * OpenThread API lock). Duplicate responses (same network name and PAN ID) are
+ * merged; only the strongest RSSI is kept. Additional unique networks beyond this
+ * cap are still delivered via @ref onResult() but are not stored.
+ */
+#ifndef OT_DISCOVER_MAX_RESULTS
+#define OT_DISCOVER_MAX_RESULTS 16
+#endif
+
+/**
  * @brief Optional filters passed to otThreadDiscover().
  *
  * Defaults match the ESP-IDF CLI `discover` command (no PAN / joiner / EUI-64
@@ -191,7 +203,8 @@ public:
    * @note Requires the IPv6 interface to be up (@c OThread.networkInterfaceUp()).
    *       Thread does not need to be started; this matches Matter pre-commission
    *       discovery. For best results, at least one Leader/Router should be
-   *       active nearby.
+   *       active nearby. At most @ref OT_DISCOVER_MAX_RESULTS networks are stored;
+   *       additional responses are still delivered via @ref onResult().
    */
   int16_t discoverNetworks(bool async = false);
 
@@ -351,6 +364,10 @@ private:
   bool discoverChannelMask(uint32_t &mask) const;
   /** Allocates `_doneSem` on first use (not in the global ctor / static init). */
   bool ensureDoneSem();
+  /** Pre-reserves result vectors (heap alloc; call outside the OT API lock). */
+  void prepareResultStorage();
+  /** Index of an existing entry with the same network name and PAN ID, or -1. */
+  int findResultByNetwork(const OThreadNetworkInfo &info) const;
   /** @c true once the final discovery callback has run (indexed reads allowed). */
   bool resultsAvailable() const {
     return _done;

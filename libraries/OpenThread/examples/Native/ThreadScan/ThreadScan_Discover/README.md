@@ -82,6 +82,21 @@ discovery failed (interface down, busy, or timeout)
 
 ## Customization
 
+### Stored result capacity
+
+The library keeps at most ``OT_DISCOVER_MAX_RESULTS`` **unique** networks per scan
+(default **16**). This sketch raises the limit to **32** for denser RF environments:
+
+```cpp
+#define OT_DISCOVER_MAX_RESULTS 32
+#include "OThreadScan.h"
+```
+
+The ``#define`` must appear **before** ``#include "OThreadScan.h"`` (in your ``.ino``
+or in a header included before it). You can also pass it from the build system, e.g.
+``-DOT_DISCOVER_MAX_RESULTS=32``. Higher values use more RAM because result vectors
+are pre-reserved to that size before each scan.
+
 Discovery timeout defaults to 30 seconds in the library. Adjust before calling
 `discoverNetworks()`:
 

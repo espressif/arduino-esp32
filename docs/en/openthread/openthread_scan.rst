@@ -25,6 +25,9 @@ commissioning. The global instance is ``OThreadScan`` (same pattern as
   ``otThreadDiscover()`` parameters.
 * WiFi-scan-style return codes: ``OT_DISCOVER_RUNNING`` (-1),
   ``OT_DISCOVER_FAILED`` (-2).
+* Result storage is pre-reserved (``OT_DISCOVER_MAX_RESULTS``, default 16) before
+  each scan so the OpenThread callback path does not heap-allocate while the OT
+  API lock is held.
 
 **Use Cases:**
 
@@ -107,6 +110,22 @@ setScanTimeout
 Maximum time to wait for blocking discovery or async completion. Default:
 ``OT_DISCOVER_DEFAULT_TIMEOUT_MS`` (30000 ms).
 
+OT_DISCOVER_MAX_RESULTS
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Maximum **unique** networks stored per scan (default **16**). Vectors are
+pre-reserved to this size before each scan. Define the macro **before** including
+``OThreadScan.h`` to override:
+
+.. code-block:: arduino
+
+    #define OT_DISCOVER_MAX_RESULTS 32
+    #include <OThreadScan.h>
+
+Or pass ``-DOT_DISCOVER_MAX_RESULTS=32`` at compile time. See
+`ThreadScan_Discover <https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover>`_
+for a sketch example.
+
 setChannel
 ^^^^^^^^^^
 
@@ -173,6 +192,13 @@ Return values:
   done).
 * ``OT_DISCOVER_RUNNING`` (-1) — discovery in progress.
 * ``OT_DISCOVER_FAILED`` (-2) — failed, timed out, or not started.
+
+At most ``OT_DISCOVER_MAX_RESULTS`` unique networks (default 16) are stored. Vectors are
+pre-reserved before the scan starts so the OpenThread callback does not allocate
+while the API lock is held. Multiple discovery responses for the same network name
+and PAN ID are merged (strongest RSSI kept). Additional unique networks beyond the
+cap are still delivered through ``onResult()`` but are omitted from
+``getResult()`` / ``getResultCount()``.
 
 scanComplete
 ^^^^^^^^^^^^

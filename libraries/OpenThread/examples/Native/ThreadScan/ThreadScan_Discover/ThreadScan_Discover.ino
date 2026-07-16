@@ -20,10 +20,16 @@
  * link fields in OThreadNetworkInfo.
  *
  * Start a Leader on another board first (SimpleThreadNetwork/LeaderNode).
+ *
+ * This sketch sets OT_DISCOVER_MAX_RESULTS to 32 (default in the library is 16).
  */
 
 #include <Arduino.h>
 #include "OThread.h"
+
+// This sketch stores up to 32 unique networks (library default is 16).
+// Define OT_DISCOVER_MAX_RESULTS before including OThreadScan.h.
+#define OT_DISCOVER_MAX_RESULTS 32
 #include "OThreadScan.h"
 
 static void printNetwork(const OThreadNetworkInfo &net, int index) {

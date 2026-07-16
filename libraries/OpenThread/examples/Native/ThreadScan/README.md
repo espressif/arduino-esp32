@@ -27,6 +27,10 @@ Do not call `scanDelete()` (or other `OThreadScan` methods) from inside
 `onResult()` / `onComplete()` — free results from `loop()` after
 `scanComplete()` finishes.
 
+**Stored result cap:** default `OT_DISCOVER_MAX_RESULTS` is **16** unique networks.
+Override with `#define OT_DISCOVER_MAX_RESULTS 32` before `#include "OThreadScan.h"`
+(see `ThreadScan_Discover` example).
+
 ## How to Run
 
 1. Flash [LeaderNode (network former)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) on one ESP32-H2 / ESP32-C6 /
