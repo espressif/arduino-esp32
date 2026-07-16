@@ -11,7 +11,7 @@ The Native API is the typed C++ interface exposed by Arduino wrappers such as:
 - `DataSet`
 - `OThreadUDP`
 - `OThreadCoAP` (`OThreadCoAPClient`, `OThreadCoAPServer`, …)
-- `OThreadScan` (network scanning — proposed Native API)
+- `OThreadScan` (network scanning — Native API)
 
 Instead of sending textual OpenThread CLI commands, sketches call methods
 directly, for example:

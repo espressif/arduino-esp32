@@ -284,7 +284,7 @@ Async poll (WiFiScanAsync-style)
     }
 
 Streaming callbacks
-*****************
+*******************
 
 .. code-block:: arduino
 

@@ -15,8 +15,7 @@ the same primitive Matter uses to list Thread networks during commissioning.
 | [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) | Non-blocking discovery with `scanComplete()` polling |
 | [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) | Streaming `onResult()` / `onComplete()` callbacks |
 
-> **Note:** These examples define the intended API. `OThreadScan.cpp`
-> implementation follows in a later step.
+> **Note:** These examples demonstrate the `OThreadScan` API provided by the library.
 
 Thread does **not** need to be started for discovery — only
 `OThread.networkInterfaceUp()` is required after `OThread.begin(false)`.
