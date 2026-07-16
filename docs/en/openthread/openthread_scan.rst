@@ -269,8 +269,8 @@ getResult
 
 .. code-block:: arduino
 
-    const OThreadNetworkInfo &getResult(uint8_t index) const;
-    bool getResult(uint8_t index, OThreadNetworkInfo &info) const;
+    const OThreadNetworkInfo &getResult(uint16_t index) const;
+    bool getResult(uint16_t index, OThreadNetworkInfo &info) const;
 
 Access one result by index (0 .. count-1). Internal storage is valid until
 ``scanDelete()``. Returns a static empty entry while discovery is still in
@@ -286,7 +286,7 @@ getActiveScanResult
 
 .. code-block:: arduino
 
-    const otActiveScanResult *getActiveScanResult(uint8_t index) const;
+    const otActiveScanResult *getActiveScanResult(uint16_t index) const;
 
 Raw OpenThread result for advanced use. Valid until ``scanDelete()``. Returns
 ``nullptr`` while discovery is still in progress or if the index is out of range.

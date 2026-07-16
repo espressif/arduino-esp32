@@ -295,7 +295,7 @@ uint16_t OThreadScanClass::getResultCount() const {
   return (n > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(n);
 }
 
-const OThreadNetworkInfo &OThreadScanClass::getResult(uint8_t index) const {
+const OThreadNetworkInfo &OThreadScanClass::getResult(uint16_t index) const {
   static const OThreadNetworkInfo kEmpty{};
   if (!resultsAvailable() || index >= _results.size()) {
     return kEmpty;
@@ -303,7 +303,7 @@ const OThreadNetworkInfo &OThreadScanClass::getResult(uint8_t index) const {
   return _results[index];
 }
 
-bool OThreadScanClass::getResult(uint8_t index, OThreadNetworkInfo &info) const {
+bool OThreadScanClass::getResult(uint16_t index, OThreadNetworkInfo &info) const {
   if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
@@ -311,23 +311,23 @@ bool OThreadScanClass::getResult(uint8_t index, OThreadNetworkInfo &info) const 
   return true;
 }
 
-String OThreadScanClass::networkName(uint8_t index) {
+String OThreadScanClass::networkName(uint16_t index) {
   return getResult(index).networkNameStr();
 }
 
-uint16_t OThreadScanClass::panId(uint8_t index) {
+uint16_t OThreadScanClass::panId(uint16_t index) {
   return getResult(index).panId;
 }
 
-String OThreadScanClass::extendedPanIdStr(uint8_t index) {
+String OThreadScanClass::extendedPanIdStr(uint16_t index) {
   return getResult(index).extendedPanIdStr();
 }
 
-String OThreadScanClass::extAddressStr(uint8_t index) {
+String OThreadScanClass::extAddressStr(uint16_t index) {
   return getResult(index).extAddressStr();
 }
 
-bool OThreadScanClass::extAddress(uint8_t index, uint8_t address[OT_EXT_ADDRESS_SIZE]) {
+bool OThreadScanClass::extAddress(uint16_t index, uint8_t address[OT_EXT_ADDRESS_SIZE]) {
   if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
@@ -335,7 +335,7 @@ bool OThreadScanClass::extAddress(uint8_t index, uint8_t address[OT_EXT_ADDRESS_
   return true;
 }
 
-bool OThreadScanClass::extendedPanId(uint8_t index, uint8_t extPanId[OT_EXT_PAN_ID_SIZE]) {
+bool OThreadScanClass::extendedPanId(uint16_t index, uint8_t extPanId[OT_EXT_PAN_ID_SIZE]) {
   if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
@@ -343,37 +343,37 @@ bool OThreadScanClass::extendedPanId(uint8_t index, uint8_t extPanId[OT_EXT_PAN_
   return true;
 }
 
-uint8_t OThreadScanClass::channel(uint8_t index) {
+uint8_t OThreadScanClass::channel(uint16_t index) {
   return getResult(index).channel;
 }
 
-int8_t OThreadScanClass::rssi(uint8_t index) {
+int8_t OThreadScanClass::rssi(uint16_t index) {
   return getResult(index).rssi;
 }
 
-uint8_t OThreadScanClass::lqi(uint8_t index) {
+uint8_t OThreadScanClass::lqi(uint16_t index) {
   return getResult(index).lqi;
 }
 
-bool OThreadScanClass::isJoinable(uint8_t index) {
+bool OThreadScanClass::isJoinable(uint16_t index) {
   if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   return _results[index].joinable;
 }
 
-uint8_t OThreadScanClass::threadVersion(uint8_t index) {
+uint8_t OThreadScanClass::threadVersion(uint16_t index) {
   return getResult(index).threadVersion;
 }
 
-bool OThreadScanClass::isNativeCommissioner(uint8_t index) {
+bool OThreadScanClass::isNativeCommissioner(uint16_t index) {
   if (!resultsAvailable() || index >= _results.size()) {
     return false;
   }
   return _results[index].nativeCommissioner;
 }
 
-const otActiveScanResult *OThreadScanClass::getActiveScanResult(uint8_t index) const {
+const otActiveScanResult *OThreadScanClass::getActiveScanResult(uint16_t index) const {
   if (!resultsAvailable() || index >= _rawResults.size()) {
     return nullptr;
   }

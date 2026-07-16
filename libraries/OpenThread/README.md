@@ -495,10 +495,10 @@ public:
   bool isDiscoverInProgress() const;
 
   uint16_t getResultCount() const;
-  const OThreadNetworkInfo &getResult(uint8_t index) const;
+  const OThreadNetworkInfo &getResult(uint16_t index) const;
 
   // Index-based getters: networkName(), panId(), rssi(), isJoinable(), ...
-  const otActiveScanResult *getActiveScanResult(uint8_t index) const;
+  const otActiveScanResult *getActiveScanResult(uint16_t index) const;
 };
 
 extern OThreadScanClass OThreadScan;

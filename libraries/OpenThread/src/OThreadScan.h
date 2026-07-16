@@ -242,13 +242,13 @@ public:
    *         a static empty entry while discovery is still in progress or if
    *         @p index is out of range.
    */
-  const OThreadNetworkInfo &getResult(uint8_t index) const;
+  const OThreadNetworkInfo &getResult(uint16_t index) const;
 
   /**
    * @brief Copy one result into @p info.
    * @return @c false if discovery is still in progress or @p index is out of range.
    */
-  bool getResult(uint8_t index, OThreadNetworkInfo &info) const;
+  bool getResult(uint16_t index, OThreadNetworkInfo &info) const;
 
   /**
    * @name Index-based convenience getters
@@ -266,28 +266,28 @@ public:
    * @param index Result index (0 .. getResultCount() - 1).
    * @return Network name, or an empty string if @p index is out of range.
    */
-  String networkName(uint8_t index);
+  String networkName(uint16_t index);
 
   /**
    * @brief IEEE 802.15.4 PAN ID for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return PAN ID, or @c 0 if @p index is out of range.
    */
-  uint16_t panId(uint8_t index);
+  uint16_t panId(uint16_t index);
 
   /**
    * @brief Extended PAN ID as a lowercase hex string for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return 16-character hex string, or empty if @p index is out of range.
    */
-  String extendedPanIdStr(uint8_t index);
+  String extendedPanIdStr(uint16_t index);
 
   /**
    * @brief IEEE 802.15.4 extended address as a hex string for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return 16-character hex string, or empty if @p index is out of range.
    */
-  String extAddressStr(uint8_t index);
+  String extAddressStr(uint16_t index);
 
   /**
    * @brief Copy the extended address for result @p index.
@@ -295,7 +295,7 @@ public:
    * @param address Output buffer (8 bytes, @c OT_EXT_ADDRESS_SIZE).
    * @return @c true on success, @c false if @p index is out of range.
    */
-  bool extAddress(uint8_t index, uint8_t address[OT_EXT_ADDRESS_SIZE]);
+  bool extAddress(uint16_t index, uint8_t address[OT_EXT_ADDRESS_SIZE]);
 
   /**
    * @brief Copy the Extended PAN ID for result @p index.
@@ -303,28 +303,28 @@ public:
    * @param extPanId Output buffer (8 bytes, @c OT_EXT_PAN_ID_SIZE).
    * @return @c true on success, @c false if @p index is out of range.
    */
-  bool extendedPanId(uint8_t index, uint8_t extPanId[OT_EXT_PAN_ID_SIZE]);
+  bool extendedPanId(uint16_t index, uint8_t extPanId[OT_EXT_PAN_ID_SIZE]);
 
   /**
    * @brief IEEE 802.15.4 channel for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return Channel (11..26), or @c 0 if @p index is out of range.
    */
-  uint8_t channel(uint8_t index);
+  uint8_t channel(uint16_t index);
 
   /**
    * @brief Received signal strength for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return RSSI in dBm, or @c 0 if @p index is out of range.
    */
-  int8_t rssi(uint8_t index);
+  int8_t rssi(uint16_t index);
 
   /**
    * @brief Link Quality Indicator for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return LQI value, or @c 0 if @p index is out of range.
    */
-  uint8_t lqi(uint8_t index);
+  uint8_t lqi(uint16_t index);
 
   /**
    * @brief Join-permitted flag for result @p index.
@@ -332,14 +332,14 @@ public:
    * @return @c true when joining is permitted, @c false when not joinable or
    *         @p index is out of range.
    */
-  bool isJoinable(uint8_t index);
+  bool isJoinable(uint16_t index);
 
   /**
    * @brief Thread version field for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
    * @return 4-bit MLE Thread version, or @c 0 if @p index is out of range.
    */
-  uint8_t threadVersion(uint8_t index);
+  uint8_t threadVersion(uint16_t index);
 
   /**
    * @brief Native Commissioner flag for result @p index.
@@ -347,7 +347,7 @@ public:
    * @return @c true when the responder advertises a native Commissioner,
    *         @c false otherwise or if @p index is out of range.
    */
-  bool isNativeCommissioner(uint8_t index);
+  bool isNativeCommissioner(uint16_t index);
 
   /** @} */
 
@@ -356,7 +356,7 @@ public:
    * @return Pointer into internal storage, or @c nullptr if discovery is still
    *         in progress or @p index is out of range. Valid until @ref scanDelete().
    */
-  const otActiveScanResult *getActiveScanResult(uint8_t index) const;
+  const otActiveScanResult *getActiveScanResult(uint16_t index) const;
 
 private:
   static void handleDiscoverResult(otActiveScanResult *aResult, void *aContext);
