@@ -357,7 +357,19 @@ int NetworkUDP::parsePacket() {
 #endif  // LWIP_IPV6=1
   if (len > 0) {
     rx_buffer = new (std::nothrow) cbuf(len);
-    rx_buffer->write(buf, len);
+    if (!rx_buffer) {
+      log_e("failed to allocate %d bytes for the receive buffer", len);
+      free(buf);
+      return 0;
+    }
+    if (rx_buffer->write(buf, len) != (size_t)len) {
+      log_e("failed to buffer %d bytes of received UDP data", len);
+      cbuf *b = rx_buffer;
+      rx_buffer = NULL;
+      delete b;
+      free(buf);
+      return 0;
+    }
   }
   free(buf);
   return len;

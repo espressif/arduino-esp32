@@ -226,7 +226,7 @@ BLEUUID BLEUUID::to128() {
     UUID_VAL_128(m_uuid)[13] = (temp >> 8) & 0xff;
     UUID_VAL_128(m_uuid)[12] = temp & 0xff;
   } else if (UUID_LEN(m_uuid) == BLE_UUID_32_BITS) {
-    uint16_t temp = UUID_VAL_32(m_uuid);
+    uint32_t temp = UUID_VAL_32(m_uuid);
     UUID_VAL_128(m_uuid)[15] = (temp >> 24) & 0xff;
     UUID_VAL_128(m_uuid)[14] = (temp >> 16) & 0xff;
     UUID_VAL_128(m_uuid)[13] = (temp >> 8) & 0xff;
