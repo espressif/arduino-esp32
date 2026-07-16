@@ -510,7 +510,7 @@ Result vectors are pre-reserved to `OT_DISCOVER_MAX_RESULTS` (default 16) before
 
 To store more unique networks, define `OT_DISCOVER_MAX_RESULTS` **before** including `OThreadScan.h` (see `ThreadScan_Discover` example).
 
-`scanDelete()` frees stored results and releases vector capacity. It is a no-op until the final discovery callback has completed (even if OpenThread already reports discover idle); call it again after the scan finishes.
+`scanDelete()` frees stored results and releases vector capacity. It is a no-op until the final discovery callback has completed (even if OpenThread already reports discover idle); call it again after the scan finishes. After a timeout it also stays a no-op until that final callback arrives — retry once `isDiscoverInProgress()` returns `false`.
 
 **Result access** (WiFiScan-style): use `getResult()` / `getResultCount()` only after discovery completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`). While a scan is running, use `onResult()` for streaming. Do not call other `OThreadScan` methods from inside `onResult()` / `onComplete()` callbacks.
 

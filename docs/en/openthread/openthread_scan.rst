@@ -223,7 +223,9 @@ scanDelete
 Release stored results and free associated memory (internal vector capacity
 is released, not just cleared). Call after processing results. This is a no-op
 until the final discovery callback has completed, even if OpenThread already
-reports discover idle; call again after the scan finishes.
+reports discover idle; call again after the scan finishes. After a timeout it
+likewise stays a no-op until OpenThread delivers that final callback — retry
+once ``isDiscoverInProgress()`` returns ``false``.
 
 isDiscoverInProgress
 ^^^^^^^^^^^^^^^^^^^^

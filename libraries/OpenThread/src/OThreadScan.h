@@ -224,6 +224,10 @@ public:
    * discovery callback has completed (``_done``), even if OpenThread already
    * reports discover idle — clearing earlier can race the completion path.
    * Call again after the scan finishes.
+   *
+   * @note After a timeout (blocking or async), this stays a no-op until
+   *       OpenThread delivers the final discovery callback. Retry once the scan
+   *       is no longer reported in progress (@ref isDiscoverInProgress()).
    */
   void scanDelete();
 
@@ -382,7 +386,6 @@ private:
   OThreadDiscoverCompleteCallback _completeCb;
   void *_completeCtx;
 
-  bool _async;
   bool _inProgress;
   bool _triggered;
   bool _done;

@@ -60,7 +60,6 @@ OThreadScanClass::OThreadScanClass()
     _resultCtx(nullptr),
     _completeCb(nullptr),
     _completeCtx(nullptr),
-    _async(false),
     _inProgress(false),
     _triggered(false),
     _done(false),
@@ -170,7 +169,6 @@ int16_t OThreadScanClass::discoverNetworks(bool async) {
 
     _results.clear();
     _rawResults.clear();
-    _async = async;
     _triggered = true;
     _done = false;
     _inProgress = false;
@@ -225,7 +223,6 @@ int16_t OThreadScanClass::scanComplete() {
   // otThreadIsDiscoverInProgress(): OT may be idle before the final callback runs.
   // Completion is signaled by the final discover callback (aResult == nullptr),
   // which sets _done and releases _doneSem.
-  
   if (_inProgress && (millis() - _startedMs) > _timeoutMs) {
     _inProgress = false;
     return OT_DISCOVER_FAILED;
@@ -239,9 +236,10 @@ int16_t OThreadScanClass::scanComplete() {
 }
 
 void OThreadScanClass::scanDelete() {
-  // Treat discovery as active until the final otThreadDiscover callback sets
-  // _done. otThreadIsDiscoverInProgress() can already be false in that window,
-  // so do not use it to decide whether clearing is safe.
+  // A scan is only complete once the final discover callback (aResult == nullptr)
+  // sets _done. Do not use otThreadIsDiscoverInProgress() here: OpenThread can go
+  // idle before that final callback is delivered (see scanComplete()), so clearing
+  // then could zero the count reported to onComplete().
   if (_triggered && !_done) {
     log_d("OThreadScan: scanDelete() deferred (waiting for discover complete)");
     return;
