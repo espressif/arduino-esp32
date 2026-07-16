@@ -96,126 +96,29 @@ can_run_windows() {
     return 1
 }
 
-# The test script run inside Linux containers
-LINUX_TEST_SCRIPT='#!/bin/bash
-set -e
+run_linux_test() {
+    local label="$1"
+    local docker_platform="$2"
 
-ARDUINO_IDE_VERSION="$1"
-PACKAGE_JSON_PATH="$2"
-SKETCH_PATH="$3"
-RELEASE_VERSION="$4"
+    echo "--- Testing: $label ---"
 
-echo "=== Installing dependencies ==="
-export DEBIAN_FRONTEND=noninteractive
-apt-get update -qq
-apt-get install -y -qq wget xz-utils xvfb libxrender1 libxtst6 libxi6 libfreetype6 libfontconfig1 python3 python3-serial > /dev/null 2>&1
-
-echo "=== Downloading Arduino IDE $ARDUINO_IDE_VERSION ==="
-ARCH=$(uname -m)
-if [[ "$ARCH" == "x86_64" ]]; then
-    IDE_URL="https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-linux64.tar.xz"
-elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
-    IDE_URL="https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-linuxaarch64.tar.xz"
-else
-    echo "ERROR: Unsupported architecture $ARCH"
-    exit 1
-fi
-
-wget -q -O /tmp/arduino.tar.xz "$IDE_URL"
-tar xf /tmp/arduino.tar.xz -C /opt/
-rm /tmp/arduino.tar.xz
-
-ARDUINO_DIR="/opt/arduino-${ARDUINO_IDE_VERSION}"
-ARDUINO_CMD="$ARDUINO_DIR/arduino"
-
-if [ ! -f "$ARDUINO_CMD" ]; then
-    echo "ERROR: Arduino binary not found at $ARDUINO_CMD"
-    ls -la /opt/
-    exit 1
-fi
-
-echo "=== Installing ESP32 core via IDE v1 ==="
-PACKAGE_URL="file://${PACKAGE_JSON_PATH}"
-VERSION_ARG=""
-if [ -n "$RELEASE_VERSION" ]; then
-    VERSION_ARG=":${RELEASE_VERSION}"
-fi
-
-# Use xvfb for headless operation (IDE v1 GUI requires a display even in CLI mode)
-# "Platform is already installed!" is treated as success
-xvfb-run "$ARDUINO_CMD" \
-    --pref "boardsmanager.additional.urls=$PACKAGE_URL" \
-    --install-boards "esp32:esp32${VERSION_ARG}" 2>&1 | tee /tmp/install_output.txt
-install_rc=${PIPESTATUS[0]}
-
-if [ $install_rc -ne 0 ]; then
-    if grep -q "Platform is already installed" /tmp/install_output.txt; then
-        echo "Core already installed, skipping installation"
-    else
-        echo "ERROR: Failed to install ESP32 core"
-        exit 1
-    fi
-fi
-
-echo "=== Compiling test sketch ==="
-xvfb-run "$ARDUINO_CMD" \
-    --pref "boardsmanager.additional.urls=$PACKAGE_URL" \
-    --verify \
-    --board esp32:esp32:esp32 \
-    "/workspace/${SKETCH_PATH}"
-
-if [ $? -ne 0 ]; then
-    echo "ERROR: Compilation failed"
-    exit 1
-fi
-
-echo "=== SUCCESS ==="
-'
-
-# Run test in a Linux x86_64 container
-run_linux_amd64_test() {
-    echo "--- Testing: linux64 (x86_64) ---"
-
-    local platform_flag=""
-    if [[ "$HOST_ARCH" != "x86_64" ]]; then
-        platform_flag="--platform linux/amd64"
+    local -a docker_args=(--rm)
+    if [[ "$docker_platform" == "linux/amd64" && "$HOST_ARCH" != "x86_64" ]]; then
+        docker_args+=(--platform linux/amd64)
+    elif [[ "$docker_platform" == "linux/arm64" && "$HOST_ARCH" != "aarch64" && "$HOST_ARCH" != "arm64" ]]; then
+        docker_args+=(--platform linux/arm64)
     fi
 
-    docker run --rm \
-        $platform_flag \
+    docker run "${docker_args[@]}" \
         -v "$REPO_ROOT:/workspace:ro" \
         -v "$PACKAGE_JSON:/test_package.json:ro" \
+        -v "$SCRIPT_DIR/linux_ide_v1_test.sh:/linux_ide_v1_test.sh:ro" \
         ubuntu:22.04 \
-        bash -c "$LINUX_TEST_SCRIPT" -- \
+        bash /linux_ide_v1_test.sh \
             "$ARDUINO_IDE_VERSION" \
             "/test_package.json" \
             "$SKETCH_PATH" \
             "${RELEASE_VERSION:-}"
-
-    return $?
-}
-
-# Run test in a Linux arm64 container
-run_linux_arm64_test() {
-    echo "--- Testing: linuxarm (arm64/aarch64) ---"
-
-    local platform_flag=""
-    if [[ "$HOST_ARCH" != "aarch64" && "$HOST_ARCH" != "arm64" ]]; then
-        platform_flag="--platform linux/arm64"
-    fi
-
-    docker run --rm \
-        $platform_flag \
-        -v "$REPO_ROOT:/workspace:ro" \
-        -v "$PACKAGE_JSON:/test_package.json:ro" \
-        ubuntu:22.04 \
-        bash -c "$LINUX_TEST_SCRIPT" -- \
-            "$ARDUINO_IDE_VERSION" \
-            "/test_package.json" \
-            "$SKETCH_PATH" \
-            "${RELEASE_VERSION:-}"
-
-    return $?
 }
 
 # Run test in a Windows container
@@ -225,29 +128,13 @@ run_windows_test() {
     docker run --rm \
         -v "$REPO_ROOT:C:\\workspace:ro" \
         -v "$PACKAGE_JSON:C:\\test_package.json:ro" \
+        -v "$SCRIPT_DIR/windows_ide_v1_test.ps1:C:\\windows_ide_v1_test.ps1:ro" \
         mcr.microsoft.com/windows/servercore:ltsc2022 \
-        powershell -Command "
-            Write-Host '=== Downloading Arduino IDE $ARDUINO_IDE_VERSION ==='
-            \$url = 'https://downloads.arduino.cc/arduino-${ARDUINO_IDE_VERSION}-windows.zip'
-            Invoke-WebRequest -Uri \$url -OutFile C:\\arduino.zip -UseBasicParsing
-            Expand-Archive -Path C:\\arduino.zip -DestinationPath C:\\
-            Remove-Item C:\\arduino.zip
-
-            \$arduinoCmd = 'C:\\arduino-${ARDUINO_IDE_VERSION}\\arduino_debug.exe'
-
-            Write-Host '=== Installing ESP32 core via IDE v1 ==='
-            \$packageUrl = 'file:///C:/test_package.json'
-            & \$arduinoCmd --pref \"boardsmanager.additional.urls=\$packageUrl\" --install-boards 'esp32:esp32${RELEASE_VERSION:+:$RELEASE_VERSION}'
-            if (\$LASTEXITCODE -ne 0) { exit 1 }
-
-            Write-Host '=== Compiling test sketch ==='
-            & \$arduinoCmd --pref \"boardsmanager.additional.urls=\$packageUrl\" --verify --board esp32:esp32:esp32 'C:\\workspace\\${SKETCH_PATH//\//\\}'
-            if (\$LASTEXITCODE -ne 0) { exit 1 }
-
-            Write-Host '=== SUCCESS ==='
-        "
-
-    return $?
+        powershell -File C:\\windows_ide_v1_test.ps1 \
+            -ArduinoIdeVersion "$ARDUINO_IDE_VERSION" \
+            -PackageJsonPath "C:\\test_package.json" \
+            -SketchPath "$SKETCH_PATH" \
+            -ReleaseVersion "${RELEASE_VERSION:-}"
 }
 
 # Run test natively on macOS
@@ -295,13 +182,11 @@ run_macos_native_test() {
     fi
 
     echo "=== Compiling test sketch ==="
-    "$arduino_cmd" \
+    if ! "$arduino_cmd" \
         --pref "boardsmanager.additional.urls=$package_url" \
         --verify \
         --board esp32:esp32:esp32 \
-        "$REPO_ROOT/${SKETCH_PATH}"
-
-    if [ $? -ne 0 ]; then
+        "$REPO_ROOT/${SKETCH_PATH}"; then
         echo "ERROR: Compilation failed"
         return 1
     fi
@@ -319,7 +204,7 @@ echo ""
 
 # Linux x86_64
 if can_run_linux_amd64; then
-    if run_linux_amd64_test; then
+    if run_linux_test "linux64 (x86_64)" "linux/amd64"; then
         RESULT_linux64="PASS"
     else
         RESULT_linux64="FAIL"
@@ -332,7 +217,7 @@ echo ""
 
 # Linux arm64
 if can_run_linux_arm64; then
-    if run_linux_arm64_test; then
+    if run_linux_test "linuxarm (arm64/aarch64)" "linux/arm64"; then
         RESULT_linuxarm="PASS"
     else
         RESULT_linuxarm="FAIL"

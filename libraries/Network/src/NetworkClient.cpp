@@ -575,10 +575,8 @@ uint8_t NetworkClient::connected() {
   if (_connected) {
     uint8_t dummy;
     int res = recv(fd(), &dummy, 1, MSG_DONTWAIT | MSG_PEEK);
-    // avoid unused var warning by gcc
-    (void)res;
-    // recv only sets errno if res is <= 0
-    if (res <= 0) {
+    // recv only sets errno when it returns -1
+    if (res < 0) {
       switch (errno) {
         case EWOULDBLOCK:
         case ENOENT:  //caused by vfs

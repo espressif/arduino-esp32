@@ -22,10 +22,9 @@
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
 using namespace esp_matter::cluster;
-using namespace esp_matter::cluster::window_covering;
-using namespace esp_matter::cluster::window_covering::command;
 using namespace esp_matter::cluster::window_covering::feature;
 using namespace chip::app::Clusters;
+namespace wc_endpoint = esp_matter::endpoint::window_covering;
 
 MatterWindowCovering::MatterWindowCovering() {}
 
@@ -33,7 +32,10 @@ MatterWindowCovering::~MatterWindowCovering() {
   end();
 }
 
-bool MatterWindowCovering::begin(uint8_t liftPercent, uint8_t tiltPercent, WindowCoveringType_t _coveringType) {
+bool MatterWindowCovering::begin(
+  uint8_t liftPercent, uint8_t tiltPercent, WindowCoveringType_t _coveringType, const PositionCalibration *liftCalibration,
+  const PositionCalibration *tiltCalibration
+) {
   ArduinoMatter::_init();
 
   if (getEndPointId() != 0) {
@@ -43,17 +45,49 @@ bool MatterWindowCovering::begin(uint8_t liftPercent, uint8_t tiltPercent, Windo
 
   coveringType = (_coveringType == 0) ? ROLLERSHADE : _coveringType;
 
-  window_covering_device::config_t window_covering_config(0);
+  if (liftPercent > 100 || tiltPercent > 100) {
+    log_e("Lift and tilt percentage must be between 0 and 100");
+    return false;
+  }
+
+  currentLiftPercent = liftPercent;
+  currentLiftPercent100ths = liftPercent * 100;
+  currentTiltPercent = tiltPercent;
+  currentTiltPercent100ths = tiltPercent * 100;
+  currentLiftPosition = 0;
+  currentTiltPosition = 0;
+  installedOpenLimitLift = 0;
+  installedClosedLimitLift = 65534;
+  installedOpenLimitTilt = 0;
+  installedClosedLimitTilt = 65534;
+
+  if (liftCalibration != nullptr) {
+    installedOpenLimitLift = liftCalibration->open;
+    installedClosedLimitLift = liftCalibration->closed;
+  }
+  if (tiltCalibration != nullptr) {
+    installedOpenLimitTilt = tiltCalibration->open;
+    installedClosedLimitTilt = tiltCalibration->closed;
+  }
+
+  bool supportsTilt = (coveringType == SHUTTER || coveringType == BLIND_TILT_ONLY || coveringType == BLIND_LIFT_AND_TILT);
+
+  wc_endpoint::config_t window_covering_config(0);
   window_covering_config.window_covering.type = (uint8_t)coveringType;
   window_covering_config.window_covering.config_status = 0;
   window_covering_config.window_covering.operational_status = 0;
 
-  currentLiftPercent = liftPercent;
-  currentTiltPercent = tiltPercent;
-  currentLiftPosition = 0;
-  currentTiltPosition = 0;
+  window_covering_config.window_covering.feature_flags = lift::get_id() | position_aware_lift::get_id();
+  window_covering_config.window_covering.features.position_aware_lift.target_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
+  window_covering_config.window_covering.features.position_aware_lift.current_position_lift_percent_100ths = nullable<uint16_t>(currentLiftPercent100ths);
 
-  endpoint_t *endpoint = window_covering_device::create(node::get(), &window_covering_config, ENDPOINT_FLAG_NONE, (void *)this);
+  if (supportsTilt) {
+    window_covering_config.window_covering.feature_flags |= tilt::get_id() | position_aware_tilt::get_id();
+    window_covering_config.window_covering.features.position_aware_tilt.target_position_tilt_percent_100ths = nullable<uint16_t>(currentTiltPercent100ths);
+    window_covering_config.window_covering.features.position_aware_tilt.current_position_tilt_percent_100ths = nullable<uint16_t>(currentTiltPercent100ths);
+  }
+
+  endpoint_t *endpoint = wc_endpoint::create(node::get(), &window_covering_config, ENDPOINT_FLAG_NONE, (void *)this);
   if (endpoint == nullptr) {
     log_e("Failed to create window covering endpoint");
     return false;
@@ -62,77 +96,11 @@ bool MatterWindowCovering::begin(uint8_t liftPercent, uint8_t tiltPercent, Windo
   setEndPointId(endpoint::get_id(endpoint));
   log_i("Window Covering created with endpoint_id %u", getEndPointId());
 
-  // Get the Window Covering cluster and add features and commands
-  cluster_t *window_covering_cluster = cluster::get(endpoint, WindowCovering::Id);
-  if (window_covering_cluster != nullptr) {
-    // Add Lift feature
-    feature::lift::config_t lift_config;
-    lift_config.number_of_actuations_lift = 0;
-    if (feature::lift::add(window_covering_cluster, &lift_config) != ESP_OK) {
-      log_e("Failed to add Lift feature");
-    }
-
-    // Add Position Aware Lift feature
-    feature::position_aware_lift::config_t position_aware_lift_config;
-    position_aware_lift_config.current_position_lift_percentage = nullable<uint8_t>(0);
-    position_aware_lift_config.target_position_lift_percent_100ths = nullable<uint16_t>(liftPercent * 100);
-    position_aware_lift_config.current_position_lift_percent_100ths = nullable<uint16_t>(liftPercent * 100);
-    if (feature::position_aware_lift::add(window_covering_cluster, &position_aware_lift_config) != ESP_OK) {
-      log_e("Failed to add Position Aware Lift feature");
-    }
-
-    // Add Tilt feature if the covering type supports it
-    bool supportsTilt = (coveringType == SHUTTER || coveringType == BLIND_TILT_ONLY || coveringType == BLIND_LIFT_AND_TILT);
-    if (supportsTilt) {
-      feature::tilt::config_t tilt_config;
-      tilt_config.number_of_actuations_tilt = 0;
-      if (feature::tilt::add(window_covering_cluster, &tilt_config) != ESP_OK) {
-        log_e("Failed to add Tilt feature");
-      }
-
-      // Add Position Aware Tilt feature
-      feature::position_aware_tilt::config_t position_aware_tilt_config;
-      position_aware_tilt_config.current_position_tilt_percentage = nullable<uint8_t>(0);
-      position_aware_tilt_config.target_position_tilt_percent_100ths = nullable<uint16_t>(tiltPercent * 100);
-      position_aware_tilt_config.current_position_tilt_percent_100ths = nullable<uint16_t>(tiltPercent * 100);
-      if (feature::position_aware_tilt::add(window_covering_cluster, &position_aware_tilt_config) != ESP_OK) {
-        log_e("Failed to add Position Aware Tilt feature");
-      }
-    }
-
-    // Add Absolute Position feature (creates InstalledOpenLimitLift/ClosedLimitLift/Tilt attributes)
-    // Must be added AFTER all lift and tilt features for all attributes to be created
-    feature::absolute_position::config_t absolute_position_config;
-    absolute_position_config.installed_open_limit_lift = 0;
-    absolute_position_config.installed_closed_limit_lift = 65534;
-    absolute_position_config.installed_open_limit_tilt = 0;
-    absolute_position_config.installed_closed_limit_tilt = 65534;
-    if (feature::absolute_position::add(window_covering_cluster, &absolute_position_config) != ESP_OK) {
-      log_e("Failed to add Absolute Position feature");
-    }
-
-    // Create Window Covering commands
-    create_up_or_open(window_covering_cluster);
-    create_down_or_close(window_covering_cluster);
-    create_stop_motion(window_covering_cluster);
-    create_go_to_lift_value(window_covering_cluster);
-    create_go_to_lift_percentage(window_covering_cluster);
-    if (supportsTilt) {
-      create_go_to_tilt_value(window_covering_cluster);
-      create_go_to_tilt_percentage(window_covering_cluster);
-    }
-  } else {
-    log_e("Failed to get Window Covering cluster for feature and command creation");
-  }
-
   started = true;
 
-  // Set initial lift and tilt percentages
-  if (liftPercent > 0) {
-    setLiftPercentage(liftPercent);
-  }
-  if (tiltPercent > 0) {
-    setTiltPercentage(tiltPercent);
+  setCurrentLiftPercent100ths(currentLiftPercent100ths);
+  if (supportsTilt) {
+    setCurrentTiltPercent100ths(currentTiltPercent100ths);
   }
 
   return true;
@@ -159,11 +127,12 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         uint16_t liftPercent100ths = val->val.u16;
         uint8_t liftPercent = (uint8_t)(liftPercent100ths / 100);
         log_d("Window Covering Lift Percentage changed to %u%%", liftPercent);
-        if (currentLiftPercent != liftPercent) {
+        if (currentLiftPercent100ths != liftPercent100ths) {
           if (_onChangeCB != NULL) {
             ret &= _onChangeCB(liftPercent, currentTiltPercent);
           }
           if (ret == true) {
+            currentLiftPercent100ths = liftPercent100ths;
             currentLiftPercent = liftPercent;
           }
         }
@@ -174,11 +143,12 @@ bool MatterWindowCovering::attributeChangeCB(uint16_t endpoint_id, uint32_t clus
         uint16_t tiltPercent100ths = val->val.u16;
         uint8_t tiltPercent = (uint8_t)(tiltPercent100ths / 100);
         log_d("Window Covering Tilt Percentage changed to %u%%", tiltPercent);
-        if (currentTiltPercent != tiltPercent) {
+        if (currentTiltPercent100ths != tiltPercent100ths) {
           if (_onChangeCB != NULL) {
             ret &= _onChangeCB(currentLiftPercent, tiltPercent);
           }
           if (ret == true) {
+            currentTiltPercent100ths = tiltPercent100ths;
             currentTiltPercent = tiltPercent;
           }
         }
@@ -314,16 +284,9 @@ bool MatterWindowCovering::setLiftPosition(uint16_t liftPosition) {
     return true;
   }
 
-  // Get InstalledOpenLimitLift and InstalledClosedLimitLift for conversion
-  uint16_t openLimit = 0;
-  uint16_t closedLimit = 0;
-  esp_matter_attr_val_t limitVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitLift::Id, &limitVal)) {
-    openLimit = limitVal.val.u16;
-  }
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitLift::Id, &limitVal)) {
-    closedLimit = limitVal.val.u16;
-  }
+  // Convert absolute position to percent100ths using locally stored installed limits
+  uint16_t openLimit = installedOpenLimitLift;
+  uint16_t closedLimit = installedClosedLimitLift;
 
   // Convert absolute position to percent100ths
   // Using the same logic as ESP-Matter's LiftToPercent100ths
@@ -351,29 +314,8 @@ bool MatterWindowCovering::setLiftPosition(uint16_t liftPosition) {
     }
   }
 
-  // Update CurrentPositionLift (absolute)
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val)) {
-    log_e("Failed to get Lift Position Attribute.");
-    return false;
-  }
-
-  if (val.val.u16 != liftPosition) {
-    val.val.u16 = liftPosition;
-    bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val);
-    if (!ret) {
-      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLift::Id, &val);
-    }
-    if (ret) {
-      currentLiftPosition = liftPosition;
-      if (!setLiftPercentage((uint8_t)(liftPercent100ths / 100))) {
-        log_e("Failed to sync Lift Percentage from Lift Position.");
-        return false;
-      }
-    }
-    return ret;
-  }
-  return true;
+  currentLiftPosition = liftPosition;
+  return setCurrentLiftPercent100ths(liftPercent100ths);
 }
 
 uint16_t MatterWindowCovering::getLiftPosition() {
@@ -381,25 +323,32 @@ uint16_t MatterWindowCovering::getLiftPosition() {
 }
 
 bool MatterWindowCovering::setLiftPercentage(uint8_t liftPercent) {
+  if (liftPercent > 100) {
+    log_e("Lift percentage must be between 0 and 100");
+    return false;
+  }
+  return setCurrentLiftPercent100ths(liftPercent * 100);
+}
+
+uint8_t MatterWindowCovering::getLiftPercentage() {
+  return currentLiftPercent;
+}
+
+bool MatterWindowCovering::setCurrentLiftPercent100ths(uint16_t liftPercent100ths) {
   if (!started) {
     log_e("Matter Window Covering device has not begun.");
     return false;
   }
 
-  if (liftPercent > 100) {
-    log_e("Lift percentage must be between 0 and 100");
+  if (liftPercent100ths > 10000) {
+    log_e("Lift percent100ths must be between 0 and 10000");
     return false;
   }
 
-  if (currentLiftPercent == liftPercent) {
+  if (currentLiftPercent100ths == liftPercent100ths) {
     return true;
   }
 
-  // Matter uses percent100ths (0-10000 for 0-100%)
-  uint16_t liftPercent100ths = liftPercent * 100;
-
-  // Update only CurrentPosition, not TargetPosition
-  // TargetPosition is set by Matter commands/apps, CurrentPosition reflects actual position
   esp_matter_attr_val_t currentVal = esp_matter_invalid(NULL);
   if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal)) {
     log_e("Failed to get Current Lift Percentage Attribute.");
@@ -413,15 +362,26 @@ bool MatterWindowCovering::setLiftPercentage(uint8_t liftPercent) {
       ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &currentVal);
     }
     if (ret) {
-      currentLiftPercent = liftPercent;
+      currentLiftPercent100ths = liftPercent100ths;
+      currentLiftPercent = (uint8_t)(liftPercent100ths / 100);
     }
     return ret;
   }
   return true;
 }
 
-uint8_t MatterWindowCovering::getLiftPercentage() {
-  return currentLiftPercent;
+uint16_t MatterWindowCovering::getCurrentLiftPercent100ths() {
+  if (started) {
+    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+    if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionLiftPercent100ths::Id, &val)) {
+      if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
+        currentLiftPercent100ths = val.val.u16;
+        currentLiftPercent = (uint8_t)(val.val.u16 / 100);
+        return val.val.u16;
+      }
+    }
+  }
+  return currentLiftPercent100ths;
 }
 
 bool MatterWindowCovering::setTargetLiftPercent100ths(uint16_t liftPercent100ths) {
@@ -468,16 +428,9 @@ bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
     return true;
   }
 
-  // Get InstalledOpenLimitTilt and InstalledClosedLimitTilt for conversion
-  uint16_t openLimit = 0;
-  uint16_t closedLimit = 0;
-  esp_matter_attr_val_t limitVal = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitTilt::Id, &limitVal)) {
-    openLimit = limitVal.val.u16;
-  }
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitTilt::Id, &limitVal)) {
-    closedLimit = limitVal.val.u16;
-  }
+  // Convert absolute position to percent100ths using locally stored installed limits
+  uint16_t openLimit = installedOpenLimitTilt;
+  uint16_t closedLimit = installedClosedLimitTilt;
 
   // Convert absolute position to percent100ths
   // Using the same logic as ESP-Matter's TiltToPercent100ths
@@ -505,29 +458,8 @@ bool MatterWindowCovering::setTiltPosition(uint16_t tiltPosition) {
     }
   }
 
-  // Update CurrentPositionTilt (absolute)
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val)) {
-    log_e("Failed to get Tilt Position Attribute.");
-    return false;
-  }
-
-  if (val.val.u16 != tiltPosition) {
-    val.val.u16 = tiltPosition;
-    bool ret = updateAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val);
-    if (!ret) {
-      ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTilt::Id, &val);
-    }
-    if (ret) {
-      currentTiltPosition = tiltPosition;
-      if (!setTiltPercentage((uint8_t)(tiltPercent100ths / 100))) {
-        log_e("Failed to sync Tilt Percentage from Tilt Position.");
-        return false;
-      }
-    }
-    return ret;
-  }
-  return true;
+  currentTiltPosition = tiltPosition;
+  return setCurrentTiltPercent100ths(tiltPercent100ths);
 }
 
 uint16_t MatterWindowCovering::getTiltPosition() {
@@ -535,25 +467,32 @@ uint16_t MatterWindowCovering::getTiltPosition() {
 }
 
 bool MatterWindowCovering::setTiltPercentage(uint8_t tiltPercent) {
+  if (tiltPercent > 100) {
+    log_e("Tilt percentage must be between 0 and 100");
+    return false;
+  }
+  return setCurrentTiltPercent100ths(tiltPercent * 100);
+}
+
+uint8_t MatterWindowCovering::getTiltPercentage() {
+  return currentTiltPercent;
+}
+
+bool MatterWindowCovering::setCurrentTiltPercent100ths(uint16_t tiltPercent100ths) {
   if (!started) {
     log_e("Matter Window Covering device has not begun.");
     return false;
   }
 
-  if (tiltPercent > 100) {
-    log_e("Tilt percentage must be between 0 and 100");
+  if (tiltPercent100ths > 10000) {
+    log_e("Tilt percent100ths must be between 0 and 10000");
     return false;
   }
 
-  if (currentTiltPercent == tiltPercent) {
+  if (currentTiltPercent100ths == tiltPercent100ths) {
     return true;
   }
 
-  // Matter uses percent100ths (0-10000 for 0-100%)
-  uint16_t tiltPercent100ths = tiltPercent * 100;
-
-  // Update only CurrentPosition, not TargetPosition
-  // TargetPosition is set by Matter commands/apps, CurrentPosition reflects actual position
   esp_matter_attr_val_t currentVal = esp_matter_invalid(NULL);
   if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &currentVal)) {
     log_e("Failed to get Current Tilt Percentage Attribute.");
@@ -567,15 +506,26 @@ bool MatterWindowCovering::setTiltPercentage(uint8_t tiltPercent) {
       ret = setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &currentVal);
     }
     if (ret) {
-      currentTiltPercent = tiltPercent;
+      currentTiltPercent100ths = tiltPercent100ths;
+      currentTiltPercent = (uint8_t)(tiltPercent100ths / 100);
     }
     return ret;
   }
   return true;
 }
 
-uint8_t MatterWindowCovering::getTiltPercentage() {
-  return currentTiltPercent;
+uint16_t MatterWindowCovering::getCurrentTiltPercent100ths() {
+  if (started) {
+    esp_matter_attr_val_t val = esp_matter_invalid(NULL);
+    if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::CurrentPositionTiltPercent100ths::Id, &val)) {
+      if (!chip::app::NumericAttributeTraits<uint16_t>::IsNullValue(val.val.u16)) {
+        currentTiltPercent100ths = val.val.u16;
+        currentTiltPercent = (uint8_t)(val.val.u16 / 100);
+        return val.val.u16;
+      }
+    }
+  }
+  return currentTiltPercent100ths;
 }
 
 bool MatterWindowCovering::setTargetTiltPercent100ths(uint16_t tiltPercent100ths) {
@@ -618,25 +568,12 @@ bool MatterWindowCovering::setInstalledOpenLimitLift(uint16_t openLimit) {
     return false;
   }
 
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitLift::Id, &val)) {
-    log_e("Failed to get Installed Open Limit Lift Attribute");
-    return false;
-  }
-
-  if (val.val.u16 != openLimit) {
-    val.val.u16 = openLimit;
-    return setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitLift::Id, &val);
-  }
+  installedOpenLimitLift = openLimit;
   return true;
 }
 
 uint16_t MatterWindowCovering::getInstalledOpenLimitLift() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitLift::Id, &val)) {
-    return val.val.u16;
-  }
-  return 0;
+  return installedOpenLimitLift;
 }
 
 bool MatterWindowCovering::setInstalledClosedLimitLift(uint16_t closedLimit) {
@@ -645,25 +582,12 @@ bool MatterWindowCovering::setInstalledClosedLimitLift(uint16_t closedLimit) {
     return false;
   }
 
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitLift::Id, &val)) {
-    log_e("Failed to get Installed Closed Limit Lift Attribute.");
-    return false;
-  }
-
-  if (val.val.u16 != closedLimit) {
-    val.val.u16 = closedLimit;
-    return setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitLift::Id, &val);
-  }
+  installedClosedLimitLift = closedLimit;
   return true;
 }
 
 uint16_t MatterWindowCovering::getInstalledClosedLimitLift() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitLift::Id, &val)) {
-    return val.val.u16;
-  }
-  return 0;
+  return installedClosedLimitLift;
 }
 
 bool MatterWindowCovering::setInstalledOpenLimitTilt(uint16_t openLimit) {
@@ -672,25 +596,12 @@ bool MatterWindowCovering::setInstalledOpenLimitTilt(uint16_t openLimit) {
     return false;
   }
 
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitTilt::Id, &val)) {
-    log_e("Failed to get Installed Open Limit Tilt Attribute.");
-    return false;
-  }
-
-  if (val.val.u16 != openLimit) {
-    val.val.u16 = openLimit;
-    return setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitTilt::Id, &val);
-  }
+  installedOpenLimitTilt = openLimit;
   return true;
 }
 
 uint16_t MatterWindowCovering::getInstalledOpenLimitTilt() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledOpenLimitTilt::Id, &val)) {
-    return val.val.u16;
-  }
-  return 0;
+  return installedOpenLimitTilt;
 }
 
 bool MatterWindowCovering::setInstalledClosedLimitTilt(uint16_t closedLimit) {
@@ -699,25 +610,32 @@ bool MatterWindowCovering::setInstalledClosedLimitTilt(uint16_t closedLimit) {
     return false;
   }
 
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (!getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitTilt::Id, &val)) {
-    log_e("Failed to get Installed Closed Limit Tilt Attribute.");
-    return false;
-  }
-
-  if (val.val.u16 != closedLimit) {
-    val.val.u16 = closedLimit;
-    return setAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitTilt::Id, &val);
-  }
+  installedClosedLimitTilt = closedLimit;
   return true;
 }
 
 uint16_t MatterWindowCovering::getInstalledClosedLimitTilt() {
-  esp_matter_attr_val_t val = esp_matter_invalid(NULL);
-  if (getAttributeVal(WindowCovering::Id, WindowCovering::Attributes::InstalledClosedLimitTilt::Id, &val)) {
-    return val.val.u16;
-  }
-  return 0;
+  return installedClosedLimitTilt;
+}
+
+bool MatterWindowCovering::setLiftCalibration(const PositionCalibration &calibration) {
+  installedOpenLimitLift = calibration.open;
+  installedClosedLimitLift = calibration.closed;
+  return true;
+}
+
+MatterWindowCovering::PositionCalibration MatterWindowCovering::getLiftCalibration() {
+  return {installedOpenLimitLift, installedClosedLimitLift};
+}
+
+bool MatterWindowCovering::setTiltCalibration(const PositionCalibration &calibration) {
+  installedOpenLimitTilt = calibration.open;
+  installedClosedLimitTilt = calibration.closed;
+  return true;
+}
+
+MatterWindowCovering::PositionCalibration MatterWindowCovering::getTiltCalibration() {
+  return {installedOpenLimitTilt, installedClosedLimitTilt};
 }
 
 bool MatterWindowCovering::setCoveringType(WindowCoveringType_t coveringType) {

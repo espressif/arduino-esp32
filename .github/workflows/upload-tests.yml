@@ -33,9 +33,6 @@ jobs:
   mock-upload:
     name: Mock upload on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    env:
-      # Job env avoids PowerShell vs bash $GITHUB_ENV differences on Windows runners.
-      MOCK_ESPTOOL_OVERRIDE: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +48,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install python dependencies
-        run: pip install pyserial esptool esp32-mock-bootloader
+        run: pip install pyserial esp32-mock-bootloader
 
       - name: Install xvfb (Linux builder upload)
         if: runner.os == 'Linux'

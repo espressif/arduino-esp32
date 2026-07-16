@@ -1,0 +1,15 @@
+tags:
+  - wifi_router
+
+platforms:
+  wokwi: false # TLS tests are unreliable on Wokwi and frequently can't connect to the server
+  qemu: false
+  hardware:
+    esp32p4: false # No wifi_router runners for SoCs that use ESP-Hosted
+
+targets:
+  esp32c6: false # Not enough RAM
+
+requires_any:
+  - CONFIG_ESP_HOSTED_ENABLED=y
+  - CONFIG_SOC_WIFI_SUPPORTED=y
