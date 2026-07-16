@@ -494,7 +494,7 @@ public:
   void scanDelete();
   bool isDiscoverInProgress() const;
 
-  uint8_t getResultCount() const;
+  uint16_t getResultCount() const;
   const OThreadNetworkInfo &getResult(uint8_t index) const;
 
   // Index-based getters: networkName(), panId(), rssi(), isJoinable(), ...

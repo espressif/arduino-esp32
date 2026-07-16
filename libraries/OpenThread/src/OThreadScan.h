@@ -190,7 +190,7 @@ public:
   bool isDiscoverInProgress() const;
 
   /** @brief Number of entries from the last completed discovery. */
-  uint8_t getResultCount() const;
+  uint16_t getResultCount() const;
 
   /**
    * @brief Access one collected result by index.

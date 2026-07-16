@@ -253,8 +253,9 @@ bool OThreadScanClass::isDiscoverInProgress() const {
   return otThreadIsDiscoverInProgress(inst);
 }
 
-uint8_t OThreadScanClass::getResultCount() const {
-  return (uint8_t)_results.size();
+uint16_t OThreadScanClass::getResultCount() const {
+  const size_t n = _results.size();
+  return (n > UINT16_MAX) ? UINT16_MAX : static_cast<uint16_t>(n);
 }
 
 const OThreadNetworkInfo &OThreadScanClass::getResult(uint8_t index) const {

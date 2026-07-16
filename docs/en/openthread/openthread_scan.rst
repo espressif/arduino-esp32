@@ -211,9 +211,10 @@ getResultCount
 
 .. code-block:: arduino
 
-    uint8_t getResultCount() const;
+    uint16_t getResultCount() const;
 
-Number of entries from the last completed discovery.
+Number of entries from the last completed discovery (saturated at
+``UINT16_MAX`` if the internal list is larger).
 
 getResult
 ^^^^^^^^^
