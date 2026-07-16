@@ -22,8 +22,8 @@ with additional features for advanced use cases.
 * **Baud rate detection**: Automatic baud rate detection (ESP32, ESP32-S2 only).
 * **Event callbacks**: Receive and error event callbacks.
 * **Configurable buffers**: Adjustable RX and TX buffer sizes.
-* **RX internal pull**: Automatic pull-up or pull-down on the RX pad (see :ref:`rx-internal-pull`).
-* **One-wire UART**: Optional single-GPIO RX+TX mode (see :ref:`one-wire-uart`).
+* **RX internal pull**: Automatic pull-up or pull-down on the RX pad (see `RX internal pull <rx-internal-pull_>`_).
+* **One-wire UART**: Optional single-GPIO RX+TX mode (see `one-wire UART <one-wire-uart_>`_).
 
 .. note::
    In case that both pins, RX and TX are detached from UART, the driver will be stopped.
@@ -77,7 +77,7 @@ Initializes the Serial port with the specified baud rate and configuration.
 
 * ``baud`` - Baud rate (bits per second). Common values: 9600, 115200, 230400, etc.
 
-  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the :ref:`Baud Rate Detection Example <baud-rate-detection-example>` for usage details.
+  **Special value:** ``0`` enables baud rate detection (ESP32, ESP32-S2 only). The function will attempt to detect the baud rate for up to ``timeout_ms`` milliseconds. See the `Baud Rate Detection Example <baud-rate-detection-example_>`_ for usage details.
 * ``config`` - Serial configuration (data bits, parity, stop bits):
 
   * ``SERIAL_8N1`` - 8 data bits, no parity, 1 stop bit (default)
@@ -94,7 +94,7 @@ Initializes the Serial port with the specified baud rate and configuration.
 
 * ``txPin`` - TX pin number. Use ``-1`` to keep the default pin or current pin assignment.
 
-* ``invert`` - If ``true``, inverts the RX and TX signal polarity. Also sets the RX internal pull to pull-down when :ref:`enableRxInternalPull` is enabled (see :ref:`signal-inversion-rx-pull`).
+* ``invert`` - If ``true``, inverts the RX and TX signal polarity. Also sets the RX internal pull to pull-down when `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled (see `Signal Inversion and RX Internal Pull <signal-inversion-rx-pull_>`_).
 
 * ``timeout_ms`` - Timeout in milliseconds for baud rate detection (when ``baud = 0``). Default: 20000 ms (20 seconds).
 
@@ -317,14 +317,13 @@ Sets or changes the RX, TX, CTS, and RTS pins for the Serial port.
 
 **Note:** This function can be called before or after ``begin()``. When pins are changed, the previous pins are automatically detached.
 
-When RX and TX are set to the same GPIO, ``enableOneWireMode(true)`` must be called **before** ``begin()``, and the UART must be in ``UART_MODE_UART``. RS485 and IrDA modes reject same-pin configuration. See :ref:`one-wire-uart` and :ref:`mode-pin-compatibility`.
+When RX and TX are set to the same GPIO, ``enableOneWireMode(true)`` must be called **before** ``begin()``, and the UART must be in ``UART_MODE_UART``. RS485 and IrDA modes reject same-pin configuration. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
+
+.. _enable-rx-internal-pull:
+.. _rx-internal-pull:
 
 enableRxInternalPull
 ********************
-
-.. _enableRxInternalPull:
-
-.. _rx-internal-pull:
 
 Enables or disables the internal pull resistor on the RX GPIO. Must be called **before** ``begin()`` to take effect.
 
@@ -336,7 +335,7 @@ Enables or disables the internal pull resistor on the RX GPIO. Must be called **
 
 **Returns:** ``true`` if the setting was applied, ``false`` if the UART is already running.
 
-When enabled, pull direction follows RX signal inversion (see :ref:`signal-inversion-rx-pull`):
+When enabled, pull direction follows RX signal inversion (see `Signal Inversion and RX Internal Pull <signal-inversion-rx-pull_>`_):
 
 * Normal RX (not inverted): pull-up (idle HIGH)
 * RX inverted: pull-down (idle LOW)
@@ -347,12 +346,11 @@ Internal pull is **not** applied in one-wire mode (same GPIO for RX and TX).
 
 * `RxPull_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/RxPull_Demo>`_ — Floating RX, inverted-RX pull direction, and optional wired loopback on split pins.
 
+.. _enable-one-wire-mode:
+.. _one-wire-uart:
+
 enableOneWireMode
 *****************
-
-.. _enableOneWireMode:
-
-.. _one-wire-uart:
 
 Enables single-GPIO (one-wire) UART mode where RX and TX share one pin. Must be called **before** ``begin()``.
 
@@ -372,12 +370,12 @@ Enables single-GPIO (one-wire) UART mode where RX and TX share one pin. Must be 
 
 * `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Self loopback on one GPIO, optional UART1→UART2 peer loopback (internal matrix or external bus wire), and half-duplex USB bridge.
 
+.. _signal-inversion-rx-pull:
+
 Signal Inversion and RX Internal Pull
 -------------------------------------
 
-.. _signal-inversion-rx-pull:
-
-RX internal pull (when :ref:`enableRxInternalPull` is enabled) tracks **RX signal inversion** only:
+RX internal pull (when `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled) tracks **RX signal inversion** only:
 
 +---------------------------+----------------------------------+
 | Event                     | RX internal pull (when enabled)  |
@@ -401,10 +399,10 @@ Call these **before** ``begin()`` (same pattern as ``setClockSource()`` and ``se
 4. ``setPins()`` (optional; can also be called after ``begin()``)
 5. ``begin()``
 
+.. _mode-pin-compatibility:
+
 Mode and Pin Compatibility
 --------------------------
-
-.. _mode-pin-compatibility:
 
 +----------------------+-------------+------------------------+
 | Mode                 | One-wire    | RX internal pull       |
@@ -620,7 +618,7 @@ Sets the UART operating mode.
 
 **Returns:** ``true`` if mode is set successfully, ``false`` otherwise.
 
-**Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver. RS485 does **not** support one-wire (same GPIO for RX and TX). See :ref:`mode-pin-compatibility`.
+**Note:** For RS485 half-duplex mode, the RTS pin must be configured using ``setPins()`` to control the transceiver. RS485 does **not** support one-wire (same GPIO for RX and TX). See `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
 
 setIrdaDirection
 ****************
@@ -710,7 +708,7 @@ Enables or disables RX signal inversion.
 
 **Returns:** ``true`` if inversion is set successfully, ``false`` otherwise.
 
-When :ref:`enableRxInternalPull` is enabled, changing RX inversion also updates the RX pad pull direction (pull-down when inverted, pull-up when normal).
+When `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled, changing RX inversion also updates the RX pad pull direction (pull-down when inverted, pull-up when normal).
 
 setTxInvert
 ***********
