@@ -366,7 +366,27 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
   }
 
   uart_t *uart = &_uart_bus_array[uart_num];
-  if (rxPin >= 0 && txPin >= 0 && rxPin == txPin) {
+
+  // Same-pin RX/TX is only valid when the caller explicitly passes (p, p).
+  // -1 means "keep the current pin" and is not rejected by itself. Reject only when
+  // that kept pin plus the newly set pin would form an implicit one-wire config, e.g.
+  // RX=2 TX=3 then setPins(-1, 2) => effective RX=TX=2 without going through UART_RX_TX.
+  const bool changingRx = (rxPin >= 0);
+  const bool changingTx = (txPin >= 0);
+  const bool explicitSamePin = (changingRx && changingTx && rxPin == txPin);
+  if ((changingRx || changingTx) && !explicitSamePin) {
+    const int8_t effectiveRx = changingRx ? rxPin : uart->_rxPin;
+    const int8_t effectiveTx = changingTx ? txPin : uart->_txPin;
+    if (effectiveRx >= 0 && effectiveTx >= 0 && effectiveRx == effectiveTx) {
+      log_e(
+        "UART%u rejecting implicit same-pin RX/TX (%d): pass both pins as (%d, %d) with enableOneWireMode(true)", uart_num, effectiveRx, effectiveRx,
+        effectiveRx
+      );
+      allPinsAreGood = false;
+    }
+  }
+
+  if (explicitSamePin) {
     if (!uart->_oneWireModeEnabled) {
       log_e("UART%u RX and TX on same pin (%d) requires enableOneWireMode(true) before begin()", uart_num, rxPin);
       allPinsAreGood = false;
@@ -421,8 +441,17 @@ static bool _uartDetachPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t
     } else {
       esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_HIGH, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
     }
-    gpio_pullup_dis((gpio_num_t)rxPin);
-    gpio_pulldown_dis((gpio_num_t)rxPin);
+    // Mirror _uartApplyRxPull(): LP UART RX pulls use RTC GPIO APIs; clear those on detach.
+#if (SOC_UART_LP_NUM >= 1) && (SOC_RTCIO_PIN_COUNT >= 1)
+    if (uart_num >= SOC_UART_HP_NUM) {
+      rtc_gpio_pullup_dis((gpio_num_t)rxPin);
+      rtc_gpio_pulldown_dis((gpio_num_t)rxPin);
+    } else
+#endif
+    {
+      gpio_pullup_dis((gpio_num_t)rxPin);
+      gpio_pulldown_dis((gpio_num_t)rxPin);
+    }
     uart->_rxPin = -1;  // -1 means unassigned/detached
     if (!perimanClearPinBus(rxPin)) {
       retCode = false;
@@ -1072,6 +1101,8 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // Track which other UARTs had their pins taken (for termination check after attach)
   int8_t rxPinPrevUART = -1, txPinPrevUART = -1, ctsPinPrevUART = -1, rtsPinPrevUART = -1;
 
+  // Explicit one-wire only: both RX and TX arguments must be the same valid pin.
+  // Implicit same-pin (e.g. setPins(currentTx, -1)) is rejected in _uartValidatePins().
   bool oneWireRequest = (rxPin >= 0 && txPin >= 0 && rxPin == txPin);
   bool sharedAttach = false;
   if (oneWireRequest) {
