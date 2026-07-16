@@ -220,10 +220,10 @@ public:
    * @brief Release stored results and free associated memory.
    *
    * Swaps internal vectors with empty containers so peak scan capacity is
-   * released (WiFi/Zigbee ``scanDelete()`` behavior). No-op while an MLE discovery is still in progress (or if the OpenThread
-   * lock cannot be acquired), so the OpenThread task cannot push into the
-   * result vectors while they are being cleared. Call again after the scan
-   * completes.
+   * released (WiFi/Zigbee ``scanDelete()`` behavior). No-op until the final
+   * discovery callback has completed (``_done``), even if OpenThread already
+   * reports discover idle — clearing earlier can race the completion path.
+   * Call again after the scan finishes.
    */
   void scanDelete();
 
