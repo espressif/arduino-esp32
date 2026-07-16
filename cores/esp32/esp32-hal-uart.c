@@ -87,7 +87,6 @@ struct uart_struct_t {
   int8_t _uart_clock_source;                  // UART Clock Source that should be used if user defines an specific one with setClockSource()
   uint32_t inv_mask;                          // UART inverse mask used to maintain related pin state
   bool _rxPullEnabled;                        // internal pull on RX pad (default true)
-  bool _oneWireModeEnabled;                   // allow RX and TX on the same GPIO
   uart_mode_t _uart_mode;                     // current UART mode for pin validation
 };
 
@@ -97,21 +96,21 @@ struct uart_struct_t {
 #define UART_MUTEX_UNLOCK()
 
 static uart_t _uart_bus_array[] = {
-  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #if SOC_UART_NUM > 1
-  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 2
-  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 3
-  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 4
-  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 5
-  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 };
 
@@ -126,21 +125,21 @@ static uart_t _uart_bus_array[] = {
   xSemaphoreGive(uart->lock)
 
 static uart_t _uart_bus_array[] = {
-  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 0, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #if SOC_UART_NUM > 1
-  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 1, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 2
-  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 2, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 3
-  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 3, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 4
-  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 4, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 #if SOC_UART_NUM > 5
-  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, false, UART_MODE_UART},
+  {NULL, 5, false, 0, NULL, -1, -1, -1, -1, 0, 0, 0, 0, false, 0, -1, 0, true, UART_MODE_UART},
 #endif
 };
 
@@ -367,30 +366,14 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
 
   uart_t *uart = &_uart_bus_array[uart_num];
 
-  // Same-pin RX/TX is only valid when the caller explicitly passes (p, p).
-  // -1 means "keep the current pin" and is not rejected by itself. Reject only when
-  // that kept pin plus the newly set pin would form an implicit one-wire config, e.g.
-  // RX=2 TX=3 then setPins(-1, 2) => effective RX=TX=2 without going through UART_RX_TX.
-  const bool changingRx = (rxPin >= 0);
-  const bool changingTx = (txPin >= 0);
-  const bool explicitSamePin = (changingRx && changingTx && rxPin == txPin);
-  if ((changingRx || changingTx) && !explicitSamePin) {
-    const int8_t effectiveRx = changingRx ? rxPin : uart->_rxPin;
-    const int8_t effectiveTx = changingTx ? txPin : uart->_txPin;
-    if (effectiveRx >= 0 && effectiveTx >= 0 && effectiveRx == effectiveTx) {
-      log_e(
-        "UART%u rejecting implicit same-pin RX/TX (%d): pass both pins as (%d, %d) with enableOneWireMode(true)", uart_num, effectiveRx, effectiveRx,
-        effectiveRx
-      );
-      allPinsAreGood = false;
-    }
-  }
-
-  if (explicitSamePin) {
-    if (!uart->_oneWireModeEnabled) {
-      log_e("UART%u RX and TX on same pin (%d) requires enableOneWireMode(true) before begin()", uart_num, rxPin);
-      allPinsAreGood = false;
-    } else if (uart->_uart_mode != UART_MODE_UART) {
+  // One-wire is automatic when effective RX and TX resolve to the same GPIO.
+  // -1 means "keep the current pin" (e.g. RX=2 TX=3 then setPins(-1, 2) => RX=TX=2).
+  const int8_t effectiveRx = (rxPin >= 0) ? rxPin : uart->_rxPin;
+  const int8_t effectiveTx = (txPin >= 0) ? txPin : uart->_txPin;
+  const int8_t effectiveCts = (ctsPin >= 0) ? ctsPin : uart->_ctsPin;
+  const int8_t effectiveRts = (rtsPin >= 0) ? rtsPin : uart->_rtsPin;
+  if (effectiveRx >= 0 && effectiveTx >= 0 && effectiveRx == effectiveTx) {
+    if (uart->_uart_mode != UART_MODE_UART) {
       log_e("UART%u one-wire mode is not compatible with the current UART mode", uart_num);
       allPinsAreGood = false;
 #if (SOC_UART_LP_NUM >= 1) && !SOC_LP_GPIO_MATRIX_SUPPORTED
@@ -398,6 +381,14 @@ static bool _uartValidatePins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8
       log_e("UART%u LP UART does not support one-wire mode on this SoC", uart_num);
       allPinsAreGood = false;
 #endif
+    }
+    if (effectiveCts == effectiveRx) {
+      log_e("UART%u one-wire RX/TX pin %d cannot also be used for CTS", uart_num, effectiveRx);
+      allPinsAreGood = false;
+    }
+    if (effectiveRts == effectiveRx) {
+      log_e("UART%u one-wire RX/TX pin %d cannot also be used for RTS", uart_num, effectiveRx);
+      allPinsAreGood = false;
     }
   }
 
@@ -1054,6 +1045,15 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   bool retCode = true;
   UART_MUTEX_LOCK();
 
+  // Resolve -1 (keep current). Same-pin effective RX/TX becomes an explicit (p, p) one-wire request.
+  int8_t setRx = (rxPin >= 0) ? rxPin : uart->_rxPin;
+  int8_t setTx = (txPin >= 0) ? txPin : uart->_txPin;
+  bool oneWireRequest = (setRx >= 0 && setTx >= 0 && setRx == setTx);
+  if (oneWireRequest) {
+    rxPin = setRx;
+    txPin = setTx;
+  }
+
   // If driver is not yet installed, just store the pin configuration
   // The pins will be properly attached when the driver is installed in uartBegin()
   if (!uartIsDriverInstalled(uart)) {
@@ -1101,9 +1101,7 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // Track which other UARTs had their pins taken (for termination check after attach)
   int8_t rxPinPrevUART = -1, txPinPrevUART = -1, ctsPinPrevUART = -1, rtsPinPrevUART = -1;
 
-  // Explicit one-wire only: both RX and TX arguments must be the same valid pin.
-  // Implicit same-pin (e.g. setPins(currentTx, -1)) is rejected in _uartValidatePins().
-  bool oneWireRequest = (rxPin >= 0 && txPin >= 0 && rxPin == txPin);
+  // oneWireRequest was resolved above from effective RX/TX (including -1 keep-current).
   bool sharedAttach = false;
   if (oneWireRequest) {
     peripheral_bus_type_t pinType = perimanGetPinBusType(rxPin);
@@ -1113,10 +1111,16 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   // First step: detach old one-wire pin when switching away from shared RX/TX
   if (_uartIsOneWireActive(uart)) {
     int8_t sharedPin = uart->_rxPin;
-    bool keepShared = oneWireRequest && rxPin == sharedPin && txPin == sharedPin;
+    bool keepShared = setRx == sharedPin && setTx == sharedPin;
     if (!keepShared) {
       log_d("Detaching old shared RX/TX pin %d from UART%d", sharedPin, uart_num);
       retCode &= _uartDetachSharedPin(uart_num, sharedPin);
+      // Detaching shared ownership clears both stored pins. Reattach both effective
+      // targets, including a side supplied as -1 ("keep current").
+      rxPin = setRx;
+      txPin = setTx;
+      rxAttach = rxPin >= 0;
+      txAttach = txPin >= 0;
     }
   }
 
@@ -1152,10 +1156,12 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   }
 
   // Second step: attach all UART new pins
-  if (sharedAttach) {
-    retCode &= _uartDetachConflictingPin(rxPin, uart_num, "RX_TX", true, &rxPinPrevUART);
-    log_d("Attaching pin %d to UART%d as shared RX/TX (one-wire)", rxPin, uart_num);
-    retCode &= _uartAttachSharedPin(uart_num, rxPin);
+  if (oneWireRequest) {
+    if (sharedAttach) {
+      retCode &= _uartDetachConflictingPin(rxPin, uart_num, "RX_TX", true, &rxPinPrevUART);
+      log_d("Attaching pin %d to UART%d as shared RX/TX (one-wire)", rxPin, uart_num);
+      retCode &= _uartAttachSharedPin(uart_num, rxPin);
+    }
   } else {
     if (rxAttach) {
       log_d("Attaching pin %d to UART%d as RX", rxPin, uart_num);
@@ -1913,6 +1919,11 @@ bool uartSetMode(uart_t *uart, uart_mode_t mode) {
     return false;
   }
 
+  if (mode != UART_MODE_UART && _uartIsOneWireActive(uart)) {
+    log_e("UART%u one-wire mode is not compatible with the requested UART mode", uart->num);
+    return false;
+  }
+
   UART_MUTEX_LOCK();
   bool retCode = (ESP_OK == uart_set_mode(uart->num, mode));
   if (retCode) {
@@ -2001,20 +2012,6 @@ bool uartEnableRxInternalPull(uint8_t uartNum, bool enable) {
   }
   _uart_bus_array[uartNum]._rxPullEnabled = enable;
   log_v("UART%u RX internal pull %s", uartNum, enable ? "enabled" : "disabled");
-  return true;
-}
-
-bool uartEnableOneWireMode(uint8_t uartNum, bool enable) {
-  if (uartNum >= SOC_UART_NUM) {
-    log_e("UART%u is invalid. This device has %u UARTs, from 0 to %u.", uartNum, SOC_UART_NUM, SOC_UART_NUM - 1);
-    return false;
-  }
-  if (uart_is_driver_installed(uartNum)) {
-    log_e("UART%u one-wire mode can't be changed when Serial is already running. Set it before calling begin().", uartNum);
-    return false;
-  }
-  _uart_bus_array[uartNum]._oneWireModeEnabled = enable;
-  log_v("UART%u one-wire mode %s", uartNum, enable ? "enabled" : "disabled");
   return true;
 }
 

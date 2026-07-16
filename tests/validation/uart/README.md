@@ -23,13 +23,13 @@ Tests run in the order listed in `setup()` (`RUN_TEST` sequence).
 | `same_uart_pin_swap_test` | Swap RX/TX on the same UART; driver stays up; echo works |
 | `move_rx_tx_to_cts_rts_test` | Move RX/TX into CTS/RTS slots; UART terminates (no valid RX/TX) |
 | `cross_uart_cts_rts_test` | Assign another UART's pins as CTS/RTS; source UART terminates (**requires 2+ test UARTs**) |
-| `rx_pull_pre_begin_api_test` | `enableRxInternalPull` / `enableOneWireMode` succeed only before `begin()` |
+| `rx_pull_pre_begin_api_test` | `enableRxInternalPull` succeeds only before `begin()` |
 | `rx_pull_inversion_test` | RX pull-up/down vs `begin(invert)`, `setRxInvert`, not `setTxInvert`; disabled pull → float |
-| `same_pin_validation_test` | `setPins(p,p)` fails without `enableOneWireMode(true)` |
+| `same_pin_validation_test` | Same-pin auto-detects one-wire; shared-pin CTS/RTS overlap is rejected; `-1` preserves shared pins and non-conflicting CTS updates; implicit split↔one-wire transitions preserve the kept pin, bus ownership, driver, and RX pull |
 | `same_pin_pull_disabled_test` | One-wire same pin → RX pad floating even with invert |
 | `same_pin_transmission_test` | One-wire echo on `TEST_AUX_PIN` (`SCL`) with internal loopback |
 | `same_pin_periman_test` | Shared pin registers as `UART_RX_TX`; `pinMode()` terminates UART |
-| `same_pin_mode_rejection_test` | RS485 and IrDA reject same-pin `setPins` |
+| `same_pin_mode_rejection_test` | RS485/IrDA reject same-pin `setPins`; `setMode` rejects active one-wire |
 | `same_pin_split_transition_test` | Split pins → one-wire (`end`/`begin`) → back to split via `setPins`; driver stays up; echo at each stage |
 | `rx_pull_setpins_reattach_test` | Pull follows RX pin after `setPins` swap; updates after `setRxInvert` |
 | `end_when_stopped_test` | Call `end()` twice without crash |

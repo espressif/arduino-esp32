@@ -1,6 +1,6 @@
 # One-Wire UART Demo
 
-Demonstrates **one-wire mode**: RX and TX on the **same GPIO** using `enableOneWireMode(true)`.
+Demonstrates **one-wire mode**: RX and TX on the **same GPIO**. Same-pin configuration auto-enables one-wire (no separate opt-in API).
 
 ## Supported SoCs
 
@@ -24,16 +24,16 @@ LP UART on **ESP32-C5/C6/C61** uses fixed RX/TX pins — one-wire is **not** sup
 | Part | UARTs | Connection | Purpose |
 |------|-------|------------|---------|
 | **A — Self loopback** | UART1 only | Same GPIO for RX+TX | Proves one-wire TX/RX on one pad |
-| **B — Peer loopback** | UART1 → UART2 | Two one-wire GPIOs | Half-duplex bus between two UART instances |
+| **B — Cross connection** | UART1 ↔ UART2 | One signal wire between two one-wire GPIOs | Bidirectional half-duplex request/reply between two UART instances |
 
-Part B runs only when the board has **3+ HP UARTs** and defines `RX2` (same guard as `IrdaMode_DualUART_Demo` / `RxPull_Demo`).
+Part B runs only when the board has **3+ HP UARTs** and defines `RX2` (UART0 remains available for Serial Monitor output). UART1 first sends a request to UART2; UART2 then sends a reply to UART1 over the same wire.
 
 ## Requirements
 
-- `enableOneWireMode(true)` **before** `begin()`
 - `UART_MODE_UART` only (not RS485, not IrDA)
-- Same GPIO for RX and TX in `setPins(p, p)` or `begin(..., p, p)`
-- **Half-duplex traffic** — do not transmit from both UARTs at once
+- Same GPIO for RX and TX in `setPins(p, p)` or `begin(..., p, p)` — one-wire is automatic
+- `-1` keep-current that makes effective RX equal TX also enables one-wire (e.g. RX=8 TX=9 then `setPins(-1, 8)`)
+- **Half-duplex traffic** — only one UART TX output may be enabled at a time
 
 ## Loopback options
 
@@ -41,10 +41,10 @@ Set `USE_INTERNAL_LOOPBACK` at the top of the sketch:
 
 | Value | Part A | Part B |
 |-------|--------|--------|
-| `1` (default) | `uart_internal_loopback(1, ONEWIRE_PIN1)` | `uart_internal_loopback(1, ONEWIRE_PIN2)` routes UART1 TX to UART2’s GPIO |
-| `0` | Optional jumper on ONEWIRE_PIN1 | Jumper **ONEWIRE_PIN1 ↔ ONEWIRE_PIN2** |
+| `1` (default) | `uart_internal_loopback(1, ONEWIRE_PIN1)` | GPIO-matrix routing switches UART1→UART2, then UART2→UART1 |
+| `0` | Optional jumper on ONEWIRE_PIN1 | One signal wire: **ONEWIRE_PIN1 ↔ ONEWIRE_PIN2**; both directions use it in turn |
 
-For external bus wiring, add a **pull-up** on the shared line (open-drain / multi-drop style). Push-pull one-wire on two GPIOs wired together can work for this demo if only one side drives at a time.
+For external wiring, the sketch changes the listening GPIO to input-only while preserving its UART RX routing, then enables input/output mode only for the current transmitter. This prevents the listening push-pull TX from holding the line HIGH against the sender. Add an external **pull-up** to hold the line at UART idle HIGH during direction changes.
 
 On USB Serial, the sketch prints **`USE_INTERNAL_LOOPBACK`**, the **GPIO numbers** for `ONEWIRE_PIN1` / `ONEWIRE_PIN2`, and wiring instructions (no jumper vs external bus) before each part runs.
 
@@ -55,14 +55,15 @@ On USB Serial, the sketch prints **`USE_INTERNAL_LOOPBACK`**, the **GPIO numbers
 | `ONEWIRE_PIN1` | `SDA` (board `pins_arduino.h`) | UART1 one-wire GPIO |
 | `ONEWIRE_PIN2` | `RX2` | UART2 one-wire GPIO (Part B) |
 
-Change the `#ifndef` defaults for your board if those pads are unavailable.
+Change the `#ifndef` defaults for your board if those pads are unavailable. Part B requires two different GPIOs; the sketch rejects equal `ONEWIRE_PIN1` and `ONEWIRE_PIN2` values.
 
 ## Electrical warning
 
 ESP-IDF documents that routing TX output and RX input to one GPIO can cause **pad conflicts**. Recommended practices:
 
-- Half-duplex protocol (never drive TX while listening on the same peer)
-- Open-drain TX with external pull-up on shared bus lines
+- Half-duplex protocol with the listening TX output tri-stated
+- External pull-up so the line remains idle HIGH while neither UART drives
+- Never enable both push-pull TX outputs on the connected wire simultaneously
 - **Not** a replacement for RS485 (which needs separate TX, RX, and RTS to a transceiver)
 
 Internal pull on RX is **disabled** in one-wire mode.
@@ -74,21 +75,22 @@ Internal pull on RX is **disabled** in one-wire mode.
 3. Read the startup lines: one-wire **GPIO numbers**, `USE_INTERNAL_LOOPBACK` mode, and Part A/B wiring summary.
 4. If `USE_INTERNAL_LOOPBACK=0`, connect the jumper(s) shown on Serial Monitor, then reset or re-upload.
 5. Read Part A/B self-test results on startup.
-6. **Part B interactive:** type characters — they are sent on UART1; bytes received on UART2 are printed to USB Serial.
-7. **Part A only (2-UART boards without Part B):** typed characters echo on UART1’s one-wire GPIO.
+6. **Part B startup test:** confirm UART2 receives `UART1_TO_UART2`, then UART1 receives `UART2_TO_UART1` over the same connection.
+7. **Part B interactive:** type characters — they are sent on UART1; bytes received on UART2 are printed to USB Serial.
+8. **Part A only (2-UART boards without Part B):** typed characters echo on UART1’s one-wire GPIO.
 
 ## Expected serial output
 
 1. **Startup** — `ONEWIRE_PIN1` / `ONEWIRE_PIN2` GPIO numbers, loopback mode banner, Part A wiring line, Part B preview (when compiled).
 2. **Part A** — `"ONEWIRE"` received on UART1 self loopback, or failure text with GPIO and loopback hint.
-3. **Part B** — wiring block (internal or external), then `"ONEWIRE"` on UART2, or failure text with GPIO pair to connect when external loopback is used.
+3. **Part B** — wiring block (internal or one external wire), `"UART1_TO_UART2"` received on UART2, then `"UART2_TO_UART1"` received on UART1.
 
 ## Wiring (external loopback, `USE_INTERNAL_LOOPBACK = 0`)
 
 The sketch prints the exact GPIO numbers for your board. Conceptually:
 
 ```
-UART1 GPIO (ONEWIRE_PIN1) ---- bus ---- UART2 GPIO (ONEWIRE_PIN2)
+UART1 GPIO (ONEWIRE_PIN1) ---- one wire ---- UART2 GPIO (ONEWIRE_PIN2)
                                 |
                            pull-up (recommended)
 ```

@@ -83,4 +83,4 @@ Verify pull direction with the printed IO pull state from `gpio_get_io_config()`
 - **Inverted RX** — RS-232 or inverted PHY: pull-down matches electrical idle LOW.
 - **Direct TX→RX wire** — partner output drives idle; internal pull is secondary (Part C illustrates this).
 
-For same-pin half-duplex buses, see `OneWire_UART_Demo` (internal pull is disabled there by design).
+For same-pin half-duplex buses, see `OneWire_UART_Demo` (same-pin auto-enables one-wire; internal pull is disabled there by design).

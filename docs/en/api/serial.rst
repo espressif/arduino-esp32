@@ -23,7 +23,7 @@ with additional features for advanced use cases.
 * **Event callbacks**: Receive and error event callbacks.
 * **Configurable buffers**: Adjustable RX and TX buffer sizes.
 * **RX internal pull**: Automatic pull-up or pull-down on the RX pad (see `RX internal pull <rx-internal-pull_>`_).
-* **One-wire UART**: Optional single-GPIO RX+TX mode (see `one-wire UART <one-wire-uart_>`_).
+* **One-wire UART**: Automatic single-GPIO RX+TX when RX and TX resolve to the same pin (see `one-wire UART <one-wire-uart_>`_).
 
 .. note::
    In case that both pins, RX and TX are detached from UART, the driver will be stopped.
@@ -61,7 +61,7 @@ ESP32-P4  5        1
 
   **Example:** The ESP32-C6 has 2 HP UARTs and 1 LP UART. The Arduino Core creates ``Serial0`` and ``Serial1`` (HP UARTs) plus ``Serial2`` (LP UART) HardwareSerial objects.
 
-  **Important:** On ESP32-C5, ESP32-C6, and ESP32-C61, LP UARTs use fixed GPIO pins for RX, TX, CTS, and RTS; ``setPins()`` cannot change them. On ESP32-P4, the LP UART supports the GPIO matrix and follows the same pin rules as HP UARTs (including one-wire mode when enabled).
+  **Important:** On ESP32-C5, ESP32-C6, and ESP32-C61, LP UARTs use fixed GPIO pins for RX, TX, CTS, and RTS; ``setPins()`` cannot change them. On ESP32-P4, the LP UART supports the GPIO matrix and follows the same pin rules as HP UARTs (including automatic one-wire when RX equals TX).
 
 Arduino-ESP32 Serial API
 ------------------------
@@ -317,7 +317,7 @@ Sets or changes the RX, TX, CTS, and RTS pins for the Serial port.
 
 **Note:** This function can be called before or after ``begin()``. When pins are changed, the previous pins are automatically detached.
 
-When RX and TX are set to the same GPIO, ``enableOneWireMode(true)`` must be called **before** ``begin()``, and the UART must be in ``UART_MODE_UART``. RS485 and IrDA modes reject same-pin configuration. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
+When the effective RX and TX pins resolve to the same GPIO (explicit ``setPins(p, p)`` / ``begin(..., p, p)``, or ``-1`` keep-current that makes them equal), the driver automatically enters **one-wire** mode and registers a shared ``UART_RX_TX`` pin. The UART must be in ``UART_MODE_UART``. RS485 and IrDA reject same-pin configuration, and ``setMode()`` rejects switching away from ``UART_MODE_UART`` while one-wire is active. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
 
 .. _enable-rx-internal-pull:
 .. _rx-internal-pull:
@@ -346,21 +346,17 @@ Internal pull is **not** applied in one-wire mode (same GPIO for RX and TX).
 
 * `RxPull_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/RxPull_Demo>`_ — Floating RX, inverted-RX pull direction, and optional wired loopback on split pins.
 
-.. _enable-one-wire-mode:
 .. _one-wire-uart:
 
-enableOneWireMode
-*****************
+One-wire UART
+*************
 
-Enables single-GPIO (one-wire) UART mode where RX and TX share one pin. Must be called **before** ``begin()``.
+One-wire (single-GPIO RX+TX) is enabled automatically when the effective RX and TX pins are the same GPIO. No separate opt-in API is required.
 
-.. code-block:: arduino
+Examples:
 
-    bool enableOneWireMode(bool enable = true);
-
-* ``enable`` - If ``true``, allows ``setPins(p, p)`` or ``begin(..., p, p)`` with the same GPIO for RX and TX. Default is ``false``.
-
-**Returns:** ``true`` if the setting was applied, ``false`` if the UART is already running.
+* ``Serial1.setPins(8, 8);`` or ``Serial1.begin(115200, SERIAL_8N1, 8, 8);``
+* With RX already ``8`` and TX ``9``, ``Serial1.setPins(-1, 8);`` resolves to RX=TX=``8`` and enters one-wire
 
 .. warning::
 
@@ -393,26 +389,25 @@ Pin Configuration Order
 
 Call these **before** ``begin()`` (same pattern as ``setClockSource()`` and ``setRxBufferSize()``):
 
-1. ``enableOneWireMode()`` (optional, default off)
-2. ``enableRxInternalPull()`` (optional, default on)
-3. ``setClockSource()``, ``setRxBufferSize()``, ``setTxBufferSize()`` (optional)
-4. ``setPins()`` (optional; can also be called after ``begin()``)
-5. ``begin()``
+1. ``enableRxInternalPull()`` (optional, default on)
+2. ``setClockSource()``, ``setRxBufferSize()``, ``setTxBufferSize()`` (optional)
+3. ``setPins()`` (optional; can also be called after ``begin()``; same-pin auto-enables one-wire)
+4. ``begin()``
 
 .. _mode-pin-compatibility:
 
 Mode and Pin Compatibility
 --------------------------
 
-+----------------------+-------------+------------------------+
-| Mode                 | One-wire    | RX internal pull       |
-+======================+=============+========================+
-| ``UART_MODE_UART``   | If enabled  | Yes (unless one-wire)  |
-| RS485 modes          | No          | Yes (split pins)       |
-| ``UART_MODE_IRDA``   | No          | Yes (split pins)       |
-| LP UART (C5/C6/C61)  | No          | Fixed RX pad only      |
-| LP UART (P4 matrix)  | If enabled  | Yes (unless one-wire)  |
-+----------------------+-------------+------------------------+
++----------------------+---------------------------+------------------------+
+| Mode                 | One-wire                  | RX internal pull       |
++======================+===========================+========================+
+| ``UART_MODE_UART``   | Auto when RX == TX        | Yes (unless one-wire)  |
+| RS485 modes          | No                        | Yes (split pins)       |
+| ``UART_MODE_IRDA``   | No                        | Yes (split pins)       |
+| LP UART (C5/C6/C61)  | No                        | Fixed RX pad only      |
+| LP UART (P4 matrix)  | Auto when RX == TX        | Yes (unless one-wire)  |
++----------------------+---------------------------+------------------------+
 
 setRxBufferSize
 ***************
@@ -898,7 +893,7 @@ Demonstrates floating RX idle (pull on vs off), pull direction vs ``begin(invert
 
 One-Wire UART Example:
 
-Demonstrates ``enableOneWireMode(true)`` with a startup self-test on one GPIO, optional **UART1 → UART2** peer loopback (``USE_INTERNAL_LOOPBACK`` or external bus wire), board-specific GPIO wiring printed on USB Serial, and interactive half-duplex forwarding from USB Serial.
+Demonstrates same-pin (one-wire) UART with a startup self-test on one GPIO, optional **UART1 → UART2** peer loopback (``USE_INTERNAL_LOOPBACK`` or external bus wire), board-specific GPIO wiring printed on USB Serial, and interactive half-duplex forwarding from USB Serial.
 
 `OneWire_UART_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo/OneWire_UART_Demo.ino>`_
 

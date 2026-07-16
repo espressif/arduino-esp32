@@ -173,7 +173,6 @@ static gpio_pull_mode_t read_rx_pull_mode(int8_t gpio) {
 }
 
 static void reset_serial_pin_options(HardwareSerial &s) {
-  s.enableOneWireMode(false);
   s.enableRxInternalPull(true);
 }
 
@@ -373,7 +372,6 @@ void enabled_uart_calls_test(void) {
 
   log_d("Checking if Serial 1 RX internal pull can't be changed while running");
   TEST_ASSERT_FALSE(Serial1.enableRxInternalPull(true));
-  TEST_ASSERT_FALSE(Serial1.enableOneWireMode(true));
 
   Serial.println("Enabled UART calls test successful");
 }
@@ -457,7 +455,6 @@ void disabled_uart_calls_test(void) {
 
   log_d("Checking if Serial 1 pin options can be set when stopped");
   TEST_ASSERT_TRUE(Serial1.enableRxInternalPull(true));
-  TEST_ASSERT_TRUE(Serial1.enableOneWireMode(true));
   reset_serial_pin_options(Serial1);
 
   Serial.println("Disabled UART calls test successful");
@@ -882,16 +879,14 @@ void cross_uart_cts_rts_test(void) {
 }
 
 void rx_pull_pre_begin_api_test(void) {
-  log_d("RX pull / one-wire APIs must be pre-begin only");
+  log_d("RX pull API must be pre-begin only");
 
   Serial1.end();
   reset_serial_pin_options(Serial1);
   TEST_ASSERT_TRUE(Serial1.enableRxInternalPull(true));
-  TEST_ASSERT_TRUE(Serial1.enableOneWireMode(true));
 
   test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
   TEST_ASSERT_FALSE(Serial1.enableRxInternalPull(true));
-  TEST_ASSERT_FALSE(Serial1.enableOneWireMode(true));
   Serial1.end();
 
   Serial.println("RX pull pre-begin API test successful");
@@ -937,14 +932,91 @@ void rx_pull_inversion_test(void) {
 }
 
 void same_pin_validation_test(void) {
-  log_d("Same-pin requires enableOneWireMode(true)");
+  log_d("Same-pin auto-detects one-wire; -1 keep-current also enables it");
 
   Serial1.end();
   reset_serial_pin_options(Serial1);
-  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
-
-  Serial1.enableOneWireMode(true);
   TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  Serial1.end();
+
+  // Explicit (p, p) then begin: shared periman type
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN, TEST_AUX_PIN, -1));
+  TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN, -1, TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  TEST_ASSERT_FALSE(Serial1.setPins(-1, -1, TEST_AUX_PIN, -1));
+  TEST_ASSERT_FALSE(Serial1.setPins(-1, -1, -1, TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+
+  // Keeping both data pins while adding CTS must preserve one-wire ownership and the driver.
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, -1, NEW_RX1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(TEST_AUX_PIN, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_CTS, perimanGetPinBusType(NEW_RX1));
+  Serial1.end();
+
+  // Back to split, then implicit one-wire via setPins(-1, currentRx)
+  test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, NEW_RX1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+
+  // Leave one-wire while keeping RX via -1; the kept RX must regain its pull.
+  TEST_ASSERT_TRUE(Serial1.setPins(-1, NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+
+  // Enter through the other implicit form, then leave while keeping TX via -1.
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_TX1, -1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, -1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+
+  // Explicit split -> one-wire collapsing onto the former RX pad, then re-expand to split.
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_RX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_TX1));
+  TEST_ASSERT_TRUE(Serial1);
+  TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
+  TEST_ASSERT_EQUAL(NEW_TX1, uart_get_TxPin(1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
+  TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
+  TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
   Serial1.end();
 
   Serial.println("Same-pin validation test successful");
@@ -955,7 +1027,6 @@ void same_pin_pull_disabled_test(void) {
 
   Serial1.end();
   reset_serial_pin_options(Serial1);
-  Serial1.enableOneWireMode(true);
   test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN, 115200, true);
   TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(TEST_AUX_PIN));
   Serial1.end();
@@ -969,7 +1040,6 @@ void same_pin_transmission_test(void) {
   Serial1.end();
   String recv;
   reset_serial_pin_options(Serial1);
-  Serial1.enableOneWireMode(true);
   test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
   Serial1.onReceive([&recv]() {
     while (Serial1.available()) {
@@ -996,7 +1066,6 @@ void same_pin_periman_test(void) {
 
   Serial1.end();
   reset_serial_pin_options(Serial1);
-  Serial1.enableOneWireMode(true);
   test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
   TEST_ASSERT_TRUE(Serial1);
@@ -1010,11 +1079,10 @@ void same_pin_periman_test(void) {
 }
 
 void same_pin_mode_rejection_test(void) {
-  log_d("RS485 and IrDA reject same-pin configuration");
+  log_d("RS485 and IrDA reject same-pin configuration; setMode rejects active one-wire");
 
   Serial1.end();
   reset_serial_pin_options(Serial1);
-  Serial1.enableOneWireMode(true);
   test_serial_begin(Serial1, NEW_RX1, NEW_TX1);
 
   TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_RS485_HALF_DUPLEX));
@@ -1024,6 +1092,10 @@ void same_pin_mode_rejection_test(void) {
   TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_IRDA));
   TEST_ASSERT_FALSE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
 
+  TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_UART));
+  TEST_ASSERT_TRUE(Serial1.setPins(TEST_AUX_PIN, TEST_AUX_PIN));
+  TEST_ASSERT_FALSE(Serial1.setMode(UART_MODE_RS485_HALF_DUPLEX));
+  TEST_ASSERT_FALSE(Serial1.setMode(UART_MODE_IRDA));
   TEST_ASSERT_TRUE(Serial1.setMode(UART_MODE_UART));
   Serial1.end();
 
@@ -1055,7 +1127,6 @@ void same_pin_split_transition_test(void) {
   TEST_ASSERT_TRUE(Serial1);
 
   Serial1.end();
-  Serial1.enableOneWireMode(true);
   test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN);
   Serial1.onReceive([&recv]() {
     while (Serial1.available()) {

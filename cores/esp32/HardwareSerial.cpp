@@ -676,13 +676,6 @@ bool HardwareSerial::enableRxInternalPull(bool enable) {
   return uartEnableRxInternalPull(_uart_nr, enable);
 }
 
-bool HardwareSerial::enableOneWireMode(bool enable) {
-  if (_uart) {
-    log_e("One-wire mode can't be changed when Serial is already running. Set it before calling begin().");
-    return false;
-  }
-  return uartEnableOneWireMode(_uart_nr, enable);
-}
 // minimum total RX Buffer size is the UART FIFO space (128 bytes for most SoC) + 1. IDF imposition.
 // LP UART has FIFO of 16 bytes
 size_t HardwareSerial::setRxBufferSize(size_t new_size) {

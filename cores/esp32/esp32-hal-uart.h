@@ -136,7 +136,6 @@ bool uartSetClockSource(uint8_t uartNum, uart_sclk_t clkSrc);
 
 // Must be set before uartBegin(); no effect after the driver is running
 bool uartEnableRxInternalPull(uint8_t uartNum, bool enable);
-bool uartEnableOneWireMode(uint8_t uartNum, bool enable);
 
 void uartStartDetectBaudrate(uart_t *uart);
 unsigned long uartDetectBaudrate(uart_t *uart);
