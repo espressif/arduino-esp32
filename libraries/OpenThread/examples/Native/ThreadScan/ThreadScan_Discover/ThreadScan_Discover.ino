@@ -62,16 +62,19 @@ static void discoverBlocking() {
     Serial.println("discovery failed (interface down, lock failure, or timeout)");
   } else if (n == OT_DISCOVER_RUNNING) {
     Serial.println("discovery already in progress (OT_DISCOVER_RUNNING)");
-  } else if (n == 0) {
-    Serial.println("no Thread networks found");
   } else {
-    Serial.print(n);
-    Serial.println(" network(s) found");
-    Serial.println("Nr | J | Network Name     | Extended PAN     | PAN  | MAC Address      | CH | dBm | LQI");
-    for (int i = 0; i < n; ++i) {
-      printNetwork(OThreadScan.getResult(i), i);
-      delay(10);
+    if (n == 0) {
+      Serial.println("no Thread networks found");
+    } else {
+      Serial.print(n);
+      Serial.println(" network(s) found");
+      Serial.println("Nr | J | Network Name     | Extended PAN     | PAN  | MAC Address      | CH | dBm | LQI");
+      for (int i = 0; i < n; ++i) {
+        printNetwork(OThreadScan.getResult(i), i);
+        delay(10);
+      }
     }
+    // Release reserved capacity after every completed scan (including 0 results).
     OThreadScan.scanDelete();
   }
 
