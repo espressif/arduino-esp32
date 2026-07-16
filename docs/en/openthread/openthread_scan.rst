@@ -314,8 +314,23 @@ Streaming callbacks
         Serial.println(info.networkNameStr());
     }
 
-    OThreadScan.onResult(onNetwork);
-    OThreadScan.discoverNetworks(true);
+    static void onDone(int16_t resultCount, otError error, void *) {
+        // Summary only — do not call scanDelete() here (OT API lock held).
+        Serial.printf("discovery done: %d\n", resultCount);
+    }
+
+    void setup() {
+        OThreadScan.onResult(onNetwork);
+        OThreadScan.onComplete(onDone);
+    }
+
+    void loop() {
+        OThreadScan.discoverNetworks(true);
+        while (OThreadScan.scanComplete() == OT_DISCOVER_RUNNING) {
+            delay(50);
+        }
+        OThreadScan.scanDelete();
+    }
 
 Examples
 --------

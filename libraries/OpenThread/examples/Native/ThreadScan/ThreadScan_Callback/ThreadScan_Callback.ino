@@ -17,6 +17,7 @@
  *
  * Matches the OpenThread / Matter model: each Discovery Response is delivered
  * through onResult(); onComplete() fires when the scan ends.
+ * Call scanDelete() from loop() after scanComplete() — not from callbacks.
  */
 
 #include <Arduino.h>
@@ -41,7 +42,6 @@ static void onDiscoverComplete(int16_t resultCount, otError error, void *) {
   } else {
     Serial.printf("discovery complete: %d network(s) (%d reported live)\r\n", resultCount, networksSeen);
   }
-  OThreadScan.scanDelete();
   networksSeen = 0;
 }
 
@@ -67,6 +67,7 @@ void loop() {
     while (OThreadScan.scanComplete() == OT_DISCOVER_RUNNING) {
       delay(50);
     }
+    OThreadScan.scanDelete();
   } else if (rc >= 0) {
     Serial.printf("discovery finished immediately with %d network(s)\r\n", rc);
     OThreadScan.scanDelete();

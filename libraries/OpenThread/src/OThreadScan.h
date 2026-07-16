@@ -127,6 +127,10 @@ typedef void (*OThreadDiscoverCompleteCallback)(int16_t resultCount, otError err
  * OThreadScan.discoverNetworks(true);
  * // ... other work in loop() ...
  * int16_t status = OThreadScan.scanComplete();
+ * if (status >= 0) {
+ *   // use getResult(i) ...
+ *   OThreadScan.scanDelete();
+ * }
  * @endcode
  *
  * Streaming flow:
@@ -135,6 +139,8 @@ typedef void (*OThreadDiscoverCompleteCallback)(int16_t resultCount, otError err
  *   Serial.println(info.networkNameStr());
  * });
  * OThreadScan.discoverNetworks(true);
+ * while (OThreadScan.scanComplete() == OT_DISCOVER_RUNNING) { }
+ * OThreadScan.scanDelete();  // from loop(), not from onComplete()
  * @endcode
  *
  * @note Result indexing (`getResult()`, `getResultCount()`, and related getters)

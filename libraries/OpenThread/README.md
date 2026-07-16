@@ -526,7 +526,7 @@ OThreadScan.scanDelete();
 
 **Async** (`discoverNetworks(true)` + `scanComplete()` in `loop()`).
 
-**Streaming** (`onResult()` / `onComplete()` callbacks — OpenThread / Matter model).
+**Streaming** (`onResult()` / `onComplete()` callbacks — OpenThread / Matter model). Call `scanDelete()` from `loop()` after `scanComplete()` finishes, not from inside callbacks.
 
 Thread does **not** need to be started; only `networkInterfaceUp()` is required. For results, run a Leader on another board first.
 

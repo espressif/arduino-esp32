@@ -41,15 +41,17 @@ OThreadScan.onResult(onDiscoverResult);
 OThreadScan.onComplete(onDiscoverComplete);
 OThreadScan.setScanTimeout(30000);
 
-// 2) Non-blocking start; wait for completion.
+// 2) Non-blocking start; wait for completion, then free results from loop().
 OThreadScan.discoverNetworks(true);
 while (OThreadScan.scanComplete() == OT_DISCOVER_RUNNING) {
   delay(50);
 }
+OThreadScan.scanDelete();
 ```
 
 `onDiscoverResult` prints each `OThreadNetworkInfo` as OpenThread receives it.
-`onDiscoverComplete` prints the final count and calls `scanDelete()`.
+`onDiscoverComplete` prints the final summary only — call `scanDelete()` from
+`loop()` after `scanComplete()` indicates completion (not from the callback).
 
 ## Expected serial output
 

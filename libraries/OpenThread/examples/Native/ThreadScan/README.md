@@ -23,6 +23,9 @@ Thread does **not** need to be started for discovery — only
 **Result access:** use `getResult()` / `getResultCount()` only after discovery
 completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`).
 While a scan is running, use `onResult()` for streaming.
+Do not call `scanDelete()` (or other `OThreadScan` methods) from inside
+`onResult()` / `onComplete()` — free results from `loop()` after
+`scanComplete()` finishes.
 
 ## How to Run
 
