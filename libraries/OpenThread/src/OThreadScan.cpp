@@ -238,8 +238,8 @@ void OThreadScanClass::scanDelete() {
     // so no further callback will touch the vectors.
   }
 
-  _results.clear();
-  _rawResults.clear();
+  std::vector<OThreadNetworkInfo>().swap(_results);
+  std::vector<otActiveScanResult>().swap(_rawResults);
   _triggered = false;
   _done = false;
   _inProgress = false;
