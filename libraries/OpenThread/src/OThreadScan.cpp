@@ -29,9 +29,11 @@ struct OtLock {
       esp_openthread_lock_release();
     }
   }
-  operator bool() const {
+  explicit operator bool() const {
     return held;
   }
+  OtLock(const OtLock &) = delete;
+  OtLock &operator=(const OtLock &) = delete;
 };
 
 String formatHexLower(const uint8_t *data, size_t len) {
