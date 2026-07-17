@@ -103,6 +103,7 @@ static bool readLine(String &line, uint32_t timeoutMs) {
   return false;
 }
 
+#if NODE_ROLE == ROLE_INITIATOR
 static void runInitiator() {
   static uint32_t n = 0;
   String request = "PING " + String(n);
@@ -124,7 +125,7 @@ static void runInitiator() {
   n++;
   delay(1000);
 }
-
+#else
 static void runResponder() {
   String request;
   if (!readLine(request, 200) || !request.startsWith("PING ")) {
@@ -138,6 +139,7 @@ static void runResponder() {
   Serial.printf("TX: %s\n", reply.c_str());
   sendLine(reply);
 }
+#endif
 
 void setup() {
   Serial.begin(115200);
