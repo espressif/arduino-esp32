@@ -362,6 +362,30 @@ Examples:
 
    One-wire mode routes both TX output and RX input through the same GPIO. ESP-IDF warns that this can cause electrical conflicts on the pad; use open-drain with an external pull-up, or a half-duplex protocol. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
 
+Why one-wire UART can receive ghost data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In one-wire mode, the pad is deliberately left **floating** (no internal pull), and RX is always listening on the same pin that TX drives. Any brief LOW or noise on that pad looks like a UART start bit, so the receiver produces framing errors, BREAK events, or "ghost" bytes even with no intentional traffic.
+
+Main causes:
+
+1. **No idle bias** — split-pin UART uses RX pull-up so idle stays HIGH. One-wire disables that pull so TX is not fighting an internal resistor. When TX is not firmly driving (startup, pin mux change, tri-state between turns, weak/open bus), the line floats and RX samples garbage.
+2. **TX/RX pad conflict** — both output and input are on one GPIO. During attach or mux changes the line can glitch LOW, causing a start bit or BREAK.
+3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
+4. **External bus without pull-up** — two one-wire peers with listening TX tri-stated leave the wire floating between turns.
+
+How to prevent it
+^^^^^^^^^^^^^^^^^
+
+* Add an **external pull-up** (approximately 4.7–10 kΩ to 3.3 V) on the one-wire pad or shared bus. This holds idle HIGH when nothing drives the line and is the strongest fix.
+* Drain RX after ``begin()`` or ``setPins()`` using ``while (Serial1.available()) { Serial1.read(); }`` to clear glitches generated during pin attachment.
+* Ignore data until the first valid frame, or require a known preamble, to filter noise before real protocol traffic.
+* Use half-duplex only: never leave both TX drivers enabled, and tri-state the listener to avoid push-pull conflicts that corrupt the idle level.
+* Use shorter wires and reduce nearby electrical noise to reduce false start bits on a floating pad.
+* Do not re-enable the internal pull in one-wire mode because it can fight TX.
+
+The internal pull is intentionally disabled in one-wire mode. Rely on **TX idle HIGH** while transmitting and use an **external pull-up** whenever the line can float.
+
 **Related Example:**
 
 * `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Self loopback on one GPIO, optional UART1→UART2 peer loopback (internal matrix or external bus wire), and half-duplex USB bridge.

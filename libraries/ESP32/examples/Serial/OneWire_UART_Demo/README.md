@@ -68,6 +68,30 @@ ESP-IDF documents that routing TX output and RX input to one GPIO can cause **pa
 
 Internal pull on RX is **disabled** in one-wire mode.
 
+## Why one-wire UART can receive ghost data
+
+In one-wire mode, the pad is deliberately left **floating** (no internal pull), and RX is always listening on the same pin that TX drives. Any brief LOW or noise on that pad looks like a UART start bit, so the receiver produces framing errors, BREAK events, or “ghost” bytes even with no intentional traffic.
+
+Main causes:
+
+1. **No idle bias** — split-pin UART uses RX pull-up so idle stays HIGH. One-wire disables that pull so TX isn’t fighting an internal resistor. When TX is not firmly driving (startup, pin mux change, tri-state between turns, weak/open bus), the line floats and RX samples garbage.
+2. **TX/RX pad conflict** — both output and input are on one GPIO. During attach/mux changes the line can glitch LOW, causing a start bit or BREAK.
+3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
+4. **External bus without pull-up** — two one-wire peers with listening TX tri-stated leave the wire floating between turns.
+
+## How to prevent it
+
+| Approach | Effect |
+|---|---|
+| **External pull-up** (approximately 4.7–10 kΩ to 3.3 V) on the one-wire pad or shared bus | Holds idle HIGH when nothing drives—the strongest fix |
+| **Drain RX after `begin()` or `setPins()`** using `while (available()) read()` | Clears glitches generated during pin attachment |
+| **Ignore data until the first valid frame** or require a known preamble | Filters noise before real protocol traffic |
+| **Use half-duplex only**—never leave both TX drivers enabled; tri-state the listener | Avoids push-pull conflicts that corrupt the idle level |
+| **Use shorter wires and reduce nearby electrical noise** | Reduces false start bits on a floating pad |
+| **Do not re-enable the internal pull in one-wire mode** | Prevents the pull resistor from fighting TX |
+
+The internal pull is intentionally disabled in one-wire mode. Rely on **TX idle HIGH** while transmitting and use an **external pull-up** whenever the line can float.
+
 ## Usage
 
 1. Upload `OneWire_UART_Demo.ino`.
