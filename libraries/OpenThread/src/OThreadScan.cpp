@@ -16,7 +16,6 @@
 #if SOC_IEEE802154_SUPPORTED && CONFIG_OPENTHREAD_ENABLED
 
 #include "esp_openthread_lock.h"
-#include <openthread/steering_data.h>
 
 #include <cstring>
 
@@ -47,6 +46,22 @@ String formatHexLower(const uint8_t *data, size_t len) {
     s += buf;
   }
   return s;
+}
+
+// MLE Discovery reports joinability via Steering Data bloom filter. The public
+// otSteeringData* helpers require OPENTHREAD_CONFIG_MESHCOP_STEERING_DATA_API_ENABLE
+// (off in Arduino builds), so inspect the struct directly. All-zero / missing
+// filter means joining is not permitted (MeshCoP Leader clears it that way).
+bool discoverResultIsJoinable(const otActiveScanResult &in) {
+  if (in.mSteeringData.mLength == 0 || in.mSteeringData.mLength > OT_STEERING_DATA_MAX_LENGTH) {
+    return false;
+  }
+  for (uint8_t i = 0; i < in.mSteeringData.mLength; ++i) {
+    if (in.mSteeringData.m8[i] != 0) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace
@@ -431,7 +446,7 @@ OThreadNetworkInfo OThreadScanClass::fromActiveScanResult(const otActiveScanResu
   out.threadVersion = (uint8_t)in.mVersion;
   // MLE Discovery (otThreadDiscover) reports joinability via Steering Data;
   // mIsJoinable is only set for IEEE 802.15.4 beacon Active Scan results.
-  out.joinable = in.mDiscover ? !otSteeringDataIsEmpty(&in.mSteeringData) : in.mIsJoinable;
+  out.joinable = in.mDiscover ? discoverResultIsJoinable(in) : in.mIsJoinable;
   out.nativeCommissioner = in.mIsNative;
   return out;
 }
