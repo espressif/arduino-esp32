@@ -257,9 +257,22 @@ static bool _uartIsOneWireActive(const uart_t *uart) {
 }
 
 static bool _uartApplyRxPull(uart_t *uart, int8_t rxPin);
+static bool _uartApplyOneWireOpenDrain(int8_t pin, bool enable);
 static bool _uartDetachSharedPin(uint8_t uart_num, int8_t pin);
 static bool _uartAttachSharedPin(uint8_t uart_num, int8_t pin);
 static bool _uartDetachBus_RX_TX(void *busptr);
+
+static bool _uartApplyOneWireOpenDrain(int8_t pin, bool enable) {
+  if (pin < 0) {
+    return true;
+  }
+  esp_err_t err = enable ? gpio_od_enable((gpio_num_t)pin) : gpio_od_disable((gpio_num_t)pin);
+  if (err != ESP_OK) {
+    log_e("Failed to %s open-drain on UART one-wire pin %d: %s", enable ? "enable" : "disable", pin, esp_err_to_name(err));
+    return false;
+  }
+  return true;
+}
 
 static bool _uartApplyRxPull(uart_t *uart, int8_t rxPin) {
   if (rxPin < 0) {
@@ -495,6 +508,7 @@ static bool _uartDetachBus_RX_TX(void *busptr) {
   }
   int8_t pin = bus->_rxPin;
   log_d("_uartDetachBus_RX_TX: detaching shared pin %d from UART%u, terminating driver", pin, bus->num);
+  bool retCode = _uartApplyOneWireOpenDrain(pin, false);
   esp_rom_gpio_pad_select_gpio(pin);
   if (_uartRxPadInverted(bus)) {
     esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(bus->num, SOC_UART_RX_PIN_IDX), false);
@@ -505,7 +519,7 @@ static bool _uartDetachBus_RX_TX(void *busptr) {
   bus->_rxPin = -1;
   bus->_txPin = -1;
   hardware_serial_end(bus->num);
-  return true;
+  return retCode;
 }
 
 static bool _uartDetachSharedPin(uint8_t uart_num, int8_t pin) {
@@ -516,6 +530,7 @@ static bool _uartDetachSharedPin(uint8_t uart_num, int8_t pin) {
   if (!_uartIsOneWireActive(uart) || uart->_rxPin != pin) {
     return true;
   }
+  bool retCode = _uartApplyOneWireOpenDrain(pin, false);
   esp_rom_gpio_pad_select_gpio(pin);
   if (_uartRxPadInverted(uart)) {
     esp_rom_gpio_connect_in_signal(GPIO_FUNC_IN_LOW, UART_PERIPH_SIGNAL(uart_num, SOC_UART_RX_PIN_IDX), false);
@@ -525,7 +540,7 @@ static bool _uartDetachSharedPin(uint8_t uart_num, int8_t pin) {
   esp_rom_gpio_connect_out_signal(pin, SIG_GPIO_OUT_IDX, false, false);
   uart->_rxPin = -1;
   uart->_txPin = -1;
-  return perimanClearPinBus(pin);
+  return perimanClearPinBus(pin) && retCode;
 }
 
 static bool _uartDetachBus_RX(void *busptr) {
@@ -753,7 +768,8 @@ static bool _uartAttachSharedPin(uint8_t uart_num, int8_t pin) {
       attachSuccess = false;
     }
   }
-  if (attachSuccess && _uartInternalSetPin(uart->num, pin, pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)) {
+  if (attachSuccess && _uartInternalSetPin(uart->num, pin, pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)
+      && _uartApplyOneWireOpenDrain(pin, true)) {
     if (perimanSetPinBus(pin, ESP32_BUS_TYPE_UART_RX_TX, (void *)uart, uart_num, -1)) {
       if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX_TX) == NULL) {
         perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX_TX, _uartDetachBus_RX_TX);
@@ -763,6 +779,7 @@ static bool _uartAttachSharedPin(uint8_t uart_num, int8_t pin) {
       _uartApplyRxPull(uart, pin);
     } else {
       log_e("UART%u failed to register shared RX/TX pin %d", uart_num, pin);
+      _uartApplyOneWireOpenDrain(pin, false);
       attachSuccess = false;
     }
   } else {
@@ -1179,6 +1196,12 @@ bool uartSetPins(uint8_t uart_num, int8_t rxPin, int8_t txPin, int8_t ctsPin, in
   if (rtsAttach) {
     log_d("Attaching pin %d to UART%d as RTS", rtsPin, uart_num);
     retCode &= _uartAttachPins(uart_num, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, rtsPin);
+  }
+
+  // Keep-current setPins calls do not reattach the shared pin, so reassert the
+  // electrical one-wire policy in case another low-level operation changed it.
+  if (oneWireRequest && _uartIsOneWireActive(uart)) {
+    retCode &= _uartApplyOneWireOpenDrain(uart->_rxPin, true);
   }
 
   // Collect unique UARTs that lost both RX and TX (need termination after mutex release)

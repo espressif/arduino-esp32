@@ -24,7 +24,7 @@ typedef enum {
   ESP32_BUS_TYPE_UART_TX,   // IO is used as UART TX pin
   ESP32_BUS_TYPE_UART_CTS,  // IO is used as UART CTS pin
   ESP32_BUS_TYPE_UART_RTS,   // IO is used as UART RTS pin
-  ESP32_BUS_TYPE_UART_RX_TX,  // IO is used as UART RX and TX pin (one-wire mode)
+  ESP32_BUS_TYPE_UART_RX_TX,  // IO is used as open-drain UART RX and TX pin (one-wire mode)
 #if SOC_SDM_SUPPORTED
   ESP32_BUS_TYPE_SIGMADELTA,  // IO is used as SigmeDelta output
 #endif

@@ -23,7 +23,7 @@ with additional features for advanced use cases.
 * **Event callbacks**: Receive and error event callbacks.
 * **Configurable buffers**: Adjustable RX and TX buffer sizes.
 * **RX internal pull**: Automatic pull-up or pull-down on the RX pad (see `RX internal pull <rx-internal-pull_>`_).
-* **One-wire UART**: Automatic single-GPIO RX+TX when RX and TX resolve to the same pin (see `one-wire UART <one-wire-uart_>`_).
+* **One-wire UART**: Automatic open-drain single-GPIO RX+TX when RX and TX resolve to the same pin (see `one-wire UART <one-wire-uart_>`_).
 
 .. note::
    In case that both pins, RX and TX are detached from UART, the driver will be stopped.
@@ -317,7 +317,7 @@ Sets or changes the RX, TX, CTS, and RTS pins for the Serial port.
 
 **Note:** This function can be called before or after ``begin()``. When pins are changed, the previous pins are automatically detached.
 
-When the effective RX and TX pins resolve to the same GPIO (explicit ``setPins(p, p)`` / ``begin(..., p, p)``, or ``-1`` keep-current that makes them equal), the driver automatically enters **one-wire** mode and registers a shared ``UART_RX_TX`` pin. The UART must be in ``UART_MODE_UART``. RS485 and IrDA reject same-pin configuration, and ``setMode()`` rejects switching away from ``UART_MODE_UART`` while one-wire is active. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
+When the effective RX and TX pins resolve to the same GPIO (explicit ``setPins(p, p)`` / ``begin(..., p, p)``, or ``-1`` keep-current that makes them equal), the driver automatically enters **open-drain one-wire** mode and registers a shared ``UART_RX_TX`` pin. An external pull-up is required. The UART must be in ``UART_MODE_UART``. RS485 and IrDA reject same-pin configuration, and ``setMode()`` rejects switching away from ``UART_MODE_UART`` while one-wire is active. See `one-wire UART <one-wire-uart_>`_ and `Mode and Pin Compatibility <mode-pin-compatibility_>`_.
 
 .. _enable-rx-internal-pull:
 .. _rx-internal-pull:
@@ -344,14 +344,14 @@ Internal pull is **not** applied in one-wire mode (same GPIO for RX and TX).
 
 **Related Example:**
 
-* `RxPull_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/RxPull_Demo>`_ — Floating RX, inverted-RX pull direction, and optional wired loopback on split pins.
+* `RxPull_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/RxPull_Demo>`_ — Floating RX vs default internal pull, and inverted-RX pull direction on split pins.
 
 .. _one-wire-uart:
 
 One-wire UART
 *************
 
-One-wire (single-GPIO RX+TX) is enabled automatically when the effective RX and TX pins are the same GPIO. No separate opt-in API is required.
+One-wire (single-GPIO RX+TX) is enabled automatically when the effective RX and TX pins are the same GPIO. The HAL configures that shared pad as open-drain. No separate opt-in API is required.
 
 Examples:
 
@@ -360,35 +360,36 @@ Examples:
 
 .. warning::
 
-   One-wire mode routes both TX output and RX input through the same GPIO. ESP-IDF warns that this can cause electrical conflicts on the pad. Use a half-duplex protocol and ensure that no more than one push-pull TX output drives a shared wire. A multi-node electrical design may instead use separately configured open-drain outputs with an external pull-up or an external transceiver. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
+   Open-drain one-wire requires an **external pull-up to 3.3 V** using a suitable conventional pull-up resistor. TX actively drives LOW and releases HIGH, so without the resistor the line has no valid idle HIGH. Use a half-duplex protocol and never let multiple peers transmit simultaneously. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
 
 Why one-wire UART can receive ghost data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In one-wire mode, the pad is deliberately left **floating** (no internal pull), and RX is always listening on the same pin that TX drives. Any brief LOW or noise on that pad looks like a UART start bit, so the receiver produces framing errors, BREAK events, or "ghost" bytes even with no intentional traffic.
+In one-wire mode, RX is always listening on the same open-drain pin that TX uses. The external pull-up establishes idle HIGH whenever all transmitters release the bus. Any brief LOW or noise looks like a UART start bit, so the receiver can produce framing errors, BREAK events, or "ghost" bytes.
 
 Main causes:
 
-1. **No idle bias** — split-pin UART uses RX pull-up so idle stays HIGH. One-wire disables that pull so TX is not fighting an internal resistor. When TX is not firmly driving (startup, pin mux change, tri-state between turns, weak/open bus), the line floats and RX samples garbage.
-2. **TX/RX pad conflict** — both output and input are on one GPIO. During attach or mux changes the line can glitch LOW, causing a start bit or BREAK.
+1. **Missing external pull-up** — open-drain TX releases HIGH and cannot establish idle HIGH by itself.
+2. **Startup or mux transients** — attaching the shared pin can briefly look like a LOW start bit.
 3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
-4. **External bus without idle bias** — a shared wire can float while UART pins are detached or TX outputs are disconnected between half-duplex turns.
+4. **Bus noise or collisions** — wiring noise or simultaneous transmitters corrupt frames.
 
 How to prevent it
 ^^^^^^^^^^^^^^^^^
 
-* Add an **external pull-up** (approximately 4.7–10 kΩ to 3.3 V) on the one-wire pad or shared bus. This holds idle HIGH when nothing drives the line and is the strongest fix.
+* Add an **external pull-up** to 3.3 V on the one-wire pad or shared bus. This holds idle HIGH whenever all open-drain outputs release the line.
 * Drain RX after ``begin()`` or ``setPins()`` using ``while (Serial1.available()) { Serial1.read(); }`` to clear glitches generated during pin attachment.
-* Ignore data until the first valid frame, or require a known preamble, to filter noise before real protocol traffic.
-* Use half-duplex only: never connect two active push-pull TX outputs to the shared wire. Disconnect, reroute, or otherwise disable the listener's TX before the other endpoint transmits.
-* Use shorter wires and reduce nearby electrical noise to reduce false start bits on a floating pad.
-* Do not re-enable the internal pull in one-wire mode because it can fight TX.
+* Match and discard the expected local self-echo after each write before processing peer data.
+* Ignore data until the first valid frame, or require a known preamble, to filter startup noise before real protocol traffic.
+* Use half-duplex only: never let multiple peers transmit simultaneously.
+* Use suitable wiring and pull-up value to maintain clean signal edges.
 
-The internal pull is intentionally disabled in one-wire mode. Rely on **TX idle HIGH** while transmitting and use an **external pull-up** whenever the line can float.
+The weak internal pull is intentionally disabled in normal one-wire operation. A real one-wire bus requires an external pull-up. Open-drain does not impose a special UART baud-rate restriction.
 
 **Related Example:**
 
-* `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Same-pad one-wire self-echo, optional bidirectional UART1↔UART2 cross-test (internal matrix or external signal wire), printed wiring instructions, and a half-duplex USB bridge.
+* `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Single-board one-wire self-echo on one GPIO (RX == TX), using the UART internal loopback so it runs with no external wiring, plus a half-duplex USB bridge.
+* `OneWire_UART_Two_Boards <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Two_Boards>`_ — Open-drain PING/PONG communication between two ESP32-family boards over one signal wire plus common GND. Both peers remain in same-pin RX/TX mode, use an external pull-up, and discard local TX self-echo.
 
 .. _signal-inversion-rx-pull:
 
@@ -397,16 +398,16 @@ Signal Inversion and RX Internal Pull
 
 RX internal pull (when `enableRxInternalPull() <enable-rx-internal-pull_>`_ is enabled) tracks **RX signal inversion** only:
 
-+---------------------------+----------------------------------+
-| Event                     | RX internal pull (when enabled)  |
-+===========================+==================================+
-| ``begin(..., invert=false)`` | Pull-up                       |
-| ``begin(..., invert=true)``  | Pull-down                     |
-| ``setRxInvert(true/false)``  | Pull-down / pull-up           |
-| ``setTxInvert()`` only       | Unchanged                     |
-| One-wire mode                | Disabled (floating)           |
-| ``enableRxInternalPull(false)`` | Disabled (floating)        |
-+---------------------------+----------------------------------+
++---------------------------------+----------------------------------+
+| Event                           | RX internal pull (when enabled)  |
++=================================+==================================+
+| ``begin(..., invert=false)``    | Pull-up                          |
+| ``begin(..., invert=true)``     | Pull-down                        |
+| ``setRxInvert(true/false)``     | Pull-down / pull-up              |
+| ``setTxInvert()`` only          | Unchanged                        |
+| One-wire mode                   | Disabled (external pull-up)      |
+| ``enableRxInternalPull(false)`` | Disabled (floating)              |
++---------------------------------+----------------------------------+
 
 Pin Configuration Order
 -----------------------
@@ -911,14 +912,20 @@ Hardware Flow Control Example:
 
 RX Internal Pull Example:
 
-Demonstrates floating RX idle (pull on vs off), pull direction vs ``begin(invert)`` / ``setRxInvert()``, and optional **TX1 → RX2** wired loopback on boards with 3+ UARTs. Prints board-specific GPIO wiring for Part C and pull state from ``gpio_get_io_config()`` on USB Serial at **115200** baud.
+Demonstrates floating RX idle (pull on vs off) and pull direction vs ``begin(invert)`` / ``setRxInvert()`` on split pins. Leave UART1 RX unconnected; the sketch prints pull state from ``gpio_get_io_config()`` on USB Serial at **115200** baud.
 
 `RxPull_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/RxPull_Demo/RxPull_Demo.ino>`_
 
 One-Wire UART Example:
 
-Demonstrates same-pin (one-wire) UART with a startup self-echo test on one GPIO and an optional bidirectional **UART1 ↔ UART2** cross-test. The cross-test can use internal GPIO-matrix routing or one external signal wire; external mode parks inactive RX/TX signals on unconnected GPIOs so only one push-pull TX drives the wire. The example prints board-specific wiring and supports interactive half-duplex forwarding from USB Serial.
+Demonstrates same-pin open-drain UART on a single board: UART1 transmits and receives on one GPIO (**RX == TX**) and receives its own transmission back through the UART internal loopback, so the example runs with no external wiring. After the startup self-echo test, typed characters are forwarded onto the one-wire GPIO and echoed back on USB Serial. On a real bus, an external pull-up to 3.3 V replaces the internal loopback.
 
 `OneWire_UART_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo/OneWire_UART_Demo.ino>`_
+
+One-Wire UART Two-Board Example:
+
+Demonstrates same-pin open-drain, half-duplex PING/PONG communication between two ESP32-family boards using one signal wire, common GND, and an external pull-up. The HAL configures open-drain automatically; the example keeps RX and TX on the same pad for every turn and discards expected local TX self-echo. Roles and GPIOs are configured independently on each board, allowing different SoCs.
+
+`OneWire_UART_Two_Boards.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Two_Boards/OneWire_UART_Two_Boards.ino>`_
 
 Complete list of `Serial examples <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial>`_.

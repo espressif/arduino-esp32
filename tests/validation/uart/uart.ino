@@ -35,6 +35,7 @@
 #include "esp_rom_gpio.h"
 #include "esp32-hal-periman.h"
 #include "driver/gpio.h"
+#include "esp_private/gpio.h"
 #include "hal/gpio_types.h"
 #include "Wire.h"
 
@@ -170,6 +171,11 @@ static gpio_pull_mode_t read_rx_pull_mode(int8_t gpio) {
     return GPIO_PULLDOWN_ONLY;
   }
   return GPIO_FLOATING;
+}
+
+static bool read_open_drain_enabled(int8_t gpio) {
+  gpio_io_config_t cfg = {};
+  return gpio_get_io_config((gpio_num_t)gpio, &cfg) == ESP_OK && cfg.od;
 }
 
 static void reset_serial_pin_options(HardwareSerial &s) {
@@ -953,6 +959,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_FALSE(Serial1.setPins(-1, -1, -1, TEST_AUX_PIN));
   TEST_ASSERT_TRUE(Serial1);
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(TEST_AUX_PIN));
 
   // Keeping both data pins while adding CTS must preserve one-wire ownership and the driver.
   TEST_ASSERT_TRUE(Serial1.setPins(-1, -1));
@@ -974,6 +981,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_RX1));
 
   // Leave one-wire while keeping RX via -1; the kept RX must regain its pull.
   TEST_ASSERT_TRUE(Serial1.setPins(-1, NEW_TX1));
@@ -983,6 +991,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_RX1));
 
   // Enter through the other implicit form, then leave while keeping TX via -1.
   TEST_ASSERT_TRUE(Serial1.setPins(NEW_TX1, -1));
@@ -991,6 +1000,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_TX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_TX1));
   TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, -1));
   TEST_ASSERT_TRUE(Serial1);
   TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
@@ -998,6 +1008,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_TX1));
 
   // Explicit split -> one-wire collapsing onto the former RX pad, then re-expand to split.
   TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_RX1));
@@ -1007,6 +1018,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX_TX, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_INIT, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(NEW_RX1));
   TEST_ASSERT_TRUE(Serial1.setPins(NEW_RX1, NEW_TX1));
   TEST_ASSERT_TRUE(Serial1);
   TEST_ASSERT_EQUAL(NEW_RX1, uart_get_RxPin(1));
@@ -1014,6 +1026,7 @@ void same_pin_validation_test(void) {
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_RX, perimanGetPinBusType(NEW_RX1));
   TEST_ASSERT_EQUAL(ESP32_BUS_TYPE_UART_TX, perimanGetPinBusType(NEW_TX1));
   TEST_ASSERT_EQUAL(GPIO_PULLUP_ONLY, read_rx_pull_mode(NEW_RX1));
+  TEST_ASSERT_FALSE(read_open_drain_enabled(NEW_RX1));
   Serial1.end();
 
   Serial.println("Same-pin validation test successful");
@@ -1026,6 +1039,7 @@ void same_pin_pull_disabled_test(void) {
   reset_serial_pin_options(Serial1);
   test_serial_begin(Serial1, TEST_AUX_PIN, TEST_AUX_PIN, 115200, true);
   TEST_ASSERT_EQUAL(GPIO_FLOATING, read_rx_pull_mode(TEST_AUX_PIN));
+  TEST_ASSERT_TRUE(read_open_drain_enabled(TEST_AUX_PIN));
   Serial1.end();
 
   Serial.println("Same-pin pull disabled test successful");
@@ -1047,6 +1061,11 @@ void same_pin_transmission_test(void) {
     }
   });
   uart_internal_loopback(1, TEST_AUX_PIN);
+  // The HAL configures the shared pad open-drain, whose released-HIGH level is only
+  // defined by an external pull-up. This CI sketch must run with no external parts
+  // (including in simulators), so drive the loopback push-pull for a deterministic
+  // pad level here. OD configuration itself is asserted in the validation/pull tests.
+  gpio_od_disable((gpio_num_t)TEST_AUX_PIN);
   delay(50);
   recv = "";
   Serial1.print("ONEWIRE");
@@ -1135,6 +1154,9 @@ void same_pin_split_transition_test(void) {
   });
   TEST_ASSERT_TRUE(Serial1);
   uart_internal_loopback(1, TEST_AUX_PIN);
+  // Same-pin loopback is driven push-pull for a deterministic pad level with no
+  // external pull-up (see same_pin_transmission_test).
+  gpio_od_disable((gpio_num_t)TEST_AUX_PIN);
   recv = "";
   Serial1.print("SHARED");
   Serial1.flush();
