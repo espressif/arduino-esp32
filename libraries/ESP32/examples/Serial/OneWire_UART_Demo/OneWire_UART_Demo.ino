@@ -57,9 +57,6 @@ static void beginOneWire(HardwareSerial &uart, int8_t pin) {
   uart.end();
   uart.setPins(pin, pin);  // same-pin auto-enables one-wire
   uart.begin(BAUD, SERIAL_8N1, pin, pin);
-  while (!uart) {
-    delay(10);
-  }
 }
 
 static bool waitForBytes(HardwareSerial &uart, uint32_t timeoutMs) {

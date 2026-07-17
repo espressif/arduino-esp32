@@ -180,9 +180,6 @@ static void test_serial_begin(HardwareSerial &s, int8_t rx, int8_t tx, unsigned 
   s.end();
   s.setPins(rx, tx);
   s.begin(baud, SERIAL_8N1, rx, tx, invert);
-  while (!s) {
-    delay(10);
-  }
 }
 
 static void uart_test_register_on_receive(UARTTestConfig &config) {
