@@ -57,8 +57,8 @@ typedef enum {
 } ardu_sdcard_command_t;
 
 // Align with ESP-IDF sdmmc SPI init (ACMD41 timeout must be >1s per SD spec)
-static constexpr unsigned sd_go_idle_delay_ms = 20;
-static constexpr unsigned sd_op_cond_timeout_ms = 3000;
+static constexpr uint32_t sd_go_idle_delay_ms = 20;
+static constexpr uint32_t sd_op_cond_timeout_ms = 3000;
 
 typedef struct {
   uint8_t ssPin;
@@ -476,7 +476,7 @@ private:
  *
  * The initialization sequence follows the SD card protocol (SPI mode, aligned with IDF):
  * 1. Power-up sequence with 74+ clock cycles
- * 2. GO_IDLE_STATE twice to enter SPI mode
+ * 2. Two GO_IDLE_STATE attempts to enter SPI mode
  * 3. CRC_ON_OFF to enable CRC checking (with retry)
  * 4. SEND_IF_COND to identify SDHC/SDXC cards
  * 5. APP_OP_COND / SEND_OP_COND (SPI args; timeout >1s)
@@ -511,10 +511,11 @@ DSTATUS ff_sd_initialize(uint8_t pdrv) {
     card->spi->transfer(0XFF);
   }
 
-  // Step 2: Select the card and send GO_IDLE_STATE (CMD0) twice in SPI mode.
+  // Step 2: Perform two GO_IDLE_STATE (CMD0) attempts in SPI mode.
   // Per SD Simplified Spec (figure 4-1) / IDF: some cards enter SD mode on the
-  // first CMD0, so the first response may fail; the second must succeed.
-  // Fix mount issue - sdWait fail ignored before command GO_IDLE_STATE
+  // first attempt, so the first response may fail; the second must succeed.
+  // (sdCommand may also retry internally on no-token/CRC errors.)
+  // Fix mount issue - sdWait fail ignored before each CMD0 attempt
   digitalWrite(card->ssPin, LOW);
   if (!sdWait(pdrv, 500)) {
     log_w("sdWait fail ignored, card initialize continues");
@@ -523,7 +524,11 @@ DSTATUS ff_sd_initialize(uint8_t pdrv) {
   sdDeselectCard(pdrv);
   delay(sd_go_idle_delay_ms);
 
-  if (!sdSelectCard(pdrv) || sdCommand(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
+  digitalWrite(card->ssPin, LOW);
+  if (!sdWait(pdrv, 500)) {
+    log_w("sdWait fail ignored, card initialize continues");
+  }
+  if (sdCommand(pdrv, GO_IDLE_STATE, 0, NULL) != 1) {
     sdDeselectCard(pdrv);
     log_w("GO_IDLE_STATE failed");
     goto unknown_card;
