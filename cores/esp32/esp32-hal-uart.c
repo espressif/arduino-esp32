@@ -266,11 +266,20 @@ static bool _uartApplyOneWireOpenDrain(int8_t pin, bool enable) {
   if (pin < 0) {
     return true;
   }
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
   esp_err_t err = enable ? gpio_od_enable((gpio_num_t)pin) : gpio_od_disable((gpio_num_t)pin);
   if (err != ESP_OK) {
     log_e("Failed to %s open-drain on UART one-wire pin %d: %s", enable ? "enable" : "disable", pin, esp_err_to_name(err));
     return false;
   }
+#else
+  // IDF < 5.4 has no gpio_od_*; match the gpio_ll_* fallback used elsewhere in this file.
+  if (enable) {
+    gpio_ll_od_enable(&GPIO, (uint32_t)pin);
+  } else {
+    gpio_ll_od_disable(&GPIO, (uint32_t)pin);
+  }
+#endif
   return true;
 }
 

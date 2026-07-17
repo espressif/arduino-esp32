@@ -35,7 +35,11 @@
 #include "esp_rom_gpio.h"
 #include "esp32-hal-periman.h"
 #include "driver/gpio.h"
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
 #include "esp_private/gpio.h"
+#else
+#include "hal/gpio_ll.h"
+#endif
 #include "hal/gpio_types.h"
 #include "Wire.h"
 
@@ -176,6 +180,15 @@ static gpio_pull_mode_t read_rx_pull_mode(int8_t gpio) {
 static bool read_open_drain_enabled(int8_t gpio) {
   gpio_io_config_t cfg = {};
   return gpio_get_io_config((gpio_num_t)gpio, &cfg) == ESP_OK && cfg.od;
+}
+
+// Temporarily force push-pull for internal loopback CI (no external pull-up).
+static void force_push_pull_for_loopback(int8_t gpio) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 0)
+  gpio_od_disable((gpio_num_t)gpio);
+#else
+  gpio_ll_od_disable(&GPIO, (uint32_t)gpio);
+#endif
 }
 
 static void reset_serial_pin_options(HardwareSerial &s) {
@@ -1065,7 +1078,7 @@ void same_pin_transmission_test(void) {
   // defined by an external pull-up. This CI sketch must run with no external parts
   // (including in simulators), so drive the loopback push-pull for a deterministic
   // pad level here. OD configuration itself is asserted in the validation/pull tests.
-  gpio_od_disable((gpio_num_t)TEST_AUX_PIN);
+  force_push_pull_for_loopback(TEST_AUX_PIN);
   delay(50);
   recv = "";
   Serial1.print("ONEWIRE");
@@ -1156,7 +1169,7 @@ void same_pin_split_transition_test(void) {
   uart_internal_loopback(1, TEST_AUX_PIN);
   // Same-pin loopback is driven push-pull for a deterministic pad level with no
   // external pull-up (see same_pin_transmission_test).
-  gpio_od_disable((gpio_num_t)TEST_AUX_PIN);
+  force_push_pull_for_loopback(TEST_AUX_PIN);
   recv = "";
   Serial1.print("SHARED");
   Serial1.flush();
