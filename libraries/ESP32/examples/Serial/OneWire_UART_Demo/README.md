@@ -41,8 +41,16 @@ Set `USE_INTERNAL_LOOPBACK` at the top of the sketch:
 
 | Value | Part A | Part B |
 |-------|--------|--------|
-| `1` (default) | `uart_internal_loopback(1, ONEWIRE_PIN1)` | GPIO-matrix routing switches UART1→UART2, then UART2→UART1 |
+| `1` (default) | `uart_internal_loopback(1, ONEWIRE_PIN1)` | No jumper required; an existing jumper is optional and redundant |
 | `0` | Optional jumper on ONEWIRE_PIN1 | One signal wire: **ONEWIRE_PIN1 ↔ ONEWIRE_PIN2**; both directions use it in turn |
+
+With `USE_INTERNAL_LOOPBACK=1`, the sketch synchronizes GPIO-matrix output routing before each turn:
+
+- **Turn 1:** both `ONEWIRE_PIN1` and `ONEWIRE_PIN2` carry UART1 TX.
+- **Turn 2:** both pins carry UART2 TX.
+- Direction changes happen after `flush()`, while UART is idle HIGH.
+
+Consequently, an installed jumper connects two pads carrying the same signal rather than shorting UART1 TX against UART2 TX. The jumper is harmless in this test but electrically redundant because the GPIO matrix already provides the connection.
 
 For external wiring, the sketch changes the listening GPIO to input-only while preserving its UART RX routing, then enables input/output mode only for the current transmitter. This prevents the listening push-pull TX from holding the line HIGH against the sender. Add an external **pull-up** to hold the line at UART idle HIGH during direction changes.
 

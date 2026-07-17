@@ -18,6 +18,8 @@
 
 #include <Arduino.h>
 #include "driver/gpio.h"
+#include "esp_rom_gpio.h"
+#include "soc/uart_periph.h"
 
 // 1 = GPIO matrix connects UART1 TX to the peer RX pad (no external wire)
 // 0 = jumper ONEWIRE_PIN1 <-> ONEWIRE_PIN2 (+ external pull-up recommended on the bus)
@@ -82,6 +84,16 @@ static void drain(HardwareSerial &uart) {
   }
 }
 
+#if HAS_UART2 && USE_INTERNAL_LOOPBACK
+// uart_internal_loopback() routes src UART TX onto dstPad but does not clear a previous
+// TX drive left on that pad. Restore the pad owner's TX before reversing direction so
+// both pads carry the same UART TX signal during each turn. An optional jumper then
+// connects identical signals instead of shorting UART1 TX against UART2 TX.
+static void restoreUartTxToOwnPin(uint8_t uartNum, int8_t pin) {
+  esp_rom_gpio_connect_out_signal(pin, uart_periph_signal[uartNum].pins[SOC_UART_TX_PIN_IDX].signal, false, false);
+}
+#endif
+
 #if HAS_UART2 && !USE_INTERNAL_LOOPBACK
 static bool setOneWireDrive(int8_t pin, bool enabled) {
   // Do not use pinMode(): it would release the UART_RX_TX peripheral-manager ownership.
@@ -115,7 +127,9 @@ static void printPartAWiringInstructions() {
 static void printPartBWiringInstructions() {
   Serial.println();
   if (USE_INTERNAL_LOOPBACK) {
-    Serial.println("  Part B: no wire — GPIO-matrix routing switches direction between each half-duplex turn.");
+    Serial.println("  Part B: no external wire required; an existing jumper is optional and redundant.");
+    Serial.println("  GPIO-matrix routing switches direction between each half-duplex turn.");
+    Serial.println("  Both GPIOs carry the same active UART TX signal during each turn.");
     Serial.printf("    UART1 GPIO %d  <~~internal~~>  UART2 GPIO %d\n", ONEWIRE_PIN1, ONEWIRE_PIN2);
   } else {
     Serial.println("  Part B wiring — one wire between both UART one-wire pads:");
@@ -173,6 +187,8 @@ static bool runDualPeerCrossTest() {
   beginOneWire(Serial2, ONEWIRE_PIN2);
 
 #if USE_INTERNAL_LOOPBACK
+  // GPIO ONEWIRE_PIN1 already carries UART1 TX; route that same signal onto
+  // ONEWIRE_PIN2. With an optional jumper, both ends therefore have identical levels.
   uart_internal_loopback(1, ONEWIRE_PIN2);
   Serial.printf("  Internal loopback: UART1 TX -> UART2 one-wire GPIO %d\n", ONEWIRE_PIN2);
 #else
@@ -221,6 +237,11 @@ static bool runDualPeerCrossTest() {
   drain(Serial2);
 
 #if USE_INTERNAL_LOOPBACK
+  // Turn 1 left UART1 TX driving ONEWIRE_PIN2. Put UART2 TX back on its own pad first;
+  // then route UART2 TX onto ONEWIRE_PIN1. Both changes happen after UART1.flush(),
+  // while the line is idle HIGH. During Turn 2 both pads carry UART2 TX, so an
+  // optional jumper connects identical signals instead of causing output contention.
+  restoreUartTxToOwnPin(2, ONEWIRE_PIN2);
   uart_internal_loopback(2, ONEWIRE_PIN1);
   Serial.printf("  Internal loopback reversed: UART2 TX -> UART1 one-wire GPIO %d\n", ONEWIRE_PIN1);
 #else
@@ -245,6 +266,7 @@ static bool runDualPeerCrossTest() {
   if (!waitForBytes(Serial1, 300)) {
     Serial.printf("  Cross test failed — UART1 GPIO %d received no reply.\n", ONEWIRE_PIN1);
 #if USE_INTERNAL_LOOPBACK
+    restoreUartTxToOwnPin(1, ONEWIRE_PIN1);
     uart_internal_loopback(1, ONEWIRE_PIN2);
 #endif
     g_dualPeerReady = false;
@@ -255,7 +277,8 @@ static bool runDualPeerCrossTest() {
   Serial.printf("UART1 received reply: \"%s\"\n", line.c_str());
 
 #if USE_INTERNAL_LOOPBACK
-  // Restore UART1 -> UART2 for the interactive mode in loop().
+  // Restore UART1 TX on both pads for interactive UART1 -> UART2 forwarding.
+  restoreUartTxToOwnPin(1, ONEWIRE_PIN1);
   uart_internal_loopback(1, ONEWIRE_PIN2);
 #else
   // Interactive mode sends UART1 -> UART2, so only UART1 may drive the wire.
@@ -290,7 +313,14 @@ void setup() {
   printLoopbackModeBanner();
   printPartAWiringInstructions();
 #if HAS_UART2
+#if USE_INTERNAL_LOOPBACK
+  Serial.printf(
+    "Part B preview: no jumper required (optional/redundant); internal matrix routes UART1 GPIO %d <-> UART2 GPIO %d.\n", ONEWIRE_PIN1,
+    ONEWIRE_PIN2
+  );
+#else
   Serial.printf("Part B preview: connect one wire between UART1 GPIO %d and UART2 GPIO %d.\n", ONEWIRE_PIN1, ONEWIRE_PIN2);
+#endif
 #endif
   Serial.println();
 
