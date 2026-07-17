@@ -23,10 +23,12 @@ LP UART on **ESP32-C5/C6/C61** uses fixed RX/TX pins — one-wire is **not** sup
 
 | Part | UARTs | Connection | Purpose |
 |------|-------|------------|---------|
-| **A — Self loopback** | UART1 only | Same GPIO for RX+TX | Proves one-wire TX/RX on one pad |
-| **B — Cross connection** | UART1 ↔ UART2 | One signal wire between two one-wire GPIOs | Bidirectional half-duplex request/reply between two UART instances |
+| **A — Self-echo** | UART1 only | Same GPIO for RX+TX; no jumper | Proves automatic one-wire RX/TX on one pad |
+| **B — Cross connection** | UART1 ↔ UART2 | One signal wire between two bus GPIOs | Bidirectional half-duplex request/reply between two UART instances |
 
-Part B runs only when the board has **3+ HP UARTs** and defines `RX2` (UART0 remains available for Serial Monitor output). UART1 first sends a request to UART2; UART2 then sends a reply to UART1 over the same wire.
+Part B runs only when the board has **3+ HP UARTs** and defines `RX2`, `TX1`, and `TX2` (UART0 remains available for Serial Monitor output). UART1 first sends a request to UART2; UART2 then sends a reply to UART1 over the same wire.
+
+Part A is the direct one-wire API demonstration (`RX == TX`). External Part B uses split RX/TX assignments to ensure that only one push-pull TX output is connected to the shared wire. It demonstrates a practical single-wire half-duplex link, but it does not put both UART endpoints in one-wire mode simultaneously.
 
 ## Requirements
 
@@ -42,7 +44,7 @@ Set `USE_INTERNAL_LOOPBACK` at the top of the sketch:
 | Value | Part A | Part B |
 |-------|--------|--------|
 | `1` (default) | `uart_internal_loopback(1, ONEWIRE_PIN1)` | No jumper required; an existing jumper is optional and redundant |
-| `0` | Optional jumper on ONEWIRE_PIN1 | One signal wire: **ONEWIRE_PIN1 ↔ ONEWIRE_PIN2**; both directions use it in turn |
+| `0` | No jumper; same-pad self-echo | One signal wire: **ONEWIRE_PIN1 ↔ ONEWIRE_PIN2**; **4.7–10 kΩ pull-up to 3.3 V recommended** |
 
 With `USE_INTERNAL_LOOPBACK=1`, the sketch synchronizes GPIO-matrix output routing before each turn:
 
@@ -52,7 +54,16 @@ With `USE_INTERNAL_LOOPBACK=1`, the sketch synchronizes GPIO-matrix output routi
 
 Consequently, an installed jumper connects two pads carrying the same signal rather than shorting UART1 TX against UART2 TX. The jumper is harmless in this test but electrically redundant because the GPIO matrix already provides the connection.
 
-For external wiring, the sketch changes the listening GPIO to input-only while preserving its UART RX routing, then enables input/output mode only for the current transmitter. This prevents the listening push-pull TX from holding the line HIGH against the sender. Add an external **pull-up** to hold the line at UART idle HIGH during direction changes.
+With `USE_INTERNAL_LOOPBACK=0`, connecting two push-pull TX outputs to one wire would cause contention. The sketch therefore keeps **only one UART TX on the bus** each turn:
+
+- **Driver:** TX on its bus pad; RX is parked on its off-bus parking GPIO.
+- **Listener:** RX on its bus pad; TX is parked on its off-bus parking GPIO.
+
+The default parking GPIOs are `TX1` and `TX2`; leave them physically unconnected. You may override them with `ONEWIRE_PARK_PIN1` and `ONEWIRE_PARK_PIN2`. The sketch rejects any duplicate bus/parking GPIO assignment.
+
+Roles swap between Turn 1 and Turn 2. For interactive mode after an external Part B, the sketch **keeps Turn 2 roles** (UART2 drives, UART1 listens). This avoids another pin-role change and uses the direction that the startup test just verified.
+
+The external pull-up is recommended because both UARTs are briefly detached while roles change; the test may work without it because the active TX drives idle HIGH. Never transmit from both UARTs at once.
 
 On USB Serial, the sketch prints **`USE_INTERNAL_LOOPBACK`**, the **GPIO numbers** for `ONEWIRE_PIN1` / `ONEWIRE_PIN2`, and wiring instructions (no jumper vs external bus) before each part runs.
 
@@ -60,18 +71,20 @@ On USB Serial, the sketch prints **`USE_INTERNAL_LOOPBACK`**, the **GPIO numbers
 
 | Define | Default | Role |
 |--------|---------|------|
-| `ONEWIRE_PIN1` | `SDA` (board `pins_arduino.h`) | UART1 one-wire GPIO |
-| `ONEWIRE_PIN2` | `RX2` | UART2 one-wire GPIO (Part B) |
+| `ONEWIRE_PIN1` | `SDA` (board `pins_arduino.h`) | UART1 one-wire pad in Part A; UART1 bus pad in Part B |
+| `ONEWIRE_PIN2` | `RX2` | UART2 bus pad in Part B |
+| `ONEWIRE_PARK_PIN1` | `TX1` | UART1 off-bus RX/TX parking GPIO in external Part B |
+| `ONEWIRE_PARK_PIN2` | `TX2` | UART2 off-bus RX/TX parking GPIO in external Part B |
 
-Change the `#ifndef` defaults for your board if those pads are unavailable. Part B requires two different GPIOs; the sketch rejects equal `ONEWIRE_PIN1` and `ONEWIRE_PIN2` values.
+Override these defines before their `#ifndef` defaults if the selected pads are unavailable. External Part B requires all four bus/parking GPIOs to be distinct.
 
 ## Electrical warning
 
 ESP-IDF documents that routing TX output and RX input to one GPIO can cause **pad conflicts**. Recommended practices:
 
-- Half-duplex protocol with the listening TX output tri-stated
-- External pull-up so the line remains idle HIGH while neither UART drives
-- Never enable both push-pull TX outputs on the connected wire simultaneously
+- On a two-UART external bus: only one TX on the wire; park unused RX/TX off-bus (this demo’s external Part B)
+- External pull-up (4.7–10 kΩ to 3.3 V) so idle stays HIGH
+- Half-duplex protocol — never transmit from both UARTs at once
 - **Not** a replacement for RS485 (which needs separate TX, RX, and RTS to a transceiver)
 
 Internal pull on RX is **disabled** in one-wire mode.
@@ -85,7 +98,7 @@ Main causes:
 1. **No idle bias** — split-pin UART uses RX pull-up so idle stays HIGH. One-wire disables that pull so TX isn’t fighting an internal resistor. When TX is not firmly driving (startup, pin mux change, tri-state between turns, weak/open bus), the line floats and RX samples garbage.
 2. **TX/RX pad conflict** — both output and input are on one GPIO. During attach/mux changes the line can glitch LOW, causing a start bit or BREAK.
 3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
-4. **External bus without pull-up** — two one-wire peers with listening TX tri-stated leave the wire floating between turns.
+4. **External bus without idle bias** — a shared wire can float while UART pins are detached or TX outputs are disconnected between turns.
 
 ## How to prevent it
 
@@ -94,7 +107,7 @@ Main causes:
 | **External pull-up** (approximately 4.7–10 kΩ to 3.3 V) on the one-wire pad or shared bus | Holds idle HIGH when nothing drives—the strongest fix |
 | **Drain RX after `begin()` or `setPins()`** using `while (available()) read()` | Clears glitches generated during pin attachment |
 | **Ignore data until the first valid frame** or require a known preamble | Filters noise before real protocol traffic |
-| **Use half-duplex only**—never leave both TX drivers enabled; tri-state the listener | Avoids push-pull conflicts that corrupt the idle level |
+| **Use half-duplex only**—disconnect, reroute, or disable the listener's TX | Prevents two push-pull TX outputs from driving the shared wire |
 | **Use shorter wires and reduce nearby electrical noise** | Reduces false start bits on a floating pad |
 | **Do not re-enable the internal pull in one-wire mode** | Prevents the pull resistor from fighting TX |
 
@@ -105,29 +118,45 @@ The internal pull is intentionally disabled in one-wire mode. Rely on **TX idle 
 1. Upload `OneWire_UART_Demo.ino`.
 2. Open Serial Monitor at **115200** baud.
 3. Read the startup lines: one-wire **GPIO numbers**, `USE_INTERNAL_LOOPBACK` mode, and Part A/B wiring summary.
-4. If `USE_INTERNAL_LOOPBACK=0`, connect the jumper(s) shown on Serial Monitor, then reset or re-upload.
-5. Read Part A/B self-test results on startup.
-6. **Part B startup test:** confirm UART2 receives `UART1_TO_UART2`, then UART1 receives `UART2_TO_UART1` over the same connection.
-7. **Part B interactive:** type characters — they are sent on UART1; bytes received on UART2 are printed to USB Serial.
-8. **Part A only (2-UART boards without Part B):** typed characters echo on UART1’s one-wire GPIO.
+4. To reproduce the external test, set `USE_INTERNAL_LOOPBACK` to `0`, connect `ONEWIRE_PIN1` directly to `ONEWIRE_PIN2`, and leave both parking GPIOs unconnected.
+5. Connect a 4.7–10 kΩ resistor from the signal wire to 3.3 V (recommended), then reset or re-upload.
+6. Read Part A/B self-test results on startup.
+7. **Part B startup test:** confirm UART2 receives `UART1_TO_UART2`, then UART1 receives `UART2_TO_UART1` over the same connection.
+8. **Part B interactive:** type text and press Send — external mode keeps Turn 2 roles, so bytes travel UART2 → wire → UART1 and print in Serial Monitor.
+9. **Part A only (boards without Part B):** typed characters self-echo through UART1’s one-wire GPIO.
 
 ## Expected serial output
 
 1. **Startup** — `ONEWIRE_PIN1` / `ONEWIRE_PIN2` GPIO numbers, loopback mode banner, Part A wiring line, Part B preview (when compiled).
-2. **Part A** — `"ONEWIRE"` received on UART1 self loopback, or failure text with GPIO and loopback hint.
-3. **Part B** — wiring block (internal or one external wire), `"UART1_TO_UART2"` received on UART2, then `"UART2_TO_UART1"` received on UART1.
+2. **Part A** — `"ONEWIRE"` received through UART1 same-pad self-echo, or failure text with a GPIO hint.
+3. **Part B** — wiring block (internal or one external signal wire), `"UART1_TO_UART2"` received on UART2, then `"UART2_TO_UART1"` received on UART1.
+4. **Interactive** — a direction line followed by the text entered in Serial Monitor.
 
-## Wiring (external loopback, `USE_INTERNAL_LOOPBACK = 0`)
+## Wiring (external cross-test, `USE_INTERNAL_LOOPBACK = 0`)
 
 The sketch prints the exact GPIO numbers for your board. Conceptually:
 
 ```
-UART1 GPIO (ONEWIRE_PIN1) ---- one wire ---- UART2 GPIO (ONEWIRE_PIN2)
+UART1 GPIO (ONEWIRE_PIN1) ---- bus ---- UART2 GPIO (ONEWIRE_PIN2)
                                 |
-                           pull-up (recommended)
+                     4.7–10 kΩ pull-up to 3.3 V
+
+UART1 parking GPIO (ONEWIRE_PARK_PIN1) ---- not connected
+UART2 parking GPIO (ONEWIRE_PARK_PIN2) ---- not connected
 ```
 
-For Part A self-test only, you can optionally short `ONEWIRE_PIN1` to itself; Part B needs the inter-UART jumper above.
+Part A needs no jumper because UART1 RX and TX are already routed to the same physical pad. Part B needs the inter-UART signal wire above; the pull-up is recommended but not required while an active TX holds the line HIGH.
+
+### Tested ESP32-S3 wiring
+
+With the generic ESP32-S3 variant defaults, Serial Monitor should print these assignments:
+
+- `ONEWIRE_PIN1`: GPIO 8
+- `ONEWIRE_PIN2`: GPIO 19
+- `ONEWIRE_PARK_PIN1`: GPIO 16 — leave unconnected
+- `ONEWIRE_PARK_PIN2`: GPIO 20 — leave unconnected
+
+Connect GPIO 8 directly to GPIO 19. A tested idle-bias value is **5.6 kΩ from that signal wire to 3.3 V**; the startup and interactive tests can also pass without it while the active TX holds the line HIGH. Set `USE_INTERNAL_LOOPBACK` to `0`, upload, open Serial Monitor at 115200 baud, type text, and press Send.
 
 ## Real-world note
 

@@ -360,7 +360,7 @@ Examples:
 
 .. warning::
 
-   One-wire mode routes both TX output and RX input through the same GPIO. ESP-IDF warns that this can cause electrical conflicts on the pad; use open-drain with an external pull-up, or a half-duplex protocol. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
+   One-wire mode routes both TX output and RX input through the same GPIO. ESP-IDF warns that this can cause electrical conflicts on the pad. Use a half-duplex protocol and ensure that no more than one push-pull TX output drives a shared wire. A multi-node electrical design may instead use separately configured open-drain outputs with an external pull-up or an external transceiver. One-wire mode is **not** a substitute for RS485 half-duplex (which requires separate TX, RX, and RTS pins to an external transceiver).
 
 Why one-wire UART can receive ghost data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -372,7 +372,7 @@ Main causes:
 1. **No idle bias** — split-pin UART uses RX pull-up so idle stays HIGH. One-wire disables that pull so TX is not fighting an internal resistor. When TX is not firmly driving (startup, pin mux change, tri-state between turns, weak/open bus), the line floats and RX samples garbage.
 2. **TX/RX pad conflict** — both output and input are on one GPIO. During attach or mux changes the line can glitch LOW, causing a start bit or BREAK.
 3. **Self-echo** — TX is also seen on RX. That is expected for intentional transmission; noise on TX looks the same.
-4. **External bus without pull-up** — two one-wire peers with listening TX tri-stated leave the wire floating between turns.
+4. **External bus without idle bias** — a shared wire can float while UART pins are detached or TX outputs are disconnected between half-duplex turns.
 
 How to prevent it
 ^^^^^^^^^^^^^^^^^
@@ -380,7 +380,7 @@ How to prevent it
 * Add an **external pull-up** (approximately 4.7–10 kΩ to 3.3 V) on the one-wire pad or shared bus. This holds idle HIGH when nothing drives the line and is the strongest fix.
 * Drain RX after ``begin()`` or ``setPins()`` using ``while (Serial1.available()) { Serial1.read(); }`` to clear glitches generated during pin attachment.
 * Ignore data until the first valid frame, or require a known preamble, to filter noise before real protocol traffic.
-* Use half-duplex only: never leave both TX drivers enabled, and tri-state the listener to avoid push-pull conflicts that corrupt the idle level.
+* Use half-duplex only: never connect two active push-pull TX outputs to the shared wire. Disconnect, reroute, or otherwise disable the listener's TX before the other endpoint transmits.
 * Use shorter wires and reduce nearby electrical noise to reduce false start bits on a floating pad.
 * Do not re-enable the internal pull in one-wire mode because it can fight TX.
 
@@ -388,7 +388,7 @@ The internal pull is intentionally disabled in one-wire mode. Rely on **TX idle 
 
 **Related Example:**
 
-* `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Self loopback on one GPIO, optional UART1→UART2 peer loopback (internal matrix or external bus wire), and half-duplex USB bridge.
+* `OneWire_UART_Demo <https://github.com/espressif/arduino-esp32/tree/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo>`_ — Same-pad one-wire self-echo, optional bidirectional UART1↔UART2 cross-test (internal matrix or external signal wire), printed wiring instructions, and a half-duplex USB bridge.
 
 .. _signal-inversion-rx-pull:
 
@@ -917,7 +917,7 @@ Demonstrates floating RX idle (pull on vs off), pull direction vs ``begin(invert
 
 One-Wire UART Example:
 
-Demonstrates same-pin (one-wire) UART with a startup self-test on one GPIO, optional **UART1 → UART2** peer loopback (``USE_INTERNAL_LOOPBACK`` or external bus wire), board-specific GPIO wiring printed on USB Serial, and interactive half-duplex forwarding from USB Serial.
+Demonstrates same-pin (one-wire) UART with a startup self-echo test on one GPIO and an optional bidirectional **UART1 ↔ UART2** cross-test. The cross-test can use internal GPIO-matrix routing or one external signal wire; external mode parks inactive RX/TX signals on unconnected GPIOs so only one push-pull TX drives the wire. The example prints board-specific wiring and supports interactive half-duplex forwarding from USB Serial.
 
 `OneWire_UART_Demo.ino <https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/Serial/OneWire_UART_Demo/OneWire_UART_Demo.ino>`_
 
