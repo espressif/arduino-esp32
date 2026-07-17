@@ -90,7 +90,7 @@ struct OThreadNetworkInfo {
   int8_t rssi;                                     ///< Received signal strength (dBm).
   uint8_t lqi;                                     ///< Link Quality Indicator.
   uint8_t threadVersion;                           ///< Thread version (4-bit MLE value).
-  bool joinable;                                   ///< Joining permitted (when known).
+  bool joinable;                                   ///< Joining permitted (Steering Data present for MLE discover).
   bool nativeCommissioner;                         ///< Native Commissioner flag.
 
   /** @brief Network name as an Arduino @c String. */
@@ -333,8 +333,9 @@ public:
   /**
    * @brief Join-permitted flag for result @p index.
    * @param index Result index (0 .. getResultCount() - 1).
-   * @return @c true when joining is permitted, @c false when not joinable or
-   *         @p index is out of range.
+   * @return @c true when joining is permitted (non-empty Steering Data for MLE
+   *         discover, or beacon Joining Permitted flag), @c false when not
+   *         joinable or @p index is out of range.
    */
   bool isJoinable(uint16_t index);
 

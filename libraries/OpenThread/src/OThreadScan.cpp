@@ -16,6 +16,7 @@
 #if SOC_IEEE802154_SUPPORTED && CONFIG_OPENTHREAD_ENABLED
 
 #include "esp_openthread_lock.h"
+#include <openthread/steering_data.h>
 
 #include <cstring>
 
@@ -428,7 +429,9 @@ OThreadNetworkInfo OThreadScanClass::fromActiveScanResult(const otActiveScanResu
   out.rssi = in.mRssi;
   out.lqi = in.mLqi;
   out.threadVersion = (uint8_t)in.mVersion;
-  out.joinable = in.mIsJoinable;
+  // MLE Discovery (otThreadDiscover) reports joinability via Steering Data;
+  // mIsJoinable is only set for IEEE 802.15.4 beacon Active Scan results.
+  out.joinable = in.mDiscover ? !otSteeringDataIsEmpty(&in.mSteeringData) : in.mIsJoinable;
   out.nativeCommissioner = in.mIsNative;
   return out;
 }
