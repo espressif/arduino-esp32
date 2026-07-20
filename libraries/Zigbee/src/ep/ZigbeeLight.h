@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 class ZigbeeLight : public ZigbeeEP {
 public:
@@ -44,7 +43,7 @@ public:
   }
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
   //callback function to be called on light change
   void (*_on_light_change)(bool);
   void lightChanged();

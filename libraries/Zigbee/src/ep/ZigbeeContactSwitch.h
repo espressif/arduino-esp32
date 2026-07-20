@@ -21,37 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_CONTACT_SWITCH_CONFIG()                                                      \
-    {                                                                                               \
-        .basic_cfg =                                                                                \
-            {                                                                                       \
-                .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                          \
-                .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                        \
-            },                                                                                      \
-        .identify_cfg =                                                                             \
-            {                                                                                       \
-                .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,                   \
-            },                                                                                      \
-        .ias_zone_cfg =                                                                             \
-            {                                                                                       \
-                .zone_state = ESP_ZB_ZCL_IAS_ZONE_ZONESTATE_NOT_ENROLLED,                           \
-                .zone_type = ESP_ZB_ZCL_IAS_ZONE_ZONETYPE_CONTACT_SWITCH,                           \
-                .zone_status = 0,                                                                   \
-                .ias_cie_addr = ESP_ZB_ZCL_ZONE_IAS_CIE_ADDR_DEFAULT,                               \
-                .zone_id = 0xff,                                                                    \
-                .zone_ctx = {0, 0, 0, 0},                                                           \
-            },                                                                                      \
-    }
-// clang-format on
-
-typedef struct zigbee_contact_switch_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_ias_zone_cluster_cfg_t ias_zone_cfg;
-} zigbee_contact_switch_cfg_t;
+#include "ezbee/zcl/cluster/ias_zone_desc.h"
 
 class ZigbeeContactSwitch : public ZigbeeEP {
 public:
@@ -82,10 +52,11 @@ public:
   }
 
 private:
-  void zbIASZoneEnrollResponse(const esp_zb_zcl_ias_zone_enroll_response_message_t *message) override;
-  uint8_t _zone_status;
+  ezb_zcl_ias_zone_cluster_config_t _ias_zone_cfg;
+  void zbIASZoneEnrollResponse(const ezb_zcl_ias_zone_enroll_rsp_message_t *message) override;
+  uint16_t _zone_status;  // ZoneStatus is a 16-bit bitmap in v2.x
   uint8_t _zone_id;
-  esp_zb_ieee_addr_t _ias_cie_addr;
+  uint8_t _ias_cie_addr[8];  // EUI-64 (was esp_zb_ieee_addr_t)
   uint8_t _ias_cie_endpoint;
   bool _enrolled;
 };

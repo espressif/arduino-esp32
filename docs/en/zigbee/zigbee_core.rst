@@ -18,21 +18,32 @@ ZigbeeCore APIs
 Network Initialization
 **********************
 
-begin
-^^^^^
+role
+^^^^
 
-Initializes the Zigbee stack and starts the network.
+Sets the Zigbee device role and initializes the stack. This must be the first Zigbee call, before configuring endpoints and calling ``begin()``.
 
 .. code-block:: arduino
 
-    bool begin(zigbee_role_t role = ZIGBEE_END_DEVICE, bool erase_nvs = false);
-    bool begin(esp_zb_cfg_t *role_cfg, bool erase_nvs = false);
+    bool role(zigbee_role_t role, bool erase_nvs = false);
+    bool role(esp_zigbee_device_config_t *role_cfg, bool erase_nvs = false);
 
-* ``role`` - Device role (default: ``ZIGBEE_END_DEVICE``)
-* ``role_cfg`` - Custom role configuration structure
+* ``role`` - Device role (``ZIGBEE_COORDINATOR``, ``ZIGBEE_ROUTER`` or ``ZIGBEE_END_DEVICE``)
+* ``role_cfg`` - Custom role configuration structure (e.g. for a sleepy end device or a custom ``max_children``)
 * ``erase_nvs`` - Whether to erase NVS storage (default: ``false``)
 
-This function will return ``true`` if initialization successful, ``false`` otherwise.
+This function will return ``true`` if the role was set and the stack initialized successfully, ``false`` otherwise.
+
+begin
+^^^^^
+
+Attaches all added endpoints, registers the device descriptor and starts the Zigbee stack. Call this after ``role()`` and after all endpoints have been added with ``addEndpoint()``.
+
+.. code-block:: arduino
+
+    bool begin();
+
+This function will return ``true`` if the stack started successfully, ``false`` otherwise.
 
 **Available Roles:**
 
@@ -203,7 +214,7 @@ Scans for available Zigbee networks.
 
 .. code-block:: arduino
 
-    void scanNetworks(uint32_t channel_mask = ESP_ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
+    void scanNetworks(uint32_t channel_mask = ZB_TRANSCEIVER_ALL_CHANNELS_MASK, uint8_t scan_duration = 5);
 
 * ``channel_mask`` - Channels to scan (default: all channels)
 * ``scan_duration`` - Scan duration (default: 5)
@@ -287,7 +298,7 @@ Sets the radio configuration.
 
 .. code-block:: arduino
 
-    void setRadioConfig(esp_zb_radio_config_t config);
+    void setRadioConfig(esp_zigbee_radio_config_t config);
 
 * ``config`` - Radio configuration structure
 
@@ -298,34 +309,13 @@ Gets the current radio configuration.
 
 .. code-block:: arduino
 
-    esp_zb_radio_config_t getRadioConfig();
+    esp_zigbee_radio_config_t getRadioConfig();
 
 This function will return current radio configuration.
 
-Host Configuration
-******************
+.. note::
 
-setHostConfig
-^^^^^^^^^^^^^
-
-Sets the host configuration.
-
-.. code-block:: arduino
-
-    void setHostConfig(esp_zb_host_config_t config);
-
-* ``config`` - Host configuration structure
-
-getHostConfig
-^^^^^^^^^^^^^
-
-Gets the current host configuration.
-
-.. code-block:: arduino
-
-    esp_zb_host_config_t getHostConfig();
-
-This function will return current host configuration.
+    The host configuration accessors (``setHostConfig`` / ``getHostConfig``) were removed in the ESP Zigbee SDK v2.x; the host configuration is no longer part of the public API.
 
 Debug and Utilities
 *******************
@@ -370,7 +360,7 @@ Sets a global callback for default response messages.
 
 .. code-block:: arduino
 
-    void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, esp_zb_zcl_status_t status, uint8_t endpoint, uint16_t cluster));
+    void onGlobalDefaultResponse(void (*callback)(zb_cmd_type_t resp_to_cmd, ezb_zcl_status_t status, uint8_t endpoint, uint16_t cluster));
 
 * ``callback`` - Function pointer to the callback function
 
@@ -386,7 +376,7 @@ Formats an IEEE address for display.
 
 .. code-block:: arduino
 
-    static const char *formatIEEEAddress(const esp_zb_ieee_addr_t addr);
+    static const char *formatIEEEAddress(const uint8_t *addr);
 
 * ``addr`` - IEEE address to format
 

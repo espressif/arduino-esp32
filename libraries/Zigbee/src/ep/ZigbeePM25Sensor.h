@@ -21,34 +21,7 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
-
-// clang-format off
-#define ZIGBEE_DEFAULT_PM2_5_SENSOR_CONFIG()                                           \
-  {                                                                                    \
-    .basic_cfg =                                                                       \
-      {                                                                                \
-        .zcl_version = ESP_ZB_ZCL_BASIC_ZCL_VERSION_DEFAULT_VALUE,                     \
-        .power_source = ESP_ZB_ZCL_BASIC_POWER_SOURCE_DEFAULT_VALUE,                   \
-      },                                                                               \
-    .identify_cfg =                                                                    \
-      {                                                                                \
-        .identify_time = ESP_ZB_ZCL_IDENTIFY_IDENTIFY_TIME_DEFAULT_VALUE,              \
-      },                                                                               \
-    .pm2_5_meas_cfg =                                                                  \
-      {                                                                                \
-        .measured_value = 0.0,                                                         \
-        .min_measured_value = 0.0,                                                     \
-        .max_measured_value = 500.0,                                                   \
-      },                                                                               \
-  }
-// clang-format on
-
-typedef struct zigbee_pm2_5_sensor_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_pm2_5_measurement_cluster_cfg_t pm2_5_meas_cfg;
-} zigbee_pm2_5_sensor_cfg_t;
+#include "ezbee/zcl/cluster/pm2_5_measurement_desc.h"
 
 class ZigbeePM25Sensor : public ZigbeeEP {
 public:
@@ -73,6 +46,10 @@ public:
 
   // Report the PM2.5 value
   bool report();
+
+private:
+  ezb_zcl_pm2_5_measurement_cluster_config_t _pm2_5_meas_cfg;
+  float _tolerance;
 };
 
 #endif  // CONFIG_ZB_ENABLED

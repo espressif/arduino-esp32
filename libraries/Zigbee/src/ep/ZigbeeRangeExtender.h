@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 class ZigbeeRangeExtender : public ZigbeeEP {
 public:

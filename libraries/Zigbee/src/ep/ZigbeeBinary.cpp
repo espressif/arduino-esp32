@@ -14,42 +14,53 @@
 
 #include "ZigbeeBinary.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/binary_input_desc.h"
+#include "ezbee/zcl/cluster/binary_output_desc.h"
+
+// NOTE(zb-v2): v2.x does not expose application-type "group id" macros. The group id is the high byte
+// of the 32-bit ApplicationType value, so the ZCL-defined values are inlined here (matching v1):
+// Binary Input = 0x03, Binary Output = 0x04.
+#define ZB_BINARY_INPUT_GROUP_ID  0x03
+#define ZB_BINARY_OUTPUT_GROUP_ID 0x04
 
 ZigbeeBinary::ZigbeeBinary(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
+  _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
   _on_binary_output_change = nullptr;
 
-  //Create basic binary sensor clusters without configuration
-  _cluster_list = esp_zb_zcl_cluster_list_create();
-  esp_zb_cluster_list_add_basic_cluster(_cluster_list, esp_zb_basic_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(_cluster_list, esp_zb_identify_cluster_create(NULL), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  // v2.x data model: build the endpoint descriptor manually with Basic + Identify server clusters.
+  // Binary Input/Output clusters are attached later by addBinaryInput()/addBinaryOutput().
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+    _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+    if (_ep_desc == nullptr) {
+    log_e("Failed to create binary endpoint descriptor");
+    }
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+    ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
 }
 
+
+
 bool ZigbeeBinary::addBinaryInput() {
-  esp_zb_attribute_list_t *esp_zb_binary_input_cluster = esp_zb_binary_input_cluster_create(NULL);
+  if (!requireBeforeAddEndpoint("addBinaryInput")) {
+    return false;
+  }
+  ezb_zcl_cluster_desc_t binary_input_cluster = ezb_zcl_binary_input_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Binary Input
-  char default_description[] = "\x0C"
-                               "Binary Input";
-  uint32_t application_type = 0x00000000 | (0x03 << 24);  // Group ID 0x03
+  // The optional Description attribute is added lazily by setBinaryInputDescription(). The SDK sizes a
+  // string attribute's storage to the first value's length and never grows it, so adding a short
+  // default here would overflow the heap if a longer description is set later.
+  uint32_t application_type = 0x00000000 | (ZB_BINARY_INPUT_GROUP_ID << 24);  // Group ID 0x03
 
-  esp_err_t ret = esp_zb_binary_input_cluster_add_attr(esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != ESP_OK) {
-    log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+  ezb_err_t ret = ezb_zcl_binary_input_cluster_desc_add_attr(binary_input_cluster, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
   }
 
-  ret = esp_zb_binary_input_cluster_add_attr(esp_zb_binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type);
-  if (ret != ESP_OK) {
-    log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-
-  ret = esp_zb_cluster_list_add_binary_input_cluster(_cluster_list, esp_zb_binary_input_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (ret != ESP_OK) {
-    log_e("Failed to add Binary Input cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  ret = ezb_af_endpoint_add_cluster_desc(_ep_desc, binary_input_cluster);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add Binary Input cluster: 0x%x", ret);
     return false;
   }
   _binary_clusters |= BINARY_INPUT;
@@ -57,29 +68,25 @@ bool ZigbeeBinary::addBinaryInput() {
 }
 
 bool ZigbeeBinary::addBinaryOutput() {
-  esp_zb_attribute_list_t *esp_zb_binary_output_cluster = esp_zb_binary_output_cluster_create(NULL);
+  if (!requireBeforeAddEndpoint("addBinaryOutput")) {
+    return false;
+  }
+  ezb_zcl_cluster_desc_t binary_output_cluster = ezb_zcl_binary_output_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER);
 
-  // Create default description for Binary Output
-  char default_description[] = "\x0D"
-                               "Binary Output";
-  uint32_t application_type = 0x00000000 | (0x04 << 24);  // Group ID 0x04
+  // The optional Description attribute is added lazily by setBinaryOutputDescription(). The SDK sizes a
+  // string attribute's storage to the first value's length and never grows it, so adding a short
+  // default here would overflow the heap if a longer description is set later.
+  uint32_t application_type = 0x00000000 | (ZB_BINARY_OUTPUT_GROUP_ID << 24);  // Group ID 0x04
 
-  esp_err_t ret =
-    esp_zb_binary_output_cluster_add_attr(esp_zb_binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, (void *)default_description);
-  if (ret != ESP_OK) {
-    log_e("Failed to add description attribute: 0x%x: %s", ret, esp_err_to_name(ret));
+  ezb_err_t ret = ezb_zcl_binary_output_cluster_desc_add_attr(binary_output_cluster, EZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add application type attribute: 0x%x", ret);
     return false;
   }
 
-  ret = esp_zb_binary_output_cluster_add_attr(esp_zb_binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type);
-  if (ret != ESP_OK) {
-    log_e("Failed to add application type attribute: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-
-  ret = esp_zb_cluster_list_add_binary_output_cluster(_cluster_list, esp_zb_binary_output_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (ret != ESP_OK) {
-    log_e("Failed to add Binary Output cluster: 0x%x: %s", ret, esp_err_to_name(ret));
+  ret = ezb_af_endpoint_add_cluster_desc(_ep_desc, binary_output_cluster);
+  if (ret != EZB_ERR_NONE) {
+    log_e("Failed to add Binary Output cluster: 0x%x", ret);
     return false;
   }
   _binary_clusters |= BINARY_OUTPUT;
@@ -93,17 +100,11 @@ bool ZigbeeBinary::setBinaryInputApplication(uint32_t application_type) {
     return false;
   }
 
-  // Add the Binary Input group ID (0x03) to the application type
-  uint32_t application_type_value = (0x03 << 24) | application_type;
-
-  esp_zb_attribute_list_t *binary_input_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != ESP_OK) {
-    log_e("Failed to set Binary Input application type: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  _bi_application_type = (ZB_BINARY_INPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setBinaryInputApplication", EZB_ZCL_CLUSTER_ID_BINARY_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_INPUT_APPLICATION_TYPE_ID,
+    &_bi_application_type, ezb_zcl_binary_input_cluster_desc_add_attr
+  );
 }
 
 // Check Zigbee Cluster Specification 3.14.11.19.5 Binary Outputs (BO) Types for application type values
@@ -113,17 +114,11 @@ bool ZigbeeBinary::setBinaryOutputApplication(uint32_t application_type) {
     return false;
   }
 
-  // Add the Binary Output group ID (0x04) to the application type
-  uint32_t application_type_value = (0x04 << 24) | application_type;
-
-  esp_zb_attribute_list_t *binary_output_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID, (void *)&application_type_value);
-  if (ret != ESP_OK) {
-    log_e("Failed to set Binary Output application type: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  _bo_application_type = (ZB_BINARY_OUTPUT_GROUP_ID << 24) | application_type;
+  return configureEpClusterAttr(
+    "setBinaryOutputApplication", EZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_OUTPUT_APPLICATION_TYPE_ID,
+    &_bo_application_type, ezb_zcl_binary_output_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeBinary::setBinaryInput(bool input) {
@@ -132,9 +127,9 @@ bool ZigbeeBinary::setBinaryInput(bool input) {
     return false;
   }
   log_d("Setting binary input to %d", input);
-  esp_zb_zcl_status_t ret =
-    setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false);
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_BINARY_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID, &input, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary input: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -143,17 +138,18 @@ bool ZigbeeBinary::setBinaryInput(bool input) {
 
 bool ZigbeeBinary::reportBinaryInput() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
-  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID;
-  report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
-  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT;
-  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
-  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
+  ezb_zcl_report_attr_cmd_t report_attr_cmd;
+  memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
+  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
+  report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
+  report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_BINARY_INPUT;
+  report_attr_cmd.cmd_ctrl.manuf_code = EZB_ZCL_STD_MANUF_CODE;
+  report_attr_cmd.cmd_ctrl.fc.direction = EZB_ZCL_CMD_DIRECTION_TO_CLI;
+  report_attr_cmd.payload.attr_id = EZB_ZCL_ATTR_BINARY_INPUT_PRESENT_VALUE_ID;
 
   if (!reportClusterAttribute(&report_attr_cmd)) {
-    log_e("Failed to send Binary Input report: 0x%x: %s");
+    log_e("Failed to send Binary Input report");
     return false;
   }
   log_v("Binary Input report sent");
@@ -166,38 +162,20 @@ bool ZigbeeBinary::setBinaryInputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the binary input cluster
-  esp_zb_attribute_list_t *binary_input_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BINARY_INPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (binary_input_cluster == nullptr) {
-    log_e("Failed to get binary input cluster");
-    return false;
-  }
+  _bi_description[0] = static_cast<char>(description_length);
+  memcpy(_bi_description + 1, description, description_length);
+  _bi_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  esp_err_t ret = esp_zb_cluster_update_attr(binary_input_cluster, ESP_ZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != ESP_OK) {
-    log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setBinaryInputDescription", EZB_ZCL_CLUSTER_ID_BINARY_INPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_INPUT_DESCRIPTION_ID, _bi_description,
+    ezb_zcl_binary_input_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeBinary::setBinaryOutputDescription(const char *description) {
@@ -206,51 +184,33 @@ bool ZigbeeBinary::setBinaryOutputDescription(const char *description) {
     return false;
   }
 
-  // Allocate a new array of size length + 2 (1 for the length, 1 for null terminator)
-  char zb_description[ZB_MAX_NAME_LENGTH + 2];
-
-  // Convert description to ZCL string
   size_t description_length = strlen(description);
   if (description_length > ZB_MAX_NAME_LENGTH) {
     log_e("Description is too long");
     return false;
   }
 
-  // Get and check the binary output cluster
-  esp_zb_attribute_list_t *binary_output_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  if (binary_output_cluster == nullptr) {
-    log_e("Failed to get binary output cluster");
-    return false;
-  }
+  _bo_description[0] = static_cast<char>(description_length);
+  memcpy(_bo_description + 1, description, description_length);
+  _bo_description[description_length + 1] = '\0';
 
-  // Store the length as the first element
-  zb_description[0] = static_cast<char>(description_length);  // Cast size_t to char
-  // Use memcpy to copy the characters to the result array
-  memcpy(zb_description + 1, description, description_length);
-  // Null-terminate the array
-  zb_description[description_length + 1] = '\0';
-
-  // Update the description attribute
-  esp_err_t ret = esp_zb_cluster_update_attr(binary_output_cluster, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, (void *)zb_description);
-  if (ret != ESP_OK) {
-    log_e("Failed to set description: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setBinaryOutputDescription", EZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_OUTPUT_DESCRIPTION_ID, _bo_description,
+    ezb_zcl_binary_output_cluster_desc_add_attr
+  );
 }
 
 //set attribute method -> method overridden in child class
-void ZigbeeBinary::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-      _output_state = *(bool *)message->attribute.data.value;
+void ZigbeeBinary::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {
+  if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_BINARY_OUTPUT) {
+    if (message->in.attribute.id == EZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_BOOL) {
+      _output_state = *(bool *)message->in.attribute.data.value;
       binaryOutputChanged();
     } else {
-      log_w("Received message ignored. Attribute ID: %u not supported for Binary Output", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for Binary Output", message->in.attribute.id);
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %u not supported for Binary endpoint", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for Binary endpoint", message->info.cluster_id);
   }
 }
 
@@ -268,11 +228,10 @@ bool ZigbeeBinary::setBinaryOutput(bool output) {
 
   log_v("Updating binary output to %d", output);
   /* Update binary output */
-  esp_zb_zcl_status_t ret = setClusterAttribute(
-    ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false
-  );
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_BINARY_OUTPUT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID, &_output_state, false);
 
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set binary output: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -281,17 +240,17 @@ bool ZigbeeBinary::setBinaryOutput(bool output) {
 
 bool ZigbeeBinary::reportBinaryOutput() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
-  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID;
-  report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
-  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_BINARY_OUTPUT;
-  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
-  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
+  ezb_zcl_report_attr_cmd_t report_attr_cmd;
+  memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
+  ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
+  report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
+  report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_BINARY_OUTPUT;
+  report_attr_cmd.cmd_ctrl.manuf_code = EZB_ZCL_STD_MANUF_CODE;
+  report_attr_cmd.cmd_ctrl.fc.direction = EZB_ZCL_CMD_DIRECTION_TO_CLI;
+  report_attr_cmd.payload.attr_id = EZB_ZCL_ATTR_BINARY_OUTPUT_PRESENT_VALUE_ID;
 
   if (!reportClusterAttribute(&report_attr_cmd)) {
-    log_e("Failed to send Binary Output report: 0x%x: %s");
+    log_e("Failed to send Binary Output report");
     return false;
   }
   log_v("Binary Output report sent");

@@ -14,81 +14,85 @@
 
 #include "ZigbeeIlluminanceSensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
+
 
 ZigbeeIlluminanceSensor::ZigbeeIlluminanceSensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID;
+  _device_id = EZB_ZHA_LIGHT_SENSOR_DEVICE_ID;
+  _illuminance_meas_cfg = {
+    .measured_value = 0,
+    .min_measured_value = 0,
+    .max_measured_value = 0xFFFE,
+  };
+  _tolerance = 0;
 
-  esp_zb_light_sensor_cfg_t light_sensor_cfg = ZIGBEE_DEFAULT_ILLUMINANCE_SENSOR_CONFIG();
-  _cluster_list = esp_zb_light_sensor_clusters_create(&light_sensor_cfg);
-
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_LIGHT_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create illuminance sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_illuminance_measurement_create_cluster_desc(&_illuminance_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeeIlluminanceSensor::setDefaultValue(uint16_t defaultValue) {
-  esp_zb_attribute_list_t *light_measure_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, (void *)&defaultValue);
-  if (ret != ESP_OK) {
-    log_e("Failed to set default value: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  _illuminance_meas_cfg.measured_value = defaultValue;
+  return configureEpClusterAttr(
+    "setDefaultValue", EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID,
+    &_illuminance_meas_cfg.measured_value, ezb_zcl_illuminance_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeIlluminanceSensor::setMinMaxValue(uint16_t min, uint16_t max) {
-  esp_zb_attribute_list_t *light_measure_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_ID, (void *)&min);
-  if (ret != ESP_OK) {
-    log_e("Failed to set min value: 0x%x: %s", ret, esp_err_to_name(ret));
+  _illuminance_meas_cfg.min_measured_value = min;
+  _illuminance_meas_cfg.max_measured_value = max;
+  if (!configureEpClusterAttr(
+        "setMinMaxValue", EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MIN_MEASURED_VALUE_ID,
+        &_illuminance_meas_cfg.min_measured_value, ezb_zcl_illuminance_measurement_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret = esp_zb_cluster_update_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_ID, (void *)&max);
-  if (ret != ESP_OK) {
-    log_e("Failed to set max value: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setMinMaxValue", EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MAX_MEASURED_VALUE_ID,
+    &_illuminance_meas_cfg.max_measured_value, ezb_zcl_illuminance_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeIlluminanceSensor::setTolerance(uint16_t tolerance) {
-  esp_zb_attribute_list_t *light_measure_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_illuminance_meas_cluster_add_attr(light_measure_cluster, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_TOLERANCE_ID, (void *)&tolerance);
-  if (ret != ESP_OK) {
-    log_e("Failed to set tolerance: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  _tolerance = tolerance;
+  return configureEpClusterAttr(
+    "setTolerance", EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_TOLERANCE_ID, &_tolerance,
+    ezb_zcl_illuminance_measurement_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeIlluminanceSensor::setReporting(uint16_t min_interval, uint16_t max_interval, uint16_t delta) {
-  esp_zb_zcl_reporting_info_t reporting_info;
-  memset(&reporting_info, 0, sizeof(esp_zb_zcl_reporting_info_t));
-  reporting_info.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_SRV;
-  reporting_info.ep = _endpoint;
-  reporting_info.cluster_id = ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT;
-  reporting_info.cluster_role = ESP_ZB_ZCL_CLUSTER_SERVER_ROLE;
-  reporting_info.attr_id = ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID;
-  reporting_info.u.send_info.min_interval = min_interval;
-  reporting_info.u.send_info.max_interval = max_interval;
-  reporting_info.u.send_info.def_min_interval = min_interval;
-  reporting_info.u.send_info.def_max_interval = max_interval;
-  reporting_info.u.send_info.delta.u16 = delta;
-  reporting_info.dst.profile_id = ESP_ZB_AF_HA_PROFILE_ID;
-  reporting_info.manuf_code = ESP_ZB_ZCL_ATTR_NON_MANUFACTURER_SPECIFIC;
-
-  return setClusterReporting(&reporting_info);
+  // NOTE(zb-v2): Reporting is now handle-based. The reporting record is created by the stack when the
+  // endpoint is registered, so this must be called after Zigbee.begin(). We look up the handle, tune the
+  // intervals/reportable change, then start the report.
+  ezb_zcl_reporting_info_t reporting_info = ezb_zcl_reporting_info_find(
+    _endpoint, EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, EZB_ZCL_STD_MANUF_CODE
+  );
+  if (reporting_info == EZB_ZCL_INVALID_REPORTING_INFO) {
+    log_e("Failed to find reporting info for illuminance measurement");
+    return false;
+  }
+  ezb_zcl_attr_variable_t delta_var = {};
+  delta_var.u16 = delta;
+  ezb_zcl_reporting_info_update(reporting_info, min_interval, max_interval, &delta_var);
+  ezb_zcl_reporting_info_update_default_interval(reporting_info, min_interval, max_interval);
+  return setClusterReporting(reporting_info);
 }
 
 bool ZigbeeIlluminanceSensor::setIlluminance(uint16_t illuminanceValue) {
   log_v("Updating Illuminance...");
   log_d("Setting Illuminance to %u", illuminanceValue);
-  esp_zb_zcl_status_t ret = setClusterAttribute(
-    ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, &illuminanceValue,
-    false
+  ezb_zcl_status_t ret = setClusterAttribute(
+    EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID, &illuminanceValue, false
   );
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set illuminance: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -97,14 +101,15 @@ bool ZigbeeIlluminanceSensor::setIlluminance(uint16_t illuminanceValue) {
 
 bool ZigbeeIlluminanceSensor::report() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
-  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID;
-  report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
-  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT;
-  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
-  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
+  ezb_zcl_report_attr_cmd_t report_attr_cmd;
+  memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
+  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
+  report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
+  report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_ILLUMINANCE_MEASUREMENT;
+  report_attr_cmd.cmd_ctrl.manuf_code = EZB_ZCL_STD_MANUF_CODE;
+  report_attr_cmd.cmd_ctrl.fc.direction = EZB_ZCL_CMD_DIRECTION_TO_CLI;
+  report_attr_cmd.payload.attr_id = EZB_ZCL_ATTR_ILLUMINANCE_MEASUREMENT_MEASURED_VALUE_ID;
 
   if (!reportClusterAttribute(&report_attr_cmd)) {
     log_e("Failed to send illuminance report");

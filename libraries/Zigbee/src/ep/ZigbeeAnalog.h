@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 //enum for bits set to check what analog cluster were added
 enum zigbee_analog_clusters {
@@ -29,12 +28,6 @@ enum zigbee_analog_clusters {
   ANALOG_OUTPUT = 2
 };
 
-typedef struct zigbee_analog_cfg_s {
-  esp_zb_basic_cluster_cfg_t basic_cfg;
-  esp_zb_identify_cluster_cfg_t identify_cfg;
-  esp_zb_analog_output_cluster_cfg_t analog_output_cfg;
-  esp_zb_analog_input_cluster_cfg_t analog_input_cfg;
-} zigbee_analog_cfg_t;
 
 class ZigbeeAnalog : public ZigbeeEP {
 public:
@@ -81,13 +74,24 @@ public:
   bool setAnalogInputReporting(uint16_t min_interval, uint16_t max_interval, float delta);
 
 private:
-  void zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) override;
+  void zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) override;
 
   void (*_on_analog_output_change)(float);
   void analogOutputChanged();
 
   uint8_t _analog_clusters;
   float _output_state;
+
+  uint32_t _ai_application_type;
+  uint32_t _ao_application_type;
+  char _ai_description[ZB_MAX_NAME_LENGTH + 2];
+  char _ao_description[ZB_MAX_NAME_LENGTH + 2];
+  float _ai_resolution;
+  float _ao_resolution;
+  float _ai_min;
+  float _ai_max;
+  float _ao_min;
+  float _ao_max;
 };
 
 #endif  // CONFIG_ZB_ENABLED

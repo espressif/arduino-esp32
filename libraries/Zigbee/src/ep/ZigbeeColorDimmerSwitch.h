@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* Class of Zigbee On/Off Switch endpoint inherited from common EP class */
+/* Class of Zigbee Color Dimmer Switch endpoint inherited from common EP class */
 
 #pragma once
 
@@ -21,7 +21,6 @@
 #if CONFIG_ZB_ENABLED
 
 #include "ZigbeeEP.h"
-#include "ha/esp_zigbee_ha_standard.h"
 
 /** Level step direction for setLightLevelStep (ZCL Step command: 0 = Up, 1 = Down) */
 enum ZigbeeLevelStepDirection {
@@ -38,17 +37,17 @@ public:
   void lightToggle();
   void lightToggle(uint16_t group_addr);
   void lightToggle(uint8_t endpoint, uint16_t short_addr);
-  void lightToggle(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightToggle(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOn();
   void lightOn(uint16_t group_addr);
   void lightOn(uint8_t endpoint, uint16_t short_addr);
-  void lightOn(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightOn(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOff();
   void lightOff(uint16_t group_addr);
   void lightOff(uint8_t endpoint, uint16_t short_addr);
-  void lightOff(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void lightOff(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void lightOffWithEffect(uint8_t effect_id, uint8_t effect_variant);
   void lightOnWithTimedOff(uint8_t on_off_control, uint16_t time_on, uint16_t time_off);
@@ -57,54 +56,54 @@ public:
   void setLightLevel(uint8_t level);
   void setLightLevel(uint8_t level, uint16_t group_addr);
   void setLightLevel(uint8_t level, uint8_t endpoint, uint16_t short_addr);
-  void setLightLevel(uint8_t level, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void setLightLevel(uint8_t level, uint8_t endpoint, const uint8_t *ieee_addr);
 
   void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time);
   void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint16_t group_addr);
   void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, uint16_t short_addr);
-  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void setLightLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, uint8_t endpoint, const uint8_t *ieee_addr);
 
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint16_t group_addr);
   void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, uint16_t short_addr);
-  void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void setLightColor(uint8_t red, uint8_t green, uint8_t blue, uint8_t endpoint, const uint8_t *ieee_addr);
 
   void getLightState();
   void getLightState(uint16_t group_addr);
   void getLightState(uint8_t endpoint, uint16_t short_addr);
-  void getLightState(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void getLightState(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void getLightLevel();
   void getLightLevel(uint16_t group_addr);
   void getLightLevel(uint8_t endpoint, uint16_t short_addr);
-  void getLightLevel(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void getLightLevel(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void getLightColor();
   void getLightColor(uint16_t group_addr);
   void getLightColor(uint8_t endpoint, uint16_t short_addr);
-  void getLightColor(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void getLightColor(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void getLightColorHS();
   void getLightColorHS(uint16_t group_addr);
   void getLightColorHS(uint8_t endpoint, uint16_t short_addr);
-  void getLightColorHS(uint8_t endpoint, esp_zb_ieee_addr_t ieee_addr);
+  void getLightColorHS(uint8_t endpoint, const uint8_t *ieee_addr);
 
   void onLightStateChange(void (*callback)(bool)) {
     _on_light_state_change = callback;
   }
-  void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, esp_zb_zcl_addr_t)) {
+  void onLightStateChangeWithSource(void (*callback)(bool, uint8_t, ezb_address_t)) {
     _on_light_state_change_with_source = callback;
   }
   void onLightLevelChange(void (*callback)(uint8_t)) {
     _on_light_level_change = callback;
   }
-  void onLightLevelChangeWithSource(void (*callback)(uint8_t, uint8_t, esp_zb_zcl_addr_t)) {
+  void onLightLevelChangeWithSource(void (*callback)(uint8_t, uint8_t, ezb_address_t)) {
     _on_light_level_change_with_source = callback;
   }
   void onLightColorChange(void (*callback)(uint8_t, uint8_t, uint8_t)) {
     _on_light_color_change = callback;
   }
-  void onLightColorChangeWithSource(void (*callback)(uint8_t, uint8_t, uint8_t, uint8_t, esp_zb_zcl_addr_t)) {
+  void onLightColorChangeWithSource(void (*callback)(uint8_t, uint8_t, uint8_t, uint8_t, ezb_address_t)) {
     _on_light_color_change_with_source = callback;
   }
 
@@ -118,19 +117,26 @@ private:
   espRgbColor_t _light_color_rgb;
 
   void (*_on_light_state_change)(bool);
-  void (*_on_light_state_change_with_source)(bool, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_state_change_with_source)(bool, uint8_t, ezb_address_t);
   void (*_on_light_level_change)(uint8_t);
-  void (*_on_light_level_change_with_source)(uint8_t, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_level_change_with_source)(uint8_t, uint8_t, ezb_address_t);
   void (*_on_light_color_change)(uint8_t, uint8_t, uint8_t);
-  void (*_on_light_color_change_with_source)(uint8_t, uint8_t, uint8_t, uint8_t, esp_zb_zcl_addr_t);
+  void (*_on_light_color_change_with_source)(uint8_t, uint8_t, uint8_t, uint8_t, ezb_address_t);
 
-  void findEndpoint(esp_zb_zdo_match_desc_req_param_t *cmd_req);
-  void bindCb(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  void findCb(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
-  static void bindCbWrapper(esp_zb_zdp_status_t zdo_status, void *user_ctx);
-  static void findCbWrapper(esp_zb_zdp_status_t zdo_status, uint16_t addr, uint8_t endpoint, void *user_ctx);
+  // v2.x On/Off, Level, Color and read senders shared by all addressing overloads.
+  void sendOnOffCommand(uint8_t on_off_cmd_id, const void *cmd_ctrl);
+  void sendMoveToLevel(uint8_t level, const void *cmd_ctrl);
+  void sendLevelStep(ZigbeeLevelStepDirection direction, uint8_t step_size, uint16_t transition_time, const void *cmd_ctrl);
+  void sendMoveToColor(espXyColor_t xy_color, const void *cmd_ctrl);
+  void sendReadAttributes(ezb_address_t dst_addr, uint8_t dst_ep, uint16_t cluster_id, uint16_t *attr_field, uint8_t attr_number, const char *err_msg);
 
-  void zbAttributeRead(uint16_t cluster_id, const esp_zb_zcl_attribute_t *attribute, uint8_t src_endpoint, esp_zb_zcl_addr_t src_address) override;
+  void findEndpoint(ezb_zdo_match_desc_req_t *cmd_req) override;
+  void bindCb(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
+  void findCb(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+  static void bindCbWrapper(const ezb_zdp_bind_req_result_t *result, void *user_ctx);
+  static void findCbWrapper(const ezb_zdo_match_desc_req_result_t *result, void *user_ctx);
+
+  void zbAttributeRead(uint16_t cluster_id, const ezb_zcl_attribute_t *attribute, uint8_t src_endpoint, ezb_address_t src_address) override;
 };
 
 #endif  // CONFIG_ZB_ENABLED

@@ -75,32 +75,42 @@ void setup() {
   }
   Serial.println("WiFi connected");
 
-  // Initialize Zigbee and Begin Zigbee stack
+  // Set custom radio configuration for RCP communication (must be before Zigbee.role())
+  esp_zigbee_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
+  radio_config.radio_uart_config.port = GATEWAY_RCP_UART_PORT;
+  radio_config.radio_uart_config.rx_pin = (gpio_num_t)GATEWAY_RCP_RX_PIN;
+  radio_config.radio_uart_config.tx_pin = (gpio_num_t)GATEWAY_RCP_TX_PIN;
+  Zigbee.setRadioConfig(radio_config);
+
+  // Initialize Zigbee stack as coordinator
+  if (!Zigbee.role(ZIGBEE_COORDINATOR)) {
+    Serial.println("Zigbee failed to init!");
+    Serial.println("Rebooting...");
+    delay(1000);
+    ESP.restart();
+  }
+
   // Optional: set Zigbee device name and model
   zbGateway.setManufacturerAndModel("Espressif", "ZigbeeGateway");
   zbGateway.addTimeCluster(timeinfo, gmtOffset_sec);
 
-  // Add endpoint to Zigbee Core
-  Serial.println("Adding Zigbee Gateway endpoint");
+  // Add endpoints to Zigbee Core
   Zigbee.addEndpoint(&zbGateway);
 
   // Optional: Open network for 180 seconds after boot
   Zigbee.setRebootOpenNetwork(180);
 
-  // Set custom radio configuration for RCP communication
-  esp_zb_radio_config_t radio_config = ZIGBEE_DEFAULT_UART_RCP_RADIO_CONFIG();
-  radio_config.radio_uart_config.port = GATEWAY_RCP_UART_PORT;
-  radio_config.radio_uart_config.rx_pin = (gpio_num_t)GATEWAY_RCP_RX_PIN;
-  radio_config.radio_uart_config.tx_pin = (gpio_num_t)GATEWAY_RCP_TX_PIN;
-
-  Zigbee.setRadioConfig(radio_config);
-
-  // When all EPs are registered, start Zigbee with ZIGBEE_COORDINATOR or ZIGBEE_ROUTER mode
-  if (!Zigbee.begin(ZIGBEE_COORDINATOR)) {
+  Serial.println("Starting Zigbee...");
+  if (!Zigbee.begin()) {
     Serial.println("Zigbee failed to start!");
     Serial.println("Rebooting...");
     ESP.restart();
+  } else {
+    Serial.println("Zigbee started successfully!");
   }
+
+  // Activate the Time cluster server so the gateway can serve/update the time (must be after Zigbee.begin())
+  zbGateway.registerTimeServer();
 
   // set notification call-back function
   sntp_set_time_sync_notification_cb(timeavailable);

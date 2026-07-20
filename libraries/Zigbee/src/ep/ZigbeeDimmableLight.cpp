@@ -14,49 +14,53 @@
 
 #include "ZigbeeDimmableLight.h"
 #if CONFIG_ZB_ENABLED
-
-#include "esp_zigbee_cluster.h"
+#include "ezbee/zha.h"
+#include "ezbee/zcl/cluster/on_off_desc.h"
+#include "ezbee/zcl/cluster/level_desc.h"
 
 ZigbeeDimmableLight::ZigbeeDimmableLight(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID;
+  _device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID;
   _on_light_change = nullptr;
 
-  zigbee_dimmable_light_cfg_t light_cfg = ZIGBEE_DEFAULT_DIMMABLE_LIGHT_CONFIG();
-  _cluster_list = zigbee_dimmable_light_clusters_create(&light_cfg);
-
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0};
+  // v2.x data model: the ZHA template builds the full endpoint descriptor (basic, identify, groups,
+  // scenes, on/off, level clusters) instead of the v1 manual cluster-list factory.
+  _ep_config = {.ep_id = endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_DIMMABLE_LIGHT_DEVICE_ID, .app_device_version = 0};
 
   // set default values
   _current_state = false;
   _current_level = 255;
+    ezb_zha_dimmable_light_config_t light_cfg = EZB_ZHA_DIMMABLE_LIGHT_CONFIG();
+    _ep_desc = ezb_zha_create_dimmable_light(_endpoint, &light_cfg);
 }
 
+
+
 // set attribute method -> method overridden in child class
-void ZigbeeDimmableLight::zbAttributeSet(const esp_zb_zcl_set_attr_value_message_t *message) {
+void ZigbeeDimmableLight::zbAttributeSet(const ezb_zcl_set_attr_value_message_t *message) {
   // check the data and call right method
-  if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_ON_OFF) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_BOOL) {
-      if (_current_state != *(bool *)message->attribute.data.value) {
-        _current_state = *(bool *)message->attribute.data.value;
+  if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_ON_OFF) {
+    if (message->in.attribute.id == EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_BOOL) {
+      if (_current_state != *(bool *)message->in.attribute.data.value) {
+        _current_state = *(bool *)message->in.attribute.data.value;
         lightChanged();
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->attribute.id);
+      log_w("Received message ignored. Attribute ID: %u not supported for On/Off Light", message->in.attribute.id);
     }
-  } else if (message->info.cluster == ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL) {
-    if (message->attribute.id == ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID && message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U8) {
-      if (_current_level != *(uint8_t *)message->attribute.data.value) {
-        _current_level = *(uint8_t *)message->attribute.data.value;
+  } else if (message->info.cluster_id == EZB_ZCL_CLUSTER_ID_LEVEL) {
+    if (message->in.attribute.id == EZB_ZCL_ATTR_LEVEL_CURRENT_LEVEL_ID && message->in.attribute.data.type == EZB_ZCL_ATTR_TYPE_UINT8) {
+      if (_current_level != *(uint8_t *)message->in.attribute.data.value) {
+        _current_level = *(uint8_t *)message->in.attribute.data.value;
         lightChanged();
       }
       return;
     } else {
-      log_w("Received message ignored. Attribute ID: %u not supported for Level Control", message->attribute.id);
-      // TODO: implement more attributes -> includes/zcl/esp_zigbee_zcl_level.h
+      log_w("Received message ignored. Attribute ID: %u not supported for Level Control", message->in.attribute.id);
+      // TODO: implement more attributes -> ezbee/zcl/cluster/level_desc.h
     }
   } else {
-    log_w("Received message ignored. Cluster ID: %u not supported for dimmable Light", message->info.cluster);
+    log_w("Received message ignored. Cluster ID: %u not supported for dimmable Light", message->info.cluster_id);
   }
 }
 
@@ -67,22 +71,20 @@ void ZigbeeDimmableLight::lightChanged() {
 }
 
 bool ZigbeeDimmableLight::setLight(bool state, uint8_t level) {
-  esp_zb_zcl_status_t ret = ESP_ZB_ZCL_STATUS_SUCCESS;
+  ezb_zcl_status_t ret = EZB_ZCL_STATUS_SUCCESS;
   // Update all attributes
   _current_state = state;
   _current_level = level;
   lightChanged();
 
   log_v("Updating on/off light state to %d", state);
-  ret = setClusterAttribute(ESP_ZB_ZCL_CLUSTER_ID_ON_OFF, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_ON_OFF, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_ON_OFF_ON_OFF_ID, &_current_state, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light state: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
-  ret = setClusterAttribute(
-    ESP_ZB_ZCL_CLUSTER_ID_LEVEL_CONTROL, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID, &_current_level, false
-  );
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  ret = setClusterAttribute(EZB_ZCL_CLUSTER_ID_LEVEL, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_LEVEL_CURRENT_LEVEL_ID, &_current_level, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set light level: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -97,24 +99,4 @@ bool ZigbeeDimmableLight::setLightLevel(uint8_t level) {
   return setLight(_current_state, level);
 }
 
-esp_zb_cluster_list_t *ZigbeeDimmableLight::zigbee_dimmable_light_clusters_create(zigbee_dimmable_light_cfg_t *light_cfg) {
-  esp_zb_attribute_list_t *esp_zb_basic_cluster = esp_zb_basic_cluster_create(&light_cfg->basic_cfg);
-  esp_zb_attribute_list_t *esp_zb_identify_cluster = esp_zb_identify_cluster_create(&light_cfg->identify_cfg);
-  esp_zb_attribute_list_t *esp_zb_groups_cluster = esp_zb_groups_cluster_create(&light_cfg->groups_cfg);
-  esp_zb_attribute_list_t *esp_zb_scenes_cluster = esp_zb_scenes_cluster_create(&light_cfg->scenes_cfg);
-  esp_zb_attribute_list_t *esp_zb_on_off_cluster = esp_zb_on_off_cluster_create(&light_cfg->on_off_cfg);
-  esp_zb_attribute_list_t *esp_zb_level_cluster = esp_zb_level_cluster_create(&light_cfg->level_cfg);
-
-  // ------------------------------ Create cluster list ------------------------------
-  esp_zb_cluster_list_t *esp_zb_cluster_list = esp_zb_zcl_cluster_list_create();
-  esp_zb_cluster_list_add_basic_cluster(esp_zb_cluster_list, esp_zb_basic_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(esp_zb_cluster_list, esp_zb_identify_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_groups_cluster(esp_zb_cluster_list, esp_zb_groups_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_scenes_cluster(esp_zb_cluster_list, esp_zb_scenes_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_on_off_cluster(esp_zb_cluster_list, esp_zb_on_off_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_level_cluster(esp_zb_cluster_list, esp_zb_level_cluster, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-
-  return esp_zb_cluster_list;
-}
-
-#endif  // SOC_IEEE802154_SUPPORTED
+#endif  // CONFIG_ZB_ENABLED

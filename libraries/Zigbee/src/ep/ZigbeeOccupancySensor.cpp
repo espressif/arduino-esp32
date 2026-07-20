@@ -14,53 +14,50 @@
 
 #include "ZigbeeOccupancySensor.h"
 #if CONFIG_ZB_ENABLED
+#include "ezbee/zha.h"
 
-esp_zb_cluster_list_t *zigbee_occupancy_sensor_clusters_create(zigbee_occupancy_sensor_cfg_t *occupancy_sensor) {
-  esp_zb_basic_cluster_cfg_t *basic_cfg = occupancy_sensor ? &(occupancy_sensor->basic_cfg) : NULL;
-  esp_zb_identify_cluster_cfg_t *identify_cfg = occupancy_sensor ? &(occupancy_sensor->identify_cfg) : NULL;
-  esp_zb_occupancy_sensing_cluster_cfg_t *occupancy_meas_cfg = occupancy_sensor ? &(occupancy_sensor->occupancy_meas_cfg) : NULL;
-  esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-  esp_zb_cluster_list_add_basic_cluster(cluster_list, esp_zb_basic_cluster_create(basic_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_identify_cluster(cluster_list, esp_zb_identify_cluster_create(identify_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_zb_cluster_list_add_occupancy_sensing_cluster(cluster_list, esp_zb_occupancy_sensing_cluster_create(occupancy_meas_cfg), ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  return cluster_list;
-}
 
 ZigbeeOccupancySensor::ZigbeeOccupancySensor(uint8_t endpoint) : ZigbeeEP(endpoint) {
-  _device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID;
+  _device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID;
+  _occupancy_meas_cfg = {
+    .occupancy = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_UNOCCUPIED,
+    .occupancy_sensor_type = EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR,
+    .occupancy_sensor_type_bitmap = (1 << EZB_ZCL_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_PIR),
+  };
 
-  //Create custom occupancy sensor configuration
-  zigbee_occupancy_sensor_cfg_t occupancy_sensor_cfg = ZIGBEE_DEFAULT_OCCUPANCY_SENSOR_CONFIG();
-  _cluster_list = zigbee_occupancy_sensor_clusters_create(&occupancy_sensor_cfg);
-
-  _ep_config = {.endpoint = _endpoint, .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID, .app_device_id = ESP_ZB_HA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_config = {.ep_id = _endpoint, .app_profile_id = EZB_AF_HA_PROFILE_ID, .app_device_id = EZB_ZHA_SIMPLE_SENSOR_DEVICE_ID, .app_device_version = 0};
+  _ep_desc = ezb_af_create_endpoint_desc(&_ep_config);
+  if (_ep_desc == nullptr) {
+    log_e("Failed to create occupancy sensor endpoint descriptor");
+    return;
+  }
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_basic_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_identify_create_cluster_desc(nullptr, EZB_ZCL_CLUSTER_SERVER));
+  ezb_af_endpoint_add_cluster_desc(_ep_desc, ezb_zcl_occupancy_sensing_create_cluster_desc(&_occupancy_meas_cfg, EZB_ZCL_CLUSTER_SERVER));
 }
 
 bool ZigbeeOccupancySensor::setSensorType(uint8_t sensor_type) {
-  uint8_t sensor_type_bitmap = 1 << sensor_type;
-  esp_zb_attribute_list_t *occupancy_sens_cluster =
-    esp_zb_cluster_list_get_cluster(_cluster_list, ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE);
-  esp_err_t ret = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID, (void *)&sensor_type);
-  if (ret != ESP_OK) {
-    log_e("Failed to set sensor type: 0x%x: %s", ret, esp_err_to_name(ret));
+  _occupancy_meas_cfg.occupancy_sensor_type = sensor_type;
+  _occupancy_meas_cfg.occupancy_sensor_type_bitmap = (1 << sensor_type);
+  if (!configureEpClusterAttr(
+        "setSensorType", EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_ID,
+        &_occupancy_meas_cfg.occupancy_sensor_type, ezb_zcl_occupancy_sensing_cluster_desc_add_attr
+      )) {
     return false;
   }
-  ret = esp_zb_cluster_update_attr(occupancy_sens_cluster, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID, (void *)&sensor_type_bitmap);
-  if (ret != ESP_OK) {
-    log_e("Failed to set sensor type bitmap: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
-  return true;
+  return configureEpClusterAttr(
+    "setSensorType", EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_SENSOR_TYPE_BITMAP_ID,
+    &_occupancy_meas_cfg.occupancy_sensor_type_bitmap, ezb_zcl_occupancy_sensing_cluster_desc_add_attr
+  );
 }
 
 bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {
   log_v("Updating occupancy sensor value...");
   /* Update occupancy sensor value */
   log_d("Setting occupancy to %d", occupied);
-  esp_zb_zcl_status_t ret = setClusterAttribute(
-    ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE, ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID, &occupied, false
-  );
-  if (ret != ESP_ZB_ZCL_STATUS_SUCCESS) {
+  ezb_zcl_status_t ret =
+    setClusterAttribute(EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING, EZB_ZCL_CLUSTER_SERVER, EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID, &occupied, false);
+  if (ret != EZB_ZCL_STATUS_SUCCESS) {
     log_e("Failed to set occupancy: 0x%x: %s", ret, esp_zb_zcl_status_to_name(ret));
     return false;
   }
@@ -69,17 +66,18 @@ bool ZigbeeOccupancySensor::setOccupancy(bool occupied) {
 
 bool ZigbeeOccupancySensor::report() {
   /* Send report attributes command */
-  esp_zb_zcl_report_attr_cmd_t report_attr_cmd;
-  report_attr_cmd.address_mode = ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT;
-  report_attr_cmd.attributeID = ESP_ZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID;
-  report_attr_cmd.direction = ESP_ZB_ZCL_CMD_DIRECTION_TO_CLI;
-  report_attr_cmd.clusterID = ESP_ZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING;
-  report_attr_cmd.zcl_basic_cmd.src_endpoint = _endpoint;
-  report_attr_cmd.manuf_specific = 0x00U;    // Standard profile command. Manufacturer code field shall not be included into ZCL frame header.
-  report_attr_cmd.dis_default_resp = 0x00U;  // Default response is enabled.
+  ezb_zcl_report_attr_cmd_t report_attr_cmd;
+  memset(&report_attr_cmd, 0, sizeof(report_attr_cmd));
+  // No explicit destination: report to bound devices (replaces v1 ESP_ZB_APS_ADDR_MODE_DST_ADDR_ENDP_NOT_PRESENT).
+  ezb_address_set_none(&report_attr_cmd.cmd_ctrl.dst_addr);
+  report_attr_cmd.cmd_ctrl.src_ep = _endpoint;
+  report_attr_cmd.cmd_ctrl.cluster_id = EZB_ZCL_CLUSTER_ID_OCCUPANCY_SENSING;
+  report_attr_cmd.cmd_ctrl.manuf_code = EZB_ZCL_STD_MANUF_CODE;
+  report_attr_cmd.cmd_ctrl.fc.direction = EZB_ZCL_CMD_DIRECTION_TO_CLI;
+  report_attr_cmd.payload.attr_id = EZB_ZCL_ATTR_OCCUPANCY_SENSING_OCCUPANCY_ID;
 
   if (!reportClusterAttribute(&report_attr_cmd)) {
-    log_e("Failed to send occupancy report: 0x%x: %s");
+    log_e("Failed to send occupancy report");
     return false;
   }
   log_v("Occupancy report sent");
