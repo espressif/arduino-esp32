@@ -47,6 +47,7 @@ static esp_err_t zb_cmd_read_attr_resp_handler(const ezb_zcl_cmd_read_attr_rsp_m
 static esp_err_t zb_cmd_write_attr_resp_handler(const ezb_zcl_cmd_write_attr_rsp_message_t *message);
 static esp_err_t zb_configure_report_resp_handler(const ezb_zcl_cmd_config_report_rsp_message_t *message);
 static esp_err_t zb_cmd_ias_zone_status_change_handler(const ezb_zcl_ias_zone_status_change_notif_message_t *message);
+static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const esp_zb_zcl_ias_zone_enroll_request_message_t *message);
 static esp_err_t zb_cmd_ias_zone_enroll_response_handler(const ezb_zcl_ias_zone_enroll_rsp_message_t *message);
 static esp_err_t zb_cmd_default_resp_handler(const ezb_zcl_cmd_default_rsp_message_t *message);
 static esp_err_t zb_window_covering_movement_resp_handler(const ezb_zcl_window_covering_movement_message_t *message);
@@ -68,6 +69,9 @@ static void zb_action_handler(ezb_zcl_core_action_callback_id_t callback_id, voi
     case EZB_ZCL_CORE_CONFIG_REPORT_RSP_CB_ID: zb_configure_report_resp_handler((ezb_zcl_cmd_config_report_rsp_message_t *)message); break;
     case EZB_ZCL_CORE_IAS_ZONE_STATUS_CHANGE_NOTIF_CB_ID:
       zb_cmd_ias_zone_status_change_handler((ezb_zcl_ias_zone_status_change_notif_message_t *)message);
+      break;
+    case ESP_ZB_CORE_CMD_IAS_ZONE_ZONE_ENROLL_CB_ID:
+      ret = zb_cmd_ias_zone_enroll_request_handler((esp_zb_zcl_ias_zone_enroll_request_message_t *)message);
       break;
     case EZB_ZCL_CORE_IAS_ZONE_ENROLL_RSP_CB_ID:
       zb_cmd_ias_zone_enroll_response_handler((ezb_zcl_ias_zone_enroll_rsp_message_t *)message);
@@ -272,6 +276,29 @@ static esp_err_t zb_cmd_ias_zone_status_change_handler(const ezb_zcl_ias_zone_st
   for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
     if (message->info.dst_ep == (*it)->getEndpoint()) {
       (*it)->zbIASZoneStatusChangeNotification(message);
+    }
+  }
+  return ESP_OK;
+}
+
+static esp_err_t zb_cmd_ias_zone_enroll_request_handler(const ezb_zcl_ias_zone_enroll_req_message_t *message) {
+  if (!message) {
+    log_e("Empty message");
+    return ESP_FAIL;
+  }
+  if (message->info.status != ESP_ZB_ZCL_STATUS_SUCCESS) {
+    log_e("Received message: error status(%d)", message->info.status);
+    return ESP_ERR_INVALID_ARG;
+  }
+  log_v(
+    "IAS Zone Enroll Request: from address(0x%x) src endpoint(%u) to dst endpoint(%u) cluster(0x%x) zone type(0x%x) manufacturer code(0x%x)",
+    message->info.src_address.u.short_addr, message->info.src_endpoint, message->info.dst_endpoint, message->info.cluster, message->zone_type,
+    message->manufacturer_code
+  );
+
+  for (std::list<ZigbeeEP *>::iterator it = Zigbee.ep_objects.begin(); it != Zigbee.ep_objects.end(); ++it) {
+    if (message->info.dst_endpoint == (*it)->getEndpoint()) {
+      (*it)->zbIASZoneEnrollRequest(message);
     }
   }
   return ESP_OK;
