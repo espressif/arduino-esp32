@@ -15,6 +15,7 @@ on:
       - "package/package_esp32_index.template.json"
       - ".github/esp32-mock-bootloader-version"
       - ".github/scripts/arduino_headless.sh"
+      - ".github/scripts/find_boards.sh"
       - ".github/scripts/mock_upload_lib.sh"
       - ".github/scripts/test-mock-upload.sh"
       - ".github/scripts/install-arduino-builder.sh"
@@ -30,8 +31,65 @@ permissions:
   contents: read
 
 jobs:
+  should-run:
+    name: Check if mock upload should run
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 2
+
+      - name: Get changed upload-related files
+        if: github.event_name == 'pull_request'
+        id: changed
+        uses: tj-actions/changed-files@2f7c5bfce28377bc069a65ba478de0a74aa0ca32 # v46.0.1
+        with:
+          files_yaml: |
+            boards:
+              - boards.txt
+            upload:
+              - '**'
+              - '!boards.txt'
+
+      - name: Find changed official boards
+        if: github.event_name == 'pull_request' && steps.changed.outputs.boards_any_changed == 'true'
+        run: bash .github/scripts/find_boards.sh official ${{ github.repository }} ${{ github.base_ref }} --output-format=matrix
+
+      - name: Decide whether to run mock upload
+        id: check
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          UPLOAD_CHANGED: ${{ steps.changed.outputs.upload_any_changed }}
+        run: |
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            echo "Not a PR; will run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # FQBNS is set by find_boards.sh via GITHUB_ENV when boards.txt changed
+          if [ -n "${FQBNS:-}" ]; then
+            echo "Official CORE_SOCS boards changed; will run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$UPLOAD_CHANGED" = "true" ]; then
+            echo "Upload-related path changed; will run"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Only non-official boards.txt changes; skipping mock upload"
+          echo "should_run=false" >> "$GITHUB_OUTPUT"
+
   mock-upload:
     name: Mock upload on ${{ matrix.os }}
+    needs: should-run
+    if: needs.should-run.outputs.should_run == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
