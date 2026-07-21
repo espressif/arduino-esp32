@@ -23,7 +23,7 @@ commissioning. The global instance is ``OThreadScan`` (same pattern as
   (``onResult()`` / ``onComplete()``).
 * Optional discover filters (PAN ID, joiner-only, EUI-64) matching
   ``otThreadDiscover()`` parameters.
-* WiFi-scan-style return codes: ``OT_DISCOVER_RUNNING`` (-1),
+* Wi-Fi scan style return codes: ``OT_DISCOVER_RUNNING`` (-1),
   ``OT_DISCOVER_FAILED`` (-2).
 * Result storage is pre-reserved (``OT_DISCOVER_MAX_RESULTS``, default 16) before
   each scan so the OpenThread callback path does not heap-allocate while the OT
