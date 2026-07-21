@@ -98,7 +98,7 @@ async discovery failed — restarting
 * [Thread Network Discovery — group overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadScan/README.md) — all three discovery patterns.
 * [ThreadScan_Discover](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover) — blocking `discoverNetworks()`.
 * [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) — per-network streaming callbacks.
-* [WiFi WiFiScanAsync](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples/WiFiScanAsync) — same async polling pattern on Wi-Fi.
+* [Wi-Fi WiFiScanAsync](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples/WiFiScanAsync) — same async polling pattern on Wi-Fi.
 
 ## License
 
