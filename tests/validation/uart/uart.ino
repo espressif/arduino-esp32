@@ -109,9 +109,7 @@ public:
       delay(5);
     }
     if (perform_assert && recv_msg != expected) {
-      Serial.printf(
-        "UART%d diag: rx=%d tx=%d avail=%u got='%s'\n", uart_num, rx_pin, uart_get_TxPin(uart_num), serial.available(), recv_msg.c_str()
-      );
+      Serial.printf("UART%d diag: rx=%d tx=%d avail=%u got='%s'\n", uart_num, rx_pin, uart_get_TxPin(uart_num), serial.available(), recv_msg.c_str());
       Serial.flush();
     }
     if (perform_assert) {

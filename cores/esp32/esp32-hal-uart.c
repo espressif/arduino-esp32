@@ -41,7 +41,7 @@
 #else
 #include "esp_private/periph_ctrl.h"
 #if SOC_PERIPH_CLK_CTRL_SHARED
-#define HP_UART_SRC_CLK_ATOMIC()       PERIPH_RCC_ATOMIC()
+#define HP_UART_SRC_CLK_ATOMIC() PERIPH_RCC_ATOMIC()
 #else
 #define HP_UART_SRC_CLK_ATOMIC()
 #endif
@@ -777,8 +777,7 @@ static bool _uartAttachSharedPin(uint8_t uart_num, int8_t pin) {
       attachSuccess = false;
     }
   }
-  if (attachSuccess && _uartInternalSetPin(uart->num, pin, pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE)
-      && _uartApplyOneWireOpenDrain(pin, true)) {
+  if (attachSuccess && _uartInternalSetPin(uart->num, pin, pin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE) && _uartApplyOneWireOpenDrain(pin, true)) {
     if (perimanSetPinBus(pin, ESP32_BUS_TYPE_UART_RX_TX, (void *)uart, uart_num, -1)) {
       if (perimanGetBusDeinit(ESP32_BUS_TYPE_UART_RX_TX) == NULL) {
         perimanSetBusDeinit(ESP32_BUS_TYPE_UART_RX_TX, _uartDetachBus_RX_TX);

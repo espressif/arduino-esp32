@@ -60,8 +60,7 @@ static void sampleFloatingIdle(bool pullEnabled, const char *label) {
   delay(FLOAT_SAMPLE_MS);
   Serial1.onReceiveError(nullptr);
 
-  Serial.printf("  %lu ms idle on unconnected RX: UART errors=%lu, available=%u\n", FLOAT_SAMPLE_MS, g_rxErrors,
-                Serial1.available());
+  Serial.printf("  %lu ms idle on unconnected RX: UART errors=%lu, available=%u\n", FLOAT_SAMPLE_MS, g_rxErrors, Serial1.available());
   if (!pullEnabled) {
     Serial.println("  Tip: floating RX may pick up noise; pull-up holds idle HIGH.");
   } else {
