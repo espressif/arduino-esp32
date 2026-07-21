@@ -274,11 +274,6 @@ void BLEClass::end(bool releaseMemory) {
   hostedDeinitBLE();
 #endif
 
-#if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
-  esp_bt_controller_disable();
-  esp_bt_controller_deinit();
-#endif
-
   if (releaseMemory) {
 #if SOC_BLE_SUPPORTED && CONFIG_BT_CONTROLLER_ENABLED
     btMemRelease(BT_MODE_BLE);
