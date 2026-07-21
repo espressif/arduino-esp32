@@ -34,6 +34,7 @@ menu.einksize=E-Ink Display Size
 menu.NetworkLogLevel=Network Log Level
 menu.DisplayModel=Display Model
 menu.Language=Language
+menu.MemoryLayout=Flash Size & Partition Scheme
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -60368,3 +60369,84 @@ ftSwarmJST.menu.Language.en=English
 ftSwarmJST.menu.Language.en.build.language_define=-DLANGUAGEEN
 ftSwarmJST.menu.Language.de=Deutsch
 ftSwarmJST.menu.Language.de.build.language_define=-DLANGUAGEDE
+
+##############################################################
+
+es32lab.name=ES Developer ES32Lab
+
+es32lab.bootloader.tool=esptool_py
+es32lab.bootloader.tool.default=esptool_py
+
+es32lab.upload.tool=esptool_py
+es32lab.upload.tool.default=esptool_py
+es32lab.upload.tool.network=esp_ota
+
+es32lab.upload.maximum_size=2097152
+es32lab.upload.maximum_data_size=327680
+es32lab.upload.flags=
+es32lab.upload.erase_cmd=
+es32lab.upload.extra_flags=
+es32lab.upload.speed=115200
+
+es32lab.serial.disableDTR=true
+es32lab.serial.disableRTS=true
+
+es32lab.build.tarch=xtensa
+es32lab.build.bootloader_addr=0x1000
+es32lab.build.target=esp32
+es32lab.build.mcu=esp32
+es32lab.build.core=esp32
+es32lab.build.variant=es_developer_es32lab
+es32lab.build.board=ESP32_ES_DEVELOPER_ES32LAB
+
+es32lab.build.f_cpu=240000000L
+es32lab.build.flash_mode=dio
+es32lab.build.flash_freq=80m
+es32lab.build.flash_size=4MB
+es32lab.build.boot=dio
+es32lab.build.partitions=no_ota
+es32lab.build.defines=
+
+es32lab.menu.FlashFreq.80=80MHz
+es32lab.menu.FlashFreq.80.build.flash_freq=80m
+es32lab.menu.FlashFreq.40=40MHz
+es32lab.menu.FlashFreq.40.build.flash_freq=40m
+
+es32lab.menu.MemoryLayout.4MNoOTA=4MB No OTA (2MB APP/1.9MB SPIFFS)
+es32lab.menu.MemoryLayout.4MNoOTA.build.flash_size=4MB
+es32lab.menu.MemoryLayout.4MNoOTA.build.partitions=no_ota
+es32lab.menu.MemoryLayout.4MNoOTA.upload.maximum_size=2097152
+es32lab.menu.MemoryLayout.4MOTA=4MB OTA (1.25MB APP/1.4MB SPIFFS)
+es32lab.menu.MemoryLayout.4MOTA.build.flash_size=4MB
+es32lab.menu.MemoryLayout.4MOTA.build.partitions=default
+es32lab.menu.MemoryLayout.4MOTA.upload.maximum_size=1310720
+es32lab.menu.MemoryLayout.8MNoOTA=8MB No OTA (3MB APP/4.9MB SPIFFS)
+es32lab.menu.MemoryLayout.8MNoOTA.build.flash_size=8MB
+es32lab.menu.MemoryLayout.8MNoOTA.build.partitions=es_developer_es32lab_8m_no_ota
+es32lab.menu.MemoryLayout.8MNoOTA.upload.maximum_size=3145728
+es32lab.menu.MemoryLayout.8MOTA=8MB OTA (2MB APP/3.9MB SPIFFS)
+es32lab.menu.MemoryLayout.8MOTA.build.flash_size=8MB
+es32lab.menu.MemoryLayout.8MOTA.build.partitions=es_developer_es32lab_8m_ota
+es32lab.menu.MemoryLayout.8MOTA.upload.maximum_size=2097152
+
+es32lab.menu.UploadSpeed.115200=115200
+es32lab.menu.UploadSpeed.115200.upload.speed=115200
+es32lab.menu.UploadSpeed.230400=230400
+es32lab.menu.UploadSpeed.230400.upload.speed=230400
+
+es32lab.menu.DebugLevel.none=None
+es32lab.menu.DebugLevel.none.build.code_debug=0
+es32lab.menu.DebugLevel.error=Error
+es32lab.menu.DebugLevel.error.build.code_debug=1
+es32lab.menu.DebugLevel.warn=Warn
+es32lab.menu.DebugLevel.warn.build.code_debug=2
+es32lab.menu.DebugLevel.info=Info
+es32lab.menu.DebugLevel.info.build.code_debug=3
+es32lab.menu.DebugLevel.debug=Debug
+es32lab.menu.DebugLevel.debug.build.code_debug=4
+es32lab.menu.DebugLevel.verbose=Verbose
+es32lab.menu.DebugLevel.verbose.build.code_debug=5
+
+es32lab.menu.EraseFlash.none=Disabled
+es32lab.menu.EraseFlash.all=Enabled
+es32lab.menu.EraseFlash.all.upload.erase_cmd=-e
