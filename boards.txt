@@ -34,7 +34,6 @@ menu.einksize=E-Ink Display Size
 menu.NetworkLogLevel=Network Log Level
 menu.DisplayModel=Display Model
 menu.Language=Language
-menu.MemoryLayout=Flash Size & Partition Scheme
 
 ##############################################################
 ### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
@@ -60412,22 +60411,23 @@ es32lab.menu.FlashFreq.80.build.flash_freq=80m
 es32lab.menu.FlashFreq.40=40MHz
 es32lab.menu.FlashFreq.40.build.flash_freq=40m
 
-es32lab.menu.MemoryLayout.4MNoOTA=4MB No OTA (2MB APP/1.9MB SPIFFS)
-es32lab.menu.MemoryLayout.4MNoOTA.build.flash_size=4MB
-es32lab.menu.MemoryLayout.4MNoOTA.build.partitions=no_ota
-es32lab.menu.MemoryLayout.4MNoOTA.upload.maximum_size=2097152
-es32lab.menu.MemoryLayout.4MOTA=4MB OTA (1.25MB APP/1.4MB SPIFFS)
-es32lab.menu.MemoryLayout.4MOTA.build.flash_size=4MB
-es32lab.menu.MemoryLayout.4MOTA.build.partitions=default
-es32lab.menu.MemoryLayout.4MOTA.upload.maximum_size=1310720
-es32lab.menu.MemoryLayout.8MNoOTA=8MB No OTA (3MB APP/4.9MB SPIFFS)
-es32lab.menu.MemoryLayout.8MNoOTA.build.flash_size=8MB
-es32lab.menu.MemoryLayout.8MNoOTA.build.partitions=es_developer_es32lab_8m_no_ota
-es32lab.menu.MemoryLayout.8MNoOTA.upload.maximum_size=3145728
-es32lab.menu.MemoryLayout.8MOTA=8MB OTA (2MB APP/3.9MB SPIFFS)
-es32lab.menu.MemoryLayout.8MOTA.build.flash_size=8MB
-es32lab.menu.MemoryLayout.8MOTA.build.partitions=es_developer_es32lab_8m_ota
-es32lab.menu.MemoryLayout.8MOTA.upload.maximum_size=2097152
+es32lab.menu.FlashSize.4M=4MB (32Mb)
+es32lab.menu.FlashSize.4M.build.flash_size=4MB
+es32lab.menu.FlashSize.8M=8MB (64Mb)
+es32lab.menu.FlashSize.8M.build.flash_size=8MB
+
+es32lab.menu.PartitionScheme.4MNoOTA=4MB No OTA (2MB APP/1.9MB SPIFFS)
+es32lab.menu.PartitionScheme.4MNoOTA.build.partitions=no_ota
+es32lab.menu.PartitionScheme.4MNoOTA.upload.maximum_size=2097152
+es32lab.menu.PartitionScheme.4MOTA=4MB OTA (1.25MB APP/1.4MB SPIFFS)
+es32lab.menu.PartitionScheme.4MOTA.build.partitions=default
+es32lab.menu.PartitionScheme.4MOTA.upload.maximum_size=1310720
+es32lab.menu.PartitionScheme.8MNoOTA=8MB No OTA (3MB APP/4.9MB SPIFFS)
+es32lab.menu.PartitionScheme.8MNoOTA.build.partitions=es_developer_es32lab_8m_no_ota
+es32lab.menu.PartitionScheme.8MNoOTA.upload.maximum_size=3145728
+es32lab.menu.PartitionScheme.8MOTA=8MB OTA (2MB APP/3.9MB SPIFFS)
+es32lab.menu.PartitionScheme.8MOTA.build.partitions=es_developer_es32lab_8m_ota
+es32lab.menu.PartitionScheme.8MOTA.upload.maximum_size=2097152
 
 es32lab.menu.UploadSpeed.115200=115200
 es32lab.menu.UploadSpeed.115200.upload.speed=115200
