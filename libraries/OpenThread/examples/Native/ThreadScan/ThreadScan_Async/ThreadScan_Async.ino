@@ -49,9 +49,8 @@ static void printResults(int count) {
     for (int i = 0; i < count; ++i) {
       const OThreadNetworkInfo &net = OThreadScan.getResult(i);
       Serial.printf(
-        "  [%d] %s | extPan=%s | pan=%04x | %s | ch=%u | %d dBm | lqi=%u | joinable=%s\r\n", i, net.networkName,
-        net.extendedPanIdStr().c_str(), net.panId, net.extAddressStr().c_str(), net.channel, net.rssi, net.lqi,
-        net.joinable ? "yes" : "no"
+        "  [%d] %s | extPan=%s | pan=%04x | %s | ch=%u | %d dBm | lqi=%u | joinable=%s\r\n", i, net.networkName, net.extendedPanIdStr().c_str(), net.panId,
+        net.extAddressStr().c_str(), net.channel, net.rssi, net.lqi, net.joinable ? "yes" : "no"
       );
     }
   }

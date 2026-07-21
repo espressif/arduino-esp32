@@ -83,7 +83,7 @@ struct OThreadDiscoverFilters {
  */
 struct OThreadNetworkInfo {
   char networkName[OT_NETWORK_NAME_MAX_SIZE + 1];  ///< Null-terminated Thread network name.
-  uint8_t extendedPanId[OT_EXT_PAN_ID_SIZE];      ///< Extended PAN ID (8 bytes).
+  uint8_t extendedPanId[OT_EXT_PAN_ID_SIZE];       ///< Extended PAN ID (8 bytes).
   uint16_t panId;                                  ///< IEEE 802.15.4 PAN ID.
   uint8_t extAddress[OT_EXT_ADDRESS_SIZE];         ///< Responder extended address.
   uint8_t channel;                                 ///< IEEE 802.15.4 channel (11..26).

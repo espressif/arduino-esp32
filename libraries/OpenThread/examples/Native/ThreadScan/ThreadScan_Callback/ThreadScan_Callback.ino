@@ -29,8 +29,8 @@ static volatile int networksSeen = 0;
 static void onDiscoverResult(const OThreadNetworkInfo &info, void *) {
   networksSeen++;
   Serial.printf(
-    "  found: %s | extPan=%s | pan=%04x | ch=%u | %d dBm | joinable=%s\r\n", info.networkName, info.extendedPanIdStr().c_str(),
-    info.panId, info.channel, info.rssi, info.joinable ? "yes" : "no"
+    "  found: %s | extPan=%s | pan=%04x | ch=%u | %d dBm | joinable=%s\r\n", info.networkName, info.extendedPanIdStr().c_str(), info.panId, info.channel,
+    info.rssi, info.joinable ? "yes" : "no"
   );
 }
 

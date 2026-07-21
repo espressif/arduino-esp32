@@ -69,19 +69,8 @@ bool discoverResultIsJoinable(const otActiveScanResult &in) {
 OThreadScanClass OThreadScan;
 
 OThreadScanClass::OThreadScanClass()
-  : _timeoutMs(OT_DISCOVER_DEFAULT_TIMEOUT_MS),
-    _channel(0),
-    _filters(),
-    _resultCb(nullptr),
-    _resultCtx(nullptr),
-    _completeCb(nullptr),
-    _completeCtx(nullptr),
-    _inProgress(false),
-    _triggered(false),
-    _done(false),
-    _startedMs(0),
-    _startError(OT_ERROR_NONE),
-    _doneSem(nullptr) {}
+  : _timeoutMs(OT_DISCOVER_DEFAULT_TIMEOUT_MS), _channel(0), _filters(), _resultCb(nullptr), _resultCtx(nullptr), _completeCb(nullptr), _completeCtx(nullptr),
+    _inProgress(false), _triggered(false), _done(false), _startedMs(0), _startError(OT_ERROR_NONE), _doneSem(nullptr) {}
 
 OThreadScanClass::~OThreadScanClass() {
   if (_doneSem) {
@@ -192,12 +181,10 @@ int16_t OThreadScanClass::discoverNetworks(bool async) {
     _startedMs = millis();
 
     if (_doneSem) {
-      while (xSemaphoreTake(_doneSem, 0) == pdTRUE) {
-      }
+      while (xSemaphoreTake(_doneSem, 0) == pdTRUE) {}
     }
 
-    error = otThreadDiscover(inst, channelMask, _filters.panIdFilter, _filters.joinerOnly, _filters.eui64Filter,
-                             handleDiscoverResult, this);
+    error = otThreadDiscover(inst, channelMask, _filters.panIdFilter, _filters.joinerOnly, _filters.eui64Filter, handleDiscoverResult, this);
     _startError = error;
     if (error != OT_ERROR_NONE) {
       _triggered = false;
@@ -268,8 +255,7 @@ void OThreadScanClass::scanDelete() {
   _inProgress = false;
   _startError = OT_ERROR_NONE;
   if (_doneSem) {
-    while (xSemaphoreTake(_doneSem, 0) == pdTRUE) {
-    }
+    while (xSemaphoreTake(_doneSem, 0) == pdTRUE) {}
   }
 }
 
