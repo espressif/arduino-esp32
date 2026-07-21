@@ -68,7 +68,7 @@ discovery returns useful results. Flash
 * [Native examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/README.md) — all Native API example categories.
 * [CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) — same operations via `OThreadCLI` (`scan` / `discover`).
 * [Simple Thread Network — LeaderNode](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/SimpleThreadNetwork/LeaderNode) — companion network former for multi-board tests.
-* [WiFi WiFiScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples/WiFiScan) — similar blocking scan ergonomics on Wi-Fi.
+* [Wi-Fi WiFiScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/WiFi/examples/WiFiScan) — similar blocking scan ergonomics on Wi-Fi.
 
 ## License
 
