@@ -10,6 +10,7 @@ The Library implements the following C++ classes and helpers:
 - `OThreadCLI` Class for CLI OpenThread API
 - `OThreadUDP` Class for sending/receiving IPv6 UDP datagrams over the Thread network (raw `otUdpSocket`, no lwIP)
 - `OThreadCoAP` Classes for Application CoAP client/server over Thread (plain CoAP on port 5683; optional CoAPS on 5684)
+- `OThreadScan` Class for MLE Thread network discovery (`discoverNetworks()` / `OThreadNetworkInfo`)
 - `DataSet` Class for OpenThread dataset manipulation using Native `OThread` Class
 
 For IPv6 multicast group membership (UDP receivers, CoAP group commands, `subscribeMulticast`, and example mapping), see **[Multicasting.md](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/Multicasting.md)**.
@@ -452,6 +453,98 @@ The PSKd is an ASCII string, **6 to 32 characters**, using the base32-thread alp
 
 - [`CommissionerNode`](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode/CommissionerNode.ino) builds a fresh DataSet, forms the network, then runs the Commissioner.
 - [`JoinerNode`](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode/JoinerNode.ino) has **no** local DataSet, only the PSKd, and uses `startJoiner()` to obtain the dataset over the air.
+
+# OThreadScan Class — Thread Network Discovery
+
+`OThreadScan` discovers nearby Thread networks via MLE discover (`otThreadDiscover()` / CLI `discover`). Each result is an `OThreadNetworkInfo` with Thread identity (network name, Extended PAN ID, joinable) and IEEE 802.15.4 link fields (extended address, PAN ID, channel, RSSI, LQI). This matches what Matter uses to list Thread networks during commissioning.
+
+## Class Definition
+
+```cpp
+struct OThreadDiscoverFilters {
+  uint16_t panIdFilter;  // OT_PANID_BROADCAST (0xffff) = no filter
+  bool joinerOnly;
+  bool eui64Filter;
+};
+
+struct OThreadNetworkInfo {
+  char     networkName[OT_NETWORK_NAME_MAX_SIZE + 1];
+  uint8_t  extendedPanId[OT_EXT_PAN_ID_SIZE];
+  uint16_t panId;
+  uint8_t  extAddress[OT_EXT_ADDRESS_SIZE];
+  uint8_t  channel;
+  int8_t   rssi;
+  uint8_t  lqi;
+  uint8_t  threadVersion;
+  bool     joinable;
+  bool     nativeCommissioner;
+  // networkNameStr(), extendedPanIdStr(), extAddressStr()
+};
+
+class OThreadScanClass {
+public:
+  void setScanTimeout(uint32_t ms);
+  void setChannel(uint8_t channel);  // 0 = all channels
+  void setDiscoverFilters(const OThreadDiscoverFilters &filters);
+  void onResult(OThreadDiscoverResultCallback callback, void *context = nullptr);
+  void onComplete(OThreadDiscoverCompleteCallback callback, void *context = nullptr);
+
+  int16_t discoverNetworks(bool async = false);
+  int16_t scanComplete();
+  void scanDelete();
+  bool isDiscoverInProgress() const;
+
+  uint16_t getResultCount() const;
+  const OThreadNetworkInfo &getResult(uint16_t index) const;
+
+  // Index-based getters: networkName(), panId(), rssi(), isJoinable(), ...
+  const otActiveScanResult *getActiveScanResult(uint16_t index) const;
+};
+
+extern OThreadScanClass OThreadScan;
+```
+
+Return codes (Wi-Fi scan convention): `OT_DISCOVER_RUNNING` (-1), `OT_DISCOVER_FAILED` (-2).
+
+Result vectors are pre-reserved to `OT_DISCOVER_MAX_RESULTS` (default 16) before each scan so discovery callbacks do not heap-allocate while the OpenThread API lock is held. Duplicate responses with the same Extended PAN ID are merged in storage; only the strongest RSSI is kept. `onResult()` is still called for every Discovery Response. Extra unique networks beyond the cap are still delivered via `onResult()` but are not stored for `getResult()`.
+
+To store more unique networks, define `OT_DISCOVER_MAX_RESULTS` **before** including `OThreadScan.h` (see `ThreadScan_Discover` example).
+
+`scanDelete()` frees stored results and releases vector capacity. It is a no-op until the final discovery callback has completed (even if OpenThread already reports discover idle); call it again after the scan finishes. After a timeout it also stays a no-op until that final callback arrives — retry once `isDiscoverInProgress()` returns `false`.
+
+**Result access** (WiFiScan-style): use `getResult()` / `getResultCount()` only after discovery completes (`discoverNetworks()` ≥ 0, `scanComplete()` ≥ 0, or `onComplete()`). While a scan is running, use `onResult()` for streaming. Do not call other `OThreadScan` methods from inside `onResult()` / `onComplete()` callbacks.
+
+## Usage patterns
+
+**Blocking** (WiFiScan-style):
+
+```cpp
+OThread.begin(false);
+OThread.networkInterfaceUp();
+int n = OThreadScan.discoverNetworks();
+for (int i = 0; i < n; ++i) {
+  Serial.println(OThreadScan.getResult(i).networkNameStr());
+}
+OThreadScan.scanDelete();
+```
+
+**Async** (`discoverNetworks(true)` + `scanComplete()` in `loop()`).
+
+**Streaming** (`onResult()` / `onComplete()` callbacks — OpenThread / Matter model). Call `scanDelete()` from `loop()` after `scanComplete()` finishes, not from inside callbacks.
+
+Thread does **not** need to be started; only `networkInterfaceUp()` is required. For results, run a Leader on another board first.
+
+## Examples
+
+| Sketch | Pattern |
+| --- | --- |
+| [`ThreadScan_Discover`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover) | Blocking |
+| [`ThreadScan_Async`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) | Async poll |
+| [`ThreadScan_Callback`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) | Streaming callbacks |
+
+CLI equivalent: [`CLI ThreadScan`](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) (`discover` via `OThreadCLI`).
+
+Full API details: [OpenThread Scan documentation](https://docs.espressif.com/projects/arduino-esp32/en/latest/openthread/openthread_scan.html).
 
 # OThreadUDP Class - IPv6 UDP over Thread
 
