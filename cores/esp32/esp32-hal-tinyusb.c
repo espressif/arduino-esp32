@@ -732,7 +732,10 @@ static void set_usb_serial_num(void) {
   /* Get the MAC address */
 #if CONFIG_IDF_TARGET_ESP32P4
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_0);
-  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_0_REG, EFUSE_MAC_1);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS_1_REG, EFUSE_MAC_1);
+#elif CONFIG_IDF_TARGET_ESP32S31
+  const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SYS0_REG, EFUSE_MAC_0);
+  const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SYS1_REG, EFUSE_MAC_1);
 #else
   const uint32_t mac0 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_0_REG, EFUSE_MAC_0);
   const uint32_t mac1 = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_1_REG, EFUSE_MAC_1);
