@@ -11,6 +11,7 @@ The Native API is the typed C++ interface exposed by Arduino wrappers such as:
 - `DataSet`
 - `OThreadUDP`
 - `OThreadCoAP` (`OThreadCoAPClient`, `OThreadCoAPServer`, …)
+- `OThreadScan` (network scanning — Native API)
 
 Instead of sending textual OpenThread CLI commands, sketches call methods
 directly, for example:
@@ -147,6 +148,31 @@ int code = client.GET(serverIp, "hello");
 See the [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) for full two-board CoAP demos. CLI-based
 CoAP examples remain under [CLI CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/COAP) for reference.
 
+### `OThreadScan`
+
+`OThreadScan` discovers nearby Thread networks via MLE discover
+(`otThreadDiscover()` / CLI `discover`). Each result is an
+`OThreadNetworkInfo` with Thread identity and 802.15.4 link fields — the same
+primitive Matter uses during commissioning.
+
+```cpp
+OThread.begin(false);
+OThread.networkInterfaceUp();
+
+int n = OThreadScan.discoverNetworks();
+for (int i = 0; i < n; ++i) {
+  Serial.println(OThreadScan.getResult(i).networkNameStr());
+}
+OThreadScan.scanDelete();
+```
+
+Indexed accessors (`getResult()`, `getResultCount()`, …) are valid only after
+discovery completes; use `onResult()` while a scan is still running.
+
+See [Native ThreadScan examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan) for blocking, async, and callback
+patterns. Raw 802.15.4 beacon scan remains available via
+[CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan) if needed.
+
 ## Native vs CLI: quick comparison
 
 | Topic | Native approach | CLI approach |
@@ -213,6 +239,7 @@ Some examples also require:
 | [Thread Commissioning](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning) | [CommissionerNode (server)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/CommissionerNode), [JoinerNode (client)](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadCommissioning/JoinerNode) | Thread commissioning: a Commissioner opens a joiner window and a Joiner obtains the dataset using only a PSKd. |
 | [Native UDP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP) | [UDP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_Light_Switch), [UDP Sensor Network](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/UDP/UDP_SensorNetwork) | Native UDP application traffic (ports 5050/5051). See [Native UDP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/UDP/README.md). |
 | [Native CoAP examples](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP) | [CoAP SimpleGet](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_SimpleGet), [CoAP Light Switch](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Light_Switch), [CoAP Sensor](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor), [CoAP CRUD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD), [CoAP Secure](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure), [CoAP Greenhouse](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse) | Native CoAP / CoAPS on ports 5683/5684. See [Native CoAP examples overview](https://github.com/espressif/arduino-esp32/blob/master/libraries/OpenThread/examples/Native/CoAP/README.md). |
+| [Native ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan) | [ThreadScan_Discover](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover), [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async), [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) | `OThreadScan.discoverNetworks()` — MLE Thread discovery with `OThreadNetworkInfo` results. CLI reference: [CLI ThreadScan](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/CLI/ThreadScan). |
 
 ## Choosing an example
 
@@ -231,6 +258,9 @@ Some examples also require:
 - Use [CoAP Sensor](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Sensor) for a read-only resource with changing values and NON polling.
 - Use [CoAP CRUD](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_CRUD) for REST collections with `OThreadCoAPResourceStore`.
 - Use [CoAP Secure](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Secure) or [CoAP Greenhouse](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/CoAP/CoAP_Greenhouse) when CoAPS (DTLS) is required.
+- Use [ThreadScan_Discover](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Discover) for blocking Thread network discovery.
+- Use [ThreadScan_Async](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Async) for non-blocking discovery polling in `loop()`.
+- Use [ThreadScan_Callback](https://github.com/espressif/arduino-esp32/tree/master/libraries/OpenThread/examples/Native/ThreadScan/ThreadScan_Callback) for per-network streaming callbacks.
 
 ## Practical guidance
 

@@ -1,5 +1,5 @@
 name=ESP32 Arduino
-version=3.3.10
+version=3.3.11
 
 tools.esp32-arduino-libs.path={runtime.platform.path}/tools/esp32-arduino-libs
 tools.esp32-arduino-libs.path.windows={runtime.platform.path}\tools\esp32-arduino-libs
@@ -112,14 +112,16 @@ build.chip_variant={build.mcu}
 build.opt.name=build_opt.h
 build.opt.path={build.path}/{build.opt.name}
 
-# Check if custom partitions exist: source > variant > build.partitions
-recipe.hooks.prebuild.1.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
-recipe.hooks.prebuild.2.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || [ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
-recipe.hooks.prebuild.3.pattern=/usr/bin/env bash -c "[ -f "{build.path}"/partitions.csv ] || cp "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
+# Copy the partition table into the build dir, always overwriting so option changes
+# (e.g. PartitionScheme) take effect on incremental builds. Lowest priority is copied
+# first and higher priority overwrites it: build.partitions < variant < source.
+recipe.hooks.prebuild.1.pattern=/usr/bin/env bash -c "[ ! -f "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv ] || cp -f "{runtime.platform.path}"/tools/partitions/{build.partitions}.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.2.pattern=/usr/bin/env bash -c "[ ! -f "{build.variant.path}"/{build.custom_partitions}.csv ] || cp -f "{build.variant.path}"/{build.custom_partitions}.csv "{build.path}"/partitions.csv"
+recipe.hooks.prebuild.3.pattern=/usr/bin/env bash -c "[ ! -f "{build.source.path}"/partitions.csv ] || cp -f "{build.source.path}"/partitions.csv "{build.path}"/partitions.csv"
 
-recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
-recipe.hooks.prebuild.2.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" if exist "{build.variant.path}\{build.custom_partitions}.csv" COPY "{build.variant.path}\{build.custom_partitions}.csv" "{build.path}\partitions.csv"
-recipe.hooks.prebuild.3.pattern.windows=cmd /c if not exist "{build.path}\partitions.csv" COPY "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.1.pattern.windows=cmd /c if exist "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" COPY /y "{runtime.platform.path}\tools\partitions\{build.partitions}.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.2.pattern.windows=cmd /c if exist "{build.variant.path}\{build.custom_partitions}.csv" COPY /y "{build.variant.path}\{build.custom_partitions}.csv" "{build.path}\partitions.csv"
+recipe.hooks.prebuild.3.pattern.windows=cmd /c if exist "{build.source.path}\partitions.csv" COPY /y "{build.source.path}\partitions.csv" "{build.path}\partitions.csv"
 
 # Check if custom bootloader exist: source > variant > build.boot
 recipe.hooks.prebuild.4.pattern_args=--chip {build.mcu} elf2image --flash-mode {build.flash_mode} --flash-freq {build.img_freq} --flash-size {build.flash_size} -o
