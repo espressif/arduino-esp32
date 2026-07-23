@@ -18,9 +18,6 @@
 
 #include <Matter.h>
 #include <MatterEndPoint.h>
-#include <app/util/attribute-storage.h>
-
-using namespace chip::app::Clusters;
 
 // A single Matter semantic tag (Descriptor cluster TagList entry). Tags are used to disambiguate
 // sibling endpoints that expose the same device type — e.g. tagging 3 buttons with Number (One/Two/Three)
@@ -68,8 +65,8 @@ public:
   void click();
 
   // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
-  // Must be called after begin(). tagList is copied internally; each entry's optional `label` pointer,
-  // if set, must remain valid for as long as this endpoint is running.
+  // Must be called after begin(). Each entry's optional `label` pointer, if set, must remain valid for
+  // as long as this endpoint is running (it is not copied).
   bool setTagList(const MatterTag *tagList, uint8_t count);
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
@@ -81,8 +78,5 @@ protected:
   uint8_t multiPressMax = 5;
   static constexpr uint8_t pressPosition = 1;
   static constexpr uint8_t idlePosition = 0;
-
-private:
-  Descriptor::Structs::SemanticTagStruct::Type *_tagList = nullptr;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

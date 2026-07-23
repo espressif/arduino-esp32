@@ -38,7 +38,6 @@ MatterGenericSwitch::MatterGenericSwitch() {}
 
 MatterGenericSwitch::~MatterGenericSwitch() {
   end();
-  delete[] _tagList;
 }
 
 bool MatterGenericSwitch::hasFeature(uint32_t feature) const {
@@ -249,26 +248,29 @@ bool MatterGenericSwitch::setTagList(const MatterTag *tagList, uint8_t count) {
     return false;
   }
 
-  Descriptor::Structs::SemanticTagStruct::Type *newTagList = new Descriptor::Structs::SemanticTagStruct::Type[count];
-  for (uint8_t i = 0; i < count; i++) {
-    newTagList[i].mfgCode.SetNull();
-    newTagList[i].namespaceID = tagList[i].namespaceId;
-    newTagList[i].tag = tagList[i].tag;
-    if (tagList[i].label != nullptr) {
-      newTagList[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
-    }
-  }
-
-  CHIP_ERROR err = SetTagList(getEndPointId(), chip::Span<const Descriptor::Structs::SemanticTagStruct::Type>(newTagList, count));
-  if (err != CHIP_NO_ERROR) {
-    log_e("Failed to set TagList attribute: %" CHIP_ERROR_FORMAT, err.Format());
-    delete[] newTagList;
+  endpoint_t *ep = endpoint::get(node::get(), getEndPointId());
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", getEndPointId());
     return false;
   }
 
-  // the previous list, if any, has just been replaced and is no longer referenced by the stack
-  delete[] _tagList;
-  _tagList = newTagList;
+  Globals::Structs::SemanticTagStruct::Type *tags = new Globals::Structs::SemanticTagStruct::Type[count];
+  for (uint8_t i = 0; i < count; i++) {
+    tags[i].mfgCode.SetNull();
+    tags[i].namespaceID = tagList[i].namespaceId;
+    tags[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  esp_err_t err = set_semantic_tags(ep, tags, count);
+  delete[] tags;
+
+  if (err != ESP_OK) {
+    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
+    return false;
+  }
   return true;
 }
 
