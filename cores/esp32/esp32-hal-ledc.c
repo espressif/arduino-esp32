@@ -510,7 +510,11 @@ bool ledcOutputInvert(uint8_t pin, bool out_invert) {
   if (bus != NULL) {
     gpio_set_level(pin, out_invert);
 
-#ifdef CONFIG_IDF_TARGET_ESP32P4
+#ifdef CONFIG_IDF_TARGET_ESP32S31
+    //LEDC0_LS_SIG_OUT_PAD_OUT0_IDX 8 chans
+    //LEDC1_LS_SIG_OUT_PAD_OUT0_IDX 8 chans, but SOC_LEDC_CHANNEL_NUM is 8?
+    esp_rom_gpio_connect_out_signal(pin, LEDC0_LS_SIG_OUT_PAD_OUT0_IDX + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0);
+#elif CONFIG_IDF_TARGET_ESP32P4
     esp_rom_gpio_connect_out_signal(pin, LEDC_LS_SIG_OUT_PAD_OUT0_IDX + ((bus->channel) % SOC_LEDC_CHANNEL_NUM), out_invert, 0);
 #else
 #ifdef SOC_LEDC_SUPPORT_HS_MODE

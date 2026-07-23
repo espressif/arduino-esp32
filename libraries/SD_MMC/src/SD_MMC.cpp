@@ -40,7 +40,7 @@
 using namespace fs;
 
 SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
-#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && defined(BOARD_HAS_SDMMC) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
   _pin_clk = SDMMC_CLK;
   _pin_cmd = SDMMC_CMD;
   _pin_d0 = SDMMC_D0;
@@ -61,7 +61,7 @@ SDMMCFS::SDMMCFS(FSImplPtr impl) : FS(impl), _card(nullptr) {
 #endif  // BOARD_HAS_1BIT_SDMMC
 
 // ESP32-P4 can use either IOMUX or GPIO matrix
-#elif defined(BOARD_HAS_SDMMC) && defined(CONFIG_IDF_TARGET_ESP32P4)
+#elif defined(BOARD_HAS_SDMMC) && (defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31))
 #if defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   _pin_clk = SDMMC_SLOT0_IOMUX_PIN_NUM_CLK;
   _pin_cmd = SDMMC_SLOT0_IOMUX_PIN_NUM_CMD;
@@ -113,7 +113,7 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
   d2 = digitalPinToGPIONumber(d2);
   d3 = digitalPinToGPIONumber(d3);
 
-#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)
   // SoC supports SDMMC pin configuration via GPIO matrix. Save the pins for later use in SDMMCFS::begin.
   _pin_clk = (int8_t)clk;
   _pin_cmd = (int8_t)cmd;
@@ -134,7 +134,7 @@ bool SDMMCFS::setPins(int clk, int cmd, int d0, int d1, int d2, int d3) {
     return false;
   }
   return true;
-#elif defined(CONFIG_IDF_TARGET_ESP32P4)
+#elif defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31)
 #if defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   // ESP32-P4 can use either IOMUX or GPIO matrix
   bool pins_ok =
@@ -184,8 +184,8 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
   }
   //mount
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-#if (defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4)) \
-  || (defined(CONFIG_IDF_TARGET_ESP32P4) && ((defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 1)) || !defined(BOARD_HAS_SDMMC)))
+#if (defined(SOC_SDMMC_USE_GPIO_MATRIX) && !defined(CONFIG_IDF_TARGET_ESP32P4) && !defined(CONFIG_IDF_TARGET_ESP32S31)) \
+  || ((defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31)) && ((defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 1)) || !defined(BOARD_HAS_SDMMC)))
   log_d("pin_cmd: %d, pin_clk: %d, pin_d0: %d, pin_d1: %d, pin_d2: %d, pin_d3: %d", _pin_cmd, _pin_clk, _pin_d0, _pin_d1, _pin_d2, _pin_d3);
   // SoC supports SDMMC pin configuration via GPIO matrix.
   // Check that the pins have been set either in the constructor or setPins function.
@@ -226,7 +226,7 @@ bool SDMMCFS::begin(const char *mountpoint, bool mode1bit, bool format_if_mount_
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
   host.flags = SDMMC_HOST_FLAG_4BIT;
-#if defined(CONFIG_IDF_TARGET_ESP32P4) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
+#if (defined(CONFIG_IDF_TARGET_ESP32P4) || defined(CONFIG_IDF_TARGET_ESP32S31)) && defined(BOARD_SDMMC_SLOT) && (BOARD_SDMMC_SLOT == 0)
   host.slot = SDMMC_HOST_SLOT_0;
   // reconfigure slot_config to remove all pins in order to use IO_MUX
   // Use 0 instead of GPIO_NUM_NC (-1) because ESP-IDF's s_check_pin_not_set()

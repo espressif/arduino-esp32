@@ -120,6 +120,45 @@ typedef emac_rmii_clock_mode_t eth_clock_mode_t;
 #ifndef ETH_RMII_CLK
 #define ETH_RMII_CLK 50
 #endif
+#elif CONFIG_IDF_TARGET_ESP32S31
+typedef emac_rmii_clock_mode_t eth_clock_mode_t;
+#include "pins_arduino.h"
+#ifndef ETH_RMII_TX0
+#define ETH_RMII_TX0 8
+#endif
+#ifndef ETH_RMII_TX1
+#define ETH_RMII_TX1 9
+#endif
+#ifndef ETH_RMII_TX2
+#define ETH_RMII_TX2 10
+#endif
+#ifndef ETH_RMII_TX3
+#define ETH_RMII_TX3 11
+#endif
+#ifndef ETH_RMII_TX_CTL
+#define ETH_RMII_TX_CTL 12
+#endif
+#ifndef ETH_RMII_TX_CLK
+#define ETH_RMII_TX_CLK 13
+#endif
+#ifndef ETH_RMII_RX_CLK
+#define ETH_RMII_RX_CLK 14
+#endif
+#ifndef ETH_RMII_RX_CTL
+#define ETH_RMII_RX_CTL 15
+#endif
+#ifndef ETH_RMII_RX0
+#define ETH_RMII_RX0 19
+#endif
+#ifndef ETH_RMII_RX1
+#define ETH_RMII_RX1 18
+#endif
+#ifndef ETH_RMII_RX2
+#define ETH_RMII_RX2 17
+#endif
+#ifndef ETH_RMII_RX3
+#define ETH_RMII_RX3 16
+#endif
 #endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 
@@ -155,6 +194,9 @@ typedef enum {
   ETH_PHY_KSZ8081,
 #if ETH_PHY_LAN867X_SUPPORTED
   ETH_PHY_LAN867X,
+#endif
+#if CONFIG_SOC_EMAC_SUPPORT_1000M
+  ETH_PHY_YT8531DC,
 #endif
 #endif /* CONFIG_ETH_USE_ESP32_EMAC */
 #if CONFIG_ETH_SPI_ETHERNET_DM9051

@@ -12,6 +12,7 @@ targets:
   - esp32p4
   - esp32s2
   - esp32s3
+  - esp32s31
 tags:
   - arduino
 files:
@@ -26,6 +27,7 @@ files:
     - "variants/esp32p4/**/*"
     - "variants/esp32s2/**/*"
     - "variants/esp32s3/**/*"
+    - "variants/esp32s31/**/*"
   exclude:
     - ".*" # All files in the root directory that start with a dot.
     - ".gitlab/"
@@ -63,7 +65,7 @@ dependencies:
     version: "==1.6.8"
     require: public
     rules:
-      - if: "target not in [esp32c2, esp32c61, esp32p4]"
+      - if: "target not in [esp32c2, esp32c61, esp32p4, esp32s31]"
   espressif/esp-dsp:
     version: "^1.8.0"
     rules:
