@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "impl/common/BLEGuards.h"
+#include "core/BLEGuards.h"
 #if BLE_ENABLED
 
 #include <functional>
@@ -24,25 +24,25 @@
 #include "WString.h"
 #include "BTStatus.h"
 #include "BTAddress.h"
-#include "BLEAdvTypes.h"
-#include "BLEServer.h"
-#include "BLEClient.h"
-#include "BLECharacteristic.h"
-#include "BLEDescriptor.h"
-#include "BLEService.h"
-#include "BLEAdvertising.h"
-#include "BLEScan.h"
-#include "BLESecurity.h"
-#include "BLEAdvertisedDevice.h"
-#include "BLERemoteService.h"
-#include "BLERemoteCharacteristic.h"
-#include "BLERemoteDescriptor.h"
-#include "BLEAdvertisementData.h"
-#include "BLEBeacon.h"
-#include "BLEEddystone.h"
-#include "BLEHIDDevice.h"
-#include "BLEStream.h"
-#include "BLEL2CAP.h"
+#include "types/BLEAdvTypes.h"
+#include "server/BLEServer.h"
+#include "client/BLEClient.h"
+#include "gatt/BLECharacteristic.h"
+#include "gatt/BLEDescriptor.h"
+#include "gatt/BLEService.h"
+#include "advertising/BLEAdvertising.h"
+#include "scan/BLEScan.h"
+#include "security/BLESecurity.h"
+#include "scan/BLEAdvertisedDevice.h"
+#include "remote/BLERemoteService.h"
+#include "remote/BLERemoteCharacteristic.h"
+#include "remote/BLERemoteDescriptor.h"
+#include "advertising/BLEAdvertisementData.h"
+#include "advertising/BLEBeacon.h"
+#include "advertising/BLEEddystone.h"
+#include "hid/BLEHIDDevice.h"
+#include "stream/BLEStream.h"
+#include "l2cap/BLEL2CAP.h"
 
 /**
  * @brief Global BLE singleton -- the entry point for all BLE operations.

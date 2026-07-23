@@ -256,7 +256,7 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 1. **Replace includes:**
    - `#include <BLEDevice.h>` → `#include <BLE.h>`
-   - Keep `#include <BLEServer.h>`, `<BLEClient.h>`, `<BLEScan.h>` etc. as needed -- `BLE.h` provides the `BLE` singleton but forward-declares other classes; you still need to include the headers for any classes whose methods you call
+   - `#include <BLE.h>` is the single umbrella: it exposes the whole public API (`BLEServer`, `BLEClient`, `BLEScan`, `BLESecurity`, beacons, HID, …), so you no longer need per-class includes. (Internally the classes live in component folders such as `server/BLEServer.h`; include those directly only if you deliberately want a minimal include.)
    - Remove `<BLEUtils.h>`, `<BLE2902.h>`, `<BLE2904.h>` (no longer exist)
    - Remove all `#ifdef CONFIG_BT_NIMBLE_ENABLED` / `#ifdef CONFIG_BT_BLUEDROID_ENABLED` blocks
 
@@ -310,16 +310,16 @@ Follow these steps to convert a v3.x sketch to v4.0:
 
 | Old (v3.x) | New (v4.0) |
 |---|---|
-| `#include <BLEDevice.h>` | `#include <BLE.h>` |
-| `#include <BLEServer.h>` | `#include <BLEServer.h>` (still needed for `BLEServer` / `BLEService` methods) |
+| `#include <BLEDevice.h>` | `#include <BLE.h>` (umbrella — exposes the whole public API) |
+| `#include <BLEServer.h>` | Covered by `#include <BLE.h>` |
 | `#include <BLEUtils.h>` | Removed (not needed) |
-| `#include <BLE2902.h>` | Removed (auto-created CCCD; or `#include <BLEDescriptor.h>`) |
+| `#include <BLE2902.h>` | Removed (auto-created CCCD; `BLEDescriptor` is in `<BLE.h>`) |
 | `#include <BLE2904.h>` | Removed (use `BLEDescriptor::createPresentationFormat()`) |
-| `#include <BLESecurity.h>` | `#include <BLESecurity.h>` (still needed for `BLESecurity` methods) |
-| `#include <BLEBeacon.h>` | `#include <BLEBeacon.h>` |
-| `#include <BLEEddystoneURL.h>` | `#include <BLEEddystone.h>` (merged) |
-| `#include <BLEEddystoneTLM.h>` | `#include <BLEEddystone.h>` (merged) |
-| `#include <BLEHIDDevice.h>` | `#include <BLEHIDDevice.h>` |
+| `#include <BLESecurity.h>` | Covered by `#include <BLE.h>` |
+| `#include <BLEBeacon.h>` | Covered by `#include <BLE.h>` |
+| `#include <BLEEddystoneURL.h>` | Covered by `#include <BLE.h>` (`BLEEddystone`, merged) |
+| `#include <BLEEddystoneTLM.h>` | Covered by `#include <BLE.h>` (`BLEEddystone`, merged) |
+| `#include <BLEHIDDevice.h>` | Covered by `#include <BLE.h>` |
 
 ### Lifecycle and Configuration
 
@@ -689,8 +689,8 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | `BLEBeacon` | `BLEBeacon` | API largely unchanged |
 | `beacon.setManufacturerId(id)` | `beacon.setManufacturerId(id)` | |
 | `beacon.getAdvertisementData()` | `beacon.getAdvertisementData()` | Returns `BLEAdvertisementData` |
-| `BLEEddystoneURL` (separate file) | `BLEEddystoneURL` | `#include <BLEEddystone.h>` (merged) |
-| `BLEEddystoneTLM` (separate file) | `BLEEddystoneTLM` | `#include <BLEEddystone.h>` (merged) |
+| `BLEEddystoneURL` (separate file) | `BLEEddystoneURL` | Covered by `#include <BLE.h>` (merged into `BLEEddystone`) |
+| `BLEEddystoneTLM` (separate file) | `BLEEddystoneTLM` | Covered by `#include <BLE.h>` (merged into `BLEEddystone`) |
 
 ### HID
 
@@ -708,11 +708,11 @@ Follow these steps to convert a v3.x sketch to v4.0:
 | N/A | `hid.bootInput()` → `BLECharacteristic` | New: Boot Keyboard Input (singleton, lazy-created) |
 | N/A | `hid.bootOutput()` → `BLECharacteristic` | New: Boot Keyboard Output (singleton, lazy-created) |
 | Manual `adv.addServiceUUID(0x1812)` | Automatic | HID Service UUID added to advertising by `BLEHIDDevice` constructor |
-| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `HIDTypes.h` |
+| Manual `setAppearance(0x03C1)` | `setAppearance(BLE_APPEARANCE_HID_KEYBOARD)` | Named constants in `hid/HIDTypes.h` (reachable via `<BLE.h>`) |
 | No included-service support | Battery Service auto-included in HID Service | Per HIDS 1.0 §3 |
 | No External Report Reference | Auto-added on Report Map (references Battery Level) | Per HIDS 1.0 §3.6 |
 
-**HID Appearance Constants** (defined in `HIDTypes.h`):
+**HID Appearance Constants** (defined in `hid/HIDTypes.h`, pulled in transitively by `<BLE.h>`):
 
 | Constant | Value |
 |---|---|
@@ -775,7 +775,6 @@ void setup() {
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLEServer.h>
 
 static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -828,7 +827,6 @@ pChr->registerForNotify([](BLERemoteCharacteristic *pChr, uint8_t *data, size_t 
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLEClient.h>
 
 static const BLEUUID SVC_UUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
 static const BLEUUID CHR_UUID("beb5483e-36e1-4688-b7f5-ea07361b26a8");
@@ -872,7 +870,6 @@ void setup() {
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLEScan.h>
 
 void setup() {
     BLE.begin("");
@@ -918,7 +915,6 @@ void setup() {
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLESecurity.h>
 
 void setup() {
     BLE.begin("SecureServer");
@@ -1028,7 +1024,6 @@ BLEDevice::startAdvertising();
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLEBeacon.h>
 
 static const BLEUUID PROXIMITY_UUID("FDA50693-A4E2-4FB1-AFCF-C6EB07647825");
 
@@ -1067,7 +1062,6 @@ BLEDevice::startAdvertising();
 **After (v4.0):**
 ```cpp
 #include <BLE.h>
-#include <BLEHIDDevice.h>
 
 BLE.begin("Keyboard");
 BLEServer server = BLE.createServer();
@@ -1080,7 +1074,7 @@ server.start();
 // HID Service UUID (0x1812) is auto-added to advertising.
 // Battery Service is auto-included in HID Service.
 BLEAdvertising adv = BLE.getAdvertising();
-adv.setAppearance(BLE_APPEARANCE_HID_KEYBOARD);  // named constant from HIDTypes.h
+adv.setAppearance(BLE_APPEARANCE_HID_KEYBOARD);  // named constant from hid/HIDTypes.h (via <BLE.h>)
 adv.start();
 ```
 
@@ -1157,7 +1151,7 @@ These features are new and were not available in v3.x:
 | Included Services | `svc.addIncludedService(otherSvc)` — GATT Included Service declarations |
 | HoGP spec-compliant HID | `BLEHIDDevice` auto-includes Battery Service, adds External Report Reference, auto-advertises HID UUID |
 | Boot Protocol characteristics | `hid.bootInput()`, `hid.bootOutput()` — singleton, lazy-created |
-| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `HIDTypes.h` |
+| HID Appearance constants | `BLE_APPEARANCE_HID_KEYBOARD`, `BLE_APPEARANCE_HID_GAMEPAD`, etc. in `hid/HIDTypes.h` |
 
 ---
 

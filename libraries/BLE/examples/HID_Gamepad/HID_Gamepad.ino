@@ -23,7 +23,7 @@
 #include <cstring>
 #include <cmath>
 #include <BLE.h>
-#include <HIDTypes.h>
+#include <hid/HIDTypes.h>
 
 // HID Report Descriptor for a gamepad with 2 axes (X, Y) and 8 buttons.
 // The macros (USAGE_PAGE, COLLECTION, etc.) are defined in HIDTypes.h.

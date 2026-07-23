@@ -137,9 +137,7 @@ set(ARDUINO_LIBRARY_AsyncUDP_SRCS libraries/AsyncUDP/src/AsyncUDP.cpp)
 
 file(GLOB ARDUINO_LIBRARY_BLE_SRCS
   libraries/BLE/src/*.cpp
-  libraries/BLE/src/impl/common/*.cpp
-  libraries/BLE/src/impl/bluedroid/*.cpp
-  libraries/BLE/src/impl/nimble/*.cpp
+  libraries/BLE/src/*/*.cpp
 )
 list(SORT ARDUINO_LIBRARY_BLE_SRCS)
 

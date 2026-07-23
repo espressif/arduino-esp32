@@ -87,7 +87,7 @@ the device that accepts the pairing request (usually the server).
 ### Bluedroid vs NimBLE
 
 Bluedroid and NimBLE are two different Bluetooth stack implementations.
-In Arduino Core 4.0, both stacks share one public API (`#include <BLE.h>`). The active host is selected by the board/sdkconfig (`BLE_NIMBLE` / `BLE_BLUEDROID` in `BLEGuards.h`); sketches do not need `#ifdef` for stack differences. Unsupported features return `BTStatus::NotSupported`.
+In Arduino Core 4.0, both stacks share one public API (`#include <BLE.h>`). The active host is selected by the board/sdkconfig (`BLE_NIMBLE` / `BLE_BLUEDROID` in `core/BLEGuards.h`); sketches do not need `#ifdef` for stack differences. Unsupported features return `BTStatus::NotSupported`.
 
 #### Bluedroid
 
@@ -401,8 +401,8 @@ BLECharacteristic chr = svc.createCharacteristic(
 
 - [MIGRATION.md](MIGRATION.md) — v3.x → v4.0 API mapping
 - [DESIGN.md](DESIGN.md) — architecture, backend contract, ordering invariants (maintainers)
-- [BLEStream](src/BLEStream.h) — Nordic UART over Arduino `Stream`; multi-central server APIs (`peerCount`, `writeTo`, `onPeerData`); see `examples/MultiClientUART`
-- Backend notes: [NimBLE](src/impl/nimble/README.md) · [Bluedroid](src/impl/bluedroid/README.md)
+- [BLEStream](src/stream/BLEStream.h) — Nordic UART over Arduino `Stream`; multi-central server APIs (`peerCount`, `writeTo`, `onPeerData`); see `examples/MultiClientUART`
+- Backend notes: [NimBLE](docs/backend-nimble.md) · [Bluedroid](docs/backend-bluedroid.md)
 
 ---
 

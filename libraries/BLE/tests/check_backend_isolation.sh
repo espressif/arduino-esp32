@@ -17,11 +17,18 @@
 # --------------------------------------------------------------------------
 # Backend-isolation guard for the public BLE API (review item 14).
 #
-# The public headers (libraries/BLE/src/BLE*.h) must never leak backend detail:
-#   * they must NOT include any backend selector / backend Impl header
-#     (impl/nimble/*, impl/bluedroid/*, impl/BLEBackend.h);
+# The public surface is the umbrella header (src/BLE.h) plus every project
+# header it exposes (its direct #include "..." entries, e.g. gatt/BLEService.h,
+# client/BLEClient.h). Those headers must never leak backend detail:
+#   * they must NOT include a backend selector or backend header
+#     (core/BLEBackend.h, or any *.nimble.h / *.bluedroid.h);
 #   * they must NOT name native stack types (esp_ble_*, ble_gap_*, ble_hs_*,
 #     ble_uuid_*) or per-type backend Impl structs in actual code.
+#
+# The set is derived from BLE.h so it stays correct as components move; the
+# implementation layer (shared *Impl.h bases, backend .nimble/.bluedroid files,
+# and internal helpers reached only from .cpp/backend files) is never scanned
+# and is free to name backend types.
 #
 # Comment lines (// ... and Doxygen ' * ...') are ignored so the invariant can
 # be described in prose without tripping the guard.
@@ -53,12 +60,30 @@ strip_comments() {
   ' "$1"
 }
 
-for hdr in "${SRC_DIR}"/BLE*.h; do
+# Build the public-surface header set: the umbrella BLE.h plus every project
+# header it directly includes that resolves to a file under src/.
+UMBRELLA="${SRC_DIR}/BLE.h"
+if [ ! -e "${UMBRELLA}" ]; then
+  echo "ERROR: umbrella header not found: ${UMBRELLA}"
+  exit 1
+fi
+
+public_headers=("${UMBRELLA}")
+while IFS= read -r inc; do
+  [ -e "${SRC_DIR}/${inc}" ] && public_headers+=("${SRC_DIR}/${inc}")
+done < <(
+  grep -oE '^[[:space:]]*#[[:space:]]*include[[:space:]]*"[^"]+"' "${UMBRELLA}" \
+    | sed -E 's/.*"([^"]+)".*/\1/'
+)
+
+for hdr in "${public_headers[@]}"; do
   [ -e "$hdr" ] || continue
   name="$(basename "$hdr")"
 
-  # 1) Forbidden includes (checked on raw #include lines).
-  bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"](impl/(nimble|bluedroid)/|impl/BLEBackend\.h)' "$hdr" || true)"
+  # 1) Forbidden includes (checked on raw #include lines): the backend selector
+  #    (core/BLEBackend.h) or any backend header by suffix (*.nimble.h /
+  #    *.bluedroid.h) wherever it lives.
+  bad_inc="$(grep -nE '^[[:space:]]*#[[:space:]]*include[[:space:]]*[<"]([^">]*\.(nimble|bluedroid)\.h|[^">]*BLEBackend\.h)' "$hdr" || true)"
   if [ -n "$bad_inc" ]; then
     echo "ERROR: ${name} includes a backend/selector header (public API must stay backend-agnostic):"
     echo "$bad_inc" | sed 's/^/    /'

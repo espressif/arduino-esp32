@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "impl/common/BLEGuards.h"
+#include "core/BLEGuards.h"
 #if BLE_ENABLED
 
 #include "BLE.h"

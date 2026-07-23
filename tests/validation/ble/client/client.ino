@@ -8,7 +8,7 @@
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
 #if defined(CONFIG_BLUEDROID_ENABLED)
-#include "impl/bluedroid/BluedroidClient.h"
+#include "client/BLEClient.bluedroid.h"
 #endif
 
 static const BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");

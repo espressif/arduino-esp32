@@ -42,7 +42,7 @@
 #include <Arduino.h>
 #include <cstring>
 #include <BLE.h>
-#include <HIDTypes.h>
+#include <hid/HIDTypes.h>
 
 // ---------------------------------------------------------------------------
 // Report IDs -- each maps to a separate Application Collection in the

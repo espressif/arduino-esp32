@@ -31,18 +31,37 @@ Backend differences may exist internally, but they should stay behind the common
 
 ## High-level architecture
 
-The library is split into three layers:
+The library is organized by **component** (feature folder), not by layer. Each
+class lives in one folder that holds its whole vertical slice — public handle,
+shared implementation base, and both backend implementations — with the layer of
+each file encoded in its name rather than its directory:
 
-1. **Public API layer** (`src/`): `BLE.h` and all public handle types (`BLEServer`, `BLEClient`, `BLEService`, `BLECharacteristic`, `BLEDescriptor`, `BLEScan`, `BLEAdvertising`, `BLESecurity`, remote GATT types, `BLEStream`, `BLEL2CAP*`).
-2. **Backend-selection and infrastructure layer** (`src/impl/`): `BLEGuards.h`, synchronization primitives, GATT validation, and thin backend bridge headers (`BLEServerBackend.h`, `BLEClientBackend.h`, `BLEScanBackend.h`, etc.).
-3. **Concrete backend layer** (`src/impl/nimble/` and `src/impl/bluedroid/`): full NimBLE and Bluedroid implementations.
+- **Public handle** — `component/BLEFoo.h` / `BLEFoo.cpp` (the API contract and
+  its backend-agnostic method bodies).
+- **Shared implementation base** — `component/BLEFooImpl.h` (`struct
+  BLEFooImplCommon`), compiled into every build.
+- **Backend implementations** — `component/BLEFoo.nimble.{h,cpp}` and
+  `component/BLEFoo.bluedroid.{h,cpp}` (`struct BLEFoo::Impl` and its native
+  callbacks), each compiled only for its stack.
 
-The public layer owns the API contract.
-Backends implement that contract and should not redefine it.
+Two folders hold code that is not owned by a single component:
+
+- `src/core/` — cross-cutting infrastructure: backend guards (`BLEGuards.h`),
+  the `BLELockGuard`/`BLESync` primitives, the `BLE_CHECK_IMPL` helper, the
+  single backend selector `BLEBackend.h`, and the compile-time
+  `BLEBackendContract.h`.
+- `src/types/` — backend-agnostic value types shared across components
+  (`BLEUUID`, `BLEConnInfo`, `BLEAdvTypes`, `BLEProperty`), including their
+  small per-stack converter helpers (`BLEUUID.nimble.*`, etc.).
+
+`src/BLE.h` is the umbrella that exposes the public handles; the `BLEClass`
+front-door (`BLE.cpp`, `BLE.nimble.*`, `BLE.bluedroid.*`) sits at the `src/`
+root. The public handles own the API contract; backends implement that contract
+and must not redefine it.
 
 ## Backend model
 
-Backend choice is centralized in `impl/common/BLEGuards.h`.
+Backend choice is centralized in `core/BLEGuards.h`.
 All BLE code must use these guards instead of repeating raw SDK config checks.
 
 Stack selection guards:
@@ -89,7 +108,7 @@ These objects are effectively global shared handles returned by `BLE`:
 - `BLE.getSecurity()`
 
 Repeated calls return handles to the same underlying object. Implementations live in
-`impl/<stack>/*Core.cpp`; each starts with the same two-line `isInitialized()` guard (written out
+`BLE.<stack>.cpp`; each starts with the same two-line `isInitialized()` guard (written out
 directly, not through a shared wrapper), then writes its own lazy-singleton alloc and backend
 post-create wiring directly (Bluedroid additionally sets `s_instance` for GAP event routing and may
 call register helpers like `bluedroidRegisterGattsApp`). There's no generic factory helper: the
@@ -98,7 +117,7 @@ shared "one size fits all" abstraction would either need to be bypassed regularl
 `createServer` already must be, for its asynchronous GATTS registration retry) or made generic
 enough that it stopped being easier to read than the explicit code it replaced.
 `BLEClass()`/`~BLEClass()` need a complete `BLEClass::Impl` (backend-specific), so they're defined
-once per backend `*Core.cpp` rather than shared — 7 identical lines duplicated is cheaper than a
+once per backend `BLE.<stack>.cpp` rather than shared — 7 identical lines duplicated is cheaper than a
 shared header for this one case.
 
 ### Per-instance handles
@@ -134,27 +153,27 @@ Where a class has meaningful stack-agnostic state/logic, the concrete `Foo::Impl
 active backend — inherits the shared base directly. There is no intermediate mixin and no empty combiner:
 
 ```cpp
-// impl/common/BLEServerImpl.h  — shared, compiled in every build
+// server/BLEServerImpl.h  — shared, compiled in every build
 struct BLEServerImplCommon : std::enable_shared_from_this<BLEServer::Impl> { /* shared state + methods */ };
 
-// impl/nimble/NimBLEServer.h   — the NimBLE build's concrete Impl
+// server/BLEServer.nimble.h   — the NimBLE build's concrete Impl
 struct BLEServer::Impl : BLEServerImplCommon { /* NimBLE state + static handlers */ };
 ```
 
 - `_impl` is a `std::shared_ptr<Impl>` pointing at the concrete `Foo::Impl` (`make_shared<Impl>()`).
-- Stack-agnostic state and dispatch live in `*ImplCommon` (`src/impl/common/BLE*Impl.h`), shared by both backends (kills duplication — item 4).
-- Backend-only state/statics live on `Foo::Impl` itself, **defined under `impl/<stack>/`**. The file location (and the Doxygen "NimBLE-specific"/"Bluedroid-specific" brief) tells you a member's layer: `FooImplCommon::` = shared, `Foo::Impl::` in `impl/<stack>/` = backend (item 2).
+- Stack-agnostic state and dispatch live in `*ImplCommon` (`src/<component>/BLEFooImpl.h`), shared by both backends (kills duplication — item 4).
+- Backend-only state/statics live on `Foo::Impl` itself, **defined in the backend file** (`<component>/BLEFoo.<stack>.h`). The file name (and the Doxygen "NimBLE-specific"/"Bluedroid-specific" brief) tells you a member's layer: `FooImplCommon::` = shared, `Foo::Impl::` in a `.nimble.*`/`.bluedroid.*` file = backend (item 2).
 - Access is **uniform and cast-free** via inheritance: `_impl->mtx`, `_impl->gattsIf`, `service->server->gattsIf` all resolve. No `static_cast`, no `backend()` helper, no mixin name to learn.
 - The single sanctioned access pattern in `.cpp` code is the `BLE_CHECK_IMPL(...)` null-guard macro, which yields a cast-free `impl` reference (item 3).
 - Backends reconstruct a public handle from a raw `Impl*` via `enable_shared_from_this` and a static `*ImplCommon::makeHandle` factory, avoiding extra `friend` declarations.
 
-This shared-base split is applied wherever there is real cross-backend duplication (Server, Service, Characteristic, Descriptor, Client, the three Remote types, Security, AdvertisedDevice). Classes that are inherently per-backend with no shared state (`BLEClass`, `Scan`, `Advertising`, `BLEL2CAPServer`) define `Foo::Impl` directly with no base. All backend `Impl` layouts are pulled in through the single umbrella selector `impl/BLEBackend.h`, which also `#include`s the compile-time contract check `impl/common/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `src/impl/nimble/README.md` and `src/impl/bluedroid/README.md`.
+This shared-base split is applied wherever there is real cross-backend duplication (Server, Service, Characteristic, Descriptor, Client, the three Remote types, Security, AdvertisedDevice). Classes that are inherently per-backend with no shared state (`BLEClass`, `Scan`, `Advertising`, `BLEL2CAPServer`) define `Foo::Impl` directly with no base. All backend `Impl` layouts are pulled in through the single umbrella selector `core/BLEBackend.h`, which also `#include`s the compile-time contract check `core/BLEBackendContract.h`; a CI guard (`tests/check_backend_isolation.sh`) fails the build if a public header names a backend type or includes a backend/selector header. Backend obligations are spelled out in [Backend contract](#backend-contract) below; stack-specific notes live in `docs/backend-nimble.md` and `docs/backend-bluedroid.md`.
 
 **Handle construction: `makeHandle` vs. the private constructor.**
 Every public handle's `std::shared_ptr<Impl>` constructor is **private** — handles must only be minted by the library, never fabricated by user code around an arbitrary `Impl*`. Code that needs to build a handle falls into two groups:
 
 - *Friends* of the handle — the owning public classes (e.g. `BLEServer` building a `BLEService`) and the class's own `*ImplCommon` — call the private constructor directly.
-- *Backend code* — the `impl/<stack>/` translation units (the concrete `Foo::Impl` and its `static` GAP/GATT callbacks) — is deliberately **not** a friend. It mints handles through the one static factory `*ImplCommon::makeHandle(...)`, which is a member of the single befriended type per class.
+- *Backend code* — the `BLEFoo.<stack>.cpp` translation units (the concrete `Foo::Impl` and its `static` GAP/GATT callbacks) — is deliberately **not** a friend. It mints handles through the one static factory `*ImplCommon::makeHandle(...)`, which is a member of the single befriended type per class.
 
 The point is to keep the `friend` surface minimal (item 5): each handle declares exactly one `friend struct BLE<T>ImplCommon` instead of befriending every backend TU and free function across both stacks. `makeHandle` additionally centralizes the raw-`Impl*` → owning-`shared_ptr` reconstruction (`impl->shared_from_this()`) for the callback paths that receive a bare `Impl*` through a `void *arg`, so that step is written and audited once rather than at every call site. The rejected alternatives: a **public constructor** would break encapsulation (any caller could wrap a foreign/dangling `Impl*`), and **per-backend `friend` declarations** would proliferate friendship (two backends × many TUs) for no clarity gain. So inside friend/public code the constructor is used directly; backend code uses `makeHandle`.
 
@@ -182,7 +201,7 @@ Handle states and semantics:
 - **destruction**: refcount decremented; Impl is freed when the last handle is released
 - **multiple handles**: interchangeable — operations on any handle affect the same underlying resource
 
-The null-handle guard is standardized through the `BLE_CHECK_IMPL` macro in `impl/common/BLEImplHelpers.h`.
+The null-handle guard is standardized through the `BLE_CHECK_IMPL` macro in `core/BLEImplHelpers.h`.
 If a public handle has no Impl, methods return a safe default or `BTStatus::InvalidState`.
 
 ### Parent-child ownership
@@ -252,8 +271,8 @@ It deliberately avoids `std::mutex` to keep binary size down.
 
 Current primitives:
 
-- `BLELockGuard` (`impl/common/BLEMutex.h`): RAII wrapper around a FreeRTOS recursive mutex
-- `BLESync` (`impl/common/BLESync.h`): blocking bridge for async stack operations
+- `BLELockGuard` (`core/BLEMutex.h`): RAII wrapper around a FreeRTOS recursive mutex
+- `BLESync` (`core/BLESync.h`): blocking bridge for async stack operations
 
 `BLESync` is used when the public API offers a blocking operation while the backend completes it asynchronously.
 The expected pattern is: prepare with `take()`, start async stack work, wait with `wait(timeoutMs)`, release from the stack callback with `give(status)`.
@@ -291,7 +310,7 @@ Do not reintroduce stack-specific property/permission conflation into public API
 
 ### GATT validation
 
-`impl/common/BLECharacteristicValidation.h` provides spec-compliance checks run in two stages:
+`gatt/BLECharacteristicValidation.h` provides spec-compliance checks run in two stages:
 
 - **Construction time**: validates properties and permissions against the Bluetooth Core Spec
 - **Registration time**: validates the complete descriptor set after any backend-specific auto-creation (e.g., Bluedroid CCCD)
@@ -382,46 +401,91 @@ Checklist for adding a third BLE backend (or understanding what an existing one 
 
 ### File layout (layer signal)
 
+Every file for a class lives in one per-class feature folder `src/<component>/`,
+with the layer of each file encoded in its name:
+
 ```
-src/BLEFoo.h                     public handle  (backend-agnostic; no NimBLE/Bluedroid headers)
-src/BLEFoo.cpp                   public-API method definitions (backend-agnostic)
-impl/common/BLEFooImpl.{h,cpp}   struct BLEFooImplCommon   -> SHARED   (compiled in every build)
-impl/<stack>/*.{h,cpp}           struct BLEFoo::Impl       -> BACKEND  (only this stack's build)
+src/<component>/BLEFoo.h                  public handle  (backend-agnostic; no NimBLE/Bluedroid headers)
+src/<component>/BLEFoo.cpp                public-API method definitions, backend-agnostic bodies
+src/<component>/BLEFooImpl.{h,cpp}        struct BLEFooImplCommon      -> SHARED   (compiled in every build)
+src/<component>/BLEFoo.nimble.{h,cpp}     struct BLEFoo::Impl (NimBLE)    -> BACKEND (only NimBLE builds)
+src/<component>/BLEFoo.bluedroid.{h,cpp}  struct BLEFoo::Impl (Bluedroid) -> BACKEND (only Bluedroid builds)
 ```
 
-A member on `BLEFooImplCommon` is **shared**. A member on `BLEFoo::Impl` (under `impl/<stack>/`) is **stack-specific**. Access is always cast-free `impl.member`. The active backend is selected in exactly one place: `impl/BLEBackend.h`.
+The components are `server/`, `client/`, `gatt/` (Service/Characteristic/Descriptor),
+`remote/` (remote GATT), `scan/`, `advertising/`, `security/`, `l2cap/` (NimBLE only),
+`stream/`, and `hid/`. The `BLEClass` front-door is the `src/` root itself
+(`BLE.cpp`, `BLE.nimble.*`, `BLE.bluedroid.*`), and `src/BLE.h` is the public umbrella.
+Cross-cutting infrastructure lives in `src/core/` and shared value types in `src/types/`
+(see [High-level architecture](#high-level-architecture)). There is no `impl/` tree.
+
+A member on `BLEFooImplCommon` is **shared**. A member on `BLEFoo::Impl` (in a
+`.nimble.*`/`.bluedroid.*` file) is **stack-specific**. Access is always cast-free
+`impl.member`. The active backend is selected in exactly one place: `core/BLEBackend.h`.
+
+### HID descriptor headers (`hid/HIDTypes.h`, `hid/HIDKeyboardTypes.h`)
+
+The `hid/` component carries two spec-level helper headers used to build HID Report
+Descriptors. They live in `hid/` (not `src/` root, not `cores/`) because they are
+BLE-HID-specific: the USB stack builds descriptors with TinyUSB's own `TUD_HID_REPORT_DESC_*`
+macros and `HID_`-prefixed short-item macros, so nothing outside BLE consumes these files —
+moving them to `cores/` would share nothing and only pollute the core.
+
+The two headers differ in how they relate to the `BLE.h` umbrella:
+
+- **`hid/HIDTypes.h` — reaches `BLE.h` transitively.** It contains only macros and
+  constants (HID short-item macros, report types, `BLE_APPEARANCE_HID_*`) — it emits **no
+  data**, so including it widely costs nothing. `hid/BLEHIDDevice.h` needs it and is itself
+  listed in `BLE.h`, so any sketch that does `#include <BLE.h>` already has it. It is *not*
+  listed directly in `BLE.h` because the umbrella aggregates the public **class** headers;
+  the HID class owns its own dependency. To avoid a macro-vs-enum collision with TinyUSB's
+  `hid_report_type_t` in composite BLE + USB-HID sketches, the report-type constants are
+  named `BLE_HID_REPORT_TYPE_{INPUT,OUTPUT,FEATURE}` rather than the unprefixed `HID_*` form.
+
+- **`hid/HIDKeyboardTypes.h` — deliberately NOT in `BLE.h`.** It *defines* an actual
+  `const KEYMAP keymap[]` lookup table (ASCII → HID usage) in the header. At namespace scope
+  that `const` has internal linkage, so every translation unit that includes it gets its own
+  copy of the table baked into flash. Only ASCII-typing keyboard sketches need it. Pulling it
+  into `BLE.h` would force a keymap table into the flash of *every* BLE sketch — mice,
+  gamepads, sensors included — for no benefit. It is therefore an **opt-in** include:
+  keyboard sketches add `#include <hid/HIDKeyboardTypes.h>` explicitly.
+
+Rule of thumb: header defines only macros/`constexpr`/declarations → safe to reach `BLE.h`;
+header *emits* data (tables, non-inline globals) → keep it opt-in.
 
 ### Backend subsystem pairs
 
-Each backend lives in `impl/<stack>/` as strict `.h`/`.cpp` **subsystem pairs** (every `.cpp` has a same-named header; the two backends are structurally identical except NimBLE-only `L2CAP`):
+Each backend implementation is a `BLEFoo.<stack>.{h,cpp}` pair inside its component
+folder — a strict `.h`/`.cpp` **subsystem pair** (every `.cpp` has a same-named
+header; the two backends are structurally identical except NimBLE-only `L2CAP`):
 
-| Pair | Owns |
-| --- | --- |
-| `Core` | `BLEClass::Impl`: init/teardown, identity, MTU, IRK, whitelist, GAP hooks |
-| `Server` | `BLEServer::Impl`: GATTS registration + server GAP/GATTS events |
-| `GattAttributes` | Service / Characteristic / Descriptor `Impl`s (notify, permissions, registration) |
-| `Client` | `BLEClient::Impl`: connection management + GATTC events |
-| `RemoteGatt` | Remote service / characteristic / descriptor `Impl`s |
-| `Scan` / `Advertising` / `Security` | Respective `Impl`s |
-| `ConnInfo` / `UUID` | Native ↔ public bridges |
-| `L2CAP` | *(NimBLE only)* L2CAP server/channel `Impl`s |
+| Pair | Location | Owns |
+| --- | --- | --- |
+| `BLE` (Core) | `src/BLE.<stack>.*` | `BLEClass::Impl`: init/teardown, identity, MTU, IRK, whitelist, GAP hooks |
+| `BLEServer` | `server/` | `BLEServer::Impl`: GATTS registration + server GAP/GATTS events |
+| `BLEGattAttributes` | `gatt/` | Service / Characteristic / Descriptor `Impl`s (notify, permissions, registration) |
+| `BLEClient` | `client/` | `BLEClient::Impl`: connection management + GATTC events |
+| `BLERemoteGatt` | `remote/` | Remote service / characteristic / descriptor `Impl`s |
+| `BLEScan` / `BLEAdvertising` / `BLESecurity` | `scan/` `advertising/` `security/` | Respective `Impl`s |
+| `BLEConnInfo` / `BLEUUID` | `types/` | Native ↔ public bridges |
+| `BLEL2CAP` | `l2cap/` | *(NimBLE only)* L2CAP server/channel `Impl`s |
 
-`impl/BLEBackend.h` includes the headers that define a `Foo::Impl` so the contract sees every `Impl`. See each backend's `README.md` for event-routing maps and quirks.
+`core/BLEBackend.h` includes the headers that define a `Foo::Impl` so the contract sees every `Impl`. See the backend notes in `docs/backend-nimble.md` and `docs/backend-bluedroid.md` for event-routing maps and quirks.
 
 ### Accessing `_impl`
 
-`_impl` is null only for a default-constructed or moved-from handle. Use `BLE_CHECK_IMPL` (`impl/common/BLEImplHelpers.h`):
+`_impl` is null only for a default-constructed or moved-from handle. Use `BLE_CHECK_IMPL` (`core/BLEImplHelpers.h`):
 
-- **`src/*.cpp` (public facade):** `BLE_CHECK_IMPL(<return-on-null>)` is mandatory as the first statement of any method that touches `_impl`.
-- **`impl/**` (backend TUs):** prefer the macro; a hand-written `if (!_impl)` is allowed only when the null path needs extra work the macro cannot express. Never mix the macro and a manual `*_impl` alias in one method.
+- **`BLEFoo.cpp` (public facade):** `BLE_CHECK_IMPL(<return-on-null>)` is mandatory as the first statement of any method that touches `_impl`.
+- **`BLEFoo.<stack>.cpp` (backend TUs):** prefer the macro; a hand-written `if (!_impl)` is allowed only when the null path needs extra work the macro cannot express. Never mix the macro and a manual `*_impl` alias in one method.
 - **Trivial validity checks** (e.g. `operator bool`): write `return _impl != nullptr;` directly.
 
 ### What a backend must provide
 
 1. **Type definitions** — one `struct Foo::Impl` per PIMPL class, inheriting `FooImplCommon` when a shared base exists (enforced by `BLEBackendContract.h`). Baseless classes (`BLEClass`, `Scan`, `Advertising`, L2CAP) define `Foo::Impl` directly. `BLEAdvertisedDevice` is fully shared — no backend `Impl` needed.
-2. **Backend-specific public methods** — anything not already defined in `src/*.cpp` that talks to the native stack. **Exception — `BLEClass`:** all lifecycle, identity, MTU/PHY/whitelist, custom handlers, **and** factory accessors live in `impl/<stack>/*Core.cpp` only.
-3. **Agnostic hooks** declared in `impl/common/` and implemented per backend (e.g. `bleServerRemoveService`). Validation helpers such as `bleValidateCharProps` are shared — consume them, do not reimplement.
-4. **Lifecycle + event routing** — init/deinit in `*Core.cpp`; route GAP/GATT into shared handlers (`handleGAP` / `handleGATTS` / `handleGATTC`, advertising/scan/security). Fire shared `BLESecurityImplCommon` pairing hooks on the process-wide `BLESecurity::Impl::instance()`.
+2. **Backend-specific public methods** — anything not already defined in `BLEFoo.cpp` that talks to the native stack. **Exception — `BLEClass`:** all lifecycle, identity, MTU/PHY/whitelist, custom handlers, **and** factory accessors live in `BLE.<stack>.cpp` only.
+3. **Agnostic hooks** declared in the shared base / `core/` and implemented per backend (e.g. `bleServerRemoveService`). Validation helpers such as `bleValidateCharProps` are shared — consume them, do not reimplement.
+4. **Lifecycle + event routing** — init/deinit in `BLE.<stack>.cpp`; route GAP/GATT into shared handlers (`handleGAP` / `handleGATTS` / `handleGATTC`, advertising/scan/security). Fire shared `BLESecurityImplCommon` pairing hooks on the process-wide `BLESecurity::Impl::instance()`.
 5. **Resource teardown in `end()`** — the library owns cleanup of resources it created. `end()` already resets advertising and stops scanning; backends with periodic-sync must call `BLEScan::terminateAllPeriodicSyncs()` **while the host is still enabled**. Terminating after host disable races teardown.
 
 ### Observable ordering (must match across backends)
@@ -460,7 +524,7 @@ Friendship is not inherited. When a backend `Impl` must touch privates of a *dif
 
 ### Enforcement
 
-- **Compile time:** `impl/common/BLEBackendContract.h` `static_assert`s shared-base inheritance and that baseless `Impl`s are defined.
+- **Compile time:** `core/BLEBackendContract.h` `static_assert`s shared-base inheritance and that baseless `Impl`s are defined.
 - **Isolation:** `tests/check_backend_isolation.sh` fails if a public `src/BLE*.h` names a backend type or includes a backend/selector header.
 - **Link time:** any public/agnostic method left undefined by the backend is a linker error.
 

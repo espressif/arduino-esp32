@@ -29,10 +29,10 @@
 #include <Arduino.h>
 #include <cstring>
 #include <BLE.h>
-#include <HIDTypes.h>
+#include <hid/HIDTypes.h>
 // Provides keymap[] for ASCII-to-HID translation (default: UK layout; define
 // US_KEYBOARD before this include to switch to US layout)
-#include <HIDKeyboardTypes.h>
+#include <hid/HIDKeyboardTypes.h>
 // HID Report Descriptor for a standard keyboard.
 // Defines: 8 modifier bits (Ctrl, Shift, Alt, GUI x left/right),
 //          1 reserved byte, and 6 simultaneous key slots

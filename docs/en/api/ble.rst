@@ -76,8 +76,9 @@ The BLE host stack is chosen at **build time** via ``sdkconfig``:
 * ``CONFIG_NIMBLE_ENABLED`` selects NimBLE
 * ``CONFIG_BLUEDROID_ENABLED`` selects Bluedroid
 
-The public API is identical regardless of the backend. Backend-specific code lives entirely in the
-``impl/nimble/`` and ``impl/bluedroid/`` directories and is never included by user code.
+The public API is identical regardless of the backend. Backend-specific code lives in per-component
+``*.nimble.*`` and ``*.bluedroid.*`` source files (for example ``server/BLEServer.nimble.cpp``), selected
+at compile time, and is never included by user code.
 
 Thread Safety
 *************
@@ -133,7 +134,7 @@ BLE 5.0 Features
 
 Extended advertising, periodic advertising, PHY selection, and Data Length Extension are available on
 SoCs with ``SOC_BLE_50_SUPPORTED`` (or via hosted BLE). These features are compile-time guarded by the
-``BLE5_SUPPORTED`` macro defined in ``impl/common/BLEGuards.h``.
+``BLE5_SUPPORTED`` macro defined in ``core/BLEGuards.h``.
 
 Getting Started
 ---------------
@@ -2718,7 +2719,7 @@ the same cached characteristic.
 HID Appearance Constants
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Defined in ``HIDTypes.h`` for use with ``adv.setAppearance()``:
+Defined in ``hid/HIDTypes.h`` (pulled in transitively by ``<BLE.h>``) for use with ``adv.setAppearance()``:
 
 .. code-block:: cpp
 
