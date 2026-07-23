@@ -18,6 +18,20 @@
 
 #include <Matter.h>
 #include <MatterEndPoint.h>
+#include <app/util/attribute-storage.h>
+
+using namespace chip::app::Clusters;
+
+// A single Matter semantic tag (Descriptor cluster TagList entry). Tags are used to disambiguate
+// sibling endpoints that expose the same device type — e.g. tagging 3 buttons with Number (One/Two/Three)
+// and Position (Top/Middle/Bottom) tags so a controller can tell them apart.
+// namespaceId/tag values come from the Matter "Standard Namespaces" specification:
+// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+struct MatterTag {
+  uint8_t namespaceId;
+  uint8_t tag;
+  const char *label = nullptr;  // optional, nullptr = no label
+};
 
 // Matter Generic Switch Endpoint — momentary smart button with optional gesture features
 class MatterGenericSwitch : public MatterEndPoint {
@@ -53,6 +67,11 @@ public:
   // Convenience: sends InitialPress and ShortRelease when release feature is enabled
   void click();
 
+  // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+  // Must be called after begin(). tagList is copied internally; each entry's optional `label` pointer,
+  // if set, must remain valid for as long as this endpoint is running.
+  bool setTagList(const MatterTag *tagList, uint8_t count);
+
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);
 
@@ -62,5 +81,8 @@ protected:
   uint8_t multiPressMax = 5;
   static constexpr uint8_t pressPosition = 1;
   static constexpr uint8_t idlePosition = 0;
+
+private:
+  Descriptor::Structs::SemanticTagStruct::Type *_tagList = nullptr;
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

@@ -18,6 +18,7 @@
 #include <Matter.h>
 #include <app/server/Server.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
+#include <string.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -37,6 +38,7 @@ MatterGenericSwitch::MatterGenericSwitch() {}
 
 MatterGenericSwitch::~MatterGenericSwitch() {
   end();
+  delete[] _tagList;
 }
 
 bool MatterGenericSwitch::hasFeature(uint32_t feature) const {
@@ -235,6 +237,39 @@ void MatterGenericSwitch::click() {
   if (hasFeature(FEATURE_RELEASE)) {
     release();
   }
+}
+
+bool MatterGenericSwitch::setTagList(const MatterTag *tagList, uint8_t count) {
+  if (!started) {
+    log_e("Matter Generic Switch device has not begun.");
+    return false;
+  }
+  if (tagList == nullptr || count == 0) {
+    log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+
+  Descriptor::Structs::SemanticTagStruct::Type *newTagList = new Descriptor::Structs::SemanticTagStruct::Type[count];
+  for (uint8_t i = 0; i < count; i++) {
+    newTagList[i].mfgCode.SetNull();
+    newTagList[i].namespaceID = tagList[i].namespaceId;
+    newTagList[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      newTagList[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  CHIP_ERROR err = SetTagList(getEndPointId(), chip::Span<const Descriptor::Structs::SemanticTagStruct::Type>(newTagList, count));
+  if (err != CHIP_NO_ERROR) {
+    log_e("Failed to set TagList attribute: %" CHIP_ERROR_FORMAT, err.Format());
+    delete[] newTagList;
+    return false;
+  }
+
+  // the previous list, if any, has just been replaced and is no longer referenced by the stack
+  delete[] _tagList;
+  _tagList = newTagList;
+  return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
