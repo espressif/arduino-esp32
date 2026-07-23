@@ -15,7 +15,7 @@ RS485 requires **separate** GPIO pins:
 | TX | UART transmit to transceiver |
 | RTS | Drives transceiver DE/~RE (direction) |
 
-**One-wire mode (`enableOneWireMode`) is not compatible with RS485.** Do not use the same GPIO for RX and TX; use an external RS485 transceiver (e.g. MAX485) with distinct TX, RX, and direction control.
+**One-wire UART (same GPIO for RX and TX) is not compatible with RS485.** Do not use the same GPIO for RX and TX; use an external RS485 transceiver (e.g. MAX485) with distinct TX, RX, and direction control.
 
 ## Wiring
 

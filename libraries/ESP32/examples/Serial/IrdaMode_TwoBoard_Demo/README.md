@@ -36,7 +36,7 @@ This example demonstrates **real infrared communication** between **two separate
 - **User selects mode** at startup via Serial Monitor (press 'T' or 'R')
 - **Real hardware required**: IR LED on TX board, IR receiver on RX board
 
-**Note:** IrDA requires **separate** TX and RX GPIO pins on each board. One-wire UART (`enableOneWireMode`) is **not** supported in IrDA mode.
+**Note:** IrDA requires **separate** TX and RX GPIO pins on each board. One-wire UART (same GPIO for RX and TX) is **not** supported in IrDA mode.
 
 The communication pattern:
 ```
