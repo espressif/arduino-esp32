@@ -19,6 +19,17 @@
 #include <Matter.h>
 #include <MatterEndPoint.h>
 
+// A single Matter semantic tag (Descriptor cluster TagList entry). Tags are used to disambiguate
+// sibling endpoints that expose the same device type — e.g. tagging 3 buttons with Number (One/Two/Three)
+// and Position (Top/Middle/Bottom) tags so a controller can tell them apart.
+// namespaceId/tag values come from the Matter "Standard Namespaces" specification:
+// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+struct MatterTag {
+  uint8_t namespaceId;
+  uint8_t tag;
+  const char *label = nullptr;  // optional, nullptr = no label
+};
+
 // Matter Generic Switch Endpoint — momentary smart button with optional gesture features
 class MatterGenericSwitch : public MatterEndPoint {
 public:
@@ -52,6 +63,11 @@ public:
 
   // Convenience: sends InitialPress and ShortRelease when release feature is enabled
   void click();
+
+  // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+  // Must be called after begin(). Each entry's optional `label` pointer, if set, must remain valid for
+  // as long as this endpoint is running (it is not copied).
+  bool setTagList(const MatterTag *tagList, uint8_t count);
 
   // this function is called by Matter internal event processor. It could be overwritten by the application, if necessary.
   bool attributeChangeCB(uint16_t endpoint_id, uint32_t cluster_id, uint32_t attribute_id, esp_matter_attr_val_t *val);

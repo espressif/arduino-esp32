@@ -18,6 +18,7 @@
 #include <Matter.h>
 #include <app/server/Server.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
+#include <string.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -235,6 +236,42 @@ void MatterGenericSwitch::click() {
   if (hasFeature(FEATURE_RELEASE)) {
     release();
   }
+}
+
+bool MatterGenericSwitch::setTagList(const MatterTag *tagList, uint8_t count) {
+  if (!started) {
+    log_e("Matter Generic Switch device has not begun.");
+    return false;
+  }
+  if (tagList == nullptr || count == 0) {
+    log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+
+  endpoint_t *ep = endpoint::get(node::get(), getEndPointId());
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", getEndPointId());
+    return false;
+  }
+
+  Globals::Structs::SemanticTagStruct::Type *tags = new Globals::Structs::SemanticTagStruct::Type[count];
+  for (uint8_t i = 0; i < count; i++) {
+    tags[i].mfgCode.SetNull();
+    tags[i].namespaceID = tagList[i].namespaceId;
+    tags[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  esp_err_t err = set_semantic_tags(ep, tags, count);
+  delete[] tags;
+
+  if (err != ESP_OK) {
+    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
