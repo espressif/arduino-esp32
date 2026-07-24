@@ -126,14 +126,11 @@ Both `ButtonOn` and `ButtonOff` are `MatterGenericSwitch` endpoints, so they exp
 The `MatterTags` namespace (see `MatterTags.h`) provides named constants for the common Matter semantic tag namespaces — no need to hardcode namespace/tag numbers from the Matter [Standard Namespaces specification](https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces):
 
 ```cpp
-MatterTag onTagList[] = {
-  MatterTags::Switches::On,
-};
 ButtonOn.begin();
-ButtonOn.setTagList(onTagList, 1);
+ButtonOn.setTagList({MatterTags::Switches::On});
 ```
 
-`ButtonOff` is tagged the same way, using `MatterTags::Switches::Off` instead. `setTagList()` must be called after `begin()`, since the endpoint (and its Descriptor cluster) must already exist. For a tag outside the predefined namespaces, or a custom label, use `MatterTags::make(namespaceId, tag, label)`.
+`ButtonOff` is tagged the same way, using `MatterTags::Switches::Off` instead. `setTagList()` must be called after `begin()`, since the endpoint (and its Descriptor cluster) must already exist. For a tag outside the predefined namespaces, or a custom label, use `MatterTags::make(namespaceId, tag, label)`. A `setTagList(const MatterTag *tagList, uint8_t count)` overload is also available for building the list at runtime (e.g. a size known only at runtime, or a list shared and reused across endpoints).
 
 ### Smart Home Integration
 

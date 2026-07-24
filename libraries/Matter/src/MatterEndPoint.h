@@ -19,6 +19,7 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <functional>
+#include <initializer_list>
 
 using namespace esp_matter;
 
@@ -86,6 +87,9 @@ public:
   // Each entry's optional `label` pointer, if set, must remain valid for as long as this endpoint is running
   // (it is not copied).
   bool setTagList(const MatterTag *tagList, uint8_t count);
+
+  // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
+  bool setTagList(std::initializer_list<MatterTag> tagList);
 
 protected:
   // used for secondary network interface endpoints

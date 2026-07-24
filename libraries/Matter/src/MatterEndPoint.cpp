@@ -207,4 +207,9 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
   return true;
 }
 
+// Convenience overload: ButtonOn.setTagList({MatterTags::Switches::On});
+bool MatterEndPoint::setTagList(std::initializer_list<MatterTag> tagList) {
+  return setTagList(tagList.begin(), static_cast<uint8_t>(tagList.size()));
+}
+
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

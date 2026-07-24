@@ -44,16 +44,6 @@ const uint8_t buttonOnPin = 4;                   // On button GPIO — change to
 const uint8_t buttonOffPin = 5;                  // Off button GPIO — change to match your wiring
 const uint8_t decommissionButtonPin = BOOT_PIN;  // hold this button for 5s to decommission
 
-// Tag each button with what it does: ButtonOn = On, ButtonOff = Off.
-// MatterTags (see MatterTags.h) provides named constants for the common Matter semantic tag
-// namespaces, so sketches don't need to hardcode namespace/tag numbers.
-MatterTag onTagList[] = {
-  MatterTags::Switches::On,
-};
-MatterTag offTagList[] = {
-  MatterTags::Switches::Off,
-};
-
 // Per-button debouncing state
 struct ButtonState {
   uint32_t timeStamp = 0;  // debouncing control
@@ -119,9 +109,11 @@ void setup() {
   ButtonOff.begin();
 
   // Tag each button so Matter controllers can tell them apart, since both share the same
-  // Generic Switch device type. Must be called after begin().
-  ButtonOn.setTagList(onTagList, 1);
-  ButtonOff.setTagList(offTagList, 1);
+  // Generic Switch device type. Must be called after begin(). MatterTags (see MatterTags.h)
+  // provides named constants for the common Matter semantic tag namespaces, so sketches
+  // don't need to hardcode namespace/tag numbers.
+  ButtonOn.setTagList({MatterTags::Switches::On});
+  ButtonOff.setTagList({MatterTags::Switches::Off});
 
   // Matter beginning - Last step, after all EndPoints are initialized
   Matter.begin();
