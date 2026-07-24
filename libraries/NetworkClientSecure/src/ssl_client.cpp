@@ -196,6 +196,10 @@ int start_ssl_client(
       return handle_error(ret);
     }
   }
+  
+  if (ssl_client->cipher_list) {
+    mbedtls_ssl_conf_ciphersuites(&ssl_client->ssl_conf, ssl_client->cipher_list.get());
+  }
 
   // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
   // MBEDTLS_SSL_VERIFY_NONE if not.

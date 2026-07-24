@@ -455,6 +455,16 @@ void NetworkClientSecure::setAlpnProtocols(const char **alpn_protos) {
   _alpn_protos = alpn_protos;
 }
 
+bool NetworkClientSecure::setCiphers(const int *list, size_t count) {
+  sslclient->cipher_list = std::shared_ptr<int>(new (std::nothrow) int[count + 1], std::default_delete<int[]>());
+  if (!sslclient->cipher_list.get()) {
+    return false;
+  }
+  memcpy(sslclient->cipher_list.get(), list, count * sizeof(int));
+  sslclient->cipher_list.get()[count] = 0;
+  return true;
+}
+
 int NetworkClientSecure::fd() const {
   return sslclient->socket;
 }
