@@ -44,18 +44,14 @@ const uint8_t buttonOnPin = 4;                   // On button GPIO — change to
 const uint8_t buttonOffPin = 5;                  // Off button GPIO — change to match your wiring
 const uint8_t decommissionButtonPin = BOOT_PIN;  // hold this button for 5s to decommission
 
-// Semantic tags for the Descriptor cluster TagList attribute.
-// Please refer to https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
-constexpr const uint8_t kNamespaceSwitches = 0x43;
-constexpr const uint8_t kTagSwitchOn = 0;   // Switches Namespace: 0x43, tag 0 (On)
-constexpr const uint8_t kTagSwitchOff = 1;  // Switches Namespace: 0x43, tag 1 (Off)
-
-// Tag each button with what it does: ButtonOn = On, ButtonOff = Off
+// Tag each button with what it does: ButtonOn = On, ButtonOff = Off.
+// MatterTags (see MatterTags.h) provides named constants for the common Matter semantic tag
+// namespaces, so sketches don't need to hardcode namespace/tag numbers.
 MatterTag onTagList[] = {
-  {kNamespaceSwitches, kTagSwitchOn},
+  MatterTags::Switches::On,
 };
 MatterTag offTagList[] = {
-  {kNamespaceSwitches, kTagSwitchOff},
+  MatterTags::Switches::Off,
 };
 
 // Per-button debouncing state

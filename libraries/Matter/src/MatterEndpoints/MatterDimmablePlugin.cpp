@@ -100,6 +100,12 @@ bool MatterDimmablePlugin::begin(bool initialState, uint8_t level) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on Dimmable Plugin endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("Dimmable Plugin created with endpoint_id %u", getEndPointId());
 
   /* Mark deferred persistence for some attributes that might be changed rapidly */

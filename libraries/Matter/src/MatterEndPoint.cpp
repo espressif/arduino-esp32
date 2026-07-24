@@ -16,6 +16,10 @@
 #ifdef CONFIG_ESP_MATTER_ENABLE_DATA_MODEL
 
 #include <MatterEndPoint.h>
+#include <app/server/Server.h>
+#include <string.h>
+
+using namespace chip::app::Clusters;
 
 uint16_t MatterEndPoint::secondary_network_endpoint_id = 0;
 
@@ -141,6 +145,66 @@ bool MatterEndPoint::endpointIdentifyCB(uint16_t endpoint_id, bool identifyIsEna
 // User callback for the Identify Cluster functionality
 void MatterEndPoint::onIdentify(EndPointIdentifyCB onEndPointIdentifyCB) {
   _onEndPointIdentifyCB = onEndPointIdentifyCB;
+}
+
+// Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+bool MatterEndPoint::enableTagList() {
+  if (endpoint_id == 0) {
+    log_e("Endpoint ID is not set");
+    return false;
+  }
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+  cluster_t *descriptorCluster = cluster::get(ep, Descriptor::Id);
+  if (descriptorCluster == nullptr) {
+    log_e("Descriptor cluster not found on endpoint %u", endpoint_id);
+    return false;
+  }
+  if (cluster::descriptor::feature::tag_list::add(descriptorCluster) != ESP_OK) {
+    log_e("Failed to enable TagList feature on endpoint %u", endpoint_id);
+    return false;
+  }
+  return true;
+}
+
+// Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
+  if (endpoint_id == 0) {
+    log_e("Endpoint ID is not set");
+    return false;
+  }
+  if (tagList == nullptr || count == 0) {
+    log_e("setTagList() requires a non-empty tag list.");
+    return false;
+  }
+
+  endpoint_t *ep = endpoint::get(node::get(), endpoint_id);
+  if (ep == nullptr) {
+    log_e("Endpoint %u not found", endpoint_id);
+    return false;
+  }
+
+  Globals::Structs::SemanticTagStruct::Type *tags = new Globals::Structs::SemanticTagStruct::Type[count];
+  for (uint8_t i = 0; i < count; i++) {
+    tags[i].mfgCode.SetNull();
+    tags[i].namespaceID = tagList[i].namespaceId;
+    tags[i].tag = tagList[i].tag;
+    if (tagList[i].label != nullptr) {
+      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
+    }
+  }
+
+  esp_err_t err = set_semantic_tags(ep, tags, count);
+  delete[] tags;
+
+  if (err != ESP_OK) {
+    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
+    return false;
+  }
+  return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

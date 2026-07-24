@@ -24,7 +24,7 @@ Both buttons expose the same Matter device type (Generic Switch), so without tag
 ## Features
 
 - Two independent Matter Generic Switch endpoints (On and Off) on a single Matter node
-- Disambiguates sibling endpoints using the Descriptor cluster `TagList` attribute (`MatterGenericSwitch::setTagList()`)
+- Disambiguates sibling endpoints using the Descriptor cluster `TagList` attribute (`MatterEndPoint::setTagList()`)
 - Support for both Wi-Fi and Thread(*) connectivity
 - **Simple short-click** gesture per button: `InitialPress` on press, `ShortRelease` on release
 - Dedicated button for factory reset (decommission)
@@ -121,17 +121,19 @@ Each button is a **simple implementation** — short click only:
 
 ### Tagging the Buttons (TagList)
 
-Both `ButtonOn` and `ButtonOff` are `MatterGenericSwitch` endpoints, so they expose the same Matter device type. To let a controller tell them apart, each endpoint is tagged right after `begin()`, using a `MatterTag` entry (namespace ID + tag ID, from the Matter [Standard Namespaces specification](https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces)):
+Both `ButtonOn` and `ButtonOff` are `MatterGenericSwitch` endpoints, so they expose the same Matter device type. To let a controller tell them apart, each endpoint is tagged right after `begin()`, using a `MatterTag` entry. `setTagList()` is defined on the shared `MatterEndPoint` base class, so it is available on any endpoint type, not just `MatterGenericSwitch`.
+
+The `MatterTags` namespace (see `MatterTags.h`) provides named constants for the common Matter semantic tag namespaces — no need to hardcode namespace/tag numbers from the Matter [Standard Namespaces specification](https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces):
 
 ```cpp
 MatterTag onTagList[] = {
-  {kNamespaceSwitches, kTagSwitchOn},  // Switches Namespace (0x43): On
+  MatterTags::Switches::On,
 };
 ButtonOn.begin();
 ButtonOn.setTagList(onTagList, 1);
 ```
 
-`ButtonOff` is tagged the same way, using the Off tag instead. `setTagList()` must be called after `begin()`, since the endpoint (and its Descriptor cluster) must already exist.
+`ButtonOff` is tagged the same way, using `MatterTags::Switches::Off` instead. `setTagList()` must be called after `begin()`, since the endpoint (and its Descriptor cluster) must already exist. For a tag outside the predefined namespaces, or a custom label, use `MatterTags::make(namespaceId, tag, label)`.
 
 ### Smart Home Integration
 

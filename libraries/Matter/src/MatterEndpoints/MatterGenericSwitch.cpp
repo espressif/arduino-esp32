@@ -18,7 +18,6 @@
 #include <Matter.h>
 #include <app/server/Server.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
-#include <string.h>
 
 using namespace esp_matter;
 using namespace esp_matter::endpoint;
@@ -106,9 +105,6 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
   cluster::groups::config_t groups_config;
   cluster::groups::create(endpoint, &groups_config, CLUSTER_FLAG_SERVER | CLUSTER_FLAG_CLIENT);
 
-  cluster_t *aCluster = cluster::get(endpoint, Descriptor::Id);
-  esp_matter::cluster::descriptor::feature::tag_list::add(aCluster);
-
   cluster::fixed_label::config_t fl_config;
   cluster::fixed_label::create(endpoint, &fl_config, CLUSTER_FLAG_SERVER);
 
@@ -116,6 +112,12 @@ bool MatterGenericSwitch::begin(uint32_t featureFlags, uint8_t multiPressMax) {
   cluster::user_label::create(endpoint, &ul_config, CLUSTER_FLAG_SERVER);
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on Generic Switch endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("Generic Switch created with endpoint_id %u (feature_flags=0x%02" PRIX32 ")", getEndPointId(), featureFlags);
 
   started = true;
@@ -236,42 +238,6 @@ void MatterGenericSwitch::click() {
   if (hasFeature(FEATURE_RELEASE)) {
     release();
   }
-}
-
-bool MatterGenericSwitch::setTagList(const MatterTag *tagList, uint8_t count) {
-  if (!started) {
-    log_e("Matter Generic Switch device has not begun.");
-    return false;
-  }
-  if (tagList == nullptr || count == 0) {
-    log_e("setTagList() requires a non-empty tag list.");
-    return false;
-  }
-
-  endpoint_t *ep = endpoint::get(node::get(), getEndPointId());
-  if (ep == nullptr) {
-    log_e("Endpoint %u not found", getEndPointId());
-    return false;
-  }
-
-  Globals::Structs::SemanticTagStruct::Type *tags = new Globals::Structs::SemanticTagStruct::Type[count];
-  for (uint8_t i = 0; i < count; i++) {
-    tags[i].mfgCode.SetNull();
-    tags[i].namespaceID = tagList[i].namespaceId;
-    tags[i].tag = tagList[i].tag;
-    if (tagList[i].label != nullptr) {
-      tags[i].label.Emplace(chip::CharSpan(tagList[i].label, strlen(tagList[i].label)));
-    }
-  }
-
-  esp_err_t err = set_semantic_tags(ep, tags, count);
-  delete[] tags;
-
-  if (err != ESP_OK) {
-    log_e("Failed to set TagList attribute: %s", esp_err_to_name(err));
-    return false;
-  }
-  return true;
 }
 
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */

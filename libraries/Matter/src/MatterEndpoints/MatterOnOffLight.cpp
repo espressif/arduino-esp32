@@ -80,6 +80,12 @@ bool MatterOnOffLight::begin(bool initialState) {
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on On-Off Light endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("On-Off Light created with endpoint_id %u", getEndPointId());
 
   started = true;

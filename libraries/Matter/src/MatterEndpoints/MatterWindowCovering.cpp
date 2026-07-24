@@ -94,6 +94,12 @@ bool MatterWindowCovering::begin(
   }
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on Window Covering endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("Window Covering created with endpoint_id %u", getEndPointId());
 
   started = true;

@@ -161,6 +161,12 @@ bool MatterThermostat::begin(ControlSequenceOfOperation_t _controlSequence, Ther
   currentMode = _currentMode;
 
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on Thermostat endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("Thermostat created with endpoint_id %u", getEndPointId());
 
   started = true;

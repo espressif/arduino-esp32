@@ -15,6 +15,8 @@ MatterColorTemperatureLight	KEYWORD1
 MatterColorLight	KEYWORD1
 MatterEnhancedColorLight	KEYWORD1
 MatterEndPoint	KEYWORD1
+MatterTag	KEYWORD1
+MatterTags	KEYWORD1
 MatterFan	KEYWORD1
 FanMode_t	KEYWORD1
 FanModeSequence_t	KEYWORD1
@@ -201,6 +203,8 @@ getSecondaryNetworkEndPointId	KEYWORD2
 createSecondaryNetworkInterface	KEYWORD2
 onIdentify	KEYWORD2
 endpointIdentifyCB	KEYWORD2
+setTagList	KEYWORD2
+make	KEYWORD2
 setIlluminance	KEYWORD2
 getIlluminance	KEYWORD2
 
