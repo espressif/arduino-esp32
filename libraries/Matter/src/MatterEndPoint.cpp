@@ -197,7 +197,7 @@ bool MatterEndPoint::setTagList(const MatterTag *tagList, uint8_t count) {
     }
   }
 
-  esp_err_t err = set_semantic_tags(ep, tags, count);
+  esp_err_t err = endpoint::set_semantic_tags(ep, tags, count);
   delete[] tags;
 
   if (err != ESP_OK) {
