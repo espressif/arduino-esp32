@@ -79,6 +79,7 @@ public:
   bool verify(const char *fingerprint, const char *domain_name);
   void setHandshakeTimeout(unsigned long handshake_timeout);
   void setAlpnProtocols(const char **alpn_protos);
+  bool setCiphers(const int *list, size_t count);
 
   // Certain protocols start in plain-text; and then have the client
   // give some STARTSSL command to `upgrade' the connection to TLS
