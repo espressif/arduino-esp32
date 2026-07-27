@@ -10,7 +10,7 @@ on:
         description: 'Git ref with the source to push to the component registry'
         required: true
   workflow_run:
-    workflows: ["ESP32 Arduino Release"]
+    workflows: ["Release ESP32 Arduino package"]
     types:
       - completed
 
