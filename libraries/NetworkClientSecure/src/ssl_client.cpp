@@ -409,8 +409,9 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   int last_err = ssl_client->last_error;
   crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
 
-  // reset embedded pointers to zero
-  memset(ssl_client, 0, sizeof(sslclient_context));
+  
+  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
+  *ssl_client = sslclient_context();
 
   ssl_client->handshake_timeout = handshake_timeout;
   ssl_client->socket_timeout = socket_timeout;
