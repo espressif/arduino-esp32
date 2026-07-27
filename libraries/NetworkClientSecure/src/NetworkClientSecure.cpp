@@ -456,6 +456,17 @@ void NetworkClientSecure::setAlpnProtocols(const char **alpn_protos) {
 }
 
 bool NetworkClientSecure::setCiphers(const int *list, size_t count) {
+  if (list == nullptr || count == 0) {
+    log_e("setCiphers: list is null or count is zero");
+    return false;
+  }
+
+  if (connected()) {
+    log_e("setCiphers: cannot change ciphersuites while a connection is active; "
+          "call this before connect() or after stop()");
+    return false;
+  }
+
   sslclient->cipher_list = std::shared_ptr<int>(new (std::nothrow) int[count + 1], std::default_delete<int[]>());
   if (!sslclient->cipher_list.get()) {
     return false;

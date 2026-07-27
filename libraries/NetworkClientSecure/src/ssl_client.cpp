@@ -408,6 +408,7 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   unsigned long socket_timeout = ssl_client->socket_timeout;
   int last_err = ssl_client->last_error;
   crt_bundle_attach_cb bundle_attach_cb = ssl_client->bundle_attach_cb;
+  std::shared_ptr<int> saved_ciphers = ssl_client->cipher_list;
 
   
   // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
@@ -417,6 +418,7 @@ void stop_ssl_socket(sslclient_context *ssl_client) {
   ssl_client->socket_timeout = socket_timeout;
   ssl_client->last_error = last_err;
   ssl_client->bundle_attach_cb = bundle_attach_cb;
+  ssl_client->cipher_list = saved_ciphers;
   ssl_client->peek_buf = -1;
 }
 
