@@ -48,8 +48,8 @@ static int _handle_error(int err, const char *function, int line) {
 #define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
 
 void ssl_init(sslclient_context *ssl_client) {
-  // reset embedded pointers to zero
-  memset(ssl_client, 0, sizeof(sslclient_context));
+  // reset ssl_client by creating new (empty) context, as shared_ptr is not safe for memset
+  *ssl_client = sslclient_context();
   mbedtls_ssl_init(&ssl_client->ssl_ctx);
   mbedtls_ssl_config_init(&ssl_client->ssl_conf);
 #if MBEDTLS_VERSION_MAJOR < 4
