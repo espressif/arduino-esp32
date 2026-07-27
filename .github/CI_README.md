@@ -1143,7 +1143,7 @@ The file lists popular Arduino libraries with their names, which examples to tes
   - Push to `master` or `release/v2.x` (docs or workflow file changes)
   - Pull requests modifying `docs/**` or the workflow file
 - `docs_deploy.yml`:
-  - `workflow_run` after **ESP32 Arduino Release**
+  - `workflow_run` after **Release ESP32 Arduino package**
   - Push to `master` or `release/v2.x` when docs change
 
 **Purpose:** Build and deploy Sphinx documentation to the production docs server

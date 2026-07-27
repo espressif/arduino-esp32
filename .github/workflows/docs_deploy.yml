@@ -2,7 +2,7 @@ name: Documentation Build and Production Deploy CI
 
 on:
   workflow_run:
-    workflows: ["ESP32 Arduino Release"]
+    workflows: ["Release ESP32 Arduino package"]
     types:
       - completed
   push:
