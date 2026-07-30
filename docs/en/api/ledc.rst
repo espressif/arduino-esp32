@@ -83,7 +83,8 @@ or change the LEDC clock source with ``ledcSetClockSource()`` before attaching
 channels. Reducing resolution makes the minimum frequency higher, not lower.
 
 Exact limits depend on the SoC, clock source, and board configuration. Run the
-:ref:`ledc-frequency-example` to print the achievable min/max for the current setup.
+:ref:`LEDC frequency range example <ledc-frequency-example>` to print the
+achievable min/max for the current setup.
 
 
 Arduino-ESP32 LEDC API
