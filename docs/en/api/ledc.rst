@@ -60,6 +60,32 @@ Attaching both pins at the same frequency/resolution and only diverging later
 with ``ledcChangeFrequency()`` will not give independent outputs if they already
 share a timer.
 
+Frequency and resolution limits
+*******************************
+
+Frequency and duty resolution are coupled. The PWM frequency is approximately:
+
+``freq ≈ ledc_clock / (clock_divider × 2^resolution)``
+
+The clock divider has a limited range, so for a given LEDC clock source and
+resolution there is both a **minimum** and a **maximum** achievable frequency.
+Asking for a frequency that is too low for the chosen resolution fails the same
+way as asking for one that is too high.
+
+When LEDC uses the XTAL clock (Arduino default on SoCs that support it), the
+crystal is typically **40 MHz** (check ``getXtalFrequencyMhz()`` for the value
+on your board). At 40 MHz with 8-bit resolution, the minimum is about **153 Hz**.
+Original ESP32 does not support XTAL as an LEDC source and defaults to
+``LEDC_AUTO_CLK`` instead.
+
+To get lower frequencies, **increase** the resolution (for example 9–14 bits),
+or change the LEDC clock source with ``ledcSetClockSource()`` before attaching
+channels. Reducing resolution makes the minimum frequency higher, not lower.
+
+Exact limits depend on the SoC, clock source, and board configuration. Run the
+:ref:`ledc-frequency-example` to print the achievable min/max for the current setup.
+
+
 Arduino-ESP32 LEDC API
 ----------------------
 
@@ -375,6 +401,13 @@ This function is used to set frequency for selected analogWrite pin.
 
 Example Applications
 ********************
+
+.. _ledc-frequency-example:
+
+LEDC frequency range example:
+
+.. literalinclude:: ../../../libraries/ESP32/examples/AnalogOut/ledcFrequency/ledcFrequency.ino
+    :language: arduino
 
 LEDC fade example:
 
