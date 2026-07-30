@@ -16,9 +16,49 @@ ESP32     16
 ESP32-S2  8
 ESP32-S3  8
 ESP32-C3  6
+ESP32-C5  6
 ESP32-C6  6
 ESP32-H2  6
+ESP32-P4  8
 ========= =======================
+
+Channels, timers and frequency sharing
+**************************************
+
+LEDC separates **channels** from **timers**:
+
+* A **channel** drives one GPIO and owns the duty cycle (and fade).
+* A **timer** owns the PWM frequency and resolution.
+* Several channels in the same speed-mode group can share one timer.
+
+``ledcAttach()`` / ``ledcAttachChannel()`` reuse an existing timer when another
+channel in the **same group** is already configured with the same frequency and
+resolution. That saves limited hardware timers, but means those pins stay locked
+to the same frequency until they use different timers.
+
+**Important:** choosing different channel numbers does **not** by itself give
+independent frequencies. If two pins are attached with the same ``freq`` and
+``resolution``, they typically share one timer. Calling
+``ledcChangeFrequency()`` on either pin then changes **all** channels on that
+timer.
+
+On ESP32 (16 channels) there are two groups with separate timer pools:
+
+* channels ``0``–``7`` (group 0)
+* channels ``8``–``15`` (group 1)
+
+Other SoCs have a single group (see the table above).
+
+To keep frequencies independent when you will change them at runtime:
+
+1. Attach the pins with **different** frequency and/or resolution from the start
+   (you can change them later with ``ledcChangeFrequency()``), or
+2. On ESP32, put them in **different channel groups** (for example channel ``0``
+   and channel ``8``).
+
+Attaching both pins at the same frequency/resolution and only diverging later
+with ``ledcChangeFrequency()`` will not give independent outputs if they already
+share a timer.
 
 Arduino-ESP32 LEDC API
 ----------------------
@@ -56,6 +96,9 @@ ledcAttach
 
 This function is used to setup LEDC pin with given frequency and resolution. LEDC channel will be selected automatically.
 
+Timer reuse for matching frequency/resolution applies here as well
+(see `Channels, timers and frequency sharing`_).
+
 .. code-block:: arduino
 
     bool ledcAttach(uint8_t pin, uint32_t freq, uint8_t resolution);
@@ -74,6 +117,10 @@ ledcAttachChannel
 
 This function is used to setup LEDC pin with given frequency, resolution and channel.
 Attaching multiple pins to the same channel will make them share the same duty cycle. Given frequency, resolution will be ignored if channel is already configured.
+
+If another channel in the same group already uses the same frequency and resolution,
+that timer is reused (see `Channels, timers and frequency sharing`_). Different
+channel numbers alone do not guarantee independent frequencies.
 
 .. code-block:: arduino
 
@@ -201,6 +248,9 @@ ledcChangeFrequency
 *******************
 
 This function is used to set frequency for the LEDC pin.
+
+This updates the **timer** used by the pin. Every channel that shares that timer
+gets the new frequency and resolution. See `Channels, timers and frequency sharing`_.
 
 .. code-block:: arduino
 
