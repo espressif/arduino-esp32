@@ -20,6 +20,7 @@
 
 #include "NetworkClientSecure.h"
 #include "esp_crt_bundle.h"
+#include "ssl_client.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
@@ -354,6 +355,11 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
     attach_ssl_certificate_bundle(sslclient.get(), false);
     _use_ca_bundle = false;
   }
+}
+
+void NetworkClientSecure::useBuiltinCACertBundle() {
+  attach_ssl_certificate_bundle(sslclient.get(), true);
+  _use_ca_bundle = true;
 }
 
 void NetworkClientSecure::setCertificate(const char *client_ca) {
