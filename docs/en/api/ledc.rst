@@ -7,20 +7,26 @@ About
 The LED control (LEDC) peripheral is primarily designed to control the intensity of LEDs,
 although it can also be used to generate PWM signals for other purposes.
 
-ESP32 SoCs has from 6 to 16 channels (variates on socs, see table below) which can generate independent waveforms, that can be used for example to drive RGB LED devices.
+ESP32 SoCs have from 6 to 16 LEDC channels (see the table below) which can
+generate independent waveforms, for example to drive RGB LED devices.
 
-========= =======================
-ESP32 SoC Number of LEDC channels
-========= =======================
-ESP32     16
-ESP32-S2  8
-ESP32-S3  8
-ESP32-C3  6
-ESP32-C5  6
-ESP32-C6  6
-ESP32-H2  6
-ESP32-P4  8
-========= =======================
+================= ======== ====== ===================
+ESP32 SoC         Channels Groups Timers (per group)
+================= ======== ====== ===================
+ESP32             16       2      4
+ESP32-S2          8        1      4
+ESP32-S3          8        1      4
+ESP32-C3          6        1      4
+ESP32-C5          6        1      4
+ESP32-C6          6        1      4
+ESP32-H2          6        1      4
+ESP32-P4          8        1      4
+================= ======== ====== ===================
+
+One group does **not** mean one timer. Each group has its own pool of timers
+(4 on all current SoCs), so you can have up to 4 independent frequencies per
+group. Channels only share a timer when they are configured with the same
+frequency and resolution (see below).
 
 Channels, timers and frequency sharing
 **************************************
@@ -29,7 +35,7 @@ LEDC separates **channels** from **timers**:
 
 * A **channel** drives one GPIO and owns the duty cycle (and fade).
 * A **timer** owns the PWM frequency and resolution.
-* Several channels in the same speed-mode group can share one timer.
+* Several channels in the same group can share one timer.
 
 ``ledcAttach()`` / ``ledcAttachChannel()`` reuse an existing timer when another
 channel in the **same group** is already configured with the same frequency and
@@ -42,12 +48,12 @@ independent frequencies. If two pins are attached with the same ``freq`` and
 ``ledcChangeFrequency()`` on either pin then changes **all** channels on that
 timer.
 
-On ESP32 (16 channels) there are two groups with separate timer pools:
+On ESP32 (2 groups) the channel ranges are:
 
 * channels ``0``–``7`` (group 0)
 * channels ``8``–``15`` (group 1)
 
-Other SoCs have a single group (see the table above).
+Other SoCs have a single group (all channels share one timer pool of 4).
 
 To keep frequencies independent when you will change them at runtime:
 
