@@ -27,7 +27,7 @@ Channels, timers and frequency sharing
 
 LEDC separates **channels** from **timers**:
 
-* A **channel** drives one GPIO and owns the duty cycle (and fade).
+* A **channel** drives one or more GPIOs and owns the duty cycle (and fade).
 * A **timer** owns the PWM frequency and resolution.
 * Several channels in the same speed-mode group can share one timer.
 
