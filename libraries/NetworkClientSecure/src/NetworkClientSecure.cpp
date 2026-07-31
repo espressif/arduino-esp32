@@ -20,7 +20,6 @@
 
 #include "NetworkClientSecure.h"
 #include "esp_crt_bundle.h"
-#include "ssl_client.h"
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
