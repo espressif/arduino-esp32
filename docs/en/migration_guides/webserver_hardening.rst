@@ -72,9 +72,13 @@ Sketches that pass their own callback to ``authenticate()`` are unaffected: the 
 serveStatic()
 *************
 
+.. vale off
+
 A request path containing a ``.`` or ``..`` segment is refused, both in its literal and in its percent-encoded form, and the resolved path
 must stay under the configured filesystem root. Applications that depended on ``..`` being resolved by the filesystem must now request the
 canonical path.
+
+.. vale on
 
 A related bug was fixed at the same time: ``serveStatic("/", fs, "/")`` used to answer every request with ``404``. Mapping a handler to the
 filesystem root now works.
