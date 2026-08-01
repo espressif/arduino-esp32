@@ -12,6 +12,19 @@ platforms:
   hardware:
     esp32p4: false # No two_duts runners using ESP-Hosted
 
+# huge_app is required because the server pulls in WebServer + LittleFS + regex.
+# PSRAM must stay disabled so the query-argument allocation regression matches
+# classic SRAM limits (with SPIRAM, oversized new[] quietly succeeds in external
+# RAM). PSRAM is only overridden on the targets that have the menu; the others
+# have no PSRAM to begin with.
+fqbn_append:
+  default: PartitionScheme=huge_app
+  esp32: PSRAM=disabled
+  esp32s2: PSRAM=disabled
+  esp32s3: PSRAM=disabled
+  esp32c5: PSRAM=disabled
+  esp32p4: PSRAM=disabled
+
 requires_any:
   - CONFIG_SOC_WIFI_SUPPORTED=y
   - CONFIG_ESP_HOSTED_ENABLED=y

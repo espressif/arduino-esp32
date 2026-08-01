@@ -662,8 +662,25 @@ Defines test requirements and platform support:
 - `soc_tags: {chip: [tag1]}` - Per-SoC hardware runner tags (see below)
 - `multi_device: {device0: sketchA, device1: sketchB}` - Multi-DUT test mapping
 - `requires: [CONFIG_X=y]` - Required sdkconfig settings
-- `requires_or: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements
+- `requires_any: [CONFIG_A=y, CONFIG_B=y]` - Alternative requirements (at least one must match)
 - `libs: [Library1, Library2]` - Required libraries
+- `fqbn_append: Menu=value,...` - Menu options added to the default FQBN of every target
+- `fqbn_append: {default: ..., chip: ...}` - Same, when the options differ per target
+- `fqbn: {chip: [full FQBN, ...]}` - Replaces the default FQBN, one build per entry
+
+**FQBN options (`fqbn_append`):**
+Each menu key is kept only once, so a key set in `fqbn_append` replaces the default value for that key rather than being listed twice. This is how a test disables an option that is on by default, such as `PSRAM=disabled` on ESP32. Options are applied lowest priority first: the target default, then `fqbn_append`, then the per-device `fqbn_append` of a multi-device test, then the debug level passed with `-d`.
+
+Use the map form when the options differ per target. The `default` entry applies to every target and the entry matching the target is merged on top of it, so only the difference has to be spelled out. This is required for menus that do not exist on every target — ESP32-C3, ESP32-C6 and ESP32-H2 have no PSRAM menu, and `arduino-cli` rejects the whole build with `invalid option 'PSRAM'` if they are given `PSRAM=disabled`:
+
+```yaml
+fqbn_append:
+  default: PartitionScheme=huge_app
+  esp32: PSRAM=disabled
+  esp32s3: PSRAM=disabled
+```
+
+Use `fqbn` instead only when a test needs several builds per target (for example with and without PSRAM); it lists complete FQBNs and ignores `fqbn_append`.
 
 Example:
 ```yaml
@@ -790,7 +807,7 @@ Each device entry can be either:
 - A **scalar** (just the sketch directory name): `device0: sender`
 - A **map** with `sketch` (required) and `fqbn_append` (optional): useful when devices need different compile-time options (e.g., different Zigbee roles or partition schemes)
 
-When `fqbn_append` is specified per device, it overrides the parent `ci.yml`'s `fqbn_append` for that device's build only.
+A per-device `fqbn_append` is merged on top of the test's top-level `fqbn_append` for that device's build only, so a device adds to the options shared by the whole test and overrides only the menu keys it sets itself. It takes the same forms as the top-level field, including the per-target map.
 
 **How it works:**
 - `tests_build.sh` builds each device sketch separately and stores artifacts under `~/.arduino/tests/<target>/<test>/<sketch>/build.tmp`.
