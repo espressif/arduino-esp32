@@ -147,12 +147,10 @@ bool ZigbeeEP::readClusterAttribute(esp_zb_zcl_read_attr_cmd_t *read_req) {
     log_w("Cannot read attribute: failed to acquire Zigbee lock");
     return false;
   }
-  esp_err_t ret = esp_zb_zcl_read_attr_cmd_req(read_req);
+  // Returns transaction sequence number (queued), not esp_err_t
+  uint8_t tsn = esp_zb_zcl_read_attr_cmd_req(read_req);
   esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to read attribute: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
+  log_v("Read-attribute request queued, TSN: 0x%02x", tsn);
   return true;
 }
 
@@ -191,12 +189,10 @@ bool ZigbeeEP::configureClusterReporting(esp_zb_zcl_config_report_cmd_t *report_
     log_w("Cannot configure cluster reporting: failed to acquire Zigbee lock");
     return false;
   }
-  esp_err_t ret = esp_zb_zcl_config_report_cmd_req(report_cmd);
+  // Returns transaction sequence number (queued), not esp_err_t
+  uint8_t tsn = esp_zb_zcl_config_report_cmd_req(report_cmd);
   esp_zb_lock_release();
-  if (ret != ESP_OK) {
-    log_e("Failed to configure cluster reporting: 0x%x: %s", ret, esp_err_to_name(ret));
-    return false;
-  }
+  log_v("Configure-report request queued, TSN: 0x%02x", tsn);
   return true;
 }
 
