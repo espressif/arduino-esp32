@@ -8,37 +8,37 @@
 
 Test|ESP32|ESP32-C3|ESP32-C5|ESP32-C6|ESP32-H2|ESP32-P4|ESP32-S2|ESP32-S3
 -|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:
-adc_pwm|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:
+adc_pwm|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:|12/12 :white_check_mark:\*|12/12 :white_check_mark:|12/12 :white_check_mark:
 ble|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
 bt_classic|1/1 :white_check_mark:|-|-|-|-|-|-|-
 bt_inuse_override|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
 bt_mem_wrap|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:
 dac|1/1 :white_check_mark:|-|-|-|-|-|1/1 :white_check_mark:|-
 democfg|2/2 :white_check_mark:|-|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
-eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:
+eeprom|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:|31/31 :white_check_mark:\*|31/31 :white_check_mark:|31/31 :white_check_mark:
 esp_now|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
 ethernet|Error :fire:|-|-|-|-|Error :fire:|-|-
-fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:
-hash|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:
-hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
+fs|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:|61/61 :white_check_mark:\*|61/61 :white_check_mark:|61/61 :white_check_mark:
+hash|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:|72/72 :white_check_mark:\*|72/72 :white_check_mark:|72/72 :white_check_mark:
+hello_world|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:\*|1/1 :white_check_mark:|1/1 :white_check_mark:
 i2s|38/38 :white_check_mark:|43/43 :white_check_mark:|Error :fire:|Error :fire:|43/43 :white_check_mark:|Error :fire:|38/38 :white_check_mark:|Error :fire:
-keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:|10/10 :white_check_mark:|10/10 :white_check_mark:
-multitasking|10/10 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:
-network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:
-networking|13/13 :white_check_mark:|13/13 :white_check_mark:\*|13/13 :white_check_mark:|13/13 :white_check_mark:|-|-|12/13 :x:|13/13 :white_check_mark:
-nvs|54/54 :white_check_mark:|54/54 :white_check_mark:|27/27 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:|54/54 :white_check_mark:|81/81 :white_check_mark:
-openthread|-|-|0/1 :x:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|-
-ota|5/5 :white_check_mark:|5/5 :white_check_mark:\*|5/5 :white_check_mark:|4/5 :x:|-|-|4/5 :x:|5/5 :white_check_mark:
-periman|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:
-power_management|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:
-psram|14/14 :white_check_mark:|-|14/14 :white_check_mark:|-|-|11/11 :white_check_mark:|14/14 :white_check_mark:|14/14 :white_check_mark:
+keyboard_layout|-|-|-|-|-|10/10 :white_check_mark:\*|10/10 :white_check_mark:|10/10 :white_check_mark:
+multitasking|10/10 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|9/9 :white_check_mark:|10/10 :white_check_mark:\*|9/9 :white_check_mark:|10/10 :white_check_mark:
+network_client|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:|13/13 :white_check_mark:\*|13/13 :white_check_mark:|13/13 :white_check_mark:
+networking|13/13 :white_check_mark:|13/13 :white_check_mark:\*|13/13 :white_check_mark:|12/13 :x:|-|-|12/13 :x:|13/13 :white_check_mark:
+nvs|54/54 :white_check_mark:|54/54 :white_check_mark:|27/27 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:|108/108 :white_check_mark:\*|54/54 :white_check_mark:|81/81 :white_check_mark:
+openthread|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|-
+ota|5/5 :white_check_mark:|5/5 :white_check_mark:\*|5/5 :white_check_mark:|4/5 :x:|-|-|3/5 :x:|5/5 :white_check_mark:
+periman|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:\*|1/1 :white_check_mark:|1/1 :white_check_mark:
+power_management|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:|5/5 :white_check_mark:\*|5/5 :white_check_mark:|5/5 :white_check_mark:
+psram|14/14 :white_check_mark:|-|14/14 :white_check_mark:|-|-|11/11 :white_check_mark:\*|14/14 :white_check_mark:|14/14 :white_check_mark:
 signed_ota|1/1 :white_check_mark:|1/1 :white_check_mark:\*|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
-ticker|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:
-timer|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:
+ticker|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:|19/19 :white_check_mark:\*|19/19 :white_check_mark:|19/19 :white_check_mark:
+timer|7/7 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:|8/8 :white_check_mark:\*|8/8 :white_check_mark:|8/8 :white_check_mark:
 tls_http|0/1 :x:|Error :fire:|0/1 :x:|-|-|-|0/1 :x:|0/1 :x:
-touch|3/3 :white_check_mark:|-|-|-|-|3/3 :white_check_mark:|3/3 :white_check_mark:|3/3 :white_check_mark:
-uart|26/26 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|26/26 :white_check_mark:|25/25 :white_check_mark:
-unity|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:
+touch|3/3 :white_check_mark:|-|-|-|-|3/3 :white_check_mark:\*|3/3 :white_check_mark:|3/3 :white_check_mark:
+uart|26/26 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:|25/25 :white_check_mark:\*|26/26 :white_check_mark:|25/25 :white_check_mark:
+unity|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:|15/15 :white_check_mark:\*|15/15 :white_check_mark:|15/15 :white_check_mark:
 webserver|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|1/1 :white_check_mark:|1/1 :white_check_mark:
 wifi|34/34 :white_check_mark:|Error :fire:|17/17 :white_check_mark:|17/17 :white_check_mark:|-|-|34/34 :white_check_mark:|51/51 :white_check_mark:
 wifi_ap|2/2 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|1/1 :white_check_mark:|-|-|2/2 :white_check_mark:|3/3 :white_check_mark:
@@ -80,22 +80,22 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - avg_score: 297.15
   - ESP32-C5 - Success - :white_check_mark:
     - cores=1 - 3 runs:
-      - avg_score: 542.23
+      - avg_score: 542.27
   - ESP32-C6 - Success - :white_check_mark:
     - cores=1 - 3 runs:
       - avg_score: 318.04
   - ESP32-H2 - Success - :white_check_mark:
     - cores=1 - 3 runs:
       - avg_score: 189.74
-  - ESP32-P4 - Success - :white_check_mark:
-    - cores=2 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - cores=2 - 3 runs (cached):
       - avg_score: 1811.05
   - ESP32-S2 - Success - :white_check_mark:
     - cores=1 - 3 runs:
       - avg_score: 372.73
   - ESP32-S3 - Success - :white_check_mark:
     - cores=2 - 3 runs:
-      - avg_score: 725.03
+      - avg_score: 724.99
 
 - **fibonacci**
   - ESP32 - Success - :white_check_mark:
@@ -113,8 +113,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
   - ESP32-H2 - Success - :white_check_mark:
     - fib_n=40 - 3 runs:
       - avg_time: 75.12 s
-  - ESP32-P4 - Success - :white_check_mark:
-    - fib_n=40 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - fib_n=40 - 3 runs (cached):
       - avg_time: 15.91 s
   - ESP32-S2 - Success - :white_check_mark:
     - fib_n=40 - 3 runs:
@@ -135,13 +135,13 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - avg_score: 0.78 MFLOPS
       - max_score: 0.78 MFLOPS
       - median_score: 0.77 MFLOPS
-      - min_score: 0.72 MFLOPS
+      - min_score: 0.71 MFLOPS
   - ESP32-C5 - Success - :white_check_mark:
     - data_type=double - 1000 runs:
       - avg_score: 1.91 MFLOPS
       - max_score: 1.93 MFLOPS
       - median_score: 1.92 MFLOPS
-      - min_score: 1.44 MFLOPS
+      - min_score: 1.43 MFLOPS
   - ESP32-C6 - Success - :white_check_mark:
     - data_type=double - 1000 runs:
       - avg_score: 1.3 MFLOPS
@@ -154,8 +154,8 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - max_score: 0.47 MFLOPS
       - median_score: 0.46 MFLOPS
       - min_score: 0.43 MFLOPS
-  - ESP32-P4 - Success - :white_check_mark:
-    - data_type=double - 1000 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - data_type=double - 1000 runs (cached):
       - avg_score: 3.14 MFLOPS
       - max_score: 3.19 MFLOPS
       - median_score: 3.15 MFLOPS
@@ -165,7 +165,7 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - avg_score: 1.7 MFLOPS
       - max_score: 1.73 MFLOPS
       - median_score: 1.71 MFLOPS
-      - min_score: 1.54 MFLOPS
+      - min_score: 1.53 MFLOPS
   - ESP32-S3 - Success - :white_check_mark:
     - data_type=double - 1000 runs:
       - avg_score: 2.0 MFLOPS
@@ -176,9 +176,9 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 - **linpack_float**
   - ESP32 - Success - :white_check_mark:
     - data_type=float - 1000 runs:
-      - avg_score: 12.64 MFLOPS
+      - avg_score: 12.89 MFLOPS
       - max_score: 13.41 MFLOPS
-      - median_score: 12.68 MFLOPS
+      - median_score: 13.04 MFLOPS
       - min_score: 5.87 MFLOPS
   - ESP32-C3 - Success - :white_check_mark:
     - data_type=float - 1000 runs:
@@ -191,7 +191,7 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - avg_score: 3.02 MFLOPS
       - max_score: 3.07 MFLOPS
       - median_score: 3.03 MFLOPS
-      - min_score: 2.14 MFLOPS
+      - min_score: 2.16 MFLOPS
   - ESP32-C6 - Success - :white_check_mark:
     - data_type=float - 1000 runs:
       - avg_score: 2.17 MFLOPS
@@ -203,16 +203,16 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - avg_score: 0.7 MFLOPS
       - max_score: 0.71 MFLOPS
       - median_score: 0.7 MFLOPS
-      - min_score: 0.64 MFLOPS
-  - ESP32-P4 - Success - :white_check_mark:
-    - data_type=float - 1000 runs:
+      - min_score: 0.63 MFLOPS
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - data_type=float - 1000 runs (cached):
       - avg_score: 30.81 MFLOPS
       - max_score: 33.65 MFLOPS
       - median_score: 31.28 MFLOPS
       - min_score: 9.39 MFLOPS
   - ESP32-S2 - Success - :white_check_mark:
     - data_type=float - 1000 runs:
-      - avg_score: 2.78 MFLOPS
+      - avg_score: 2.77 MFLOPS
       - max_score: 2.81 MFLOPS
       - median_score: 2.78 MFLOPS
       - min_score: 2.41 MFLOPS
@@ -227,73 +227,73 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
   - ESP32 - Success - :white_check_mark:
     - copies=400,max_test_size=524288 - 3 runs:
       - memcpy_65536_mock_avg_rate: 9244.0 KiB/s
-      - memcpy_65536_mock_avg_time: 2769220.0 us
-      - memcpy_65536_system_avg_rate: 9006.67 KiB/s
-      - memcpy_65536_system_avg_time: 2842208.0 us
-      - memcpy_131072_mock_avg_rate: 9247.0 KiB/s
-      - memcpy_131072_mock_avg_time: 5536871.0 us
-      - memcpy_131072_system_avg_rate: 9013.67 KiB/s
-      - memcpy_131072_system_avg_time: 5680052.67 us
+      - memcpy_65536_mock_avg_time: 2769236.0 us
+      - memcpy_65536_system_avg_rate: 9006.33 KiB/s
+      - memcpy_65536_system_avg_time: 2842220.0 us
+      - memcpy_131072_mock_avg_rate: 9246.67 KiB/s
+      - memcpy_131072_mock_avg_time: 5536857.0 us
+      - memcpy_131072_system_avg_rate: 9013.0 KiB/s
+      - memcpy_131072_system_avg_time: 5680129.0 us
       - memcpy_262144_mock_avg_rate: 9248.0 KiB/s
-      - memcpy_262144_mock_avg_time: 11072012.0 us
+      - memcpy_262144_mock_avg_time: 11072019.0 us
       - memcpy_262144_system_avg_rate: 9014.0 KiB/s
-      - memcpy_262144_system_avg_time: 11359987.0 us
+      - memcpy_262144_system_avg_time: 11359971.0 us
       - memcpy_524288_mock_avg_rate: 9249.0 KiB/s
-      - memcpy_524288_mock_avg_time: 22141907.33 us
+      - memcpy_524288_mock_avg_time: 22141184.67 us
       - memcpy_524288_system_avg_rate: 9017.0 KiB/s
-      - memcpy_524288_system_avg_time: 22711179.0 us
+      - memcpy_524288_system_avg_time: 22711172.67 us
       - memset_65536_mock_avg_rate: 14139.0 KiB/s
-      - memset_65536_mock_avg_time: 1810546.67 us
+      - memset_65536_mock_avg_time: 1810532.33 us
       - memset_65536_system_avg_rate: 14144.0 KiB/s
-      - memset_65536_system_avg_time: 1809875.33 us
+      - memset_65536_system_avg_time: 1809871.33 us
       - memset_131072_mock_avg_rate: 14142.0 KiB/s
-      - memset_131072_mock_avg_time: 3620175.67 us
+      - memset_131072_mock_avg_time: 3620181.67 us
       - memset_131072_system_avg_rate: 14143.0 KiB/s
-      - memset_131072_system_avg_time: 3619946.67 us
-      - memset_262144_mock_avg_rate: 14144.0 KiB/s
-      - memset_262144_mock_avg_time: 7239332.33 us
+      - memset_131072_system_avg_time: 3619942.0 us
+      - memset_262144_mock_avg_rate: 14144.67 KiB/s
+      - memset_262144_mock_avg_time: 7239296.0 us
       - memset_262144_system_avg_rate: 14145.0 KiB/s
-      - memset_262144_system_avg_time: 7239045.67 us
+      - memset_262144_system_avg_time: 7239067.0 us
       - memset_524288_mock_avg_rate: 14145.0 KiB/s
-      - memset_524288_mock_avg_time: 14477632.0 us
+      - memset_524288_mock_avg_time: 14477617.67 us
       - memset_524288_system_avg_rate: 14146.0 KiB/s
-      - memset_524288_system_avg_time: 14477214.0 us
+      - memset_524288_system_avg_time: 14477210.33 us
   - ESP32-C5 - Success - :white_check_mark:
     - copies=400,max_test_size=524288 - 3 runs:
       - memcpy_65536_mock_avg_rate: 8724.0 KiB/s
-      - memcpy_65536_mock_avg_time: 2934178.0 us
+      - memcpy_65536_mock_avg_time: 2934169.67 us
       - memcpy_65536_system_avg_rate: 8732.0 KiB/s
-      - memcpy_65536_system_avg_time: 2931601.33 us
-      - memcpy_131072_mock_avg_rate: 8727.33 KiB/s
-      - memcpy_131072_mock_avg_time: 5866284.0 us
+      - memcpy_65536_system_avg_time: 2931555.33 us
+      - memcpy_131072_mock_avg_rate: 8728.0 KiB/s
+      - memcpy_131072_mock_avg_time: 5866137.33 us
       - memcpy_131072_system_avg_rate: 8735.0 KiB/s
-      - memcpy_131072_system_avg_time: 5861343.67 us
+      - memcpy_131072_system_avg_time: 5861288.67 us
       - memcpy_262144_mock_avg_rate: 8729.0 KiB/s
-      - memcpy_262144_mock_avg_time: 11730710.67 us
+      - memcpy_262144_mock_avg_time: 11730317.67 us
       - memcpy_262144_system_avg_rate: 8735.0 KiB/s
-      - memcpy_262144_system_avg_time: 11722041.0 us
+      - memcpy_262144_system_avg_time: 11722038.33 us
       - memcpy_524288_mock_avg_rate: 8729.67 KiB/s
-      - memcpy_524288_mock_avg_time: 23458907.0 us
+      - memcpy_524288_mock_avg_time: 23458684.67 us
       - memcpy_524288_system_avg_rate: 8736.0 KiB/s
-      - memcpy_524288_system_avg_time: 23443209.67 us
+      - memcpy_524288_system_avg_time: 23443208.33 us
       - memset_65536_mock_avg_rate: 13444.0 KiB/s
-      - memset_65536_mock_avg_time: 1904063.67 us
+      - memset_65536_mock_avg_time: 1904063.0 us
       - memset_65536_system_avg_rate: 13465.67 KiB/s
-      - memset_65536_system_avg_time: 1901077.67 us
+      - memset_65536_system_avg_time: 1901087.67 us
       - memset_131072_mock_avg_rate: 13444.0 KiB/s
-      - memset_131072_mock_avg_time: 3808135.67 us
+      - memset_131072_mock_avg_time: 3808134.0 us
       - memset_131072_system_avg_rate: 13469.0 KiB/s
-      - memset_131072_system_avg_time: 3801246.67 us
+      - memset_131072_system_avg_time: 3801245.67 us
       - memset_262144_mock_avg_rate: 13444.0 KiB/s
-      - memset_262144_mock_avg_time: 7616260.0 us
+      - memset_262144_mock_avg_time: 7616258.33 us
       - memset_262144_system_avg_rate: 13469.0 KiB/s
-      - memset_262144_system_avg_time: 7602640.33 us
+      - memset_262144_system_avg_time: 7602639.0 us
       - memset_524288_mock_avg_rate: 13445.0 KiB/s
-      - memset_524288_mock_avg_time: 15232359.67 us
+      - memset_524288_mock_avg_time: 15232358.0 us
       - memset_524288_system_avg_rate: 13468.0 KiB/s
-      - memset_524288_system_avg_time: 15205427.0 us
-  - ESP32-P4 - Success - :white_check_mark:
-    - copies=400,max_test_size=524288 - 3 runs:
+      - memset_524288_system_avg_time: 15205426.33 us
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - copies=400,max_test_size=524288 - 3 runs (cached):
       - memcpy_65536_mock_avg_rate: 398701.67 KiB/s
       - memcpy_65536_mock_avg_time: 64208.33 us
       - memcpy_65536_system_avg_rate: 411397.33 KiB/s
@@ -329,37 +329,37 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
   - ESP32-S2 - Success - :white_check_mark:
     - copies=400,max_test_size=524288 - 3 runs:
       - memcpy_65536_mock_avg_rate: 9750.0 KiB/s
-      - memcpy_65536_mock_avg_time: 2625518.67 us
+      - memcpy_65536_mock_avg_time: 2625517.67 us
       - memcpy_65536_system_avg_rate: 9748.0 KiB/s
-      - memcpy_65536_system_avg_time: 2626024.0 us
+      - memcpy_65536_system_avg_time: 2626035.0 us
       - memcpy_131072_mock_avg_rate: 9750.0 KiB/s
-      - memcpy_131072_mock_avg_time: 5251155.0 us
+      - memcpy_131072_mock_avg_time: 5251156.0 us
       - memcpy_131072_system_avg_rate: 9749.0 KiB/s
-      - memcpy_131072_system_avg_time: 5251806.33 us
+      - memcpy_131072_system_avg_time: 5251803.33 us
       - memcpy_262144_mock_avg_rate: 9750.0 KiB/s
-      - memcpy_262144_mock_avg_time: 10502440.33 us
+      - memcpy_262144_mock_avg_time: 10502438.33 us
       - memcpy_262144_system_avg_rate: 9749.0 KiB/s
-      - memcpy_262144_system_avg_time: 10502844.33 us
+      - memcpy_262144_system_avg_time: 10502847.67 us
       - memcpy_524288_mock_avg_rate: 9750.0 KiB/s
-      - memcpy_524288_mock_avg_time: 21005003.0 us
+      - memcpy_524288_mock_avg_time: 21005002.67 us
       - memcpy_524288_system_avg_rate: 9749.0 KiB/s
-      - memcpy_524288_system_avg_time: 21005619.67 us
+      - memcpy_524288_system_avg_time: 21005624.0 us
       - memset_65536_mock_avg_rate: 14856.0 KiB/s
-      - memset_65536_mock_avg_time: 1723167.67 us
+      - memset_65536_mock_avg_time: 1723168.0 us
       - memset_65536_system_avg_rate: 14855.0 KiB/s
-      - memset_65536_system_avg_time: 1723298.0 us
+      - memset_65536_system_avg_time: 1723298.67 us
       - memset_131072_mock_avg_rate: 14855.0 KiB/s
-      - memset_131072_mock_avg_time: 3446588.0 us
+      - memset_131072_mock_avg_time: 3446588.33 us
       - memset_131072_system_avg_rate: 14855.0 KiB/s
-      - memset_131072_system_avg_time: 3446593.67 us
+      - memset_131072_system_avg_time: 3446593.0 us
       - memset_262144_mock_avg_rate: 14854.0 KiB/s
-      - memset_262144_mock_avg_time: 6893432.67 us
+      - memset_262144_mock_avg_time: 6893431.67 us
       - memset_262144_system_avg_rate: 14854.0 KiB/s
-      - memset_262144_system_avg_time: 6893437.0 us
+      - memset_262144_system_avg_time: 6893438.0 us
       - memset_524288_mock_avg_rate: 14854.0 KiB/s
-      - memset_524288_mock_avg_time: 13787121.33 us
+      - memset_524288_mock_avg_time: 13787121.67 us
       - memset_524288_system_avg_rate: 14854.0 KiB/s
-      - memset_524288_system_avg_time: 13787126.0 us
+      - memset_524288_system_avg_time: 13787125.67 us
   - ESP32-S3 - Success - :white_check_mark:
     - copies=400,max_test_size=524288 - 3 runs:
       - memcpy_65536_mock_avg_rate: 21847.0 KiB/s
@@ -398,128 +398,128 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
 - **ramspeed**
   - ESP32 - Success - :white_check_mark:
     - copies=50000,max_test_size=65536 - 3 runs:
-      - memcpy_32_mock_avg_rate: 34578.67 KiB/s
-      - memcpy_32_mock_avg_time: 45172.0 us
+      - memcpy_32_mock_avg_rate: 34579.33 KiB/s
+      - memcpy_32_mock_avg_time: 45171.33 us
       - memcpy_32_system_avg_rate: 96882.0 KiB/s
       - memcpy_32_system_avg_time: 16122.67 us
-      - memcpy_64_mock_avg_rate: 61243.67 KiB/s
-      - memcpy_64_mock_avg_time: 51025.33 us
+      - memcpy_64_mock_avg_rate: 61244.0 KiB/s
+      - memcpy_64_mock_avg_time: 51025.0 us
       - memcpy_64_system_avg_rate: 127627.0 KiB/s
       - memcpy_64_system_avg_time: 24485.33 us
-      - memcpy_128_mock_avg_rate: 99624.67 KiB/s
-      - memcpy_128_mock_avg_time: 62735.0 us
+      - memcpy_128_mock_avg_rate: 99624.0 KiB/s
+      - memcpy_128_mock_avg_time: 62735.67 us
       - memcpy_128_system_avg_rate: 151622.67 KiB/s
       - memcpy_128_system_avg_time: 41220.67 us
-      - memcpy_256_mock_avg_rate: 145083.33 KiB/s
-      - memcpy_256_mock_avg_time: 86157.0 us
-      - memcpy_256_system_avg_rate: 167375.0 KiB/s
-      - memcpy_256_system_avg_time: 74682.33 us
+      - memcpy_256_mock_avg_rate: 145084.67 KiB/s
+      - memcpy_256_mock_avg_time: 86156.33 us
+      - memcpy_256_system_avg_rate: 167377.0 KiB/s
+      - memcpy_256_system_avg_time: 74681.33 us
       - memcpy_512_mock_avg_rate: 187972.0 KiB/s
       - memcpy_512_mock_avg_time: 132998.0 us
       - memcpy_512_system_avg_rate: 176522.67 KiB/s
       - memcpy_512_system_avg_time: 141624.33 us
-      - memcpy_1024_mock_avg_rate: 220572.33 KiB/s
-      - memcpy_1024_mock_avg_time: 226682.67 us
-      - memcpy_1024_system_avg_rate: 181498.67 KiB/s
-      - memcpy_1024_system_avg_time: 275483.67 us
+      - memcpy_1024_mock_avg_rate: 220573.0 KiB/s
+      - memcpy_1024_mock_avg_time: 226682.0 us
+      - memcpy_1024_system_avg_rate: 181498.33 KiB/s
+      - memcpy_1024_system_avg_time: 275484.0 us
       - memcpy_2048_mock_avg_rate: 241515.67 KiB/s
       - memcpy_2048_mock_avg_time: 414051.33 us
       - memcpy_2048_system_avg_rate: 184083.0 KiB/s
-      - memcpy_2048_system_avg_time: 543232.33 us
+      - memcpy_2048_system_avg_time: 543233.0 us
       - memcpy_4096_mock_avg_rate: 253553.33 KiB/s
       - memcpy_4096_mock_avg_time: 788787.0 us
       - memcpy_4096_system_avg_rate: 185405.0 KiB/s
-      - memcpy_4096_system_avg_time: 1078718.0 us
+      - memcpy_4096_system_avg_time: 1078718.67 us
       - memcpy_8192_mock_avg_rate: 260033.67 KiB/s
       - memcpy_8192_mock_avg_time: 1538258.33 us
       - memcpy_8192_system_avg_rate: 186076.67 KiB/s
-      - memcpy_8192_system_avg_time: 2149647.67 us
+      - memcpy_8192_system_avg_time: 2149647.33 us
       - memcpy_16384_mock_avg_rate: 263400.0 KiB/s
       - memcpy_16384_mock_avg_time: 3037198.0 us
       - memcpy_16384_system_avg_rate: 186420.0 KiB/s
-      - memcpy_16384_system_avg_time: 4291372.0 us
+      - memcpy_16384_system_avg_time: 4291372.33 us
       - memcpy_32768_mock_avg_rate: 265117.0 KiB/s
-      - memcpy_32768_mock_avg_time: 6035064.67 us
+      - memcpy_32768_mock_avg_time: 6035064.33 us
       - memcpy_32768_system_avg_rate: 186593.0 KiB/s
-      - memcpy_32768_system_avg_time: 8574784.67 us
+      - memcpy_32768_system_avg_time: 8574784.33 us
       - memcpy_65536_mock_avg_rate: 265983.0 KiB/s
       - memcpy_65536_mock_avg_time: 12030805.33 us
       - memcpy_65536_system_avg_rate: 186679.0 KiB/s
-      - memcpy_65536_system_avg_time: 17141680.67 us
+      - memcpy_65536_system_avg_time: 17141681.0 us
       - memset_32_mock_avg_rate: 41265.0 KiB/s
       - memset_32_mock_avg_time: 37852.67 us
-      - memset_32_system_avg_rate: 122237.67 KiB/s
-      - memset_32_system_avg_time: 12778.33 us
+      - memset_32_system_avg_rate: 122244.0 KiB/s
+      - memset_32_system_avg_time: 12777.67 us
       - memset_64_mock_avg_rate: 74716.33 KiB/s
       - memset_64_mock_avg_time: 41824.67 us
-      - memset_64_system_avg_rate: 210201.67 KiB/s
-      - memset_64_system_avg_time: 14866.67 us
-      - memset_128_mock_avg_rate: 125575.67 KiB/s
-      - memset_128_mock_avg_time: 49770.67 us
+      - memset_64_system_avg_rate: 210229.67 KiB/s
+      - memset_64_system_avg_time: 14864.67 us
+      - memset_128_mock_avg_rate: 125575.0 KiB/s
+      - memset_128_mock_avg_time: 49771.0 us
       - memset_128_system_avg_rate: 328118.0 KiB/s
       - memset_128_system_avg_time: 19048.0 us
       - memset_256_mock_avg_rate: 190362.0 KiB/s
       - memset_256_mock_avg_time: 65664.33 us
-      - memset_256_system_avg_rate: 455999.0 KiB/s
+      - memset_256_system_avg_rate: 455998.67 KiB/s
       - memset_256_system_avg_time: 27412.33 us
-      - memset_512_mock_avg_rate: 256541.67 KiB/s
-      - memset_512_mock_avg_time: 97450.0 us
-      - memset_512_system_avg_rate: 566280.67 KiB/s
-      - memset_512_system_avg_time: 44147.67 us
-      - memset_1024_mock_avg_rate: 310517.33 KiB/s
-      - memset_1024_mock_avg_time: 161021.33 us
+      - memset_512_mock_avg_rate: 256542.33 KiB/s
+      - memset_512_mock_avg_time: 97449.67 us
+      - memset_512_system_avg_rate: 566297.67 KiB/s
+      - memset_512_system_avg_time: 44146.33 us
+      - memset_1024_mock_avg_rate: 310518.0 KiB/s
+      - memset_1024_mock_avg_time: 161021.0 us
       - memset_1024_system_avg_rate: 644263.0 KiB/s
       - memset_1024_system_avg_time: 77608.0 us
       - memset_2048_mock_avg_rate: 347025.0 KiB/s
       - memset_2048_mock_avg_time: 288163.0 us
-      - memset_2048_system_avg_rate: 691836.67 KiB/s
+      - memset_2048_system_avg_rate: 691837.0 KiB/s
       - memset_2048_system_avg_time: 144542.67 us
-      - memset_4096_mock_avg_rate: 368698.33 KiB/s
-      - memset_4096_mock_avg_time: 542447.67 us
-      - memset_4096_system_avg_rate: 718392.0 KiB/s
-      - memset_4096_system_avg_time: 278399.33 us
+      - memset_4096_mock_avg_rate: 368698.67 KiB/s
+      - memset_4096_mock_avg_time: 542447.33 us
+      - memset_4096_system_avg_rate: 718391.0 KiB/s
+      - memset_4096_system_avg_time: 278399.67 us
       - memset_8192_mock_avg_rate: 380582.0 KiB/s
       - memset_8192_mock_avg_time: 1051021.0 us
-      - memset_8192_system_avg_rate: 732442.0 KiB/s
+      - memset_8192_system_avg_rate: 732441.67 KiB/s
       - memset_8192_system_avg_time: 546118.0 us
       - memset_16384_mock_avg_rate: 386818.0 KiB/s
-      - memset_16384_mock_avg_time: 2068155.0 us
-      - memset_16384_system_avg_rate: 739678.0 KiB/s
-      - memset_16384_system_avg_time: 1081551.33 us
+      - memset_16384_mock_avg_time: 2068155.33 us
+      - memset_16384_system_avg_rate: 739682.33 KiB/s
+      - memset_16384_system_avg_time: 1081544.67 us
       - memset_32768_mock_avg_rate: 390011.0 KiB/s
       - memset_32768_mock_avg_time: 4102438.0 us
       - memset_32768_system_avg_rate: 743347.33 KiB/s
-      - memset_32768_system_avg_time: 2152424.67 us
+      - memset_32768_system_avg_time: 2152425.0 us
       - memset_65536_mock_avg_rate: 391630.33 KiB/s
-      - memset_65536_mock_avg_time: 8170958.33 us
+      - memset_65536_mock_avg_time: 8170958.0 us
       - memset_65536_system_avg_rate: 745199.33 KiB/s
       - memset_65536_system_avg_time: 4294150.67 us
   - ESP32-C3 - Success - :white_check_mark:
     - copies=50000,max_test_size=65536 - 3 runs:
-      - memcpy_32_mock_avg_rate: 38803.67 KiB/s
-      - memcpy_32_mock_avg_time: 40253.33 us
-      - memcpy_32_system_avg_rate: 59127.33 KiB/s
-      - memcpy_32_system_avg_time: 26417.33 us
-      - memcpy_64_mock_avg_rate: 63703.0 KiB/s
-      - memcpy_64_mock_avg_time: 49055.67 us
+      - memcpy_32_mock_avg_rate: 38803.0 KiB/s
+      - memcpy_32_mock_avg_time: 40254.0 us
+      - memcpy_32_system_avg_rate: 59128.0 KiB/s
+      - memcpy_32_system_avg_time: 26417.0 us
+      - memcpy_64_mock_avg_rate: 63701.67 KiB/s
+      - memcpy_64_mock_avg_time: 49056.33 us
       - memcpy_64_system_avg_rate: 93750.33 KiB/s
       - memcpy_64_system_avg_time: 33333.0 us
-      - memcpy_128_mock_avg_rate: 93754.0 KiB/s
-      - memcpy_128_mock_avg_time: 66663.33 us
-      - memcpy_128_system_avg_rate: 141966.67 KiB/s
-      - memcpy_128_system_avg_time: 44024.33 us
+      - memcpy_128_mock_avg_rate: 93754.33 KiB/s
+      - memcpy_128_mock_avg_time: 66663.0 us
+      - memcpy_128_system_avg_rate: 141964.0 KiB/s
+      - memcpy_128_system_avg_time: 44025.0 us
       - memcpy_256_mock_avg_rate: 122689.33 KiB/s
       - memcpy_256_mock_avg_time: 101883.0 us
-      - memcpy_256_system_avg_rate: 189290.0 KiB/s
-      - memcpy_256_system_avg_time: 66036.0 us
+      - memcpy_256_system_avg_rate: 189289.0 KiB/s
+      - memcpy_256_system_avg_time: 66036.33 us
       - memcpy_512_mock_avg_rate: 145076.33 KiB/s
-      - memcpy_512_mock_avg_time: 172322.0 us
+      - memcpy_512_mock_avg_time: 172322.33 us
       - memcpy_512_system_avg_rate: 203328.67 KiB/s
       - memcpy_512_system_avg_time: 122953.33 us
       - memcpy_1024_mock_avg_rate: 159642.0 KiB/s
-      - memcpy_1024_mock_avg_time: 313199.67 us
-      - memcpy_1024_system_avg_rate: 212006.33 KiB/s
-      - memcpy_1024_system_avg_time: 235841.33 us
+      - memcpy_1024_mock_avg_time: 313199.33 us
+      - memcpy_1024_system_avg_rate: 212006.0 KiB/s
+      - memcpy_1024_system_avg_time: 235841.67 us
       - memcpy_2048_mock_avg_rate: 168081.0 KiB/s
       - memcpy_2048_mock_avg_time: 594951.0 us
       - memcpy_2048_system_avg_rate: 216038.0 KiB/s
@@ -527,367 +527,367 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memcpy_4096_mock_avg_rate: 172643.67 KiB/s
       - memcpy_4096_mock_avg_time: 1158451.0 us
       - memcpy_4096_system_avg_rate: 220993.0 KiB/s
-      - memcpy_4096_system_avg_time: 905003.67 us
+      - memcpy_4096_system_avg_time: 905004.0 us
       - memcpy_8192_mock_avg_rate: 175019.0 KiB/s
       - memcpy_8192_mock_avg_time: 2285456.0 us
       - memcpy_8192_system_avg_rate: 223792.67 KiB/s
-      - memcpy_8192_system_avg_time: 1787365.33 us
+      - memcpy_8192_system_avg_time: 1787365.0 us
       - memcpy_16384_mock_avg_rate: 176231.0 KiB/s
       - memcpy_16384_mock_avg_time: 4539477.0 us
       - memcpy_16384_system_avg_rate: 225179.0 KiB/s
-      - memcpy_16384_system_avg_time: 3552719.33 us
+      - memcpy_16384_system_avg_time: 3552718.67 us
       - memcpy_32768_mock_avg_rate: 176844.0 KiB/s
       - memcpy_32768_mock_avg_time: 9047520.0 us
       - memcpy_32768_system_avg_rate: 226009.0 KiB/s
       - memcpy_32768_system_avg_time: 7079338.0 us
       - memcpy_65536_mock_avg_rate: 177152.0 KiB/s
-      - memcpy_65536_mock_avg_time: 18063568.33 us
+      - memcpy_65536_mock_avg_time: 18063568.67 us
       - memcpy_65536_system_avg_rate: 229366.0 KiB/s
-      - memcpy_65536_system_avg_time: 13951447.67 us
-      - memset_32_mock_avg_rate: 43192.0 KiB/s
-      - memset_32_mock_avg_time: 36163.67 us
-      - memset_32_system_avg_rate: 115483.67 KiB/s
-      - memset_32_system_avg_time: 13525.67 us
-      - memset_64_mock_avg_rate: 77038.33 KiB/s
-      - memset_64_mock_avg_time: 40564.0 us
+      - memcpy_65536_system_avg_time: 13951447.33 us
+      - memset_32_mock_avg_rate: 43191.67 KiB/s
+      - memset_32_mock_avg_time: 36164.0 us
+      - memset_32_system_avg_rate: 115489.0 KiB/s
+      - memset_32_system_avg_time: 13525.0 us
+      - memset_64_mock_avg_rate: 77037.0 KiB/s
+      - memset_64_mock_avg_time: 40564.67 us
       - memset_64_system_avg_rate: 168421.0 KiB/s
       - memset_64_system_avg_time: 18554.67 us
       - memset_128_mock_avg_rate: 126599.0 KiB/s
       - memset_128_mock_avg_time: 49368.33 us
       - memset_128_system_avg_rate: 218388.67 KiB/s
       - memset_128_system_avg_time: 28618.67 us
-      - memset_256_mock_avg_rate: 186622.0 KiB/s
-      - memset_256_mock_avg_time: 66980.0 us
-      - memset_256_system_avg_rate: 256459.0 KiB/s
-      - memset_256_system_avg_time: 48740.67 us
-      - memset_512_mock_avg_rate: 244617.0 KiB/s
+      - memset_256_mock_avg_rate: 186621.33 KiB/s
+      - memset_256_mock_avg_time: 66980.33 us
+      - memset_256_system_avg_rate: 256457.33 KiB/s
+      - memset_256_system_avg_time: 48741.0 us
+      - memset_512_mock_avg_rate: 244617.33 KiB/s
       - memset_512_mock_avg_time: 102200.33 us
-      - memset_512_system_avg_rate: 280924.0 KiB/s
-      - memset_512_system_avg_time: 88992.0 us
-      - memset_1024_mock_avg_rate: 289620.0 KiB/s
-      - memset_1024_mock_avg_time: 172640.0 us
-      - memset_1024_system_avg_rate: 294999.67 KiB/s
+      - memset_512_system_avg_rate: 280925.0 KiB/s
+      - memset_512_system_avg_time: 88991.67 us
+      - memset_1024_mock_avg_rate: 289623.33 KiB/s
+      - memset_1024_mock_avg_time: 172638.0 us
+      - memset_1024_system_avg_rate: 295000.0 KiB/s
       - memset_1024_system_avg_time: 169491.33 us
-      - memset_2048_mock_avg_rate: 318962.67 KiB/s
-      - memset_2048_mock_avg_time: 313515.67 us
-      - memset_2048_system_avg_rate: 302578.33 KiB/s
-      - memset_2048_system_avg_time: 330492.67 us
-      - memset_4096_mock_avg_rate: 335981.0 KiB/s
+      - memset_2048_mock_avg_rate: 318962.33 KiB/s
+      - memset_2048_mock_avg_time: 313516.0 us
+      - memset_2048_system_avg_rate: 302578.67 KiB/s
+      - memset_2048_system_avg_time: 330492.33 us
+      - memset_4096_mock_avg_rate: 335981.33 KiB/s
       - memset_4096_mock_avg_time: 595270.67 us
       - memset_4096_system_avg_rate: 306515.0 KiB/s
-      - memset_4096_system_avg_time: 652495.33 us
+      - memset_4096_system_avg_time: 652495.67 us
       - memset_8192_mock_avg_rate: 345191.67 KiB/s
       - memset_8192_mock_avg_time: 1158774.67 us
       - memset_8192_system_avg_rate: 308522.33 KiB/s
       - memset_8192_system_avg_time: 1296501.0 us
       - memset_16384_mock_avg_rate: 349988.33 KiB/s
-      - memset_16384_mock_avg_time: 2285789.67 us
+      - memset_16384_mock_avg_time: 2285790.0 us
       - memset_16384_system_avg_rate: 309535.0 KiB/s
-      - memset_16384_system_avg_time: 2584519.33 us
+      - memset_16384_system_avg_time: 2584519.0 us
       - memset_32768_mock_avg_rate: 352434.0 KiB/s
-      - memset_32768_mock_avg_time: 4539851.67 us
+      - memset_32768_mock_avg_time: 4539852.0 us
       - memset_32768_system_avg_rate: 310045.0 KiB/s
       - memset_32768_system_avg_time: 5160528.33 us
       - memset_65536_mock_avg_rate: 353673.33 KiB/s
-      - memset_65536_mock_avg_time: 9047880.67 us
+      - memset_65536_mock_avg_time: 9047880.33 us
       - memset_65536_system_avg_rate: 310300.0 KiB/s
       - memset_65536_system_avg_time: 10312582.0 us
   - ESP32-C5 - Success - :white_check_mark:
     - copies=50000,max_test_size=65536 - 3 runs:
-      - memcpy_32_mock_avg_rate: 76114.33 KiB/s
-      - memcpy_32_mock_avg_time: 20521.67 us
-      - memcpy_32_system_avg_rate: 103886.67 KiB/s
-      - memcpy_32_system_avg_time: 15045.67 us
-      - memcpy_64_mock_avg_rate: 124448.33 KiB/s
-      - memcpy_64_mock_avg_time: 25110.67 us
-      - memcpy_64_system_avg_rate: 161155.67 KiB/s
-      - memcpy_64_system_avg_time: 19407.67 us
-      - memcpy_128_mock_avg_rate: 183307.33 KiB/s
-      - memcpy_128_mock_avg_time: 34095.67 us
-      - memcpy_128_system_avg_rate: 230260.0 KiB/s
-      - memcpy_128_system_avg_time: 27143.67 us
-      - memcpy_256_mock_avg_rate: 242138.0 KiB/s
-      - memcpy_256_mock_avg_time: 51623.33 us
-      - memcpy_256_system_avg_rate: 294246.0 KiB/s
-      - memcpy_256_system_avg_time: 42481.67 us
-      - memcpy_512_mock_avg_rate: 283629.67 KiB/s
-      - memcpy_512_mock_avg_time: 88143.0 us
-      - memcpy_512_system_avg_rate: 322674.0 KiB/s
-      - memcpy_512_system_avg_time: 77478.33 us
-      - memcpy_1024_mock_avg_rate: 317996.33 KiB/s
-      - memcpy_1024_mock_avg_time: 157234.33 us
-      - memcpy_1024_system_avg_rate: 344624.67 KiB/s
-      - memcpy_1024_system_avg_time: 145085.33 us
-      - memcpy_2048_mock_avg_rate: 335659.0 KiB/s
-      - memcpy_2048_mock_avg_time: 297921.0 us
-      - memcpy_2048_system_avg_rate: 353022.0 KiB/s
-      - memcpy_2048_system_avg_time: 283268.0 us
-      - memcpy_4096_mock_avg_rate: 345241.67 KiB/s
-      - memcpy_4096_mock_avg_time: 579304.0 us
-      - memcpy_4096_system_avg_rate: 361301.67 KiB/s
-      - memcpy_4096_system_avg_time: 553553.67 us
-      - memcpy_8192_mock_avg_rate: 350238.33 KiB/s
-      - memcpy_8192_mock_avg_time: 1142078.0 us
-      - memcpy_8192_system_avg_rate: 365622.67 KiB/s
-      - memcpy_8192_system_avg_time: 1094023.67 us
-      - memcpy_16384_mock_avg_rate: 352796.67 KiB/s
-      - memcpy_16384_mock_avg_time: 2267593.0 us
-      - memcpy_16384_system_avg_rate: 367405.0 KiB/s
-      - memcpy_16384_system_avg_time: 2177431.67 us
-      - memcpy_32768_mock_avg_rate: 354092.0 KiB/s
-      - memcpy_32768_mock_avg_time: 4518596.33 us
-      - memcpy_32768_system_avg_rate: 368237.67 KiB/s
-      - memcpy_32768_system_avg_time: 4345016.0 us
-      - memcpy_65536_mock_avg_rate: 354745.67 KiB/s
-      - memcpy_65536_mock_avg_time: 9020542.67 us
-      - memcpy_65536_system_avg_rate: 374440.33 KiB/s
-      - memcpy_65536_system_avg_time: 8546074.67 us
-      - memset_32_mock_avg_rate: 102069.0 KiB/s
-      - memset_32_mock_avg_time: 15303.33 us
-      - memset_32_system_avg_rate: 101914.67 KiB/s
-      - memset_32_system_avg_time: 15326.67 us
-      - memset_64_mock_avg_rate: 169861.0 KiB/s
-      - memset_64_mock_avg_time: 18398.0 us
-      - memset_64_system_avg_rate: 174786.0 KiB/s
-      - memset_64_system_avg_time: 17879.33 us
-      - memset_128_mock_avg_rate: 275508.0 KiB/s
-      - memset_128_mock_avg_time: 22685.33 us
-      - memset_128_system_avg_rate: 272970.0 KiB/s
-      - memset_128_system_avg_time: 22896.67 us
-      - memset_256_mock_avg_rate: 378738.67 KiB/s
-      - memset_256_mock_avg_time: 33004.33 us
-      - memset_256_system_avg_rate: 373074.33 KiB/s
-      - memset_256_system_avg_time: 33505.33 us
-      - memset_512_mock_avg_rate: 457478.33 KiB/s
-      - memset_512_mock_avg_time: 54647.33 us
-      - memset_512_system_avg_rate: 460996.0 KiB/s
-      - memset_512_system_avg_time: 54230.33 us
-      - memset_1024_mock_avg_rate: 529421.0 KiB/s
-      - memset_1024_mock_avg_time: 94442.67 us
-      - memset_1024_system_avg_rate: 529479.33 KiB/s
-      - memset_1024_system_avg_time: 94432.33 us
-      - memset_2048_mock_avg_rate: 571625.33 KiB/s
-      - memset_2048_mock_avg_time: 174939.67 us
-      - memset_2048_system_avg_rate: 571981.67 KiB/s
-      - memset_2048_system_avg_time: 174830.67 us
-      - memset_4096_mock_avg_rate: 595674.67 KiB/s
-      - memset_4096_mock_avg_time: 335753.33 us
-      - memset_4096_system_avg_rate: 595871.67 KiB/s
-      - memset_4096_system_avg_time: 335642.67 us
-      - memset_8192_mock_avg_rate: 608484.67 KiB/s
-      - memset_8192_mock_avg_time: 657370.0 us
-      - memset_8192_system_avg_rate: 608596.0 KiB/s
-      - memset_8192_system_avg_time: 657250.0 us
-      - memset_16384_mock_avg_rate: 615141.33 KiB/s
-      - memset_16384_mock_avg_time: 1300513.33 us
-      - memset_16384_system_avg_rate: 615171.67 KiB/s
-      - memset_16384_system_avg_time: 1300449.0 us
-      - memset_32768_mock_avg_rate: 618507.33 KiB/s
-      - memset_32768_mock_avg_time: 2586871.33 us
-      - memset_32768_system_avg_rate: 618494.33 KiB/s
-      - memset_32768_system_avg_time: 2586925.0 us
-      - memset_65536_mock_avg_rate: 620207.67 KiB/s
-      - memset_65536_mock_avg_time: 5159558.0 us
-      - memset_65536_system_avg_rate: 620193.0 KiB/s
-      - memset_65536_system_avg_time: 5159683.33 us
+      - memcpy_32_mock_avg_rate: 76098.0 KiB/s
+      - memcpy_32_mock_avg_time: 20526.0 us
+      - memcpy_32_system_avg_rate: 103317.0 KiB/s
+      - memcpy_32_system_avg_time: 15125.0 us
+      - memcpy_64_mock_avg_rate: 124419.0 KiB/s
+      - memcpy_64_mock_avg_time: 25116.67 us
+      - memcpy_64_system_avg_rate: 161211.0 KiB/s
+      - memcpy_64_system_avg_time: 19400.33 us
+      - memcpy_128_mock_avg_rate: 183384.33 KiB/s
+      - memcpy_128_mock_avg_time: 34081.33 us
+      - memcpy_128_system_avg_rate: 228232.0 KiB/s
+      - memcpy_128_system_avg_time: 27386.67 us
+      - memcpy_256_mock_avg_rate: 242200.67 KiB/s
+      - memcpy_256_mock_avg_time: 51610.0 us
+      - memcpy_256_system_avg_rate: 294014.67 KiB/s
+      - memcpy_256_system_avg_time: 42515.0 us
+      - memcpy_512_mock_avg_rate: 283633.0 KiB/s
+      - memcpy_512_mock_avg_time: 88142.0 us
+      - memcpy_512_system_avg_rate: 322710.67 KiB/s
+      - memcpy_512_system_avg_time: 77468.67 us
+      - memcpy_1024_mock_avg_rate: 317999.67 KiB/s
+      - memcpy_1024_mock_avg_time: 157232.67 us
+      - memcpy_1024_system_avg_rate: 344651.67 KiB/s
+      - memcpy_1024_system_avg_time: 145074.0 us
+      - memcpy_2048_mock_avg_rate: 335656.33 KiB/s
+      - memcpy_2048_mock_avg_time: 297923.33 us
+      - memcpy_2048_system_avg_rate: 352908.67 KiB/s
+      - memcpy_2048_system_avg_time: 283359.33 us
+      - memcpy_4096_mock_avg_rate: 345238.33 KiB/s
+      - memcpy_4096_mock_avg_time: 579309.33 us
+      - memcpy_4096_system_avg_rate: 361306.0 KiB/s
+      - memcpy_4096_system_avg_time: 553546.67 us
+      - memcpy_8192_mock_avg_rate: 350238.0 KiB/s
+      - memcpy_8192_mock_avg_time: 1142079.67 us
+      - memcpy_8192_system_avg_rate: 365614.33 KiB/s
+      - memcpy_8192_system_avg_time: 1094047.67 us
+      - memcpy_16384_mock_avg_rate: 352800.33 KiB/s
+      - memcpy_16384_mock_avg_time: 2267568.67 us
+      - memcpy_16384_system_avg_rate: 367409.67 KiB/s
+      - memcpy_16384_system_avg_time: 2177404.33 us
+      - memcpy_32768_mock_avg_rate: 354087.33 KiB/s
+      - memcpy_32768_mock_avg_time: 4518650.67 us
+      - memcpy_32768_system_avg_rate: 368230.33 KiB/s
+      - memcpy_32768_system_avg_time: 4345100.0 us
+      - memcpy_65536_mock_avg_rate: 354744.0 KiB/s
+      - memcpy_65536_mock_avg_time: 9020573.67 us
+      - memcpy_65536_system_avg_rate: 374423.0 KiB/s
+      - memcpy_65536_system_avg_time: 8546469.0 us
+      - memset_32_mock_avg_rate: 102035.67 KiB/s
+      - memset_32_mock_avg_time: 15308.33 us
+      - memset_32_system_avg_rate: 101945.67 KiB/s
+      - memset_32_system_avg_time: 15322.0 us
+      - memset_64_mock_avg_rate: 169772.33 KiB/s
+      - memset_64_mock_avg_time: 18407.33 us
+      - memset_64_system_avg_rate: 173362.33 KiB/s
+      - memset_64_system_avg_time: 18026.0 us
+      - memset_128_mock_avg_rate: 274094.67 KiB/s
+      - memset_128_mock_avg_time: 22802.33 us
+      - memset_128_system_avg_rate: 273818.0 KiB/s
+      - memset_128_system_avg_time: 22825.33 us
+      - memset_256_mock_avg_rate: 378650.33 KiB/s
+      - memset_256_mock_avg_time: 33012.0 us
+      - memset_256_system_avg_rate: 373093.0 KiB/s
+      - memset_256_system_avg_time: 33503.67 us
+      - memset_512_mock_avg_rate: 457503.67 KiB/s
+      - memset_512_mock_avg_time: 54644.33 us
+      - memset_512_system_avg_rate: 460976.0 KiB/s
+      - memset_512_system_avg_time: 54232.67 us
+      - memset_1024_mock_avg_rate: 530104.67 KiB/s
+      - memset_1024_mock_avg_time: 94321.0 us
+      - memset_1024_system_avg_rate: 529460.67 KiB/s
+      - memset_1024_system_avg_time: 94435.67 us
+      - memset_2048_mock_avg_rate: 571620.67 KiB/s
+      - memset_2048_mock_avg_time: 174941.0 us
+      - memset_2048_system_avg_rate: 571974.0 KiB/s
+      - memset_2048_system_avg_time: 174833.0 us
+      - memset_4096_mock_avg_rate: 595639.33 KiB/s
+      - memset_4096_mock_avg_time: 335773.33 us
+      - memset_4096_system_avg_rate: 595860.0 KiB/s
+      - memset_4096_system_avg_time: 335649.0 us
+      - memset_8192_mock_avg_rate: 608487.33 KiB/s
+      - memset_8192_mock_avg_time: 657367.33 us
+      - memset_8192_system_avg_rate: 608588.33 KiB/s
+      - memset_8192_system_avg_time: 657258.33 us
+      - memset_16384_mock_avg_rate: 615144.67 KiB/s
+      - memset_16384_mock_avg_time: 1300506.33 us
+      - memset_16384_system_avg_rate: 615158.0 KiB/s
+      - memset_16384_system_avg_time: 1300478.33 us
+      - memset_32768_mock_avg_rate: 618512.0 KiB/s
+      - memset_32768_mock_avg_time: 2586851.33 us
+      - memset_32768_system_avg_rate: 618489.0 KiB/s
+      - memset_32768_system_avg_time: 2586947.33 us
+      - memset_65536_mock_avg_rate: 620212.67 KiB/s
+      - memset_65536_mock_avg_time: 5159517.67 us
+      - memset_65536_system_avg_rate: 620177.67 KiB/s
+      - memset_65536_system_avg_time: 5159806.0 us
   - ESP32-C6 - Success - :white_check_mark:
     - copies=50000,max_test_size=65536 - 3 runs:
-      - memcpy_32_mock_avg_rate: 42409.0 KiB/s
-      - memcpy_32_mock_avg_time: 36831.33 us
-      - memcpy_32_system_avg_rate: 69908.67 KiB/s
-      - memcpy_32_system_avg_time: 22343.33 us
-      - memcpy_64_mock_avg_rate: 66910.67 KiB/s
-      - memcpy_64_mock_avg_time: 46704.0 us
-      - memcpy_64_system_avg_rate: 104515.0 KiB/s
-      - memcpy_64_system_avg_time: 29900.0 us
-      - memcpy_128_mock_avg_rate: 94336.0 KiB/s
-      - memcpy_128_mock_avg_time: 66252.33 us
-      - memcpy_128_system_avg_rate: 150459.67 KiB/s
-      - memcpy_128_system_avg_time: 41539.33 us
-      - memcpy_256_mock_avg_rate: 118704.33 KiB/s
-      - memcpy_256_mock_avg_time: 105303.0 us
-      - memcpy_256_system_avg_rate: 191869.33 KiB/s
-      - memcpy_256_system_avg_time: 65148.33 us
-      - memcpy_512_mock_avg_rate: 136321.0 KiB/s
-      - memcpy_512_mock_avg_time: 183390.0 us
-      - memcpy_512_system_avg_rate: 208483.33 KiB/s
-      - memcpy_512_system_avg_time: 119913.33 us
-      - memcpy_1024_mock_avg_rate: 147227.0 KiB/s
-      - memcpy_1024_mock_avg_time: 339611.0 us
-      - memcpy_1024_system_avg_rate: 217934.0 KiB/s
-      - memcpy_1024_system_avg_time: 229427.0 us
-      - memcpy_2048_mock_avg_rate: 153433.67 KiB/s
-      - memcpy_2048_mock_avg_time: 651745.33 us
+      - memcpy_32_mock_avg_rate: 42409.67 KiB/s
+      - memcpy_32_mock_avg_time: 36830.67 us
+      - memcpy_32_system_avg_rate: 69900.0 KiB/s
+      - memcpy_32_system_avg_time: 22346.0 us
+      - memcpy_64_mock_avg_rate: 66909.33 KiB/s
+      - memcpy_64_mock_avg_time: 46704.67 us
+      - memcpy_64_system_avg_rate: 104516.0 KiB/s
+      - memcpy_64_system_avg_time: 29899.67 us
+      - memcpy_128_mock_avg_rate: 94317.33 KiB/s
+      - memcpy_128_mock_avg_time: 66265.33 us
+      - memcpy_128_system_avg_rate: 150448.67 KiB/s
+      - memcpy_128_system_avg_time: 41542.33 us
+      - memcpy_256_mock_avg_rate: 118714.0 KiB/s
+      - memcpy_256_mock_avg_time: 105294.67 us
+      - memcpy_256_system_avg_rate: 191867.33 KiB/s
+      - memcpy_256_system_avg_time: 65149.0 us
+      - memcpy_512_mock_avg_rate: 136328.0 KiB/s
+      - memcpy_512_mock_avg_time: 183380.67 us
+      - memcpy_512_system_avg_rate: 208484.67 KiB/s
+      - memcpy_512_system_avg_time: 119912.67 us
+      - memcpy_1024_mock_avg_rate: 147227.33 KiB/s
+      - memcpy_1024_mock_avg_time: 339610.33 us
+      - memcpy_1024_system_avg_rate: 217934.33 KiB/s
+      - memcpy_1024_system_avg_time: 229426.67 us
+      - memcpy_2048_mock_avg_rate: 153433.33 KiB/s
+      - memcpy_2048_mock_avg_time: 651746.67 us
       - memcpy_2048_system_avg_rate: 223453.0 KiB/s
       - memcpy_2048_system_avg_time: 447520.67 us
-      - memcpy_4096_mock_avg_rate: 156719.67 KiB/s
-      - memcpy_4096_mock_avg_time: 1276161.33 us
+      - memcpy_4096_mock_avg_rate: 156719.0 KiB/s
+      - memcpy_4096_mock_avg_time: 1276162.0 us
       - memcpy_4096_system_avg_rate: 228347.0 KiB/s
-      - memcpy_4096_system_avg_time: 875857.33 us
+      - memcpy_4096_system_avg_time: 875857.0 us
       - memcpy_8192_mock_avg_rate: 158415.0 KiB/s
       - memcpy_8192_mock_avg_time: 2525005.0 us
       - memcpy_8192_system_avg_rate: 230750.0 KiB/s
-      - memcpy_8192_system_avg_time: 1733471.67 us
-      - memcpy_16384_mock_avg_rate: 159280.33 KiB/s
-      - memcpy_16384_mock_avg_time: 5022573.0 us
+      - memcpy_8192_system_avg_time: 1733472.0 us
+      - memcpy_16384_mock_avg_rate: 159280.67 KiB/s
+      - memcpy_16384_mock_avg_time: 5022572.67 us
       - memcpy_16384_system_avg_rate: 231953.0 KiB/s
-      - memcpy_16384_system_avg_time: 3448971.33 us
+      - memcpy_16384_system_avg_time: 3448972.0 us
       - memcpy_32768_mock_avg_rate: 159716.0 KiB/s
-      - memcpy_32768_mock_avg_time: 10017778.33 us
+      - memcpy_32768_mock_avg_time: 10017778.0 us
       - memcpy_32768_system_avg_rate: 232301.0 KiB/s
-      - memcpy_32768_system_avg_time: 6887605.67 us
+      - memcpy_32768_system_avg_time: 6887607.67 us
       - memcpy_65536_mock_avg_rate: 159935.0 KiB/s
-      - memcpy_65536_mock_avg_time: 20008022.33 us
+      - memcpy_65536_mock_avg_time: 20008022.67 us
       - memcpy_65536_system_avg_rate: 235923.0 KiB/s
-      - memcpy_65536_system_avg_time: 13563731.33 us
-      - memset_32_mock_avg_rate: 51164.67 KiB/s
-      - memset_32_mock_avg_time: 30528.67 us
-      - memset_32_system_avg_rate: 62819.0 KiB/s
-      - memset_32_system_avg_time: 24865.0 us
-      - memset_64_mock_avg_rate: 88636.67 KiB/s
-      - memset_64_mock_avg_time: 35256.0 us
-      - memset_64_system_avg_rate: 109119.0 KiB/s
-      - memset_64_system_avg_time: 28638.33 us
-      - memset_128_mock_avg_rate: 139520.0 KiB/s
-      - memset_128_mock_avg_time: 44796.33 us
-      - memset_128_system_avg_rate: 172677.0 KiB/s
-      - memset_128_system_avg_time: 36194.67 us
-      - memset_256_mock_avg_rate: 196578.33 KiB/s
-      - memset_256_mock_avg_time: 63587.67 us
+      - memcpy_65536_system_avg_time: 13563729.0 us
+      - memset_32_mock_avg_rate: 51164.0 KiB/s
+      - memset_32_mock_avg_time: 30529.0 us
+      - memset_32_system_avg_rate: 62819.67 KiB/s
+      - memset_32_system_avg_time: 24864.67 us
+      - memset_64_mock_avg_rate: 88638.0 KiB/s
+      - memset_64_mock_avg_time: 35255.67 us
+      - memset_64_system_avg_rate: 109111.33 KiB/s
+      - memset_64_system_avg_time: 28640.33 us
+      - memset_128_mock_avg_rate: 139521.0 KiB/s
+      - memset_128_mock_avg_time: 44796.0 us
+      - memset_128_system_avg_rate: 172675.33 KiB/s
+      - memset_128_system_avg_time: 36195.0 us
+      - memset_256_mock_avg_rate: 196595.67 KiB/s
+      - memset_256_mock_avg_time: 63582.0 us
       - memset_256_system_avg_rate: 243662.67 KiB/s
       - memset_256_system_avg_time: 51300.33 us
-      - memset_512_mock_avg_rate: 245928.33 KiB/s
-      - memset_512_mock_avg_time: 101655.33 us
-      - memset_512_system_avg_rate: 306702.67 KiB/s
-      - memset_512_system_avg_time: 81512.0 us
-      - memset_1024_mock_avg_rate: 282299.0 KiB/s
-      - memset_1024_mock_avg_time: 177117.0 us
-      - memset_1024_system_avg_rate: 352263.0 KiB/s
-      - memset_1024_system_avg_time: 141939.33 us
-      - memset_2048_mock_avg_rate: 304752.67 KiB/s
-      - memset_2048_mock_avg_time: 328134.33 us
+      - memset_512_mock_avg_rate: 245953.33 KiB/s
+      - memset_512_mock_avg_time: 101645.0 us
+      - memset_512_system_avg_rate: 306701.33 KiB/s
+      - memset_512_system_avg_time: 81512.33 us
+      - memset_1024_mock_avg_rate: 282296.0 KiB/s
+      - memset_1024_mock_avg_time: 177118.67 us
+      - memset_1024_system_avg_rate: 352264.0 KiB/s
+      - memset_1024_system_avg_time: 141939.0 us
+      - memset_2048_mock_avg_rate: 304753.0 KiB/s
+      - memset_2048_mock_avg_time: 328134.0 us
       - memset_2048_system_avg_rate: 380529.0 KiB/s
       - memset_2048_system_avg_time: 262792.0 us
       - memset_4096_mock_avg_rate: 317331.33 KiB/s
       - memset_4096_mock_avg_time: 630255.0 us
-      - memset_4096_system_avg_rate: 396435.67 KiB/s
-      - memset_4096_system_avg_time: 504494.67 us
-      - memset_8192_mock_avg_rate: 323998.0 KiB/s
-      - memset_8192_mock_avg_time: 1234572.0 us
+      - memset_4096_system_avg_rate: 396435.0 KiB/s
+      - memset_4096_system_avg_time: 504495.33 us
+      - memset_8192_mock_avg_rate: 323997.67 KiB/s
+      - memset_8192_mock_avg_time: 1234573.67 us
       - memset_8192_system_avg_rate: 404898.0 KiB/s
-      - memset_8192_system_avg_time: 987901.67 us
-      - memset_16384_mock_avg_rate: 327414.0 KiB/s
-      - memset_16384_mock_avg_time: 2443383.0 us
+      - memset_8192_system_avg_time: 987901.0 us
+      - memset_16384_mock_avg_rate: 327414.33 KiB/s
+      - memset_16384_mock_avg_time: 2443380.33 us
       - memset_16384_system_avg_rate: 409266.33 KiB/s
       - memset_16384_system_avg_time: 1954715.33 us
-      - memset_32768_mock_avg_rate: 329204.67 KiB/s
-      - memset_32768_mock_avg_time: 4860188.67 us
+      - memset_32768_mock_avg_rate: 329205.0 KiB/s
+      - memset_32768_mock_avg_time: 4860186.33 us
       - memset_32768_system_avg_rate: 411487.0 KiB/s
-      - memset_32768_system_avg_time: 3888335.0 us
+      - memset_32768_system_avg_time: 3888335.67 us
       - memset_65536_mock_avg_rate: 330095.0 KiB/s
-      - memset_65536_mock_avg_time: 9694166.0 us
+      - memset_65536_mock_avg_time: 9694166.67 us
       - memset_65536_system_avg_rate: 412604.33 KiB/s
-      - memset_65536_system_avg_time: 7755600.67 us
+      - memset_65536_system_avg_time: 7755600.0 us
   - ESP32-H2 - Success - :white_check_mark:
     - copies=50000,max_test_size=65536 - 3 runs:
-      - memcpy_32_mock_avg_rate: 26433.0 KiB/s
-      - memcpy_32_mock_avg_time: 59091.67 us
-      - memcpy_32_system_avg_rate: 42286.33 KiB/s
-      - memcpy_32_system_avg_time: 36938.0 us
-      - memcpy_64_mock_avg_rate: 41595.33 KiB/s
-      - memcpy_64_mock_avg_time: 75128.0 us
-      - memcpy_64_system_avg_rate: 64389.0 KiB/s
-      - memcpy_64_system_avg_time: 48532.67 us
-      - memcpy_128_mock_avg_rate: 58453.33 KiB/s
-      - memcpy_128_mock_avg_time: 106922.0 us
-      - memcpy_128_system_avg_rate: 94026.0 KiB/s
-      - memcpy_128_system_avg_time: 66470.67 us
-      - memcpy_256_mock_avg_rate: 73457.0 KiB/s
-      - memcpy_256_mock_avg_time: 170167.0 us
+      - memcpy_32_mock_avg_rate: 26431.67 KiB/s
+      - memcpy_32_mock_avg_time: 59095.0 us
+      - memcpy_32_system_avg_rate: 42287.33 KiB/s
+      - memcpy_32_system_avg_time: 36937.0 us
+      - memcpy_64_mock_avg_rate: 41604.33 KiB/s
+      - memcpy_64_mock_avg_time: 75111.33 us
+      - memcpy_64_system_avg_rate: 64382.67 KiB/s
+      - memcpy_64_system_avg_time: 48537.67 us
+      - memcpy_128_mock_avg_rate: 58451.33 KiB/s
+      - memcpy_128_mock_avg_time: 106925.33 us
+      - memcpy_128_system_avg_rate: 94033.0 KiB/s
+      - memcpy_128_system_avg_time: 66466.0 us
+      - memcpy_256_mock_avg_rate: 73453.0 KiB/s
+      - memcpy_256_mock_avg_time: 170175.33 us
       - memcpy_256_system_avg_rate: 122136.0 KiB/s
       - memcpy_256_system_avg_time: 102344.33 us
-      - memcpy_512_mock_avg_rate: 84235.33 KiB/s
-      - memcpy_512_mock_avg_time: 296786.0 us
-      - memcpy_512_system_avg_rate: 134230.33 KiB/s
-      - memcpy_512_system_avg_time: 186246.33 us
-      - memcpy_1024_mock_avg_rate: 90880.33 KiB/s
-      - memcpy_1024_mock_avg_time: 550171.33 us
-      - memcpy_1024_system_avg_rate: 141245.33 KiB/s
-      - memcpy_1024_system_avg_time: 353993.0 us
+      - memcpy_512_mock_avg_rate: 84237.67 KiB/s
+      - memcpy_512_mock_avg_time: 296778.67 us
+      - memcpy_512_system_avg_rate: 134227.67 KiB/s
+      - memcpy_512_system_avg_time: 186250.0 us
+      - memcpy_1024_mock_avg_rate: 90881.0 KiB/s
+      - memcpy_1024_mock_avg_time: 550168.67 us
+      - memcpy_1024_system_avg_rate: 141245.0 KiB/s
+      - memcpy_1024_system_avg_time: 353994.0 us
       - memcpy_2048_mock_avg_rate: 94631.0 KiB/s
       - memcpy_2048_mock_avg_time: 1056725.33 us
-      - memcpy_2048_system_avg_rate: 145023.0 KiB/s
-      - memcpy_2048_system_avg_time: 689543.67 us
+      - memcpy_2048_system_avg_rate: 145023.33 KiB/s
+      - memcpy_2048_system_avg_time: 689541.67 us
       - memcpy_4096_mock_avg_rate: 96631.0 KiB/s
-      - memcpy_4096_mock_avg_time: 2069717.67 us
+      - memcpy_4096_mock_avg_time: 2069717.33 us
       - memcpy_4096_system_avg_rate: 148322.33 KiB/s
-      - memcpy_4096_system_avg_time: 1348412.0 us
+      - memcpy_4096_system_avg_time: 1348412.33 us
       - memcpy_8192_mock_avg_rate: 97674.0 KiB/s
-      - memcpy_8192_mock_avg_time: 4095241.0 us
+      - memcpy_8192_mock_avg_time: 4095237.0 us
       - memcpy_8192_system_avg_rate: 150024.67 KiB/s
       - memcpy_8192_system_avg_time: 2666220.0 us
       - memcpy_16384_mock_avg_rate: 98198.0 KiB/s
-      - memcpy_16384_mock_avg_time: 8146767.0 us
+      - memcpy_16384_mock_avg_time: 8146771.0 us
       - memcpy_16384_system_avg_rate: 150892.0 KiB/s
-      - memcpy_16384_system_avg_time: 5301783.33 us
+      - memcpy_16384_system_avg_time: 5301783.0 us
       - memcpy_32768_mock_avg_rate: 98463.0 KiB/s
-      - memcpy_32768_mock_avg_time: 16249688.33 us
+      - memcpy_32768_mock_avg_time: 16249688.0 us
       - memcpy_32768_system_avg_rate: 151152.0 KiB/s
       - memcpy_32768_system_avg_time: 10585308.67 us
       - memcpy_65536_mock_avg_rate: 98597.0 KiB/s
-      - memcpy_65536_mock_avg_time: 32455250.0 us
+      - memcpy_65536_mock_avg_time: 32455245.67 us
       - memcpy_65536_system_avg_rate: 151284.0 KiB/s
-      - memcpy_65536_system_avg_time: 21152175.33 us
-      - memset_32_mock_avg_rate: 29905.67 KiB/s
-      - memset_32_mock_avg_time: 52229.33 us
+      - memcpy_65536_system_avg_time: 21152180.33 us
+      - memset_32_mock_avg_rate: 29903.0 KiB/s
+      - memset_32_mock_avg_time: 52234.0 us
       - memset_32_system_avg_rate: 37478.0 KiB/s
       - memset_32_system_avg_time: 41677.33 us
-      - memset_64_mock_avg_rate: 51015.67 KiB/s
-      - memset_64_mock_avg_time: 61255.0 us
+      - memset_64_mock_avg_rate: 51003.0 KiB/s
+      - memset_64_mock_avg_time: 61270.33 us
       - memset_64_system_avg_rate: 65093.0 KiB/s
       - memset_64_system_avg_time: 48008.0 us
-      - memset_128_mock_avg_rate: 78756.67 KiB/s
-      - memset_128_mock_avg_time: 79357.67 us
-      - memset_128_system_avg_rate: 103023.67 KiB/s
-      - memset_128_system_avg_time: 60665.33 us
-      - memset_256_mock_avg_rate: 108110.0 KiB/s
-      - memset_256_mock_avg_time: 115622.33 us
+      - memset_128_mock_avg_rate: 78751.67 KiB/s
+      - memset_128_mock_avg_time: 79363.0 us
+      - memset_128_system_avg_rate: 103024.33 KiB/s
+      - memset_128_system_avg_time: 60665.0 us
+      - memset_256_mock_avg_rate: 108116.33 KiB/s
+      - memset_256_mock_avg_time: 115615.67 us
       - memset_256_system_avg_rate: 145362.0 KiB/s
       - memset_256_system_avg_time: 85992.0 us
-      - memset_512_mock_avg_rate: 133741.0 KiB/s
-      - memset_512_mock_avg_time: 186928.0 us
-      - memset_512_system_avg_rate: 182972.33 KiB/s
-      - memset_512_system_avg_time: 136632.33 us
-      - memset_1024_mock_avg_rate: 151224.67 KiB/s
-      - memset_1024_mock_avg_time: 330633.0 us
-      - memset_1024_system_avg_rate: 210153.0 KiB/s
-      - memset_1024_system_avg_time: 237921.33 us
-      - memset_2048_mock_avg_rate: 161943.33 KiB/s
-      - memset_2048_mock_avg_time: 617497.33 us
+      - memset_512_mock_avg_rate: 133740.33 KiB/s
+      - memset_512_mock_avg_time: 186928.67 us
+      - memset_512_system_avg_rate: 182972.67 KiB/s
+      - memset_512_system_avg_time: 136632.0 us
+      - memset_1024_mock_avg_rate: 151226.0 KiB/s
+      - memset_1024_mock_avg_time: 330629.67 us
+      - memset_1024_system_avg_rate: 210149.0 KiB/s
+      - memset_1024_system_avg_time: 237926.0 us
+      - memset_2048_mock_avg_rate: 161943.67 KiB/s
+      - memset_2048_mock_avg_time: 617497.0 us
       - memset_2048_system_avg_rate: 227012.0 KiB/s
-      - memset_2048_system_avg_time: 440504.33 us
-      - memset_4096_mock_avg_rate: 167794.67 KiB/s
-      - memset_4096_mock_avg_time: 1191928.67 us
-      - memset_4096_system_avg_rate: 236502.0 KiB/s
-      - memset_4096_system_avg_time: 845657.0 us
-      - memset_8192_mock_avg_rate: 170958.33 KiB/s
-      - memset_8192_mock_avg_time: 2339745.33 us
-      - memset_8192_system_avg_rate: 241550.0 KiB/s
-      - memset_8192_system_avg_time: 1655967.33 us
-      - memset_16384_mock_avg_rate: 172589.0 KiB/s
-      - memset_16384_mock_avg_time: 4635284.0 us
+      - memset_2048_system_avg_time: 440504.67 us
+      - memset_4096_mock_avg_rate: 167789.0 KiB/s
+      - memset_4096_mock_avg_time: 1191970.67 us
+      - memset_4096_system_avg_rate: 236502.33 KiB/s
+      - memset_4096_system_avg_time: 845656.67 us
+      - memset_8192_mock_avg_rate: 170958.0 KiB/s
+      - memset_8192_mock_avg_time: 2339749.0 us
+      - memset_8192_system_avg_rate: 241550.67 KiB/s
+      - memset_8192_system_avg_time: 1655963.0 us
+      - memset_16384_mock_avg_rate: 172588.67 KiB/s
+      - memset_16384_mock_avg_time: 4635288.33 us
       - memset_16384_system_avg_rate: 244155.33 KiB/s
-      - memset_16384_system_avg_time: 3276590.33 us
-      - memset_32768_mock_avg_rate: 173398.0 KiB/s
-      - memset_32768_mock_avg_time: 9227317.67 us
+      - memset_16384_system_avg_time: 3276590.67 us
+      - memset_32768_mock_avg_rate: 173397.67 KiB/s
+      - memset_32768_mock_avg_time: 9227322.0 us
       - memset_32768_system_avg_rate: 245480.0 KiB/s
-      - memset_32768_system_avg_time: 6517833.33 us
-      - memset_65536_mock_avg_rate: 173810.0 KiB/s
-      - memset_65536_mock_avg_time: 18410806.0 us
+      - memset_32768_system_avg_time: 6517829.0 us
+      - memset_65536_mock_avg_rate: 173810.33 KiB/s
+      - memset_65536_mock_avg_time: 18410802.67 us
       - memset_65536_system_avg_rate: 246148.0 KiB/s
-      - memset_65536_system_avg_time: 13000282.33 us
-  - ESP32-P4 - Success - :white_check_mark:
-    - copies=50000,max_test_size=65536 - 3 runs:
+      - memset_65536_system_avg_time: 13000286.33 us
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - copies=50000,max_test_size=65536 - 3 runs (cached):
       - memcpy_32_mock_avg_rate: 127070.67 KiB/s
       - memcpy_32_mock_avg_time: 12292.33 us
       - memcpy_32_system_avg_rate: 168375.0 KiB/s
@@ -990,24 +990,24 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memcpy_32_mock_avg_time: 40969.33 us
       - memcpy_32_system_avg_rate: 113193.33 KiB/s
       - memcpy_32_system_avg_time: 13799.33 us
-      - memcpy_64_mock_avg_rate: 66744.67 KiB/s
-      - memcpy_64_mock_avg_time: 46819.67 us
-      - memcpy_64_system_avg_rate: 159029.67 KiB/s
-      - memcpy_64_system_avg_time: 19650.33 us
-      - memcpy_128_mock_avg_rate: 106795.0 KiB/s
-      - memcpy_128_mock_avg_time: 58523.0 us
-      - memcpy_128_system_avg_rate: 199308.33 KiB/s
-      - memcpy_128_system_avg_time: 31358.33 us
+      - memcpy_64_mock_avg_rate: 66746.0 KiB/s
+      - memcpy_64_mock_avg_time: 46819.0 us
+      - memcpy_64_system_avg_rate: 159027.0 KiB/s
+      - memcpy_64_system_avg_time: 19650.67 us
+      - memcpy_128_mock_avg_rate: 106794.33 KiB/s
+      - memcpy_128_mock_avg_time: 58523.33 us
+      - memcpy_128_system_avg_rate: 199306.33 KiB/s
+      - memcpy_128_system_avg_time: 31358.67 us
       - memcpy_256_mock_avg_rate: 152561.0 KiB/s
       - memcpy_256_mock_avg_time: 81934.0 us
-      - memcpy_256_system_avg_rate: 228244.33 KiB/s
-      - memcpy_256_system_avg_time: 54765.67 us
-      - memcpy_512_mock_avg_rate: 194170.33 KiB/s
-      - memcpy_512_mock_avg_time: 128752.67 us
-      - memcpy_512_system_avg_rate: 246066.33 KiB/s
-      - memcpy_512_system_avg_time: 101598.33 us
-      - memcpy_1024_mock_avg_rate: 224831.0 KiB/s
-      - memcpy_1024_mock_avg_time: 222389.0 us
+      - memcpy_256_system_avg_rate: 228242.0 KiB/s
+      - memcpy_256_system_avg_time: 54766.33 us
+      - memcpy_512_mock_avg_rate: 194170.67 KiB/s
+      - memcpy_512_mock_avg_time: 128752.33 us
+      - memcpy_512_system_avg_rate: 246067.33 KiB/s
+      - memcpy_512_system_avg_time: 101598.0 us
+      - memcpy_1024_mock_avg_rate: 224831.33 KiB/s
+      - memcpy_1024_mock_avg_time: 222388.67 us
       - memcpy_1024_system_avg_rate: 256081.0 KiB/s
       - memcpy_1024_system_avg_time: 195250.0 us
       - memcpy_2048_mock_avg_rate: 244104.0 KiB/s
@@ -1015,17 +1015,17 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memcpy_2048_system_avg_rate: 261399.67 KiB/s
       - memcpy_2048_system_avg_time: 382555.33 us
       - memcpy_4096_mock_avg_rate: 255035.67 KiB/s
-      - memcpy_4096_mock_avg_time: 784202.0 us
+      - memcpy_4096_mock_avg_time: 784202.33 us
       - memcpy_4096_system_avg_rate: 264142.0 KiB/s
-      - memcpy_4096_system_avg_time: 757167.0 us
+      - memcpy_4096_system_avg_time: 757167.33 us
       - memcpy_8192_mock_avg_rate: 260877.0 KiB/s
-      - memcpy_8192_mock_avg_time: 1533286.33 us
+      - memcpy_8192_mock_avg_time: 1533286.67 us
       - memcpy_8192_system_avg_rate: 265537.67 KiB/s
       - memcpy_8192_system_avg_time: 1506375.0 us
       - memcpy_16384_mock_avg_rate: 263899.0 KiB/s
       - memcpy_16384_mock_avg_time: 3031460.33 us
       - memcpy_16384_system_avg_rate: 266237.33 KiB/s
-      - memcpy_16384_system_avg_time: 3004830.33 us
+      - memcpy_16384_system_avg_time: 3004830.67 us
       - memcpy_32768_mock_avg_rate: 265436.0 KiB/s
       - memcpy_32768_mock_avg_time: 6027800.67 us
       - memcpy_32768_system_avg_rate: 266589.0 KiB/s
@@ -1048,38 +1048,38 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memset_128_system_avg_time: 25505.0 us
       - memset_256_mock_avg_rate: 201364.67 KiB/s
       - memset_256_mock_avg_time: 62076.33 us
-      - memset_256_system_avg_rate: 308248.33 KiB/s
-      - memset_256_system_avg_time: 40551.67 us
-      - memset_512_mock_avg_rate: 266392.33 KiB/s
-      - memset_512_mock_avg_time: 93846.33 us
-      - memset_512_system_avg_rate: 353830.0 KiB/s
-      - memset_512_system_avg_time: 70655.33 us
-      - memset_1024_mock_avg_rate: 317691.33 KiB/s
-      - memset_1024_mock_avg_time: 157385.33 us
-      - memset_1024_system_avg_rate: 382078.33 KiB/s
-      - memset_1024_system_avg_time: 130863.0 us
+      - memset_256_system_avg_rate: 308245.67 KiB/s
+      - memset_256_system_avg_time: 40552.0 us
+      - memset_512_mock_avg_rate: 266391.0 KiB/s
+      - memset_512_mock_avg_time: 93847.0 us
+      - memset_512_system_avg_rate: 353832.0 KiB/s
+      - memset_512_system_avg_time: 70655.0 us
+      - memset_1024_mock_avg_rate: 317692.0 KiB/s
+      - memset_1024_mock_avg_time: 157385.0 us
+      - memset_1024_system_avg_rate: 382077.33 KiB/s
+      - memset_1024_system_avg_time: 130863.33 us
       - memset_2048_mock_avg_rate: 351541.67 KiB/s
       - memset_2048_mock_avg_time: 284461.0 us
-      - memset_2048_system_avg_rate: 397996.33 KiB/s
-      - memset_2048_system_avg_time: 251258.33 us
+      - memset_2048_system_avg_rate: 397997.33 KiB/s
+      - memset_2048_system_avg_time: 251257.67 us
       - memset_4096_mock_avg_rate: 371322.0 KiB/s
       - memset_4096_mock_avg_time: 538615.0 us
-      - memset_4096_system_avg_rate: 406425.67 KiB/s
-      - memset_4096_system_avg_time: 492094.33 us
+      - memset_4096_system_avg_rate: 406425.33 KiB/s
+      - memset_4096_system_avg_time: 492094.67 us
       - memset_8192_mock_avg_rate: 382071.0 KiB/s
       - memset_8192_mock_avg_time: 1046924.0 us
       - memset_8192_system_avg_rate: 410789.67 KiB/s
-      - memset_8192_system_avg_time: 973732.67 us
+      - memset_8192_system_avg_time: 973733.0 us
       - memset_16384_mock_avg_rate: 387683.0 KiB/s
       - memset_16384_mock_avg_time: 2063538.67 us
       - memset_16384_system_avg_rate: 413004.0 KiB/s
       - memset_16384_system_avg_time: 1937023.0 us
       - memset_32768_mock_avg_rate: 390548.67 KiB/s
-      - memset_32768_mock_avg_time: 4096796.0 us
-      - memset_32768_system_avg_rate: 414121.33 KiB/s
-      - memset_32768_system_avg_time: 3863594.67 us
+      - memset_32768_mock_avg_time: 4096797.0 us
+      - memset_32768_system_avg_rate: 414122.0 KiB/s
+      - memset_32768_system_avg_time: 3863593.67 us
       - memset_65536_mock_avg_rate: 391999.0 KiB/s
-      - memset_65536_mock_avg_time: 8163267.67 us
+      - memset_65536_mock_avg_time: 8163268.0 us
       - memset_65536_system_avg_rate: 414681.67 KiB/s
       - memset_65536_system_avg_time: 7716755.0 us
   - ESP32-S3 - Success - :white_check_mark:
@@ -1090,94 +1090,94 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
       - memcpy_32_system_avg_time: 12560.33 us
       - memcpy_64_mock_avg_rate: 77339.33 KiB/s
       - memcpy_64_mock_avg_time: 40406.0 us
-      - memcpy_64_system_avg_rate: 186626.33 KiB/s
+      - memcpy_64_system_avg_rate: 186626.0 KiB/s
       - memcpy_64_system_avg_time: 16744.67 us
-      - memcpy_128_mock_avg_rate: 121855.67 KiB/s
-      - memcpy_128_mock_avg_time: 51290.0 us
-      - memcpy_128_system_avg_rate: 248845.0 KiB/s
-      - memcpy_128_system_avg_time: 25116.0 us
+      - memcpy_128_mock_avg_rate: 121854.67 KiB/s
+      - memcpy_128_mock_avg_time: 51290.33 us
+      - memcpy_128_system_avg_rate: 248858.33 KiB/s
+      - memcpy_128_system_avg_time: 25114.67 us
       - memcpy_256_mock_avg_rate: 171092.67 KiB/s
       - memcpy_256_mock_avg_time: 73059.67 us
-      - memcpy_256_system_avg_rate: 298632.67 KiB/s
-      - memcpy_256_system_avg_time: 41857.33 us
-      - memcpy_512_mock_avg_rate: 214411.67 KiB/s
-      - memcpy_512_mock_avg_time: 116598.0 us
-      - memcpy_512_system_avg_rate: 331828.33 KiB/s
+      - memcpy_256_system_avg_rate: 298630.33 KiB/s
+      - memcpy_256_system_avg_time: 41857.67 us
+      - memcpy_512_mock_avg_rate: 214411.0 KiB/s
+      - memcpy_512_mock_avg_time: 116598.33 us
+      - memcpy_512_system_avg_rate: 331828.67 KiB/s
       - memcpy_512_system_avg_time: 75340.0 us
-      - memcpy_1024_mock_avg_rate: 245487.0 KiB/s
-      - memcpy_1024_mock_avg_time: 203676.33 us
-      - memcpy_1024_system_avg_rate: 351346.67 KiB/s
-      - memcpy_1024_system_avg_time: 142309.33 us
+      - memcpy_1024_mock_avg_rate: 245486.33 KiB/s
+      - memcpy_1024_mock_avg_time: 203677.0 us
+      - memcpy_1024_system_avg_rate: 351346.0 KiB/s
+      - memcpy_1024_system_avg_time: 142309.67 us
       - memcpy_2048_mock_avg_rate: 264665.0 KiB/s
-      - memcpy_2048_mock_avg_time: 377835.33 us
+      - memcpy_2048_mock_avg_time: 377835.0 us
       - memcpy_2048_system_avg_rate: 361998.0 KiB/s
       - memcpy_2048_system_avg_time: 276244.33 us
       - memcpy_4096_mock_avg_rate: 275427.33 KiB/s
-      - memcpy_4096_mock_avg_time: 726142.67 us
-      - memcpy_4096_system_avg_rate: 367568.0 KiB/s
-      - memcpy_4096_system_avg_time: 544116.0 us
+      - memcpy_4096_mock_avg_time: 726143.0 us
+      - memcpy_4096_system_avg_rate: 367570.33 KiB/s
+      - memcpy_4096_system_avg_time: 544112.67 us
       - memcpy_8192_mock_avg_rate: 281142.33 KiB/s
       - memcpy_8192_mock_avg_time: 1422764.0 us
-      - memcpy_8192_system_avg_rate: 370419.67 KiB/s
-      - memcpy_8192_system_avg_time: 1079854.67 us
-      - memcpy_16384_mock_avg_rate: 284092.0 KiB/s
-      - memcpy_16384_mock_avg_time: 2815988.33 us
+      - memcpy_8192_system_avg_rate: 370420.0 KiB/s
+      - memcpy_8192_system_avg_time: 1079854.0 us
+      - memcpy_16384_mock_avg_rate: 284091.0 KiB/s
+      - memcpy_16384_mock_avg_time: 2815994.0 us
       - memcpy_16384_system_avg_rate: 371861.67 KiB/s
-      - memcpy_16384_system_avg_time: 2151336.33 us
-      - memcpy_32768_mock_avg_rate: 285586.0 KiB/s
-      - memcpy_32768_mock_avg_time: 5602509.67 us
+      - memcpy_16384_system_avg_time: 2151335.67 us
+      - memcpy_32768_mock_avg_rate: 285585.33 KiB/s
+      - memcpy_32768_mock_avg_time: 5602515.67 us
       - memcpy_32768_system_avg_rate: 372587.0 KiB/s
-      - memcpy_32768_system_avg_time: 4294293.67 us
+      - memcpy_32768_system_avg_time: 4294293.33 us
       - memcpy_65536_mock_avg_rate: 286346.0 KiB/s
       - memcpy_65536_mock_avg_time: 11175272.67 us
       - memcpy_65536_system_avg_rate: 372950.67 KiB/s
       - memcpy_65536_system_avg_time: 8580213.67 us
       - memset_32_mock_avg_rate: 54447.33 KiB/s
       - memset_32_mock_avg_time: 28688.0 us
-      - memset_32_system_avg_rate: 126457.0 KiB/s
-      - memset_32_system_avg_time: 12352.0 us
-      - memset_64_mock_avg_rate: 96901.0 KiB/s
-      - memset_64_mock_avg_time: 32249.33 us
-      - memset_64_system_avg_rate: 216372.0 KiB/s
-      - memset_64_system_avg_time: 14442.67 us
+      - memset_32_system_avg_rate: 126477.33 KiB/s
+      - memset_32_system_avg_time: 12350.0 us
+      - memset_64_mock_avg_rate: 96902.0 KiB/s
+      - memset_64_mock_avg_time: 32249.0 us
+      - memset_64_system_avg_rate: 216377.0 KiB/s
+      - memset_64_system_avg_time: 14442.33 us
       - memset_128_mock_avg_rate: 158764.67 KiB/s
       - memset_128_mock_avg_time: 39366.33 us
       - memset_128_system_avg_rate: 335480.0 KiB/s
       - memset_128_system_avg_time: 18630.0 us
-      - memset_256_mock_avg_rate: 233203.67 KiB/s
-      - memset_256_mock_avg_time: 53601.0 us
-      - memset_256_system_avg_rate: 462911.0 KiB/s
-      - memset_256_system_avg_time: 27003.0 us
+      - memset_256_mock_avg_rate: 233202.33 KiB/s
+      - memset_256_mock_avg_time: 53601.33 us
+      - memset_256_system_avg_rate: 462916.67 KiB/s
+      - memset_256_system_avg_time: 27002.67 us
       - memset_512_mock_avg_rate: 304596.33 KiB/s
       - memset_512_mock_avg_time: 82075.67 us
-      - memset_512_system_avg_rate: 571475.67 KiB/s
-      - memset_512_system_avg_time: 43746.33 us
-      - memset_1024_mock_avg_rate: 359663.67 KiB/s
-      - memset_1024_mock_avg_time: 139018.67 us
-      - memset_1024_system_avg_rate: 647321.0 KiB/s
-      - memset_1024_system_avg_time: 77241.33 us
-      - memset_2048_mock_avg_rate: 395398.33 KiB/s
-      - memset_2048_mock_avg_time: 252909.33 us
+      - memset_512_system_avg_rate: 571484.67 KiB/s
+      - memset_512_system_avg_time: 43745.67 us
+      - memset_1024_mock_avg_rate: 359663.0 KiB/s
+      - memset_1024_mock_avg_time: 139019.0 us
+      - memset_1024_system_avg_rate: 647338.0 KiB/s
+      - memset_1024_system_avg_time: 77239.33 us
+      - memset_2048_mock_avg_rate: 395397.67 KiB/s
+      - memset_2048_mock_avg_time: 252909.67 us
       - memset_2048_system_avg_rate: 693328.67 KiB/s
       - memset_2048_system_avg_time: 144231.67 us
-      - memset_4096_mock_avg_rate: 416074.0 KiB/s
-      - memset_4096_mock_avg_time: 480683.0 us
-      - memset_4096_system_avg_rate: 718934.33 KiB/s
-      - memset_4096_system_avg_time: 278189.33 us
-      - memset_8192_mock_avg_rate: 427264.33 KiB/s
-      - memset_8192_mock_avg_time: 936188.33 us
-      - memset_8192_system_avg_rate: 732498.0 KiB/s
-      - memset_8192_system_avg_time: 546076.0 us
-      - memset_16384_mock_avg_rate: 433087.0 KiB/s
-      - memset_16384_mock_avg_time: 1847202.33 us
-      - memset_16384_system_avg_rate: 739468.0 KiB/s
-      - memset_16384_system_avg_time: 1081858.0 us
+      - memset_4096_mock_avg_rate: 416075.67 KiB/s
+      - memset_4096_mock_avg_time: 480681.33 us
+      - memset_4096_system_avg_rate: 718930.0 KiB/s
+      - memset_4096_system_avg_time: 278191.0 us
+      - memset_8192_mock_avg_rate: 427265.0 KiB/s
+      - memset_8192_mock_avg_time: 936186.33 us
+      - memset_8192_system_avg_rate: 732488.33 KiB/s
+      - memset_8192_system_avg_time: 546083.33 us
+      - memset_16384_mock_avg_rate: 433089.0 KiB/s
+      - memset_16384_mock_avg_time: 1847193.0 us
+      - memset_16384_system_avg_rate: 739468.67 KiB/s
+      - memset_16384_system_avg_time: 1081857.33 us
       - memset_32768_mock_avg_rate: 436059.0 KiB/s
-      - memset_32768_mock_avg_time: 3669224.0 us
-      - memset_32768_system_avg_rate: 743010.67 KiB/s
-      - memset_32768_system_avg_time: 2153400.0 us
-      - memset_65536_mock_avg_rate: 437562.67 KiB/s
-      - memset_65536_mock_avg_time: 7313232.67 us
+      - memset_32768_mock_avg_time: 3669223.0 us
+      - memset_32768_system_avg_rate: 743010.33 KiB/s
+      - memset_32768_system_avg_time: 2153401.67 us
+      - memset_65536_mock_avg_rate: 437562.0 KiB/s
+      - memset_65536_mock_avg_time: 7313237.0 us
       - memset_65536_system_avg_rate: 744783.67 KiB/s
       - memset_65536_system_avg_time: 4296545.67 us
 
@@ -1197,22 +1197,22 @@ wifi|34/34 :white_check_mark:|17/17 :white_check_mark:|17/17 :white_check_mark:|
   - ESP32-H2 - Success - :white_check_mark:
     - digits=16384 - 3 runs:
       - avg_time: 70.98 s
-  - ESP32-P4 - Success - :white_check_mark:
-    - digits=16384 - 3 runs:
+  - ESP32-P4 - Success - :white_check_mark:\*
+    - digits=16384 - 3 runs (cached):
       - avg_time: 8.96 s
   - ESP32-S2 - Success - :white_check_mark:
     - digits=16384 - 3 runs:
       - avg_time: 17.87 s
   - ESP32-S3 - Success - :white_check_mark:
     - digits=16384 - 3 runs:
-      - avg_time: 23.44 s
+      - avg_time: 23.46 s
 
 
 
 > \* Result from last successful run (runner currently unavailable)
 
-Generated on: 2026/07/31 04:02:45 UTC
+Generated on: 2026/08/02 03:03:01 UTC
 
-[Commit](https://github.com/espressif/arduino-esp32/commit/759892884f915b0627b1c41f08264b7bb037a92c) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/30593563914) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/30594152069) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/30603050481)
+[Commit](https://github.com/espressif/arduino-esp32/commit/5cdf8975ae8d9e35888b724b01a444d22406424e) / [Build and QEMU run](https://github.com/espressif/arduino-esp32/actions/runs/30725226797) / [Hardware and Wokwi run](https://github.com/espressif/arduino-esp32/actions/runs/30725526632) / [Results processing](https://github.com/espressif/arduino-esp32/actions/runs/30729882694)
 
-[Test results](https://github.com/espressif/arduino-esp32/runs/91069764055)
+[Test results](https://github.com/espressif/arduino-esp32/runs/91448276614)
