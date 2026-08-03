@@ -69,6 +69,40 @@ enum HTTPAuthMethod {
 #define HTTP_MAX_CLOSE_WAIT     5000  //ms to wait for the client to close the connection
 #define HTTP_MAX_BASIC_AUTH_LEN 256   // maximum length of a basic Auth base64 encoded username:password string
 
+// Request limits. All of these can be overridden from the build (e.g. with
+// -DWEBSERVER_MAX_URI_LEN=8192) to trade robustness against memory use.
+
+#ifndef WEBSERVER_MAX_URI_LEN
+#define WEBSERVER_MAX_URI_LEN 2048  // max request-target length; longer requests get 414. 0 disables the check
+#endif
+
+#ifndef WEBSERVER_MAX_QUERY_ARGS
+#define WEBSERVER_MAX_QUERY_ARGS 256  // max key=value args taken from a query string or urlencoded body
+#endif
+
+#ifndef WEBSERVER_MAX_MULTIPART_SKIP_LINES
+#define WEBSERVER_MAX_MULTIPART_SKIP_LINES 64  // unrecognized multipart lines tolerated before giving up
+#endif
+
+#ifndef WEBSERVER_MAX_LINE_LEN
+#define WEBSERVER_MAX_LINE_LEN 4096  // max length of a single protocol line (request line, header, multipart header)
+#endif
+
+#ifndef WEBSERVER_MAX_POST_ARG_LEN
+#define WEBSERVER_MAX_POST_ARG_LEN 16384  // max length of one line of a non-file multipart field value
+#endif
+
+// Time limits on receiving a request. Without them a peer that trickles one byte
+// per stream timeout keeps handleClient() from returning for as long as it likes.
+
+#ifndef WEBSERVER_MAX_LINE_WAIT
+#define WEBSERVER_MAX_LINE_WAIT 5000  // ms for a single protocol line to arrive complete. 0 disables the check
+#endif
+
+#ifndef WEBSERVER_MAX_HEADER_WAIT
+#define WEBSERVER_MAX_HEADER_WAIT 10000  // ms for the request line and all headers together. 0 disables the check
+#endif
+
 #define CONTENT_LENGTH_UNKNOWN ((size_t) - 1)
 #define CONTENT_LENGTH_NOT_SET ((size_t) - 2)
 
@@ -176,11 +210,30 @@ public:
   virtual NetworkClient &client() {
     return _currentClient;
   }
+  // A handler registered with an upload callback also receives raw
+  // (non-multipart) bodies, so upload() may be reached with no upload in
+  // progress and vice versa. Report an inactive object rather than
+  // dereferencing null; use hasUpload()/hasRaw() to tell the contexts apart.
   HTTPUpload &upload() {
+    if (!_currentUpload) {
+      _currentUpload.reset(new HTTPUpload());
+      _currentUpload->status = UPLOAD_FILE_ABORTED;
+    }
     return *_currentUpload;
   }
   HTTPRaw &raw() {
+    if (!_currentRaw) {
+      _currentRaw.reset(new HTTPRaw());
+      _currentRaw->status = RAW_ABORTED;
+    }
     return *_currentRaw;
+  }
+
+  bool hasUpload() const {
+    return static_cast<bool>(_currentUpload);
+  }
+  bool hasRaw() const {
+    return static_cast<bool>(_currentRaw);
   }
 
   String pathArg(unsigned int i) const;                                         // get request path argument by number
