@@ -9,7 +9,7 @@ ESP-NOW is a communication protocol designed for low-power, low-latency, and hig
 It is ideal for scenarios where devices need to communicate directly with each other in a local network.
 ESP-NOW can be used for smart lights, remote control devices, sensors and many other applications.
 
-This library provides an easy-to-use interface for setting up ESP-NOW communication, adding and removing peers, and sending and receiving data packets.
+This library provides an easy-to-use interface for setting up ESP-NOW communication, adding and removing peers, and sending and receiving data packets. This library is only tested on the ESP32 family of chips. We cannot guarantee that it will be compatible with ESP8266 or other ESP32-like chips.
 
 Arduino-ESP32 ESP-NOW API
 -------------------------
