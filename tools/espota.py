@@ -49,6 +49,10 @@
 # Changes
 # 2025-10-07:
 # - Fixed authentication when images might use old MD5 hashes stored in the firmware
+#
+# Changes
+# 2026-08-03:
+# - Added IPv6 support for invite/auth UDP and TCP listen
 
 
 from __future__ import print_function
@@ -67,6 +71,59 @@ AUTH = 200
 
 # Constants
 PROGRESS_BAR_LENGTH = 60
+
+
+def normalize_ip_literal(addr):
+    """Strip optional brackets from an IP literal (e.g. '[fe80::1]' -> 'fe80::1')."""
+    if not addr:
+        return addr
+    if addr.startswith("[") and "]" in addr:
+        return addr[1 : addr.index("]")]
+    return addr
+
+
+def resolve_endpoint(addr, port, socktype=socket.SOCK_DGRAM):
+    """
+    Resolve addr:port to (family, sockaddr).
+    Supports IPv4, IPv6, and scoped link-local addresses (fe80::1%en0).
+    """
+    host = normalize_ip_literal(addr)
+    try:
+        infos = socket.getaddrinfo(host, int(port), socket.AF_UNSPEC, socktype)
+    except socket.gaierror as e:
+        raise ValueError("Unable to resolve %s:%s (%s)" % (addr, port, e))
+    if not infos:
+        raise ValueError("Unable to resolve %s:%s" % (addr, port))
+    family, _socktype, _proto, _canonname, sockaddr = infos[0]
+    return family, sockaddr
+
+
+def is_unspecified_bind_address(addr):
+    host = normalize_ip_literal(addr)
+    return host in ("0.0.0.0", "::", "")
+
+
+def choose_bind_address(local_addr, remote_family):
+    """
+    Pick a TCP bind address matching the remote address family.
+    Default 0.0.0.0 becomes :: when the target is IPv6.
+    """
+    if not is_unspecified_bind_address(local_addr):
+        return local_addr
+    if remote_family == socket.AF_INET6:
+        return "::"
+    return "0.0.0.0"
+
+
+def create_socket(family, socktype):
+    sock = socket.socket(family, socktype)
+    if family == socket.AF_INET6 and socktype == socket.SOCK_STREAM:
+        # Dual-stack listen when binding :: (platform permitting)
+        try:
+            sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        except (AttributeError, OSError):
+            pass
+    return sock
 
 
 # update_progress(): Displays or updates a console progress bar
@@ -95,12 +152,16 @@ def update_progress(progress):
         sys.stderr.flush()
 
 
-def send_invitation_and_get_auth_challenge(remote_addr, remote_port, message):
+def send_invitation_and_get_auth_challenge(remote_addr, remote_port, message, local_addr=None):
     """
     Send invitation to ESP device and get authentication challenge.
     Returns (success, auth_data, error_message) tuple.
     """
-    remote_address = (remote_addr, int(remote_port))
+    try:
+        family, remote_address = resolve_endpoint(remote_addr, remote_port, socket.SOCK_DGRAM)
+    except ValueError as e:
+        return False, None, str(e)
+
     inv_tries = 0
     data = ""
 
@@ -110,8 +171,13 @@ def send_invitation_and_get_auth_challenge(remote_addr, remote_port, message):
 
     while inv_tries < 10:
         inv_tries += 1
-        sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock2 = create_socket(family, socket.SOCK_DGRAM)
         try:
+            # Bind UDP to the same host address used for TCP listen so the DUT
+            # reverse-connects to an address we are actually listening on.
+            if local_addr and not is_unspecified_bind_address(local_addr):
+                _lf, local_sa = resolve_endpoint(local_addr, 0, socket.SOCK_DGRAM)
+                sock2.bind(local_sa)
             sent = sock2.sendto(message.encode(), remote_address)  # noqa: F841
         except:  # noqa: E722
             sys.stderr.write("failed\n")
@@ -141,7 +207,16 @@ def send_invitation_and_get_auth_challenge(remote_addr, remote_port, message):
 
 
 def authenticate(
-    remote_addr, remote_port, password, use_md5_password, use_old_protocol, filename, content_size, file_md5, nonce
+    remote_addr,
+    remote_port,
+    password,
+    use_md5_password,
+    use_old_protocol,
+    filename,
+    content_size,
+    file_md5,
+    nonce,
+    local_addr=None,
 ):
     """
     Perform authentication with the ESP device.
@@ -153,7 +228,10 @@ def authenticate(
     Returns (success, error_message) tuple.
     """
     cnonce_text = "%s%u%s%s" % (filename, content_size, file_md5, remote_addr)
-    remote_address = (remote_addr, int(remote_port))
+    try:
+        family, remote_address = resolve_endpoint(remote_addr, remote_port, socket.SOCK_DGRAM)
+    except ValueError as e:
+        return False, str(e)
 
     if use_old_protocol:
         # Generate client nonce (cnonce)
@@ -174,7 +252,7 @@ def authenticate(
         # New PBKDF2-HMAC-SHA256 challenge/response protocol (3.3.1+)
         # The password can be hashed with either MD5 or SHA256
         if use_md5_password:
-            # Use MD5 for password hash (for devices that stored MD5 hashes)
+            # Use MD5 for password hash (for devices that stored MD5 passwords)
             password_hash = hashlib.md5(password.encode()).hexdigest()
         else:
             # Use SHA256 for password hash (recommended)
@@ -191,8 +269,11 @@ def authenticate(
         expected_response_length = 64
 
     # Send authentication response
-    sock2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock2 = create_socket(family, socket.SOCK_DGRAM)
     try:
+        if local_addr and not is_unspecified_bind_address(local_addr):
+            _lf, local_sa = resolve_endpoint(local_addr, 0, socket.SOCK_DGRAM)
+            sock2.bind(local_sa)
         message = "%d %s %s\n" % (AUTH, cnonce, response)
         sock2.sendto(message.encode(), remote_address)
         sock2.settimeout(10)
@@ -216,15 +297,29 @@ def authenticate(
 def serve(  # noqa: C901
     remote_addr, local_addr, remote_port, local_port, password, md5_target, filename, command=FLASH
 ):
-    # Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = (local_addr, local_port)
+    try:
+        remote_family, _remote_sockaddr = resolve_endpoint(remote_addr, remote_port, socket.SOCK_DGRAM)
+    except ValueError as e:
+        logging.error("%s", str(e))
+        return 1
+
+    bind_addr = choose_bind_address(local_addr, remote_family)
+    try:
+        bind_family, server_address = resolve_endpoint(bind_addr, local_port, socket.SOCK_STREAM)
+    except ValueError as e:
+        logging.error("%s", str(e))
+        return 1
+
+    # Create a TCP socket matching the target address family
+    sock = create_socket(bind_family, socket.SOCK_STREAM)
     logging.info("Starting on %s:%s", str(server_address[0]), str(server_address[1]))
     try:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(server_address)
         sock.listen(1)
     except Exception as e:
         logging.error("Listen Failed: %s", str(e))
+        sock.close()
         return 1
 
     content_size = os.path.getsize(filename)
@@ -234,9 +329,12 @@ def serve(  # noqa: C901
     message = "%d %d %d %s\n" % (command, local_port, content_size, file_md5)
 
     # Send invitation and get authentication challenge
-    success, data, error = send_invitation_and_get_auth_challenge(remote_addr, remote_port, message)
+    success, data, error = send_invitation_and_get_auth_challenge(
+        remote_addr, remote_port, message, local_addr=bind_addr
+    )
     if not success:
         logging.error(error)
+        sock.close()
         return 1
 
     if data != "OK":
@@ -263,12 +361,14 @@ def serve(  # noqa: C901
                     content_size=content_size,
                     file_md5=file_md5,
                     nonce=nonce,
+                    local_addr=bind_addr,
                 )
 
                 if not auth_success:
                     sys.stderr.write("FAIL\n")
                     logging.error("Authentication Failed: %s", auth_error)
                     logging.error("Please check your password and try again")
+                    sock.close()
                     return 1
 
                 sys.stderr.write("OK\n")
@@ -296,6 +396,7 @@ def serve(  # noqa: C901
                         content_size=content_size,
                         file_md5=file_md5,
                         nonce=nonce,
+                        local_addr=bind_addr,
                     )
 
                     if auth_success:
@@ -315,6 +416,7 @@ def serve(  # noqa: C901
                         content_size=content_size,
                         file_md5=file_md5,
                         nonce=nonce,
+                        local_addr=bind_addr,
                     )
 
                     # Scenario 3: If SHA256 fails, try MD5 password hash (for devices with stored MD5 passwords)
@@ -325,15 +427,19 @@ def serve(  # noqa: C901
                         sys.stderr.flush()
 
                         # Device is back in OTA_IDLE after auth failure, need to send new invitation
-                        success, data, error = send_invitation_and_get_auth_challenge(remote_addr, remote_port, message)
+                        success, data, error = send_invitation_and_get_auth_challenge(
+                            remote_addr, remote_port, message, local_addr=bind_addr
+                        )
                         if not success:
                             sys.stderr.write("FAIL\n")
                             logging.error("Failed to get new challenge for MD5 retry: %s", error)
+                            sock.close()
                             return 1
 
                         if not data.startswith("AUTH"):
                             sys.stderr.write("FAIL\n")
                             logging.error("Expected AUTH challenge for MD5 retry, got: %s", data)
+                            sock.close()
                             return 1
 
                         # Get new nonce for second attempt
@@ -352,6 +458,7 @@ def serve(  # noqa: C901
                             content_size=content_size,
                             file_md5=file_md5,
                             nonce=nonce,
+                            local_addr=bind_addr,
                         )
 
                         if auth_success:
@@ -370,14 +477,17 @@ def serve(  # noqa: C901
                     sys.stderr.write("FAIL\n")
                     logging.error("Authentication Failed: %s", auth_error)
                     logging.error("Please check your password and try again")
+                    sock.close()
                     return 1
 
                 sys.stderr.write("OK\n")
             else:
                 logging.error("Invalid nonce length: %d (expected 32 or 64)", nonce_length)
+                sock.close()
                 return 1
         else:
             logging.error("Bad Answer: %s", data)
+            sock.close()
             return 1
 
     logging.info("Waiting for device...")
@@ -417,11 +527,13 @@ def serve(  # noqa: C901
                     sys.stderr.write("\n")
                     logging.error("Error Uploading: %s", str(e))
                     connection.close()
+                    sock.close()
                     return 1
 
             if last_response_contained_ok:
                 logging.info("Success")
                 connection.close()
+                sock.close()
                 return 0
 
             sys.stderr.write("\n")
@@ -439,6 +551,7 @@ def serve(  # noqa: C901
                     if "OK" in data:
                         logging.info("Success")
                         connection.close()
+                        sock.close()
                         return 0
                     elif data:  # Got some response but not OK
                         logging.warning("Unexpected response from device: '%s'", data)
@@ -458,16 +571,21 @@ def serve(  # noqa: C901
                 )
                 logging.warning("Device might be rebooting to apply firmware - this is normal.")
                 connection.close()
+                sock.close()
                 return 0  # Consider it successful if we got any response and upload completed
             else:
                 logging.error("No response from device after upload completion")
                 logging.error("This could indicate device reboot (normal) or network issues")
                 connection.close()
+                sock.close()
                 return 1
     except Exception as e:  # noqa: E722
         logging.error("Error: %s", str(e))
     finally:
-        connection.close()
+        try:
+            connection.close()
+        except Exception as e:
+            logging.debug("Error closing device connection: %s", str(e))
 
     sock.close()
     return 1
@@ -477,8 +595,15 @@ def parse_args(unparsed_args):
     parser = argparse.ArgumentParser(description="Transmit image over the air to the ESP32 module with OTA support.")
 
     # destination ip and port
-    parser.add_argument("-i", "--ip", dest="esp_ip", action="store", help="ESP32 IP Address.", default=False)
-    parser.add_argument("-I", "--host_ip", dest="host_ip", action="store", help="Host IP Address.", default="0.0.0.0")
+    parser.add_argument("-i", "--ip", dest="esp_ip", action="store", help="ESP32 IP Address (IPv4 or IPv6).", default=False)
+    parser.add_argument(
+        "-I",
+        "--host_ip",
+        dest="host_ip",
+        action="store",
+        help="Host IP Address (IPv4 or IPv6). Default: 0.0.0.0 (becomes :: for IPv6 targets).",
+        default="0.0.0.0",
+    )
     parser.add_argument("-p", "--port", dest="esp_port", type=int, help="ESP32 OTA Port. Default: 3232", default=3232)
     parser.add_argument(
         "-P",

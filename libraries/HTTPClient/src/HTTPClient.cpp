@@ -270,15 +270,35 @@ bool HTTPClient::beginInternal(String url, const char *expectedProtocol) {
     _base64Authorization = base64::encode(auth);
   }
 
-  // get port
-  index = host.indexOf(':');
+  // Host / port. RFC 3986 IPv6 literals use brackets: [2001:db8::1]:8080
   String the_host;
-  if (index >= 0) {
-    the_host = host.substring(0, index);  // hostname
-    host.remove(0, (index + 1));          // remove hostname + :
-    _port = host.toInt();                 // get port
+  if (host.startsWith("[")) {
+    int closing = host.indexOf(']');
+    if (closing < 0) {
+      log_e("failed to parse IPv6 host (missing ']')");
+      return false;
+    }
+    the_host = host.substring(1, closing);
+    if (the_host.length() == 0) {
+      log_e("failed to parse IPv6 host (empty)");
+      return false;
+    }
+    if ((size_t)(closing + 1) < host.length()) {
+      if (host.charAt(closing + 1) != ':') {
+        log_e("failed to parse IPv6 URL (expected ':' after ']')");
+        return false;
+      }
+      _port = host.substring(closing + 2).toInt();
+    }
   } else {
-    the_host = host;
+    index = host.indexOf(':');
+    if (index >= 0) {
+      the_host = host.substring(0, index);  // hostname
+      host.remove(0, (index + 1));          // remove hostname + :
+      _port = host.toInt();                 // get port
+    } else {
+      the_host = host;
+    }
   }
   if (_host != the_host && connected()) {
     log_d("switching host from '%s' to '%s'. disconnecting first", _host.c_str(), the_host.c_str());
@@ -1142,7 +1162,15 @@ bool HTTPClient::sendHeader(const char *type) {
     header += "1";
   }
 
-  header += String(F("\r\nHost: ")) + _host;
+  // RFC 3986 / RFC 7230: IPv6 literals in Host must be bracketed.
+  header += String(F("\r\nHost: "));
+  if (_host.indexOf(':') >= 0) {
+    header += '[';
+    header += _host;
+    header += ']';
+  } else {
+    header += _host;
+  }
   if (_port != 80 && _port != 443) {
     header += ':';
     header += String(_port);

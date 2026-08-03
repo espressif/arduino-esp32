@@ -1,13 +1,52 @@
 import logging
 import os
+import re
 import socket
+import subprocess
 import sys
 import threading
+import time
 from http.server import SimpleHTTPRequestHandler
 from pathlib import Path
 from socketserver import ThreadingTCPServer
 
 import pytest
+from pytest_embedded.unity import UNITY_SUMMARY_LINE_REGEX
+
+ESP32_ROOT = Path(__file__).resolve().parents[3]
+ESPOTA = ESP32_ROOT / "tools" / "espota.py"
+
+# IPv4 or IPv6 (may contain ':'); auth is last space-separated token
+ARDUINO_OTA_BEGIN_RE = re.compile(rb"ARDUINO_OTA_BEGIN (\S+) ([0-9]+) (\S+)")
+ARDUINO_OTA_BEGIN_MAPPED_RE = re.compile(rb"ARDUINO_OTA_BEGIN_MAPPED (\S+) ([0-9]+) (\S+)")
+
+
+def _is_ipv6(addr: str) -> bool:
+    host = addr.strip("[]")
+    if "%" in host:
+        host = host.split("%", 1)[0]
+    try:
+        socket.inet_pton(socket.AF_INET6, host)
+        return True
+    except OSError:
+        return False
+
+
+def _ipv4_mapped(addr: str) -> str:
+    """Convert an IPv4 literal to an IPv4-mapped IPv6 literal (::ffff:a.b.c.d)."""
+    host = addr.strip("[]")
+    socket.inet_pton(socket.AF_INET, host)  # validate
+    return f"::ffff:{host}"
+
+
+def _ipv6_socket_ok() -> bool:
+    """True if the host can create an IPv6 socket (needed for ::ffff: mapped OTA)."""
+    try:
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        s.close()
+        return True
+    except OSError:
+        return False
 
 
 def _lan_ip() -> str:
@@ -26,6 +65,35 @@ def _lan_ip() -> str:
         candidate = sockaddr[0]
         if candidate and not candidate.startswith("127."):
             return candidate
+    return ""
+
+
+def _lan_ipv6(v4_hint: str | None = None) -> str:
+    """Pick a global host IPv6 address suitable for ArduinoOTA reverse-connect."""
+    override = os.environ.get("OTA_HOST_IPV6")
+    if override:
+        return override
+
+    # Prefer a global address learned via UDP connect (OS picks the right source)
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    try:
+        s.connect(("2001:4860:4860::8888", 80))
+        addr = s.getsockname()[0]
+        if addr and not addr.startswith("fe80:") and addr != "::1":
+            return addr
+    except OSError:
+        pass
+    finally:
+        s.close()
+
+    # Fallback: scan getaddrinfo results for a global unicast address
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET6, socket.SOCK_DGRAM):
+            candidate = info[4][0]
+            if candidate and not candidate.startswith("fe80:") and not candidate.startswith("::1"):
+                return candidate
+    except socket.gaierror:
+        pass
     return ""
 
 
@@ -57,6 +125,105 @@ def _find_firmware(build_dir: Path) -> Path | None:
     return None
 
 
+def _run_espota(
+    dut_ip: str,
+    dut_port: int,
+    host_ip: str,
+    firmware: Path,
+    password: str | None,
+    logger: logging.Logger,
+) -> None:
+    if not ESPOTA.is_file():
+        pytest.fail(f"espota.py not found at {ESPOTA}")
+
+    cmd = [
+        sys.executable,
+        str(ESPOTA),
+        "-i",
+        dut_ip,
+        "-I",
+        host_ip,
+        "-p",
+        str(dut_port),
+        "-f",
+        str(firmware),
+        "-t",
+        "30",
+    ]
+    if password:
+        cmd.extend(["-a", password])
+
+    logger.info("Running espota: %s", " ".join(cmd))
+    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ESP32_ROOT))
+    if result.stdout:
+        logger.info("espota stdout:\n%s", result.stdout)
+    if result.stderr:
+        logger.info("espota stderr:\n%s", result.stderr)
+    if result.returncode != 0:
+        pytest.fail(f"espota failed (exit {result.returncode}) for {dut_ip}:{dut_port}")
+
+
+def _expect_unity_with_arduino_ota(
+    dut, firmware: Path, host_ip: str, host_ipv6: str, timeout: float = 300
+) -> None:
+    """Expect Unity output while serving ArduinoOTA uploads via espota.py."""
+    logger = logging.getLogger(__name__)
+    deadline = time.time() + timeout
+    log = b""
+
+    while True:
+        remaining = max(1.0, deadline - time.time())
+        match = dut.expect(
+            [ARDUINO_OTA_BEGIN_MAPPED_RE, ARDUINO_OTA_BEGIN_RE, UNITY_SUMMARY_LINE_REGEX],
+            timeout=remaining,
+        )
+        log += dut.pexpect_proc.before
+
+        matched = match.group(0)
+        if isinstance(matched, str):
+            matched = matched.encode()
+
+        mapped = ARDUINO_OTA_BEGIN_MAPPED_RE.search(matched)
+        begin = ARDUINO_OTA_BEGIN_RE.search(matched)
+        if mapped or begin:
+            log += matched
+            m = mapped or begin
+            dut_ip = m.group(1).decode()
+            dut_port = int(m.group(2).decode())
+            auth = m.group(3).decode()
+            password = None if auth == "NONE" else auth
+
+            if mapped:
+                # Dual-stack edge case: talk to the DUT IPv4 via IPv4-mapped IPv6 literals.
+                dut_ip = _ipv4_mapped(dut_ip)
+                bind_ip = _ipv4_mapped(host_ip)
+            elif _is_ipv6(dut_ip):
+                if not host_ipv6:
+                    pytest.fail(
+                        f"DUT requested IPv6 OTA ({dut_ip}) but host reported no global IPv6 "
+                        "(DUT should have ignored this case)"
+                    )
+                bind_ip = host_ipv6
+            else:
+                bind_ip = host_ip
+
+            logger.info("ArduinoOTA requested: ip=%s port=%s auth=%s host=%s", dut_ip, dut_port, auth, bind_ip)
+            # Give the DUT a moment to enter ArduinoOTA.handle() wait loop
+            time.sleep(0.5)
+            _run_espota(dut_ip, dut_port, bind_ip, firmware, password, logger)
+            continue
+
+        # Unity summary reached — parse cases into the junit report
+        log += matched
+        dut.testsuite.add_unity_test_cases(
+            log,
+            additional_attrs={
+                "app_path": dut.app.app_path,
+            },
+        )
+        return
+
+
 def test_ota(dut, wifi_ssid, wifi_pass, request):
     LOGGER = logging.getLogger(__name__)
 
@@ -75,9 +242,32 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
     if not host_ip:
         pytest.fail("Could not determine host LAN IP")
 
+    host_ipv6 = _lan_ipv6(host_ip)
+    ipv6_socket_ok = _ipv6_socket_ok()
+    if host_ipv6:
+        ipv6_mode = "FULL"
+        LOGGER.info("Host IPv6 for ArduinoOTA: %s", host_ipv6)
+    elif ipv6_socket_ok:
+        ipv6_mode = "MAPPED"
+        LOGGER.info("Host has IPv6 sockets but no global IPv6; native IPv6 cases will be ignored")
+    else:
+        ipv6_mode = "NONE"
+        LOGGER.warning("Host has no IPv6 support; all IPv6 cases will be ignored")
+
     serve_dir = firmware.parent
 
-    class ReusableTCPServer(ThreadingTCPServer):
+    class DualStackHTTPServer(ThreadingTCPServer):
+        """HTTP server reachable over IPv4 and IPv6."""
+
+        address_family = socket.AF_INET6
+        allow_reuse_address = True
+        daemon_threads = True
+
+        def server_bind(self):
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            super().server_bind()
+
+    class IPv4HTTPServer(ThreadingTCPServer):
         allow_reuse_address = True
         daemon_threads = True
 
@@ -93,19 +283,35 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
 
     port = 8766
     server = None
-    for _ in range(10):
-        try:
-            server = ReusableTCPServer(("0.0.0.0", port), handler_class)
-            break
-        except OSError:
-            port += 1
+    dual_stack = False
+    if ipv6_socket_ok:
+        for _ in range(10):
+            try:
+                server = DualStackHTTPServer(("::", port), handler_class)
+                dual_stack = True
+                break
+            except OSError:
+                port += 1
+    if server is None:
+        port = 8766
+        for _ in range(10):
+            try:
+                server = IPv4HTTPServer(("0.0.0.0", port), handler_class)
+                break
+            except OSError:
+                port += 1
     if server is None:
         pytest.fail("Could not bind HTTP server port")
 
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     base_url = f"http://{host_ip}:{port}"
-    LOGGER.info("HTTP server at %s serving %s", base_url, serve_dir)
+    LOGGER.info(
+        "HTTP server at %s (%s) serving %s",
+        base_url,
+        f"dual-stack :::{port}" if dual_stack else f"IPv4 0.0.0.0:{port}",
+        serve_dir,
+    )
 
     try:
         LOGGER.info("Waiting for device to be ready...")
@@ -120,8 +326,18 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
         dut.expect_exact("Send Server URL (or NONE):")
         dut.write(f"{base_url}\n")
 
-        LOGGER.info("Running OTA Unity tests")
-        dut.expect_unity_test_output(timeout=120)
+        dut.expect_exact("Send IPv6 Mode (NONE|MAPPED|FULL):")
+        dut.write(f"{ipv6_mode}\n")
+
+        dut.expect_exact("Send IPv6 Server Host (or NONE):")
+        dut.write(f"{host_ipv6 or 'NONE'}\n")
+
+        dut.expect_exact("Send IPv6 Server Port (or 0):")
+        dut.write(f"{port if host_ipv6 else 0}\n")
+
+        LOGGER.info("Running OTA Unity tests (Update/HTTPUpdate/ArduinoOTA)")
+        # Extra ArduinoOTA uploads (IPv4/IPv6 interaction cases) need a longer budget.
+        _expect_unity_with_arduino_ota(dut, firmware, host_ip, host_ipv6, timeout=600)
     finally:
         if server:
             server.shutdown()
