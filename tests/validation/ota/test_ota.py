@@ -15,6 +15,7 @@ from pytest_embedded.unity import UNITY_SUMMARY_LINE_REGEX
 
 ESP32_ROOT = Path(__file__).resolve().parents[3]
 ESPOTA = ESP32_ROOT / "tools" / "espota.py"
+LOGGER = logging.getLogger(__name__)
 
 # IPv4 or IPv6 (may contain ':'); auth is last space-separated token
 ARDUINO_OTA_BEGIN_RE = re.compile(rb"ARDUINO_OTA_BEGIN (\S+) ([0-9]+) (\S+)")
@@ -75,16 +76,20 @@ def _lan_ipv6(v4_hint: str | None = None) -> str:
         return override
 
     # Prefer a global address learned via UDP connect (OS picks the right source)
-    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     try:
-        s.connect(("2001:4860:4860::8888", 80))
-        addr = s.getsockname()[0]
-        if addr and not addr.startswith("fe80:") and addr != "::1":
-            return addr
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
     except OSError:
-        pass
-    finally:
-        s.close()
+        s = None
+    if s is not None:
+        try:
+            s.connect(("2001:4860:4860::8888", 80))
+            addr = s.getsockname()[0]
+            if addr and not addr.startswith("fe80:") and addr != "::1":
+                return addr
+        except OSError:
+            pass
+        finally:
+            s.close()
 
     # Fallback: scan getaddrinfo results for a global unicast address
     try:
@@ -92,8 +97,8 @@ def _lan_ipv6(v4_hint: str | None = None) -> str:
             candidate = info[4][0]
             if candidate and not candidate.startswith("fe80:") and not candidate.startswith("::1"):
                 return candidate
-    except socket.gaierror:
-        pass
+    except (socket.gaierror, OSError) as e:
+        LOGGER.debug("getaddrinfo IPv6 fallback failed (%s); no host global IPv6", e)
     return ""
 
 
@@ -131,7 +136,6 @@ def _run_espota(
     host_ip: str,
     firmware: Path,
     password: str | None,
-    logger: logging.Logger,
 ) -> None:
     if not ESPOTA.is_file():
         pytest.fail(f"espota.py not found at {ESPOTA}")
@@ -153,12 +157,22 @@ def _run_espota(
     if password:
         cmd.extend(["-a", password])
 
-    logger.info("Running espota: %s", " ".join(cmd))
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=str(ESP32_ROOT))
+    LOGGER.info("Running espota: %s", " ".join(cmd))
+    # espota -t is 30s per socket op; full upload needs headroom beyond that.
+    try:
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, cwd=str(ESP32_ROOT), timeout=120
+        )
+    except subprocess.TimeoutExpired as e:
+        if e.stdout:
+            LOGGER.info("espota stdout (timed out):\n%s", e.stdout)
+        if e.stderr:
+            LOGGER.info("espota stderr (timed out):\n%s", e.stderr)
+        pytest.fail(f"espota timed out after 120s for {dut_ip}:{dut_port}")
     if result.stdout:
-        logger.info("espota stdout:\n%s", result.stdout)
+        LOGGER.info("espota stdout:\n%s", result.stdout)
     if result.stderr:
-        logger.info("espota stderr:\n%s", result.stderr)
+        LOGGER.info("espota stderr:\n%s", result.stderr)
     if result.returncode != 0:
         pytest.fail(f"espota failed (exit {result.returncode}) for {dut_ip}:{dut_port}")
 
@@ -167,7 +181,6 @@ def _expect_unity_with_arduino_ota(
     dut, firmware: Path, host_ip: str, host_ipv6: str, timeout: float = 300
 ) -> None:
     """Expect Unity output while serving ArduinoOTA uploads via espota.py."""
-    logger = logging.getLogger(__name__)
     deadline = time.time() + timeout
     log = b""
 
@@ -207,10 +220,10 @@ def _expect_unity_with_arduino_ota(
             else:
                 bind_ip = host_ip
 
-            logger.info("ArduinoOTA requested: ip=%s port=%s auth=%s host=%s", dut_ip, dut_port, auth, bind_ip)
+            LOGGER.info("ArduinoOTA requested: ip=%s port=%s auth=%s host=%s", dut_ip, dut_port, auth, bind_ip)
             # Give the DUT a moment to enter ArduinoOTA.handle() wait loop
             time.sleep(0.5)
-            _run_espota(dut_ip, dut_port, bind_ip, firmware, password, logger)
+            _run_espota(dut_ip, dut_port, bind_ip, firmware, password)
             continue
 
         # Unity summary reached — parse cases into the junit report
@@ -225,8 +238,6 @@ def _expect_unity_with_arduino_ota(
 
 
 def test_ota(dut, wifi_ssid, wifi_pass, request):
-    LOGGER = logging.getLogger(__name__)
-
     if not wifi_ssid:
         pytest.fail("WiFi SSID is required but not provided. Use --wifi-ssid argument.")
 
@@ -268,9 +279,7 @@ def test_ota(dut, wifi_ssid, wifi_pass, request):
             try:
                 self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             except (AttributeError, OSError) as e:
-                logging.getLogger(__name__).debug(
-                    "IPV6_V6ONLY=0 not applied (%s); continuing with IPv6 bind", e
-                )
+                LOGGER.debug("IPV6_V6ONLY=0 not applied (%s); continuing with IPv6 bind", e)
             super().server_bind()
 
     class IPv4HTTPServer(ThreadingTCPServer):
