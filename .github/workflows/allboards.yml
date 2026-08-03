@@ -23,7 +23,7 @@ jobs:
           ref: ${{ github.event.client_payload.branch }}
 
       - name: Get boards fqbns
-        run: bash .github/scripts/find_all_boards.sh
+        run: bash .github/scripts/find_boards.sh all --output-format=array
 
   setup-chunks:
     needs: find-boards
