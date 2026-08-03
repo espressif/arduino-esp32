@@ -53,7 +53,7 @@ ESP32-S3   Yes    Yes         `ESP32-S3`_
     `Lib Builder documentation <lib_builder.html>`_, respectively.
 
 .. note::
-    This core and its libraries are only tested on the ESP32 family of chips listed above. We cannot guarantee that the libraries will be compatible with ESP8266 or other ESP32-like chips.
+    This core and its libraries are only tested on the ESP32 family of chips listed above. Interoperability with ESP8266 or other non-ESP32 platforms is not guaranteed.
 
 See `Boards <boards/boards.html>`_ for more details about ESP32 development boards.
 
