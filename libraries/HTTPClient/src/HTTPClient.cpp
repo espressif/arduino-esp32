@@ -35,6 +35,32 @@
 /// Cookie jar support
 #include <time.h>
 
+// Strip RFC 3986 brackets so connect() and Host formatting share one canonical form.
+static String stripHttpHostBrackets(const String &host) {
+  if (host.startsWith("[") && host.endsWith("]") && host.length() >= 2) {
+    return host.substring(1, host.length() - 1);
+  }
+  return host;
+}
+
+// Parse an explicit port string from a URL authority (digits only, 0..65535).
+static bool parseHttpPortString(const String &port_str, uint16_t &port_out) {
+  if (port_str.length() == 0) {
+    return false;
+  }
+  for (unsigned i = 0; i < port_str.length(); i++) {
+    if (!isDigit(port_str[i])) {
+      return false;
+    }
+  }
+  long value = port_str.toInt();
+  if (value < 0 || value > 65535) {
+    return false;
+  }
+  port_out = (uint16_t)value;
+  return true;
+}
+
 #ifdef HTTPCLIENT_1_1_COMPATIBLE
 class TransportTraits {
 public:
@@ -167,7 +193,7 @@ bool HTTPClient::begin(NetworkClient &client, String host, uint16_t port, String
   _client = &client;
 
   clear();
-  _host = host;
+  _host = stripHttpHostBrackets(host);
   _port = port;
   _uri = uri;
   _protocol = (https ? "https" : "http");
@@ -270,15 +296,46 @@ bool HTTPClient::beginInternal(String url, const char *expectedProtocol) {
     _base64Authorization = base64::encode(auth);
   }
 
-  // get port
-  index = host.indexOf(':');
+  // Host / port. RFC 3986 IPv6 literals use brackets: [2001:db8::1]:8080
   String the_host;
-  if (index >= 0) {
-    the_host = host.substring(0, index);  // hostname
-    host.remove(0, (index + 1));          // remove hostname + :
-    _port = host.toInt();                 // get port
+  if (host.startsWith("[")) {
+    int closing = host.indexOf(']');
+    if (closing < 0) {
+      log_e("failed to parse IPv6 host (missing ']')");
+      return false;
+    }
+    the_host = host.substring(1, closing);
+    if (the_host.length() == 0) {
+      log_e("failed to parse IPv6 host (empty)");
+      return false;
+    }
+    if ((size_t)(closing + 1) < host.length()) {
+      if (host.charAt(closing + 1) != ':') {
+        log_e("failed to parse IPv6 URL (expected ':' after ']')");
+        return false;
+      }
+      String port_str = host.substring(closing + 2);
+      uint16_t parsed_port = 0;
+      if (!parseHttpPortString(port_str, parsed_port)) {
+        log_e("failed to parse IPv6 URL port '%s'", port_str.c_str());
+        return false;
+      }
+      _port = parsed_port;
+    }
   } else {
-    the_host = host;
+    index = host.indexOf(':');
+    if (index >= 0) {
+      the_host = host.substring(0, index);  // hostname
+      String port_str = host.substring(index + 1);
+      uint16_t parsed_port = 0;
+      if (!parseHttpPortString(port_str, parsed_port)) {
+        log_e("failed to parse URL port '%s'", port_str.c_str());
+        return false;
+      }
+      _port = parsed_port;
+    } else {
+      the_host = host;
+    }
   }
   if (_host != the_host && connected()) {
     log_d("switching host from '%s' to '%s'. disconnecting first", _host.c_str(), the_host.c_str());
@@ -300,11 +357,11 @@ bool HTTPClient::begin(String host, uint16_t port, String uri) {
   }
 
   clear();
-  _host = host;
+  _host = stripHttpHostBrackets(host);
   _port = port;
   _uri = uri;
   _transportTraits = TransportTraitsPtr(new TransportTraits());
-  log_d("host: %s port: %u uri: %s", host.c_str(), port, uri.c_str());
+  log_d("host: %s port: %u uri: %s", _host.c_str(), port, uri.c_str());
   return true;
 }
 
@@ -317,7 +374,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char *CAcer
   }
 
   clear();
-  _host = host;
+  _host = stripHttpHostBrackets(host);
   _port = port;
   _uri = uri;
 
@@ -337,7 +394,7 @@ bool HTTPClient::begin(String host, uint16_t port, String uri, const char *CAcer
   }
 
   clear();
-  _host = host;
+  _host = stripHttpHostBrackets(host);
   _port = port;
   _uri = uri;
 
@@ -1142,7 +1199,17 @@ bool HTTPClient::sendHeader(const char *type) {
     header += "1";
   }
 
-  header += String(F("\r\nHost: ")) + _host;
+  // RFC 3986 / RFC 7230: IPv6 literals in Host must be bracketed (once).
+  header += String(F("\r\nHost: "));
+  if (_host.startsWith("[")) {
+    header += _host;
+  } else if (_host.indexOf(':') >= 0) {
+    header += '[';
+    header += _host;
+    header += ']';
+  } else {
+    header += _host;
+  }
   if (_port != 80 && _port != 443) {
     header += ':';
     header += String(_port);
