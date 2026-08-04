@@ -356,6 +356,11 @@ void NetworkClientSecure::setCACertBundle(const uint8_t *bundle, size_t size) {
   }
 }
 
+void NetworkClientSecure::useBuiltinCACertBundle() {
+  attach_ssl_certificate_bundle(sslclient.get(), true);
+  _use_ca_bundle = true;
+}
+
 void NetworkClientSecure::setCertificate(const char *client_ca) {
   if (_cert_free && _cert) {
     free((void *)_cert);
