@@ -430,8 +430,12 @@ bool BLEAdvertisedDevice::haveTXPower() {
 void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len) {
   uint8_t length;
   uint8_t ad_type;
-  uint8_t sizeConsumed = 0;
+  size_t sizeConsumed = 0;
   bool finished = false;
+
+  if (payload == nullptr || total_len == 0) {
+    return;
+  }
 
   // Store/append raw payload data for later retrieval
   // This handles both ADV and Scan Response packets by merging them
@@ -458,7 +462,19 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
   }
 
   while (!finished) {
-    length = *payload;           // Retrieve the length of the record.
+    if (sizeConsumed >= total_len) {
+      break;
+    }
+
+    length = *payload;  // Retrieve the length of the record.
+
+    // Reject AD structures that extend past the valid buffer. Otherwise we can
+    // read stale controller/stack memory and produce garbled names/data.
+    if ((size_t)length + 1 > total_len - sizeConsumed) {
+      log_e("AD structure length %u exceeds remaining %lu bytes", length, (unsigned long)(total_len - sizeConsumed));
+      break;
+    }
+
     payload++;                   // Skip to type
     sizeConsumed += 1 + length;  // increase the size consumed.
 

@@ -155,6 +155,12 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       Serial.println(deviceName);
 
       if (deviceName == targetServerName) {
+        // Issue #12801: server appends an oversize AD after the name; parser must reject it.
+        if (advertisedDevice.haveManufacturerData()) {
+          Serial.println("[CLIENT] FAIL: oversize AD was not rejected");
+        } else {
+          Serial.println("[CLIENT] PASS: oversize AD rejected");
+        }
         Serial.println("[CLIENT] Found target server!");
         BLEDevice::getScan()->stop();
         myDevice = new BLEAdvertisedDevice(advertisedDevice);

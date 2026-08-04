@@ -175,12 +175,20 @@ void setup() {
   // Start service
   pService->start();
 
-  // Start advertising
+  // Start advertising. Scan response carries the name plus a deliberately oversize
+  // AD structure (issue #12801): length claims 20 bytes but only 2 follow.
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
   pAdvertising->setMinPreferred(0x06);
   pAdvertising->setMaxPreferred(0x12);
+
+  BLEAdvertisementData scanResponse;
+  scanResponse.setName(serverName);
+  char oversizeAd[] = {20, (char)0xFF, 0x01, 0x02};
+  scanResponse.addData(oversizeAd, sizeof(oversizeAd));
+  pAdvertising->setScanResponseData(scanResponse);
+
   BLEDevice::startAdvertising();
 
   Serial.printf("[SERVER] Advertising started with name: %s\n", serverName.c_str());
