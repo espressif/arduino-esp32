@@ -63,6 +63,12 @@ bool MatterTemperatureSensor::begin(int16_t _rawTemperature) {
   }
   rawTemperature = _rawTemperature;
   setEndPointId(endpoint::get_id(endpoint));
+
+  if (!enableTagList()) {
+    log_e("Failed to enable TagList support on Temperature Sensor endpoint %u", getEndPointId());
+    return false;
+  }
+
   log_i("Temperature Sensor created with endpoint_id %u", getEndPointId());
 
   started = true;

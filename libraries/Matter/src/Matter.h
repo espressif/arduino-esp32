@@ -19,6 +19,8 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <ColorFormat.h>
+#include <MatterEndPoint.h>
+#include <MatterTags.h>
 #include <MatterEndpoints/MatterGenericSwitch.h>
 #include <MatterEndpoints/MatterOnOffLight.h>
 #include <MatterEndpoints/MatterDimmableLight.h>

@@ -19,8 +19,23 @@
 #include <Arduino.h>
 #include <esp_matter.h>
 #include <functional>
+#include <initializer_list>
 
 using namespace esp_matter;
+
+// A single Matter semantic tag (Descriptor cluster TagList entry). Tags disambiguate sibling
+// endpoints that expose the same device type, or otherwise clarify an endpoint's role/position
+// (e.g. tagging 3 buttons with Number (One/Two/Three) and Position (Top/Middle/Bottom) tags so a
+// controller can tell them apart).
+// namespaceId/tag values come from the Matter "Standard Namespaces" specification:
+// https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
+// See MatterTags.h for named constants covering the common namespaces (no magic numbers required)
+// and MatterTags::make() for a custom namespace/tag/label combination.
+struct MatterTag {
+  uint8_t namespaceId;
+  uint8_t tag;
+  const char *label = nullptr;  // optional, nullptr = no label
+};
 
 // Matter Endpoint Base Class. Controls the endpoint ID and allows the child class to overwrite attribute change call
 class MatterEndPoint {
@@ -67,11 +82,25 @@ public:
   // User callback for the Identify Cluster functionality
   void onIdentify(EndPointIdentifyCB onEndPointIdentifyCB);
 
+  // Sets the Descriptor cluster TagList attribute for this endpoint, replacing any tag list set previously.
+  // The endpoint subclass must have called enableTagList() during its begin() for this to succeed.
+  // Each entry's optional `label` pointer, if set, must remain valid for as long as this endpoint is running
+  // (it is not copied).
+  bool setTagList(const MatterTag *tagList, uint8_t count);
+
+  // Convenience overload: Light1.setTagList({MatterTags::Position::Top, MatterTags::Number::One});
+  bool setTagList(std::initializer_list<MatterTag> tagList);
+
 protected:
   // used for secondary network interface endpoints
   static uint16_t secondary_network_endpoint_id;
   // main endpoint ID
   uint16_t endpoint_id = 0;
   EndPointIdentifyCB _onEndPointIdentifyCB = nullptr;
+
+  // Enables the Descriptor cluster TagList feature on this endpoint so setTagList() can be used.
+  // Endpoint subclasses that want to support setTagList() must call this once from begin(), after
+  // the endpoint has been created and setEndPointId() has been called.
+  bool enableTagList();
 };
 #endif /* CONFIG_ESP_MATTER_ENABLE_DATA_MODEL */
