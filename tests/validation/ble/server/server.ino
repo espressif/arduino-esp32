@@ -1078,8 +1078,10 @@ void loop() {
   // =========================================================================
   // Requires tearing down the current connection: building a new legacy adv
   // payload with every BLEAdvertisementData setter, pushing it via
-  // setAdvertisementData(), and letting the client scan+parse it. The server
-  // stays initialized but the connection is dropped and a new advertising
+  // setAdvertisementData(), and letting the client scan+parse it. A second
+  // window (OSZ_<name>) carries a truncated manufacturer AD for the
+  // parsePayload bounds regression (issue #12801). The server stays
+  // initialized but the connection is dropped and a new advertising
   // configuration is applied.
   if (currentPhase >= 20 && !phase20Done) {
     phase20Done = true;
@@ -1124,8 +1126,29 @@ void loop() {
 
     BTStatus s = adv.start();
     Serial.printf("[SERVER] Phase20 advReady ok=%d isAdv=%d\n", (int)(bool)s, (int)adv.isAdvertising());
-    // Must outlast the client's 8 s scan (which starts ~1 s after the
-    // phase begins due to disconnect + adv setup time).
+    // Must outlast the client's active scan (+ optional scan-response retry).
+    delay(14000);
+    adv.stop();
+
+    // Parser regression (issue #12801): advertise a scan response whose final
+    // AD length byte claims more octets than remain in the PDU. The client's
+    // parsePayload must reject that field instead of reading past the buffer.
+    // Distinct name so the client does not confuse this with the ADV_ window.
+    String oszName = String("OSZ_") + serverName;
+    BLEAdvertisementData od;
+    od.setFlags(BLEAdvFlag::GeneralDisc | BLEAdvFlag::BrEdrNotSupported);
+    od.setName(oszName);
+    adv.setAdvertisementData(od);
+
+    BLEAdvertisementData osr;
+    // Length 20 claims 20 octets follow; only type (0xFF) + 2 data bytes are present.
+    const uint8_t oversizeAd[] = {20, 0xFF, 0x01, 0x02};
+    osr.addRaw(oversizeAd, sizeof(oversizeAd));
+    adv.setScanResponseData(osr);
+
+    BTStatus os = adv.start();
+    Serial.printf("[SERVER] Phase20 parseOversizeAdv ok=%d isAdv=%d\n", (int)(bool)os, (int)adv.isAdvertising());
+    // Client may still be finishing the ADV_ retry; keep this window wide.
     delay(12000);
     adv.stop();
     adv.reset();

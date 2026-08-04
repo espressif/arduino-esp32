@@ -524,6 +524,25 @@ def _phase_adv_data_and_scan(server, client):
     """Phase 20 — full BLEAdvertisementData payload + scan tuning parsers."""
     server.expect(r"\[SERVER\] Phase20 advReady ok=[01] isAdv=[01]", timeout=30)
     client.expect(r"\[CLIENT\] Phase20 results=\d+ isScanning=[01]", timeout=30)
+    # Slave Connection Interval Range AD (0x12): encoding guard on the server
+    # (setPreferredParams / setMinPreferred / setMaxPreferred) plus the
+    # over-the-air round trip parsed back by the client. The client emits the
+    # prefInterval line *before* sawAdv, so match it first (a later expect would
+    # consume past it and never find it).
+    m_cpref = client.expect(
+        r"\[CLIENT\] Phase20 prefInterval have=([01]) min=0x([0-9A-Fa-f]+) max=0x([0-9A-Fa-f]+)",
+        timeout=30,
+    )
+    assert int(m_cpref.group(1)) == 1, "client did not receive the Slave Connection Interval Range AD (0x12)"
+    assert int(m_cpref.group(2), 16) == 0x0006, f"preferred min interval mismatch: got 0x{m_cpref.group(2)}"
+    assert int(m_cpref.group(3), 16) == 0x0012, f"preferred max interval mismatch: got 0x{m_cpref.group(3)}"
+    m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
+    assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
+    # Parser regression (issue #12801): after the ADV_ window the server advertises
+    # OSZ_<name> with a truncated manufacturer AD; parsePayload must reject it.
+    server.expect(r"\[SERVER\] Phase20 parseOversizeAdv ok=1 isAdv=[01]", timeout=50)
+    m_osz = client.expect(r"\[CLIENT\] Phase20 parseOversizeRejected=(-1|[01])", timeout=50)
+    assert int(m_osz.group(1)) == 1, "client did not reject the truncated manufacturer AD (issue #12801)"
     # AD payload-limit regression: legacy 31-octet cap must be enforced (name
     # degrades to a Shortened Local Name, an oversized field is dropped whole),
     # while an extended payload accepts the full name.
@@ -534,23 +553,9 @@ def _phase_adv_data_and_scan(server, client):
     assert int(m_cap.group(1)) == 1, "legacy AD overflowed the 31-octet cap on a too-long name"
     assert int(m_cap.group(2)) == 1, "an oversized AD field was not rejected whole (legacy cap)"
     assert int(m_cap.group(3)) == 1, "extended AD payload did not accept the full name"
-    # Slave Connection Interval Range AD (0x12): encoding guard on the server
-    # (setPreferredParams / setMinPreferred / setMaxPreferred) plus the
-    # over-the-air round trip parsed back by the client. The client emits the
-    # prefInterval line *before* sawAdv, so match it first (a later expect would
-    # consume past it and never find it).
     m_pref = server.expect(r"\[SERVER\] Phase20 prefIntervalAD ok=([01])", timeout=10)
     assert int(m_pref.group(1)) == 1, "setPreferredParams did not emit a correct Slave Connection Interval Range AD (0x12)"
-    m_cpref = client.expect(
-        r"\[CLIENT\] Phase20 prefInterval have=([01]) min=0x([0-9A-Fa-f]+) max=0x([0-9A-Fa-f]+)",
-        timeout=10,
-    )
-    assert int(m_cpref.group(1)) == 1, "client did not receive the Slave Connection Interval Range AD (0x12)"
-    assert int(m_cpref.group(2), 16) == 0x0006, f"preferred min interval mismatch: got 0x{m_cpref.group(2)}"
-    assert int(m_cpref.group(3), 16) == 0x0012, f"preferred max interval mismatch: got 0x{m_cpref.group(3)}"
-    m = client.expect(r"\[CLIENT\] Phase20 sawAdv=([01])", timeout=30)
-    assert int(m.group(1)) == 1, "client did not see the ADV_<name> payload"
-    client.expect_exact("[CLIENT] Phase20 done", timeout=10)
+    client.expect_exact("[CLIENT] Phase20 done", timeout=15)
     server.expect_exact("[SERVER] Phase20 done", timeout=20)
 
 

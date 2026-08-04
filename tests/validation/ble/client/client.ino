@@ -1329,60 +1329,119 @@ void setup() {
     scn.setWindow(96);     // 60 ms
     bool sawAdv = false;
     String wantName = String("ADV_") + targetName;
+    // Prefer the sighting that already merged the scan response (mfg / longer
+    // payload). Taking the first name match can be ADV_IND-only under load.
+    auto pickBest = [&](BLEScan::Results &results, BLEAdvertisedDevice &out) -> bool {
+      bool found = false;
+      size_t bestScore = 0;
+      for (const auto &dev : results) {
+        BLEAdvertisedDevice d = dev;
+        String n = d.getName();
+        Serial.printf("[CLIENT] Phase20 seen name=\"%s\" addr=%s payloadLen=%u\n", n.c_str(), d.getAddress().toString().c_str(), (unsigned)d.getPayloadLength());
+        if (n != wantName) {
+          continue;
+        }
+        size_t score = d.getPayloadLength();
+        if (d.haveManufacturerData()) {
+          score += 100;
+        }
+        if (d.haveServiceData()) {
+          score += 50;
+        }
+        if (!found || score > bestScore) {
+          out = d;
+          bestScore = score;
+          found = true;
+        }
+      }
+      return found;
+    };
+
+    BLEAdvertisedDevice d;
     BLEScan::Results results = scn.startBlocking(8000);
     Serial.printf("[CLIENT] Phase20 results=%u isScanning=%d want=%s\n", (unsigned)results.size(), (int)scn.isScanning(), wantName.c_str());
-    for (const auto &dev : results) {
+    sawAdv = pickBest(results, d);
+    // One retry if we only saw the primary ADV (no scan-response fields yet).
+    if (sawAdv && !d.haveManufacturerData()) {
+      Serial.println("[CLIENT] Phase20 retry scan for scan response");
+      scn.clearResults();
+      scn.clearDuplicateCache();
+      results = scn.startBlocking(4000);
+      Serial.printf("[CLIENT] Phase20 retry results=%u\n", (unsigned)results.size());
+      BLEAdvertisedDevice retry;
+      if (pickBest(results, retry) && retry.getPayloadLength() >= d.getPayloadLength()) {
+        d = retry;
+      }
+    }
+    if (sawAdv) {
+      Serial.printf("[CLIENT] Phase20 name=%s rssi=%d txPower=%d\n", d.getName().c_str(), (int)d.getRSSI(), (int)d.getTXPower());
+      Serial.printf(
+        "[CLIENT] Phase20 haveName=%d haveRSSI=%d haveTxPow=%d haveAppearance=%d haveMfg=%d haveSvcData=%d haveSvcUUID=%d\n", (int)d.haveName(),
+        (int)d.haveRSSI(), (int)d.haveTXPower(), (int)d.haveAppearance(), (int)d.haveManufacturerData(), (int)d.haveServiceData(), (int)d.haveServiceUUID()
+      );
+      Serial.printf(
+        "[CLIENT] Phase20 appearance=0x%04X addrType=%u connectable=%d legacy=%d\n", (unsigned)d.getAppearance(), (unsigned)d.getAddressType(),
+        (int)d.isConnectable(), (int)d.isLegacyAdvertisement()
+      );
+      Serial.printf("[CLIENT] Phase20 svcUUIDs=%u first=%s\n", (unsigned)d.getServiceUUIDCount(), d.getServiceUUID(0).toString().c_str());
+      Serial.printf(
+        "[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)d.getManufacturerDataString().length()
+      );
+      size_t svcLen = 0;
+      const uint8_t *svcRaw = d.getServiceData(0, &svcLen);
+      BLEUUID svc16((uint16_t)0x180D);
+      Serial.printf(
+        "[CLIENT] Phase20 svcDataLen=%u advertisesSvc=%d payloadLen=%u\n", (unsigned)svcLen, (int)d.isAdvertisingService(svc16),
+        (unsigned)d.getPayloadLength()
+      );
+      (void)svcRaw;
+      // Slave Connection Interval Range AD (0x12): parse it back out of the
+      // merged adv+scan-response payload and confirm the min/max the server
+      // set via setPreferredParams survived the round trip.
+      const uint8_t *pl = d.getPayload();
+      size_t plLen = d.getPayloadLength();
+      bool havePref = false;
+      uint16_t prefMin = 0, prefMax = 0;
+      for (size_t i = 0; pl && i + 1 < plLen;) {
+        uint8_t flen = pl[i];
+        if (flen == 0) {
+          break;
+        }
+        if (pl[i + 1] == 0x12 && flen >= 5 && (i + 1 + flen) <= plLen) {
+          prefMin = (uint16_t)pl[i + 2] | ((uint16_t)pl[i + 3] << 8);
+          prefMax = (uint16_t)pl[i + 4] | ((uint16_t)pl[i + 5] << 8);
+          havePref = true;
+          break;
+        }
+        i += flen + 1;
+      }
+      Serial.printf("[CLIENT] Phase20 prefInterval have=%d min=0x%04X max=0x%04X\n", (int)havePref, (unsigned)prefMin, (unsigned)prefMax);
+    }
+    Serial.printf("[CLIENT] Phase20 sawAdv=%d\n", (int)sawAdv);
+
+    // Second scan: server switches to OSZ_<name> with a truncated manufacturer
+    // AD in the scan response. parsePayload must not treat it as valid mfg data.
+    // Server valid window is 14 s; after ADV_ (+ optional retry) wait for OSZ_.
+    scn.stop();
+    delay(3000);
+    scn.clearResults();
+    scn.clearDuplicateCache();
+    String oszWant = String("OSZ_") + targetName;
+    BLEScan::Results oszResults = scn.startBlocking(8000);
+    int parseOversizeRejected = -1;
+    for (const auto &dev : oszResults) {
       BLEAdvertisedDevice d = dev;
-      String n = d.getName();
-      Serial.printf("[CLIENT] Phase20 seen name=\"%s\" addr=%s\n", n.c_str(), d.getAddress().toString().c_str());
-      if (n == wantName) {
-        sawAdv = true;
-        Serial.printf("[CLIENT] Phase20 name=%s rssi=%d txPower=%d\n", n.c_str(), (int)d.getRSSI(), (int)d.getTXPower());
+      if (d.getName() == oszWant) {
+        parseOversizeRejected = d.haveManufacturerData() ? 0 : 1;
         Serial.printf(
-          "[CLIENT] Phase20 haveName=%d haveRSSI=%d haveTxPow=%d haveAppearance=%d haveMfg=%d haveSvcData=%d haveSvcUUID=%d\n", (int)d.haveName(),
-          (int)d.haveRSSI(), (int)d.haveTXPower(), (int)d.haveAppearance(), (int)d.haveManufacturerData(), (int)d.haveServiceData(), (int)d.haveServiceUUID()
-        );
-        Serial.printf(
-          "[CLIENT] Phase20 appearance=0x%04X addrType=%u connectable=%d legacy=%d\n", (unsigned)d.getAppearance(), (unsigned)d.getAddressType(),
-          (int)d.isConnectable(), (int)d.isLegacyAdvertisement()
-        );
-        Serial.printf("[CLIENT] Phase20 svcUUIDs=%u first=%s\n", (unsigned)d.getServiceUUIDCount(), d.getServiceUUID(0).toString().c_str());
-        Serial.printf(
-          "[CLIENT] Phase20 mfgCompany=0x%04X mfgLen=%u\n", (unsigned)d.getManufacturerCompanyId(), (unsigned)d.getManufacturerDataString().length()
-        );
-        size_t svcLen = 0;
-        const uint8_t *svcRaw = d.getServiceData(0, &svcLen);
-        BLEUUID svc16((uint16_t)0x180D);
-        Serial.printf(
-          "[CLIENT] Phase20 svcDataLen=%u advertisesSvc=%d payloadLen=%u\n", (unsigned)svcLen, (int)d.isAdvertisingService(svc16),
+          "[CLIENT] Phase20 parseOversize name=%s haveMfg=%d payloadLen=%u\n", d.getName().c_str(), (int)d.haveManufacturerData(),
           (unsigned)d.getPayloadLength()
         );
-        (void)svcRaw;
-        // Slave Connection Interval Range AD (0x12): parse it back out of the
-        // merged adv+scan-response payload and confirm the min/max the server
-        // set via setPreferredParams survived the round trip.
-        const uint8_t *pl = d.getPayload();
-        size_t plLen = d.getPayloadLength();
-        bool havePref = false;
-        uint16_t prefMin = 0, prefMax = 0;
-        for (size_t i = 0; pl && i + 1 < plLen;) {
-          uint8_t flen = pl[i];
-          if (flen == 0) {
-            break;
-          }
-          if (pl[i + 1] == 0x12 && flen >= 5 && (i + 1 + flen) <= plLen) {
-            prefMin = (uint16_t)pl[i + 2] | ((uint16_t)pl[i + 3] << 8);
-            prefMax = (uint16_t)pl[i + 4] | ((uint16_t)pl[i + 5] << 8);
-            havePref = true;
-            break;
-          }
-          i += flen + 1;
-        }
-        Serial.printf("[CLIENT] Phase20 prefInterval have=%d min=0x%04X max=0x%04X\n", (int)havePref, (unsigned)prefMin, (unsigned)prefMax);
         break;
       }
     }
-    Serial.printf("[CLIENT] Phase20 sawAdv=%d\n", (int)sawAdv);
+    Serial.printf("[CLIENT] Phase20 parseOversizeRejected=%d\n", parseOversizeRejected);
+
     scn.clearResults();
     scn.setActiveScan(true);
     Serial.println("[CLIENT] Phase20 done");

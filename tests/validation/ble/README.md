@@ -43,7 +43,7 @@ and L2CAP-dependent phases self-skip on targets/builds without support.
 | 17 | address_types | every `BTAddress::Type` + Public/Random connect roundtrip |
 | 18 | authorization | app-level authorization approve/deny of writes |
 | 19 | encrypted_perm_enforcement | encrypted characteristic read/write over paired link |
-| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip |
+| 20 | adv_data_and_scan | full `BLEAdvertisementData` payload + **31-octet cap enforcement** + Slave Connection Interval Range AD (0x12) round trip + **truncated AD parser rejection** (issue #12801) |
 | 21 | beacon_and_eddystone | iBeacon / Eddystone URL / Eddystone TLM frames |
 | 22 | bond_and_whitelist | bond enumeration, whitelist, IRK cross-check |
 | 23 | error_paths_and_misc | unknown UUIDs, typed reads, UUID algebra, write-after-disconnect |
@@ -67,7 +67,10 @@ full name. It additionally guards the Slave Connection Interval Range AD (0x12):
 `setPreferredParams` (the field `setMinPreferred` / `setMaxPreferred` feed) must
 encode `[04 12 min_lo min_hi max_lo max_hi]` in little-endian 1.25 ms units, and
 the client parses the same field back out of the received payload to confirm the
-min/max survived the over-the-air round trip.
+min/max survived the over-the-air round trip. A second over-the-air window
+(`OSZ_<name>`) appends a deliberately truncated manufacturer AD (length byte
+claims 20 octets, only 2 follow) via `addRaw`; the client must report
+`parseOversizeRejected=1` (`!haveManufacturerData()`), guarding issue #12801.
 
 ## Requirements
 
