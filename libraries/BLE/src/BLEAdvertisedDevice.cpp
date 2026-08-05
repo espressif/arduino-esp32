@@ -468,6 +468,10 @@ void BLEAdvertisedDevice::parseAdvertisement(uint8_t *payload, size_t total_len)
 
     length = *payload;  // Retrieve the length of the record.
 
+    if (length == 0) {  // Terminator record
+      break;
+    }
+
     // Reject AD structures that extend past the valid buffer. Otherwise we can
     // read stale controller/stack memory and produce garbled names/data.
     if ((size_t)length + 1 > total_len - sizeConsumed) {

@@ -175,8 +175,8 @@ void setup() {
   // Start service
   pService->start();
 
-  // Start advertising. Scan response carries the name plus a deliberately oversize
-  // AD structure (issue #12801): length claims 20 bytes but only 2 follow.
+  // Start advertising. Scan response carries the name plus a deliberately oversized
+  // AD structure: length claims 20 bytes (type+data) but only 3 bytes follow.
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);

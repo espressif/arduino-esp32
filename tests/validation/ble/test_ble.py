@@ -54,7 +54,8 @@ def test_ble(dut, ci_job_id):
 
     # Client finds server
     LOGGER.info("Waiting for client to discover server...")
-    client.expect_exact("[CLIENT] PASS: oversize AD rejected", timeout=60)
+    m = client.expect(r"\[CLIENT\] (PASS|FAIL): oversize AD (?:was not rejected|rejected)", timeout=60)
+    assert m.group(1).decode() == "PASS", f"Oversize AD handling failed: {m.group(0).decode()}"
     client.expect_exact("[CLIENT] Found target server!", timeout=10)
 
     # Client connects to server
