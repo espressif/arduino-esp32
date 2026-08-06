@@ -41,24 +41,15 @@ size_t StreamString::write(uint8_t data) {
 }
 
 int StreamString::available() {
-  return length();
+  return length() - _start;
 }
 
 int StreamString::read() {
-  if (length()) {
-    char c = charAt(0);
-    remove(0, 1);
-    return c;
-  }
-  return -1;
+  return available() ? charAt(_start++) : -1;
 }
 
 int StreamString::peek() {
-  if (length()) {
-    char c = charAt(0);
-    return c;
-  }
-  return -1;
+  return available() ? charAt(_start) : -1;
 }
 
 void StreamString::flush() {}
