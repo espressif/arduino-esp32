@@ -48537,6 +48537,177 @@ waveshare_esp32_s3_touch_lcd_7.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+waveshare_esp32_s3_touch_lcd_7c.name=Waveshare ESP32-S3-Touch-LCD-7C-BOX
+
+waveshare_esp32_s3_touch_lcd_7c.bootloader.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_7c.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_touch_lcd_7c.upload.tool=esptool_py
+waveshare_esp32_s3_touch_lcd_7c.upload.tool.default=esptool_py
+waveshare_esp32_s3_touch_lcd_7c.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_touch_lcd_7c.upload.maximum_size=4718592
+waveshare_esp32_s3_touch_lcd_7c.upload.maximum_data_size=327680
+waveshare_esp32_s3_touch_lcd_7c.upload.flags=
+waveshare_esp32_s3_touch_lcd_7c.upload.erase_cmd=
+waveshare_esp32_s3_touch_lcd_7c.upload.extra_flags=
+waveshare_esp32_s3_touch_lcd_7c.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_7c.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_touch_lcd_7c.serial.disableDTR=false
+waveshare_esp32_s3_touch_lcd_7c.serial.disableRTS=false
+
+waveshare_esp32_s3_touch_lcd_7c.build.tarch=xtensa
+waveshare_esp32_s3_touch_lcd_7c.build.bootloader_addr=0x0
+waveshare_esp32_s3_touch_lcd_7c.build.target=esp32s3
+waveshare_esp32_s3_touch_lcd_7c.build.mcu=esp32s3
+waveshare_esp32_s3_touch_lcd_7c.build.core=esp32
+waveshare_esp32_s3_touch_lcd_7c.build.variant=waveshare_esp32_s3_touch_lcd_7c
+waveshare_esp32_s3_touch_lcd_7c.build.board=WAVESHARE_ESP32_S3_TOUCH_LCD_7C
+
+waveshare_esp32_s3_touch_lcd_7c.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_7c.build.cdc_on_boot=1
+waveshare_esp32_s3_touch_lcd_7c.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_7c.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_7c.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_7c.build.flash_size=32MB
+waveshare_esp32_s3_touch_lcd_7c.build.flash_freq=80m
+waveshare_esp32_s3_touch_lcd_7c.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_7c.build.boot=qio
+waveshare_esp32_s3_touch_lcd_7c.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_7c.build.partitions=large_fat_32MB
+waveshare_esp32_s3_touch_lcd_7c.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_7c.build.loop_core=
+waveshare_esp32_s3_touch_lcd_7c.build.event_core=
+waveshare_esp32_s3_touch_lcd_7c.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_7c.build.memory_type={build.boot}_{build.psram_type}
+
+## IDE 2.0 Seems to not update the value
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.default=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.default.build.copy_jtag_files=0
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.builtin=Integrated USB JTAG
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.external=FTDI Adapter
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.external.build.copy_jtag_files=1
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.bridge=ESP USB Bridge
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
+waveshare_esp32_s3_touch_lcd_7c.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.opi=OPI PSRAM
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.opi.build.psram_type=opi
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_touch_lcd_7c.menu.PSRAM.disabled.build.psram_type=opi
+
+waveshare_esp32_s3_touch_lcd_7c.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_touch_lcd_7c.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_touch_lcd_7c.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_touch_lcd_7c.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_touch_lcd_7c.menu.FlashMode.qio.build.flash_freq=80m
+
+waveshare_esp32_s3_touch_lcd_7c.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_7c.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_7c.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_7c.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_7c.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_touch_lcd_7c.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_touch_lcd_7c.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_touch_lcd_7c.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_touch_lcd_7c.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_touch_lcd_7c.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_touch_lcd_7c.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_touch_lcd_7c.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_touch_lcd_7c.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_touch_lcd_7c.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+waveshare_esp32_s3_touch_lcd_7c.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+waveshare_esp32_s3_touch_lcd_7c.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_touch_lcd_7c.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_7c.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_7c.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_touch_lcd_7c.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_touch_lcd_7c.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.max_app_32MB=Max APP 32MB (31.4 MB)
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.max_app_32MB.build.partitions=max_app_32MB
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.max_app_32MB.upload.maximum_size=33423360
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.custom=Custom
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.custom.build.partitions=
+waveshare_esp32_s3_touch_lcd_7c.menu.PartitionScheme.custom.upload.maximum_size=33554432
+
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.40.build.f_cpu=40000000L
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.20=20MHz
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.20.build.f_cpu=20000000L
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.10=10MHz
+waveshare_esp32_s3_touch_lcd_7c.menu.CPUFreq.10.build.f_cpu=10000000L
+
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.256000.windows=256000
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.256000.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.230400.windows.upload.speed=256000
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.230400=230400
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.230400.upload.speed=230400
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.460800.upload.speed=460800
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.512000.windows=512000
+waveshare_esp32_s3_touch_lcd_7c.menu.UploadSpeed.512000.upload.speed=512000
+
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.none=None
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.error=Error
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.info=Info
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_touch_lcd_7c.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_touch_lcd_7c.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_touch_lcd_7c.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_touch_lcd_7c.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 waveshare_esp32_s3_touch_lcd_5.name=Waveshare ESP32-S3-Touch-LCD-5
 waveshare_esp32_s3_touch_lcd_5.vid.0=0x303a
 waveshare_esp32_s3_touch_lcd_5.pid.0=0x8237
