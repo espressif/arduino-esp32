@@ -10,6 +10,7 @@
 #include "mbedtls/ssl.h"
 #include "mbedtls/error.h"
 #include "mbedtls/version.h"
+#include <memory>
 
 #if MBEDTLS_VERSION_MAJOR < 4
 #include "mbedtls/entropy.h"
@@ -39,6 +40,8 @@ typedef struct sslclient_context {
 
   int last_error;
   int peek_buf;
+
+  std::shared_ptr<int> cipher_list;
 
 } sslclient_context;
 
