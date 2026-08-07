@@ -45165,6 +45165,150 @@ ws_esp32_s3_matrix.menu.EraseFlash.all.upload.erase_cmd=-e
 
 ##############################################################
 
+waveshare_esp32_s3_rgb_matrix.name=Waveshare ESP32-S3-RGB-Matrix
+
+waveshare_esp32_s3_rgb_matrix.bootloader.tool=esptool_py
+waveshare_esp32_s3_rgb_matrix.bootloader.tool.default=esptool_py
+
+waveshare_esp32_s3_rgb_matrix.upload.tool=esptool_py
+waveshare_esp32_s3_rgb_matrix.upload.tool.default=esptool_py
+waveshare_esp32_s3_rgb_matrix.upload.tool.network=esp_ota
+
+waveshare_esp32_s3_rgb_matrix.upload.maximum_size=4718592
+waveshare_esp32_s3_rgb_matrix.upload.maximum_data_size=327680
+waveshare_esp32_s3_rgb_matrix.upload.flags=
+waveshare_esp32_s3_rgb_matrix.upload.erase_cmd=
+waveshare_esp32_s3_rgb_matrix.upload.extra_flags=
+waveshare_esp32_s3_rgb_matrix.upload.use_1200bps_touch=false
+waveshare_esp32_s3_rgb_matrix.upload.wait_for_upload_port=false
+
+waveshare_esp32_s3_rgb_matrix.serial.disableDTR=false
+waveshare_esp32_s3_rgb_matrix.serial.disableRTS=false
+
+waveshare_esp32_s3_rgb_matrix.build.tarch=xtensa
+waveshare_esp32_s3_rgb_matrix.build.bootloader_addr=0x0
+waveshare_esp32_s3_rgb_matrix.build.target=esp32s3
+waveshare_esp32_s3_rgb_matrix.build.mcu=esp32s3
+waveshare_esp32_s3_rgb_matrix.build.core=esp32
+waveshare_esp32_s3_rgb_matrix.build.variant=waveshare_esp32_s3_rgb_matrix
+waveshare_esp32_s3_rgb_matrix.build.board=WAVESHARE_ESP32_S3_RGB_MATRIX
+
+waveshare_esp32_s3_rgb_matrix.build.usb_mode=1
+waveshare_esp32_s3_rgb_matrix.build.cdc_on_boot=1
+waveshare_esp32_s3_rgb_matrix.build.msc_on_boot=0
+waveshare_esp32_s3_rgb_matrix.build.dfu_on_boot=0
+waveshare_esp32_s3_rgb_matrix.build.f_cpu=240000000L
+waveshare_esp32_s3_rgb_matrix.build.flash_size=32MB
+waveshare_esp32_s3_rgb_matrix.build.flash_freq=80m
+waveshare_esp32_s3_rgb_matrix.build.flash_mode=dio
+waveshare_esp32_s3_rgb_matrix.build.boot=qio
+waveshare_esp32_s3_rgb_matrix.build.boot_freq=80m
+waveshare_esp32_s3_rgb_matrix.build.partitions=large_fat_32MB
+waveshare_esp32_s3_rgb_matrix.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_rgb_matrix.build.loop_core=
+waveshare_esp32_s3_rgb_matrix.build.event_core=
+waveshare_esp32_s3_rgb_matrix.build.psram_type=opi
+waveshare_esp32_s3_rgb_matrix.build.memory_type={build.boot}_{build.psram_type}
+
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.opi=OPI PSRAM
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.opi.build.psram_type=opi
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.disabled=Disabled
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.disabled.build.defines=
+waveshare_esp32_s3_rgb_matrix.menu.PSRAM.disabled.build.psram_type=qspi
+
+waveshare_esp32_s3_rgb_matrix.menu.FlashMode.qio=QIO 80MHz
+waveshare_esp32_s3_rgb_matrix.menu.FlashMode.qio.build.flash_mode=dio
+waveshare_esp32_s3_rgb_matrix.menu.FlashMode.qio.build.boot=qio
+waveshare_esp32_s3_rgb_matrix.menu.FlashMode.qio.build.boot_freq=80m
+waveshare_esp32_s3_rgb_matrix.menu.FlashMode.qio.build.flash_freq=80m
+
+waveshare_esp32_s3_rgb_matrix.menu.FlashSize.32M=32MB (256Mb)
+waveshare_esp32_s3_rgb_matrix.menu.FlashSize.32M.build.flash_size=32MB
+
+waveshare_esp32_s3_rgb_matrix.menu.LoopCore.1=Core 1
+waveshare_esp32_s3_rgb_matrix.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+waveshare_esp32_s3_rgb_matrix.menu.LoopCore.0=Core 0
+waveshare_esp32_s3_rgb_matrix.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+waveshare_esp32_s3_rgb_matrix.menu.EventsCore.1=Core 1
+waveshare_esp32_s3_rgb_matrix.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+waveshare_esp32_s3_rgb_matrix.menu.EventsCore.0=Core 0
+waveshare_esp32_s3_rgb_matrix.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
+
+waveshare_esp32_s3_rgb_matrix.menu.USBMode.hwcdc=Hardware CDC and JTAG
+waveshare_esp32_s3_rgb_matrix.menu.USBMode.hwcdc.build.usb_mode=1
+waveshare_esp32_s3_rgb_matrix.menu.USBMode.default=USB-OTG (TinyUSB)
+waveshare_esp32_s3_rgb_matrix.menu.USBMode.default.build.usb_mode=0
+
+waveshare_esp32_s3_rgb_matrix.menu.CDCOnBoot.cdc=Enabled
+waveshare_esp32_s3_rgb_matrix.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+waveshare_esp32_s3_rgb_matrix.menu.CDCOnBoot.default=Disabled
+waveshare_esp32_s3_rgb_matrix.menu.CDCOnBoot.default.build.cdc_on_boot=0
+
+waveshare_esp32_s3_rgb_matrix.menu.MSCOnBoot.default=Disabled
+waveshare_esp32_s3_rgb_matrix.menu.MSCOnBoot.default.build.msc_on_boot=0
+waveshare_esp32_s3_rgb_matrix.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_rgb_matrix.menu.MSCOnBoot.msc.build.msc_on_boot=1
+
+waveshare_esp32_s3_rgb_matrix.menu.DFUOnBoot.default=Disabled
+waveshare_esp32_s3_rgb_matrix.menu.DFUOnBoot.default.build.dfu_on_boot=0
+waveshare_esp32_s3_rgb_matrix.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+waveshare_esp32_s3_rgb_matrix.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.default=UART0 / Hardware CDC
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.default.upload.use_1200bps_touch=false
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.default.upload.wait_for_upload_port=false
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+waveshare_esp32_s3_rgb_matrix.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_fat24M_32MB=32M Flash (4.8MB APP/22MB FATFS)
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_fat24M_32MB.build.partitions=large_fat_32MB
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_fat24M_32MB.upload.maximum_size=4718592
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_little24M_32MB=32M Flash (4.8MB APP/22MB LittleFS)
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_little24M_32MB.build.partitions=large_littlefs_32MB
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app5M_little24M_32MB.upload.maximum_size=4718592
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app13M_data7M_32MB=32M Flash (13MB APP/6.75MB SPIFFS)
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app13M_data7M_32MB.build.partitions=default_32MB
+waveshare_esp32_s3_rgb_matrix.menu.PartitionScheme.app13M_data7M_32MB.upload.maximum_size=13107200
+
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.240=240MHz (WiFi)
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.240.build.f_cpu=240000000L
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.160=160MHz (WiFi)
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.160.build.f_cpu=160000000L
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.80=80MHz (WiFi)
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.80.build.f_cpu=80000000L
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.40=40MHz
+waveshare_esp32_s3_rgb_matrix.menu.CPUFreq.40.build.f_cpu=40000000L
+
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.921600=921600
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.921600.upload.speed=921600
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.115200=115200
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.115200.upload.speed=115200
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.460800.linux=460800
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.460800.macosx=460800
+waveshare_esp32_s3_rgb_matrix.menu.UploadSpeed.460800.upload.speed=460800
+
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.none=None
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.none.build.code_debug=0
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.error=Error
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.error.build.code_debug=1
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.warn=Warn
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.warn.build.code_debug=2
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.info=Info
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.info.build.code_debug=3
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.debug=Debug
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.debug.build.code_debug=4
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.verbose=Verbose
+waveshare_esp32_s3_rgb_matrix.menu.DebugLevel.verbose.build.code_debug=5
+
+waveshare_esp32_s3_rgb_matrix.menu.EraseFlash.none=Disabled
+waveshare_esp32_s3_rgb_matrix.menu.EraseFlash.all=Enabled
+waveshare_esp32_s3_rgb_matrix.menu.EraseFlash.all.upload.erase_cmd=-e
+
+##############################################################
+
 waveshare_esp32_s3_touch_lcd_169.name=Waveshare ESP32-S3-Touch-LCD-1.69
 waveshare_esp32_s3_touch_lcd_169.vid.0=0x303a
 waveshare_esp32_s3_touch_lcd_169.pid.0=0x821E
